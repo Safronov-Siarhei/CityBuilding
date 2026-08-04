@@ -36,16 +36,8 @@ namespace CityBuilder.EditorTools
         [MenuItem("CityBuilder/Setup Project (Scenes + Prefabs)")]
         public static void Run()
         {
-            var houseData = CreateBuildingData(
-                "House", new Vector2Int(1, 1), height: 2f, color: new Color(0.55f, 0.35f, 0.2f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } });
-
-            var townHallData = CreateBuildingData(
-                "TownHall", new Vector2Int(5, 5), height: 4f, color: new Color(0.62f, 0.6f, 0.65f),
-                cost: new List<ResourceAmount>());
-
             BuildMainMenuScene();
-            BuildCityScene(houseData, townHallData);
+            BuildCityScene();
 
             EditorBuildSettings.scenes = new[]
             {
@@ -90,9 +82,23 @@ namespace CityBuilder.EditorTools
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/MainMenu.unity");
         }
 
-        private static void BuildCityScene(BuildingData houseData, BuildingData townHallData)
+        private static void BuildCityScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+
+            // Building data/prefab assets are created here, after the scene switch above, so no
+            // further NewScene() call happens before they're consumed below. EditorSceneManager.
+            // NewScene() unloads objects that aren't rooted in the new scene yet, which silently
+            // turns freshly created ScriptableObject asset references stale (Unity "fake null").
+            var houseData = CreateBuildingData(
+                "House", new Vector2Int(1, 1), height: 2f, color: new Color(0.55f, 0.35f, 0.2f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } });
+
+            var townHallData = CreateBuildingData(
+                "TownHall", new Vector2Int(5, 5), height: 4f, color: new Color(0.62f, 0.6f, 0.65f),
+                cost: new List<ResourceAmount>());
+
+            AssetDatabase.SaveAssets();
 
             var groundMesh = CubeMeshBuilder.BuildGrid(GridCellsX, GridCellsZ, CellSize, CubeGap, GroundHeight, GroundOrigin);
             Directory.CreateDirectory(ModelsFolder);
