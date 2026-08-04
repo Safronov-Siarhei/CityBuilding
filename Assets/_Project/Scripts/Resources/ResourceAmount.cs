@@ -1,0 +1,11 @@
+using System;
+
+namespace CityBuilder.Resources
+{
+    [Serializable]
+    public class ResourceAmount
+    {
+        public ResourceType type;
+        public int amount;
+    }
+}
