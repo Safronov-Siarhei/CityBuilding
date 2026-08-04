@@ -9,10 +9,13 @@ namespace CityBuilder.Grid
 
         [SerializeField] private float cellSize = 2f;
         [SerializeField] private Vector3 originWorldPosition = Vector3.zero;
+        [SerializeField] private Vector2Int gridSize = new Vector2Int(30, 30);
+        [SerializeField] private float groundHeight = 1f;
 
         private readonly HashSet<Vector2Int> _occupiedCells = new HashSet<Vector2Int>();
 
         public float CellSize => cellSize;
+        public Vector2Int GridSize => gridSize;
 
         private void Awake()
         {
@@ -40,7 +43,16 @@ namespace CityBuilder.Grid
         public Vector3 GetFootprintCenterWorld(Vector2Int originCell, Vector2Int footprintSize)
         {
             var corner = CellToWorld(originCell);
-            return corner + new Vector3(footprintSize.x * cellSize * 0.5f, 0f, footprintSize.y * cellSize * 0.5f);
+            return new Vector3(
+                corner.x + footprintSize.x * cellSize * 0.5f,
+                groundHeight,
+                corner.z + footprintSize.y * cellSize * 0.5f);
+        }
+
+        public bool IsWithinBounds(Vector2Int originCell, Vector2Int footprintSize)
+        {
+            if (originCell.x < 0 || originCell.y < 0) return false;
+            return originCell.x + footprintSize.x <= gridSize.x && originCell.y + footprintSize.y <= gridSize.y;
         }
 
         public bool IsAreaFree(Vector2Int originCell, Vector2Int footprintSize)
@@ -53,6 +65,11 @@ namespace CityBuilder.Grid
                 }
             }
             return true;
+        }
+
+        public bool CanPlace(Vector2Int originCell, Vector2Int footprintSize)
+        {
+            return IsWithinBounds(originCell, footprintSize) && IsAreaFree(originCell, footprintSize);
         }
 
         public void SetAreaOccupied(Vector2Int originCell, Vector2Int footprintSize, bool occupied)
