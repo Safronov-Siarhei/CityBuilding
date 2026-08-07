@@ -75,7 +75,7 @@ namespace CityBuilder.EditorTools
 
             // Created after the scene switch above (see the NewScene() comment in BuildCityScene
             // for why) and used only within this method, before this scene is saved.
-            var panelSprite = CreateRoundedRectSprite();
+            var panelSprite = CreatePanelSprite();
 
             var cameraGO = new GameObject("Menu Camera", typeof(Camera));
             var menuCamera = cameraGO.GetComponent<Camera>();
@@ -203,7 +203,7 @@ namespace CityBuilder.EditorTools
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
             // one goes stale the moment this method's caller (BuildCityScene) switched scenes.
-            var panelSprite = CreateRoundedRectSprite();
+            var panelSprite = CreatePanelSprite();
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
@@ -218,7 +218,6 @@ namespace CityBuilder.EditorTools
             // Hint shown only while the player must place the mandatory Town Hall.
             var hintRoot = CreateImage(canvasGO.transform, "PlacementHint", new Color(0f, 0f, 0f, 0.6f));
             hintRoot.sprite = panelSprite;
-            hintRoot.type = Image.Type.Sliced;
             var hintRect = hintRoot.GetComponent<RectTransform>();
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 1f);
             hintRect.anchoredPosition = new Vector2(0f, -70f);
@@ -326,6 +325,7 @@ namespace CityBuilder.EditorTools
         private static void CreateForestBorder(float innerHalfWidth, float innerHalfDepth, float outerHalfWidth, float outerHalfDepth)
         {
             var root = new GameObject("Forest");
+            var trunkMaterial = CreateLitMaterial("TreeTrunk", new Color(0.36f, 0.24f, 0.14f));
             var canopyMaterial = CreateLitMaterial("TreeCanopy", new Color(0.16f, 0.38f, 0.18f));
 
             // Fixed seed so re-running the setup script produces the same layout every time.
@@ -341,14 +341,32 @@ namespace CityBuilder.EditorTools
                 var z = Random.Range(-outerHalfDepth, outerHalfDepth);
                 if (Mathf.Abs(x) < innerHalfWidth && Mathf.Abs(z) < innerHalfDepth) continue; // inside the buildable area
 
-                var tree = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                tree.name = "Tree";
-                Object.DestroyImmediate(tree.GetComponent<SphereCollider>());
-                var scale = Random.Range(1.4f, 2.2f);
-                tree.transform.localScale = new Vector3(scale, scale * 1.3f, scale);
-                tree.transform.position = new Vector3(x, scale * 0.55f, z);
-                tree.GetComponent<Renderer>().sharedMaterial = canopyMaterial;
-                tree.transform.SetParent(root.transform, true);
+                var scale = Random.Range(0.8f, 1.3f);
+                var trunkHeight = 1f * scale;
+                var canopySize = 1.6f * scale;
+                var canopyHeight = 1.4f * scale;
+
+                var treeRoot = new GameObject("Tree");
+                treeRoot.transform.position = new Vector3(x, 0f, z);
+                treeRoot.transform.SetParent(root.transform, true);
+
+                // Fully cubic tree: a box trunk with a box canopy on top — no rounded primitives.
+                var trunk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                trunk.name = "Trunk";
+                Object.DestroyImmediate(trunk.GetComponent<BoxCollider>());
+                trunk.transform.SetParent(treeRoot.transform, false);
+                trunk.transform.localScale = new Vector3(0.35f * scale, trunkHeight, 0.35f * scale);
+                trunk.transform.localPosition = new Vector3(0f, trunkHeight * 0.5f, 0f);
+                trunk.GetComponent<Renderer>().sharedMaterial = trunkMaterial;
+
+                var canopy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                canopy.name = "Canopy";
+                Object.DestroyImmediate(canopy.GetComponent<BoxCollider>());
+                canopy.transform.SetParent(treeRoot.transform, false);
+                canopy.transform.localScale = new Vector3(canopySize, canopyHeight, canopySize);
+                canopy.transform.localPosition = new Vector3(0f, trunkHeight + canopyHeight * 0.5f, 0f);
+                canopy.GetComponent<Renderer>().sharedMaterial = canopyMaterial;
+
                 placed++;
             }
         }
@@ -372,29 +390,21 @@ namespace CityBuilder.EditorTools
             return material;
         }
 
-        private static Sprite CreateRoundedRectSprite()
+        private static Sprite CreatePanelSprite()
         {
-            const int size = 128;
-            const int radius = 30;
+            // Plain solid rectangle, sharp 90-degree corners — the whole game is meant to read
+            // as cubic/angular, so no rounded UI corners either.
+            const int size = 8;
 
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
-                filterMode = FilterMode.Bilinear,
+                filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
             };
 
-            for (var y = 0; y < size; y++)
-            {
-                for (var x = 0; x < size; x++)
-                {
-                    var cx = Mathf.Clamp(x, radius, size - 1 - radius);
-                    var cy = Mathf.Clamp(y, radius, size - 1 - radius);
-                    var dx = x - cx;
-                    var dy = y - cy;
-                    var inside = (dx * dx + dy * dy) <= radius * radius;
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, inside ? 1f : 0f));
-                }
-            }
+            var pixels = new Color[size * size];
+            for (var i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+            texture.SetPixels(pixels);
             texture.Apply();
 
             Directory.CreateDirectory(TexturesFolder);
@@ -402,9 +412,7 @@ namespace CityBuilder.EditorTools
             DeleteIfExists(texPath);
             AssetDatabase.CreateAsset(texture, texPath);
 
-            var sprite = Sprite.Create(
-                texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0,
-                SpriteMeshType.FullRect, new Vector4(radius, radius, radius, radius));
+            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
             sprite.name = "UI_Panel_Sprite";
             AssetDatabase.AddObjectToAsset(sprite, texture);
             AssetDatabase.ImportAsset(texPath);
@@ -448,7 +456,6 @@ namespace CityBuilder.EditorTools
 
             var image = go.GetComponent<Image>();
             image.sprite = sprite;
-            image.type = Image.Type.Sliced;
             image.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
             CreateText(go.transform, "Label", label, 28, Vector2.zero, sizeDelta - new Vector2(20f, 20f));
