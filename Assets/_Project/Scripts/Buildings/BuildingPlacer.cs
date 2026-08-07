@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace CityBuilder.Buildings
@@ -21,6 +22,7 @@ namespace CityBuilder.Buildings
         private bool _mandatoryBuildingPlaced;
 
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
+        public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
 
         private void Start()
         {
@@ -32,35 +34,44 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
-            var keyboard = Keyboard.current;
-            var mouse = Mouse.current;
-            if (keyboard == null || mouse == null) return;
+            var pointer = Pointer.current;
+            if (pointer == null) return;
 
             var forcedSelection = IsPlacingMandatoryBuilding;
 
             if (!forcedSelection)
             {
-                for (var i = 0; i < availableBuildings.Count && i < 9; i++)
+                var keyboard = Keyboard.current;
+                if (keyboard != null)
                 {
-                    if (keyboard[Key.Digit1 + i].wasPressedThisFrame)
+                    for (var i = 0; i < availableBuildings.Count && i < 9; i++)
                     {
-                        SelectBuilding(availableBuildings[i]);
+                        if (keyboard[Key.Digit1 + i].wasPressedThisFrame)
+                        {
+                            SelectBuilding(availableBuildings[i]);
+                        }
+                    }
+
+                    if (keyboard[Key.Escape].wasPressedThisFrame)
+                    {
+                        ClearSelection();
                     }
                 }
 
-                if (keyboard[Key.Escape].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
+                if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
                 {
                     ClearSelection();
                 }
             }
 
             if (_selectedBuilding == null) return;
+            if (IsPointerOverUI()) return;
 
-            if (TryGetGroundCell(mouse, out var cell))
+            if (TryGetGroundCell(pointer, out var cell))
             {
                 UpdateGhost(cell);
 
-                if (mouse.leftButton.wasPressedThisFrame)
+                if (pointer.press.wasPressedThisFrame)
                 {
                     TryPlace(cell);
                 }
@@ -90,12 +101,25 @@ namespace CityBuilder.Buildings
             _ghostRenderers.Clear();
         }
 
-        private bool TryGetGroundCell(Mouse mouse, out Vector2Int cell)
+        private static bool IsPointerOverUI()
+        {
+            if (EventSystem.current == null) return false;
+
+            var touchscreen = Touchscreen.current;
+            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
+            {
+                return EventSystem.current.IsPointerOverGameObject(touchscreen.primaryTouch.touchId.ReadValue());
+            }
+
+            return EventSystem.current.IsPointerOverGameObject();
+        }
+
+        private bool TryGetGroundCell(Pointer pointer, out Vector2Int cell)
         {
             cell = default;
             if (targetCamera == null) return false;
 
-            var ray = targetCamera.ScreenPointToRay(mouse.position.ReadValue());
+            var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 500f, groundLayerMask)) return false;
 
             cell = GridManager.Instance.WorldToCell(hit.point);
@@ -140,7 +164,10 @@ namespace CityBuilder.Buildings
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
             var wasMandatory = _selectedBuilding == mandatoryFirstBuilding;
-            ClearSelection();
+            _selectedBuilding = null;
+            if (_ghostInstance != null) Destroy(_ghostInstance);
+            _ghostInstance = null;
+            _ghostRenderers.Clear();
             if (wasMandatory) _mandatoryBuildingPlaced = true;
         }
     }
