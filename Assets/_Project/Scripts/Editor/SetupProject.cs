@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using CityBuilder.UI;
@@ -22,11 +23,13 @@ namespace CityBuilder.EditorTools
         private const string ScenesFolder = "Assets/_Project/Scenes";
         private const string MaterialsFolder = "Assets/_Project/Materials";
         private const string TexturesFolder = "Assets/_Project/Textures";
+        private const string ModelsFolder = "Assets/_Project/Models";
         private const string BuildingPrefabsFolder = "Assets/_Project/Prefabs/Buildings";
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
 
         private const int GridCellsX = 30;
         private const int GridCellsZ = 30;
+        private const int ForestMarginCells = 10;
         private const float CellSize = 2f;
         private const float BuildingInset = 0.08f;
         private const float GroundHeight = 0f;
@@ -118,25 +121,32 @@ namespace CityBuilder.EditorTools
             // NewScene() unloads objects that aren't rooted in the new scene yet, which silently
             // turns freshly created ScriptableObject asset references stale (Unity "fake null").
             var houseData = CreateBuildingData(
-                "House", new Vector2Int(1, 1), height: 2f, color: new Color(0.55f, 0.35f, 0.2f),
+                "House", new Vector2Int(1, 1), height: 2f,
+                wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } });
 
             var townHallData = CreateBuildingData(
-                "TownHall", new Vector2Int(5, 5), height: 4f, color: new Color(0.62f, 0.6f, 0.65f),
+                "TownHall", new Vector2Int(5, 5), height: 4f,
+                wallColor: new Color(0.75f, 0.72f, 0.68f), roofColor: new Color(0.5f, 0.14f, 0.14f),
                 cost: new List<ResourceAmount>());
 
             AssetDatabase.SaveAssets();
 
-            var groundMaterial = CreateGridGroundMaterial();
+            // The buildable area matches GridManager's logical grid exactly, but the visible
+            // ground extends further out with a decorative forest border around it (see
+            // CreateForestBorder), so the map doesn't just stop at a bare edge.
+            var groundMaterial = CreateGroundMaterial();
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
-            var groundWidth = GridCellsX * CellSize;
-            var groundDepth = GridCellsZ * CellSize;
-            // Unity's Plane primitive is a flat 10x10 quad (2 triangles) — cheap to render on
-            // mobile — with a grid-line texture tiled once per cell for the "2D" grid look.
+            var groundCellsX = GridCellsX + ForestMarginCells * 2;
+            var groundCellsZ = GridCellsZ + ForestMarginCells * 2;
+            var groundWidth = groundCellsX * CellSize;
+            var groundDepth = groundCellsZ * CellSize;
             ground.transform.localScale = new Vector3(groundWidth / 10f, 1f, groundDepth / 10f);
-            ground.transform.position = GroundOrigin + new Vector3(groundWidth * 0.5f, 0f, groundDepth * 0.5f);
+            ground.transform.position = Vector3.zero; // GroundOrigin is symmetric around world origin
             ground.GetComponent<MeshRenderer>().sharedMaterial = groundMaterial;
+
+            CreateForestBorder(GridCellsX * CellSize * 0.5f, GridCellsZ * CellSize * 0.5f, groundWidth * 0.5f, groundDepth * 0.5f);
 
             var mainCameraGO = GameObject.Find("Main Camera");
             var camera = mainCameraGO.GetComponent<Camera>();
@@ -253,9 +263,9 @@ namespace CityBuilder.EditorTools
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static BuildingData CreateBuildingData(string name, Vector2Int footprint, float height, Color color, List<ResourceAmount> cost)
+        private static BuildingData CreateBuildingData(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost)
         {
-            var prefab = CreateBuildingPrefab(name, footprint, height, color);
+            var prefab = CreateBuildingPrefab(name, footprint, height, wallColor, roofColor);
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = name;
@@ -270,21 +280,36 @@ namespace CityBuilder.EditorTools
             return data;
         }
 
-        private static GameObject CreateBuildingPrefab(string name, Vector2Int footprint, float height, Color color)
+        private static GameObject CreateBuildingPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
+            var wallHeight = height * 0.6f;
+            var roofHeight = height * 0.4f;
+            const float roofOverhang = 1.08f;
 
             var root = new GameObject(name);
             root.AddComponent<BuildingInstance>();
 
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            visual.name = "Visual";
-            Object.DestroyImmediate(visual.GetComponent<BoxCollider>());
-            visual.transform.SetParent(root.transform, false);
-            visual.transform.localScale = new Vector3(sizeX, height, sizeZ);
-            visual.transform.localPosition = new Vector3(0f, height * 0.5f, 0f);
-            visual.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial($"Building_{name}", color);
+            var walls = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            walls.name = "Walls";
+            Object.DestroyImmediate(walls.GetComponent<BoxCollider>());
+            walls.transform.SetParent(root.transform, false);
+            walls.transform.localScale = new Vector3(sizeX, wallHeight, sizeZ);
+            walls.transform.localPosition = new Vector3(0f, wallHeight * 0.5f, 0f);
+            walls.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+
+            var roofMesh = RoofMeshBuilder.BuildGableRoof(sizeX * roofOverhang, sizeZ * roofOverhang, roofHeight);
+            Directory.CreateDirectory(ModelsFolder);
+            var roofMeshPath = $"{ModelsFolder}/Roof_{name}.asset";
+            DeleteIfExists(roofMeshPath);
+            AssetDatabase.CreateAsset(roofMesh, roofMeshPath);
+
+            var roofGO = new GameObject("Roof", typeof(MeshFilter), typeof(MeshRenderer));
+            roofGO.transform.SetParent(root.transform, false);
+            roofGO.transform.localPosition = new Vector3(0f, wallHeight, 0f);
+            roofGO.GetComponent<MeshFilter>().sharedMesh = roofMesh;
+            roofGO.GetComponent<MeshRenderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
 
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX, height, sizeZ);
@@ -298,6 +323,36 @@ namespace CityBuilder.EditorTools
             return prefab;
         }
 
+        private static void CreateForestBorder(float innerHalfWidth, float innerHalfDepth, float outerHalfWidth, float outerHalfDepth)
+        {
+            var root = new GameObject("Forest");
+            var canopyMaterial = CreateLitMaterial("TreeCanopy", new Color(0.16f, 0.38f, 0.18f));
+
+            // Fixed seed so re-running the setup script produces the same layout every time.
+            Random.InitState(12345);
+            const int treeCount = 160;
+            var placed = 0;
+            var attempts = 0;
+
+            while (placed < treeCount && attempts < treeCount * 10)
+            {
+                attempts++;
+                var x = Random.Range(-outerHalfWidth, outerHalfWidth);
+                var z = Random.Range(-outerHalfDepth, outerHalfDepth);
+                if (Mathf.Abs(x) < innerHalfWidth && Mathf.Abs(z) < innerHalfDepth) continue; // inside the buildable area
+
+                var tree = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                tree.name = "Tree";
+                Object.DestroyImmediate(tree.GetComponent<SphereCollider>());
+                var scale = Random.Range(1.4f, 2.2f);
+                tree.transform.localScale = new Vector3(scale, scale * 1.3f, scale);
+                tree.transform.position = new Vector3(x, scale * 0.55f, z);
+                tree.GetComponent<Renderer>().sharedMaterial = canopyMaterial;
+                tree.transform.SetParent(root.transform, true);
+                placed++;
+            }
+        }
+
         private static Material CreateLitMaterial(string name, Color color)
         {
             var path = $"{MaterialsFolder}/{name}.mat";
@@ -308,45 +363,12 @@ namespace CityBuilder.EditorTools
             return material;
         }
 
-        private static Material CreateGridGroundMaterial()
+        private static Material CreateGroundMaterial()
         {
-            const int textureSize = 64;
-            const int lineThicknessPx = 2;
-            var fill = new Color(0.35f, 0.55f, 0.25f);
-            var line = new Color(0.24f, 0.4f, 0.17f);
-
-            var texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Repeat
-            };
-
-            // Each tile draws a line only on its own left/bottom edge; repeated across the grid
-            // this still produces a full, evenly-spaced grid without doubled-up seams.
-            for (var y = 0; y < textureSize; y++)
-            {
-                for (var x = 0; x < textureSize; x++)
-                {
-                    var onLine = x < lineThicknessPx || y < lineThicknessPx;
-                    texture.SetPixel(x, y, onLine ? line : fill);
-                }
-            }
-            texture.Apply();
-
-            Directory.CreateDirectory(TexturesFolder);
-            var texPath = $"{TexturesFolder}/GridCell.asset";
-            DeleteIfExists(texPath);
-            AssetDatabase.CreateAsset(texture, texPath);
-
-            var material = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
-            {
-                mainTexture = texture,
-                mainTextureScale = new Vector2(GridCellsX, GridCellsZ)
-            };
-
-            var matPath = $"{MaterialsFolder}/Ground.mat";
-            DeleteIfExists(matPath);
-            AssetDatabase.CreateAsset(material, matPath);
+            var path = $"{MaterialsFolder}/Ground.mat";
+            DeleteIfExists(path);
+            var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.42f, 0.62f, 0.32f) };
+            AssetDatabase.CreateAsset(material, path);
             return material;
         }
 
@@ -446,7 +468,10 @@ namespace CityBuilder.EditorTools
             AssetDatabase.DeleteAsset("Assets/Scenes");
             AssetDatabase.DeleteAsset("Assets/TutorialInfo");
             AssetDatabase.DeleteAsset("Assets/Readme.asset");
-            AssetDatabase.DeleteAsset("Assets/_Project/Models");
+            // Stale assets from earlier iterations of the ground/buildings.
+            DeleteIfExists($"{TexturesFolder}/GridCell.asset");
+            DeleteIfExists($"{MaterialsFolder}/Building_House.mat");
+            DeleteIfExists($"{MaterialsFolder}/Building_TownHall.mat");
         }
     }
 }
