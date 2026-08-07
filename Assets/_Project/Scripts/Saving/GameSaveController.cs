@@ -7,6 +7,10 @@ using UnityEngine;
 
 namespace CityBuilder.Saving
 {
+    /// <summary>
+    /// Saving is entirely player-initiated (see SaveDialogController) — the player decides
+    /// when and under what name to save, there is no autosave.
+    /// </summary>
     public class GameSaveController : MonoBehaviour
     {
         [SerializeField] private BuildingPlacer buildingPlacer;
@@ -14,6 +18,8 @@ namespace CityBuilder.Saving
 
         private Dictionary<string, BuildingData> _catalog;
         private GameSaveData _pendingLoad;
+
+        public string CurrentSaveName { get; private set; } = string.Empty;
 
         private void Awake()
         {
@@ -23,51 +29,40 @@ namespace CityBuilder.Saving
                 if (data != null) _catalog[data.buildingName] = data;
             }
 
-            if (GameSessionIntent.LoadSavedGame)
-            {
-                GameSessionIntent.LoadSavedGame = false;
-                _pendingLoad = SaveSystem.HasSave() ? SaveSystem.Load() : null;
+            var nameToLoad = GameSessionIntent.SaveNameToLoad;
+            GameSessionIntent.SaveNameToLoad = null;
+            if (string.IsNullOrEmpty(nameToLoad)) return;
 
-                // Marked here (Awake, guaranteed to run before every Start() in the scene,
-                // including BuildingPlacer's) so its Start() doesn't force-select the Town Hall
-                // again for what is actually a resumed game. Actually instantiating the saved
-                // buildings/resources needs GridManager/ResourceManager's singletons, which are
-                // only guaranteed ready once every Awake() has run — so that part waits for
-                // Start() below.
-                if (_pendingLoad != null && _pendingLoad.mandatoryBuildingPlaced && buildingPlacer != null)
-                {
-                    buildingPlacer.MarkMandatoryBuildingAlreadyPlaced();
-                }
+            _pendingLoad = SaveSystem.Load(nameToLoad);
+            if (_pendingLoad == null) return;
+
+            CurrentSaveName = nameToLoad;
+
+            // Marked here (Awake, guaranteed to run before every Start() in the scene,
+            // including BuildingPlacer's) so its Start() doesn't force-select the Town Hall
+            // again for what is actually a resumed game. Actually instantiating the saved
+            // buildings/resources needs GridManager/ResourceManager's singletons, which are
+            // only guaranteed ready once every Awake() has run — so that part waits for
+            // Start() below.
+            if (_pendingLoad.mandatoryBuildingPlaced && buildingPlacer != null)
+            {
+                buildingPlacer.MarkMandatoryBuildingAlreadyPlaced();
             }
         }
 
         private void Start()
         {
-            if (_pendingLoad != null)
-            {
-                ApplyLoadedState(_pendingLoad);
-                _pendingLoad = null;
-            }
-
-            if (buildingPlacer != null)
-            {
-                buildingPlacer.OnBuildingPlaced += SaveGame;
-            }
+            if (_pendingLoad == null) return;
+            ApplyLoadedState(_pendingLoad);
+            _pendingLoad = null;
         }
 
-        private void OnApplicationPause(bool pauseStatus)
+        /// <summary>Explicit, player-triggered save under the given (already sanitized) name.</summary>
+        public void SaveGame(string saveName)
         {
-            if (pauseStatus) SaveGame();
-        }
-
-        private void OnApplicationQuit()
-        {
-            SaveGame();
-        }
-
-        public void SaveGame()
-        {
-            SaveSystem.Save(CollectSaveData());
+            if (string.IsNullOrEmpty(saveName)) return;
+            CurrentSaveName = saveName;
+            SaveSystem.Save(saveName, CollectSaveData());
         }
 
         private void ApplyLoadedState(GameSaveData data)

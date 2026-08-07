@@ -115,6 +115,8 @@ namespace CityBuilder.EditorTools
             menuControllerSO.FindProperty("loadGameButton").objectReferenceValue = loadGameButton;
             menuControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            BuildLoadPanel(canvasGO.transform, panelSprite, menuController);
+
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/MainMenu.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/MainMenu.unity");
@@ -208,14 +210,14 @@ namespace CityBuilder.EditorTools
             knownBuildingsProp.GetArrayElementAtIndex(1).objectReferenceValue = townHallData;
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, new List<BuildingData> { houseData });
+            BuildGameplayUI(placer, saveController, new List<BuildingData> { houseData });
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, List<BuildingData> hotbarBuildings)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, List<BuildingData> hotbarBuildings)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -277,6 +279,142 @@ namespace CityBuilder.EditorTools
             visibilitySO.FindProperty("showWhilePlacingMandatory").objectReferenceValue = hintRoot.gameObject;
             visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = hotbarGO;
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
+
+            BuildSaveUI(canvasGO.transform, panelSprite, saveController);
+        }
+
+        private static void BuildSaveUI(Transform canvasParent, Sprite panelSprite, GameSaveController saveController)
+        {
+            // Manual save only, per design: the player decides if/when to save, so this button
+            // is the only way a save ever happens — there is no autosave to fall back on.
+            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "Сохранить", new Vector2(810f, 465f), new Vector2(240f, 90f));
+
+            var dialogRoot = new GameObject("SaveDialog", typeof(RectTransform));
+            dialogRoot.transform.SetParent(canvasParent, false);
+            StretchFull(dialogRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(dialogRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(dialogRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(760f, 420f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            CreateText(card.transform, "Title", "Сохранить игру", 40, new Vector2(0f, 150f), new Vector2(680f, 70f));
+
+            var nameInput = CreateInputField(card.transform, "NameInput", "MyCityName", new Vector2(0f, 30f), new Vector2(600f, 90f), panelSprite);
+
+            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmSaveButton", "Сохранить", new Vector2(-160f, -100f), new Vector2(300f, 90f));
+            var cancelButton = CreateButton(card.transform, panelSprite, "CancelSaveButton", "Отмена", new Vector2(160f, -100f), new Vector2(300f, 90f));
+
+            var dialogController = dialogRoot.AddComponent<SaveDialogController>();
+            var dialogSO = new SerializedObject(dialogController);
+            dialogSO.FindProperty("saveController").objectReferenceValue = saveController;
+            dialogSO.FindProperty("dialogRoot").objectReferenceValue = dialogRoot;
+            dialogSO.FindProperty("nameInput").objectReferenceValue = nameInput;
+            dialogSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(saveButton.onClick, dialogController.OpenDialog);
+            UnityEventTools.AddPersistentListener(confirmButton.onClick, dialogController.ConfirmSave);
+            UnityEventTools.AddPersistentListener(cancelButton.onClick, dialogController.CloseDialog);
+
+            dialogRoot.SetActive(false);
+        }
+
+        private static void BuildLoadPanel(Transform canvasParent, Sprite panelSprite, MainMenuController menuController)
+        {
+            var panelRoot = new GameObject("LoadPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(1000f, 760f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            CreateText(card.transform, "Title", "Загрузить игру", 48, new Vector2(0f, 320f), new Vector2(900f, 80f));
+
+            BuildSaveScrollList(card.transform, out var content, out var emptyLabelGO);
+
+            var selectedLabel = CreateText(card.transform, "SelectedLabel", string.Empty, 26, new Vector2(0f, -170f), new Vector2(900f, 50f), new Color(1f, 1f, 1f, 0.8f));
+
+            var loadButton = CreateButton(card.transform, panelSprite, "LoadSelectedButton", "Загрузить", new Vector2(-190f, -270f), new Vector2(360f, 90f));
+            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "Назад", new Vector2(190f, -270f), new Vector2(360f, 90f));
+
+            var panelController = panelRoot.AddComponent<LoadGamePanelController>();
+            var panelSO = new SerializedObject(panelController);
+            panelSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            panelSO.FindProperty("listContent").objectReferenceValue = content;
+            panelSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
+            panelSO.FindProperty("loadSelectedButton").objectReferenceValue = loadButton;
+            panelSO.FindProperty("selectedNameLabel").objectReferenceValue = selectedLabel;
+            panelSO.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            panelSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(loadButton.onClick, panelController.ConfirmLoad);
+            UnityEventTools.AddPersistentListener(backButton.onClick, panelController.ClosePanel);
+
+            panelRoot.SetActive(false);
+
+            var menuSO = new SerializedObject(menuController);
+            menuSO.FindProperty("loadGamePanel").objectReferenceValue = panelController;
+            menuSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void BuildSaveScrollList(Transform parent, out RectTransform content, out GameObject emptyLabelGO)
+        {
+            var scrollGO = new GameObject("ScrollView", typeof(RectTransform), typeof(ScrollRect));
+            scrollGO.transform.SetParent(parent, false);
+            var scrollRectTransform = scrollGO.GetComponent<RectTransform>();
+            scrollRectTransform.anchorMin = scrollRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            scrollRectTransform.anchoredPosition = new Vector2(0f, 60f);
+            scrollRectTransform.sizeDelta = new Vector2(900f, 420f);
+
+            var viewportGO = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+            viewportGO.transform.SetParent(scrollGO.transform, false);
+            var viewportRect = viewportGO.GetComponent<RectTransform>();
+            StretchFull(viewportRect);
+            viewportGO.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
+
+            var contentGO = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            contentGO.transform.SetParent(viewportGO.transform, false);
+            var contentRect = contentGO.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = Vector2.zero;
+
+            var layoutGroup = contentGO.GetComponent<VerticalLayoutGroup>();
+            layoutGroup.childControlWidth = true;
+            layoutGroup.childControlHeight = true;
+            layoutGroup.childForceExpandWidth = true;
+            layoutGroup.childForceExpandHeight = false;
+            layoutGroup.spacing = 12f;
+            layoutGroup.padding = new RectOffset(8, 8, 8, 8);
+
+            var sizeFitter = contentGO.GetComponent<ContentSizeFitter>();
+            sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scrollRect = scrollGO.GetComponent<ScrollRect>();
+            scrollRect.content = contentRect;
+            scrollRect.viewport = viewportRect;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+            var emptyLabel = CreateText(viewportGO.transform, "EmptyLabel", "Нет сохранений", 28, Vector2.zero, new Vector2(700f, 80f), new Color(1f, 1f, 1f, 0.6f));
+
+            content = contentRect;
+            emptyLabelGO = emptyLabel.gameObject;
         }
 
         private static BuildingData CreateBuildingData(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost)
@@ -442,6 +580,64 @@ namespace CityBuilder.EditorTools
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = color;
             return go.GetComponent<Image>();
+        }
+
+        private static void StretchFull(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private static InputField CreateInputField(Transform parent, string name, string placeholderText, Vector2 anchoredPos, Vector2 sizeDelta, Sprite backgroundSprite)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(InputField));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            var bgImage = go.GetComponent<Image>();
+            bgImage.sprite = backgroundSprite;
+            bgImage.color = Color.white;
+
+            var textGO = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            textGO.transform.SetParent(go.transform, false);
+            var textRect = textGO.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(20f, 6f);
+            textRect.offsetMax = new Vector2(-20f, -6f);
+            var textComp = textGO.GetComponent<Text>();
+            textComp.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textComp.fontSize = 30;
+            textComp.alignment = TextAnchor.MiddleLeft;
+            textComp.color = Color.black;
+            textComp.supportRichText = false;
+
+            var placeholderGO = new GameObject("Placeholder", typeof(RectTransform), typeof(Text));
+            placeholderGO.transform.SetParent(go.transform, false);
+            var placeholderRect = placeholderGO.GetComponent<RectTransform>();
+            placeholderRect.anchorMin = Vector2.zero;
+            placeholderRect.anchorMax = Vector2.one;
+            placeholderRect.offsetMin = new Vector2(20f, 6f);
+            placeholderRect.offsetMax = new Vector2(-20f, -6f);
+            var placeholderComp = placeholderGO.GetComponent<Text>();
+            placeholderComp.font = textComp.font;
+            placeholderComp.fontSize = 30;
+            placeholderComp.alignment = TextAnchor.MiddleLeft;
+            placeholderComp.color = new Color(0f, 0f, 0f, 0.4f);
+            placeholderComp.text = placeholderText;
+            placeholderComp.fontStyle = FontStyle.Italic;
+
+            var inputField = go.GetComponent<InputField>();
+            inputField.textComponent = textComp;
+            inputField.placeholder = placeholderComp;
+            inputField.characterLimit = 24;
+
+            return inputField;
         }
 
         private static Text CreateText(Transform parent, string name, string content, int fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color? color = null)

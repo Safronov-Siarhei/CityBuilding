@@ -9,26 +9,25 @@ namespace CityBuilder.UI
     {
         [SerializeField] private string gameplaySceneName = "CityBuilder";
         [SerializeField] private Button loadGameButton;
+        [SerializeField] private LoadGamePanelController loadGamePanel;
 
         private void Start()
         {
             if (loadGameButton != null)
             {
-                loadGameButton.interactable = SaveSystem.HasSave();
+                loadGameButton.interactable = SaveSystem.HasAnySave();
             }
         }
 
         public void StartNewGame()
         {
-            GameSessionIntent.LoadSavedGame = false;
+            GameSessionIntent.SaveNameToLoad = null;
             SceneManager.LoadScene(gameplaySceneName);
         }
 
         public void LoadGame()
         {
-            if (!SaveSystem.HasSave()) return;
-            GameSessionIntent.LoadSavedGame = true;
-            SceneManager.LoadScene(gameplaySceneName);
+            if (loadGamePanel != null) loadGamePanel.OpenPanel();
         }
 
         public void QuitGame()
