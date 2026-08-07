@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
+using CityBuilder.Citizens;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
@@ -131,14 +132,55 @@ namespace CityBuilder.EditorTools
             // NewScene() unloads objects that aren't rooted in the new scene yet, which silently
             // turns freshly created ScriptableObject asset references stale (Unity "fake null").
             var houseData = CreateBuildingData(
-                "House", new Vector2Int(1, 1), height: 2f,
+                "House", "Дом", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } });
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
+                citizensGranted: 5);
 
             var townHallData = CreateBuildingData(
-                "TownHall", new Vector2Int(5, 5), height: 4f,
+                "TownHall", "Ратуша", new Vector2Int(5, 5), height: 4f,
                 wallColor: new Color(0.75f, 0.72f, 0.68f), roofColor: new Color(0.5f, 0.14f, 0.14f),
-                cost: new List<ResourceAmount>());
+                cost: new List<ResourceAmount>(),
+                citizensGranted: 5);
+
+            var fishermanHutData = CreateBuildingData(
+                "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
+                wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
+                maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+
+            var lumberjackData = CreateBuildingData(
+                "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
+                wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2);
+
+            var wallData = CreateBuildingData(
+                "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
+                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.clear,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                hasRoof: false);
+
+            var towerData = CreateBuildingData(
+                "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.clear,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
+                hasRoof: false);
+
+            var quarryData = CreateBuildingData(
+                "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
+                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
+                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2);
+
+            var hunterHutData = CreateBuildingData(
+                "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
+                wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+
+            var hotbarBuildingData = new List<BuildingData> { houseData, fishermanHutData, lumberjackData, wallData, towerData, quarryData, hunterHutData };
+            var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
             AssetDatabase.SaveAssets();
 
@@ -197,27 +239,38 @@ namespace CityBuilder.EditorTools
             placerSO.FindProperty("targetCamera").objectReferenceValue = camera;
             placerSO.FindProperty("mandatoryFirstBuilding").objectReferenceValue = townHallData;
             var availableProp = placerSO.FindProperty("availableBuildings");
-            availableProp.arraySize = 1;
-            availableProp.GetArrayElementAtIndex(0).objectReferenceValue = houseData;
+            availableProp.arraySize = hotbarBuildingData.Count;
+            for (var i = 0; i < hotbarBuildingData.Count; i++)
+            {
+                availableProp.GetArrayElementAtIndex(i).objectReferenceValue = hotbarBuildingData[i];
+            }
             placerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            var citizenManager = managers.AddComponent<CitizenManager>();
+            var citizenManagerSO = new SerializedObject(citizenManager);
+            citizenManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            citizenManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var saveController = managers.AddComponent<GameSaveController>();
             var saveControllerSO = new SerializedObject(saveController);
             saveControllerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            saveControllerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             var knownBuildingsProp = saveControllerSO.FindProperty("knownBuildings");
-            knownBuildingsProp.arraySize = 2;
-            knownBuildingsProp.GetArrayElementAtIndex(0).objectReferenceValue = houseData;
-            knownBuildingsProp.GetArrayElementAtIndex(1).objectReferenceValue = townHallData;
+            knownBuildingsProp.arraySize = allBuildingData.Count;
+            for (var i = 0; i < allBuildingData.Count; i++)
+            {
+                knownBuildingsProp.GetArrayElementAtIndex(i).objectReferenceValue = allBuildingData[i];
+            }
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, new List<BuildingData> { houseData });
+            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, List<BuildingData> hotbarBuildings)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -253,8 +306,8 @@ namespace CityBuilder.EditorTools
             hotbarRect.pivot = new Vector2(0.5f, 0f);
             hotbarRect.anchoredPosition = new Vector2(0f, 28f);
 
-            const float buttonSize = 150f;
-            const float spacing = 22f;
+            const float buttonSize = 130f;
+            const float spacing = 16f;
             var totalWidth = hotbarBuildings.Count * buttonSize + Mathf.Max(0, hotbarBuildings.Count - 1) * spacing;
             hotbarRect.sizeDelta = new Vector2(totalWidth, buttonSize);
 
@@ -262,7 +315,7 @@ namespace CityBuilder.EditorTools
             {
                 var data = hotbarBuildings[i];
                 var x = -totalWidth * 0.5f + buttonSize * 0.5f + i * (buttonSize + spacing);
-                var button = CreateButton(hotbarGO.transform, panelSprite, $"Building_{data.buildingName}", data.buildingName, new Vector2(x, buttonSize * 0.5f), new Vector2(buttonSize, buttonSize));
+                var button = CreateButton(hotbarGO.transform, panelSprite, $"Building_{data.buildingName}", data.displayName, new Vector2(x, buttonSize * 0.5f), new Vector2(buttonSize, buttonSize));
 
                 var handler = button.gameObject.AddComponent<HotbarButtonHandler>();
                 var handlerSO = new SerializedObject(handler);
@@ -282,6 +335,82 @@ namespace CityBuilder.EditorTools
 
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
+            BuildResourceHUD(canvasGO.transform);
+
+            var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite);
+            BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
+        }
+
+        private static void BuildResourceHUD(Transform canvasParent)
+        {
+            // Sits just below the top row (hint banner + Меню/Сохранить corners, all in the
+            // y 420-510 band) in the same center-anchored coordinate space as those, so it
+            // never overlaps them regardless of which of those happen to be visible.
+            var root = new GameObject("ResourceHUD", typeof(RectTransform));
+            root.transform.SetParent(canvasParent, false);
+            var rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 370f);
+            rect.sizeDelta = new Vector2(1300f, 50f);
+
+            var label = CreateText(root.transform, "Label", string.Empty, 24, Vector2.zero, new Vector2(1300f, 50f));
+
+            var hud = root.AddComponent<ResourceHUDController>();
+            var hudSO = new SerializedObject(hud);
+            hudSO.FindProperty("label").objectReferenceValue = label;
+            hudSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite)
+        {
+            var panelRoot = new GameObject("BuildingInfoPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(700f, 400f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 140f), new Vector2(640f, 60f));
+            var workers = CreateText(card.transform, "Workers", string.Empty, 26, new Vector2(0f, 65f), new Vector2(640f, 50f), new Color(1f, 1f, 1f, 0.85f));
+            var idle = CreateText(card.transform, "Idle", string.Empty, 22, new Vector2(0f, 20f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+
+            var assignButton = CreateButton(card.transform, panelSprite, "AssignButton", "+ Назначить", new Vector2(-170f, -110f), new Vector2(300f, 80f));
+            var unassignButton = CreateButton(card.transform, panelSprite, "UnassignButton", "- Снять", new Vector2(170f, -110f), new Vector2(300f, 80f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -200f), new Vector2(300f, 70f));
+
+            var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
+            var controllerSO = new SerializedObject(controller);
+            controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
+            controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
+            controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
+            controllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(assignButton.onClick, controller.AssignWorker);
+            UnityEventTools.AddPersistentListener(unassignButton.onClick, controller.UnassignWorker);
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+
+            panelRoot.SetActive(false);
+            return controller;
+        }
+
+        private static void BuildBuildingSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer, BuildingInfoPanelController infoPanel)
+        {
+            var go = new GameObject("BuildingSelector");
+            go.transform.SetParent(canvasParent, false);
+            var selector = go.AddComponent<BuildingSelector>();
+            var so = new SerializedObject(selector);
+            so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
+            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
@@ -454,33 +583,43 @@ namespace CityBuilder.EditorTools
             emptyLabelGO = emptyLabel.gameObject;
         }
 
-        private static BuildingData CreateBuildingData(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost)
+        private static BuildingData CreateBuildingData(
+            string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
+            bool hasRoof = true, int citizensGranted = 0,
+            int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f)
         {
-            var prefab = CreateBuildingPrefab(name, footprint, height, wallColor, roofColor);
+            var prefab = CreateBuildingPrefab(id, footprint, height, wallColor, roofColor, hasRoof, maxWorkers);
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
-            data.buildingName = name;
+            data.buildingName = id;
+            data.displayName = displayName;
             data.prefab = prefab;
             data.footprintSize = footprint;
             data.cost = cost;
+            data.citizensGranted = citizensGranted;
+            data.maxWorkers = maxWorkers;
+            data.producesResource = producesResource;
+            data.productionPerWorkerPerTick = productionPerTick;
+            data.productionIntervalSeconds = productionInterval;
 
             Directory.CreateDirectory(BuildingDataFolder);
-            var dataPath = $"{BuildingDataFolder}/{name}.asset";
+            var dataPath = $"{BuildingDataFolder}/{id}.asset";
             DeleteIfExists(dataPath);
             AssetDatabase.CreateAsset(data, dataPath);
             return data;
         }
 
-        private static GameObject CreateBuildingPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor)
+        private static GameObject CreateBuildingPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, bool hasRoof, int maxWorkers)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
-            var wallHeight = height * 0.6f;
-            var roofHeight = height * 0.4f;
+            var wallHeight = hasRoof ? height * 0.6f : height;
+            var roofHeight = hasRoof ? height * 0.4f : 0f;
             const float roofOverhang = 1.08f;
 
             var root = new GameObject(name);
             root.AddComponent<BuildingInstance>();
+            if (maxWorkers > 0) root.AddComponent<ProductionBuilding>();
 
             var walls = GameObject.CreatePrimitive(PrimitiveType.Cube);
             walls.name = "Walls";
@@ -490,17 +629,20 @@ namespace CityBuilder.EditorTools
             walls.transform.localPosition = new Vector3(0f, wallHeight * 0.5f, 0f);
             walls.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
 
-            var roofMesh = RoofMeshBuilder.BuildGableRoof(sizeX * roofOverhang, sizeZ * roofOverhang, roofHeight);
-            Directory.CreateDirectory(ModelsFolder);
-            var roofMeshPath = $"{ModelsFolder}/Roof_{name}.asset";
-            DeleteIfExists(roofMeshPath);
-            AssetDatabase.CreateAsset(roofMesh, roofMeshPath);
+            if (hasRoof)
+            {
+                var roofMesh = RoofMeshBuilder.BuildGableRoof(sizeX * roofOverhang, sizeZ * roofOverhang, roofHeight);
+                Directory.CreateDirectory(ModelsFolder);
+                var roofMeshPath = $"{ModelsFolder}/Roof_{name}.asset";
+                DeleteIfExists(roofMeshPath);
+                AssetDatabase.CreateAsset(roofMesh, roofMeshPath);
 
-            var roofGO = new GameObject("Roof", typeof(MeshFilter), typeof(MeshRenderer));
-            roofGO.transform.SetParent(root.transform, false);
-            roofGO.transform.localPosition = new Vector3(0f, wallHeight, 0f);
-            roofGO.GetComponent<MeshFilter>().sharedMesh = roofMesh;
-            roofGO.GetComponent<MeshRenderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+                var roofGO = new GameObject("Roof", typeof(MeshFilter), typeof(MeshRenderer));
+                roofGO.transform.SetParent(root.transform, false);
+                roofGO.transform.localPosition = new Vector3(0f, wallHeight, 0f);
+                roofGO.GetComponent<MeshFilter>().sharedMesh = roofMesh;
+                roofGO.GetComponent<MeshRenderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+            }
 
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX, height, sizeZ);

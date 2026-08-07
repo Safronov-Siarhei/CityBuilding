@@ -9,6 +9,7 @@ namespace CityBuilder.Saving
     {
         public int version = 1;
         public bool mandatoryBuildingPlaced;
+        public int population;
         public List<ResourceEntry> resources = new List<ResourceEntry>();
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
     }
@@ -26,5 +27,6 @@ namespace CityBuilder.Saving
         public string buildingName;
         public int cellX;
         public int cellY;
+        public int assignedWorkers;
     }
 }

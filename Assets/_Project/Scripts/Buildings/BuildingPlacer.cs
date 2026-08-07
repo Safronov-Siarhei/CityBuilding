@@ -24,8 +24,9 @@ namespace CityBuilder.Buildings
         private bool _mandatoryBuildingPlaced;
 
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
+        public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
-        public event Action OnBuildingPlaced;
+        public event Action<BuildingData> OnBuildingPlaced;
 
         private void Start()
         {
@@ -177,6 +178,7 @@ namespace CityBuilder.Buildings
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
+            var placedData = _selectedBuilding;
             var wasMandatory = _selectedBuilding == mandatoryFirstBuilding;
             _selectedBuilding = null;
             if (_ghostInstance != null) Destroy(_ghostInstance);
@@ -184,7 +186,7 @@ namespace CityBuilder.Buildings
             _ghostRenderers.Clear();
             if (wasMandatory) _mandatoryBuildingPlaced = true;
 
-            OnBuildingPlaced?.Invoke();
+            OnBuildingPlaced?.Invoke(placedData);
         }
     }
 }

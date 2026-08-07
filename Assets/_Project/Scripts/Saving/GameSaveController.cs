@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Citizens;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace CityBuilder.Saving
     public class GameSaveController : MonoBehaviour
     {
         [SerializeField] private BuildingPlacer buildingPlacer;
+        [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
 
         private Dictionary<string, BuildingData> _catalog;
@@ -41,9 +43,9 @@ namespace CityBuilder.Saving
             // Marked here (Awake, guaranteed to run before every Start() in the scene,
             // including BuildingPlacer's) so its Start() doesn't force-select the Town Hall
             // again for what is actually a resumed game. Actually instantiating the saved
-            // buildings/resources needs GridManager/ResourceManager's singletons, which are
-            // only guaranteed ready once every Awake() has run — so that part waits for
-            // Start() below.
+            // buildings/resources needs GridManager/ResourceManager/CitizenManager's singletons,
+            // which are only guaranteed ready once every Awake() has run — so that part waits
+            // for Start() below.
             if (_pendingLoad.mandatoryBuildingPlaced && buildingPlacer != null)
             {
                 buildingPlacer.MarkMandatoryBuildingAlreadyPlaced();
@@ -67,6 +69,11 @@ namespace CityBuilder.Saving
 
         private void ApplyLoadedState(GameSaveData data)
         {
+            if (citizenManager != null)
+            {
+                citizenManager.SetPopulation(data.population);
+            }
+
             foreach (var entry in data.resources)
             {
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
@@ -86,6 +93,12 @@ namespace CityBuilder.Saving
                 buildingInstance.Initialize(buildingData, cell);
 
                 GridManager.Instance.SetAreaOccupied(cell, footprint, true);
+
+                if (entry.assignedWorkers > 0)
+                {
+                    var production = instance.GetComponent<ProductionBuilding>();
+                    production?.SetAssignedWorkers(entry.assignedWorkers);
+                }
             }
         }
 
@@ -93,7 +106,8 @@ namespace CityBuilder.Saving
         {
             var data = new GameSaveData
             {
-                mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding
+                mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
+                population = citizenManager != null ? citizenManager.TotalPopulation : 0
             };
 
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))
@@ -104,11 +118,14 @@ namespace CityBuilder.Saving
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
                 if (instance.Data == null) continue;
+
+                var production = instance.GetComponent<ProductionBuilding>();
                 data.buildings.Add(new BuildingEntry
                 {
                     buildingName = instance.Data.buildingName,
                     cellX = instance.OriginCell.x,
-                    cellY = instance.OriginCell.y
+                    cellY = instance.OriginCell.y,
+                    assignedWorkers = production != null ? production.AssignedWorkers : 0
                 });
             }
 
