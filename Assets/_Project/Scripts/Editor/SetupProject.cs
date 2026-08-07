@@ -4,6 +4,7 @@ using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
 using CityBuilder.Citizens;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
 using CityBuilder.UI;
@@ -27,8 +28,8 @@ namespace CityBuilder.EditorTools
         private const string BuildingPrefabsFolder = "Assets/_Project/Prefabs/Buildings";
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
 
-        private const int GridCellsX = 30;
-        private const int GridCellsZ = 30;
+        private const int GridCellsX = 100;
+        private const int GridCellsZ = 100;
         private const int ForestMarginCells = 10;
         private const float CellSize = 2f;
         private const float BuildingInset = 0.08f;
@@ -270,6 +271,17 @@ namespace CityBuilder.EditorTools
                 knownBuildingsProp.GetArrayElementAtIndex(i).objectReferenceValue = allBuildingData[i];
             }
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Picks up whichever map MainMenuController/MapSelector chose for a new game, or the
+            // one stored in a loaded save (see GameSaveController.LoadedMapId), and paints it.
+            var mapTerrainGenerator = managers.AddComponent<MapTerrainGenerator>();
+            var mapTerrainGeneratorSO = new SerializedObject(mapTerrainGenerator);
+            mapTerrainGeneratorSO.FindProperty("saveController").objectReferenceValue = saveController;
+            mapTerrainGeneratorSO.ApplyModifiedPropertiesWithoutUndo();
+
+            var saveControllerMapFieldSO = new SerializedObject(saveController);
+            saveControllerMapFieldSO.FindProperty("mapTerrainGenerator").objectReferenceValue = mapTerrainGenerator;
+            saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildGameplayUI(placer, saveController, camera, hotbarBuildingData);
 

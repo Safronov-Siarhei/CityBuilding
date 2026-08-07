@@ -9,5 +9,8 @@ namespace CityBuilder.Saving
     {
         /// <summary>Null/empty means start a fresh game; otherwise the save slot name to load.</summary>
         public static string SaveNameToLoad;
+
+        /// <summary>Map picked by MapSelector for a fresh game; ignored when loading a save (which carries its own map).</summary>
+        public static string NewGameMapId;
     }
 }

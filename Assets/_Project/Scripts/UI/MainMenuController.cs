@@ -1,3 +1,4 @@
+using CityBuilder.Maps;
 using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,6 +23,8 @@ namespace CityBuilder.UI
         public void StartNewGame()
         {
             GameSessionIntent.SaveNameToLoad = null;
+            var map = MapSelector.PickForNewGame();
+            GameSessionIntent.NewGameMapId = map != null ? map.MapId : null;
             SceneManager.LoadScene(gameplaySceneName);
         }
 

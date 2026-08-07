@@ -11,16 +11,16 @@ namespace CityBuilder.CameraControl
         [SerializeField] private Transform cameraTransform;
 
         [Header("Pan (PC)")]
-        [SerializeField] private float panSpeed = 25f;
+        [SerializeField] private float panSpeed = 50f;
         [SerializeField] private bool edgeScrollEnabled = true;
         [SerializeField] private float edgeScrollBorder = 12f;
         [SerializeField] private Vector2 panBoundsMin = new Vector2(-100f, -100f);
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
         [Header("Zoom (PC)")]
-        [SerializeField] private float zoomSpeed = 20f;
+        [SerializeField] private float zoomSpeed = 40f;
         [SerializeField] private float minDistance = 8f;
-        [SerializeField] private float maxDistance = 60f;
+        [SerializeField] private float maxDistance = 220f;
 
         [Header("Rotate (PC only)")]
         [SerializeField] private float rotateSpeed = 90f;

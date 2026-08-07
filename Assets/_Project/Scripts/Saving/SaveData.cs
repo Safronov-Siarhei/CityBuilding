@@ -8,6 +8,7 @@ namespace CityBuilder.Saving
     public class GameSaveData
     {
         public int version = 1;
+        public string mapId = string.Empty;
         public bool mandatoryBuildingPlaced;
         public int population;
         public List<ResourceEntry> resources = new List<ResourceEntry>();

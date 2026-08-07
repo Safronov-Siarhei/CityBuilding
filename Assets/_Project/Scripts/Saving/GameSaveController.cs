@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
 
@@ -16,12 +17,16 @@ namespace CityBuilder.Saving
     {
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenManager citizenManager;
+        [SerializeField] private MapTerrainGenerator mapTerrainGenerator;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
 
         private Dictionary<string, BuildingData> _catalog;
         private GameSaveData _pendingLoad;
 
         public string CurrentSaveName { get; private set; } = string.Empty;
+
+        /// <summary>Map id carried by the save being loaded this session, resolved in Awake so MapTerrainGenerator's Start() can read it. Empty when starting a fresh game.</summary>
+        public string LoadedMapId { get; private set; } = string.Empty;
 
         private void Awake()
         {
@@ -39,6 +44,7 @@ namespace CityBuilder.Saving
             if (_pendingLoad == null) return;
 
             CurrentSaveName = nameToLoad;
+            LoadedMapId = _pendingLoad.mapId;
 
             // Marked here (Awake, guaranteed to run before every Start() in the scene,
             // including BuildingPlacer's) so its Start() doesn't force-select the Town Hall
@@ -106,6 +112,7 @@ namespace CityBuilder.Saving
         {
             var data = new GameSaveData
             {
+                mapId = mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty,
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0
             };
