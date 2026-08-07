@@ -11,12 +11,21 @@ namespace CityBuilder.UI
 
         private void Start()
         {
-            if (ResourceManager.Instance != null) ResourceManager.Instance.OnResourceChanged += HandleResourceChanged;
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.OnResourceChanged += HandleResourceChanged;
+                ResourceManager.Instance.OnInfiniteResourcesChanged += HandleInfiniteResourcesChanged;
+            }
             if (CitizenManager.Instance != null) CitizenManager.Instance.OnPopulationChanged += Refresh;
             Refresh();
         }
 
         private void HandleResourceChanged(ResourceType type, int amount)
+        {
+            Refresh();
+        }
+
+        private void HandleInfiniteResourcesChanged(bool enabled)
         {
             Refresh();
         }
@@ -29,12 +38,16 @@ namespace CityBuilder.UI
                 ? $"{CitizenManager.Instance.TotalPopulation} (своб. {CitizenManager.Instance.IdlePopulation})"
                 : "0";
 
+            var infinite = ResourceManager.Instance.InfiniteResources;
+            string Amount(ResourceType type) => infinite ? "∞" : ResourceManager.Instance.GetAmount(type).ToString();
+
             label.text =
-                $"Дерево {ResourceManager.Instance.GetAmount(ResourceType.Wood)}   " +
-                $"Камень {ResourceManager.Instance.GetAmount(ResourceType.Stone)}   " +
-                $"Еда {ResourceManager.Instance.GetAmount(ResourceType.Food)}   " +
-                $"Золото {ResourceManager.Instance.GetAmount(ResourceType.Gold)}   " +
-                $"Жители {pop}";
+                $"Дерево {Amount(ResourceType.Wood)}   " +
+                $"Камень {Amount(ResourceType.Stone)}   " +
+                $"Еда {Amount(ResourceType.Food)}   " +
+                $"Золото {Amount(ResourceType.Gold)}   " +
+                $"Жители {pop}" +
+                (infinite ? "   [ДЕБАГ: РЕСУРСЫ ∞ — F9]" : string.Empty);
         }
     }
 }

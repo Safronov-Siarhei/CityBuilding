@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Core;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace CityBuilder.Resources
 {
@@ -9,6 +11,7 @@ namespace CityBuilder.Resources
         public static ResourceManager Instance { get; private set; }
 
         public event Action<ResourceType, int> OnResourceChanged;
+        public event Action<bool> OnInfiniteResourcesChanged;
 
         [SerializeField] private List<ResourceAmount> startingResources = new List<ResourceAmount>
         {
@@ -18,7 +21,13 @@ namespace CityBuilder.Resources
             new ResourceAmount { type = ResourceType.Gold, amount = 100 },
         };
 
+        [Header("Debug")]
+        [SerializeField] private Key infiniteResourcesToggleKey = Key.F9;
+
         private readonly Dictionary<ResourceType, int> _resources = new Dictionary<ResourceType, int>();
+
+        /// <summary>Debug/testing cheat — toggled with <see cref="infiniteResourcesToggleKey"/>, not exposed to the player.</summary>
+        public bool InfiniteResources { get; private set; }
 
         private void Awake()
         {
@@ -33,6 +42,25 @@ namespace CityBuilder.Resources
             {
                 _resources[starting.type] = starting.amount;
             }
+        }
+
+        private void Update()
+        {
+            if (ModalGate.IsBlocked) return;
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard[infiniteResourcesToggleKey].wasPressedThisFrame)
+            {
+                SetInfiniteResources(!InfiniteResources);
+            }
+        }
+
+        public void SetInfiniteResources(bool enable)
+        {
+            if (InfiniteResources == enable) return;
+            InfiniteResources = enable;
+            Debug.Log(enable ? "[Cheat] Infinite resources ENABLED" : "[Cheat] Infinite resources disabled");
+            OnInfiniteResourcesChanged?.Invoke(enable);
         }
 
         public int GetAmount(ResourceType type)
@@ -56,6 +84,8 @@ namespace CityBuilder.Resources
 
         public bool HasEnough(IEnumerable<ResourceAmount> costs)
         {
+            if (InfiniteResources) return true;
+
             foreach (var cost in costs)
             {
                 if (GetAmount(cost.type) < cost.amount) return false;
@@ -65,6 +95,8 @@ namespace CityBuilder.Resources
 
         public bool TrySpend(IEnumerable<ResourceAmount> costs)
         {
+            if (InfiniteResources) return true;
+
             var costList = new List<ResourceAmount>(costs);
             if (!HasEnough(costList)) return false;
 
