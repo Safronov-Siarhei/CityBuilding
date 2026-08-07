@@ -130,34 +130,35 @@ namespace CityBuilder.EditorTools
             // NewScene() unloads objects that aren't rooted in the new scene yet, which silently
             // turns freshly created ScriptableObject asset references stale (Unity "fake null").
             var trimMaterial = CreateLitMaterial("Trim", new Color(0.14f, 0.11f, 0.08f));
+            var doorMaterial = CreateLitMaterial("Door", new Color(0.32f, 0.18f, 0.09f));
             var windowMaterial = CreateLitMaterial("Window", new Color(0.88f, 0.78f, 0.48f));
 
             var houseData = CreateBuildingData(
                 "House", "Дом", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true, citizensGranted: 5);
 
             var townHallData = CreateBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(5, 5), height: 4f,
                 wallColor: new Color(0.75f, 0.72f, 0.68f), roofColor: new Color(0.5f, 0.14f, 0.14f),
                 cost: new List<ResourceAmount>(),
-                style: BuildingStyle.Landmark, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Landmark, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 citizensGranted: 5);
 
             var fishermanHutData = CreateBuildingData(
                 "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
 
             var lumberjackData = CreateBuildingData(
                 "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2);
 
             var wallData = CreateBuildingData(
@@ -176,14 +177,14 @@ namespace CityBuilder.EditorTools
                 "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2);
 
             var hunterHutData = CreateBuildingData(
                 "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
 
             var hotbarBuildingData = new List<BuildingData> { houseData, fishermanHutData, lumberjackData, wallData, towerData, quarryData, hunterHutData };
@@ -595,7 +596,7 @@ namespace CityBuilder.EditorTools
 
         private static BuildingData CreateBuildingData(
             string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
-            BuildingStyle style, Material trimMaterial, Material windowMaterial,
+            BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f)
         {
@@ -603,7 +604,7 @@ namespace CityBuilder.EditorTools
             switch (style)
             {
                 case BuildingStyle.Hut:
-                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, maxWorkers, hasChimney, trimMaterial, windowMaterial);
+                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
                     break;
                 case BuildingStyle.Fortification:
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: false);
@@ -612,7 +613,7 @@ namespace CityBuilder.EditorTools
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: true);
                     break;
                 default:
-                    prefab = CreateTownHallPrefab(id, footprint, height, wallColor, roofColor, trimMaterial);
+                    prefab = CreateTownHallPrefab(id, footprint, height, wallColor, roofColor, trimMaterial, doorMaterial, windowMaterial);
                     break;
             }
 
@@ -636,12 +637,14 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Procedurally assembles a dwelling/workshop from cube primitives: a plinth, walls, a
-        /// door, a window count derived from the wall width, and a two-tier stepped roof — the
-        /// number and placement of parts comes from footprint/height, not hand-picked positions,
-        /// so the same generator produces a small House and a wider Lumberjack alike.
+        /// Procedurally assembles a dwelling/workshop from cube primitives: a stepped plinth,
+        /// corner posts, a framed door with a step, a window count derived from wall width
+        /// (placed on both the front and back faces), a banded three-tier roof with a ridge cap,
+        /// and an optional chimney with a cap. The part count and placement all come from
+        /// footprint/height, not hand-picked positions, so the same generator produces a small
+        /// House and a wider Lumberjack alike.
         /// </summary>
-        private static GameObject CreateHutPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, int maxWorkers, bool hasChimney, Material trimMaterial, Material windowMaterial)
+        private static GameObject CreateHutPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, int maxWorkers, bool hasChimney, Material trimMaterial, Material doorMaterial, Material windowMaterial)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
@@ -652,64 +655,62 @@ namespace CityBuilder.EditorTools
 
             var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
             var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+            var roofShadeMaterial = CreateLitMaterial($"Building_{name}_RoofShade", Shade(roofColor, 0.8f));
 
-            var plinthHeight = height * 0.08f;
-            var wallHeight = height * 0.5f;
-            var y = 0f;
+            var y = AddSteppedPlinth(root.transform, sizeX, sizeZ, height * 0.1f, trimMaterial, wallMaterial);
 
-            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.06f, plinthHeight, sizeZ * 1.06f), wallMaterial);
-            y += plinthHeight;
-
+            var wallHeight = height * 0.42f;
             AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+            AddCornerPosts(root.transform, sizeX, sizeZ, y, wallHeight, trimMaterial);
 
-            var doorWidth = Mathf.Clamp(sizeX * 0.22f, 0.35f, 0.6f);
-            var doorHeight = wallHeight * 0.55f;
-            AddCubePart(root.transform, "Door", new Vector3(0f, y + doorHeight * 0.5f, -sizeZ * 0.5f - 0.02f), new Vector3(doorWidth, doorHeight, 0.05f), trimMaterial);
+            var doorWidth = Mathf.Clamp(sizeX * 0.24f, 0.36f, 0.6f);
+            var doorHeight = wallHeight * 0.62f;
+            AddFramedOpening(root.transform, "Door", 0f, y + doorHeight * 0.5f, -sizeZ * 0.5f, -1f, doorWidth, doorHeight, trimMaterial, doorMaterial);
+            AddCubePart(root.transform, "Doorstep", new Vector3(0f, y - 0.03f, -sizeZ * 0.5f - 0.22f), new Vector3(doorWidth + 0.3f, 0.06f, 0.3f), trimMaterial);
 
-            // Window count derived from wall width — wider buildings procedurally get more.
-            var windowCount = Mathf.Clamp(Mathf.FloorToInt(sizeX / 1.3f), 0, 3);
-            var windowY = y + wallHeight * 0.66f;
+            // Window count derived from wall width — wider buildings procedurally get more,
+            // mirrored on the front and back faces.
+            var windowCount = Mathf.Clamp(Mathf.FloorToInt(sizeX / 1.3f), 0, 2);
+            var windowY = y + wallHeight * 0.7f;
             for (var i = 0; i < windowCount; i++)
             {
                 var t = (i + 1f) / (windowCount + 1f);
-                var wx = Mathf.Lerp(-sizeX * 0.5f + 0.3f, sizeX * 0.5f - 0.3f, t);
-                if (Mathf.Abs(wx) < doorWidth) continue; // skip over the door
-                AddCubePart(root.transform, $"Window{i}", new Vector3(wx, windowY, -sizeZ * 0.5f - 0.02f), new Vector3(0.2f, 0.2f, 0.05f), windowMaterial);
+                var wx = Mathf.Lerp(-sizeX * 0.5f + 0.35f, sizeX * 0.5f - 0.35f, t);
+                if (Mathf.Abs(wx) < doorWidth * 0.7f) continue; // skip over the door
+                AddFramedOpening(root.transform, $"WindowFront{i}", wx, windowY, -sizeZ * 0.5f, -1f, 0.22f, 0.22f, trimMaterial, windowMaterial);
+                AddFramedOpening(root.transform, $"WindowBack{i}", wx, windowY, sizeZ * 0.5f, 1f, 0.22f, 0.22f, trimMaterial, windowMaterial);
             }
 
             y += wallHeight;
 
-            // Two stepped roof tiers, shrinking upward — a blocky stand-in for a pitched roof.
-            var roofBudget = height - y;
-            var tierScale = 1f;
-            for (var tier = 0; tier < 2; tier++)
-            {
-                var tierHeight = roofBudget * (tier == 0 ? 0.58f : 0.42f);
-                tierScale *= tier == 0 ? 0.9f : 0.68f;
-                AddCubePart(root.transform, $"RoofTier{tier}", new Vector3(0f, y + tierHeight * 0.5f, 0f), new Vector3(sizeX * tierScale, tierHeight, sizeZ * tierScale), roofMaterial);
-                y += tierHeight;
-            }
+            AddCubePart(root.transform, "Fascia", new Vector3(0f, y + 0.03f, 0f), new Vector3(sizeX * 1.05f, 0.06f, sizeZ * 1.05f), trimMaterial);
+            y += 0.06f;
+
+            y = AddShingleRoof(root.transform, sizeX, sizeZ, y, height - y, 3, roofMaterial, roofShadeMaterial, trimMaterial);
 
             if (hasChimney)
             {
-                var chimneyHeight = height * 0.22f;
-                var chimneySize = Mathf.Min(sizeX, sizeZ) * 0.16f;
-                var chimneyBase = y - roofBudget * 0.15f;
-                AddCubePart(root.transform, "Chimney", new Vector3(sizeX * 0.28f, chimneyBase + chimneyHeight * 0.5f, sizeZ * 0.28f), new Vector3(chimneySize, chimneyHeight, chimneySize), trimMaterial);
-                y = Mathf.Max(y, chimneyBase + chimneyHeight);
+                var chimneyHeight = height * 0.2f;
+                var chimneySize = Mathf.Min(sizeX, sizeZ) * 0.15f;
+                var chimneyBase = Mathf.Max(0f, y - height * 0.3f);
+                AddCubePart(root.transform, "Chimney", new Vector3(sizeX * 0.28f, chimneyBase + chimneyHeight * 0.5f, sizeZ * 0.28f), new Vector3(chimneySize, chimneyHeight, chimneySize), wallMaterial);
+                AddCubePart(root.transform, "ChimneyCap", new Vector3(sizeX * 0.28f, chimneyBase + chimneyHeight + 0.03f, sizeZ * 0.28f), new Vector3(chimneySize * 1.4f, 0.06f, chimneySize * 1.4f), trimMaterial);
+                y = Mathf.Max(y, chimneyBase + chimneyHeight + 0.06f);
             }
 
             var collider = root.AddComponent<BoxCollider>();
-            collider.size = new Vector3(sizeX * 1.06f, y, sizeZ * 1.06f);
+            collider.size = new Vector3(sizeX * 1.1f, y, sizeZ * 1.1f);
             collider.center = new Vector3(0f, y * 0.5f, 0f);
 
             return SavePrefab(root, name);
         }
 
         /// <summary>
-        /// Procedurally assembles a wall segment or tower: a plinth, a solid wall block, and
-        /// four corner merlons generated by looping over the footprint's corner sign
-        /// combinations (not four hand-typed positions). Towers additionally get a lookout cap.
+        /// Procedurally assembles a wall segment or tower: a stepped plinth, wall block(s) with
+        /// arrow slits, and a crenellation ring generated by looping around the footprint's
+        /// perimeter (a merlon count derived from size, not four hand-typed corner positions).
+        /// Towers get two stacked, slightly inset wall tiers plus a lookout cap instead of one
+        /// solid block, reading as noticeably taller and more fortified than a plain wall.
         /// </summary>
         private static GameObject CreateFortificationPrefab(string name, Vector2Int footprint, float height, Color wallColor, Material trimMaterial, bool isTower)
         {
@@ -720,54 +721,58 @@ namespace CityBuilder.EditorTools
             root.AddComponent<BuildingInstance>();
 
             var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+            var shadeMaterial = CreateLitMaterial($"Building_{name}_Shade", Shade(wallColor, 0.85f));
 
-            var plinthHeight = height * 0.06f;
-            var wallHeight = height * 0.78f;
-            var y = 0f;
-
-            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.06f, plinthHeight, sizeZ * 1.06f), wallMaterial);
-            y += plinthHeight;
-
-            AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
-            y += wallHeight;
-
-            var merlonHeight = height * 0.12f;
-            var merlonSize = Mathf.Min(sizeX, sizeZ) * 0.22f;
-            var offsetX = sizeX * 0.5f - merlonSize * 0.6f;
-            var offsetZ = sizeZ * 0.5f - merlonSize * 0.6f;
-            var merlonIndex = 0;
-            for (var sx = -1; sx <= 1; sx += 2)
-            {
-                for (var sz = -1; sz <= 1; sz += 2)
-                {
-                    var pos = new Vector3(sx * offsetX, y + merlonHeight * 0.5f, sz * offsetZ);
-                    AddCubePart(root.transform, $"Merlon{merlonIndex}", pos, new Vector3(merlonSize, merlonHeight, merlonSize), trimMaterial);
-                    merlonIndex++;
-                }
-            }
-            y += merlonHeight;
+            var y = AddSteppedPlinth(root.transform, sizeX, sizeZ, height * 0.08f, trimMaterial, wallMaterial);
 
             if (isTower)
             {
-                var capHeight = height * 0.16f;
+                var tier1Height = height * 0.34f;
+                AddCubePart(root.transform, "WallsLower", new Vector3(0f, y + tier1Height * 0.5f, 0f), new Vector3(sizeX, tier1Height, sizeZ), wallMaterial);
+                AddArrowSlits(root.transform, "SlitLower", sizeX, sizeZ, y + tier1Height * 0.6f, trimMaterial);
+                y += tier1Height;
+
+                const float inset = 0.9f;
+                var tier2Height = height * 0.28f;
+                AddCubePart(root.transform, "WallsUpper", new Vector3(0f, y + tier2Height * 0.5f, 0f), new Vector3(sizeX * inset, tier2Height, sizeZ * inset), shadeMaterial);
+                AddArrowSlits(root.transform, "SlitUpper", sizeX * inset, sizeZ * inset, y + tier2Height * 0.6f, trimMaterial);
+                y += tier2Height;
+
+                var merlonHeight = height * 0.12f;
+                AddCrenellationRing(root.transform, "Merlon", sizeX * inset, sizeZ * inset, y + merlonHeight * 0.5f, merlonHeight, trimMaterial);
+                y += merlonHeight;
+
+                var capHeight = height * 0.14f;
                 var capSize = Mathf.Min(sizeX, sizeZ) * 0.5f;
                 AddCubePart(root.transform, "Lookout", new Vector3(0f, y + capHeight * 0.5f, 0f), new Vector3(capSize, capHeight, capSize), wallMaterial);
                 y += capHeight;
             }
+            else
+            {
+                var wallHeight = height * 0.66f;
+                AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+                AddArrowSlits(root.transform, "Slit", sizeX, sizeZ, y + wallHeight * 0.62f, trimMaterial);
+                y += wallHeight;
+
+                var merlonHeight = height * 0.15f;
+                AddCrenellationRing(root.transform, "Merlon", sizeX, sizeZ, y + merlonHeight * 0.5f, merlonHeight, trimMaterial);
+                y += merlonHeight;
+            }
 
             var collider = root.AddComponent<BoxCollider>();
-            collider.size = new Vector3(sizeX * 1.06f, y, sizeZ * 1.06f);
+            collider.size = new Vector3(sizeX * 1.1f, y, sizeZ * 1.1f);
             collider.center = new Vector3(0f, y * 0.5f, 0f);
 
             return SavePrefab(root, name);
         }
 
         /// <summary>
-        /// Procedurally assembles the Town Hall: a plinth, walls, a three-tier stepped roof
-        /// generated by a loop, four corner towers (again looped over corner sign combinations
-        /// rather than typed out), and a banner pole.
+        /// Procedurally assembles the Town Hall: entrance steps, a stepped plinth, corner-posted
+        /// walls with a framed door and windows, a banded three-tier roof with a ridge cap, and
+        /// four corner towers with capped spires (looped over corner sign combinations, not
+        /// typed out) — deliberately the most elaborate building, matching its unique 5x5 role.
         /// </summary>
-        private static GameObject CreateTownHallPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, Material trimMaterial)
+        private static GameObject CreateTownHallPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, Material trimMaterial, Material doorMaterial, Material windowMaterial)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
@@ -777,34 +782,35 @@ namespace CityBuilder.EditorTools
 
             var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
             var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+            var roofShadeMaterial = CreateLitMaterial($"Building_{name}_RoofShade", Shade(roofColor, 0.8f));
 
-            var plinthHeight = height * 0.06f;
-            var wallHeight = height * 0.42f;
-            var y = 0f;
+            AddCubePart(root.transform, "StepLower", new Vector3(0f, -0.03f, -sizeZ * 0.5f - 0.55f), new Vector3(sizeX * 0.32f, 0.06f, 0.55f), trimMaterial);
+            AddCubePart(root.transform, "StepUpper", new Vector3(0f, 0.03f, -sizeZ * 0.5f - 0.22f), new Vector3(sizeX * 0.24f, 0.06f, 0.32f), trimMaterial);
 
-            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.04f, plinthHeight, sizeZ * 1.04f), wallMaterial);
-            y += plinthHeight;
+            var y = AddSteppedPlinth(root.transform, sizeX, sizeZ, height * 0.08f, trimMaterial, wallMaterial);
 
+            var wallHeight = height * 0.34f;
             AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+            AddCornerPosts(root.transform, sizeX, sizeZ, y, wallHeight, trimMaterial);
 
-            var doorHeight = wallHeight * 0.6f;
-            AddCubePart(root.transform, "Door", new Vector3(0f, y + doorHeight * 0.5f, -sizeZ * 0.5f - 0.02f), new Vector3(sizeX * 0.16f, doorHeight, 0.06f), trimMaterial);
+            var doorWidth = sizeX * 0.16f;
+            var doorHeight = wallHeight * 0.65f;
+            AddFramedOpening(root.transform, "Door", 0f, y + doorHeight * 0.5f, -sizeZ * 0.5f, -1f, doorWidth, doorHeight, trimMaterial, doorMaterial);
 
-            y += wallHeight;
-
-            const int roofTiers = 3;
-            var roofBudget = height * 0.34f;
-            var tierScale = 1f;
-            for (var tier = 0; tier < roofTiers; tier++)
+            var windowY = y + wallHeight * 0.72f;
+            foreach (var wx in new[] { -sizeX * 0.28f, sizeX * 0.28f })
             {
-                var tierHeight = roofBudget / roofTiers;
-                tierScale *= 0.66f;
-                AddCubePart(root.transform, $"RoofTier{tier}", new Vector3(0f, y + tierHeight * 0.5f, 0f), new Vector3(sizeX * tierScale, tierHeight, sizeZ * tierScale), roofMaterial);
-                y += tierHeight;
+                AddFramedOpening(root.transform, $"Window{(wx < 0 ? "L" : "R")}", wx, windowY, -sizeZ * 0.5f, -1f, 0.32f, 0.32f, trimMaterial, windowMaterial);
             }
 
+            y += wallHeight;
+            AddCubePart(root.transform, "Fascia", new Vector3(0f, y + 0.03f, 0f), new Vector3(sizeX * 1.03f, 0.06f, sizeZ * 1.03f), trimMaterial);
+            y += 0.06f;
+
+            y = AddShingleRoof(root.transform, sizeX, sizeZ, y, height * 0.3f, 3, roofMaterial, roofShadeMaterial, trimMaterial);
+
             var towerSize = Mathf.Min(sizeX, sizeZ) * 0.22f;
-            var towerHeight = height * 0.72f;
+            var towerHeight = height * 0.78f;
             var offsetX = sizeX * 0.5f - towerSize * 0.6f;
             var offsetZ = sizeZ * 0.5f - towerSize * 0.6f;
             var towerIndex = 0;
@@ -814,7 +820,8 @@ namespace CityBuilder.EditorTools
                 {
                     var basePos = new Vector3(sx * offsetX, 0f, sz * offsetZ);
                     AddCubePart(root.transform, $"CornerTower{towerIndex}", basePos + new Vector3(0f, towerHeight * 0.5f, 0f), new Vector3(towerSize, towerHeight, towerSize), wallMaterial);
-                    AddCubePart(root.transform, $"CornerCap{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.3f, 0f), new Vector3(towerSize * 1.15f, towerSize * 0.6f, towerSize * 1.15f), roofMaterial);
+                    AddCubePart(root.transform, $"CornerCap{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.25f, 0f), new Vector3(towerSize * 1.2f, towerSize * 0.5f, towerSize * 1.2f), roofMaterial);
+                    AddCubePart(root.transform, $"CornerSpire{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.5f + towerSize * 0.35f, 0f), new Vector3(towerSize * 0.4f, towerSize * 0.7f, towerSize * 0.4f), trimMaterial);
                     towerIndex++;
                 }
             }
@@ -824,12 +831,108 @@ namespace CityBuilder.EditorTools
             AddCubePart(root.transform, "Banner", new Vector3(sizeX * 0.05f, y + poleHeight * 0.7f, 0f), new Vector3(sizeX * 0.08f, poleHeight * 0.3f, 0.04f), roofMaterial);
             y += poleHeight;
 
-            var totalHeight = Mathf.Max(y, towerHeight + towerSize * 0.6f);
+            var totalHeight = Mathf.Max(y, towerHeight + towerSize * 0.85f);
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX * 1.1f, totalHeight, sizeZ * 1.1f);
             collider.center = new Vector3(0f, totalHeight * 0.5f, 0f);
 
             return SavePrefab(root, name);
+        }
+
+        /// <summary>Two-tier foundation (a wide dark base course, then a narrower top course).</summary>
+        private static float AddSteppedPlinth(Transform parent, float sizeX, float sizeZ, float totalHeight, Material baseMaterial, Material topMaterial)
+        {
+            var baseHeight = totalHeight * 0.55f;
+            var topHeight = totalHeight * 0.45f;
+            AddCubePart(parent, "PlinthBase", new Vector3(0f, baseHeight * 0.5f, 0f), new Vector3(sizeX * 1.1f, baseHeight, sizeZ * 1.1f), baseMaterial);
+            AddCubePart(parent, "PlinthTop", new Vector3(0f, baseHeight + topHeight * 0.5f, 0f), new Vector3(sizeX * 1.03f, topHeight, sizeZ * 1.03f), topMaterial);
+            return totalHeight;
+        }
+
+        /// <summary>Four thin trim-colored pillars at the wall corners, looped over corner sign combinations.</summary>
+        private static void AddCornerPosts(Transform parent, float sizeX, float sizeZ, float y, float postHeight, Material material)
+        {
+            const float thickness = 0.12f;
+            var halfX = sizeX * 0.5f - thickness * 0.5f;
+            var halfZ = sizeZ * 0.5f - thickness * 0.5f;
+            var index = 0;
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                for (var sz = -1; sz <= 1; sz += 2)
+                {
+                    AddCubePart(parent, $"CornerPost{index}", new Vector3(sx * halfX, y + postHeight * 0.5f, sz * halfZ), new Vector3(thickness, postHeight, thickness), material);
+                    index++;
+                }
+            }
+        }
+
+        /// <summary>A door or window as two layers — a slightly larger dark frame behind a smaller inset pane — instead of one flat cube.</summary>
+        private static void AddFramedOpening(Transform parent, string name, float x, float y, float zFace, float outwardSign, float width, float height, Material frameMaterial, Material paneMaterial)
+        {
+            AddCubePart(parent, $"{name}Frame", new Vector3(x, y, zFace + outwardSign * 0.01f), new Vector3(width + 0.08f, height + 0.08f, 0.04f), frameMaterial);
+            AddCubePart(parent, $"{name}Pane", new Vector3(x, y, zFace + outwardSign * 0.05f), new Vector3(width, height, 0.05f), paneMaterial ?? frameMaterial);
+        }
+
+        /// <summary>Thin vertical arrow-slit accents on the front face, count derived from wall width.</summary>
+        private static void AddArrowSlits(Transform parent, string prefix, float sizeX, float sizeZ, float y, Material material)
+        {
+            var count = Mathf.Clamp(Mathf.RoundToInt(sizeX / 1.3f), 1, 2);
+            for (var i = 0; i < count; i++)
+            {
+                var t = (i + 1f) / (count + 1f);
+                var x = Mathf.Lerp(-sizeX * 0.5f + 0.3f, sizeX * 0.5f - 0.3f, t);
+                AddCubePart(parent, $"{prefix}{i}", new Vector3(x, y, -sizeZ * 0.5f - 0.02f), new Vector3(0.08f, 0.32f, 0.04f), material);
+            }
+        }
+
+        /// <summary>
+        /// A crenellation (battlement) ring: merlons spaced along all four footprint edges,
+        /// with the count per edge derived from size — not four hand-typed corner positions.
+        /// </summary>
+        private static void AddCrenellationRing(Transform parent, string prefix, float sizeX, float sizeZ, float y, float merlonHeight, Material material)
+        {
+            const float thickness = 0.22f;
+            var halfX = sizeX * 0.5f - thickness * 0.5f;
+            var halfZ = sizeZ * 0.5f - thickness * 0.5f;
+            var perSide = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(sizeX, sizeZ) / 1.4f), 2, 4);
+
+            var index = 0;
+            for (var i = 0; i < perSide; i++)
+            {
+                var t = perSide == 1 ? 0f : Mathf.Lerp(-0.82f, 0.82f, (float)i / (perSide - 1));
+                AddCubePart(parent, $"{prefix}{index++}", new Vector3(t * halfX, y, -halfZ), new Vector3(thickness, merlonHeight, thickness), material);
+                AddCubePart(parent, $"{prefix}{index++}", new Vector3(t * halfX, y, halfZ), new Vector3(thickness, merlonHeight, thickness), material);
+                AddCubePart(parent, $"{prefix}{index++}", new Vector3(-halfX, y, t * halfZ), new Vector3(thickness, merlonHeight, thickness), material);
+                AddCubePart(parent, $"{prefix}{index++}", new Vector3(halfX, y, t * halfZ), new Vector3(thickness, merlonHeight, thickness), material);
+            }
+        }
+
+        /// <summary>
+        /// N stepped, shrinking roof tiers with alternating shade (a cheap banded/"shingle"
+        /// look) topped with a thin ridge cap, returning the y after the ridge.
+        /// </summary>
+        private static float AddShingleRoof(Transform parent, float sizeX, float sizeZ, float yStart, float heightBudget, int tiers, Material roofMaterial, Material roofShadeMaterial, Material trimMaterial)
+        {
+            var y = yStart;
+            var scale = 1f;
+            for (var tier = 0; tier < tiers; tier++)
+            {
+                var tierHeight = (heightBudget / tiers) * (1f - tier * 0.1f);
+                scale *= Mathf.Lerp(0.92f, 0.6f, tiers <= 1 ? 0f : (float)tier / (tiers - 1));
+                var material = tier % 2 == 0 ? roofMaterial : roofShadeMaterial;
+                AddCubePart(parent, $"RoofTier{tier}", new Vector3(0f, y + tierHeight * 0.5f, 0f), new Vector3(sizeX * scale, tierHeight, sizeZ * scale), material);
+                y += tierHeight;
+            }
+
+            AddCubePart(parent, "RoofRidge", new Vector3(0f, y + 0.03f, 0f), new Vector3(sizeX * scale * 0.9f, 0.06f, 0.12f), trimMaterial);
+            y += 0.06f;
+
+            return y;
+        }
+
+        private static Color Shade(Color color, float factor)
+        {
+            return new Color(Mathf.Clamp01(color.r * factor), Mathf.Clamp01(color.g * factor), Mathf.Clamp01(color.b * factor), color.a);
         }
 
         private static GameObject AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)
