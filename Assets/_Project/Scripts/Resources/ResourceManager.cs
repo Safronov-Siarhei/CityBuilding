@@ -48,6 +48,12 @@ namespace CityBuilder.Resources
             OnResourceChanged?.Invoke(type, _resources[type]);
         }
 
+        public void SetAmount(ResourceType type, int amount)
+        {
+            _resources[type] = amount;
+            OnResourceChanged?.Invoke(type, amount);
+        }
+
         public bool HasEnough(IEnumerable<ResourceAmount> costs)
         {
             foreach (var cost in costs)

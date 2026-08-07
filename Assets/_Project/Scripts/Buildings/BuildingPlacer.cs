@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
@@ -23,13 +24,23 @@ namespace CityBuilder.Buildings
 
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
+        public event Action OnBuildingPlaced;
 
         private void Start()
         {
-            if (mandatoryFirstBuilding != null)
+            if (IsPlacingMandatoryBuilding)
             {
                 SelectBuilding(mandatoryFirstBuilding);
             }
+        }
+
+        /// <summary>
+        /// Called by save/load when restoring a game where the Town Hall was already placed,
+        /// so Start() doesn't force-select it again for a fresh mandatory-placement flow.
+        /// </summary>
+        public void MarkMandatoryBuildingAlreadyPlaced()
+        {
+            _mandatoryBuildingPlaced = true;
         }
 
         private void Update()
@@ -169,6 +180,8 @@ namespace CityBuilder.Buildings
             _ghostInstance = null;
             _ghostRenderers.Clear();
             if (wasMandatory) _mandatoryBuildingPlaced = true;
+
+            OnBuildingPlaced?.Invoke();
         }
     }
 }

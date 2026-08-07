@@ -5,6 +5,7 @@ using CityBuilder.CameraControl;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
+using CityBuilder.Saving;
 using CityBuilder.UI;
 using UnityEditor;
 using UnityEditor.Events;
@@ -101,11 +102,18 @@ namespace CityBuilder.EditorTools
 
             var menuController = canvasGO.AddComponent<MainMenuController>();
 
-            var newGameButton = CreateButton(canvasGO.transform, panelSprite, "NewGameButton", "Новая игра", new Vector2(0f, 10f), new Vector2(460f, 120f));
+            var newGameButton = CreateButton(canvasGO.transform, panelSprite, "NewGameButton", "Новая игра", new Vector2(0f, 60f), new Vector2(460f, 100f));
             UnityEventTools.AddPersistentListener(newGameButton.onClick, menuController.StartNewGame);
 
-            var quitButton = CreateButton(canvasGO.transform, panelSprite, "QuitButton", "Выход", new Vector2(0f, -150f), new Vector2(460f, 120f));
+            var loadGameButton = CreateButton(canvasGO.transform, panelSprite, "LoadGameButton", "Загрузить игру", new Vector2(0f, -64f), new Vector2(460f, 100f));
+            UnityEventTools.AddPersistentListener(loadGameButton.onClick, menuController.LoadGame);
+
+            var quitButton = CreateButton(canvasGO.transform, panelSprite, "QuitButton", "Выход", new Vector2(0f, -188f), new Vector2(460f, 100f));
             UnityEventTools.AddPersistentListener(quitButton.onClick, menuController.QuitGame);
+
+            var menuControllerSO = new SerializedObject(menuController);
+            menuControllerSO.FindProperty("loadGameButton").objectReferenceValue = loadGameButton;
+            menuControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/MainMenu.unity");
@@ -190,6 +198,15 @@ namespace CityBuilder.EditorTools
             availableProp.arraySize = 1;
             availableProp.GetArrayElementAtIndex(0).objectReferenceValue = houseData;
             placerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            var saveController = managers.AddComponent<GameSaveController>();
+            var saveControllerSO = new SerializedObject(saveController);
+            saveControllerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            var knownBuildingsProp = saveControllerSO.FindProperty("knownBuildings");
+            knownBuildingsProp.arraySize = 2;
+            knownBuildingsProp.GetArrayElementAtIndex(0).objectReferenceValue = houseData;
+            knownBuildingsProp.GetArrayElementAtIndex(1).objectReferenceValue = townHallData;
+            saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildGameplayUI(placer, new List<BuildingData> { houseData });
 
