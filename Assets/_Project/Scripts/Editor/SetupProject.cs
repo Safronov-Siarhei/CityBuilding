@@ -260,6 +260,12 @@ namespace CityBuilder.EditorTools
             citizenManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             citizenManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
+            var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
+            citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            citizenVisualsManagerSO.FindProperty("gridManager").objectReferenceValue = gridManager;
+            citizenVisualsManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             var saveController = managers.AddComponent<GameSaveController>();
             var saveControllerSO = new SerializedObject(saveController);
             saveControllerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;

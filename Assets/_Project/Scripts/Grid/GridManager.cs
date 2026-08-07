@@ -17,6 +17,7 @@ namespace CityBuilder.Grid
 
         public float CellSize => cellSize;
         public Vector2Int GridSize => gridSize;
+        public float GroundHeight => groundHeight;
 
         private void Awake()
         {
