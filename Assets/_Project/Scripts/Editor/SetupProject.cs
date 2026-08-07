@@ -3,7 +3,6 @@ using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
 using CityBuilder.Citizens;
-using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
@@ -25,7 +24,6 @@ namespace CityBuilder.EditorTools
         private const string ScenesFolder = "Assets/_Project/Scenes";
         private const string MaterialsFolder = "Assets/_Project/Materials";
         private const string TexturesFolder = "Assets/_Project/Textures";
-        private const string ModelsFolder = "Assets/_Project/Models";
         private const string BuildingPrefabsFolder = "Assets/_Project/Prefabs/Buildings";
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
 
@@ -131,53 +129,62 @@ namespace CityBuilder.EditorTools
             // further NewScene() call happens before they're consumed below. EditorSceneManager.
             // NewScene() unloads objects that aren't rooted in the new scene yet, which silently
             // turns freshly created ScriptableObject asset references stale (Unity "fake null").
+            var trimMaterial = CreateLitMaterial("Trim", new Color(0.14f, 0.11f, 0.08f));
+            var windowMaterial = CreateLitMaterial("Window", new Color(0.88f, 0.78f, 0.48f));
+
             var houseData = CreateBuildingData(
                 "House", "Дом", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
-                citizensGranted: 5);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                hasChimney: true, citizensGranted: 5);
 
             var townHallData = CreateBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(5, 5), height: 4f,
                 wallColor: new Color(0.75f, 0.72f, 0.68f), roofColor: new Color(0.5f, 0.14f, 0.14f),
                 cost: new List<ResourceAmount>(),
+                style: BuildingStyle.Landmark, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 citizensGranted: 5);
 
             var fishermanHutData = CreateBuildingData(
                 "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
-                maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
 
             var lumberjackData = CreateBuildingData(
                 "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2);
 
             var wallData = CreateBuildingData(
                 "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
-                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.clear,
+                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                hasRoof: false);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var towerData = CreateBuildingData(
                 "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
-                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.clear,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                hasRoof: false);
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var quarryData = CreateBuildingData(
                 "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2);
 
             var hunterHutData = CreateBuildingData(
                 "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
 
             var hotbarBuildingData = new List<BuildingData> { houseData, fishermanHutData, lumberjackData, wallData, towerData, quarryData, hunterHutData };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -583,12 +590,31 @@ namespace CityBuilder.EditorTools
             emptyLabelGO = emptyLabel.gameObject;
         }
 
+        /// <summary>Architectural archetype driving which procedural generator builds a prefab.</summary>
+        private enum BuildingStyle { Hut, Fortification, Tower, Landmark }
+
         private static BuildingData CreateBuildingData(
             string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
-            bool hasRoof = true, int citizensGranted = 0,
+            BuildingStyle style, Material trimMaterial, Material windowMaterial,
+            bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f)
         {
-            var prefab = CreateBuildingPrefab(id, footprint, height, wallColor, roofColor, hasRoof, maxWorkers);
+            GameObject prefab;
+            switch (style)
+            {
+                case BuildingStyle.Hut:
+                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, maxWorkers, hasChimney, trimMaterial, windowMaterial);
+                    break;
+                case BuildingStyle.Fortification:
+                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: false);
+                    break;
+                case BuildingStyle.Tower:
+                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: true);
+                    break;
+                default:
+                    prefab = CreateTownHallPrefab(id, footprint, height, wallColor, roofColor, trimMaterial);
+                    break;
+            }
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
@@ -609,45 +635,217 @@ namespace CityBuilder.EditorTools
             return data;
         }
 
-        private static GameObject CreateBuildingPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, bool hasRoof, int maxWorkers)
+        /// <summary>
+        /// Procedurally assembles a dwelling/workshop from cube primitives: a plinth, walls, a
+        /// door, a window count derived from the wall width, and a two-tier stepped roof — the
+        /// number and placement of parts comes from footprint/height, not hand-picked positions,
+        /// so the same generator produces a small House and a wider Lumberjack alike.
+        /// </summary>
+        private static GameObject CreateHutPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, int maxWorkers, bool hasChimney, Material trimMaterial, Material windowMaterial)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
-            var wallHeight = hasRoof ? height * 0.6f : height;
-            var roofHeight = hasRoof ? height * 0.4f : 0f;
-            const float roofOverhang = 1.08f;
 
             var root = new GameObject(name);
             root.AddComponent<BuildingInstance>();
             if (maxWorkers > 0) root.AddComponent<ProductionBuilding>();
 
-            var walls = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            walls.name = "Walls";
-            Object.DestroyImmediate(walls.GetComponent<BoxCollider>());
-            walls.transform.SetParent(root.transform, false);
-            walls.transform.localScale = new Vector3(sizeX, wallHeight, sizeZ);
-            walls.transform.localPosition = new Vector3(0f, wallHeight * 0.5f, 0f);
-            walls.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+            var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+            var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
 
-            if (hasRoof)
+            var plinthHeight = height * 0.08f;
+            var wallHeight = height * 0.5f;
+            var y = 0f;
+
+            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.06f, plinthHeight, sizeZ * 1.06f), wallMaterial);
+            y += plinthHeight;
+
+            AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+
+            var doorWidth = Mathf.Clamp(sizeX * 0.22f, 0.35f, 0.6f);
+            var doorHeight = wallHeight * 0.55f;
+            AddCubePart(root.transform, "Door", new Vector3(0f, y + doorHeight * 0.5f, -sizeZ * 0.5f - 0.02f), new Vector3(doorWidth, doorHeight, 0.05f), trimMaterial);
+
+            // Window count derived from wall width — wider buildings procedurally get more.
+            var windowCount = Mathf.Clamp(Mathf.FloorToInt(sizeX / 1.3f), 0, 3);
+            var windowY = y + wallHeight * 0.66f;
+            for (var i = 0; i < windowCount; i++)
             {
-                var roofMesh = RoofMeshBuilder.BuildGableRoof(sizeX * roofOverhang, sizeZ * roofOverhang, roofHeight);
-                Directory.CreateDirectory(ModelsFolder);
-                var roofMeshPath = $"{ModelsFolder}/Roof_{name}.asset";
-                DeleteIfExists(roofMeshPath);
-                AssetDatabase.CreateAsset(roofMesh, roofMeshPath);
+                var t = (i + 1f) / (windowCount + 1f);
+                var wx = Mathf.Lerp(-sizeX * 0.5f + 0.3f, sizeX * 0.5f - 0.3f, t);
+                if (Mathf.Abs(wx) < doorWidth) continue; // skip over the door
+                AddCubePart(root.transform, $"Window{i}", new Vector3(wx, windowY, -sizeZ * 0.5f - 0.02f), new Vector3(0.2f, 0.2f, 0.05f), windowMaterial);
+            }
 
-                var roofGO = new GameObject("Roof", typeof(MeshFilter), typeof(MeshRenderer));
-                roofGO.transform.SetParent(root.transform, false);
-                roofGO.transform.localPosition = new Vector3(0f, wallHeight, 0f);
-                roofGO.GetComponent<MeshFilter>().sharedMesh = roofMesh;
-                roofGO.GetComponent<MeshRenderer>().sharedMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+            y += wallHeight;
+
+            // Two stepped roof tiers, shrinking upward — a blocky stand-in for a pitched roof.
+            var roofBudget = height - y;
+            var tierScale = 1f;
+            for (var tier = 0; tier < 2; tier++)
+            {
+                var tierHeight = roofBudget * (tier == 0 ? 0.58f : 0.42f);
+                tierScale *= tier == 0 ? 0.9f : 0.68f;
+                AddCubePart(root.transform, $"RoofTier{tier}", new Vector3(0f, y + tierHeight * 0.5f, 0f), new Vector3(sizeX * tierScale, tierHeight, sizeZ * tierScale), roofMaterial);
+                y += tierHeight;
+            }
+
+            if (hasChimney)
+            {
+                var chimneyHeight = height * 0.22f;
+                var chimneySize = Mathf.Min(sizeX, sizeZ) * 0.16f;
+                var chimneyBase = y - roofBudget * 0.15f;
+                AddCubePart(root.transform, "Chimney", new Vector3(sizeX * 0.28f, chimneyBase + chimneyHeight * 0.5f, sizeZ * 0.28f), new Vector3(chimneySize, chimneyHeight, chimneySize), trimMaterial);
+                y = Mathf.Max(y, chimneyBase + chimneyHeight);
             }
 
             var collider = root.AddComponent<BoxCollider>();
-            collider.size = new Vector3(sizeX, height, sizeZ);
-            collider.center = new Vector3(0f, height * 0.5f, 0f);
+            collider.size = new Vector3(sizeX * 1.06f, y, sizeZ * 1.06f);
+            collider.center = new Vector3(0f, y * 0.5f, 0f);
 
+            return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// Procedurally assembles a wall segment or tower: a plinth, a solid wall block, and
+        /// four corner merlons generated by looping over the footprint's corner sign
+        /// combinations (not four hand-typed positions). Towers additionally get a lookout cap.
+        /// </summary>
+        private static GameObject CreateFortificationPrefab(string name, Vector2Int footprint, float height, Color wallColor, Material trimMaterial, bool isTower)
+        {
+            var sizeX = footprint.x * CellSize - BuildingInset;
+            var sizeZ = footprint.y * CellSize - BuildingInset;
+
+            var root = new GameObject(name);
+            root.AddComponent<BuildingInstance>();
+
+            var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+
+            var plinthHeight = height * 0.06f;
+            var wallHeight = height * 0.78f;
+            var y = 0f;
+
+            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.06f, plinthHeight, sizeZ * 1.06f), wallMaterial);
+            y += plinthHeight;
+
+            AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+            y += wallHeight;
+
+            var merlonHeight = height * 0.12f;
+            var merlonSize = Mathf.Min(sizeX, sizeZ) * 0.22f;
+            var offsetX = sizeX * 0.5f - merlonSize * 0.6f;
+            var offsetZ = sizeZ * 0.5f - merlonSize * 0.6f;
+            var merlonIndex = 0;
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                for (var sz = -1; sz <= 1; sz += 2)
+                {
+                    var pos = new Vector3(sx * offsetX, y + merlonHeight * 0.5f, sz * offsetZ);
+                    AddCubePart(root.transform, $"Merlon{merlonIndex}", pos, new Vector3(merlonSize, merlonHeight, merlonSize), trimMaterial);
+                    merlonIndex++;
+                }
+            }
+            y += merlonHeight;
+
+            if (isTower)
+            {
+                var capHeight = height * 0.16f;
+                var capSize = Mathf.Min(sizeX, sizeZ) * 0.5f;
+                AddCubePart(root.transform, "Lookout", new Vector3(0f, y + capHeight * 0.5f, 0f), new Vector3(capSize, capHeight, capSize), wallMaterial);
+                y += capHeight;
+            }
+
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(sizeX * 1.06f, y, sizeZ * 1.06f);
+            collider.center = new Vector3(0f, y * 0.5f, 0f);
+
+            return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// Procedurally assembles the Town Hall: a plinth, walls, a three-tier stepped roof
+        /// generated by a loop, four corner towers (again looped over corner sign combinations
+        /// rather than typed out), and a banner pole.
+        /// </summary>
+        private static GameObject CreateTownHallPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, Material trimMaterial)
+        {
+            var sizeX = footprint.x * CellSize - BuildingInset;
+            var sizeZ = footprint.y * CellSize - BuildingInset;
+
+            var root = new GameObject(name);
+            root.AddComponent<BuildingInstance>();
+
+            var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
+            var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
+
+            var plinthHeight = height * 0.06f;
+            var wallHeight = height * 0.42f;
+            var y = 0f;
+
+            AddCubePart(root.transform, "Plinth", new Vector3(0f, plinthHeight * 0.5f, 0f), new Vector3(sizeX * 1.04f, plinthHeight, sizeZ * 1.04f), wallMaterial);
+            y += plinthHeight;
+
+            AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
+
+            var doorHeight = wallHeight * 0.6f;
+            AddCubePart(root.transform, "Door", new Vector3(0f, y + doorHeight * 0.5f, -sizeZ * 0.5f - 0.02f), new Vector3(sizeX * 0.16f, doorHeight, 0.06f), trimMaterial);
+
+            y += wallHeight;
+
+            const int roofTiers = 3;
+            var roofBudget = height * 0.34f;
+            var tierScale = 1f;
+            for (var tier = 0; tier < roofTiers; tier++)
+            {
+                var tierHeight = roofBudget / roofTiers;
+                tierScale *= 0.66f;
+                AddCubePart(root.transform, $"RoofTier{tier}", new Vector3(0f, y + tierHeight * 0.5f, 0f), new Vector3(sizeX * tierScale, tierHeight, sizeZ * tierScale), roofMaterial);
+                y += tierHeight;
+            }
+
+            var towerSize = Mathf.Min(sizeX, sizeZ) * 0.22f;
+            var towerHeight = height * 0.72f;
+            var offsetX = sizeX * 0.5f - towerSize * 0.6f;
+            var offsetZ = sizeZ * 0.5f - towerSize * 0.6f;
+            var towerIndex = 0;
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                for (var sz = -1; sz <= 1; sz += 2)
+                {
+                    var basePos = new Vector3(sx * offsetX, 0f, sz * offsetZ);
+                    AddCubePart(root.transform, $"CornerTower{towerIndex}", basePos + new Vector3(0f, towerHeight * 0.5f, 0f), new Vector3(towerSize, towerHeight, towerSize), wallMaterial);
+                    AddCubePart(root.transform, $"CornerCap{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.3f, 0f), new Vector3(towerSize * 1.15f, towerSize * 0.6f, towerSize * 1.15f), roofMaterial);
+                    towerIndex++;
+                }
+            }
+
+            var poleHeight = height * 0.2f;
+            AddCubePart(root.transform, "Pole", new Vector3(0f, y + poleHeight * 0.5f, 0f), new Vector3(0.08f, poleHeight, 0.08f), trimMaterial);
+            AddCubePart(root.transform, "Banner", new Vector3(sizeX * 0.05f, y + poleHeight * 0.7f, 0f), new Vector3(sizeX * 0.08f, poleHeight * 0.3f, 0.04f), roofMaterial);
+            y += poleHeight;
+
+            var totalHeight = Mathf.Max(y, towerHeight + towerSize * 0.6f);
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(sizeX * 1.1f, totalHeight, sizeZ * 1.1f);
+            collider.center = new Vector3(0f, totalHeight * 0.5f, 0f);
+
+            return SavePrefab(root, name);
+        }
+
+        private static GameObject AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = partName;
+            Object.DestroyImmediate(go.GetComponent<BoxCollider>());
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPosition;
+            go.transform.localScale = size;
+            go.GetComponent<Renderer>().sharedMaterial = material;
+            return go;
+        }
+
+        private static GameObject SavePrefab(GameObject root, string name)
+        {
             Directory.CreateDirectory(BuildingPrefabsFolder);
             var prefabPath = $"{BuildingPrefabsFolder}/{name}.prefab";
             DeleteIfExists(prefabPath);
@@ -871,6 +1069,9 @@ namespace CityBuilder.EditorTools
             DeleteIfExists($"{TexturesFolder}/GridCell.asset");
             DeleteIfExists($"{MaterialsFolder}/Building_House.mat");
             DeleteIfExists($"{MaterialsFolder}/Building_TownHall.mat");
+            // Buildings are pure cube assemblies now (no custom roof meshes), so the whole
+            // Models folder from the old diagonal-gable-roof system is stale.
+            AssetDatabase.DeleteAsset("Assets/_Project/Models");
         }
     }
 }
