@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -32,6 +33,8 @@ namespace CityBuilder.CameraControl
 
         private void Update()
         {
+            if (ModalGate.IsBlocked) return;
+
             var dt = Time.unscaledDeltaTime;
 
             var handledByTouch = HandleTouch(dt);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Grid
@@ -25,6 +26,10 @@ namespace CityBuilder.Grid
                 return;
             }
             Instance = this;
+
+            // A fresh CityBuilder scene load should never inherit a stuck "modal open" state
+            // from a previous session (e.g. leaving via the exit-to-menu shortcut).
+            ModalGate.Reset();
         }
 
         public Vector2Int WorldToCell(Vector3 worldPosition)

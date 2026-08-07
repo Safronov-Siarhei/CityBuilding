@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -45,6 +46,8 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
+            if (ModalGate.IsBlocked) return;
+
             var pointer = Pointer.current;
             if (pointer == null) return;
 

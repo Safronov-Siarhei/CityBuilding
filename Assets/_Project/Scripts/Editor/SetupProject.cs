@@ -281,6 +281,43 @@ namespace CityBuilder.EditorTools
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
+            BuildExitUI(canvasGO.transform, panelSprite);
+        }
+
+        private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
+        {
+            var menuButton = CreateButton(canvasParent, panelSprite, "MenuButton", "Меню", new Vector2(-810f, 465f), new Vector2(240f, 90f));
+
+            var dialogRoot = new GameObject("ExitDialog", typeof(RectTransform));
+            dialogRoot.transform.SetParent(canvasParent, false);
+            StretchFull(dialogRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(dialogRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(dialogRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(760f, 380f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            CreateText(card.transform, "Title", "Выйти в главное меню?", 36, new Vector2(0f, 120f), new Vector2(680f, 70f));
+            CreateText(card.transform, "Warning", "Несохранённые изменения будут потеряны.", 24, new Vector2(0f, 40f), new Vector2(680f, 60f), new Color(1f, 0.7f, 0.6f, 1f));
+
+            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmExitButton", "Выйти", new Vector2(-160f, -90f), new Vector2(300f, 90f));
+            var cancelButton = CreateButton(card.transform, panelSprite, "CancelExitButton", "Отмена", new Vector2(160f, -90f), new Vector2(300f, 90f));
+
+            var dialogController = dialogRoot.AddComponent<ExitToMenuController>();
+            var dialogSO = new SerializedObject(dialogController);
+            dialogSO.FindProperty("dialogRoot").objectReferenceValue = dialogRoot;
+            dialogSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(menuButton.onClick, dialogController.OpenDialog);
+            UnityEventTools.AddPersistentListener(confirmButton.onClick, dialogController.ConfirmExit);
+            UnityEventTools.AddPersistentListener(cancelButton.onClick, dialogController.CloseDialog);
+
+            dialogRoot.SetActive(false);
         }
 
         private static void BuildSaveUI(Transform canvasParent, Sprite panelSprite, GameSaveController saveController)

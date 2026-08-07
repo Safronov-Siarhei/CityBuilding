@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,11 +27,13 @@ namespace CityBuilder.Saving
                 nameInput.text = saveController != null ? saveController.CurrentSaveName : string.Empty;
             }
             if (dialogRoot != null) dialogRoot.SetActive(true);
+            ModalGate.SetBlocked(true);
         }
 
         public void CloseDialog()
         {
             if (dialogRoot != null) dialogRoot.SetActive(false);
+            ModalGate.SetBlocked(false);
         }
 
         public void ConfirmSave()
