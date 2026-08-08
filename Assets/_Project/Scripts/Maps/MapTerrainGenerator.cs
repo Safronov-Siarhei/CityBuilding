@@ -104,20 +104,45 @@ namespace CityBuilder.Maps
             }
             texture.Apply();
 
-            var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            plane.name = "MapTerrain";
-            Destroy(plane.GetComponent<Collider>());
-            plane.transform.SetParent(transform, false);
-
             var worldWidth = width * cellSize;
             var worldDepth = height * cellSize;
             var origin = grid.CellToWorld(Vector2Int.zero);
             // Nudged just above the base ground plane to avoid z-fighting where it covers it.
-            plane.transform.position = new Vector3(origin.x + worldWidth * 0.5f, 0.02f, origin.z + worldDepth * 0.5f);
-            plane.transform.localScale = new Vector3(worldWidth / 10f, 1f, worldDepth / 10f);
+            var groundY = origin.y + 0.02f;
+
+            // A hand-built quad (rather than the CreatePrimitive Plane used before) so the
+            // texture-to-world mapping is guaranteed exact: texel (x,y) always lands at the same
+            // world position as CellToWorld(x,y), which is what SpawnTree/SpawnRock/props use —
+            // relying on the primitive Plane's built-in UV orientation previously left the
+            // painted ground (water especially) visually offset from where props actually sit.
+            var planeGO = new GameObject("MapTerrain");
+            planeGO.transform.SetParent(transform, false);
+
+            var mesh = new Mesh
+            {
+                vertices = new[]
+                {
+                    new Vector3(origin.x, groundY, origin.z),
+                    new Vector3(origin.x + worldWidth, groundY, origin.z),
+                    new Vector3(origin.x, groundY, origin.z + worldDepth),
+                    new Vector3(origin.x + worldWidth, groundY, origin.z + worldDepth)
+                },
+                uv = new[]
+                {
+                    new Vector2(0f, 0f),
+                    new Vector2(1f, 0f),
+                    new Vector2(0f, 1f),
+                    new Vector2(1f, 1f)
+                },
+                triangles = new[] { 0, 2, 1, 2, 3, 1 }
+            };
+            mesh.RecalculateNormals();
+
+            planeGO.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var meshRenderer = planeGO.AddComponent<MeshRenderer>();
 
             var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { mainTexture = texture };
-            plane.GetComponent<Renderer>().sharedMaterial = material;
+            meshRenderer.sharedMaterial = material;
         }
 
         private Color ColorFor(TerrainType terrain)
