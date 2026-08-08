@@ -34,7 +34,6 @@ namespace CityBuilder.Citizens
         private bool _isWalking;
 
         private CharacterController _controller;
-        private Renderer _renderer;
 
         // Set whenever SetWorking/SetIdleWander runs while OnWorkVisitCompleted is being
         // dispatched, so OnPauseElapsed can tell a subscriber already reassigned this agent
@@ -47,7 +46,6 @@ namespace CityBuilder.Citizens
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
-            _renderer = GetComponentInChildren<Renderer>();
         }
 
         /// <summary>First-time spawn: places the agent at the town center and starts it wandering.</summary>
@@ -83,13 +81,6 @@ namespace CityBuilder.Citizens
 
         private void Update()
         {
-            // Wandering/commuting is purely cosmetic simulation -- freeze it entirely while the
-            // citizen isn't rendered by any camera (saves the CharacterController move + state
-            // machine work every frame for off-screen agents) and resume exactly where it left
-            // off once back in view. Actual resource output isn't affected: that ticks on
-            // ProductionBuilding's own timer, independent of this visit-walking animation.
-            if (_renderer != null && !_renderer.isVisible) return;
-
             if (_isWalking)
             {
                 // Horizontal-only distance/direction: SimpleMove's own gravity governs vertical

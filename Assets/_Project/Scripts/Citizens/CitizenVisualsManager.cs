@@ -216,7 +216,7 @@ namespace CityBuilder.Citizens
             ResourceNode nearest = null;
             var nearestDistanceSq = float.MaxValue;
 
-            foreach (var node in FindObjectsByType<ResourceNode>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var node in ResourceNode.All)
             {
                 if (node.IsClaimed || node.ResourceType != resourceType) continue;
 

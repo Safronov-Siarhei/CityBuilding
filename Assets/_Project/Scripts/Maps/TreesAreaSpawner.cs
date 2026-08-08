@@ -19,6 +19,9 @@ namespace CityBuilder.Maps
         private const int InitialTreeCount = 600;
         private const float RespawnDelaySeconds = 60f;
         private const int MaxPlacementAttempts = 40;
+        // Cell size is 1m on this map, so a 1-cell exclusion radius keeps trees at least ~2 cells
+        // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
+        private const int MinSpacingCells = 1;
 
         private Collider _zoneCollider;
         private Bounds _zoneBounds;
@@ -97,6 +100,7 @@ namespace CityBuilder.Maps
                 if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
                 // Explicit "don't spawn where a building/other object already stands" check.
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
+                if (HasNearbyTree(cell)) continue;
 
                 var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
@@ -116,6 +120,19 @@ namespace CityBuilder.Maps
                 _treeCellByInstance[instance] = cell;
                 return;
             }
+        }
+
+        /// <summary>True if any already-placed tree occupies a cell within MinSpacingCells of the candidate (a square neighborhood check, cheap and sufficient at this grid resolution).</summary>
+        private bool HasNearbyTree(Vector2Int cell)
+        {
+            for (var dx = -MinSpacingCells; dx <= MinSpacingCells; dx++)
+            {
+                for (var dz = -MinSpacingCells; dz <= MinSpacingCells; dz++)
+                {
+                    if (_treeCells.Contains(cell + new Vector2Int(dx, dz))) return true;
+                }
+            }
+            return false;
         }
     }
 }
