@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -149,7 +150,7 @@ namespace CityBuilder.Buildings
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
             _ghostInstance.transform.position = center;
 
-            var canPlace = GridManager.Instance.CanPlace(cell, footprint);
+            var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_selectedBuilding.cost);
             var color = (canPlace && canAfford) ? validColor : invalidColor;
 
@@ -163,10 +164,37 @@ namespace CityBuilder.Buildings
             }
         }
 
+        /// <summary>
+        /// GridManager.CanPlace plus a mesh-map-aware exception: a water-category building
+        /// (BuildingData.isWaterCategory) may also go on cells that are normally water-blocked,
+        /// as long as they're within the map's water-placement zone and not already occupied by
+        /// something else. Water itself isn't tracked in GridManager's occupancy set (see
+        /// MeshMapApplier), specifically so this exception is possible.
+        /// </summary>
+        private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint)
+        {
+            if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !GridManager.Instance.IsAreaFree(cell, footprint)) return false;
+
+            var mapApplier = MeshMapApplier.Instance;
+            if (mapApplier == null) return true;
+
+            for (var x = 0; x < footprint.x; x++)
+            {
+                for (var z = 0; z < footprint.y; z++)
+                {
+                    var c = cell + new Vector2Int(x, z);
+                    if (!mapApplier.IsWaterCell(c)) continue;
+                    if (_selectedBuilding.isWaterCategory && mapApplier.IsWaterPlacementZone(c)) continue;
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private void TryPlace(Vector2Int cell)
         {
             var footprint = _selectedBuilding.footprintSize;
-            if (!GridManager.Instance.CanPlace(cell, footprint)) return;
+            if (!CanPlaceSelectedBuilding(cell, footprint)) return;
             if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost)) return;
 
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);

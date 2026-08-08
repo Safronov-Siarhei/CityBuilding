@@ -18,6 +18,7 @@ namespace CityBuilder.Saving
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private MapTerrainGenerator mapTerrainGenerator;
+        [SerializeField] private MeshMapApplier meshMapApplier;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
 
         private Dictionary<string, BuildingData> _catalog;
@@ -112,7 +113,9 @@ namespace CityBuilder.Saving
         {
             var data = new GameSaveData
             {
-                mapId = mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty,
+                mapId = meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
+                    ? meshMapApplier.CurrentMapId
+                    : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0
             };

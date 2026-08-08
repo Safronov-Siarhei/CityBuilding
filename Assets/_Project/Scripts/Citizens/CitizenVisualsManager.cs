@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
@@ -32,14 +33,18 @@ namespace CityBuilder.Citizens
         };
         private static readonly Color SkinColor = new Color(0.85f, 0.68f, 0.55f);
 
+        private const float NodeRetryIntervalSeconds = 5f;
+
         private readonly List<CitizenAgent> _allAgents = new List<CitizenAgent>();
         private readonly List<CitizenAgent> _idleAgents = new List<CitizenAgent>();
         private readonly Dictionary<ProductionBuilding, List<CitizenAgent>> _workingAgents = new Dictionary<ProductionBuilding, List<CitizenAgent>>();
         private readonly Dictionary<CitizenAgent, ResourceNode> _claimedNodes = new Dictionary<CitizenAgent, ResourceNode>();
+        private readonly Dictionary<CitizenAgent, Action> _workVisitHandlers = new Dictionary<CitizenAgent, Action>();
 
         private Material[] _clothingMaterials;
         private Material _skinMaterial;
         private Vector3? _townCenter;
+        private float _nodeRetryTimer;
 
         private void Awake()
         {
@@ -58,6 +63,31 @@ namespace CityBuilder.Citizens
                 citizenManager.OnPopulationChanged += SyncVisualCount;
             }
             SyncVisualCount();
+        }
+
+        private void Update()
+        {
+            // A worker whose tree was just felled has no node to walk to until the next one
+            // grows back (see TreesAreaSpawner's respawn delay) -- periodically retry so it
+            // doesn't sit idle-at-building forever once one does.
+            _nodeRetryTimer -= Time.deltaTime;
+            if (_nodeRetryTimer > 0f) return;
+            _nodeRetryTimer = NodeRetryIntervalSeconds;
+
+            foreach (var pair in _workingAgents)
+            {
+                var building = pair.Key;
+                var resourceType = building.ProducesResource;
+                if (resourceType != ResourceType.Wood && resourceType != ResourceType.Stone) continue;
+
+                foreach (var agent in pair.Value)
+                {
+                    if (!_claimedNodes.ContainsKey(agent))
+                    {
+                        AssignAgentToBuilding(agent, building);
+                    }
+                }
+            }
         }
 
         public void RegisterProductionBuilding(ProductionBuilding building)
@@ -152,6 +182,33 @@ namespace CityBuilder.Citizens
             }
 
             agent.SetWorking(buildingPos, nodePos);
+            EnsureWorkVisitSubscription(agent, building);
+        }
+
+        /// <summary>
+        /// One-time (per agent) subscription to CitizenAgent.OnWorkVisitCompleted, torn down in
+        /// ReleaseAgentToIdle/RemoveAgent. Re-running AssignAgentToBuilding for the same
+        /// still-working agent (e.g. the periodic retry, or a fresh node after a harvest) is a
+        /// no-op here since the closure below already targets the right building.
+        /// </summary>
+        private void EnsureWorkVisitSubscription(CitizenAgent agent, ProductionBuilding building)
+        {
+            if (_workVisitHandlers.ContainsKey(agent)) return;
+
+            void Handler() => HandleWorkVisitCompleted(agent, building);
+            agent.OnWorkVisitCompleted += Handler;
+            _workVisitHandlers[agent] = Handler;
+        }
+
+        /// <summary>A citizen just finished one visit at its claimed node. Wood nodes (real trees) are felled by a single visit; Stone (no node source yet) and anything else is left alone.</summary>
+        private void HandleWorkVisitCompleted(CitizenAgent agent, ProductionBuilding building)
+        {
+            if (!_claimedNodes.TryGetValue(agent, out var node) || node == null) return;
+            if (node.ResourceType != ResourceType.Wood) return;
+
+            _claimedNodes.Remove(agent);
+            TreesAreaSpawner.Instance?.NotifyTreeHarvested(node.gameObject);
+            AssignAgentToBuilding(agent, building); // re-search; comes up empty until the tree respawns
         }
 
         private static ResourceNode FindNearestFreeNode(Vector3 fromPosition, ResourceType resourceType)
@@ -162,6 +219,9 @@ namespace CityBuilder.Citizens
             foreach (var node in FindObjectsByType<ResourceNode>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             {
                 if (node.IsClaimed || node.ResourceType != resourceType) continue;
+
+                var growth = node.GetComponent<TreeGrowth>();
+                if (growth != null && !growth.IsFullyGrown) continue;
 
                 var distanceSq = (node.transform.position - fromPosition).sqrMagnitude;
                 if (distanceSq < nearestDistanceSq)
@@ -176,6 +236,8 @@ namespace CityBuilder.Citizens
 
         private void ReleaseAgentToIdle(CitizenAgent agent)
         {
+            UnsubscribeWorkVisit(agent);
+
             if (_claimedNodes.TryGetValue(agent, out var node))
             {
                 node.Release();
@@ -189,6 +251,7 @@ namespace CityBuilder.Citizens
 
         private void RemoveAgent(CitizenAgent agent)
         {
+            UnsubscribeWorkVisit(agent);
             _idleAgents.Remove(agent);
             _allAgents.Remove(agent);
             if (_claimedNodes.TryGetValue(agent, out var node))
@@ -197,6 +260,15 @@ namespace CityBuilder.Citizens
                 _claimedNodes.Remove(agent);
             }
             if (agent != null) Destroy(agent.gameObject);
+        }
+
+        private void UnsubscribeWorkVisit(CitizenAgent agent)
+        {
+            if (agent != null && _workVisitHandlers.TryGetValue(agent, out var handler))
+            {
+                agent.OnWorkVisitCompleted -= handler;
+            }
+            _workVisitHandlers.Remove(agent);
         }
 
         private CitizenAgent SpawnAgent()
@@ -209,7 +281,7 @@ namespace CityBuilder.Citizens
             var root = new GameObject("Citizen");
             root.transform.SetParent(transform, false);
 
-            var clothing = _clothingMaterials[Random.Range(0, _clothingMaterials.Length)];
+            var clothing = _clothingMaterials[UnityEngine.Random.Range(0, _clothingMaterials.Length)];
             AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);
             AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
 

@@ -14,6 +14,12 @@ namespace CityBuilder.Buildings
         public Vector2Int footprintSize = Vector2Int.one;
         public List<ResourceAmount> cost = new List<ResourceAmount>();
 
+        [Header("Placement")]
+        // Allows placement on cells inside a mesh map's water-placement zone (MeshMapApplier)
+        // even though those cells are normally water-blocked -- e.g. a bridge or water wheel.
+        // No such building exists yet; this is the (unverified) infrastructure for one.
+        public bool isWaterCategory = false;
+
         [Header("Population")]
         public int citizensGranted = 0;
 

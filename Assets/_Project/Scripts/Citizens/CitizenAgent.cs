@@ -1,4 +1,6 @@
+using System;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using UnityEngine;
 
 namespace CityBuilder.Citizens
@@ -31,6 +33,14 @@ namespace CityBuilder.Citizens
         private float _pauseTimer;
         private bool _isWalking;
 
+        // Set whenever SetWorking/SetIdleWander runs while OnWorkVisitCompleted is being
+        // dispatched, so OnPauseElapsed can tell a subscriber already reassigned this agent
+        // synchronously and skip its own (now-stale) default transition below.
+        private bool _reassignedDuringCallback;
+
+        /// <summary>Fired once per completed "at the node" work visit (Working mode only) -- e.g. drives tree felling in CitizenVisualsManager.</summary>
+        public event Action OnWorkVisitCompleted;
+
         /// <summary>First-time spawn: places the agent at the town center and starts it wandering.</summary>
         public void Initialize(Vector3 townCenter)
         {
@@ -41,6 +51,7 @@ namespace CityBuilder.Citizens
         /// <summary>Switches (or keeps) the agent to ambient wandering from wherever it currently is.</summary>
         public void SetIdleWander(Vector3 townCenter)
         {
+            _reassignedDuringCallback = true;
             _mode = Mode.Wandering;
             _townCenter = townCenter;
             BeginIdlePause();
@@ -53,6 +64,7 @@ namespace CityBuilder.Citizens
         /// </summary>
         public void SetWorking(Vector3 buildingPos, Vector3? nodePos)
         {
+            _reassignedDuringCallback = true;
             _mode = Mode.Working;
             _buildingPos = buildingPos;
             _nodePos = nodePos;
@@ -107,13 +119,24 @@ namespace CityBuilder.Citizens
                 return;
             }
 
+            // The pause that just elapsed was the one spent AT the node -- one visit completed.
+            if (_headingToNode)
+            {
+                _reassignedDuringCallback = false;
+                OnWorkVisitCompleted?.Invoke();
+                // A subscriber may have synchronously called SetWorking/SetIdleWander on this
+                // same agent (e.g. felled the tree and reassigned it) -- if so, its fresh state
+                // must not be immediately overwritten by the default transition below.
+                if (_reassignedDuringCallback) return;
+            }
+
             _headingToNode = !_headingToNode;
             WalkTo(_headingToNode ? _nodePos.Value : _buildingPos);
         }
 
         private void BeginIdlePause()
         {
-            _pauseTimer = Random.Range(MinIdleSeconds, MaxIdleSeconds);
+            _pauseTimer = UnityEngine.Random.Range(MinIdleSeconds, MaxIdleSeconds);
         }
 
         private void WalkTo(Vector3 target)
@@ -133,11 +156,12 @@ namespace CityBuilder.Citizens
 
             for (var attempt = 0; attempt < MaxTargetAttempts; attempt++)
             {
-                var offset = Random.insideUnitCircle * (WanderRadiusCells * grid.CellSize);
+                var offset = UnityEngine.Random.insideUnitCircle * (WanderRadiusCells * grid.CellSize);
                 var candidate = _townCenter + new Vector3(offset.x, 0f, offset.y);
                 var cell = grid.WorldToCell(candidate);
 
                 if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
+                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) continue;
 
                 WalkTo(new Vector3(candidate.x, grid.GroundHeight, candidate.z));
                 return;

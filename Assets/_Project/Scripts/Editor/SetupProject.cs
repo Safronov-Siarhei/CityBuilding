@@ -27,11 +27,14 @@ namespace CityBuilder.EditorTools
         private const string TexturesFolder = "Assets/_Project/Textures";
         private const string BuildingPrefabsFolder = "Assets/_Project/Prefabs/Buildings";
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
+        private const string MeshMapsFolder = "Assets/_Project/Resources/MeshMaps";
+        private const string ModelsMap1Folder = "Assets/_Project/Models/Map1";
+        private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
 
-        private const int GridCellsX = 100;
-        private const int GridCellsZ = 100;
-        private const int ForestMarginCells = 10;
-        private const float CellSize = 2f;
+        private const int GridCellsX = 200;
+        private const int GridCellsZ = 200;
+        private const int ForestMarginCells = 20; // same 20m world-space margin as before the cellSize halved
+        private const float CellSize = 1f;
         private const float BuildingInset = 0.08f;
         private const float GroundHeight = 0f;
         private static readonly Vector3 GroundOrigin = new Vector3(-GridCellsX * CellSize * 0.5f, 0f, -GridCellsZ * CellSize * 0.5f);
@@ -284,6 +287,21 @@ namespace CityBuilder.EditorTools
             }
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            CreateMeshMapDefinition("Map1");
+
+            // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
+            // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
+            // game; MapTerrainGenerator's existing "not found in catalog" no-op then harmlessly
+            // skips it, and vice versa for a legacy PNG map id.
+            var meshMapApplier = managers.AddComponent<MeshMapApplier>();
+            var meshMapApplierSO = new SerializedObject(meshMapApplier);
+            meshMapApplierSO.FindProperty("saveController").objectReferenceValue = saveController;
+            meshMapApplierSO.FindProperty("baseGroundToHide").objectReferenceValue = ground;
+            meshMapApplierSO.FindProperty("baseForestBorderToHide").objectReferenceValue = GameObject.Find("Forest");
+            meshMapApplierSO.ApplyModifiedPropertiesWithoutUndo();
+
+            managers.AddComponent<TreesAreaSpawner>();
+
             // Picks up whichever map MainMenuController/MapSelector chose for a new game, or the
             // one stored in a loaded save (see GameSaveController.LoadedMapId), and paints it.
             var mapTerrainGenerator = managers.AddComponent<MapTerrainGenerator>();
@@ -296,6 +314,7 @@ namespace CityBuilder.EditorTools
 
             var saveControllerMapFieldSO = new SerializedObject(saveController);
             saveControllerMapFieldSO.FindProperty("mapTerrainGenerator").objectReferenceValue = mapTerrainGenerator;
+            saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildGameplayUI(placer, saveController, camera, hotbarBuildingData);
@@ -1039,6 +1058,36 @@ namespace CityBuilder.EditorTools
             var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = color };
             AssetDatabase.CreateAsset(material, path);
             return material;
+        }
+
+        /// <summary>
+        /// Loads a hand-authored map's five FBX prefabs by their fixed Models/ paths and writes a
+        /// MeshMapDefinition asset under Resources/MeshMaps so MeshMapCatalog/MapSelector can find
+        /// it. Parameterized rather than folder-scanning like the old MapImporter — a second map
+        /// is just one more call to this with a different id/paths, not a new system.
+        /// </summary>
+        private static void CreateMeshMapDefinition(string mapId)
+        {
+            var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-Ground.fbx");
+            var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-Water.fbx");
+            var waterPlacementZone = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-PlaceForWaterObjects.fbx");
+            var treesArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-TreesArea.fbx");
+            var tree1 = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree1.fbx");
+            var tree2 = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree2.fbx");
+
+            if (ground == null || water == null || waterPlacementZone == null || treesArea == null || tree1 == null || tree2 == null)
+            {
+                Debug.LogWarning($"CreateMeshMapDefinition: one or more Map1 FBX assets not found under {ModelsMap1Folder}/{ModelsTerrainFolder} -- skipping Map1 MeshMapDefinition.");
+                return;
+            }
+
+            var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
+            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, new[] { tree1, tree2 });
+
+            Directory.CreateDirectory(MeshMapsFolder);
+            var path = $"{MeshMapsFolder}/{mapId}.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(map, path);
         }
 
         private static Material CreateGroundMaterial()
