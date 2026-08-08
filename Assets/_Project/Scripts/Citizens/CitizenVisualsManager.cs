@@ -1,17 +1,24 @@
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
+using CityBuilder.Resources;
 using UnityEngine;
 
 namespace CityBuilder.Citizens
 {
     /// <summary>
-    /// Spawns/despawns a simple cube-built citizen model per population point and lets each one
-    /// wander ambiently near the town center (see CitizenAgent). Purely visual — population
-    /// itself stays owned by CitizenManager; this just mirrors it. No task assignment yet.
+    /// Spawns/despawns a simple cube-built citizen model per population point. Idle citizens
+    /// wander ambiently near the town center (see CitizenAgent); citizens assigned as workers on
+    /// a ProductionBuilding are pulled from the idle pool and sent to commute between that
+    /// building and a nearby ResourceNode (Wood/Stone buildings) or just stay at the building
+    /// (Food buildings, which have no tree/rock concept). Population and worker counts stay
+    /// owned by CitizenManager / ProductionBuilding respectively — this only mirrors them.
     /// </summary>
     public class CitizenVisualsManager : MonoBehaviour
     {
+        public static CitizenVisualsManager Instance { get; private set; }
+
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private GridManager gridManager;
 
@@ -25,10 +32,24 @@ namespace CityBuilder.Citizens
         };
         private static readonly Color SkinColor = new Color(0.85f, 0.68f, 0.55f);
 
-        private readonly List<GameObject> _agents = new List<GameObject>();
+        private readonly List<CitizenAgent> _allAgents = new List<CitizenAgent>();
+        private readonly List<CitizenAgent> _idleAgents = new List<CitizenAgent>();
+        private readonly Dictionary<ProductionBuilding, List<CitizenAgent>> _workingAgents = new Dictionary<ProductionBuilding, List<CitizenAgent>>();
+        private readonly Dictionary<CitizenAgent, ResourceNode> _claimedNodes = new Dictionary<CitizenAgent, ResourceNode>();
+
         private Material[] _clothingMaterials;
         private Material _skinMaterial;
         private Vector3? _townCenter;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
 
         private void Start()
         {
@@ -39,28 +60,146 @@ namespace CityBuilder.Citizens
             SyncVisualCount();
         }
 
+        public void RegisterProductionBuilding(ProductionBuilding building)
+        {
+            if (_workingAgents.ContainsKey(building)) return;
+
+            _workingAgents[building] = new List<CitizenAgent>();
+            building.OnAssignedWorkersChanged += () => SyncBuildingWorkers(building);
+            SyncBuildingWorkers(building);
+        }
+
+        public void UnregisterProductionBuilding(ProductionBuilding building)
+        {
+            if (!_workingAgents.TryGetValue(building, out var agents)) return;
+
+            foreach (var agent in agents)
+            {
+                ReleaseAgentToIdle(agent);
+            }
+            _workingAgents.Remove(building);
+        }
+
         private void SyncVisualCount()
         {
             if (citizenManager == null) return;
 
             var target = citizenManager.TotalPopulation;
 
-            while (_agents.Count < target)
+            while (_allAgents.Count < target)
             {
                 var agent = SpawnAgent();
                 if (agent == null) break; // town center not resolvable yet (Town Hall not placed)
-                _agents.Add(agent);
+                _allAgents.Add(agent);
+                _idleAgents.Add(agent);
             }
 
-            while (_agents.Count > target)
+            while (_allAgents.Count > target)
             {
-                var last = _agents[_agents.Count - 1];
-                _agents.RemoveAt(_agents.Count - 1);
-                if (last != null) Destroy(last);
+                // Prefer removing idle agents first; a mismatched save/load edge case could
+                // otherwise leave a building visually short a worker, which self-heals on the
+                // next SyncBuildingWorkers pass.
+                var agent = _idleAgents.Count > 0 ? _idleAgents[_idleAgents.Count - 1] : _allAgents[_allAgents.Count - 1];
+                RemoveAgent(agent);
             }
         }
 
-        private GameObject SpawnAgent()
+        private void SyncBuildingWorkers(ProductionBuilding building)
+        {
+            if (!_workingAgents.TryGetValue(building, out var agents)) return;
+
+            while (agents.Count < building.AssignedWorkers)
+            {
+                var agent = PullIdleAgent();
+                if (agent == null) break; // no idle agents available yet
+                agents.Add(agent);
+                AssignAgentToBuilding(agent, building);
+            }
+
+            while (agents.Count > building.AssignedWorkers)
+            {
+                var agent = agents[agents.Count - 1];
+                agents.RemoveAt(agents.Count - 1);
+                ReleaseAgentToIdle(agent);
+            }
+        }
+
+        private CitizenAgent PullIdleAgent()
+        {
+            if (_idleAgents.Count == 0) return null;
+            var agent = _idleAgents[_idleAgents.Count - 1];
+            _idleAgents.RemoveAt(_idleAgents.Count - 1);
+            return agent;
+        }
+
+        private void AssignAgentToBuilding(CitizenAgent agent, ProductionBuilding building)
+        {
+            var buildingInstance = building.GetComponent<BuildingInstance>();
+            var buildingPos = buildingInstance != null && gridManager != null
+                ? gridManager.GetFootprintCenterWorld(buildingInstance.OriginCell, buildingInstance.Data.footprintSize)
+                : building.transform.position;
+
+            Vector3? nodePos = null;
+            var resourceType = building.ProducesResource;
+            if (resourceType == ResourceType.Wood || resourceType == ResourceType.Stone)
+            {
+                var node = FindNearestFreeNode(buildingPos, resourceType);
+                if (node != null && node.TryClaim())
+                {
+                    _claimedNodes[agent] = node;
+                    nodePos = node.transform.position;
+                }
+            }
+
+            agent.SetWorking(buildingPos, nodePos);
+        }
+
+        private static ResourceNode FindNearestFreeNode(Vector3 fromPosition, ResourceType resourceType)
+        {
+            ResourceNode nearest = null;
+            var nearestDistanceSq = float.MaxValue;
+
+            foreach (var node in FindObjectsByType<ResourceNode>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (node.IsClaimed || node.ResourceType != resourceType) continue;
+
+                var distanceSq = (node.transform.position - fromPosition).sqrMagnitude;
+                if (distanceSq < nearestDistanceSq)
+                {
+                    nearestDistanceSq = distanceSq;
+                    nearest = node;
+                }
+            }
+
+            return nearest;
+        }
+
+        private void ReleaseAgentToIdle(CitizenAgent agent)
+        {
+            if (_claimedNodes.TryGetValue(agent, out var node))
+            {
+                node.Release();
+                _claimedNodes.Remove(agent);
+            }
+
+            var center = _townCenter ?? agent.transform.position;
+            agent.SetIdleWander(center);
+            _idleAgents.Add(agent);
+        }
+
+        private void RemoveAgent(CitizenAgent agent)
+        {
+            _idleAgents.Remove(agent);
+            _allAgents.Remove(agent);
+            if (_claimedNodes.TryGetValue(agent, out var node))
+            {
+                node.Release();
+                _claimedNodes.Remove(agent);
+            }
+            if (agent != null) Destroy(agent.gameObject);
+        }
+
+        private CitizenAgent SpawnAgent()
         {
             var center = ResolveTownCenter();
             if (center == null) return null;
@@ -77,7 +216,7 @@ namespace CityBuilder.Citizens
             var agent = root.AddComponent<CitizenAgent>();
             agent.Initialize(center.Value);
 
-            return root;
+            return agent;
         }
 
         private Vector3? ResolveTownCenter()

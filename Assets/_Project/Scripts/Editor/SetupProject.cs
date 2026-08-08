@@ -207,7 +207,13 @@ namespace CityBuilder.EditorTools
             ground.transform.position = Vector3.zero; // GroundOrigin is symmetric around world origin
             ground.GetComponent<MeshRenderer>().sharedMaterial = groundMaterial;
 
-            CreateForestBorder(GridCellsX * CellSize * 0.5f, GridCellsZ * CellSize * 0.5f, groundWidth * 0.5f, groundDepth * 0.5f);
+            // Also handed to MapTerrainGenerator below, so its Forest/Stone resource-node props
+            // (trees/rocks) share the exact same materials as the decorative forest border.
+            var treeTrunkMaterial = CreateLitMaterial("TreeTrunk", new Color(0.36f, 0.24f, 0.14f));
+            var treeCanopyMaterial = CreateLitMaterial("TreeCanopy", new Color(0.16f, 0.38f, 0.18f));
+            var rockMaterial = CreateLitMaterial("Rock", new Color(0.55f, 0.53f, 0.48f));
+
+            CreateForestBorder(GridCellsX * CellSize * 0.5f, GridCellsZ * CellSize * 0.5f, groundWidth * 0.5f, groundDepth * 0.5f, treeTrunkMaterial, treeCanopyMaterial);
 
             var mainCameraGO = GameObject.Find("Main Camera");
             var camera = mainCameraGO.GetComponent<Camera>();
@@ -283,6 +289,9 @@ namespace CityBuilder.EditorTools
             var mapTerrainGenerator = managers.AddComponent<MapTerrainGenerator>();
             var mapTerrainGeneratorSO = new SerializedObject(mapTerrainGenerator);
             mapTerrainGeneratorSO.FindProperty("saveController").objectReferenceValue = saveController;
+            mapTerrainGeneratorSO.FindProperty("treeTrunkMaterial").objectReferenceValue = treeTrunkMaterial;
+            mapTerrainGeneratorSO.FindProperty("treeCanopyMaterial").objectReferenceValue = treeCanopyMaterial;
+            mapTerrainGeneratorSO.FindProperty("rockMaterial").objectReferenceValue = rockMaterial;
             mapTerrainGeneratorSO.ApplyModifiedPropertiesWithoutUndo();
 
             var saveControllerMapFieldSO = new SerializedObject(saveController);
@@ -975,11 +984,9 @@ namespace CityBuilder.EditorTools
             return prefab;
         }
 
-        private static void CreateForestBorder(float innerHalfWidth, float innerHalfDepth, float outerHalfWidth, float outerHalfDepth)
+        private static void CreateForestBorder(float innerHalfWidth, float innerHalfDepth, float outerHalfWidth, float outerHalfDepth, Material trunkMaterial, Material canopyMaterial)
         {
             var root = new GameObject("Forest");
-            var trunkMaterial = CreateLitMaterial("TreeTrunk", new Color(0.36f, 0.24f, 0.14f));
-            var canopyMaterial = CreateLitMaterial("TreeCanopy", new Color(0.16f, 0.38f, 0.18f));
 
             // Fixed seed so re-running the setup script produces the same layout every time.
             Random.InitState(12345);
