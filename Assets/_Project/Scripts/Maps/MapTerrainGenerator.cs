@@ -24,7 +24,6 @@ namespace CityBuilder.Maps
         [SerializeField] private GameSaveController saveController;
         [SerializeField] private Color waterColor = new Color(0.25f, 0.5f, 0.75f);
         [SerializeField] private Color grassColor = new Color(0.42f, 0.62f, 0.32f);
-        [SerializeField] private Color forestColor = new Color(0.16f, 0.38f, 0.18f);
         [SerializeField] private Color stoneColor = new Color(0.58f, 0.56f, 0.52f);
         [SerializeField] private Material treeTrunkMaterial;
         [SerializeField] private Material treeCanopyMaterial;
@@ -126,8 +125,10 @@ namespace CityBuilder.Maps
             switch (terrain)
             {
                 case TerrainType.Water: return waterColor;
-                case TerrainType.Forest: return forestColor;
                 case TerrainType.Stone: return stoneColor;
+                // Forest is a spawn designation for tree props (see SpawnTree below), not a
+                // distinct ground color — the tile itself still reads as ordinary grass.
+                case TerrainType.Forest:
                 default: return grassColor;
             }
         }
