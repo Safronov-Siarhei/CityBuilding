@@ -67,22 +67,27 @@ namespace CityBuilder.Maps
             if (baseGroundToHide != null) baseGroundToHide.SetActive(false);
             if (baseForestBorderToHide != null) baseForestBorderToHide.SetActive(false);
 
+            // These FBX assets carry a corrective root rotation from Blender's Z-up authoring
+            // (visible in the Inspector, e.g. ~90 degrees on X) that must NOT be overridden with
+            // Quaternion.identity -- doing so would leave the mesh (and its collider, used below
+            // for the land/water raycast split) rotated out of alignment with the world. Passing
+            // each prefab's own transform.rotation preserves whatever correction it needs.
             Collider groundCollider = null;
             if (map.GroundPrefab != null)
             {
-                var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, Quaternion.identity, transform);
+                var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
                 groundCollider = AddMeshCollider(groundInstance);
             }
 
             if (map.WaterPrefab != null)
             {
-                Instantiate(map.WaterPrefab, Vector3.zero, Quaternion.identity, transform);
+                Instantiate(map.WaterPrefab, Vector3.zero, map.WaterPrefab.transform.rotation, transform);
             }
 
             Collider waterZoneCollider = null;
             if (map.WaterPlacementZonePrefab != null)
             {
-                var waterZoneInstance = Instantiate(map.WaterPlacementZonePrefab, Vector3.zero, Quaternion.identity, transform);
+                var waterZoneInstance = Instantiate(map.WaterPlacementZonePrefab, Vector3.zero, map.WaterPlacementZonePrefab.transform.rotation, transform);
                 SetRenderersEnabled(waterZoneInstance, false);
                 waterZoneCollider = AddMeshCollider(waterZoneInstance);
             }
@@ -90,7 +95,7 @@ namespace CityBuilder.Maps
             GameObject treesAreaInstance = null;
             if (map.TreesAreaPrefab != null)
             {
-                treesAreaInstance = Instantiate(map.TreesAreaPrefab, Vector3.zero, Quaternion.identity, transform);
+                treesAreaInstance = Instantiate(map.TreesAreaPrefab, Vector3.zero, map.TreesAreaPrefab.transform.rotation, transform);
                 SetRenderersEnabled(treesAreaInstance, false);
                 AddMeshCollider(treesAreaInstance);
             }

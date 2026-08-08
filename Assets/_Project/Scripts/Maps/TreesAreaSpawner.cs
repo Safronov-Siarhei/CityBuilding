@@ -95,7 +95,9 @@ namespace CityBuilder.Maps
                 if (prefab == null) continue;
 
                 var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
-                var instance = Instantiate(prefab, position, Quaternion.identity, transform);
+                // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
+                // than forcing identity, which would render the tree tipped over.
+                var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
                 instance.AddComponent<TreeGrowth>();
                 instance.AddComponent<ResourceNode>().Initialize(ResourceType.Wood);
 
