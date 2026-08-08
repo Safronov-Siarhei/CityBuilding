@@ -285,6 +285,17 @@ namespace CityBuilder.Citizens
             AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);
             AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
 
+            // Added before CitizenAgent so its Awake() can find it via GetComponent. Sized to
+            // roughly match the cube body+head (feet at local y=0, top of head around y=0.72),
+            // so citizens now physically collide with building colliders instead of walking
+            // through them.
+            var controller = root.AddComponent<CharacterController>();
+            controller.height = 0.72f;
+            controller.radius = 0.15f;
+            controller.center = new Vector3(0f, 0.36f, 0f);
+            controller.skinWidth = 0.02f;
+            controller.minMoveDistance = 0f;
+
             var agent = root.AddComponent<CitizenAgent>();
             agent.Initialize(center.Value);
 

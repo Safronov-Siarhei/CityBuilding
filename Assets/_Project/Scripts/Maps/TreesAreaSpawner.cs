@@ -16,7 +16,7 @@ namespace CityBuilder.Maps
     {
         public static TreesAreaSpawner Instance { get; private set; }
 
-        private const int InitialTreeCount = 300;
+        private const int InitialTreeCount = 600;
         private const float RespawnDelaySeconds = 60f;
         private const int MaxPlacementAttempts = 40;
 
@@ -45,7 +45,9 @@ namespace CityBuilder.Maps
             _zoneBounds = _zoneCollider.bounds;
             for (var i = 0; i < InitialTreeCount; i++)
             {
-                SpawnOneTree();
+                // The starting forest is already mature -- only trees planted later (after a
+                // harvest) grow up from a sapling. See SpawnOneTree's startGrown parameter.
+                SpawnOneTree(startGrown: true);
             }
         }
 
@@ -68,13 +70,15 @@ namespace CityBuilder.Maps
         private IEnumerator RespawnAfterDelay()
         {
             yield return new WaitForSeconds(RespawnDelaySeconds);
-            SpawnOneTree();
+            SpawnOneTree(startGrown: false);
         }
 
-        private void SpawnOneTree()
+        private void SpawnOneTree(bool startGrown)
         {
             var grid = GridManager.Instance;
             if (grid == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
+
+            var mapApplier = MeshMapApplier.Instance;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
@@ -88,6 +92,9 @@ namespace CityBuilder.Maps
 
                 var cell = grid.WorldToCell(hit.point);
                 if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
+                // The TreesArea zone can overlap the shoreline right at its edge -- exclude water
+                // cells explicitly rather than trusting the zone mesh alone.
+                if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
                 // Explicit "don't spawn where a building/other object already stands" check.
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
 
@@ -98,7 +105,10 @@ namespace CityBuilder.Maps
                 // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
                 // than forcing identity, which would render the tree tipped over.
                 var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
-                instance.AddComponent<TreeGrowth>();
+                if (!startGrown)
+                {
+                    instance.AddComponent<TreeGrowth>();
+                }
                 instance.AddComponent<ResourceNode>().Initialize(ResourceType.Wood);
 
                 grid.SetAreaOccupied(cell, Vector2Int.one, true);

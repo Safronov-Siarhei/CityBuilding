@@ -22,9 +22,6 @@ namespace CityBuilder.CameraControl
         [SerializeField] private float minDistance = 8f;
         [SerializeField] private float maxDistance = 220f;
 
-        [Header("Rotate (PC only)")]
-        [SerializeField] private float rotateSpeed = 90f;
-
         [Header("Touch")]
         [SerializeField] private float touchPanSpeed = 0.06f;
         [SerializeField] private float touchZoomSpeed = 0.05f;
@@ -46,7 +43,6 @@ namespace CityBuilder.CameraControl
                 {
                     HandlePan(keyboard, mouse, dt);
                     HandleZoom(mouse, dt);
-                    HandleRotate(keyboard, mouse, dt);
                 }
             }
         }
@@ -169,19 +165,5 @@ namespace CityBuilder.CameraControl
             cameraTransform.localPosition = localPos;
         }
 
-        private void HandleRotate(Keyboard keyboard, Mouse mouse, float dt)
-        {
-            var rotateInput = 0f;
-            if (keyboard[Key.Q].isPressed) rotateInput -= 1f;
-            if (keyboard[Key.E].isPressed) rotateInput += 1f;
-
-            if (mouse.middleButton.isPressed)
-            {
-                rotateInput += mouse.delta.ReadValue().x * 0.1f;
-            }
-
-            if (Mathf.Approximately(rotateInput, 0f)) return;
-            transform.Rotate(Vector3.up, rotateInput * rotateSpeed * dt, Space.World);
-        }
     }
 }

@@ -33,6 +33,8 @@ namespace CityBuilder.Citizens
         private float _pauseTimer;
         private bool _isWalking;
 
+        private CharacterController _controller;
+
         // Set whenever SetWorking/SetIdleWander runs while OnWorkVisitCompleted is being
         // dispatched, so OnPauseElapsed can tell a subscriber already reassigned this agent
         // synchronously and skip its own (now-stale) default transition below.
@@ -40,6 +42,11 @@ namespace CityBuilder.Citizens
 
         /// <summary>Fired once per completed "at the node" work visit (Working mode only) -- e.g. drives tree felling in CitizenVisualsManager.</summary>
         public event Action OnWorkVisitCompleted;
+
+        private void Awake()
+        {
+            _controller = GetComponent<CharacterController>();
+        }
 
         /// <summary>First-time spawn: places the agent at the town center and starts it wandering.</summary>
         public void Initialize(Vector3 townCenter)
@@ -76,11 +83,32 @@ namespace CityBuilder.Citizens
         {
             if (_isWalking)
             {
-                transform.position = Vector3.MoveTowards(transform.position, _target, WalkSpeed * Time.deltaTime);
-                if (Vector3.Distance(transform.position, _target) < ArrivalThreshold)
+                // Horizontal-only distance/direction: SimpleMove's own gravity governs vertical
+                // position (settling onto whatever collider is underneath), so comparing full 3D
+                // distance against _target (whose Y is just a hint) could stall just short of
+                // ArrivalThreshold if gravity has settled the agent at a slightly different height.
+                var toTarget = _target - transform.position;
+                toTarget.y = 0f;
+                var distance = toTarget.magnitude;
+
+                if (distance < ArrivalThreshold)
                 {
                     _isWalking = false;
                     OnArrived();
+                    return;
+                }
+
+                var direction = toTarget / distance;
+                if (_controller != null && _controller.enabled)
+                {
+                    // CharacterController collides with building colliders (see BuildingPlacer's
+                    // procedurally generated BoxColliders), so citizens can no longer walk through
+                    // a placed building the way a direct transform.position set would allow.
+                    _controller.SimpleMove(direction * WalkSpeed);
+                }
+                else
+                {
+                    transform.position += direction * WalkSpeed * Time.deltaTime;
                 }
                 return;
             }
