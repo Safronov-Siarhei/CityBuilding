@@ -44,6 +44,7 @@ namespace CityBuilder.Citizens
         private Material[] _clothingMaterials;
         private Material _skinMaterial;
         private Vector3? _townCenter;
+        private Vector3? _citizenSpawnPoint;
         private float _nodeRetryTimer;
 
         private void Awake()
@@ -297,7 +298,7 @@ namespace CityBuilder.Citizens
             controller.minMoveDistance = 0f;
 
             var agent = root.AddComponent<CitizenAgent>();
-            agent.Initialize(center.Value);
+            agent.Initialize(_citizenSpawnPoint ?? center.Value, center.Value);
 
             return agent;
         }
@@ -311,7 +312,18 @@ namespace CityBuilder.Citizens
             {
                 if (instance.Data != null && instance.Data.buildingName == "TownHall")
                 {
-                    _townCenter = gridManager.GetFootprintCenterWorld(instance.OriginCell, instance.Data.footprintSize);
+                    var footprint = instance.Data.footprintSize;
+                    _townCenter = gridManager.GetFootprintCenterWorld(instance.OriginCell, footprint);
+
+                    // The footprint center sits inside the Town Hall's own solid BoxCollider --
+                    // fine when citizens just walked through it, but now that they carry a
+                    // CharacterController (physical collision with buildings) spawning there
+                    // would trap them inside its walls from frame one. Spawn just south of the
+                    // building instead, past its footprint edge (matching the procedurally
+                    // generated entrance, which also faces -Z -- see SetupProject.CreateTownHallPrefab).
+                    var southEdgeZ = _townCenter.Value.z - footprint.y * gridManager.CellSize * 0.5f;
+                    _citizenSpawnPoint = new Vector3(_townCenter.Value.x, _townCenter.Value.y, southEdgeZ - gridManager.CellSize);
+
                     return _townCenter;
                 }
             }

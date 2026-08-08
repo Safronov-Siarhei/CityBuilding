@@ -48,11 +48,16 @@ namespace CityBuilder.Citizens
             _controller = GetComponent<CharacterController>();
         }
 
-        /// <summary>First-time spawn: places the agent at the town center and starts it wandering.</summary>
-        public void Initialize(Vector3 townCenter)
+        /// <summary>
+        /// First-time spawn: places the agent at spawnPosition (expected to be clear of any
+        /// building's solid collider -- see CitizenVisualsManager.SpawnAgent, which no longer
+        /// passes the Town Hall's own footprint center now that citizens carry a
+        /// CharacterController) and starts it wandering around wanderCenter.
+        /// </summary>
+        public void Initialize(Vector3 spawnPosition, Vector3 wanderCenter)
         {
-            transform.position = townCenter;
-            SetIdleWander(townCenter);
+            transform.position = spawnPosition;
+            SetIdleWander(wanderCenter);
         }
 
         /// <summary>Switches (or keeps) the agent to ambient wandering from wherever it currently is.</summary>
