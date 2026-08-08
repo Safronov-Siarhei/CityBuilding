@@ -1197,9 +1197,6 @@ namespace CityBuilder.EditorTools
             DeleteIfExists($"{TexturesFolder}/GridCell.asset");
             DeleteIfExists($"{MaterialsFolder}/Building_House.mat");
             DeleteIfExists($"{MaterialsFolder}/Building_TownHall.mat");
-            // Buildings are pure cube assemblies now (no custom roof meshes), so the whole
-            // Models folder from the old diagonal-gable-roof system is stale.
-            AssetDatabase.DeleteAsset("Assets/_Project/Models");
         }
     }
 }
