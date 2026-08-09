@@ -30,6 +30,7 @@ namespace CityBuilder.EditorTools
         private const string MeshMapsFolder = "Assets/_Project/Resources/MeshMaps";
         private const string ModelsMap1Folder = "Assets/_Project/Models/Map1";
         private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
+        private const string ModelsBuildingsFolder = "Assets/_Project/Models/Buildings";
 
         private const int GridCellsX = 200;
         private const int GridCellsZ = 200;
@@ -144,11 +145,10 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true, citizensGranted: 5);
 
-            var townHallData = CreateBuildingData(
-                "TownHall", "Ратуша", new Vector2Int(5, 5), height: 4f,
-                wallColor: new Color(0.75f, 0.72f, 0.68f), roofColor: new Color(0.5f, 0.14f, 0.14f),
+            var townHallData = CreateFbxBuildingData(
+                "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
+                fbxFileName: "MainCastle-1.fbx",
                 cost: new List<ResourceAmount>(),
-                style: BuildingStyle.Landmark, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 citizensGranted: 5);
 
             var fishermanHutData = CreateBuildingData(
@@ -638,7 +638,7 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>Architectural archetype driving which procedural generator builds a prefab.</summary>
-        private enum BuildingStyle { Hut, Fortification, Tower, Landmark }
+        private enum BuildingStyle { Hut, Fortification, Tower }
 
         private static BuildingData CreateBuildingData(
             string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
@@ -659,8 +659,7 @@ namespace CityBuilder.EditorTools
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: true);
                     break;
                 default:
-                    prefab = CreateTownHallPrefab(id, footprint, height, wallColor, roofColor, trimMaterial, doorMaterial, windowMaterial);
-                    break;
+                    throw new System.ArgumentOutOfRangeException(nameof(style), style, null);
             }
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
@@ -813,76 +812,52 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Procedurally assembles the Town Hall: entrance steps, a stepped plinth, corner-posted
-        /// walls with a framed door and windows, a banded three-tier roof with a ridge cap, and
-        /// four corner towers with capped spires (looped over corner sign combinations, not
-        /// typed out) — deliberately the most elaborate building, matching its unique 5x5 role.
+        /// Builds a BuildingData backed by a hand-authored FBX model (Assets/_Project/Models/
+        /// Buildings/) instead of one of the procedural generators above -- currently just the
+        /// Town Hall. The model's own root rotation is preserved rather than forced to identity
+        /// (see MeshMapApplier for why: Blender-authored FBX carry a corrective root rotation that
+        /// must survive instantiation), and it's parented under an unrotated wrapper GameObject so
+        /// the BoxCollider's size/center -- sized to the logical footprint, not the mesh -- stay
+        /// aligned to world axes regardless of that rotation. Expects the model's own pivot at the
+        /// footprint's base center (matching the convention used for the hand-authored map meshes).
         /// </summary>
-        private static GameObject CreateTownHallPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, Material trimMaterial, Material doorMaterial, Material windowMaterial)
+        private static BuildingData CreateFbxBuildingData(string id, string displayName, Vector2Int footprint, float height, string fbxFileName, List<ResourceAmount> cost, int citizensGranted = 0)
         {
-            var sizeX = footprint.x * CellSize - BuildingInset;
-            var sizeZ = footprint.y * CellSize - BuildingInset;
+            var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
 
-            var root = new GameObject(name);
-            root.AddComponent<BuildingInstance>();
-
-            var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
-            var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
-            var roofShadeMaterial = CreateLitMaterial($"Building_{name}_RoofShade", Shade(roofColor, 0.8f));
-
-            AddCubePart(root.transform, "StepLower", new Vector3(0f, -0.03f, -sizeZ * 0.5f - 0.55f), new Vector3(sizeX * 0.32f, 0.06f, 0.55f), trimMaterial);
-            AddCubePart(root.transform, "StepUpper", new Vector3(0f, 0.03f, -sizeZ * 0.5f - 0.22f), new Vector3(sizeX * 0.24f, 0.06f, 0.32f), trimMaterial);
-
-            var y = AddSteppedPlinth(root.transform, sizeX, sizeZ, height * 0.08f, trimMaterial, wallMaterial);
-
-            var wallHeight = height * 0.34f;
-            AddCubePart(root.transform, "Walls", new Vector3(0f, y + wallHeight * 0.5f, 0f), new Vector3(sizeX, wallHeight, sizeZ), wallMaterial);
-            AddCornerPosts(root.transform, sizeX, sizeZ, y, wallHeight, trimMaterial);
-
-            var doorWidth = sizeX * 0.16f;
-            var doorHeight = wallHeight * 0.65f;
-            AddFramedOpening(root.transform, "Door", 0f, y + doorHeight * 0.5f, -sizeZ * 0.5f, -1f, doorWidth, doorHeight, trimMaterial, doorMaterial);
-
-            var windowY = y + wallHeight * 0.72f;
-            foreach (var wx in new[] { -sizeX * 0.28f, sizeX * 0.28f })
+            GameObject prefab = null;
+            if (sourcePrefab != null)
             {
-                AddFramedOpening(root.transform, $"Window{(wx < 0 ? "L" : "R")}", wx, windowY, -sizeZ * 0.5f, -1f, 0.32f, 0.32f, trimMaterial, windowMaterial);
+                var root = new GameObject(id);
+                root.AddComponent<BuildingInstance>();
+                Object.Instantiate(sourcePrefab, Vector3.zero, sourcePrefab.transform.rotation, root.transform);
+
+                var sizeX = footprint.x * CellSize - BuildingInset;
+                var sizeZ = footprint.y * CellSize - BuildingInset;
+                var collider = root.AddComponent<BoxCollider>();
+                collider.size = new Vector3(sizeX, height, sizeZ);
+                collider.center = new Vector3(0f, height * 0.5f, 0f);
+
+                prefab = SavePrefab(root, id);
+            }
+            else
+            {
+                Debug.LogError($"CreateFbxBuildingData: FBX not found at {ModelsBuildingsFolder}/{fbxFileName} -- '{id}' will have no prefab.");
             }
 
-            y += wallHeight;
-            AddCubePart(root.transform, "Fascia", new Vector3(0f, y + 0.03f, 0f), new Vector3(sizeX * 1.03f, 0.06f, sizeZ * 1.03f), trimMaterial);
-            y += 0.06f;
+            var data = ScriptableObject.CreateInstance<BuildingData>();
+            data.buildingName = id;
+            data.displayName = displayName;
+            data.prefab = prefab;
+            data.footprintSize = footprint;
+            data.cost = cost;
+            data.citizensGranted = citizensGranted;
 
-            y = AddShingleRoof(root.transform, sizeX, sizeZ, y, height * 0.3f, 3, roofMaterial, roofShadeMaterial, trimMaterial);
-
-            var towerSize = Mathf.Min(sizeX, sizeZ) * 0.22f;
-            var towerHeight = height * 0.78f;
-            var offsetX = sizeX * 0.5f - towerSize * 0.6f;
-            var offsetZ = sizeZ * 0.5f - towerSize * 0.6f;
-            var towerIndex = 0;
-            for (var sx = -1; sx <= 1; sx += 2)
-            {
-                for (var sz = -1; sz <= 1; sz += 2)
-                {
-                    var basePos = new Vector3(sx * offsetX, 0f, sz * offsetZ);
-                    AddCubePart(root.transform, $"CornerTower{towerIndex}", basePos + new Vector3(0f, towerHeight * 0.5f, 0f), new Vector3(towerSize, towerHeight, towerSize), wallMaterial);
-                    AddCubePart(root.transform, $"CornerCap{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.25f, 0f), new Vector3(towerSize * 1.2f, towerSize * 0.5f, towerSize * 1.2f), roofMaterial);
-                    AddCubePart(root.transform, $"CornerSpire{towerIndex}", basePos + new Vector3(0f, towerHeight + towerSize * 0.5f + towerSize * 0.35f, 0f), new Vector3(towerSize * 0.4f, towerSize * 0.7f, towerSize * 0.4f), trimMaterial);
-                    towerIndex++;
-                }
-            }
-
-            var poleHeight = height * 0.2f;
-            AddCubePart(root.transform, "Pole", new Vector3(0f, y + poleHeight * 0.5f, 0f), new Vector3(0.08f, poleHeight, 0.08f), trimMaterial);
-            AddCubePart(root.transform, "Banner", new Vector3(sizeX * 0.05f, y + poleHeight * 0.7f, 0f), new Vector3(sizeX * 0.08f, poleHeight * 0.3f, 0.04f), roofMaterial);
-            y += poleHeight;
-
-            var totalHeight = Mathf.Max(y, towerHeight + towerSize * 0.85f);
-            var collider = root.AddComponent<BoxCollider>();
-            collider.size = new Vector3(sizeX * 1.1f, totalHeight, sizeZ * 1.1f);
-            collider.center = new Vector3(0f, totalHeight * 0.5f, 0f);
-
-            return SavePrefab(root, name);
+            Directory.CreateDirectory(BuildingDataFolder);
+            var dataPath = $"{BuildingDataFolder}/{id}.asset";
+            DeleteIfExists(dataPath);
+            AssetDatabase.CreateAsset(data, dataPath);
+            return data;
         }
 
         /// <summary>Two-tier foundation (a wide dark base course, then a narrower top course).</summary>
