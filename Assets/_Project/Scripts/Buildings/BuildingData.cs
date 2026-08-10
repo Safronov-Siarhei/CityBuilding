@@ -54,5 +54,10 @@ namespace CityBuilder.Buildings
         // BuildingInstance.CurrentHealth/Decay for the per-instance runtime values these seed.
         public int maxHealth = 100;
         public int defense = 0;
+
+        [Header("Fog of War")]
+        // Cells around this building permanently cleared of fog once placed -- see
+        // FogOfWarManager.RevealPermanent, called from BuildingInstance.Initialize.
+        public int fogRevealRadius = 8;
     }
 }

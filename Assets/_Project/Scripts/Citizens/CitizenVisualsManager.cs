@@ -36,6 +36,9 @@ namespace CityBuilder.Citizens
         private const float NodeRetryIntervalSeconds = 5f;
 
         private readonly List<CitizenAgent> _allAgents = new List<CitizenAgent>();
+
+        /// <summary>Every spawned citizen (idle or working) -- e.g. FogOfWarManager scans this instead of a FindObjectsByType scene scan.</summary>
+        public IReadOnlyList<CitizenAgent> AllAgents => _allAgents;
         private readonly List<CitizenAgent> _idleAgents = new List<CitizenAgent>();
         private readonly Dictionary<ProductionBuilding, List<CitizenAgent>> _workingAgents = new Dictionary<ProductionBuilding, List<CitizenAgent>>();
         private readonly Dictionary<CitizenAgent, ResourceNode> _claimedNodes = new Dictionary<CitizenAgent, ResourceNode>();

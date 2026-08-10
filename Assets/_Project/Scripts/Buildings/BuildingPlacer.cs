@@ -266,7 +266,13 @@ namespace CityBuilder.Buildings
                 _ghostInstance = null;
                 _ghostRenderers.Clear();
             }
-            if (wasMandatory) _mandatoryBuildingPlaced = true;
+            if (wasMandatory)
+            {
+                _mandatoryBuildingPlaced = true;
+                // The mandatory Town Hall's own reveal already ran above (Initialize runs before
+                // this point) -- fog only starts covering the rest of the map from here.
+                FogOfWarManager.Instance?.Activate();
+            }
 
             OnBuildingPlaced?.Invoke(placedData);
         }

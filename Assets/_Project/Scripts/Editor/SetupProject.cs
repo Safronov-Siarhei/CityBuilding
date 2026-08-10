@@ -150,14 +150,14 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing, maxHealth: 80);
+                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing, maxHealth: 80, fogRevealRadius: 10);
 
             var cottageData = CreateBuildingData(
                 "Cottage", "Коттедж", new Vector2Int(1, 1), height: 2.3f,
                 wallColor: new Color(0.62f, 0.42f, 0.55f), roofColor: new Color(0.3f, 0.2f, 0.4f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 8, category: BuildingCategory.Housing, maxHealth: 120);
+                hasChimney: true, citizensGranted: 8, category: BuildingCategory.Housing, maxHealth: 120, fogRevealRadius: 10);
 
             var townHallData = CreateFbxBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
@@ -172,66 +172,66 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 12);
 
             var hunterHutData = CreateBuildingData(
                 "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 14);
 
             var farmData = CreateBuildingData(
                 "Farm", "Ферма", new Vector2Int(2, 2), height: 1.8f,
                 wallColor: new Color(0.68f, 0.55f, 0.3f), roofColor: new Color(0.42f, 0.58f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3, category: BuildingCategory.Food, maxHealth: 70);
+                maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3, category: BuildingCategory.Food, maxHealth: 70, fogRevealRadius: 10);
 
             var lumberjackData = CreateBuildingData(
                 "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100);
+                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100, fogRevealRadius: 15);
 
             var quarryData = CreateBuildingData(
                 "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 110);
+                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
 
             var mineData = CreateBuildingData(
                 "Mine", "Шахта", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.6f, 0.5f, 0.2f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Gold, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110);
+                maxWorkers: 3, producesResource: ResourceType.Gold, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
 
             var wallData = CreateBuildingData(
                 "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 150, defense: 15);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 150, defense: 15, fogRevealRadius: 6);
 
             var towerData = CreateBuildingData(
                 "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25);
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25, fogRevealRadius: 18);
 
             var barracksData = CreateBuildingData(
                 "Barracks", "Казармы", new Vector2Int(2, 2), height: 2.6f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 30 }, new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 180, defense: 10);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 180, defense: 10, fogRevealRadius: 10);
 
             var gateData = CreateBuildingData(
                 "Gate", "Ворота", new Vector2Int(2, 1), height: 1.8f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 12 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12, fogRevealRadius: 8);
 
             var roadData = CreateBuildingData(
                 "Road", "Дорога", new Vector2Int(1, 1), height: 0.05f,
@@ -239,7 +239,7 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 3 } },
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 category: BuildingCategory.Infrastructure, maxHealth: 40,
-                isRoad: true, keepSelectedAfterPlacement: true);
+                isRoad: true, keepSelectedAfterPlacement: true, fogRevealRadius: 4);
 
             var bridgeData = CreateBuildingData(
                 "Bridge", "Мост", new Vector2Int(1, 1), height: 0.05f,
@@ -247,21 +247,21 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 8 } },
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 category: BuildingCategory.Infrastructure, maxHealth: 40,
-                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true);
+                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true, fogRevealRadius: 4);
 
             var waterMillData = CreateWaterBuildingData(
                 "WaterMill", "Водяная мельница", new Vector2Int(2, 2),
                 deckColor: new Color(0.5f, 0.4f, 0.28f), accentColor: new Color(0.35f, 0.24f, 0.14f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 10 } },
                 addWheel: true, maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3,
-                category: BuildingCategory.Food, maxHealth: 90);
+                category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 12);
 
             var dockData = CreateWaterBuildingData(
                 "Dock", "Пристань", new Vector2Int(2, 2),
                 deckColor: new Color(0.55f, 0.4f, 0.24f), accentColor: new Color(0.68f, 0.5f, 0.3f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
                 addCrates: true, maxWorkers: 2, producesResource: ResourceType.Gold, productionPerTick: 1,
-                category: BuildingCategory.Production, maxHealth: 80);
+                category: BuildingCategory.Production, maxHealth: 80, fogRevealRadius: 12);
 
             var hotbarBuildingData = new List<BuildingData>
             {
@@ -354,6 +354,12 @@ namespace CityBuilder.EditorTools
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             citizenVisualsManagerSO.FindProperty("gridManager").objectReferenceValue = gridManager;
             citizenVisualsManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            var fogOfWarManager = managers.AddComponent<FogOfWarManager>();
+            var fogOfWarManagerSO = new SerializedObject(fogOfWarManager);
+            fogOfWarManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            fogOfWarManagerSO.FindProperty("citizenVisualsManager").objectReferenceValue = citizenVisualsManager;
+            fogOfWarManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var saveController = managers.AddComponent<GameSaveController>();
             var saveControllerSO = new SerializedObject(saveController);
@@ -867,7 +873,7 @@ namespace CityBuilder.EditorTools
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
             BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0,
-            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false)
+            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false, int fogRevealRadius = 8)
         {
             GameObject prefab;
             switch (style)
@@ -907,6 +913,7 @@ namespace CityBuilder.EditorTools
             data.isRoad = isRoad;
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
+            data.fogRevealRadius = fogRevealRadius;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1152,7 +1159,7 @@ namespace CityBuilder.EditorTools
         private static BuildingData CreateWaterBuildingData(
             string id, string displayName, Vector2Int footprint, Color deckColor, Color accentColor, List<ResourceAmount> cost,
             bool addWheel = false, bool addCrates = false, int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0,
-            BuildingCategory category = BuildingCategory.Production, int maxHealth = 80, int defense = 0)
+            BuildingCategory category = BuildingCategory.Production, int maxHealth = 80, int defense = 0, int fogRevealRadius = 8)
         {
             var prefab = CreateWaterBuildingPrefab(id, footprint, deckColor, accentColor, addWheel, addCrates);
 
@@ -1172,6 +1179,7 @@ namespace CityBuilder.EditorTools
             data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
             data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
             data.isWaterCategory = true;
+            data.fogRevealRadius = fogRevealRadius;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1191,7 +1199,7 @@ namespace CityBuilder.EditorTools
         /// footprint's base center (matching the convention used for the hand-authored map meshes).
         /// </summary>
         private static BuildingData CreateFbxBuildingData(string id, string displayName, Vector2Int footprint, float height, string fbxFileName, List<ResourceAmount> cost, int citizensGranted = 0,
-            int maxHealth = 200, int defense = 0, List<ResourceAmount> upgradeToLevel2Cost = null, List<ResourceAmount> upgradeToLevel3Cost = null)
+            int maxHealth = 200, int defense = 0, List<ResourceAmount> upgradeToLevel2Cost = null, List<ResourceAmount> upgradeToLevel3Cost = null, int fogRevealRadius = 20)
         {
             var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
 
@@ -1226,6 +1234,7 @@ namespace CityBuilder.EditorTools
             data.defense = defense;
             data.upgradeToLevel2Cost = upgradeToLevel2Cost ?? new List<ResourceAmount>();
             data.upgradeToLevel3Cost = upgradeToLevel3Cost ?? new List<ResourceAmount>();
+            data.fogRevealRadius = fogRevealRadius;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";

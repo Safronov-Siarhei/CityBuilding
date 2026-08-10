@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
 
@@ -28,6 +29,16 @@ namespace CityBuilder.Buildings
             RotationSteps = ((rotationSteps % 4) + 4) % 4;
             CurrentHealth = data != null ? data.maxHealth : 0;
             Decay = 0f;
+
+            // The single hook point for every building instantiation (fresh placement AND
+            // save/load), so permanent fog reveal always matches the buildings actually present
+            // without needing any separate persistence of its own.
+            if (data != null)
+            {
+                var footprint = data.footprintSize;
+                var centerCell = originCell + new Vector2Int(footprint.x / 2, footprint.y / 2);
+                FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
+            }
         }
 
         /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>
