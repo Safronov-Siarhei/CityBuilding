@@ -103,12 +103,13 @@ namespace CityBuilder.Maps
                 if (HasNearbyTree(cell)) continue;
 
                 var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
-                // Direct raycast against the actual Ground collider at the exact spawn point --
-                // belt-and-braces on top of the IsWaterCell check above: the TreesArea zone can
-                // overlap the shoreline right at its edge, and IsWaterCell's own per-cell result
-                // is a single raycast at the CELL CENTER, which can disagree with the footprint
-                // center used here right at a cell that straddles the coastline.
-                if (mapApplier != null && !mapApplier.HasGroundBeneath(position)) continue;
+                // A shoreline rarely lines up with the 1m grid -- IsWaterCell above is a single
+                // raycast at this exact same cell-center point, so it only rejects a cell if the
+                // CENTER happens to be over water. A cell the coastline clips diagonally can have
+                // its center sampled onto a sliver of solid Ground while most of the cell (and the
+                // tree that would render there) sits over water. Sampling the cell's four corners
+                // too catches that partial-coverage case.
+                if (mapApplier != null && !HasFullGroundCoverage(mapApplier, position, grid.CellSize)) continue;
 
                 var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
@@ -126,6 +127,27 @@ namespace CityBuilder.Maps
                 _treeCellByInstance[instance] = cell;
                 return;
             }
+        }
+
+        /// <summary>
+        /// Samples the center plus all four corners (inset slightly so they stay within the cell)
+        /// against the real Ground collider -- a coastline cutting diagonally through the cell
+        /// fails at least one corner even when the center alone would pass.
+        /// </summary>
+        private static bool HasFullGroundCoverage(MeshMapApplier mapApplier, Vector3 center, float cellSize)
+        {
+            if (!mapApplier.HasGroundBeneath(center)) return false;
+
+            var half = cellSize * 0.45f;
+            for (var dx = -1; dx <= 1; dx += 2)
+            {
+                for (var dz = -1; dz <= 1; dz += 2)
+                {
+                    var corner = new Vector3(center.x + dx * half, center.y, center.z + dz * half);
+                    if (!mapApplier.HasGroundBeneath(corner)) return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>True if any already-placed tree occupies a cell within MinSpacingCells of the candidate (a square neighborhood check, cheap and sufficient at this grid resolution).</summary>
