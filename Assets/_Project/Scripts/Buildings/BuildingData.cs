@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CityBuilder.Buildings
 {
+    /// <summary>Groups buildings in the hotbar (see BuildingCategoryPanel) -- purely a UI grouping, not a gameplay mechanic.</summary>
+    public enum BuildingCategory { Housing, Food, Production, Military }
+
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]
     public class BuildingData : ScriptableObject
     {
@@ -13,6 +16,7 @@ namespace CityBuilder.Buildings
         public GameObject prefab;
         public Vector2Int footprintSize = Vector2Int.one;
         public List<ResourceAmount> cost = new List<ResourceAmount>();
+        public BuildingCategory category = BuildingCategory.Production;
 
         [Header("Placement")]
         // Allows placement on cells inside a mesh map's water-placement zone (MeshMapApplier)

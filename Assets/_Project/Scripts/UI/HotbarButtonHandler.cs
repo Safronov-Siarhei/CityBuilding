@@ -8,6 +8,8 @@ namespace CityBuilder.UI
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private BuildingData building;
 
+        public BuildingData Building => building;
+
         public void SelectThisBuilding()
         {
             if (buildingPlacer != null && building != null) buildingPlacer.SelectBuilding(building);

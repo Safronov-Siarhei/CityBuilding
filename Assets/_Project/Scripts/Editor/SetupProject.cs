@@ -143,7 +143,7 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 5);
+                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing);
 
             var townHallData = CreateFbxBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
@@ -156,40 +156,40 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food);
 
             var lumberjackData = CreateBuildingData(
                 "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2);
+                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production);
 
             var wallData = CreateBuildingData(
                 "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military);
 
             var towerData = CreateBuildingData(
                 "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military);
 
             var quarryData = CreateBuildingData(
                 "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2);
+                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production);
 
             var hunterHutData = CreateBuildingData(
                 "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food);
 
             var hotbarBuildingData = new List<BuildingData> { houseData, fishermanHutData, lumberjackData, wallData, towerData, quarryData, hunterHutData };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -350,18 +350,27 @@ namespace CityBuilder.EditorTools
             hintRect.sizeDelta = new Vector2(780f, 84f);
             CreateText(hintRoot.transform, "Text", "Выберите место для Ратуши (5x5)", 30, Vector2.zero, new Vector2(740f, 74f));
 
-            // Touch-friendly building hotbar, shown only once the Town Hall is placed (there's
-            // nothing else buildable before that point). Number-key hotkeys still work on PC.
+            // Touch-friendly building hotbar, grouped into categories (a small category row above
+            // it picks which category's buildings the hotbar shows -- see BuildingCategoryPanel).
+            // Shown only once the Town Hall is placed (there's nothing else buildable before that
+            // point). Number-key hotkeys still work on PC, against the same availableBuildings
+            // list regardless of which category is currently shown.
+            var menuGO = new GameObject("BuildingMenu", typeof(RectTransform));
+            menuGO.transform.SetParent(canvasGO.transform, false);
+            StretchFull(menuGO.GetComponent<RectTransform>());
+            var categoryPanel = menuGO.AddComponent<BuildingCategoryPanel>();
+
+            const float buttonSize = 130f;
+            const float spacing = 16f;
+
             var hotbarGO = new GameObject("Hotbar", typeof(RectTransform));
-            hotbarGO.transform.SetParent(canvasGO.transform, false);
+            hotbarGO.transform.SetParent(menuGO.transform, false);
             var hotbarRect = hotbarGO.GetComponent<RectTransform>();
             hotbarRect.anchorMin = new Vector2(0.5f, 0f);
             hotbarRect.anchorMax = new Vector2(0.5f, 0f);
             hotbarRect.pivot = new Vector2(0.5f, 0f);
             hotbarRect.anchoredPosition = new Vector2(0f, 28f);
 
-            const float buttonSize = 130f;
-            const float spacing = 16f;
             var totalWidth = hotbarBuildings.Count * buttonSize + Mathf.Max(0, hotbarBuildings.Count - 1) * spacing;
             hotbarRect.sizeDelta = new Vector2(totalWidth, buttonSize);
 
@@ -380,11 +389,54 @@ namespace CityBuilder.EditorTools
                 UnityEventTools.AddPersistentListener(button.onClick, handler.SelectThisBuilding);
             }
 
+            // Fixed display order; only categories that actually have a hotbar building get a tab.
+            var categoryLabels = new (BuildingCategory Category, string Label)[]
+            {
+                (BuildingCategory.Housing, "Жильё"),
+                (BuildingCategory.Food, "Еда"),
+                (BuildingCategory.Production, "Производство"),
+                (BuildingCategory.Military, "Оборона"),
+            };
+            var presentCategories = new List<BuildingCategory>();
+            foreach (var entry in categoryLabels)
+            {
+                if (hotbarBuildings.Exists(b => b.category == entry.Category)) presentCategories.Add(entry.Category);
+            }
+
+            const float categoryButtonWidth = 150f;
+            const float categoryButtonHeight = 56f;
+            var categoryTotalWidth = presentCategories.Count * categoryButtonWidth + Mathf.Max(0, presentCategories.Count - 1) * spacing;
+
+            var categoryBarGO = new GameObject("CategoryBar", typeof(RectTransform));
+            categoryBarGO.transform.SetParent(menuGO.transform, false);
+            var categoryBarRect = categoryBarGO.GetComponent<RectTransform>();
+            categoryBarRect.anchorMin = new Vector2(0.5f, 0f);
+            categoryBarRect.anchorMax = new Vector2(0.5f, 0f);
+            categoryBarRect.pivot = new Vector2(0.5f, 0f);
+            categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y + buttonSize + spacing);
+            categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonHeight);
+
+            for (var i = 0; i < presentCategories.Count; i++)
+            {
+                var category = presentCategories[i];
+                var label = categoryLabels[System.Array.FindIndex(categoryLabels, e => e.Category == category)].Label;
+                var x = -categoryTotalWidth * 0.5f + categoryButtonWidth * 0.5f + i * (categoryButtonWidth + spacing);
+                var categoryButton = CreateButton(categoryBarGO.transform, panelSprite, $"Category_{category}", label, new Vector2(x, categoryButtonHeight * 0.5f), new Vector2(categoryButtonWidth, categoryButtonHeight));
+
+                var categoryHandler = categoryButton.gameObject.AddComponent<CategoryButtonHandler>();
+                var categoryHandlerSO = new SerializedObject(categoryHandler);
+                categoryHandlerSO.FindProperty("panel").objectReferenceValue = categoryPanel;
+                categoryHandlerSO.FindProperty("category").enumValueIndex = (int)category;
+                categoryHandlerSO.ApplyModifiedPropertiesWithoutUndo();
+
+                UnityEventTools.AddPersistentListener(categoryButton.onClick, categoryHandler.SelectThisCategory);
+            }
+
             var visibility = canvasGO.AddComponent<BuildingPlacerUIVisibility>();
             var visibilitySO = new SerializedObject(visibility);
             visibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             visibilitySO.FindProperty("showWhilePlacingMandatory").objectReferenceValue = hintRoot.gameObject;
-            visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = hotbarGO;
+            visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = menuGO;
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
@@ -644,7 +696,8 @@ namespace CityBuilder.EditorTools
             string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false, int citizensGranted = 0,
-            int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f)
+            int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
+            BuildingCategory category = BuildingCategory.Production)
         {
             GameObject prefab;
             switch (style)
@@ -673,6 +726,7 @@ namespace CityBuilder.EditorTools
             data.producesResource = producesResource;
             data.productionPerWorkerPerTick = productionPerTick;
             data.productionIntervalSeconds = productionInterval;
+            data.category = category;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
