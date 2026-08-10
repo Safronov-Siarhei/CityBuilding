@@ -75,6 +75,7 @@ namespace CityBuilder.UI
 
             var image = rowGO.GetComponent<Image>();
             image.sprite = rowSprite;
+            image.type = Image.Type.Sliced;
             image.color = NormalRowColor;
 
             var textGO = new GameObject("Label", typeof(RectTransform), typeof(Text));

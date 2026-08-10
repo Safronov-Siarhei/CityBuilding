@@ -392,6 +392,7 @@ namespace CityBuilder.EditorTools
             // Hint shown only while the player must place the mandatory Town Hall.
             var hintRoot = CreateImage(canvasGO.transform, "PlacementHint", new Color(0f, 0f, 0f, 0.6f));
             hintRoot.sprite = panelSprite;
+            hintRoot.type = Image.Type.Sliced;
             var hintRect = hintRoot.GetComponent<RectTransform>();
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 1f);
             hintRect.anchoredPosition = new Vector2(0f, -70f);
@@ -557,6 +558,7 @@ namespace CityBuilder.EditorTools
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.sizeDelta = new Vector2(700f, 600f);
@@ -633,6 +635,7 @@ namespace CityBuilder.EditorTools
 
             var card = CreateImage(dialogRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.sizeDelta = new Vector2(760f, 380f);
@@ -671,6 +674,7 @@ namespace CityBuilder.EditorTools
 
             var card = CreateImage(dialogRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.sizeDelta = new Vector2(760f, 420f);
@@ -708,6 +712,7 @@ namespace CityBuilder.EditorTools
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.sizeDelta = new Vector2(1000f, 760f);
@@ -1270,8 +1275,10 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
+            var waterMaterial = CreateWaterMaterial();
+
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
-            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, new[] { tree1, tree2 });
+            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, new[] { tree1, tree2 }, waterMaterial);
 
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{mapId}.asset";
@@ -1288,11 +1295,48 @@ namespace CityBuilder.EditorTools
             return material;
         }
 
+        /// <summary>
+        /// User-supplied Water.png (hand-authored alongside the Map1 FBX assets) applied as the
+        /// main texture on a URP Lit material, assigned to the Water mesh's renderer at runtime
+        /// by MeshMapApplier -- same "materials controlled explicitly through code" pattern as
+        /// every other material in this file, just texture-backed instead of flat-color.
+        /// </summary>
+        private static Material CreateWaterMaterial()
+        {
+            var texturePath = $"{ModelsMap1Folder}/Water.png";
+            AssetDatabase.ImportAsset(texturePath);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            if (texture == null)
+            {
+                Debug.LogWarning($"CreateWaterMaterial: Water.png not found at {texturePath} -- water will keep its FBX-imported default material.");
+                return null;
+            }
+
+            var path = $"{MaterialsFolder}/Water.mat";
+            Directory.CreateDirectory(MaterialsFolder);
+            DeleteIfExists(path);
+            var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { mainTexture = texture };
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        /// <summary>
+        /// "Резной камень" (Style A): a carved-stone bevel — dark outer groove, a lighter raised
+        /// rim just inside it, and small dark rivet squares in the corners. Sharp 90-degree
+        /// corners throughout (the game's cubic/angular style, no rounded UI). Greyscale so the
+        /// per-context .color tint used across the UI still works. 9-sliced (see the returned
+        /// sprite's border) so it stretches cleanly to any button/panel size without smearing the
+        /// bevel or rivets.
+        /// </summary>
         private static Sprite CreatePanelSprite()
         {
-            // Plain solid rectangle, sharp 90-degree corners — the whole game is meant to read
-            // as cubic/angular, so no rounded UI corners either.
-            const int size = 8;
+            const int size = 32;
+            const int border = 8;
+
+            var fill = new Color(0.6f, 0.6f, 0.58f);
+            var groove = new Color(0.16f, 0.16f, 0.15f);
+            var rim = new Color(0.82f, 0.82f, 0.78f);
+            var rivet = new Color(0.1f, 0.1f, 0.09f);
 
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
@@ -1301,7 +1345,34 @@ namespace CityBuilder.EditorTools
             };
 
             var pixels = new Color[size * size];
-            for (var i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var edgeDist = Mathf.Min(Mathf.Min(x, y), Mathf.Min(size - 1 - x, size - 1 - y));
+                    Color color;
+                    if (edgeDist < 2) color = groove;
+                    else if (edgeDist < 4) color = rim;
+                    else color = fill;
+                    pixels[y * size + x] = color;
+                }
+            }
+
+            void Rivet(int cx, int cy)
+            {
+                for (var dy = 0; dy < 2; dy++)
+                {
+                    for (var dx = 0; dx < 2; dx++)
+                    {
+                        pixels[(cy + dy) * size + (cx + dx)] = rivet;
+                    }
+                }
+            }
+            Rivet(3, 3);
+            Rivet(size - 5, 3);
+            Rivet(3, size - 5);
+            Rivet(size - 5, size - 5);
+
             texture.SetPixels(pixels);
             texture.Apply();
 
@@ -1310,7 +1381,8 @@ namespace CityBuilder.EditorTools
             DeleteIfExists(texPath);
             AssetDatabase.CreateAsset(texture, texPath);
 
-            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f,
+                0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
             sprite.name = "UI_Panel_Sprite";
             AssetDatabase.AddObjectToAsset(sprite, texture);
             AssetDatabase.ImportAsset(texPath);
@@ -1589,6 +1661,7 @@ namespace CityBuilder.EditorTools
 
             var background = go.GetComponent<Image>();
             background.sprite = backgroundSprite;
+            background.type = Image.Type.Sliced;
             background.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
             var iconGO = new GameObject("Icon", typeof(RectTransform), typeof(Image));
@@ -1633,6 +1706,7 @@ namespace CityBuilder.EditorTools
 
             var bgImage = go.GetComponent<Image>();
             bgImage.sprite = backgroundSprite;
+            bgImage.type = Image.Type.Sliced;
             bgImage.color = Color.white;
 
             var textGO = new GameObject("Text", typeof(RectTransform), typeof(Text));
@@ -1701,6 +1775,7 @@ namespace CityBuilder.EditorTools
 
             var image = go.GetComponent<Image>();
             image.sprite = sprite;
+            image.type = Image.Type.Sliced;
             image.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
             CreateText(go.transform, "Label", label, 28, Vector2.zero, sizeDelta - new Vector2(20f, 20f));

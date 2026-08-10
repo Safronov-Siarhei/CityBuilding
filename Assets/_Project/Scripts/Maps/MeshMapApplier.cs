@@ -81,7 +81,14 @@ namespace CityBuilder.Maps
 
             if (map.WaterPrefab != null)
             {
-                Instantiate(map.WaterPrefab, Vector3.zero, map.WaterPrefab.transform.rotation, transform);
+                var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, map.WaterPrefab.transform.rotation, transform);
+                if (map.WaterMaterial != null)
+                {
+                    foreach (var renderer in waterInstance.GetComponentsInChildren<Renderer>())
+                    {
+                        renderer.sharedMaterial = map.WaterMaterial;
+                    }
+                }
             }
 
             Collider waterZoneCollider = null;

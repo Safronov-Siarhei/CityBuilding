@@ -16,6 +16,7 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject waterPlacementZonePrefab;
         [SerializeField] private GameObject treesAreaPrefab;
         [SerializeField] private GameObject[] treePrefabs = new GameObject[0];
+        [SerializeField] private Material waterMaterial;
 
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
         public GameObject GroundPrefab => groundPrefab;
@@ -23,9 +24,10 @@ namespace CityBuilder.Maps
         public GameObject WaterPlacementZonePrefab => waterPlacementZonePrefab;
         public GameObject TreesAreaPrefab => treesAreaPrefab;
         public GameObject[] TreePrefabs => treePrefabs;
+        public Material WaterMaterial => waterMaterial;
 
 #if UNITY_EDITOR
-        public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees)
+        public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, Material waterMat)
         {
             mapId = id;
             groundPrefab = ground;
@@ -33,6 +35,7 @@ namespace CityBuilder.Maps
             waterPlacementZonePrefab = waterPlacementZone;
             treesAreaPrefab = treesArea;
             treePrefabs = trees;
+            waterMaterial = waterMat;
         }
 #endif
     }
