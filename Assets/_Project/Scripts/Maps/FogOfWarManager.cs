@@ -42,6 +42,7 @@ namespace CityBuilder.Maps
         private int _chunksX;
         private int _chunksZ;
         private bool _active;
+        private bool _initialized;
         private float _citizenTimer;
         private Material _cloudMaterial;
 
@@ -53,9 +54,24 @@ namespace CityBuilder.Maps
                 return;
             }
             Instance = this;
+            EnsureInitialized();
+        }
 
+        /// <summary>
+        /// Sets up the reveal grids and chunk GameObjects the first time GridManager.Instance is
+        /// actually available. Component Awake() order across different GameObjects is NOT
+        /// something Unity guarantees (only "all Awakes before any Start" is guaranteed) --
+        /// relying on add-order alone let this run before GridManager.Awake() had set Instance,
+        /// leaving every array here null and throwing a NullReferenceException the first time
+        /// anything touched them. Idempotent and cheap once done, so it's safe to call from every
+        /// entry point (Awake, Start, Update, Activate, RevealPermanent) as a self-healing guard.
+        /// </summary>
+        private void EnsureInitialized()
+        {
+            if (_initialized) return;
             var grid = GridManager.Instance;
             if (grid == null) return;
+            _initialized = true;
 
             _permanent = new bool[grid.GridSize.x, grid.GridSize.y];
             _citizenRevealed = new bool[grid.GridSize.x, grid.GridSize.y];
@@ -85,6 +101,7 @@ namespace CityBuilder.Maps
 
         private void Start()
         {
+            EnsureInitialized();
             // A loaded save already has mandatoryFirstBuilding placed (see GameSaveController.
             // Awake -> MarkMandatoryBuildingAlreadyPlaced, guaranteed to run before this Start
             // since Unity runs every Awake before any Start) -- fog starts active immediately.
@@ -95,6 +112,7 @@ namespace CityBuilder.Maps
         private void Update()
         {
             if (!_active) return;
+            EnsureInitialized();
 
             _citizenTimer -= Time.deltaTime;
             if (_citizenTimer <= 0f)
@@ -109,6 +127,7 @@ namespace CityBuilder.Maps
         /// <summary>Turns fog on for the first time -- called once, right after the mandatory Town Hall is placed.</summary>
         public void Activate()
         {
+            EnsureInitialized();
             if (_active) return;
             _active = true;
             MarkAllChunksDirtyAndRebuild();
@@ -117,6 +136,7 @@ namespace CityBuilder.Maps
         /// <summary>Permanently clears a circular radius (in grid cells) around center. Cheap no-op for cells already revealed.</summary>
         public void RevealPermanent(Vector2Int center, int radiusCells)
         {
+            EnsureInitialized();
             if (_permanent == null || radiusCells <= 0) return;
             var grid = GridManager.Instance;
             if (grid == null) return;

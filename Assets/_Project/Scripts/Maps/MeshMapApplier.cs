@@ -27,7 +27,7 @@ namespace CityBuilder.Maps
 
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
-        private Collider _groundCollider;
+        private Collider[] _groundColliders = new Collider[0];
         private GameObject _groundInstance;
 
         public string CurrentMapId { get; private set; } = string.Empty;
@@ -64,13 +64,10 @@ namespace CityBuilder.Maps
         /// <summary>The instantiated Ground mesh's own transform -- e.g. TreesAreaSpawner parents its trees under this instead of under itself.</summary>
         public Transform GroundTransform => _groundInstance != null ? _groundInstance.transform : null;
 
-        /// <summary>World-space bounds of the real Ground mesh collider, for sampling random points that are guaranteed to fall within its extent.</summary>
-        public Bounds GroundBounds => _groundCollider != null ? _groundCollider.bounds : default;
-
         /// <summary>
-        /// Live downward raycast against the actual Ground mesh collider (not the cached per-cell
-        /// water set) directly beneath worldPos. Used where a placement needs to confirm real
-        /// solid ground exists at an exact point rather than "this whole cell counts as land".
+        /// Live downward raycast against the real Ground mesh collider(s) (not the cached
+        /// per-cell water set) directly beneath worldPos. Used where a placement needs to confirm
+        /// real solid ground exists at an exact point rather than "this whole cell counts as land".
         /// </summary>
         public bool HasGroundBeneath(Vector3 worldPos)
         {
@@ -81,17 +78,21 @@ namespace CityBuilder.Maps
         /// Same raycast as HasGroundBeneath, but also returns the exact hit (surface point/
         /// normal) -- e.g. TreesAreaSpawner samples a random point over Ground first and places
         /// the tree exactly at the hit, rather than guessing a point elsewhere and hoping it lands
-        /// on solid ground.
+        /// on solid ground. Ground can be several disconnected mesh pieces (see
+        /// AddMeshCollidersToAll), so every one of them is checked, not just the first.
         /// </summary>
         public bool TryRaycastGround(Vector3 worldPos, out RaycastHit hit)
         {
-            hit = default;
-            if (_groundCollider == null) return false;
-
             const float rayStartHeight = 500f;
             const float rayLength = 1000f;
             var ray = new Ray(new Vector3(worldPos.x, rayStartHeight, worldPos.z), Vector3.down);
-            return _groundCollider.Raycast(ray, out hit, rayLength);
+
+            foreach (var collider in _groundColliders)
+            {
+                if (collider != null && collider.Raycast(ray, out hit, rayLength)) return true;
+            }
+            hit = default;
+            return false;
         }
 
         private void Apply(MeshMapDefinition map)
@@ -107,12 +108,15 @@ namespace CityBuilder.Maps
             // Quaternion.identity -- doing so would leave the mesh (and its collider, used below
             // for the land/water raycast split) rotated out of alignment with the world. Passing
             // each prefab's own transform.rotation preserves whatever correction it needs.
-            Collider groundCollider = null;
             if (map.GroundPrefab != null)
             {
                 var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
-                groundCollider = AddMeshCollider(groundInstance);
-                _groundCollider = groundCollider;
+                // Every sub-mesh gets its own collider, not just the first -- Map-1-Ground.fbx is
+                // authored as several separate mesh pieces, and a single collider derived from
+                // only the first one found left the rest of the terrain with nothing to raycast
+                // against (silently misclassified as water / unreachable ground).
+                AddMeshCollidersToAll(groundInstance);
+                _groundColliders = groundInstance.GetComponentsInChildren<Collider>();
                 _groundInstance = groundInstance;
             }
 
@@ -133,12 +137,13 @@ namespace CityBuilder.Maps
                 }
             }
 
-            Collider waterZoneCollider = null;
+            Collider[] waterZoneColliders = new Collider[0];
             if (map.WaterPlacementZonePrefab != null)
             {
                 var waterZoneInstance = Instantiate(map.WaterPlacementZonePrefab, Vector3.zero, map.WaterPlacementZonePrefab.transform.rotation, transform);
                 SetRenderersEnabled(waterZoneInstance, false);
-                waterZoneCollider = AddMeshCollider(waterZoneInstance);
+                AddMeshCollidersToAll(waterZoneInstance);
+                waterZoneColliders = waterZoneInstance.GetComponentsInChildren<Collider>();
             }
 
             GameObject treesAreaInstance = null;
@@ -153,7 +158,7 @@ namespace CityBuilder.Maps
                 AddMeshCollidersToAll(treesAreaInstance);
             }
 
-            ComputeWaterAndZoneCells(grid, groundCollider, waterZoneCollider);
+            ComputeWaterAndZoneCells(grid, waterZoneColliders);
 
             if (treesAreaInstance != null && TreesAreaSpawner.Instance != null)
             {
@@ -161,7 +166,7 @@ namespace CityBuilder.Maps
             }
         }
 
-        private void ComputeWaterAndZoneCells(GridManager grid, Collider groundCollider, Collider waterZoneCollider)
+        private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders)
         {
             const float rayStartHeight = 500f;
             const float rayLength = 1000f;
@@ -174,13 +179,22 @@ namespace CityBuilder.Maps
                     var center = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                     var ray = new Ray(new Vector3(center.x, rayStartHeight, center.z), Vector3.down);
 
-                    var isLand = groundCollider != null && groundCollider.Raycast(ray, out _, rayLength);
+                    var isLand = TryRaycastGround(new Vector3(center.x, 0f, center.z), out _);
                     if (!isLand)
                     {
                         _waterCells.Add(cell);
                     }
 
-                    if (waterZoneCollider != null && waterZoneCollider.Raycast(ray, out _, rayLength))
+                    var isWaterZone = false;
+                    foreach (var waterZoneCollider in waterZoneColliders)
+                    {
+                        if (waterZoneCollider != null && waterZoneCollider.Raycast(ray, out _, rayLength))
+                        {
+                            isWaterZone = true;
+                            break;
+                        }
+                    }
+                    if (isWaterZone)
                     {
                         _waterPlacementZoneCells.Add(cell);
                     }
@@ -189,25 +203,13 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>
-        /// Finds the mesh (root or nested child -- FBX hierarchy isn't guaranteed) and adds a
-        /// MeshCollider on the same GameObject, explicitly wired to that mesh. Imported FBX
+        /// Adds a MeshCollider to every MeshFilter found under root (root itself or any nested
+        /// child -- FBX hierarchy isn't guaranteed), each wired to its own mesh. Imported FBX
         /// assets have no collider by default (addColliders: 0), and a MeshCollider only reads
-        /// from a MeshFilter on its own GameObject, not a parent/child's.
+        /// from a MeshFilter on its own GameObject, not a parent/child's -- a hand-authored map
+        /// mesh (Ground, the water-placement zone, TreesArea) can be several disconnected pieces,
+        /// so every one of them needs its own collider rather than just the first found.
         /// </summary>
-        private static Collider AddMeshCollider(GameObject root)
-        {
-            var meshFilter = root.GetComponentInChildren<MeshFilter>();
-            if (meshFilter == null) return null;
-
-            var existing = meshFilter.GetComponent<Collider>();
-            if (existing != null) return existing;
-
-            var collider = meshFilter.gameObject.AddComponent<MeshCollider>();
-            collider.sharedMesh = meshFilter.sharedMesh;
-            return collider;
-        }
-
-        /// <summary>Like AddMeshCollider, but adds a collider to every MeshFilter found under root instead of just the first.</summary>
         private static void AddMeshCollidersToAll(GameObject root)
         {
             foreach (var meshFilter in root.GetComponentsInChildren<MeshFilter>())
