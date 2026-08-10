@@ -23,7 +23,8 @@ namespace CityBuilder.Maps
         // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
         private const int MinSpacingCells = 1;
 
-        private Collider[] _zoneColliders = new Collider[0];
+        private Collider _zoneCollider;
+        private Bounds _zoneBounds;
         private GameObject[] _treePrefabs = new GameObject[0];
         private readonly HashSet<Vector2Int> _treeCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _treeCellByInstance = new Dictionary<GameObject, Vector2Int>();
@@ -40,15 +41,11 @@ namespace CityBuilder.Maps
 
         public void Initialize(GameObject treesAreaInstance, GameObject[] treePrefabs)
         {
-            // Plural: MeshMapApplier now adds a collider to every mesh piece under the zone
-            // instance, not just the first -- a hand-authored TreesArea can be several
-            // disconnected forest patches, and a single collider derived from only the first
-            // piece would silently leave the rest of the zone with nothing to sample against.
-            _zoneColliders = treesAreaInstance != null ? treesAreaInstance.GetComponentsInChildren<Collider>() : new Collider[0];
+            _zoneCollider = treesAreaInstance != null ? treesAreaInstance.GetComponentInChildren<Collider>() : null;
             _treePrefabs = treePrefabs ?? new GameObject[0];
-            if (_zoneColliders.Length == 0 || _treePrefabs.Length == 0) return;
-            if (MeshMapApplier.Instance == null || MeshMapApplier.Instance.GroundTransform == null) return;
+            if (_zoneCollider == null || _treePrefabs.Length == 0) return;
 
+            _zoneBounds = _zoneCollider.bounds;
             for (var i = 0; i < InitialTreeCount; i++)
             {
                 // The starting forest is already mature -- only trees planted later (after a
@@ -58,7 +55,7 @@ namespace CityBuilder.Maps
 
             if (_treeCells.Count == 0)
             {
-                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- zone colliders: {_zoneColliders.Length}, tree prefabs: {_treePrefabs.Length}. Every placement attempt failed either the zone-membership or the Ground raycast check.");
+                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- zone bounds: {_zoneBounds}. Every placement attempt failed either the zone-membership or the water-cell check.");
             }
         }
 
@@ -84,66 +81,41 @@ namespace CityBuilder.Maps
             SpawnOneTree(startGrown: false);
         }
 
-        /// <summary>
-        /// Samples a random point within the (small, tight) TreesArea zone bounds -- sampling
-        /// from the whole Ground extent instead (an earlier version of this method) made a valid
-        /// hit rare-to-nonexistent whenever the zone was a small fraction of the map, since most
-        /// random Ground points would land outside it and get rejected within MaxPlacementAttempts
-        /// tries. A raycast against the real Ground collider at that same point still gates the
-        /// final placement, so a tree can only ever land somewhere solid ground truly is -- that
-        /// was the actual bug this method fixes (the zone mesh can overlap the shoreline). The
-        /// tree is spawned as a child of the Ground instance itself (mapApplier.GroundTransform),
-        /// not of this spawner.
-        /// </summary>
         private void SpawnOneTree(bool startGrown)
         {
             var grid = GridManager.Instance;
-            var mapApplier = MeshMapApplier.Instance;
-            if (grid == null || mapApplier == null || _zoneColliders.Length == 0 || _treePrefabs.Length == 0) return;
+            if (grid == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
 
-            var groundTransform = mapApplier.GroundTransform;
-            if (groundTransform == null) return;
+            var mapApplier = MeshMapApplier.Instance;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                // A different zone piece each attempt so multi-patch zones get sampled fairly
-                // across all of them, not just whichever one happened to be picked first.
-                var zoneCollider = _zoneColliders[Random.Range(0, _zoneColliders.Length)];
-                var zoneBounds = zoneCollider.bounds;
-                var x = Random.Range(zoneBounds.min.x, zoneBounds.max.x);
-                var z = Random.Range(zoneBounds.min.z, zoneBounds.max.z);
-                var origin = new Vector3(x, zoneBounds.max.y + 50f, z);
+                var x = Random.Range(_zoneBounds.min.x, _zoneBounds.max.x);
+                var z = Random.Range(_zoneBounds.min.z, _zoneBounds.max.z);
+                var origin = new Vector3(x, _zoneBounds.max.y + 50f, z);
 
                 // Raycast confirms true membership in the (possibly irregular) zone shape, not
                 // just the bounding box.
-                if (!zoneCollider.Raycast(new Ray(origin, Vector3.down), out _, 1000f)) continue;
-                // ...and that solid ground truly exists at this exact point, rather than trusting
-                // the zone mesh alone right at a shoreline it might overlap.
-                if (!mapApplier.TryRaycastGround(origin, out var groundHit)) continue;
+                if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out var hit, 1000f)) continue;
 
-                var cell = grid.WorldToCell(groundHit.point);
+                var cell = grid.WorldToCell(hit.point);
                 if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
+                // The TreesArea zone can overlap the shoreline right at its edge -- exclude water
+                // cells explicitly rather than trusting the zone mesh alone. This now benefits
+                // from MeshMapApplier's Ground collider covering every mesh piece (not just the
+                // first), so the water/land classification itself is accurate.
+                if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
                 // Explicit "don't spawn where a building/other object already stands" check.
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (HasNearbyTree(cell)) continue;
 
                 var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
-                // groundHit.point (not a grid-cell-center approximation) so the tree sits exactly
-                // on the real mesh surface. Preserve the prefab's own corrective root rotation
-                // (see MeshMapApplier) rather than forcing identity, which would tip it over.
-                var instance = Instantiate(prefab, groundHit.point, prefab.transform.rotation, groundTransform);
-                // Instantiate(pos, rot, parent) only sets world position/rotation -- localScale is
-                // copied verbatim from the prefab, so it still combines with the new parent's own
-                // scale. Map-1-Ground.fbx's imported root carries a 100x transform scale (its mesh
-                // data is baked down to compensate, which is why Ground itself still looks correct
-                // size) -- a tree parented under it without this correction would render 100x too
-                // big. Counteract it explicitly so the tree's final world scale is unchanged.
-                var parentScale = groundTransform.lossyScale;
-                instance.transform.localScale = new Vector3(
-                    parentScale.x != 0f ? 1f / parentScale.x : 1f,
-                    parentScale.y != 0f ? 1f / parentScale.y : 1f,
-                    parentScale.z != 0f ? 1f / parentScale.z : 1f);
+
+                var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+                // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
+                // than forcing identity, which would render the tree tipped over.
+                var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
                 if (!startGrown)
                 {
                     instance.AddComponent<TreeGrowth>();
