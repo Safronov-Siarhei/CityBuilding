@@ -98,6 +98,11 @@ namespace CityBuilder.Saving
                 var buildingInstance = instance.GetComponent<BuildingInstance>();
                 if (buildingInstance == null) buildingInstance = instance.AddComponent<BuildingInstance>();
                 buildingInstance.Initialize(buildingData, cell);
+                buildingInstance.SetLevel(entry.level);
+                // entry.currentHealth is 0 for saves made before this field existed (missing JSON
+                // field deserializes to the int default) -- treat that as "unknown", not "destroyed".
+                var health = entry.currentHealth > 0 ? entry.currentHealth : buildingData.maxHealth;
+                buildingInstance.SetCondition(health, entry.decay);
 
                 GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
@@ -135,7 +140,10 @@ namespace CityBuilder.Saving
                     buildingName = instance.Data.buildingName,
                     cellX = instance.OriginCell.x,
                     cellY = instance.OriginCell.y,
-                    assignedWorkers = production != null ? production.AssignedWorkers : 0
+                    assignedWorkers = production != null ? production.AssignedWorkers : 0,
+                    level = instance.Level,
+                    currentHealth = instance.CurrentHealth,
+                    decay = instance.Decay
                 });
             }
 

@@ -143,55 +143,94 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing);
+                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing, maxHealth: 80);
+
+            var cottageData = CreateBuildingData(
+                "Cottage", "Коттедж", new Vector2Int(1, 1), height: 2.3f,
+                wallColor: new Color(0.62f, 0.42f, 0.55f), roofColor: new Color(0.3f, 0.2f, 0.4f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                hasChimney: true, citizensGranted: 8, category: BuildingCategory.Housing, maxHealth: 120);
 
             var townHallData = CreateFbxBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
                 fbxFileName: "MainCastle-1.fbx",
                 cost: new List<ResourceAmount>(),
-                citizensGranted: 5);
+                citizensGranted: 5, maxHealth: 400, defense: 20,
+                upgradeToLevel2Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 100 }, new ResourceAmount { type = ResourceType.Stone, amount = 60 } },
+                upgradeToLevel3Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 220 }, new ResourceAmount { type = ResourceType.Stone, amount = 150 }, new ResourceAmount { type = ResourceType.Gold, amount = 40 } });
 
             var fishermanHutData = CreateBuildingData(
                 "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food);
-
-            var lumberjackData = CreateBuildingData(
-                "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
-                wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production);
-
-            var wallData = CreateBuildingData(
-                "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
-                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military);
-
-            var towerData = CreateBuildingData(
-                "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
-                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military);
-
-            var quarryData = CreateBuildingData(
-                "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
-                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90);
 
             var hunterHutData = CreateBuildingData(
                 "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food);
+                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90);
 
-            var hotbarBuildingData = new List<BuildingData> { houseData, fishermanHutData, lumberjackData, wallData, towerData, quarryData, hunterHutData };
+            var farmData = CreateBuildingData(
+                "Farm", "Ферма", new Vector2Int(2, 2), height: 1.8f,
+                wallColor: new Color(0.68f, 0.55f, 0.3f), roofColor: new Color(0.42f, 0.58f, 0.24f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3, category: BuildingCategory.Food, maxHealth: 70);
+
+            var lumberjackData = CreateBuildingData(
+                "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
+                wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100);
+
+            var quarryData = CreateBuildingData(
+                "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
+                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 110);
+
+            var mineData = CreateBuildingData(
+                "Mine", "Шахта", new Vector2Int(2, 2), height: 2.2f,
+                wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.6f, 0.5f, 0.2f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 15 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                maxWorkers: 3, producesResource: ResourceType.Gold, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110);
+
+            var wallData = CreateBuildingData(
+                "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
+                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 150, defense: 15);
+
+            var towerData = CreateBuildingData(
+                "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25);
+
+            var barracksData = CreateBuildingData(
+                "Barracks", "Казармы", new Vector2Int(2, 2), height: 2.6f,
+                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 30 }, new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 180, defense: 10);
+
+            var gateData = CreateBuildingData(
+                "Gate", "Ворота", new Vector2Int(2, 1), height: 1.8f,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 12 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12);
+
+            var hotbarBuildingData = new List<BuildingData>
+            {
+                houseData, cottageData, fishermanHutData, hunterHutData, farmData,
+                lumberjackData, quarryData, mineData, wallData, towerData, barracksData, gateData
+            };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
             AssetDatabase.SaveAssets();
@@ -363,22 +402,37 @@ namespace CityBuilder.EditorTools
             const float buttonSize = 130f;
             const float spacing = 16f;
 
-            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform));
+            // HorizontalLayoutGroup (not manual per-button positions) because only one category's
+            // buildings are active at a time (see BuildingCategoryPanel) -- the layout group
+            // automatically excludes inactive children and re-centers around whichever subset is
+            // currently shown, where fixed absolute offsets computed from the full 12-building
+            // list would leave a category's buttons stranded off-center.
+            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
             hotbarGO.transform.SetParent(menuGO.transform, false);
             var hotbarRect = hotbarGO.GetComponent<RectTransform>();
             hotbarRect.anchorMin = new Vector2(0.5f, 0f);
             hotbarRect.anchorMax = new Vector2(0.5f, 0f);
             hotbarRect.pivot = new Vector2(0.5f, 0f);
             hotbarRect.anchoredPosition = new Vector2(0f, 28f);
+            hotbarRect.sizeDelta = new Vector2(0f, buttonSize);
 
-            var totalWidth = hotbarBuildings.Count * buttonSize + Mathf.Max(0, hotbarBuildings.Count - 1) * spacing;
-            hotbarRect.sizeDelta = new Vector2(totalWidth, buttonSize);
+            var hotbarLayout = hotbarGO.GetComponent<HorizontalLayoutGroup>();
+            hotbarLayout.spacing = spacing;
+            hotbarLayout.childAlignment = TextAnchor.MiddleCenter;
+            hotbarLayout.childControlWidth = false;
+            hotbarLayout.childControlHeight = false;
+            hotbarLayout.childForceExpandWidth = false;
+            hotbarLayout.childForceExpandHeight = false;
+
+            var hotbarFitter = hotbarGO.GetComponent<ContentSizeFitter>();
+            hotbarFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            hotbarFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             for (var i = 0; i < hotbarBuildings.Count; i++)
             {
                 var data = hotbarBuildings[i];
-                var x = -totalWidth * 0.5f + buttonSize * 0.5f + i * (buttonSize + spacing);
-                var button = CreateButton(hotbarGO.transform, panelSprite, $"Building_{data.buildingName}", data.displayName, new Vector2(x, buttonSize * 0.5f), new Vector2(buttonSize, buttonSize));
+                var icon = CreateBuildingIcon(data.buildingName);
+                var button = CreateIconButton(hotbarGO.transform, panelSprite, icon, $"Building_{data.buildingName}", Vector2.zero, new Vector2(buttonSize, buttonSize));
 
                 var handler = button.gameObject.AddComponent<HotbarButtonHandler>();
                 var handlerSO = new SerializedObject(handler);
@@ -390,22 +444,15 @@ namespace CityBuilder.EditorTools
             }
 
             // Fixed display order; only categories that actually have a hotbar building get a tab.
-            var categoryLabels = new (BuildingCategory Category, string Label)[]
-            {
-                (BuildingCategory.Housing, "Жильё"),
-                (BuildingCategory.Food, "Еда"),
-                (BuildingCategory.Production, "Производство"),
-                (BuildingCategory.Military, "Оборона"),
-            };
+            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Military };
             var presentCategories = new List<BuildingCategory>();
-            foreach (var entry in categoryLabels)
+            foreach (var cat in categoryOrder)
             {
-                if (hotbarBuildings.Exists(b => b.category == entry.Category)) presentCategories.Add(entry.Category);
+                if (hotbarBuildings.Exists(b => b.category == cat)) presentCategories.Add(cat);
             }
 
-            const float categoryButtonWidth = 150f;
-            const float categoryButtonHeight = 56f;
-            var categoryTotalWidth = presentCategories.Count * categoryButtonWidth + Mathf.Max(0, presentCategories.Count - 1) * spacing;
+            const float categoryButtonSize = 80f;
+            var categoryTotalWidth = presentCategories.Count * categoryButtonSize + Mathf.Max(0, presentCategories.Count - 1) * spacing;
 
             var categoryBarGO = new GameObject("CategoryBar", typeof(RectTransform));
             categoryBarGO.transform.SetParent(menuGO.transform, false);
@@ -414,14 +461,14 @@ namespace CityBuilder.EditorTools
             categoryBarRect.anchorMax = new Vector2(0.5f, 0f);
             categoryBarRect.pivot = new Vector2(0.5f, 0f);
             categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y + buttonSize + spacing);
-            categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonHeight);
+            categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonSize);
 
             for (var i = 0; i < presentCategories.Count; i++)
             {
                 var category = presentCategories[i];
-                var label = categoryLabels[System.Array.FindIndex(categoryLabels, e => e.Category == category)].Label;
-                var x = -categoryTotalWidth * 0.5f + categoryButtonWidth * 0.5f + i * (categoryButtonWidth + spacing);
-                var categoryButton = CreateButton(categoryBarGO.transform, panelSprite, $"Category_{category}", label, new Vector2(x, categoryButtonHeight * 0.5f), new Vector2(categoryButtonWidth, categoryButtonHeight));
+                var icon = CreateCategoryIcon(category);
+                var x = -categoryTotalWidth * 0.5f + categoryButtonSize * 0.5f + i * (categoryButtonSize + spacing);
+                var categoryButton = CreateIconButton(categoryBarGO.transform, panelSprite, icon, $"Category_{category}", new Vector2(x, categoryButtonSize * 0.5f), new Vector2(categoryButtonSize, categoryButtonSize));
 
                 var categoryHandler = categoryButton.gameObject.AddComponent<CategoryButtonHandler>();
                 var categoryHandlerSO = new SerializedObject(categoryHandler);
@@ -480,27 +527,49 @@ namespace CityBuilder.EditorTools
             card.sprite = panelSprite;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(700f, 400f);
+            cardRect.sizeDelta = new Vector2(700f, 600f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 140f), new Vector2(640f, 60f));
-            var workers = CreateText(card.transform, "Workers", string.Empty, 26, new Vector2(0f, 65f), new Vector2(640f, 50f), new Color(1f, 1f, 1f, 0.85f));
-            var idle = CreateText(card.transform, "Idle", string.Empty, 22, new Vector2(0f, 20f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 260f), new Vector2(640f, 60f));
+            var level = CreateText(card.transform, "Level", string.Empty, 24, new Vector2(0f, 205f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.85f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 165f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
 
-            var assignButton = CreateButton(card.transform, panelSprite, "AssignButton", "+ Назначить", new Vector2(-170f, -110f), new Vector2(300f, 80f));
-            var unassignButton = CreateButton(card.transform, panelSprite, "UnassignButton", "- Снять", new Vector2(170f, -110f), new Vector2(300f, 80f));
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -200f), new Vector2(300f, 70f));
+            // Passthrough containers (StretchFull, zero offset) purely to group-toggle visibility --
+            // children keep the same card-relative positions they'd have without the wrapper.
+            var workerControls = new GameObject("WorkerControls", typeof(RectTransform));
+            workerControls.transform.SetParent(card.transform, false);
+            StretchFull(workerControls.GetComponent<RectTransform>());
+
+            var workers = CreateText(workerControls.transform, "Workers", string.Empty, 26, new Vector2(0f, 105f), new Vector2(640f, 50f), new Color(1f, 1f, 1f, 0.85f));
+            var idle = CreateText(workerControls.transform, "Idle", string.Empty, 22, new Vector2(0f, 65f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+            var assignButton = CreateButton(workerControls.transform, panelSprite, "AssignButton", "+ Назначить", new Vector2(-170f, 10f), new Vector2(300f, 80f));
+            var unassignButton = CreateButton(workerControls.transform, panelSprite, "UnassignButton", "- Снять", new Vector2(170f, 10f), new Vector2(300f, 80f));
+
+            var upgradeControls = new GameObject("UpgradeControls", typeof(RectTransform));
+            upgradeControls.transform.SetParent(card.transform, false);
+            StretchFull(upgradeControls.GetComponent<RectTransform>());
+
+            var upgradeCost = CreateText(upgradeControls.transform, "UpgradeCost", string.Empty, 22, new Vector2(0f, -55f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.7f));
+            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "Улучшить", new Vector2(0f, -125f), new Vector2(360f, 70f));
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -215f), new Vector2(300f, 70f));
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
+            controllerSO.FindProperty("levelLabel").objectReferenceValue = level;
+            controllerSO.FindProperty("conditionLabel").objectReferenceValue = condition;
+            controllerSO.FindProperty("workerControls").objectReferenceValue = workerControls;
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
+            controllerSO.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
+            controllerSO.FindProperty("upgradeCostLabel").objectReferenceValue = upgradeCost;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(assignButton.onClick, controller.AssignWorker);
             UnityEventTools.AddPersistentListener(unassignButton.onClick, controller.UnassignWorker);
+            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
             panelRoot.SetActive(false);
@@ -697,7 +766,7 @@ namespace CityBuilder.EditorTools
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
-            BuildingCategory category = BuildingCategory.Production)
+            BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0)
         {
             GameObject prefab;
             switch (style)
@@ -727,12 +796,27 @@ namespace CityBuilder.EditorTools
             data.productionPerWorkerPerTick = productionPerTick;
             data.productionIntervalSeconds = productionInterval;
             data.category = category;
+            data.maxHealth = maxHealth;
+            data.defense = defense;
+            data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
+            data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
             DeleteIfExists(dataPath);
             AssetDatabase.CreateAsset(data, dataPath);
             return data;
+        }
+
+        /// <summary>Derives an upgrade-level cost from a building's base placement cost -- e.g. level 2 costs 1.6x the base, level 3 costs 2.8x. Each amount is rounded up to at least 1 so a cheap base cost still produces a meaningful upgrade cost.</summary>
+        private static List<ResourceAmount> ScaleCost(List<ResourceAmount> baseCost, float multiplier)
+        {
+            var scaled = new List<ResourceAmount>();
+            foreach (var amount in baseCost)
+            {
+                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * multiplier)) });
+            }
+            return scaled;
         }
 
         /// <summary>
@@ -875,7 +959,8 @@ namespace CityBuilder.EditorTools
         /// aligned to world axes regardless of that rotation. Expects the model's own pivot at the
         /// footprint's base center (matching the convention used for the hand-authored map meshes).
         /// </summary>
-        private static BuildingData CreateFbxBuildingData(string id, string displayName, Vector2Int footprint, float height, string fbxFileName, List<ResourceAmount> cost, int citizensGranted = 0)
+        private static BuildingData CreateFbxBuildingData(string id, string displayName, Vector2Int footprint, float height, string fbxFileName, List<ResourceAmount> cost, int citizensGranted = 0,
+            int maxHealth = 200, int defense = 0, List<ResourceAmount> upgradeToLevel2Cost = null, List<ResourceAmount> upgradeToLevel3Cost = null)
         {
             var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
 
@@ -906,6 +991,10 @@ namespace CityBuilder.EditorTools
             data.footprintSize = footprint;
             data.cost = cost;
             data.citizensGranted = citizensGranted;
+            data.maxHealth = maxHealth;
+            data.defense = defense;
+            data.upgradeToLevel2Cost = upgradeToLevel2Cost ?? new List<ResourceAmount>();
+            data.upgradeToLevel3Cost = upgradeToLevel3Cost ?? new List<ResourceAmount>();
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1155,6 +1244,264 @@ namespace CityBuilder.EditorTools
             AssetDatabase.AddObjectToAsset(sprite, texture);
             AssetDatabase.ImportAsset(texPath);
             return sprite;
+        }
+
+        /// <summary>
+        /// Flat-color pictogram icons for the hotbar/category buttons (see CreateIconButton),
+        /// drawn as filled rectangles/triangles onto a small transparent-background texture --
+        /// kept to straight edges only, matching the project's no-circles cubic style used
+        /// everywhere else. Returned sprites are cached assets, safe to reuse across buttons.
+        /// </summary>
+        private static Sprite CreateIconSprite(string key, int size, System.Action<Color[], int> paint)
+        {
+            var pixels = new Color[size * size];
+            paint(pixels, size);
+
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels(pixels);
+            texture.Apply();
+
+            Directory.CreateDirectory(TexturesFolder);
+            var path = $"{TexturesFolder}/Icon_{key}.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(texture, path);
+
+            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            sprite.name = $"Icon_{key}_Sprite";
+            AssetDatabase.AddObjectToAsset(sprite, texture);
+            AssetDatabase.ImportAsset(path);
+            return sprite;
+        }
+
+        /// <summary>Normalized (0,0)=bottom-left..(1,1)=top-right, axis-aligned fill.</summary>
+        private static void FillIconRect(Color[] pixels, int size, float x0, float y0, float x1, float y1, Color color)
+        {
+            var px0 = Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(x0, x1) * size), 0, size);
+            var px1 = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(x0, x1) * size), 0, size);
+            var py0 = Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(y0, y1) * size), 0, size);
+            var py1 = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(y0, y1) * size), 0, size);
+            for (var y = py0; y < py1; y++)
+            {
+                for (var x = px0; x < px1; x++)
+                {
+                    pixels[y * size + x] = color;
+                }
+            }
+        }
+
+        /// <summary>Normalized (0,0)=bottom-left..(1,1)=top-right triangle fill (simple edge-function rasterization).</summary>
+        private static void FillIconTriangle(Color[] pixels, int size, Vector2 a, Vector2 b, Vector2 c, Color color)
+        {
+            a *= size; b *= size; c *= size;
+            var minX = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))), 0, size);
+            var maxX = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))), 0, size);
+            var minY = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.y, Mathf.Min(b.y, c.y))), 0, size);
+            var maxY = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.y, Mathf.Max(b.y, c.y))), 0, size);
+
+            for (var y = minY; y < maxY; y++)
+            {
+                for (var x = minX; x < maxX; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    var d1 = IconTriangleSign(p, a, b);
+                    var d2 = IconTriangleSign(p, b, c);
+                    var d3 = IconTriangleSign(p, c, a);
+                    var hasNeg = d1 < 0f || d2 < 0f || d3 < 0f;
+                    var hasPos = d1 > 0f || d2 > 0f || d3 > 0f;
+                    if (!(hasNeg && hasPos)) pixels[y * size + x] = color;
+                }
+            }
+        }
+
+        private static float IconTriangleSign(Vector2 p1, Vector2 p2, Vector2 p3)
+        {
+            return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+        }
+
+        private static Sprite CreateCategoryIcon(BuildingCategory category)
+        {
+            switch (category)
+            {
+                case BuildingCategory.Housing:
+                    return CreateIconSprite("Cat_Housing", 64, (p, s) =>
+                    {
+                        FillIconTriangle(p, s, new Vector2(0.15f, 0.55f), new Vector2(0.85f, 0.55f), new Vector2(0.5f, 0.88f), new Color(0.55f, 0.18f, 0.16f));
+                        FillIconRect(p, s, 0.22f, 0.14f, 0.78f, 0.55f, new Color(0.82f, 0.68f, 0.5f));
+                        FillIconRect(p, s, 0.44f, 0.14f, 0.56f, 0.38f, new Color(0.35f, 0.22f, 0.12f));
+                    });
+                case BuildingCategory.Food:
+                    return CreateIconSprite("Cat_Food", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.15f, 0.12f, 0.85f, 0.4f, new Color(0.45f, 0.32f, 0.18f));
+                        FillIconRect(p, s, 0.22f, 0.4f, 0.42f, 0.62f, new Color(0.75f, 0.18f, 0.16f));
+                        FillIconRect(p, s, 0.42f, 0.4f, 0.58f, 0.68f, new Color(0.86f, 0.68f, 0.24f));
+                        FillIconRect(p, s, 0.58f, 0.4f, 0.78f, 0.6f, new Color(0.35f, 0.55f, 0.28f));
+                    });
+                case BuildingCategory.Military:
+                    return CreateIconSprite("Cat_Military", 64, (p, s) =>
+                    {
+                        var shield = new Color(0.45f, 0.46f, 0.5f);
+                        FillIconRect(p, s, 0.22f, 0.42f, 0.78f, 0.85f, shield);
+                        FillIconTriangle(p, s, new Vector2(0.22f, 0.42f), new Vector2(0.78f, 0.42f), new Vector2(0.5f, 0.12f), shield);
+                        var trim = new Color(0.7f, 0.62f, 0.3f);
+                        FillIconRect(p, s, 0.46f, 0.2f, 0.54f, 0.78f, trim);
+                        FillIconRect(p, s, 0.3f, 0.58f, 0.7f, 0.66f, trim);
+                    });
+                default: // Production
+                    return CreateIconSprite("Cat_Production", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.44f, 0.12f, 0.56f, 0.62f, new Color(0.42f, 0.28f, 0.16f));
+                        FillIconRect(p, s, 0.24f, 0.6f, 0.76f, 0.82f, new Color(0.52f, 0.52f, 0.55f));
+                    });
+            }
+        }
+
+        private static Sprite CreateBuildingIcon(string buildingId)
+        {
+            switch (buildingId)
+            {
+                case "House":
+                    return CreateIconSprite("Bld_House", 64, (p, s) =>
+                    {
+                        FillIconTriangle(p, s, new Vector2(0.15f, 0.52f), new Vector2(0.85f, 0.52f), new Vector2(0.5f, 0.88f), new Color(0.5f, 0.14f, 0.14f));
+                        FillIconRect(p, s, 0.22f, 0.14f, 0.78f, 0.52f, new Color(0.75f, 0.55f, 0.35f));
+                        FillIconRect(p, s, 0.44f, 0.14f, 0.56f, 0.36f, new Color(0.32f, 0.18f, 0.09f));
+                        FillIconRect(p, s, 0.64f, 0.62f, 0.72f, 0.82f, new Color(0.4f, 0.4f, 0.42f));
+                    });
+                case "Cottage":
+                    return CreateIconSprite("Bld_Cottage", 64, (p, s) =>
+                    {
+                        FillIconTriangle(p, s, new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.5f), new Vector2(0.5f, 0.86f), new Color(0.35f, 0.2f, 0.4f));
+                        FillIconRect(p, s, 0.16f, 0.14f, 0.84f, 0.5f, new Color(0.85f, 0.75f, 0.55f));
+                        FillIconRect(p, s, 0.42f, 0.14f, 0.58f, 0.38f, new Color(0.32f, 0.18f, 0.09f));
+                        FillIconRect(p, s, 0.22f, 0.28f, 0.32f, 0.4f, new Color(0.4f, 0.55f, 0.65f));
+                        FillIconRect(p, s, 0.68f, 0.28f, 0.78f, 0.4f, new Color(0.4f, 0.55f, 0.65f));
+                    });
+                case "FishermanHut":
+                    return CreateIconSprite("Bld_Fisherman", 64, (p, s) =>
+                    {
+                        var fish = new Color(0.3f, 0.52f, 0.68f);
+                        FillIconTriangle(p, s, new Vector2(0.15f, 0.5f), new Vector2(0.7f, 0.72f), new Vector2(0.7f, 0.28f), fish);
+                        FillIconTriangle(p, s, new Vector2(0.7f, 0.28f), new Vector2(0.7f, 0.72f), new Vector2(0.92f, 0.5f), fish);
+                    });
+                case "HunterHut":
+                    return CreateIconSprite("Bld_Hunter", 64, (p, s) =>
+                    {
+                        var wood = new Color(0.4f, 0.28f, 0.16f);
+                        FillIconRect(p, s, 0.18f, 0.46f, 0.62f, 0.54f, wood);
+                        FillIconTriangle(p, s, new Vector2(0.6f, 0.36f), new Vector2(0.6f, 0.64f), new Vector2(0.85f, 0.5f), wood);
+                        FillIconTriangle(p, s, new Vector2(0.18f, 0.5f), new Vector2(0.3f, 0.62f), new Vector2(0.3f, 0.38f), new Color(0.75f, 0.18f, 0.16f));
+                    });
+                case "Farm":
+                    return CreateIconSprite("Bld_Farm", 64, (p, s) =>
+                    {
+                        var stem = new Color(0.42f, 0.58f, 0.24f);
+                        var grain = new Color(0.86f, 0.68f, 0.24f);
+                        FillIconRect(p, s, 0.47f, 0.12f, 0.53f, 0.55f, stem);
+                        FillIconTriangle(p, s, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.9f), new Vector2(0.22f, 0.65f), grain);
+                        FillIconTriangle(p, s, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.9f), new Vector2(0.78f, 0.65f), grain);
+                    });
+                case "Lumberjack":
+                    return CreateIconSprite("Bld_Lumberjack", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.46f, 0.12f, 0.54f, 0.7f, new Color(0.42f, 0.28f, 0.16f));
+                        FillIconTriangle(p, s, new Vector2(0.3f, 0.55f), new Vector2(0.3f, 0.85f), new Vector2(0.62f, 0.7f), new Color(0.55f, 0.55f, 0.58f));
+                    });
+                case "Quarry":
+                    return CreateIconSprite("Bld_Quarry", 64, (p, s) =>
+                    {
+                        var head = new Color(0.5f, 0.5f, 0.52f);
+                        FillIconRect(p, s, 0.46f, 0.12f, 0.54f, 0.62f, new Color(0.42f, 0.28f, 0.16f));
+                        FillIconTriangle(p, s, new Vector2(0.5f, 0.7f), new Vector2(0.15f, 0.85f), new Vector2(0.5f, 0.55f), head);
+                        FillIconTriangle(p, s, new Vector2(0.5f, 0.7f), new Vector2(0.85f, 0.85f), new Vector2(0.5f, 0.55f), head);
+                    });
+                case "Mine":
+                    return CreateIconSprite("Bld_Mine", 64, (p, s) =>
+                    {
+                        var ore = new Color(0.78f, 0.68f, 0.22f);
+                        FillIconRect(p, s, 0.15f, 0.15f, 0.85f, 0.4f, new Color(0.35f, 0.35f, 0.38f));
+                        FillIconRect(p, s, 0.25f, 0.4f, 0.45f, 0.58f, ore);
+                        FillIconRect(p, s, 0.45f, 0.4f, 0.65f, 0.65f, ore);
+                        FillIconRect(p, s, 0.6f, 0.4f, 0.78f, 0.55f, ore);
+                        FillIconRect(p, s, 0.2f, 0.08f, 0.32f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
+                        FillIconRect(p, s, 0.68f, 0.08f, 0.8f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
+                    });
+                case "Wall":
+                    return CreateIconSprite("Bld_Wall", 64, (p, s) =>
+                    {
+                        var brick = new Color(0.55f, 0.53f, 0.48f);
+                        FillIconRect(p, s, 0.1f, 0.1f, 0.9f, 0.9f, new Color(0.3f, 0.29f, 0.26f));
+                        FillIconRect(p, s, 0.12f, 0.62f, 0.46f, 0.86f, brick);
+                        FillIconRect(p, s, 0.5f, 0.62f, 0.88f, 0.86f, brick);
+                        FillIconRect(p, s, 0.12f, 0.38f, 0.3f, 0.6f, brick);
+                        FillIconRect(p, s, 0.34f, 0.38f, 0.68f, 0.6f, brick);
+                        FillIconRect(p, s, 0.72f, 0.38f, 0.88f, 0.6f, brick);
+                        FillIconRect(p, s, 0.12f, 0.14f, 0.46f, 0.36f, brick);
+                        FillIconRect(p, s, 0.5f, 0.14f, 0.88f, 0.36f, brick);
+                    });
+                case "Tower":
+                    return CreateIconSprite("Bld_Tower", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.4f, 0.38f, 0.34f);
+                        FillIconRect(p, s, 0.28f, 0.1f, 0.72f, 0.8f, stone);
+                        FillIconRect(p, s, 0.22f, 0.8f, 0.36f, 0.92f, stone);
+                        FillIconRect(p, s, 0.44f, 0.8f, 0.56f, 0.92f, stone);
+                        FillIconRect(p, s, 0.64f, 0.8f, 0.78f, 0.92f, stone);
+                    });
+                case "Barracks":
+                    return CreateIconSprite("Bld_Barracks", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.16f, 0.12f, 0.84f, 0.55f, new Color(0.5f, 0.48f, 0.44f));
+                        FillIconTriangle(p, s, new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.55f), new Vector2(0.5f, 0.8f), new Color(0.35f, 0.3f, 0.26f));
+                        FillIconRect(p, s, 0.48f, 0.8f, 0.52f, 0.95f, new Color(0.3f, 0.2f, 0.1f));
+                        FillIconRect(p, s, 0.52f, 0.85f, 0.72f, 0.95f, new Color(0.75f, 0.18f, 0.16f));
+                    });
+                case "Gate":
+                    return CreateIconSprite("Bld_Gate", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.4f, 0.38f, 0.34f);
+                        FillIconRect(p, s, 0.14f, 0.12f, 0.32f, 0.85f, stone);
+                        FillIconRect(p, s, 0.68f, 0.12f, 0.86f, 0.85f, stone);
+                        FillIconRect(p, s, 0.14f, 0.78f, 0.86f, 0.9f, stone);
+                    });
+                default:
+                    return CreateIconSprite($"Bld_{buildingId}", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.25f, 0.25f, 0.75f, 0.75f, new Color(0.6f, 0.6f, 0.6f));
+                    });
+            }
+        }
+
+        private static Button CreateIconButton(Transform parent, Sprite backgroundSprite, Sprite iconSprite, string name, Vector2 anchoredPos, Vector2 sizeDelta)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            var background = go.GetComponent<Image>();
+            background.sprite = backgroundSprite;
+            background.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
+
+            var iconGO = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGO.transform.SetParent(go.transform, false);
+            var iconRect = iconGO.GetComponent<RectTransform>();
+            iconRect.anchorMin = Vector2.zero;
+            iconRect.anchorMax = Vector2.one;
+            var pad = Mathf.Min(sizeDelta.x, sizeDelta.y) * 0.16f;
+            iconRect.offsetMin = new Vector2(pad, pad);
+            iconRect.offsetMax = new Vector2(-pad, -pad);
+            var iconImage = iconGO.GetComponent<Image>();
+            iconImage.sprite = iconSprite;
+            iconImage.preserveAspect = true;
+
+            return go.GetComponent<Button>();
         }
 
         private static Image CreateImage(Transform parent, string name, Color color)

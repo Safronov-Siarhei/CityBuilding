@@ -1,5 +1,4 @@
 using CityBuilder.Buildings;
-using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,8 +7,8 @@ using UnityEngine.InputSystem;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Tap/click an already-placed production building (when not currently placing a new one)
-    /// to open its worker-assignment panel.
+    /// Tap/click an already-placed building (when not currently placing a new one) to open its
+    /// info panel -- worker assignment for production buildings, upgrade for every building.
     /// </summary>
     public class BuildingSelector : MonoBehaviour
     {
@@ -31,10 +30,10 @@ namespace CityBuilder.UI
             var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 500f, raycastMask)) return;
 
-            var production = hit.collider.GetComponent<ProductionBuilding>();
-            if (production != null && infoPanel != null)
+            var instance = hit.collider.GetComponent<BuildingInstance>();
+            if (instance != null && infoPanel != null)
             {
-                infoPanel.Show(production);
+                infoPanel.Show(instance);
             }
         }
 

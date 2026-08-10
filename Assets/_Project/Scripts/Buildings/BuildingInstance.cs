@@ -1,16 +1,60 @@
+using System.Collections.Generic;
+using CityBuilder.Resources;
 using UnityEngine;
 
 namespace CityBuilder.Buildings
 {
     public class BuildingInstance : MonoBehaviour
     {
+        public const int MaxLevel = 3;
+
         public BuildingData Data { get; private set; }
         public Vector2Int OriginCell { get; private set; }
+        public int Level { get; private set; } = 1;
+
+        /// <summary>Current hit points; starts at BuildingData.maxHealth. No damage source exists yet -- this is state for a future combat/decay system to read and write.</summary>
+        public int CurrentHealth { get; private set; }
+
+        /// <summary>0 (new) to 1 (fully dilapidated). Nothing advances this yet -- reserved for a future decay-over-time system.</summary>
+        public float Decay { get; private set; }
 
         public void Initialize(BuildingData data, Vector2Int originCell)
         {
             Data = data;
             OriginCell = originCell;
+            CurrentHealth = data != null ? data.maxHealth : 0;
+            Decay = 0f;
+        }
+
+        /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>
+        public void SetLevel(int level)
+        {
+            Level = Mathf.Clamp(level, 1, MaxLevel);
+        }
+
+        /// <summary>Used by save/load to restore already-valid runtime condition directly.</summary>
+        public void SetCondition(int health, float decay)
+        {
+            CurrentHealth = Data != null ? Mathf.Clamp(health, 0, Data.maxHealth) : health;
+            Decay = Mathf.Clamp01(decay);
+        }
+
+        /// <summary>Null once already at MaxLevel.</summary>
+        public List<ResourceAmount> GetUpgradeCost()
+        {
+            if (Data == null || Level >= MaxLevel) return null;
+            return Level == 1 ? Data.upgradeToLevel2Cost : Data.upgradeToLevel3Cost;
+        }
+
+        public bool TryUpgrade()
+        {
+            var cost = GetUpgradeCost();
+            if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
+
+            Level++;
+            // Visual style / stat scaling per level is a planned future addition (see
+            // BuildingData's Upgrades/Condition headers) -- upgrading only advances Level so far.
+            return true;
         }
     }
 }

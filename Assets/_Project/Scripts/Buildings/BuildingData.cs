@@ -32,5 +32,18 @@ namespace CityBuilder.Buildings
         public ResourceType producesResource = ResourceType.Wood;
         public int productionPerWorkerPerTick = 0;
         public float productionIntervalSeconds = 6f;
+
+        [Header("Upgrades")]
+        // Level 1 is the building as placed (free). These are what BuildingInstance.TryUpgrade
+        // spends to reach level 2 / level 3. Changing the model or stats per level is planned
+        // for later -- for now upgrading only advances BuildingInstance.Level.
+        public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
+
+        [Header("Condition")]
+        // Base (level 1) stats. Intended to scale with upgrade level in the future -- see
+        // BuildingInstance.CurrentHealth/Decay for the per-instance runtime values these seed.
+        public int maxHealth = 100;
+        public int defense = 0;
     }
 }

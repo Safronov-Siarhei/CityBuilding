@@ -29,5 +29,8 @@ namespace CityBuilder.Saving
         public int cellX;
         public int cellY;
         public int assignedWorkers;
+        public int level = 1;
+        public int currentHealth;
+        public float decay;
     }
 }
