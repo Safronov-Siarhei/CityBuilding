@@ -165,7 +165,7 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount>(),
                 citizensGranted: 5, maxHealth: 400, defense: 20,
                 upgradeToLevel2Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 100 }, new ResourceAmount { type = ResourceType.Stone, amount = 60 } },
-                upgradeToLevel3Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 220 }, new ResourceAmount { type = ResourceType.Stone, amount = 150 }, new ResourceAmount { type = ResourceType.Gold, amount = 40 } });
+                upgradeToLevel3Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 220 }, new ResourceAmount { type = ResourceType.Stone, amount = 150 }, new ResourceAmount { type = ResourceType.Gold, amount = 40 }, new ResourceAmount { type = ResourceType.Coal, amount = 20 } });
 
             var fishermanHutData = CreateBuildingData(
                 "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
@@ -204,34 +204,67 @@ namespace CityBuilder.EditorTools
 
             var mineData = CreateBuildingData(
                 "Mine", "Шахта", new Vector2Int(2, 2), height: 2.2f,
-                wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.6f, 0.5f, 0.2f),
+                wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.5f, 0.5f, 0.56f),
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Gold, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
+                maxWorkers: 3, producesResource: ResourceType.Iron, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
+            // Digging deeper for iron ore needs fuel to run the forge/pumps -- coal from CoalMine.
+            // AssetDatabase.CreateAsset (inside CreateBuildingData) writes the asset to disk
+            // immediately; mutating its lists afterward needs an explicit SetDirty or the later
+            // AssetDatabase.SaveAssets() call silently skips these edits.
+            mineData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Coal, amount = 10 });
+            mineData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Coal, amount = 22 });
+            EditorUtility.SetDirty(mineData);
+
+            var coalMineData = CreateBuildingData(
+                "CoalMine", "Угольная шахта", new Vector2Int(2, 2), height: 2.2f,
+                wallColor: new Color(0.3f, 0.28f, 0.27f), roofColor: new Color(0.14f, 0.14f, 0.15f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 10 } },
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                maxWorkers: 3, producesResource: ResourceType.Coal, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100, fogRevealRadius: 14);
+            // Iron tools/props are needed to shore up deeper coal seams -- ties the two mines together.
+            coalMineData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 6 });
+            coalMineData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 14 });
+            EditorUtility.SetDirty(coalMineData);
 
             var wallData = CreateBuildingData(
                 "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 150, defense: 15, fogRevealRadius: 6);
+            // Iron reinforcement/fittings gate the defense line's later tiers -- a smithing chain
+            // (Mine -> Iron) has to exist before walls/towers/barracks/gates can be hardened.
+            wallData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 6 });
+            wallData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 14 });
+            EditorUtility.SetDirty(wallData);
 
             var towerData = CreateBuildingData(
                 "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
                 style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25, fogRevealRadius: 18);
+            towerData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 12 });
+            towerData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 26 });
+            EditorUtility.SetDirty(towerData);
 
             var barracksData = CreateBuildingData(
                 "Barracks", "Казармы", new Vector2Int(2, 2), height: 2.6f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 30 }, new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 180, defense: 10, fogRevealRadius: 10);
+            // Weapons/armor for a bigger garrison -- the steepest iron sink in the game.
+            barracksData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 15 });
+            barracksData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 32 });
+            EditorUtility.SetDirty(barracksData);
 
             var gateData = CreateBuildingData(
                 "Gate", "Ворота", new Vector2Int(2, 1), height: 1.8f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 12 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12, fogRevealRadius: 8);
+            gateData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 8 });
+            gateData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 18 });
+            EditorUtility.SetDirty(gateData);
 
             var roadData = CreateBuildingData(
                 "Road", "Дорога", new Vector2Int(1, 1), height: 0.05f,
@@ -266,7 +299,7 @@ namespace CityBuilder.EditorTools
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, fishermanHutData, hunterHutData, farmData,
-                lumberjackData, quarryData, mineData, roadData, wallData, towerData, barracksData, gateData,
+                lumberjackData, quarryData, mineData, coalMineData, roadData, wallData, towerData, barracksData, gateData,
                 bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -571,7 +604,9 @@ namespace CityBuilder.EditorTools
         {
             // Sits just below the top row (hint banner + Меню/Сохранить corners, all in the
             // y 420-510 band) in the same center-anchored coordinate space as those, so it
-            // never overlaps them regardless of which of those happen to be visible.
+            // never overlaps them regardless of which of those happen to be visible. Laid out as
+            // icon+number chips (see CreateResourceIcon) instead of one plain-text label so the
+            // always-on bar reads at a glance rather than as a wall of Russian resource names.
             var root = new GameObject("ResourceHUD", typeof(RectTransform));
             root.transform.SetParent(canvasParent, false);
             var rect = root.GetComponent<RectTransform>();
@@ -579,11 +614,52 @@ namespace CityBuilder.EditorTools
             rect.anchoredPosition = new Vector2(0f, 370f);
             rect.sizeDelta = new Vector2(1300f, 50f);
 
-            var label = CreateText(root.transform, "Label", string.Empty, 24, Vector2.zero, new Vector2(1300f, 50f));
+            var resourceTypes = new[] { ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold };
+            var slotCount = resourceTypes.Length + 1; // + population slot
+            var slotWidth = 1300f / slotCount;
+            var amountTexts = new Text[resourceTypes.Length];
+
+            for (var i = 0; i < resourceTypes.Length; i++)
+            {
+                var slotCenter = -650f + slotWidth * (i + 0.5f);
+
+                var icon = CreateImage(root.transform, $"Icon_{resourceTypes[i]}", Color.white);
+                icon.sprite = CreateResourceIcon(resourceTypes[i]);
+                var iconRect = icon.GetComponent<RectTransform>();
+                iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+                iconRect.anchoredPosition = new Vector2(slotCenter - slotWidth * 0.22f, 0f);
+                iconRect.sizeDelta = new Vector2(32f, 32f);
+
+                var amountText = CreateText(root.transform, $"Amount_{resourceTypes[i]}", "0", 24,
+                    new Vector2(slotCenter + slotWidth * 0.14f, 0f), new Vector2(slotWidth * 0.6f, 50f));
+                amountText.alignment = TextAnchor.MiddleLeft;
+                amountTexts[i] = amountText;
+            }
+
+            var popCenter = -650f + slotWidth * (resourceTypes.Length + 0.5f);
+            var popIcon = CreateImage(root.transform, "Icon_Population", Color.white);
+            popIcon.sprite = CreatePopulationIcon();
+            var popIconRect = popIcon.GetComponent<RectTransform>();
+            popIconRect.anchorMin = popIconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            popIconRect.anchoredPosition = new Vector2(popCenter - slotWidth * 0.22f, 0f);
+            popIconRect.sizeDelta = new Vector2(32f, 32f);
+
+            var populationText = CreateText(root.transform, "Amount_Population", "0", 24,
+                new Vector2(popCenter + slotWidth * 0.14f, 0f), new Vector2(slotWidth * 0.6f, 50f));
+            populationText.alignment = TextAnchor.MiddleLeft;
 
             var hud = root.AddComponent<ResourceHUDController>();
             var hudSO = new SerializedObject(hud);
-            hudSO.FindProperty("label").objectReferenceValue = label;
+            var resourceOrderProp = hudSO.FindProperty("resourceOrder");
+            resourceOrderProp.arraySize = resourceTypes.Length;
+            var amountTextsProp = hudSO.FindProperty("amountTexts");
+            amountTextsProp.arraySize = amountTexts.Length;
+            for (var i = 0; i < resourceTypes.Length; i++)
+            {
+                resourceOrderProp.GetArrayElementAtIndex(i).enumValueIndex = (int)resourceTypes[i];
+                amountTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = amountTexts[i];
+            }
+            hudSO.FindProperty("populationText").objectReferenceValue = populationText;
             hudSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1787,11 +1863,22 @@ namespace CityBuilder.EditorTools
                 case "Mine":
                     return CreateIconSprite("Bld_Mine", 64, (p, s) =>
                     {
-                        var ore = new Color(0.78f, 0.68f, 0.22f);
+                        var ore = new Color(0.58f, 0.62f, 0.68f);
                         FillIconRect(p, s, 0.15f, 0.15f, 0.85f, 0.4f, new Color(0.35f, 0.35f, 0.38f));
                         FillIconRect(p, s, 0.25f, 0.4f, 0.45f, 0.58f, ore);
                         FillIconRect(p, s, 0.45f, 0.4f, 0.65f, 0.65f, ore);
                         FillIconRect(p, s, 0.6f, 0.4f, 0.78f, 0.55f, ore);
+                        FillIconRect(p, s, 0.2f, 0.08f, 0.32f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
+                        FillIconRect(p, s, 0.68f, 0.08f, 0.8f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
+                    });
+                case "CoalMine":
+                    return CreateIconSprite("Bld_CoalMine", 64, (p, s) =>
+                    {
+                        var coal = new Color(0.12f, 0.12f, 0.13f);
+                        FillIconRect(p, s, 0.15f, 0.15f, 0.85f, 0.4f, new Color(0.3f, 0.28f, 0.27f));
+                        FillIconRect(p, s, 0.25f, 0.4f, 0.45f, 0.58f, coal);
+                        FillIconRect(p, s, 0.45f, 0.4f, 0.65f, 0.65f, coal);
+                        FillIconRect(p, s, 0.6f, 0.4f, 0.78f, 0.55f, coal);
                         FillIconRect(p, s, 0.2f, 0.08f, 0.32f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
                         FillIconRect(p, s, 0.68f, 0.08f, 0.8f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
                     });
@@ -1882,6 +1969,71 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.25f, 0.25f, 0.75f, 0.75f, new Color(0.6f, 0.6f, 0.6f));
                     });
             }
+        }
+
+        /// <summary>Small pictogram per ResourceType, used by the top resource HUD bar in place of plain-text resource names (see ResourceHUDController/BuildResourceHUD).</summary>
+        private static Sprite CreateResourceIcon(ResourceType type)
+        {
+            switch (type)
+            {
+                case ResourceType.Wood:
+                    return CreateIconSprite("Res_Wood", 64, (p, s) =>
+                    {
+                        var log = new Color(0.55f, 0.36f, 0.2f);
+                        var ring = new Color(0.78f, 0.6f, 0.4f);
+                        FillIconRect(p, s, 0.12f, 0.36f, 0.88f, 0.64f, log);
+                        FillIconRect(p, s, 0.12f, 0.36f, 0.24f, 0.64f, ring);
+                        FillIconRect(p, s, 0.76f, 0.36f, 0.88f, 0.64f, ring);
+                        FillIconRect(p, s, 0.16f, 0.44f, 0.2f, 0.56f, log);
+                        FillIconRect(p, s, 0.8f, 0.44f, 0.84f, 0.56f, log);
+                    });
+                case ResourceType.Stone:
+                    return CreateIconSprite("Res_Stone", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.58f, 0.56f, 0.52f);
+                        var shade = new Color(0.42f, 0.4f, 0.37f);
+                        FillIconTriangle(p, s, new Vector2(0.12f, 0.2f), new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.2f), stone);
+                        FillIconTriangle(p, s, new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.78f), new Vector2(0.88f, 0.2f), shade);
+                    });
+                case ResourceType.Iron:
+                    return CreateIconSprite("Res_Iron", 64, (p, s) =>
+                    {
+                        var ingot = new Color(0.62f, 0.65f, 0.7f);
+                        var shine = new Color(0.82f, 0.85f, 0.88f);
+                        FillIconRect(p, s, 0.14f, 0.3f, 0.86f, 0.58f, ingot);
+                        FillIconRect(p, s, 0.22f, 0.58f, 0.78f, 0.68f, ingot);
+                        FillIconRect(p, s, 0.2f, 0.36f, 0.32f, 0.52f, shine);
+                    });
+                case ResourceType.Coal:
+                    return CreateIconSprite("Res_Coal", 64, (p, s) =>
+                    {
+                        var coal = new Color(0.14f, 0.14f, 0.15f);
+                        var shine = new Color(0.34f, 0.34f, 0.36f);
+                        FillIconRect(p, s, 0.18f, 0.18f, 0.5f, 0.5f, coal);
+                        FillIconRect(p, s, 0.42f, 0.3f, 0.82f, 0.62f, coal);
+                        FillIconRect(p, s, 0.22f, 0.55f, 0.5f, 0.82f, coal);
+                        FillIconRect(p, s, 0.48f, 0.4f, 0.56f, 0.48f, shine);
+                    });
+                default: // Gold
+                    return CreateIconSprite("Res_Gold", 64, (p, s) =>
+                    {
+                        var bar = new Color(0.85f, 0.68f, 0.24f);
+                        var shine = new Color(0.95f, 0.86f, 0.5f);
+                        FillIconRect(p, s, 0.14f, 0.28f, 0.86f, 0.58f, bar);
+                        FillIconRect(p, s, 0.22f, 0.58f, 0.78f, 0.7f, bar);
+                        FillIconRect(p, s, 0.2f, 0.34f, 0.68f, 0.4f, shine);
+                    });
+            }
+        }
+
+        private static Sprite CreatePopulationIcon()
+        {
+            return CreateIconSprite("Res_Population", 64, (p, s) =>
+            {
+                var body = new Color(0.85f, 0.82f, 0.75f);
+                FillIconRect(p, s, 0.38f, 0.56f, 0.62f, 0.74f, body);
+                FillIconTriangle(p, s, new Vector2(0.2f, 0.1f), new Vector2(0.8f, 0.1f), new Vector2(0.5f, 0.54f), body);
+            });
         }
 
         /// <summary>An open square bracket (three sides) with an arrowhead where the fourth side would start -- reads as "turn/cycle" without needing a curved stroke (straight-edges-only, matching every other icon here).</summary>

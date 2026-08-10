@@ -6,6 +6,8 @@ namespace CityBuilder.Resources
         Stone,
         Food,
         Gold,
-        Population
+        Population,
+        Iron,
+        Coal
     }
 }

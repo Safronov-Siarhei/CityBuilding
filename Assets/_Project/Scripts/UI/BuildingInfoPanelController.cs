@@ -107,6 +107,8 @@ namespace CityBuilder.UI
                 case ResourceType.Stone: return "камня";
                 case ResourceType.Food: return "еды";
                 case ResourceType.Gold: return "золота";
+                case ResourceType.Iron: return "железа";
+                case ResourceType.Coal: return "угля";
                 default: return type.ToString();
             }
         }

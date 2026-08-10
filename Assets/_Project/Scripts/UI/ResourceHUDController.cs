@@ -1,3 +1,4 @@
+using System;
 using CityBuilder.Citizens;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -7,7 +8,12 @@ namespace CityBuilder.UI
 {
     public class ResourceHUDController : MonoBehaviour
     {
-        [SerializeField] private Text label;
+        // Parallel arrays wired by SetupProject.BuildResourceHUD -- resourceOrder[i]'s amount is
+        // shown by amountTexts[i], next to that resource's icon. Icons replace the old plain-text
+        // resource names ("Дерево 50   Камень 20 ...") so the always-on top bar reads visually.
+        [SerializeField] private ResourceType[] resourceOrder;
+        [SerializeField] private Text[] amountTexts;
+        [SerializeField] private Text populationText;
 
         private void Start()
         {
@@ -32,22 +38,22 @@ namespace CityBuilder.UI
 
         private void Refresh()
         {
-            if (label == null || ResourceManager.Instance == null) return;
-
-            var pop = CitizenManager.Instance != null
-                ? $"{CitizenManager.Instance.TotalPopulation} (своб. {CitizenManager.Instance.IdlePopulation})"
-                : "0";
+            if (ResourceManager.Instance == null || resourceOrder == null || amountTexts == null) return;
 
             var infinite = ResourceManager.Instance.InfiniteResources;
-            string Amount(ResourceType type) => infinite ? "∞" : ResourceManager.Instance.GetAmount(type).ToString();
+            var count = Math.Min(resourceOrder.Length, amountTexts.Length);
+            for (var i = 0; i < count; i++)
+            {
+                if (amountTexts[i] == null) continue;
+                amountTexts[i].text = infinite ? "∞" : ResourceManager.Instance.GetAmount(resourceOrder[i]).ToString();
+            }
 
-            label.text =
-                $"Дерево {Amount(ResourceType.Wood)}   " +
-                $"Камень {Amount(ResourceType.Stone)}   " +
-                $"Еда {Amount(ResourceType.Food)}   " +
-                $"Золото {Amount(ResourceType.Gold)}   " +
-                $"Жители {pop}" +
-                (infinite ? "   [ДЕБАГ: РЕСУРСЫ ∞ — F9]" : string.Empty);
+            if (populationText != null)
+            {
+                populationText.text = CitizenManager.Instance != null
+                    ? $"{CitizenManager.Instance.TotalPopulation} ({CitizenManager.Instance.IdlePopulation})"
+                    : "0";
+            }
         }
     }
 }
