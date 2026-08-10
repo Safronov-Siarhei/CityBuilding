@@ -128,7 +128,15 @@ namespace CityBuilder.Citizens
                     // CharacterController collides with building colliders (see BuildingPlacer's
                     // procedurally generated BoxColliders), so citizens can no longer walk through
                     // a placed building the way a direct transform.position set would allow.
-                    _controller.SimpleMove(direction * speed);
+                    //
+                    // Move() (not SimpleMove()) so gravity never touches Y -- the map is flat by
+                    // design (GridManager.GroundHeight is one fixed constant used everywhere else:
+                    // spawn points, wander targets, building placement) and letting the built-in
+                    // CharacterController gravity settle onto the real Map1 mesh collider instead
+                    // let citizens hover near buildings while gravity caught up, or fall through
+                    // thin/seamed spots in that mesh. Y is pinned explicitly every frame instead.
+                    _controller.Move(direction * speed * Time.deltaTime);
+                    PinToGroundHeight();
                 }
                 else
                 {
@@ -142,6 +150,17 @@ namespace CityBuilder.Citizens
             {
                 OnPauseElapsed();
             }
+        }
+
+        /// <summary>Terrain is flat by design -- clamps back to the one fixed ground height every move instead of trusting whatever Y the CharacterController's collision resolution landed on.</summary>
+        private void PinToGroundHeight()
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            var pos = transform.position;
+            pos.y = grid.GroundHeight;
+            transform.position = pos;
         }
 
         /// <summary>Faster while standing on a road cell (RoadNetwork) -- see RoadSpeedMultiplier.</summary>
