@@ -7,16 +7,19 @@ using UnityEngine;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Simple cubic fog-of-war: the whole map is visible until the mandatory Town Hall is placed
-    /// (see Activate, called from BuildingPlacer.TryPlace), then everything not yet explored is
-    /// covered by cloud blocks. Buildings permanently clear a radius around themselves
-    /// (BuildingData.fogRevealRadius, applied from BuildingInstance.Initialize -- the single hook
-    /// point for both fresh placement and save/load, so no separate persistence is needed here).
-    /// Citizens temporarily clear a radius around themselves that closes back up once they move on.
+    /// Simple flat-overlay fog-of-war (classic RTS style): the whole map is visible until the
+    /// mandatory Town Hall is placed (see Activate, called from BuildingPlacer.TryPlace), then
+    /// everything not yet explored is covered by a dark, opaque plane hovering above the terrain
+    /// -- high enough to clear the tallest building/tree, so nothing pokes through it, but with no
+    /// visible side walls the way a solid cloud block would have. Buildings permanently clear a
+    /// radius around themselves (BuildingData.fogRevealRadius, applied from BuildingInstance.
+    /// Initialize -- the single hook point for both fresh placement and save/load, so no separate
+    /// persistence is needed here). Citizens temporarily clear a radius around themselves that
+    /// closes back up once they move on.
     ///
     /// Reveal bookkeeping is exact, at the same 1m grid resolution as gameplay; rendering is
     /// chunked (ChunkSize cells per chunk, one combined mesh each) and each chunk merges
-    /// contiguous fogged cells along a row into a single box before triangulating, so a mesh
+    /// contiguous fogged cells along a row into a single quad before triangulating, so a mesh
     /// rebuild -- which happens only for chunks whose reveal state actually changed -- stays cheap
     /// even for a mostly-fogged 200x200 map.
     /// </summary>
@@ -30,8 +33,9 @@ namespace CityBuilder.Maps
         private const int ChunkSize = 20;
         private const int CitizenRevealRadiusCells = 7;
         private const float CitizenUpdateInterval = 0.3f;
-        private const float CloudBottomY = 0f;
-        private const float CloudTopY = 6f;
+        // Clears the tallest building (Tower, ~4.2m) and every tree with room to spare, so nothing
+        // ever pokes up through the overlay from below.
+        private const float OverlayHeight = 5f;
 
         private bool[,] _permanent;
         private bool[,] _citizenRevealed;
@@ -83,7 +87,7 @@ namespace CityBuilder.Maps
             _chunkFilters = new MeshFilter[_chunksX, _chunksZ];
             _chunkMeshes = new Mesh[_chunksX, _chunksZ];
 
-            _cloudMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.93f, 0.95f, 0.97f) };
+            _cloudMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.05f, 0.05f, 0.06f) };
 
             for (var cx = 0; cx < _chunksX; cx++)
             {
@@ -240,7 +244,7 @@ namespace CityBuilder.Maps
             }
         }
 
-        /// <summary>Rebuilds one chunk's combined mesh from scratch: contiguous fogged cells along each row are merged into a single box before triangulating, keeping a mostly- or fully-fogged chunk far cheaper than one box per cell.</summary>
+        /// <summary>Rebuilds one chunk's combined mesh from scratch: contiguous fogged cells along each row are merged into a single quad before triangulating, keeping a mostly- or fully-fogged chunk far cheaper than one quad per cell.</summary>
         private void RebuildChunk(int cx, int cz)
         {
             var grid = GridManager.Instance;
@@ -261,7 +265,7 @@ namespace CityBuilder.Maps
                     if (fogged && runStartX < 0) runStartX = x;
                     if (!fogged && runStartX >= 0)
                     {
-                        AddCloudRow(vertices, triangles, grid, runStartX, x, z);
+                        AddOverlayRow(vertices, triangles, grid, runStartX, x, z);
                         runStartX = -1;
                     }
                 }
@@ -290,24 +294,19 @@ namespace CityBuilder.Maps
             _chunkDirty[cx, cz] = false;
         }
 
-        private static void AddCloudRow(List<Vector3> vertices, List<int> triangles, GridManager grid, int xStart, int xEndExclusive, int z)
+        /// <summary>A single flat quad at OverlayHeight, spanning the merged run -- no side walls, so it reads as a hovering dark plane rather than a solid block.</summary>
+        private static void AddOverlayRow(List<Vector3> vertices, List<int> triangles, GridManager grid, int xStart, int xEndExclusive, int z)
         {
             var corner = grid.CellToWorld(new Vector2Int(xStart, z));
             var x0 = corner.x;
             var x1 = corner.x + (xEndExclusive - xStart) * grid.CellSize;
             var z0 = corner.z;
             var z1 = corner.z + grid.CellSize;
-            AddCloudBox(vertices, triangles, x0, x1, z0, z1);
-        }
 
-        /// <summary>Top + four sides (no bottom -- never seen). Each face is emitted with both winding orders so it renders regardless of which one Unity treats as front-facing, without needing shared vertices (which would otherwise average opposing normals to near-zero).</summary>
-        private static void AddCloudBox(List<Vector3> vertices, List<int> triangles, float x0, float x1, float z0, float z1)
-        {
-            AddQuadBothSides(vertices, triangles, new Vector3(x0, CloudTopY, z0), new Vector3(x0, CloudTopY, z1), new Vector3(x1, CloudTopY, z1), new Vector3(x1, CloudTopY, z0));
-            AddQuadBothSides(vertices, triangles, new Vector3(x0, CloudBottomY, z1), new Vector3(x0, CloudTopY, z1), new Vector3(x1, CloudTopY, z1), new Vector3(x1, CloudBottomY, z1));
-            AddQuadBothSides(vertices, triangles, new Vector3(x1, CloudBottomY, z0), new Vector3(x1, CloudTopY, z0), new Vector3(x0, CloudTopY, z0), new Vector3(x0, CloudBottomY, z0));
-            AddQuadBothSides(vertices, triangles, new Vector3(x1, CloudBottomY, z1), new Vector3(x1, CloudTopY, z1), new Vector3(x1, CloudTopY, z0), new Vector3(x1, CloudBottomY, z0));
-            AddQuadBothSides(vertices, triangles, new Vector3(x0, CloudBottomY, z0), new Vector3(x0, CloudTopY, z0), new Vector3(x0, CloudTopY, z1), new Vector3(x0, CloudBottomY, z1));
+            // Both winding orders, so it renders regardless of which one Unity treats as
+            // front-facing, without needing shared vertices (which would otherwise average
+            // opposing normals to near-zero).
+            AddQuadBothSides(vertices, triangles, new Vector3(x0, OverlayHeight, z0), new Vector3(x0, OverlayHeight, z1), new Vector3(x1, OverlayHeight, z1), new Vector3(x1, OverlayHeight, z0));
         }
 
         private static void AddQuadBothSides(List<Vector3> vertices, List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
