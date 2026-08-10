@@ -194,10 +194,11 @@ namespace CityBuilder.Buildings
 
         /// <summary>
         /// GridManager.CanPlace plus a mesh-map-aware exception: a water-category building
-        /// (BuildingData.isWaterCategory) may also go on cells that are normally water-blocked,
-        /// as long as they're within the map's water-placement zone and not already occupied by
-        /// something else. Water itself isn't tracked in GridManager's occupancy set (see
-        /// MeshMapApplier), specifically so this exception is possible.
+        /// (BuildingData.isWaterCategory) may go where a normal building can't (a cell that's
+        /// water-blocked), but only within the map's water-placement zone, and its footprint must
+        /// be entirely water -- never touching dry Ground. A normal building is the mirror image:
+        /// every footprint cell must be dry land. Water itself isn't tracked in GridManager's
+        /// occupancy set (see MeshMapApplier), specifically so this exception is possible.
         /// </summary>
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint)
         {
@@ -211,8 +212,15 @@ namespace CityBuilder.Buildings
                 for (var z = 0; z < footprint.y; z++)
                 {
                     var c = cell + new Vector2Int(x, z);
-                    if (!mapApplier.IsWaterCell(c)) continue;
-                    if (_selectedBuilding.isWaterCategory && mapApplier.IsWaterPlacementZone(c)) continue;
+                    var isWater = mapApplier.IsWaterCell(c);
+
+                    if (_selectedBuilding.isWaterCategory)
+                    {
+                        if (isWater && mapApplier.IsWaterPlacementZone(c)) continue;
+                        return false;
+                    }
+
+                    if (!isWater) continue;
                     return false;
                 }
             }

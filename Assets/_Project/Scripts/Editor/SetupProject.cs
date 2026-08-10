@@ -241,10 +241,33 @@ namespace CityBuilder.EditorTools
                 category: BuildingCategory.Infrastructure, maxHealth: 40,
                 isRoad: true, keepSelectedAfterPlacement: true);
 
+            var bridgeData = CreateBuildingData(
+                "Bridge", "Мост", new Vector2Int(1, 1), height: 0.05f,
+                wallColor: new Color(0.5f, 0.35f, 0.2f), roofColor: new Color(0.36f, 0.24f, 0.13f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 8 } },
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                category: BuildingCategory.Infrastructure, maxHealth: 40,
+                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true);
+
+            var waterMillData = CreateWaterBuildingData(
+                "WaterMill", "Водяная мельница", new Vector2Int(2, 2),
+                deckColor: new Color(0.5f, 0.4f, 0.28f), accentColor: new Color(0.35f, 0.24f, 0.14f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 10 } },
+                addWheel: true, maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3,
+                category: BuildingCategory.Food, maxHealth: 90);
+
+            var dockData = CreateWaterBuildingData(
+                "Dock", "Пристань", new Vector2Int(2, 2),
+                deckColor: new Color(0.55f, 0.4f, 0.24f), accentColor: new Color(0.68f, 0.5f, 0.3f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
+                addCrates: true, maxWorkers: 2, producesResource: ResourceType.Gold, productionPerTick: 1,
+                category: BuildingCategory.Production, maxHealth: 80);
+
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, fishermanHutData, hunterHutData, farmData,
-                lumberjackData, quarryData, mineData, roadData, wallData, towerData, barracksData, gateData
+                lumberjackData, quarryData, mineData, roadData, wallData, towerData, barracksData, gateData,
+                bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
@@ -844,7 +867,7 @@ namespace CityBuilder.EditorTools
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
             BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0,
-            bool isRoad = false, bool keepSelectedAfterPlacement = false)
+            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false)
         {
             GameObject prefab;
             switch (style)
@@ -883,6 +906,7 @@ namespace CityBuilder.EditorTools
             data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
             data.isRoad = isRoad;
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
+            data.isWaterCategory = isWaterCategory;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1063,6 +1087,97 @@ namespace CityBuilder.EditorTools
             collider.isTrigger = true;
 
             return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// A wooden deck on short corner posts (a "built on stilts over the water" read), used for
+        /// every isWaterCategory production building -- see CreateWaterBuildingData. addWheel adds
+        /// a mill paddle wheel (a cross of two thin blades, not a true circle -- matching the
+        /// no-circles style everywhere else); addCrates adds a couple of cargo props for a dock.
+        /// </summary>
+        private static GameObject CreateWaterBuildingPrefab(string name, Vector2Int footprint, Color deckColor, Color accentColor, bool addWheel, bool addCrates)
+        {
+            var sizeX = footprint.x * CellSize - BuildingInset;
+            var sizeZ = footprint.y * CellSize - BuildingInset;
+            const float deckThickness = 0.14f;
+            const float postDepth = 0.4f;
+
+            var root = new GameObject(name);
+            root.AddComponent<BuildingInstance>();
+
+            var deckMaterial = CreateLitMaterial($"Building_{name}_Deck", deckColor);
+            var accentMaterial = CreateLitMaterial($"Building_{name}_Accent", accentColor);
+
+            AddCubePart(root.transform, "Deck", new Vector3(0f, deckThickness * 0.5f, 0f), new Vector3(sizeX, deckThickness, sizeZ), deckMaterial);
+
+            var halfX = sizeX * 0.5f - 0.15f;
+            var halfZ = sizeZ * 0.5f - 0.15f;
+            var postIndex = 0;
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                for (var sz = -1; sz <= 1; sz += 2)
+                {
+                    AddCubePart(root.transform, $"Post{postIndex}", new Vector3(sx * halfX, -postDepth * 0.5f, sz * halfZ), new Vector3(0.12f, postDepth, 0.12f), accentMaterial);
+                    postIndex++;
+                }
+            }
+
+            if (addWheel)
+            {
+                var postX = sizeX * 0.5f + 0.12f;
+                AddCubePart(root.transform, "WheelPost", new Vector3(postX, 0.8f, 0f), new Vector3(0.14f, 1.6f, 0.14f), accentMaterial);
+                AddCubePart(root.transform, "BladeVertical", new Vector3(postX, 0.9f, 0f), new Vector3(0.08f, 1.3f, 0.16f), deckMaterial);
+                AddCubePart(root.transform, "BladeHorizontal", new Vector3(postX, 0.9f, 0f), new Vector3(0.08f, 0.16f, 1.3f), deckMaterial);
+            }
+
+            if (addCrates)
+            {
+                AddCubePart(root.transform, "CrateA", new Vector3(sizeX * 0.22f, deckThickness + 0.15f, sizeZ * 0.2f), new Vector3(0.3f, 0.3f, 0.3f), accentMaterial);
+                AddCubePart(root.transform, "CrateB", new Vector3(-sizeX * 0.18f, deckThickness + 0.12f, -sizeZ * 0.25f), new Vector3(0.24f, 0.24f, 0.24f), accentMaterial);
+            }
+
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(sizeX, deckThickness + postDepth, sizeZ);
+            collider.center = new Vector3(0f, (deckThickness - postDepth) * 0.5f, 0f);
+
+            return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// A water-only production building (BuildingData.isWaterCategory) -- placeable exclusively
+        /// within a mesh map's water-placement zone, and never touching dry Ground (see
+        /// BuildingPlacer.CanPlaceSelectedBuilding). Mirrors CreateBuildingData's data-assignment
+        /// tail but drives CreateWaterBuildingPrefab instead of the land-building style switch.
+        /// </summary>
+        private static BuildingData CreateWaterBuildingData(
+            string id, string displayName, Vector2Int footprint, Color deckColor, Color accentColor, List<ResourceAmount> cost,
+            bool addWheel = false, bool addCrates = false, int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0,
+            BuildingCategory category = BuildingCategory.Production, int maxHealth = 80, int defense = 0)
+        {
+            var prefab = CreateWaterBuildingPrefab(id, footprint, deckColor, accentColor, addWheel, addCrates);
+
+            var data = ScriptableObject.CreateInstance<BuildingData>();
+            data.buildingName = id;
+            data.displayName = displayName;
+            data.prefab = prefab;
+            data.footprintSize = footprint;
+            data.cost = cost;
+            data.maxWorkers = maxWorkers;
+            data.producesResource = producesResource;
+            data.productionPerWorkerPerTick = productionPerTick;
+            data.productionIntervalSeconds = 6f;
+            data.category = category;
+            data.maxHealth = maxHealth;
+            data.defense = defense;
+            data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
+            data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
+            data.isWaterCategory = true;
+
+            Directory.CreateDirectory(BuildingDataFolder);
+            var dataPath = $"{BuildingDataFolder}/{id}.asset";
+            DeleteIfExists(dataPath);
+            AssetDatabase.CreateAsset(data, dataPath);
+            return data;
         }
 
         /// <summary>
@@ -1713,6 +1828,40 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.46f, 0.14f, 0.54f, 0.32f, stripe);
                         FillIconRect(p, s, 0.46f, 0.42f, 0.54f, 0.6f, stripe);
                         FillIconRect(p, s, 0.46f, 0.7f, 0.54f, 0.86f, stripe);
+                    });
+                case "Bridge":
+                    return CreateIconSprite("Bld_Bridge", 64, (p, s) =>
+                    {
+                        var water = new Color(0.3f, 0.5f, 0.75f);
+                        var plank = new Color(0.5f, 0.35f, 0.2f);
+                        FillIconRect(p, s, 0.05f, 0.1f, 0.95f, 0.9f, water);
+                        FillIconRect(p, s, 0.1f, 0.42f, 0.9f, 0.58f, plank);
+                        FillIconRect(p, s, 0.16f, 0.58f, 0.22f, 0.72f, plank);
+                        FillIconRect(p, s, 0.78f, 0.58f, 0.84f, 0.72f, plank);
+                        FillIconRect(p, s, 0.16f, 0.28f, 0.22f, 0.42f, plank);
+                        FillIconRect(p, s, 0.78f, 0.28f, 0.84f, 0.42f, plank);
+                    });
+                case "WaterMill":
+                    return CreateIconSprite("Bld_WaterMill", 64, (p, s) =>
+                    {
+                        var wall = new Color(0.5f, 0.4f, 0.28f);
+                        var roof = new Color(0.32f, 0.22f, 0.15f);
+                        var wheel = new Color(0.35f, 0.24f, 0.14f);
+                        FillIconRect(p, s, 0.14f, 0.16f, 0.56f, 0.6f, wall);
+                        FillIconTriangle(p, s, new Vector2(0.1f, 0.6f), new Vector2(0.6f, 0.6f), new Vector2(0.35f, 0.82f), roof);
+                        FillIconRect(p, s, 0.6f, 0.22f, 0.9f, 0.72f, wheel);
+                        FillIconRect(p, s, 0.68f, 0.14f, 0.82f, 0.8f, wheel);
+                    });
+                case "Dock":
+                    return CreateIconSprite("Bld_Dock", 64, (p, s) =>
+                    {
+                        var water = new Color(0.3f, 0.5f, 0.75f);
+                        var deck = new Color(0.55f, 0.4f, 0.24f);
+                        var crate = new Color(0.68f, 0.5f, 0.3f);
+                        FillIconRect(p, s, 0.05f, 0.1f, 0.95f, 0.5f, water);
+                        FillIconRect(p, s, 0.1f, 0.44f, 0.9f, 0.58f, deck);
+                        FillIconRect(p, s, 0.2f, 0.58f, 0.42f, 0.8f, crate);
+                        FillIconRect(p, s, 0.5f, 0.58f, 0.68f, 0.74f, crate);
                     });
                 default:
                     return CreateIconSprite($"Bld_{buildingId}", 64, (p, s) =>
