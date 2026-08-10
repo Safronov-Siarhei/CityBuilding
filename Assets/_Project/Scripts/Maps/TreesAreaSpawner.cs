@@ -23,7 +23,7 @@ namespace CityBuilder.Maps
         // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
         private const int MinSpacingCells = 1;
 
-        private Collider _zoneCollider;
+        private Collider[] _zoneColliders = new Collider[0];
         private GameObject[] _treePrefabs = new GameObject[0];
         private readonly HashSet<Vector2Int> _treeCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _treeCellByInstance = new Dictionary<GameObject, Vector2Int>();
@@ -40,9 +40,13 @@ namespace CityBuilder.Maps
 
         public void Initialize(GameObject treesAreaInstance, GameObject[] treePrefabs)
         {
-            _zoneCollider = treesAreaInstance != null ? treesAreaInstance.GetComponentInChildren<Collider>() : null;
+            // Plural: MeshMapApplier now adds a collider to every mesh piece under the zone
+            // instance, not just the first -- a hand-authored TreesArea can be several
+            // disconnected forest patches, and a single collider derived from only the first
+            // piece would silently leave the rest of the zone with nothing to sample against.
+            _zoneColliders = treesAreaInstance != null ? treesAreaInstance.GetComponentsInChildren<Collider>() : new Collider[0];
             _treePrefabs = treePrefabs ?? new GameObject[0];
-            if (_zoneCollider == null || _treePrefabs.Length == 0) return;
+            if (_zoneColliders.Length == 0 || _treePrefabs.Length == 0) return;
             if (MeshMapApplier.Instance == null || MeshMapApplier.Instance.GroundTransform == null) return;
 
             for (var i = 0; i < InitialTreeCount; i++)
@@ -50,6 +54,11 @@ namespace CityBuilder.Maps
                 // The starting forest is already mature -- only trees planted later (after a
                 // harvest) grow up from a sapling. See SpawnOneTree's startGrown parameter.
                 SpawnOneTree(startGrown: true);
+            }
+
+            if (_treeCells.Count == 0)
+            {
+                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- zone colliders: {_zoneColliders.Length}, tree prefabs: {_treePrefabs.Length}. Every placement attempt failed either the zone-membership or the Ground raycast check.");
             }
         }
 
@@ -90,22 +99,24 @@ namespace CityBuilder.Maps
         {
             var grid = GridManager.Instance;
             var mapApplier = MeshMapApplier.Instance;
-            if (grid == null || mapApplier == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
+            if (grid == null || mapApplier == null || _zoneColliders.Length == 0 || _treePrefabs.Length == 0) return;
 
             var groundTransform = mapApplier.GroundTransform;
             if (groundTransform == null) return;
 
-            var zoneBounds = _zoneCollider.bounds;
-
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
+                // A different zone piece each attempt so multi-patch zones get sampled fairly
+                // across all of them, not just whichever one happened to be picked first.
+                var zoneCollider = _zoneColliders[Random.Range(0, _zoneColliders.Length)];
+                var zoneBounds = zoneCollider.bounds;
                 var x = Random.Range(zoneBounds.min.x, zoneBounds.max.x);
                 var z = Random.Range(zoneBounds.min.z, zoneBounds.max.z);
                 var origin = new Vector3(x, zoneBounds.max.y + 50f, z);
 
                 // Raycast confirms true membership in the (possibly irregular) zone shape, not
                 // just the bounding box.
-                if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out _, 1000f)) continue;
+                if (!zoneCollider.Raycast(new Ray(origin, Vector3.down), out _, 1000f)) continue;
                 // ...and that solid ground truly exists at this exact point, rather than trusting
                 // the zone mesh alone right at a shoreline it might overlap.
                 if (!mapApplier.TryRaycastGround(origin, out var groundHit)) continue;

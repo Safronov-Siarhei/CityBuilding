@@ -146,7 +146,11 @@ namespace CityBuilder.Maps
             {
                 treesAreaInstance = Instantiate(map.TreesAreaPrefab, Vector3.zero, map.TreesAreaPrefab.transform.rotation, transform);
                 SetRenderersEnabled(treesAreaInstance, false);
-                AddMeshCollider(treesAreaInstance);
+                // Every sub-mesh gets its own collider (not just the first, unlike AddMeshCollider
+                // above) -- a hand-authored TreesArea zone can be several disconnected forest
+                // patches, and deriving a single collider from just the first one found would
+                // silently make the rest of the zone impossible for TreesAreaSpawner to sample.
+                AddMeshCollidersToAll(treesAreaInstance);
             }
 
             ComputeWaterAndZoneCells(grid, groundCollider, waterZoneCollider);
@@ -201,6 +205,17 @@ namespace CityBuilder.Maps
             var collider = meshFilter.gameObject.AddComponent<MeshCollider>();
             collider.sharedMesh = meshFilter.sharedMesh;
             return collider;
+        }
+
+        /// <summary>Like AddMeshCollider, but adds a collider to every MeshFilter found under root instead of just the first.</summary>
+        private static void AddMeshCollidersToAll(GameObject root)
+        {
+            foreach (var meshFilter in root.GetComponentsInChildren<MeshFilter>())
+            {
+                if (meshFilter.GetComponent<Collider>() != null) continue;
+                var collider = meshFilter.gameObject.AddComponent<MeshCollider>();
+                collider.sharedMesh = meshFilter.sharedMesh;
+            }
         }
 
         private static void SetRenderersEnabled(GameObject root, bool enabled)
