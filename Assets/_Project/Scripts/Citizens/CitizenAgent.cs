@@ -21,11 +21,21 @@ namespace CityBuilder.Citizens
         private const int RoadSearchRadiusCells = 6;
         private const float WanderRadiusCells = 8f;
         private const float MinIdleSeconds = 1f;
-        private const float MaxIdleSeconds = 3f;
+        private const float MaxIdleSeconds = 5f;
+        private const float GroundRaycastHeight = 200f;
+        private const float GroundHeightTolerance = 0.5f;
         private const float WorkPauseSeconds = 3f;
         private const float BuildingRestSeconds = 1.5f;
         private const float ArrivalThreshold = 0.05f;
         private const int MaxTargetAttempts = 8;
+        // Straight-line movement (see WalkTo/BuildRoute -- no real pathfinding around solid
+        // obstacles) can walk an agent face-first into a wall with nothing pulling it sideways;
+        // CharacterController.Move then just holds it pinned there with zero progress toward
+        // _target. If the remaining distance hasn't improved for this long, the destination is
+        // treated as unreachable from here instead of leaving the agent stuck indefinitely.
+        private const float StuckTimeoutSeconds = 1.5f;
+        private const float StuckRetryPauseSeconds = 1f;
+        private const float ProgressEpsilon = 0.02f;
 
         private enum Mode { Wandering, Working }
 
@@ -41,6 +51,10 @@ namespace CityBuilder.Citizens
         private int _routeIndex;
         private float _pauseTimer;
         private bool _isWalking;
+
+        private float _bestRemainingDistance;
+        private float _stuckTimer;
+        private bool _resumingAfterStuck;
 
         private CharacterController _controller;
 
@@ -73,6 +87,7 @@ namespace CityBuilder.Citizens
         public void SetIdleWander(Vector3 townCenter)
         {
             _reassignedDuringCallback = true;
+            _resumingAfterStuck = false;
             _mode = Mode.Wandering;
             _townCenter = townCenter;
             BeginIdlePause();
@@ -86,6 +101,7 @@ namespace CityBuilder.Citizens
         public void SetWorking(Vector3 buildingPos, Vector3? nodePos)
         {
             _reassignedDuringCallback = true;
+            _resumingAfterStuck = false;
             _mode = Mode.Working;
             _buildingPos = buildingPos;
             _nodePos = nodePos;
@@ -113,12 +129,28 @@ namespace CityBuilder.Citizens
                         // Reached an intermediate waypoint (a road detour, see BuildRoute) --
                         // keep walking toward the next leg instead of treating this as arrival.
                         _target = _route[_routeIndex];
+                        ResetStuckTracking();
                         return;
                     }
 
                     _isWalking = false;
                     OnArrived();
                     return;
+                }
+
+                if (distance < _bestRemainingDistance - ProgressEpsilon)
+                {
+                    _bestRemainingDistance = distance;
+                    _stuckTimer = 0f;
+                }
+                else
+                {
+                    _stuckTimer += Time.deltaTime;
+                    if (_stuckTimer >= StuckTimeoutSeconds)
+                    {
+                        OnStuck();
+                        return;
+                    }
                 }
 
                 var direction = toTarget / distance;
@@ -148,8 +180,41 @@ namespace CityBuilder.Citizens
             _pauseTimer -= Time.deltaTime;
             if (_pauseTimer <= 0f)
             {
+                if (_resumingAfterStuck)
+                {
+                    _resumingAfterStuck = false;
+                    WalkTo(_headingToNode ? _nodePos.Value : _buildingPos);
+                    return;
+                }
                 OnPauseElapsed();
             }
+        }
+
+        /// <summary>
+        /// Abandons the current unreachable-from-here destination (see StuckTimeoutSeconds).
+        /// Wandering just picks a fresh target on the next idle tick. Working retries the exact
+        /// same leg after a short breather instead of toggling _headingToNode -- this wasn't a
+        /// real arrival, so treating it as one would wrongly fire OnWorkVisitCompleted or send
+        /// the agent back before it ever reached the node.
+        /// </summary>
+        private void OnStuck()
+        {
+            _isWalking = false;
+
+            if (_mode == Mode.Wandering)
+            {
+                BeginIdlePause();
+                return;
+            }
+
+            _resumingAfterStuck = true;
+            _pauseTimer = StuckRetryPauseSeconds;
+        }
+
+        private void ResetStuckTracking()
+        {
+            _bestRemainingDistance = float.MaxValue;
+            _stuckTimer = 0f;
         }
 
         /// <summary>Terrain is flat by design -- clamps back to the one fixed ground height every move instead of trusting whatever Y the CharacterController's collision resolution landed on.</summary>
@@ -228,6 +293,7 @@ namespace CityBuilder.Citizens
             _routeIndex = 0;
             _target = _route[0];
             _isWalking = true;
+            ResetStuckTracking();
         }
 
         /// <summary>
@@ -281,6 +347,14 @@ namespace CityBuilder.Citizens
             return nearest;
         }
 
+        /// <summary>
+        /// Idle citizens wander to a random point within WanderRadiusCells of the town center,
+        /// picked once the current idle pause elapses (up to MaxIdleSeconds). Grid bounds/
+        /// occupancy/water are cheap early-outs; a final downward raycast against the real scene
+        /// geometry confirms solid ground actually exists there (hit height close to
+        /// GridManager.GroundHeight -- a building or tree collider hit would land well above that
+        /// tolerance and gets rejected) before committing to it as the new route.
+        /// </summary>
         private void PickNewWanderTarget()
         {
             var grid = GridManager.Instance;
@@ -298,13 +372,24 @@ namespace CityBuilder.Citizens
 
                 if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) continue;
+                if (!TryFindWalkablePoint(grid, candidate, out var walkable)) continue;
 
-                WalkTo(new Vector3(candidate.x, grid.GroundHeight, candidate.z));
+                WalkTo(walkable);
                 return;
             }
 
             // No free spot found nearby this cycle — wait and try again on the next idle tick.
             BeginIdlePause();
+        }
+
+        private static bool TryFindWalkablePoint(GridManager grid, Vector3 candidate, out Vector3 result)
+        {
+            result = new Vector3(candidate.x, grid.GroundHeight, candidate.z);
+
+            var origin = new Vector3(candidate.x, GroundRaycastHeight, candidate.z);
+            if (!Physics.Raycast(origin, Vector3.down, out var hit, GroundRaycastHeight * 2f)) return false;
+
+            return Mathf.Abs(hit.point.y - grid.GroundHeight) <= GroundHeightTolerance;
         }
     }
 }

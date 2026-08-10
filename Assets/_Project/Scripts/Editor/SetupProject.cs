@@ -265,6 +265,8 @@ namespace CityBuilder.EditorTools
 
             CreateForestBorder(GridCellsX * CellSize * 0.5f, GridCellsZ * CellSize * 0.5f, groundWidth * 0.5f, groundDepth * 0.5f, treeTrunkMaterial, treeCanopyMaterial);
 
+            var minimapTexture = CreateMinimapCamera();
+
             var mainCameraGO = GameObject.Find("Main Camera");
             var camera = mainCameraGO.GetComponent<Camera>();
 
@@ -365,14 +367,14 @@ namespace CityBuilder.EditorTools
             saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData);
+            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData, minimapTexture);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -522,6 +524,7 @@ namespace CityBuilder.EditorTools
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
             BuildResourceHUD(canvasGO.transform);
+            BuildMinimap(canvasGO.transform, panelSprite, minimapTexture);
 
             var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite);
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
@@ -545,6 +548,36 @@ namespace CityBuilder.EditorTools
             var hudSO = new SerializedObject(hud);
             hudSO.FindProperty("label").objectReferenceValue = label;
             hudSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Top-right corner, stacked just below the Меню/Сохранить row (see BuildResourceHUD's
+        /// comment for that shared y 420-510 band) so it never overlaps them. Square, not
+        /// circular -- the game's no-circles cubic style applies to UI chrome too.
+        /// </summary>
+        private static void BuildMinimap(Transform canvasParent, Sprite panelSprite, RenderTexture minimapTexture)
+        {
+            if (minimapTexture == null) return;
+
+            const float size = 200f;
+            const float border = 8f;
+
+            var frame = CreateImage(canvasParent, "Minimap", new Color(0.26f, 0.29f, 0.24f, 0.95f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(810f, 300f);
+            frameRect.sizeDelta = new Vector2(size + border * 2f, size + border * 2f);
+
+            var viewGO = new GameObject("MinimapView", typeof(RectTransform), typeof(RawImage));
+            viewGO.transform.SetParent(frame.transform, false);
+            var viewRect = viewGO.GetComponent<RectTransform>();
+            viewRect.anchorMin = Vector2.zero;
+            viewRect.anchorMax = Vector2.one;
+            viewRect.offsetMin = new Vector2(border, border);
+            viewRect.offsetMax = new Vector2(-border, -border);
+            viewGO.GetComponent<RawImage>().texture = minimapTexture;
         }
 
         private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite)
@@ -1284,6 +1317,37 @@ namespace CityBuilder.EditorTools
             var path = $"{MeshMapsFolder}/{mapId}.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(map, path);
+        }
+
+        /// <summary>
+        /// A dedicated top-down orthographic camera rendering into a RenderTexture for the HUD
+        /// minimap (see BuildMinimap) -- a live view of the actual scene rather than a separately
+        /// drawn icon map, so buildings/trees/roads the player places show up automatically.
+        /// Sized to exactly frame the GridCellsX x GridCellsZ world span.
+        /// </summary>
+        private static RenderTexture CreateMinimapCamera()
+        {
+            var rtPath = $"{TexturesFolder}/Minimap_RT.renderTexture";
+            Directory.CreateDirectory(TexturesFolder);
+            DeleteIfExists(rtPath);
+            var renderTexture = new RenderTexture(512, 512, 16) { name = "Minimap_RT" };
+            AssetDatabase.CreateAsset(renderTexture, rtPath);
+
+            var cameraGO = new GameObject("MinimapCamera", typeof(Camera));
+            cameraGO.transform.position = new Vector3(0f, 150f, 0f);
+            cameraGO.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            var minimapCamera = cameraGO.GetComponent<Camera>();
+            minimapCamera.orthographic = true;
+            minimapCamera.orthographicSize = GridCellsX * CellSize * 0.5f;
+            minimapCamera.nearClipPlane = 1f;
+            minimapCamera.farClipPlane = 400f;
+            minimapCamera.clearFlags = CameraClearFlags.SolidColor;
+            minimapCamera.backgroundColor = new Color(0.08f, 0.14f, 0.22f);
+            minimapCamera.targetTexture = renderTexture;
+            minimapCamera.cullingMask = ~0;
+
+            return renderTexture;
         }
 
         private static Material CreateGroundMaterial()
