@@ -24,7 +24,6 @@ namespace CityBuilder.Maps
         private const int MinSpacingCells = 1;
 
         private Collider _zoneCollider;
-        private Bounds _zoneBounds;
         private GameObject[] _treePrefabs = new GameObject[0];
         private readonly HashSet<Vector2Int> _treeCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _treeCellByInstance = new Dictionary<GameObject, Vector2Int>();
@@ -44,8 +43,8 @@ namespace CityBuilder.Maps
             _zoneCollider = treesAreaInstance != null ? treesAreaInstance.GetComponentInChildren<Collider>() : null;
             _treePrefabs = treePrefabs ?? new GameObject[0];
             if (_zoneCollider == null || _treePrefabs.Length == 0) return;
+            if (MeshMapApplier.Instance == null || MeshMapApplier.Instance.GroundTransform == null) return;
 
-            _zoneBounds = _zoneCollider.bounds;
             for (var i = 0; i < InitialTreeCount; i++)
             {
                 // The starting forest is already mature -- only trees planted later (after a
@@ -76,46 +75,51 @@ namespace CityBuilder.Maps
             SpawnOneTree(startGrown: false);
         }
 
+        /// <summary>
+        /// Samples a random point directly ON the real Ground surface first (a live raycast
+        /// against Ground's own collider), THEN checks whether the TreesArea zone covers that
+        /// exact point -- the inverse of the old approach (sample within the zone, hope it's
+        /// land), which could place a tree over water whenever the zone mesh overlapped the
+        /// shoreline. Sampling from Ground itself means a tree can only ever exist somewhere
+        /// solid ground truly is. The tree is spawned as a child of the Ground instance itself
+        /// (mapApplier.GroundTransform), not of this spawner.
+        /// </summary>
         private void SpawnOneTree(bool startGrown)
         {
             var grid = GridManager.Instance;
-            if (grid == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
-
             var mapApplier = MeshMapApplier.Instance;
+            if (grid == null || mapApplier == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
+
+            var groundTransform = mapApplier.GroundTransform;
+            if (groundTransform == null) return;
+
+            var bounds = mapApplier.GroundBounds;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                var x = Random.Range(_zoneBounds.min.x, _zoneBounds.max.x);
-                var z = Random.Range(_zoneBounds.min.z, _zoneBounds.max.z);
-                var origin = new Vector3(x, _zoneBounds.max.y + 50f, z);
+                var x = Random.Range(bounds.min.x, bounds.max.x);
+                var z = Random.Range(bounds.min.z, bounds.max.z);
+                var origin = new Vector3(x, bounds.max.y + 50f, z);
 
-                // Raycast confirms true membership in the (possibly irregular) zone shape, not
-                // just the bounding box.
-                if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out var hit, 1000f)) continue;
+                // Ground first -- guarantees the candidate point is real solid ground, not a
+                // guess validated after the fact.
+                if (!mapApplier.TryRaycastGround(origin, out var groundHit)) continue;
+                // Then require the (possibly irregular) TreesArea zone shape actually covers this
+                // exact point, not just its bounding box.
+                if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out _, 1000f)) continue;
 
-                var cell = grid.WorldToCell(hit.point);
+                var cell = grid.WorldToCell(groundHit.point);
                 if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
-                // The TreesArea zone can overlap the shoreline right at its edge -- exclude water
-                // cells explicitly rather than trusting the zone mesh alone.
-                if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
                 // Explicit "don't spawn where a building/other object already stands" check.
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (HasNearbyTree(cell)) continue;
 
-                var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
-                // A shoreline rarely lines up with the 1m grid -- IsWaterCell above is a single
-                // raycast at this exact same cell-center point, so it only rejects a cell if the
-                // CENTER happens to be over water. A cell the coastline clips diagonally can have
-                // its center sampled onto a sliver of solid Ground while most of the cell (and the
-                // tree that would render there) sits over water. Sampling the cell's four corners
-                // too catches that partial-coverage case.
-                if (mapApplier != null && !HasFullGroundCoverage(mapApplier, position, grid.CellSize)) continue;
-
                 var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
-                // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
-                // than forcing identity, which would render the tree tipped over.
-                var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
+                // groundHit.point (not a grid-cell-center approximation) so the tree sits exactly
+                // on the real mesh surface. Preserve the prefab's own corrective root rotation
+                // (see MeshMapApplier) rather than forcing identity, which would tip it over.
+                var instance = Instantiate(prefab, groundHit.point, prefab.transform.rotation, groundTransform);
                 if (!startGrown)
                 {
                     instance.AddComponent<TreeGrowth>();
@@ -127,27 +131,6 @@ namespace CityBuilder.Maps
                 _treeCellByInstance[instance] = cell;
                 return;
             }
-        }
-
-        /// <summary>
-        /// Samples the center plus all four corners (inset slightly so they stay within the cell)
-        /// against the real Ground collider -- a coastline cutting diagonally through the cell
-        /// fails at least one corner even when the center alone would pass.
-        /// </summary>
-        private static bool HasFullGroundCoverage(MeshMapApplier mapApplier, Vector3 center, float cellSize)
-        {
-            if (!mapApplier.HasGroundBeneath(center)) return false;
-
-            var half = cellSize * 0.45f;
-            for (var dx = -1; dx <= 1; dx += 2)
-            {
-                for (var dz = -1; dz <= 1; dz += 2)
-                {
-                    var corner = new Vector3(center.x + dx * half, center.y, center.z + dz * half);
-                    if (!mapApplier.HasGroundBeneath(corner)) return false;
-                }
-            }
-            return true;
         }
 
         /// <summary>True if any already-placed tree occupies a cell within MinSpacingCells of the candidate (a square neighborhood check, cheap and sufficient at this grid resolution).</summary>

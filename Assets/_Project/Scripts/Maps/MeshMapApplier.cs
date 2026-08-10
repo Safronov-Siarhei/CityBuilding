@@ -28,6 +28,7 @@ namespace CityBuilder.Maps
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
         private Collider _groundCollider;
+        private GameObject _groundInstance;
 
         public string CurrentMapId { get; private set; } = string.Empty;
 
@@ -60,21 +61,37 @@ namespace CityBuilder.Maps
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
 
+        /// <summary>The instantiated Ground mesh's own transform -- e.g. TreesAreaSpawner parents its trees under this instead of under itself.</summary>
+        public Transform GroundTransform => _groundInstance != null ? _groundInstance.transform : null;
+
+        /// <summary>World-space bounds of the real Ground mesh collider, for sampling random points that are guaranteed to fall within its extent.</summary>
+        public Bounds GroundBounds => _groundCollider != null ? _groundCollider.bounds : default;
+
         /// <summary>
         /// Live downward raycast against the actual Ground mesh collider (not the cached per-cell
         /// water set) directly beneath worldPos. Used where a placement needs to confirm real
-        /// solid ground exists at an exact point rather than "this whole cell counts as land" --
-        /// e.g. TreesAreaSpawner, since the hand-authored TreesArea zone can overlap the shoreline
-        /// right at its edge and the 1m grid cell it resolves to may only be partly land.
+        /// solid ground exists at an exact point rather than "this whole cell counts as land".
         /// </summary>
         public bool HasGroundBeneath(Vector3 worldPos)
         {
+            return TryRaycastGround(worldPos, out _);
+        }
+
+        /// <summary>
+        /// Same raycast as HasGroundBeneath, but also returns the exact hit (surface point/
+        /// normal) -- e.g. TreesAreaSpawner samples a random point over Ground first and places
+        /// the tree exactly at the hit, rather than guessing a point elsewhere and hoping it lands
+        /// on solid ground.
+        /// </summary>
+        public bool TryRaycastGround(Vector3 worldPos, out RaycastHit hit)
+        {
+            hit = default;
             if (_groundCollider == null) return false;
 
             const float rayStartHeight = 500f;
             const float rayLength = 1000f;
             var ray = new Ray(new Vector3(worldPos.x, rayStartHeight, worldPos.z), Vector3.down);
-            return _groundCollider.Raycast(ray, out _, rayLength);
+            return _groundCollider.Raycast(ray, out hit, rayLength);
         }
 
         private void Apply(MeshMapDefinition map)
@@ -96,6 +113,7 @@ namespace CityBuilder.Maps
                 var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
                 groundCollider = AddMeshCollider(groundInstance);
                 _groundCollider = groundCollider;
+                _groundInstance = groundInstance;
             }
 
             if (map.WaterPrefab != null)
