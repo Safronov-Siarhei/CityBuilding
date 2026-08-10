@@ -598,6 +598,7 @@ namespace CityBuilder.EditorTools
 
             var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite);
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
+            BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
         }
 
         private static void BuildResourceHUD(Transform canvasParent)
@@ -765,6 +766,27 @@ namespace CityBuilder.EditorTools
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
             so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Click-to-select-a-citizen-then-click-to-move-it (see CitizenSelector). The feedback
+        /// label is dead center, large and shadowed like the main menu title so the momentary
+        /// OK!/NO! flash reads clearly regardless of what's behind it; hidden until the first
+        /// destination click.
+        /// </summary>
+        private static void BuildCitizenSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer)
+        {
+            var feedbackText = CreateText(canvasParent, "CitizenMoveFeedback", string.Empty, 64, Vector2.zero, new Vector2(400f, 100f), addShadow: true);
+            feedbackText.gameObject.SetActive(false);
+
+            var go = new GameObject("CitizenSelector");
+            go.transform.SetParent(canvasParent, false);
+            var selector = go.AddComponent<CitizenSelector>();
+            var so = new SerializedObject(selector);
+            so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
+            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

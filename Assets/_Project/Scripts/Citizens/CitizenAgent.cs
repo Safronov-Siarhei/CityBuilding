@@ -37,7 +37,7 @@ namespace CityBuilder.Citizens
         private const float StuckRetryPauseSeconds = 1f;
         private const float ProgressEpsilon = 0.02f;
 
-        private enum Mode { Wandering, Working }
+        private enum Mode { Wandering, Working, ManualMove }
 
         private Mode _mode = Mode.Wandering;
         private Vector3 _townCenter;
@@ -45,6 +45,13 @@ namespace CityBuilder.Citizens
         private Vector3 _buildingPos;
         private Vector3? _nodePos;
         private bool _headingToNode;
+
+        // Snapshot of what this agent was doing right before a manual move order (see MoveTo),
+        // so it resumes exactly that -- idle wander from its new spot, or the interrupted job's
+        // commute leg -- once it arrives (see OnArrived) instead of just stopping there forever.
+        private Mode _resumeMode;
+        private Vector3 _resumeTownCenter;
+        private Vector3 _manualDestination;
 
         private Vector3 _target;
         private Vector3[] _route = { Vector3.zero };
@@ -65,6 +72,9 @@ namespace CityBuilder.Citizens
 
         /// <summary>Fired once per completed "at the node" work visit (Working mode only) -- e.g. drives tree felling in CitizenVisualsManager.</summary>
         public event Action OnWorkVisitCompleted;
+
+        /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>
+        public bool IsIdle => _mode == Mode.Wandering;
 
         private void Awake()
         {
@@ -107,6 +117,25 @@ namespace CityBuilder.Citizens
             _nodePos = nodePos;
             _headingToNode = nodePos.HasValue;
             WalkTo(_headingToNode ? nodePos.Value : buildingPos);
+        }
+
+        /// <summary>
+        /// Interrupts whatever this agent is currently doing and walks it to an explicit point
+        /// (see CitizenSelector: click a citizen, then click a destination). Resumes the
+        /// interrupted behavior on arrival -- see OnArrived's ManualMove branch.
+        /// </summary>
+        public void MoveTo(Vector3 destination)
+        {
+            if (_mode != Mode.ManualMove)
+            {
+                _resumeMode = _mode;
+                _resumeTownCenter = _townCenter;
+            }
+            _reassignedDuringCallback = true;
+            _resumingAfterStuck = false;
+            _manualDestination = destination;
+            _mode = Mode.ManualMove;
+            WalkTo(destination);
         }
 
         private void Update()
@@ -183,7 +212,10 @@ namespace CityBuilder.Citizens
                 if (_resumingAfterStuck)
                 {
                     _resumingAfterStuck = false;
-                    WalkTo(_headingToNode ? _nodePos.Value : _buildingPos);
+                    var retryTarget = _mode == Mode.ManualMove
+                        ? _manualDestination
+                        : (_headingToNode ? _nodePos.Value : _buildingPos);
+                    WalkTo(retryTarget);
                     return;
                 }
                 OnPauseElapsed();
@@ -242,6 +274,22 @@ namespace CityBuilder.Citizens
 
         private void OnArrived()
         {
+            if (_mode == Mode.ManualMove)
+            {
+                _mode = _resumeMode;
+                if (_mode == Mode.Wandering)
+                {
+                    _townCenter = _resumeTownCenter;
+                    BeginIdlePause();
+                }
+                else
+                {
+                    // Working: resume the interrupted commute leg from here.
+                    _pauseTimer = _headingToNode ? WorkPauseSeconds : BuildingRestSeconds;
+                }
+                return;
+            }
+
             if (_mode == Mode.Wandering)
             {
                 BeginIdlePause();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
@@ -59,6 +60,24 @@ namespace CityBuilder.Maps
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
+
+        // Instantiate(map.GroundPrefab, ...) in Apply() names its clone after the source FBX
+        // asset ("Map-1-Ground(Clone)"); AddMeshCollidersToAll then adds one MeshCollider per
+        // sub-mesh child underneath that root -- so any hit collider under it, at any depth,
+        // means "on the ground mesh".
+        private const string GroundRootName = "Map-1-Ground";
+
+        /// <summary>Used by CitizenSelector to validate a click-to-move destination -- true only if the raycast hit landed on (a child of) the Map-1-Ground mesh, not water, a building, a tree, or empty space off the map.</summary>
+        public static bool IsGroundHit(RaycastHit hit)
+        {
+            var t = hit.collider != null ? hit.collider.transform : null;
+            while (t != null)
+            {
+                if (t.name.StartsWith(GroundRootName, StringComparison.Ordinal)) return true;
+                t = t.parent;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Live downward raycast against the real Ground mesh collider(s) directly beneath
