@@ -226,10 +226,18 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 12 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12);
 
+            var roadData = CreateBuildingData(
+                "Road", "Дорога", new Vector2Int(1, 1), height: 0.05f,
+                wallColor: new Color(0.32f, 0.32f, 0.34f), roofColor: new Color(0.85f, 0.75f, 0.3f),
+                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 3 } },
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                category: BuildingCategory.Infrastructure, maxHealth: 40,
+                isRoad: true, keepSelectedAfterPlacement: true);
+
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, fishermanHutData, hunterHutData, farmData,
-                lumberjackData, quarryData, mineData, wallData, towerData, barracksData, gateData
+                lumberjackData, quarryData, mineData, roadData, wallData, towerData, barracksData, gateData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
@@ -290,6 +298,7 @@ namespace CityBuilder.EditorTools
             gridSO.ApplyModifiedPropertiesWithoutUndo();
 
             managers.AddComponent<ResourceManager>();
+            managers.AddComponent<RoadNetwork>();
 
             var placer = managers.AddComponent<BuildingPlacer>();
             var placerSO = new SerializedObject(placer);
@@ -444,7 +453,7 @@ namespace CityBuilder.EditorTools
             }
 
             // Fixed display order; only categories that actually have a hotbar building get a tab.
-            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Military };
+            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Infrastructure, BuildingCategory.Military };
             var presentCategories = new List<BuildingCategory>();
             foreach (var cat in categoryOrder)
             {
@@ -782,14 +791,15 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>Architectural archetype driving which procedural generator builds a prefab.</summary>
-        private enum BuildingStyle { Hut, Fortification, Tower }
+        private enum BuildingStyle { Hut, Fortification, Tower, Road }
 
         private static BuildingData CreateBuildingData(
             string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
-            BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0)
+            BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0,
+            bool isRoad = false, bool keepSelectedAfterPlacement = false)
         {
             GameObject prefab;
             switch (style)
@@ -802,6 +812,9 @@ namespace CityBuilder.EditorTools
                     break;
                 case BuildingStyle.Tower:
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: true);
+                    break;
+                case BuildingStyle.Road:
+                    prefab = CreateRoadPrefab(id, wallColor, roofColor);
                     break;
                 default:
                     throw new System.ArgumentOutOfRangeException(nameof(style), style, null);
@@ -823,6 +836,8 @@ namespace CityBuilder.EditorTools
             data.defense = defense;
             data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
             data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
+            data.isRoad = isRoad;
+            data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -968,6 +983,39 @@ namespace CityBuilder.EditorTools
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX * 1.1f, y, sizeZ * 1.1f);
             collider.center = new Vector3(0f, y * 0.5f, 0f);
+
+            return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// A flat, thin paved tile with a dashed centerline stripe -- players lay these one at a
+        /// time (footprint 1x1) to build a continuous road; see RoadNetwork/CitizenAgent for how
+        /// citizens detect and speed up on them. Its collider is a trigger, unlike every other
+        /// building's solid BoxCollider: CharacterController ignores triggers for movement
+        /// blocking, so citizens walk straight over a road (staying grounded on the terrain
+        /// collider beneath) instead of treating it as an obstacle, while the trigger still lets
+        /// BuildingPlacer/BuildingSelector's raycasts detect it for ground-picking and clicking.
+        /// </summary>
+        private static GameObject CreateRoadPrefab(string name, Color roadColor, Color stripeColor)
+        {
+            var sizeX = CellSize - 0.04f;
+            var sizeZ = CellSize - 0.04f;
+            const float thickness = 0.05f;
+
+            var root = new GameObject(name);
+            root.AddComponent<BuildingInstance>();
+
+            var roadMaterial = CreateLitMaterial($"Building_{name}_Surface", roadColor);
+            var stripeMaterial = CreateLitMaterial($"Building_{name}_Stripe", stripeColor);
+
+            AddCubePart(root.transform, "Surface", new Vector3(0f, thickness * 0.5f, 0f), new Vector3(sizeX, thickness, sizeZ), roadMaterial);
+            AddCubePart(root.transform, "StripeNorth", new Vector3(0f, thickness + 0.01f, sizeZ * 0.27f), new Vector3(sizeX * 0.12f, 0.02f, sizeZ * 0.34f), stripeMaterial);
+            AddCubePart(root.transform, "StripeSouth", new Vector3(0f, thickness + 0.01f, -sizeZ * 0.27f), new Vector3(sizeX * 0.12f, 0.02f, sizeZ * 0.34f), stripeMaterial);
+
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(sizeX, thickness, sizeZ);
+            collider.center = new Vector3(0f, thickness * 0.5f, 0f);
+            collider.isTrigger = true;
 
             return SavePrefab(root, name);
         }
@@ -1374,6 +1422,15 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.46f, 0.2f, 0.54f, 0.78f, trim);
                         FillIconRect(p, s, 0.3f, 0.58f, 0.7f, 0.66f, trim);
                     });
+                case BuildingCategory.Infrastructure:
+                    return CreateIconSprite("Cat_Infrastructure", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.1f, 0.42f, 0.9f, 0.58f, new Color(0.38f, 0.38f, 0.4f));
+                        var stripe = new Color(0.88f, 0.78f, 0.3f);
+                        FillIconRect(p, s, 0.18f, 0.47f, 0.34f, 0.53f, stripe);
+                        FillIconRect(p, s, 0.46f, 0.47f, 0.62f, 0.53f, stripe);
+                        FillIconRect(p, s, 0.74f, 0.47f, 0.86f, 0.53f, stripe);
+                    });
                 default: // Production
                     return CreateIconSprite("Cat_Production", 64, (p, s) =>
                     {
@@ -1490,6 +1547,15 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.14f, 0.12f, 0.32f, 0.85f, stone);
                         FillIconRect(p, s, 0.68f, 0.12f, 0.86f, 0.85f, stone);
                         FillIconRect(p, s, 0.14f, 0.78f, 0.86f, 0.9f, stone);
+                    });
+                case "Road":
+                    return CreateIconSprite("Bld_Road", 64, (p, s) =>
+                    {
+                        FillIconRect(p, s, 0.1f, 0.1f, 0.9f, 0.9f, new Color(0.35f, 0.35f, 0.36f));
+                        var stripe = new Color(0.85f, 0.75f, 0.3f);
+                        FillIconRect(p, s, 0.46f, 0.14f, 0.54f, 0.32f, stripe);
+                        FillIconRect(p, s, 0.46f, 0.42f, 0.54f, 0.6f, stripe);
+                        FillIconRect(p, s, 0.46f, 0.7f, 0.54f, 0.86f, stripe);
                     });
                 default:
                     return CreateIconSprite($"Bld_{buildingId}", 64, (p, s) =>

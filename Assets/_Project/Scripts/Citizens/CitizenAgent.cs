@@ -1,4 +1,5 @@
 using System;
+using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
@@ -12,6 +13,12 @@ namespace CityBuilder.Citizens
     public class CitizenAgent : MonoBehaviour
     {
         private const float WalkSpeed = 1.5f;
+        private const float RoadSpeedMultiplier = 1.6f;
+        // How far (in cells) a citizen "looks" for a road to detour onto before giving up and
+        // walking straight there -- a lightweight stand-in for real pathfinding across the road
+        // network: it finds the nearest road near the start and near the destination and routes
+        // through both, rather than searching a path along the road graph itself.
+        private const int RoadSearchRadiusCells = 6;
         private const float WanderRadiusCells = 8f;
         private const float MinIdleSeconds = 1f;
         private const float MaxIdleSeconds = 3f;
@@ -30,6 +37,8 @@ namespace CityBuilder.Citizens
         private bool _headingToNode;
 
         private Vector3 _target;
+        private Vector3[] _route = { Vector3.zero };
+        private int _routeIndex;
         private float _pauseTimer;
         private bool _isWalking;
 
@@ -98,22 +107,32 @@ namespace CityBuilder.Citizens
 
                 if (distance < ArrivalThreshold)
                 {
+                    _routeIndex++;
+                    if (_routeIndex < _route.Length)
+                    {
+                        // Reached an intermediate waypoint (a road detour, see BuildRoute) --
+                        // keep walking toward the next leg instead of treating this as arrival.
+                        _target = _route[_routeIndex];
+                        return;
+                    }
+
                     _isWalking = false;
                     OnArrived();
                     return;
                 }
 
                 var direction = toTarget / distance;
+                var speed = CurrentWalkSpeed();
                 if (_controller != null && _controller.enabled)
                 {
                     // CharacterController collides with building colliders (see BuildingPlacer's
                     // procedurally generated BoxColliders), so citizens can no longer walk through
                     // a placed building the way a direct transform.position set would allow.
-                    _controller.SimpleMove(direction * WalkSpeed);
+                    _controller.SimpleMove(direction * speed);
                 }
                 else
                 {
-                    transform.position += direction * WalkSpeed * Time.deltaTime;
+                    transform.position += direction * speed * Time.deltaTime;
                 }
                 return;
             }
@@ -123,6 +142,18 @@ namespace CityBuilder.Citizens
             {
                 OnPauseElapsed();
             }
+        }
+
+        /// <summary>Faster while standing on a road cell (RoadNetwork) -- see RoadSpeedMultiplier.</summary>
+        private float CurrentWalkSpeed()
+        {
+            var grid = GridManager.Instance;
+            var roads = RoadNetwork.Instance;
+            if (grid != null && roads != null && roads.IsRoad(grid.WorldToCell(transform.position)))
+            {
+                return WalkSpeed * RoadSpeedMultiplier;
+            }
+            return WalkSpeed;
         }
 
         private void OnArrived()
@@ -174,8 +205,61 @@ namespace CityBuilder.Citizens
 
         private void WalkTo(Vector3 target)
         {
-            _target = target;
+            _route = BuildRoute(transform.position, target);
+            _routeIndex = 0;
+            _target = _route[0];
             _isWalking = true;
+        }
+
+        /// <summary>
+        /// If there's a road within RoadSearchRadiusCells of both the start and the destination,
+        /// routes through the nearest road cell at each end (start -&gt; road near start -&gt; road
+        /// near destination -&gt; destination) instead of a straight line, so the agent picks up the
+        /// road speed bonus for the middle of the trip. Falls back to a direct single-leg route
+        /// when no nearby road exists at either end, or when both ends resolve to the same cell
+        /// (already effectively on/at the road).
+        /// </summary>
+        private static Vector3[] BuildRoute(Vector3 from, Vector3 to)
+        {
+            var grid = GridManager.Instance;
+            var roads = RoadNetwork.Instance;
+            if (grid == null || roads == null) return new[] { to };
+
+            var startRoad = FindNearestRoadCell(grid, roads, from);
+            var endRoad = FindNearestRoadCell(grid, roads, to);
+            if (!startRoad.HasValue || !endRoad.HasValue || startRoad.Value == endRoad.Value)
+            {
+                return new[] { to };
+            }
+
+            var startRoadPos = grid.GetFootprintCenterWorld(startRoad.Value, Vector2Int.one);
+            var endRoadPos = grid.GetFootprintCenterWorld(endRoad.Value, Vector2Int.one);
+            return new[] { startRoadPos, endRoadPos, to };
+        }
+
+        private static Vector2Int? FindNearestRoadCell(GridManager grid, RoadNetwork roads, Vector3 worldPos)
+        {
+            var center = grid.WorldToCell(worldPos);
+            Vector2Int? nearest = null;
+            var nearestDistSq = int.MaxValue;
+
+            for (var dx = -RoadSearchRadiusCells; dx <= RoadSearchRadiusCells; dx++)
+            {
+                for (var dz = -RoadSearchRadiusCells; dz <= RoadSearchRadiusCells; dz++)
+                {
+                    var cell = center + new Vector2Int(dx, dz);
+                    if (!roads.IsRoad(cell)) continue;
+
+                    var distSq = dx * dx + dz * dz;
+                    if (distSq < nearestDistSq)
+                    {
+                        nearestDistSq = distSq;
+                        nearest = cell;
+                    }
+                }
+            }
+
+            return nearest;
         }
 
         private void PickNewWanderTarget()

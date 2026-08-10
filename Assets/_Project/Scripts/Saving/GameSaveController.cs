@@ -111,6 +111,17 @@ namespace CityBuilder.Saving
 
                 GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
+                if (buildingData.isRoad && RoadNetwork.Instance != null)
+                {
+                    for (var x = 0; x < footprint.x; x++)
+                    {
+                        for (var z = 0; z < footprint.y; z++)
+                        {
+                            RoadNetwork.Instance.RegisterRoad(cell + new Vector2Int(x, z));
+                        }
+                    }
+                }
+
                 if (entry.assignedWorkers > 0)
                 {
                     var production = instance.GetComponent<ProductionBuilding>();

@@ -235,12 +235,29 @@ namespace CityBuilder.Buildings
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
+            if (_selectedBuilding.isRoad && RoadNetwork.Instance != null)
+            {
+                for (var x = 0; x < footprint.x; x++)
+                {
+                    for (var z = 0; z < footprint.y; z++)
+                    {
+                        RoadNetwork.Instance.RegisterRoad(cell + new Vector2Int(x, z));
+                    }
+                }
+            }
+
             var placedData = _selectedBuilding;
             var wasMandatory = _selectedBuilding == mandatoryFirstBuilding;
-            _selectedBuilding = null;
-            if (_ghostInstance != null) Destroy(_ghostInstance);
-            _ghostInstance = null;
-            _ghostRenderers.Clear();
+
+            // Roads (and anything else marked keepSelectedAfterPlacement) stay selected so the
+            // player can lay several tiles in a row without reopening the hotbar each time.
+            if (!placedData.keepSelectedAfterPlacement)
+            {
+                _selectedBuilding = null;
+                if (_ghostInstance != null) Destroy(_ghostInstance);
+                _ghostInstance = null;
+                _ghostRenderers.Clear();
+            }
             if (wasMandatory) _mandatoryBuildingPlaced = true;
 
             OnBuildingPlaced?.Invoke(placedData);

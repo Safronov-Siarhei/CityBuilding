@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CityBuilder.Buildings
 {
     /// <summary>Groups buildings in the hotbar (see BuildingCategoryPanel) -- purely a UI grouping, not a gameplay mechanic.</summary>
-    public enum BuildingCategory { Housing, Food, Production, Military }
+    public enum BuildingCategory { Housing, Food, Production, Infrastructure, Military }
 
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]
     public class BuildingData : ScriptableObject
@@ -23,6 +23,15 @@ namespace CityBuilder.Buildings
         // even though those cells are normally water-blocked -- e.g. a bridge or water wheel.
         // No such building exists yet; this is the (unverified) infrastructure for one.
         public bool isWaterCategory = false;
+
+        // Registers the placed cell(s) with RoadNetwork so CitizenAgent can detect and speed up
+        // on them -- see BuildingPlacer.TryPlace/GameSaveController.ApplyLoadedState.
+        public bool isRoad = false;
+
+        // Keeps this building selected (ghost stays active) after a successful placement instead
+        // of clearing the selection -- lets the player lay several tiles in a row (e.g. a road)
+        // without re-opening the hotbar each time.
+        public bool keepSelectedAfterPlacement = false;
 
         [Header("Population")]
         public int citizensGranted = 0;
