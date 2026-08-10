@@ -81,7 +81,12 @@ namespace CityBuilder.Maps
 
             if (map.WaterPrefab != null)
             {
-                var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, map.WaterPrefab.transform.rotation, transform);
+                // Y is pinned to -90 regardless of whatever the FBX bake produces for it --
+                // X/Z are kept from the source prefab since those carry the Blender Z-up
+                // correction (see the comment above on GroundPrefab).
+                var sourceEuler = map.WaterPrefab.transform.rotation.eulerAngles;
+                var waterRotation = Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
+                var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
                 if (map.WaterMaterial != null)
                 {
                     foreach (var renderer in waterInstance.GetComponentsInChildren<Renderer>())
