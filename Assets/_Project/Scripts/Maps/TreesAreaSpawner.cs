@@ -76,13 +76,15 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>
-        /// Samples a random point directly ON the real Ground surface first (a live raycast
-        /// against Ground's own collider), THEN checks whether the TreesArea zone covers that
-        /// exact point -- the inverse of the old approach (sample within the zone, hope it's
-        /// land), which could place a tree over water whenever the zone mesh overlapped the
-        /// shoreline. Sampling from Ground itself means a tree can only ever exist somewhere
-        /// solid ground truly is. The tree is spawned as a child of the Ground instance itself
-        /// (mapApplier.GroundTransform), not of this spawner.
+        /// Samples a random point within the (small, tight) TreesArea zone bounds -- sampling
+        /// from the whole Ground extent instead (an earlier version of this method) made a valid
+        /// hit rare-to-nonexistent whenever the zone was a small fraction of the map, since most
+        /// random Ground points would land outside it and get rejected within MaxPlacementAttempts
+        /// tries. A raycast against the real Ground collider at that same point still gates the
+        /// final placement, so a tree can only ever land somewhere solid ground truly is -- that
+        /// was the actual bug this method fixes (the zone mesh can overlap the shoreline). The
+        /// tree is spawned as a child of the Ground instance itself (mapApplier.GroundTransform),
+        /// not of this spawner.
         /// </summary>
         private void SpawnOneTree(bool startGrown)
         {
@@ -93,20 +95,20 @@ namespace CityBuilder.Maps
             var groundTransform = mapApplier.GroundTransform;
             if (groundTransform == null) return;
 
-            var bounds = mapApplier.GroundBounds;
+            var zoneBounds = _zoneCollider.bounds;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                var x = Random.Range(bounds.min.x, bounds.max.x);
-                var z = Random.Range(bounds.min.z, bounds.max.z);
-                var origin = new Vector3(x, bounds.max.y + 50f, z);
+                var x = Random.Range(zoneBounds.min.x, zoneBounds.max.x);
+                var z = Random.Range(zoneBounds.min.z, zoneBounds.max.z);
+                var origin = new Vector3(x, zoneBounds.max.y + 50f, z);
 
-                // Ground first -- guarantees the candidate point is real solid ground, not a
-                // guess validated after the fact.
-                if (!mapApplier.TryRaycastGround(origin, out var groundHit)) continue;
-                // Then require the (possibly irregular) TreesArea zone shape actually covers this
-                // exact point, not just its bounding box.
+                // Raycast confirms true membership in the (possibly irregular) zone shape, not
+                // just the bounding box.
                 if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out _, 1000f)) continue;
+                // ...and that solid ground truly exists at this exact point, rather than trusting
+                // the zone mesh alone right at a shoreline it might overlap.
+                if (!mapApplier.TryRaycastGround(origin, out var groundHit)) continue;
 
                 var cell = grid.WorldToCell(groundHit.point);
                 if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
