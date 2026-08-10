@@ -85,9 +85,16 @@ namespace CityBuilder.EditorTools
             var cameraGO = new GameObject("Menu Camera", typeof(Camera));
             var menuCamera = cameraGO.GetComponent<Camera>();
             menuCamera.clearFlags = CameraClearFlags.SolidColor;
-            menuCamera.backgroundColor = new Color(0.08f, 0.11f, 0.14f);
-            menuCamera.cullingMask = 0;
-            menuCamera.orthographic = true;
+            menuCamera.backgroundColor = new Color(0.55f, 0.75f, 0.92f);
+            menuCamera.cullingMask = ~0;
+            menuCamera.orthographic = false;
+            menuCamera.nearClipPlane = 0.3f;
+            menuCamera.farClipPlane = 500f;
+            cameraGO.AddComponent<MenuCameraFlythrough>();
+
+            // Terrain-only scenery (no grid/buildings/citizens) for the flythrough to fly over --
+            // a random pick each time this scene loads, see MainMenuBackground.
+            new GameObject("MenuBackground").AddComponent<MainMenuBackground>();
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
@@ -101,8 +108,8 @@ namespace CityBuilder.EditorTools
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 1f;
 
-            CreateText(canvasGO.transform, "Title", "СТРОИТЕЛЬ ГОРОДОВ", 72, new Vector2(0f, 260f), new Vector2(1200f, 140f));
-            CreateText(canvasGO.transform, "Subtitle", "мобильный градостроитель", 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f));
+            CreateText(canvasGO.transform, "Title", "СТРОИТЕЛЬ ГОРОДОВ", 72, new Vector2(0f, 260f), new Vector2(1200f, 140f), addShadow: true);
+            CreateText(canvasGO.transform, "Subtitle", "мобильный градостроитель", 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f), addShadow: true);
 
             var menuController = canvasGO.AddComponent<MainMenuController>();
 
@@ -1824,7 +1831,7 @@ namespace CityBuilder.EditorTools
             return inputField;
         }
 
-        private static Text CreateText(Transform parent, string name, string content, int fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color? color = null)
+        private static Text CreateText(Transform parent, string name, string content, int fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color? color = null, bool addShadow = false)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Text));
             go.transform.SetParent(parent, false);
@@ -1839,6 +1846,16 @@ namespace CityBuilder.EditorTools
             text.fontSize = fontSize;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = color ?? Color.white;
+
+            // Only for standalone display text (e.g. the menu title) -- never on button labels,
+            // which stay flat against their own carved-stone panel background.
+            if (addShadow)
+            {
+                var shadow = go.AddComponent<Shadow>();
+                shadow.effectColor = new Color(0f, 0f, 0f, 0.75f);
+                shadow.effectDistance = new Vector2(3f, -3f);
+            }
+
             return text;
         }
 
