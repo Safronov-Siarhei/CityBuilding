@@ -102,10 +102,16 @@ namespace CityBuilder.Maps
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (HasNearbyTree(cell)) continue;
 
+                var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+                // Direct raycast against the actual Ground collider at the exact spawn point --
+                // belt-and-braces on top of the IsWaterCell check above: the TreesArea zone can
+                // overlap the shoreline right at its edge, and IsWaterCell's own per-cell result
+                // is a single raycast at the CELL CENTER, which can disagree with the footprint
+                // center used here right at a cell that straddles the coastline.
+                if (mapApplier != null && !mapApplier.HasGroundBeneath(position)) continue;
+
                 var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
-
-                var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
                 // than forcing identity, which would render the tree tipped over.
                 var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);

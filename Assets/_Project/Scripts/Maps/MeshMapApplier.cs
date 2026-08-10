@@ -27,6 +27,7 @@ namespace CityBuilder.Maps
 
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
+        private Collider _groundCollider;
 
         public string CurrentMapId { get; private set; } = string.Empty;
 
@@ -59,6 +60,23 @@ namespace CityBuilder.Maps
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
 
+        /// <summary>
+        /// Live downward raycast against the actual Ground mesh collider (not the cached per-cell
+        /// water set) directly beneath worldPos. Used where a placement needs to confirm real
+        /// solid ground exists at an exact point rather than "this whole cell counts as land" --
+        /// e.g. TreesAreaSpawner, since the hand-authored TreesArea zone can overlap the shoreline
+        /// right at its edge and the 1m grid cell it resolves to may only be partly land.
+        /// </summary>
+        public bool HasGroundBeneath(Vector3 worldPos)
+        {
+            if (_groundCollider == null) return false;
+
+            const float rayStartHeight = 500f;
+            const float rayLength = 1000f;
+            var ray = new Ray(new Vector3(worldPos.x, rayStartHeight, worldPos.z), Vector3.down);
+            return _groundCollider.Raycast(ray, out _, rayLength);
+        }
+
         private void Apply(MeshMapDefinition map)
         {
             var grid = GridManager.Instance;
@@ -77,6 +95,7 @@ namespace CityBuilder.Maps
             {
                 var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
                 groundCollider = AddMeshCollider(groundInstance);
+                _groundCollider = groundCollider;
             }
 
             if (map.WaterPrefab != null)

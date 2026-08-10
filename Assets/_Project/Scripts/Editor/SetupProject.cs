@@ -1385,22 +1385,26 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// "Резной камень" (Style A): a carved-stone bevel — dark outer groove, a lighter raised
-        /// rim just inside it, and small dark rivet squares in the corners. Sharp 90-degree
-        /// corners throughout (the game's cubic/angular style, no rounded UI). Greyscale so the
-        /// per-context .color tint used across the UI still works. 9-sliced (see the returned
-        /// sprite's border) so it stretches cleanly to any button/panel size without smearing the
-        /// bevel or rivets.
+        /// "Резной камень" (Style A): a carved-stone bevel -- a dark recessed groove around the
+        /// rim, then a directional raised bevel (light catching the top/left edges, shadow on the
+        /// bottom/right, the classic raised-panel look), dark rivet squares in the corners, flat
+        /// mid-grey fill in the middle. Sharp 90-degree corners throughout (the game's cubic/
+        /// angular style, no rounded UI). Colors are pushed to near-black/near-white specifically
+        /// so the bevel still reads clearly after the heavy per-context dark .color tints used
+        /// across the UI (a subtler greyscale range washed out to near-invisible once multiplied
+        /// by those tints). 9-sliced (see the returned sprite's border) so it stretches cleanly to
+        /// any button/panel size without smearing the bevel or rivets.
         /// </summary>
         private static Sprite CreatePanelSprite()
         {
             const int size = 32;
             const int border = 8;
 
-            var fill = new Color(0.6f, 0.6f, 0.58f);
-            var groove = new Color(0.16f, 0.16f, 0.15f);
-            var rim = new Color(0.82f, 0.82f, 0.78f);
-            var rivet = new Color(0.1f, 0.1f, 0.09f);
+            var fill = new Color(0.55f, 0.55f, 0.52f);
+            var groove = new Color(0.04f, 0.04f, 0.04f);
+            var lightEdge = new Color(0.92f, 0.92f, 0.88f);
+            var darkEdge = new Color(0.14f, 0.13f, 0.12f);
+            var rivet = new Color(0.03f, 0.03f, 0.03f);
 
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
@@ -1413,10 +1417,20 @@ namespace CityBuilder.EditorTools
             {
                 for (var x = 0; x < size; x++)
                 {
-                    var edgeDist = Mathf.Min(Mathf.Min(x, y), Mathf.Min(size - 1 - x, size - 1 - y));
+                    var distLeft = x;
+                    var distRight = size - 1 - x;
+                    var distTop = size - 1 - y;
+                    var distBottom = y;
+                    var minEdge = Mathf.Min(Mathf.Min(distLeft, distRight), Mathf.Min(distTop, distBottom));
+
                     Color color;
-                    if (edgeDist < 2) color = groove;
-                    else if (edgeDist < 4) color = rim;
+                    if (minEdge < 2) color = groove;
+                    else if (minEdge < border)
+                    {
+                        var isLightSide = distLeft <= distRight && distLeft <= distTop && distLeft <= distBottom
+                            || distTop <= distRight && distTop <= distLeft && distTop <= distBottom;
+                        color = isLightSide ? lightEdge : darkEdge;
+                    }
                     else color = fill;
                     pixels[y * size + x] = color;
                 }
