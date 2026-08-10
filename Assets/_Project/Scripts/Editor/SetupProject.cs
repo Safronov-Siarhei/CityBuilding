@@ -403,14 +403,14 @@ namespace CityBuilder.EditorTools
             saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData, minimapTexture);
+            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData, minimapTexture, townHallData);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -435,7 +435,8 @@ namespace CityBuilder.EditorTools
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 1f);
             hintRect.anchoredPosition = new Vector2(0f, -70f);
             hintRect.sizeDelta = new Vector2(780f, 84f);
-            CreateText(hintRoot.transform, "Text", "Выберите место для Ратуши (5x5)", 30, Vector2.zero, new Vector2(740f, 74f));
+            var footprint = mandatoryBuilding != null ? mandatoryBuilding.footprintSize : new Vector2Int(4, 4);
+            CreateText(hintRoot.transform, "Text", $"Выберите место для Ратуши ({footprint.x}x{footprint.y})", 30, Vector2.zero, new Vector2(740f, 74f));
 
             // Touch-friendly building hotbar, grouped into categories (a small category row above
             // it picks which category's buildings the hotbar shows -- see BuildingCategoryPanel).
@@ -1528,14 +1529,17 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static Sprite CreatePanelSprite()
         {
-            const int size = 32;
-            const int border = 8;
+            // Thick border (roughly a third of the texture per side) and near-black/near-white
+            // contrast -- an earlier, subtler version (thin 8px border in a 32px texture) turned
+            // out imperceptible once shrunk to actual button size and compressed in a screenshot.
+            const int size = 48;
+            const int border = 16;
 
             var fill = new Color(0.55f, 0.55f, 0.52f);
-            var groove = new Color(0.04f, 0.04f, 0.04f);
-            var lightEdge = new Color(0.92f, 0.92f, 0.88f);
-            var darkEdge = new Color(0.14f, 0.13f, 0.12f);
-            var rivet = new Color(0.03f, 0.03f, 0.03f);
+            var groove = new Color(0.02f, 0.02f, 0.02f);
+            var lightEdge = new Color(0.96f, 0.96f, 0.92f);
+            var darkEdge = new Color(0.1f, 0.09f, 0.08f);
+            var rivet = new Color(0.02f, 0.02f, 0.02f);
 
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
@@ -1555,7 +1559,7 @@ namespace CityBuilder.EditorTools
                     var minEdge = Mathf.Min(Mathf.Min(distLeft, distRight), Mathf.Min(distTop, distBottom));
 
                     Color color;
-                    if (minEdge < 2) color = groove;
+                    if (minEdge < 3) color = groove;
                     else if (minEdge < border)
                     {
                         var isLightSide = distLeft <= distRight && distLeft <= distTop && distLeft <= distBottom
@@ -1569,18 +1573,18 @@ namespace CityBuilder.EditorTools
 
             void Rivet(int cx, int cy)
             {
-                for (var dy = 0; dy < 2; dy++)
+                for (var dy = 0; dy < 4; dy++)
                 {
-                    for (var dx = 0; dx < 2; dx++)
+                    for (var dx = 0; dx < 4; dx++)
                     {
                         pixels[(cy + dy) * size + (cx + dx)] = rivet;
                     }
                 }
             }
-            Rivet(3, 3);
-            Rivet(size - 5, 3);
-            Rivet(3, size - 5);
-            Rivet(size - 5, size - 5);
+            Rivet(5, 5);
+            Rivet(size - 9, 5);
+            Rivet(5, size - 9);
+            Rivet(size - 9, size - 9);
 
             texture.SetPixels(pixels);
             texture.Apply();

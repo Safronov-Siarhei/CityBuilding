@@ -120,6 +120,17 @@ namespace CityBuilder.Maps
                 // on the real mesh surface. Preserve the prefab's own corrective root rotation
                 // (see MeshMapApplier) rather than forcing identity, which would tip it over.
                 var instance = Instantiate(prefab, groundHit.point, prefab.transform.rotation, groundTransform);
+                // Instantiate(pos, rot, parent) only sets world position/rotation -- localScale is
+                // copied verbatim from the prefab, so it still combines with the new parent's own
+                // scale. Map-1-Ground.fbx's imported root carries a 100x transform scale (its mesh
+                // data is baked down to compensate, which is why Ground itself still looks correct
+                // size) -- a tree parented under it without this correction would render 100x too
+                // big. Counteract it explicitly so the tree's final world scale is unchanged.
+                var parentScale = groundTransform.lossyScale;
+                instance.transform.localScale = new Vector3(
+                    parentScale.x != 0f ? 1f / parentScale.x : 1f,
+                    parentScale.y != 0f ? 1f / parentScale.y : 1f,
+                    parentScale.z != 0f ? 1f / parentScale.z : 1f);
                 if (!startGrown)
                 {
                     instance.AddComponent<TreeGrowth>();
