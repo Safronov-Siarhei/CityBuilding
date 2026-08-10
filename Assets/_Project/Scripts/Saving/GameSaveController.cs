@@ -91,13 +91,18 @@ namespace CityBuilder.Saving
                 if (!_catalog.TryGetValue(entry.buildingName, out var buildingData) || buildingData.prefab == null) continue;
 
                 var cell = new Vector2Int(entry.cellX, entry.cellY);
-                var footprint = buildingData.footprintSize;
+                // Rotated 90/270 means the footprint's X/Z are swapped for grid-occupancy
+                // purposes -- matches BuildingPlacer.RotatedFootprint at placement time.
+                var footprint = entry.rotationSteps % 2 == 0
+                    ? buildingData.footprintSize
+                    : new Vector2Int(buildingData.footprintSize.y, buildingData.footprintSize.x);
                 var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
-                var instance = Instantiate(buildingData.prefab, center, Quaternion.identity);
+                var rotation = Quaternion.Euler(0f, entry.rotationSteps * 90f, 0f);
+                var instance = Instantiate(buildingData.prefab, center, rotation);
 
                 var buildingInstance = instance.GetComponent<BuildingInstance>();
                 if (buildingInstance == null) buildingInstance = instance.AddComponent<BuildingInstance>();
-                buildingInstance.Initialize(buildingData, cell);
+                buildingInstance.Initialize(buildingData, cell, entry.rotationSteps);
                 buildingInstance.SetLevel(entry.level);
                 // entry.currentHealth is 0 for saves made before this field existed (missing JSON
                 // field deserializes to the int default) -- treat that as "unknown", not "destroyed".
@@ -143,7 +148,8 @@ namespace CityBuilder.Saving
                     assignedWorkers = production != null ? production.AssignedWorkers : 0,
                     level = instance.Level,
                     currentHealth = instance.CurrentHealth,
-                    decay = instance.Decay
+                    decay = instance.Decay,
+                    rotationSteps = instance.RotationSteps
                 });
             }
 

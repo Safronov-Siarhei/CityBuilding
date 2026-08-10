@@ -32,5 +32,6 @@ namespace CityBuilder.Saving
         public int level = 1;
         public int currentHealth;
         public float decay;
+        public int rotationSteps;
     }
 }

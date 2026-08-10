@@ -12,16 +12,20 @@ namespace CityBuilder.Buildings
         public Vector2Int OriginCell { get; private set; }
         public int Level { get; private set; } = 1;
 
+        /// <summary>0-3, each a 90-degree step around Y -- set at placement (BuildingPlacer.RotateSelection) and restored on load.</summary>
+        public int RotationSteps { get; private set; }
+
         /// <summary>Current hit points; starts at BuildingData.maxHealth. No damage source exists yet -- this is state for a future combat/decay system to read and write.</summary>
         public int CurrentHealth { get; private set; }
 
         /// <summary>0 (new) to 1 (fully dilapidated). Nothing advances this yet -- reserved for a future decay-over-time system.</summary>
         public float Decay { get; private set; }
 
-        public void Initialize(BuildingData data, Vector2Int originCell)
+        public void Initialize(BuildingData data, Vector2Int originCell, int rotationSteps = 0)
         {
             Data = data;
             OriginCell = originCell;
+            RotationSteps = ((rotationSteps % 4) + 4) % 4;
             CurrentHealth = data != null ? data.maxHealth : 0;
             Decay = 0f;
         }

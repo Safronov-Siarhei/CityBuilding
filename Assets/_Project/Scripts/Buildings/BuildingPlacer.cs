@@ -24,6 +24,10 @@ namespace CityBuilder.Buildings
         private readonly List<Renderer> _ghostRenderers = new List<Renderer>();
         private bool _mandatoryBuildingPlaced;
 
+        // 0-3, each a 90-degree step around Y. Reset to 0 on every new SelectBuilding so rotation
+        // never carries over from whatever the player was placing before.
+        private int _rotationSteps;
+
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
         public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
@@ -81,6 +85,15 @@ namespace CityBuilder.Buildings
             }
 
             if (_selectedBuilding == null) return;
+
+            // Rotation is allowed even while placing the mandatory Town Hall (it's not a
+            // cancel/switch action, so it doesn't need the forcedSelection guard above).
+            var rotateKeyboard = Keyboard.current;
+            if (rotateKeyboard != null && rotateKeyboard[Key.R].wasPressedThisFrame)
+            {
+                RotateSelection();
+            }
+
             if (IsPointerOverUI()) return;
 
             if (TryGetGroundCell(pointer, out var cell))
@@ -98,6 +111,7 @@ namespace CityBuilder.Buildings
         {
             ClearSelection();
             _selectedBuilding = data;
+            _rotationSteps = 0;
             if (_selectedBuilding.prefab == null) return;
 
             _ghostInstance = Instantiate(_selectedBuilding.prefab);
@@ -115,6 +129,19 @@ namespace CityBuilder.Buildings
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
             _ghostRenderers.Clear();
+        }
+
+        /// <summary>Rotates the current ghost/pending placement by 90 degrees -- PC 'R' key, or the mobile rotate button (see SetupProject's ShowWhileSelectingBuilding-gated button).</summary>
+        public void RotateSelection()
+        {
+            if (_selectedBuilding == null) return;
+            _rotationSteps = (_rotationSteps + 1) % 4;
+        }
+
+        /// <summary>Swaps X/Z for a 90 or 270 degree rotation -- a non-square footprint occupies different grid cells once turned on its side.</summary>
+        private Vector2Int RotatedFootprint(Vector2Int footprint)
+        {
+            return _rotationSteps % 2 == 0 ? footprint : new Vector2Int(footprint.y, footprint.x);
         }
 
         private static bool IsPointerOverUI()
@@ -146,9 +173,10 @@ namespace CityBuilder.Buildings
         {
             if (_ghostInstance == null) return;
 
-            var footprint = _selectedBuilding.footprintSize;
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
             _ghostInstance.transform.position = center;
+            _ghostInstance.transform.rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_selectedBuilding.cost);
@@ -193,16 +221,17 @@ namespace CityBuilder.Buildings
 
         private void TryPlace(Vector2Int cell)
         {
-            var footprint = _selectedBuilding.footprintSize;
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             if (!CanPlaceSelectedBuilding(cell, footprint)) return;
             if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost)) return;
 
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
-            var instance = Instantiate(_selectedBuilding.prefab, center, Quaternion.identity);
+            var rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);
+            var instance = Instantiate(_selectedBuilding.prefab, center, rotation);
 
             var buildingInstance = instance.GetComponent<BuildingInstance>();
             if (buildingInstance == null) buildingInstance = instance.AddComponent<BuildingInstance>();
-            buildingInstance.Initialize(_selectedBuilding, cell);
+            buildingInstance.Initialize(_selectedBuilding, cell, _rotationSteps);
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 

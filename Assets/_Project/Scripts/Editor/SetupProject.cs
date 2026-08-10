@@ -486,6 +486,29 @@ namespace CityBuilder.EditorTools
             visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = menuGO;
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
+            // Mobile rotate button (PC also has the 'R' key -- see BuildingPlacer.Update).
+            // Lives outside menuGO/BuildingPlacerUIVisibility's mandatory-placement gating since
+            // rotation is useful even while placing the mandatory Town Hall; ShowWhileSelectingBuilding
+            // handles its own visibility instead, tied directly to IsSelecting.
+            var rotateIcon = CreateRotateIcon();
+            var rotateButton = CreateIconButton(canvasGO.transform, panelSprite, rotateIcon, "RotateButton", Vector2.zero, new Vector2(90f, 90f));
+            var rotateRect = rotateButton.GetComponent<RectTransform>();
+            rotateRect.anchorMin = new Vector2(1f, 0f);
+            rotateRect.anchorMax = new Vector2(1f, 0f);
+            rotateRect.pivot = new Vector2(1f, 0f);
+            rotateRect.anchoredPosition = new Vector2(-40f, 40f);
+
+            UnityEventTools.AddPersistentListener(rotateButton.onClick, placer.RotateSelection);
+
+            // Lives on the Canvas itself (an always-active object), not on the button it
+            // controls -- a script polling its own GameObject's active state would stop
+            // receiving Update() calls the moment it deactivates it, and never reactivate it.
+            var rotateVisibility = canvasGO.AddComponent<ShowWhileSelectingBuilding>();
+            var rotateVisibilitySO = new SerializedObject(rotateVisibility);
+            rotateVisibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            rotateVisibilitySO.FindProperty("target").objectReferenceValue = rotateButton.gameObject;
+            rotateVisibilitySO.ApplyModifiedPropertiesWithoutUndo();
+
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
             BuildResourceHUD(canvasGO.transform);
@@ -1474,6 +1497,19 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.25f, 0.25f, 0.75f, 0.75f, new Color(0.6f, 0.6f, 0.6f));
                     });
             }
+        }
+
+        /// <summary>An open square bracket (three sides) with an arrowhead where the fourth side would start -- reads as "turn/cycle" without needing a curved stroke (straight-edges-only, matching every other icon here).</summary>
+        private static Sprite CreateRotateIcon()
+        {
+            return CreateIconSprite("Action_Rotate", 64, (p, s) =>
+            {
+                var line = new Color(0.92f, 0.92f, 0.9f);
+                FillIconRect(p, s, 0.2f, 0.78f, 0.8f, 0.86f, line);
+                FillIconRect(p, s, 0.72f, 0.24f, 0.8f, 0.86f, line);
+                FillIconRect(p, s, 0.2f, 0.24f, 0.8f, 0.32f, line);
+                FillIconTriangle(p, s, new Vector2(0.06f, 0.44f), new Vector2(0.28f, 0.56f), new Vector2(0.28f, 0.32f), line);
+            });
         }
 
         private static Button CreateIconButton(Transform parent, Sprite backgroundSprite, Sprite iconSprite, string name, Vector2 anchoredPos, Vector2 sizeDelta)
