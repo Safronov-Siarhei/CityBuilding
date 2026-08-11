@@ -2,6 +2,7 @@ using System.Collections;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
+using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,9 +18,12 @@ namespace CityBuilder.UI
     /// CitizenVisualsManager's job bookkeeping (ProductionBuilding.AssignedWorkers, claimed
     /// ResourceNodes) without a matching release, so those clicks are simply ignored.
     ///
-    /// Every destination click flashes "OK!"/"NO!" for a second (see MeshMapApplier.IsGroundHit)
-    /// depending on whether it landed on the actual Map-1-Ground mesh -- water, buildings, trees
-    /// and empty space off the map all read as NO! and don't move the citizen.
+    /// Every destination click resolves to one grid cell (see ResolveDestinationCell) -- a
+    /// building/tree-occupied cell is redirected to the nearest free walkable cell nearby instead
+    /// of aiming straight into an obstacle. That cell is highlighted (green while the order is
+    /// still in progress, red and brief if the click had nowhere valid to resolve to) alongside
+    /// the existing center-screen OK!/NO! flash, so it's obvious both what was clicked and where
+    /// the citizen actually ended up heading.
     /// </summary>
     public class CitizenSelector : MonoBehaviour
     {
@@ -27,6 +31,14 @@ namespace CityBuilder.UI
         private const float MarkerHeight = 1.15f;
         private const float MarkerBobSpeed = 3f;
         private const float MarkerBobAmount = 0.08f;
+        private const float InvalidHighlightSeconds = 1f;
+        private const float HighlightHeightOffset = 0.03f;
+        private const float HighlightCellFraction = 0.85f;
+        // How far (in cells) to search for a free, walkable cell when the clicked cell itself is
+        // occupied by a building -- ring-expanding search, so a click on a building sends the
+        // citizen to stand next to it instead of walking straight into its collider and getting
+        // permanently stuck (see CitizenAgent.MaxManualMoveStuckRetries).
+        private const int OccupiedSearchRadiusCells = 4;
 
         [SerializeField] private Camera targetCamera;
         [SerializeField] private BuildingPlacer buildingPlacer;
@@ -35,7 +47,10 @@ namespace CityBuilder.UI
 
         private CitizenAgent _selected;
         private GameObject _marker;
+        private GameObject _cellHighlight;
+        private bool _cellHighlightPersistent;
         private Coroutine _feedbackRoutine;
+        private Coroutine _highlightRoutine;
 
         private void Update()
         {
@@ -46,6 +61,11 @@ namespace CityBuilder.UI
             if (_selected != null)
             {
                 BobMarker();
+
+                // The persistent (green, order-in-progress) highlight tracks the agent's own
+                // manual-move state rather than a fixed timer -- it disappears the moment the
+                // citizen either arrives or gives up (see CitizenAgent.OnStuck's retry cap).
+                if (_cellHighlightPersistent && !_selected.IsManualMoving) HideCellHighlight();
 
                 var keyboard = Keyboard.current;
                 if (keyboard != null && keyboard[Key.Escape].wasPressedThisFrame)
@@ -76,13 +96,49 @@ namespace CityBuilder.UI
 
             if (_selected == null) return;
 
-            // Ignores whatever the click actually landed on first (a building roof, a tree
-            // canopy) and instead checks the real ground straight down at that X/Z -- so a
-            // destination that's merely behind/under something on screen still reads as valid;
-            // see MeshMapApplier.IsGroundAt.
-            var onGround = MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsGroundAt(hit.point);
-            ShowFeedback(onGround);
-            if (onGround) _selected.MoveTo(hit.point);
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            var clickedCell = grid.WorldToCell(hit.point);
+            var resolved = ResolveDestinationCell(grid, clickedCell, out var destination);
+
+            ShowFeedback(resolved);
+            ShowCellHighlight(resolved ? destination : grid.GetFootprintCenterWorld(clickedCell, Vector2Int.one), resolved);
+
+            if (resolved) _selected.MoveTo(destination);
+        }
+
+        /// <summary>
+        /// True + destination if clickedCell (or, when that's occupied by a building, the
+        /// nearest free walkable cell within OccupiedSearchRadiusCells) sits on real flat ground
+        /// -- see MeshMapApplier.IsGroundAt. Ignores trees entirely (GridManager has no concept
+        /// of them; only buildings occupy cells) -- a tree-blocked destination still resolves
+        /// here and relies on CitizenAgent's stuck-retry give-up instead.
+        /// </summary>
+        private static bool ResolveDestinationCell(GridManager grid, Vector2Int clickedCell, out Vector3 destination)
+        {
+            for (var radius = 0; radius <= OccupiedSearchRadiusCells; radius++)
+            {
+                for (var dx = -radius; dx <= radius; dx++)
+                {
+                    for (var dz = -radius; dz <= radius; dz++)
+                    {
+                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != radius) continue; // ring only, nearest radius first
+
+                        var candidate = clickedCell + new Vector2Int(dx, dz);
+                        if (!grid.IsWithinBounds(candidate, Vector2Int.one) || !grid.IsAreaFree(candidate, Vector2Int.one)) continue;
+
+                        var worldPos = grid.GetFootprintCenterWorld(candidate, Vector2Int.one);
+                        if (MeshMapApplier.Instance != null && !MeshMapApplier.Instance.IsGroundAt(worldPos)) continue;
+
+                        destination = worldPos;
+                        return true;
+                    }
+                }
+            }
+
+            destination = default;
+            return false;
         }
 
         private void Select(CitizenAgent citizen)
@@ -90,12 +146,14 @@ namespace CityBuilder.UI
             _selected = citizen;
             if (_marker == null) _marker = CreateMarker();
             _marker.SetActive(true);
+            HideCellHighlight();
         }
 
         private void Deselect()
         {
             _selected = null;
             if (_marker != null) _marker.SetActive(false);
+            HideCellHighlight();
         }
 
         private void BobMarker()
@@ -117,6 +175,68 @@ namespace CityBuilder.UI
                 color = new Color(1f, 0.85f, 0.2f)
             };
             return marker;
+        }
+
+        private void EnsureCellHighlight()
+        {
+            if (_cellHighlight != null) return;
+
+            _cellHighlight = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _cellHighlight.name = "CitizenTargetCellHighlight";
+            Destroy(_cellHighlight.GetComponent<Collider>());
+            // Lies flat facing up (local -Z normal -> world +Y) instead of standing upright like
+            // a default Quad, matching how a ground-decal-style cell highlight should sit.
+            _cellHighlight.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            _cellHighlight.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            _cellHighlight.SetActive(false);
+        }
+
+        /// <summary>
+        /// Snaps a flat quad onto the cell at worldPos (grid-cell-sized, matching how the ghost
+        /// building preview reads during placement). Green + stays up while the order is in
+        /// progress (persistent=true, cleared once IsManualMoving goes false); red + a one-second
+        /// flash when the click had nowhere valid to resolve to.
+        /// </summary>
+        private void ShowCellHighlight(Vector3 worldPos, bool ok)
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            EnsureCellHighlight();
+
+            _cellHighlight.transform.position = new Vector3(worldPos.x, grid.GroundHeight + HighlightHeightOffset, worldPos.z);
+            var size = grid.CellSize * HighlightCellFraction;
+            _cellHighlight.transform.localScale = new Vector3(size, size, 1f);
+            _cellHighlight.GetComponent<Renderer>().sharedMaterial.color = ok
+                ? new Color(0.35f, 0.9f, 0.35f)
+                : new Color(0.9f, 0.3f, 0.25f);
+            _cellHighlight.SetActive(true);
+            _cellHighlightPersistent = ok;
+
+            if (_highlightRoutine != null)
+            {
+                StopCoroutine(_highlightRoutine);
+                _highlightRoutine = null;
+            }
+            if (!ok) _highlightRoutine = StartCoroutine(HideHighlightAfterDelay());
+        }
+
+        private void HideCellHighlight()
+        {
+            if (_highlightRoutine != null)
+            {
+                StopCoroutine(_highlightRoutine);
+                _highlightRoutine = null;
+            }
+            _cellHighlightPersistent = false;
+            if (_cellHighlight != null) _cellHighlight.SetActive(false);
+        }
+
+        private IEnumerator HideHighlightAfterDelay()
+        {
+            yield return new WaitForSeconds(InvalidHighlightSeconds);
+            if (_cellHighlight != null) _cellHighlight.SetActive(false);
+            _highlightRoutine = null;
         }
 
         private void ShowFeedback(bool ok)

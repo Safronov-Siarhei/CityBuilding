@@ -36,6 +36,12 @@ namespace CityBuilder.Citizens
         private const float StuckTimeoutSeconds = 1.5f;
         private const float StuckRetryPauseSeconds = 1f;
         private const float ProgressEpsilon = 0.02f;
+        // A manual move order (see MoveTo) retries a blocked destination a bounded number of
+        // times instead of forever like Working does -- Working's node/building is known
+        // reachable (it was walked to before), but a player-clicked point might genuinely be
+        // behind something with no way around it, and retrying that forever would just look like
+        // the citizen froze rather than the game giving up on an impossible order.
+        private const int MaxManualMoveStuckRetries = 3;
 
         private enum Mode { Wandering, Working, ManualMove }
 
@@ -52,6 +58,7 @@ namespace CityBuilder.Citizens
         private Mode _resumeMode;
         private Vector3 _resumeTownCenter;
         private Vector3 _manualDestination;
+        private int _manualStuckRetries;
 
         private Vector3 _target;
         private Vector3[] _route = { Vector3.zero };
@@ -75,6 +82,9 @@ namespace CityBuilder.Citizens
 
         /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>
         public bool IsIdle => _mode == Mode.Wandering;
+
+        /// <summary>True from MoveTo until the agent either arrives or gives up (see MaxManualMoveStuckRetries) -- CitizenSelector uses this to know when to hide the persistent target-cell highlight.</summary>
+        public bool IsManualMoving => _mode == Mode.ManualMove;
 
         private void Awake()
         {
@@ -134,6 +144,7 @@ namespace CityBuilder.Citizens
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
             _manualDestination = destination;
+            _manualStuckRetries = 0;
             _mode = Mode.ManualMove;
             WalkTo(destination);
         }
@@ -237,6 +248,27 @@ namespace CityBuilder.Citizens
             {
                 BeginIdlePause();
                 return;
+            }
+
+            if (_mode == Mode.ManualMove)
+            {
+                _manualStuckRetries++;
+                if (_manualStuckRetries > MaxManualMoveStuckRetries)
+                {
+                    // Genuinely unreachable from here -- stop retrying and resume whatever this
+                    // agent was doing before the order instead of looking frozen forever.
+                    _mode = _resumeMode;
+                    if (_mode == Mode.Wandering)
+                    {
+                        _townCenter = _resumeTownCenter;
+                        BeginIdlePause();
+                    }
+                    else
+                    {
+                        _pauseTimer = _headingToNode ? WorkPauseSeconds : BuildingRestSeconds;
+                    }
+                    return;
+                }
             }
 
             _resumingAfterStuck = true;
