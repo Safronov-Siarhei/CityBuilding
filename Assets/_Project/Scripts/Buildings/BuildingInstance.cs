@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CityBuilder.Buildings
 {
@@ -38,7 +40,32 @@ namespace CityBuilder.Buildings
                 var footprint = data.footprintSize;
                 var centerCell = originCell + new Vector2Int(footprint.x / 2, footprint.y / 2);
                 FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
+
+                SetupNavMeshObstacle(data);
             }
+        }
+
+        /// <summary>
+        /// Carves this building's footprint out of the baked NavMesh (see
+        /// MeshMapApplier.BuildNavMesh) so CitizenAgent's pathfinding routes around it instead of
+        /// walking straight through -- no re-bake needed, NavMeshObstacle carving is dynamic.
+        /// Roads/bridges are excluded: they're walkable ground, not an obstacle, even though they
+        /// (like every other building) still occupy their cell in GridManager.
+        /// </summary>
+        private void SetupNavMeshObstacle(BuildingData data)
+        {
+            if (data.isRoad) return;
+
+            var obstacle = GetComponent<NavMeshObstacle>();
+            if (obstacle == null) obstacle = gameObject.AddComponent<NavMeshObstacle>();
+
+            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            obstacle.shape = NavMeshObstacleShape.Box;
+            // Local box, unrotated -- the transform this component sits on already carries the
+            // building's placement rotation, so the box rotates along with it automatically.
+            obstacle.size = new Vector3(data.footprintSize.x * cellSize, 2f, data.footprintSize.y * cellSize);
+            obstacle.center = new Vector3(0f, 1f, 0f);
+            obstacle.carving = true;
         }
 
         /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CityBuilder.Maps
 {
@@ -22,6 +23,10 @@ namespace CityBuilder.Maps
         // Cell size is 1m on this map, so a 1-cell exclusion radius keeps trees at least ~2 cells
         // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
         private const int MinSpacingCells = 1;
+        // Trunk-sized, not canopy-sized -- comfortably inside the MinSpacingCells gap between
+        // neighboring trees so two adjacent trees' carved regions never overlap/merge.
+        private const float TreeObstacleRadius = 0.3f;
+        private const float TreeObstacleHeight = 2f;
 
         private Collider _zoneCollider;
         private Bounds _zoneBounds;
@@ -121,6 +126,15 @@ namespace CityBuilder.Maps
                     instance.AddComponent<TreeGrowth>();
                 }
                 instance.AddComponent<ResourceNode>().Initialize(ResourceType.Wood);
+
+                // Carves this tree out of the baked NavMesh (see MeshMapApplier.BuildNavMesh) so
+                // CitizenAgent's pathfinding routes around it -- destroyed automatically along
+                // with the tree GameObject on harvest (NotifyTreeHarvested), no cleanup needed.
+                var obstacle = instance.AddComponent<NavMeshObstacle>();
+                obstacle.shape = NavMeshObstacleShape.Capsule;
+                obstacle.radius = TreeObstacleRadius;
+                obstacle.height = TreeObstacleHeight;
+                obstacle.carving = true;
 
                 grid.SetAreaOccupied(cell, Vector2Int.one, true);
                 _treeCells.Add(cell);

@@ -3,6 +3,7 @@ using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CityBuilder.Citizens
 {
@@ -14,11 +15,6 @@ namespace CityBuilder.Citizens
     {
         private const float WalkSpeed = 1.5f;
         private const float RoadSpeedMultiplier = 1.6f;
-        // How far (in cells) a citizen "looks" for a road to detour onto before giving up and
-        // walking straight there -- a lightweight stand-in for real pathfinding across the road
-        // network: it finds the nearest road near the start and near the destination and routes
-        // through both, rather than searching a path along the road graph itself.
-        private const int RoadSearchRadiusCells = 6;
         private const float WanderRadiusCells = 8f;
         private const float MinIdleSeconds = 1f;
         private const float MaxIdleSeconds = 5f;
@@ -28,11 +24,12 @@ namespace CityBuilder.Citizens
         private const float BuildingRestSeconds = 1.5f;
         private const float ArrivalThreshold = 0.05f;
         private const int MaxTargetAttempts = 8;
-        // Straight-line movement (see WalkTo/BuildRoute -- no real pathfinding around solid
-        // obstacles) can walk an agent face-first into a wall with nothing pulling it sideways;
-        // CharacterController.Move then just holds it pinned there with zero progress toward
-        // _target. If the remaining distance hasn't improved for this long, the destination is
-        // treated as unreachable from here instead of leaving the agent stuck indefinitely.
+        // BuildRoute routes around known obstacles via NavMesh, but the bake/carve isn't a
+        // perfect guarantee (e.g. an obstacle whose carved shape doesn't exactly match its solid
+        // collider) -- if a leg still ends up blocked, CharacterController.Move just holds the
+        // agent pinned there with zero progress toward _target. If the remaining distance hasn't
+        // improved for this long, the destination is treated as unreachable from here instead of
+        // leaving the agent stuck indefinitely.
         private const float StuckTimeoutSeconds = 1.5f;
         private const float StuckRetryPauseSeconds = 1f;
         private const float ProgressEpsilon = 0.02f;
@@ -166,8 +163,9 @@ namespace CityBuilder.Citizens
                     _routeIndex++;
                     if (_routeIndex < _route.Length)
                     {
-                        // Reached an intermediate waypoint (a road detour, see BuildRoute) --
-                        // keep walking toward the next leg instead of treating this as arrival.
+                        // Reached an intermediate waypoint (a NavMesh path corner, see
+                        // BuildRoute) -- keep walking toward the next leg instead of treating
+                        // this as arrival.
                         _target = _route[_routeIndex];
                         ResetStuckTracking();
                         return;
@@ -376,55 +374,37 @@ namespace CityBuilder.Citizens
             ResetStuckTracking();
         }
 
+        // Reused across every BuildRoute call instead of allocating a fresh NavMeshPath each
+        // time -- CalculatePath just overwrites its contents.
+        private static readonly NavMeshPath SharedPath = new NavMeshPath();
+
         /// <summary>
-        /// If there's a road within RoadSearchRadiusCells of both the start and the destination,
-        /// routes through the nearest road cell at each end (start -&gt; road near start -&gt; road
-        /// near destination -&gt; destination) instead of a straight line, so the agent picks up the
-        /// road speed bonus for the middle of the trip. Falls back to a direct single-leg route
-        /// when no nearby road exists at either end, or when both ends resolve to the same cell
-        /// (already effectively on/at the road).
+        /// Routes around solid obstacles (buildings, trees) via the NavMesh baked in
+        /// MeshMapApplier.BuildNavMesh, instead of the straight line this used to be -- those
+        /// obstacles each carve themselves out of it dynamically (BuildingInstance/
+        /// TreesAreaSpawner), so this always sees the current layout with no extra bookkeeping
+        /// here. The road speed bonus (CurrentWalkSpeed) is unaffected either way -- it already
+        /// just checks whatever cell the agent is currently standing on, not how the route was
+        /// planned. Falls back to a direct line if no NavMesh exists yet or no path is found at
+        /// all, so the agent still attempts something instead of never moving.
         /// </summary>
         private static Vector3[] BuildRoute(Vector3 from, Vector3 to)
         {
-            var grid = GridManager.Instance;
-            var roads = RoadNetwork.Instance;
-            if (grid == null || roads == null) return new[] { to };
-
-            var startRoad = FindNearestRoadCell(grid, roads, from);
-            var endRoad = FindNearestRoadCell(grid, roads, to);
-            if (!startRoad.HasValue || !endRoad.HasValue || startRoad.Value == endRoad.Value)
+            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, SharedPath) && SharedPath.corners.Length > 0)
             {
-                return new[] { to };
-            }
-
-            var startRoadPos = grid.GetFootprintCenterWorld(startRoad.Value, Vector2Int.one);
-            var endRoadPos = grid.GetFootprintCenterWorld(endRoad.Value, Vector2Int.one);
-            return new[] { startRoadPos, endRoadPos, to };
-        }
-
-        private static Vector2Int? FindNearestRoadCell(GridManager grid, RoadNetwork roads, Vector3 worldPos)
-        {
-            var center = grid.WorldToCell(worldPos);
-            Vector2Int? nearest = null;
-            var nearestDistSq = int.MaxValue;
-
-            for (var dx = -RoadSearchRadiusCells; dx <= RoadSearchRadiusCells; dx++)
-            {
-                for (var dz = -RoadSearchRadiusCells; dz <= RoadSearchRadiusCells; dz++)
+                var corners = SharedPath.corners;
+                // corners[0] is (very close to) `from` itself -- drop it so the agent doesn't
+                // spend a frame "arriving" at where it's already standing before starting to walk.
+                if (corners.Length > 1 && (corners[0] - from).sqrMagnitude < 0.0001f)
                 {
-                    var cell = center + new Vector2Int(dx, dz);
-                    if (!roads.IsRoad(cell)) continue;
-
-                    var distSq = dx * dx + dz * dz;
-                    if (distSq < nearestDistSq)
-                    {
-                        nearestDistSq = distSq;
-                        nearest = cell;
-                    }
+                    var trimmed = new Vector3[corners.Length - 1];
+                    Array.Copy(corners, 1, trimmed, 0, trimmed.Length);
+                    return trimmed;
                 }
+                return corners;
             }
 
-            return nearest;
+            return new[] { to };
         }
 
         /// <summary>

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CityBuilder.Maps
 {
@@ -25,9 +26,26 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject baseGroundToHide;
         [SerializeField] private GameObject baseForestBorderToHide;
 
+        // Sized for a citizen, not Unity's default humanoid navmesh agent -- CitizenAgent's
+        // CharacterController is radius 0.15/height 0.72 (see CitizenVisualsManager.SpawnAgent).
+        // agentSlope deliberately excludes Map-1-Ground.fbx's decorative relief (hills/cliffs
+        // outside the flat playable field, see GroundHeightTolerance below) from the walkable
+        // surface, so a path never routes across it even if IsGroundAt somehow let a point there
+        // through.
+        private static readonly NavMeshBuildSettings CitizenNavMeshSettings = new NavMeshBuildSettings
+        {
+            agentTypeID = 0,
+            agentRadius = 0.22f,
+            agentHeight = 0.8f,
+            agentSlope = 40f,
+            agentClimb = 0.3f,
+            minRegionArea = 0.5f,
+        };
+
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
         private Collider[] _groundColliders = new Collider[0];
+        private NavMeshDataInstance _navMeshDataInstance;
 
         public string CurrentMapId { get; private set; } = string.Empty;
 
@@ -133,6 +151,7 @@ namespace CityBuilder.Maps
                 // against (silently misclassified as water / unreachable ground).
                 AddMeshCollidersToAll(groundInstance);
                 _groundColliders = groundInstance.GetComponentsInChildren<Collider>();
+                BuildNavMesh();
             }
 
             if (map.WaterPrefab != null)
@@ -179,6 +198,45 @@ namespace CityBuilder.Maps
             {
                 TreesAreaSpawner.Instance.Initialize(treesAreaInstance, map.TreePrefabs);
             }
+        }
+
+        /// <summary>
+        /// Bakes a walkable NavMesh from the Ground mesh's own colliders (water and the
+        /// decorative forest border have none, so both are automatically excluded -- no manual
+        /// carving needed for those). Buildings and trees aren't part of this bake at all: they
+        /// carve themselves out dynamically at runtime via their own NavMeshObstacle component
+        /// (see BuildingInstance.Initialize / TreesAreaSpawner.SpawnOneTree), so placing/removing
+        /// one never needs a re-bake here. RemoveAllNavMeshData first since this can re-run if a
+        /// map is ever reapplied within the same play session (nothing else in this project adds
+        /// NavMesh data, so this is safe to own outright).
+        /// </summary>
+        private void BuildNavMesh()
+        {
+            NavMesh.RemoveAllNavMeshData();
+
+            var sources = new List<NavMeshBuildSource>();
+            foreach (var collider in _groundColliders)
+            {
+                if (collider is MeshCollider meshCollider && meshCollider.sharedMesh != null)
+                {
+                    sources.Add(new NavMeshBuildSource
+                    {
+                        shape = NavMeshBuildSourceShape.Mesh,
+                        sourceObject = meshCollider.sharedMesh,
+                        transform = meshCollider.transform.localToWorldMatrix,
+                        area = 0
+                    });
+                }
+            }
+            if (sources.Count == 0) return;
+
+            var grid = GridManager.Instance;
+            var worldWidth = grid != null ? grid.GridSize.x * grid.CellSize : 200f;
+            var worldDepth = grid != null ? grid.GridSize.y * grid.CellSize : 200f;
+            var bounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
+
+            var navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, bounds, Vector3.zero, Quaternion.identity);
+            _navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
         }
 
         private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders)
