@@ -20,10 +20,11 @@ namespace CityBuilder.UI
     ///
     /// Every destination click resolves to one grid cell (see ResolveDestinationCell) -- a
     /// building/tree-occupied cell is redirected to the nearest free walkable cell nearby instead
-    /// of aiming straight into an obstacle. That cell is highlighted (green while the order is
-    /// still in progress, red and brief if the click had nowhere valid to resolve to) alongside
-    /// the existing center-screen OK!/NO! flash, so it's obvious both what was clicked and where
-    /// the citizen actually ended up heading.
+    /// of aiming straight into an obstacle. That cell gets a hollow square outline (yellow while
+    /// the order is still in progress, red and brief if the click had nowhere valid to resolve
+    /// to) alongside the existing center-screen OK!/NO! flash, so it's obvious both what was
+    /// clicked and where the citizen actually ended up heading -- without a filled highlight
+    /// blotting out whatever's on that cell.
     /// </summary>
     public class CitizenSelector : MonoBehaviour
     {
@@ -33,7 +34,8 @@ namespace CityBuilder.UI
         private const float MarkerBobAmount = 0.08f;
         private const float InvalidHighlightSeconds = 1f;
         private const float HighlightHeightOffset = 0.03f;
-        private const float HighlightCellFraction = 0.85f;
+        private const float HighlightCellFraction = 0.9f;
+        private const float HighlightBorderFraction = 0.14f;
         // How far (in cells) to search for a free, walkable cell when the clicked cell itself is
         // occupied by a building -- ring-expanding search, so a click on a building sends the
         // citizen to stand next to it instead of walking straight into its collider and getting
@@ -48,6 +50,7 @@ namespace CityBuilder.UI
         private CitizenAgent _selected;
         private GameObject _marker;
         private GameObject _cellHighlight;
+        private Material _cellHighlightMaterial;
         private bool _cellHighlightPersistent;
         private Coroutine _feedbackRoutine;
         private Coroutine _highlightRoutine;
@@ -177,23 +180,49 @@ namespace CityBuilder.UI
             return marker;
         }
 
+        /// <summary>
+        /// Hollow square frame (4 thin bars around a unit cell, empty in the middle) instead of a
+        /// filled quad -- reads as "this cell" without blotting out whatever's on it (a tree,
+        /// part of a building) the way a solid fill did. Built once in local unit-cell space;
+        /// ShowCellHighlight scales/positions/colors the whole group per click.
+        /// </summary>
         private void EnsureCellHighlight()
         {
             if (_cellHighlight != null) return;
 
-            _cellHighlight = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            _cellHighlight.name = "CitizenTargetCellHighlight";
-            Destroy(_cellHighlight.GetComponent<Collider>());
+            _cellHighlight = new GameObject("CitizenTargetCellHighlight");
             // Lies flat facing up (local -Z normal -> world +Y) instead of standing upright like
-            // a default Quad, matching how a ground-decal-style cell highlight should sit.
+            // a default Quad, matching how a ground-decal-style highlight should sit.
             _cellHighlight.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            _cellHighlight.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+
+            var t = HighlightBorderFraction;
+            CreateHighlightBar(_cellHighlight.transform, "Top", new Vector3(0f, 0.5f - t * 0.5f, 0f), new Vector3(1f, t, 1f));
+            CreateHighlightBar(_cellHighlight.transform, "Bottom", new Vector3(0f, -0.5f + t * 0.5f, 0f), new Vector3(1f, t, 1f));
+            CreateHighlightBar(_cellHighlight.transform, "Left", new Vector3(-0.5f + t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
+            CreateHighlightBar(_cellHighlight.transform, "Right", new Vector3(0.5f - t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
+
+            _cellHighlightMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            foreach (var bar in _cellHighlight.GetComponentsInChildren<Renderer>())
+            {
+                bar.sharedMaterial = _cellHighlightMaterial;
+            }
+
             _cellHighlight.SetActive(false);
         }
 
+        private static void CreateHighlightBar(Transform parent, string name, Vector3 localPos, Vector3 localScale)
+        {
+            var bar = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            bar.name = name;
+            Destroy(bar.GetComponent<Collider>());
+            bar.transform.SetParent(parent, false);
+            bar.transform.localPosition = localPos;
+            bar.transform.localScale = localScale;
+        }
+
         /// <summary>
-        /// Snaps a flat quad onto the cell at worldPos (grid-cell-sized, matching how the ghost
-        /// building preview reads during placement). Green + stays up while the order is in
+        /// Snaps the frame onto the cell at worldPos (grid-cell-sized, matching how the ghost
+        /// building preview reads during placement). Yellow + stays up while the order is in
         /// progress (persistent=true, cleared once IsManualMoving goes false); red + a one-second
         /// flash when the click had nowhere valid to resolve to.
         /// </summary>
@@ -207,8 +236,8 @@ namespace CityBuilder.UI
             _cellHighlight.transform.position = new Vector3(worldPos.x, grid.GroundHeight + HighlightHeightOffset, worldPos.z);
             var size = grid.CellSize * HighlightCellFraction;
             _cellHighlight.transform.localScale = new Vector3(size, size, 1f);
-            _cellHighlight.GetComponent<Renderer>().sharedMaterial.color = ok
-                ? new Color(0.35f, 0.9f, 0.35f)
+            _cellHighlightMaterial.color = ok
+                ? new Color(0.95f, 0.82f, 0.2f)
                 : new Color(0.9f, 0.3f, 0.25f);
             _cellHighlight.SetActive(true);
             _cellHighlightPersistent = ok;

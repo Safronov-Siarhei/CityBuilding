@@ -436,14 +436,14 @@ namespace CityBuilder.EditorTools
             saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, camera, hotbarBuildingData, minimapTexture, townHallData);
+            BuildGameplayUI(placer, saveController, camera, rtsCamera, hotbarBuildingData, minimapTexture, townHallData);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, RTSCameraController cameraRig, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -594,7 +594,7 @@ namespace CityBuilder.EditorTools
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
             BuildResourceHUD(canvasGO.transform);
-            BuildMinimap(canvasGO.transform, panelSprite, minimapTexture);
+            BuildMinimap(canvasGO.transform, panelSprite, minimapTexture, cameraRig);
 
             var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite);
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
@@ -669,7 +669,7 @@ namespace CityBuilder.EditorTools
         /// comment for that shared y 420-510 band) so it never overlaps them. Square, not
         /// circular -- the game's no-circles cubic style applies to UI chrome too.
         /// </summary>
-        private static void BuildMinimap(Transform canvasParent, Sprite panelSprite, RenderTexture minimapTexture)
+        private static void BuildMinimap(Transform canvasParent, Sprite panelSprite, RenderTexture minimapTexture, RTSCameraController cameraRig)
         {
             if (minimapTexture == null) return;
 
@@ -692,6 +692,28 @@ namespace CityBuilder.EditorTools
             viewRect.offsetMin = new Vector2(border, border);
             viewRect.offsetMax = new Vector2(-border, -border);
             viewGO.GetComponent<RawImage>().texture = minimapTexture;
+
+            // Diamond dot tracking the camera rig's ground position (see MinimapCameraIndicator)
+            // -- so a player who's panned/zoomed off somewhere can tell where they're looking
+            // from at a glance, instead of having to recognize terrain on the small live render.
+            var markerGO = new GameObject("CameraMarker", typeof(RectTransform), typeof(Image));
+            markerGO.transform.SetParent(viewGO.transform, false);
+            var markerRect = markerGO.GetComponent<RectTransform>();
+            markerRect.anchorMin = markerRect.anchorMax = new Vector2(0.5f, 0.5f);
+            markerRect.pivot = new Vector2(0.5f, 0.5f);
+            markerRect.sizeDelta = new Vector2(12f, 12f);
+            markerRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            markerGO.GetComponent<Image>().color = new Color(1f, 0.92f, 0.3f);
+
+            var indicator = viewGO.AddComponent<MinimapCameraIndicator>();
+            var indicatorSO = new SerializedObject(indicator);
+            indicatorSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;
+            indicatorSO.FindProperty("marker").objectReferenceValue = markerRect;
+            // Same GridCellsX/CellSize world span the minimap camera (CreateMinimapCamera) is
+            // framed to, expressed as UI units per world unit -- see MinimapCameraIndicator.
+            indicatorSO.FindProperty("worldToMapScale").floatValue = size / (GridCellsX * CellSize);
+            indicatorSO.FindProperty("mapHalfExtent").floatValue = size * 0.5f;
+            indicatorSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite)
