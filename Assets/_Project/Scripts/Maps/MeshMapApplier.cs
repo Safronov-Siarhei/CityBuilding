@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
@@ -212,31 +213,45 @@ namespace CityBuilder.Maps
         /// </summary>
         private void BuildNavMesh()
         {
-            NavMesh.RemoveAllNavMeshData();
-
-            var sources = new List<NavMeshBuildSource>();
-            foreach (var collider in _groundColliders)
+            // NavMesh is an enhancement (CitizenAgent falls back to a direct line when no path is
+            // found -- see BuildRoute), never a requirement -- a failure here (e.g. a mesh with a
+            // bad import setting, an unexpected geometry edge case) must never take down the rest
+            // of Apply() with it, since everything after this call (water, the water-placement
+            // zone, TreesArea/tree spawning) -- and every later gameplay action that depends on
+            // this method having run to completion, like population grants firing when the Town
+            // Hall is placed -- would otherwise silently stop working too.
+            try
             {
-                if (collider is MeshCollider meshCollider && meshCollider.sharedMesh != null)
+                NavMesh.RemoveAllNavMeshData();
+
+                var sources = new List<NavMeshBuildSource>();
+                foreach (var collider in _groundColliders)
                 {
-                    sources.Add(new NavMeshBuildSource
+                    if (collider is MeshCollider meshCollider && meshCollider.sharedMesh != null)
                     {
-                        shape = NavMeshBuildSourceShape.Mesh,
-                        sourceObject = meshCollider.sharedMesh,
-                        transform = meshCollider.transform.localToWorldMatrix,
-                        area = 0
-                    });
+                        sources.Add(new NavMeshBuildSource
+                        {
+                            shape = NavMeshBuildSourceShape.Mesh,
+                            sourceObject = meshCollider.sharedMesh,
+                            transform = meshCollider.transform.localToWorldMatrix,
+                            area = 0
+                        });
+                    }
                 }
+                if (sources.Count == 0) return;
+
+                var grid = GridManager.Instance;
+                var worldWidth = grid != null ? grid.GridSize.x * grid.CellSize : 200f;
+                var worldDepth = grid != null ? grid.GridSize.y * grid.CellSize : 200f;
+                var bounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
+
+                var navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, bounds, Vector3.zero, Quaternion.identity);
+                _navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
             }
-            if (sources.Count == 0) return;
-
-            var grid = GridManager.Instance;
-            var worldWidth = grid != null ? grid.GridSize.x * grid.CellSize : 200f;
-            var worldDepth = grid != null ? grid.GridSize.y * grid.CellSize : 200f;
-            var bounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
-
-            var navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, bounds, Vector3.zero, Quaternion.identity);
-            _navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
+            catch (Exception e)
+            {
+                Debug.LogError($"MeshMapApplier.BuildNavMesh failed -- citizens will fall back to direct-line movement instead of pathfinding around obstacles. {e}");
+            }
         }
 
         private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders)

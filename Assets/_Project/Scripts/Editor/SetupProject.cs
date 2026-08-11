@@ -43,6 +43,8 @@ namespace CityBuilder.EditorTools
         [MenuItem("CityBuilder/Setup Project (Scenes + Prefabs)")]
         public static void Run()
         {
+            ForceReimportModels();
+
             BuildMainMenuScene();
             BuildCityScene();
 
@@ -61,6 +63,17 @@ namespace CityBuilder.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// Guarantees ModelImportDefaults' import settings (isReadable, bakeAxisConversion) are
+        /// actually applied to the FBX assets already committed under Models/ -- Unity doesn't
+        /// reliably retroactively reimport existing assets just because the AssetPostprocessor
+        /// script that governs them changed.
+        /// </summary>
+        private static void ForceReimportModels()
+        {
+            AssetDatabase.ImportAsset("Assets/_Project/Models", ImportAssetOptions.ForceUpdate | ImportAssetOptions.ImportRecursive);
         }
 
         private static void ConfigureMobileLandscape()

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -51,21 +52,34 @@ namespace CityBuilder.Buildings
         /// walking straight through -- no re-bake needed, NavMeshObstacle carving is dynamic.
         /// Roads/bridges are excluded: they're walkable ground, not an obstacle, even though they
         /// (like every other building) still occupy their cell in GridManager.
+        ///
+        /// Wrapped in try/catch: this runs from Initialize, which is itself called from
+        /// BuildingPlacer.TryPlace *before* it fires OnBuildingPlaced -- an unhandled exception
+        /// here would abort TryPlace mid-way and silently skip that event entirely, which is what
+        /// grants a placed Town Hall/House's citizens. NavMesh carving is an enhancement, not
+        /// something placement correctness should ever depend on.
         /// </summary>
         private void SetupNavMeshObstacle(BuildingData data)
         {
             if (data.isRoad) return;
 
-            var obstacle = GetComponent<NavMeshObstacle>();
-            if (obstacle == null) obstacle = gameObject.AddComponent<NavMeshObstacle>();
+            try
+            {
+                var obstacle = GetComponent<NavMeshObstacle>();
+                if (obstacle == null) obstacle = gameObject.AddComponent<NavMeshObstacle>();
 
-            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-            obstacle.shape = NavMeshObstacleShape.Box;
-            // Local box, unrotated -- the transform this component sits on already carries the
-            // building's placement rotation, so the box rotates along with it automatically.
-            obstacle.size = new Vector3(data.footprintSize.x * cellSize, 2f, data.footprintSize.y * cellSize);
-            obstacle.center = new Vector3(0f, 1f, 0f);
-            obstacle.carving = true;
+                var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+                obstacle.shape = NavMeshObstacleShape.Box;
+                // Local box, unrotated -- the transform this component sits on already carries
+                // the building's placement rotation, so the box rotates along with it automatically.
+                obstacle.size = new Vector3(data.footprintSize.x * cellSize, 2f, data.footprintSize.y * cellSize);
+                obstacle.center = new Vector3(0f, 1f, 0f);
+                obstacle.carving = true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"BuildingInstance.SetupNavMeshObstacle failed for '{data.buildingName}' -- citizens may walk through it instead of around it. {e}");
+            }
         }
 
         /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>

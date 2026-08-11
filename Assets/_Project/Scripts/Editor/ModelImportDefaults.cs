@@ -21,6 +21,12 @@ namespace CityBuilder.EditorTools
             if (assetImporter is ModelImporter modelImporter)
             {
                 modelImporter.bakeAxisConversion = true;
+                // MeshMapApplier.BuildNavMesh (NavMeshBuilder.BuildNavMeshData) needs CPU access
+                // to the Ground mesh's vertex/triangle data to voxelize it into a NavMesh --
+                // Unity's default (Read/Write disabled) throws the moment anything tries to read
+                // a mesh like that at runtime, which was aborting MeshMapApplier.Apply() partway
+                // through and taking the rest of map setup down with it.
+                modelImporter.isReadable = true;
             }
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Grid;
@@ -95,8 +96,8 @@ namespace CityBuilder.Maps
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                var x = Random.Range(_zoneBounds.min.x, _zoneBounds.max.x);
-                var z = Random.Range(_zoneBounds.min.z, _zoneBounds.max.z);
+                var x = UnityEngine.Random.Range(_zoneBounds.min.x, _zoneBounds.max.x);
+                var z = UnityEngine.Random.Range(_zoneBounds.min.z, _zoneBounds.max.z);
                 var origin = new Vector3(x, _zoneBounds.max.y + 50f, z);
 
                 // Raycast confirms true membership in the (possibly irregular) zone shape, not
@@ -114,7 +115,7 @@ namespace CityBuilder.Maps
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (HasNearbyTree(cell)) continue;
 
-                var prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
+                var prefab = _treePrefabs[UnityEngine.Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
 
                 var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
@@ -130,11 +131,22 @@ namespace CityBuilder.Maps
                 // Carves this tree out of the baked NavMesh (see MeshMapApplier.BuildNavMesh) so
                 // CitizenAgent's pathfinding routes around it -- destroyed automatically along
                 // with the tree GameObject on harvest (NotifyTreeHarvested), no cleanup needed.
-                var obstacle = instance.AddComponent<NavMeshObstacle>();
-                obstacle.shape = NavMeshObstacleShape.Capsule;
-                obstacle.radius = TreeObstacleRadius;
-                obstacle.height = TreeObstacleHeight;
-                obstacle.carving = true;
+                // Wrapped: an exception here must not abort this whole method -- it's called in a
+                // loop of up to InitialTreeCount trees, and letting one bad obstacle add take the
+                // rest of the forest (and grid/cell bookkeeping below) down with it would be far
+                // worse than just that one tree not carving itself out.
+                try
+                {
+                    var obstacle = instance.AddComponent<NavMeshObstacle>();
+                    obstacle.shape = NavMeshObstacleShape.Capsule;
+                    obstacle.radius = TreeObstacleRadius;
+                    obstacle.height = TreeObstacleHeight;
+                    obstacle.carving = true;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"TreesAreaSpawner: NavMeshObstacle setup failed for a tree -- it may not block citizen pathing. {e}");
+                }
 
                 grid.SetAreaOccupied(cell, Vector2Int.one, true);
                 _treeCells.Add(cell);
