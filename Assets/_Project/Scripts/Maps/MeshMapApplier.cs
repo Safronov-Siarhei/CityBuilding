@@ -60,6 +60,15 @@ namespace CityBuilder.Maps
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
 
+        // Map-1-Ground.fbx isn't one flat plane -- it also carries decorative relief (rises/dips
+        // outside the flat playable field) as part of the same mesh/collider set. Citizens are
+        // pinned to one fixed flat height every frame (see CitizenAgent.PinToGroundHeight), so a
+        // destination that's real ground but at the wrong height is still physically unreachable
+        // at that pinned height -- the agent walks into the relief's actual geometry and gets
+        // stuck forever instead of arriving. Same tolerance CitizenAgent.TryFindWalkablePoint
+        // already uses to vet ambient wander targets, applied here too.
+        private const float GroundHeightTolerance = 0.5f;
+
         /// <summary>
         /// Used by CitizenSelector to validate a click-to-move destination. Deliberately ignores
         /// whatever the click's own raycast actually hit first (a building roof, a tree canopy)
@@ -68,10 +77,19 @@ namespace CityBuilder.Maps
         /// citizen still has to physically get there: CitizenAgent has no pathfinding around
         /// obstacles, so if the target is genuinely behind a building's solid collider it'll walk
         /// into it and get stuck (see CitizenAgent's StuckTimeoutSeconds retry) same as any other
-        /// unreachable point. This only answers "is there real ground at this X/Z", independently
-        /// of what's rendered on top of it.
+        /// unreachable point. Also rejects real ground that's off the flat playable height (see
+        /// GroundHeightTolerance above) -- without this a click on a decorative slope/cliff piece
+        /// of the same Ground mesh would read OK! but never actually be reachable.
         /// </summary>
-        public bool IsGroundAt(Vector3 worldPos) => TryRaycastGround(worldPos, out _);
+        public bool IsGroundAt(Vector3 worldPos)
+        {
+            if (!TryRaycastGround(worldPos, out var hit)) return false;
+
+            var grid = GridManager.Instance;
+            if (grid == null) return true;
+
+            return Mathf.Abs(hit.point.y - grid.GroundHeight) <= GroundHeightTolerance;
+        }
 
         /// <summary>
         /// Live downward raycast against the real Ground mesh collider(s) directly beneath
