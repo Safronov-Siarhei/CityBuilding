@@ -375,8 +375,15 @@ namespace CityBuilder.Citizens
         }
 
         // Reused across every BuildRoute call instead of allocating a fresh NavMeshPath each
-        // time -- CalculatePath just overwrites its contents.
-        private static readonly NavMeshPath SharedPath = new NavMeshPath();
+        // time -- CalculatePath just overwrites its contents. Deliberately NOT initialized inline
+        // here (`= new NavMeshPath()`): a static field initializer on a MonoBehaviour-derived
+        // type runs as part of that type's static constructor, and Unity explicitly disallows
+        // constructing a NavMeshPath from there ("InitializeNavMeshPath is not allowed to be
+        // called from a MonoBehaviour constructor or instance field initializer") -- it broke
+        // every single citizen spawn, since CitizenVisualsManager.SpawnAgent's AddComponent
+        // triggers this type's static init the first time. Built lazily in BuildRoute instead,
+        // well after Awake/Start, where the same restriction doesn't apply.
+        private static NavMeshPath _sharedPath;
 
         /// <summary>
         /// Routes around solid obstacles (buildings, trees) via the NavMesh baked in
@@ -390,9 +397,11 @@ namespace CityBuilder.Citizens
         /// </summary>
         private static Vector3[] BuildRoute(Vector3 from, Vector3 to)
         {
-            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, SharedPath) && SharedPath.corners.Length > 0)
+            _sharedPath ??= new NavMeshPath();
+
+            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath) && _sharedPath.corners.Length > 0)
             {
-                var corners = SharedPath.corners;
+                var corners = _sharedPath.corners;
                 // corners[0] is (very close to) `from` itself -- drop it so the agent doesn't
                 // spend a frame "arriving" at where it's already standing before starting to walk.
                 if (corners.Length > 1 && (corners[0] - from).sqrMagnitude < 0.0001f)
