@@ -76,7 +76,11 @@ namespace CityBuilder.UI
 
             if (_selected == null) return;
 
-            var onGround = MeshMapApplier.IsGroundHit(hit);
+            // Ignores whatever the click actually landed on first (a building roof, a tree
+            // canopy) and instead checks the real ground straight down at that X/Z -- so a
+            // destination that's merely behind/under something on screen still reads as valid;
+            // see MeshMapApplier.IsGroundAt.
+            var onGround = MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsGroundAt(hit.point);
             ShowFeedback(onGround);
             if (onGround) _selected.MoveTo(hit.point);
         }
