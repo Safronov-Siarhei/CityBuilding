@@ -34,6 +34,12 @@ namespace CityBuilder.Citizens
         private static readonly Color SkinColor = new Color(0.85f, 0.68f, 0.55f);
 
         private const float NodeRetryIntervalSeconds = 5f;
+        // Every citizen used to spawn at the exact same _citizenSpawnPoint -- multiple
+        // CharacterControllers landing at literally the same position is a physics edge case
+        // Unity doesn't reliably resolve on its own (no separation happens without an actual
+        // Move() call), so they'd visually stack into what looked like a single frozen citizen.
+        // A small random offset keeps them clustered near the entrance but not coincident.
+        private const float SpawnJitterRadius = 0.6f;
 
         private readonly List<CitizenAgent> _allAgents = new List<CitizenAgent>();
 
@@ -300,8 +306,12 @@ namespace CityBuilder.Citizens
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
+            var spawnBase = _citizenSpawnPoint ?? center.Value;
+            var jitter = UnityEngine.Random.insideUnitCircle * SpawnJitterRadius;
+            var spawnPosition = spawnBase + new Vector3(jitter.x, 0f, jitter.y);
+
             var agent = root.AddComponent<CitizenAgent>();
-            agent.Initialize(_citizenSpawnPoint ?? center.Value, center.Value);
+            agent.Initialize(spawnPosition, center.Value);
 
             return agent;
         }
