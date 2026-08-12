@@ -3,6 +3,7 @@ using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
 using CityBuilder.Citizens;
+using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -422,6 +423,13 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<HappinessManager>();
 
+            managers.AddComponent<GameOverManager>();
+
+            var orcRaidManager = managers.AddComponent<OrcRaidManager>();
+            var orcRaidManagerSO = new SerializedObject(orcRaidManager);
+            orcRaidManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
+            orcRaidManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -635,6 +643,7 @@ namespace CityBuilder.EditorTools
 
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
+            BuildGameOverUI(canvasGO.transform, panelSprite);
             BuildResourceHUD(canvasGO.transform);
             BuildMinimap(canvasGO.transform, panelSprite, minimapTexture, cameraRig);
 
@@ -1029,6 +1038,39 @@ namespace CityBuilder.EditorTools
             dialogRoot.SetActive(false);
         }
 
+        /// <summary>Full-screen defeat panel, same backdrop+card pattern as the dialog above -- shown by GameOverController once GameOverManager reports the Town Hall destroyed. Only action is back to the menu; there's nothing left to confirm/cancel.</summary>
+        private static void BuildGameOverUI(Transform canvasParent, Sprite panelSprite)
+        {
+            var panelRoot = new GameObject("GameOverPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.8f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(760f, 380f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            CreateText(card.transform, "Title", "Поражение", 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
+            CreateText(card.transform, "Reason", "Ратуша разрушена.", 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
+
+            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "В главное меню", new Vector2(0f, -100f), new Vector2(360f, 90f));
+
+            var controller = panelRoot.AddComponent<GameOverController>();
+            var controllerSO = new SerializedObject(controller);
+            controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            controllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(menuButton.onClick, controller.ReturnToMenu);
+
+            panelRoot.SetActive(false);
+        }
+
         private static void BuildSaveUI(Transform canvasParent, Sprite panelSprite, GameSaveController saveController)
         {
             // Manual save only, per design: the player decides if/when to save, so this button
@@ -1194,6 +1236,12 @@ namespace CityBuilder.EditorTools
                 default:
                     throw new System.ArgumentOutOfRangeException(nameof(style), style, null);
             }
+
+            // Any building with a real defense stat (Wall/Tower/Barracks/Gate) fights back against
+            // OrcUnit raiders on its own -- see DefensiveBuilding. Attached here (once, at prefab
+            // creation) rather than conditionally at placement time, same as ProductionBuilding's
+            // maxWorkers check in CreateHutPrefab.
+            if (defense > 0) prefab.AddComponent<DefensiveBuilding>();
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;

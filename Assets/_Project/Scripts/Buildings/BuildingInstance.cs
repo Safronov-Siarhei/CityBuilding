@@ -31,7 +31,7 @@ namespace CityBuilder.Buildings
         /// <summary>0-3, each a 90-degree step around Y -- set at placement (BuildingPlacer.RotateSelection) and restored on load.</summary>
         public int RotationSteps { get; private set; }
 
-        /// <summary>Current hit points; starts at BuildingData.maxHealth. No damage source exists yet -- this is state for a future combat system to read and write.</summary>
+        /// <summary>Current hit points; starts at BuildingData.maxHealth. Reduced by TryDamage (see CityBuilder.Combat.OrcUnit) -- no other damage source exists yet.</summary>
         public int CurrentHealth { get; private set; }
 
         /// <summary>
@@ -55,6 +55,9 @@ namespace CityBuilder.Buildings
         {
             return !string.IsNullOrEmpty(buildingName) && _countByName.TryGetValue(buildingName, out var count) && count > 0;
         }
+
+        /// <summary>Fired for every building lost to combat damage (see TryDamage), including the Town Hall -- CityBuilder.Core.GameOverManager listens for that specific case to trigger defeat. Not fired for decay destruction (HandleFullyDecayed), which the Town Hall is exempt from anyway.</summary>
+        public static event Action<BuildingInstance> OnDestroyedInCombat;
 
         public void Initialize(BuildingData data, Vector2Int originCell, int rotationSteps = 0)
         {
@@ -118,6 +121,28 @@ namespace CityBuilder.Buildings
         private void HandleFullyDecayed()
         {
             EventLogManager.Instance?.Log($"Разрушено от ветхости: {Data.displayName}");
+            FreeCellsAndDestroy();
+        }
+
+        /// <summary>
+        /// Damage from combat (see CityBuilder.Combat.OrcUnit) -- unlike decay, this applies to
+        /// every building including the Town Hall, since its loss is the game's defeat condition
+        /// (see CityBuilder.Core.GameOverManager, which listens for OnDestroyedInCombat).
+        /// </summary>
+        public void TryDamage(int amount)
+        {
+            if (amount <= 0 || CurrentHealth <= 0) return;
+
+            CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            if (CurrentHealth > 0) return;
+
+            EventLogManager.Instance?.Log($"Разрушено в бою: {Data.displayName}");
+            OnDestroyedInCombat?.Invoke(this);
+            FreeCellsAndDestroy();
+        }
+
+        private void FreeCellsAndDestroy()
+        {
             if (GridManager.Instance != null) GridManager.Instance.SetAreaOccupied(OriginCell, RotatedFootprint(), false);
             Destroy(gameObject);
         }
