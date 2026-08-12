@@ -378,6 +378,7 @@ namespace CityBuilder.EditorTools
             rigSO.ApplyModifiedPropertiesWithoutUndo();
 
             var managers = new GameObject("GameManagers");
+            managers.AddComponent<FrameRateController>();
 
             var gridManager = managers.AddComponent<GridManager>();
             var gridSO = new SerializedObject(gridManager);
