@@ -661,7 +661,12 @@ namespace CityBuilder.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        /// <summary>Sits directly above the EventLog panel (both left side, x -810) -- +/- stepped control matching the existing worker-assignment button idiom rather than a drag slider.</summary>
+        /// <summary>
+        /// Wedged into the x -810 column between the ResourceHUD's bottom edge (y 345) and the
+        /// EventLog panel's top edge (y 260) -- centered at y 302 with a 60-tall frame keeps a
+        /// ~12px clear margin on both sides instead of the two overlapping (an earlier pass at y
+        /// 340/70-tall clipped into the ResourceHUD's leftmost icon column).
+        /// </summary>
         private static void BuildTaxRateControl(Transform canvasParent, Sprite panelSprite)
         {
             var frame = CreateImage(canvasParent, "TaxRate", new Color(0.16f, 0.18f, 0.15f, 0.85f));
@@ -669,12 +674,12 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-810f, 340f);
-            frameRect.sizeDelta = new Vector2(400f, 70f);
+            frameRect.anchoredPosition = new Vector2(-810f, 302f);
+            frameRect.sizeDelta = new Vector2(400f, 60f);
 
-            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(60f, 60f));
-            var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 60f));
-            var plusButton = CreateButton(frame.transform, panelSprite, "PlusButton", "+", new Vector2(150f, 0f), new Vector2(60f, 60f));
+            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(52f, 52f));
+            var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 52f));
+            var plusButton = CreateButton(frame.transform, panelSprite, "PlusButton", "+", new Vector2(150f, 0f), new Vector2(52f, 52f));
 
             var go = new GameObject("TaxRateController");
             go.transform.SetParent(canvasParent, false);
