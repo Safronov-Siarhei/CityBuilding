@@ -414,6 +414,11 @@ namespace CityBuilder.EditorTools
             settlementTierManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             settlementTierManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            var taxManager = managers.AddComponent<TaxManager>();
+            var taxManagerSO = new SerializedObject(taxManager);
+            taxManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            taxManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -431,6 +436,7 @@ namespace CityBuilder.EditorTools
             saveControllerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             saveControllerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             saveControllerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
+            saveControllerSO.FindProperty("taxManager").objectReferenceValue = taxManager;
             var knownBuildingsProp = saveControllerSO.FindProperty("knownBuildings");
             knownBuildingsProp.arraySize = allBuildingData.Count;
             for (var i = 0; i < allBuildingData.Count; i++)
@@ -636,6 +642,33 @@ namespace CityBuilder.EditorTools
             BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
             BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
             BuildEventLog(canvasGO.transform, panelSprite);
+            BuildTaxRateControl(canvasGO.transform, panelSprite);
+        }
+
+        /// <summary>Sits directly above the EventLog panel (both left side, x -810) -- +/- stepped control matching the existing worker-assignment button idiom rather than a drag slider.</summary>
+        private static void BuildTaxRateControl(Transform canvasParent, Sprite panelSprite)
+        {
+            var frame = CreateImage(canvasParent, "TaxRate", new Color(0.16f, 0.18f, 0.15f, 0.85f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(-810f, 340f);
+            frameRect.sizeDelta = new Vector2(400f, 70f);
+
+            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(60f, 60f));
+            var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 60f));
+            var plusButton = CreateButton(frame.transform, panelSprite, "PlusButton", "+", new Vector2(150f, 0f), new Vector2(60f, 60f));
+
+            var go = new GameObject("TaxRateController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<TaxRateController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("rateLabel").objectReferenceValue = rateLabel;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(minusButton.onClick, controller.Decrease);
+            UnityEventTools.AddPersistentListener(plusButton.onClick, controller.Increase);
         }
 
         /// <summary>
@@ -698,7 +731,7 @@ namespace CityBuilder.EditorTools
             rect.anchoredPosition = new Vector2(0f, 370f);
             rect.sizeDelta = new Vector2(1300f, 50f);
 
-            var resourceTypes = new[] { ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold };
+            var resourceTypes = new[] { ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold, ResourceType.Coins };
             var slotCount = resourceTypes.Length + 1; // + population slot
             var slotWidth = 1300f / slotCount;
             var amountTexts = new Text[resourceTypes.Length];
@@ -2152,6 +2185,22 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.22f, 0.55f, 0.5f, 0.82f, coal);
                         FillIconRect(p, s, 0.48f, 0.4f, 0.56f, 0.48f, shine);
                     });
+                case ResourceType.Coins:
+                    // A stack of square coins (not circular discs -- straight edges only, same
+                    // "no circles" rule every other icon in this project follows) in a brighter,
+                    // lighter yellow than the Gold bar's more amber tone, so the two read as
+                    // visually distinct currencies at a glance.
+                    return CreateIconSprite("Res_Coins", 64, (p, s) =>
+                    {
+                        var coin = new Color(0.95f, 0.82f, 0.3f);
+                        var edge = new Color(0.7f, 0.58f, 0.16f);
+                        FillIconRect(p, s, 0.18f, 0.14f, 0.7f, 0.32f, edge);
+                        FillIconRect(p, s, 0.2f, 0.16f, 0.68f, 0.28f, coin);
+                        FillIconRect(p, s, 0.26f, 0.34f, 0.78f, 0.52f, edge);
+                        FillIconRect(p, s, 0.28f, 0.36f, 0.76f, 0.48f, coin);
+                        FillIconRect(p, s, 0.34f, 0.54f, 0.86f, 0.72f, edge);
+                        FillIconRect(p, s, 0.36f, 0.56f, 0.84f, 0.68f, coin);
+                    });
                 default: // Gold
                     return CreateIconSprite("Res_Gold", 64, (p, s) =>
                     {
@@ -2172,12 +2221,13 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static ResourceIconLibrary CreateResourceIconLibrary()
         {
-            var icons = new Sprite[7]; // one slot per ResourceType value (Wood..Coal)
+            var icons = new Sprite[8]; // one slot per ResourceType value (Wood..Coins)
             icons[(int)ResourceType.Wood] = CreateResourceIcon(ResourceType.Wood);
             icons[(int)ResourceType.Stone] = CreateResourceIcon(ResourceType.Stone);
             icons[(int)ResourceType.Gold] = CreateResourceIcon(ResourceType.Gold);
             icons[(int)ResourceType.Iron] = CreateResourceIcon(ResourceType.Iron);
             icons[(int)ResourceType.Coal] = CreateResourceIcon(ResourceType.Coal);
+            icons[(int)ResourceType.Coins] = CreateResourceIcon(ResourceType.Coins);
             icons[(int)ResourceType.Population] = CreatePopulationIcon();
             // Food has no icon yet -- no building cost currently includes it; left null,
             // BuildingInfoPanelController just renders an icon-less chip if that ever changes.

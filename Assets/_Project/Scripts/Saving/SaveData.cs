@@ -12,6 +12,7 @@ namespace CityBuilder.Saving
         public bool mandatoryBuildingPlaced;
         public int population;
         public int currentDay = 1;
+        public int taxRatePercent = 10;
         public List<ResourceEntry> resources = new List<ResourceEntry>();
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
     }

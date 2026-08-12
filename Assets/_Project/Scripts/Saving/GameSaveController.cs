@@ -19,6 +19,7 @@ namespace CityBuilder.Saving
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private GameCalendar gameCalendar;
+        [SerializeField] private TaxManager taxManager;
         [SerializeField] private MapTerrainGenerator mapTerrainGenerator;
         [SerializeField] private MeshMapApplier meshMapApplier;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
@@ -88,6 +89,11 @@ namespace CityBuilder.Saving
                 gameCalendar.SetCurrentDay(data.currentDay);
             }
 
+            if (taxManager != null)
+            {
+                taxManager.SetTaxRate(data.taxRatePercent);
+            }
+
             foreach (var entry in data.resources)
             {
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
@@ -146,7 +152,8 @@ namespace CityBuilder.Saving
                     : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0,
-                currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1
+                currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1,
+                taxRatePercent = taxManager != null ? taxManager.TaxRatePercent : 10
             };
 
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))

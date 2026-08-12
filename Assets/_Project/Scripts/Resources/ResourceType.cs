@@ -8,6 +8,7 @@ namespace CityBuilder.Resources
         Gold,
         Population,
         Iron,
-        Coal
+        Coal,
+        Coins
     }
 }
