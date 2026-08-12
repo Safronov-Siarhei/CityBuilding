@@ -55,8 +55,14 @@ namespace CityBuilder.Resources
         private void CollectTaxes()
         {
             var population = citizenManager != null ? citizenManager.TotalPopulation : 0;
-            var income = Mathf.RoundToInt(population * (TaxRatePercent / 100f) * CoinsPerCitizenPerDayAtMaxTax);
+            var income = ComputeDailyIncome(population, TaxRatePercent);
             if (income > 0) ResourceManager.Instance?.Add(ResourceType.Coins, income);
+        }
+
+        /// <summary>Pure formula extracted from CollectTaxes so it's covered by an EditMode test without needing a live scene/singletons.</summary>
+        public static int ComputeDailyIncome(int population, int taxRatePercent)
+        {
+            return Mathf.RoundToInt(population * (taxRatePercent / 100f) * CoinsPerCitizenPerDayAtMaxTax);
         }
     }
 }

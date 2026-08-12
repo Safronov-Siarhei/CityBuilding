@@ -102,10 +102,16 @@ namespace CityBuilder.Buildings
         {
             if (!DecaysOverTime) return;
 
-            Decay = Mathf.Clamp01(Decay + DecayPerDayBase / Mathf.Max(1, Level));
+            Decay = ComputeNextDecay(Decay, Level);
             UpdateDecayWarningMarker();
 
             if (Decay >= 1f) HandleFullyDecayed();
+        }
+
+        /// <summary>Pure formula extracted from HandleDayPassed so it's covered by an EditMode test without needing a live scene/GameCalendar.</summary>
+        public static float ComputeNextDecay(float currentDecay, int level)
+        {
+            return Mathf.Clamp01(currentDecay + DecayPerDayBase / Mathf.Max(1, level));
         }
 
         /// <summary>Grid occupancy, NavMesh obstacle carving, and worker release (via ProductionBuilding.OnDestroy -> CitizenVisualsManager) are all cleaned up automatically by destroying the GameObject -- nothing here needs to touch those systems directly.</summary>

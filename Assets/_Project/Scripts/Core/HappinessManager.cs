@@ -63,7 +63,7 @@ namespace CityBuilder.Core
 
         public void Recompute()
         {
-            TaxScore = TaxManager.Instance != null ? Mathf.Clamp(100 - TaxManager.Instance.TaxRatePercent, 0, 100) : 100;
+            TaxScore = TaxManager.Instance != null ? ComputeTaxScore(TaxManager.Instance.TaxRatePercent) : 100;
             ComputeBuildingScores(out var decayScore, out var defenseScore);
             DecayScore = decayScore;
             DefenseScore = defenseScore;
@@ -71,6 +71,28 @@ namespace CityBuilder.Core
             HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore) / 3f);
             UpdateCriticalState();
             OnHappinessChanged?.Invoke();
+        }
+
+        /// <summary>Pure formula extracted so it's covered by an EditMode test without needing a live TaxManager.</summary>
+        public static int ComputeTaxScore(int taxRatePercent) => Mathf.Clamp(100 - taxRatePercent, 0, 100);
+
+        /// <summary>Pure formula extracted so it's covered by an EditMode test without needing a live scene.</summary>
+        public static int ComputeDecayScore(float totalDecay, int buildingsCounted)
+        {
+            return buildingsCounted <= 0 ? 100 : Mathf.RoundToInt(100f * (1f - totalDecay / buildingsCounted));
+        }
+
+        /// <summary>
+        /// Pure formula extracted so it's covered by an EditMode test without needing a live scene.
+        /// totalDefense must already be the flat (not level-scaled) sum -- see the comment in
+        /// ComputeBuildingScores on why Level must not multiply in here.
+        /// </summary>
+        public static int ComputeDefenseScore(int totalDefense, int population)
+        {
+            if (population <= 0) return 100;
+
+            var target = population * DefensePerCitizenTarget;
+            return target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalDefense / target), 0, 100);
         }
 
         private void UpdateCriticalState()
@@ -111,17 +133,10 @@ namespace CityBuilder.Core
                 if (instance.Data != null) totalDefense += instance.Data.defense;
             }
 
-            decayScore = decayCounted == 0 ? 100 : Mathf.RoundToInt(100f * (1f - totalDecay / decayCounted));
+            decayScore = ComputeDecayScore(totalDecay, decayCounted);
 
             var population = CitizenManager.Instance != null ? CitizenManager.Instance.TotalPopulation : 0;
-            if (population <= 0)
-            {
-                defenseScore = 100;
-                return;
-            }
-
-            var target = population * DefensePerCitizenTarget;
-            defenseScore = target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalDefense / target), 0, 100);
+            defenseScore = ComputeDefenseScore(totalDefense, population);
         }
     }
 }

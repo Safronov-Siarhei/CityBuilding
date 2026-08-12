@@ -62,6 +62,12 @@ namespace CityBuilder.Citizens
         private float DecayProductionMultiplier()
         {
             var decay = _buildingInstance != null ? _buildingInstance.Decay : 0f;
+            return ComputeDecayProductionMultiplier(decay);
+        }
+
+        /// <summary>Pure formula extracted from DecayProductionMultiplier so it's covered by an EditMode test without needing a live BuildingInstance.</summary>
+        public static float ComputeDecayProductionMultiplier(float decay)
+        {
             if (decay <= BuildingInstance.DecayPenaltyThreshold) return 1f;
 
             var t = (decay - BuildingInstance.DecayPenaltyThreshold) / (1f - BuildingInstance.DecayPenaltyThreshold);
