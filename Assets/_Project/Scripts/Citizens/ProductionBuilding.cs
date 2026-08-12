@@ -11,7 +11,13 @@ namespace CityBuilder.Citizens
     /// </summary>
     public class ProductionBuilding : MonoBehaviour
     {
+        // Above BuildingInstance.DecayPenaltyThreshold, output falls linearly from 100% down to
+        // this floor at full (1.0) decay -- a decrepit building still limps along instead of
+        // dropping straight to zero the moment it crosses the threshold.
+        private const float MinDecayProductionMultiplier = 0.5f;
+
         private BuildingData _data;
+        private BuildingInstance _buildingInstance;
         private float _timer;
 
         public int AssignedWorkers { get; private set; }
@@ -22,7 +28,7 @@ namespace CityBuilder.Citizens
         // BuildingInstance.Initialize() runs a line after Instantiate() returns, which is after
         // this component's own Awake() already ran — so BuildingData isn't available yet at
         // Awake time. Resolving it lazily on first access sidesteps that ordering entirely.
-        private BuildingData Data => _data != null ? _data : (_data = GetComponent<BuildingInstance>()?.Data);
+        private BuildingData Data => _data != null ? _data : (_data = (_buildingInstance = GetComponent<BuildingInstance>())?.Data);
 
         public int MaxWorkers => Data != null ? Data.maxWorkers : 0;
         public ResourceType ProducesResource => Data != null ? Data.producesResource : ResourceType.Wood;
@@ -47,7 +53,19 @@ namespace CityBuilder.Citizens
             if (_timer < data.productionIntervalSeconds) return;
             _timer -= data.productionIntervalSeconds;
 
-            ResourceManager.Instance?.Add(data.producesResource, AssignedWorkers * data.productionPerWorkerPerTick);
+            var baseAmount = AssignedWorkers * data.productionPerWorkerPerTick;
+            var amount = Mathf.RoundToInt(baseAmount * DecayProductionMultiplier());
+            ResourceManager.Instance?.Add(data.producesResource, amount);
+        }
+
+        /// <summary>1 below BuildingInstance.DecayPenaltyThreshold, falling linearly to MinDecayProductionMultiplier at full decay -- a neglected building still produces something, just less, right up until it's destroyed outright.</summary>
+        private float DecayProductionMultiplier()
+        {
+            var decay = _buildingInstance != null ? _buildingInstance.Decay : 0f;
+            if (decay <= BuildingInstance.DecayPenaltyThreshold) return 1f;
+
+            var t = (decay - BuildingInstance.DecayPenaltyThreshold) / (1f - BuildingInstance.DecayPenaltyThreshold);
+            return Mathf.Lerp(1f, MinDecayProductionMultiplier, t);
         }
 
         public bool TryAssignWorker()

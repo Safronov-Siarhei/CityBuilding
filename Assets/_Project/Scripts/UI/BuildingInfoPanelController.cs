@@ -18,6 +18,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text idleLabel;
         [SerializeField] private GameObject upgradeControls;
         [SerializeField] private Text upgradeCostLabel;
+        [SerializeField] private GameObject repairControls;
+        [SerializeField] private Text repairCostLabel;
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
@@ -57,6 +59,12 @@ namespace CityBuilder.UI
             Refresh();
         }
 
+        public void Repair()
+        {
+            _currentInstance?.TryRepair();
+            Refresh();
+        }
+
         private void Refresh()
         {
             if (_currentInstance == null || _currentInstance.Data == null) return;
@@ -86,6 +94,13 @@ namespace CityBuilder.UI
             if (upgradeCost != null && upgradeCostLabel != null)
             {
                 upgradeCostLabel.text = upgradeCost.Count == 0 ? "Улучшить (бесплатно)" : "Улучшить: " + FormatCost(upgradeCost);
+            }
+
+            var repairCost = _currentInstance.GetRepairCost();
+            if (repairControls != null) repairControls.SetActive(repairCost != null);
+            if (repairCost != null && repairCostLabel != null)
+            {
+                repairCostLabel.text = $"Ветхость {Mathf.RoundToInt(_currentInstance.Decay * 100f)}% — Отремонтировать: " + FormatCost(repairCost);
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -12,6 +13,17 @@ namespace CityBuilder.Buildings
     {
         public const int MaxLevel = 3;
 
+        // Above this fraction, ProductionBuilding scales output down (see its
+        // DecayProductionMultiplier) -- exposed here since decay itself is owned by this class.
+        public const float DecayPenaltyThreshold = 0.7f;
+
+        // First-pass pace, tunable: divided by Level, so a level-3 building decays a third as
+        // fast as the same building fresh at level 1 -- upgrading doubles as upkeep investment,
+        // not just a stat/production bump.
+        private const float DecayPerDayBase = 0.02f;
+        private const float RepairCostFraction = 0.4f;
+        private const float DecayMarkerHeight = 3f;
+
         public BuildingData Data { get; private set; }
         public Vector2Int OriginCell { get; private set; }
         public int Level { get; private set; } = 1;
@@ -19,11 +31,20 @@ namespace CityBuilder.Buildings
         /// <summary>0-3, each a 90-degree step around Y -- set at placement (BuildingPlacer.RotateSelection) and restored on load.</summary>
         public int RotationSteps { get; private set; }
 
-        /// <summary>Current hit points; starts at BuildingData.maxHealth. No damage source exists yet -- this is state for a future combat/decay system to read and write.</summary>
+        /// <summary>Current hit points; starts at BuildingData.maxHealth. No damage source exists yet -- this is state for a future combat system to read and write.</summary>
         public int CurrentHealth { get; private set; }
 
-        /// <summary>0 (new) to 1 (fully dilapidated). Nothing advances this yet -- reserved for a future decay-over-time system.</summary>
+        /// <summary>
+        /// 0 (new) to 1 (fully dilapidated). Accrues one step per GameCalendar day (see
+        /// HandleDayPassed) for every building except roads/bridges (not really "buildings") and
+        /// the Town Hall (its destruction is a defeat condition on its own -- decay auto-removing
+        /// it here would be a jarring, half-implemented "game over" with no actual game-over
+        /// screen behind it yet). Above DecayPenaltyThreshold, ProductionBuilding's output drops;
+        /// at 1 the building is destroyed outright (see HandleFullyDecayed) and must be rebuilt.
+        /// </summary>
         public float Decay { get; private set; }
+
+        private GameObject _decayWarningMarker;
 
         public void Initialize(BuildingData data, Vector2Int originCell, int rotationSteps = 0)
         {
@@ -44,6 +65,92 @@ namespace CityBuilder.Buildings
 
                 SetupNavMeshObstacle(data);
             }
+        }
+
+        private void Start()
+        {
+            if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed += HandleDayPassed;
+        }
+
+        private void OnDestroy()
+        {
+            if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= HandleDayPassed;
+        }
+
+        private bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != "TownHall";
+
+        private void HandleDayPassed()
+        {
+            if (!DecaysOverTime) return;
+
+            Decay = Mathf.Clamp01(Decay + DecayPerDayBase / Mathf.Max(1, Level));
+            UpdateDecayWarningMarker();
+
+            if (Decay >= 1f) HandleFullyDecayed();
+        }
+
+        /// <summary>Grid occupancy, NavMesh obstacle carving, and worker release (via ProductionBuilding.OnDestroy -> CitizenVisualsManager) are all cleaned up automatically by destroying the GameObject -- nothing here needs to touch those systems directly.</summary>
+        private void HandleFullyDecayed()
+        {
+            if (GridManager.Instance != null) GridManager.Instance.SetAreaOccupied(OriginCell, RotatedFootprint(), false);
+            Destroy(gameObject);
+        }
+
+        private Vector2Int RotatedFootprint()
+        {
+            var footprint = Data.footprintSize;
+            return RotationSteps % 2 == 0 ? footprint : new Vector2Int(footprint.y, footprint.x);
+        }
+
+        /// <summary>Null once there's nothing to repair (Decay already 0).</summary>
+        public List<ResourceAmount> GetRepairCost()
+        {
+            if (Data == null || Decay <= 0f) return null;
+
+            var scaled = new List<ResourceAmount>();
+            foreach (var amount in Data.cost)
+            {
+                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * RepairCostFraction)) });
+            }
+            return scaled;
+        }
+
+        public bool TryRepair()
+        {
+            var cost = GetRepairCost();
+            if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
+
+            Decay = 0f;
+            UpdateDecayWarningMarker();
+            return true;
+        }
+
+        /// <summary>Small floating marker above the building while its decay is in the production-penalty band (see DecayPenaltyThreshold) -- a HUD-less, at-a-glance "this needs attention" cue without having to open every building's info panel.</summary>
+        private void UpdateDecayWarningMarker()
+        {
+            var shouldShow = Decay > DecayPenaltyThreshold && Decay < 1f;
+
+            if (shouldShow && _decayWarningMarker == null)
+            {
+                _decayWarningMarker = CreateDecayWarningMarker();
+            }
+            if (_decayWarningMarker != null) _decayWarningMarker.SetActive(shouldShow);
+        }
+
+        private GameObject CreateDecayWarningMarker()
+        {
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = "DecayWarningMarker";
+            Destroy(marker.GetComponent<BoxCollider>());
+            marker.transform.SetParent(transform, false);
+            marker.transform.localPosition = new Vector3(0f, DecayMarkerHeight, 0f);
+            marker.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            marker.transform.localRotation = Quaternion.Euler(45f, 45f, 0f);
+            marker.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            {
+                color = new Color(0.95f, 0.4f, 0.1f)
+            };
+            return marker;
         }
 
         /// <summary>
@@ -93,6 +200,7 @@ namespace CityBuilder.Buildings
         {
             CurrentHealth = Data != null ? Mathf.Clamp(health, 0, Data.maxHealth) : health;
             Decay = Mathf.Clamp01(decay);
+            UpdateDecayWarningMarker();
         }
 
         /// <summary>Null once already at MaxLevel.</summary>

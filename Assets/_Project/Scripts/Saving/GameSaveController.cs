@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -17,6 +18,7 @@ namespace CityBuilder.Saving
     {
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenManager citizenManager;
+        [SerializeField] private GameCalendar gameCalendar;
         [SerializeField] private MapTerrainGenerator mapTerrainGenerator;
         [SerializeField] private MeshMapApplier meshMapApplier;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
@@ -81,6 +83,11 @@ namespace CityBuilder.Saving
                 citizenManager.SetPopulation(data.population);
             }
 
+            if (gameCalendar != null)
+            {
+                gameCalendar.SetCurrentDay(data.currentDay);
+            }
+
             foreach (var entry in data.resources)
             {
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
@@ -138,7 +145,8 @@ namespace CityBuilder.Saving
                     ? meshMapApplier.CurrentMapId
                     : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
-                population = citizenManager != null ? citizenManager.TotalPopulation : 0
+                population = citizenManager != null ? citizenManager.TotalPopulation : 0,
+                currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1
             };
 
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))

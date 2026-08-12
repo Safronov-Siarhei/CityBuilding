@@ -11,6 +11,7 @@ namespace CityBuilder.Saving
         public string mapId = string.Empty;
         public bool mandatoryBuildingPlaced;
         public int population;
+        public int currentDay = 1;
         public List<ResourceEntry> resources = new List<ResourceEntry>();
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
     }

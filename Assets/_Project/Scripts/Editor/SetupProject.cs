@@ -3,6 +3,7 @@ using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
 using CityBuilder.Citizens;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -377,6 +378,7 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<ResourceManager>();
             managers.AddComponent<RoadNetwork>();
+            var gameCalendar = managers.AddComponent<GameCalendar>();
 
             var placer = managers.AddComponent<BuildingPlacer>();
             var placerSO = new SerializedObject(placer);
@@ -411,6 +413,7 @@ namespace CityBuilder.EditorTools
             var saveControllerSO = new SerializedObject(saveController);
             saveControllerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             saveControllerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            saveControllerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
             var knownBuildingsProp = saveControllerSO.FindProperty("knownBuildings");
             knownBuildingsProp.arraySize = allBuildingData.Count;
             for (var i = 0; i < allBuildingData.Count; i++)
@@ -743,7 +746,7 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(700f, 600f);
+            cardRect.sizeDelta = new Vector2(700f, 780f);
             cardRect.anchoredPosition = Vector2.zero;
 
             var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 260f), new Vector2(640f, 60f));
@@ -768,7 +771,14 @@ namespace CityBuilder.EditorTools
             var upgradeCost = CreateText(upgradeControls.transform, "UpgradeCost", string.Empty, 22, new Vector2(0f, -55f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.7f));
             var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "Улучшить", new Vector2(0f, -125f), new Vector2(360f, 70f));
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -215f), new Vector2(300f, 70f));
+            var repairControls = new GameObject("RepairControls", typeof(RectTransform));
+            repairControls.transform.SetParent(card.transform, false);
+            StretchFull(repairControls.GetComponent<RectTransform>());
+
+            var repairCost = CreateText(repairControls.transform, "RepairCost", string.Empty, 22, new Vector2(0f, -195f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.7f));
+            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "Отремонтировать", new Vector2(0f, -265f), new Vector2(360f, 70f));
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -345f), new Vector2(300f, 70f));
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -781,11 +791,14 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
             controllerSO.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
             controllerSO.FindProperty("upgradeCostLabel").objectReferenceValue = upgradeCost;
+            controllerSO.FindProperty("repairControls").objectReferenceValue = repairControls;
+            controllerSO.FindProperty("repairCostLabel").objectReferenceValue = repairCost;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(assignButton.onClick, controller.AssignWorker);
             UnityEventTools.AddPersistentListener(unassignButton.onClick, controller.UnassignWorker);
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
+            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.Repair);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
             panelRoot.SetActive(false);
