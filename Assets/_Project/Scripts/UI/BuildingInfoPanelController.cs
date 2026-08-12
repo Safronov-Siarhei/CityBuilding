@@ -81,7 +81,13 @@ namespace CityBuilder.UI
             if (levelLabel != null) levelLabel.text = $"Уровень: {_currentInstance.Level} / {BuildingInstance.MaxLevel}";
             if (conditionLabel != null)
             {
-                conditionLabel.text = $"Прочность: {_currentInstance.CurrentHealth}/{data.maxHealth}   Защита: {data.defense}   Ветхость: {Mathf.RoundToInt(_currentInstance.Decay * 100f)}%";
+                // Roads/Town Hall never accrue decay at all (see BuildingInstance.DecaysOverTime) --
+                // showing them as a static "0%" reads like a decaying building that just hasn't
+                // aged yet, so they get their own label instead.
+                var decayText = _currentInstance.DecaysOverTime
+                    ? $"{Mathf.RoundToInt(_currentInstance.Decay * 100f)}%"
+                    : "не изнашивается";
+                conditionLabel.text = $"Прочность: {_currentInstance.CurrentHealth}/{data.maxHealth}   Защита: {data.defense}   Ветхость: {decayText}";
             }
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;

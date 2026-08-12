@@ -64,8 +64,9 @@ namespace CityBuilder.Core
         public void Recompute()
         {
             TaxScore = TaxManager.Instance != null ? Mathf.Clamp(100 - TaxManager.Instance.TaxRatePercent, 0, 100) : 100;
-            DecayScore = ComputeDecayScore();
-            DefenseScore = ComputeDefenseScore();
+            ComputeBuildingScores(out var decayScore, out var defenseScore);
+            DecayScore = decayScore;
+            DefenseScore = defenseScore;
 
             HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore) / 3f);
             UpdateCriticalState();
@@ -86,34 +87,41 @@ namespace CityBuilder.Core
             }
         }
 
-        private static int ComputeDecayScore()
+        /// <summary>Single pass over every BuildingInstance for both scores -- decay and defense
+        /// each need to scan the same building list, so this avoids two separate FindObjectsByType
+        /// calls per Recompute.</summary>
+        private static void ComputeBuildingScores(out int decayScore, out int defenseScore)
         {
-            var instances = FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
-            var total = 0f;
-            var counted = 0;
-            foreach (var instance in instances)
-            {
-                if (!instance.DecaysOverTime) continue;
-                total += instance.Decay;
-                counted++;
-            }
-            return counted == 0 ? 100 : Mathf.RoundToInt(100f * (1f - total / counted));
-        }
-
-        private static int ComputeDefenseScore()
-        {
-            var instances = FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
+            var totalDecay = 0f;
+            var decayCounted = 0;
             var totalDefense = 0;
-            foreach (var instance in instances)
+
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (instance.Data != null) totalDefense += instance.Data.defense * instance.Level;
+                if (instance.DecaysOverTime)
+                {
+                    totalDecay += instance.Decay;
+                    decayCounted++;
+                }
+
+                // BuildingData.defense is a level-1 base stat -- BuildingInstance.TryUpgrade only
+                // advances Level so far, it doesn't scale defense (see BuildingData's "Condition"
+                // header and BuildingInfoPanelController, which both treat defense as flat), so
+                // this must not multiply by Level either.
+                if (instance.Data != null) totalDefense += instance.Data.defense;
             }
+
+            decayScore = decayCounted == 0 ? 100 : Mathf.RoundToInt(100f * (1f - totalDecay / decayCounted));
 
             var population = CitizenManager.Instance != null ? CitizenManager.Instance.TotalPopulation : 0;
-            if (population <= 0) return 100;
+            if (population <= 0)
+            {
+                defenseScore = 100;
+                return;
+            }
 
             var target = population * DefensePerCitizenTarget;
-            return target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalDefense / target), 0, 100);
+            defenseScore = target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalDefense / target), 0, 100);
         }
     }
 }
