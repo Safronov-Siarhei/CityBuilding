@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -17,9 +18,10 @@ namespace CityBuilder.UI
         [SerializeField] private Text workersLabel;
         [SerializeField] private Text idleLabel;
         [SerializeField] private GameObject upgradeControls;
-        [SerializeField] private Text upgradeCostLabel;
+        [SerializeField] private Transform upgradeCostRow;
         [SerializeField] private GameObject repairControls;
-        [SerializeField] private Text repairCostLabel;
+        [SerializeField] private Transform repairCostRow;
+        [SerializeField] private ResourceIconLibrary iconLibrary;
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
@@ -91,41 +93,64 @@ namespace CityBuilder.UI
 
             var upgradeCost = _currentInstance.GetUpgradeCost();
             if (upgradeControls != null) upgradeControls.SetActive(upgradeCost != null);
-            if (upgradeCost != null && upgradeCostLabel != null)
-            {
-                upgradeCostLabel.text = upgradeCost.Count == 0 ? "Улучшить (бесплатно)" : "Улучшить: " + FormatCost(upgradeCost);
-            }
+            BuildCostRow(upgradeCostRow, upgradeCost);
 
             var repairCost = _currentInstance.GetRepairCost();
             if (repairControls != null) repairControls.SetActive(repairCost != null);
-            if (repairCost != null && repairCostLabel != null)
+            BuildCostRow(repairCostRow, repairCost);
+        }
+
+        /// <summary>
+        /// Rebuilds an icon+number chip per resource in cost (icon from iconLibrary, number as a
+        /// small Text next to it) instead of a "40 дерева, 24 камня" sentence -- cost lists vary
+        /// per building/action, so this runs at runtime rather than being laid out once in
+        /// SetupProject. The row's own HorizontalLayoutGroup (see SetupProject.BuildBuildingInfoPanel)
+        /// handles spacing/centering; this only needs to add/remove the leaf icon+text children.
+        /// </summary>
+        private void BuildCostRow(Transform row, List<ResourceAmount> cost)
+        {
+            if (row == null) return;
+
+            for (var i = row.childCount - 1; i >= 0; i--)
             {
-                repairCostLabel.text = $"Ветхость {Mathf.RoundToInt(_currentInstance.Decay * 100f)}% — Отремонтировать: " + FormatCost(repairCost);
+                Destroy(row.GetChild(i).gameObject);
+            }
+            if (cost == null) return;
+
+            if (cost.Count == 0)
+            {
+                CreateChipText(row, "Бесплатно");
+                return;
+            }
+
+            foreach (var amount in cost)
+            {
+                CreateChipIcon(row, iconLibrary != null ? iconLibrary.GetIcon(amount.type) : null);
+                CreateChipText(row, amount.amount.ToString());
             }
         }
 
-        private static string FormatCost(System.Collections.Generic.List<ResourceAmount> cost)
+        private static void CreateChipIcon(Transform parent, Sprite sprite)
         {
-            var parts = new string[cost.Count];
-            for (var i = 0; i < cost.Count; i++)
-            {
-                parts[i] = $"{cost[i].amount} {ResourceLabel(cost[i].type)}";
-            }
-            return string.Join(", ", parts);
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<RectTransform>().sizeDelta = new Vector2(28f, 28f);
+            var image = go.GetComponent<Image>();
+            image.sprite = sprite;
+            image.preserveAspect = true;
         }
 
-        private static string ResourceLabel(ResourceType type)
+        private static void CreateChipText(Transform parent, string content)
         {
-            switch (type)
-            {
-                case ResourceType.Wood: return "дерева";
-                case ResourceType.Stone: return "камня";
-                case ResourceType.Food: return "еды";
-                case ResourceType.Gold: return "золота";
-                case ResourceType.Iron: return "железа";
-                case ResourceType.Coal: return "угля";
-                default: return type.ToString();
-            }
+            var go = new GameObject("Amount", typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<RectTransform>().sizeDelta = new Vector2(70f, 32f);
+            var text = go.GetComponent<Text>();
+            text.text = content;
+            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 22;
+            text.alignment = TextAnchor.MiddleLeft;
+            text.color = Color.white;
         }
     }
 }

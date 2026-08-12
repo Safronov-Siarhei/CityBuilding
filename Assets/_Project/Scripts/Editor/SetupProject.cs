@@ -28,6 +28,7 @@ namespace CityBuilder.EditorTools
         private const string TexturesFolder = "Assets/_Project/Textures";
         private const string BuildingPrefabsFolder = "Assets/_Project/Prefabs/Buildings";
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
+        private const string ResourceScriptableObjectsFolder = "Assets/_Project/ScriptableObjects/Resources";
         private const string MeshMapsFolder = "Assets/_Project/Resources/MeshMaps";
         private const string ModelsMap1Folder = "Assets/_Project/Models/Map1";
         private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
@@ -612,7 +613,9 @@ namespace CityBuilder.EditorTools
             BuildResourceHUD(canvasGO.transform);
             BuildMinimap(canvasGO.transform, panelSprite, minimapTexture, cameraRig);
 
-            var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite);
+            var iconLibrary = CreateResourceIconLibrary();
+
+            var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite, iconLibrary);
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
             BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
         }
@@ -732,7 +735,7 @@ namespace CityBuilder.EditorTools
             indicatorSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite)
+        private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
         {
             var panelRoot = new GameObject("BuildingInfoPanel", typeof(RectTransform));
             panelRoot.transform.SetParent(canvasParent, false);
@@ -768,14 +771,14 @@ namespace CityBuilder.EditorTools
             upgradeControls.transform.SetParent(card.transform, false);
             StretchFull(upgradeControls.GetComponent<RectTransform>());
 
-            var upgradeCost = CreateText(upgradeControls.transform, "UpgradeCost", string.Empty, 22, new Vector2(0f, -55f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.7f));
+            var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(0f, -55f));
             var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "Улучшить", new Vector2(0f, -125f), new Vector2(360f, 70f));
 
             var repairControls = new GameObject("RepairControls", typeof(RectTransform));
             repairControls.transform.SetParent(card.transform, false);
             StretchFull(repairControls.GetComponent<RectTransform>());
 
-            var repairCost = CreateText(repairControls.transform, "RepairCost", string.Empty, 22, new Vector2(0f, -195f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.7f));
+            var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(0f, -195f));
             var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "Отремонтировать", new Vector2(0f, -265f), new Vector2(360f, 70f));
 
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -345f), new Vector2(300f, 70f));
@@ -790,9 +793,10 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
             controllerSO.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
-            controllerSO.FindProperty("upgradeCostLabel").objectReferenceValue = upgradeCost;
+            controllerSO.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
             controllerSO.FindProperty("repairControls").objectReferenceValue = repairControls;
-            controllerSO.FindProperty("repairCostLabel").objectReferenceValue = repairCost;
+            controllerSO.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
+            controllerSO.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(assignButton.onClick, controller.AssignWorker);
@@ -2096,6 +2100,34 @@ namespace CityBuilder.EditorTools
             }
         }
 
+        /// <summary>
+        /// Runtime-queryable counterpart to CreateResourceIcon/CreatePopulationIcon -- those two
+        /// only ever get called from Editor code (this script), but BuildingInfoPanelController's
+        /// upgrade/repair cost chips need the same sprites at play time, so they're captured into
+        /// a saved ScriptableObject asset indexed by ResourceType (see ResourceIconLibrary).
+        /// </summary>
+        private static ResourceIconLibrary CreateResourceIconLibrary()
+        {
+            var icons = new Sprite[7]; // one slot per ResourceType value (Wood..Coal)
+            icons[(int)ResourceType.Wood] = CreateResourceIcon(ResourceType.Wood);
+            icons[(int)ResourceType.Stone] = CreateResourceIcon(ResourceType.Stone);
+            icons[(int)ResourceType.Gold] = CreateResourceIcon(ResourceType.Gold);
+            icons[(int)ResourceType.Iron] = CreateResourceIcon(ResourceType.Iron);
+            icons[(int)ResourceType.Coal] = CreateResourceIcon(ResourceType.Coal);
+            icons[(int)ResourceType.Population] = CreatePopulationIcon();
+            // Food has no icon yet -- no building cost currently includes it; left null,
+            // BuildingInfoPanelController just renders an icon-less chip if that ever changes.
+
+            var library = ScriptableObject.CreateInstance<ResourceIconLibrary>();
+            library.EditorInitialize(icons);
+
+            Directory.CreateDirectory(ResourceScriptableObjectsFolder);
+            var path = $"{ResourceScriptableObjectsFolder}/ResourceIconLibrary.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(library, path);
+            return library;
+        }
+
         private static Sprite CreatePopulationIcon()
         {
             return CreateIconSprite("Res_Population", 64, (p, s) =>
@@ -2154,6 +2186,27 @@ namespace CityBuilder.EditorTools
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = color;
             return go.GetComponent<Image>();
+        }
+
+        /// <summary>Empty horizontal row for BuildingInfoPanelController to fill with icon+number cost chips at runtime (see its BuildCostRow) -- the layout group handles spacing/centering, so runtime code only ever adds/removes leaf children.</summary>
+        private static Transform CreateCostRow(Transform parent, string name, Vector2 anchoredPos)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(640f, 44f);
+
+            var layout = go.GetComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.spacing = 18f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            return go.transform;
         }
 
         private static void StretchFull(RectTransform rect)
