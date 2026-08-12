@@ -173,6 +173,13 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true, citizensGranted: 8, category: BuildingCategory.Housing, maxHealth: 120, fogRevealRadius: 10);
+            // First example wiring of the requirement system (BuildingData.requiredBuilding):
+            // upscale housing needs a basic House placed first. AssetDatabase.CreateAsset (inside
+            // CreateBuildingData) writes the asset immediately -- see the Iron/Coal upgrade-cost
+            // bug this same gotcha caused earlier -- so this mutation needs an explicit SetDirty
+            // or the later AssetDatabase.SaveAssets() silently drops it.
+            cottageData.requiredBuilding = houseData;
+            EditorUtility.SetDirty(cottageData);
 
             var townHallData = CreateFbxBuildingData(
                 "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
@@ -260,6 +267,9 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25, fogRevealRadius: 18);
             towerData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 12 });
             towerData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 26 });
+            // Second example wiring of the requirement system: a Tower reinforces an existing
+            // wall line rather than standing alone.
+            towerData.requiredBuilding = wallData;
             EditorUtility.SetDirty(towerData);
 
             var barracksData = CreateBuildingData(

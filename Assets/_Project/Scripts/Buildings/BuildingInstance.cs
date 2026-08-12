@@ -46,6 +46,16 @@ namespace CityBuilder.Buildings
 
         private GameObject _decayWarningMarker;
 
+        // Self-registering count-by-name registry (same pattern as ResourceNode.All) so
+        // BuildingPlacer can answer "does at least one X exist yet" for the requiredBuilding
+        // check without a FindObjectsByType scan on every placement/ghost update.
+        private static readonly Dictionary<string, int> _countByName = new Dictionary<string, int>();
+
+        public static bool HasAny(string buildingName)
+        {
+            return !string.IsNullOrEmpty(buildingName) && _countByName.TryGetValue(buildingName, out var count) && count > 0;
+        }
+
         public void Initialize(BuildingData data, Vector2Int originCell, int rotationSteps = 0)
         {
             Data = data;
@@ -64,6 +74,7 @@ namespace CityBuilder.Buildings
                 FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
 
                 SetupNavMeshObstacle(data);
+                ChangeCount(data.buildingName, 1);
             }
         }
 
@@ -75,6 +86,13 @@ namespace CityBuilder.Buildings
         private void OnDestroy()
         {
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= HandleDayPassed;
+            if (Data != null) ChangeCount(Data.buildingName, -1);
+        }
+
+        private static void ChangeCount(string buildingName, int delta)
+        {
+            _countByName.TryGetValue(buildingName, out var count);
+            _countByName[buildingName] = Mathf.Max(0, count + delta);
         }
 
         private bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != "TownHall";

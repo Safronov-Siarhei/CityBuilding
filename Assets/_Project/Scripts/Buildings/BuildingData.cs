@@ -59,5 +59,11 @@ namespace CityBuilder.Buildings
         // Cells around this building permanently cleared of fog once placed -- see
         // FogOfWarManager.RevealPermanent, called from BuildingInstance.Initialize.
         public int fogRevealRadius = 8;
+
+        [Header("Requirements")]
+        // Null = no prerequisite. Otherwise at least one already-placed instance of this building
+        // (by buildingName -- see BuildingInstance.HasAny) must exist before this one can be
+        // placed. Checked by BuildingPlacer alongside affordability, not by GridManager.
+        public BuildingData requiredBuilding;
     }
 }

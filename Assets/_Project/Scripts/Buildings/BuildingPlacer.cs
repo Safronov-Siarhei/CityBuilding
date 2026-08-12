@@ -180,7 +180,8 @@ namespace CityBuilder.Buildings
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_selectedBuilding.cost);
-            var color = (canPlace && canAfford) ? validColor : invalidColor;
+            var hasRequirement = HasRequiredBuilding();
+            var color = (canPlace && canAfford && hasRequirement) ? validColor : invalidColor;
 
             foreach (var rend in _ghostRenderers)
             {
@@ -227,10 +228,18 @@ namespace CityBuilder.Buildings
             return true;
         }
 
+        /// <summary>True if _selectedBuilding.requiredBuilding is unset, or at least one instance of it already exists (see BuildingInstance.HasAny) -- e.g. a Cottage needs a House placed first.</summary>
+        private bool HasRequiredBuilding()
+        {
+            var required = _selectedBuilding.requiredBuilding;
+            return required == null || BuildingInstance.HasAny(required.buildingName);
+        }
+
         private void TryPlace(Vector2Int cell)
         {
             var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             if (!CanPlaceSelectedBuilding(cell, footprint)) return;
+            if (!HasRequiredBuilding()) return;
             if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost)) return;
 
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
