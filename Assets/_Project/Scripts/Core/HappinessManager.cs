@@ -23,10 +23,18 @@ namespace CityBuilder.Core
         // defended" (100 score); below that the defense score scales down linearly to 0.
         private const float DefensePerCitizenTarget = 0.5f;
 
+        // Hysteresis band for the EventLog crossing notice below -- entering/leaving this band is
+        // logged once each way (see UpdateCriticalState), not every recompute, so a score sitting
+        // right at the edge doesn't spam the log on every tax-rate tweak or day tick.
+        private const int CriticalThreshold = 30;
+        private const int RecoveredThreshold = 70;
+
         public int HappinessPercent { get; private set; } = 100;
         public int TaxScore { get; private set; } = 100;
         public int DecayScore { get; private set; } = 100;
         public int DefenseScore { get; private set; } = 100;
+
+        private bool _isCritical;
 
         public event Action OnHappinessChanged;
 
@@ -60,7 +68,22 @@ namespace CityBuilder.Core
             DefenseScore = ComputeDefenseScore();
 
             HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore) / 3f);
+            UpdateCriticalState();
             OnHappinessChanged?.Invoke();
+        }
+
+        private void UpdateCriticalState()
+        {
+            if (!_isCritical && HappinessPercent <= CriticalThreshold)
+            {
+                _isCritical = true;
+                EventLogManager.Instance?.Log($"Довольство упало до критического уровня ({HappinessPercent}%)");
+            }
+            else if (_isCritical && HappinessPercent >= RecoveredThreshold)
+            {
+                _isCritical = false;
+                EventLogManager.Instance?.Log($"Довольство восстановилось ({HappinessPercent}%)");
+            }
         }
 
         private static int ComputeDecayScore()
