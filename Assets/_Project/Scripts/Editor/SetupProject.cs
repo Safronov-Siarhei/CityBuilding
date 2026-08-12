@@ -1778,6 +1778,11 @@ namespace CityBuilder.EditorTools
             minimapCamera.targetTexture = renderTexture;
             minimapCamera.cullingMask = ~0;
 
+            var updater = cameraGO.AddComponent<MinimapCameraUpdater>();
+            var updaterSO = new SerializedObject(updater);
+            updaterSO.FindProperty("minimapCamera").objectReferenceValue = minimapCamera;
+            updaterSO.ApplyModifiedPropertiesWithoutUndo();
+
             return renderTexture;
         }
 
