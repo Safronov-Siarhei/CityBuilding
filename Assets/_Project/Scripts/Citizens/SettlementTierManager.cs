@@ -67,7 +67,8 @@ namespace CityBuilder.Citizens
             OnTierChanged?.Invoke(Tiers[resolvedIndex].name);
         }
 
-        private static int ResolveTierIndex(int population)
+        /// <summary>Public so EditMode tests can cover the tier-boundary math directly.</summary>
+        public static int ResolveTierIndex(int population)
         {
             var index = 0;
             for (var i = 0; i < Tiers.Length; i++)
