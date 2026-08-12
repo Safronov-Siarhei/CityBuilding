@@ -56,6 +56,14 @@ namespace CityBuilder.Maps
         private float _citizenTimer;
         private Material _cloudMaterial;
 
+        // Reused across every RebuildChunk call instead of allocating fresh Lists each time --
+        // citizen movement can dirty several chunks per UpdateCitizenReveal tick (every 0.3s), so
+        // this was a recurring GC source scaling with how many citizens are near a chunk boundary.
+        // Safe as shared instance state: RebuildChunk always runs one chunk to completion (mesh
+        // upload included) before the next one starts, never overlapping or recursing.
+        private readonly List<Vector3> _chunkVertices = new List<Vector3>();
+        private readonly List<int> _chunkTriangles = new List<int>();
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -265,8 +273,10 @@ namespace CityBuilder.Maps
             var x1 = Mathf.Min(x0 + ChunkSize, grid.GridSize.x);
             var z1 = Mathf.Min(z0 + ChunkSize, grid.GridSize.y);
 
-            var vertices = new List<Vector3>();
-            var triangles = new List<int>();
+            var vertices = _chunkVertices;
+            var triangles = _chunkTriangles;
+            vertices.Clear();
+            triangles.Clear();
 
             for (var z = z0; z < z1; z++)
             {
