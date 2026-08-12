@@ -475,14 +475,14 @@ namespace CityBuilder.EditorTools
             saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, camera, rtsCamera, settlementTierManager, hotbarBuildingData, minimapTexture, townHallData);
+            BuildGameplayUI(placer, saveController, camera, rtsCamera, settlementTierManager, gameCalendar, hotbarBuildingData, minimapTexture, townHallData);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, RTSCameraController cameraRig, SettlementTierManager settlementTierManager, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, RTSCameraController cameraRig, SettlementTierManager settlementTierManager, GameCalendar gameCalendar, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -643,6 +643,22 @@ namespace CityBuilder.EditorTools
             BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
             BuildEventLog(canvasGO.transform, panelSprite);
             BuildTaxRateControl(canvasGO.transform, panelSprite);
+            BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
+        }
+
+        /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>
+        private static void BuildSettlementStatus(Transform canvasParent, GameCalendar gameCalendar, SettlementTierManager settlementTierManager)
+        {
+            var statusText = CreateText(canvasParent, "SettlementStatus", string.Empty, 26, new Vector2(0f, 465f), new Vector2(500f, 60f), new Color(1f, 1f, 1f, 0.85f), addShadow: true);
+
+            var go = new GameObject("SettlementStatusController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<SettlementStatusController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
+            so.FindProperty("tierManager").objectReferenceValue = settlementTierManager;
+            so.FindProperty("statusText").objectReferenceValue = statusText;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>Sits directly above the EventLog panel (both left side, x -810) -- +/- stepped control matching the existing worker-assignment button idiom rather than a drag slider.</summary>
