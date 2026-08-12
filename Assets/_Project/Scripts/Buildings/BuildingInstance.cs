@@ -95,7 +95,8 @@ namespace CityBuilder.Buildings
             _countByName[buildingName] = Mathf.Max(0, count + delta);
         }
 
-        private bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != "TownHall";
+        /// <summary>Also read by HappinessManager to decide which instances count toward the settlement's decay-based happiness score -- roads/Town Hall never decay, so including them would just dilute the average with artificial zeros.</summary>
+        public bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != "TownHall";
 
         private void HandleDayPassed()
         {

@@ -419,6 +419,8 @@ namespace CityBuilder.EditorTools
             taxManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             taxManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            managers.AddComponent<HappinessManager>();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -644,6 +646,35 @@ namespace CityBuilder.EditorTools
             BuildEventLog(canvasGO.transform, panelSprite);
             BuildTaxRateControl(canvasGO.transform, panelSprite);
             BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
+            BuildHappinessPanel(canvasGO.transform, panelSprite);
+        }
+
+        /// <summary>
+        /// Right side, mirroring the EventLog panel's position/size on the left (x -810, y 100) --
+        /// sits below the Minimap's bottom edge (y 192, see BuildMinimap) with a clear gap, same
+        /// standing-panel treatment as EventLog/TaxRate rather than a toast, since happiness is
+        /// meant to be glanced at over time.
+        /// </summary>
+        private static void BuildHappinessPanel(Transform canvasParent, Sprite panelSprite)
+        {
+            var frame = CreateImage(canvasParent, "Happiness", new Color(0.16f, 0.18f, 0.15f, 0.85f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(810f, 100f);
+            frameRect.sizeDelta = new Vector2(400f, 110f);
+
+            var happinessLabel = CreateText(frame.transform, "HappinessLabel", string.Empty, 26, new Vector2(0f, 22f), new Vector2(370f, 44f));
+            var breakdownLabel = CreateText(frame.transform, "BreakdownLabel", string.Empty, 17, new Vector2(0f, -22f), new Vector2(370f, 40f), new Color(1f, 1f, 1f, 0.7f));
+
+            var go = new GameObject("HappinessController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<HappinessController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("happinessLabel").objectReferenceValue = happinessLabel;
+            so.FindProperty("breakdownLabel").objectReferenceValue = breakdownLabel;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>
