@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -39,6 +40,11 @@ namespace CityBuilder.Maps
 
         private bool[,] _permanent;
         private bool[,] _citizenRevealed;
+        // Ping-ponged with _citizenRevealed in UpdateCitizenReveal instead of allocating a fresh
+        // grid-sized array every 0.3s (CitizenUpdateInterval) -- on a 200x200 map that was a 40KB
+        // GC allocation several times a second for the life of the session, a steady source of GC
+        // pressure/stutter that has nothing to do with how many citizens are actually on screen.
+        private bool[,] _citizenRevealedScratch;
         private bool[,] _chunkDirty;
         private GameObject[,] _chunkObjects;
         private MeshFilter[,] _chunkFilters;
@@ -79,6 +85,7 @@ namespace CityBuilder.Maps
 
             _permanent = new bool[grid.GridSize.x, grid.GridSize.y];
             _citizenRevealed = new bool[grid.GridSize.x, grid.GridSize.y];
+            _citizenRevealedScratch = new bool[grid.GridSize.x, grid.GridSize.y];
 
             _chunksX = Mathf.CeilToInt(grid.GridSize.x / (float)ChunkSize);
             _chunksZ = Mathf.CeilToInt(grid.GridSize.y / (float)ChunkSize);
@@ -170,7 +177,9 @@ namespace CityBuilder.Maps
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            var fresh = new bool[grid.GridSize.x, grid.GridSize.y];
+            var fresh = _citizenRevealedScratch;
+            Array.Clear(fresh, 0, fresh.Length);
+
             var agents = citizenVisualsManager != null ? citizenVisualsManager.AllAgents : null;
             if (agents != null)
             {
@@ -191,6 +200,9 @@ namespace CityBuilder.Maps
                 }
             }
 
+            // Swap references instead of assigning a newly allocated array -- the old
+            // _citizenRevealed becomes next tick's scratch buffer, so this never allocates.
+            _citizenRevealedScratch = _citizenRevealed;
             _citizenRevealed = fresh;
         }
 

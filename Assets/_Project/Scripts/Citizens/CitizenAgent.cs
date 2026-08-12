@@ -367,9 +367,8 @@ namespace CityBuilder.Citizens
 
         private void WalkTo(Vector3 target)
         {
-            _route = BuildRoute(transform.position, target);
-            _routeIndex = 0;
-            _target = _route[0];
+            BuildRoute(transform.position, target);
+            _target = _route[_routeIndex];
             _isWalking = true;
             ResetStuckTracking();
         }
@@ -385,6 +384,11 @@ namespace CityBuilder.Citizens
         // well after Awake/Start, where the same restriction doesn't apply.
         private static NavMeshPath _sharedPath;
 
+        // Reused for the direct-line fallback below instead of allocating a fresh one-element
+        // array every time a citizen picks a new destination (which, across dozens of wandering/
+        // working citizens, is a steady trickle of otherwise-avoidable GC garbage).
+        private readonly Vector3[] _fallbackRoute = new Vector3[1];
+
         /// <summary>
         /// Routes around solid obstacles (buildings, trees) via the NavMesh baked in
         /// MeshMapApplier.BuildNavMesh, instead of the straight line this used to be -- those
@@ -394,26 +398,29 @@ namespace CityBuilder.Citizens
         /// just checks whatever cell the agent is currently standing on, not how the route was
         /// planned. Falls back to a direct line if no NavMesh exists yet or no path is found at
         /// all, so the agent still attempts something instead of never moving.
+        ///
+        /// Sets _route/_routeIndex directly rather than returning a trimmed copy: NavMeshPath.
+        /// corners already allocates a fresh array on every access, so skipping over corners[0]
+        /// (very close to `from` itself -- see below) via _routeIndex instead of an Array.Copy
+        /// avoids doubling that allocation on every single route.
         /// </summary>
-        private static Vector3[] BuildRoute(Vector3 from, Vector3 to)
+        private void BuildRoute(Vector3 from, Vector3 to)
         {
             _sharedPath ??= new NavMeshPath();
 
             if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath) && _sharedPath.corners.Length > 0)
             {
-                var corners = _sharedPath.corners;
-                // corners[0] is (very close to) `from` itself -- drop it so the agent doesn't
-                // spend a frame "arriving" at where it's already standing before starting to walk.
-                if (corners.Length > 1 && (corners[0] - from).sqrMagnitude < 0.0001f)
-                {
-                    var trimmed = new Vector3[corners.Length - 1];
-                    Array.Copy(corners, 1, trimmed, 0, trimmed.Length);
-                    return trimmed;
-                }
-                return corners;
+                _route = _sharedPath.corners;
+                // corners[0] is (very close to) `from` itself -- start one waypoint in so the
+                // agent doesn't spend a frame "arriving" at where it's already standing before
+                // starting to walk.
+                _routeIndex = (_route.Length > 1 && (_route[0] - from).sqrMagnitude < 0.0001f) ? 1 : 0;
+                return;
             }
 
-            return new[] { to };
+            _fallbackRoute[0] = to;
+            _route = _fallbackRoute;
+            _routeIndex = 0;
         }
 
         /// <summary>

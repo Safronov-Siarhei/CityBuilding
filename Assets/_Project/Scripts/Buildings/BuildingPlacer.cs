@@ -22,6 +22,12 @@ namespace CityBuilder.Buildings
         private BuildingData _selectedBuilding;
         private GameObject _ghostInstance;
         private readonly List<Renderer> _ghostRenderers = new List<Renderer>();
+        // Cached once per renderer in SelectBuilding instead of reading Renderer.materials (which
+        // allocates a fresh array, instantiating unique Material copies on top of that the first
+        // time) on every single Update() while the ghost is following the cursor -- placement can
+        // sit open for several seconds, so that was a steady per-frame GC allocation the whole time.
+        private readonly List<Material[]> _ghostMaterials = new List<Material[]>();
+        private Color? _lastGhostColor;
         private bool _mandatoryBuildingPlaced;
 
         // 0-3, each a 90-degree step around Y. Reset to 0 on every new SelectBuilding so rotation
@@ -121,6 +127,15 @@ namespace CityBuilder.Buildings
             {
                 col.enabled = false;
             }
+
+            _ghostMaterials.Clear();
+            foreach (var rend in _ghostRenderers)
+            {
+                // One-time instantiation of this renderer's material copies -- every later
+                // UpdateGhost call reuses this same array instead of re-fetching/re-instantiating.
+                _ghostMaterials.Add(rend.materials);
+            }
+            _lastGhostColor = null;
         }
 
         public void ClearSelection()
@@ -129,6 +144,8 @@ namespace CityBuilder.Buildings
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
             _ghostRenderers.Clear();
+            _ghostMaterials.Clear();
+            _lastGhostColor = null;
         }
 
         /// <summary>Rotates the current ghost/pending placement by 90 degrees -- PC 'R' key, or the mobile rotate button (see SetupProject's ShowWhileSelectingBuilding-gated button).</summary>
@@ -183,12 +200,18 @@ namespace CityBuilder.Buildings
             var hasRequirement = HasRequiredBuilding();
             var color = (canPlace && canAfford && hasRequirement) ? validColor : invalidColor;
 
-            foreach (var rend in _ghostRenderers)
+            // The color only actually changes when validity flips (moving between two invalid
+            // cells re-applies the same red every frame otherwise) -- skips the Material.color
+            // write (and the shader property-block dirtying that comes with it) on every one of
+            // the many frames where nothing about the ghost's tint needs to change.
+            if (_lastGhostColor.HasValue && _lastGhostColor.Value == color) return;
+            _lastGhostColor = color;
+
+            foreach (var materials in _ghostMaterials)
             {
-                if (rend == null) continue;
-                foreach (var mat in rend.materials)
+                foreach (var mat in materials)
                 {
-                    mat.color = color;
+                    if (mat != null) mat.color = color;
                 }
             }
         }
