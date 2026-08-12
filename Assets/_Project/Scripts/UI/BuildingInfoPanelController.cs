@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
+using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,6 +26,8 @@ namespace CityBuilder.UI
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
+        private GameObject _radiusIndicator;
+        private Material _radiusIndicatorMaterial;
 
         public void Show(BuildingInstance instance)
         {
@@ -33,6 +36,7 @@ namespace CityBuilder.UI
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             Refresh();
+            ShowRadiusIndicator();
         }
 
         public void Close()
@@ -41,6 +45,7 @@ namespace CityBuilder.UI
             _currentProduction = null;
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
+            HideRadiusIndicator();
         }
 
         public void AssignWorker()
@@ -151,6 +156,68 @@ namespace CityBuilder.UI
             text.fontSize = 22;
             text.alignment = TextAnchor.MiddleLeft;
             text.color = Color.white;
+        }
+
+        /// <summary>
+        /// Ground-flat hollow square around the selected building sized to its fogRevealRadius --
+        /// otherwise that stat (how far it permanently clears fog) has no visible representation
+        /// anywhere in the game. Square, not a circle, matching the project's straight-edges-only
+        /// icon/highlight style (see CitizenSelector's target-cell frame, same 4-bar approach).
+        /// </summary>
+        private void ShowRadiusIndicator()
+        {
+            if (_currentInstance == null || _currentInstance.Data == null) return;
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            var data = _currentInstance.Data;
+            var center = grid.GetFootprintCenterWorld(_currentInstance.OriginCell, data.footprintSize);
+            var size = data.fogRevealRadius * 2f * grid.CellSize;
+
+            EnsureRadiusIndicator();
+            _radiusIndicator.transform.position = new Vector3(center.x, grid.GroundHeight + 0.05f, center.z);
+            _radiusIndicator.transform.localScale = new Vector3(size, size, 1f);
+            _radiusIndicator.SetActive(true);
+        }
+
+        private void HideRadiusIndicator()
+        {
+            if (_radiusIndicator != null) _radiusIndicator.SetActive(false);
+        }
+
+        private void EnsureRadiusIndicator()
+        {
+            if (_radiusIndicator != null) return;
+
+            _radiusIndicator = new GameObject("BuildingRadiusIndicator");
+            _radiusIndicator.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            // Fraction of the square's own (radius-dependent) size, same approach as
+            // CitizenSelector's target-cell frame -- absolute border thickness varies a bit
+            // between a small and a large fogRevealRadius, which reads fine in practice.
+            const float t = 0.02f;
+            CreateBar(_radiusIndicator.transform, "Top", new Vector3(0f, 0.5f - t * 0.5f, 0f), new Vector3(1f, t, 1f));
+            CreateBar(_radiusIndicator.transform, "Bottom", new Vector3(0f, -0.5f + t * 0.5f, 0f), new Vector3(1f, t, 1f));
+            CreateBar(_radiusIndicator.transform, "Left", new Vector3(-0.5f + t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
+            CreateBar(_radiusIndicator.transform, "Right", new Vector3(0.5f - t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
+
+            _radiusIndicatorMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = new Color(0.4f, 0.8f, 0.95f) };
+            foreach (var bar in _radiusIndicator.GetComponentsInChildren<Renderer>())
+            {
+                bar.sharedMaterial = _radiusIndicatorMaterial;
+            }
+
+            _radiusIndicator.SetActive(false);
+        }
+
+        private static void CreateBar(Transform parent, string name, Vector3 localPos, Vector3 localScale)
+        {
+            var bar = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            bar.name = name;
+            Destroy(bar.GetComponent<Collider>());
+            bar.transform.SetParent(parent, false);
+            bar.transform.localPosition = localPos;
+            bar.transform.localScale = localScale;
         }
     }
 }
