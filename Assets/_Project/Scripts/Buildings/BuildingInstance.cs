@@ -110,6 +110,7 @@ namespace CityBuilder.Buildings
         /// <summary>Grid occupancy, NavMesh obstacle carving, and worker release (via ProductionBuilding.OnDestroy -> CitizenVisualsManager) are all cleaned up automatically by destroying the GameObject -- nothing here needs to touch those systems directly.</summary>
         private void HandleFullyDecayed()
         {
+            EventLogManager.Instance?.Log($"Разрушено от ветхости: {Data.displayName}");
             if (GridManager.Instance != null) GridManager.Instance.SetAreaOccupied(OriginCell, RotatedFootprint(), false);
             Destroy(gameObject);
         }

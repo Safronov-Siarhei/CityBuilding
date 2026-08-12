@@ -390,6 +390,7 @@ namespace CityBuilder.EditorTools
             managers.AddComponent<ResourceManager>();
             managers.AddComponent<RoadNetwork>();
             var gameCalendar = managers.AddComponent<GameCalendar>();
+            managers.AddComponent<EventLogManager>();
 
             var placer = managers.AddComponent<BuildingPlacer>();
             var placerSO = new SerializedObject(placer);
@@ -634,6 +635,34 @@ namespace CityBuilder.EditorTools
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
             BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
             BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
+            BuildEventLog(canvasGO.transform, panelSprite);
+        }
+
+        /// <summary>
+        /// Left side, below the Меню button (y 465) and clear of the hotbar at the bottom --
+        /// a standing panel (not a toast) since it's meant to be glanced at over time, unlike
+        /// SettlementTierToast's momentary flash for the same kind of milestone.
+        /// </summary>
+        private static void BuildEventLog(Transform canvasParent, Sprite panelSprite)
+        {
+            var frame = CreateImage(canvasParent, "EventLog", new Color(0.16f, 0.18f, 0.15f, 0.85f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(-810f, 100f);
+            frameRect.sizeDelta = new Vector2(400f, 320f);
+
+            var logText = CreateText(frame.transform, "LogText", string.Empty, 20, Vector2.zero, new Vector2(370f, 290f), new Color(1f, 1f, 1f, 0.85f));
+            logText.alignment = TextAnchor.UpperLeft;
+            logText.verticalOverflow = VerticalWrapMode.Truncate;
+
+            var go = new GameObject("EventLogController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<EventLogController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("logText").objectReferenceValue = logText;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>

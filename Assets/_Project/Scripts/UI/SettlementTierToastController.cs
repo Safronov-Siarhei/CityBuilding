@@ -1,5 +1,6 @@
 using System.Collections;
 using CityBuilder.Citizens;
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +27,7 @@ namespace CityBuilder.UI
 
             toastText.text = $"Поселение выросло. Теперь это: {tierName}.";
             toastText.gameObject.SetActive(true);
+            EventLogManager.Instance?.Log($"Поселение выросло: теперь это {tierName}");
 
             if (_hideRoutine != null) StopCoroutine(_hideRoutine);
             _hideRoutine = StartCoroutine(HideAfterDelay());
