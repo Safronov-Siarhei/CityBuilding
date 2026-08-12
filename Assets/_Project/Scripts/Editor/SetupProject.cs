@@ -408,6 +408,11 @@ namespace CityBuilder.EditorTools
             citizenManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             citizenManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            var settlementTierManager = managers.AddComponent<SettlementTierManager>();
+            var settlementTierManagerSO = new SerializedObject(settlementTierManager);
+            settlementTierManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            settlementTierManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -463,14 +468,14 @@ namespace CityBuilder.EditorTools
             saveControllerMapFieldSO.FindProperty("meshMapApplier").objectReferenceValue = meshMapApplier;
             saveControllerMapFieldSO.ApplyModifiedPropertiesWithoutUndo();
 
-            BuildGameplayUI(placer, saveController, camera, rtsCamera, hotbarBuildingData, minimapTexture, townHallData);
+            BuildGameplayUI(placer, saveController, camera, rtsCamera, settlementTierManager, hotbarBuildingData, minimapTexture, townHallData);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/CityBuilder.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/CityBuilder.unity");
         }
 
-        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, RTSCameraController cameraRig, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
+        private static void BuildGameplayUI(BuildingPlacer placer, GameSaveController saveController, Camera targetCamera, RTSCameraController cameraRig, SettlementTierManager settlementTierManager, List<BuildingData> hotbarBuildings, RenderTexture minimapTexture, BuildingData mandatoryBuilding)
         {
             // Created here (no NewScene() call happens between this and its uses below/this
             // scene being saved) rather than reused from BuildMainMenuScene's sprite, since that
@@ -628,6 +633,26 @@ namespace CityBuilder.EditorTools
             var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite, iconLibrary);
             BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
             BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
+            BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
+        }
+
+        /// <summary>
+        /// Sits between the ResourceHUD (y 370) and the dead-center CitizenMoveFeedback text (y
+        /// 0) so a tier-up toast never overlaps either -- hidden until SettlementTierManager
+        /// actually reports one (see SettlementTierToastController).
+        /// </summary>
+        private static void BuildSettlementTierToast(Transform canvasParent, SettlementTierManager settlementTierManager)
+        {
+            var toastText = CreateText(canvasParent, "SettlementTierToast", string.Empty, 32, new Vector2(0f, 300f), new Vector2(1100f, 70f), addShadow: true);
+            toastText.gameObject.SetActive(false);
+
+            var go = new GameObject("SettlementTierToastController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<SettlementTierToastController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("tierManager").objectReferenceValue = settlementTierManager;
+            so.FindProperty("toastText").objectReferenceValue = toastText;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void BuildResourceHUD(Transform canvasParent)
