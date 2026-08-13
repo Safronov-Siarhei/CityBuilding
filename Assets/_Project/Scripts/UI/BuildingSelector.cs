@@ -17,6 +17,9 @@ namespace CityBuilder.UI
         [SerializeField] private BuildingInfoPanelController infoPanel;
         [SerializeField] private LayerMask raycastMask = ~0;
 
+        // Reused across clicks rather than using Physics.RaycastAll, which allocates every call.
+        private readonly RaycastHit[] _hits = new RaycastHit[16];
+
         private void Update()
         {
             if (ModalGate.IsBlocked) return;
@@ -28,12 +31,19 @@ namespace CityBuilder.UI
             if (IsPointerOverUI()) return;
 
             var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-            if (!Physics.Raycast(ray, out var hit, 500f, raycastMask)) return;
 
-            var instance = hit.collider.GetComponent<BuildingInstance>();
-            if (instance != null && infoPanel != null)
+            // All hits, not just the nearest: a tree's click collider is a box around its whole
+            // canopy, so one standing between the camera and a building would otherwise swallow
+            // the click and the info panel would never open. Same fix as CitizenSelector.
+            var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
+
+            for (var i = 0; i < hitCount; i++)
             {
-                infoPanel.Show(instance);
+                var instance = _hits[i].collider.GetComponent<BuildingInstance>();
+                if (instance == null) continue;
+
+                if (infoPanel != null) infoPanel.Show(instance);
+                return;
             }
         }
 

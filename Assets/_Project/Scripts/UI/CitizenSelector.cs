@@ -47,6 +47,10 @@ namespace CityBuilder.UI
         [SerializeField] private Text feedbackText;
         [SerializeField] private LayerMask raycastMask = ~0;
 
+        // Reused across clicks rather than using Physics.RaycastAll, which allocates a fresh array
+        // every call. 16 is far more than a click through a forest ever produces.
+        private readonly RaycastHit[] _hits = new RaycastHit[16];
+
         private CitizenAgent _selected;
         private GameObject _marker;
         private GameObject _cellHighlight;
@@ -88,16 +92,34 @@ namespace CityBuilder.UI
             if (IsPointerOverUI()) return;
 
             var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-            if (!Physics.Raycast(ray, out var hit, 500f, raycastMask)) return;
 
-            var citizen = hit.collider.GetComponent<CitizenAgent>();
-            if (citizen != null)
+            // Every hit along the ray, not just the nearest one. A tree's click collider is a box
+            // around its whole canopy, so with the camera looking down at an angle it sits between
+            // the cursor and any citizen standing near that tree -- a plain Physics.Raycast
+            // returned the tree, the citizen check missed, and clicking your own people simply did
+            // nothing. Selection now looks past whatever happens to be in front.
+            var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
+            if (hitCount == 0) return;
+
+            // Citizens win over scenery at any depth: they're the thing the player is aiming at.
+            for (var i = 0; i < hitCount; i++)
             {
+                var citizen = _hits[i].collider.GetComponent<CitizenAgent>();
+                if (citizen == null) continue;
+
                 if (citizen.IsIdle) Select(citizen);
                 return;
             }
 
             if (_selected == null) return;
+
+            // Nothing else has priority, so the nearest hit is what was clicked.
+            var nearest = 0;
+            for (var i = 1; i < hitCount; i++)
+            {
+                if (_hits[i].distance < _hits[nearest].distance) nearest = i;
+            }
+            var hit = _hits[nearest];
 
             // GetComponentInParent, not GetComponent: a tree's click collider sits on its prefab
             // root but a boulder's cluster parts are children, and either could be what the
