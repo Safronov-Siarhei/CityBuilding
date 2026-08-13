@@ -11,9 +11,11 @@ namespace CityBuilder.CameraControl
         [SerializeField] private Transform cameraTransform;
 
         [Header("Pan (PC)")]
+        // Keyboard only, deliberately: edge scrolling (camera pans when the cursor nears a screen
+        // border) used to be here and was removed -- it hijacked the camera during ordinary
+        // pointing, e.g. reaching for the hotbar or a building near the edge. It also has no
+        // meaning on the touch devices this game primarily targets, where panning is a finger drag.
         [SerializeField] private float panSpeed = 50f;
-        [SerializeField] private bool edgeScrollEnabled = true;
-        [SerializeField] private float edgeScrollBorder = 12f;
         [SerializeField] private Vector2 panBoundsMin = new Vector2(-100f, -100f);
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
@@ -35,16 +37,16 @@ namespace CityBuilder.CameraControl
             var dt = Time.unscaledDeltaTime;
 
             var handledByTouch = HandleTouch(dt);
-            if (!handledByTouch)
-            {
-                var keyboard = Keyboard.current;
-                var mouse = Mouse.current;
-                if (keyboard != null && mouse != null)
-                {
-                    HandlePan(keyboard, mouse, dt);
-                    HandleZoom(mouse, dt);
-                }
-            }
+            if (handledByTouch) return;
+
+            // Panning and zooming are checked independently now that panning no longer reads the
+            // mouse -- previously both were skipped entirely if no mouse was present, so keyboard
+            // panning silently did nothing on a machine without one.
+            var keyboard = Keyboard.current;
+            if (keyboard != null) HandlePan(keyboard, dt);
+
+            var mouse = Mouse.current;
+            if (mouse != null) HandleZoom(mouse, dt);
         }
 
         private bool HandleTouch(float dt)
@@ -117,22 +119,13 @@ namespace CityBuilder.CameraControl
             transform.position = newPos;
         }
 
-        private void HandlePan(Keyboard keyboard, Mouse mouse, float dt)
+        private void HandlePan(Keyboard keyboard, float dt)
         {
             var input = Vector2.zero;
             if (keyboard[Key.W].isPressed || keyboard[Key.UpArrow].isPressed) input.y += 1f;
             if (keyboard[Key.S].isPressed || keyboard[Key.DownArrow].isPressed) input.y -= 1f;
             if (keyboard[Key.D].isPressed || keyboard[Key.RightArrow].isPressed) input.x += 1f;
             if (keyboard[Key.A].isPressed || keyboard[Key.LeftArrow].isPressed) input.x -= 1f;
-
-            if (edgeScrollEnabled && input == Vector2.zero)
-            {
-                var mousePos = mouse.position.ReadValue();
-                if (mousePos.x <= edgeScrollBorder) input.x -= 1f;
-                else if (mousePos.x >= Screen.width - edgeScrollBorder) input.x += 1f;
-                if (mousePos.y <= edgeScrollBorder) input.y -= 1f;
-                else if (mousePos.y >= Screen.height - edgeScrollBorder) input.y += 1f;
-            }
 
             if (input == Vector2.zero) return;
 
