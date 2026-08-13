@@ -5,6 +5,7 @@ using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -36,11 +37,12 @@ namespace CityBuilder.UI
         private const float HighlightHeightOffset = 0.03f;
         private const float HighlightCellFraction = 0.9f;
         private const float HighlightBorderFraction = 0.14f;
-        // How far (in cells) to search for a free, walkable cell when the clicked cell itself is
-        // occupied by a building -- ring-expanding search, so a click on a building sends the
-        // citizen to stand next to it instead of walking straight into its collider and getting
-        // permanently stuck (see CitizenAgent.MaxManualMoveStuckRetries).
-        private const int OccupiedSearchRadiusCells = 4;
+        // How far a clicked point may be pulled onto walkable NavMesh (see TryResolveDestination).
+        // Deliberately tight: this is the click's precision budget, and anything larger starts
+        // silently sending citizens somewhere the player didn't point at. Enough to forgive a
+        // click on a building's wall or a step into the water's edge, not enough to teleport the
+        // order across a clearing.
+        private const float DestinationSampleRadius = 2f;
 
         [SerializeField] private Camera targetCamera;
         [SerializeField] private BuildingPlacer buildingPlacer;
@@ -131,45 +133,56 @@ namespace CityBuilder.UI
                 return;
             }
 
-            var grid = GridManager.Instance;
-            if (grid == null) return;
+            // The ground under the cursor, taken from the nearest SOLID hit. Trigger props (a
+            // tree's canopy box, a boulder, a road tile) are skipped: a canopy box is metres above
+            // and to the side of the ground beneath it, so using its contact point as "where the
+            // player clicked" skews the destination before the NavMesh ever sees it.
+            var clickPoint = hit.point;
+            var solid = -1;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].collider.isTrigger) continue;
+                if (solid < 0 || _hits[i].distance < _hits[solid].distance) solid = i;
+            }
+            if (solid >= 0) clickPoint = _hits[solid].point;
 
-            var clickedCell = grid.WorldToCell(hit.point);
-            var resolved = ResolveDestinationCell(grid, clickedCell, out var destination);
+            var resolved = TryResolveDestination(clickPoint, out var destination);
 
             ShowFeedback(resolved);
-            ShowCellHighlight(resolved ? destination : grid.GetFootprintCenterWorld(clickedCell, Vector2Int.one), resolved);
+            ShowCellHighlight(resolved ? destination : clickPoint, resolved);
 
             if (resolved) _selected.MoveTo(destination);
         }
 
         /// <summary>
-        /// True + destination if clickedCell (or, when that's occupied by a building, the
-        /// nearest free walkable cell within OccupiedSearchRadiusCells) sits on real flat ground
-        /// -- see MeshMapApplier.IsGroundAt. Ignores trees entirely (GridManager has no concept
-        /// of them; only buildings occupy cells) -- a tree-blocked destination still resolves
-        /// here and relies on CitizenAgent's stuck-retry give-up instead.
+        /// Nearest walkable point to where the player clicked, straight from the NavMesh.
+        ///
+        /// Replaces a ring search over grid cells that was wrong in two ways at once. It treated
+        /// tree cells as blocked (GridManager marks them occupied) even though trees are fully
+        /// walkable now -- no NavMesh carving, trigger colliders only -- so in a forest almost
+        /// every click got bounced to a different cell. And when it did bounce, it scanned each
+        /// ring from -radius upward and took the first hit, which is always the (-x,-z) corner:
+        /// a systematic shove down-and-left, exactly the offset the player measured.
+        ///
+        /// SamplePosition has neither problem: it returns the CLOSEST walkable point with no
+        /// directional bias, and it answers about walkability rather than build-site occupancy,
+        /// so a click on open forest floor resolves to itself.
         /// </summary>
-        private static bool ResolveDestinationCell(GridManager grid, Vector2Int clickedCell, out Vector3 destination)
+        private static bool TryResolveDestination(Vector3 clickPoint, out Vector3 destination)
         {
-            for (var radius = 0; radius <= OccupiedSearchRadiusCells; radius++)
+            if (NavMesh.SamplePosition(clickPoint, out var navHit, DestinationSampleRadius, NavMesh.AllAreas))
             {
-                for (var dx = -radius; dx <= radius; dx++)
-                {
-                    for (var dz = -radius; dz <= radius; dz++)
-                    {
-                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != radius) continue; // ring only, nearest radius first
+                destination = navHit.position;
+                return true;
+            }
 
-                        var candidate = clickedCell + new Vector2Int(dx, dz);
-                        if (!grid.IsWithinBounds(candidate, Vector2Int.one) || !grid.IsAreaFree(candidate, Vector2Int.one)) continue;
-
-                        var worldPos = grid.GetFootprintCenterWorld(candidate, Vector2Int.one);
-                        if (MeshMapApplier.Instance != null && !MeshMapApplier.Instance.IsGroundAt(worldPos)) continue;
-
-                        destination = worldPos;
-                        return true;
-                    }
-                }
+            // No NavMesh at all (a failed bake -- see MeshMapApplier.BuildNavMesh, which warns):
+            // fall back to the raw point if it's at least real ground, so click-to-move degrades
+            // rather than refusing every order.
+            if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsGroundAt(clickPoint))
+            {
+                destination = clickPoint;
+                return true;
             }
 
             destination = default;
