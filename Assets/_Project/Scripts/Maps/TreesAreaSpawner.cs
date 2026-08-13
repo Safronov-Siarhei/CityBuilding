@@ -122,6 +122,10 @@ namespace CityBuilder.Maps
                 // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
                 // than forcing identity, which would render the tree tipped over.
                 var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
+                // Before TreeGrowth, so the collider is measured at the tree's full size and then
+                // scales down/up along with the transform as the sapling grows, instead of being
+                // permanently sized to a 10% sapling.
+                AddClickCollider(instance);
                 if (!startGrown)
                 {
                     instance.AddComponent<TreeGrowth>();
@@ -153,6 +157,44 @@ namespace CityBuilder.Maps
                 _treeCellByInstance[instance] = cell;
                 return;
             }
+        }
+
+        /// <summary>
+        /// Gives the tree a click target so the player can send a citizen to chop it by hand (see
+        /// CitizenSelector/ManualGathering) -- the tree FBXs import with addColliders off, so
+        /// until this existed a click went straight through a tree into the ground behind it.
+        ///
+        /// A TRIGGER, not a solid collider: Physics.Raycast still hits it (queriesHitTriggers is
+        /// on by default) but it doesn't block CharacterController.Move, so this stays a pure
+        /// input affordance. Making ~600 trees physically solid instead would hand every citizen
+        /// hundreds of new obstacles to get wedged against, and pathing already routes around
+        /// trees via their NavMeshObstacle below.
+        ///
+        /// Sized from the combined renderer bounds (converted back into local space) rather than a
+        /// hardcoded box, since Tree1/Tree2 aren't the same size -- approximate under any prefab
+        /// rotation, which is fine for something only ever used as a click target.
+        /// </summary>
+        private static void AddClickCollider(GameObject instance)
+        {
+            var renderers = instance.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return;
+
+            var bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            var lossyScale = instance.transform.lossyScale;
+            if (Mathf.Approximately(lossyScale.x, 0f) || Mathf.Approximately(lossyScale.y, 0f) || Mathf.Approximately(lossyScale.z, 0f)) return;
+
+            var box = instance.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.center = instance.transform.InverseTransformPoint(bounds.center);
+            box.size = new Vector3(
+                bounds.size.x / lossyScale.x,
+                bounds.size.y / lossyScale.y,
+                bounds.size.z / lossyScale.z);
         }
 
         /// <summary>True if any already-placed tree occupies a cell within MinSpacingCells of the candidate (a square neighborhood check, cheap and sufficient at this grid resolution).</summary>

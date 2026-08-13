@@ -199,6 +199,11 @@ namespace CityBuilder.Maps
             {
                 TreesAreaSpawner.Instance.Initialize(treesAreaInstance, map.TreePrefabs);
             }
+
+            // After the forest, so boulders can't land on a cell a tree already took (they share
+            // GridManager occupancy), and after ComputeWaterAndZoneCells so they stay out of the
+            // water. Mesh maps carry no rock prefabs of their own -- see RockSpawner.
+            RockSpawner.Instance?.Initialize();
         }
 
         /// <summary>

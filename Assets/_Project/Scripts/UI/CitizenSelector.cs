@@ -68,7 +68,7 @@ namespace CityBuilder.UI
                 // The persistent (green, order-in-progress) highlight tracks the agent's own
                 // manual-move state rather than a fixed timer -- it disappears the moment the
                 // citizen either arrives or gives up (see CitizenAgent.OnStuck's retry cap).
-                if (_cellHighlightPersistent && !_selected.IsManualMoving) HideCellHighlight();
+                if (_cellHighlightPersistent && !_selected.IsExecutingOrder) HideCellHighlight();
 
                 var keyboard = Keyboard.current;
                 if (keyboard != null && keyboard[Key.Escape].wasPressedThisFrame)
@@ -98,6 +98,16 @@ namespace CityBuilder.UI
             }
 
             if (_selected == null) return;
+
+            // GetComponentInParent, not GetComponent: a tree's click collider sits on its prefab
+            // root but a boulder's cluster parts are children, and either could be what the
+            // raycast reports depending on the model.
+            var node = hit.collider.GetComponentInParent<ResourceNode>();
+            if (node != null)
+            {
+                CommandGather(node);
+                return;
+            }
 
             var grid = GridManager.Instance;
             if (grid == null) return;
@@ -142,6 +152,30 @@ namespace CityBuilder.UI
 
             destination = default;
             return false;
+        }
+
+        /// <summary>
+        /// Sends the selected citizen to hand-gather the clicked tree/boulder (see
+        /// CitizenAgent.GatherFrom). Refused, with the same red NO! feedback a bad move order
+        /// gets, when the node is already spoken for by a Lumberjack worker or another citizen
+        /// (ResourceNode.IsClaimed) or is still a growing sapling -- matching the rule
+        /// CitizenVisualsManager.FindNearestFreeNode already applies to building workers.
+        /// </summary>
+        private void CommandGather(ResourceNode node)
+        {
+            var growth = node.GetComponent<TreeGrowth>();
+            var isUnripeSapling = growth != null && !growth.IsFullyGrown;
+
+            if (isUnripeSapling || !node.TryClaim())
+            {
+                ShowFeedback(false);
+                ShowCellHighlight(node.transform.position, false);
+                return;
+            }
+
+            _selected.GatherFrom(node);
+            ShowFeedback(true);
+            ShowCellHighlight(node.transform.position, true);
         }
 
         private void Select(CitizenAgent citizen)

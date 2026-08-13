@@ -477,6 +477,7 @@ namespace CityBuilder.EditorTools
             meshMapApplierSO.ApplyModifiedPropertiesWithoutUndo();
 
             managers.AddComponent<TreesAreaSpawner>();
+            managers.AddComponent<RockSpawner>();
 
             // Picks up whichever map MainMenuController/MapSelector chose for a new game, or the
             // one stored in a loaded save (see GameSaveController.LoadedMapId), and paints it.

@@ -40,10 +40,21 @@ namespace CityBuilder.Citizens
         // the citizen froze rather than the game giving up on an impossible order.
         private const int MaxManualMoveStuckRetries = 3;
 
-        private enum Mode { Wandering, Working, ManualMove }
+        // How long a citizen spends actually chopping/quarrying once in reach of the node.
+        private const float GatherSeconds = 2.5f;
+        // Gathering stops this far from the node instead of at its exact center: trees carve
+        // themselves out of the NavMesh (see TreesAreaSpawner's NavMeshObstacle), so a route to a
+        // tree's center can never fully complete -- the agent would grind against the carve until
+        // the stuck timeout instead of ever starting work.
+        private const float GatherReachDistance = 1.6f;
+
+        private enum Mode { Wandering, Working, ManualMove, Gathering }
 
         private Mode _mode = Mode.Wandering;
         private Vector3 _townCenter;
+
+        /// <summary>The node this citizen was sent to hand-gather (see GatherFrom). Claimed by the caller, always released by this component -- on completion, on giving up, on being reassigned, and on destruction.</summary>
+        private ResourceNode _gatherNode;
 
         private Vector3 _buildingPos;
         private Vector3? _nodePos;
@@ -80,12 +91,20 @@ namespace CityBuilder.Citizens
         /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>
         public bool IsIdle => _mode == Mode.Wandering;
 
-        /// <summary>True from MoveTo until the agent either arrives or gives up (see MaxManualMoveStuckRetries) -- CitizenSelector uses this to know when to hide the persistent target-cell highlight.</summary>
-        public bool IsManualMoving => _mode == Mode.ManualMove;
+        /// <summary>True from a player-issued order (MoveTo/GatherFrom) until the agent either finishes it or gives up (see MaxManualMoveStuckRetries) -- CitizenSelector uses this to know when to hide the persistent target-cell highlight.</summary>
+        public bool IsExecutingOrder => _mode == Mode.ManualMove || _mode == Mode.Gathering;
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+        }
+
+        private void OnDestroy()
+        {
+            // A citizen removed mid-gather (population drop) must not leave its node claimed
+            // forever -- nothing else would ever release it, quietly making that tree/boulder
+            // permanently un-gatherable and invisible to the Lumberjack's node search too.
+            ReleaseGatherNode();
         }
 
         /// <summary>
@@ -105,6 +124,7 @@ namespace CityBuilder.Citizens
         {
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
+            ReleaseGatherNode();
             _mode = Mode.Wandering;
             _townCenter = townCenter;
             BeginIdlePause();
@@ -119,6 +139,7 @@ namespace CityBuilder.Citizens
         {
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
+            ReleaseGatherNode();
             _mode = Mode.Working;
             _buildingPos = buildingPos;
             _nodePos = nodePos;
@@ -140,16 +161,63 @@ namespace CityBuilder.Citizens
             }
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
+            ReleaseGatherNode();
             _manualDestination = destination;
             _manualStuckRetries = 0;
             _mode = Mode.ManualMove;
             WalkTo(destination);
         }
 
+        /// <summary>
+        /// Sends this citizen to hand-gather one resource node (see CitizenSelector: select a
+        /// citizen, then click a tree or boulder), then return to idle wandering -- one node per
+        /// order, not a standing job. The player's escape hatch from a resource deadlock, where
+        /// the building that produces a resource can't be afforded without that same resource.
+        ///
+        /// The node must already be claimed by the caller (ResourceNode.TryClaim), so a Lumberjack
+        /// worker can't be sent to the same tree in the same frame; this component owns releasing
+        /// it from here on.
+        /// </summary>
+        public void GatherFrom(ResourceNode node)
+        {
+            if (node == null) return;
+
+            _reassignedDuringCallback = true;
+            _resumingAfterStuck = false;
+            ReleaseGatherNode();
+            _gatherNode = node;
+            _manualStuckRetries = 0;
+            _mode = Mode.Gathering;
+            WalkTo(node.transform.position);
+        }
+
         private void Update()
         {
+            // The target tree/boulder can disappear mid-order -- a Lumberjack's worker felling the
+            // same tree, or another citizen gathering it first. Nothing left to walk to.
+            if (_mode == Mode.Gathering && _gatherNode == null)
+            {
+                AbortGather();
+                return;
+            }
+
             if (_isWalking)
             {
+                // Close enough to work: gathering deliberately doesn't require reaching the node's
+                // exact position, which a NavMesh route can't do for a tree that carved itself out
+                // of the mesh (see GatherReachDistance).
+                if (_mode == Mode.Gathering)
+                {
+                    var toNode = _gatherNode.transform.position - transform.position;
+                    toNode.y = 0f;
+                    if (toNode.sqrMagnitude <= GatherReachDistance * GatherReachDistance)
+                    {
+                        _isWalking = false;
+                        _pauseTimer = GatherSeconds;
+                        return;
+                    }
+                }
+
                 // Horizontal-only distance/direction: SimpleMove's own gravity governs vertical
                 // position (settling onto whatever collider is underneath), so comparing full 3D
                 // distance against _target (whose Y is just a hint) could stall just short of
@@ -221,6 +289,14 @@ namespace CityBuilder.Citizens
                 if (_resumingAfterStuck)
                 {
                     _resumingAfterStuck = false;
+                    // Gathering must be handled explicitly, not folded into the Working branch --
+                    // that one reads _nodePos.Value, which is null for a hand-gather order.
+                    if (_mode == Mode.Gathering)
+                    {
+                        WalkTo(_gatherNode.transform.position);
+                        return;
+                    }
+
                     var retryTarget = _mode == Mode.ManualMove
                         ? _manualDestination
                         : (_headingToNode ? _nodePos.Value : _buildingPos);
@@ -246,6 +322,19 @@ namespace CityBuilder.Citizens
             {
                 BeginIdlePause();
                 return;
+            }
+
+            // Same bounded-retry treatment as a manual move order: a tree the player picked might
+            // be genuinely unreachable (across water, walled in), and retrying forever would just
+            // look like the citizen froze.
+            if (_mode == Mode.Gathering)
+            {
+                _manualStuckRetries++;
+                if (_manualStuckRetries > MaxManualMoveStuckRetries)
+                {
+                    AbortGather();
+                    return;
+                }
             }
 
             if (_mode == Mode.ManualMove)
@@ -304,6 +393,14 @@ namespace CityBuilder.Citizens
 
         private void OnArrived()
         {
+            if (_mode == Mode.Gathering)
+            {
+                // Normally the GatherReachDistance check in Update gets here first; this covers
+                // the case where the route happened to land exactly on the node.
+                _pauseTimer = GatherSeconds;
+                return;
+            }
+
             if (_mode == Mode.ManualMove)
             {
                 _mode = _resumeMode;
@@ -332,6 +429,12 @@ namespace CityBuilder.Citizens
 
         private void OnPauseElapsed()
         {
+            if (_mode == Mode.Gathering)
+            {
+                CompleteGather();
+                return;
+            }
+
             if (_mode == Mode.Wandering)
             {
                 PickNewWanderTarget();
@@ -358,6 +461,34 @@ namespace CityBuilder.Citizens
 
             _headingToNode = !_headingToNode;
             WalkTo(_headingToNode ? _nodePos.Value : _buildingPos);
+        }
+
+        /// <summary>The chop/quarry pause finished -- bank the resource, despawn the node, and go back to idle wandering. One node per order, by design (see GatherFrom).</summary>
+        private void CompleteGather()
+        {
+            var node = _gatherNode;
+            _gatherNode = null;
+
+            if (node != null)
+            {
+                node.Release();
+                ManualGathering.Harvest(node);
+            }
+
+            SetIdleWander(_townCenter);
+        }
+
+        /// <summary>Gives up on the order without harvesting (unreachable node, or it vanished first) and returns to idle wandering.</summary>
+        private void AbortGather()
+        {
+            ReleaseGatherNode();
+            SetIdleWander(_townCenter);
+        }
+
+        private void ReleaseGatherNode()
+        {
+            if (_gatherNode != null) _gatherNode.Release();
+            _gatherNode = null;
         }
 
         private void BeginIdlePause()
