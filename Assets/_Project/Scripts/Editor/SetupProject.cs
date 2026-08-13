@@ -59,9 +59,16 @@ namespace CityBuilder.EditorTools
 
             CleanupTemplateAssets();
 
-            // Applied last: EditorSceneManager.NewScene() calls earlier in this method (in
-            // BuildMainMenuScene/BuildCityScene) were observed to revert PlayerSettings changes
-            // made beforehand, so nothing here can precede a scene switch.
+            // BuildCityScene() runs last above, so CityBuilder is still the active scene here --
+            // left as-is, that becomes the scene the Editor restores on its next normal (non-
+            // batchmode) launch, silently replacing the "opens on MainMenu" behavior every prior
+            // session had. Re-opening MainMenu explicitly (matches BuildMainMenuScene's own
+            // path/name) keeps that behavior intact regardless of how batchmode was invoked.
+            EditorSceneManager.OpenScene($"{ScenesFolder}/MainMenu.unity");
+
+            // Applied last: EditorSceneManager.NewScene()/OpenScene() calls were observed to
+            // revert PlayerSettings changes made beforehand, so nothing here can precede a scene
+            // switch -- including the MainMenu re-open just above.
             ConfigureMobileLandscape();
 
             AssetDatabase.SaveAssets();
