@@ -238,7 +238,17 @@ namespace CityBuilder.Maps
                         });
                     }
                 }
-                if (sources.Count == 0) return;
+                if (sources.Count == 0)
+                {
+                    // Previously a silent no-op -- left citizens permanently on the direct-line
+                    // fallback (see CitizenAgent.BuildRoute) with zero trace of why in the
+                    // Console, which made "citizens aren't moving right" reports impossible to
+                    // diagnose remotely. _groundColliders came from AddMeshCollidersToAll just
+                    // above in Apply() -- an empty result here means either the Ground prefab had
+                    // no MeshFilters, or none of them got a MeshCollider (e.g. an unreadable mesh).
+                    Debug.LogWarning($"MeshMapApplier.BuildNavMesh: 0 usable MeshCollider sources out of {_groundColliders.Length} ground collider(s) -- NavMesh was NOT built. Citizens will fall back to walking in a straight line toward every destination, ignoring obstacles.");
+                    return;
+                }
 
                 var grid = GridManager.Instance;
                 var worldWidth = grid != null ? grid.GridSize.x * grid.CellSize : 200f;
@@ -247,6 +257,7 @@ namespace CityBuilder.Maps
 
                 var navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, bounds, Vector3.zero, Quaternion.identity);
                 _navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
+                Debug.Log($"MeshMapApplier.BuildNavMesh: baked NavMesh from {sources.Count} ground source(s).");
             }
             catch (Exception e)
             {
