@@ -366,6 +366,20 @@ namespace CityBuilder.Citizens
             _pauseTimer = StuckRetryPauseSeconds;
         }
 
+        /// <summary>
+        /// Distance ignoring height. Every position comparison in this component must be
+        /// horizontal: the agent's Y is pinned to one flat constant every frame
+        /// (PinToGroundHeight) while NavMesh corners carry the baked surface's own height, so a
+        /// 3D comparison measures a vertical difference that has nothing to do with whether the
+        /// agent has got anywhere.
+        /// </summary>
+        private static float HorizontalSqrDistance(Vector3 a, Vector3 b)
+        {
+            var dx = a.x - b.x;
+            var dz = a.z - b.z;
+            return dx * dx + dz * dz;
+        }
+
         /// <summary>Horizontal-only (Y is pinned separately, see PinToGroundHeight) "am I actually standing at this thing" test, used to tell a real arrival apart from the end of a partial/fallback route.</summary>
         private bool IsWithinReachOf(Vector3 worldPosition)
         {
@@ -586,15 +600,28 @@ namespace CityBuilder.Citizens
                 // and repeated forever -- with nothing logged, because picking the target had
                 // succeeded. This was the "Town Hall built among trees breaks the game" report.
                 var reachesSomewhere = corners.Length > 0 &&
-                                       (corners[corners.Length - 1] - from).sqrMagnitude > MinRouteProgressSqr;
+                                       HorizontalSqrDistance(corners[corners.Length - 1], from) > MinRouteProgressSqr;
 
                 if (reachesSomewhere)
                 {
                     _route = corners;
-                    // corners[0] is (very close to) `from` itself -- start one waypoint in so the
-                    // agent doesn't spend a frame "arriving" at where it's already standing before
-                    // starting to walk.
-                    _routeIndex = (_route.Length > 1 && (_route[0] - from).sqrMagnitude < 0.0001f) ? 1 : 0;
+
+                    // Skip every leading corner the agent is already standing on. This used to be
+                    // a single "is corner[0] within 1cm of `from`" test measured in 3D, and that
+                    // was the "the citizen just stands there ~70% of the time" bug: the agent's Y
+                    // is pinned to GridManager.GroundHeight every frame (PinToGroundHeight) while
+                    // NavMesh corners sit on the baked surface, so the two differ vertically by
+                    // more than the 1cm threshold often enough to matter. When the test failed,
+                    // the target became corner[0] -- the agent's own feet -- and since the arrival
+                    // check is horizontal, it "arrived" on the very first frame without moving.
+                    // Whether it triggered depended on the local height difference, which is
+                    // exactly why it looked random.
+                    _routeIndex = 0;
+                    while (_routeIndex < _route.Length - 1 &&
+                           HorizontalSqrDistance(_route[_routeIndex], from) < ArrivalThreshold * ArrivalThreshold)
+                    {
+                        _routeIndex++;
+                    }
                     return;
                 }
             }
