@@ -16,6 +16,10 @@ namespace CityBuilder.Citizens
         private const float WalkSpeed = 1.5f;
         private const float RoadSpeedMultiplier = 1.6f;
         private const float WanderRadiusCells = 8f;
+        // How far NavMesh.SamplePosition may pull a random candidate onto actual walkable mesh.
+        // Generous enough that a point landing inside a tree's carved-out hole still resolves to
+        // the walkable ground beside it, rather than the whole attempt being wasted.
+        private const float WanderNavSampleRadius = 2.5f;
         private const float MinIdleSeconds = 1f;
         private const float MaxIdleSeconds = 5f;
         private const float GroundRaycastHeight = 200f;
@@ -582,11 +586,22 @@ namespace CityBuilder.Citizens
 
         /// <summary>
         /// Idle citizens wander to a random point within WanderRadiusCells of the town center,
-        /// picked once the current idle pause elapses (up to MaxIdleSeconds). Grid bounds/
-        /// occupancy/water are cheap early-outs; a final downward raycast against the real scene
-        /// geometry confirms solid ground actually exists there (hit height close to
-        /// GridManager.GroundHeight -- a building or tree collider hit would land well above that
-        /// tolerance and gets rejected) before committing to it as the new route.
+        /// picked once the current idle pause elapses (up to MaxIdleSeconds).
+        ///
+        /// Asks the NavMesh whether a candidate is walkable (NavMesh.SamplePosition) instead of
+        /// re-deriving that from grid occupancy plus a downward physics probe. The NavMesh already
+        /// encodes every rule the old checks were approximating -- buildings and trees carve
+        /// themselves out of it, water was never baked into it, and cliffs are excluded by the
+        /// bake's agentSlope -- and unlike a physics probe it cannot be fooled by something merely
+        /// standing in the way.
+        ///
+        /// That last part was breaking the game: with a Town Hall built deep in the forest, every
+        /// candidate hit one of three walls at once -- tree cells count as occupied, the Town Hall
+        /// occupies 16 cells at the centre of the circle, and the downward probe kept landing on
+        /// the CharacterControllers of the other citizens clustered at the shared spawn point
+        /// (a capsule is a solid collider, not a trigger, so ignoring triggers doesn't help). All
+        /// MaxTargetAttempts failed on every idle tick, forever, and the citizens simply never
+        /// moved again -- exactly the "building the Town Hall among trees breaks the game" report.
         /// </summary>
         private void PickNewWanderTarget()
         {
@@ -597,35 +612,51 @@ namespace CityBuilder.Citizens
                 return;
             }
 
-            var blockedByGrid = 0;
-            var blockedByWater = 0;
-            var blockedByGround = 0;
+            var wanderRadius = WanderRadiusCells * grid.CellSize;
 
             for (var attempt = 0; attempt < MaxTargetAttempts; attempt++)
             {
-                var offset = UnityEngine.Random.insideUnitCircle * (WanderRadiusCells * grid.CellSize);
+                var offset = UnityEngine.Random.insideUnitCircle * wanderRadius;
+                var candidate = _townCenter + new Vector3(offset.x, 0f, offset.y);
+
+                if (NavMesh.SamplePosition(candidate, out var navHit, WanderNavSampleRadius, NavMesh.AllAreas))
+                {
+                    WalkTo(navHit.position);
+                    return;
+                }
+            }
+
+            // Only reachable when there's no NavMesh at all (see MeshMapApplier.BuildNavMesh, which
+            // warns when its bake produces nothing) -- fall back to the old geometry probe so a
+            // broken bake degrades into rough wandering rather than total paralysis.
+            PickWanderTargetWithoutNavMesh(grid, wanderRadius);
+        }
+
+        private void PickWanderTargetWithoutNavMesh(GridManager grid, float wanderRadius)
+        {
+            for (var attempt = 0; attempt < MaxTargetAttempts; attempt++)
+            {
+                var offset = UnityEngine.Random.insideUnitCircle * wanderRadius;
                 var candidate = _townCenter + new Vector3(offset.x, 0f, offset.y);
                 var cell = grid.WorldToCell(candidate);
 
-                if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) { blockedByGrid++; continue; }
-                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) { blockedByWater++; continue; }
-                if (!TryFindWalkablePoint(grid, candidate, out var walkable)) { blockedByGround++; continue; }
+                if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
+                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) continue;
+                if (!TryFindWalkablePoint(grid, candidate, out var walkable)) continue;
 
                 WalkTo(walkable);
                 return;
             }
 
-            // No free spot found nearby this cycle — wait and try again on the next idle tick.
             // Logged once per session (not per failure, which would flood): a citizen that can
             // never find anywhere to walk just stands there looking broken, with nothing in the
-            // Console explaining why, which is exactly how the "citizens stopped moving" report
-            // that this counter was added for went undiagnosed for several rounds.
+            // Console explaining why, which is how this went undiagnosed for several rounds.
             if (!_loggedWanderFailure)
             {
                 _loggedWanderFailure = true;
-                Debug.LogWarning($"CitizenAgent: no walkable wander target found in {MaxTargetAttempts} attempts around {_townCenter} " +
-                                 $"(rejected: {blockedByGrid} occupied/out-of-bounds, {blockedByWater} water, {blockedByGround} not flat ground). " +
-                                 "Citizens will appear frozen while this keeps failing.");
+                Debug.LogWarning($"CitizenAgent: no walkable wander target around {_townCenter} -- neither the NavMesh nor the " +
+                                 "geometry fallback found one. Citizens will stand still while this keeps failing; check that " +
+                                 "MeshMapApplier.BuildNavMesh actually baked (it logs its source count on success).");
             }
             BeginIdlePause();
         }
