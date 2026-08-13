@@ -42,11 +42,12 @@ namespace CityBuilder.Citizens
 
         // How long a citizen spends actually chopping/quarrying once in reach of the node.
         private const float GatherSeconds = 2.5f;
-        // Gathering stops this far from the node instead of at its exact center: trees carve
+        // Close enough to work a resource node, instead of demanding its exact center: trees carve
         // themselves out of the NavMesh (see TreesAreaSpawner's NavMeshObstacle), so a route to a
         // tree's center can never fully complete -- the agent would grind against the carve until
-        // the stuck timeout instead of ever starting work.
-        private const float GatherReachDistance = 1.6f;
+        // the stuck timeout instead of ever starting work. Doubles as the "did I actually get
+        // there?" test, see OnArrived/OnPauseElapsed.
+        private const float NodeReachDistance = 1.6f;
 
         private enum Mode { Wandering, Working, ManualMove, Gathering }
 
@@ -206,16 +207,11 @@ namespace CityBuilder.Citizens
                 // Close enough to work: gathering deliberately doesn't require reaching the node's
                 // exact position, which a NavMesh route can't do for a tree that carved itself out
                 // of the mesh (see GatherReachDistance).
-                if (_mode == Mode.Gathering)
+                if (_mode == Mode.Gathering && IsWithinReachOf(_gatherNode.transform.position))
                 {
-                    var toNode = _gatherNode.transform.position - transform.position;
-                    toNode.y = 0f;
-                    if (toNode.sqrMagnitude <= GatherReachDistance * GatherReachDistance)
-                    {
-                        _isWalking = false;
-                        _pauseTimer = GatherSeconds;
-                        return;
-                    }
+                    _isWalking = false;
+                    _pauseTimer = GatherSeconds;
+                    return;
                 }
 
                 // Horizontal-only distance/direction: SimpleMove's own gravity governs vertical
@@ -362,6 +358,14 @@ namespace CityBuilder.Citizens
             _pauseTimer = StuckRetryPauseSeconds;
         }
 
+        /// <summary>Horizontal-only (Y is pinned separately, see PinToGroundHeight) "am I actually standing at this thing" test, used to tell a real arrival apart from the end of a partial/fallback route.</summary>
+        private bool IsWithinReachOf(Vector3 worldPosition)
+        {
+            var delta = worldPosition - transform.position;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= NodeReachDistance * NodeReachDistance;
+        }
+
         private void ResetStuckTracking()
         {
             _bestRemainingDistance = float.MaxValue;
@@ -395,8 +399,18 @@ namespace CityBuilder.Citizens
         {
             if (_mode == Mode.Gathering)
             {
-                // Normally the GatherReachDistance check in Update gets here first; this covers
-                // the case where the route happened to land exactly on the node.
+                // Reaching the end of the ROUTE is not the same as reaching the node.
+                // NavMesh.CalculatePath reports success for a PARTIAL path too (target
+                // unreachable -- across water, walled off), and the straight-line fallback can
+                // stop against a collider; either way the agent "arrives" nowhere near the tree.
+                // Without this check it would harvest it from there, handing the player a free
+                // resource for clicking something across the river.
+                if (_gatherNode == null || !IsWithinReachOf(_gatherNode.transform.position))
+                {
+                    OnStuck();
+                    return;
+                }
+
                 _pauseTimer = GatherSeconds;
                 return;
             }
@@ -451,6 +465,18 @@ namespace CityBuilder.Citizens
             // The pause that just elapsed was the one spent AT the node -- one visit completed.
             if (_headingToNode)
             {
+                // ...but only if the worker genuinely got there. Same partial-path caveat as the
+                // hand-gather path (see OnArrived): an unreachable node yields a route that ends
+                // somewhere else entirely, and firing the visit event from there would fell a tree
+                // the worker never reached. Head back to the building and try the leg again rather
+                // than harvesting at a distance.
+                if (_nodePos.HasValue && !IsWithinReachOf(_nodePos.Value))
+                {
+                    _headingToNode = false;
+                    WalkTo(_buildingPos);
+                    return;
+                }
+
                 _reassignedDuringCallback = false;
                 OnWorkVisitCompleted?.Invoke();
                 // A subscriber may have synchronously called SetWorking/SetIdleWander on this
