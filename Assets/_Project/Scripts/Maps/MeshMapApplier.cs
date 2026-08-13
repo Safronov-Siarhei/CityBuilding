@@ -55,6 +55,11 @@ namespace CityBuilder.Maps
 
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
+        // Every grid cell inside the map's TreesArea zone, resolved once at load so the zone's
+        // own geometry can be thrown away immediately afterwards (see Apply) instead of staying
+        // in the scene as an invisible obstacle. A list, not a set: TreesAreaSpawner picks random
+        // cells from it, which wants indexing.
+        private readonly List<Vector2Int> _treesZoneCells = new List<Vector2Int>();
         private Collider[] _groundColliders = new Collider[0];
         private NavMeshDataInstance _navMeshDataInstance;
 
@@ -149,6 +154,34 @@ namespace CityBuilder.Maps
             return false;
         }
 
+        /// <summary>
+        /// Where an arbitrary ray (in practice: the camera ray under the cursor) meets the map's
+        /// real ground surface -- the nearest hit across every ground mesh piece.
+        ///
+        /// Asked of the ground colliders BY NAME rather than via a Physics.Raycast that takes
+        /// whatever it meets first, which is the only way a click can mean "this spot on the
+        /// ground" reliably: a scene-wide ray reports the first collider along it, and over a
+        /// forest that is a tree's canopy box, a boulder, a building roof -- each of them metres
+        /// above and beside the ground the player is pointing at. Callers that want the thing
+        /// that was clicked (a citizen, a tree) still scan all hits themselves; this answers the
+        /// separate question of where on the map that click landed.
+        /// </summary>
+        public bool TryRaycastGround(Ray ray, out RaycastHit hit)
+        {
+            const float rayLength = 1000f;
+
+            hit = default;
+            var found = false;
+            foreach (var collider in _groundColliders)
+            {
+                if (collider == null || !collider.Raycast(ray, out var candidate, rayLength)) continue;
+                if (found && candidate.distance >= hit.distance) continue;
+                hit = candidate;
+                found = true;
+            }
+            return found;
+        }
+
         private void Apply(MeshMapDefinition map)
         {
             var grid = GridManager.Instance;
@@ -201,6 +234,7 @@ namespace CityBuilder.Maps
             }
 
             GameObject treesAreaInstance = null;
+            Collider[] treesZoneColliders = new Collider[0];
             if (map.TreesAreaPrefab != null)
             {
                 treesAreaInstance = Instantiate(map.TreesAreaPrefab, Vector3.zero, map.TreesAreaPrefab.transform.rotation, transform);
@@ -208,15 +242,42 @@ namespace CityBuilder.Maps
                 // Every sub-mesh gets its own collider (not just the first, unlike AddMeshCollider
                 // above) -- a hand-authored TreesArea zone can be several disconnected forest
                 // patches, and deriving a single collider from just the first one found would
-                // silently make the rest of the zone impossible for TreesAreaSpawner to sample.
+                // silently make the rest of the zone read as outside the zone below.
                 AddMeshCollidersToAll(treesAreaInstance);
+                treesZoneColliders = treesAreaInstance.GetComponentsInChildren<Collider>();
             }
 
-            ComputeWaterAndZoneCells(grid, waterZoneColliders);
+            ComputeWaterAndZoneCells(grid, waterZoneColliders, treesZoneColliders);
 
-            if (treesAreaInstance != null && TreesAreaSpawner.Instance != null)
+            // The zone is spawn DATA, and now that it's been read into cells it must stop being
+            // physics. Map-1-TreesArea.fbx is not a flat marker plane: it's an extruded volume a
+            // full metre tall sitting directly ON the walkable ground (y 0..1), invisible,
+            // covering the whole forest. Every physics query over the forest hit its top face
+            // first instead of what the player was actually pointing at:
+            //
+            // - Click-to-move took the destination from that face, a metre above the ground and,
+            //   at the camera's angle, about a metre off horizontally -- the "clicks land next to
+            //   where I clicked" report.
+            // - A boulder (0.6m) sits entirely inside the slab, and a tree's lower half does too,
+            //   so a click meant to order a chop/quarry never reached the ResourceNode underneath
+            //   -- it became a move order, or a flat NO! where the shifted point had no NavMesh.
+            // - BuildingPlacer's ghost read the same shifted cell, and CitizenAgent's ground probe
+            //   (TryFindWalkablePoint) rejected every forest point as "wrong height".
+            // - Its side walls are solid geometry standing in the citizens' walking layer.
+            //
+            // Deactivated before Destroy: Destroy only takes effect at end of frame, and the
+            // colliders must be out of the physics scene for the tree spawning right below.
+            if (treesAreaInstance != null)
             {
-                TreesAreaSpawner.Instance.Initialize(treesAreaInstance, map.TreePrefabs);
+                treesAreaInstance.SetActive(false);
+                Destroy(treesAreaInstance);
+            }
+
+            // Called even when the zone resolved to nothing, so TreesAreaSpawner gets to report a
+            // forest that silently failed to materialise rather than staying quiet about it.
+            if (map.TreesAreaPrefab != null && TreesAreaSpawner.Instance != null)
+            {
+                TreesAreaSpawner.Instance.Initialize(_treesZoneCells.ToArray(), map.TreePrefabs);
             }
 
             // After the forest, so boulders can't land on a cell a tree already took (they share
@@ -375,7 +436,13 @@ namespace CityBuilder.Maps
             }
         }
 
-        private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders)
+        /// <summary>
+        /// One downward probe per grid cell that resolves, in a single pass, which cells are
+        /// water (no ground mesh beneath them) and which fall inside each of the map's authored
+        /// zones. Runs once at map load; afterwards the zone geometry itself is disposable (see
+        /// Apply) and every later query is a plain set/list lookup.
+        /// </summary>
+        private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders, Collider[] treesZoneColliders)
         {
             const float rayStartHeight = 500f;
             const float rayLength = 1000f;
@@ -406,6 +473,13 @@ namespace CityBuilder.Maps
                     if (isWaterZone)
                     {
                         _waterPlacementZoneCells.Add(cell);
+                    }
+
+                    foreach (var treesZoneCollider in treesZoneColliders)
+                    {
+                        if (treesZoneCollider == null || !treesZoneCollider.Raycast(ray, out _, rayLength)) continue;
+                        _treesZoneCells.Add(cell);
+                        break;
                     }
                 }
             }

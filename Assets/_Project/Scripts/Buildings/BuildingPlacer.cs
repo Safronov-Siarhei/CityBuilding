@@ -180,9 +180,22 @@ namespace CityBuilder.Buildings
             if (targetCamera == null) return false;
 
             var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-            // Ignores triggers so the cursor reads the ground under a tree/boulder rather than the
-            // side of its click collider (see TreesAreaSpawner.AddClickCollider) -- hitting that
-            // instead would resolve to a cell up to a metre off from where the player is pointing.
+
+            // The ground mesh asked directly, when there is one (see MeshMapApplier), instead of
+            // a scene-wide ray that reports whatever collider it meets first. Anything standing on
+            // the ground -- a tree's click box, a boulder, an authored zone volume -- is hit
+            // metres above and beside the ground under the cursor, and the ghost then previews a
+            // cell up to a metre off from where the player is pointing.
+            var mapApplier = MeshMapApplier.Instance;
+            if (mapApplier != null)
+            {
+                if (!mapApplier.TryRaycastGround(ray, out var groundHit)) return false;
+                cell = GridManager.Instance.WorldToCell(groundHit.point);
+                return true;
+            }
+
+            // Legacy PNG maps have no ground mesh to query -- fall back to the scene ray, still
+            // ignoring triggers so tree/boulder click boxes stay out of it.
             if (!Physics.Raycast(ray, out var hit, 500f, groundLayerMask, QueryTriggerInteraction.Ignore)) return false;
 
             cell = GridManager.Instance.WorldToCell(hit.point);

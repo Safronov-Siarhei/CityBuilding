@@ -19,9 +19,10 @@ namespace CityBuilder.UI
     /// CitizenVisualsManager's job bookkeeping (ProductionBuilding.AssignedWorkers, claimed
     /// ResourceNodes) without a matching release, so those clicks are simply ignored.
     ///
-    /// Every destination click resolves to one grid cell (see ResolveDestinationCell) -- a
-    /// building/tree-occupied cell is redirected to the nearest free walkable cell nearby instead
-    /// of aiming straight into an obstacle. That cell gets a hollow square outline (yellow while
+    /// A destination click reads the point where the camera ray meets the ground mesh and pulls
+    /// it onto the nearest walkable NavMesh position (see TryResolveDestination), so a click that
+    /// lands on something unwalkable aims next to it rather than into it. That cell gets a hollow
+    /// square outline (yellow while
     /// the order is still in progress, red and brief if the click had nowhere valid to resolve
     /// to) alongside the existing center-screen OK!/NO! flash, so it's obvious both what was
     /// clicked and where the citizen actually ended up heading -- without a filled highlight
@@ -50,8 +51,12 @@ namespace CityBuilder.UI
         [SerializeField] private LayerMask raycastMask = ~0;
 
         // Reused across clicks rather than using Physics.RaycastAll, which allocates a fresh array
-        // every call. 16 is far more than a click through a forest ever produces.
-        private readonly RaycastHit[] _hits = new RaycastHit[16];
+        // every call. Sized generously: the camera looks down at a shallow angle, so the ray
+        // travels tens of metres of forest before it reaches the cursor, piercing the click box of
+        // every tree on the way. Overflowing the buffer isn't a truncation of far-away noise --
+        // RaycastNonAlloc returns hits UNSORTED, so a full buffer can drop the very citizen or
+        // tree that was clicked and keep a dozen irrelevant trunks instead.
+        private readonly RaycastHit[] _hits = new RaycastHit[64];
 
         private CitizenAgent _selected;
         private GameObject _marker;
@@ -104,40 +109,56 @@ namespace CityBuilder.UI
             if (hitCount == 0) return;
 
             // Citizens win over scenery at any depth: they're the thing the player is aiming at.
+            // The NEAREST citizen along the ray, not the first one the unsorted hit list happens
+            // to mention -- with two citizens under the cursor that was picking between them at
+            // random.
+            var citizenHit = -1;
             for (var i = 0; i < hitCount; i++)
             {
-                var citizen = _hits[i].collider.GetComponent<CitizenAgent>();
-                if (citizen == null) continue;
-
+                if (_hits[i].collider.GetComponent<CitizenAgent>() == null) continue;
+                if (citizenHit < 0 || _hits[i].distance < _hits[citizenHit].distance) citizenHit = i;
+            }
+            if (citizenHit >= 0)
+            {
+                var citizen = _hits[citizenHit].collider.GetComponent<CitizenAgent>();
                 if (citizen.IsIdle) Select(citizen);
                 return;
             }
 
             if (_selected == null) return;
 
-            // Nothing else has priority, so the nearest hit is what was clicked.
-            var nearest = 0;
-            for (var i = 1; i < hitCount; i++)
-            {
-                if (_hits[i].distance < _hits[nearest].distance) nearest = i;
-            }
-            var hit = _hits[nearest];
-
+            // The nearest resource node along the ray, if the click met one at all. Scanning every
+            // hit rather than testing only the single nearest collider: a tree's click box is wide
+            // enough that a boulder or a second tree standing just in front of the cursor can be
+            // the nearest hit while the thing actually under the cursor is a few entries further
+            // down the list.
+            //
             // GetComponentInParent, not GetComponent: a tree's click collider sits on its prefab
             // root but a boulder's cluster parts are children, and either could be what the
             // raycast reports depending on the model.
-            var node = hit.collider.GetComponentInParent<ResourceNode>();
+            ResourceNode node = null;
+            var nodeDistance = float.MaxValue;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].distance >= nodeDistance) continue;
+                var candidate = _hits[i].collider.GetComponentInParent<ResourceNode>();
+                if (candidate == null) continue;
+                node = candidate;
+                nodeDistance = _hits[i].distance;
+            }
             if (node != null)
             {
                 CommandGather(node);
                 return;
             }
 
-            // The ground under the cursor, taken from the nearest SOLID hit. Trigger props (a
-            // tree's canopy box, a boulder, a road tile) are skipped: a canopy box is metres above
-            // and to the side of the ground beneath it, so using its contact point as "where the
-            // player clicked" skews the destination before the NavMesh ever sees it.
-            var clickPoint = hit.point;
+            // Where the click landed on the map, asked of the ground mesh itself (see
+            // MeshMapApplier.TryRaycastGround) rather than read off whatever collider the ray met
+            // first. Everything standing on the ground -- a tree's canopy box, a boulder, a
+            // building, an authored zone volume -- is metres above and beside the ground beneath
+            // it, and any of those as "where the player clicked" skews the destination before the
+            // NavMesh ever sees it.
+            var clickPoint = _hits[0].point;
             var solid = -1;
             for (var i = 0; i < hitCount; i++)
             {
@@ -145,6 +166,12 @@ namespace CityBuilder.UI
                 if (solid < 0 || _hits[i].distance < _hits[solid].distance) solid = i;
             }
             if (solid >= 0) clickPoint = _hits[solid].point;
+            // No ground under the cursor (water, off the map edge) leaves clickPoint as that
+            // fallback, which TryResolveDestination then refuses with the usual red NO!.
+            if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryRaycastGround(ray, out var groundHit))
+            {
+                clickPoint = groundHit.point;
+            }
 
             var resolved = TryResolveDestination(clickPoint, out var destination);
 

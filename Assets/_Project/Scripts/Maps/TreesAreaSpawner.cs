@@ -23,8 +23,13 @@ namespace CityBuilder.Maps
         // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
         private const int MinSpacingCells = 1;
 
-        private Collider _zoneCollider;
-        private Bounds _zoneBounds;
+        // The zone as grid cells, resolved once by MeshMapApplier.ComputeWaterAndZoneCells. The
+        // zone's mesh used to be kept in the scene and raycast per placement attempt instead --
+        // but that mesh is an invisible metre-tall slab lying on the walkable ground, and leaving
+        // it there quietly broke every click, ghost preview and ground probe over the forest (see
+        // MeshMapApplier.Apply). Cells are also simply cheaper: one array index per attempt
+        // instead of a physics query, ~600 of them on load.
+        private Vector2Int[] _zoneCells = new Vector2Int[0];
         private GameObject[] _treePrefabs = new GameObject[0];
         private readonly HashSet<Vector2Int> _treeCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _treeCellByInstance = new Dictionary<GameObject, Vector2Int>();
@@ -39,13 +44,16 @@ namespace CityBuilder.Maps
             Instance = this;
         }
 
-        public void Initialize(GameObject treesAreaInstance, GameObject[] treePrefabs)
+        public void Initialize(Vector2Int[] zoneCells, GameObject[] treePrefabs)
         {
-            _zoneCollider = treesAreaInstance != null ? treesAreaInstance.GetComponentInChildren<Collider>() : null;
+            _zoneCells = zoneCells ?? new Vector2Int[0];
             _treePrefabs = treePrefabs ?? new GameObject[0];
-            if (_zoneCollider == null || _treePrefabs.Length == 0) return;
+            if (_zoneCells.Length == 0 || _treePrefabs.Length == 0)
+            {
+                Debug.LogWarning($"TreesAreaSpawner: nothing to spawn from -- {_zoneCells.Length} zone cells, {_treePrefabs.Length} tree prefabs. The map will have no forest at all.");
+                return;
+            }
 
-            _zoneBounds = _zoneCollider.bounds;
             for (var i = 0; i < InitialTreeCount; i++)
             {
                 // The starting forest is already mature -- only trees planted later (after a
@@ -55,7 +63,7 @@ namespace CityBuilder.Maps
 
             if (_treeCells.Count == 0)
             {
-                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- zone bounds: {_zoneBounds}. Every placement attempt failed either the zone-membership or the water-cell check.");
+                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- the zone resolved to {_zoneCells.Length} cells. Every placement attempt failed the water/occupancy/spacing checks.");
             }
         }
 
@@ -84,21 +92,16 @@ namespace CityBuilder.Maps
         private void SpawnOneTree(bool startGrown)
         {
             var grid = GridManager.Instance;
-            if (grid == null || _zoneCollider == null || _treePrefabs.Length == 0) return;
+            if (grid == null || _zoneCells.Length == 0 || _treePrefabs.Length == 0) return;
 
             var mapApplier = MeshMapApplier.Instance;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                var x = UnityEngine.Random.Range(_zoneBounds.min.x, _zoneBounds.max.x);
-                var z = UnityEngine.Random.Range(_zoneBounds.min.z, _zoneBounds.max.z);
-                var origin = new Vector3(x, _zoneBounds.max.y + 50f, z);
-
-                // Raycast confirms true membership in the (possibly irregular) zone shape, not
-                // just the bounding box.
-                if (!_zoneCollider.Raycast(new Ray(origin, Vector3.down), out var hit, 1000f)) continue;
-
-                var cell = grid.WorldToCell(hit.point);
+                // Straight out of the zone's own cells, so every attempt is inside the (possibly
+                // irregular, possibly several-patched) zone shape by construction -- no bounding
+                // box to reject, and no wasted attempts on the gaps between patches.
+                var cell = _zoneCells[UnityEngine.Random.Range(0, _zoneCells.Length)];
                 if (!grid.IsWithinBounds(cell, Vector2Int.one)) continue;
                 // The TreesArea zone can overlap the shoreline right at its edge -- exclude water
                 // cells explicitly rather than trusting the zone mesh alone. This now benefits
@@ -161,31 +164,57 @@ namespace CityBuilder.Maps
         /// hundreds of new obstacles to get wedged against -- and trees are deliberately walk-
         /// through now, in pathing as well (see SpawnOneTree on why the NavMeshObstacle went away).
         ///
-        /// Sized from the combined renderer bounds (converted back into local space) rather than a
-        /// hardcoded box, since Tree1/Tree2 aren't the same size -- approximate under any prefab
-        /// rotation, which is fine for something only ever used as a click target.
+        /// Sized from the tree's own meshes measured IN THE TREE'S LOCAL SPACE, since Tree1/Tree2
+        /// aren't the same size and a BoxCollider's size is local by definition.
+        ///
+        /// It used to take the world-space renderer bounds and divide the size by lossyScale,
+        /// which quietly assumes the tree is axis-aligned with the world. These FBX prefabs are
+        /// not: they carry a corrective 90-degree root rotation from Blender's Z-up authoring (see
+        /// MeshMapApplier), so the world AABB's HEIGHT was written into the collider's local Z.
+        /// A 2.5m tall, 0.9m wide tree got a box 0.9m tall and 2.5m deep -- covering neither the
+        /// trunk nor the crown, and covering more than a metre of bare ground on each side of the
+        /// tree instead. Clicks on the tree passed straight through it (no chop order, the click
+        /// became a move order) while clicks on the ground beside it ordered a chop. Measuring in
+        /// local space is exact under any rotation and scale.
         /// </summary>
         private static void AddClickCollider(GameObject instance)
         {
-            var renderers = instance.GetComponentsInChildren<Renderer>();
-            if (renderers.Length == 0) return;
+            var worldToLocal = instance.transform.worldToLocalMatrix;
+            var bounds = new Bounds();
+            var measured = false;
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++)
+            foreach (var renderer in instance.GetComponentsInChildren<Renderer>())
             {
-                bounds.Encapsulate(renderers[i].bounds);
+                var meshFilter = renderer.GetComponent<MeshFilter>();
+                var mesh = meshFilter != null ? meshFilter.sharedMesh : null;
+                if (mesh == null) continue;
+
+                var meshToLocal = worldToLocal * renderer.transform.localToWorldMatrix;
+                var meshBounds = mesh.bounds;
+                for (var corner = 0; corner < 8; corner++)
+                {
+                    var offset = new Vector3(
+                        (corner & 1) == 0 ? -meshBounds.extents.x : meshBounds.extents.x,
+                        (corner & 2) == 0 ? -meshBounds.extents.y : meshBounds.extents.y,
+                        (corner & 4) == 0 ? -meshBounds.extents.z : meshBounds.extents.z);
+                    var localCorner = meshToLocal.MultiplyPoint3x4(meshBounds.center + offset);
+
+                    if (!measured)
+                    {
+                        bounds = new Bounds(localCorner, Vector3.zero);
+                        measured = true;
+                        continue;
+                    }
+                    bounds.Encapsulate(localCorner);
+                }
             }
 
-            var lossyScale = instance.transform.lossyScale;
-            if (Mathf.Approximately(lossyScale.x, 0f) || Mathf.Approximately(lossyScale.y, 0f) || Mathf.Approximately(lossyScale.z, 0f)) return;
+            if (!measured) return;
 
             var box = instance.AddComponent<BoxCollider>();
             box.isTrigger = true;
-            box.center = instance.transform.InverseTransformPoint(bounds.center);
-            box.size = new Vector3(
-                bounds.size.x / lossyScale.x,
-                bounds.size.y / lossyScale.y,
-                bounds.size.z / lossyScale.z);
+            box.center = bounds.center;
+            box.size = bounds.size;
         }
 
         /// <summary>True if any already-placed tree occupies a cell within MinSpacingCells of the candidate (a square neighborhood check, cheap and sufficient at this grid resolution).</summary>

@@ -18,7 +18,10 @@ namespace CityBuilder.UI
         [SerializeField] private LayerMask raycastMask = ~0;
 
         // Reused across clicks rather than using Physics.RaycastAll, which allocates every call.
-        private readonly RaycastHit[] _hits = new RaycastHit[16];
+        // Sized for a shallow camera ray crossing tens of metres of forest: RaycastNonAlloc
+        // returns hits unsorted, so a buffer that fills up can drop the clicked building itself
+        // and keep a dozen tree click boxes instead. Same sizing as CitizenSelector.
+        private readonly RaycastHit[] _hits = new RaycastHit[64];
 
         private void Update()
         {
@@ -37,14 +40,22 @@ namespace CityBuilder.UI
             // the click and the info panel would never open. Same fix as CitizenSelector.
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
 
+            // The nearest building along the ray, not the first one the unsorted hit list happens
+            // to mention -- clicking a building with another one behind it opened whichever panel
+            // PhysX felt like.
+            BuildingInstance nearest = null;
+            var nearestDistance = float.MaxValue;
             for (var i = 0; i < hitCount; i++)
             {
+                if (_hits[i].distance >= nearestDistance) continue;
                 var instance = _hits[i].collider.GetComponent<BuildingInstance>();
                 if (instance == null) continue;
 
-                if (infoPanel != null) infoPanel.Show(instance);
-                return;
+                nearest = instance;
+                nearestDistance = _hits[i].distance;
             }
+
+            if (nearest != null && infoPanel != null) infoPanel.Show(nearest);
         }
 
         private static bool IsPointerOverUI()
