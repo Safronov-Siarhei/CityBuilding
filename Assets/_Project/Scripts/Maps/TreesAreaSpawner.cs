@@ -1,10 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace CityBuilder.Maps
 {
@@ -24,10 +22,6 @@ namespace CityBuilder.Maps
         // Cell size is 1m on this map, so a 1-cell exclusion radius keeps trees at least ~2 cells
         // (~2m center-to-center, ~1m canopy-to-canopy) apart instead of allowed to touch directly.
         private const int MinSpacingCells = 1;
-        // Trunk-sized, not canopy-sized -- comfortably inside the MinSpacingCells gap between
-        // neighboring trees so two adjacent trees' carved regions never overlap/merge.
-        private const float TreeObstacleRadius = 0.3f;
-        private const float TreeObstacleHeight = 2f;
 
         private Collider _zoneCollider;
         private Bounds _zoneBounds;
@@ -132,26 +126,23 @@ namespace CityBuilder.Maps
                 }
                 instance.AddComponent<ResourceNode>().Initialize(ResourceType.Wood);
 
-                // Carves this tree out of the baked NavMesh (see MeshMapApplier.BuildNavMesh) so
-                // CitizenAgent's pathfinding routes around it -- destroyed automatically along
-                // with the tree GameObject on harvest (NotifyTreeHarvested), no cleanup needed.
-                // Wrapped: an exception here must not abort this whole method -- it's called in a
-                // loop of up to InitialTreeCount trees, and letting one bad obstacle add take the
-                // rest of the forest (and grid/cell bookkeeping below) down with it would be far
-                // worse than just that one tree not carving itself out.
-                try
-                {
-                    var obstacle = instance.AddComponent<NavMeshObstacle>();
-                    obstacle.shape = NavMeshObstacleShape.Capsule;
-                    obstacle.radius = TreeObstacleRadius;
-                    obstacle.height = TreeObstacleHeight;
-                    obstacle.carving = true;
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"TreesAreaSpawner: NavMeshObstacle setup failed for a tree -- it may not block citizen pathing. {e}");
-                }
-
+                // Deliberately NO NavMeshObstacle. Trees used to carve themselves out of the
+                // NavMesh so pathing routed around them, and that turned out to be both the single
+                // most expensive thing in the scene and an outright bug:
+                //
+                // - Cost: 600 carving obstacles re-voxelize the NavMesh when they appear (a stall
+                //   on entering a map), are tracked for movement every frame forever despite never
+                //   moving, re-carve locally on every harvest/respawn, and inflate the NavMesh with
+                //   600 holes that every single pathfinding query then has to navigate around.
+                // - Bug: enough holes fragment the forest floor into disconnected islands. An agent
+                //   standing on one gets a "successful" but degenerate path (see
+                //   CitizenAgent.BuildRoute) and stops dead -- the "Town Hall built among trees
+                //   freezes the citizens" report.
+                //
+                // Buildings still carve and stay solid, so those are still routed around properly.
+                // Nothing changes visually here: a tree's collider is a trigger (AddClickCollider),
+                // so citizens always walked THROUGH trees physically -- they just take a straight
+                // line through the trunk now instead of an elaborate detour around it.
                 grid.SetAreaOccupied(cell, Vector2Int.one, true);
                 _treeCells.Add(cell);
                 _treeCellByInstance[instance] = cell;
@@ -167,8 +158,8 @@ namespace CityBuilder.Maps
         /// A TRIGGER, not a solid collider: Physics.Raycast still hits it (queriesHitTriggers is
         /// on by default) but it doesn't block CharacterController.Move, so this stays a pure
         /// input affordance. Making ~600 trees physically solid instead would hand every citizen
-        /// hundreds of new obstacles to get wedged against, and pathing already routes around
-        /// trees via their NavMeshObstacle below.
+        /// hundreds of new obstacles to get wedged against -- and trees are deliberately walk-
+        /// through now, in pathing as well (see SpawnOneTree on why the NavMeshObstacle went away).
         ///
         /// Sized from the combined renderer bounds (converted back into local space) rather than a
         /// hardcoded box, since Tree1/Tree2 aren't the same size -- approximate under any prefab
