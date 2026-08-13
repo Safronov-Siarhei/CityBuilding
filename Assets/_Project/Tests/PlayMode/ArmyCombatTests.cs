@@ -115,6 +115,56 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0, ArmyManager.Instance.SoldierCount);
         }
 
+        /// <summary>
+        /// Reported from a real session: with the infinite-resources cheat on and an empty
+        /// treasury, day 2 disbanded the whole army for non-payment. Upkeep was comparing against
+        /// the raw coin count instead of asking ResourceManager whether it could afford the cost,
+        /// and the cheat lives in that question.
+        /// </summary>
+        [Test]
+        public void InfiniteResources_KeepsTheArmyPaid()
+        {
+            var army = ArmyManager.Instance;
+            var spot = WalkablePoint();
+            for (var i = 0; i < 3; i++)
+            {
+                Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
+            }
+
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 0);
+            ResourceManager.Instance.SetInfiniteResources(true);
+            try
+            {
+                army.ChargeDailyUpkeep();
+
+                Assert.AreEqual(3, army.SoldierCount, "With infinite resources on, an empty treasury must not disband anyone.");
+            }
+            finally
+            {
+                ResourceManager.Instance.SetInfiniteResources(false);
+            }
+        }
+
+        [Test]
+        public void UnpayableUpkeep_DisbandsSoldiersAndSendsThemHome()
+        {
+            var army = ArmyManager.Instance;
+            var spot = WalkablePoint();
+            for (var i = 0; i < 3; i++)
+            {
+                Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
+            }
+
+            var populationWithArmy = CitizenManager.Instance.TotalPopulation;
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 0);
+
+            army.ChargeDailyUpkeep();
+
+            Assert.AreEqual(0, army.SoldierCount, "Nobody can be paid, so nobody stays.");
+            Assert.AreEqual(populationWithArmy + 3, CitizenManager.Instance.TotalPopulation,
+                "Soldiers let go for lack of pay walk home as citizens -- being unpaid is not the same as dying.");
+        }
+
         [UnityTest]
         public IEnumerator AGroupKillsAnOrcThatWalksIntoIt()
         {

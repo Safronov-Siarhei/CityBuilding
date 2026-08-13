@@ -145,7 +145,9 @@ namespace CityBuilder.Combat
             // rather than silently pocketing the coins is the honest way to handle it anyway.
             if (!CitizenManager.Instance.TryTakeIdleCitizen())
             {
-                if (resources != null) RefundCost(resources, SoldierStats.RecruitCost(type));
+                // Nothing to refund when the cheat is on -- TrySpend reported success without
+                // deducting anything, and paying it back would mint coins out of nowhere.
+                if (resources != null && !resources.InfiniteResources) RefundCost(resources, SoldierStats.RecruitCost(type));
                 return false;
             }
 
@@ -181,17 +183,26 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// Daily pay. When the treasury can't cover the whole army, soldiers are disbanded one at a
-        /// time (each one walking home as a citizen) until what's left is affordable -- per the
-        /// design, an unpaid soldier simply leaves, with no further penalty.
+        /// Daily pay, charged once per game day. When the treasury can't cover the whole army,
+        /// soldiers are disbanded one at a time (each one walking home as a citizen) until what's
+        /// left is affordable -- per the design, an unpaid soldier simply leaves, with no further
+        /// penalty.
+        ///
+        /// Affordability is asked of ResourceManager.HasEnough rather than compared against
+        /// GetAmount by hand. That distinction is not pedantry: HasEnough is where the infinite-
+        /// resources cheat lives, and reading the raw coin count instead disbanded the player's
+        /// whole army on day 2 while the cheat was on and every other cost in the game was free.
+        ///
+        /// Public so a test can charge a day directly instead of waiting two real minutes for the
+        /// calendar to tick.
         /// </summary>
-        private void ChargeDailyUpkeep()
+        public void ChargeDailyUpkeep()
         {
             var resources = ResourceManager.Instance;
             if (resources == null) return;
 
             var disbanded = 0;
-            while (DailyUpkeep > resources.GetAmount(ResourceType.Coins) && TryDisbandCheapest())
+            while (DailyUpkeep > 0 && !resources.HasEnough(UpkeepCost(DailyUpkeep)) && TryDisbandCheapest())
             {
                 disbanded++;
             }
@@ -204,7 +215,19 @@ namespace CityBuilder.Combat
             var upkeep = DailyUpkeep;
             if (upkeep <= 0) return;
 
-            resources.TrySpend(new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = upkeep } });
+            resources.TrySpend(UpkeepCost(upkeep));
+        }
+
+        // Rebuilt in place rather than allocated per call: this runs every game day, and every
+        // affordability probe inside the disband loop above needs one too.
+        private readonly List<ResourceAmount> _upkeepCost = new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = 0 } };
+
+        private List<ResourceAmount> UpkeepCost(int coins)
+        {
+            // ResourceAmount is a class, so the existing element is updated in place rather than
+            // replaced -- otherwise the "reused list" would allocate an object per call anyway.
+            _upkeepCost[0].amount = coins;
+            return _upkeepCost;
         }
 
         private bool TryDisbandCheapest()
