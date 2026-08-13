@@ -445,6 +445,13 @@ namespace CityBuilder.EditorTools
             orcRaidManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
             orcRaidManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // The player's side of the war: recruitment, groups and the daily upkeep charge (hence
+            // the calendar reference, same as the raid clock's).
+            var armyManager = managers.AddComponent<ArmyManager>();
+            var armyManagerSO = new SerializedObject(armyManager);
+            armyManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
+            armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -675,6 +682,65 @@ namespace CityBuilder.EditorTools
             BuildTaxRateControl(canvasGO.transform, panelSprite);
             BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
             BuildHappinessPanel(canvasGO.transform, panelSprite);
+            BuildArmyPanel(canvasGO.transform, panelSprite);
+            BuildArmyOrderInput(canvasGO.transform, targetCamera, placer);
+        }
+
+        /// <summary>
+        /// The army panel, directly under the Happiness panel on the right (same x 760 and width,
+        /// see BuildHappinessPanel for why it isn't 810). Hidden by ArmyPanelController until the
+        /// player actually has soldiers, so a settlement with no army isn't staring at an empty
+        /// box -- which is also why the rows inside are built at runtime rather than here: their
+        /// number changes with recruitment.
+        /// </summary>
+        private static void BuildArmyPanel(Transform canvasParent, Sprite panelSprite)
+        {
+            var frame = CreateImage(canvasParent, "Army", new Color(0.16f, 0.18f, 0.15f, 0.85f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(760f, -60f);
+            frameRect.sizeDelta = new Vector2(400f, 220f);
+
+            var summaryLabel = CreateText(frame.transform, "ArmySummary", string.Empty, 19, new Vector2(0f, 88f), new Vector2(370f, 36f), new Color(1f, 1f, 1f, 0.75f));
+
+            // Rows are added top-down from here by the controller; the container leaves room for
+            // the summary line above it.
+            var rowContainer = new GameObject("ArmyGroupRows", typeof(RectTransform));
+            rowContainer.transform.SetParent(frame.transform, false);
+            var rowRect = rowContainer.GetComponent<RectTransform>();
+            rowRect.anchorMin = new Vector2(0f, 0f);
+            rowRect.anchorMax = new Vector2(1f, 1f);
+            rowRect.offsetMin = new Vector2(15f, 15f);
+            rowRect.offsetMax = new Vector2(-15f, -50f);
+
+            // On its own always-active object, NOT on the panel it shows: a component on a
+            // deactivated GameObject never runs Start() and would never subscribe (same trap
+            // documented on GameOverController).
+            var go = new GameObject("ArmyPanelController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<ArmyPanelController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = frame.gameObject;
+            so.FindProperty("rowContainer").objectReferenceValue = rowContainer.GetComponent<RectTransform>();
+            so.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
+            so.FindProperty("buttonSprite").objectReferenceValue = panelSprite;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            frame.gameObject.SetActive(false);
+        }
+
+        /// <summary>Turns world taps into orders for the selected group (see ArmyOrderInput) -- inert while no group is selected, which is how it coexists with the citizen/building selectors.</summary>
+        private static void BuildArmyOrderInput(Transform canvasParent, Camera targetCamera, BuildingPlacer placer)
+        {
+            var go = new GameObject("ArmyOrderInput");
+            go.transform.SetParent(canvasParent, false);
+            var input = go.AddComponent<ArmyOrderInput>();
+            var so = new SerializedObject(input);
+            so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
+            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>
@@ -987,6 +1053,17 @@ namespace CityBuilder.EditorTools
             var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(0f, -195f));
             var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "Отремонтировать", new Vector2(0f, -265f), new Vector2(360f, 70f));
 
+            // Recruitment (Barracks only) reuses the worker block's slot on the card: the two are
+            // mutually exclusive in practice -- the Barracks has no maxWorkers, so its worker
+            // block never shows -- and this keeps the card from growing a fourth stacked section.
+            var recruitControls = new GameObject("RecruitControls", typeof(RectTransform));
+            recruitControls.transform.SetParent(card.transform, false);
+            StretchFull(recruitControls.GetComponent<RectTransform>());
+
+            var recruitLabel = CreateText(recruitControls.transform, "RecruitLabel", string.Empty, 22, new Vector2(0f, 105f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.8f));
+            var recruitCostRow = CreateCostRow(recruitControls.transform, "RecruitCostRow", new Vector2(0f, 62f));
+            var recruitButton = CreateButton(recruitControls.transform, panelSprite, "RecruitButton", "Нанять ополченца", new Vector2(0f, 10f), new Vector2(360f, 70f));
+
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -345f), new Vector2(300f, 70f));
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
@@ -1002,6 +1079,9 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
             controllerSO.FindProperty("repairControls").objectReferenceValue = repairControls;
             controllerSO.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
+            controllerSO.FindProperty("recruitControls").objectReferenceValue = recruitControls;
+            controllerSO.FindProperty("recruitLabel").objectReferenceValue = recruitLabel;
+            controllerSO.FindProperty("recruitCostRow").objectReferenceValue = recruitCostRow;
             controllerSO.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -1009,6 +1089,7 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(unassignButton.onClick, controller.UnassignWorker);
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
             UnityEventTools.AddPersistentListener(repairButton.onClick, controller.Repair);
+            UnityEventTools.AddPersistentListener(recruitButton.onClick, controller.Recruit);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
             panelRoot.SetActive(false);
@@ -1103,8 +1184,10 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(760f, 380f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            CreateText(card.transform, "Title", "Поражение", 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
-            CreateText(card.transform, "Reason", "Ратуша разрушена.", 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
+            // Text and colour are set per outcome by GameOverController -- one panel serves both
+            // the defeat and the "all portals closed" victory.
+            var title = CreateText(card.transform, "Title", "Поражение", 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
+            var reason = CreateText(card.transform, "Reason", "Ратуша разрушена.", 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
 
             var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "В главное меню", new Vector2(0f, -100f), new Vector2(360f, 90f));
 
@@ -1118,6 +1201,8 @@ namespace CityBuilder.EditorTools
             var controller = controllerGO.AddComponent<GameOverController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
+            controllerSO.FindProperty("reasonLabel").objectReferenceValue = reason;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(menuButton.onClick, controller.ReturnToMenu);

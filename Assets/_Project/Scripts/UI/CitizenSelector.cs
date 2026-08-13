@@ -71,6 +71,13 @@ namespace CityBuilder.UI
             if (ModalGate.IsBlocked) return;
             if (buildingPlacer != null && buildingPlacer.IsSelecting) return;
             if (targetCamera == null) return;
+            // While an army group is selected every world tap is an order to it (see
+            // ArmyOrderInput) -- one tap must not also grab a citizen and send them walking.
+            if (Combat.ArmyManager.Instance != null && Combat.ArmyManager.Instance.SelectedGroup != null)
+            {
+                Deselect();
+                return;
+            }
 
             if (_selected != null)
             {

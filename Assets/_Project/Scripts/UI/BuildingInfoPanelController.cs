@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
+using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
@@ -11,6 +12,10 @@ namespace CityBuilder.UI
 {
     public class BuildingInfoPanelController : MonoBehaviour
     {
+        /// <summary>The one building that recruits, and the one tier it can recruit today -- armoured tiers need the equipment buildings and the Laboratory unlock that don't exist yet.</summary>
+        private const string RecruitBuildingName = "Barracks";
+        private const SoldierType RecruitableType = SoldierType.Militia;
+
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Text titleLabel;
         [SerializeField] private Text levelLabel;
@@ -22,6 +27,9 @@ namespace CityBuilder.UI
         [SerializeField] private Transform upgradeCostRow;
         [SerializeField] private GameObject repairControls;
         [SerializeField] private Transform repairCostRow;
+        [SerializeField] private GameObject recruitControls;
+        [SerializeField] private Text recruitLabel;
+        [SerializeField] private Transform recruitCostRow;
         [SerializeField] private ResourceIconLibrary iconLibrary;
 
         private BuildingInstance _currentInstance;
@@ -72,6 +80,15 @@ namespace CityBuilder.UI
             Refresh();
         }
 
+        /// <summary>Recruits one militiaman at this Barracks -- costs coins and one idle citizen (see ArmyManager). The panel stays open so the player can raise several in a row.</summary>
+        public void Recruit()
+        {
+            if (_currentInstance == null || ArmyManager.Instance == null) return;
+
+            ArmyManager.Instance.TryRecruit(RecruitableType, _currentInstance.transform.position);
+            Refresh();
+        }
+
         private void Refresh()
         {
             if (_currentInstance == null || _currentInstance.Data == null) return;
@@ -109,6 +126,29 @@ namespace CityBuilder.UI
             var repairCost = _currentInstance.GetRepairCost();
             if (repairControls != null) repairControls.SetActive(repairCost != null);
             BuildCostRow(repairCostRow, repairCost);
+
+            RefreshRecruitControls(data);
+        }
+
+        /// <summary>
+        /// Recruitment lives on the Barracks only. The label doubles as the refusal reason (army
+        /// full / no idle citizens / not enough coins) so a player who taps a button that does
+        /// nothing is told which of the three limits they hit, rather than being left guessing at
+        /// a greyed-out button.
+        /// </summary>
+        private void RefreshRecruitControls(BuildingData data)
+        {
+            var army = ArmyManager.Instance;
+            var isBarracks = data.buildingName == RecruitBuildingName;
+
+            if (recruitControls != null) recruitControls.SetActive(isBarracks && army != null);
+            if (!isBarracks || army == null) return;
+
+            BuildCostRow(recruitCostRow, SoldierStats.RecruitCost(RecruitableType));
+
+            if (recruitLabel == null) return;
+            var blocker = army.DescribeRecruitBlocker(RecruitableType);
+            recruitLabel.text = blocker ?? $"Армия: {army.SoldierCount}/{SoldierStats.MaxArmySize}   Содержание: {army.DailyUpkeep} мон./день";
         }
 
         /// <summary>

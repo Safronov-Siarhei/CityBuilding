@@ -51,15 +51,15 @@ namespace CityBuilder.Tests.PlayMode
 
             if (_sceneLoaded) yield break;
 
+            // Another test class may have left time running fast; every wait below is in scaled
+            // time, so start from a known rate.
+            Time.timeScale = 1f;
+
             // Same handoff the main menu uses to start a new game on a chosen map.
             GameSessionIntent.NewGameMapId = MapId;
             SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
 
-            // One frame for the load, one for Start (where MeshMapApplier applies the map and the
-            // spawners fill it), then a moment for anything they defer.
-            yield return null;
-            yield return null;
-            yield return new WaitForSeconds(0.5f);
+            yield return PlayModeScene.WaitUntilMapIsPhysicsReady(MapId);
 
             _sceneLoaded = true;
         }
@@ -86,7 +86,7 @@ namespace CityBuilder.Tests.PlayMode
                 var ray = ClickRayTo(target);
 
                 Assert.IsTrue(Physics.Raycast(ray, out var hit, 500f, ~0, QueryTriggerInteraction.Ignore),
-                    $"A click aimed at {target} hit nothing solid at all.");
+                    $"A click aimed at {target} hit nothing solid at all. {Diagnose(target, ray)}");
                 Assert.Less(HorizontalDistance(hit.point, target), AllowedClickErrorMetres,
                     $"A click aimed at {target} landed on {hit.point} ({hit.collider.name}) -- something is standing " +
                     "invisibly above the ground and intercepting clicks.");
@@ -105,7 +105,7 @@ namespace CityBuilder.Tests.PlayMode
                 var ray = ClickRayTo(target);
 
                 Assert.IsTrue(MeshMapApplier.Instance.TryRaycastGround(ray, out var hit),
-                    $"The ground mesh was not found under a click aimed at {target}.");
+                    $"The ground mesh was not found under a click aimed at {target}. {Diagnose(target, ray)}");
                 Assert.Less(HorizontalDistance(hit.point, target), AllowedClickErrorMetres,
                     $"The ground under {target} resolved to {hit.point}.");
             }
@@ -197,6 +197,30 @@ namespace CityBuilder.Tests.PlayMode
                     $"The probe over {target} landed on '{hit.collider.name}' at y={hit.point.y:F2} instead of the " +
                     $"walkable height {grid.GroundHeight:F2}.");
             }
+        }
+
+        /// <summary>Everything worth knowing when a ray that should have hit the map hits nothing -- printed into the failure so a rerun isn't needed to find out what the scene actually contained.</summary>
+        private static string Diagnose(Vector3 target, Ray ray)
+        {
+            var down = new Ray(new Vector3(target.x, 50f, target.z), Vector3.down);
+            var verticalHit = Physics.Raycast(down, out var below, 100f, ~0, QueryTriggerInteraction.Ignore)
+                ? $"'{below.collider.name}' at y={below.point.y:F2}"
+                : "nothing";
+
+            var allHits = Physics.RaycastAll(ray, 500f, ~0, QueryTriggerInteraction.Collide);
+            var names = allHits.Length == 0 ? "none" : string.Empty;
+            foreach (var hit in allHits)
+            {
+                names += $"{hit.collider.name}@{hit.distance:F1}m ";
+            }
+
+            var mapApplier = MeshMapApplier.Instance;
+            var groundObject = GameObject.Find("Map-1-Ground(Clone)");
+            var groundColliders = groundObject != null ? groundObject.GetComponentsInChildren<Collider>().Length : -1;
+
+            return $"[ray from {ray.origin} dir {ray.direction}; straight down finds {verticalHit}; " +
+                   $"all hits along the ray: {names}; MeshMapApplier={(mapApplier == null ? "null" : mapApplier.CurrentMapId)}; " +
+                   $"ground colliders in scene={groundColliders}; timeScale={Time.timeScale}; nodes={ResourceNode.All.Count}]";
         }
 
         private static Ray ClickRayTo(Vector3 groundPoint)

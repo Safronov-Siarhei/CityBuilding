@@ -79,6 +79,28 @@ namespace CityBuilder.Citizens
             OnPopulationChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Moves one idle citizen out of the settlement entirely -- they've been recruited into the
+        /// army (see ArmyManager). Total population drops, assigned workers don't: the citizen who
+        /// leaves is by definition one who wasn't working, so nobody's job is disturbed and
+        /// IdlePopulation stays a truthful number. False when there is nobody idle to take.
+        /// </summary>
+        public bool TryTakeIdleCitizen()
+        {
+            if (IdlePopulation <= 0) return false;
+
+            _totalPopulation--;
+            OnPopulationChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>A recruited citizen coming home (a disbanded soldier). The mirror of TryTakeIdleCitizen -- a soldier killed in battle is never returned this way.</summary>
+        public void ReturnCitizen()
+        {
+            _totalPopulation++;
+            OnPopulationChanged?.Invoke();
+        }
+
         /// <summary>Used by save/load to restore a known-valid worker count without the idle check.</summary>
         public void NotifyWorkersAssignedBulk(int count)
         {

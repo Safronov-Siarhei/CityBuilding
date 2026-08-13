@@ -28,6 +28,8 @@ namespace CityBuilder.UI
             if (ModalGate.IsBlocked) return;
             if (buildingPlacer != null && buildingPlacer.IsSelecting) return;
             if (targetCamera == null) return;
+            // Command mode owns world taps while a group is selected -- see ArmyOrderInput.
+            if (CityBuilder.Combat.ArmyManager.Instance != null && CityBuilder.Combat.ArmyManager.Instance.SelectedGroup != null) return;
 
             var pointer = Pointer.current;
             if (pointer == null || !pointer.press.wasPressedThisFrame) return;

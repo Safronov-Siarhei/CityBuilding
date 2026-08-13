@@ -16,7 +16,7 @@ namespace CityBuilder.Combat
     /// units only ever engage buildings, never citizens. All combat numbers here are first-pass,
     /// tunable.
     /// </summary>
-    public class OrcUnit : MonoBehaviour
+    public class OrcUnit : MonoBehaviour, IDamageTarget
     {
         // Level 1 values; an orc's actual stats are these scaled by its Level (see Initialize).
         // Raids spawn level 1 -- higher levels currently only come from the OrcSpawn cheat, and
@@ -32,6 +32,15 @@ namespace CityBuilder.Combat
         private const float WalkSpeed = 1.3f;
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
+        // A raid is still after the town, not the garrison -- but an orc being stabbed has to hit
+        // back, or the player's militia would kill raiders with zero losses. So: anything within
+        // this radius takes precedence over the building the orc was walking to, and the orc goes
+        // back to the building once nothing is close any more. No pursuit beyond the radius.
+        private const float SoldierAggroRadius = 6f;
+        private const float SoldierAttackRange = 1.4f;
+        // Much shorter than RetargetIntervalSeconds: buildings don't move, soldiers do, and a
+        // five-second reaction to being attacked reads as the orc simply not noticing.
+        private const float SoldierScanIntervalSeconds = 0.4f;
 
         private static readonly List<OrcUnit> _all = new List<OrcUnit>();
         public static IReadOnlyList<OrcUnit> All => _all;
@@ -40,12 +49,21 @@ namespace CityBuilder.Combat
 
         private CharacterController _controller;
         private BuildingInstance _target;
+        private SoldierUnit _soldierTarget;
         private Vector3[] _route = { Vector3.zero };
         private int _routeIndex;
         private float _attackTimer;
         private float _retargetTimer;
+        private float _soldierScanTimer;
 
         public int CurrentHealth { get; private set; } = BaseMaxHealth;
+
+        // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
+        // a unit, not a structure, so a group set to prioritise structures walks past it.
+        Transform IDamageTarget.Transform => this != null ? transform : null;
+        bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0;
+        bool IDamageTarget.IsStructure => false;
+        void IDamageTarget.TakeDamage(int amount) => TakeDamage(amount);
 
         /// <summary>1 unless raised at spawn time. Scales both health and attack damage linearly.</summary>
         public int Level { get; private set; } = 1;
@@ -84,6 +102,20 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
+            // Defenders in reach come first -- see SoldierAggroRadius.
+            _soldierScanTimer -= Time.deltaTime;
+            if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
+            {
+                _soldierScanTimer = SoldierScanIntervalSeconds;
+                _soldierTarget = FindNearestSoldierInAggroRange();
+            }
+
+            if (_soldierTarget != null)
+            {
+                FightSoldier();
+                return;
+            }
+
             _retargetTimer -= Time.deltaTime;
             if (_target == null || _retargetTimer <= 0f)
             {
@@ -110,6 +142,63 @@ namespace CityBuilder.Combat
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth <= 0) Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Closes on the nearby soldier and swings at it. Deliberately a straight-line approach
+        /// rather than a NavMesh route: the target is by definition within SoldierAggroRadius, and
+        /// planning a path every time a defender shuffles a step would cost more than it buys.
+        /// </summary>
+        private void FightSoldier()
+        {
+            var toSoldier = _soldierTarget.transform.position - transform.position;
+            toSoldier.y = 0f;
+            var distance = toSoldier.magnitude;
+
+            if (distance <= SoldierAttackRange)
+            {
+                _attackTimer -= Time.deltaTime;
+                if (_attackTimer > 0f) return;
+                _attackTimer = AttackIntervalSeconds;
+
+                _soldierTarget.TakeDamage(_attackDamage);
+                if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
+                return;
+            }
+
+            var direction = toSoldier / distance;
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(direction * WalkSpeed * Time.deltaTime);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += direction * WalkSpeed * Time.deltaTime;
+            }
+
+            // The building route was planned from where this orc used to stand; force a replan
+            // once the fight is over instead of resuming a route that no longer starts here.
+            _retargetTimer = 0f;
+        }
+
+        private SoldierUnit FindNearestSoldierInAggroRange()
+        {
+            SoldierUnit nearest = null;
+            var nearestDistSq = SoldierAggroRadius * SoldierAggroRadius;
+
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+
+                var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
+                if (distSq > nearestDistSq) continue;
+
+                nearestDistSq = distSq;
+                nearest = soldier;
+            }
+
+            return nearest;
         }
 
         private void TickAttack()

@@ -192,6 +192,15 @@ namespace CityBuilder.Combat
             AddPortalPart(root.transform, new Vector3(0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
             AddPortalPart(root.transform, new Vector3(0f, 3.1f, 0f), new Vector3(1.6f, 0.4f, 0.4f));
 
+            // One click target covering the whole arch (the parts' own colliders are stripped), so
+            // the player can tap the portal to order an assault on it -- see ArmyOrderInput. A
+            // TRIGGER, like every other click affordance in this project: it must not become a
+            // wall that raiding orcs and marching soldiers get wedged against.
+            var clickCollider = root.AddComponent<BoxCollider>();
+            clickCollider.isTrigger = true;
+            clickCollider.center = new Vector3(0f, 1.7f, 0f);
+            clickCollider.size = new Vector3(2f, 3.4f, 0.8f);
+
             // Occupies its cell so the player can't drop a building on top of the arch.
             grid.SetAreaOccupied(cell, Vector2Int.one, true);
             // Testing convenience (see PortalFogRevealRadiusCells) -- the player can see where

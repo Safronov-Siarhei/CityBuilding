@@ -1,26 +1,44 @@
+using System;
 using System.Collections.Generic;
+using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// Marks an Orc portal -- the raid source OrcRaidManager spawns OrcUnits from. Deliberately
-    /// not destructible yet: per the design backlog's win condition, destroying a portal is meant
-    /// to require clearing its base first, which needs a player army that doesn't exist yet. This
-    /// is defense-only for now (see GameOverManager for the Town-Hall-loss defeat condition) --
-    /// there is no win condition in this slice.
+    /// An Orc portal: the raid source OrcRaidManager spawns OrcUnits from, and -- since the player
+    /// now has an army that can reach it -- the map's objective. Destroying the last portal wins
+    /// the map (see GameOverManager.NotifyPortalDestroyed).
     ///
-    /// Self-registering (same pattern as ResourceNode.All) so anything needing to address a
-    /// specific portal -- currently the OrcSpawn cheat -- can enumerate them without scanning the
-    /// scene. Only one portal exists today; the registry is what makes the eventual several-per-map
-    /// design addressable without changing callers.
+    /// The health pool is deliberately large: per the design, a portal is not a quick strike but
+    /// something a group has to stand and work on, long enough for the defenders (today: the raids
+    /// it keeps spawning; later: the base built around it) to be a real problem. Nothing else in
+    /// the game can damage it -- only SoldierUnit, through IDamageTarget.
+    ///
+    /// Self-registering (same pattern as ResourceNode.All) so soldiers can enumerate portals as
+    /// targets and the win check can count the survivors without scanning the scene.
     /// </summary>
-    public class OrcPortal : MonoBehaviour
+    public class OrcPortal : MonoBehaviour, IDamageTarget
     {
+        /// <summary>~65 militia-swings, i.e. a couple of minutes for a small group that isn't being interrupted.</summary>
+        private const int MaxPortalHealth = 320;
+
         private static readonly List<OrcPortal> _all = new List<OrcPortal>();
 
         /// <summary>Every portal currently in the scene, in spawn order.</summary>
         public static IReadOnlyList<OrcPortal> All => _all;
+
+        /// <summary>Raised after a portal is destroyed and has already left the registry, so a handler can read All.Count as the number of portals still standing.</summary>
+        public static event Action<OrcPortal> OnPortalDestroyed;
+
+        public int MaxHealth => MaxPortalHealth;
+        public int CurrentHealth { get; private set; } = MaxPortalHealth;
+
+        Transform IDamageTarget.Transform => this != null ? transform : null;
+        bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0;
+
+        /// <summary>A structure, so a group set to TargetPriority.Structures makes straight for it past the orcs.</summary>
+        bool IDamageTarget.IsStructure => true;
 
         private void OnEnable()
         {
@@ -30,6 +48,21 @@ namespace CityBuilder.Combat
         private void OnDisable()
         {
             _all.Remove(this);
+        }
+
+        public void TakeDamage(int amount)
+        {
+            if (amount <= 0 || CurrentHealth <= 0) return;
+
+            CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            if (CurrentHealth > 0) return;
+
+            // Out of the registry before the event fires: handlers (the win check) ask how many
+            // portals are left, and a destroyed one must not still be counted among them.
+            _all.Remove(this);
+            EventLogManager.Instance?.Log("Портал орков разрушен!");
+            OnPortalDestroyed?.Invoke(this);
+            Destroy(gameObject);
         }
     }
 }
