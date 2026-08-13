@@ -28,6 +28,13 @@ namespace CityBuilder.Buildings
         // on them -- see BuildingPlacer.TryPlace/GameSaveController.ApplyLoadedState.
         public bool isRoad = false;
 
+        // Contributes its footprint to the NavMesh as walkable ground (see
+        // MeshMapApplier.RegisterWalkableSurface). Only meaningful for something spanning terrain
+        // citizens otherwise can't cross -- a Bridge over water. The NavMesh is baked once from
+        // the ground mesh, and ordinary buildings only ever carve holes OUT of it, so without this
+        // a bridge is decoration: the water underneath stays unwalkable and nobody crosses it.
+        public bool providesWalkableSurface = false;
+
         // Keeps this building selected (ghost stays active) after a successful placement instead
         // of clearing the selection -- lets the player lay several tiles in a row (e.g. a road)
         // without re-opening the hotbar each time.

@@ -77,6 +77,10 @@ namespace CityBuilder.Buildings
                 FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
 
                 SetupNavMeshObstacle(data);
+                // The mirror image of the obstacle above: a Bridge doesn't carve the NavMesh, it
+                // ADDS to it, which is the only way water ever becomes crossable (see
+                // MeshMapApplier.RegisterWalkableSurface).
+                if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 ChangeCount(data.buildingName, 1);
             }
         }
@@ -89,7 +93,11 @@ namespace CityBuilder.Buildings
         private void OnDestroy()
         {
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= HandleDayPassed;
-            if (Data != null) ChangeCount(Data.buildingName, -1);
+            if (Data != null)
+            {
+                if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                ChangeCount(Data.buildingName, -1);
+            }
         }
 
         private static void ChangeCount(string buildingName, int delta)

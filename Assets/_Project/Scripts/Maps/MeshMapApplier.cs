@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
 using UnityEngine;
@@ -43,10 +44,28 @@ namespace CityBuilder.Maps
             minRegionArea = 0.5f,
         };
 
+        // Vertical size of the box a walkable-surface building (a Bridge) contributes to the
+        // NavMesh. Thin, and centred on the building's own origin, so its walkable top face lands
+        // within agentClimb of the surrounding ground and the two connect into one region.
+        private const float WalkableSurfaceThickness = 0.2f;
+        // Bridges are keepSelectedAfterPlacement -- players lay a run of tiles in quick
+        // succession, and rebuilding the whole map's NavMesh per tile would hitch on every click.
+        // Coalesces a burst of placements into a single rebuild shortly after the last one.
+        private const float NavMeshRebuildDebounceSeconds = 0.4f;
+
         private readonly HashSet<Vector2Int> _waterCells = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> _waterPlacementZoneCells = new HashSet<Vector2Int>();
         private Collider[] _groundColliders = new Collider[0];
         private NavMeshDataInstance _navMeshDataInstance;
+
+        // Kept past the initial bake so walkable-surface buildings can be folded in later without
+        // re-deriving the (unchanging) ground geometry every time.
+        private NavMeshData _navMeshData;
+        private Bounds _navMeshBounds;
+        private readonly List<NavMeshBuildSource> _groundSources = new List<NavMeshBuildSource>();
+        private readonly Dictionary<BuildingInstance, NavMeshBuildSource> _walkableSurfaces = new Dictionary<BuildingInstance, NavMeshBuildSource>();
+        private readonly List<NavMeshBuildSource> _rebuildSources = new List<NavMeshBuildSource>();
+        private float _rebuildTimer = -1f;
 
         public string CurrentMapId { get; private set; } = string.Empty;
 
@@ -229,12 +248,12 @@ namespace CityBuilder.Maps
             {
                 NavMesh.RemoveAllNavMeshData();
 
-                var sources = new List<NavMeshBuildSource>();
+                _groundSources.Clear();
                 foreach (var collider in _groundColliders)
                 {
                     if (collider is MeshCollider meshCollider && meshCollider.sharedMesh != null)
                     {
-                        sources.Add(new NavMeshBuildSource
+                        _groundSources.Add(new NavMeshBuildSource
                         {
                             shape = NavMeshBuildSourceShape.Mesh,
                             sourceObject = meshCollider.sharedMesh,
@@ -243,6 +262,7 @@ namespace CityBuilder.Maps
                         });
                     }
                 }
+                var sources = _groundSources;
                 if (sources.Count == 0)
                 {
                     // Previously a silent no-op -- left citizens permanently on the direct-line
@@ -258,15 +278,100 @@ namespace CityBuilder.Maps
                 var grid = GridManager.Instance;
                 var worldWidth = grid != null ? grid.GridSize.x * grid.CellSize : 200f;
                 var worldDepth = grid != null ? grid.GridSize.y * grid.CellSize : 200f;
-                var bounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
+                _navMeshBounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
 
-                var navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, bounds, Vector3.zero, Quaternion.identity);
-                _navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
+                _navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, _navMeshBounds, Vector3.zero, Quaternion.identity);
+                _navMeshDataInstance = NavMesh.AddNavMeshData(_navMeshData);
                 Debug.Log($"MeshMapApplier.BuildNavMesh: baked NavMesh from {sources.Count} ground source(s).");
+
+                // A loaded save instantiates its buildings from GameSaveController.Start(), which
+                // Unity may run before this one -- any bridge that already registered itself would
+                // have just been baked away by the ground-only build above, so fold them back in.
+                if (_walkableSurfaces.Count > 0) ScheduleNavMeshRebuild();
             }
             catch (Exception e)
             {
                 Debug.LogError($"MeshMapApplier.BuildNavMesh failed -- citizens will fall back to direct-line movement instead of pathfinding around obstacles. {e}");
+            }
+        }
+
+        /// <summary>
+        /// Adds this building's footprint to the NavMesh as walkable ground -- see
+        /// BuildingData.providesWalkableSurface, currently only the Bridge. Called from
+        /// BuildingInstance.Initialize, so it covers both fresh placement and save/load restore
+        /// through the same single hook the fog reveal already uses.
+        ///
+        /// A Box source built from the footprint rather than the prefab's collider: the road/
+        /// bridge collider is a trigger sized for clicking, and driving navigation off it would
+        /// tie two unrelated things together. The building's own transform carries its placement
+        /// rotation, so the unrotated footprint is correct here for the same reason it is in
+        /// BuildingInstance.SetupNavMeshObstacle.
+        /// </summary>
+        public void RegisterWalkableSurface(BuildingInstance instance)
+        {
+            if (instance == null || instance.Data == null) return;
+
+            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            var footprint = instance.Data.footprintSize;
+
+            _walkableSurfaces[instance] = new NavMeshBuildSource
+            {
+                shape = NavMeshBuildSourceShape.Box,
+                size = new Vector3(footprint.x * cellSize, WalkableSurfaceThickness, footprint.y * cellSize),
+                transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
+                area = 0
+            };
+
+            ScheduleNavMeshRebuild();
+        }
+
+        /// <summary>Drops a destroyed bridge's contribution (decay, combat damage) so the water underneath goes back to being uncrossable.</summary>
+        public void UnregisterWalkableSurface(BuildingInstance instance)
+        {
+            if (instance == null) return;
+            if (_walkableSurfaces.Remove(instance)) ScheduleNavMeshRebuild();
+        }
+
+        private void ScheduleNavMeshRebuild()
+        {
+            _rebuildTimer = NavMeshRebuildDebounceSeconds;
+        }
+
+        private void Update()
+        {
+            if (_rebuildTimer < 0f) return;
+
+            _rebuildTimer -= Time.deltaTime;
+            if (_rebuildTimer > 0f) return;
+
+            _rebuildTimer = -1f;
+            RebuildNavMeshWithWalkableSurfaces();
+        }
+
+        /// <summary>
+        /// Re-bakes the map's NavMesh from the (cached) ground geometry plus every registered
+        /// walkable surface. Updates the existing NavMeshData in place and asynchronously, so the
+        /// current one stays live and usable while it runs -- citizens mid-route keep walking
+        /// rather than freezing for the duration of a full-map bake.
+        /// </summary>
+        private void RebuildNavMeshWithWalkableSurfaces()
+        {
+            if (_navMeshData == null || _groundSources.Count == 0) return;
+
+            try
+            {
+                _rebuildSources.Clear();
+                _rebuildSources.AddRange(_groundSources);
+                foreach (var surface in _walkableSurfaces.Values)
+                {
+                    _rebuildSources.Add(surface);
+                }
+
+                NavMeshBuilder.UpdateNavMeshDataAsync(_navMeshData, CitizenNavMeshSettings, _rebuildSources, _navMeshBounds);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"MeshMapApplier.RebuildNavMeshWithWalkableSurfaces failed -- bridges placed this session won't be walkable. {e}");
             }
         }
 

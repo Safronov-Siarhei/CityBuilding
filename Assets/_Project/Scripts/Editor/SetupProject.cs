@@ -313,7 +313,10 @@ namespace CityBuilder.EditorTools
                 cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 8 } },
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 category: BuildingCategory.Infrastructure, maxHealth: 40,
-                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true, fogRevealRadius: 4);
+                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true, fogRevealRadius: 4,
+                // The whole point of a bridge: it's the only building that makes previously
+                // uncrossable terrain walkable (see BuildingData.providesWalkableSurface).
+                providesWalkableSurface: true);
 
             var waterMillData = CreateWaterBuildingData(
                 "WaterMill", "Водяная мельница", new Vector2Int(2, 2),
@@ -1233,7 +1236,8 @@ namespace CityBuilder.EditorTools
             bool hasChimney = false, int citizensGranted = 0,
             int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
             BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0,
-            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false, int fogRevealRadius = 8)
+            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false, int fogRevealRadius = 8,
+            bool providesWalkableSurface = false)
         {
             GameObject prefab;
             switch (style)
@@ -1277,6 +1281,7 @@ namespace CityBuilder.EditorTools
             data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
             data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
             data.isRoad = isRoad;
+            data.providesWalkableSurface = providesWalkableSurface;
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
             data.fogRevealRadius = fogRevealRadius;
