@@ -46,6 +46,10 @@ namespace CityBuilder.EditorTools
         [MenuItem("CityBuilder/Setup Project (Scenes + Prefabs)")]
         public static void Run()
         {
+            // Per-run, not per-Editor-session: assets are deleted and rebuilt below, so sprites
+            // cached by a previous run would point at objects that no longer exist.
+            _iconSpriteCache.Clear();
+
             ForceReimportModels();
 
             BuildMainMenuScene();
@@ -1081,7 +1085,14 @@ namespace CityBuilder.EditorTools
 
             var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "В главное меню", new Vector2(0f, -100f), new Vector2(360f, 90f));
 
-            var controller = panelRoot.AddComponent<GameOverController>();
+            // The controller lives on its own always-active object, NOT on the panel it shows.
+            // A component on a deactivated GameObject never gets Start(), so putting it on
+            // panelRoot (deactivated just below) meant it never subscribed to
+            // GameOverManager.OnGameOver -- the Town Hall could be destroyed and the defeat
+            // screen would simply never appear. Same reasoning as ShowWhileSelectingBuilding.
+            var controllerGO = new GameObject("GameOverController");
+            controllerGO.transform.SetParent(canvasParent, false);
+            var controller = controllerGO.AddComponent<GameOverController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
@@ -1983,8 +1994,17 @@ namespace CityBuilder.EditorTools
         /// kept to straight edges only, matching the project's no-circles cubic style used
         /// everywhere else. Returned sprites are cached assets, safe to reuse across buttons.
         /// </summary>
+        // Every icon this run, keyed the same way its asset path is. Several icons are requested
+        // twice per run -- the resource ones by both BuildResourceHUD and
+        // CreateResourceIconLibrary -- and without this the second request would DeleteIfExists
+        // the asset the first caller had already pointed a scene Image at, silently breaking that
+        // reference and leaving a blank white square in the HUD. Cleared at the start of Run().
+        private static readonly Dictionary<string, Sprite> _iconSpriteCache = new Dictionary<string, Sprite>();
+
         private static Sprite CreateIconSprite(string key, int size, System.Action<Color[], int> paint)
         {
+            if (_iconSpriteCache.TryGetValue(key, out var cached) && cached != null) return cached;
+
             var pixels = new Color[size * size];
             paint(pixels, size);
 
@@ -2005,6 +2025,21 @@ namespace CityBuilder.EditorTools
             sprite.name = $"Icon_{key}_Sprite";
             AssetDatabase.AddObjectToAsset(sprite, texture);
             AssetDatabase.ImportAsset(path);
+
+            // Re-read the sprite through the AssetDatabase rather than handing back the instance
+            // built above: ImportAsset re-creates the objects behind that path, so the local
+            // reference is no longer the one that actually lives in the asset, and serializing it
+            // into a scene writes a reference to nothing.
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (asset is Sprite imported)
+                {
+                    _iconSpriteCache[key] = imported;
+                    return imported;
+                }
+            }
+
+            _iconSpriteCache[key] = sprite;
             return sprite;
         }
 

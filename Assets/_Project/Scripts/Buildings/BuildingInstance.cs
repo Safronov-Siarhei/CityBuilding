@@ -45,6 +45,7 @@ namespace CityBuilder.Buildings
         public float Decay { get; private set; }
 
         private GameObject _decayWarningMarker;
+        private BuildingHealthBar _healthBar;
 
         // Self-registering count-by-name registry (same pattern as ResourceNode.All) so
         // BuildingPlacer can answer "does at least one X exist yet" for the requiredBuilding
@@ -142,11 +143,21 @@ namespace CityBuilder.Buildings
             if (amount <= 0 || CurrentHealth <= 0) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            ShowHealthBar();
             if (CurrentHealth > 0) return;
 
             EventLogManager.Instance?.Log($"Разрушено в бою: {Data.displayName}");
             OnDestroyedInCombat?.Invoke(this);
             FreeCellsAndDestroy();
+        }
+
+        /// <summary>Created on first damage rather than up front -- most buildings are never attacked at all, and this way they carry no extra objects or per-frame work for a bar nobody will see.</summary>
+        private void ShowHealthBar()
+        {
+            if (Data == null || Data.maxHealth <= 0) return;
+
+            if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform);
+            _healthBar.Report(CurrentHealth / (float)Data.maxHealth);
         }
 
         private void FreeCellsAndDestroy()
