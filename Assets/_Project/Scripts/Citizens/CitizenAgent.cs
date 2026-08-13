@@ -37,6 +37,10 @@ namespace CityBuilder.Citizens
         private const float StuckTimeoutSeconds = 1.5f;
         private const float StuckRetryPauseSeconds = 1f;
         private const float ProgressEpsilon = 0.02f;
+        // A route whose far end is closer than this to where the agent already stands isn't a
+        // route -- see BuildRoute. Comfortably above ArrivalThreshold (0.05), so anything accepted
+        // as a route is guaranteed to need at least a few frames of actual walking.
+        private const float MinRouteProgressSqr = 0.25f * 0.25f;
         // A manual move order (see MoveTo) retries a blocked destination a bounded number of
         // times instead of forever like Working does -- Working's node/building is known
         // reachable (it was walked to before), but a player-clicked point might genuinely be
@@ -569,16 +573,35 @@ namespace CityBuilder.Citizens
         {
             _sharedPath ??= new NavMeshPath();
 
-            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath) && _sharedPath.corners.Length > 0)
+            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
             {
-                _route = _sharedPath.corners;
-                // corners[0] is (very close to) `from` itself -- start one waypoint in so the
-                // agent doesn't spend a frame "arriving" at where it's already standing before
-                // starting to walk.
-                _routeIndex = (_route.Length > 1 && (_route[0] - from).sqrMagnitude < 0.0001f) ? 1 : 0;
-                return;
+                var corners = _sharedPath.corners;
+
+                // CalculatePath reports success for a PARTIAL path as well, and a partial path
+                // from a spot with nowhere to go is a single corner at `from` itself -- which
+                // happens whenever the agent is standing on an isolated scrap of NavMesh, e.g.
+                // hemmed in by the carve holes of a dense patch of trees. Accepting that route
+                // froze citizens solid and silently: the agent "arrived" at its own feet within
+                // one frame (ArrivalThreshold is 5cm), went back to idling, picked another target,
+                // and repeated forever -- with nothing logged, because picking the target had
+                // succeeded. This was the "Town Hall built among trees breaks the game" report.
+                var reachesSomewhere = corners.Length > 0 &&
+                                       (corners[corners.Length - 1] - from).sqrMagnitude > MinRouteProgressSqr;
+
+                if (reachesSomewhere)
+                {
+                    _route = corners;
+                    // corners[0] is (very close to) `from` itself -- start one waypoint in so the
+                    // agent doesn't spend a frame "arriving" at where it's already standing before
+                    // starting to walk.
+                    _routeIndex = (_route.Length > 1 && (_route[0] - from).sqrMagnitude < 0.0001f) ? 1 : 0;
+                    return;
+                }
             }
 
+            // Straight at the target. Viable even through a thicket, because trees and boulders
+            // carry trigger colliders only (see TreesAreaSpawner.AddClickCollider) -- they block
+            // pathing, not movement -- and anything genuinely solid trips the stuck detector.
             _fallbackRoute[0] = to;
             _route = _fallbackRoute;
             _routeIndex = 0;
