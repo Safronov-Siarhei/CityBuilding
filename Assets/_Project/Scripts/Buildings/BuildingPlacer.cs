@@ -180,7 +180,10 @@ namespace CityBuilder.Buildings
             if (targetCamera == null) return false;
 
             var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-            if (!Physics.Raycast(ray, out var hit, 500f, groundLayerMask)) return false;
+            // Ignores triggers so the cursor reads the ground under a tree/boulder rather than the
+            // side of its click collider (see TreesAreaSpawner.AddClickCollider) -- hitting that
+            // instead would resolve to a cell up to a metre off from where the player is pointing.
+            if (!Physics.Raycast(ray, out var hit, 500f, groundLayerMask, QueryTriggerInteraction.Ignore)) return false;
 
             cell = GridManager.Instance.WorldToCell(hit.point);
             return true;

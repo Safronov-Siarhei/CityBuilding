@@ -571,30 +571,57 @@ namespace CityBuilder.Citizens
                 return;
             }
 
+            var blockedByGrid = 0;
+            var blockedByWater = 0;
+            var blockedByGround = 0;
+
             for (var attempt = 0; attempt < MaxTargetAttempts; attempt++)
             {
                 var offset = UnityEngine.Random.insideUnitCircle * (WanderRadiusCells * grid.CellSize);
                 var candidate = _townCenter + new Vector3(offset.x, 0f, offset.y);
                 var cell = grid.WorldToCell(candidate);
 
-                if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
-                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) continue;
-                if (!TryFindWalkablePoint(grid, candidate, out var walkable)) continue;
+                if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) { blockedByGrid++; continue; }
+                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.IsWaterCell(cell)) { blockedByWater++; continue; }
+                if (!TryFindWalkablePoint(grid, candidate, out var walkable)) { blockedByGround++; continue; }
 
                 WalkTo(walkable);
                 return;
             }
 
             // No free spot found nearby this cycle — wait and try again on the next idle tick.
+            // Logged once per session (not per failure, which would flood): a citizen that can
+            // never find anywhere to walk just stands there looking broken, with nothing in the
+            // Console explaining why, which is exactly how the "citizens stopped moving" report
+            // that this counter was added for went undiagnosed for several rounds.
+            if (!_loggedWanderFailure)
+            {
+                _loggedWanderFailure = true;
+                Debug.LogWarning($"CitizenAgent: no walkable wander target found in {MaxTargetAttempts} attempts around {_townCenter} " +
+                                 $"(rejected: {blockedByGrid} occupied/out-of-bounds, {blockedByWater} water, {blockedByGround} not flat ground). " +
+                                 "Citizens will appear frozen while this keeps failing.");
+            }
             BeginIdlePause();
         }
+
+        // Session-wide, not per-agent: the failure is almost always environmental (bad ground
+        // height, everything occupied), so one report is the signal -- 5+ citizens each logging
+        // it every few seconds would bury it.
+        private static bool _loggedWanderFailure;
 
         private static bool TryFindWalkablePoint(GridManager grid, Vector3 candidate, out Vector3 result)
         {
             result = new Vector3(candidate.x, grid.GroundHeight, candidate.z);
 
             var origin = new Vector3(candidate.x, GroundRaycastHeight, candidate.z);
-            if (!Physics.Raycast(origin, Vector3.down, out var hit, GroundRaycastHeight * 2f)) return false;
+            // QueryTriggerInteraction.Ignore is essential, not a micro-optimization: trees and
+            // boulders carry trigger colliders purely so the player can click them (see
+            // TreesAreaSpawner.AddClickCollider / RockSpawner). Without this, a downward probe
+            // over a tree hits its canopy several metres up instead of the ground, the height
+            // check below rejects the spot, and a citizen surrounded by forest -- which is most
+            // of them, the Town Hall sits in the woods -- fails all MaxTargetAttempts every time
+            // and stands still forever.
+            if (!Physics.Raycast(origin, Vector3.down, out var hit, GroundRaycastHeight * 2f, ~0, QueryTriggerInteraction.Ignore)) return false;
 
             return Mathf.Abs(hit.point.y - grid.GroundHeight) <= GroundHeightTolerance;
         }
