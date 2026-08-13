@@ -1,5 +1,7 @@
+using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using UnityEngine;
 
 namespace CityBuilder.Combat
@@ -23,10 +25,20 @@ namespace CityBuilder.Combat
         // +1 raider per this many elapsed days, capped below -- a slow ramp, not a hard wall.
         private const int DaysPerExtraRaider = 3;
         private const int MaxRaidSize = 8;
-        // Offset from the grid's own edge, not its center -- keeps the portal away from wherever
-        // the player's Town Hall ends up (always placed first, near the middle of the buildable
-        // area) without needing per-map authoring data that doesn't exist yet.
-        private const int PortalCornerMarginCells = 15;
+        // Placeholder placement rule for testing, not the final design: the user's intent is
+        // hand-authored portal locations per map (like the TreesArea zone), which don't exist as
+        // map data yet. Until then one portal goes a fixed distance from the Town Hall -- close
+        // enough to reach on foot while testing raids, and anchored to the player's base so it's
+        // never stranded in an unreachable corner.
+        private const float PortalDistanceFromTownHallMeters = 20f;
+        // Directions tried around the Town Hall at each radius before widening the search.
+        private const int PortalDirectionSamples = 16;
+        private static readonly float[] PortalFallbackRadiiMeters = { 0f, -4f, 4f, -8f, 8f };
+        // Revealed permanently so the portal is visible from the start -- explicitly a testing
+        // convenience the user asked for; the intended behaviour is for it to stay hidden until
+        // the player scouts it.
+        private const int PortalFogRevealRadiusCells = 12;
+        private const string TownHallBuildingName = "TownHall";
 
         [SerializeField] private GameCalendar gameCalendar;
 
@@ -51,15 +63,21 @@ namespace CityBuilder.Combat
             Instance = this;
         }
 
-        private void Start()
-        {
-            _raidTimer = RaidIntervalSeconds;
-            SpawnPortal();
-        }
-
         private void Update()
         {
-            if (!_portalSpawned) return;
+            if (!_portalSpawned)
+            {
+                // The portal is positioned relative to the Town Hall, so nothing can happen until
+                // the player has placed it. HasAny is an O(1) registry lookup (see
+                // BuildingInstance), so polling it per frame is free -- the one real scan below
+                // runs exactly once, on the frame the Town Hall appears. Also covers a loaded
+                // save, where the Town Hall exists before this component's first Update and no
+                // placement event ever fires.
+                if (!BuildingInstance.HasAny(TownHallBuildingName)) return;
+
+                TrySpawnPortalNearTownHall();
+                return;
+            }
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
@@ -68,12 +86,90 @@ namespace CityBuilder.Combat
             SpawnRaid();
         }
 
-        private void SpawnPortal()
+        /// <summary>
+        /// Places the single portal on solid ground at roughly PortalDistanceFromTownHallMeters
+        /// from the Town Hall, sampling directions around it and widening the radius if none of
+        /// them land somewhere valid. "Valid" is MeshMapApplier.IsGroundAt, i.e. actually standing
+        /// on the map's Ground mesh at the flat playable height -- which rules out the lake and
+        /// the decorative cliffs, either of which would strand every spawned orc off the NavMesh
+        /// and send them walking through the world in a straight line.
+        /// </summary>
+        private void TrySpawnPortalNearTownHall()
         {
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            var cell = new Vector2Int(grid.GridSize.x - PortalCornerMarginCells, grid.GridSize.y - PortalCornerMarginCells);
+            if (!TryFindTownHallPosition(out var townHallPosition))
+            {
+                // HasAny said one exists, so this means it was destroyed within the same frame.
+                // Nothing to anchor to; try again next frame.
+                return;
+            }
+
+            if (!TryFindPortalSpot(grid, townHallPosition, out var cell))
+            {
+                Debug.LogError($"OrcRaidManager: no valid ground found for the portal around the Town Hall at {townHallPosition} " +
+                               $"({PortalDirectionSamples} directions x {PortalFallbackRadiiMeters.Length} radii, all water/cliff/occupied). " +
+                               "No portal will exist and no raids will happen this session.");
+                // Stops the per-frame retry: the map geometry won't change, so re-running this
+                // every frame would just repeat the same failure forever.
+                _portalSpawned = true;
+                return;
+            }
+
+            SpawnPortal(grid, cell);
+        }
+
+        private static bool TryFindTownHallPosition(out Vector3 position)
+        {
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.Data != null && instance.Data.buildingName == TownHallBuildingName)
+                {
+                    position = instance.transform.position;
+                    return true;
+                }
+            }
+
+            position = default;
+            return false;
+        }
+
+        private static bool TryFindPortalSpot(GridManager grid, Vector3 townHallPosition, out Vector2Int cell)
+        {
+            var mapApplier = MeshMapApplier.Instance;
+            // Random starting angle so repeat playthroughs on the same map don't always put the
+            // portal in the exact same spot relative to the base.
+            var angleOffset = Random.Range(0f, Mathf.PI * 2f);
+
+            foreach (var radiusDelta in PortalFallbackRadiiMeters)
+            {
+                var radius = PortalDistanceFromTownHallMeters + radiusDelta;
+                if (radius <= 0f) continue;
+
+                for (var i = 0; i < PortalDirectionSamples; i++)
+                {
+                    var angle = angleOffset + i * (Mathf.PI * 2f / PortalDirectionSamples);
+                    var candidate = townHallPosition + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+                    var candidateCell = grid.WorldToCell(candidate);
+
+                    if (!grid.IsWithinBounds(candidateCell, Vector2Int.one) || !grid.IsAreaFree(candidateCell, Vector2Int.one)) continue;
+                    if (mapApplier != null && mapApplier.IsWaterCell(candidateCell)) continue;
+
+                    var worldPosition = grid.GetFootprintCenterWorld(candidateCell, Vector2Int.one);
+                    if (mapApplier != null && !mapApplier.IsGroundAt(worldPosition)) continue;
+
+                    cell = candidateCell;
+                    return true;
+                }
+            }
+
+            cell = default;
+            return false;
+        }
+
+        private void SpawnPortal(GridManager grid, Vector2Int cell)
+        {
             _portalPosition = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
 
             EnsureMaterials();
@@ -88,7 +184,16 @@ namespace CityBuilder.Combat
             AddPortalPart(root.transform, new Vector3(0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
             AddPortalPart(root.transform, new Vector3(0f, 3.1f, 0f), new Vector3(1.6f, 0.4f, 0.4f));
 
+            // Occupies its cell so the player can't drop a building on top of the arch.
+            grid.SetAreaOccupied(cell, Vector2Int.one, true);
+            // Testing convenience (see PortalFogRevealRadiusCells) -- the player can see where
+            // raids come from instead of having them arrive out of unexplored fog.
+            FogOfWarManager.Instance?.RevealPermanent(cell, PortalFogRevealRadiusCells);
+
             _portalSpawned = true;
+            // Only starts counting once the portal actually exists, so the player isn't raided
+            // from nowhere during the time it takes them to place the Town Hall.
+            _raidTimer = RaidIntervalSeconds;
             EventLogManager.Instance?.Log("На карте открылся портал орков.");
         }
 
