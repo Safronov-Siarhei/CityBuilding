@@ -18,8 +18,11 @@ namespace CityBuilder.Combat
     /// </summary>
     public class OrcUnit : MonoBehaviour
     {
-        private const int MaxHealth = 20;
-        private const int AttackDamage = 4;
+        // Level 1 values; an orc's actual stats are these scaled by its Level (see Initialize).
+        // Raids spawn level 1 -- higher levels currently only come from the OrcSpawn cheat, and
+        // are the groundwork for the backlog's "raid strength scales with player progression".
+        private const int BaseMaxHealth = 20;
+        private const int BaseAttackDamage = 4;
         private const float AttackIntervalSeconds = 1.2f;
         // Generous on purpose: a target building's transform sits at its footprint CENTER, and a
         // NavMeshObstacle carve stops the route a bit short of that -- for the biggest buildings
@@ -42,11 +45,26 @@ namespace CityBuilder.Combat
         private float _attackTimer;
         private float _retargetTimer;
 
-        public int CurrentHealth { get; private set; } = MaxHealth;
+        public int CurrentHealth { get; private set; } = BaseMaxHealth;
+
+        /// <summary>1 unless raised at spawn time. Scales both health and attack damage linearly.</summary>
+        public int Level { get; private set; } = 1;
+
+        private int _maxHealth = BaseMaxHealth;
+        private int _attackDamage = BaseAttackDamage;
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+        }
+
+        /// <summary>Optional -- an orc left uninitialized is a perfectly valid level 1. Called right after the component is added, before its first Update.</summary>
+        public void Initialize(int level)
+        {
+            Level = Mathf.Max(1, level);
+            _maxHealth = BaseMaxHealth * Level;
+            _attackDamage = BaseAttackDamage * Level;
+            CurrentHealth = _maxHealth;
         }
 
         private void OnEnable()
@@ -100,7 +118,7 @@ namespace CityBuilder.Combat
             if (_attackTimer > 0f) return;
             _attackTimer = AttackIntervalSeconds;
 
-            _target.TryDamage(AttackDamage);
+            _target.TryDamage(_attackDamage);
             // TryDamage updates CurrentHealth synchronously even though the resulting Destroy()
             // is deferred to end of frame -- safe to read right away to drop a dead target instead
             // of waiting a frame to notice.

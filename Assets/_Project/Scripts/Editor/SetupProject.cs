@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
+using CityBuilder.Cheats;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
 using CityBuilder.Core;
@@ -486,6 +487,8 @@ namespace CityBuilder.EditorTools
             managers.AddComponent<TreesAreaSpawner>();
             managers.AddComponent<RockSpawner>();
 
+            BuildCheats();
+
             // Picks up whichever map MainMenuController/MapSelector chose for a new game, or the
             // one stored in a loaded save (see GameSaveController.LoadedMapId), and paints it.
             var mapTerrainGenerator = managers.AddComponent<MapTerrainGenerator>();
@@ -704,6 +707,26 @@ namespace CityBuilder.EditorTools
             so.FindProperty("happinessLabel").objectReferenceValue = happinessLabel;
             so.FindProperty("breakdownLabel").objectReferenceValue = breakdownLabel;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Testing-only tools, kept in their own GameCheats branch of the hierarchy rather than
+        /// mixed into GameManagers so it's obvious at a glance which objects are the game and
+        /// which are scaffolding. Each cheat is its own child so it gets its own Inspector with
+        /// its own buttons (see CheatInspectors). Nothing here runs unless the tester acts --
+        /// they're event-driven with no Update.
+        /// </summary>
+        private static void BuildCheats()
+        {
+            var root = new GameObject("GameCheats");
+
+            var orcSpawn = new GameObject("OrcSpawn");
+            orcSpawn.transform.SetParent(root.transform, false);
+            orcSpawn.AddComponent<OrcSpawnCheat>();
+
+            var resources = new GameObject("Resources");
+            resources.transform.SetParent(root.transform, false);
+            resources.AddComponent<ResourceCheat>();
         }
 
         /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>

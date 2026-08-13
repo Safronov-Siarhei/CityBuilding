@@ -53,6 +53,9 @@ namespace CityBuilder.Combat
         private bool _portalSpawned;
         private float _raidTimer;
 
+        /// <summary>Pauses the automatic raid clock without touching the portal. Set by the OrcSpawn cheat so hand-spawned squads can be observed in isolation; nothing in normal gameplay sets it.</summary>
+        public bool RaidsSuspended { get; set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -78,6 +81,11 @@ namespace CityBuilder.Combat
                 TrySpawnPortalNearTownHall();
                 return;
             }
+
+            // Portal placement above still runs while suspended -- the OrcSpawn cheat needs a
+            // portal to aim at, it just doesn't want the automatic waves interleaving with the
+            // squads it spawns deliberately.
+            if (RaidsSuspended) return;
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
@@ -213,12 +221,24 @@ namespace CityBuilder.Combat
             var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
             var size = ComputeRaidSize(day);
 
-            for (var i = 0; i < size; i++)
-            {
-                SpawnOrc();
-            }
-
+            SpawnOrcs(_portalPosition, size, level: 1);
             EventLogManager.Instance?.Log($"Орки начали набег ({size})");
+        }
+
+        /// <summary>
+        /// Spawns a squad at an explicit position -- the entry point the OrcSpawn cheat uses to
+        /// place orcs at a chosen portal, at a chosen level, on demand. Safe to call before the
+        /// portal exists: it builds its own materials rather than assuming SpawnPortal ran first.
+        /// </summary>
+        public void SpawnOrcs(Vector3 origin, int count, int level)
+        {
+            if (count <= 0) return;
+
+            EnsureMaterials();
+            for (var i = 0; i < count; i++)
+            {
+                SpawnOrc(origin, level);
+            }
         }
 
         /// <summary>Pure formula extracted so it's covered by an EditMode test without needing a live scene.</summary>
@@ -228,13 +248,18 @@ namespace CityBuilder.Combat
             return Mathf.Min(MaxRaidSize, BaseRaidSize + bonus);
         }
 
-        private void SpawnOrc()
+        private void SpawnOrc(Vector3 origin, int level)
         {
             var jitter = Random.insideUnitCircle * 1.5f;
-            var spawnPos = _portalPosition + new Vector3(jitter.x, 0f, jitter.y);
+            var spawnPos = origin + new Vector3(jitter.x, 0f, jitter.y);
 
-            var root = new GameObject("Orc");
+            var root = new GameObject(level > 1 ? $"Orc (lvl {level})" : "Orc");
             root.transform.position = spawnPos;
+            // Visibly bigger with level, so a cheat-spawned elite is tellable from a raider at a
+            // glance without opening the inspector. Deliberately sublinear -- a level 5 orc has 5x
+            // the health but must not be a five-times-wider wall of cubes.
+            var scale = 1f + (Mathf.Max(1, level) - 1) * 0.12f;
+            root.transform.localScale = Vector3.one * scale;
 
             AddCubePart(root.transform, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.36f, 0.6f, 0.36f), _orcSkinMaterial);
             AddCubePart(root.transform, "Head", new Vector3(0f, 0.72f, 0f), new Vector3(0.26f, 0.26f, 0.26f), _orcSkinMaterial);
@@ -247,7 +272,7 @@ namespace CityBuilder.Combat
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
-            root.AddComponent<OrcUnit>();
+            root.AddComponent<OrcUnit>().Initialize(level);
         }
 
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)
