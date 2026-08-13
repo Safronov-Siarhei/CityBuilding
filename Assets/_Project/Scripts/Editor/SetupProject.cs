@@ -660,10 +660,14 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Right side, mirroring the EventLog panel's position/size on the left (x -810, y 100) --
+        /// Right side, mirroring the EventLog panel's position/size on the left (x -760, y 100) --
         /// sits below the Minimap's bottom edge (y 192, see BuildMinimap) with a clear gap, same
         /// standing-panel treatment as EventLog/TaxRate rather than a toast, since happiness is
-        /// meant to be glanced at over time.
+        /// meant to be glanced at over time. x is 760, not the 810 the Minimap/Menu/Save corners
+        /// use -- at this panel's 400 width that would put its right edge at 1010, past the
+        /// canvas's actual visible edge (960 at exact 16:9) and clip it, as seen in a real
+        /// gameplay screenshot (2026-08-12) where the equivalent TaxRate panel's minus button was
+        /// invisible off-screen for the same reason.
         /// </summary>
         private static void BuildHappinessPanel(Transform canvasParent, Sprite panelSprite)
         {
@@ -672,7 +676,7 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(810f, 100f);
+            frameRect.anchoredPosition = new Vector2(760f, 100f);
             frameRect.sizeDelta = new Vector2(400f, 110f);
 
             var happinessLabel = CreateText(frame.transform, "HappinessLabel", string.Empty, 26, new Vector2(0f, 22f), new Vector2(370f, 44f));
@@ -703,10 +707,14 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Wedged into the x -810 column between the ResourceHUD's bottom edge (y 345) and the
+        /// Wedged into the x -760 column between the ResourceHUD's bottom edge (y 345) and the
         /// EventLog panel's top edge (y 260) -- centered at y 302 with a 60-tall frame keeps a
         /// ~12px clear margin on both sides instead of the two overlapping (an earlier pass at y
-        /// 340/70-tall clipped into the ResourceHUD's leftmost icon column).
+        /// 340/70-tall clipped into the ResourceHUD's leftmost icon column). x moved in from -810
+        /// to -760 (2026-08-12): at 400 wide, -810 put this panel's left edge at -1010, past the
+        /// canvas's actual visible edge (-960 at exact 16:9) -- confirmed in a real gameplay
+        /// screenshot where the minus button (the panel's leftmost element) was clipped off-screen
+        /// entirely, not just visually tight.
         /// </summary>
         private static void BuildTaxRateControl(Transform canvasParent, Sprite panelSprite)
         {
@@ -715,7 +723,7 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-810f, 302f);
+            frameRect.anchoredPosition = new Vector2(-760f, 302f);
             frameRect.sizeDelta = new Vector2(400f, 60f);
 
             var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(52f, 52f));
@@ -736,7 +744,8 @@ namespace CityBuilder.EditorTools
         /// <summary>
         /// Left side, below the Меню button (y 465) and clear of the hotbar at the bottom --
         /// a standing panel (not a toast) since it's meant to be glanced at over time, unlike
-        /// SettlementTierToast's momentary flash for the same kind of milestone.
+        /// SettlementTierToast's momentary flash for the same kind of milestone. x is -760, not
+        /// -810 -- see BuildTaxRateControl's comment on why (same off-screen-clipping fix).
         /// </summary>
         private static void BuildEventLog(Transform canvasParent, Sprite panelSprite)
         {
@@ -745,7 +754,7 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-810f, 100f);
+            frameRect.anchoredPosition = new Vector2(-760f, 100f);
             frameRect.sizeDelta = new Vector2(400f, 320f);
 
             var logText = CreateText(frame.transform, "LogText", string.Empty, 20, Vector2.zero, new Vector2(370f, 290f), new Color(1f, 1f, 1f, 0.85f));
