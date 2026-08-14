@@ -81,7 +81,38 @@ namespace CityBuilder.Buildings
                 // ADDS to it, which is the only way water ever becomes crossable (see
                 // MeshMapApplier.RegisterWalkableSurface).
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
+                if (data.connectsToFences) RegisterFenceCells();
                 ChangeCount(data.buildingName, 1);
+            }
+        }
+
+        /// <summary>
+        /// Every cell this building covers joins the fence line, so a two-cell gate connects on
+        /// both of its tiles rather than only where its origin happens to sit. Registering the
+        /// segment's own FenceAppearance (null for anything that just connects) is what lets
+        /// FenceNetwork re-shape it when a neighbour appears or is destroyed.
+        /// </summary>
+        private void RegisterFenceCells()
+        {
+            var network = FenceNetwork.Instance;
+            if (network == null) return;
+
+            var appearance = GetComponent<FenceAppearance>();
+            foreach (var cell in OccupiedCells()) network.Register(cell, appearance);
+        }
+
+        /// <summary>The cells this building sits on, with the footprint turned to match its placement rotation -- the same swap BuildingPlacer applies before it reserves them.</summary>
+        private IEnumerable<Vector2Int> OccupiedCells()
+        {
+            var footprint = Data.footprintSize;
+            if (RotationSteps % 2 != 0) footprint = new Vector2Int(footprint.y, footprint.x);
+
+            for (var x = 0; x < footprint.x; x++)
+            {
+                for (var z = 0; z < footprint.y; z++)
+                {
+                    yield return OriginCell + new Vector2Int(x, z);
+                }
             }
         }
 
@@ -96,6 +127,12 @@ namespace CityBuilder.Buildings
             if (Data != null)
             {
                 if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                if (Data.connectsToFences && FenceNetwork.Instance != null)
+                {
+                    // Leaves a real gap: the segments either side re-shape into dead ends, which is
+                    // the whole point of a fence an enemy can break through.
+                    foreach (var cell in OccupiedCells()) FenceNetwork.Instance.Unregister(cell);
+                }
                 ChangeCount(Data.buildingName, -1);
             }
         }

@@ -30,6 +30,10 @@ namespace CityBuilder.Combat
         // Much shorter than RetargetIntervalSeconds: buildings don't move, soldiers do, and a
         // five-second reaction to being attacked reads as the orc simply not noticing.
         private const float SoldierScanIntervalSeconds = 0.4f;
+        // How far around itself a stuck orc looks for the thing blocking its way. Roughly one
+        // building away: wide enough to catch the wall it just walked up to, narrow enough that it
+        // can't reach past that wall for something behind it.
+        private const float BlockerReachRadius = 2.5f;
 
         private static readonly List<OrcUnit> _all = new List<OrcUnit>();
         public static IReadOnlyList<OrcUnit> All => _all;
@@ -41,6 +45,8 @@ namespace CityBuilder.Combat
         private SoldierUnit _soldierTarget;
         private Vector3[] _route = { Vector3.zero };
         private int _routeIndex;
+        /// <summary>The route stops short of the target because something unwalkable is in between -- see BuildRoute.</summary>
+        private bool _routeBlocked;
         private float _attackTimer;
         private float _retargetTimer;
         private float _soldierScanTimer;
@@ -152,6 +158,14 @@ namespace CityBuilder.Combat
                 return;
             }
 
+            // Walked the whole route and the target is still out of reach: something the orc can't
+            // path around is between them. Take it out on that instead of standing there.
+            if (_routeBlocked && _routeIndex >= _route.Length - 1 && ReachedLastWaypoint())
+            {
+                AttackWhateverIsBlockingTheWay();
+                return;
+            }
+
             AdvanceAlongRoute();
         }
 
@@ -233,6 +247,14 @@ namespace CityBuilder.Combat
             if (_target.CurrentHealth <= 0) _target = null;
         }
 
+        /// <summary>Standing on the end of the route, i.e. this is as far as it goes.</summary>
+        private bool ReachedLastWaypoint()
+        {
+            var toWaypoint = _route[_route.Length - 1] - transform.position;
+            toWaypoint.y = 0f;
+            return toWaypoint.magnitude < ArrivalThreshold * 4f;
+        }
+
         /// <summary>Walks toward the current route waypoint, advancing to the next one on arrival. Purely locomotion -- Update already decided this frame isn't an attack frame before calling this.</summary>
         private void AdvanceAlongRoute()
         {
@@ -291,16 +313,62 @@ namespace CityBuilder.Combat
 
             _target = nearest;
             _routeIndex = 0;
-            _route = _target != null ? BuildRoute(transform.position, _target.transform.position) : new[] { transform.position };
+            _routeBlocked = false;
+            _route = _target != null
+                ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked)
+                : new[] { transform.position };
         }
 
-        private static Vector3[] BuildRoute(Vector3 from, Vector3 to)
+        /// <summary>
+        /// The nearest building close enough to be what's standing in the way -- called once the
+        /// orc has walked its route out and still can't reach what it was heading for. That is what
+        /// makes a fence a real obstacle instead of scenery: the raider stops at it and starts
+        /// breaking it rather than pretending the way is open.
+        /// </summary>
+        private void AttackWhateverIsBlockingTheWay()
+        {
+            BuildingInstance blocker = null;
+            var nearestDistSq = BlockerReachRadius * BlockerReachRadius;
+
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.Data == null || instance.Data.isRoad) continue;
+
+                var distSq = (instance.transform.position - transform.position).sqrMagnitude;
+                if (distSq > nearestDistSq) continue;
+
+                nearestDistSq = distSq;
+                blocker = instance;
+            }
+
+            if (blocker == null) return;
+
+            _target = blocker;
+            _routeIndex = 0;
+            _routeBlocked = false;
+            _route = new[] { blocker.transform.position };
+        }
+
+        /// <summary>
+        /// A NavMesh route, and whether it actually gets there. `blocked` is the important half:
+        /// buildings carve themselves out of the NavMesh (BuildingInstance.SetupNavMeshObstacle),
+        /// so a walled-off target yields a PARTIAL path that stops at the wall. This used to return
+        /// a straight line to the target in that case, which walked raiders through solid walls.
+        ///
+        /// A path that can't be computed at all is different -- that means there is no NavMesh
+        /// under this orc (see MeshMapApplier.BuildNavMesh, which logs when the bake fails), not
+        /// that something is in the way, so the straight-line fallback still applies there.
+        /// </summary>
+        private static Vector3[] BuildRoute(Vector3 from, Vector3 to, out bool blocked)
         {
             _sharedPath ??= new NavMeshPath();
             if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath) && _sharedPath.corners.Length > 0)
             {
+                blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
                 return _sharedPath.corners;
             }
+
+            blocked = false;
             return new[] { to };
         }
     }

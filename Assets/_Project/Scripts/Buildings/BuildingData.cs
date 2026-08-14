@@ -35,6 +35,12 @@ namespace CityBuilder.Buildings
         // a bridge is decoration: the water underneath stays unwalkable and nobody crosses it.
         public bool providesWalkableSurface = false;
 
+        // Part of the fence line: registers this building's cells with FenceNetwork, so fence
+        // segments next to it shape themselves as if the line continued through it. A Fence sets
+        // this AND carries a FenceAppearance (it changes its own model); a Gate or Tower would set
+        // only this, joining the line while keeping its own look.
+        public bool connectsToFences = false;
+
         // Keeps this building selected (ghost stays active) after a successful placement instead
         // of clearing the selection -- lets the player lay several tiles in a row (e.g. a road)
         // without re-opening the hotbar each time.

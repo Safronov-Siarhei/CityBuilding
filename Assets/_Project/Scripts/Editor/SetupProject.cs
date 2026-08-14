@@ -262,6 +262,10 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
+            // Two models, no colours or size of its own: everything about how a fence segment looks
+            // comes from the FBX pair and from which neighbours it finds (see FenceShape).
+            var fenceData = CreateFenceBuildingData("Fence", "Fence-1-Straight.fbx", "Fence-1-Corner.fbx");
+
             var roadData = CreateBuildingData(
                 "Road", new Vector2Int(1, 1), height: 0.05f,
                 wallColor: new Color(0.32f, 0.32f, 0.34f), roofColor: new Color(0.85f, 0.75f, 0.3f),
@@ -290,7 +294,7 @@ namespace CityBuilder.EditorTools
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, fishermanHutData, hunterHutData, farmData,
-                lumberjackData, quarryData, mineData, coalMineData, roadData, wallData, towerData, barracksData, gateData,
+                lumberjackData, quarryData, mineData, coalMineData, roadData, fenceData, wallData, towerData, barracksData, gateData,
                 bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -358,6 +362,7 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<ResourceManager>();
             managers.AddComponent<RoadNetwork>();
+            managers.AddComponent<FenceNetwork>();
             var gameCalendar = managers.AddComponent<GameCalendar>();
             managers.AddComponent<EventLogManager>();
 
@@ -1356,6 +1361,99 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// A fence segment. Unlike every other building, its prefab carries TWO models -- the
+        /// straight run and the corner -- and FenceAppearance shows whichever one matches the
+        /// neighbouring segments (see FenceShape). Nothing about which model is visible is decided
+        /// here or saved: it is derived from the cells around it every time the line changes, so a
+        /// destroyed segment turns its neighbours back into dead ends for free.
+        ///
+        /// Two deliberate differences from CreateBuildingData: the collider spans the WHOLE cell
+        /// with no BuildingInset, because segments have to touch to read as one fence, and each
+        /// model hangs inside a wrapper so FenceAppearance can turn the wrapper without disturbing
+        /// whatever local rotation the FBX brought with it.
+        /// </summary>
+        private static BuildingData CreateFenceBuildingData(string id, string straightFbxFileName, string cornerFbxFileName)
+        {
+            var root = new GameObject(id);
+            root.AddComponent<BuildingInstance>();
+            var appearance = root.AddComponent<FenceAppearance>();
+
+            var straight = CreateFenceModelWrapper("Straight", straightFbxFileName, root.transform, out var modelHeight);
+            var corner = CreateFenceModelWrapper("Corner", cornerFbxFileName, root.transform, out _);
+            appearance.SetModels(straight, corner);
+            // The straight run is what a lone segment shows; FenceAppearance swaps them the moment
+            // the piece learns about its neighbours.
+            if (corner != null) corner.SetActive(false);
+
+            var height = modelHeight > 0.01f ? modelHeight : 1.2f;
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(CellSize, height, CellSize);
+            collider.center = new Vector3(0f, height * 0.5f, 0f);
+
+            var prefab = SavePrefab(root, id);
+
+            var data = ScriptableObject.CreateInstance<BuildingData>();
+            data.buildingName = id;
+            data.prefab = prefab;
+            data.footprintSize = Vector2Int.one;
+            ApplyBalance(data, Balance(id));
+            data.connectsToFences = true;
+            // Laid out tile by tile like a road, so the hotbar selection survives each placement.
+            data.keepSelectedAfterPlacement = true;
+
+            Directory.CreateDirectory(BuildingDataFolder);
+            var dataPath = $"{BuildingDataFolder}/{id}.asset";
+            DeleteIfExists(dataPath);
+            AssetDatabase.CreateAsset(data, dataPath);
+            return data;
+        }
+
+        /// <summary>
+        /// One fence model, parented under a wrapper that FenceAppearance rotates, and re-centred on
+        /// the cell.
+        ///
+        /// The re-centring is not cosmetic tidying: these FBX carry their geometry offset from the
+        /// object origin (the two models were authored side by side in one Blender scene and
+        /// exported with a zero Lcl Translation), so instantiated as-is a segment would stand
+        /// several metres away from the cell it belongs to. Measuring the renderer bounds instead of
+        /// hardcoding that offset means a re-export with a different layout still lands correctly.
+        /// </summary>
+        private static GameObject CreateFenceModelWrapper(string wrapperName, string fbxFileName, Transform parent, out float height)
+        {
+            height = 0f;
+
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
+            if (source == null)
+            {
+                Debug.LogError($"CreateFenceModelWrapper: FBX not found at {ModelsBuildingsFolder}/{fbxFileName} -- the fence will have no '{wrapperName}' model.");
+                return null;
+            }
+
+            var wrapper = new GameObject(wrapperName);
+            wrapper.transform.SetParent(parent, false);
+
+            var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, wrapper.transform);
+
+            var renderers = model.GetComponentsInChildren<MeshRenderer>();
+            if (renderers.Length == 0)
+            {
+                Debug.LogError($"CreateFenceModelWrapper: '{fbxFileName}' has no MeshRenderer -- nothing to place or measure.");
+                return wrapper;
+            }
+
+            var bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            // Centre horizontally on the cell and drop the model onto the ground plane.
+            model.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            height = bounds.size.y;
+
+            Debug.Log($"CreateFenceModelWrapper: '{fbxFileName}' -> {wrapperName}, footprint {bounds.size.x:0.###}x{bounds.size.z:0.###}, " +
+                      $"height {bounds.size.y:0.###}, recentred by ({-bounds.center.x:0.###}, {-bounds.min.y:0.###}, {-bounds.center.z:0.###}).");
+            return wrapper;
+        }
+
+        /// <summary>
         /// The balance sheet's row for a building. A missing row is a build error rather than a
         /// silent default: the asset would still be generated, but full of placeholder numbers that
         /// look deliberate in the Inspector and would be very hard to trace back to a renamed row.
@@ -2312,6 +2410,18 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.6f, 0.4f, 0.78f, 0.55f, coal);
                         FillIconRect(p, s, 0.2f, 0.08f, 0.32f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
                         FillIconRect(p, s, 0.68f, 0.08f, 0.8f, 0.15f, new Color(0.15f, 0.15f, 0.15f));
+                    });
+                case "Fence":
+                    return CreateIconSprite("Bld_Fence", 64, (p, s) =>
+                    {
+                        // Two posts and two rails, read as a wooden fence rather than the stone
+                        // courses the Wall icon uses.
+                        var post = new Color(0.45f, 0.3f, 0.16f);
+                        var rail = new Color(0.62f, 0.45f, 0.25f);
+                        FillIconRect(p, s, 0.12f, 0.46f, 0.88f, 0.58f, rail);
+                        FillIconRect(p, s, 0.12f, 0.24f, 0.88f, 0.36f, rail);
+                        FillIconRect(p, s, 0.2f, 0.12f, 0.34f, 0.78f, post);
+                        FillIconRect(p, s, 0.66f, 0.12f, 0.8f, 0.78f, post);
                     });
                 case "Wall":
                     return CreateIconSprite("Bld_Wall", 64, (p, s) =>
