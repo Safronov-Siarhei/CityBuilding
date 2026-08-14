@@ -148,6 +148,7 @@ namespace CityBuilder.EditorTools
             {
                 var row = rows[i];
                 if (row.Count == 0 || string.IsNullOrWhiteSpace(row[0])) continue;
+                if (IsNoteRow(row)) continue;
 
                 units.Add(new UnitBalance
                 {
@@ -197,6 +198,7 @@ namespace CityBuilder.EditorTools
             {
                 var row = rows[i];
                 if (row.Count <= valueColumn || string.IsNullOrWhiteSpace(row[keyColumn])) continue;
+                if (IsNoteRow(row)) continue;
 
                 var key = row[keyColumn].Trim();
                 if (!TryParseNumber(row[valueColumn], out var value))
@@ -207,6 +209,23 @@ namespace CityBuilder.EditorTools
                 values[key] = value;
             }
             return values;
+        }
+
+        /// <summary>
+        /// A note the author left under the table, not data. The sheet's tabs end with prose ("жёлтые
+        /// ячейки — правишь ты"), and a published CSV exports it as an ordinary row whose first cell
+        /// -- the id/key column -- is full of text. Such a row is recognised by everything *after*
+        /// the first cell being empty, which no real row ever is: a unit always has a display name,
+        /// and an economy key always has either a value or a comment beside it. That way an
+        /// accidentally emptied value in a real row still shouts instead of being mistaken for prose.
+        /// </summary>
+        private static bool IsNoteRow(List<string> row)
+        {
+            for (var i = 1; i < row.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(row[i])) return false;
+            }
+            return true;
         }
 
         private static string Text(List<string> header, List<string> row, string column)

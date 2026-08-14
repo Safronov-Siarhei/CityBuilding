@@ -1,3 +1,7 @@
-id,display_name,max_health,attack_damage,attack_interval_sec,attack_range_units,attack_range_structures,walk_speed,engage_radius,recruit_coins,upkeep_coins_per_day
-militia,Ополчение,12,5,1.1,1.4,2.6,1.5,7,25,1
-orc,Орк,20,4,1.2,1.4,3,1.3,6,0,0
+id,display_name,max_health,attack_damage,attack_interval_sec,attack_range_units,attack_range_structures,walk_speed,engage_radius,recruit_coins,upkeep_coins_per_day,dps,ttk_vs_militia_sec,ttk_vs_orc_sec,coins_per_hp
+militia,Ополчение,12,5,"1,1","1,4","2,6","1,5",7,25,1,"4,55","3,30","4,40","2,08"
+orc,Орк,20,4,"1,2","1,4","3,0","1,3",6,0,0,"3,33","3,60","6,00","0,00"
+,,,,,,,,,,,,,,
+"Жёлтые ячейки — правишь ты. Серые считаются формулами: их можно смотреть, но менять бессмысленно.",,,,,,,,,,,,,,
+"Колонки id и display_name читает код. Порядок колонок не важен — импортёр ищет их по названию, лишние колонки игнорирует.",,,,,,,,,,,,,,
+Добавить нового юнита = добавить строку. Но код узнает о нём только когда для него появится тип в игре.,,,,,,,,,,,,,,
