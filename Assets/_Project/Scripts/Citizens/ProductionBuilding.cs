@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using System;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
@@ -14,7 +15,7 @@ namespace CityBuilder.Citizens
         // Above BuildingInstance.DecayPenaltyThreshold, output falls linearly from 100% down to
         // this floor at full (1.0) decay -- a decrepit building still limps along instead of
         // dropping straight to zero the moment it crosses the threshold.
-        private const float MinDecayProductionMultiplier = 0.5f;
+        // From the balance sheet (min_decay_production_multiplier).
 
         private BuildingData _data;
         private BuildingInstance _buildingInstance;
@@ -71,7 +72,7 @@ namespace CityBuilder.Citizens
             if (decay <= BuildingInstance.DecayPenaltyThreshold) return 1f;
 
             var t = (decay - BuildingInstance.DecayPenaltyThreshold) / (1f - BuildingInstance.DecayPenaltyThreshold);
-            return Mathf.Lerp(1f, MinDecayProductionMultiplier, t);
+            return Mathf.Lerp(1f, BalanceConfig.Instance.MinDecayProductionMultiplier, t);
         }
 
         public bool TryAssignWorker()

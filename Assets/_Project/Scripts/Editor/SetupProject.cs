@@ -51,6 +51,12 @@ namespace CityBuilder.EditorTools
             // cached by a previous run would point at objects that no longer exist.
             _iconSpriteCache.Clear();
 
+            // Before anything is built: the scene's components and the generated BuildingData both
+            // read balance numbers, and a stale config would bake yesterday's balance into today's
+            // assets. Regenerating from the committed CSVs (never from the network) keeps a
+            // batchmode build reproducible on any machine.
+            BalanceImporter.RebuildConfig();
+
             ForceReimportModels();
 
             BuildMainMenuScene();

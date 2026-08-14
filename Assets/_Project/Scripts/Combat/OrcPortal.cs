@@ -20,9 +20,6 @@ namespace CityBuilder.Combat
     /// </summary>
     public class OrcPortal : MonoBehaviour, IDamageTarget
     {
-        /// <summary>~65 militia-swings, i.e. a couple of minutes for a small group that isn't being interrupted.</summary>
-        private const int MaxPortalHealth = 320;
-
         private static readonly List<OrcPortal> _all = new List<OrcPortal>();
 
         /// <summary>Every portal currently in the scene, in spawn order.</summary>
@@ -31,8 +28,16 @@ namespace CityBuilder.Combat
         /// <summary>Raised after a portal is destroyed and has already left the registry, so a handler can read All.Count as the number of portals still standing.</summary>
         public static event Action<OrcPortal> OnPortalDestroyed;
 
-        public int MaxHealth => MaxPortalHealth;
-        public int CurrentHealth { get; private set; } = MaxPortalHealth;
+        /// <summary>From the balance sheet (portal_max_health): deliberately a long grind, so closing a portal is a siege rather than a quick strike.</summary>
+        public int MaxHealth { get; private set; }
+
+        public int CurrentHealth { get; private set; }
+
+        private void Awake()
+        {
+            MaxHealth = BalanceConfig.Instance.PortalMaxHealth;
+            CurrentHealth = MaxHealth;
+        }
 
         Transform IDamageTarget.Transform => this != null ? transform : null;
         bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0;

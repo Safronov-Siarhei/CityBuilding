@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace CityBuilder.Combat
     /// them -- walk to my slot in the formation, engage what my group's priority says to engage.
     ///
     /// Two deliberate limits, both matching the decided design:
-    /// - With no attack order, a soldier only engages what comes within EngageRadius of its slot,
+    /// - With no attack order, a soldier only engages what comes within its engage radius of its slot,
     ///   and never chases beyond it. A group left alone holds its ground; it doesn't trickle across
     ///   the map after raiders and get killed one at a time.
     /// - Soldiers only ever damage IDamageTarget implementors (orcs, portals). They have no path at
@@ -18,15 +19,6 @@ namespace CityBuilder.Combat
     /// </summary>
     public class SoldierUnit : MonoBehaviour
     {
-        /// <summary>Melee reach against a unit. Structures use the wider range below -- a portal is several metres across and its transform sits at the centre.</summary>
-        private const float UnitAttackRange = 1.4f;
-        private const float StructureAttackRange = 2.6f;
-
-        /// <summary>How far from its formation slot a soldier will engage something without being ordered to.</summary>
-        private const float EngageRadius = 7f;
-
-        private const float WalkSpeed = 1.5f;
-
         /// <summary>Below this (horizontal) the soldier is close enough to its slot to stop shuffling.</summary>
         private const float SlotArrivalDistance = 0.25f;
 
@@ -54,6 +46,16 @@ namespace CityBuilder.Combat
         public int MaxHealth { get; private set; } = 1;
         public int CurrentHealth { get; private set; } = 1;
 
+        // Copied out of the balance sheet once, at Initialize, rather than read through
+        // BalanceConfig every frame -- with twenty soldiers each running this Update, the numbers
+        // have to cost what a const cost.
+        private float _unitAttackRange = 1.4f;
+        private float _structureAttackRange = 2.6f;
+        private float _engageRadius = 7f;
+        private float _walkSpeed = 1.5f;
+        private float _attackIntervalSeconds = 1.1f;
+        private int _attackDamage = 1;
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
@@ -76,6 +78,14 @@ namespace CityBuilder.Combat
             Group = group;
             MaxHealth = SoldierStats.MaxHealth(type);
             CurrentHealth = MaxHealth;
+
+            var stats = SoldierStats.Row(type);
+            _unitAttackRange = stats.attackRangeUnits;
+            _structureAttackRange = stats.attackRangeStructures;
+            _engageRadius = stats.engageRadius;
+            _walkSpeed = stats.walkSpeed;
+            _attackIntervalSeconds = stats.attackIntervalSeconds;
+            _attackDamage = stats.attackDamage;
         }
 
         private void Update()
@@ -93,7 +103,7 @@ namespace CityBuilder.Combat
             if (_target != null && _target.IsAlive)
             {
                 var targetPosition = _target.Transform.position;
-                var range = _target.IsStructure ? StructureAttackRange : UnitAttackRange;
+                var range = _target.IsStructure ? _structureAttackRange : _unitAttackRange;
 
                 if (HorizontalDistance(targetPosition, transform.position) <= range)
                 {
@@ -132,7 +142,7 @@ namespace CityBuilder.Combat
                 if (candidate == null || !candidate.IsAlive) continue;
 
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
-                if (distance > EngageRadius) continue;
+                if (distance > _engageRadius) continue;
 
                 var prefersStructures = Group.Priority == TargetPriority.Structures;
                 var isPreferredBucket = candidate.IsStructure == prefersStructures;
@@ -170,9 +180,9 @@ namespace CityBuilder.Combat
         {
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
-            _attackTimer = SoldierStats.AttackIntervalSeconds(Type);
+            _attackTimer = _attackIntervalSeconds;
 
-            _target.TakeDamage(SoldierStats.AttackDamage(Type));
+            _target.TakeDamage(_attackDamage);
             if (!_target.IsAlive) _target = null;
         }
 
@@ -194,11 +204,11 @@ namespace CityBuilder.Combat
 
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * WalkSpeed * Time.deltaTime);
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
             }
             else
             {
-                transform.position += direction * WalkSpeed * Time.deltaTime;
+                transform.position += direction * _walkSpeed * Time.deltaTime;
             }
 
             PinToGroundHeight();

@@ -20,11 +20,9 @@ namespace CityBuilder.Combat
     {
         public static OrcRaidManager Instance { get; private set; }
 
-        private const float RaidIntervalSeconds = 90f;
-        private const int BaseRaidSize = 2;
-        // +1 raider per this many elapsed days, capped below -- a slow ramp, not a hard wall.
-        private const int DaysPerExtraRaider = 3;
-        private const int MaxRaidSize = 8;
+        // Raid pacing and size come from the balance sheet's economy tab (raid_*): interval, the
+        // day-1 squad, how many days buy one more raider, and the ceiling.
+
         // Placeholder placement rule for testing, not the final design: the user's intent is
         // hand-authored portal locations per map (like the TreesArea zone), which don't exist as
         // map data yet. Until then one portal goes a fixed distance from the Town Hall -- close
@@ -89,7 +87,7 @@ namespace CityBuilder.Combat
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
-            _raidTimer = RaidIntervalSeconds;
+            _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
 
             SpawnRaid();
         }
@@ -210,7 +208,7 @@ namespace CityBuilder.Combat
             _portalSpawned = true;
             // Only starts counting once the portal actually exists, so the player isn't raided
             // from nowhere during the time it takes them to place the Town Hall.
-            _raidTimer = RaidIntervalSeconds;
+            _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
             EventLogManager.Instance?.Log("На карте открылся портал орков.");
         }
 
@@ -250,11 +248,18 @@ namespace CityBuilder.Combat
             }
         }
 
-        /// <summary>Pure formula extracted so it's covered by an EditMode test without needing a live scene.</summary>
+        /// <summary>Pure formula, kept separate so an EditMode test can check the ramp without a live scene. Takes its numbers explicitly so the test can state them rather than depend on today's sheet.</summary>
+        public static int ComputeRaidSize(int day, int baseSize, int daysPerExtraRaider, int maxSize)
+        {
+            var bonus = daysPerExtraRaider > 0 ? Mathf.Max(0, day - 1) / daysPerExtraRaider : 0;
+            return Mathf.Min(maxSize, baseSize + bonus);
+        }
+
+        /// <summary>The size of the raid that would go out on the given day at the sheet's current numbers.</summary>
         public static int ComputeRaidSize(int day)
         {
-            var bonus = Mathf.Max(0, day - 1) / DaysPerExtraRaider;
-            return Mathf.Min(MaxRaidSize, BaseRaidSize + bonus);
+            var balance = BalanceConfig.Instance;
+            return ComputeRaidSize(day, balance.RaidBaseSize, balance.RaidDaysPerExtraRaider, balance.RaidMaxSize);
         }
 
         private void SpawnOrc(Vector3 origin, int level)

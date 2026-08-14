@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using CityBuilder.Resources;
 using System.Collections.Generic;
 
@@ -32,85 +33,51 @@ namespace CityBuilder.Combat
     }
 
     /// <summary>
-    /// Per-type stats and costs, as pure static data. Deliberately not a ScriptableObject: every
-    /// number here is gameplay balance that belongs in version control next to the code that reads
-    /// it, and being plain statics means the EditMode tests can assert on the balance relationships
-    /// (a militia must lose a straight 1v1 against a level 1 orc, recruitment must be affordable
-    /// from a day's taxes, and so on) without a live scene.
-    ///
-    /// All numbers are first-pass and freely tunable.
+    /// Reads a soldier type's stats out of the balance sheet (see BalanceConfig): every number
+    /// below is authored in the spreadsheet, not here. The lookup goes through this one place so
+    /// callers -- and the balance tests -- keep asking the same question they always did, while the
+    /// answer now comes from the sheet.
     /// </summary>
     public static class SoldierStats
     {
+        /// <summary>Maps the code's unit types onto the sheet's row ids. The sheet is keyed by a readable id rather than by an enum's numeric value, so reordering the enum can't silently repoint a row.</summary>
+        private static string SheetId(SoldierType type)
+        {
+            switch (type)
+            {
+                case SoldierType.Militia:
+                default:
+                    return "militia";
+            }
+        }
+
+        /// <summary>The whole sheet row, for callers (SoldierUnit) that want several of its numbers at once and cache them.</summary>
+        public static UnitBalance Row(SoldierType type) => BalanceConfig.Instance.Unit(SheetId(type));
+
         /// <summary>
-        /// Army-wide cap across every group and type, per the design backlog: fixed at 20, chosen
-        /// partly for device performance. Deliberately NOT scaled by economy -- the intended
-        /// difficulty lever is that upkeep makes filling all 20 slots painful, not the cap itself.
+        /// Army-wide cap across every group and type, per the design backlog: chosen partly for
+        /// device performance. Deliberately NOT scaled by economy -- the intended difficulty lever
+        /// is that upkeep makes filling all the slots painful, not the cap itself.
         /// </summary>
-        public const int MaxArmySize = 20;
+        public static int MaxArmySize => BalanceConfig.Instance.ArmyMaxSize;
 
-        public static string DisplayName(SoldierType type)
-        {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return "Ополчение";
-            }
-        }
+        public static string DisplayName(SoldierType type) => Row(type).displayName;
 
-        /// <summary>Militia are meant to lose a 1v1 against a level 1 orc (20 HP, 4 damage) and win by numbers -- see SoldierStatsTests, which pins that relationship down.</summary>
-        public static int MaxHealth(SoldierType type)
-        {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return 12;
-            }
-        }
+        /// <summary>Militia are meant to lose a 1v1 against a level 1 orc and win by numbers -- see ArmyBalanceTests, which pins that relationship down against whatever the sheet currently says.</summary>
+        public static int MaxHealth(SoldierType type) => Row(type).maxHealth;
 
-        public static int AttackDamage(SoldierType type)
-        {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return 5;
-            }
-        }
+        public static int AttackDamage(SoldierType type) => Row(type).attackDamage;
 
-        public static float AttackIntervalSeconds(SoldierType type)
-        {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return 1.1f;
-            }
-        }
+        public static float AttackIntervalSeconds(SoldierType type) => Row(type).attackIntervalSeconds;
 
-        /// <summary>Coins only for Militia -- an armed peasant needs no forge. Later tiers add their equipment items on top of this.</summary>
+        /// <summary>Coins only for Militia -- an armed peasant needs no forge. Later tiers will add their equipment items on top of this.</summary>
         public static List<ResourceAmount> RecruitCost(SoldierType type)
         {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = 25 } };
-            }
+            return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = Row(type).recruitCoins } };
         }
 
         /// <summary>Coins deducted per soldier per game day. Unpayable upkeep disbands soldiers one at a time -- see ArmyManager.</summary>
-        public static int UpkeepCoinsPerDay(SoldierType type)
-        {
-            switch (type)
-            {
-                case SoldierType.Militia:
-                default:
-                    return 1;
-            }
-        }
+        public static int UpkeepCoinsPerDay(SoldierType type) => Row(type).upkeepCoinsPerDay;
 
         /// <summary>Total coins per day for a whole army -- extracted so the UI and the tests share one formula with the daily charge itself.</summary>
         public static int TotalUpkeepPerDay(IEnumerable<SoldierType> soldierTypes)

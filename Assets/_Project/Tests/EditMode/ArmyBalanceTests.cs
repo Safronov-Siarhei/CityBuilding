@@ -1,4 +1,5 @@
 using CityBuilder.Combat;
+using CityBuilder.Core;
 using CityBuilder.Resources;
 using NUnit.Framework;
 using UnityEngine;
@@ -16,11 +17,12 @@ namespace CityBuilder.Tests.EditMode
     /// </summary>
     public class ArmyBalanceTests
     {
-        // OrcUnit's level 1 stats, mirrored here because they're private to that MonoBehaviour and
-        // this is the one place that needs to reason about both sides at once.
-        private const int OrcHealth = 20;
-        private const int OrcDamage = 4;
-        private const float OrcAttackInterval = 1.2f;
+        // Both sides straight from the balance sheet, so a retune of either one is checked against
+        // the other rather than against a number copied into this file once.
+        private static UnitBalance Orc => BalanceConfig.Instance.Unit("orc");
+        private static int OrcHealth => Orc.maxHealth;
+        private static int OrcDamage => Orc.attackDamage;
+        private static float OrcAttackInterval => Orc.attackIntervalSeconds;
 
         private static float TimeToKill(int targetHealth, int damagePerHit, float interval, int attackers = 1)
         {
@@ -71,10 +73,13 @@ namespace CityBuilder.Tests.EditMode
         }
 
         [Test]
-        public void ArmyCap_IsTwenty()
+        public void ArmyCap_IsSmallEnoughForAPhone()
         {
-            // Explicitly decided (and chosen partly for device performance), not incidental.
-            Assert.AreEqual(20, SoldierStats.MaxArmySize);
+            // The cap is a device-performance decision as much as a design one, so the sheet is
+            // free to tune it -- within a range that keeps twenty-ish units on screen, not two
+            // hundred.
+            Assert.GreaterOrEqual(SoldierStats.MaxArmySize, 5);
+            Assert.LessOrEqual(SoldierStats.MaxArmySize, 40);
         }
 
         [Test]

@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -18,16 +19,15 @@ namespace CityBuilder.Citizens
         // Deliberately small relative to building costs (a Lumberjack is 40 Wood) -- hand
         // gathering is the anti-deadlock floor, not a competitive alternative to actually
         // building an economy. First-pass, tunable.
-        private const int WoodPerTree = 5;
-        private const int StonePerRock = 4;
+        // Both from the balance sheet's economy tab (wood_per_tree / stone_per_rock).
 
         /// <summary>How much of its own resource one node yields when gathered by hand. 0 for anything not hand-gatherable.</summary>
         public static int YieldFor(ResourceType resourceType)
         {
             switch (resourceType)
             {
-                case ResourceType.Wood: return WoodPerTree;
-                case ResourceType.Stone: return StonePerRock;
+                case ResourceType.Wood: return BalanceConfig.Instance.WoodPerTree;
+                case ResourceType.Stone: return BalanceConfig.Instance.StonePerRock;
                 default: return 0;
             }
         }

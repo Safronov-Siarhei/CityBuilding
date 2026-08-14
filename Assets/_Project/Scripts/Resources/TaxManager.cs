@@ -17,7 +17,7 @@ namespace CityBuilder.Resources
         public static TaxManager Instance { get; private set; }
 
         // Coins collected per citizen per day at 100% tax -- first-pass, tunable.
-        private const float CoinsPerCitizenPerDayAtMaxTax = 0.5f;
+        // From the balance sheet (coins_per_citizen_per_day_at_max_tax).
         private const int MaxTaxRatePercent = 100;
 
         [SerializeField] private CitizenManager citizenManager;
@@ -62,7 +62,7 @@ namespace CityBuilder.Resources
         /// <summary>Pure formula extracted from CollectTaxes so it's covered by an EditMode test without needing a live scene/singletons.</summary>
         public static int ComputeDailyIncome(int population, int taxRatePercent)
         {
-            return Mathf.RoundToInt(population * (taxRatePercent / 100f) * CoinsPerCitizenPerDayAtMaxTax);
+            return Mathf.RoundToInt(population * (taxRatePercent / 100f) * BalanceConfig.Instance.CoinsPerCitizenPerDayAtMaxTax);
         }
     }
 }

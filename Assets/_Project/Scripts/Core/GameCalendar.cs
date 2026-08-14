@@ -13,10 +13,9 @@ namespace CityBuilder.Core
     {
         public static GameCalendar Instance { get; private set; }
 
-        // First-pass pace, tunable: at this length, BuildingInstance.DecayPerDayBase (2%/day at
-        // level 1) fully decays an un-repaired, un-upgraded building in about 100 minutes of
-        // continuous play.
-        private const float DayLengthSeconds = 120f;
+        // From the balance sheet (day_length_seconds), cached at Awake: at the shipped length, a
+        // building at 2%/day fully decays in about 100 minutes of continuous play.
+        private float _dayLengthSeconds;
 
         private float _timer;
 
@@ -32,13 +31,14 @@ namespace CityBuilder.Core
                 return;
             }
             Instance = this;
+            _dayLengthSeconds = BalanceConfig.Instance.DayLengthSeconds;
         }
 
         private void Update()
         {
             _timer += Time.deltaTime;
-            if (_timer < DayLengthSeconds) return;
-            _timer -= DayLengthSeconds;
+            if (_timer < _dayLengthSeconds) return;
+            _timer -= _dayLengthSeconds;
 
             CurrentDay++;
             OnDayPassed?.Invoke();

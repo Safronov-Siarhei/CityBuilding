@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using CityBuilder.Buildings;
 using UnityEngine;
 
@@ -12,10 +13,11 @@ namespace CityBuilder.Combat
     /// </summary>
     public class DefensiveBuilding : MonoBehaviour
     {
-        private const float AttackIntervalSeconds = 1f;
-        // World-space meters, not cells -- GridManager.CellSize is 1f in this project so the two
+        // Both come from the balance sheet's economy tab, cached at Awake. The range is in
+        // world-space metres, not cells -- GridManager.CellSize is 1f in this project so the two
         // happen to match, but this is deliberately independent of that.
-        private const float AttackRangeMeters = 6f;
+        private float _attackIntervalSeconds;
+        private float _attackRangeMeters;
 
         private BuildingInstance _buildingInstance;
         private float _timer;
@@ -23,6 +25,8 @@ namespace CityBuilder.Combat
         private void Awake()
         {
             _buildingInstance = GetComponent<BuildingInstance>();
+            _attackIntervalSeconds = BalanceConfig.Instance.DefenceAttackIntervalSeconds;
+            _attackRangeMeters = BalanceConfig.Instance.DefenceAttackRangeMeters;
         }
 
         private void Update()
@@ -31,7 +35,7 @@ namespace CityBuilder.Combat
 
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;
-            _timer = AttackIntervalSeconds;
+            _timer = _attackIntervalSeconds;
 
             var target = FindNearestOrcInRange();
             target?.TakeDamage(_buildingInstance.Data.defense);
@@ -40,7 +44,7 @@ namespace CityBuilder.Combat
         private OrcUnit FindNearestOrcInRange()
         {
             OrcUnit nearest = null;
-            var nearestDistSq = AttackRangeMeters * AttackRangeMeters;
+            var nearestDistSq = _attackRangeMeters * _attackRangeMeters;
 
             foreach (var orc in OrcUnit.All)
             {

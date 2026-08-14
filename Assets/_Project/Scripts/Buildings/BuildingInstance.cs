@@ -15,13 +15,12 @@ namespace CityBuilder.Buildings
 
         // Above this fraction, ProductionBuilding scales output down (see its
         // DecayProductionMultiplier) -- exposed here since decay itself is owned by this class.
-        public const float DecayPenaltyThreshold = 0.7f;
+        public static float DecayPenaltyThreshold => BalanceConfig.Instance.DecayPenaltyThreshold;
 
         // First-pass pace, tunable: divided by Level, so a level-3 building decays a third as
         // fast as the same building fresh at level 1 -- upgrading doubles as upkeep investment,
         // not just a stat/production bump.
-        private const float DecayPerDayBase = 0.02f;
-        private const float RepairCostFraction = 0.4f;
+        // Both from the balance sheet's economy tab (decay_per_day_at_level1 / repair_cost_fraction).
         private const float DecayMarkerHeight = 3f;
 
         public BuildingData Data { get; private set; }
@@ -123,7 +122,7 @@ namespace CityBuilder.Buildings
         /// <summary>Pure formula extracted from HandleDayPassed so it's covered by an EditMode test without needing a live scene/GameCalendar.</summary>
         public static float ComputeNextDecay(float currentDecay, int level)
         {
-            return Mathf.Clamp01(currentDecay + DecayPerDayBase / Mathf.Max(1, level));
+            return Mathf.Clamp01(currentDecay + BalanceConfig.Instance.DecayPerDayAtLevel1 / Mathf.Max(1, level));
         }
 
         /// <summary>Grid occupancy, NavMesh obstacle carving, and worker release (via ProductionBuilding.OnDestroy -> CitizenVisualsManager) are all cleaned up automatically by destroying the GameObject -- nothing here needs to touch those systems directly.</summary>
@@ -180,7 +179,7 @@ namespace CityBuilder.Buildings
             var scaled = new List<ResourceAmount>();
             foreach (var amount in Data.cost)
             {
-                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * RepairCostFraction)) });
+                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * BalanceConfig.Instance.RepairCostFraction)) });
             }
             return scaled;
         }

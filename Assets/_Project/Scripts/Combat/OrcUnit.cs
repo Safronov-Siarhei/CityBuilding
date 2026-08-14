@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using UnityEngine;
 using UnityEngine.AI;
@@ -18,26 +19,14 @@ namespace CityBuilder.Combat
     /// </summary>
     public class OrcUnit : MonoBehaviour, IDamageTarget
     {
-        // Level 1 values; an orc's actual stats are these scaled by its Level (see Initialize).
-        // Raids spawn level 1 -- higher levels currently only come from the OrcSpawn cheat, and
-        // are the groundwork for the backlog's "raid strength scales with player progression".
-        private const int BaseMaxHealth = 20;
-        private const int BaseAttackDamage = 4;
-        private const float AttackIntervalSeconds = 1.2f;
-        // Generous on purpose: a target building's transform sits at its footprint CENTER, and a
-        // NavMeshObstacle carve stops the route a bit short of that -- for the biggest buildings
-        // (Town Hall, 4x4) the gap can exceed a tight melee range. Simpler to over-range slightly
-        // than to chase exact edge-of-footprint contact for a first pass.
-        private const float AttackRange = 3f;
-        private const float WalkSpeed = 1.3f;
+        // Stats come from the balance sheet's "orc" row (see BalanceConfig); the fields below cache
+        // them per orc at Awake. Level scales health and damage on top -- raids spawn level 1, and
+        // higher levels currently only come from the OrcSpawn cheat.
+        /// <summary>The row this unit reads in the balance sheet's units tab.</summary>
+        private const string SheetId = "orc";
+
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
-        // A raid is still after the town, not the garrison -- but an orc being stabbed has to hit
-        // back, or the player's militia would kill raiders with zero losses. So: anything within
-        // this radius takes precedence over the building the orc was walking to, and the orc goes
-        // back to the building once nothing is close any more. No pursuit beyond the radius.
-        private const float SoldierAggroRadius = 6f;
-        private const float SoldierAttackRange = 1.4f;
         // Much shorter than RetargetIntervalSeconds: buildings don't move, soldiers do, and a
         // five-second reaction to being attacked reads as the orc simply not noticing.
         private const float SoldierScanIntervalSeconds = 0.4f;
@@ -56,7 +45,7 @@ namespace CityBuilder.Combat
         private float _retargetTimer;
         private float _soldierScanTimer;
 
-        public int CurrentHealth { get; private set; } = BaseMaxHealth;
+        public int CurrentHealth { get; private set; }
 
         // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
         // a unit, not a structure, so a group set to prioritise structures walks past it.
@@ -68,20 +57,50 @@ namespace CityBuilder.Combat
         /// <summary>1 unless raised at spawn time. Scales both health and attack damage linearly.</summary>
         public int Level { get; private set; } = 1;
 
-        private int _maxHealth = BaseMaxHealth;
-        private int _attackDamage = BaseAttackDamage;
+        private int _maxHealth;
+        private int _attackDamage;
+        private int _baseMaxHealth;
+        private int _baseAttackDamage;
+        private float _attackIntervalSeconds;
+        // Generous on purpose: a target building's transform sits at its footprint CENTER, and a
+        // NavMeshObstacle carve stops the route a bit short of that -- for the biggest buildings
+        // (Town Hall, 4x4) the gap can exceed a tight melee range. That's why the sheet gives orcs
+        // a wider reach against structures than against soldiers.
+        private float _buildingAttackRange;
+        private float _soldierAttackRange;
+        // A raid is still after the town, not the garrison -- but an orc being stabbed has to hit
+        // back, or the player's militia would kill raiders without a scratch. So: a soldier within
+        // this radius takes precedence over the building the orc was walking to, and the orc goes
+        // back to that building once nothing is close any more. No pursuit beyond the radius.
+        private float _soldierAggroRadius;
+        private float _walkSpeed;
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+
+            // In Awake, not Initialize: an orc left uninitialized is a valid level 1 and still
+            // needs its stats.
+            var stats = BalanceConfig.Instance.Unit(SheetId);
+            _baseMaxHealth = stats.maxHealth;
+            _baseAttackDamage = stats.attackDamage;
+            _attackIntervalSeconds = stats.attackIntervalSeconds;
+            _buildingAttackRange = stats.attackRangeStructures;
+            _soldierAttackRange = stats.attackRangeUnits;
+            _soldierAggroRadius = stats.engageRadius;
+            _walkSpeed = stats.walkSpeed;
+
+            _maxHealth = _baseMaxHealth;
+            _attackDamage = _baseAttackDamage;
+            CurrentHealth = _maxHealth;
         }
 
         /// <summary>Optional -- an orc left uninitialized is a perfectly valid level 1. Called right after the component is added, before its first Update.</summary>
         public void Initialize(int level)
         {
             Level = Mathf.Max(1, level);
-            _maxHealth = BaseMaxHealth * Level;
-            _attackDamage = BaseAttackDamage * Level;
+            _maxHealth = _baseMaxHealth * Level;
+            _attackDamage = _baseAttackDamage * Level;
             CurrentHealth = _maxHealth;
         }
 
@@ -127,7 +146,7 @@ namespace CityBuilder.Combat
             var toTarget = _target.transform.position - transform.position;
             toTarget.y = 0f;
 
-            if (toTarget.magnitude <= AttackRange)
+            if (toTarget.magnitude <= _buildingAttackRange)
             {
                 TickAttack();
                 return;
@@ -155,11 +174,11 @@ namespace CityBuilder.Combat
             toSoldier.y = 0f;
             var distance = toSoldier.magnitude;
 
-            if (distance <= SoldierAttackRange)
+            if (distance <= _soldierAttackRange)
             {
                 _attackTimer -= Time.deltaTime;
                 if (_attackTimer > 0f) return;
-                _attackTimer = AttackIntervalSeconds;
+                _attackTimer = _attackIntervalSeconds;
 
                 _soldierTarget.TakeDamage(_attackDamage);
                 if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
@@ -169,12 +188,12 @@ namespace CityBuilder.Combat
             var direction = toSoldier / distance;
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * WalkSpeed * Time.deltaTime);
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
                 PinToGroundHeight();
             }
             else
             {
-                transform.position += direction * WalkSpeed * Time.deltaTime;
+                transform.position += direction * _walkSpeed * Time.deltaTime;
             }
 
             // The building route was planned from where this orc used to stand; force a replan
@@ -185,7 +204,7 @@ namespace CityBuilder.Combat
         private SoldierUnit FindNearestSoldierInAggroRange()
         {
             SoldierUnit nearest = null;
-            var nearestDistSq = SoldierAggroRadius * SoldierAggroRadius;
+            var nearestDistSq = _soldierAggroRadius * _soldierAggroRadius;
 
             foreach (var soldier in SoldierUnit.All)
             {
@@ -205,7 +224,7 @@ namespace CityBuilder.Combat
         {
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
-            _attackTimer = AttackIntervalSeconds;
+            _attackTimer = _attackIntervalSeconds;
 
             _target.TryDamage(_attackDamage);
             // TryDamage updates CurrentHealth synchronously even though the resulting Destroy()
@@ -231,12 +250,12 @@ namespace CityBuilder.Combat
             var direction = toWaypoint / distance;
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * WalkSpeed * Time.deltaTime);
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
                 PinToGroundHeight();
             }
             else
             {
-                transform.position += direction * WalkSpeed * Time.deltaTime;
+                transform.position += direction * _walkSpeed * Time.deltaTime;
             }
         }
 
