@@ -67,6 +67,104 @@ namespace CityBuilder.Tests.EditMode
             }
         }
 
+        [TestCase("House")]
+        [TestCase("Cottage")]
+        [TestCase("TownHall")]
+        [TestCase("FishermanHut")]
+        [TestCase("HunterHut")]
+        [TestCase("Farm")]
+        [TestCase("Lumberjack")]
+        [TestCase("Quarry")]
+        [TestCase("Mine")]
+        [TestCase("CoalMine")]
+        [TestCase("Wall")]
+        [TestCase("Tower")]
+        [TestCase("Barracks")]
+        [TestCase("Gate")]
+        [TestCase("Road")]
+        [TestCase("Bridge")]
+        [TestCase("WaterMill")]
+        [TestCase("Dock")]
+        public void BuildingsTab_HasEveryBuildingTheCodeAsksFor(string id)
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+
+            Assert.IsNotNull(config.Building(id),
+                $"The buildings tab has no row with id '{id}', so SetupProject generates it with placeholder " +
+                "numbers. A renamed or deleted row looks exactly like this.");
+        }
+
+        [Test]
+        public void EveryBuilding_HasNumbersThatCanBeBuiltWith()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+            Assert.IsNotEmpty(config.Buildings, "The buildings tab imported as empty -- most likely the CSV lost its rows or its header.");
+
+            foreach (var building in config.Buildings)
+            {
+                Assert.IsNotEmpty(building.displayName, $"{building.id}: an empty display name shows up as a blank hotbar tooltip.");
+                Assert.Greater(building.maxHealth, 0, $"{building.id}: zero health collapses the moment it's placed.");
+                Assert.GreaterOrEqual(building.defense, 0, $"{building.id}: negative defence would heal the raiders.");
+                Assert.Greater(building.productionIntervalSeconds, 0f, $"{building.id}: a zero production interval ticks every frame.");
+                Assert.GreaterOrEqual(building.maxWorkers, 0, $"{building.id}: negative worker slots.");
+                Assert.GreaterOrEqual(building.fogRevealRadius, 0, $"{building.id}: negative reveal radius.");
+
+                if (building.productionPerWorkerPerTick > 0)
+                {
+                    Assert.Greater(building.maxWorkers, 0,
+                        $"{building.id}: produces something but has no worker slots, so it can never produce anything.");
+                }
+
+                foreach (var amount in building.cost)
+                {
+                    Assert.Greater(amount.amount, 0, $"{building.id}: a cost entry of {amount.amount} {amount.type} should simply be absent.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The prerequisite column is the one place in the buildings tab that points at another row,
+        /// so it's the one that can dangle: a typo there silently costs the building its requirement.
+        /// </summary>
+        [Test]
+        public void BuildingPrerequisites_PointAtRealBuildings()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+
+            foreach (var building in config.Buildings)
+            {
+                if (string.IsNullOrEmpty(building.requiredBuildingId)) continue;
+
+                Assert.AreNotEqual(building.id, building.requiredBuildingId,
+                    $"{building.id} requires itself, which can never be satisfied.");
+                Assert.IsNotNull(config.Building(building.requiredBuildingId),
+                    $"{building.id} requires '{building.requiredBuildingId}', which is not a row in the buildings tab.");
+            }
+        }
+
+        /// <summary>Upgrades are supposed to get steeper, not cheaper -- the kind of thing a mistyped formula in the sheet inverts without looking wrong.</summary>
+        [Test]
+        public void UpgradeCosts_RiseWithLevel()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+
+            foreach (var building in config.Buildings)
+            {
+                var level2 = 0;
+                foreach (var amount in building.upgradeToLevel2Cost) level2 += amount.amount;
+
+                var level3 = 0;
+                foreach (var amount in building.upgradeToLevel3Cost) level3 += amount.amount;
+
+                Assert.GreaterOrEqual(level3, level2,
+                    $"{building.id}: reaching level 3 costs {level3} resources in total, less than the {level2} level 2 costs.");
+            }
+        }
+
         [Test]
         public void Economy_IsInsideSaneRanges()
         {

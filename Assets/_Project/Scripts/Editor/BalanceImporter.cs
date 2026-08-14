@@ -4,7 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text;
+using CityBuilder.Buildings;
 using CityBuilder.Core;
+using CityBuilder.Resources;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,6 +28,7 @@ namespace CityBuilder.EditorTools
         public const string BalanceFolder = "Assets/_Project/Balance";
         public const string UnitsCsvPath = BalanceFolder + "/units.csv";
         public const string EconomyCsvPath = BalanceFolder + "/economy.csv";
+        public const string BuildingsCsvPath = BalanceFolder + "/buildings.csv";
         public const string SettingsAssetPath = BalanceFolder + "/BalanceSheetSettings.asset";
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
 
@@ -43,6 +46,7 @@ namespace CityBuilder.EditorTools
         public static BalanceConfig RebuildConfig()
         {
             var units = ReadUnits(UnitsCsvPath);
+            var buildings = ReadBuildings(BuildingsCsvPath);
             var economy = ReadEconomy(EconomyCsvPath);
 
             var config = AssetDatabase.LoadAssetAtPath<BalanceConfig>(ConfigAssetPath);
@@ -53,11 +57,11 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.CreateAsset(config, ConfigAssetPath);
             }
 
-            config.OverwriteFrom(units, economy);
+            config.OverwriteFrom(units, buildings, economy);
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"BalanceImporter: {units.Count} units and {economy.Count} economy keys -> {ConfigAssetPath}");
+            Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings and {economy.Count} economy keys -> {ConfigAssetPath}");
             return config;
         }
 
@@ -70,7 +74,8 @@ namespace CityBuilder.EditorTools
         public static void PullFromGoogleSheets()
         {
             var settings = LoadOrCreateSettings();
-            if (string.IsNullOrWhiteSpace(settings.unitsCsvUrl) && string.IsNullOrWhiteSpace(settings.economyCsvUrl))
+            if (string.IsNullOrWhiteSpace(settings.unitsCsvUrl) && string.IsNullOrWhiteSpace(settings.economyCsvUrl)
+                && string.IsNullOrWhiteSpace(settings.buildingsCsvUrl))
             {
                 Selection.activeObject = settings;
                 EditorUtility.DisplayDialog("Баланс",
@@ -83,6 +88,7 @@ namespace CityBuilder.EditorTools
             var downloaded = 0;
             downloaded += TryDownload(settings.unitsCsvUrl, UnitsCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.economyCsvUrl, EconomyCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.buildingsCsvUrl, BuildingsCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -166,6 +172,103 @@ namespace CityBuilder.EditorTools
                 });
             }
             return units;
+        }
+
+        /// <summary>
+        /// The buildings tab: one row per building, numbers only. Costs are spread across one column
+        /// per resource (cost_wood, up2_stone, ...) rather than packed into a single cell, so the
+        /// sheet can total and compare them -- "what does the defence line cost in stone" is a column
+        /// sum, and the upgrade columns are formulas over the base cost.
+        /// </summary>
+        private static List<BuildingBalance> ReadBuildings(string path)
+        {
+            var buildings = new List<BuildingBalance>();
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return buildings;
+
+            var header = rows[0];
+            for (var i = 0; i < header.Count; i++)
+            {
+                header[i] = header[i].Trim();
+            }
+
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (row.Count == 0 || string.IsNullOrWhiteSpace(row[0])) continue;
+                if (IsNoteRow(row)) continue;
+
+                buildings.Add(new BuildingBalance
+                {
+                    id = Text(header, row, "id"),
+                    displayName = Text(header, row, "display_name"),
+                    category = ParseEnum(header, row, "category", BuildingCategory.Production, path),
+                    cost = ReadCost(header, row, "cost_", path),
+                    citizensGranted = (int)Number(header, row, "citizens_granted", path),
+                    maxWorkers = (int)Number(header, row, "max_workers", path),
+                    producesResource = ParseEnum(header, row, "produces", ResourceType.Wood, path),
+                    productionPerWorkerPerTick = (int)Number(header, row, "production_per_tick", path),
+                    productionIntervalSeconds = Number(header, row, "production_interval_sec", path),
+                    maxHealth = (int)Number(header, row, "max_health", path),
+                    defense = (int)Number(header, row, "defense", path),
+                    fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
+                    requiredBuildingId = Text(header, row, "requires"),
+                    upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
+                    upgradeToLevel3Cost = ReadCost(header, row, "up3_", path),
+                });
+            }
+            return buildings;
+        }
+
+        /// <summary>
+        /// The resource columns sharing one prefix, as a cost list. Only the five resources a
+        /// building can actually cost are looked for; a blank or zero cell means "not part of this
+        /// cost" and is dropped, so the generated asset carries the same short lists it always did.
+        /// </summary>
+        private static List<ResourceAmount> ReadCost(List<string> header, List<string> row, string prefix, string path)
+        {
+            var cost = new List<ResourceAmount>();
+            foreach (var type in CostResources)
+            {
+                var amount = CostAmount(header, row, prefix + type.ToString().ToLowerInvariant(), path);
+                if (amount > 0) cost.Add(new ResourceAmount { type = type, amount = amount });
+            }
+            return cost;
+        }
+
+        /// <summary>
+        /// Resources a building can be paid for, in the order the cost list is built -- which is the
+        /// order the UI shows them in, so it stays the same for every building.
+        /// </summary>
+        private static readonly ResourceType[] CostResources =
+        {
+            ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold,
+        };
+
+        /// <summary>Quiet about an absent column or an empty cell (that is simply a cost this building doesn't have), loud about a cell holding something that isn't a number.</summary>
+        private static int CostAmount(List<string> header, List<string> row, string column, string path)
+        {
+            if (header.IndexOf(column) < 0) return 0;
+
+            var raw = Text(header, row, column);
+            if (raw.Length == 0) return 0;
+            if (TryParseNumber(raw, out var value)) return (int)value;
+
+            Debug.LogError($"BalanceImporter: {path} has '{raw}' in column '{column}', which is not a number. Treating it as 0.");
+            return 0;
+        }
+
+        /// <summary>An enum-valued cell read by name ("Housing", "Food"). Empty keeps the fallback -- a building with no production names no resource.</summary>
+        private static TEnum ParseEnum<TEnum>(List<string> header, List<string> row, string column, TEnum fallback, string path)
+            where TEnum : struct
+        {
+            var raw = Text(header, row, column);
+            if (raw.Length == 0) return fallback;
+            if (Enum.TryParse(raw, true, out TEnum parsed)) return parsed;
+
+            Debug.LogError($"BalanceImporter: {path} column '{column}' has '{raw}', which is not a valid {typeof(TEnum).Name} " +
+                           $"(expected one of: {string.Join(", ", Enum.GetNames(typeof(TEnum)))}). Using {fallback}.");
+            return fallback;
         }
 
         /// <summary>

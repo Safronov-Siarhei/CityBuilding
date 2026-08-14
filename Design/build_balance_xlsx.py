@@ -1,5 +1,7 @@
-"""Builds the balance workbook the game imports from (units/economy tabs) plus a read-only
-summary tab whose formulas show what the numbers actually mean."""
+"""Builds the balance workbook the game imports from (units/economy/buildings tabs) plus a
+read-only summary tab whose formulas show what the numbers actually mean."""
+import os
+
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -110,6 +112,8 @@ econ_rows = [
     ("repair_cost_fraction", 0.4, "Доля стоимости постройки за полный ремонт"),
     ("wood_per_tree", 5, "Дерева за одно срубленное дерево вручную"),
     ("stone_per_rock", 4, "Камня за один валун вручную"),
+    ("building_upgrade_level2_multiplier", 1.6, "Только для формул на вкладке buildings: код читает готовые up2_/up3_"),
+    ("building_upgrade_level3_multiplier", 2.8, "Только для формул на вкладке buildings: код читает готовые up2_/up3_"),
 ]
 
 for r, (key, value, comment) in enumerate(econ_rows, start=2):
@@ -126,6 +130,154 @@ for r, (key, value, comment) in enumerate(econ_rows, start=2):
 economy.freeze_panes = "A2"
 economy.cell(row=len(econ_rows) + 3, column=1,
              value="Ключи в колонке key читает код: переименование = потерянная настройка (импорт напишет об этом ошибкой).").font = NOTE
+
+# ------------------------------------------------------------ buildings ----
+# Numbers only. What a building looks like -- footprint, height, colours, model --
+# stays in SetupProject.cs, so nothing here can break geometry.
+buildings = wb.create_sheet("buildings")
+
+RESOURCES = ["wood", "stone", "iron", "coal", "gold"]
+
+bld_cols = [
+    ("id", 14, None),
+    ("display_name", 20, None),
+    ("category", 15, None),
+    ("cost_wood", 11, None), ("cost_stone", 11, None), ("cost_iron", 10, None),
+    ("cost_coal", 10, None), ("cost_gold", 10, None),
+    ("citizens_granted", 16, None),
+    ("max_workers", 12, None),
+    ("produces", 11, None),
+    ("production_per_tick", 18, None),
+    ("production_interval_sec", 20, None),
+    ("max_health", 11, None),
+    ("defense", 10, None),
+    ("fog_reveal_radius", 16, None),
+    ("requires", 13, None),
+]
+bld_cols += [(f"up2_{res}", 10, "derived") for res in RESOURCES]
+bld_cols += [(f"up3_{res}", 10, "derived") for res in RESOURCES]
+bld_cols += [
+    ("comment", 60, "note"),
+    ("total_cost", 12, "derived"),
+    ("per_day", 12, "derived"),
+    ("payback_days", 14, "derived"),
+]
+
+for col, (name, width, _kind) in enumerate(bld_cols, start=1):
+    cell = buildings.cell(row=1, column=col, value=name)
+    cell.font = HEADER_FONT
+    cell.fill = HEADER_FILL
+    cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    cell.border = BOX
+    buildings.column_dimensions[get_column_letter(col)].width = width
+
+# id, name, category, cost{res}, citizens, workers, produces, per_tick, interval,
+# health, defense, fog, requires, upgrade overrides, comment.
+# An upgrade cell is a formula (base cost x the level's multiplier) unless it appears in
+# `over`: the Town Hall is free to place so there is nothing to scale, and the iron/coal
+# entries are deliberate tech gates rather than a function of the base price.
+bld_rows = [
+    ("House", "Дом", "Housing", {"wood": 10}, 5, 0, "", 0, 6, 80, 0, 10, "", {}, ""),
+    ("Cottage", "Коттедж", "Housing", {"wood": 25, "stone": 8}, 8, 0, "", 0, 6, 120, 0, 10, "House", {},
+     "Требует Дом: жильё поприличнее ставится только там, где уже есть базовое."),
+    ("TownHall", "Ратуша", "Production", {}, 5, 0, "", 0, 6, 400, 20, 20, "",
+     {(2, "wood"): 100, (2, "stone"): 60, (3, "wood"): 220, (3, "stone"): 150, (3, "coal"): 20, (3, "gold"): 40},
+     "Ставится бесплатно, поэтому стоимости апгрейдов заданы руками, а не формулой от базовой цены."),
+    ("FishermanHut", "Хижина рыбака", "Food", {"wood": 15}, 0, 2, "Food", 2, 6, 90, 0, 12, "", {}, ""),
+    ("HunterHut", "Хижина охотника", "Food", {"wood": 15, "stone": 5}, 0, 2, "Food", 2, 6, 90, 0, 14, "", {}, ""),
+    ("Farm", "Ферма", "Food", {"wood": 15, "stone": 5}, 0, 3, "Food", 3, 6, 70, 0, 10, "", {}, ""),
+    ("Lumberjack", "Лесопилка", "Production", {"wood": 20, "stone": 5}, 0, 3, "Wood", 2, 6, 100, 0, 15, "", {}, ""),
+    ("Quarry", "Каменоломня", "Production", {"wood": 20}, 0, 3, "Stone", 2, 6, 110, 0, 14, "", {}, ""),
+    ("Mine", "Шахта", "Production", {"wood": 25, "stone": 15}, 0, 3, "Iron", 1, 6, 110, 0, 14, "",
+     {(2, "coal"): 10, (3, "coal"): 22},
+     "Копать глубже за рудой = топливо для горна и насосов, поэтому в апгрейдах уголь."),
+    ("CoalMine", "Угольная шахта", "Production", {"wood": 25, "stone": 10}, 0, 3, "Coal", 2, 6, 100, 0, 14, "",
+     {(2, "iron"): 6, (3, "iron"): 14},
+     "Железная крепь для глубоких пластов — связывает две шахты друг с другом."),
+    ("Wall", "Стена", "Military", {"stone": 5}, 0, 0, "", 0, 6, 150, 15, 6, "",
+     {(2, "iron"): 6, (3, "iron"): 14},
+     "Железо в апгрейдах у всей линии обороны: сначала цепочка Шахта → железо, потом крепкие стены."),
+    ("Tower", "Башня", "Military", {"wood": 5, "stone": 15}, 0, 0, "", 0, 6, 220, 25, 18, "Wall",
+     {(2, "iron"): 12, (3, "iron"): 26},
+     "Требует Стену: башня усиливает линию, а не стоит сама по себе."),
+    ("Barracks", "Казармы", "Military", {"wood": 15, "stone": 30}, 0, 0, "", 0, 6, 180, 10, 10, "",
+     {(2, "iron"): 15, (3, "iron"): 32},
+     "Оружие и броня для большего гарнизона — самый крупный сток железа в игре."),
+    ("Gate", "Ворота", "Military", {"wood": 5, "stone": 12}, 0, 0, "", 0, 6, 160, 12, 8, "",
+     {(2, "iron"): 8, (3, "iron"): 18}, ""),
+    ("Road", "Дорога", "Infrastructure", {"stone": 3}, 0, 0, "", 0, 6, 40, 0, 4, "", {}, ""),
+    ("Bridge", "Мост", "Infrastructure", {"wood": 8}, 0, 0, "", 0, 6, 40, 0, 4, "", {}, ""),
+    ("WaterMill", "Водяная мельница", "Food", {"wood": 25, "stone": 10}, 0, 3, "Food", 3, 6, 90, 0, 12, "", {}, ""),
+    ("Dock", "Пристань", "Production", {"wood": 20, "stone": 8}, 0, 2, "Gold", 1, 6, 80, 0, 12, "", {}, ""),
+]
+
+COST_START = 4                      # column D: cost_wood
+UP_START = {2: 18, 3: 23}           # columns R and W
+ECON = 'INDEX(economy!B:B,MATCH("{key}",economy!A:A,0))'
+
+def authored(cell, value, fmt=None):
+    cell.value = value
+    cell.font = BLUE
+    cell.fill = INPUT_FILL
+    cell.border = BOX
+    if fmt:
+        cell.number_format = fmt
+
+def derived(cell, formula, fmt="0"):
+    cell.value = formula
+    cell.font = BLACK
+    cell.fill = DERIVED_FILL
+    cell.border = BOX
+    cell.number_format = fmt
+
+for r, (bid, name, category, cost, citizens, workers, produces, per_tick,
+        interval, health, defense, fog, requires, over, comment) in enumerate(bld_rows, start=2):
+    authored(buildings.cell(row=r, column=1), bid)
+    authored(buildings.cell(row=r, column=2), name)
+    authored(buildings.cell(row=r, column=3), category)
+    for i, res in enumerate(RESOURCES):
+        authored(buildings.cell(row=r, column=COST_START + i), cost.get(res, 0))
+    authored(buildings.cell(row=r, column=9), citizens)
+    authored(buildings.cell(row=r, column=10), workers)
+    authored(buildings.cell(row=r, column=11), produces)
+    authored(buildings.cell(row=r, column=12), per_tick)
+    authored(buildings.cell(row=r, column=13), interval)
+    authored(buildings.cell(row=r, column=14), health)
+    authored(buildings.cell(row=r, column=15), defense)
+    authored(buildings.cell(row=r, column=16), fog)
+    authored(buildings.cell(row=r, column=17), requires)
+
+    for level in (2, 3):
+        multiplier = ECON.format(key=f"building_upgrade_level{level}_multiplier")
+        for i, res in enumerate(RESOURCES):
+            cell = buildings.cell(row=r, column=UP_START[level] + i)
+            if (level, res) in over:
+                authored(cell, over[(level, res)])
+            else:
+                base = f"{get_column_letter(COST_START + i)}{r}"
+                # Mirrors the rule the code used to apply: scale, round, and never let a
+                # non-zero base cost scale down to nothing.
+                derived(cell, f"=IF({base}=0,0,MAX(1,ROUND({base}*{multiplier},0)))")
+
+    note_cell = buildings.cell(row=r, column=28, value=comment)
+    note_cell.font = NOTE
+    note_cell.border = BOX
+
+    derived(buildings.cell(row=r, column=29), f"=SUM(D{r}:H{r})")
+    day = ECON.format(key="day_length_seconds")
+    derived(buildings.cell(row=r, column=30), f"=IF(M{r}=0,0,J{r}*L{r}*{day}/M{r})", "0.0")
+    derived(buildings.cell(row=r, column=31), f'=IF(AD{r}=0,"",AC{r}/AD{r})', "0.0")
+
+buildings.freeze_panes = "B2"
+first_note = len(bld_rows) + 3
+buildings.cell(row=first_note, column=1,
+               value="Жёлтые ячейки — правишь ты. Серые считаются формулами.").font = NOTE
+buildings.cell(row=first_note + 1, column=1,
+               value="Колонку id читает код: переименование строки = здание без баланса, сборка скажет об этом ошибкой.").font = NOTE
+buildings.cell(row=first_note + 2, column=1,
+               value="Визуал (размер в клетках, высота, цвета, модель) живёт в SetupProject.cs и в таблицу не переносится.").font = NOTE
+buildings.cell(row=first_note + 3, column=1,
+               value="per_day и payback_days считают только производство: сколько ресурса в день на полном штате и за сколько дней отбивается постройка.").font = NOTE
 
 # -------------------------------------------------------------- summary ----
 s = wb.create_sheet("сводка")
@@ -186,8 +338,16 @@ r = line(r, "Дней до полного износа, 3 уровень", "=3/I
 r = line(r, "Реальных минут до полного износа, 1 ур.", "=B27*INDEX(economy!B:B,MATCH(\"day_length_seconds\",economy!A:A,0))/60", "", "0.0")
 
 r += 1
-note = s.cell(row=r, column=1, value="Эта вкладка только считает — правь units и economy, числа здесь пересчитаются сами.")
+r = title(r, "Здания")
+r = line(r, "Быстрее всех окупается, дней", "=MIN(buildings!AE:AE)", "По колонке payback_days: сколько игровых дней производство отбивает постройку.", "0.0")
+r = line(r, "Линия обороны целиком, камня", '=SUMIF(buildings!$C:$C,"Military",buildings!$E:$E)', "Стена + башня + казармы + ворота по одному разу.", "0")
+r = line(r, "Жителей за всё жильё", '=SUMIF(buildings!$C:$C,"Housing",buildings!$I:$I)', "Дом + коттедж по одному разу.", "0")
+r = line(r, "Еды в день со всех источников", '=SUMIF(buildings!$C:$C,"Food",buildings!$AD:$AD)', "На полном штате рабочих.", "0.0")
+
+r += 1
+note = s.cell(row=r, column=1, value="Эта вкладка только считает — правь units, economy и buildings, числа здесь пересчитаются сами.")
 note.font = NOTE
 
-wb.save(r"C:\Users\borei\AppData\Local\Temp\claude\D--Fork-CityBuilding\eb49c351-aa8b-4a23-97fd-0aa9d97ab685\scratchpad\CityBuilding_Balance.xlsx")
+# Next to this script, i.e. Design/ -- the workbook is committed alongside its generator.
+wb.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), "CityBuilding_Balance.xlsx"))
 print("saved")

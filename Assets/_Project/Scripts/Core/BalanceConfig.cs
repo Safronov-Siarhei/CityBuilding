@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Buildings;
+using CityBuilder.Resources;
 using UnityEngine;
 
 namespace CityBuilder.Core
@@ -32,6 +34,49 @@ namespace CityBuilder.Core
     }
 
     /// <summary>
+    /// One row of the balance sheet's "buildings" tab: everything about a building that is a NUMBER
+    /// rather than a shape. What the building looks like -- footprint, height, colours, which
+    /// procedural generator or FBX builds its prefab -- stays in SetupProject, because none of it is
+    /// balance and a spreadsheet is a bad place to author geometry.
+    ///
+    /// Read at build time only: SetupProject bakes these into the BuildingData assets the game
+    /// actually loads, so the runtime never walks this list.
+    /// </summary>
+    [Serializable]
+    public class BuildingBalance
+    {
+        public string id = string.Empty;
+        public string displayName = string.Empty;
+        public BuildingCategory category = BuildingCategory.Production;
+
+        /// <summary>Placement cost. Built from the tab's cost_wood/cost_stone/... columns, zeroes omitted.</summary>
+        public List<ResourceAmount> cost = new List<ResourceAmount>();
+
+        public int citizensGranted;
+        public int maxWorkers;
+        public ResourceType producesResource = ResourceType.Wood;
+        public int productionPerWorkerPerTick;
+        public float productionIntervalSeconds = 6f;
+        public int maxHealth = 100;
+        public int defense;
+        public int fogRevealRadius = 8;
+
+        /// <summary>Id of a building that must already stand somewhere before this one can be placed. Empty = no prerequisite.</summary>
+        public string requiredBuildingId = string.Empty;
+
+        /// <summary>
+        /// Upgrade costs, spelled out per level instead of derived in code from a multiplier. The
+        /// sheet computes the ordinary cases with a formula (base cost x the level's multiplier) and
+        /// the exceptions are authored by hand -- the Town Hall, which is free to place and so has
+        /// nothing to scale, and the iron/coal that gate the mines and the defence line. That gating
+        /// used to live in six scattered mutations in SetupProject, where it was invisible next to
+        /// the numbers it was balancing against.
+        /// </summary>
+        public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
+    }
+
+    /// <summary>
     /// Every tunable gameplay number in one asset, generated from the balance spreadsheet's CSV
     /// export (see Assets/_Project/Balance and the Editor-side BalanceImporter). The spreadsheet is
     /// where balance is AUTHORED -- with derived columns showing what the numbers actually mean
@@ -54,6 +99,9 @@ namespace CityBuilder.Core
 
         [Header("Units (units.csv)")]
         [SerializeField] private List<UnitBalance> units = new List<UnitBalance>();
+
+        [Header("Buildings (buildings.csv)")]
+        [SerializeField] private List<BuildingBalance> buildings = new List<BuildingBalance>();
 
         [Header("Army (economy.csv)")]
         [SerializeField] private int armyMaxSize = 20;
@@ -80,6 +128,7 @@ namespace CityBuilder.Core
         [SerializeField] private int stonePerRock = 4;
 
         public IReadOnlyList<UnitBalance> Units => units;
+        public IReadOnlyList<BuildingBalance> Buildings => buildings;
         public int ArmyMaxSize => armyMaxSize;
         public float RaidIntervalSeconds => raidIntervalSeconds;
         public int RaidBaseSize => raidBaseSize;
@@ -131,10 +180,25 @@ namespace CityBuilder.Core
             return new UnitBalance { id = id, displayName = id };
         }
 
+        /// <summary>
+        /// A building row by id ("House", "Tower"), or null if the sheet has no such row. Callers
+        /// decide how loud a miss is: SetupProject treats it as a build error, because a building
+        /// with no balance row would otherwise be generated silently full of defaults.
+        /// </summary>
+        public BuildingBalance Building(string id)
+        {
+            foreach (var building in buildings)
+            {
+                if (building.id == id) return building;
+            }
+            return null;
+        }
+
         /// <summary>Editor-side entry point for the CSV importer -- see BalanceImporter.</summary>
-        public void OverwriteFrom(List<UnitBalance> importedUnits, Dictionary<string, float> economy)
+        public void OverwriteFrom(List<UnitBalance> importedUnits, List<BuildingBalance> importedBuildings, Dictionary<string, float> economy)
         {
             units = importedUnits;
+            buildings = importedBuildings;
 
             armyMaxSize = (int)Read(economy, "army_max_size", armyMaxSize);
             raidIntervalSeconds = Read(economy, "raid_interval_seconds", raidIntervalSeconds);

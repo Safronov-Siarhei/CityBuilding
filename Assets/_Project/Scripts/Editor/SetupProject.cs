@@ -44,6 +44,13 @@ namespace CityBuilder.EditorTools
         private const float GroundHeight = 0f;
         private static readonly Vector3 GroundOrigin = new Vector3(-GridCellsX * CellSize * 0.5f, 0f, -GridCellsZ * CellSize * 0.5f);
 
+        /// <summary>
+        /// The balance the current run is building against, straight from RebuildConfig's return
+        /// value rather than BalanceConfig.Instance -- Instance caches whatever Resources.Load
+        /// happened to return first, which in an Editor session can predate the rebuild.
+        /// </summary>
+        private static BalanceConfig _balance;
+
         [MenuItem("CityBuilder/Setup Project (Scenes + Prefabs)")]
         public static void Run()
         {
@@ -55,7 +62,7 @@ namespace CityBuilder.EditorTools
             // read balance numbers, and a stale config would bake yesterday's balance into today's
             // assets. Regenerating from the committed CSVs (never from the network) keeps a
             // batchmode build reproducible on any machine.
-            BalanceImporter.RebuildConfig();
+            _balance = BalanceImporter.RebuildConfig();
 
             ForceReimportModels();
 
@@ -179,169 +186,106 @@ namespace CityBuilder.EditorTools
             var doorMaterial = CreateLitMaterial("Door", new Color(0.32f, 0.18f, 0.09f));
             var windowMaterial = CreateLitMaterial("Window", new Color(0.88f, 0.78f, 0.48f));
 
+            // Only shape below: every number these buildings are balanced on -- cost, health,
+            // production, defence, upgrades, prerequisites -- comes from the balance sheet's
+            // buildings tab, looked up by the id in the first argument (see ApplyBalance).
             var houseData = CreateBuildingData(
-                "House", "Дом", new Vector2Int(1, 1), height: 2f,
+                "House", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 10 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 5, category: BuildingCategory.Housing, maxHealth: 80, fogRevealRadius: 10);
+                hasChimney: true);
 
             var cottageData = CreateBuildingData(
-                "Cottage", "Коттедж", new Vector2Int(1, 1), height: 2.3f,
+                "Cottage", new Vector2Int(1, 1), height: 2.3f,
                 wallColor: new Color(0.62f, 0.42f, 0.55f), roofColor: new Color(0.3f, 0.2f, 0.4f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, citizensGranted: 8, category: BuildingCategory.Housing, maxHealth: 120, fogRevealRadius: 10);
-            // First example wiring of the requirement system (BuildingData.requiredBuilding):
-            // upscale housing needs a basic House placed first. AssetDatabase.CreateAsset (inside
-            // CreateBuildingData) writes the asset immediately -- see the Iron/Coal upgrade-cost
-            // bug this same gotcha caused earlier -- so this mutation needs an explicit SetDirty
-            // or the later AssetDatabase.SaveAssets() silently drops it.
-            cottageData.requiredBuilding = houseData;
-            EditorUtility.SetDirty(cottageData);
+                hasChimney: true);
 
             var townHallData = CreateFbxBuildingData(
-                "TownHall", "Ратуша", new Vector2Int(4, 4), height: 3f,
-                fbxFileName: "MainCastle-1.fbx",
-                cost: new List<ResourceAmount>(),
-                citizensGranted: 5, maxHealth: 400, defense: 20,
-                upgradeToLevel2Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 100 }, new ResourceAmount { type = ResourceType.Stone, amount = 60 } },
-                upgradeToLevel3Cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 220 }, new ResourceAmount { type = ResourceType.Stone, amount = 150 }, new ResourceAmount { type = ResourceType.Gold, amount = 40 }, new ResourceAmount { type = ResourceType.Coal, amount = 20 } });
+                "TownHall", new Vector2Int(4, 4), height: 3f,
+                fbxFileName: "MainCastle-1.fbx");
 
             var fishermanHutData = CreateBuildingData(
-                "FishermanHut", "Хижина рыбака", new Vector2Int(2, 1), height: 2f,
+                "FishermanHut", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 12);
+                hasChimney: true);
 
             var hunterHutData = CreateBuildingData(
-                "HunterHut", "Хижина охотника", new Vector2Int(2, 1), height: 2f,
+                "HunterHut", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true, maxWorkers: 2, producesResource: ResourceType.Food, productionPerTick: 2, category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 14);
+                hasChimney: true);
 
             var farmData = CreateBuildingData(
-                "Farm", "Ферма", new Vector2Int(2, 2), height: 1.8f,
+                "Farm", new Vector2Int(2, 2), height: 1.8f,
                 wallColor: new Color(0.68f, 0.55f, 0.3f), roofColor: new Color(0.42f, 0.58f, 0.24f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 15 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3, category: BuildingCategory.Food, maxHealth: 70, fogRevealRadius: 10);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var lumberjackData = CreateBuildingData(
-                "Lumberjack", "Лесопилка", new Vector2Int(2, 2), height: 2.4f,
+                "Lumberjack", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Wood, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100, fogRevealRadius: 15);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var quarryData = CreateBuildingData(
-                "Quarry", "Каменоломня", new Vector2Int(2, 2), height: 2f,
+                "Quarry", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Stone, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var mineData = CreateBuildingData(
-                "Mine", "Шахта", new Vector2Int(2, 2), height: 2.2f,
+                "Mine", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.5f, 0.5f, 0.56f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 15 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Iron, productionPerTick: 1, category: BuildingCategory.Production, maxHealth: 110, fogRevealRadius: 14);
-            // Digging deeper for iron ore needs fuel to run the forge/pumps -- coal from CoalMine.
-            // AssetDatabase.CreateAsset (inside CreateBuildingData) writes the asset to disk
-            // immediately; mutating its lists afterward needs an explicit SetDirty or the later
-            // AssetDatabase.SaveAssets() call silently skips these edits.
-            mineData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Coal, amount = 10 });
-            mineData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Coal, amount = 22 });
-            EditorUtility.SetDirty(mineData);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var coalMineData = CreateBuildingData(
-                "CoalMine", "Угольная шахта", new Vector2Int(2, 2), height: 2.2f,
+                "CoalMine", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.3f, 0.28f, 0.27f), roofColor: new Color(0.14f, 0.14f, 0.15f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 10 } },
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                maxWorkers: 3, producesResource: ResourceType.Coal, productionPerTick: 2, category: BuildingCategory.Production, maxHealth: 100, fogRevealRadius: 14);
-            // Iron tools/props are needed to shore up deeper coal seams -- ties the two mines together.
-            coalMineData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 6 });
-            coalMineData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 14 });
-            EditorUtility.SetDirty(coalMineData);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var wallData = CreateBuildingData(
-                "Wall", "Стена", new Vector2Int(1, 1), height: 1.6f,
+                "Wall", new Vector2Int(1, 1), height: 1.6f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 150, defense: 15, fogRevealRadius: 6);
-            // Iron reinforcement/fittings gate the defense line's later tiers -- a smithing chain
-            // (Mine -> Iron) has to exist before walls/towers/barracks/gates can be hardened.
-            wallData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 6 });
-            wallData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 14 });
-            EditorUtility.SetDirty(wallData);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var towerData = CreateBuildingData(
-                "Tower", "Башня", new Vector2Int(2, 2), height: 4.2f,
+                "Tower", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 15 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 220, defense: 25, fogRevealRadius: 18);
-            towerData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 12 });
-            towerData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 26 });
-            // Second example wiring of the requirement system: a Tower reinforces an existing
-            // wall line rather than standing alone.
-            towerData.requiredBuilding = wallData;
-            EditorUtility.SetDirty(towerData);
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var barracksData = CreateBuildingData(
-                "Barracks", "Казармы", new Vector2Int(2, 2), height: 2.6f,
+                "Barracks", new Vector2Int(2, 2), height: 2.6f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 30 }, new ResourceAmount { type = ResourceType.Wood, amount = 15 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 180, defense: 10, fogRevealRadius: 10);
-            // Weapons/armor for a bigger garrison -- the steepest iron sink in the game.
-            barracksData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 15 });
-            barracksData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 32 });
-            EditorUtility.SetDirty(barracksData);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var gateData = CreateBuildingData(
-                "Gate", "Ворота", new Vector2Int(2, 1), height: 1.8f,
+                "Gate", new Vector2Int(2, 1), height: 1.8f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 12 }, new ResourceAmount { type = ResourceType.Wood, amount = 5 } },
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial, category: BuildingCategory.Military, maxHealth: 160, defense: 12, fogRevealRadius: 8);
-            gateData.upgradeToLevel2Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 8 });
-            gateData.upgradeToLevel3Cost.Add(new ResourceAmount { type = ResourceType.Iron, amount = 18 });
-            EditorUtility.SetDirty(gateData);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var roadData = CreateBuildingData(
-                "Road", "Дорога", new Vector2Int(1, 1), height: 0.05f,
+                "Road", new Vector2Int(1, 1), height: 0.05f,
                 wallColor: new Color(0.32f, 0.32f, 0.34f), roofColor: new Color(0.85f, 0.75f, 0.3f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Stone, amount = 3 } },
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
-                category: BuildingCategory.Infrastructure, maxHealth: 40,
-                isRoad: true, keepSelectedAfterPlacement: true, fogRevealRadius: 4);
+                isRoad: true, keepSelectedAfterPlacement: true);
 
             var bridgeData = CreateBuildingData(
-                "Bridge", "Мост", new Vector2Int(1, 1), height: 0.05f,
+                "Bridge", new Vector2Int(1, 1), height: 0.05f,
                 wallColor: new Color(0.5f, 0.35f, 0.2f), roofColor: new Color(0.36f, 0.24f, 0.13f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 8 } },
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
-                category: BuildingCategory.Infrastructure, maxHealth: 40,
-                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true, fogRevealRadius: 4,
+                isRoad: true, keepSelectedAfterPlacement: true, isWaterCategory: true,
                 // The whole point of a bridge: it's the only building that makes previously
                 // uncrossable terrain walkable (see BuildingData.providesWalkableSurface).
                 providesWalkableSurface: true);
 
             var waterMillData = CreateWaterBuildingData(
-                "WaterMill", "Водяная мельница", new Vector2Int(2, 2),
+                "WaterMill", new Vector2Int(2, 2),
                 deckColor: new Color(0.5f, 0.4f, 0.28f), accentColor: new Color(0.35f, 0.24f, 0.14f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 25 }, new ResourceAmount { type = ResourceType.Stone, amount = 10 } },
-                addWheel: true, maxWorkers: 3, producesResource: ResourceType.Food, productionPerTick: 3,
-                category: BuildingCategory.Food, maxHealth: 90, fogRevealRadius: 12);
+                addWheel: true);
 
             var dockData = CreateWaterBuildingData(
-                "Dock", "Пристань", new Vector2Int(2, 2),
+                "Dock", new Vector2Int(2, 2),
                 deckColor: new Color(0.55f, 0.4f, 0.24f), accentColor: new Color(0.68f, 0.5f, 0.3f),
-                cost: new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = 20 }, new ResourceAmount { type = ResourceType.Stone, amount = 8 } },
-                addCrates: true, maxWorkers: 2, producesResource: ResourceType.Gold, productionPerTick: 1,
-                category: BuildingCategory.Production, maxHealth: 80, fogRevealRadius: 12);
+                addCrates: true);
 
             var hotbarBuildingData = new List<BuildingData>
             {
@@ -350,6 +294,8 @@ namespace CityBuilder.EditorTools
                 bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
+
+            ResolveBuildingRequirements(allBuildingData);
 
             AssetDatabase.SaveAssets();
 
@@ -1356,19 +1302,22 @@ namespace CityBuilder.EditorTools
         private enum BuildingStyle { Hut, Fortification, Tower, Road }
 
         private static BuildingData CreateBuildingData(
-            string id, string displayName, Vector2Int footprint, float height, Color wallColor, Color roofColor, List<ResourceAmount> cost,
+            string id, Vector2Int footprint, float height, Color wallColor, Color roofColor,
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
-            bool hasChimney = false, int citizensGranted = 0,
-            int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0, float productionInterval = 6f,
-            BuildingCategory category = BuildingCategory.Production, int maxHealth = 100, int defense = 0,
-            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false, int fogRevealRadius = 8,
+            bool hasChimney = false,
+            bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false,
             bool providesWalkableSurface = false)
         {
+            // Two of the sheet's numbers shape the prefab rather than just sitting on the data asset,
+            // so the row has to be read before it's built: worker slots become geometry, and a real
+            // defence stat decides whether the building shoots back at all.
+            var balance = Balance(id);
+
             GameObject prefab;
             switch (style)
             {
                 case BuildingStyle.Hut:
-                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
+                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, balance.maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
                     break;
                 case BuildingStyle.Fortification:
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: false);
@@ -1387,29 +1336,17 @@ namespace CityBuilder.EditorTools
             // OrcUnit raiders on its own -- see DefensiveBuilding. Attached here (once, at prefab
             // creation) rather than conditionally at placement time, same as ProductionBuilding's
             // maxWorkers check in CreateHutPrefab.
-            if (defense > 0) prefab.AddComponent<DefensiveBuilding>();
+            if (balance.defense > 0) prefab.AddComponent<DefensiveBuilding>();
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
-            data.displayName = displayName;
             data.prefab = prefab;
             data.footprintSize = footprint;
-            data.cost = cost;
-            data.citizensGranted = citizensGranted;
-            data.maxWorkers = maxWorkers;
-            data.producesResource = producesResource;
-            data.productionPerWorkerPerTick = productionPerTick;
-            data.productionIntervalSeconds = productionInterval;
-            data.category = category;
-            data.maxHealth = maxHealth;
-            data.defense = defense;
-            data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
-            data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
+            ApplyBalance(data, balance);
             data.isRoad = isRoad;
             data.providesWalkableSurface = providesWalkableSurface;
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
-            data.fogRevealRadius = fogRevealRadius;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1418,15 +1355,81 @@ namespace CityBuilder.EditorTools
             return data;
         }
 
-        /// <summary>Derives an upgrade-level cost from a building's base placement cost -- e.g. level 2 costs 1.6x the base, level 3 costs 2.8x. Each amount is rounded up to at least 1 so a cheap base cost still produces a meaningful upgrade cost.</summary>
-        private static List<ResourceAmount> ScaleCost(List<ResourceAmount> baseCost, float multiplier)
+        /// <summary>
+        /// The balance sheet's row for a building. A missing row is a build error rather than a
+        /// silent default: the asset would still be generated, but full of placeholder numbers that
+        /// look deliberate in the Inspector and would be very hard to trace back to a renamed row.
+        /// </summary>
+        private static BuildingBalance Balance(string id)
         {
-            var scaled = new List<ResourceAmount>();
-            foreach (var amount in baseCost)
+            var row = _balance != null ? _balance.Building(id) : null;
+            if (row != null) return row;
+
+            Debug.LogError($"SetupProject: the balance sheet's buildings tab has no row with id '{id}'. " +
+                           $"'{id}' is being generated with placeholder numbers -- add the row to {BalanceImporter.BuildingsCsvPath} and rebuild.");
+            return new BuildingBalance { id = id, displayName = id };
+        }
+
+        /// <summary>Copies every balanced number from a sheet row onto a building's data asset. Shape (footprint, prefab, road/water flags) is the caller's business.</summary>
+        private static void ApplyBalance(BuildingData data, BuildingBalance balance)
+        {
+            data.displayName = balance.displayName;
+            data.category = balance.category;
+            data.cost = CopyCost(balance.cost);
+            data.citizensGranted = balance.citizensGranted;
+            data.maxWorkers = balance.maxWorkers;
+            data.producesResource = balance.producesResource;
+            data.productionPerWorkerPerTick = balance.productionPerWorkerPerTick;
+            data.productionIntervalSeconds = balance.productionIntervalSeconds;
+            data.maxHealth = balance.maxHealth;
+            data.defense = balance.defense;
+            data.fogRevealRadius = balance.fogRevealRadius;
+            data.upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
+            data.upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);
+        }
+
+        /// <summary>A fresh cost list -- the config asset's own ResourceAmount objects must never end up referenced by a building asset.</summary>
+        private static List<ResourceAmount> CopyCost(List<ResourceAmount> source)
+        {
+            var copy = new List<ResourceAmount>(source.Count);
+            foreach (var amount in source)
             {
-                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * multiplier)) });
+                copy.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
             }
-            return scaled;
+            return copy;
+        }
+
+        /// <summary>
+        /// Wires BuildingData.requiredBuilding from the sheet's "requires" column, once every asset
+        /// exists -- a prerequisite is a reference to another building, so it cannot be resolved
+        /// while the buildings are still being created one by one.
+        ///
+        /// CreateAsset has already written each asset to disk by now, so mutating one afterwards
+        /// needs an explicit SetDirty; without it the closing SaveAssets silently drops the edit.
+        /// </summary>
+        private static void ResolveBuildingRequirements(List<BuildingData> buildings)
+        {
+            var byId = new Dictionary<string, BuildingData>(buildings.Count);
+            foreach (var building in buildings)
+            {
+                byId[building.buildingName] = building;
+            }
+
+            foreach (var building in buildings)
+            {
+                var requiredId = Balance(building.buildingName).requiredBuildingId;
+                if (string.IsNullOrWhiteSpace(requiredId)) continue;
+
+                if (!byId.TryGetValue(requiredId.Trim(), out var required))
+                {
+                    Debug.LogError($"SetupProject: '{building.buildingName}' requires '{requiredId}', which is not a building id. " +
+                                   $"Check the requires column in {BalanceImporter.BuildingsCsvPath} -- the prerequisite is being left empty.");
+                    continue;
+                }
+
+                building.requiredBuilding = required;
+                EditorUtility.SetDirty(building);
+            }
         }
 
         /// <summary>
@@ -1653,29 +1656,17 @@ namespace CityBuilder.EditorTools
         /// tail but drives CreateWaterBuildingPrefab instead of the land-building style switch.
         /// </summary>
         private static BuildingData CreateWaterBuildingData(
-            string id, string displayName, Vector2Int footprint, Color deckColor, Color accentColor, List<ResourceAmount> cost,
-            bool addWheel = false, bool addCrates = false, int maxWorkers = 0, ResourceType producesResource = ResourceType.Wood, int productionPerTick = 0,
-            BuildingCategory category = BuildingCategory.Production, int maxHealth = 80, int defense = 0, int fogRevealRadius = 8)
+            string id, Vector2Int footprint, Color deckColor, Color accentColor,
+            bool addWheel = false, bool addCrates = false)
         {
             var prefab = CreateWaterBuildingPrefab(id, footprint, deckColor, accentColor, addWheel, addCrates);
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
-            data.displayName = displayName;
             data.prefab = prefab;
             data.footprintSize = footprint;
-            data.cost = cost;
-            data.maxWorkers = maxWorkers;
-            data.producesResource = producesResource;
-            data.productionPerWorkerPerTick = productionPerTick;
-            data.productionIntervalSeconds = 6f;
-            data.category = category;
-            data.maxHealth = maxHealth;
-            data.defense = defense;
-            data.upgradeToLevel2Cost = ScaleCost(cost, 1.6f);
-            data.upgradeToLevel3Cost = ScaleCost(cost, 2.8f);
+            ApplyBalance(data, Balance(id));
             data.isWaterCategory = true;
-            data.fogRevealRadius = fogRevealRadius;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -1694,8 +1685,7 @@ namespace CityBuilder.EditorTools
         /// aligned to world axes regardless of that rotation. Expects the model's own pivot at the
         /// footprint's base center (matching the convention used for the hand-authored map meshes).
         /// </summary>
-        private static BuildingData CreateFbxBuildingData(string id, string displayName, Vector2Int footprint, float height, string fbxFileName, List<ResourceAmount> cost, int citizensGranted = 0,
-            int maxHealth = 200, int defense = 0, List<ResourceAmount> upgradeToLevel2Cost = null, List<ResourceAmount> upgradeToLevel3Cost = null, int fogRevealRadius = 20)
+        private static BuildingData CreateFbxBuildingData(string id, Vector2Int footprint, float height, string fbxFileName)
         {
             var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
 
@@ -1721,16 +1711,9 @@ namespace CityBuilder.EditorTools
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
-            data.displayName = displayName;
             data.prefab = prefab;
             data.footprintSize = footprint;
-            data.cost = cost;
-            data.citizensGranted = citizensGranted;
-            data.maxHealth = maxHealth;
-            data.defense = defense;
-            data.upgradeToLevel2Cost = upgradeToLevel2Cost ?? new List<ResourceAmount>();
-            data.upgradeToLevel3Cost = upgradeToLevel3Cost ?? new List<ResourceAmount>();
-            data.fogRevealRadius = fogRevealRadius;
+            ApplyBalance(data, Balance(id));
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
