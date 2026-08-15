@@ -87,8 +87,8 @@ namespace CityBuilder.Buildings
 
         [Header("Upgrades")]
         // Level 1 is the building as placed (free). These are what BuildingInstance.TryUpgrade
-        // spends to reach level 2 / level 3. Changing the model or stats per level is planned
-        // for later -- for now upgrading only advances BuildingInstance.Level.
+        // spends to reach level 2 / level 3. What the levels themselves are worth lives in
+        // `levels` above, and which model each one shows in BuildingLevelAppearance.
         public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
         public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
 

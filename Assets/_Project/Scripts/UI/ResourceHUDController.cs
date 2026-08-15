@@ -48,15 +48,10 @@ namespace CityBuilder.UI
                 if (amountTexts[i] == null) continue;
 
                 var type = resourceOrder[i];
-                var amount = ResourceManager.Instance.GetAmount(type);
-                var capacity = ResourceManager.Instance.GetCapacity(type);
-
-                // The ceiling is only worth showing once it's close enough to matter -- a permanent
-                // "50/200" on every resource is noise, but a stockpile quietly stuck at its limit
-                // with no explanation is worse.
-                amountTexts[i].text = infinite ? "∞"
-                    : amount >= capacity * 0.8f && capacity != int.MaxValue ? $"{amount}/{capacity}"
-                    : amount.ToString();
+                amountTexts[i].text = Format(
+                    ResourceManager.Instance.GetAmount(type),
+                    ResourceManager.Instance.GetCapacity(type),
+                    infinite);
             }
 
             if (populationText != null)
@@ -66,5 +61,29 @@ namespace CityBuilder.UI
                     : "0";
             }
         }
+
+        /// <summary>
+        /// What one resource reads as in the top bar.
+        ///
+        /// The ceiling is only worth showing once it's close enough to matter -- a permanent
+        /// "50/200" on every resource is noise, but a stockpile quietly stuck at its limit with no
+        /// explanation is worse. Public and static so the rule itself is covered by an EditMode
+        /// test without a canvas.
+        /// </summary>
+        public static string Format(int amount, int capacity, bool infinite)
+        {
+            if (infinite) return "∞";
+            if (capacity == int.MaxValue) return amount.ToString();
+
+            return (long)amount * CapacityVisibleDenominator >= (long)capacity * CapacityVisibleNumerator
+                ? $"{amount}/{capacity}"
+                : amount.ToString();
+        }
+
+        // Four-fifths full. Compared as integers rather than against amount >= capacity * 0.8f:
+        // 0.8f is a hair above four fifths, so a store at exactly 80% -- 80/100, the roundest case
+        // there is -- used to keep its ceiling hidden.
+        private const int CapacityVisibleNumerator = 4;
+        private const int CapacityVisibleDenominator = 5;
     }
 }
