@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Tower
   displayName: "\u0411\u0430\u0448\u043D\u044F"
-  prefab: {fileID: 6127341538433638983, guid: 576446a4762b0ca488e1a2aab8557497, type: 3}
+  prefab: {fileID: 1137124716686334715, guid: 576446a4762b0ca488e1a2aab8557497, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 0
+  levels:
+  - maxHealth: 220
+    defense: 25
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 352
+    defense: 40
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 550
+    defense: 63
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
   producesResource: 0
-  productionPerWorkerPerTick: 0
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -46,7 +59,5 @@ MonoBehaviour:
     amount: 42
   - type: 5
     amount: 26
-  maxHealth: 220
-  defense: 25
   fogRevealRadius: 18
   requiredBuilding: {fileID: 11400000, guid: 42c36e2b36f3e7748b0ad79a2439ef39, type: 2}

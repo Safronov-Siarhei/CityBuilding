@@ -1322,7 +1322,9 @@ namespace CityBuilder.EditorTools
             switch (style)
             {
                 case BuildingStyle.Hut:
-                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, balance.maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
+                    // Level 1's worker count: the hut's geometry is built once, and its level-2
+                    // model is a separate FBX rather than a re-generated mesh.
+                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, LevelOne(balance).maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
                     break;
                 case BuildingStyle.Fortification:
                     prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: false);
@@ -1341,7 +1343,10 @@ namespace CityBuilder.EditorTools
             // OrcUnit raiders on its own -- see DefensiveBuilding. Attached here (once, at prefab
             // creation) rather than conditionally at placement time, same as ProductionBuilding's
             // maxWorkers check in CreateHutPrefab.
-            if (balance.defense > 0) prefab.AddComponent<DefensiveBuilding>();
+            // Attached if the building EVER fights back, not just at level 1 -- a structure that
+            // only gains defence when upgraded still needs the component from the start, since
+            // upgrading swaps stats and models but never rebuilds the prefab.
+            if (FightsBackAtAnyLevel(balance)) prefab.AddComponent<DefensiveBuilding>();
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
@@ -1474,16 +1479,49 @@ namespace CityBuilder.EditorTools
             data.displayName = balance.displayName;
             data.category = balance.category;
             data.cost = CopyCost(balance.cost);
-            data.citizensGranted = balance.citizensGranted;
-            data.maxWorkers = balance.maxWorkers;
             data.producesResource = balance.producesResource;
-            data.productionPerWorkerPerTick = balance.productionPerWorkerPerTick;
             data.productionIntervalSeconds = balance.productionIntervalSeconds;
-            data.maxHealth = balance.maxHealth;
-            data.defense = balance.defense;
             data.fogRevealRadius = balance.fogRevealRadius;
+            data.levels = CopyLevels(balance.levels);
             data.upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
             data.upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);
+        }
+
+        /// <summary>The level-1 stats of a sheet row, or defaults if the row is missing its levels entirely (already reported by Balance).</summary>
+        private static BuildingLevelStats LevelOne(BuildingBalance balance)
+        {
+            return balance.levels != null && balance.levels.Count > 0 && balance.levels[0] != null
+                ? balance.levels[0]
+                : new BuildingLevelStats();
+        }
+
+        /// <summary>Whether this building has a defence stat at any of its levels -- see the DefensiveBuilding attachment.</summary>
+        private static bool FightsBackAtAnyLevel(BuildingBalance balance)
+        {
+            if (balance.levels == null) return false;
+            foreach (var level in balance.levels)
+            {
+                if (level != null && level.defense > 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>A fresh set of level stats, for the same reason CopyCost exists: the config asset's own objects must never be shared with a building asset.</summary>
+        private static List<BuildingLevelStats> CopyLevels(List<BuildingLevelStats> source)
+        {
+            var copy = new List<BuildingLevelStats>(source.Count);
+            foreach (var level in source)
+            {
+                copy.Add(new BuildingLevelStats
+                {
+                    maxHealth = level.maxHealth,
+                    defense = level.defense,
+                    citizensGranted = level.citizensGranted,
+                    maxWorkers = level.maxWorkers,
+                    productionPerWorkerPerTick = level.productionPerWorkerPerTick,
+                });
+            }
+            return copy;
         }
 
         /// <summary>A fresh cost list -- the config asset's own ResourceAmount objects must never end up referenced by a building asset.</summary>

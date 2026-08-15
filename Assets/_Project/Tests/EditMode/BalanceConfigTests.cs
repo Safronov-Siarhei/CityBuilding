@@ -105,16 +105,22 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in config.Buildings)
             {
                 Assert.IsNotEmpty(building.displayName, $"{building.id}: an empty display name shows up as a blank hotbar tooltip.");
-                Assert.Greater(building.maxHealth, 0, $"{building.id}: zero health collapses the moment it's placed.");
-                Assert.GreaterOrEqual(building.defense, 0, $"{building.id}: negative defence would heal the raiders.");
                 Assert.Greater(building.productionIntervalSeconds, 0f, $"{building.id}: a zero production interval ticks every frame.");
-                Assert.GreaterOrEqual(building.maxWorkers, 0, $"{building.id}: negative worker slots.");
                 Assert.GreaterOrEqual(building.fogRevealRadius, 0, $"{building.id}: negative reveal radius.");
+                Assert.AreEqual(3, building.levels.Count, $"{building.id}: every building needs stats for all three upgrade levels.");
 
-                if (building.productionPerWorkerPerTick > 0)
+                for (var level = 1; level <= building.levels.Count; level++)
                 {
-                    Assert.Greater(building.maxWorkers, 0,
-                        $"{building.id}: produces something but has no worker slots, so it can never produce anything.");
+                    var stats = building.levels[level - 1];
+                    Assert.Greater(stats.maxHealth, 0, $"{building.id} lvl {level}: zero health collapses the moment it's placed.");
+                    Assert.GreaterOrEqual(stats.defense, 0, $"{building.id} lvl {level}: negative defence would heal the raiders.");
+                    Assert.GreaterOrEqual(stats.maxWorkers, 0, $"{building.id} lvl {level}: negative worker slots.");
+
+                    if (stats.productionPerWorkerPerTick > 0)
+                    {
+                        Assert.Greater(stats.maxWorkers, 0,
+                            $"{building.id} lvl {level}: produces something but has no worker slots, so it can never produce anything.");
+                    }
                 }
 
                 foreach (var amount in building.cost)
@@ -142,6 +148,33 @@ namespace CityBuilder.Tests.EditMode
                     $"{building.id} requires itself, which can never be satisfied.");
                 Assert.IsNotNull(config.Building(building.requiredBuildingId),
                     $"{building.id} requires '{building.requiredBuildingId}', which is not a row in the buildings tab.");
+            }
+        }
+
+        /// <summary>
+        /// An upgrade costs real resources, so it must never hand back a weaker building. Catches
+        /// the obvious sheet slip -- typing a level-2 value into the level-3 column, or leaving a
+        /// decimal point out of one cell in a row of three.
+        /// </summary>
+        [Test]
+        public void UpgradingNeverMakesABuildingWorse()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+
+            foreach (var building in config.Buildings)
+            {
+                for (var level = 2; level <= building.levels.Count; level++)
+                {
+                    var previous = building.levels[level - 2];
+                    var current = building.levels[level - 1];
+
+                    Assert.GreaterOrEqual(current.maxHealth, previous.maxHealth, $"{building.id}: level {level} is less sturdy than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.defense, previous.defense, $"{building.id}: level {level} defends worse than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.citizensGranted, previous.citizensGranted, $"{building.id}: level {level} houses fewer people than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.maxWorkers, previous.maxWorkers, $"{building.id}: level {level} employs fewer people than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.productionPerWorkerPerTick, previous.productionPerWorkerPerTick, $"{building.id}: level {level} produces less than level {level - 1}.");
+                }
             }
         }
 

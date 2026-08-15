@@ -104,7 +104,7 @@ namespace CityBuilder.UI
                 var decayText = _currentInstance.DecaysOverTime
                     ? $"{Mathf.RoundToInt(_currentInstance.Decay * 100f)}%"
                     : "не изнашивается";
-                conditionLabel.text = $"Прочность: {_currentInstance.CurrentHealth}/{data.maxHealth}   Защита: {data.defense}   Ветхость: {decayText}";
+                conditionLabel.text = $"Прочность: {_currentInstance.CurrentHealth}/{_currentInstance.MaxHealth}   Защита: {_currentInstance.Defense}   Ветхость: {decayText}";
             }
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;

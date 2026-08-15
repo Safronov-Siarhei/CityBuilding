@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Cottage
   displayName: "\u041A\u043E\u0442\u0442\u0435\u0434\u0436"
-  prefab: {fileID: 2469477368151700747, guid: 16cd330d28d7bc54f858ab31e4372cfe, type: 3}
+  prefab: {fileID: 6699901386225572940, guid: 16cd330d28d7bc54f858ab31e4372cfe, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 8
-  maxWorkers: 0
+  levels:
+  - maxHealth: 120
+    defense: 0
+    citizensGranted: 8
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 192
+    defense: 0
+    citizensGranted: 12
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 300
+    defense: 0
+    citizensGranted: 16
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
   producesResource: 0
-  productionPerWorkerPerTick: 0
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -42,7 +55,5 @@ MonoBehaviour:
     amount: 70
   - type: 1
     amount: 22
-  maxHealth: 120
-  defense: 0
   fogRevealRadius: 10
   requiredBuilding: {fileID: 11400000, guid: 9498935a3e8bc0349804d9797bf7e1ec, type: 2}

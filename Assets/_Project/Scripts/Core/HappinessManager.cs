@@ -126,11 +126,10 @@ namespace CityBuilder.Core
                     decayCounted++;
                 }
 
-                // BuildingData.defense is a level-1 base stat -- BuildingInstance.TryUpgrade only
-                // advances Level so far, it doesn't scale defense (see BuildingData's "Condition"
-                // header and BuildingInfoPanelController, which both treat defense as flat), so
-                // this must not multiply by Level either.
-                if (instance.Data != null) totalDefense += instance.Data.defense;
+                // Defence is authored per upgrade level in the balance sheet, and BuildingInstance
+                // already resolves it for the level a building actually stands at -- so this reads
+                // it straight and must NOT scale by Level on top, which would count the upgrade twice.
+                totalDefense += instance.Defense;
             }
 
             decayScore = ComputeDecayScore(totalDecay, decayCounted);

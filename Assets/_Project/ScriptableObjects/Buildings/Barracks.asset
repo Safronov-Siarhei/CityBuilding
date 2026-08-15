@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Barracks
   displayName: "\u041A\u0430\u0437\u0430\u0440\u043C\u044B"
-  prefab: {fileID: 6560388756881795129, guid: 536ac734a756b4b43a1230c9add005bc, type: 3}
+  prefab: {fileID: 2337678951346417418, guid: 536ac734a756b4b43a1230c9add005bc, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 0
+  levels:
+  - maxHealth: 180
+    defense: 10
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 288
+    defense: 16
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 450
+    defense: 25
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
   producesResource: 0
-  productionPerWorkerPerTick: 0
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -46,7 +59,5 @@ MonoBehaviour:
     amount: 84
   - type: 5
     amount: 32
-  maxHealth: 180
-  defense: 10
   fogRevealRadius: 10
   requiredBuilding: {fileID: 0}

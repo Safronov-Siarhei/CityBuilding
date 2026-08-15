@@ -119,7 +119,7 @@ namespace CityBuilder.Saving
                 buildingInstance.SetLevel(entry.level);
                 // entry.currentHealth is 0 for saves made before this field existed (missing JSON
                 // field deserializes to the int default) -- treat that as "unknown", not "destroyed".
-                var health = entry.currentHealth > 0 ? entry.currentHealth : buildingData.maxHealth;
+                var health = entry.currentHealth > 0 ? entry.currentHealth : buildingData.LevelStats(entry.level).maxHealth;
                 buildingInstance.SetCondition(health, entry.decay);
 
                 GridManager.Instance.SetAreaOccupied(cell, footprint, true);

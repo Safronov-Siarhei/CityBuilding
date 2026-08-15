@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Dock
   displayName: "\u041F\u0440\u0438\u0441\u0442\u0430\u043D\u044C"
-  prefab: {fileID: 1360640823531742864, guid: fe7eccf660cafd64ca4183492e7b6c1b, type: 3}
+  prefab: {fileID: 6014045383708647101, guid: fe7eccf660cafd64ca4183492e7b6c1b, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 2
+  levels:
+  - maxHealth: 80
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 1
+  - maxHealth: 128
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 1
+  - maxHealth: 200
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 1
   producesResource: 3
-  productionPerWorkerPerTick: 1
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -42,7 +55,5 @@ MonoBehaviour:
     amount: 56
   - type: 1
     amount: 22
-  maxHealth: 80
-  defense: 0
   fogRevealRadius: 12
   requiredBuilding: {fileID: 0}

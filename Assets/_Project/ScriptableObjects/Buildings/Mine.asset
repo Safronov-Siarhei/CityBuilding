@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Mine
   displayName: "\u0428\u0430\u0445\u0442\u0430"
-  prefab: {fileID: 3476169949796679403, guid: 12ba4b673f4e1224d8d8920e160e9d74, type: 3}
+  prefab: {fileID: 449832808932668518, guid: 12ba4b673f4e1224d8d8920e160e9d74, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 3
+  levels:
+  - maxHealth: 110
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
+  - maxHealth: 176
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
+  - maxHealth: 275
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
   producesResource: 5
-  productionPerWorkerPerTick: 1
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -46,7 +59,5 @@ MonoBehaviour:
     amount: 42
   - type: 6
     amount: 22
-  maxHealth: 110
-  defense: 0
   fogRevealRadius: 14
   requiredBuilding: {fileID: 0}

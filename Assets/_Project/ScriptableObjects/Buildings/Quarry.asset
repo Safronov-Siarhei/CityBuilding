@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Quarry
   displayName: "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
-  prefab: {fileID: 4925027577146856464, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
+  prefab: {fileID: 5825580142241746953, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -25,10 +25,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 3
+  levels:
+  - maxHealth: 110
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
+  - maxHealth: 176
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
+  - maxHealth: 275
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
   producesResource: 1
-  productionPerWorkerPerTick: 2
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -36,7 +49,5 @@ MonoBehaviour:
   upgradeToLevel3Cost:
   - type: 0
     amount: 56
-  maxHealth: 110
-  defense: 0
   fogRevealRadius: 14
   requiredBuilding: {fileID: 0}

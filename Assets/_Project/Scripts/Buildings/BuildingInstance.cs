@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Citizens;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -30,8 +31,14 @@ namespace CityBuilder.Buildings
         /// <summary>0-3, each a 90-degree step around Y -- set at placement (BuildingPlacer.RotateSelection) and restored on load.</summary>
         public int RotationSteps { get; private set; }
 
-        /// <summary>Current hit points; starts at BuildingData.maxHealth. Reduced by TryDamage (see CityBuilder.Combat.OrcUnit) -- no other damage source exists yet.</summary>
+        /// <summary>Current hit points; starts at this building's maximum for its level. Reduced by TryDamage (see CityBuilder.Combat.OrcUnit) -- no other damage source exists yet.</summary>
         public int CurrentHealth { get; private set; }
+
+        /// <summary>Hit points at full repair, for the level this building currently stands at.</summary>
+        public int MaxHealth => Data != null ? Data.LevelStats(Level).maxHealth : 0;
+
+        /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
+        public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
 
         /// <summary>
         /// 0 (new) to 1 (fully dilapidated). Accrues one step per GameCalendar day (see
@@ -45,6 +52,7 @@ namespace CityBuilder.Buildings
 
         private GameObject _decayWarningMarker;
         private BuildingHealthBar _healthBar;
+        private BuildingLevelAppearance _levelAppearance;
 
         // Self-registering count-by-name registry (same pattern as ResourceNode.All) so
         // BuildingPlacer can answer "does at least one X exist yet" for the requiredBuilding
@@ -63,8 +71,9 @@ namespace CityBuilder.Buildings
         {
             Data = data;
             OriginCell = originCell;
+            _levelAppearance = GetComponent<BuildingLevelAppearance>();
             RotationSteps = ((rotationSteps % 4) + 4) % 4;
-            CurrentHealth = data != null ? data.maxHealth : 0;
+            CurrentHealth = data != null ? data.LevelStats(Level).maxHealth : 0;
             Decay = 0f;
 
             // The single hook point for every building instantiation (fresh placement AND
@@ -190,10 +199,10 @@ namespace CityBuilder.Buildings
         /// <summary>Created on first damage rather than up front -- most buildings are never attacked at all, and this way they carry no extra objects or per-frame work for a bar nobody will see.</summary>
         private void ShowHealthBar()
         {
-            if (Data == null || Data.maxHealth <= 0) return;
+            if (Data == null || MaxHealth <= 0) return;
 
             if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform);
-            _healthBar.Report(CurrentHealth / (float)Data.maxHealth);
+            _healthBar.Report(CurrentHealth / (float)MaxHealth);
         }
 
         private void FreeCellsAndDestroy()
@@ -299,12 +308,15 @@ namespace CityBuilder.Buildings
         public void SetLevel(int level)
         {
             Level = Mathf.Clamp(level, 1, MaxLevel);
+            // A loaded building has to look its level straight away -- nothing else will tell it to,
+            // since it was never upgraded during this session.
+            _levelAppearance?.Apply(Level);
         }
 
         /// <summary>Used by save/load to restore already-valid runtime condition directly.</summary>
         public void SetCondition(int health, float decay)
         {
-            CurrentHealth = Data != null ? Mathf.Clamp(health, 0, Data.maxHealth) : health;
+            CurrentHealth = Data != null ? Mathf.Clamp(health, 0, MaxHealth) : health;
             Decay = Mathf.Clamp01(decay);
             UpdateDecayWarningMarker();
         }
@@ -321,9 +333,21 @@ namespace CityBuilder.Buildings
             var cost = GetUpgradeCost();
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
 
+            var before = Data.LevelStats(Level);
             Level++;
-            // Visual style / stat scaling per level is a planned future addition (see
-            // BuildingData's Upgrades/Condition headers) -- upgrading only advances Level so far.
+            var after = Data.LevelStats(Level);
+
+            // Carry damage across rather than healing the building for free: a wall upgraded while
+            // a raid chews on it gains the extra hit points, it doesn't forget the fight.
+            CurrentHealth = Mathf.Clamp(CurrentHealth + (after.maxHealth - before.maxHealth), 1, after.maxHealth);
+            if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)after.maxHealth);
+
+            // Housing that gets roomier with its level brings the difference in, once -- the
+            // citizens the building already granted stay granted (see CitizenManager).
+            var extraCitizens = after.citizensGranted - before.citizensGranted;
+            if (extraCitizens > 0) CitizenManager.Instance?.AddCitizens(extraCitizens);
+
+            _levelAppearance?.Apply(Level);
             return true;
         }
     }

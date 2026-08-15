@@ -31,7 +31,10 @@ namespace CityBuilder.Citizens
         // Awake time. Resolving it lazily on first access sidesteps that ordering entirely.
         private BuildingData Data => _data != null ? _data : (_data = (_buildingInstance = GetComponent<BuildingInstance>())?.Data);
 
-        public int MaxWorkers => Data != null ? Data.maxWorkers : 0;
+        /// <summary>Worker slots at this building's current upgrade level -- an upgraded workshop can take on more hands the moment it finishes.</summary>
+        public int MaxWorkers => Data != null ? Data.LevelStats(CurrentLevel).maxWorkers : 0;
+
+        private int CurrentLevel => _buildingInstance != null ? _buildingInstance.Level : 1;
         public ResourceType ProducesResource => Data != null ? Data.producesResource : ResourceType.Wood;
         public string DisplayName => Data != null ? Data.displayName : "?";
 
@@ -54,7 +57,7 @@ namespace CityBuilder.Citizens
             if (_timer < data.productionIntervalSeconds) return;
             _timer -= data.productionIntervalSeconds;
 
-            var baseAmount = AssignedWorkers * data.productionPerWorkerPerTick;
+            var baseAmount = AssignedWorkers * data.LevelStats(CurrentLevel).productionPerWorkerPerTick;
             var amount = Mathf.RoundToInt(baseAmount * DecayProductionMultiplier());
             ResourceManager.Instance?.Add(data.producesResource, amount);
         }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: FishermanHut
   displayName: "\u0425\u0438\u0436\u0438\u043D\u0430 \u0440\u044B\u0431\u0430\u043A\u0430"
-  prefab: {fileID: 8126731114875367071, guid: eece0b4cd2b979447be17d2e19c07923, type: 3}
+  prefab: {fileID: 420914971441794721, guid: eece0b4cd2b979447be17d2e19c07923, type: 3}
   footprintSize: {x: 2, y: 1}
   cost:
   - type: 0
@@ -25,10 +25,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 2
+  levels:
+  - maxHealth: 90
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
+  - maxHealth: 144
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
+  - maxHealth: 225
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
   producesResource: 2
-  productionPerWorkerPerTick: 2
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -36,7 +49,5 @@ MonoBehaviour:
   upgradeToLevel3Cost:
   - type: 0
     amount: 42
-  maxHealth: 90
-  defense: 0
   fogRevealRadius: 12
   requiredBuilding: {fileID: 0}

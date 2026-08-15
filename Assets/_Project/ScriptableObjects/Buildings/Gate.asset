@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Gate
   displayName: "\u0412\u043E\u0440\u043E\u0442\u0430"
-  prefab: {fileID: 2016656588191792238, guid: 8c49e527341e9f141968a434ae3077c6, type: 3}
+  prefab: {fileID: 272777465973494494, guid: 8c49e527341e9f141968a434ae3077c6, type: 3}
   footprintSize: {x: 2, y: 1}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 0
+  levels:
+  - maxHealth: 160
+    defense: 12
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 256
+    defense: 19
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 400
+    defense: 30
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
   producesResource: 0
-  productionPerWorkerPerTick: 0
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -46,7 +59,5 @@ MonoBehaviour:
     amount: 34
   - type: 5
     amount: 18
-  maxHealth: 160
-  defense: 12
   fogRevealRadius: 8
   requiredBuilding: {fileID: 0}

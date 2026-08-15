@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: TownHall
   displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
-  prefab: {fileID: 2969443750021540436, guid: e554cfb3e12e7cc45bf4a3c5e5234646, type: 3}
+  prefab: {fileID: 4972505397271386770, guid: e554cfb3e12e7cc45bf4a3c5e5234646, type: 3}
   footprintSize: {x: 4, y: 4}
   cost: []
   category: 2
@@ -23,10 +23,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 5
-  maxWorkers: 0
+  levels:
+  - maxHealth: 400
+    defense: 20
+    citizensGranted: 5
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 640
+    defense: 32
+    citizensGranted: 8
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+  - maxHealth: 1000
+    defense: 50
+    citizensGranted: 10
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
   producesResource: 0
-  productionPerWorkerPerTick: 0
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -42,7 +55,5 @@ MonoBehaviour:
     amount: 20
   - type: 3
     amount: 40
-  maxHealth: 400
-  defense: 20
   fogRevealRadius: 20
   requiredBuilding: {fileID: 0}

@@ -52,14 +52,17 @@ namespace CityBuilder.Core
         /// <summary>Placement cost. Built from the tab's cost_wood/cost_stone/... columns, zeroes omitted.</summary>
         public List<ResourceAmount> cost = new List<ResourceAmount>();
 
-        public int citizensGranted;
-        public int maxWorkers;
         public ResourceType producesResource = ResourceType.Wood;
-        public int productionPerWorkerPerTick;
         public float productionIntervalSeconds = 6f;
-        public int maxHealth = 100;
-        public int defense;
         public int fogRevealRadius = 8;
+
+        /// <summary>
+        /// One entry per upgrade level, always three of them. The sheet authors level 1 in the
+        /// plain columns (max_health, defense, ...) and the higher levels in suffixed ones
+        /// (max_health_2, max_health_3); an absent or empty suffixed column repeats the level below,
+        /// so a building that gains nothing from upgrading simply has nothing extra to fill in.
+        /// </summary>
+        public List<BuildingLevelStats> levels = new List<BuildingLevelStats>();
 
         /// <summary>Id of a building that must already stand somewhere before this one can be placed. Empty = no prerequisite.</summary>
         public string requiredBuildingId = string.Empty;

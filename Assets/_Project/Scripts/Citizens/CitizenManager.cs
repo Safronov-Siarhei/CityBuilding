@@ -43,10 +43,10 @@ namespace CityBuilder.Citizens
 
         private void HandleBuildingPlaced(BuildingData data)
         {
-            if (data != null && data.citizensGranted > 0)
-            {
-                AddCitizens(data.citizensGranted);
-            }
+            // Freshly placed, so level 1 -- the citizens an upgrade adds on top come from
+            // BuildingInstance.TryUpgrade, which knows the level it just reached.
+            var granted = data != null ? data.LevelStats(1).citizensGranted : 0;
+            if (granted > 0) AddCitizens(granted);
         }
 
         public void AddCitizens(int amount)

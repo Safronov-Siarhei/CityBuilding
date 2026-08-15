@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Lumberjack
   displayName: "\u041B\u0435\u0441\u043E\u043F\u0438\u043B\u043A\u0430"
-  prefab: {fileID: 2673632337212283207, guid: e7b2cdd6b9991a748b8a671e65a5628b, type: 3}
+  prefab: {fileID: 8643204651135620411, guid: e7b2cdd6b9991a748b8a671e65a5628b, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 3
+  levels:
+  - maxHealth: 100
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
+  - maxHealth: 160
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
+  - maxHealth: 250
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
   producesResource: 0
-  productionPerWorkerPerTick: 2
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -42,7 +55,5 @@ MonoBehaviour:
     amount: 56
   - type: 1
     amount: 14
-  maxHealth: 100
-  defense: 0
   fogRevealRadius: 15
   requiredBuilding: {fileID: 0}

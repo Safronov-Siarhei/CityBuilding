@@ -31,14 +31,14 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
-            if (_buildingInstance == null || _buildingInstance.Data == null || _buildingInstance.Data.defense <= 0) return;
+            if (_buildingInstance == null || _buildingInstance.Data == null || _buildingInstance.Defense <= 0) return;
 
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;
             _timer = _attackIntervalSeconds;
 
             var target = FindNearestOrcInRange();
-            target?.TakeDamage(_buildingInstance.Data.defense);
+            target?.TakeDamage(_buildingInstance.Defense);
         }
 
         private OrcUnit FindNearestOrcInRange()

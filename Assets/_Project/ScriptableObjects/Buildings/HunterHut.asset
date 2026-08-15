@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: HunterHut
   displayName: "\u0425\u0438\u0436\u0438\u043D\u0430 \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430"
-  prefab: {fileID: 5564339487040981648, guid: 24b39289c86b78c4a9dc4ed675906dd3, type: 3}
+  prefab: {fileID: 7275285174286846898, guid: 24b39289c86b78c4a9dc4ed675906dd3, type: 3}
   footprintSize: {x: 2, y: 1}
   cost:
   - type: 0
@@ -27,10 +27,23 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
-  citizensGranted: 0
-  maxWorkers: 2
+  levels:
+  - maxHealth: 90
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
+  - maxHealth: 144
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
+  - maxHealth: 225
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
   producesResource: 2
-  productionPerWorkerPerTick: 2
   productionIntervalSeconds: 6
   upgradeToLevel2Cost:
   - type: 0
@@ -42,7 +55,5 @@ MonoBehaviour:
     amount: 42
   - type: 1
     amount: 14
-  maxHealth: 90
-  defense: 0
   fogRevealRadius: 14
   requiredBuilding: {fileID: 0}

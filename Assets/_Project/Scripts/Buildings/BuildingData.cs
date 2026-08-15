@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -6,6 +7,26 @@ namespace CityBuilder.Buildings
 {
     /// <summary>Groups buildings in the hotbar (see BuildingCategoryPanel) -- purely a UI grouping, not a gameplay mechanic.</summary>
     public enum BuildingCategory { Housing, Food, Production, Infrastructure, Military }
+
+    /// <summary>
+    /// What a building is worth at one upgrade level. Every stat that a level is supposed to
+    /// improve lives here rather than on BuildingData, so no caller can read a building's strength
+    /// without saying which level it means -- upgrading used to advance a number and change nothing
+    /// else, and a flat "maxHealth" next to a Level property was exactly how that stayed unnoticed.
+    ///
+    /// Authored per level in the balance sheet's buildings tab: max_health / max_health_2 /
+    /// max_health_3 and so on, where a missing or empty higher-level column simply repeats the
+    /// level below it.
+    /// </summary>
+    [Serializable]
+    public class BuildingLevelStats
+    {
+        public int maxHealth = 100;
+        public int defense;
+        public int citizensGranted;
+        public int maxWorkers;
+        public int productionPerWorkerPerTick;
+    }
 
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]
     public class BuildingData : ScriptableObject
@@ -46,13 +67,14 @@ namespace CityBuilder.Buildings
         // without re-opening the hotbar each time.
         public bool keepSelectedAfterPlacement = false;
 
-        [Header("Population")]
-        public int citizensGranted = 0;
+        [Header("Per-level stats")]
+        // Three entries, one per upgrade level. Filled from the balance sheet by SetupProject --
+        // read it through LevelStats(level), never by index, so a building whose sheet row is
+        // missing levels still answers with something sane.
+        public List<BuildingLevelStats> levels = new List<BuildingLevelStats>();
 
         [Header("Production")]
-        public int maxWorkers = 0;
         public ResourceType producesResource = ResourceType.Wood;
-        public int productionPerWorkerPerTick = 0;
         public float productionIntervalSeconds = 6f;
 
         [Header("Upgrades")]
@@ -61,12 +83,6 @@ namespace CityBuilder.Buildings
         // for later -- for now upgrading only advances BuildingInstance.Level.
         public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
         public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
-
-        [Header("Condition")]
-        // Base (level 1) stats. Intended to scale with upgrade level in the future -- see
-        // BuildingInstance.CurrentHealth/Decay for the per-instance runtime values these seed.
-        public int maxHealth = 100;
-        public int defense = 0;
 
         [Header("Fog of War")]
         // Cells around this building permanently cleared of fog once placed -- see
@@ -78,5 +94,22 @@ namespace CityBuilder.Buildings
         // (by buildingName -- see BuildingInstance.HasAny) must exist before this one can be
         // placed. Checked by BuildingPlacer alongside affordability, not by GridManager.
         public BuildingData requiredBuilding;
+
+        /// <summary>
+        /// This building's stats at the given level (1..3), clamped into whatever the sheet
+        /// actually provided. A building with no levels at all answers with defaults rather than
+        /// null: a missing sheet row is already reported loudly at build time (see
+        /// SetupProject.Balance), and returning null here would turn that one error into a crash
+        /// somewhere far away.
+        /// </summary>
+        public BuildingLevelStats LevelStats(int level)
+        {
+            if (levels == null || levels.Count == 0) return Fallback;
+
+            var index = Mathf.Clamp(level, 1, levels.Count) - 1;
+            return levels[index] ?? Fallback;
+        }
+
+        private static readonly BuildingLevelStats Fallback = new BuildingLevelStats();
     }
 }

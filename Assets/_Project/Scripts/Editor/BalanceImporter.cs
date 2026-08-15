@@ -204,20 +204,65 @@ namespace CityBuilder.EditorTools
                     displayName = Text(header, row, "display_name"),
                     category = ParseEnum(header, row, "category", BuildingCategory.Production, path),
                     cost = ReadCost(header, row, "cost_", path),
-                    citizensGranted = (int)Number(header, row, "citizens_granted", path),
-                    maxWorkers = (int)Number(header, row, "max_workers", path),
                     producesResource = ParseEnum(header, row, "produces", ResourceType.Wood, path),
-                    productionPerWorkerPerTick = (int)Number(header, row, "production_per_tick", path),
                     productionIntervalSeconds = Number(header, row, "production_interval_sec", path),
-                    maxHealth = (int)Number(header, row, "max_health", path),
-                    defense = (int)Number(header, row, "defense", path),
                     fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
+                    levels = ReadLevels(header, row, path),
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
                     upgradeToLevel3Cost = ReadCost(header, row, "up3_", path),
                 });
             }
             return buildings;
+        }
+
+        /// <summary>
+        /// The three upgrade levels of one building.
+        ///
+        /// Level 1 comes from the plain column, levels 2 and 3 from the same name with a _2 / _3
+        /// suffix, and anything the sheet doesn't say repeats the level below -- an upgrade that
+        /// leaves a stat alone is the common case, and making every building spell out every stat
+        /// three times would be a wall of duplicated numbers nobody would keep honest.
+        ///
+        /// Lookup is by column name, so giving a stat its own per-level column later needs a line
+        /// here and nothing else -- no schema, no migration, no fixed column order.
+        /// </summary>
+        private static List<BuildingLevelStats> ReadLevels(List<string> header, List<string> row, string path)
+        {
+            var levels = new List<BuildingLevelStats>(BuildingInstance.MaxLevel);
+
+            for (var level = 1; level <= BuildingInstance.MaxLevel; level++)
+            {
+                var previous = levels.Count > 0 ? levels[levels.Count - 1] : null;
+                levels.Add(new BuildingLevelStats
+                {
+                    maxHealth = LevelNumber(header, row, "max_health", level, previous?.maxHealth, path),
+                    defense = LevelNumber(header, row, "defense", level, previous?.defense, path),
+                    citizensGranted = LevelNumber(header, row, "citizens_granted", level, previous?.citizensGranted, path),
+                    maxWorkers = LevelNumber(header, row, "max_workers", level, previous?.maxWorkers, path),
+                    productionPerWorkerPerTick = LevelNumber(header, row, "production_per_tick", level, previous?.productionPerWorkerPerTick, path),
+                });
+            }
+
+            return levels;
+        }
+
+        /// <summary>
+        /// One stat at one level: "max_health" for level 1, "max_health_2" for level 2, and so on.
+        /// Level 1 is required and says so when it's missing; a higher level silently inherits,
+        /// which is the whole point -- only the stats an upgrade actually changes get typed in.
+        /// </summary>
+        private static int LevelNumber(List<string> header, List<string> row, string column, int level, int? inherited, string path)
+        {
+            var name = level == 1 ? column : $"{column}_{level}";
+
+            if (header.IndexOf(name) < 0 || Text(header, row, name).Length == 0)
+            {
+                if (inherited.HasValue) return inherited.Value;
+                return (int)Number(header, row, column, path); // level 1: report the miss properly
+            }
+
+            return (int)Number(header, row, name, path);
         }
 
         /// <summary>
