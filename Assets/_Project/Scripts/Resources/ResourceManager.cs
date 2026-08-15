@@ -13,6 +13,16 @@ namespace CityBuilder.Resources
         public event Action<ResourceType, int> OnResourceChanged;
         public event Action<bool> OnInfiniteResourcesChanged;
 
+        /// <summary>Raised when a storehouse is built, upgraded or lost, i.e. when the ceiling on something moved.</summary>
+        public event Action OnCapacityChanged;
+
+        /// <summary>
+        /// Extra room built by storehouses, on top of the settlement's base capacity. Buildings add
+        /// their share on placement and take it back when destroyed (see BuildingInstance), so this
+        /// never needs a scan over the map.
+        /// </summary>
+        private readonly Dictionary<ResourceStorageGroup, int> _builtCapacity = new Dictionary<ResourceStorageGroup, int>();
+
         [SerializeField] private List<ResourceAmount> startingResources = new List<ResourceAmount>
         {
             new ResourceAmount { type = ResourceType.Wood, amount = 50 },
@@ -68,12 +78,82 @@ namespace CityBuilder.Resources
             return _resources.TryGetValue(type, out var amount) ? amount : 0;
         }
 
-        public void Add(ResourceType type, int amount)
+        /// <summary>
+        /// How much of this resource the settlement can hold: what it starts with plus every
+        /// storehouse built for that group. Population has no ceiling -- it isn't warehoused.
+        /// </summary>
+        public int GetCapacity(ResourceType type)
         {
-            if (amount == 0) return;
+            var group = ResourceStorage.GroupOf(type);
+            if (group == ResourceStorageGroup.None) return int.MaxValue;
+
+            _builtCapacity.TryGetValue(group, out var built);
+            return BaseCapacity(group) + built;
+        }
+
+        private static int BaseCapacity(ResourceStorageGroup group)
+        {
+            var config = BalanceConfig.Instance;
+            switch (group)
+            {
+                case ResourceStorageGroup.Food: return config.BaseCapacityFood;
+                case ResourceStorageGroup.Valuables: return config.BaseCapacityValuables;
+                default: return config.BaseCapacityMaterials;
+            }
+        }
+
+        public void AddCapacity(ResourceStorageGroup group, int amount)
+        {
+            if (group == ResourceStorageGroup.None || amount == 0) return;
+
+            _builtCapacity.TryGetValue(group, out var current);
+            _builtCapacity[group] = Mathf.Max(0, current + amount);
+            OnCapacityChanged?.Invoke();
+
+            // Losing a storehouse can leave more in store than there is now room for. Spill the
+            // difference rather than carrying an impossible number around: everything that reads a
+            // stockpile would otherwise have to know it might be over the limit.
+            if (amount < 0) ClampToCapacity(group);
+        }
+
+        private void ClampToCapacity(ResourceStorageGroup group)
+        {
+            foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))
+            {
+                if (ResourceStorage.GroupOf(type) != group) continue;
+
+                var capacity = GetCapacity(type);
+                if (GetAmount(type) <= capacity) continue;
+
+                _resources[type] = capacity;
+                OnResourceChanged?.Invoke(type, capacity);
+            }
+        }
+
+        /// <summary>
+        /// Adds what fits and returns how much actually went in -- callers that care about the
+        /// difference (a producer filling a full granary) can report it. Spending is never blocked
+        /// by a ceiling, so negative amounts pass straight through.
+        /// </summary>
+        public int Add(ResourceType type, int amount)
+        {
+            if (amount == 0) return 0;
+
             _resources.TryGetValue(type, out var current);
-            _resources[type] = current + amount;
-            OnResourceChanged?.Invoke(type, _resources[type]);
+            var updated = current + amount;
+
+            if (amount > 0)
+            {
+                var capacity = GetCapacity(type);
+                if (updated > capacity) updated = Mathf.Max(current, capacity);
+            }
+
+            var stored = updated - current;
+            if (stored == 0) return 0;
+
+            _resources[type] = updated;
+            OnResourceChanged?.Invoke(type, updated);
+            return stored;
         }
 
         public void SetAmount(ResourceType type, int amount)

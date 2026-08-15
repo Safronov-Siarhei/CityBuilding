@@ -56,6 +56,9 @@ namespace CityBuilder.Core
         public float productionIntervalSeconds = 6f;
         public int fogRevealRadius = 8;
 
+        /// <summary>Which family of resources this building stores, if any. How much it holds is per level.</summary>
+        public ResourceStorageGroup storageGroup = ResourceStorageGroup.None;
+
         /// <summary>
         /// One entry per upgrade level, always three of them. The sheet authors level 1 in the
         /// plain columns (max_health, defense, ...) and the higher levels in suffixed ones
@@ -130,6 +133,13 @@ namespace CityBuilder.Core
         [SerializeField] private int woodPerTree = 5;
         [SerializeField] private int stonePerRock = 4;
 
+        [Header("Storage (economy.csv)")]
+        // What the settlement can hold before a single storehouse is built. Without these a new
+        // game would be unable to keep the resources it starts with.
+        [SerializeField] private int baseCapacityMaterials = 200;
+        [SerializeField] private int baseCapacityFood = 100;
+        [SerializeField] private int baseCapacityValuables = 300;
+
         public IReadOnlyList<UnitBalance> Units => units;
         public IReadOnlyList<BuildingBalance> Buildings => buildings;
         public int ArmyMaxSize => armyMaxSize;
@@ -148,6 +158,9 @@ namespace CityBuilder.Core
         public float RepairCostFraction => repairCostFraction;
         public int WoodPerTree => woodPerTree;
         public int StonePerRock => stonePerRock;
+        public int BaseCapacityMaterials => baseCapacityMaterials;
+        public int BaseCapacityFood => baseCapacityFood;
+        public int BaseCapacityValuables => baseCapacityValuables;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -219,6 +232,9 @@ namespace CityBuilder.Core
             repairCostFraction = Read(economy, "repair_cost_fraction", repairCostFraction);
             woodPerTree = (int)Read(economy, "wood_per_tree", woodPerTree);
             stonePerRock = (int)Read(economy, "stone_per_rock", stonePerRock);
+            baseCapacityMaterials = (int)Read(economy, "base_capacity_materials", baseCapacityMaterials);
+            baseCapacityFood = (int)Read(economy, "base_capacity_food", baseCapacityFood);
+            baseCapacityValuables = (int)Read(economy, "base_capacity_valuables", baseCapacityValuables);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

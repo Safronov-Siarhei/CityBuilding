@@ -21,6 +21,7 @@ namespace CityBuilder.UI
             {
                 ResourceManager.Instance.OnResourceChanged += HandleResourceChanged;
                 ResourceManager.Instance.OnInfiniteResourcesChanged += HandleInfiniteResourcesChanged;
+                ResourceManager.Instance.OnCapacityChanged += Refresh;
             }
             if (CitizenManager.Instance != null) CitizenManager.Instance.OnPopulationChanged += Refresh;
             Refresh();
@@ -45,7 +46,17 @@ namespace CityBuilder.UI
             for (var i = 0; i < count; i++)
             {
                 if (amountTexts[i] == null) continue;
-                amountTexts[i].text = infinite ? "∞" : ResourceManager.Instance.GetAmount(resourceOrder[i]).ToString();
+
+                var type = resourceOrder[i];
+                var amount = ResourceManager.Instance.GetAmount(type);
+                var capacity = ResourceManager.Instance.GetCapacity(type);
+
+                // The ceiling is only worth showing once it's close enough to matter -- a permanent
+                // "50/200" on every resource is noise, but a stockpile quietly stuck at its limit
+                // with no explanation is worse.
+                amountTexts[i].text = infinite ? "∞"
+                    : amount >= capacity * 0.8f && capacity != int.MaxValue ? $"{amount}/{capacity}"
+                    : amount.ToString();
             }
 
             if (populationText != null)

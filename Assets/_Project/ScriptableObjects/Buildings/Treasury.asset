@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e59262d371d1b314e8cc25adcb2a829c, type: 3}
+  m_Name: Treasury
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
+  buildingName: Treasury
+  displayName: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
+  prefab: {fileID: 8545578085004259326, guid: 95a186bbcf7bfc2448209a0ee8a5a1d7, type: 3}
+  footprintSize: {x: 2, y: 2}
+  cost:
+  - type: 0
+    amount: 10
+  - type: 1
+    amount: 40
+  category: 3
+  isWaterCategory: 0
+  isRoad: 0
+  providesWalkableSurface: 0
+  connectsToFences: 0
+  keepSelectedAfterPlacement: 0
+  levels:
+  - maxHealth: 200
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 500
+  - maxHealth: 320
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 1000
+  - maxHealth: 500
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 1800
+  producesResource: 0
+  productionIntervalSeconds: 6
+  storageGroup: 3
+  upgradeToLevel2Cost:
+  - type: 0
+    amount: 16
+  - type: 1
+    amount: 64
+  upgradeToLevel3Cost:
+  - type: 0
+    amount: 28
+  - type: 1
+    amount: 112
+  fogRevealRadius: 8
+  requiredBuilding: {fileID: 0}

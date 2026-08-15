@@ -26,6 +26,9 @@ namespace CityBuilder.Buildings
         public int citizensGranted;
         public int maxWorkers;
         public int productionPerWorkerPerTick;
+
+        /// <summary>How much room this building adds to its storage group (see BuildingData.storageGroup). Zero for anything that isn't a storehouse.</summary>
+        public int storageCapacity;
     }
 
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]
@@ -76,6 +79,11 @@ namespace CityBuilder.Buildings
         [Header("Production")]
         public ResourceType producesResource = ResourceType.Wood;
         public float productionIntervalSeconds = 6f;
+
+        [Header("Storage")]
+        // Which family of resources this building stores. None for everything that isn't a
+        // storehouse -- the amount it holds is per level, in BuildingLevelStats.storageCapacity.
+        public ResourceStorageGroup storageGroup = ResourceStorageGroup.None;
 
         [Header("Upgrades")]
         // Level 1 is the building as placed (free). These are what BuildingInstance.TryUpgrade

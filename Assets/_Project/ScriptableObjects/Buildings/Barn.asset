@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e59262d371d1b314e8cc25adcb2a829c, type: 3}
+  m_Name: Barn
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
+  buildingName: Barn
+  displayName: "\u0410\u043C\u0431\u0430\u0440"
+  prefab: {fileID: 4488475585267823492, guid: a7c8409440523894d88850c1e9512167, type: 3}
+  footprintSize: {x: 2, y: 2}
+  cost:
+  - type: 0
+    amount: 25
+  - type: 1
+    amount: 5
+  category: 1
+  isWaterCategory: 0
+  isRoad: 0
+  providesWalkableSurface: 0
+  connectsToFences: 0
+  keepSelectedAfterPlacement: 0
+  levels:
+  - maxHealth: 100
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 200
+  - maxHealth: 160
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 400
+  - maxHealth: 250
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 700
+  producesResource: 0
+  productionIntervalSeconds: 6
+  storageGroup: 2
+  upgradeToLevel2Cost:
+  - type: 0
+    amount: 40
+  - type: 1
+    amount: 8
+  upgradeToLevel3Cost:
+  - type: 0
+    amount: 70
+  - type: 1
+    amount: 14
+  fogRevealRadius: 8
+  requiredBuilding: {fileID: 0}

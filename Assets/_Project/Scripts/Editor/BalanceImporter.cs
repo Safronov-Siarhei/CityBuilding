@@ -207,6 +207,7 @@ namespace CityBuilder.EditorTools
                     producesResource = ParseEnum(header, row, "produces", ResourceType.Wood, path),
                     productionIntervalSeconds = Number(header, row, "production_interval_sec", path),
                     fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
+                    storageGroup = ParseEnum(header, row, "storage_group", ResourceStorageGroup.None, path),
                     levels = ReadLevels(header, row, path),
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
@@ -241,6 +242,7 @@ namespace CityBuilder.EditorTools
                     citizensGranted = LevelNumber(header, row, "citizens_granted", level, previous?.citizensGranted, path),
                     maxWorkers = LevelNumber(header, row, "max_workers", level, previous?.maxWorkers, path),
                     productionPerWorkerPerTick = LevelNumber(header, row, "production_per_tick", level, previous?.productionPerWorkerPerTick, path),
+                    storageCapacity = LevelNumber(header, row, "storage_capacity", level, previous?.storageCapacity, path),
                 });
             }
 

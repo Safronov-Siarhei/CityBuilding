@@ -76,6 +76,9 @@ namespace CityBuilder.Tests.EditMode
         [TestCase("Quarry")]
         [TestCase("Mine")]
         [TestCase("CoalMine")]
+        [TestCase("Warehouse")]
+        [TestCase("Barn")]
+        [TestCase("Treasury")]
         [TestCase("Tower")]
         [TestCase("Barracks")]
         [TestCase("Gate")]
@@ -194,6 +197,47 @@ namespace CityBuilder.Tests.EditMode
                 Assert.GreaterOrEqual(level3, level2,
                     $"{building.id}: reaching level 3 costs {level3} resources in total, less than the {level2} level 2 costs.");
             }
+        }
+
+        /// <summary>
+        /// A storehouse has to declare BOTH what it keeps and how much, or it is a building that
+        /// costs resources and does nothing. The two halves live in different columns, so it is
+        /// entirely possible to fill in one and forget the other.
+        /// </summary>
+        [Test]
+        public void StorehousesDeclareBothWhatTheyKeepAndHowMuch()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            Assert.IsNotNull(config);
+
+            var storehouses = 0;
+            foreach (var building in config.Buildings)
+            {
+                var capacity = building.levels[0].storageCapacity;
+                var stores = building.storageGroup != CityBuilder.Resources.ResourceStorageGroup.None;
+
+                if (stores)
+                {
+                    storehouses++;
+                    Assert.Greater(capacity, 0, $"{building.id}: says it stores {building.storageGroup} but holds nothing.");
+                }
+                else
+                {
+                    Assert.AreEqual(0, capacity, $"{building.id}: has storage capacity but no storage_group, so it holds nothing in practice.");
+                }
+            }
+
+            Assert.Greater(storehouses, 0, "No building stores anything -- every resource would be stuck at the settlement's base capacity forever.");
+        }
+
+        [Test]
+        public void BaseCapacities_LeaveRoomForTheStartingResources()
+        {
+            var config = BalanceConfig.Instance;
+
+            Assert.Greater(config.BaseCapacityMaterials, 0, "A zero materials ceiling means the first tree felled is wasted.");
+            Assert.Greater(config.BaseCapacityFood, 0);
+            Assert.Greater(config.BaseCapacityValuables, 0);
         }
 
         [Test]

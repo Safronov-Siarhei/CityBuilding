@@ -91,6 +91,7 @@ namespace CityBuilder.Buildings
                 // MeshMapApplier.RegisterWalkableSurface).
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 if (data.connectsToFences) RegisterFenceCells();
+                ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeCount(data.buildingName, 1);
             }
         }
@@ -136,6 +137,7 @@ namespace CityBuilder.Buildings
             if (Data != null)
             {
                 if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
                 {
                     // Leaves a real gap: the segments either side re-shape into dead ends, which is
@@ -144,6 +146,17 @@ namespace CityBuilder.Buildings
                 }
                 ChangeCount(Data.buildingName, -1);
             }
+        }
+
+        /// <summary>
+        /// Hands this building's storage room to the settlement, or takes it back. Paired with the
+        /// registration in Initialize and the release in OnDestroy so the ceiling always matches the
+        /// storehouses actually standing -- burning down a granary really does spill the surplus.
+        /// </summary>
+        private void ChangeStoredCapacity(int delta)
+        {
+            if (delta == 0 || Data == null || Data.storageGroup == ResourceStorageGroup.None) return;
+            ResourceManager.Instance?.AddCapacity(Data.storageGroup, delta);
         }
 
         private static void ChangeCount(string buildingName, int delta)
@@ -307,7 +320,13 @@ namespace CityBuilder.Buildings
         /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>
         public void SetLevel(int level)
         {
+            // Initialize already handed over level 1's storage room, so a building restored at a
+            // higher level owes the settlement the difference -- otherwise a loaded save would
+            // quietly hold less than the same town did before it was saved.
+            var before = Data != null ? Data.LevelStats(Level).storageCapacity : 0;
             Level = Mathf.Clamp(level, 1, MaxLevel);
+            if (Data != null) ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity - before);
+
             // A loaded building has to look its level straight away -- nothing else will tell it to,
             // since it was never upgraded during this session.
             _levelAppearance?.Apply(Level);
@@ -346,6 +365,8 @@ namespace CityBuilder.Buildings
             // citizens the building already granted stay granted (see CitizenManager).
             var extraCitizens = after.citizensGranted - before.citizensGranted;
             if (extraCitizens > 0) CitizenManager.Instance?.AddCitizens(extraCitizens);
+
+            ChangeStoredCapacity(after.storageCapacity - before.storageCapacity);
 
             _levelAppearance?.Apply(Level);
             return true;

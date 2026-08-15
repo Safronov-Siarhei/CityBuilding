@@ -59,8 +59,31 @@ namespace CityBuilder.Citizens
 
             var baseAmount = AssignedWorkers * data.LevelStats(CurrentLevel).productionPerWorkerPerTick;
             var amount = Mathf.RoundToInt(baseAmount * DecayProductionMultiplier());
-            ResourceManager.Instance?.Add(data.producesResource, amount);
+            if (amount <= 0) return;
+
+            var stored = ResourceManager.Instance != null ? ResourceManager.Instance.Add(data.producesResource, amount) : amount;
+            ReportOverflow(data, amount - stored);
         }
+
+        /// <summary>
+        /// Says once that this building's output is going to waste for want of storage, and stays
+        /// quiet until it has somewhere to put things again. Without the latch a full granary would
+        /// write a line to the event log every few seconds for every farm in the settlement.
+        /// </summary>
+        private void ReportOverflow(BuildingData data, int wasted)
+        {
+            if (wasted <= 0)
+            {
+                _reportedOverflow = false;
+                return;
+            }
+
+            if (_reportedOverflow) return;
+            _reportedOverflow = true;
+            EventLogManager.Instance?.Log($"Некуда складывать: {data.displayName} работает впустую, нужно хранилище");
+        }
+
+        private bool _reportedOverflow;
 
         /// <summary>1 below BuildingInstance.DecayPenaltyThreshold, falling linearly to MinDecayProductionMultiplier at full decay -- a neglected building still produces something, just less, right up until it's destroyed outright.</summary>
         private float DecayProductionMultiplier()
