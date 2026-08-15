@@ -176,7 +176,7 @@ namespace CityBuilder.Citizens
         {
             var buildingInstance = building.GetComponent<BuildingInstance>();
             var buildingPos = buildingInstance != null && gridManager != null
-                ? gridManager.GetFootprintCenterWorld(buildingInstance.OriginCell, buildingInstance.Data.footprintSize)
+                ? gridManager.GetFootprintCenterWorld(buildingInstance.OriginCell, buildingInstance.RotatedFootprint())
                 : building.transform.position;
 
             Vector3? nodePos = null;
@@ -325,7 +325,7 @@ namespace CityBuilder.Citizens
             {
                 if (instance.Data != null && instance.Data.buildingName == "TownHall")
                 {
-                    var footprint = instance.Data.footprintSize;
+                    var footprint = instance.RotatedFootprint();
                     _townCenter = gridManager.GetFootprintCenterWorld(instance.OriginCell, footprint);
 
                     // The footprint center sits inside the Town Hall's own solid BoxCollider --

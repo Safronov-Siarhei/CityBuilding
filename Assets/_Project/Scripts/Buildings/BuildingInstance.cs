@@ -81,7 +81,10 @@ namespace CityBuilder.Buildings
             // without needing any separate persistence of its own.
             if (data != null)
             {
-                var footprint = data.footprintSize;
+                // The ROTATED footprint, or a building placed sideways reveals the fog around a
+                // point off to one side of itself -- invisible on a square footprint, half a
+                // building out on a 4x2 one.
+                var footprint = RotatedFootprint();
                 var centerCell = originCell + new Vector2Int(footprint.x / 2, footprint.y / 2);
                 FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
 
@@ -224,7 +227,14 @@ namespace CityBuilder.Buildings
             Destroy(gameObject);
         }
 
-        private Vector2Int RotatedFootprint()
+        /// <summary>
+        /// This building's footprint as it actually lies on the grid, with X and Z swapped when it
+        /// was placed on its side. Anything that asks the grid where this building IS -- its cells,
+        /// its centre, the point a worker walks to -- has to use this and not Data.footprintSize:
+        /// the two are the same number only for a square building, and a 4x2 turned 90 degrees ends
+        /// up a whole building away from where the unrotated one says it is.
+        /// </summary>
+        public Vector2Int RotatedFootprint()
         {
             var footprint = Data.footprintSize;
             return RotationSteps % 2 == 0 ? footprint : new Vector2Int(footprint.y, footprint.x);
