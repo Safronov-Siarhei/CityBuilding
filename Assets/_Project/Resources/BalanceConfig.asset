@@ -176,44 +176,6 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 42
-  - id: HunterHut
-    displayName: "\u0425\u0438\u0436\u0438\u043D\u0430 \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430"
-    category: 1
-    cost:
-    - type: 0
-      amount: 15
-    - type: 1
-      amount: 5
-    producesResource: 2
-    productionIntervalSeconds: 6
-    fogRevealRadius: 14
-    levels:
-    - maxHealth: 90
-      defense: 0
-      citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 2
-    - maxHealth: 144
-      defense: 0
-      citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 2
-    - maxHealth: 225
-      defense: 0
-      citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 2
-    requiredBuildingId: 
-    upgradeToLevel2Cost:
-    - type: 0
-      amount: 24
-    - type: 1
-      amount: 8
-    upgradeToLevel3Cost:
-    - type: 0
-      amount: 42
-    - type: 1
-      amount: 14
   - id: Farm
     displayName: "\u0424\u0435\u0440\u043C\u0430"
     category: 1
@@ -406,42 +368,6 @@ MonoBehaviour:
       amount: 28
     - type: 5
       amount: 14
-  - id: Wall
-    displayName: "\u0421\u0442\u0435\u043D\u0430"
-    category: 4
-    cost:
-    - type: 1
-      amount: 5
-    producesResource: 0
-    productionIntervalSeconds: 6
-    fogRevealRadius: 6
-    levels:
-    - maxHealth: 150
-      defense: 15
-      citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-    - maxHealth: 240
-      defense: 24
-      citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-    - maxHealth: 375
-      defense: 38
-      citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-    requiredBuildingId: 
-    upgradeToLevel2Cost:
-    - type: 1
-      amount: 8
-    - type: 5
-      amount: 6
-    upgradeToLevel3Cost:
-    - type: 1
-      amount: 14
-    - type: 5
-      amount: 14
   - id: Tower
     displayName: "\u0411\u0430\u0448\u043D\u044F"
     category: 4
@@ -469,7 +395,7 @@ MonoBehaviour:
       citizensGranted: 0
       maxWorkers: 0
       productionPerWorkerPerTick: 0
-    requiredBuildingId: Wall
+    requiredBuildingId: Fence
     upgradeToLevel2Cost:
     - type: 0
       amount: 8

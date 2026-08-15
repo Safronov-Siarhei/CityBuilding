@@ -211,12 +211,6 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
 
-            var hunterHutData = CreateBuildingData(
-                "HunterHut", new Vector2Int(2, 1), height: 2f,
-                wallColor: new Color(0.38f, 0.28f, 0.18f), roofColor: new Color(0.22f, 0.42f, 0.24f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true);
-
             var farmData = CreateBuildingData(
                 "Farm", new Vector2Int(2, 2), height: 1.8f,
                 wallColor: new Color(0.68f, 0.55f, 0.3f), roofColor: new Color(0.42f, 0.58f, 0.24f),
@@ -242,11 +236,6 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.3f, 0.28f, 0.27f), roofColor: new Color(0.14f, 0.14f, 0.15f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
-            var wallData = CreateBuildingData(
-                "Wall", new Vector2Int(1, 1), height: 1.6f,
-                wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
-
             var towerData = CreateBuildingData(
                 "Tower", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
@@ -264,7 +253,7 @@ namespace CityBuilder.EditorTools
 
             // Two models, no colours or size of its own: everything about how a fence segment looks
             // comes from the FBX pair and from which neighbours it finds (see FenceShape).
-            var fenceData = CreateFenceBuildingData("Fence", "Fence-1-Straight.fbx", "Fence-1-Corner.fbx");
+            var fenceData = CreateFenceBuildingData("Fence", "Fence1-lvl1-Straight.fbx", "Fence1-lvl1-Corner.fbx");
 
             var roadData = CreateBuildingData(
                 "Road", new Vector2Int(1, 1), height: 0.05f,
@@ -293,8 +282,8 @@ namespace CityBuilder.EditorTools
 
             var hotbarBuildingData = new List<BuildingData>
             {
-                houseData, cottageData, fishermanHutData, hunterHutData, farmData,
-                lumberjackData, quarryData, mineData, coalMineData, roadData, fenceData, wallData, towerData, barracksData, gateData,
+                houseData, cottageData, fishermanHutData, farmData,
+                lumberjackData, quarryData, mineData, coalMineData, roadData, fenceData, towerData, barracksData, gateData,
                 bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -2396,14 +2385,6 @@ namespace CityBuilder.EditorTools
                         FillIconTriangle(p, s, new Vector2(0.15f, 0.5f), new Vector2(0.7f, 0.72f), new Vector2(0.7f, 0.28f), fish);
                         FillIconTriangle(p, s, new Vector2(0.7f, 0.28f), new Vector2(0.7f, 0.72f), new Vector2(0.92f, 0.5f), fish);
                     });
-                case "HunterHut":
-                    return CreateIconSprite("Bld_Hunter", 64, (p, s) =>
-                    {
-                        var wood = new Color(0.4f, 0.28f, 0.16f);
-                        FillIconRect(p, s, 0.18f, 0.46f, 0.62f, 0.54f, wood);
-                        FillIconTriangle(p, s, new Vector2(0.6f, 0.36f), new Vector2(0.6f, 0.64f), new Vector2(0.85f, 0.5f), wood);
-                        FillIconTriangle(p, s, new Vector2(0.18f, 0.5f), new Vector2(0.3f, 0.62f), new Vector2(0.3f, 0.38f), new Color(0.75f, 0.18f, 0.16f));
-                    });
                 case "Farm":
                     return CreateIconSprite("Bld_Farm", 64, (p, s) =>
                     {
@@ -2460,19 +2441,6 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.12f, 0.24f, 0.88f, 0.36f, rail);
                         FillIconRect(p, s, 0.2f, 0.12f, 0.34f, 0.78f, post);
                         FillIconRect(p, s, 0.66f, 0.12f, 0.8f, 0.78f, post);
-                    });
-                case "Wall":
-                    return CreateIconSprite("Bld_Wall", 64, (p, s) =>
-                    {
-                        var brick = new Color(0.55f, 0.53f, 0.48f);
-                        FillIconRect(p, s, 0.1f, 0.1f, 0.9f, 0.9f, new Color(0.3f, 0.29f, 0.26f));
-                        FillIconRect(p, s, 0.12f, 0.62f, 0.46f, 0.86f, brick);
-                        FillIconRect(p, s, 0.5f, 0.62f, 0.88f, 0.86f, brick);
-                        FillIconRect(p, s, 0.12f, 0.38f, 0.3f, 0.6f, brick);
-                        FillIconRect(p, s, 0.34f, 0.38f, 0.68f, 0.6f, brick);
-                        FillIconRect(p, s, 0.72f, 0.38f, 0.88f, 0.6f, brick);
-                        FillIconRect(p, s, 0.12f, 0.14f, 0.46f, 0.36f, brick);
-                        FillIconRect(p, s, 0.5f, 0.14f, 0.88f, 0.36f, brick);
                     });
                 case "Tower":
                     return CreateIconSprite("Bld_Tower", 64, (p, s) =>
