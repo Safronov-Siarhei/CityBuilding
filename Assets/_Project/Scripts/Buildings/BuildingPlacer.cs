@@ -37,6 +37,9 @@ namespace CityBuilder.Buildings
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
         public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
+
+        /// <summary>The building the player has to put down before anything else (the Town Hall). Deliberately not in AvailableBuildings -- it never appears in the hotbar -- which makes this the only way to reach it from outside.</summary>
+        public BuildingData MandatoryFirstBuilding => mandatoryFirstBuilding;
         public event Action<BuildingData> OnBuildingPlaced;
 
         private void Start()

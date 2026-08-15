@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -201,9 +201,12 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
 
-            var townHallData = CreateFbxBuildingData(
+            // Its model is authored (TownHall1-lvl1.fbx) and picked up by name -- the colours and
+            // height below are only what it would fall back to if that file went missing.
+            var townHallData = CreateBuildingData(
                 "TownHall", new Vector2Int(4, 4), height: 3f,
-                fbxFileName: "MainCastle-1.fbx");
+                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var fishermanHutData = CreateBuildingData(
                 "FishermanHut", new Vector2Int(2, 1), height: 2f,
@@ -1329,8 +1332,18 @@ namespace CityBuilder.EditorTools
             // defence stat decides whether the building shoots back at all.
             var balance = Balance(id);
 
+            // An authored model wins over anything generated here: the moment `<id>1-lvl1.fbx`
+            // exists, the placeholder below stops being built. That is the whole loop for adding
+            // art -- drop the file in, run the build, see it in the game. No code change, which
+            // matters when there are ~48 buildings to get through and most of them will arrive as
+            // rough stand-ins first.
             GameObject prefab;
-            switch (style)
+            var authoredModel = AuthoredModel(id);
+            if (authoredModel != null)
+            {
+                prefab = CreateAuthoredModelPrefab(id, footprint, height, authoredModel, balance);
+            }
+            else switch (style)
             {
                 case BuildingStyle.Hut:
                     // Level 1's worker count: the hut's geometry is built once, and its level-2
@@ -1375,6 +1388,86 @@ namespace CityBuilder.EditorTools
             AssetDatabase.CreateAsset(data, dataPath);
             return data;
         }
+
+        /// <summary>
+        /// The authored model for a building, found by name rather than wired up in code:
+        /// `<id>1-lvl1.fbx` in Models/Buildings, matching the naming the models themselves use
+        /// (the digit is the building variant, lvl1 its upgrade level). Null while nobody has drawn
+        /// it and the procedural placeholder is still standing in.
+        /// </summary>
+        private static GameObject AuthoredModel(string id)
+        {
+            return AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{id}1-lvl1.fbx");
+        }
+
+        /// <summary>
+        /// A building whose look comes entirely from an FBX. Everything else about it -- its cells,
+        /// its stats, its components -- is unchanged from the generated version, so swapping the
+        /// file in changes the picture and nothing else.
+        ///
+        /// The collider is the one part that has to be MEASURED rather than declared: it is what
+        /// the player's clicks meet, and a hand-written height that disagrees with the model gives
+        /// either a roof that cannot be clicked or an invisible box beside the building that eats
+        /// clicks meant for the ground. Stand-in models are deliberately the wrong height, so this
+        /// would be wrong for every one of them.
+        /// </summary>
+        private static GameObject CreateAuthoredModelPrefab(string id, Vector2Int footprint, float fallbackHeight, GameObject source, BuildingBalance balance)
+        {
+            var root = new GameObject(id);
+            root.AddComponent<BuildingInstance>();
+            // Same rule as DefensiveBuilding below: attached if the building EVER employs anyone,
+            // since upgrading swaps stats and models but never rebuilds the prefab.
+            if (EmploysAtAnyLevel(balance)) root.AddComponent<ProductionBuilding>();
+
+            var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, root.transform);
+            var measuredHeight = FitModelToPlot(model, footprint, id);
+            var height = measuredHeight > 0.01f ? measuredHeight : fallbackHeight;
+
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(footprint.x * CellSize - BuildingInset, height, footprint.y * CellSize - BuildingInset);
+            collider.center = new Vector3(0f, height * 0.5f, 0f);
+
+            return SavePrefab(root, id);
+        }
+
+        /// <summary>
+        /// Centres a model on its plot, stands it on the ground, and reports how tall it turned out.
+        ///
+        /// Measuring instead of trusting the FBX's origin is what makes a model droppable: these
+        /// files come out of Blender with the geometry wherever the scene happened to leave it (the
+        /// fence pair were exported side by side with a zero translation and would otherwise have
+        /// stood metres from their cell). Only the horizontal centre and the base are corrected --
+        /// nothing is scaled, so a model built at the wrong size stays wrong and says so.
+        /// </summary>
+        private static float FitModelToPlot(GameObject model, Vector2Int footprint, string id)
+        {
+            var renderers = model.GetComponentsInChildren<MeshRenderer>();
+            if (renderers.Length == 0)
+            {
+                Debug.LogError($"FitModelToPlot: '{id}' has an authored model with no MeshRenderer -- nothing to place or measure.");
+                return 0f;
+            }
+
+            var bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            model.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+
+            var plotX = footprint.x * CellSize;
+            var plotZ = footprint.y * CellSize;
+            if (bounds.size.x > plotX + ModelPlotTolerance || bounds.size.z > plotZ + ModelPlotTolerance)
+            {
+                Debug.LogWarning($"FitModelToPlot: '{id}' is {bounds.size.x:0.##}x{bounds.size.z:0.##}m but its plot is " +
+                                 $"{plotX:0.##}x{plotZ:0.##}m -- it will hang over its neighbours' cells.");
+            }
+
+            Debug.Log($"FitModelToPlot: '{id}' -> {bounds.size.x:0.##}x{bounds.size.z:0.##}m on a {plotX:0.##}x{plotZ:0.##}m plot, " +
+                      $"height {bounds.size.y:0.##}m, recentred by ({-bounds.center.x:0.##}, {-bounds.min.y:0.##}, {-bounds.center.z:0.##}).");
+            return bounds.size.y;
+        }
+
+        /// <summary>How far over its plot a model may hang before the build says something. A hair of overhang is normal (eaves, a porch); half a cell is a modelling mistake.</summary>
+        private const float ModelPlotTolerance = 0.5f;
 
         /// <summary>
         /// A fence segment. Unlike every other building, its prefab carries TWO models -- the
@@ -1514,6 +1607,17 @@ namespace CityBuilder.EditorTools
             foreach (var level in balance.levels)
             {
                 if (level != null && level.defense > 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Whether this building has worker slots at any of its levels -- see the ProductionBuilding attachment. Same reasoning as FightsBackAtAnyLevel: a workshop that only takes hands on at level 2 is upgraded, never rebuilt.</summary>
+        private static bool EmploysAtAnyLevel(BuildingBalance balance)
+        {
+            if (balance.levels == null) return false;
+            foreach (var level in balance.levels)
+            {
+                if (level != null && level.maxWorkers > 0) return true;
             }
             return false;
         }
@@ -1816,53 +1920,6 @@ namespace CityBuilder.EditorTools
             data.footprintSize = footprint;
             ApplyBalance(data, Balance(id));
             data.isWaterCategory = true;
-
-            Directory.CreateDirectory(BuildingDataFolder);
-            var dataPath = $"{BuildingDataFolder}/{id}.asset";
-            DeleteIfExists(dataPath);
-            AssetDatabase.CreateAsset(data, dataPath);
-            return data;
-        }
-
-        /// <summary>
-        /// Builds a BuildingData backed by a hand-authored FBX model (Assets/_Project/Models/
-        /// Buildings/) instead of one of the procedural generators above -- currently just the
-        /// Town Hall. The model's own root rotation is preserved rather than forced to identity
-        /// (see MeshMapApplier for why: Blender-authored FBX carry a corrective root rotation that
-        /// must survive instantiation), and it's parented under an unrotated wrapper GameObject so
-        /// the BoxCollider's size/center -- sized to the logical footprint, not the mesh -- stay
-        /// aligned to world axes regardless of that rotation. Expects the model's own pivot at the
-        /// footprint's base center (matching the convention used for the hand-authored map meshes).
-        /// </summary>
-        private static BuildingData CreateFbxBuildingData(string id, Vector2Int footprint, float height, string fbxFileName)
-        {
-            var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
-
-            GameObject prefab = null;
-            if (sourcePrefab != null)
-            {
-                var root = new GameObject(id);
-                root.AddComponent<BuildingInstance>();
-                Object.Instantiate(sourcePrefab, Vector3.zero, sourcePrefab.transform.rotation, root.transform);
-
-                var sizeX = footprint.x * CellSize - BuildingInset;
-                var sizeZ = footprint.y * CellSize - BuildingInset;
-                var collider = root.AddComponent<BoxCollider>();
-                collider.size = new Vector3(sizeX, height, sizeZ);
-                collider.center = new Vector3(0f, height * 0.5f, 0f);
-
-                prefab = SavePrefab(root, id);
-            }
-            else
-            {
-                Debug.LogError($"CreateFbxBuildingData: FBX not found at {ModelsBuildingsFolder}/{fbxFileName} -- '{id}' will have no prefab.");
-            }
-
-            var data = ScriptableObject.CreateInstance<BuildingData>();
-            data.buildingName = id;
-            data.prefab = prefab;
-            data.footprintSize = footprint;
-            ApplyBalance(data, Balance(id));
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";

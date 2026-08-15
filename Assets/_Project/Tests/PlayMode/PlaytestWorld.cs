@@ -17,7 +17,7 @@ namespace CityBuilder.Tests.PlayMode
     /// </summary>
     public static class PlaytestWorld
     {
-        /// <summary>A catalogue entry by its stable id ("Fence", "Barn", ...), taken from the scene's own hotbar list rather than from AssetDatabase, which does not exist in a player.</summary>
+        /// <summary>A catalogue entry by its stable id ("Fence", "Barn", ...), taken from the scene's own building lists rather than from AssetDatabase, which does not exist in a player. The Town Hall is not in the hotbar, so it is looked up separately.</summary>
         public static BuildingData Building(string buildingName)
         {
             var placer = Object.FindAnyObjectByType<BuildingPlacer>();
@@ -27,7 +27,9 @@ namespace CityBuilder.Tests.PlayMode
             {
                 if (data != null && data.buildingName == buildingName) return data;
             }
-            return null;
+
+            var mandatory = placer.MandatoryFirstBuilding;
+            return mandatory != null && mandatory.buildingName == buildingName ? mandatory : null;
         }
 
         public static BuildingInstance Place(BuildingData data, Vector2Int cell, int rotationSteps = 0)
