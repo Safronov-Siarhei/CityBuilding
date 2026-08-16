@@ -116,14 +116,24 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(uprightDrawn.size.x, uprightDrawn.size.z);
         }
 
-        /// <summary>The narrowest real rectangle in the catalogue. Everything here is about the difference between X and Z, so a square building would prove nothing.</summary>
+        /// <summary>
+        /// Any rectangle in the catalogue -- everything here is about the difference between X and
+        /// Z, so a square building would prove nothing. Found rather than named on purpose: which
+        /// buildings are rectangular is decided by the models now (SetupProject reads the footprint
+        /// off the FBX), so a named one could stop being rectangular with the next re-export.
+        /// </summary>
         private static BuildingData RectangularBuilding()
         {
-            var data = PlaytestWorld.Building("FishermanHut");
-            Assert.IsNotNull(data, "No FishermanHut in the building catalogue.");
-            Assert.AreNotEqual(data.footprintSize.x, data.footprintSize.y,
-                "The FishermanHut is square now -- these tests need a rectangular building, pick another one.");
-            return data;
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            Assert.IsNotNull(placer, "No BuildingPlacer in the loaded scene.");
+
+            foreach (var data in placer.AvailableBuildings)
+            {
+                if (data != null && data.prefab != null && data.footprintSize.x != data.footprintSize.y) return data;
+            }
+
+            Assert.Fail("Every building in the catalogue is square -- there is nothing here to test rotation against.");
+            return null;
         }
 
         private BuildingInstance Place(BuildingData data, int rotationSteps)

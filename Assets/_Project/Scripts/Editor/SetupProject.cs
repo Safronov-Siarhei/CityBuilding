@@ -190,7 +190,7 @@ namespace CityBuilder.EditorTools
             // production, defence, upgrades, prerequisites -- comes from the balance sheet's
             // buildings tab, looked up by the id in the first argument (see ApplyBalance).
             var houseData = CreateBuildingData(
-                "House", new Vector2Int(1, 1), height: 2f,
+                "Hovel", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
@@ -209,7 +209,7 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var fishermanHutData = CreateBuildingData(
-                "FishermanHut", new Vector2Int(2, 1), height: 2f,
+                "FisherHut", new Vector2Int(2, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
@@ -220,7 +220,7 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var lumberjackData = CreateBuildingData(
-                "Lumberjack", new Vector2Int(2, 2), height: 2.4f,
+                "Sawmill", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
@@ -230,7 +230,7 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
             var mineData = CreateBuildingData(
-                "Mine", new Vector2Int(2, 2), height: 2.2f,
+                "IronMine", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.5f, 0.5f, 0.56f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
 
@@ -1333,15 +1333,16 @@ namespace CityBuilder.EditorTools
             var balance = Balance(id);
 
             // An authored model wins over anything generated here: the moment `<id>1-lvl1.fbx`
-            // exists, the placeholder below stops being built. That is the whole loop for adding
-            // art -- drop the file in, run the build, see it in the game. No code change, which
-            // matters when there are ~48 buildings to get through and most of them will arrive as
-            // rough stand-ins first.
+            // exists, the placeholder below stops being built and the model's own size becomes the
+            // building's footprint. That is the whole loop for adding art -- drop the file in, run
+            // the build, see it in the game. No code change, which matters when there are ~48
+            // buildings to get through and most of them will arrive as rough stand-ins first. The
+            // footprint passed in is what the placeholder falls back to until then.
             GameObject prefab;
             var authoredModel = AuthoredModel(id);
             if (authoredModel != null)
             {
-                prefab = CreateAuthoredModelPrefab(id, footprint, height, authoredModel, balance);
+                prefab = CreateAuthoredModelPrefab(id, height, authoredModel, balance, out footprint);
             }
             else switch (style)
             {
@@ -1401,17 +1402,19 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// A building whose look comes entirely from an FBX. Everything else about it -- its cells,
-        /// its stats, its components -- is unchanged from the generated version, so swapping the
-        /// file in changes the picture and nothing else.
+        /// A building whose look comes entirely from an FBX. Everything else about it -- its stats,
+        /// its components -- is unchanged from the generated version, so swapping the file in
+        /// changes the picture and nothing else.
         ///
-        /// The collider is the one part that has to be MEASURED rather than declared: it is what
-        /// the player's clicks meet, and a hand-written height that disagrees with the model gives
-        /// either a roof that cannot be clicked or an invisible box beside the building that eats
-        /// clicks meant for the ground. Stand-in models are deliberately the wrong height, so this
-        /// would be wrong for every one of them.
+        /// Both of the numbers that used to be typed in by hand are MEASURED here instead. The
+        /// height, because it is what the player's clicks meet: a hand-written height that
+        /// disagrees with the model gives either a roof that cannot be clicked or an invisible box
+        /// beside the building that eats clicks meant for the ground, and stand-in models are
+        /// deliberately not the final height. The footprint, because the models carry the sizes the
+        /// design wants -- a 2x2 model IS a 2x2 building -- and the alternative is two sources of
+        /// truth that drift apart every time something is re-exported.
         /// </summary>
-        private static GameObject CreateAuthoredModelPrefab(string id, Vector2Int footprint, float fallbackHeight, GameObject source, BuildingBalance balance)
+        private static GameObject CreateAuthoredModelPrefab(string id, float fallbackHeight, GameObject source, BuildingBalance balance, out Vector2Int footprint)
         {
             var root = new GameObject(id);
             root.AddComponent<BuildingInstance>();
@@ -1420,8 +1423,10 @@ namespace CityBuilder.EditorTools
             if (EmploysAtAnyLevel(balance)) root.AddComponent<ProductionBuilding>();
 
             var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, root.transform);
-            var measuredHeight = FitModelToPlot(model, footprint, id);
-            var height = measuredHeight > 0.01f ? measuredHeight : fallbackHeight;
+            var size = FitModelToGround(model, id);
+
+            footprint = FootprintOf(size, id);
+            var height = size.y > 0.01f ? size.y : fallbackHeight;
 
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(footprint.x * CellSize - BuildingInset, height, footprint.y * CellSize - BuildingInset);
@@ -1431,43 +1436,45 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Centres a model on its plot, stands it on the ground, and reports how tall it turned out.
+        /// Centres a model on its own origin, stands it on the ground, and reports how big it turned
+        /// out to be.
         ///
         /// Measuring instead of trusting the FBX's origin is what makes a model droppable: these
         /// files come out of Blender with the geometry wherever the scene happened to leave it (the
         /// fence pair were exported side by side with a zero translation and would otherwise have
         /// stood metres from their cell). Only the horizontal centre and the base are corrected --
-        /// nothing is scaled, so a model built at the wrong size stays wrong and says so.
+        /// nothing is ever scaled.
         /// </summary>
-        private static float FitModelToPlot(GameObject model, Vector2Int footprint, string id)
+        private static Vector3 FitModelToGround(GameObject model, string id)
         {
             var renderers = model.GetComponentsInChildren<MeshRenderer>();
             if (renderers.Length == 0)
             {
-                Debug.LogError($"FitModelToPlot: '{id}' has an authored model with no MeshRenderer -- nothing to place or measure.");
-                return 0f;
+                Debug.LogError($"FitModelToGround: '{id}' has an authored model with no MeshRenderer -- nothing to place or measure.");
+                return Vector3.zero;
             }
 
             var bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
 
             model.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
-
-            var plotX = footprint.x * CellSize;
-            var plotZ = footprint.y * CellSize;
-            if (bounds.size.x > plotX + ModelPlotTolerance || bounds.size.z > plotZ + ModelPlotTolerance)
-            {
-                Debug.LogWarning($"FitModelToPlot: '{id}' is {bounds.size.x:0.##}x{bounds.size.z:0.##}m but its plot is " +
-                                 $"{plotX:0.##}x{plotZ:0.##}m -- it will hang over its neighbours' cells.");
-            }
-
-            Debug.Log($"FitModelToPlot: '{id}' -> {bounds.size.x:0.##}x{bounds.size.z:0.##}m on a {plotX:0.##}x{plotZ:0.##}m plot, " +
-                      $"height {bounds.size.y:0.##}m, recentred by ({-bounds.center.x:0.##}, {-bounds.min.y:0.##}, {-bounds.center.z:0.##}).");
-            return bounds.size.y;
+            return bounds.size;
         }
 
-        /// <summary>How far over its plot a model may hang before the build says something. A hair of overhang is normal (eaves, a porch); half a cell is a modelling mistake.</summary>
-        private const float ModelPlotTolerance = 0.5f;
+        /// <summary>
+        /// How many cells a model claims: its own size in metres, rounded to the nearest whole cell
+        /// and never less than one. Rounding rather than ceiling on purpose -- a roof overhanging its
+        /// walls by a few centimetres is a roof, not another cell of ground.
+        /// </summary>
+        private static Vector2Int FootprintOf(Vector3 size, string id)
+        {
+            var footprint = new Vector2Int(
+                Mathf.Max(1, Mathf.RoundToInt(size.x / CellSize)),
+                Mathf.Max(1, Mathf.RoundToInt(size.z / CellSize)));
+
+            Debug.Log($"FootprintOf: '{id}' measures {size.x:0.##}x{size.z:0.##}m, {size.y:0.##}m tall -> {footprint.x}x{footprint.y} cells.");
+            return footprint;
+        }
 
         /// <summary>
         /// A fence segment. Unlike every other building, its prefab carries TWO models -- the
@@ -2442,8 +2449,8 @@ namespace CityBuilder.EditorTools
         {
             switch (buildingId)
             {
-                case "House":
-                    return CreateIconSprite("Bld_House", 64, (p, s) =>
+                case "Hovel":
+                    return CreateIconSprite("Bld_Hovel", 64, (p, s) =>
                     {
                         FillIconTriangle(p, s, new Vector2(0.15f, 0.52f), new Vector2(0.85f, 0.52f), new Vector2(0.5f, 0.88f), new Color(0.5f, 0.14f, 0.14f));
                         FillIconRect(p, s, 0.22f, 0.14f, 0.78f, 0.52f, new Color(0.75f, 0.55f, 0.35f));
@@ -2459,8 +2466,8 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.22f, 0.28f, 0.32f, 0.4f, new Color(0.4f, 0.55f, 0.65f));
                         FillIconRect(p, s, 0.68f, 0.28f, 0.78f, 0.4f, new Color(0.4f, 0.55f, 0.65f));
                     });
-                case "FishermanHut":
-                    return CreateIconSprite("Bld_Fisherman", 64, (p, s) =>
+                case "FisherHut":
+                    return CreateIconSprite("Bld_FisherHut", 64, (p, s) =>
                     {
                         var fish = new Color(0.3f, 0.52f, 0.68f);
                         FillIconTriangle(p, s, new Vector2(0.15f, 0.5f), new Vector2(0.7f, 0.72f), new Vector2(0.7f, 0.28f), fish);
@@ -2475,8 +2482,8 @@ namespace CityBuilder.EditorTools
                         FillIconTriangle(p, s, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.9f), new Vector2(0.22f, 0.65f), grain);
                         FillIconTriangle(p, s, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.9f), new Vector2(0.78f, 0.65f), grain);
                     });
-                case "Lumberjack":
-                    return CreateIconSprite("Bld_Lumberjack", 64, (p, s) =>
+                case "Sawmill":
+                    return CreateIconSprite("Bld_Sawmill", 64, (p, s) =>
                     {
                         FillIconRect(p, s, 0.46f, 0.12f, 0.54f, 0.7f, new Color(0.42f, 0.28f, 0.16f));
                         FillIconTriangle(p, s, new Vector2(0.3f, 0.55f), new Vector2(0.3f, 0.85f), new Vector2(0.62f, 0.7f), new Color(0.55f, 0.55f, 0.58f));
@@ -2489,8 +2496,8 @@ namespace CityBuilder.EditorTools
                         FillIconTriangle(p, s, new Vector2(0.5f, 0.7f), new Vector2(0.15f, 0.85f), new Vector2(0.5f, 0.55f), head);
                         FillIconTriangle(p, s, new Vector2(0.5f, 0.7f), new Vector2(0.85f, 0.85f), new Vector2(0.5f, 0.55f), head);
                     });
-                case "Mine":
-                    return CreateIconSprite("Bld_Mine", 64, (p, s) =>
+                case "IronMine":
+                    return CreateIconSprite("Bld_IronMine", 64, (p, s) =>
                     {
                         var ore = new Color(0.58f, 0.62f, 0.68f);
                         FillIconRect(p, s, 0.15f, 0.15f, 0.85f, 0.4f, new Color(0.35f, 0.35f, 0.38f));

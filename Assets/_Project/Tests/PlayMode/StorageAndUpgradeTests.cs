@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -161,12 +161,12 @@ namespace CityBuilder.Tests.PlayMode
         public IEnumerator AProducerWithNowhereToPutItsOutput_SaysSoOnce()
         {
             var resources = ResourceManager.Instance;
-            var hutData = PlaytestWorld.Building("FishermanHut");
-            Assert.IsNotNull(hutData, "No FishermanHut in the building catalogue.");
+            var hutData = PlaytestWorld.Building("FisherHut");
+            Assert.IsNotNull(hutData, "No FisherHut in the building catalogue.");
 
             var hut = Place(hutData);
             var production = hut.GetComponent<ProductionBuilding>();
-            Assert.IsNotNull(production, "The FishermanHut prefab has no ProductionBuilding -- it can never produce anything.");
+            Assert.IsNotNull(production, "The FisherHut prefab has no ProductionBuilding -- it can never produce anything.");
 
             production.SetAssignedWorkers(production.MaxWorkers);
             Assert.Greater(production.AssignedWorkers, 0, "Nobody could be put to work at the hut.");
@@ -194,8 +194,8 @@ namespace CityBuilder.Tests.PlayMode
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var houseData = PlaytestWorld.Building("House");
-            Assert.IsNotNull(houseData, "No House in the building catalogue.");
+            var houseData = PlaytestWorld.Building("Hovel");
+            Assert.IsNotNull(houseData, "No Hovel in the building catalogue.");
 
             var house = Place(houseData);
             Assert.AreEqual(houseData.LevelStats(1).maxHealth, house.MaxHealth);
@@ -231,7 +231,7 @@ namespace CityBuilder.Tests.PlayMode
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var houseData = PlaytestWorld.Building("House");
+            var houseData = PlaytestWorld.Building("Hovel");
             var house = Place(houseData);
             var atLevelOne = VisibleBounds(house);
 

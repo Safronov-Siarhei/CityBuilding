@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using NUnit.Framework;
 
 namespace CityBuilder.Tests.EditMode
@@ -67,14 +67,14 @@ namespace CityBuilder.Tests.EditMode
             }
         }
 
-        [TestCase("House")]
+        [TestCase("Hovel")]
         [TestCase("Cottage")]
         [TestCase("TownHall")]
-        [TestCase("FishermanHut")]
+        [TestCase("FisherHut")]
         [TestCase("Farm")]
-        [TestCase("Lumberjack")]
+        [TestCase("Sawmill")]
         [TestCase("Quarry")]
-        [TestCase("Mine")]
+        [TestCase("IronMine")]
         [TestCase("CoalMine")]
         [TestCase("Warehouse")]
         [TestCase("Barn")]

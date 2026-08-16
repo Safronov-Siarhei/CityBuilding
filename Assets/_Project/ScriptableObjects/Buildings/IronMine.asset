@@ -10,48 +10,58 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e59262d371d1b314e8cc25adcb2a829c, type: 3}
-  m_Name: House
+  m_Name: IronMine
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
-  buildingName: House
-  displayName: "\u0414\u043E\u043C"
-  prefab: {fileID: 1019598668442344511, guid: 5fe5bca248a3b9647abf9862a7e8c96c, type: 3}
-  footprintSize: {x: 1, y: 1}
+  buildingName: IronMine
+  displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u0448\u0430\u0445\u0442\u0430"
+  prefab: {fileID: 5998073992999244023, guid: f6d238bb4c15c834095222221b66f1e5, type: 3}
+  footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
-    amount: 10
-  category: 0
+    amount: 25
+  - type: 1
+    amount: 15
+  category: 2
   isWaterCategory: 0
   isRoad: 0
   providesWalkableSurface: 0
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
   levels:
-  - maxHealth: 80
+  - maxHealth: 110
     defense: 0
-    citizensGranted: 5
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
     storageCapacity: 0
-  - maxHealth: 128
+  - maxHealth: 176
     defense: 0
-    citizensGranted: 8
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
     storageCapacity: 0
-  - maxHealth: 200
+  - maxHealth: 275
     defense: 0
-    citizensGranted: 10
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    citizensGranted: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 0
+  producesResource: 5
   productionIntervalSeconds: 6
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 16
+    amount: 40
+  - type: 1
+    amount: 24
+  - type: 6
+    amount: 10
   upgradeToLevel3Cost:
   - type: 0
-    amount: 28
-  fogRevealRadius: 10
+    amount: 70
+  - type: 1
+    amount: 42
+  - type: 6
+    amount: 22
+  fogRevealRadius: 14
   requiredBuilding: {fileID: 0}
