@@ -203,6 +203,42 @@ namespace CityBuilder.EditorTools
 
             // Its model is authored (TownHall1-lvl1.fbx) and picked up by name -- the colours and
             // height below are only what it would fall back to if that file went missing.
+            // The third rung of the housing ladder: Лачуга -> Коттедж -> Поместье.
+            var manorData = CreateBuildingData(
+                "Manor", new Vector2Int(3, 3), height: 3.4f,
+                wallColor: new Color(0.78f, 0.72f, 0.6f), roofColor: new Color(0.35f, 0.28f, 0.42f),
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                hasChimney: true);
+
+            // Decorations. They cost something, they stand somewhere, and that is all they do today
+            // -- nothing in the game reads them yet. They are here because happiness is going to
+            // (factor 3, entertainment/decor, see the design backlog) and because a town of nothing
+            // but workshops does not look like a town.
+            var townSquareData = CreateBuildingData(
+                "TownSquare", new Vector2Int(3, 3), height: 0.1f,
+                wallColor: new Color(0.62f, 0.6f, 0.56f), roofColor: new Color(0.5f, 0.48f, 0.45f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
+            var flagData = CreateBuildingData(
+                "Flag", new Vector2Int(1, 1), height: 2.4f,
+                wallColor: new Color(0.7f, 0.2f, 0.18f), roofColor: new Color(0.45f, 0.32f, 0.18f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
+            var decTreeData = CreateBuildingData(
+                "DecTree", new Vector2Int(1, 1), height: 2.6f,
+                wallColor: new Color(0.32f, 0.6f, 0.28f), roofColor: new Color(0.42f, 0.28f, 0.16f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
+            var decBushData = CreateBuildingData(
+                "DecBush", new Vector2Int(1, 1), height: 0.8f,
+                wallColor: new Color(0.36f, 0.55f, 0.3f), roofColor: new Color(0.28f, 0.45f, 0.24f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
+            var decGardenData = CreateBuildingData(
+                "DecGarden", new Vector2Int(2, 2), height: 0.4f,
+                wallColor: new Color(0.5f, 0.62f, 0.34f), roofColor: new Color(0.8f, 0.5f, 0.6f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
             var townHallData = CreateBuildingData(
                 "TownHall", new Vector2Int(4, 4), height: 3f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
@@ -345,13 +381,14 @@ namespace CityBuilder.EditorTools
 
             var hotbarBuildingData = new List<BuildingData>
             {
-                houseData, cottageData, fishermanHutData, farmData,
+                houseData, cottageData, manorData, fishermanHutData, farmData,
                 lumberjackData, quarryData, mineData, coalMineData,
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
                 fortifiedTowerData, fortifiedGateData,
-                bridgeData, waterMillData, dockData
+                bridgeData, waterMillData, dockData,
+                townSquareData, flagData, decTreeData, decBushData, decGardenData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
@@ -614,7 +651,7 @@ namespace CityBuilder.EditorTools
             }
 
             // Fixed display order; only categories that actually have a hotbar building get a tab.
-            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Infrastructure, BuildingCategory.Military };
+            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Infrastructure, BuildingCategory.Military, BuildingCategory.Decor };
             var presentCategories = new List<BuildingCategory>();
             foreach (var cat in categoryOrder)
             {
@@ -2478,6 +2515,14 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.18f, 0.47f, 0.34f, 0.53f, stripe);
                         FillIconRect(p, s, 0.46f, 0.47f, 0.62f, 0.53f, stripe);
                         FillIconRect(p, s, 0.74f, 0.47f, 0.86f, 0.53f, stripe);
+                    });
+                case BuildingCategory.Decor:
+                    return CreateIconSprite("Cat_Decor", 64, (p, s) =>
+                    {
+                        // A little tree: the one thing every decoration in this category has in
+                        // common is that it is there to look at.
+                        FillIconRect(p, s, 0.45f, 0.1f, 0.55f, 0.42f, new Color(0.42f, 0.28f, 0.16f));
+                        FillIconTriangle(p, s, new Vector2(0.16f, 0.42f), new Vector2(0.84f, 0.42f), new Vector2(0.5f, 0.92f), new Color(0.32f, 0.6f, 0.28f));
                     });
                 default: // Production
                     return CreateIconSprite("Cat_Production", 64, (p, s) =>

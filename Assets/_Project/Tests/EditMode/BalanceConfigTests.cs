@@ -69,6 +69,12 @@ namespace CityBuilder.Tests.EditMode
 
         [TestCase("Hovel")]
         [TestCase("Cottage")]
+        [TestCase("Manor")]
+        [TestCase("TownSquare")]
+        [TestCase("Flag")]
+        [TestCase("DecTree")]
+        [TestCase("DecBush")]
+        [TestCase("DecGarden")]
         [TestCase("TownHall")]
         [TestCase("FisherHut")]
         [TestCase("Farm")]

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CityBuilder.Buildings
 {
     /// <summary>Groups buildings in the hotbar (see BuildingCategoryPanel) -- purely a UI grouping, not a gameplay mechanic.</summary>
-    public enum BuildingCategory { Housing, Food, Production, Infrastructure, Military }
+    public enum BuildingCategory { Housing, Food, Production, Infrastructure, Military, Decor }
 
     /// <summary>
     /// What a building is worth at one upgrade level. Every stat that a level is supposed to

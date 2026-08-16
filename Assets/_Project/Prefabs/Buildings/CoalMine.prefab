@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2991062799909671848
+--- !u!1 &2282381717567465337
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 544530319879201163}
-  - component: {fileID: 7490231333722302451}
-  - component: {fileID: 9151961007221154398}
+  - component: {fileID: 7630151118434276531}
+  - component: {fileID: 7977436500256387387}
+  - component: {fileID: 7233905397832681490}
   m_Layer: 0
   m_Name: CoalMine1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &544530319879201163
+--- !u!4 &7630151118434276531
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2991062799909671848}
+  m_GameObject: {fileID: 2282381717567465337}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000011920929, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4920988564349788250}
+  m_Father: {fileID: 7051869112493728665}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7490231333722302451
+--- !u!33 &7977436500256387387
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2991062799909671848}
+  m_GameObject: {fileID: 2282381717567465337}
   m_Mesh: {fileID: -7000534718094743691, guid: da022bb619ab1c64ca685cee42aedcfe, type: 3}
---- !u!23 &9151961007221154398
+--- !u!23 &7233905397832681490
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2991062799909671848}
+  m_GameObject: {fileID: 2282381717567465337}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &4069130810660417615
+--- !u!1 &9027552451947547731
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4920988564349788250}
-  - component: {fileID: 2517750467755627564}
-  - component: {fileID: 7283874429077798715}
-  - component: {fileID: 4119361312699932404}
+  - component: {fileID: 7051869112493728665}
+  - component: {fileID: 5995012802426287744}
+  - component: {fileID: 825234655481972816}
+  - component: {fileID: 5165173173374607969}
   m_Layer: 0
   m_Name: CoalMine
   m_TagString: Untagged
@@ -109,53 +109,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4920988564349788250
+--- !u!4 &7051869112493728665
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4069130810660417615}
+  m_GameObject: {fileID: 9027552451947547731}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 544530319879201163}
+  - {fileID: 7630151118434276531}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2517750467755627564
+--- !u!114 &5995012802426287744
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4069130810660417615}
+  m_GameObject: {fileID: 9027552451947547731}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!114 &7283874429077798715
+--- !u!114 &825234655481972816
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4069130810660417615}
+  m_GameObject: {fileID: 9027552451947547731}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70482574febad6f44b69817ae91c40c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Citizens.ProductionBuilding
---- !u!65 &4119361312699932404
+--- !u!65 &5165173173374607969
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4069130810660417615}
+  m_GameObject: {fileID: 9027552451947547731}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
