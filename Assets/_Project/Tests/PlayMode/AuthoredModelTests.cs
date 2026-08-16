@@ -109,6 +109,51 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("townhall", VisibleBounds(building).center, 16f, 30f, 35f);
         }
 
+        /// <summary>
+        /// Every building in the game, in rows, in one picture -- the quickest way to see what a
+        /// batch of new models actually looks like, and which ones are still placeholders. Not an
+        /// assertion: it photographs whatever fits and says so if the map has nowhere to line them
+        /// up.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Photograph_EveryBuilding()
+        {
+            const int columns = 5;
+
+            var catalogue = new List<BuildingData>(Object.FindAnyObjectByType<BuildingPlacer>().AvailableBuildings);
+            var rows = Mathf.CeilToInt(catalogue.Count / (float)columns);
+
+            // As roomy a grid as this map has space for. Nothing in the hotbar is bigger than 2x2,
+            // so even the tightest spacing leaves a cell between neighbours.
+            var origin = new Vector2Int(-1, -1);
+            var plot = Vector2Int.zero;
+            var spacing = 0;
+            foreach (var candidate in new[] { 5, 4, 3 })
+            {
+                plot = new Vector2Int(columns * candidate, rows * candidate);
+                origin = PlaytestWorld.FindFreeArea(plot);
+                spacing = candidate;
+                if (origin != new Vector2Int(-1, -1)) break;
+            }
+
+            if (origin == new Vector2Int(-1, -1))
+            {
+                Debug.Log($"[Playtest] No {plot.x}x{plot.y} clear patch on this map to line the catalogue up on -- skipping the parade shot.");
+                yield break;
+            }
+
+            for (var i = 0; i < catalogue.Count; i++)
+            {
+                if (catalogue[i] == null) continue;
+                var cell = origin + new Vector2Int(i % columns * spacing, i / columns * spacing);
+                _placed.Add(PlaytestWorld.Place(catalogue[i], cell));
+            }
+            yield return null;
+
+            var centre = PlaytestWorld.CellCenter(origin + new Vector2Int(plot.x / 2, plot.y / 2));
+            yield return PlaytestCapture.Shoot("catalogue", centre, 34f, 45f, 20f);
+        }
+
         private BuildingInstance PlaceAuthoredBuilding()
         {
             var data = PlaytestWorld.Building(AuthoredBuildingId);
