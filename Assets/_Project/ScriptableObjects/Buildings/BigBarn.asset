@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e59262d371d1b314e8cc25adcb2a829c, type: 3}
+  m_Name: BigBarn
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
+  buildingName: BigBarn
+  displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0430\u043C\u0431\u0430\u0440"
+  prefab: {fileID: 2395837692224082895, guid: fc9461135a5862547b06ff37e876ef8c, type: 3}
+  footprintSize: {x: 2, y: 2}
+  cost:
+  - type: 0
+    amount: 70
+  - type: 1
+    amount: 30
+  category: 1
+  isWaterCategory: 0
+  isRoad: 0
+  providesWalkableSurface: 0
+  connectsToFences: 0
+  keepSelectedAfterPlacement: 0
+  levels:
+  - maxHealth: 220
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 550
+  - maxHealth: 352
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 1100
+  - maxHealth: 550
+    defense: 0
+    citizensGranted: 0
+    maxWorkers: 0
+    productionPerWorkerPerTick: 0
+    storageCapacity: 1900
+  producesResource: 0
+  productionIntervalSeconds: 6
+  storageGroup: 2
+  upgradeToLevel2Cost:
+  - type: 0
+    amount: 112
+  - type: 1
+    amount: 48
+  upgradeToLevel3Cost:
+  - type: 0
+    amount: 196
+  - type: 1
+    amount: 84
+  fogRevealRadius: 8
+  requiredBuilding: {fileID: 11400000, guid: 798542eb6f8329b428ff2ccc6c503dcf, type: 2}

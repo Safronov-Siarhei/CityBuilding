@@ -274,6 +274,26 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: new Color(0.72f, 0.6f, 0.24f),
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
+            // The second tier of each storehouse. Nothing new mechanically -- storage_group and
+            // storage_capacity already do all of it -- so what these add is the reason to keep
+            // building outward once the first three are full. Each needs its smaller version
+            // standing first (the `requires` column), which is also what keeps them out of the
+            // opening minutes of a game.
+            var bigWarehouseData = CreateBuildingData(
+                "BigWarehouse", new Vector2Int(3, 3), height: 3.2f,
+                wallColor: new Color(0.52f, 0.41f, 0.27f), roofColor: new Color(0.3f, 0.25f, 0.2f),
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+
+            var bigBarnData = CreateBuildingData(
+                "BigBarn", new Vector2Int(3, 3), height: 3.4f,
+                wallColor: new Color(0.66f, 0.45f, 0.24f), roofColor: new Color(0.45f, 0.31f, 0.17f),
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+
+            var bigTreasuryData = CreateBuildingData(
+                "BigTreasury", new Vector2Int(3, 3), height: 3f,
+                wallColor: new Color(0.46f, 0.44f, 0.41f), roofColor: new Color(0.78f, 0.66f, 0.28f),
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+
             // Two models, no colours or size of its own: everything about how a fence segment looks
             // comes from the FBX pair and from which neighbours it finds (see FenceShape).
             var fenceData = CreateFenceBuildingData("Fence", "Fence1-lvl1-Straight.fbx", "Fence1-lvl1-Corner.fbx");
@@ -308,6 +328,7 @@ namespace CityBuilder.EditorTools
                 houseData, cottageData, fishermanHutData, farmData,
                 lumberjackData, quarryData, mineData, coalMineData,
                 warehouseData, barnData, treasuryData,
+                bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
                 bridgeData, waterMillData, dockData
             };
@@ -2546,6 +2567,42 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.12f, 0.66f, 0.88f, 0.76f, new Color(0.36f, 0.34f, 0.32f));
                         FillIconRect(p, s, 0.3f, 0.28f, 0.7f, 0.5f, gold);
                         FillIconRect(p, s, 0.44f, 0.18f, 0.56f, 0.3f, new Color(0.3f, 0.28f, 0.26f));
+                    });
+                // The second tier of each storehouse: the same pictogram, doubled up, so the pair
+                // reads as "more of the same" in the hotbar rather than as two unrelated buildings.
+                case "BigWarehouse":
+                    return CreateIconSprite("Bld_BigWarehouse", 64, (p, s) =>
+                    {
+                        var crate = new Color(0.58f, 0.44f, 0.26f);
+                        var band = new Color(0.36f, 0.28f, 0.18f);
+                        FillIconRect(p, s, 0.06f, 0.08f, 0.52f, 0.6f, crate);
+                        FillIconRect(p, s, 0.06f, 0.3f, 0.52f, 0.36f, band);
+                        FillIconRect(p, s, 0.48f, 0.24f, 0.94f, 0.82f, crate);
+                        FillIconRect(p, s, 0.48f, 0.5f, 0.94f, 0.56f, band);
+                        FillIconTriangle(p, s, new Vector2(0.42f, 0.82f), new Vector2(1f, 0.82f), new Vector2(0.71f, 0.98f), band);
+                    });
+                case "BigBarn":
+                    return CreateIconSprite("Bld_BigBarn", 64, (p, s) =>
+                    {
+                        var wall = new Color(0.72f, 0.5f, 0.28f);
+                        var grain = new Color(0.88f, 0.74f, 0.34f);
+                        var roof = new Color(0.5f, 0.34f, 0.18f);
+                        FillIconTriangle(p, s, new Vector2(0.02f, 0.5f), new Vector2(0.56f, 0.5f), new Vector2(0.29f, 0.74f), roof);
+                        FillIconRect(p, s, 0.06f, 0.06f, 0.52f, 0.52f, wall);
+                        FillIconTriangle(p, s, new Vector2(0.44f, 0.66f), new Vector2(0.98f, 0.66f), new Vector2(0.71f, 0.94f), roof);
+                        FillIconRect(p, s, 0.48f, 0.22f, 0.94f, 0.68f, wall);
+                        FillIconRect(p, s, 0.62f, 0.22f, 0.8f, 0.5f, grain);
+                    });
+                case "BigTreasury":
+                    return CreateIconSprite("Bld_BigTreasury", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.52f, 0.5f, 0.46f);
+                        var gold = new Color(0.85f, 0.7f, 0.24f);
+                        FillIconRect(p, s, 0.06f, 0.06f, 0.52f, 0.54f, stone);
+                        FillIconRect(p, s, 0.06f, 0.54f, 0.52f, 0.62f, new Color(0.36f, 0.34f, 0.32f));
+                        FillIconRect(p, s, 0.48f, 0.2f, 0.94f, 0.76f, stone);
+                        FillIconRect(p, s, 0.48f, 0.76f, 0.94f, 0.84f, new Color(0.36f, 0.34f, 0.32f));
+                        FillIconRect(p, s, 0.6f, 0.38f, 0.82f, 0.6f, gold);
                     });
                 case "Fence":
                     return CreateIconSprite("Bld_Fence", 64, (p, s) =>
