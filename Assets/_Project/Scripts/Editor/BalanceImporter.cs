@@ -369,8 +369,20 @@ namespace CityBuilder.EditorTools
         /// and an economy key always has either a value or a comment beside it. That way an
         /// accidentally emptied value in a real row still shouts instead of being mistaken for prose.
         /// </summary>
+        /// <summary>
+        /// The sheets end with a few rows of prose for whoever is editing them ("Жёлтые ячейки --
+        /// правишь ты"), which must never be read as data.
+        ///
+        /// Two ways to tell. The obvious one: everything after the first cell is empty. The
+        /// second one exists because a note is a sentence, and a sentence with a comma in it comes
+        /// back from Google split across two cells -- at which point the first test passes it
+        /// through as a building whose id is a paragraph of Russian and whose every number is zero.
+        /// An id never contains a space; a note always does.
+        /// </summary>
         private static bool IsNoteRow(List<string> row)
         {
+            if (row.Count > 0 && row[0] != null && row[0].Trim().Contains(" ")) return true;
+
             for (var i = 1; i < row.Count; i++)
             {
                 if (!string.IsNullOrWhiteSpace(row[i])) return false;
