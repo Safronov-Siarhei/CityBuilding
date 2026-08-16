@@ -379,6 +379,42 @@ namespace CityBuilder.EditorTools
                 deckColor: new Color(0.55f, 0.4f, 0.24f), accentColor: new Color(0.68f, 0.5f, 0.3f),
                 addCrates: true);
 
+            // Buildings whose models arrived ahead of their mechanics. They can be placed, they
+            // cost what the sheet says and they do nothing whatsoever -- no production, no storage,
+            // no defence, no workers. Each is waiting on a system that does not exist yet
+            // (processing chains, fire, illness, happiness, soldier upgrades), and the balance row
+            // for each says so in its comment. They are in the game because a town that can only
+            // build the implemented half of the design does not look like the design.
+            var shellBuildings = new List<BuildingData>();
+            foreach (var shell in new[]
+            {
+                ("Granary", new Vector2Int(2, 2), 2.6f, new Color(0.68f, 0.56f, 0.34f), new Color(0.45f, 0.35f, 0.22f), BuildingStyle.Hut),
+                ("BigGranary", new Vector2Int(3, 3), 3.2f, new Color(0.64f, 0.52f, 0.3f), new Color(0.4f, 0.31f, 0.2f), BuildingStyle.Hut),
+                ("Baker", new Vector2Int(2, 2), 2.4f, new Color(0.8f, 0.66f, 0.46f), new Color(0.5f, 0.3f, 0.2f), BuildingStyle.Hut),
+                ("Windmill", new Vector2Int(2, 2), 3.6f, new Color(0.75f, 0.72f, 0.64f), new Color(0.42f, 0.34f, 0.24f), BuildingStyle.Hut),
+                ("Smokehouse", new Vector2Int(2, 2), 2.2f, new Color(0.5f, 0.4f, 0.32f), new Color(0.3f, 0.24f, 0.2f), BuildingStyle.Hut),
+                ("PigFarm", new Vector2Int(2, 2), 1.8f, new Color(0.72f, 0.6f, 0.5f), new Color(0.45f, 0.36f, 0.26f), BuildingStyle.Hut),
+                ("Orchard", new Vector2Int(2, 2), 1.6f, new Color(0.46f, 0.6f, 0.32f), new Color(0.36f, 0.5f, 0.26f), BuildingStyle.Hut),
+                ("Smelter", new Vector2Int(2, 2), 2.8f, new Color(0.42f, 0.4f, 0.38f), new Color(0.28f, 0.26f, 0.25f), BuildingStyle.Hut),
+                ("CopperMine", new Vector2Int(2, 2), 2.2f, new Color(0.55f, 0.4f, 0.3f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut),
+                ("GoldMine", new Vector2Int(2, 2), 2.2f, new Color(0.6f, 0.55f, 0.35f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut),
+                ("Laboratory", new Vector2Int(2, 2), 2.8f, new Color(0.55f, 0.5f, 0.6f), new Color(0.3f, 0.28f, 0.4f), BuildingStyle.Hut),
+                ("HealerHouse", new Vector2Int(2, 2), 2.4f, new Color(0.86f, 0.84f, 0.8f), new Color(0.6f, 0.25f, 0.22f), BuildingStyle.Hut),
+                ("FireBrigade", new Vector2Int(2, 2), 2.4f, new Color(0.7f, 0.3f, 0.24f), new Color(0.35f, 0.3f, 0.28f), BuildingStyle.Hut),
+                ("Well", new Vector2Int(1, 1), 1.2f, new Color(0.55f, 0.53f, 0.5f), new Color(0.4f, 0.3f, 0.2f), BuildingStyle.Hut),
+                ("Castle", new Vector2Int(4, 4), 5f, new Color(0.55f, 0.54f, 0.5f), Color.white, BuildingStyle.Fortification),
+                ("Church", new Vector2Int(2, 2), 4f, new Color(0.82f, 0.8f, 0.76f), new Color(0.35f, 0.4f, 0.5f), BuildingStyle.Hut),
+                ("Tavern", new Vector2Int(2, 2), 2.6f, new Color(0.66f, 0.48f, 0.3f), new Color(0.4f, 0.28f, 0.18f), BuildingStyle.Hut),
+                ("Theater", new Vector2Int(3, 3), 3.2f, new Color(0.78f, 0.74f, 0.66f), new Color(0.5f, 0.34f, 0.3f), BuildingStyle.Hut),
+                ("Colosseum", new Vector2Int(4, 4), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Fortification),
+            })
+            {
+                shellBuildings.Add(CreateBuildingData(
+                    shell.Item1, shell.Item2, height: shell.Item3,
+                    wallColor: shell.Item4, roofColor: shell.Item5,
+                    style: shell.Item6, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial));
+            }
+
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, manorData, fishermanHutData, farmData,
@@ -390,6 +426,7 @@ namespace CityBuilder.EditorTools
                 bridgeData, waterMillData, dockData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData
             };
+            hotbarBuildingData.AddRange(shellBuildings);
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
 
             ResolveBuildingRequirements(allBuildingData);

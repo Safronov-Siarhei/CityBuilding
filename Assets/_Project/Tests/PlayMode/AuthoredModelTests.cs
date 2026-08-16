@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -110,48 +110,65 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// Every building in the game, in rows, in one picture -- the quickest way to see what a
-        /// batch of new models actually looks like, and which ones are still placeholders. Not an
-        /// assertion: it photographs whatever fits and says so if the map has nowhere to line them
-        /// up.
+        /// The whole catalogue, photographed a dozen buildings at a time -- the quickest way to see
+        /// what a batch of new models actually looks like and which entries are still placeholder
+        /// boxes. Not an assertion: it shoots what fits and says so when the map has nowhere to line
+        /// anything up.
+        ///
+        /// A dozen at a time rather than all at once because Map1 is a narrow strip of dry land: the
+        /// single grid a full catalogue would need has not fitted on it since the twenty-eighth
+        /// building.
         /// </summary>
         [UnityTest]
         public IEnumerator Photograph_EveryBuilding()
         {
-            const int columns = 5;
+            const int columns = 4;
+            const int perShot = 12;
 
             var catalogue = new List<BuildingData>(Object.FindAnyObjectByType<BuildingPlacer>().AvailableBuildings);
-            var rows = Mathf.CeilToInt(catalogue.Count / (float)columns);
+            var shot = 0;
 
-            // As roomy a grid as this map has space for. Nothing in the hotbar is bigger than 2x2,
-            // so even the tightest spacing leaves a cell between neighbours.
-            var origin = new Vector2Int(-1, -1);
-            var plot = Vector2Int.zero;
-            var spacing = 0;
-            foreach (var candidate in new[] { 5, 4, 3 })
+            for (var first = 0; first < catalogue.Count; first += perShot)
             {
-                plot = new Vector2Int(columns * candidate, rows * candidate);
-                origin = PlaytestWorld.FindFreeArea(plot);
-                spacing = candidate;
-                if (origin != new Vector2Int(-1, -1)) break;
-            }
+                var count = Mathf.Min(perShot, catalogue.Count - first);
+                var rows = Mathf.CeilToInt(count / (float)columns);
 
-            if (origin == new Vector2Int(-1, -1))
-            {
-                Debug.Log($"[Playtest] No {plot.x}x{plot.y} clear patch on this map to line the catalogue up on -- skipping the parade shot.");
-                yield break;
-            }
+                // As roomy a grid as this patch of map allows. Nothing in the hotbar is bigger than
+                // 4x4, so three cells apart is the tightest that still reads as separate buildings.
+                var origin = new Vector2Int(-1, -1);
+                var plot = Vector2Int.zero;
+                var spacing = 0;
+                foreach (var candidate in new[] { 5, 4, 3 })
+                {
+                    plot = new Vector2Int(columns * candidate, rows * candidate);
+                    origin = PlaytestWorld.FindFreeArea(plot);
+                    spacing = candidate;
+                    if (origin != new Vector2Int(-1, -1)) break;
+                }
 
-            for (var i = 0; i < catalogue.Count; i++)
-            {
-                if (catalogue[i] == null) continue;
-                var cell = origin + new Vector2Int(i % columns * spacing, i / columns * spacing);
-                _placed.Add(PlaytestWorld.Place(catalogue[i], cell));
-            }
-            yield return null;
+                if (origin == new Vector2Int(-1, -1))
+                {
+                    Debug.Log($"[Playtest] No {plot.x}x{plot.y} clear patch left on this map -- stopping after {shot} catalogue shots.");
+                    yield break;
+                }
 
-            var centre = PlaytestWorld.CellCenter(origin + new Vector2Int(plot.x / 2, plot.y / 2));
-            yield return PlaytestCapture.Shoot("catalogue", centre, 34f, 45f, 20f);
+                var placed = new List<BuildingInstance>();
+                for (var i = 0; i < count; i++)
+                {
+                    var data = catalogue[first + i];
+                    if (data == null) continue;
+                    placed.Add(PlaytestWorld.Place(data, origin + new Vector2Int(i % columns * spacing, i / columns * spacing)));
+                }
+                yield return null;
+
+                shot++;
+                var centre = PlaytestWorld.CellCenter(origin + new Vector2Int(plot.x / 2, plot.y / 2));
+                yield return PlaytestCapture.Shoot($"catalogue-{shot}", centre, 22f, 40f, 20f);
+
+                // Immediately, not deferred: the next batch goes looking for free cells this frame.
+                foreach (var building in placed) Object.DestroyImmediate(building.gameObject);
+                yield return null;
+            }
         }
 
         private BuildingInstance PlaceAuthoredBuilding()
