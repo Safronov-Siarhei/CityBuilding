@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -169,7 +169,7 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>Also read by HappinessManager to decide which instances count toward the settlement's decay-based happiness score -- roads/Town Hall never decay, so including them would just dilute the average with artificial zeros.</summary>
-        public bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != "TownHall";
+        public bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != BuildingIds.TownHall;
 
         private void HandleDayPassed()
         {

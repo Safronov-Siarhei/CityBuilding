@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
@@ -323,7 +323,7 @@ namespace CityBuilder.Citizens
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             {
-                if (instance.Data != null && instance.Data.buildingName == "TownHall")
+                if (instance.Data != null && instance.Data.buildingName == BuildingIds.TownHall)
                 {
                     var footprint = instance.RotatedFootprint();
                     _townCenter = gridManager.GetFootprintCenterWorld(instance.OriginCell, footprint);

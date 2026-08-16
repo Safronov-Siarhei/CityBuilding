@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3059190859447518826
+--- !u!1 &1619436735493712359
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5232991809425167704}
-  - component: {fileID: 3477523277461551627}
-  - component: {fileID: 3567059765089879176}
+  - component: {fileID: 8993839205488153157}
+  - component: {fileID: 9157906335367456862}
+  - component: {fileID: 7890504083939281959}
   m_Layer: 0
   m_Name: PigFarm1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5232991809425167704
+--- !u!4 &8993839205488153157
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3059190859447518826}
+  m_GameObject: {fileID: 1619436735493712359}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000023841858, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1469497181844094510}
+  m_Father: {fileID: 7364330618834486948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3477523277461551627
+--- !u!33 &9157906335367456862
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3059190859447518826}
+  m_GameObject: {fileID: 1619436735493712359}
   m_Mesh: {fileID: 3563621458087032001, guid: 3be96114e88fc9340ad35dbcd6fecf01, type: 3}
---- !u!23 &3567059765089879176
+--- !u!23 &7890504083939281959
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3059190859447518826}
+  m_GameObject: {fileID: 1619436735493712359}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &7758314193380060218
+--- !u!1 &1846381978228381212
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1469497181844094510}
-  - component: {fileID: 95745371623317508}
-  - component: {fileID: 3545608814994616360}
+  - component: {fileID: 7364330618834486948}
+  - component: {fileID: 8396931457595084945}
+  - component: {fileID: 130827301713633412}
   m_Layer: 0
   m_Name: PigFarm
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1469497181844094510
+--- !u!4 &7364330618834486948
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7758314193380060218}
+  m_GameObject: {fileID: 1846381978228381212}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5232991809425167704}
+  - {fileID: 8993839205488153157}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &95745371623317508
+--- !u!114 &8396931457595084945
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7758314193380060218}
+  m_GameObject: {fileID: 1846381978228381212}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &3545608814994616360
+--- !u!65 &130827301713633412
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7758314193380060218}
+  m_GameObject: {fileID: 1846381978228381212}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

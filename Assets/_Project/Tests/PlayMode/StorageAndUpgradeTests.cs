@@ -99,32 +99,32 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ABarn_RaisesTheFoodCeiling_AndLosingItSpillsTheSurplus()
+        public IEnumerator AGranary_RaisesTheFoodCeiling_AndLosingItSpillsTheSurplus()
         {
             var resources = ResourceManager.Instance;
             var baseCapacity = resources.GetCapacity(ResourceType.Food);
 
-            var barnData = PlaytestWorld.Building("Barn");
-            Assert.IsNotNull(barnData, "No Barn in the building catalogue.");
-            var room = barnData.LevelStats(1).storageCapacity;
-            Assert.Greater(room, 0, "The Barn's balance row gives it no storage capacity at all -- it is a storehouse that stores nothing.");
+            var granaryData = PlaytestWorld.Building("Granary");
+            Assert.IsNotNull(granaryData, "No Granary in the building catalogue.");
+            var room = granaryData.LevelStats(1).storageCapacity;
+            Assert.Greater(room, 0, "The Кладовая's balance row gives it no storage capacity at all -- it is a storehouse that stores nothing.");
 
-            var barn = Place(barnData);
-            Assert.AreEqual(baseCapacity + room, resources.GetCapacity(ResourceType.Food), "Building a Barn did not raise the food ceiling.");
+            var granary = Place(granaryData);
+            Assert.AreEqual(baseCapacity + room, resources.GetCapacity(ResourceType.Food), "Building a Кладовая did not raise the food ceiling.");
 
-            // Only the Barn's own group moves: grain does not fit in a treasury.
+            // Only the Кладовая's own group moves: bread does not fit in a treasury.
             Assert.AreEqual(BalanceConfig.Instance.BaseCapacityMaterials, resources.GetCapacity(ResourceType.Wood));
 
             var stocked = baseCapacity + room;
             resources.SetAmount(ResourceType.Food, stocked);
 
-            _placed.Remove(barn);
-            PlaytestWorld.Demolish(barn);
+            _placed.Remove(granary);
+            PlaytestWorld.Demolish(granary);
             yield return null;
 
-            Assert.AreEqual(baseCapacity, resources.GetCapacity(ResourceType.Food), "Losing the Barn did not take its room back.");
+            Assert.AreEqual(baseCapacity, resources.GetCapacity(ResourceType.Food), "Losing the Кладовая did not take its room back.");
             Assert.AreEqual(baseCapacity, resources.GetAmount(ResourceType.Food),
-                "The food that was being kept in the destroyed Barn is still in store -- the surplus should have spilled with the building.");
+                "The food that was being kept in the destroyed Кладовая is still in store -- the surplus should have spilled with the building.");
         }
 
         [UnityTest]
@@ -251,7 +251,7 @@ namespace CityBuilder.Tests.PlayMode
             var origin = PlaytestWorld.FindFreeArea(new Vector2Int(9, 3));
             Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "Nowhere free to stand three storehouses side by side.");
 
-            var names = new[] { "Warehouse", "Barn", "Treasury" };
+            var names = new[] { "Warehouse", "Granary", "Treasury" };
             for (var i = 0; i < names.Length; i++)
             {
                 var data = PlaytestWorld.Building(names[i]);

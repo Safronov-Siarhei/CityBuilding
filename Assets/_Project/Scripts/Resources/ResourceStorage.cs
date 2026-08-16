@@ -10,9 +10,18 @@ namespace CityBuilder.Resources
     {
         /// <summary>Not stored at all -- population is a headcount, not something a warehouse holds.</summary>
         None,
+
+        /// <summary>Timber, stone, ore as it comes out of the ground, coal. The Склад.</summary>
         Materials,
+
+        /// <summary>Anything anyone eats, cooked or raw -- bread, vegetables, fruit, smoked and fresh meat and fish. The Кладовая.</summary>
         Food,
+
+        /// <summary>Coins and ore smelted into bars. The Сокровищница.</summary>
         Valuables,
+
+        /// <summary>Wheat, and only wheat. The Амбар: what comes off the fields before a mill has touched it.</summary>
+        Grain,
     }
 
     public static class ResourceStorage
@@ -26,6 +35,8 @@ namespace CityBuilder.Resources
                     return ResourceStorageGroup.None;
                 case ResourceType.Food:
                     return ResourceStorageGroup.Food;
+                case ResourceType.Grain:
+                    return ResourceStorageGroup.Grain;
                 case ResourceType.Gold:
                 case ResourceType.Coins:
                     return ResourceStorageGroup.Valuables;

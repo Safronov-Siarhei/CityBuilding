@@ -30,7 +30,7 @@ namespace CityBuilder.Tests.PlayMode
         private const string MapId = "Map1";
 
         /// <summary>The building whose model is authored today. Anything else is still a placeholder built to a declared height.</summary>
-        private const string AuthoredBuildingId = "TownHall";
+        private const string AuthoredBuildingId = BuildingIds.TownHall;
 
         private static bool _sceneLoaded;
 

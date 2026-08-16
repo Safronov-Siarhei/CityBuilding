@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2945372905457003491
+--- !u!1 &4775445335291848430
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,115 +8,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7614092238212289030}
-  - component: {fileID: 140691602946816426}
-  - component: {fileID: 4941725214493917584}
+  - component: {fileID: 2925981399669548047}
+  - component: {fileID: 8524242555031765953}
+  - component: {fileID: 5684007979747010219}
   m_Layer: 0
-  m_Name: Bridge
+  m_Name: StripeNorth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7614092238212289030
+--- !u!4 &2925981399669548047
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2945372905457003491}
+  m_GameObject: {fileID: 4775445335291848430}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 5183072454608727363}
-  - {fileID: 5404378825374985972}
-  - {fileID: 6015535478104595099}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &140691602946816426
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2945372905457003491}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &4941725214493917584
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2945372905457003491}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.96, y: 0.05, z: 0.96}
-  m_Center: {x: 0, y: 0.025, z: 0}
---- !u!1 &3975653458405635618
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6015535478104595099}
-  - component: {fileID: 2236233257241830569}
-  - component: {fileID: 3201663268723079955}
-  m_Layer: 0
-  m_Name: StripeSouth
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6015535478104595099
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3975653458405635618}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.060000002, z: -0.2592}
+  m_LocalPosition: {x: 0, y: 0.060000002, z: 0.2592}
   m_LocalScale: {x: 0.1152, y: 0.02, z: 0.32639998}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7614092238212289030}
+  m_Father: {fileID: 2497613777848791772}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2236233257241830569
+--- !u!33 &8524242555031765953
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3975653458405635618}
+  m_GameObject: {fileID: 4775445335291848430}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &3201663268723079955
+--- !u!23 &5684007979747010219
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3975653458405635618}
+  m_GameObject: {fileID: 4775445335291848430}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -159,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &7844980632665888586
+--- !u!1 &5589591901411804464
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -167,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5183072454608727363}
-  - component: {fileID: 3285322859519437188}
-  - component: {fileID: 6242794129620408589}
+  - component: {fileID: 3956513384909136289}
+  - component: {fileID: 6096127265806901333}
+  - component: {fileID: 7151081478000824344}
   m_Layer: 0
   m_Name: Surface
   m_TagString: Untagged
@@ -177,36 +108,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5183072454608727363
+--- !u!4 &3956513384909136289
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7844980632665888586}
+  m_GameObject: {fileID: 5589591901411804464}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.025, z: 0}
   m_LocalScale: {x: 0.96, y: 0.05, z: 0.96}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7614092238212289030}
+  m_Father: {fileID: 2497613777848791772}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3285322859519437188
+--- !u!33 &6096127265806901333
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7844980632665888586}
+  m_GameObject: {fileID: 5589591901411804464}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &6242794129620408589
+--- !u!23 &7151081478000824344
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7844980632665888586}
+  m_GameObject: {fileID: 5589591901411804464}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -249,7 +180,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &8544146650216780547
+--- !u!1 &7106151087650777242
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -257,46 +188,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5404378825374985972}
-  - component: {fileID: 1706224493365815326}
-  - component: {fileID: 5243934649841523941}
+  - component: {fileID: 6932556383338904287}
+  - component: {fileID: 8408863528123520039}
+  - component: {fileID: 7921388337671646489}
   m_Layer: 0
-  m_Name: StripeNorth
+  m_Name: StripeSouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5404378825374985972
+--- !u!4 &6932556383338904287
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8544146650216780547}
+  m_GameObject: {fileID: 7106151087650777242}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.060000002, z: 0.2592}
+  m_LocalPosition: {x: 0, y: 0.060000002, z: -0.2592}
   m_LocalScale: {x: 0.1152, y: 0.02, z: 0.32639998}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7614092238212289030}
+  m_Father: {fileID: 2497613777848791772}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1706224493365815326
+--- !u!33 &8408863528123520039
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8544146650216780547}
+  m_GameObject: {fileID: 7106151087650777242}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &5243934649841523941
+--- !u!23 &7921388337671646489
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8544146650216780547}
+  m_GameObject: {fileID: 7106151087650777242}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -339,3 +270,72 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7741843400786888432
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2497613777848791772}
+  - component: {fileID: 1242884054229345767}
+  - component: {fileID: 4423664602141940838}
+  m_Layer: 0
+  m_Name: Bridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2497613777848791772
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7741843400786888432}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3956513384909136289}
+  - {fileID: 2925981399669548047}
+  - {fileID: 6932556383338904287}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1242884054229345767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7741843400786888432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
+--- !u!65 &4423664602141940838
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7741843400786888432}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.96, y: 0.05, z: 0.96}
+  m_Center: {x: 0, y: 0.025, z: 0}

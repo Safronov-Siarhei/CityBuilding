@@ -240,7 +240,7 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
             var townHallData = CreateBuildingData(
-                "TownHall", new Vector2Int(4, 4), height: 3f,
+                BuildingIds.TownHall, new Vector2Int(4, 4), height: 3f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
@@ -402,7 +402,6 @@ namespace CityBuilder.EditorTools
                 ("HealerHouse", new Vector2Int(2, 2), 2.4f, new Color(0.86f, 0.84f, 0.8f), new Color(0.6f, 0.25f, 0.22f), BuildingStyle.Hut),
                 ("FireBrigade", new Vector2Int(2, 2), 2.4f, new Color(0.7f, 0.3f, 0.24f), new Color(0.35f, 0.3f, 0.28f), BuildingStyle.Hut),
                 ("Well", new Vector2Int(1, 1), 1.2f, new Color(0.55f, 0.53f, 0.5f), new Color(0.4f, 0.3f, 0.2f), BuildingStyle.Hut),
-                ("Castle", new Vector2Int(4, 4), 5f, new Color(0.55f, 0.54f, 0.5f), Color.white, BuildingStyle.Fortification),
                 ("Church", new Vector2Int(2, 2), 4f, new Color(0.82f, 0.8f, 0.76f), new Color(0.35f, 0.4f, 0.5f), BuildingStyle.Hut),
                 ("Tavern", new Vector2Int(2, 2), 2.6f, new Color(0.66f, 0.48f, 0.3f), new Color(0.4f, 0.28f, 0.18f), BuildingStyle.Hut),
                 ("Theater", new Vector2Int(3, 3), 3.2f, new Color(0.78f, 0.74f, 0.66f), new Color(0.5f, 0.34f, 0.3f), BuildingStyle.Hut),
@@ -688,7 +687,7 @@ namespace CityBuilder.EditorTools
             }
 
             // Fixed display order; only categories that actually have a hotbar building get a tab.
-            var categoryOrder = new[] { BuildingCategory.Housing, BuildingCategory.Food, BuildingCategory.Production, BuildingCategory.Infrastructure, BuildingCategory.Military, BuildingCategory.Decor };
+            var categoryOrder = new[] { BuildingCategory.City, BuildingCategory.Storage, BuildingCategory.Entertainment, BuildingCategory.Defence, BuildingCategory.Production, BuildingCategory.Food, BuildingCategory.Water };
             var presentCategories = new List<BuildingCategory>();
             foreach (var cat in categoryOrder)
             {
@@ -2519,8 +2518,8 @@ namespace CityBuilder.EditorTools
         {
             switch (category)
             {
-                case BuildingCategory.Housing:
-                    return CreateIconSprite("Cat_Housing", 64, (p, s) =>
+                case BuildingCategory.City:
+                    return CreateIconSprite("Cat_City", 64, (p, s) =>
                     {
                         FillIconTriangle(p, s, new Vector2(0.15f, 0.55f), new Vector2(0.85f, 0.55f), new Vector2(0.5f, 0.88f), new Color(0.55f, 0.18f, 0.16f));
                         FillIconRect(p, s, 0.22f, 0.14f, 0.78f, 0.55f, new Color(0.82f, 0.68f, 0.5f));
@@ -2534,8 +2533,8 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.42f, 0.4f, 0.58f, 0.68f, new Color(0.86f, 0.68f, 0.24f));
                         FillIconRect(p, s, 0.58f, 0.4f, 0.78f, 0.6f, new Color(0.35f, 0.55f, 0.28f));
                     });
-                case BuildingCategory.Military:
-                    return CreateIconSprite("Cat_Military", 64, (p, s) =>
+                case BuildingCategory.Defence:
+                    return CreateIconSprite("Cat_Defence", 64, (p, s) =>
                     {
                         var shield = new Color(0.45f, 0.46f, 0.5f);
                         FillIconRect(p, s, 0.22f, 0.42f, 0.78f, 0.85f, shield);
@@ -2544,17 +2543,34 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.46f, 0.2f, 0.54f, 0.78f, trim);
                         FillIconRect(p, s, 0.3f, 0.58f, 0.7f, 0.66f, trim);
                     });
-                case BuildingCategory.Infrastructure:
-                    return CreateIconSprite("Cat_Infrastructure", 64, (p, s) =>
+                case BuildingCategory.Storage:
+                    return CreateIconSprite("Cat_Storage", 64, (p, s) =>
                     {
-                        FillIconRect(p, s, 0.1f, 0.42f, 0.9f, 0.58f, new Color(0.38f, 0.38f, 0.4f));
-                        var stripe = new Color(0.88f, 0.78f, 0.3f);
-                        FillIconRect(p, s, 0.18f, 0.47f, 0.34f, 0.53f, stripe);
-                        FillIconRect(p, s, 0.46f, 0.47f, 0.62f, 0.53f, stripe);
-                        FillIconRect(p, s, 0.74f, 0.47f, 0.86f, 0.53f, stripe);
+                        // Stacked crates -- the category is four storehouses and their big versions.
+                        var crate = new Color(0.58f, 0.44f, 0.26f);
+                        var band = new Color(0.36f, 0.28f, 0.18f);
+                        FillIconRect(p, s, 0.1f, 0.1f, 0.5f, 0.5f, crate);
+                        FillIconRect(p, s, 0.1f, 0.28f, 0.5f, 0.34f, band);
+                        FillIconRect(p, s, 0.52f, 0.1f, 0.9f, 0.5f, crate);
+                        FillIconRect(p, s, 0.52f, 0.28f, 0.9f, 0.34f, band);
+                        FillIconRect(p, s, 0.3f, 0.52f, 0.7f, 0.9f, crate);
+                        FillIconRect(p, s, 0.3f, 0.7f, 0.7f, 0.76f, band);
                     });
-                case BuildingCategory.Decor:
-                    return CreateIconSprite("Cat_Decor", 64, (p, s) =>
+                case BuildingCategory.Water:
+                    return CreateIconSprite("Cat_Water", 64, (p, s) =>
+                    {
+                        // Two waves under a jetty. The category is a stub in the design and a stub
+                        // here: bridge, dock and water mill sit in it until it gets thought through.
+                        var water = new Color(0.32f, 0.55f, 0.8f);
+                        var deck = new Color(0.5f, 0.38f, 0.24f);
+                        FillIconRect(p, s, 0.08f, 0.16f, 0.92f, 0.28f, water);
+                        FillIconRect(p, s, 0.08f, 0.36f, 0.92f, 0.48f, water);
+                        FillIconRect(p, s, 0.1f, 0.6f, 0.9f, 0.72f, deck);
+                        FillIconRect(p, s, 0.22f, 0.48f, 0.3f, 0.6f, deck);
+                        FillIconRect(p, s, 0.7f, 0.48f, 0.78f, 0.6f, deck);
+                    });
+                case BuildingCategory.Entertainment:
+                    return CreateIconSprite("Cat_Entertainment", 64, (p, s) =>
                     {
                         // A little tree: the one thing every decoration in this category has in
                         // common is that it is there to look at.

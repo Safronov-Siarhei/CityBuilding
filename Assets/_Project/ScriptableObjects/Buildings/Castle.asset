@@ -13,16 +13,10 @@ MonoBehaviour:
   m_Name: Castle
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Castle
-  displayName: "\u0417\u0430\u043C\u043E\u043A"
-  prefab: {fileID: 8392021900076354685, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
+  displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
+  prefab: {fileID: 785887021099202829, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
   footprintSize: {x: 5, y: 5}
-  cost:
-  - type: 0
-    amount: 120
-  - type: 1
-    amount: 90
-  - type: 5
-    amount: 15
+  cost: []
   category: 0
   isWaterCategory: 0
   isRoad: 0
@@ -30,21 +24,21 @@ MonoBehaviour:
   connectsToFences: 0
   keepSelectedAfterPlacement: 0
   levels:
-  - maxHealth: 600
-    defense: 0
-    citizensGranted: 0
+  - maxHealth: 400
+    defense: 20
+    citizensGranted: 5
     maxWorkers: 0
     productionPerWorkerPerTick: 0
     storageCapacity: 0
-  - maxHealth: 960
-    defense: 0
-    citizensGranted: 0
+  - maxHealth: 640
+    defense: 32
+    citizensGranted: 8
     maxWorkers: 0
     productionPerWorkerPerTick: 0
     storageCapacity: 0
-  - maxHealth: 1500
-    defense: 0
-    citizensGranted: 0
+  - maxHealth: 1000
+    defense: 50
+    citizensGranted: 10
     maxWorkers: 0
     productionPerWorkerPerTick: 0
     storageCapacity: 0
@@ -53,17 +47,17 @@ MonoBehaviour:
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 192
+    amount: 100
   - type: 1
-    amount: 144
-  - type: 5
-    amount: 24
+    amount: 60
   upgradeToLevel3Cost:
   - type: 0
-    amount: 336
+    amount: 220
   - type: 1
-    amount: 252
-  - type: 5
-    amount: 42
+    amount: 150
+  - type: 6
+    amount: 20
+  - type: 3
+    amount: 40
   fogRevealRadius: 20
   requiredBuilding: {fileID: 0}

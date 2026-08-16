@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -36,7 +36,7 @@ namespace CityBuilder.Combat
         // convenience the user asked for; the intended behaviour is for it to stay hidden until
         // the player scouts it.
         private const int PortalFogRevealRadiusCells = 12;
-        private const string TownHallBuildingName = "TownHall";
+        private const string TownHallBuildingName = BuildingIds.TownHall;
 
         [SerializeField] private GameCalendar gameCalendar;
 

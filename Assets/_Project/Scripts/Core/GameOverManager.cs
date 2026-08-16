@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using UnityEngine;
@@ -53,7 +53,7 @@ namespace CityBuilder.Core
 
         private void HandleBuildingDestroyed(BuildingInstance instance)
         {
-            if (IsGameOver || instance.Data == null || instance.Data.buildingName != "TownHall") return;
+            if (IsGameOver || instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) return;
 
             EndGame(victory: false, "Поражение: Ратуша разрушена.");
         }

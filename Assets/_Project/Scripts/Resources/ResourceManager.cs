@@ -98,6 +98,7 @@ namespace CityBuilder.Resources
             {
                 case ResourceStorageGroup.Food: return config.BaseCapacityFood;
                 case ResourceStorageGroup.Valuables: return config.BaseCapacityValuables;
+                case ResourceStorageGroup.Grain: return config.BaseCapacityGrain;
                 default: return config.BaseCapacityMaterials;
             }
         }

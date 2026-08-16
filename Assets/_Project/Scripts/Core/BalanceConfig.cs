@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
@@ -139,6 +139,7 @@ namespace CityBuilder.Core
         [SerializeField] private int baseCapacityMaterials = 200;
         [SerializeField] private int baseCapacityFood = 100;
         [SerializeField] private int baseCapacityValuables = 300;
+        [SerializeField] private int baseCapacityGrain = 150;
 
         public IReadOnlyList<UnitBalance> Units => units;
         public IReadOnlyList<BuildingBalance> Buildings => buildings;
@@ -161,6 +162,7 @@ namespace CityBuilder.Core
         public int BaseCapacityMaterials => baseCapacityMaterials;
         public int BaseCapacityFood => baseCapacityFood;
         public int BaseCapacityValuables => baseCapacityValuables;
+        public int BaseCapacityGrain => baseCapacityGrain;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -235,6 +237,7 @@ namespace CityBuilder.Core
             baseCapacityMaterials = (int)Read(economy, "base_capacity_materials", baseCapacityMaterials);
             baseCapacityFood = (int)Read(economy, "base_capacity_food", baseCapacityFood);
             baseCapacityValuables = (int)Read(economy, "base_capacity_valuables", baseCapacityValuables);
+            baseCapacityGrain = (int)Read(economy, "base_capacity_grain", baseCapacityGrain);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>
