@@ -242,17 +242,37 @@ namespace CityBuilder.EditorTools
             var towerData = CreateBuildingData(
                 "Tower", new Vector2Int(2, 2), height: 4.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true);
 
             var barracksData = CreateBuildingData(
                 "Barracks", new Vector2Int(2, 2), height: 2.6f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
 
+            // Towers and gates stand IN the fence line rather than beside it: connectsToFences
+            // registers their cells with FenceNetwork, so the segments either side shape themselves
+            // as if the line ran straight through. They keep their own model -- only the fence
+            // changes shape (see FenceAppearance).
             var gateData = CreateBuildingData(
                 "Gate", new Vector2Int(2, 1), height: 1.8f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true);
+
+            // The second tier of the defensive line. Separate buildings, not upgrade levels -- the
+            // taxonomy treats them that way, and each still has its own three levels on top.
+            var fortifiedTowerData = CreateBuildingData(
+                "FortifiedTower", new Vector2Int(2, 2), height: 5f,
+                wallColor: new Color(0.46f, 0.45f, 0.42f), roofColor: Color.white,
+                style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true);
+
+            var fortifiedGateData = CreateBuildingData(
+                "FortifiedGate", new Vector2Int(2, 1), height: 2.2f,
+                wallColor: new Color(0.44f, 0.42f, 0.4f), roofColor: Color.white,
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true);
 
             // One storehouse per resource family, so every group has somewhere to go -- what each
             // one holds is the storage_group column, not anything decided here. Placeholder
@@ -330,6 +350,7 @@ namespace CityBuilder.EditorTools
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
+                fortifiedTowerData, fortifiedGateData,
                 bridgeData, waterMillData, dockData
             };
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
@@ -1346,7 +1367,7 @@ namespace CityBuilder.EditorTools
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false,
             bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false,
-            bool providesWalkableSurface = false)
+            bool providesWalkableSurface = false, bool connectsToFences = false)
         {
             // Two of the sheet's numbers shape the prefab rather than just sitting on the data asset,
             // so the row has to be read before it's built: worker slots become geometry, and a real
@@ -1403,6 +1424,7 @@ namespace CityBuilder.EditorTools
             data.providesWalkableSurface = providesWalkableSurface;
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
+            data.connectsToFences = connectsToFences;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -2640,6 +2662,29 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.14f, 0.12f, 0.32f, 0.85f, stone);
                         FillIconRect(p, s, 0.68f, 0.12f, 0.86f, 0.85f, stone);
                         FillIconRect(p, s, 0.14f, 0.78f, 0.86f, 0.9f, stone);
+                    });
+                // The fortified pair: the same silhouettes in darker stone, with the battlements
+                // filled in solid, so the tier reads at hotbar size without a second look.
+                case "FortifiedTower":
+                    return CreateIconSprite("Bld_FortifiedTower", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.3f, 0.29f, 0.27f);
+                        var band = new Color(0.52f, 0.5f, 0.46f);
+                        FillIconRect(p, s, 0.24f, 0.08f, 0.76f, 0.8f, stone);
+                        FillIconRect(p, s, 0.24f, 0.44f, 0.76f, 0.52f, band);
+                        FillIconRect(p, s, 0.18f, 0.8f, 0.34f, 0.94f, stone);
+                        FillIconRect(p, s, 0.42f, 0.8f, 0.58f, 0.94f, stone);
+                        FillIconRect(p, s, 0.66f, 0.8f, 0.82f, 0.94f, stone);
+                    });
+                case "FortifiedGate":
+                    return CreateIconSprite("Bld_FortifiedGate", 64, (p, s) =>
+                    {
+                        var stone = new Color(0.3f, 0.29f, 0.27f);
+                        var band = new Color(0.52f, 0.5f, 0.46f);
+                        FillIconRect(p, s, 0.1f, 0.1f, 0.34f, 0.86f, stone);
+                        FillIconRect(p, s, 0.66f, 0.1f, 0.9f, 0.86f, stone);
+                        FillIconRect(p, s, 0.1f, 0.76f, 0.9f, 0.92f, stone);
+                        FillIconRect(p, s, 0.34f, 0.1f, 0.66f, 0.2f, band);
                     });
                 case "Road":
                     return CreateIconSprite("Bld_Road", 64, (p, s) =>

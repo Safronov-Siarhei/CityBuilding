@@ -220,6 +220,42 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// A gate is part of the wall, not a building standing next to a hole in it: it keeps its
+        /// own model but registers its cells with the fence line (BuildingData.connectsToFences), so
+        /// the segments either side go back to being a straight run instead of two dead ends
+        /// staring at each other.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AGateInTheLine_MakesTheFenceRunThroughIt()
+        {
+            var gap = new Vector2Int(_origin.x + RingSize.x / 2, _origin.y);
+            var west = gap + Vector2Int.left;
+            var east = gap + Vector2Int.right;
+
+            PlaytestWorld.Demolish(_segments[gap]);
+            _placed.Remove(_segments[gap]);
+            _segments.Remove(gap);
+            yield return null;
+
+            var gateData = PlaytestWorld.Building("Gate");
+            Assert.IsNotNull(gateData, "No Gate in the building catalogue.");
+            Assert.IsTrue(gateData.connectsToFences, "The Gate is not marked as part of the fence line, so nothing below can work.");
+
+            _placed.Add(PlaytestWorld.Place(gateData, gap));
+            yield return null;
+
+            Assert.IsTrue(FenceNetwork.Instance.Connects(gap), "The Gate did not register its cell with the fence line.");
+
+            foreach (var cell in new[] { west, east })
+            {
+                var straight = ModelWrapper(_segments[cell], "Straight");
+                Assert.IsTrue(straight.gameObject.activeSelf, $"The segment at {cell} beside the gate is not showing the straight model.");
+                Assert.AreEqual(1, Mathf.RoundToInt(straight.rotation.eulerAngles.y / 90f) % 4,
+                    $"The segment at {cell} is still shaped as a dead end -- the fence does not know the gate continues the line.");
+            }
+        }
+
         /// <summary>Not an assertion -- the photographs. See PlaytestCapture for why a test suite takes them.</summary>
         [UnityTest]
         public IEnumerator Photograph_TheFinishedFence()

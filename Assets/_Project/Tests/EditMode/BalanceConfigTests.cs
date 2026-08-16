@@ -85,6 +85,8 @@ namespace CityBuilder.Tests.EditMode
         [TestCase("Tower")]
         [TestCase("Barracks")]
         [TestCase("Gate")]
+        [TestCase("FortifiedTower")]
+        [TestCase("FortifiedGate")]
         [TestCase("Road")]
         [TestCase("Bridge")]
         [TestCase("WaterMill")]
