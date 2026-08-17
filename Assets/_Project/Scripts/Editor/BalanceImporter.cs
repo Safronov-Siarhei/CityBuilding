@@ -278,7 +278,11 @@ namespace CityBuilder.EditorTools
                 var entry = new LocalizationConfig.Entry { key = key, values = new List<string>() };
                 foreach (var column in languageColumns)
                 {
-                    entry.values.Add(column < row.Count ? row[column].Trim() : string.Empty);
+                    var value = column < row.Count ? row[column].Trim() : string.Empty;
+                    // A two-line label is written "\n" in the sheet, not as a real line break in
+                    // the cell: a cell containing a newline comes back from a published CSV as two
+                    // rows, and pasting one back into the sheet splits it in half.
+                    entry.values.Add(value.Replace("\\n", "\n"));
                 }
                 entries.Add(entry);
             }
