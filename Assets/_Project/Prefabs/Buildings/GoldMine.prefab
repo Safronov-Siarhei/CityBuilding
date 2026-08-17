@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &6160468102054205476
+--- !u!1 &1254677967881018586
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1105257994104728097}
-  - component: {fileID: 942713475936487575}
-  - component: {fileID: 6383283349372639155}
+  - component: {fileID: 5791040421957409305}
+  - component: {fileID: 220761094071511551}
+  - component: {fileID: 2305187873589567004}
   m_Layer: 0
   m_Name: GoldMine
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1105257994104728097
+--- !u!4 &5791040421957409305
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6160468102054205476}
+  m_GameObject: {fileID: 1254677967881018586}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3879589701323043649}
+  - {fileID: 6135031885762780856}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &942713475936487575
+--- !u!114 &220761094071511551
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6160468102054205476}
+  m_GameObject: {fileID: 1254677967881018586}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &6383283349372639155
+--- !u!65 &2305187873589567004
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6160468102054205476}
+  m_GameObject: {fileID: 1254677967881018586}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.92, y: 0.025000237, z: 1.92}
   m_Center: {x: 0, y: 0.012500118, z: 0}
---- !u!1 &8697408154623190675
+--- !u!1 &6350489138584250067
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3879589701323043649}
-  - component: {fileID: 2772611150693507908}
-  - component: {fileID: 6636007881720886138}
+  - component: {fileID: 6135031885762780856}
+  - component: {fileID: 2280676991590864506}
+  - component: {fileID: 2191223405903783800}
   m_Layer: 0
   m_Name: GoldMine1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3879589701323043649
+--- !u!4 &6135031885762780856
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8697408154623190675}
+  m_GameObject: {fileID: 6350489138584250067}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000011920929, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1105257994104728097}
+  m_Father: {fileID: 5791040421957409305}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2772611150693507908
+--- !u!33 &2280676991590864506
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8697408154623190675}
+  m_GameObject: {fileID: 6350489138584250067}
   m_Mesh: {fileID: -763351084569329826, guid: 527af6b60e1e9e840890a3a8456e65c8, type: 3}
---- !u!23 &6636007881720886138
+--- !u!23 &2191223405903783800
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8697408154623190675}
+  m_GameObject: {fileID: 6350489138584250067}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

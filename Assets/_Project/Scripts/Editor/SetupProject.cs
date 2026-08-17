@@ -778,6 +778,7 @@ namespace CityBuilder.EditorTools
             BuildTaxRateControl(canvasGO.transform, panelSprite);
             BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
             BuildHappinessPanel(canvasGO.transform, panelSprite);
+            BuildWorkforcePanel(canvasGO.transform, panelSprite);
             BuildArmyPanel(canvasGO.transform, panelSprite);
             BuildArmyOrderInput(canvasGO.transform, targetCamera, placer);
         }
@@ -891,6 +892,59 @@ namespace CityBuilder.EditorTools
             var resources = new GameObject("Resources");
             resources.transform.SetParent(root.transform, false);
             resources.AddComponent<ResourceCheat>();
+        }
+
+        /// <summary>
+        /// Every workplace in the settlement in one scrollable card, with the same +/- controls the
+        /// building's own info panel carries -- see WorkforcePanelController for why it lists
+        /// buildings rather than people.
+        ///
+        /// A modal card like BuildingInfoPanel rather than a standing panel: at a settlement's
+        /// worth of workshops this list is far too tall to leave on screen, and it is something the
+        /// player consults when rearranging rather than watches.
+        /// </summary>
+        private static void BuildWorkforcePanel(Transform canvasParent, Sprite panelSprite)
+        {
+            var panelRoot = new GameObject("WorkforcePanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(960f, 780f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            CreateText(card.transform, "Title", "Жители и работы", 34, new Vector2(0f, 320f), new Vector2(880f, 60f));
+            var summaryLabel = CreateText(card.transform, "Summary", string.Empty, 22, new Vector2(0f, 272f), new Vector2(880f, 40f), new Color(1f, 1f, 1f, 0.8f));
+
+            BuildScrollList(card.transform, new Vector2(0f, -20f), new Vector2(900f, 520f),
+                "Пока негде работать — постройте производство", out var content, out var emptyLabelGO);
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -320f), new Vector2(300f, 70f));
+
+            var controller = panelRoot.AddComponent<WorkforcePanelController>();
+            var controllerSO = new SerializedObject(controller);
+            controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            controllerSO.FindProperty("listContent").objectReferenceValue = content;
+            controllerSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
+            controllerSO.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
+            controllerSO.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            controllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
+
+            // In the top row's left gap: Меню occupies -930..-690 and the settlement status text
+            // -250..250, so a 240-wide button centred at -520 sits clear of both.
+            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "Жители", new Vector2(-520f, 465f), new Vector2(240f, 90f));
+            UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
+
+            panelRoot.SetActive(false);
         }
 
         /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>
@@ -1388,7 +1442,7 @@ namespace CityBuilder.EditorTools
 
             CreateText(card.transform, "Title", "Загрузить игру", 48, new Vector2(0f, 320f), new Vector2(900f, 80f));
 
-            BuildSaveScrollList(card.transform, out var content, out var emptyLabelGO);
+            BuildScrollList(card.transform, new Vector2(0f, 60f), new Vector2(900f, 420f), "Нет сохранений", out var content, out var emptyLabelGO);
 
             var selectedLabel = CreateText(card.transform, "SelectedLabel", string.Empty, 26, new Vector2(0f, -170f), new Vector2(900f, 50f), new Color(1f, 1f, 1f, 0.8f));
 
@@ -1415,14 +1469,15 @@ namespace CityBuilder.EditorTools
             menuSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void BuildSaveScrollList(Transform parent, out RectTransform content, out GameObject emptyLabelGO)
+        /// <summary>A scrollable, vertically stacked list whose rows are built at runtime -- the save browser's slots, the workforce panel's workplaces.</summary>
+        private static void BuildScrollList(Transform parent, Vector2 position, Vector2 size, string emptyText, out RectTransform content, out GameObject emptyLabelGO)
         {
             var scrollGO = new GameObject("ScrollView", typeof(RectTransform), typeof(ScrollRect));
             scrollGO.transform.SetParent(parent, false);
             var scrollRectTransform = scrollGO.GetComponent<RectTransform>();
             scrollRectTransform.anchorMin = scrollRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            scrollRectTransform.anchoredPosition = new Vector2(0f, 60f);
-            scrollRectTransform.sizeDelta = new Vector2(900f, 420f);
+            scrollRectTransform.anchoredPosition = position;
+            scrollRectTransform.sizeDelta = size;
 
             var viewportGO = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
             viewportGO.transform.SetParent(scrollGO.transform, false);
@@ -1457,7 +1512,7 @@ namespace CityBuilder.EditorTools
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
-            var emptyLabel = CreateText(viewportGO.transform, "EmptyLabel", "Нет сохранений", 28, Vector2.zero, new Vector2(700f, 80f), new Color(1f, 1f, 1f, 0.6f));
+            var emptyLabel = CreateText(viewportGO.transform, "EmptyLabel", emptyText, 28, Vector2.zero, new Vector2(700f, 80f), new Color(1f, 1f, 1f, 0.6f));
 
             content = contentRect;
             emptyLabelGO = emptyLabel.gameObject;
