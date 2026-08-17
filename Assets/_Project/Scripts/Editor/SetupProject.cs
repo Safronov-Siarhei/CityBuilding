@@ -525,6 +525,13 @@ namespace CityBuilder.EditorTools
             taxManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             taxManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // The settlement's daily meal. HappinessManager reads its numbers for two of the five
+            // happiness factors, and GameOverManager ends the map when it starves the town out.
+            var foodConsumptionManager = managers.AddComponent<FoodConsumptionManager>();
+            var foodConsumptionManagerSO = new SerializedObject(foodConsumptionManager);
+            foodConsumptionManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            foodConsumptionManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             managers.AddComponent<HappinessManager>();
 
             managers.AddComponent<GameOverManager>();
@@ -850,10 +857,12 @@ namespace CityBuilder.EditorTools
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
             frameRect.anchoredPosition = new Vector2(760f, 100f);
-            frameRect.sizeDelta = new Vector2(400f, 110f);
+            // 130 rather than 110: the breakdown became two lines when food and losses joined the
+            // three original factors (see HappinessController).
+            frameRect.sizeDelta = new Vector2(400f, 130f);
 
-            var happinessLabel = CreateText(frame.transform, "HappinessLabel", string.Empty, 26, new Vector2(0f, 22f), new Vector2(370f, 44f));
-            var breakdownLabel = CreateText(frame.transform, "BreakdownLabel", string.Empty, 17, new Vector2(0f, -22f), new Vector2(370f, 40f), new Color(1f, 1f, 1f, 0.7f));
+            var happinessLabel = CreateText(frame.transform, "HappinessLabel", string.Empty, 26, new Vector2(0f, 32f), new Vector2(370f, 44f));
+            var breakdownLabel = CreateText(frame.transform, "BreakdownLabel", string.Empty, 17, new Vector2(0f, -22f), new Vector2(370f, 56f), new Color(1f, 1f, 1f, 0.7f));
 
             var go = new GameObject("HappinessController");
             go.transform.SetParent(canvasParent, false);

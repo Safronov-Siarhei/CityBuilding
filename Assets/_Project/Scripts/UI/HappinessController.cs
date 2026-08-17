@@ -32,7 +32,10 @@ namespace CityBuilder.UI
             }
             if (breakdownLabel != null)
             {
-                breakdownLabel.text = $"Налог {HappinessManager.Instance.TaxScore} · Ветхость {HappinessManager.Instance.DecayScore} · Оборона {HappinessManager.Instance.DefenseScore}";
+                // Two lines: five factors do not fit across the panel's width at this font size.
+                breakdownLabel.text =
+                    $"Налог {HappinessManager.Instance.TaxScore} · Ветхость {HappinessManager.Instance.DecayScore} · Оборона {HappinessManager.Instance.DefenseScore}\n" +
+                    $"Еда {HappinessManager.Instance.FoodScore} · Потери {HappinessManager.Instance.DeathScore}";
             }
         }
 

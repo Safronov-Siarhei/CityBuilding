@@ -56,6 +56,48 @@ namespace CityBuilder.Citizens
             OnPopulationChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Citizens lost for good -- starvation today, plague or fire later. Returns how many
+        /// actually died, which is fewer than asked for once the town runs out of people.
+        ///
+        /// Takes the idle ones first and only then lays workers off, because a death that leaves
+        /// _assignedPopulation above _totalPopulation would quietly break the whole worker economy:
+        /// IdlePopulation clamps at zero, so the settlement would look fully employed forever while
+        /// production buildings kept ticking on staff who no longer exist.
+        /// </summary>
+        public int KillCitizens(int amount)
+        {
+            if (amount <= 0) return 0;
+
+            var died = Mathf.Min(amount, _totalPopulation);
+            if (died <= 0) return 0;
+
+            _totalPopulation -= died;
+            LayOffWorkersBeyondPopulation();
+            OnPopulationChanged?.Invoke();
+            return died;
+        }
+
+        /// <summary>Hands back worker slots until the assigned count fits the surviving population. Each ProductionBuilding owns its own count, so they have to be asked one at a time.</summary>
+        private void LayOffWorkersBeyondPopulation()
+        {
+            if (_assignedPopulation <= _totalPopulation) return;
+
+            foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
+            {
+                while (_assignedPopulation > _totalPopulation && building.AssignedWorkers > 0)
+                {
+                    // Decrements _assignedPopulation through NotifyWorkerUnassigned.
+                    building.TryUnassignWorker();
+                }
+                if (_assignedPopulation <= _totalPopulation) return;
+            }
+
+            // Nothing left to unassign (buildings gone, counts already out of step) -- the invariant
+            // matters more than where the discrepancy came from.
+            _assignedPopulation = Mathf.Min(_assignedPopulation, _totalPopulation);
+        }
+
         /// <summary>Used by save/load to set population directly, bypassing the placement-grant path.</summary>
         public void SetPopulation(int amount)
         {

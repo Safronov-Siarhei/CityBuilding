@@ -137,6 +137,16 @@ namespace CityBuilder.Core
         [SerializeField] private int woodPerTree = 5;
         [SerializeField] private int stonePerRock = 4;
 
+        [Header("Food (economy.csv)")]
+        // What one mouth -- citizen or soldier -- eats per day, how long a settlement may go short
+        // before people start dying, how many kinds of food count as a varied diet, and how many
+        // days of deaths the happiness model keeps remembering.
+        [SerializeField] private float foodPerMouthPerDay = 0.5f;
+        [SerializeField] private int hungryDaysBeforeDeaths = 2;
+        [SerializeField] private int foodVarietyTarget = 2;
+        [SerializeField] private int deathsMemoryDays = 3;
+        [SerializeField] private int happinessPenaltyPerDeath = 10;
+
         [Header("Storage (economy.csv)")]
         // What the settlement can hold before a single storehouse is built. Without these a new
         // game would be unable to keep the resources it starts with.
@@ -167,6 +177,11 @@ namespace CityBuilder.Core
         public int BaseCapacityFood => baseCapacityFood;
         public int BaseCapacityValuables => baseCapacityValuables;
         public int BaseCapacityGrain => baseCapacityGrain;
+        public float FoodPerMouthPerDay => foodPerMouthPerDay;
+        public int HungryDaysBeforeDeaths => hungryDaysBeforeDeaths;
+        public int FoodVarietyTarget => foodVarietyTarget;
+        public int DeathsMemoryDays => deathsMemoryDays;
+        public int HappinessPenaltyPerDeath => happinessPenaltyPerDeath;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -242,6 +257,11 @@ namespace CityBuilder.Core
             baseCapacityFood = (int)Read(economy, "base_capacity_food", baseCapacityFood);
             baseCapacityValuables = (int)Read(economy, "base_capacity_valuables", baseCapacityValuables);
             baseCapacityGrain = (int)Read(economy, "base_capacity_grain", baseCapacityGrain);
+            foodPerMouthPerDay = Read(economy, "food_per_mouth_per_day", foodPerMouthPerDay);
+            hungryDaysBeforeDeaths = (int)Read(economy, "hungry_days_before_deaths", hungryDaysBeforeDeaths);
+            foodVarietyTarget = (int)Read(economy, "food_variety_target", foodVarietyTarget);
+            deathsMemoryDays = (int)Read(economy, "deaths_memory_days", deathsMemoryDays);
+            happinessPenaltyPerDeath = (int)Read(economy, "happiness_penalty_per_death", happinessPenaltyPerDeath);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

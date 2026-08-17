@@ -34,6 +34,12 @@ namespace CityBuilder.Core
         public int DecayScore { get; private set; } = 100;
         public int DefenseScore { get; private set; } = 100;
 
+        /// <summary>Factor 1: how many kinds of food actually reached the table on the last day the settlement ate.</summary>
+        public int FoodScore { get; private set; } = 100;
+
+        /// <summary>Factor 2: citizens lost over the last few days -- starvation today, other causes as they arrive.</summary>
+        public int DeathScore { get; private set; } = 100;
+
         private bool _isCritical;
 
         public event Action OnHappinessChanged;
@@ -52,6 +58,11 @@ namespace CityBuilder.Core
         {
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed += Recompute;
             if (TaxManager.Instance != null) TaxManager.Instance.OnTaxRateChanged += Recompute;
+            // Both this and the meal hang off OnDayPassed, and which of the two runs first depends
+            // on the order two Start() methods happened to subscribe in. Listening to the meal
+            // itself makes that ordering stop mattering: whichever way round the day ticks, the
+            // score is recomputed once more with the food numbers the day actually produced.
+            if (FoodConsumptionManager.Instance != null) FoodConsumptionManager.Instance.OnFoodConsumed += Recompute;
             Recompute();
         }
 
@@ -59,6 +70,7 @@ namespace CityBuilder.Core
         {
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= Recompute;
             if (TaxManager.Instance != null) TaxManager.Instance.OnTaxRateChanged -= Recompute;
+            if (FoodConsumptionManager.Instance != null) FoodConsumptionManager.Instance.OnFoodConsumed -= Recompute;
         }
 
         public void Recompute()
@@ -68,7 +80,11 @@ namespace CityBuilder.Core
             DecayScore = decayScore;
             DefenseScore = defenseScore;
 
-            HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore) / 3f);
+            var food = FoodConsumptionManager.Instance;
+            FoodScore = ComputeFoodScore(food != null ? food.LastVariety : 0, food != null ? food.HungryDaysInARow : 0);
+            DeathScore = ComputeDeathScore(food != null ? food.RecentDeaths : 0);
+
+            HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore + FoodScore + DeathScore) / 5f);
             UpdateCriticalState();
             OnHappinessChanged?.Invoke();
         }
@@ -93,6 +109,35 @@ namespace CityBuilder.Core
 
             var target = population * DefensePerCitizenTarget;
             return target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalDefense / target), 0, 100);
+        }
+
+        /// <summary>
+        /// Factor 1 of the design's happiness model: variety of food eaten, against the sheet's
+        /// target for a full table. A hungry settlement scores zero outright rather than being
+        /// graded on variety -- going short is not a subtler version of eating a dull diet, and a
+        /// town eating one kind of bread badly should not out-score a town eating two kinds well.
+        ///
+        /// Pure so an EditMode test covers it without a live scene.
+        /// </summary>
+        public static int ComputeFoodScore(int varietyEaten, int hungryDaysInARow)
+        {
+            if (hungryDaysInARow > 0) return 0;
+
+            var target = BalanceConfig.Instance.FoodVarietyTarget;
+            if (target <= 0) return 100;
+
+            return Mathf.Clamp(Mathf.RoundToInt(100f * varietyEaten / target), 0, 100);
+        }
+
+        /// <summary>
+        /// Factor 2: recent deaths. Full marks for a settlement that has buried nobody, falling by
+        /// the sheet's penalty for each citizen lost inside the remembered window. Pure, as above.
+        /// </summary>
+        public static int ComputeDeathScore(int recentDeaths)
+        {
+            if (recentDeaths <= 0) return 100;
+
+            return Mathf.Clamp(100 - recentDeaths * BalanceConfig.Instance.HappinessPenaltyPerDeath, 0, 100);
         }
 
         private void UpdateCriticalState()
