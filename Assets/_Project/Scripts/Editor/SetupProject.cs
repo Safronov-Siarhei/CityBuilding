@@ -36,6 +36,9 @@ namespace CityBuilder.EditorTools
         private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
         private const string ModelsBuildingsFolder = "Assets/_Project/Models/Buildings";
 
+        /// <summary>How many Tree{n}.fbx variants live in ModelsTerrainFolder -- the forest picks between all of them.</summary>
+        private const int TreeModelCount = 5;
+
         private const int GridCellsX = 200;
         private const int GridCellsZ = 200;
         private const int ForestMarginCells = 20; // same 20m world-space margin as before the cellSize halved
@@ -2227,7 +2230,7 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Loads a hand-authored map's five FBX prefabs by their fixed Models/ paths and writes a
+        /// Loads a hand-authored map's FBX prefabs by their fixed Models/ paths and writes a
         /// MeshMapDefinition asset under Resources/MeshMaps so MeshMapCatalog/MapSelector can find
         /// it. Parameterized rather than folder-scanning like the old MapImporter — a second map
         /// is just one more call to this with a different id/paths, not a new system.
@@ -2238,10 +2241,18 @@ namespace CityBuilder.EditorTools
             var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-Water.fbx");
             var waterPlacementZone = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-PlaceForWaterObjects.fbx");
             var treesArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-TreesArea.fbx");
-            var tree1 = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree1.fbx");
-            var tree2 = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree2.fbx");
+            // Every Tree*.fbx variant, so TreesAreaSpawner has the full set to pick from at random
+            // (see SpawnOneTree). Adding a sixth model is one more file plus a bump of
+            // TreeModelCount -- nothing here is written per-model.
+            var trees = new GameObject[TreeModelCount];
+            var treesMissing = false;
+            for (var i = 0; i < TreeModelCount; i++)
+            {
+                trees[i] = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree{i + 1}.fbx");
+                if (trees[i] == null) treesMissing = true;
+            }
 
-            if (ground == null || water == null || waterPlacementZone == null || treesArea == null || tree1 == null || tree2 == null)
+            if (ground == null || water == null || waterPlacementZone == null || treesArea == null || treesMissing)
             {
                 Debug.LogWarning($"CreateMeshMapDefinition: one or more Map1 FBX assets not found under {ModelsMap1Folder}/{ModelsTerrainFolder} -- skipping Map1 MeshMapDefinition.");
                 return;
@@ -2250,7 +2261,7 @@ namespace CityBuilder.EditorTools
             var waterMaterial = CreateWaterMaterial();
 
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
-            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, new[] { tree1, tree2 }, waterMaterial);
+            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, waterMaterial);
 
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{mapId}.asset";

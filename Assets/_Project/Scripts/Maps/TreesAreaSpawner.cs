@@ -164,8 +164,8 @@ namespace CityBuilder.Maps
         /// hundreds of new obstacles to get wedged against -- and trees are deliberately walk-
         /// through now, in pathing as well (see SpawnOneTree on why the NavMeshObstacle went away).
         ///
-        /// Sized from the tree's own meshes measured IN THE TREE'S LOCAL SPACE, since Tree1/Tree2
-        /// aren't the same size and a BoxCollider's size is local by definition.
+        /// Sized from the tree's own meshes measured IN THE TREE'S LOCAL SPACE, since the tree
+        /// models aren't all the same size and a BoxCollider's size is local by definition.
         ///
         /// It used to take the world-space renderer bounds and divide the size by lossyScale,
         /// which quietly assumes the tree is axis-aligned with the world. These FBX prefabs are
