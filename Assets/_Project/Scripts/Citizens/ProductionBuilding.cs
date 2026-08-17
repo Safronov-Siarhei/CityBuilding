@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
@@ -36,7 +36,7 @@ namespace CityBuilder.Citizens
         public int MaxWorkers => Data != null ? Data.LevelStats(CurrentLevel).maxWorkers : 0;
 
         private int CurrentLevel => _buildingInstance != null ? _buildingInstance.Level : 1;
-        public string DisplayName => Data != null ? Data.displayName : "?";
+        public string DisplayName => Data != null ? Data.LocalizedName : "?";
 
         /// <summary>Everything this building knows how to make. One entry for almost everything; the Плавильня is why this is a list.</summary>
         public IReadOnlyList<BuildingRecipe> Recipes => Data != null ? Data.recipes : EmptyRecipes;
@@ -211,7 +211,7 @@ namespace CityBuilder.Citizens
             if (!_reportedMissingInput)
             {
                 _reportedMissingInput = true;
-                EventLogManager.Instance?.Log($"{DisplayName}: не хватает сырья ({DescribeInputs(recipe)})");
+                EventLogManager.Instance?.Log(Localization.Format("log.no_input", DisplayName, DescribeInputs(recipe)));
             }
             return false;
         }
@@ -245,7 +245,7 @@ namespace CityBuilder.Citizens
 
             if (_reportedOverflow) return;
             _reportedOverflow = true;
-            EventLogManager.Instance?.Log($"Некуда складывать: {data.displayName} работает впустую, нужно хранилище");
+            EventLogManager.Instance?.Log(Localization.Format("log.no_storage", data.LocalizedName));
         }
 
         private bool _reportedOverflow;

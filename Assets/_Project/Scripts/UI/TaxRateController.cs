@@ -1,4 +1,5 @@
-using CityBuilder.Resources;
+﻿using CityBuilder.Resources;
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,7 +33,7 @@ namespace CityBuilder.UI
         private void Refresh()
         {
             if (rateLabel == null || TaxManager.Instance == null) return;
-            rateLabel.text = $"Налог: {TaxManager.Instance.TaxRatePercent}%";
+            rateLabel.text = Localization.Format("tax.rate", TaxManager.Instance.TaxRatePercent);
         }
     }
 }

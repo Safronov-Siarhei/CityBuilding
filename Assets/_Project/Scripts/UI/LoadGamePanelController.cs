@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CityBuilder.Core;
 using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -114,7 +115,7 @@ namespace CityBuilder.UI
         private void UpdateSelectionUI()
         {
             if (loadSelectedButton != null) loadSelectedButton.interactable = !string.IsNullOrEmpty(_selectedName);
-            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : $"Выбрано: {_selectedName}";
+            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : Localization.Format("load.selected", _selectedName);
         }
     }
 }

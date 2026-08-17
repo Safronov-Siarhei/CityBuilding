@@ -61,7 +61,11 @@ namespace CityBuilder.Combat
         /// </summary>
         public static int MaxArmySize => BalanceConfig.Instance.ArmyMaxSize;
 
-        public static string DisplayName(SoldierType type) => Row(type).displayName;
+        /// <summary>
+        /// From the localization sheet under `unit.<type>`, not from the units tab's display_name --
+        /// that column stays as the sheet author's own label for the row, which nobody translates.
+        /// </summary>
+        public static string DisplayName(SoldierType type) => Localization.Get("unit." + type.ToString().ToLowerInvariant());
 
         /// <summary>Militia are meant to lose a 1v1 against a level 1 orc and win by numbers -- see ArmyBalanceTests, which pins that relationship down against whatever the sheet currently says.</summary>
         public static int MaxHealth(SoldierType type) => Row(type).maxHealth;

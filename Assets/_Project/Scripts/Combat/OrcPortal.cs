@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
@@ -65,7 +65,7 @@ namespace CityBuilder.Combat
             // Out of the registry before the event fires: handlers (the win check) ask how many
             // portals are left, and a destroyed one must not still be counted among them.
             _all.Remove(this);
-            EventLogManager.Instance?.Log("Портал орков разрушен!");
+            EventLogManager.Instance?.Log(Localization.Get("log.portal_destroyed"));
             OnPortalDestroyed?.Invoke(this);
             Destroy(gameObject);
         }

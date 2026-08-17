@@ -1,4 +1,4 @@
-using CityBuilder.Citizens;
+﻿using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,7 +34,7 @@ namespace CityBuilder.UI
 
             var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
             var tier = tierManager != null ? tierManager.CurrentTierName : string.Empty;
-            statusText.text = $"{tier} · День {day}";
+            statusText.text = Localization.Format("hud.status", tier, day);
         }
     }
 }

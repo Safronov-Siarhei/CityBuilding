@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -310,7 +310,7 @@ namespace CityBuilder.Buildings
 
             // Roads excluded -- laying a dozen tiles in a row would otherwise flood the log out
             // of usefulness (see EventLogManager).
-            if (!placedData.isRoad) EventLogManager.Instance?.Log($"Построено: {placedData.displayName}");
+            if (!placedData.isRoad) EventLogManager.Instance?.Log(Localization.Format("log.built", placedData.LocalizedName));
 
             // Roads (and anything else marked keepSelectedAfterPlacement) stay selected so the
             // player can lay several tiles in a row without reopening the hotbar each time.

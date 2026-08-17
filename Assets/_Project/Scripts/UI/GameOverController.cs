@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -31,12 +31,12 @@ namespace CityBuilder.UI
         {
             if (titleLabel != null)
             {
-                titleLabel.text = victory ? "Победа" : "Поражение";
+                titleLabel.text = Localization.Get(victory ? "over.victory" : "over.defeat");
                 titleLabel.color = victory ? VictoryColor : DefeatColor;
             }
             if (reasonLabel != null)
             {
-                reasonLabel.text = victory ? "Все порталы орков закрыты." : "Ратуша разрушена.";
+                reasonLabel.text = Localization.Get(victory ? "over.victory_reason" : "over.defeat_reason");
             }
 
             if (panelRoot != null) panelRoot.SetActive(true);

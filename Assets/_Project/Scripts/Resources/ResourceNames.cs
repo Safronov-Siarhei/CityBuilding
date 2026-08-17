@@ -1,34 +1,19 @@
+using CityBuilder.Core;
+
 namespace CityBuilder.Resources
 {
     /// <summary>
-    /// What a resource is called in the UI. The HUD says everything with icons, so this did not
-    /// exist until a building had to explain a conversion ("Мука из зерна") -- an icon pair alone
-    /// cannot say which of the two is the input.
+    /// What a resource is called in the UI.
+    ///
+    /// The name itself lives in the localization sheet under `resource.<Type>` -- the key is
+    /// derived from the enum rather than stored anywhere, so a new resource needs one row in the
+    /// sheet and no code at all. An untranslated one shows its key, which is the point: a blank
+    /// label would be a bug nobody notices.
     /// </summary>
     public static class ResourceNames
     {
-        public static string Of(ResourceType type)
-        {
-            switch (type)
-            {
-                case ResourceType.Wood: return "дерево";
-                case ResourceType.Stone: return "камень";
-                case ResourceType.Food: return "еда";
-                // Iron and Gold are the ore, not the metal -- see the note on ResourceType.
-                case ResourceType.Gold: return "золотая руда";
-                case ResourceType.Population: return "жители";
-                case ResourceType.Iron: return "железная руда";
-                case ResourceType.CopperOre: return "медная руда";
-                case ResourceType.IronBar: return "железный слиток";
-                case ResourceType.CopperBar: return "медный слиток";
-                case ResourceType.GoldBar: return "золотой слиток";
-                case ResourceType.Coal: return "уголь";
-                case ResourceType.Coins: return "монеты";
-                case ResourceType.Grain: return "пшеница";
-                case ResourceType.Flour: return "мука";
-                case ResourceType.Bread: return "хлеб";
-                default: return type.ToString();
-            }
-        }
+        public static string Of(ResourceType type) => Localization.Get(KeyFor(type));
+
+        public static string KeyFor(ResourceType type) => "resource." + type;
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -129,7 +129,7 @@ namespace CityBuilder.Resources
         {
             if (shortfall <= 0)
             {
-                if (HungryDaysInARow > 0) EventLogManager.Instance?.Log("Поселение снова сыто.");
+                if (HungryDaysInARow > 0) EventLogManager.Instance?.Log(Localization.Get("log.fed"));
                 HungryDaysInARow = 0;
                 return 0;
             }
@@ -139,7 +139,7 @@ namespace CityBuilder.Resources
             var config = BalanceConfig.Instance;
             if (HungryDaysInARow < config.HungryDaysBeforeDeaths)
             {
-                EventLogManager.Instance?.Log($"Голод: не хватает еды ({shortfall}). Люди начнут умирать, если не накормить.");
+                EventLogManager.Instance?.Log(Localization.Format("log.hungry", shortfall));
                 return 0;
             }
 
@@ -148,7 +148,7 @@ namespace CityBuilder.Resources
             var deaths = citizenManager.KillCitizens(ComputeStarvationDeaths(shortfall));
             if (deaths <= 0) return 0;
 
-            EventLogManager.Instance?.Log($"Голод: умерло жителей — {deaths}");
+            EventLogManager.Instance?.Log(Localization.Format("log.starved", deaths));
             return deaths;
         }
 

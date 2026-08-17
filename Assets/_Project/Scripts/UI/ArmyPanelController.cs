@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Combat;
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -69,7 +70,7 @@ namespace CityBuilder.UI
 
             if (summaryLabel != null)
             {
-                summaryLabel.text = $"Армия: {army.SoldierCount}/{SoldierStats.MaxArmySize}   Содержание: {army.DailyUpkeep} мон./день";
+                summaryLabel.text = Localization.Format("army.summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
             }
 
             var index = 0;
@@ -129,7 +130,7 @@ namespace CityBuilder.UI
 
         private static string PriorityLabel(TargetPriority priority)
         {
-            return priority == TargetPriority.Units ? "Цель: враги" : "Цель: строения";
+            return Localization.Get(priority == TargetPriority.Units ? "army.target_units" : "army.target_buildings");
         }
 
         private Button CreateButton(Transform parent, string name, string label, Color background, Color textColor)

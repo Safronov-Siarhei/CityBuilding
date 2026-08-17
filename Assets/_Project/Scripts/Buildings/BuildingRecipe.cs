@@ -24,8 +24,11 @@ namespace CityBuilder.Buildings
         /// <summary>Stable id, saved with the building so a reloaded furnace is still set to the metal the player chose.</summary>
         public string id = string.Empty;
 
-        /// <summary>What the player sees on the selector button -- "Железный слиток".</summary>
+        /// <summary>The recipes tab's own Russian label. What the player actually reads is <see cref="LocalizedName"/>.</summary>
         public string displayName = string.Empty;
+
+        /// <summary>What goes on the selector button -- the localization sheet's `recipe.<id>`, falling back to the sheet's own label.</summary>
+        public string LocalizedName => Core.Localization.GetOrDefault("recipe." + id, displayName);
 
         /// <summary>
         /// Everything one batch consumes. Empty for a gatherer: a mine makes ore out of the ground,
@@ -56,7 +59,7 @@ namespace CityBuilder.Buildings
                 eaten.Append(input.amount).Append(' ').Append(ResourceNames.Of(input.type));
             }
 
-            return $"{eaten} -> {made}";
+            return Core.Localization.Format("recipe.conversion", eaten.ToString(), made);
         }
     }
 }

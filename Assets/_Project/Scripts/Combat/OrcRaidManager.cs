@@ -209,7 +209,7 @@ namespace CityBuilder.Combat
             // Only starts counting once the portal actually exists, so the player isn't raided
             // from nowhere during the time it takes them to place the Town Hall.
             _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
-            EventLogManager.Instance?.Log("На карте открылся портал орков.");
+            EventLogManager.Instance?.Log(Localization.Get("log.portal_opened"));
         }
 
         private void AddPortalPart(Transform parent, Vector3 localPosition, Vector3 size)
@@ -229,7 +229,7 @@ namespace CityBuilder.Combat
             var size = ComputeRaidSize(day);
 
             SpawnOrcs(_portalPosition, size, level: 1);
-            EventLogManager.Instance?.Log($"Орки начали набег ({size})");
+            EventLogManager.Instance?.Log(Localization.Format("log.raid", size));
         }
 
         /// <summary>

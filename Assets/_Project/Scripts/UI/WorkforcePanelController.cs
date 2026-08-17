@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
 using CityBuilder.Resources;
@@ -119,7 +119,7 @@ namespace CityBuilder.UI
             if (summaryLabel != null)
             {
                 var total = citizens != null ? citizens.TotalPopulation : 0;
-                summaryLabel.text = $"Свободных жителей: {idle}   ·   Всего: {total}";
+                summaryLabel.text = Localization.Format("workforce.summary", idle, total);
             }
 
             var lostABuilding = false;
@@ -156,9 +156,9 @@ namespace CityBuilder.UI
             if (building == null) return string.Empty;
 
             var recipe = building.SelectedRecipe;
-            if (recipe == null) return "ничего не производит";
+            if (recipe == null) return Localization.Get("workforce.idle_building");
 
-            return $"даёт {recipe.Describe()}";
+            return Localization.Format("workforce.gives", recipe.Describe());
         }
 
         private void CreateRow(ProductionBuilding building)

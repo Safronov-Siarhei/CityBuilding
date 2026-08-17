@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,15 +27,18 @@ namespace CityBuilder.UI
 
             if (happinessLabel != null)
             {
-                happinessLabel.text = $"Довольство: {HappinessManager.Instance.HappinessPercent}%";
+                happinessLabel.text = Localization.Format("happiness.title", HappinessManager.Instance.HappinessPercent);
                 happinessLabel.color = ColorForScore(HappinessManager.Instance.HappinessPercent);
             }
             if (breakdownLabel != null)
             {
                 // Two lines: five factors do not fit across the panel's width at this font size.
-                breakdownLabel.text =
-                    $"Налог {HappinessManager.Instance.TaxScore} · Ветхость {HappinessManager.Instance.DecayScore} · Оборона {HappinessManager.Instance.DefenseScore}\n" +
-                    $"Еда {HappinessManager.Instance.FoodScore} · Потери {HappinessManager.Instance.DeathScore}";
+                // The line break lives in the translation, so a language with longer words can
+                // break somewhere else without a code change.
+                breakdownLabel.text = Localization.Format("happiness.breakdown",
+                    HappinessManager.Instance.TaxScore, HappinessManager.Instance.DecayScore,
+                    HappinessManager.Instance.DefenseScore, HappinessManager.Instance.FoodScore,
+                    HappinessManager.Instance.DeathScore);
             }
         }
 

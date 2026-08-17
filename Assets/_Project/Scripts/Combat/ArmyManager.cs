@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -121,13 +121,13 @@ namespace CityBuilder.Combat
         /// </summary>
         public string DescribeRecruitBlocker(SoldierType type)
         {
-            if (SoldierCount >= SoldierStats.MaxArmySize) return $"Армия полна ({SoldierStats.MaxArmySize})";
+            if (SoldierCount >= SoldierStats.MaxArmySize) return Localization.Format("army.full", SoldierStats.MaxArmySize);
 
             var citizens = CitizenManager.Instance;
-            if (citizens == null || citizens.IdlePopulation <= 0) return "Нет свободных жителей";
+            if (citizens == null || citizens.IdlePopulation <= 0) return Localization.Get("army.no_citizens");
 
             var resources = ResourceManager.Instance;
-            if (resources != null && !resources.HasEnough(SoldierStats.RecruitCost(type))) return "Не хватает монет";
+            if (resources != null && !resources.HasEnough(SoldierStats.RecruitCost(type))) return Localization.Get("army.no_coins");
 
             return null;
         }
@@ -155,7 +155,7 @@ namespace CityBuilder.Combat
             var unit = SpawnSoldier(type, position, group);
             group.Add(unit);
 
-            EventLogManager.Instance?.Log($"{SoldierStats.DisplayName(type)}: нанят боец ({SoldierCount}/{SoldierStats.MaxArmySize})");
+            EventLogManager.Instance?.Log(Localization.Format("log.recruited", SoldierStats.DisplayName(type), SoldierCount, SoldierStats.MaxArmySize));
             OnArmyChanged?.Invoke();
             return true;
         }
@@ -178,7 +178,7 @@ namespace CityBuilder.Combat
 
             RemoveFromGroup(unit);
             Destroy(unit.gameObject);
-            EventLogManager.Instance?.Log("Боец погиб в бою.");
+            EventLogManager.Instance?.Log(Localization.Get("log.soldier_died"));
             OnArmyChanged?.Invoke();
         }
 
@@ -209,7 +209,7 @@ namespace CityBuilder.Combat
 
             if (disbanded > 0)
             {
-                EventLogManager.Instance?.Log($"Нечем платить содержание: распущено бойцов — {disbanded}");
+                EventLogManager.Instance?.Log(Localization.Format("log.disbanded", disbanded));
             }
 
             var upkeep = DailyUpkeep;

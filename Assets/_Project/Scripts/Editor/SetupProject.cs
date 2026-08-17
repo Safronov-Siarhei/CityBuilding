@@ -152,18 +152,22 @@ namespace CityBuilder.EditorTools
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 1f;
 
-            CreateText(canvasGO.transform, "Title", "СТРОИТЕЛЬ ГОРОДОВ", 72, new Vector2(0f, 260f), new Vector2(1200f, 140f), addShadow: true);
-            CreateText(canvasGO.transform, "Subtitle", "мобильный градостроитель", 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f), addShadow: true);
+            Localize(CreateText(canvasGO.transform, "Title", string.Empty, 72, new Vector2(0f, 260f), new Vector2(1200f, 140f), addShadow: true), "menu.title");
+            Localize(CreateText(canvasGO.transform, "Subtitle", string.Empty, 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f), addShadow: true), "menu.subtitle");
 
             var menuController = canvasGO.AddComponent<MainMenuController>();
 
-            var newGameButton = CreateButton(canvasGO.transform, panelSprite, "NewGameButton", "Новая игра", new Vector2(0f, 60f), new Vector2(460f, 100f));
+            var newGameButton = CreateButton(canvasGO.transform, panelSprite, "NewGameButton", "menu.new_game", new Vector2(0f, 60f), new Vector2(460f, 100f));
             UnityEventTools.AddPersistentListener(newGameButton.onClick, menuController.StartNewGame);
 
-            var loadGameButton = CreateButton(canvasGO.transform, panelSprite, "LoadGameButton", "Загрузить игру", new Vector2(0f, -64f), new Vector2(460f, 100f));
+            var loadGameButton = CreateButton(canvasGO.transform, panelSprite, "LoadGameButton", "menu.load_game", new Vector2(0f, -64f), new Vector2(460f, 100f));
             UnityEventTools.AddPersistentListener(loadGameButton.onClick, menuController.LoadGame);
 
-            var quitButton = CreateButton(canvasGO.transform, panelSprite, "QuitButton", "Выход", new Vector2(0f, -188f), new Vector2(460f, 100f));
+            // The stack grew a fourth entry, so everything below the load button moved down one
+            // slot (124 apart, as the three above already were).
+            var settingsButton = CreateButton(canvasGO.transform, panelSprite, "SettingsButton", "menu.settings", new Vector2(0f, -188f), new Vector2(460f, 100f));
+
+            var quitButton = CreateButton(canvasGO.transform, panelSprite, "QuitButton", "menu.quit", new Vector2(0f, -312f), new Vector2(460f, 100f));
             UnityEventTools.AddPersistentListener(quitButton.onClick, menuController.QuitGame);
 
             var menuControllerSO = new SerializedObject(menuController);
@@ -171,10 +175,58 @@ namespace CityBuilder.EditorTools
             menuControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildLoadPanel(canvasGO.transform, panelSprite, menuController);
+            BuildSettingsPanel(canvasGO.transform, panelSprite, settingsButton);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/MainMenu.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/MainMenu.unity");
+        }
+
+        /// <summary>
+        /// The settings card, on the main menu. The language buttons inside are built at play time
+        /// from whatever columns the localization sheet has -- see SettingsPanelController -- so a
+        /// third language never needs this method touched.
+        /// </summary>
+        private static void BuildSettingsPanel(Transform canvasParent, Sprite panelSprite, Button openButton)
+        {
+            var panelRoot = new GameObject("SettingsPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(760f, 420f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 140f), new Vector2(680f, 70f)), "settings.title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 66f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "settings.language");
+
+            var languageRow = new GameObject("LanguageRow", typeof(RectTransform));
+            languageRow.transform.SetParent(card.transform, false);
+            var languageRowRect = languageRow.GetComponent<RectTransform>();
+            languageRowRect.anchorMin = languageRowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            languageRowRect.anchoredPosition = new Vector2(0f, -10f);
+            languageRowRect.sizeDelta = new Vector2(700f, 72f);
+
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "settings.back", new Vector2(0f, -140f), new Vector2(300f, 80f));
+
+            var controller = panelRoot.AddComponent<SettingsPanelController>();
+            var controllerSO = new SerializedObject(controller);
+            controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
+            controllerSO.FindProperty("buttonSprite").objectReferenceValue = panelSprite;
+            controllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(backButton.onClick, controller.ClosePanel);
+            UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
+
+            panelRoot.SetActive(false);
         }
 
         private static void BuildCityScene()
@@ -640,7 +692,7 @@ namespace CityBuilder.EditorTools
             hintRect.anchoredPosition = new Vector2(0f, -70f);
             hintRect.sizeDelta = new Vector2(780f, 84f);
             var footprint = mandatoryBuilding != null ? mandatoryBuilding.footprintSize : new Vector2Int(4, 4);
-            CreateText(hintRoot.transform, "Text", $"Выберите место для Ратуши ({footprint.x}x{footprint.y})", 30, Vector2.zero, new Vector2(740f, 74f));
+            CreateText(hintRoot.transform, "Text", Localization.Format("hud.place_hint", footprint.x, footprint.y), 30, Vector2.zero, new Vector2(740f, 74f));
 
             // Touch-friendly building hotbar, grouped into categories (a small category row above
             // it picks which category's buildings the hotbar shows -- see BuildingCategoryPanel).
@@ -920,13 +972,13 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(960f, 780f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            CreateText(card.transform, "Title", "Жители и работы", 34, new Vector2(0f, 320f), new Vector2(880f, 60f));
+            Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 320f), new Vector2(880f, 60f)), "workforce.title");
             var summaryLabel = CreateText(card.transform, "Summary", string.Empty, 22, new Vector2(0f, 272f), new Vector2(880f, 40f), new Color(1f, 1f, 1f, 0.8f));
 
             BuildScrollList(card.transform, new Vector2(0f, -20f), new Vector2(900f, 520f),
-                "Пока негде работать — постройте производство", out var content, out var emptyLabelGO);
+                "workforce.empty", out var content, out var emptyLabelGO);
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -320f), new Vector2(300f, 70f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "ui.close", new Vector2(0f, -320f), new Vector2(300f, 70f));
 
             var controller = panelRoot.AddComponent<WorkforcePanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -941,7 +993,7 @@ namespace CityBuilder.EditorTools
 
             // In the top row's left gap: Меню occupies -930..-690 and the settlement status text
             // -250..250, so a 240-wide button centred at -520 sits clear of both.
-            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "Жители", new Vector2(-520f, 465f), new Vector2(240f, 90f));
+            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "hud.workforce", new Vector2(-520f, 465f), new Vector2(240f, 90f));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);
@@ -1222,22 +1274,22 @@ namespace CityBuilder.EditorTools
 
             var workers = CreateText(workerControls.transform, "Workers", string.Empty, 26, new Vector2(0f, 105f), new Vector2(640f, 50f), new Color(1f, 1f, 1f, 0.85f));
             var idle = CreateText(workerControls.transform, "Idle", string.Empty, 22, new Vector2(0f, 65f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
-            var assignButton = CreateButton(workerControls.transform, panelSprite, "AssignButton", "+ Назначить", new Vector2(-170f, 10f), new Vector2(300f, 80f));
-            var unassignButton = CreateButton(workerControls.transform, panelSprite, "UnassignButton", "- Снять", new Vector2(170f, 10f), new Vector2(300f, 80f));
+            var assignButton = CreateButton(workerControls.transform, panelSprite, "AssignButton", "building.assign", new Vector2(-170f, 10f), new Vector2(300f, 80f));
+            var unassignButton = CreateButton(workerControls.transform, panelSprite, "UnassignButton", "building.unassign", new Vector2(170f, 10f), new Vector2(300f, 80f));
 
             var upgradeControls = new GameObject("UpgradeControls", typeof(RectTransform));
             upgradeControls.transform.SetParent(card.transform, false);
             StretchFull(upgradeControls.GetComponent<RectTransform>());
 
             var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(0f, -55f));
-            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "Улучшить", new Vector2(0f, -125f), new Vector2(360f, 70f));
+            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "building.upgrade", new Vector2(0f, -125f), new Vector2(360f, 70f));
 
             var repairControls = new GameObject("RepairControls", typeof(RectTransform));
             repairControls.transform.SetParent(card.transform, false);
             StretchFull(repairControls.GetComponent<RectTransform>());
 
             var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(0f, -195f));
-            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "Отремонтировать", new Vector2(0f, -265f), new Vector2(360f, 70f));
+            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "building.repair", new Vector2(0f, -265f), new Vector2(360f, 70f));
 
             // Recruitment (Barracks only) reuses the worker block's slot on the card: the two are
             // mutually exclusive in practice -- the Barracks has no maxWorkers, so its worker
@@ -1248,9 +1300,9 @@ namespace CityBuilder.EditorTools
 
             var recruitLabel = CreateText(recruitControls.transform, "RecruitLabel", string.Empty, 22, new Vector2(0f, 105f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.8f));
             var recruitCostRow = CreateCostRow(recruitControls.transform, "RecruitCostRow", new Vector2(0f, 62f));
-            var recruitButton = CreateButton(recruitControls.transform, panelSprite, "RecruitButton", "Нанять ополченца", new Vector2(0f, 10f), new Vector2(360f, 70f));
+            var recruitButton = CreateButton(recruitControls.transform, panelSprite, "RecruitButton", "building.recruit", new Vector2(0f, 10f), new Vector2(360f, 70f));
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "Закрыть", new Vector2(0f, -345f), new Vector2(300f, 70f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "ui.close", new Vector2(0f, -345f), new Vector2(300f, 70f));
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -1321,7 +1373,7 @@ namespace CityBuilder.EditorTools
 
         private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
         {
-            var menuButton = CreateButton(canvasParent, panelSprite, "MenuButton", "Меню", new Vector2(-810f, 465f), new Vector2(240f, 90f));
+            var menuButton = CreateButton(canvasParent, panelSprite, "MenuButton", "hud.menu", new Vector2(-810f, 465f), new Vector2(240f, 90f));
 
             var dialogRoot = new GameObject("ExitDialog", typeof(RectTransform));
             dialogRoot.transform.SetParent(canvasParent, false);
@@ -1338,11 +1390,11 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(760f, 380f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            CreateText(card.transform, "Title", "Выйти в главное меню?", 36, new Vector2(0f, 120f), new Vector2(680f, 70f));
-            CreateText(card.transform, "Warning", "Несохранённые изменения будут потеряны.", 24, new Vector2(0f, 40f), new Vector2(680f, 60f), new Color(1f, 0.7f, 0.6f, 1f));
+            Localize(CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 120f), new Vector2(680f, 70f)), "exit.title");
+            Localize(CreateText(card.transform, "Warning", string.Empty, 24, new Vector2(0f, 40f), new Vector2(680f, 60f), new Color(1f, 0.7f, 0.6f, 1f)), "exit.warning");
 
-            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmExitButton", "Выйти", new Vector2(-160f, -90f), new Vector2(300f, 90f));
-            var cancelButton = CreateButton(card.transform, panelSprite, "CancelExitButton", "Отмена", new Vector2(160f, -90f), new Vector2(300f, 90f));
+            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmExitButton", "exit.confirm", new Vector2(-160f, -90f), new Vector2(300f, 90f));
+            var cancelButton = CreateButton(card.transform, panelSprite, "CancelExitButton", "ui.cancel", new Vector2(160f, -90f), new Vector2(300f, 90f));
 
             var dialogController = dialogRoot.AddComponent<ExitToMenuController>();
             var dialogSO = new SerializedObject(dialogController);
@@ -1376,10 +1428,10 @@ namespace CityBuilder.EditorTools
 
             // Text and colour are set per outcome by GameOverController -- one panel serves both
             // the defeat and the "all portals closed" victory.
-            var title = CreateText(card.transform, "Title", "Поражение", 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
-            var reason = CreateText(card.transform, "Reason", "Ратуша разрушена.", 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
+            var title = CreateText(card.transform, "Title", string.Empty, 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
+            var reason = CreateText(card.transform, "Reason", string.Empty, 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
 
-            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "В главное меню", new Vector2(0f, -100f), new Vector2(360f, 90f));
+            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "over.to_menu", new Vector2(0f, -100f), new Vector2(360f, 90f));
 
             // The controller lives on its own always-active object, NOT on the panel it shows.
             // A component on a deactivated GameObject never gets Start(), so putting it on
@@ -1404,7 +1456,7 @@ namespace CityBuilder.EditorTools
         {
             // Manual save only, per design: the player decides if/when to save, so this button
             // is the only way a save ever happens — there is no autosave to fall back on.
-            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "Сохранить", new Vector2(810f, 465f), new Vector2(240f, 90f));
+            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "hud.save", new Vector2(810f, 465f), new Vector2(240f, 90f));
 
             var dialogRoot = new GameObject("SaveDialog", typeof(RectTransform));
             dialogRoot.transform.SetParent(canvasParent, false);
@@ -1421,12 +1473,12 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(760f, 420f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            CreateText(card.transform, "Title", "Сохранить игру", 40, new Vector2(0f, 150f), new Vector2(680f, 70f));
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 150f), new Vector2(680f, 70f)), "save.title");
 
             var nameInput = CreateInputField(card.transform, "NameInput", "MyCityName", new Vector2(0f, 30f), new Vector2(600f, 90f), panelSprite);
 
-            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmSaveButton", "Сохранить", new Vector2(-160f, -100f), new Vector2(300f, 90f));
-            var cancelButton = CreateButton(card.transform, panelSprite, "CancelSaveButton", "Отмена", new Vector2(160f, -100f), new Vector2(300f, 90f));
+            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmSaveButton", "save.confirm", new Vector2(-160f, -100f), new Vector2(300f, 90f));
+            var cancelButton = CreateButton(card.transform, panelSprite, "CancelSaveButton", "ui.cancel", new Vector2(160f, -100f), new Vector2(300f, 90f));
 
             var dialogController = dialogRoot.AddComponent<SaveDialogController>();
             var dialogSO = new SerializedObject(dialogController);
@@ -1459,14 +1511,14 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(1000f, 760f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            CreateText(card.transform, "Title", "Загрузить игру", 48, new Vector2(0f, 320f), new Vector2(900f, 80f));
+            Localize(CreateText(card.transform, "Title", string.Empty, 48, new Vector2(0f, 320f), new Vector2(900f, 80f)), "load.title");
 
-            BuildScrollList(card.transform, new Vector2(0f, 60f), new Vector2(900f, 420f), "Нет сохранений", out var content, out var emptyLabelGO);
+            BuildScrollList(card.transform, new Vector2(0f, 60f), new Vector2(900f, 420f), "load.empty", out var content, out var emptyLabelGO);
 
             var selectedLabel = CreateText(card.transform, "SelectedLabel", string.Empty, 26, new Vector2(0f, -170f), new Vector2(900f, 50f), new Color(1f, 1f, 1f, 0.8f));
 
-            var loadButton = CreateButton(card.transform, panelSprite, "LoadSelectedButton", "Загрузить", new Vector2(-190f, -270f), new Vector2(360f, 90f));
-            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "Назад", new Vector2(190f, -270f), new Vector2(360f, 90f));
+            var loadButton = CreateButton(card.transform, panelSprite, "LoadSelectedButton", "load.confirm", new Vector2(-190f, -270f), new Vector2(360f, 90f));
+            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "ui.back", new Vector2(190f, -270f), new Vector2(360f, 90f));
 
             var panelController = panelRoot.AddComponent<LoadGamePanelController>();
             var panelSO = new SerializedObject(panelController);
@@ -1489,7 +1541,7 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>A scrollable, vertically stacked list whose rows are built at runtime -- the save browser's slots, the workforce panel's workplaces.</summary>
-        private static void BuildScrollList(Transform parent, Vector2 position, Vector2 size, string emptyText, out RectTransform content, out GameObject emptyLabelGO)
+        private static void BuildScrollList(Transform parent, Vector2 position, Vector2 size, string emptyKey, out RectTransform content, out GameObject emptyLabelGO)
         {
             var scrollGO = new GameObject("ScrollView", typeof(RectTransform), typeof(ScrollRect));
             scrollGO.transform.SetParent(parent, false);
@@ -1531,7 +1583,7 @@ namespace CityBuilder.EditorTools
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
-            var emptyLabel = CreateText(viewportGO.transform, "EmptyLabel", emptyText, 28, Vector2.zero, new Vector2(700f, 80f), new Color(1f, 1f, 1f, 0.6f));
+            var emptyLabel = Localize(CreateText(viewportGO.transform, "EmptyLabel", string.Empty, 28, Vector2.zero, new Vector2(700f, 80f), new Color(1f, 1f, 1f, 0.6f)), emptyKey);
 
             content = contentRect;
             emptyLabelGO = emptyLabel.gameObject;
@@ -3323,7 +3375,19 @@ namespace CityBuilder.EditorTools
             return text;
         }
 
-        private static Button CreateButton(Transform parent, Sprite sprite, string name, string label, Vector2 anchoredPos, Vector2 sizeDelta)
+        /// <summary>Hangs a LocalizedText on a fixed caption so it fills itself in and follows a language change. Returns the label, so it can wrap a CreateText call inline.</summary>
+        private static Text Localize(Text label, string key)
+        {
+            label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+            return label;
+        }
+
+        /// <summary>
+        /// A button whose caption comes from the localization sheet: `labelKey` is a key, not text.
+        /// The label carries a LocalizedText, so it re-reads itself when the player switches
+        /// language without anything having to hunt down every button in the scene.
+        /// </summary>
+        private static Button CreateButton(Transform parent, Sprite sprite, string name, string labelKey, Vector2 anchoredPos, Vector2 sizeDelta)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
@@ -3337,7 +3401,7 @@ namespace CityBuilder.EditorTools
             image.type = Image.Type.Sliced;
             image.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
-            CreateText(go.transform, "Label", label, 28, Vector2.zero, sizeDelta - new Vector2(20f, 20f));
+            Localize(CreateText(go.transform, "Label", string.Empty, 28, Vector2.zero, sizeDelta - new Vector2(20f, 20f)), labelKey);
             return go.GetComponent<Button>();
         }
 

@@ -75,7 +75,7 @@ namespace CityBuilder.Core
 
             if (IsGameOver || !_hadCitizens) return;
 
-            EndGame(victory: false, "Поражение: в поселении не осталось жителей.");
+            EndGame(victory: false, Localization.Get("log.defeat_empty"));
         }
 
         private bool _hadCitizens;
@@ -84,7 +84,7 @@ namespace CityBuilder.Core
         {
             if (IsGameOver || instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) return;
 
-            EndGame(victory: false, "Поражение: Ратуша разрушена.");
+            EndGame(victory: false, Localization.Get("log.defeat_townhall"));
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace CityBuilder.Core
         {
             if (IsGameOver || OrcPortal.All.Count > 0) return;
 
-            EndGame(victory: true, "Победа: все порталы орков закрыты!");
+            EndGame(victory: true, Localization.Get("log.victory"));
         }
 
         private void EndGame(bool victory, string logMessage)

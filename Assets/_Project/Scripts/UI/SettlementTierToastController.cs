@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
@@ -25,9 +25,9 @@ namespace CityBuilder.UI
         {
             if (toastText == null) return;
 
-            toastText.text = $"Поселение выросло. Теперь это: {tierName}.";
+            toastText.text = Localization.Format("log.tier_up", tierName);
             toastText.gameObject.SetActive(true);
-            EventLogManager.Instance?.Log($"Поселение выросло. Теперь это: {tierName}.");
+            EventLogManager.Instance?.Log(Localization.Format("log.tier_up", tierName));
 
             if (_hideRoutine != null) StopCoroutine(_hideRoutine);
             _hideRoutine = StartCoroutine(HideAfterDelay());

@@ -14,20 +14,21 @@ namespace CityBuilder.Citizens
     {
         public static SettlementTierManager Instance { get; private set; }
 
-        private static readonly (int minPopulation, string name)[] Tiers =
+        // Localization keys, not names: the tier's text lives in the sheet under tier.<code>.
+        private static readonly (int minPopulation, string key)[] Tiers =
         {
-            (0, "Хутор"),
-            (20, "Деревня"),
-            (50, "Городок"),
-            (100, "Город"),
-            (200, "Королевство"),
+            (0, "tier.hamlet"),
+            (20, "tier.village"),
+            (50, "tier.town"),
+            (100, "tier.city"),
+            (200, "tier.kingdom"),
         };
 
         [SerializeField] private CitizenManager citizenManager;
 
         private int _currentTierIndex = -1;
 
-        public string CurrentTierName => Tiers[Mathf.Max(0, _currentTierIndex)].name;
+        public string CurrentTierName => Core.Localization.Get(Tiers[Mathf.Max(0, _currentTierIndex)].key);
 
         /// <summary>Fired with the new tier's name only when population growth actually crosses into it (not on the initial silent resolve at scene load).</summary>
         public event Action<string> OnTierChanged;
@@ -64,7 +65,7 @@ namespace CityBuilder.Citizens
             if (resolvedIndex <= _currentTierIndex) return;
 
             _currentTierIndex = resolvedIndex;
-            OnTierChanged?.Invoke(Tiers[resolvedIndex].name);
+            OnTierChanged?.Invoke(Core.Localization.Get(Tiers[resolvedIndex].key));
         }
 
         /// <summary>Public so EditMode tests can cover the tier-boundary math directly.</summary>

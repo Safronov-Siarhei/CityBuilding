@@ -48,7 +48,7 @@ namespace CityBuilder.Buildings
     {
         [Header("Identity")]
         public string buildingName = "Building"; // stable id — used for save files and catalog lookup
-        public string displayName = "Building"; // shown in UI
+        public string displayName = "Building"; // the sheet's own Russian label; the fallback for LocalizedName
         public GameObject prefab;
         public Vector2Int footprintSize = Vector2Int.one;
         public List<ResourceAmount> cost = new List<ResourceAmount>();
@@ -118,6 +118,9 @@ namespace CityBuilder.Buildings
         // (by buildingName -- see BuildingInstance.HasAny) must exist before this one can be
         // placed. Checked by BuildingPlacer alongside affordability, not by GridManager.
         public BuildingData requiredBuilding;
+
+        /// <summary>What to show the player: the localization sheet's `building.<id>`, falling back to the buildings tab's own display_name.</summary>
+        public string LocalizedName => Core.Localization.GetOrDefault("building." + buildingName, displayName);
 
         /// <summary>
         /// This building's stats at the given level (1..3), clamped into whatever the sheet

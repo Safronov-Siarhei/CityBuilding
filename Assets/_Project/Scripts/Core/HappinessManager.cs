@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Resources;
@@ -145,12 +145,12 @@ namespace CityBuilder.Core
             if (!_isCritical && HappinessPercent <= CriticalThreshold)
             {
                 _isCritical = true;
-                EventLogManager.Instance?.Log($"Довольство упало до критического уровня ({HappinessPercent}%)");
+                EventLogManager.Instance?.Log(Localization.Format("log.happiness_low", HappinessPercent));
             }
             else if (_isCritical && HappinessPercent >= RecoveredThreshold)
             {
                 _isCritical = false;
-                EventLogManager.Instance?.Log($"Довольство восстановилось ({HappinessPercent}%)");
+                EventLogManager.Instance?.Log(Localization.Format("log.happiness_recovered", HappinessPercent));
             }
         }
 

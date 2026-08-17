@@ -1,0 +1,736 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1483708f10e1e204d88f0a1f831da1b9, type: 3}
+  m_Name: LocalizationConfig
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Core.LocalizationConfig
+  languages:
+  - ru
+  - en
+  entries:
+  - key: menu.title
+    values:
+    - "\u0421\u0422\u0420\u041E\u0418\u0422\u0415\u041B\u042C \u0413\u041E\u0420\u041E\u0414\u041E\u0412"
+    - CITY BUILDER
+  - key: menu.subtitle
+    values:
+    - "\u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0433\u0440\u0430\u0434\u043E\u0441\u0442\u0440\u043E\u0438\u0442\u0435\u043B\u044C"
+    - a mobile city builder
+  - key: menu.new_game
+    values:
+    - "\u041D\u043E\u0432\u0430\u044F \u0438\u0433\u0440\u0430"
+    - New Game
+  - key: menu.load_game
+    values:
+    - "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438\u0433\u0440\u0443"
+    - Load Game
+  - key: menu.settings
+    values:
+    - "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438"
+    - Settings
+  - key: menu.quit
+    values:
+    - "\u0412\u044B\u0445\u043E\u0434"
+    - Quit
+  - key: settings.title
+    values:
+    - "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438"
+    - Settings
+  - key: settings.language
+    values:
+    - "\u042F\u0437\u044B\u043A"
+    - Language
+  - key: settings.back
+    values:
+    - "\u041D\u0430\u0437\u0430\u0434"
+    - Back
+  - key: ui.close
+    values:
+    - "\u0417\u0430\u043A\u0440\u044B\u0442\u044C"
+    - Close
+  - key: ui.cancel
+    values:
+    - "\u041E\u0442\u043C\u0435\u043D\u0430"
+    - Cancel
+  - key: ui.back
+    values:
+    - "\u041D\u0430\u0437\u0430\u0434"
+    - Back
+  - key: ui.free
+    values:
+    - "\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E"
+    - Free
+  - key: hud.menu
+    values:
+    - "\u041C\u0435\u043D\u044E"
+    - Menu
+  - key: hud.save
+    values:
+    - "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C"
+    - Save
+  - key: hud.workforce
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0438"
+    - Citizens
+  - key: hud.status
+    values:
+    - "{0} \xB7 \u0414\u0435\u043D\u044C {1}"
+    - "{0} \xB7 Day {1}"
+  - key: hud.place_hint
+    values:
+    - "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043C\u0435\u0441\u0442\u043E
+      \u0434\u043B\u044F \u0420\u0430\u0442\u0443\u0448\u0438 ({0}x{1})"
+    - Choose a spot for the Town Hall ({0}x{1})
+  - key: exit.title
+    values:
+    - "\u0412\u044B\u0439\u0442\u0438 \u0432 \u0433\u043B\u0430\u0432\u043D\u043E\u0435
+      \u043C\u0435\u043D\u044E?"
+    - Return to the main menu?
+  - key: exit.warning
+    values:
+    - "\u041D\u0435\u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435
+      \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0431\u0443\u0434\u0443\u0442
+      \u043F\u043E\u0442\u0435\u0440\u044F\u043D\u044B."
+    - Unsaved progress will be lost.
+  - key: exit.confirm
+    values:
+    - "\u0412\u044B\u0439\u0442\u0438"
+    - Quit
+  - key: save.title
+    values:
+    - "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0438\u0433\u0440\u0443"
+    - Save Game
+  - key: save.confirm
+    values:
+    - "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C"
+    - Save
+  - key: load.title
+    values:
+    - "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438\u0433\u0440\u0443"
+    - Load Game
+  - key: load.empty
+    values:
+    - "\u041D\u0435\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0439"
+    - No saved games
+  - key: load.confirm
+    values:
+    - "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C"
+    - Load
+  - key: load.selected
+    values:
+    - "\u0412\u044B\u0431\u0440\u0430\u043D\u043E: {0}"
+    - 'Selected: {0}'
+  - key: building.level
+    values:
+    - "\u0423\u0440\u043E\u0432\u0435\u043D\u044C: {0} / {1}"
+    - 'Level: {0} / {1}'
+  - key: building.condition
+    values:
+    - "\u041F\u0440\u043E\u0447\u043D\u043E\u0441\u0442\u044C: {0}/{1}   \u0417\u0430\u0449\u0438\u0442\u0430:
+      {2}   \u0412\u0435\u0442\u0445\u043E\u0441\u0442\u044C: {3}"
+    - 'Health: {0}/{1}   Defence: {2}   Wear: {3}'
+  - key: building.no_decay
+    values:
+    - "\u043D\u0435 \u0438\u0437\u043D\u0430\u0448\u0438\u0432\u0430\u0435\u0442\u0441\u044F"
+    - never wears out
+  - key: building.workers
+    values:
+    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435: {0} / {1}"
+    - 'Workers: {0} / {1}'
+  - key: building.idle_citizens
+    values:
+    - "\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445 \u0436\u0438\u0442\u0435\u043B\u0435\u0439:
+      {0}"
+    - 'Idle citizens: {0}'
+  - key: building.produces
+    values:
+    - "\u041F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442: {0} / {1} \u0441
+      \u043D\u0430 \u0440\u0430\u0431\u043E\u0442\u043D\u0438\u043A\u0430"
+    - 'Produces: {0} / {1}s per worker'
+  - key: building.assign
+    values:
+    - "+ \u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C"
+    - + Hire
+  - key: building.unassign
+    values:
+    - "- \u0421\u043D\u044F\u0442\u044C"
+    - '- Dismiss'
+  - key: building.upgrade
+    values:
+    - "\u0423\u043B\u0443\u0447\u0448\u0438\u0442\u044C"
+    - Upgrade
+  - key: building.repair
+    values:
+    - "\u041E\u0442\u0440\u0435\u043C\u043E\u043D\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
+    - Repair
+  - key: building.recruit
+    values:
+    - "\u041D\u0430\u043D\u044F\u0442\u044C \u043E\u043F\u043E\u043B\u0447\u0435\u043D\u0446\u0430"
+    - Recruit militia
+  - key: recipe.conversion
+    values:
+    - '{0} -> {1}'
+    - '{0} -> {1}'
+  - key: recipe.batches
+    values:
+    - x{0}
+    - x{0}
+  - key: workforce.title
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0438 \u0438 \u0440\u0430\u0431\u043E\u0442\u044B"
+    - Citizens and Work
+  - key: workforce.empty
+    values:
+    - "\u041F\u043E\u043A\u0430 \u043D\u0435\u0433\u0434\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C
+      \u2014 \u043F\u043E\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0441\u0442\u0432\u043E"
+    - "Nowhere to work yet \u2014 build something that produces"
+  - key: workforce.summary
+    values:
+    - "\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445 \u0436\u0438\u0442\u0435\u043B\u0435\u0439:
+      {0}   \xB7   \u0412\u0441\u0435\u0433\u043E: {1}"
+    - "Idle: {0}   \xB7   Total: {1}"
+  - key: workforce.gives
+    values:
+    - "\u0434\u0430\u0451\u0442 {0}"
+    - makes {0}
+  - key: workforce.idle_building
+    values:
+    - "\u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442"
+    - produces nothing
+  - key: happiness.title
+    values:
+    - "\u0414\u043E\u0432\u043E\u043B\u044C\u0441\u0442\u0432\u043E: {0}%"
+    - 'Contentment: {0}%'
+  - key: happiness.breakdown
+    values:
+    - "\u041D\u0430\u043B\u043E\u0433 {0} \xB7 \u0412\u0435\u0442\u0445\u043E\u0441\u0442\u044C
+      {1} \xB7 \u041E\u0431\u043E\u0440\u043E\u043D\u0430 {2}"
+    - 
+  - key: tax.rate
+    values:
+    - "\u041D\u0430\u043B\u043E\u0433: {0}%"
+    - 'Tax: {0}%'
+  - key: army.summary
+    values:
+    - "\u0410\u0440\u043C\u0438\u044F: {0}/{1}   \u0421\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435:
+      {2} \u043C\u043E\u043D./\u0434\u0435\u043D\u044C"
+    - 'Army: {0}/{1}   Upkeep: {2} coins/day'
+  - key: army.target_units
+    values:
+    - "\u0426\u0435\u043B\u044C: \u0432\u0440\u0430\u0433\u0438"
+    - 'Target: enemies'
+  - key: army.target_buildings
+    values:
+    - "\u0426\u0435\u043B\u044C: \u0441\u0442\u0440\u043E\u0435\u043D\u0438\u044F"
+    - 'Target: buildings'
+  - key: army.full
+    values:
+    - "\u0410\u0440\u043C\u0438\u044F \u043F\u043E\u043B\u043D\u0430 ({0})"
+    - The army is full ({0})
+  - key: army.no_citizens
+    values:
+    - "\u041D\u0435\u0442 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445
+      \u0436\u0438\u0442\u0435\u043B\u0435\u0439"
+    - No idle citizens
+  - key: army.no_coins
+    values:
+    - "\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u043D\u0435\u0442"
+    - Not enough coins
+  - key: unit.militia
+    values:
+    - "\u041E\u043F\u043E\u043B\u0447\u0435\u043D\u0438\u0435"
+    - Militia
+  - key: unit.militia_flavour
+    values:
+    - "\u0436\u0438\u0442\u0435\u043B\u0438 \u0441 \u0432\u0438\u043B\u0430\u043C\u0438"
+    - townsfolk with pitchforks
+  - key: over.victory
+    values:
+    - "\u041F\u043E\u0431\u0435\u0434\u0430"
+    - Victory
+  - key: over.defeat
+    values:
+    - "\u041F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435"
+    - Defeat
+  - key: over.victory_reason
+    values:
+    - "\u0412\u0441\u0435 \u043F\u043E\u0440\u0442\u0430\u043B\u044B \u043E\u0440\u043A\u043E\u0432
+      \u0437\u0430\u043A\u0440\u044B\u0442\u044B."
+    - Every orc portal is closed.
+  - key: over.defeat_reason
+    values:
+    - "\u0420\u0430\u0442\u0443\u0448\u0430 \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u0430."
+    - The Town Hall is destroyed.
+  - key: over.to_menu
+    values:
+    - "\u0412 \u0433\u043B\u0430\u0432\u043D\u043E\u0435 \u043C\u0435\u043D\u044E"
+    - Main menu
+  - key: log.day
+    values:
+    - "\u0414\u0435\u043D\u044C {0}: {1}"
+    - 'Day {0}: {1}'
+  - key: log.built
+    values:
+    - "\u041F\u043E\u0441\u0442\u0440\u043E\u0435\u043D\u043E: {0}"
+    - 'Built: {0}'
+  - key: log.destroyed_decay
+    values:
+    - "\u0420\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u043E \u043E\u0442 \u0432\u0435\u0442\u0445\u043E\u0441\u0442\u0438:
+      {0}"
+    - 'Fell apart from neglect: {0}'
+  - key: log.destroyed_combat
+    values:
+    - "\u0420\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u043E \u0432 \u0431\u043E\u044E:
+      {0}"
+    - 'Destroyed in battle: {0}'
+  - key: log.no_input
+    values:
+    - "{0}: \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u0441\u044B\u0440\u044C\u044F
+      ({1})"
+    - '{0}: out of raw material ({1})'
+  - key: log.no_storage
+    values:
+    - "\u041D\u0435\u043A\u0443\u0434\u0430 \u0441\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u0442\u044C:
+      {0} \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0432\u043F\u0443\u0441\u0442\u0443\u044E,
+      \u043D\u0443\u0436\u043D\u043E \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435"
+    - 'Nowhere to put it: {0} is working for nothing, build a storehouse'
+  - key: log.fed
+    values:
+    - "\u041F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0435 \u0441\u043D\u043E\u0432\u0430
+      \u0441\u044B\u0442\u043E."
+    - The settlement is fed again.
+  - key: log.hungry
+    values:
+    - "\u0413\u043E\u043B\u043E\u0434: \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442
+      \u0435\u0434\u044B ({0}). \u041B\u044E\u0434\u0438 \u043D\u0430\u0447\u043D\u0443\u0442
+      \u0443\u043C\u0438\u0440\u0430\u0442\u044C, \u0435\u0441\u043B\u0438 \u043D\u0435
+      \u043D\u0430\u043A\u043E\u0440\u043C\u0438\u0442\u044C."
+    - 'Hunger: {0} short. People will start dying unless they are fed.'
+  - key: log.starved
+    values:
+    - "\u0413\u043E\u043B\u043E\u0434: \u0443\u043C\u0435\u0440\u043B\u043E \u0436\u0438\u0442\u0435\u043B\u0435\u0439
+      \u2014 {0}"
+    - "Starvation: citizens lost \u2014 {0}"
+  - key: log.recruited
+    values:
+    - "{0}: \u043D\u0430\u043D\u044F\u0442 \u0431\u043E\u0435\u0446 ({1}/{2})"
+    - '{0}: soldier recruited ({1}/{2})'
+  - key: log.soldier_died
+    values:
+    - "\u0411\u043E\u0435\u0446 \u043F\u043E\u0433\u0438\u0431 \u0432 \u0431\u043E\u044E."
+    - A soldier fell in battle.
+  - key: log.disbanded
+    values:
+    - "\u041D\u0435\u0447\u0435\u043C \u043F\u043B\u0430\u0442\u0438\u0442\u044C
+      \u0441\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435: \u0440\u0430\u0441\u043F\u0443\u0449\u0435\u043D\u043E
+      \u0431\u043E\u0439\u0446\u043E\u0432 \u2014 {0}"
+    - "No coins for upkeep: soldiers disbanded \u2014 {0}"
+  - key: log.portal_opened
+    values:
+    - "\u041D\u0430 \u043A\u0430\u0440\u0442\u0435 \u043E\u0442\u043A\u0440\u044B\u043B\u0441\u044F
+      \u043F\u043E\u0440\u0442\u0430\u043B \u043E\u0440\u043A\u043E\u0432."
+    - An orc portal has opened.
+  - key: log.portal_destroyed
+    values:
+    - "\u041F\u043E\u0440\u0442\u0430\u043B \u043E\u0440\u043A\u043E\u0432 \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D!"
+    - The orc portal is destroyed!
+  - key: log.raid
+    values:
+    - "\u041E\u0440\u043A\u0438 \u043D\u0430\u0447\u0430\u043B\u0438 \u043D\u0430\u0431\u0435\u0433
+      ({0})"
+    - The orcs are raiding ({0})
+  - key: log.happiness_low
+    values:
+    - "\u0414\u043E\u0432\u043E\u043B\u044C\u0441\u0442\u0432\u043E \u0443\u043F\u0430\u043B\u043E
+      \u0434\u043E \u043A\u0440\u0438\u0442\u0438\u0447\u0435\u0441\u043A\u043E\u0433\u043E
+      \u0443\u0440\u043E\u0432\u043D\u044F ({0}%)"
+    - Contentment has fallen to a critical level ({0}%)
+  - key: log.happiness_recovered
+    values:
+    - "\u0414\u043E\u0432\u043E\u043B\u044C\u0441\u0442\u0432\u043E \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u043E\u0441\u044C
+      ({0}%)"
+    - Contentment has recovered ({0}%)
+  - key: log.defeat_townhall
+    values:
+    - "\u041F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435: \u0420\u0430\u0442\u0443\u0448\u0430
+      \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u0430."
+    - 'Defeat: the Town Hall is destroyed.'
+  - key: log.defeat_empty
+    values:
+    - "\u041F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435: \u0432 \u043F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0438
+      \u043D\u0435 \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C \u0436\u0438\u0442\u0435\u043B\u0435\u0439."
+    - 'Defeat: no citizens remain in the settlement.'
+  - key: log.victory
+    values:
+    - "\u041F\u043E\u0431\u0435\u0434\u0430: \u0432\u0441\u0435 \u043F\u043E\u0440\u0442\u0430\u043B\u044B
+      \u043E\u0440\u043A\u043E\u0432 \u0437\u0430\u043A\u0440\u044B\u0442\u044B!"
+    - 'Victory: every orc portal is closed!'
+  - key: log.tier_up
+    values:
+    - "\u041F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0435 \u0432\u044B\u0440\u043E\u0441\u043B\u043E.
+      \u0422\u0435\u043F\u0435\u0440\u044C \u044D\u0442\u043E: {0}."
+    - The settlement has grown. It is now a {0}.
+  - key: tier.hamlet
+    values:
+    - "\u0425\u0443\u0442\u043E\u0440"
+    - Hamlet
+  - key: tier.village
+    values:
+    - "\u0414\u0435\u0440\u0435\u0432\u043D\u044F"
+    - Village
+  - key: tier.town
+    values:
+    - "\u0413\u043E\u0440\u043E\u0434\u043E\u043A"
+    - Town
+  - key: tier.city
+    values:
+    - "\u0413\u043E\u0440\u043E\u0434"
+    - City
+  - key: tier.kingdom
+    values:
+    - "\u041A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u0442\u0432\u043E"
+    - Kingdom
+  - key: category.City
+    values:
+    - "\u0413\u043E\u0440\u043E\u0434"
+    - City
+  - key: category.Storage
+    values:
+    - "\u0421\u043A\u043B\u0430\u0434\u044B"
+    - Storage
+  - key: category.Entertainment
+    values:
+    - "\u0420\u0430\u0437\u0432\u043B\u0435\u0447\u0435\u043D\u0438\u044F"
+    - Leisure
+  - key: category.Defence
+    values:
+    - "\u041E\u0431\u043E\u0440\u043E\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0435"
+    - Defence
+  - key: category.Production
+    values:
+    - "\u041F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0435"
+    - Industry
+  - key: category.Food
+    values:
+    - "\u041F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0441\u0442\u0432\u043E \u0435\u0434\u044B"
+    - Food
+  - key: category.Water
+    values:
+    - "\u0412\u043E\u0434\u043D\u044B\u0435"
+    - Water
+  - key: resource.Wood
+    values:
+    - "\u0434\u0435\u0440\u0435\u0432\u043E"
+    - timber
+  - key: resource.Stone
+    values:
+    - "\u043A\u0430\u043C\u0435\u043D\u044C"
+    - stone
+  - key: resource.Food
+    values:
+    - "\u0435\u0434\u0430"
+    - food
+  - key: resource.Gold
+    values:
+    - "\u0437\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
+    - gold ore
+  - key: resource.Population
+    values:
+    - "\u0436\u0438\u0442\u0435\u043B\u0438"
+    - citizens
+  - key: resource.Iron
+    values:
+    - "\u0436\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+    - iron ore
+  - key: resource.Coal
+    values:
+    - "\u0443\u0433\u043E\u043B\u044C"
+    - coal
+  - key: resource.Coins
+    values:
+    - "\u043C\u043E\u043D\u0435\u0442\u044B"
+    - coins
+  - key: resource.Grain
+    values:
+    - "\u043F\u0448\u0435\u043D\u0438\u0446\u0430"
+    - wheat
+  - key: resource.Flour
+    values:
+    - "\u043C\u0443\u043A\u0430"
+    - flour
+  - key: resource.Bread
+    values:
+    - "\u0445\u043B\u0435\u0431"
+    - bread
+  - key: resource.CopperOre
+    values:
+    - "\u043C\u0435\u0434\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+    - copper ore
+  - key: resource.IronBar
+    values:
+    - "\u0436\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - iron bar
+  - key: resource.CopperBar
+    values:
+    - "\u043C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - copper bar
+  - key: resource.GoldBar
+    values:
+    - "\u0437\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - gold bar
+  - key: building.Hovel
+    values:
+    - "\u041B\u0430\u0447\u0443\u0433\u0430"
+    - Hovel
+  - key: building.Cottage
+    values:
+    - "\u041A\u043E\u0442\u0442\u0435\u0434\u0436"
+    - Cottage
+  - key: building.Manor
+    values:
+    - "\u041E\u0441\u043E\u0431\u043D\u044F\u043A"
+    - Manor
+  - key: building.Castle
+    values:
+    - "\u0420\u0430\u0442\u0443\u0448\u0430"
+    - Town Hall
+  - key: building.FisherHut
+    values:
+    - "\u0420\u044B\u0431\u0430\u0446\u043A\u0430\u044F \u0445\u0438\u0436\u0438\u043D\u0430"
+    - Fisherman's Hut
+  - key: building.Farm
+    values:
+    - "\u0424\u0435\u0440\u043C\u0430"
+    - Farm
+  - key: building.Sawmill
+    values:
+    - "\u041B\u0435\u0441\u043E\u043F\u0438\u043B\u043A\u0430"
+    - Sawmill
+  - key: building.Quarry
+    values:
+    - "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
+    - Quarry
+  - key: building.IronMine
+    values:
+    - "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    - Iron Mine
+  - key: building.CoalMine
+    values:
+    - "\u0423\u0433\u043E\u043B\u044C\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    - Coal Mine
+  - key: building.Warehouse
+    values:
+    - "\u0421\u043A\u043B\u0430\u0434"
+    - Warehouse
+  - key: building.Barn
+    values:
+    - "\u0410\u043C\u0431\u0430\u0440"
+    - Barn
+  - key: building.Treasury
+    values:
+    - "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
+    - Treasury
+  - key: building.BigWarehouse
+    values:
+    - "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0441\u043A\u043B\u0430\u0434"
+    - Great Warehouse
+  - key: building.BigBarn
+    values:
+    - "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0430\u043C\u0431\u0430\u0440"
+    - Great Barn
+  - key: building.BigTreasury
+    values:
+    - "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u0441\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
+    - Great Treasury
+  - key: building.Tower
+    values:
+    - "\u0411\u0430\u0448\u043D\u044F"
+    - Tower
+  - key: building.Barracks
+    values:
+    - "\u041A\u0430\u0437\u0430\u0440\u043C\u0430"
+    - Barracks
+  - key: building.Gate
+    values:
+    - "\u0412\u043E\u0440\u043E\u0442\u0430"
+    - Gate
+  - key: building.FortifiedTower
+    values:
+    - "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u0430\u044F \u0431\u0430\u0448\u043D\u044F"
+    - Fortified Tower
+  - key: building.FortifiedGate
+    values:
+    - "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u044B\u0435 \u0432\u043E\u0440\u043E\u0442\u0430"
+    - Fortified Gate
+  - key: building.Fence
+    values:
+    - "\u0417\u0430\u0431\u043E\u0440"
+    - Fence
+  - key: building.Road
+    values:
+    - "\u0414\u043E\u0440\u043E\u0433\u0430"
+    - Road
+  - key: building.Bridge
+    values:
+    - "\u041C\u043E\u0441\u0442"
+    - Bridge
+  - key: building.WaterMill
+    values:
+    - "\u0412\u043E\u0434\u044F\u043D\u0430\u044F \u043C\u0435\u043B\u044C\u043D\u0438\u0446\u0430"
+    - Water Mill
+  - key: building.Dock
+    values:
+    - "\u041F\u0440\u0438\u0441\u0442\u0430\u043D\u044C"
+    - Dock
+  - key: building.TownSquare
+    values:
+    - "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C"
+    - Town Square
+  - key: building.Flag
+    values:
+    - "\u0424\u043B\u0430\u0433"
+    - Flag
+  - key: building.DecTree
+    values:
+    - "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u0434\u0435\u0440\u0435\u0432\u043E"
+    - Ornamental Tree
+  - key: building.DecBush
+    values:
+    - "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439 \u043A\u0443\u0441\u0442"
+    - Ornamental Bush
+  - key: building.DecGarden
+    values:
+    - "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439 \u0441\u0430\u0434"
+    - Ornamental Garden
+  - key: building.Granary
+    values:
+    - "\u041A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
+    - Pantry
+  - key: building.BigGranary
+    values:
+    - "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
+    - Great Pantry
+  - key: building.Baker
+    values:
+    - "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
+    - Bakery
+  - key: building.Windmill
+    values:
+    - "\u0412\u0435\u0442\u0440\u044F\u043A"
+    - Windmill
+  - key: building.Smokehouse
+    values:
+    - "\u041A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u044F"
+    - Smokehouse
+  - key: building.PigFarm
+    values:
+    - "\u0421\u0432\u0438\u043D\u043E\u0444\u0435\u0440\u043C\u0430"
+    - Pig Farm
+  - key: building.Orchard
+    values:
+    - "\u0424\u0440\u0443\u043A\u0442\u043E\u0432\u044B\u0439 \u0441\u0430\u0434"
+    - Orchard
+  - key: building.Smelter
+    values:
+    - "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
+    - Smelter
+  - key: building.CopperMine
+    values:
+    - "\u041C\u0435\u0434\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    - Copper Mine
+  - key: building.GoldMine
+    values:
+    - "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    - Gold Mine
+  - key: building.Laboratory
+    values:
+    - "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F"
+    - Laboratory
+  - key: building.HealerHouse
+    values:
+    - "\u0414\u043E\u043C \u043B\u0435\u043A\u0430\u0440\u044F"
+    - Healer's House
+  - key: building.FireBrigade
+    values:
+    - "\u041F\u043E\u0436\u0430\u0440\u043D\u0430\u044F \u0431\u0440\u0438\u0433\u0430\u0434\u0430"
+    - Fire Brigade
+  - key: building.Well
+    values:
+    - "\u041A\u043E\u043B\u043E\u0434\u0435\u0446"
+    - Well
+  - key: building.Church
+    values:
+    - "\u0426\u0435\u0440\u043A\u043E\u0432\u044C"
+    - Church
+  - key: building.Tavern
+    values:
+    - "\u0422\u0430\u0432\u0435\u0440\u043D\u0430"
+    - Tavern
+  - key: building.Theater
+    values:
+    - "\u0422\u0435\u0430\u0442\u0440"
+    - Theatre
+  - key: building.Colosseum
+    values:
+    - "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
+    - Colosseum
+  - key: recipe.wood
+    values:
+    - "\u0414\u0435\u0440\u0435\u0432\u043E"
+    - Timber
+  - key: recipe.stone
+    values:
+    - "\u041A\u0430\u043C\u0435\u043D\u044C"
+    - Stone
+  - key: recipe.iron_ore
+    values:
+    - "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+    - Iron Ore
+  - key: recipe.coal
+    values:
+    - "\u0423\u0433\u043E\u043B\u044C"
+    - Coal
+  - key: recipe.copper_ore
+    values:
+    - "\u041C\u0435\u0434\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+    - Copper Ore
+  - key: recipe.gold_ore
+    values:
+    - "\u0417\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
+    - Gold Ore
+  - key: recipe.fish
+    values:
+    - "\u0415\u0434\u0430"
+    - Food
+  - key: recipe.grain
+    values:
+    - "\u041F\u0448\u0435\u043D\u0438\u0446\u0430"
+    - Wheat
+  - key: recipe.flour
+    values:
+    - "\u041C\u0443\u043A\u0430"
+    - Flour
+  - key: recipe.bread
+    values:
+    - "\u0425\u043B\u0435\u0431"
+    - Bread
+  - key: recipe.iron_bar
+    values:
+    - "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - Iron Bar
+  - key: recipe.copper_bar
+    values:
+    - "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - Copper Bar
+  - key: recipe.gold_bar
+    values:
+    - "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    - Gold Bar

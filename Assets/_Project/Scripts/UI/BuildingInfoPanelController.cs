@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -98,8 +98,8 @@ namespace CityBuilder.UI
             if (_currentInstance == null || _currentInstance.Data == null) return;
             var data = _currentInstance.Data;
 
-            if (titleLabel != null) titleLabel.text = data.displayName;
-            if (levelLabel != null) levelLabel.text = $"Уровень: {_currentInstance.Level} / {BuildingInstance.MaxLevel}";
+            if (titleLabel != null) titleLabel.text = data.LocalizedName;
+            if (levelLabel != null) levelLabel.text = Localization.Format("building.level", _currentInstance.Level, BuildingInstance.MaxLevel);
             if (conditionLabel != null)
             {
                 // Roads/Town Hall never accrue decay at all (see BuildingInstance.DecaysOverTime) --
@@ -107,8 +107,8 @@ namespace CityBuilder.UI
                 // aged yet, so they get their own label instead.
                 var decayText = _currentInstance.DecaysOverTime
                     ? $"{Mathf.RoundToInt(_currentInstance.Decay * 100f)}%"
-                    : "не изнашивается";
-                conditionLabel.text = $"Прочность: {_currentInstance.CurrentHealth}/{_currentInstance.MaxHealth}   Защита: {_currentInstance.Defense}   Ветхость: {decayText}";
+                    : Localization.Get("building.no_decay");
+                conditionLabel.text = Localization.Format("building.condition", _currentInstance.CurrentHealth, _currentInstance.MaxHealth, _currentInstance.Defense, decayText);
             }
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
@@ -122,11 +122,11 @@ namespace CityBuilder.UI
             RefreshRecipeControls();
             if (hasProduction)
             {
-                if (workersLabel != null) workersLabel.text = $"Рабочие: {_currentProduction.AssignedWorkers} / {_currentProduction.MaxWorkers}";
+                if (workersLabel != null) workersLabel.text = Localization.Format("building.workers", _currentProduction.AssignedWorkers, _currentProduction.MaxWorkers);
                 if (idleLabel != null)
                 {
                     var idle = CitizenManager.Instance != null ? CitizenManager.Instance.IdlePopulation : 0;
-                    idleLabel.text = $"Свободных жителей: {idle}";
+                    idleLabel.text = Localization.Format("building.idle_citizens", idle);
                 }
             }
 
@@ -142,10 +142,9 @@ namespace CityBuilder.UI
         }
 
         /// <summary>
-        /// The production line, per worker: "Производит: мука 1 / 6 с" for something that makes its
-        /// resource out of nothing, and "Производит: мука 1 из 2 пшеница / 6 с" for a workshop that
-        /// converts. Stated per worker because that is how the numbers are authored and how the
-        /// player reasons about the +/- worker buttons right below it.
+        /// The production line: what one worker gets through in a tick, spelled as the recipe
+        /// itself. Stated per worker because that is how the numbers are authored and how the
+        /// player reasons about the +/- buttons right below it.
         ///
         /// Pure and static so the wording is covered by an EditMode test without a canvas.
         /// </summary>
@@ -153,8 +152,8 @@ namespace CityBuilder.UI
         {
             if (recipe == null || batchesPerWorker <= 0) return string.Empty;
 
-            var batches = batchesPerWorker > 1 ? $" x{batchesPerWorker}" : string.Empty;
-            return $"Производит: {recipe.Describe()}{batches} / {intervalSeconds:0.#} с на работника";
+            var batches = batchesPerWorker > 1 ? Localization.Format("recipe.batches", batchesPerWorker) : string.Empty;
+            return Localization.Format("building.produces", recipe.Describe() + batches, intervalSeconds.ToString("0.#"));
         }
 
         /// <summary>
@@ -222,7 +221,7 @@ namespace CityBuilder.UI
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
             label.color = Color.white;
-            label.text = recipe.displayName;
+            label.text = recipe.LocalizedName;
 
             var button = go.GetComponent<Button>();
             button.targetGraphic = image;
@@ -262,7 +261,7 @@ namespace CityBuilder.UI
 
             if (recruitLabel == null) return;
             var blocker = army.DescribeRecruitBlocker(RecruitableType);
-            recruitLabel.text = blocker ?? $"Армия: {army.SoldierCount}/{SoldierStats.MaxArmySize}   Содержание: {army.DailyUpkeep} мон./день";
+            recruitLabel.text = blocker ?? Localization.Format("army.summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
         }
 
         /// <summary>
@@ -284,7 +283,7 @@ namespace CityBuilder.UI
 
             if (cost.Count == 0)
             {
-                CreateChipText(row, "Бесплатно");
+                CreateChipText(row, Localization.Get("ui.free"));
                 return;
             }
 

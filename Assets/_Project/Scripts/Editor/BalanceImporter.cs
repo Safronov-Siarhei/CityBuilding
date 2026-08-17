@@ -30,6 +30,8 @@ namespace CityBuilder.EditorTools
         public const string EconomyCsvPath = BalanceFolder + "/economy.csv";
         public const string BuildingsCsvPath = BalanceFolder + "/buildings.csv";
         public const string RecipesCsvPath = BalanceFolder + "/recipes.csv";
+        public const string LocalizationCsvPath = BalanceFolder + "/localization.csv";
+        public const string LocalizationAssetPath = "Assets/_Project/Resources/LocalizationConfig.asset";
         public const string SettingsAssetPath = BalanceFolder + "/BalanceSheetSettings.asset";
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
 
@@ -61,9 +63,12 @@ namespace CityBuilder.EditorTools
 
             config.OverwriteFrom(units, buildings, economy);
             EditorUtility.SetDirty(config);
+
+            var localizationKeys = RebuildLocalization();
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings and {economy.Count} economy keys -> {ConfigAssetPath}");
+            Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings, {economy.Count} economy keys " +
+                      $"and {localizationKeys} localization keys -> {ConfigAssetPath}");
             return config;
         }
 
@@ -92,6 +97,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.economyCsvUrl, EconomyCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.buildingsCsvUrl, BuildingsCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.recipesCsvUrl, RecipesCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.localizationCsvUrl, LocalizationCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -217,6 +223,77 @@ namespace CityBuilder.EditorTools
                 });
             }
             return buildings;
+        }
+
+        /// <summary>
+        /// The localization tab into its own asset: `key` then one column per language, in whatever
+        /// order the sheet has them. Adding a third language is a column in the sheet and nothing
+        /// here -- the columns after `key` and `comment` ARE the language list.
+        /// </summary>
+        private static int RebuildLocalization()
+        {
+            var rows = ReadCsv(LocalizationCsvPath);
+            if (rows.Count == 0) return 0;
+
+            var header = rows[0];
+            for (var i = 0; i < header.Count; i++)
+            {
+                header[i] = header[i].Trim();
+            }
+
+            var languageColumns = new List<int>();
+            var languages = new List<string>();
+            for (var i = 0; i < header.Count; i++)
+            {
+                if (header[i] == "key" || header[i] == "comment" || header[i].Length == 0) continue;
+                languageColumns.Add(i);
+                languages.Add(header[i]);
+            }
+
+            if (languages.Count == 0)
+            {
+                Debug.LogError($"BalanceImporter: {LocalizationCsvPath} has no language columns beside 'key' and 'comment'.");
+                return 0;
+            }
+
+            var entries = new List<LocalizationConfig.Entry>();
+            var seen = new HashSet<string>();
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (row.Count == 0) continue;
+
+                var key = row[0].Trim();
+                // Keys never contain spaces, and the prose under the table always does -- the same
+                // rule IsNoteRow uses, applied here because a note row's later cells are empty and
+                // would otherwise import as a key with no text at all.
+                if (key.Length == 0 || key.Contains(" ")) continue;
+
+                if (!seen.Add(key))
+                {
+                    Debug.LogError($"BalanceImporter: '{key}' appears twice in the localization tab. The first one wins.");
+                    continue;
+                }
+
+                var entry = new LocalizationConfig.Entry { key = key, values = new List<string>() };
+                foreach (var column in languageColumns)
+                {
+                    entry.values.Add(column < row.Count ? row[column].Trim() : string.Empty);
+                }
+                entries.Add(entry);
+            }
+
+            var asset = AssetDatabase.LoadAssetAtPath<LocalizationConfig>(LocalizationAssetPath);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<LocalizationConfig>();
+                Directory.CreateDirectory(Path.GetDirectoryName(LocalizationAssetPath) ?? string.Empty);
+                AssetDatabase.CreateAsset(asset, LocalizationAssetPath);
+            }
+
+            asset.OverwriteFrom(languages, entries);
+            EditorUtility.SetDirty(asset);
+            return entries.Count;
         }
 
         /// <summary>
