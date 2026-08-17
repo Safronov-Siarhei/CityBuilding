@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Windmill
   displayName: "\u0412\u0435\u0442\u0440\u044F\u043A"
-  prefab: {fileID: 1706123120663308490, guid: 44a4e4f07d3dc264c860f0e0012e6275, type: 3}
+  prefab: {fileID: 7742259852564372805, guid: 44a4e4f07d3dc264c860f0e0012e6275, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -31,23 +31,27 @@ MonoBehaviour:
   - maxHealth: 120
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 1
+    consumptionPerWorkerPerTick: 2
     storageCapacity: 0
   - maxHealth: 192
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 1
+    consumptionPerWorkerPerTick: 2
     storageCapacity: 0
   - maxHealth: 300
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 4
+    productionPerWorkerPerTick: 1
+    consumptionPerWorkerPerTick: 2
     storageCapacity: 0
-  producesResource: 0
+  producesResource: 9
   productionIntervalSeconds: 6
+  consumesResource: 8
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
@@ -60,4 +64,4 @@ MonoBehaviour:
   - type: 1
     amount: 28
   fogRevealRadius: 12
-  requiredBuilding: {fileID: 0}
+  requiredBuilding: {fileID: 11400000, guid: 04f42c35759c2c04db28628faf115e39, type: 2}

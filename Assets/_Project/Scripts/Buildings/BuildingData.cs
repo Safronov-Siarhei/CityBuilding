@@ -32,6 +32,14 @@ namespace CityBuilder.Buildings
         public int maxWorkers;
         public int productionPerWorkerPerTick;
 
+        /// <summary>
+        /// How much of BuildingData.consumesResource one worker turns into their tick's output.
+        /// Zero -- the case for everything that digs, fells or grows its resource out of nothing --
+        /// means this building has no input at all, and is what tells the two kinds apart: there is
+        /// no "no resource" to put in consumesResource.
+        /// </summary>
+        public int consumptionPerWorkerPerTick;
+
         /// <summary>How much room this building adds to its storage group (see BuildingData.storageGroup). Zero for anything that isn't a storehouse.</summary>
         public int storageCapacity;
     }
@@ -84,6 +92,11 @@ namespace CityBuilder.Buildings
         [Header("Production")]
         public ResourceType producesResource = ResourceType.Wood;
         public float productionIntervalSeconds = 6f;
+
+        // What this building eats to make the above -- the Ветряк's wheat, the Пекарня's flour.
+        // Only meaningful while BuildingLevelStats.consumptionPerWorkerPerTick is above zero;
+        // a lumberjack's hut leaves that at zero and this field is never read.
+        public ResourceType consumesResource = ResourceType.Wood;
 
         [Header("Storage")]
         // Which family of resources this building stores. None for everything that isn't a

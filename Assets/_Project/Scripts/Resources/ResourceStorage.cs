@@ -33,7 +33,11 @@ namespace CityBuilder.Resources
             {
                 case ResourceType.Population:
                     return ResourceStorageGroup.None;
+                // Flour is not food, but the design puts it in the Кладовая alongside the bread it
+                // becomes -- only the raw wheat gets a building of its own.
                 case ResourceType.Food:
+                case ResourceType.Flour:
+                case ResourceType.Bread:
                     return ResourceStorageGroup.Food;
                 case ResourceType.Grain:
                     return ResourceStorageGroup.Grain;

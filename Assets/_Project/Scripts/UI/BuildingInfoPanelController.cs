@@ -20,6 +20,7 @@ namespace CityBuilder.UI
         [SerializeField] private Text titleLabel;
         [SerializeField] private Text levelLabel;
         [SerializeField] private Text conditionLabel;
+        [SerializeField] private Text productionLabel;
         [SerializeField] private GameObject workerControls;
         [SerializeField] private Text workersLabel;
         [SerializeField] private Text idleLabel;
@@ -109,6 +110,15 @@ namespace CityBuilder.UI
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
             if (workerControls != null) workerControls.SetActive(hasProduction);
+            if (productionLabel != null)
+            {
+                productionLabel.text = hasProduction
+                    ? ProductionSummary(
+                        _currentProduction.ProducesResource, _currentProduction.ProductionPerWorkerPerTick,
+                        _currentProduction.ConsumesResource, _currentProduction.ConsumptionPerWorkerPerTick,
+                        data.productionIntervalSeconds)
+                    : string.Empty;
+            }
             if (hasProduction)
             {
                 if (workersLabel != null) workersLabel.text = $"Рабочие: {_currentProduction.AssignedWorkers} / {_currentProduction.MaxWorkers}";
@@ -128,6 +138,27 @@ namespace CityBuilder.UI
             BuildCostRow(repairCostRow, repairCost);
 
             RefreshRecruitControls(data);
+        }
+
+        /// <summary>
+        /// The production line, per worker: "Производит: мука 1 / 6 с" for something that makes its
+        /// resource out of nothing, and "Производит: мука 1 из 2 пшеница / 6 с" for a workshop that
+        /// converts. Stated per worker because that is how the numbers are authored and how the
+        /// player reasons about the +/- worker buttons right below it.
+        ///
+        /// Pure and static so the wording is covered by an EditMode test without a canvas.
+        /// </summary>
+        public static string ProductionSummary(
+            ResourceType produces, int producedPerWorker,
+            ResourceType consumes, int consumedPerWorker,
+            float intervalSeconds)
+        {
+            if (producedPerWorker <= 0) return string.Empty;
+
+            var output = $"Производит: {ResourceNames.Of(produces)} {producedPerWorker}";
+            if (consumedPerWorker > 0) output += $" из {consumedPerWorker} {ResourceNames.Of(consumes)}";
+
+            return $"{output} / {intervalSeconds:0.#} с на работника";
         }
 
         /// <summary>

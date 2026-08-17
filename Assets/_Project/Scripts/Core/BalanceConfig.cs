@@ -53,6 +53,10 @@ namespace CityBuilder.Core
         public List<ResourceAmount> cost = new List<ResourceAmount>();
 
         public ResourceType producesResource = ResourceType.Wood;
+
+        /// <summary>What the building turns into its output. Read only where the levels ask for a non-zero consumption_per_tick -- see BuildingLevelStats.</summary>
+        public ResourceType consumesResource = ResourceType.Wood;
+
         public float productionIntervalSeconds = 6f;
         public int fogRevealRadius = 8;
 

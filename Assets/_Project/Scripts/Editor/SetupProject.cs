@@ -993,16 +993,29 @@ namespace CityBuilder.EditorTools
             var rect = root.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2(0f, 370f);
-            rect.sizeDelta = new Vector2(1300f, 50f);
 
-            var resourceTypes = new[] { ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold, ResourceType.Coins };
+            // Widened from 1300 when the food chain added four more chips: eleven slots in the old
+            // width left barely a hundred pixels each, and "150/150" does not fit in that.
+            const float barWidth = 1800f;
+            rect.sizeDelta = new Vector2(barWidth, 50f);
+
+            // The food chain reads left to right in the order it is actually made -- пшеница,
+            // мука, хлеб -- after the raw materials and the two currencies. Еда is what everything
+            // that isn't the bakery still produces (fish, fruit, meat), and sits with them.
+            var resourceTypes = new[]
+            {
+                ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal,
+                ResourceType.Gold, ResourceType.Coins,
+                ResourceType.Grain, ResourceType.Flour, ResourceType.Bread, ResourceType.Food,
+            };
             var slotCount = resourceTypes.Length + 1; // + population slot
-            var slotWidth = 1300f / slotCount;
+            var slotWidth = barWidth / slotCount;
+            var halfBar = barWidth * 0.5f;
             var amountTexts = new Text[resourceTypes.Length];
 
             for (var i = 0; i < resourceTypes.Length; i++)
             {
-                var slotCenter = -650f + slotWidth * (i + 0.5f);
+                var slotCenter = -halfBar + slotWidth * (i + 0.5f);
 
                 var icon = CreateImage(root.transform, $"Icon_{resourceTypes[i]}", Color.white);
                 icon.sprite = CreateResourceIcon(resourceTypes[i]);
@@ -1017,7 +1030,7 @@ namespace CityBuilder.EditorTools
                 amountTexts[i] = amountText;
             }
 
-            var popCenter = -650f + slotWidth * (resourceTypes.Length + 0.5f);
+            var popCenter = -halfBar + slotWidth * (resourceTypes.Length + 0.5f);
             var popIcon = CreateImage(root.transform, "Icon_Population", Color.white);
             popIcon.sprite = CreatePopulationIcon();
             var popIconRect = popIcon.GetComponent<RectTransform>();
@@ -1115,7 +1128,12 @@ namespace CityBuilder.EditorTools
 
             var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 260f), new Vector2(640f, 60f));
             var level = CreateText(card.transform, "Level", string.Empty, 24, new Vector2(0f, 205f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.85f));
-            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 165f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 172f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+
+            // What the building makes, and out of what. Sits between the condition line and the
+            // worker block because it is the answer to "why would I staff this" -- and for the
+            // mill and the bakery it is the only place the conversion is written down at all.
+            var production = CreateText(card.transform, "Production", string.Empty, 20, new Vector2(0f, 137f), new Vector2(640f, 30f), new Color(0.82f, 0.88f, 0.7f));
 
             // Passthrough containers (StretchFull, zero offset) purely to group-toggle visibility --
             // children keep the same card-relative positions they'd have without the wrapper.
@@ -1161,6 +1179,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
             controllerSO.FindProperty("levelLabel").objectReferenceValue = level;
             controllerSO.FindProperty("conditionLabel").objectReferenceValue = condition;
+            controllerSO.FindProperty("productionLabel").objectReferenceValue = production;
             controllerSO.FindProperty("workerControls").objectReferenceValue = workerControls;
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
@@ -1710,6 +1729,7 @@ namespace CityBuilder.EditorTools
             data.category = balance.category;
             data.cost = CopyCost(balance.cost);
             data.producesResource = balance.producesResource;
+            data.consumesResource = balance.consumesResource;
             data.productionIntervalSeconds = balance.productionIntervalSeconds;
             data.fogRevealRadius = balance.fogRevealRadius;
             data.storageGroup = balance.storageGroup;
@@ -1761,6 +1781,7 @@ namespace CityBuilder.EditorTools
                     citizensGranted = level.citizensGranted,
                     maxWorkers = level.maxWorkers,
                     productionPerWorkerPerTick = level.productionPerWorkerPerTick,
+                    consumptionPerWorkerPerTick = level.consumptionPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
                 });
             }
@@ -2905,6 +2926,61 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.34f, 0.54f, 0.86f, 0.72f, edge);
                         FillIconRect(p, s, 0.36f, 0.56f, 0.84f, 0.68f, coin);
                     });
+                case ResourceType.Grain:
+                    // A sheaf: three upright stalks with the ears blocked in above them. Straight
+                    // edges only, same as every other icon here.
+                    return CreateIconSprite("Res_Grain", 64, (p, s) =>
+                    {
+                        var straw = new Color(0.85f, 0.7f, 0.3f);
+                        var ear = new Color(0.95f, 0.83f, 0.45f);
+                        FillIconRect(p, s, 0.22f, 0.12f, 0.3f, 0.6f, straw);
+                        FillIconRect(p, s, 0.46f, 0.12f, 0.54f, 0.7f, straw);
+                        FillIconRect(p, s, 0.7f, 0.12f, 0.78f, 0.6f, straw);
+                        FillIconRect(p, s, 0.18f, 0.56f, 0.34f, 0.78f, ear);
+                        FillIconRect(p, s, 0.42f, 0.66f, 0.58f, 0.88f, ear);
+                        FillIconRect(p, s, 0.66f, 0.56f, 0.82f, 0.78f, ear);
+                        FillIconRect(p, s, 0.14f, 0.24f, 0.86f, 0.32f, ear);
+                    });
+                case ResourceType.Flour:
+                    // A sack, tied at the neck, with a spill of white in front of it -- flour is
+                    // otherwise the same pale colour as nothing at all.
+                    return CreateIconSprite("Res_Flour", 64, (p, s) =>
+                    {
+                        var sack = new Color(0.82f, 0.76f, 0.62f);
+                        var tie = new Color(0.6f, 0.52f, 0.38f);
+                        var powder = new Color(0.96f, 0.95f, 0.92f);
+                        FillIconRect(p, s, 0.2f, 0.16f, 0.7f, 0.68f, sack);
+                        FillIconRect(p, s, 0.3f, 0.68f, 0.6f, 0.78f, tie);
+                        FillIconRect(p, s, 0.26f, 0.78f, 0.64f, 0.86f, sack);
+                        FillIconRect(p, s, 0.62f, 0.16f, 0.88f, 0.24f, powder);
+                        FillIconRect(p, s, 0.7f, 0.24f, 0.84f, 0.3f, powder);
+                    });
+                case ResourceType.Bread:
+                    // A loaf: a darker crust with the slashes cut across its top.
+                    return CreateIconSprite("Res_Bread", 64, (p, s) =>
+                    {
+                        var crust = new Color(0.72f, 0.48f, 0.24f);
+                        var crumb = new Color(0.88f, 0.68f, 0.4f);
+                        FillIconRect(p, s, 0.12f, 0.26f, 0.88f, 0.66f, crust);
+                        FillIconRect(p, s, 0.2f, 0.66f, 0.8f, 0.74f, crust);
+                        FillIconRect(p, s, 0.28f, 0.58f, 0.36f, 0.7f, crumb);
+                        FillIconRect(p, s, 0.46f, 0.58f, 0.54f, 0.72f, crumb);
+                        FillIconRect(p, s, 0.64f, 0.58f, 0.72f, 0.7f, crumb);
+                    });
+                case ResourceType.Food:
+                    // Everything edible that isn't bread yet: fish, fruit, meat. One generic
+                    // basket rather than an attempt to draw all three.
+                    return CreateIconSprite("Res_Food", 64, (p, s) =>
+                    {
+                        var basket = new Color(0.6f, 0.42f, 0.24f);
+                        var weave = new Color(0.75f, 0.56f, 0.34f);
+                        var produce = new Color(0.72f, 0.24f, 0.22f);
+                        var leaf = new Color(0.35f, 0.6f, 0.28f);
+                        FillIconRect(p, s, 0.32f, 0.6f, 0.52f, 0.8f, produce);
+                        FillIconRect(p, s, 0.54f, 0.62f, 0.7f, 0.78f, leaf);
+                        FillIconRect(p, s, 0.16f, 0.2f, 0.84f, 0.62f, basket);
+                        FillIconRect(p, s, 0.16f, 0.38f, 0.84f, 0.44f, weave);
+                    });
                 default: // Gold
                     return CreateIconSprite("Res_Gold", 64, (p, s) =>
                     {
@@ -2925,16 +3001,19 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static ResourceIconLibrary CreateResourceIconLibrary()
         {
-            var icons = new Sprite[8]; // one slot per ResourceType value (Wood..Coins)
-            icons[(int)ResourceType.Wood] = CreateResourceIcon(ResourceType.Wood);
-            icons[(int)ResourceType.Stone] = CreateResourceIcon(ResourceType.Stone);
-            icons[(int)ResourceType.Gold] = CreateResourceIcon(ResourceType.Gold);
-            icons[(int)ResourceType.Iron] = CreateResourceIcon(ResourceType.Iron);
-            icons[(int)ResourceType.Coal] = CreateResourceIcon(ResourceType.Coal);
-            icons[(int)ResourceType.Coins] = CreateResourceIcon(ResourceType.Coins);
-            icons[(int)ResourceType.Population] = CreatePopulationIcon();
-            // Food has no icon yet -- no building cost currently includes it; left null,
-            // BuildingInfoPanelController just renders an icon-less chip if that ever changes.
+            // Sized off the enum rather than a literal: this array used to be `new Sprite[8]` and
+            // silently stopped covering the enum the moment a resource was added -- the library's
+            // bounds check then answered "no icon" for it, which looks exactly like a drawing that
+            // was never written.
+            // (System.Enum spelled out: a plain `using System;` here would make the file's bare
+            // `Random.Range` calls ambiguous with System.Random.)
+            var icons = new Sprite[System.Enum.GetValues(typeof(ResourceType)).Length];
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+            {
+                icons[(int)type] = type == ResourceType.Population
+                    ? CreatePopulationIcon()
+                    : CreateResourceIcon(type);
+            }
 
             var library = ScriptableObject.CreateInstance<ResourceIconLibrary>();
             library.EditorInitialize(icons);

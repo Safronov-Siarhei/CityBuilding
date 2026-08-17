@@ -11,12 +11,13 @@ namespace CityBuilder.Resources
         Coal,
         Coins,
 
-        /// <summary>
-        /// Wheat, straight off the farm. Nothing produces or consumes it yet -- it exists because
-        /// the Амбар exists to hold it and nothing else, and a storehouse for a resource the game
-        /// has no name for is a building that can never be explained to a player. The mill and the
-        /// bakery are what will give it a purpose (see the processing chains in the design backlog).
-        /// </summary>
-        Grain
+        /// <summary>Wheat, straight off the farm and into the Амбар. The first link of the chain the Ферма starts and the Пекарня ends.</summary>
+        Grain,
+
+        /// <summary>Milled wheat. The Ветряк's only output and the Пекарня's only input -- nobody eats it, which is the point of a middle link.</summary>
+        Flour,
+
+        /// <summary>The chain's end: the first food the settlement makes rather than gathers.</summary>
+        Bread
     }
 }

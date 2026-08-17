@@ -20,10 +20,20 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(ResourceStorageGroup.Materials, ResourceStorage.GroupOf(type));
         }
 
-        [Test]
-        public void Food_HasItsOwnStore()
+        /// <summary>Flour is in here deliberately: it isn't food, but the design puts it in the Кладовая with the bread it becomes rather than giving it a fifth storehouse.</summary>
+        [TestCase(ResourceType.Food)]
+        [TestCase(ResourceType.Flour)]
+        [TestCase(ResourceType.Bread)]
+        public void Food_HasItsOwnStore(ResourceType type)
         {
-            Assert.AreEqual(ResourceStorageGroup.Food, ResourceStorage.GroupOf(ResourceType.Food));
+            Assert.AreEqual(ResourceStorageGroup.Food, ResourceStorage.GroupOf(type));
+        }
+
+        /// <summary>Wheat is the one link of the chain with a building of its own -- if it ever fell back to Materials, the Амбар would stop meaning anything.</summary>
+        [Test]
+        public void Wheat_GoesInTheBarn()
+        {
+            Assert.AreEqual(ResourceStorageGroup.Grain, ResourceStorage.GroupOf(ResourceType.Grain));
         }
 
         [TestCase(ResourceType.Gold)]

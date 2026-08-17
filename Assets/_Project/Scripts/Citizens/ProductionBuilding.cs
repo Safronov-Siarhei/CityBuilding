@@ -38,6 +38,11 @@ namespace CityBuilder.Citizens
         public ResourceType ProducesResource => Data != null ? Data.producesResource : ResourceType.Wood;
         public string DisplayName => Data != null ? Data.displayName : "?";
 
+        /// <summary>What this building turns into its output, and how much of it one worker uses per tick. Zero means it makes its resource out of nothing -- see BuildingLevelStats.</summary>
+        public ResourceType ConsumesResource => Data != null ? Data.consumesResource : ResourceType.Wood;
+        public int ConsumptionPerWorkerPerTick => Data != null ? Data.LevelStats(CurrentLevel).consumptionPerWorkerPerTick : 0;
+        public int ProductionPerWorkerPerTick => Data != null ? Data.LevelStats(CurrentLevel).productionPerWorkerPerTick : 0;
+
         private void Start()
         {
             CitizenVisualsManager.Instance?.RegisterProductionBuilding(this);
@@ -57,13 +62,76 @@ namespace CityBuilder.Citizens
             if (_timer < data.productionIntervalSeconds) return;
             _timer -= data.productionIntervalSeconds;
 
-            var baseAmount = AssignedWorkers * data.LevelStats(CurrentLevel).productionPerWorkerPerTick;
-            var amount = Mathf.RoundToInt(baseAmount * DecayProductionMultiplier());
+            var level = data.LevelStats(CurrentLevel);
+            var resources = ResourceManager.Instance;
+            var inputPerWorker = level.consumptionPerWorkerPerTick;
+
+            // A workshop runs as many of its worker stations as it has raw material for: a mill
+            // with three hands and grain for two mills two sacks' worth this tick, not none.
+            var working = inputPerWorker > 0
+                ? SuppliedWorkers(AssignedWorkers, inputPerWorker, resources != null ? resources.GetAmount(data.consumesResource) : 0)
+                : AssignedWorkers;
+
+            if (inputPerWorker > 0 && !ReportMissingInput(data, working <= 0)) return;
+
+            var amount = Mathf.RoundToInt(working * level.productionPerWorkerPerTick * DecayProductionMultiplier());
             if (amount <= 0) return;
 
-            var stored = ResourceManager.Instance != null ? ResourceManager.Instance.Add(data.producesResource, amount) : amount;
+            // Nothing is milled into a store that cannot hold it. A plain producer may waste its
+            // output -- there is nothing to lose but the tick -- but a converter would be burning
+            // wheat to make flour that falls on the floor, which is a bug the player would never
+            // be able to see happening.
+            if (inputPerWorker > 0 && resources != null && resources.GetAmount(data.producesResource) >= resources.GetCapacity(data.producesResource))
+            {
+                ReportOverflow(data, amount);
+                return;
+            }
+
+            if (inputPerWorker > 0) resources?.Add(data.consumesResource, -(working * inputPerWorker));
+
+            var stored = resources != null ? resources.Add(data.producesResource, amount) : amount;
             ReportOverflow(data, amount - stored);
         }
+
+        /// <summary>
+        /// How many of the assigned workers there is input for this tick. Pure so an EditMode test
+        /// can pin the partial case down without a scene: the interesting answers are "all of them",
+        /// "some of them" and "none", and only the middle one is easy to get wrong.
+        /// </summary>
+        public static int SuppliedWorkers(int assignedWorkers, int inputPerWorker, int inputInStore)
+        {
+            if (assignedWorkers <= 0) return 0;
+
+            // Before the empty-store check, not after: a building that needs no input must not be
+            // stopped by having none of a resource it never asked for.
+            if (inputPerWorker <= 0) return assignedWorkers;
+            if (inputInStore <= 0) return 0;
+
+            return Mathf.Min(assignedWorkers, inputInStore / inputPerWorker);
+        }
+
+        /// <summary>
+        /// Says once that a converter is standing idle for want of raw material, and stays quiet
+        /// until it runs again -- same latch as ReportOverflow, and for the same reason: a bakery
+        /// with no flour ticks every few seconds forever. Returns whether the building may work.
+        /// </summary>
+        private bool ReportMissingInput(BuildingData data, bool starved)
+        {
+            if (!starved)
+            {
+                _reportedMissingInput = false;
+                return true;
+            }
+
+            if (!_reportedMissingInput)
+            {
+                _reportedMissingInput = true;
+                EventLogManager.Instance?.Log($"{data.displayName}: не хватает сырья ({ResourceNames.Of(data.consumesResource)})");
+            }
+            return false;
+        }
+
+        private bool _reportedMissingInput;
 
         /// <summary>
         /// Says once that this building's output is going to waste for want of storage, and stays

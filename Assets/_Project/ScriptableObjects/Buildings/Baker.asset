@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Baker
   displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
-  prefab: {fileID: 5692007167751245897, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
+  prefab: {fileID: 3693413788963288971, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
   footprintSize: {x: 1, y: 2}
   cost:
   - type: 0
@@ -31,23 +31,27 @@ MonoBehaviour:
   - maxHealth: 110
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 2
+    productionPerWorkerPerTick: 2
+    consumptionPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 176
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 3
+    productionPerWorkerPerTick: 2
+    consumptionPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 275
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
+    maxWorkers: 4
+    productionPerWorkerPerTick: 2
+    consumptionPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 0
+  producesResource: 10
   productionIntervalSeconds: 6
+  consumesResource: 9
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
@@ -60,4 +64,4 @@ MonoBehaviour:
   - type: 1
     amount: 28
   fogRevealRadius: 10
-  requiredBuilding: {fileID: 0}
+  requiredBuilding: {fileID: 11400000, guid: 04fda69031619844392113fa31c06f65, type: 2}
