@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: GoldMine
   displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
-  prefab: {fileID: 1254677967881018586, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
+  prefab: {fileID: 1374478448742563843, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -31,27 +31,28 @@ MonoBehaviour:
   - maxHealth: 120
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 192
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 300
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 0
+  recipes:
+  - id: gold_ore
+    displayName: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
+    inputs: []
+    output: 3
+    outputAmount: 1
   productionIntervalSeconds: 6
-  consumesResource: 0
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

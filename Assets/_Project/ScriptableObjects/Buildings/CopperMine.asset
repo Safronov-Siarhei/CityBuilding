@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: CopperMine
   displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
-  prefab: {fileID: 4523555723294885592, guid: 52ef1b73fbd606a45a7872f66b94cf29, type: 3}
+  prefab: {fileID: 3512110300950277794, guid: 52ef1b73fbd606a45a7872f66b94cf29, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -31,27 +31,28 @@ MonoBehaviour:
   - maxHealth: 110
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 176
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 275
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 0
+  recipes:
+  - id: copper_ore
+    displayName: "\u041C\u0435\u0434\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+    inputs: []
+    output: 11
+    outputAmount: 1
   productionIntervalSeconds: 6
-  consumesResource: 0
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

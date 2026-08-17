@@ -1,0 +1,17 @@
+building,recipe_id,display_name,in1,in1_amount,in2,in2_amount,out,out_amount,comment
+Sawmill,wood,Дерево,,,,,Wood,1,Добыча: выход без входа.
+Quarry,stone,Камень,,,,,Stone,1,
+IronMine,iron_ore,Железная руда,,,,,Iron,1,
+CoalMine,coal,Уголь,,,,,Coal,1,
+CopperMine,copper_ore,Медная руда,,,,,CopperOre,1,
+GoldMine,gold_ore,Золотая руда,,,,,Gold,1,
+FisherHut,fish,Еда,,,,,Food,1,
+Farm,grain,Пшеница,,,,,Grain,1,
+Windmill,flour,Мука,Grain,2,,,Flour,1,Первое звено переработки.
+Baker,bread,Хлеб,Flour,1,,,Bread,2,
+Smelter,iron_bar,Железный слиток,Iron,2,Coal,1,IronBar,1,"Плавильня: игрок выбирает металл в карточке здания."
+Smelter,copper_bar,Медный слиток,CopperOre,2,Coal,1,CopperBar,1,
+Smelter,gold_bar,Золотой слиток,Gold,2,Coal,1,GoldBar,1,
+Одна строка на рецепт. Здание без строк здесь не производит ничего.,,,,,,,,,
+in1/in2 — что уходит за одну партию; out — что получается. Пустой in1 значит добычу из ничего.,,,,,,,,,
+Сколько партий за тик делает один работник — это batches_per_tick во вкладке buildings.,,,,,,,,,

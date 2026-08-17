@@ -155,10 +155,10 @@ namespace CityBuilder.UI
         {
             if (building == null) return string.Empty;
 
-            var makes = ResourceNames.Of(building.ProducesResource);
-            if (building.ConsumptionPerWorkerPerTick <= 0) return $"даёт {makes}";
+            var recipe = building.SelectedRecipe;
+            if (recipe == null) return "ничего не производит";
 
-            return $"даёт {makes} из {ResourceNames.Of(building.ConsumesResource)}";
+            return $"даёт {recipe.Describe()}";
         }
 
         private void CreateRow(ProductionBuilding building)

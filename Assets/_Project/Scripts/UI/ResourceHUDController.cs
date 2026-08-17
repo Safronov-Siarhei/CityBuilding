@@ -6,17 +6,35 @@ using UnityEngine.UI;
 
 namespace CityBuilder.UI
 {
+    /// <summary>
+    /// The always-on resource bar.
+    ///
+    /// It shows only the resources the settlement has actually met. A fixed chip per ResourceType
+    /// worked while there were six of them; at fifteen -- three ores, three bars, four foods -- a
+    /// full row is unreadable, and most of it is zeroes for things the player has not built the
+    /// mine for yet. So a chip appears the first time its resource does, and then stays for the
+    /// rest of the session even if the stock falls back to zero: a number that vanishes when you
+    /// spend it all is worse than a zero, because the player cannot tell empty from missing.
+    /// </summary>
     public class ResourceHUDController : MonoBehaviour
     {
-        // Parallel arrays wired by SetupProject.BuildResourceHUD -- resourceOrder[i]'s amount is
-        // shown by amountTexts[i], next to that resource's icon. Icons replace the old plain-text
-        // resource names ("Дерево 50   Камень 20 ...") so the always-on top bar reads visually.
+        // Parallel arrays wired by SetupProject.BuildResourceHUD: resourceOrder[i] is drawn by
+        // icons[i] and amountTexts[i]. Positions are decided here rather than at build time,
+        // because which chips are on screen changes as the settlement grows.
         [SerializeField] private ResourceType[] resourceOrder;
+        [SerializeField] private RectTransform[] icons;
         [SerializeField] private Text[] amountTexts;
+        [SerializeField] private RectTransform populationIcon;
         [SerializeField] private Text populationText;
+        [SerializeField] private float barWidth = 1800f;
+
+        /// <summary>Which resources have ever been in the settlement's hands. Index-aligned with resourceOrder.</summary>
+        private bool[] _seen;
 
         private void Start()
         {
+            _seen = new bool[resourceOrder != null ? resourceOrder.Length : 0];
+
             if (ResourceManager.Instance != null)
             {
                 ResourceManager.Instance.OnResourceChanged += HandleResourceChanged;
@@ -41,24 +59,60 @@ namespace CityBuilder.UI
         {
             if (ResourceManager.Instance == null || resourceOrder == null || amountTexts == null) return;
 
-            var infinite = ResourceManager.Instance.InfiniteResources;
+            var resources = ResourceManager.Instance;
+            var infinite = resources.InfiniteResources;
             var count = Math.Min(resourceOrder.Length, amountTexts.Length);
+
+            // Which chips belong on screen, and how many -- the slot width depends on the count,
+            // so this has to be known before anything is positioned.
+            var visible = 0;
             for (var i = 0; i < count; i++)
             {
-                if (amountTexts[i] == null) continue;
-
-                var type = resourceOrder[i];
-                amountTexts[i].text = Format(
-                    ResourceManager.Instance.GetAmount(type),
-                    ResourceManager.Instance.GetCapacity(type),
-                    infinite);
+                if (resources.GetAmount(resourceOrder[i]) > 0) _seen[i] = true;
+                if (_seen[i]) visible++;
             }
 
+            var slots = visible + 1; // + the population chip, which is always there
+            var slotWidth = barWidth / slots;
+            var slot = 0;
+
+            for (var i = 0; i < count; i++)
+            {
+                var shown = _seen[i];
+                if (icons[i] != null) icons[i].gameObject.SetActive(shown);
+                if (amountTexts[i] != null) amountTexts[i].gameObject.SetActive(shown);
+                if (!shown) continue;
+
+                PlaceChip(icons[i], amountTexts[i], slot++, slotWidth);
+                if (amountTexts[i] != null)
+                {
+                    amountTexts[i].text = Format(
+                        resources.GetAmount(resourceOrder[i]),
+                        resources.GetCapacity(resourceOrder[i]),
+                        infinite);
+                }
+            }
+
+            PlaceChip(populationIcon, populationText, slot, slotWidth);
             if (populationText != null)
             {
                 populationText.text = CitizenManager.Instance != null
                     ? $"{CitizenManager.Instance.TotalPopulation} ({CitizenManager.Instance.IdlePopulation})"
                     : "0";
+            }
+        }
+
+        /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>
+        private void PlaceChip(RectTransform icon, Text amount, int slot, float slotWidth)
+        {
+            var center = -barWidth * 0.5f + slotWidth * (slot + 0.5f);
+
+            if (icon != null) icon.anchoredPosition = new Vector2(center - slotWidth * 0.22f, 0f);
+            if (amount != null)
+            {
+                var rect = amount.GetComponent<RectTransform>();
+                rect.anchoredPosition = new Vector2(center + slotWidth * 0.14f, 0f);
+                rect.sizeDelta = new Vector2(slotWidth * 0.6f, 50f);
             }
         }
 

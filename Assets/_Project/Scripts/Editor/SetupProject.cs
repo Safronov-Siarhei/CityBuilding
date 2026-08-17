@@ -1057,66 +1057,66 @@ namespace CityBuilder.EditorTools
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2(0f, 370f);
 
-            // Widened from 1300 when the food chain added four more chips: eleven slots in the old
-            // width left barely a hundred pixels each, and "150/150" does not fit in that.
             const float barWidth = 1800f;
             rect.sizeDelta = new Vector2(barWidth, 50f);
 
-            // The food chain reads left to right in the order it is actually made -- пшеница,
-            // мука, хлеб -- after the raw materials and the two currencies. Еда is what everything
-            // that isn't the bakery still produces (fish, fruit, meat), and sits with them.
+            // Reading order: raw materials, then the ore and the metal it becomes side by side,
+            // then money, then the food chain in the order it is actually made. A chip is only on
+            // screen once its resource has existed -- ResourceHUDController lays the visible ones
+            // out, which is why nothing here is positioned.
             var resourceTypes = new[]
             {
-                ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal,
-                ResourceType.Gold, ResourceType.Coins,
+                ResourceType.Wood, ResourceType.Stone, ResourceType.Coal,
+                ResourceType.Iron, ResourceType.IronBar,
+                ResourceType.CopperOre, ResourceType.CopperBar,
+                ResourceType.Gold, ResourceType.GoldBar,
+                ResourceType.Coins,
                 ResourceType.Grain, ResourceType.Flour, ResourceType.Bread, ResourceType.Food,
             };
-            var slotCount = resourceTypes.Length + 1; // + population slot
-            var slotWidth = barWidth / slotCount;
-            var halfBar = barWidth * 0.5f;
+            var icons = new RectTransform[resourceTypes.Length];
             var amountTexts = new Text[resourceTypes.Length];
 
             for (var i = 0; i < resourceTypes.Length; i++)
             {
-                var slotCenter = -halfBar + slotWidth * (i + 0.5f);
-
                 var icon = CreateImage(root.transform, $"Icon_{resourceTypes[i]}", Color.white);
                 icon.sprite = CreateResourceIcon(resourceTypes[i]);
                 var iconRect = icon.GetComponent<RectTransform>();
                 iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-                iconRect.anchoredPosition = new Vector2(slotCenter - slotWidth * 0.22f, 0f);
                 iconRect.sizeDelta = new Vector2(32f, 32f);
+                icons[i] = iconRect;
 
                 var amountText = CreateText(root.transform, $"Amount_{resourceTypes[i]}", "0", 24,
-                    new Vector2(slotCenter + slotWidth * 0.14f, 0f), new Vector2(slotWidth * 0.6f, 50f));
+                    Vector2.zero, new Vector2(160f, 50f));
                 amountText.alignment = TextAnchor.MiddleLeft;
                 amountTexts[i] = amountText;
             }
 
-            var popCenter = -halfBar + slotWidth * (resourceTypes.Length + 0.5f);
             var popIcon = CreateImage(root.transform, "Icon_Population", Color.white);
             popIcon.sprite = CreatePopulationIcon();
             var popIconRect = popIcon.GetComponent<RectTransform>();
             popIconRect.anchorMin = popIconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            popIconRect.anchoredPosition = new Vector2(popCenter - slotWidth * 0.22f, 0f);
             popIconRect.sizeDelta = new Vector2(32f, 32f);
 
-            var populationText = CreateText(root.transform, "Amount_Population", "0", 24,
-                new Vector2(popCenter + slotWidth * 0.14f, 0f), new Vector2(slotWidth * 0.6f, 50f));
+            var populationText = CreateText(root.transform, "Amount_Population", "0", 24, Vector2.zero, new Vector2(160f, 50f));
             populationText.alignment = TextAnchor.MiddleLeft;
 
             var hud = root.AddComponent<ResourceHUDController>();
             var hudSO = new SerializedObject(hud);
             var resourceOrderProp = hudSO.FindProperty("resourceOrder");
             resourceOrderProp.arraySize = resourceTypes.Length;
+            var iconsProp = hudSO.FindProperty("icons");
+            iconsProp.arraySize = icons.Length;
             var amountTextsProp = hudSO.FindProperty("amountTexts");
             amountTextsProp.arraySize = amountTexts.Length;
             for (var i = 0; i < resourceTypes.Length; i++)
             {
                 resourceOrderProp.GetArrayElementAtIndex(i).enumValueIndex = (int)resourceTypes[i];
+                iconsProp.GetArrayElementAtIndex(i).objectReferenceValue = icons[i];
                 amountTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = amountTexts[i];
             }
+            hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
+            hudSO.FindProperty("barWidth").floatValue = barWidth;
             hudSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1189,14 +1189,30 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(700f, 780f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 260f), new Vector2(640f, 60f));
-            var level = CreateText(card.transform, "Level", string.Empty, 24, new Vector2(0f, 205f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.85f));
-            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 172f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
+            // The header stack was pushed up to 330 to open the band at y 160 for the recipe
+            // buttons; the blocks below the worker controls are untouched.
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 330f), new Vector2(640f, 60f));
+            var level = CreateText(card.transform, "Level", string.Empty, 24, new Vector2(0f, 280f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.85f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 240f), new Vector2(640f, 40f), new Color(1f, 1f, 1f, 0.6f));
 
-            // What the building makes, and out of what. Sits between the condition line and the
-            // worker block because it is the answer to "why would I staff this" -- and for the
-            // mill and the bakery it is the only place the conversion is written down at all.
-            var production = CreateText(card.transform, "Production", string.Empty, 20, new Vector2(0f, 137f), new Vector2(640f, 30f), new Color(0.82f, 0.88f, 0.7f));
+            // What the building makes, and out of what. Above the worker block because it is the
+            // answer to "why would I staff this" -- and for a converter it is the only place the
+            // conversion is written down at all.
+            var production = CreateText(card.transform, "Production", string.Empty, 20, new Vector2(0f, 205f), new Vector2(640f, 30f), new Color(0.82f, 0.88f, 0.7f));
+
+            // The metal buttons on a Плавильня, hidden for every building that has only one recipe.
+            // The buttons themselves are built at play time by the controller: how many there are
+            // is a property of the sheet, not of the scene.
+            var recipeControls = new GameObject("RecipeControls", typeof(RectTransform));
+            recipeControls.transform.SetParent(card.transform, false);
+            StretchFull(recipeControls.GetComponent<RectTransform>());
+
+            var recipeRow = new GameObject("RecipeRow", typeof(RectTransform));
+            recipeRow.transform.SetParent(recipeControls.transform, false);
+            var recipeRowRect = recipeRow.GetComponent<RectTransform>();
+            recipeRowRect.anchorMin = recipeRowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            recipeRowRect.anchoredPosition = new Vector2(0f, 160f);
+            recipeRowRect.sizeDelta = new Vector2(660f, 58f);
 
             // Passthrough containers (StretchFull, zero offset) purely to group-toggle visibility --
             // children keep the same card-relative positions they'd have without the wrapper.
@@ -1243,6 +1259,9 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("levelLabel").objectReferenceValue = level;
             controllerSO.FindProperty("conditionLabel").objectReferenceValue = condition;
             controllerSO.FindProperty("productionLabel").objectReferenceValue = production;
+            controllerSO.FindProperty("recipeControls").objectReferenceValue = recipeControls;
+            controllerSO.FindProperty("recipeRow").objectReferenceValue = recipeRowRect;
+            controllerSO.FindProperty("recipeButtonSprite").objectReferenceValue = panelSprite;
             controllerSO.FindProperty("workerControls").objectReferenceValue = workerControls;
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
@@ -1792,8 +1811,7 @@ namespace CityBuilder.EditorTools
             data.displayName = balance.displayName;
             data.category = balance.category;
             data.cost = CopyCost(balance.cost);
-            data.producesResource = balance.producesResource;
-            data.consumesResource = balance.consumesResource;
+            data.recipes = CopyRecipes(balance.recipes);
             data.productionIntervalSeconds = balance.productionIntervalSeconds;
             data.fogRevealRadius = balance.fogRevealRadius;
             data.storageGroup = balance.storageGroup;
@@ -1844,9 +1862,28 @@ namespace CityBuilder.EditorTools
                     defense = level.defense,
                     citizensGranted = level.citizensGranted,
                     maxWorkers = level.maxWorkers,
-                    productionPerWorkerPerTick = level.productionPerWorkerPerTick,
-                    consumptionPerWorkerPerTick = level.consumptionPerWorkerPerTick,
+                    batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
+                });
+            }
+            return copy;
+        }
+
+        /// <summary>A fresh recipe list, for the same reason as CopyCost: the config asset's own objects must never be shared with a building asset.</summary>
+        private static List<BuildingRecipe> CopyRecipes(List<BuildingRecipe> source)
+        {
+            var copy = new List<BuildingRecipe>();
+            if (source == null) return copy;
+
+            foreach (var recipe in source)
+            {
+                copy.Add(new BuildingRecipe
+                {
+                    id = recipe.id,
+                    displayName = recipe.displayName,
+                    inputs = CopyCost(recipe.inputs),
+                    output = recipe.output,
+                    outputAmount = recipe.outputAmount,
                 });
             }
             return copy;
@@ -2931,6 +2968,17 @@ namespace CityBuilder.EditorTools
             }
         }
 
+        /// <summary>One stacked ingot, tinted per metal -- the three bars differ only in colour, which is exactly how a player tells them apart at icon size.</summary>
+        private static Sprite CreateBarIcon(string name, Color metal, Color shine)
+        {
+            return CreateIconSprite(name, 64, (p, s) =>
+            {
+                FillIconRect(p, s, 0.14f, 0.26f, 0.86f, 0.54f, metal);
+                FillIconRect(p, s, 0.24f, 0.54f, 0.76f, 0.7f, metal);
+                FillIconRect(p, s, 0.2f, 0.32f, 0.66f, 0.38f, shine);
+            });
+        }
+
         /// <summary>Small pictogram per ResourceType, used by the top resource HUD bar in place of plain-text resource names (see ResourceHUDController/BuildResourceHUD).</summary>
         private static Sprite CreateResourceIcon(ResourceType type)
         {
@@ -2990,6 +3038,24 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.34f, 0.54f, 0.86f, 0.72f, edge);
                         FillIconRect(p, s, 0.36f, 0.56f, 0.84f, 0.68f, coin);
                     });
+                case ResourceType.CopperOre:
+                    // Ore, not metal: rough lumps with a copper tint, matching the Stone icon's
+                    // silhouette so the three ores read as a family.
+                    return CreateIconSprite("Res_CopperOre", 64, (p, s) =>
+                    {
+                        var rock = new Color(0.48f, 0.44f, 0.4f);
+                        var ore = new Color(0.78f, 0.45f, 0.24f);
+                        FillIconRect(p, s, 0.16f, 0.2f, 0.84f, 0.6f, rock);
+                        FillIconRect(p, s, 0.28f, 0.6f, 0.66f, 0.72f, rock);
+                        FillIconRect(p, s, 0.26f, 0.3f, 0.4f, 0.44f, ore);
+                        FillIconRect(p, s, 0.54f, 0.38f, 0.7f, 0.52f, ore);
+                    });
+                case ResourceType.IronBar:
+                    return CreateBarIcon("Res_IronBar", new Color(0.62f, 0.65f, 0.7f), new Color(0.85f, 0.88f, 0.92f));
+                case ResourceType.CopperBar:
+                    return CreateBarIcon("Res_CopperBar", new Color(0.78f, 0.45f, 0.24f), new Color(0.93f, 0.66f, 0.42f));
+                case ResourceType.GoldBar:
+                    return CreateBarIcon("Res_GoldBar", new Color(0.85f, 0.68f, 0.24f), new Color(0.97f, 0.88f, 0.55f));
                 case ResourceType.Grain:
                     // A sheaf: three upright stalks with the ears blocked in above them. Straight
                     // edges only, same as every other icon here.

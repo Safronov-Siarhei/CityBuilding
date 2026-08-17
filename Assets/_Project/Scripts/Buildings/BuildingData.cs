@@ -30,15 +30,14 @@ namespace CityBuilder.Buildings
         public int defense;
         public int citizensGranted;
         public int maxWorkers;
-        public int productionPerWorkerPerTick;
 
         /// <summary>
-        /// How much of BuildingData.consumesResource one worker turns into their tick's output.
-        /// Zero -- the case for everything that digs, fells or grows its resource out of nothing --
-        /// means this building has no input at all, and is what tells the two kinds apart: there is
-        /// no "no resource" to put in consumesResource.
+        /// How many batches of the selected recipe one worker gets through per tick. What a batch
+        /// consists of is the recipe's business (see BuildingRecipe) -- this is the only half an
+        /// upgrade improves, so a better workshop makes more of whatever it is set to rather than
+        /// changing what it makes.
         /// </summary>
-        public int consumptionPerWorkerPerTick;
+        public int batchesPerWorkerPerTick;
 
         /// <summary>How much room this building adds to its storage group (see BuildingData.storageGroup). Zero for anything that isn't a storehouse.</summary>
         public int storageCapacity;
@@ -90,13 +89,12 @@ namespace CityBuilder.Buildings
         public List<BuildingLevelStats> levels = new List<BuildingLevelStats>();
 
         [Header("Production")]
-        public ResourceType producesResource = ResourceType.Wood;
-        public float productionIntervalSeconds = 6f;
+        // Everything this building knows how to make, from the balance sheet's recipes tab. Empty
+        // for anything that produces nothing at all -- a house, a wall, the Пристань. One entry is
+        // the ordinary case; several means the player chooses (see ProductionBuilding).
+        public List<BuildingRecipe> recipes = new List<BuildingRecipe>();
 
-        // What this building eats to make the above -- the Ветряк's wheat, the Пекарня's flour.
-        // Only meaningful while BuildingLevelStats.consumptionPerWorkerPerTick is above zero;
-        // a lumberjack's hut leaves that at zero and this field is never read.
-        public ResourceType consumesResource = ResourceType.Wood;
+        public float productionIntervalSeconds = 6f;
 
         [Header("Storage")]
         // Which family of resources this building stores. None for everything that isn't a

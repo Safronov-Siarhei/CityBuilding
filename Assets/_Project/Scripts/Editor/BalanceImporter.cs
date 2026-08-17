@@ -29,6 +29,7 @@ namespace CityBuilder.EditorTools
         public const string UnitsCsvPath = BalanceFolder + "/units.csv";
         public const string EconomyCsvPath = BalanceFolder + "/economy.csv";
         public const string BuildingsCsvPath = BalanceFolder + "/buildings.csv";
+        public const string RecipesCsvPath = BalanceFolder + "/recipes.csv";
         public const string SettingsAssetPath = BalanceFolder + "/BalanceSheetSettings.asset";
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
 
@@ -47,6 +48,7 @@ namespace CityBuilder.EditorTools
         {
             var units = ReadUnits(UnitsCsvPath);
             var buildings = ReadBuildings(BuildingsCsvPath);
+            AttachRecipes(buildings, ReadRecipes(RecipesCsvPath));
             var economy = ReadEconomy(EconomyCsvPath);
 
             var config = AssetDatabase.LoadAssetAtPath<BalanceConfig>(ConfigAssetPath);
@@ -89,6 +91,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.unitsCsvUrl, UnitsCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.economyCsvUrl, EconomyCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.buildingsCsvUrl, BuildingsCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.recipesCsvUrl, RecipesCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -204,8 +207,6 @@ namespace CityBuilder.EditorTools
                     displayName = Text(header, row, "display_name"),
                     category = ParseEnum(header, row, "category", BuildingCategory.Production, path),
                     cost = ReadCost(header, row, "cost_", path),
-                    producesResource = ParseEnum(header, row, "produces", ResourceType.Wood, path),
-                    consumesResource = ParseEnum(header, row, "consumes", ResourceType.Wood, path),
                     productionIntervalSeconds = Number(header, row, "production_interval_sec", path),
                     fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
                     storageGroup = ParseEnum(header, row, "storage_group", ResourceStorageGroup.None, path),
@@ -216,6 +217,106 @@ namespace CityBuilder.EditorTools
                 });
             }
             return buildings;
+        }
+
+        /// <summary>
+        /// The recipes tab: one row per thing a building can make. A building's rows are matched to
+        /// it by the `building` column, so adding a second metal to the furnace is a new row and
+        /// nothing else -- no schema, no widening of the buildings tab.
+        /// </summary>
+        private static List<(string building, BuildingRecipe recipe)> ReadRecipes(string path)
+        {
+            var recipes = new List<(string, BuildingRecipe)>();
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return recipes;
+
+            var header = rows[0];
+            for (var i = 0; i < header.Count; i++)
+            {
+                header[i] = header[i].Trim();
+            }
+
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (row.Count == 0 || string.IsNullOrWhiteSpace(row[0])) continue;
+                if (IsNoteRow(row)) continue;
+
+                var recipe = new BuildingRecipe
+                {
+                    id = Text(header, row, "recipe_id"),
+                    displayName = Text(header, row, "display_name"),
+                    output = ParseEnum(header, row, "out", ResourceType.Wood, path),
+                    outputAmount = (int)Number(header, row, "out_amount", path),
+                    inputs = ReadRecipeInputs(header, row, path),
+                };
+
+                if (recipe.outputAmount <= 0)
+                {
+                    Debug.LogError($"BalanceImporter: recipe '{recipe.id}' of {Text(header, row, "building")} produces {recipe.outputAmount} -- a recipe that makes nothing would consume its inputs for free.");
+                    continue;
+                }
+
+                recipes.Add((Text(header, row, "building"), recipe));
+            }
+            return recipes;
+        }
+
+        /// <summary>
+        /// A recipe's inputs, read from the in1/in2/... pairs. A blank slot is simply not an
+        /// ingredient -- a mine names none of them, and smelting names two.
+        /// </summary>
+        private static List<ResourceAmount> ReadRecipeInputs(List<string> header, List<string> row, string path)
+        {
+            var inputs = new List<ResourceAmount>();
+
+            for (var slot = 1; slot <= MaxRecipeInputs; slot++)
+            {
+                var typeColumn = $"in{slot}";
+                var amountColumn = $"in{slot}_amount";
+                if (header.IndexOf(typeColumn) < 0) continue;
+
+                var raw = Text(header, row, typeColumn);
+                if (raw.Length == 0) continue;
+
+                var amount = CostAmount(header, row, amountColumn, path);
+                if (amount <= 0)
+                {
+                    Debug.LogError($"BalanceImporter: {path} names '{raw}' in {typeColumn} but gives it no amount. Ignoring that ingredient.");
+                    continue;
+                }
+
+                inputs.Add(new ResourceAmount { type = ParseEnum(header, row, typeColumn, ResourceType.Wood, path), amount = amount });
+            }
+
+            return inputs;
+        }
+
+        /// <summary>How many in{n}/in{n}_amount column pairs the importer looks for. Widening the tab is one number here.</summary>
+        private const int MaxRecipeInputs = 3;
+
+        /// <summary>
+        /// Hands each recipe to its building. A recipe naming a building that does not exist is a
+        /// loud error rather than a silent drop -- it means a renamed id, and the symptom would be
+        /// a workshop that mysteriously stopped producing.
+        /// </summary>
+        private static void AttachRecipes(List<BuildingBalance> buildings, List<(string building, BuildingRecipe recipe)> recipes)
+        {
+            foreach (var building in buildings)
+            {
+                building.recipes = new List<BuildingRecipe>();
+            }
+
+            foreach (var (buildingId, recipe) in recipes)
+            {
+                var owner = buildings.Find(b => b.id == buildingId);
+                if (owner == null)
+                {
+                    Debug.LogError($"BalanceImporter: recipe '{recipe.id}' names building '{buildingId}', which has no row in the buildings tab.");
+                    continue;
+                }
+                owner.recipes.Add(recipe);
+            }
         }
 
         /// <summary>
@@ -242,8 +343,7 @@ namespace CityBuilder.EditorTools
                     defense = LevelNumber(header, row, "defense", level, previous?.defense, path),
                     citizensGranted = LevelNumber(header, row, "citizens_granted", level, previous?.citizensGranted, path),
                     maxWorkers = LevelNumber(header, row, "max_workers", level, previous?.maxWorkers, path),
-                    productionPerWorkerPerTick = LevelNumber(header, row, "production_per_tick", level, previous?.productionPerWorkerPerTick, path),
-                    consumptionPerWorkerPerTick = LevelNumber(header, row, "consumption_per_tick", level, previous?.consumptionPerWorkerPerTick, path),
+                    batchesPerWorkerPerTick = LevelNumber(header, row, "batches_per_tick", level, previous?.batchesPerWorkerPerTick, path),
                     storageCapacity = LevelNumber(header, row, "storage_capacity", level, previous?.storageCapacity, path),
                 });
             }
@@ -292,6 +392,9 @@ namespace CityBuilder.EditorTools
         private static readonly ResourceType[] CostResources =
         {
             ResourceType.Wood, ResourceType.Stone, ResourceType.Iron, ResourceType.Coal, ResourceType.Gold,
+            // Smelted iron, so the Плавильня's output has somewhere to go: the three buildings that
+            // used to be paid for in raw ore are what the furnace is for.
+            ResourceType.IronBar,
         };
 
         /// <summary>Quiet about an absent column or an empty cell (that is simply a cost this building doesn't have), loud about a cell holding something that isn't a number.</summary>

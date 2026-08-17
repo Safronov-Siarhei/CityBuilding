@@ -31,6 +31,13 @@ namespace CityBuilder.Saving
         public int cellX;
         public int cellY;
         public int assignedWorkers;
+
+        /// <summary>
+        /// Which recipe the building was set to, by its stable id -- empty for the great majority
+        /// that only know one thing. An index would have been shorter and wrong: reordering the
+        /// recipes tab would silently turn every saved furnace into a different metal.
+        /// </summary>
+        public string selectedRecipeId = string.Empty;
         public int level = 1;
         public int currentHealth;
         public float decay;

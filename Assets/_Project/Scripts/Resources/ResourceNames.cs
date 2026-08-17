@@ -14,9 +14,14 @@ namespace CityBuilder.Resources
                 case ResourceType.Wood: return "дерево";
                 case ResourceType.Stone: return "камень";
                 case ResourceType.Food: return "еда";
-                case ResourceType.Gold: return "золото";
+                // Iron and Gold are the ore, not the metal -- see the note on ResourceType.
+                case ResourceType.Gold: return "золотая руда";
                 case ResourceType.Population: return "жители";
-                case ResourceType.Iron: return "железо";
+                case ResourceType.Iron: return "железная руда";
+                case ResourceType.CopperOre: return "медная руда";
+                case ResourceType.IronBar: return "железный слиток";
+                case ResourceType.CopperBar: return "медный слиток";
+                case ResourceType.GoldBar: return "золотой слиток";
                 case ResourceType.Coal: return "уголь";
                 case ResourceType.Coins: return "монеты";
                 case ResourceType.Grain: return "пшеница";

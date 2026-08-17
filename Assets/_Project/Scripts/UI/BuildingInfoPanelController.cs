@@ -21,6 +21,9 @@ namespace CityBuilder.UI
         [SerializeField] private Text levelLabel;
         [SerializeField] private Text conditionLabel;
         [SerializeField] private Text productionLabel;
+        [SerializeField] private GameObject recipeControls;
+        [SerializeField] private RectTransform recipeRow;
+        [SerializeField] private Sprite recipeButtonSprite;
         [SerializeField] private GameObject workerControls;
         [SerializeField] private Text workersLabel;
         [SerializeField] private Text idleLabel;
@@ -113,12 +116,10 @@ namespace CityBuilder.UI
             if (productionLabel != null)
             {
                 productionLabel.text = hasProduction
-                    ? ProductionSummary(
-                        _currentProduction.ProducesResource, _currentProduction.ProductionPerWorkerPerTick,
-                        _currentProduction.ConsumesResource, _currentProduction.ConsumptionPerWorkerPerTick,
-                        data.productionIntervalSeconds)
+                    ? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds)
                     : string.Empty;
             }
+            RefreshRecipeControls();
             if (hasProduction)
             {
                 if (workersLabel != null) workersLabel.text = $"Рабочие: {_currentProduction.AssignedWorkers} / {_currentProduction.MaxWorkers}";
@@ -148,18 +149,100 @@ namespace CityBuilder.UI
         ///
         /// Pure and static so the wording is covered by an EditMode test without a canvas.
         /// </summary>
-        public static string ProductionSummary(
-            ResourceType produces, int producedPerWorker,
-            ResourceType consumes, int consumedPerWorker,
-            float intervalSeconds)
+        public static string ProductionSummary(BuildingRecipe recipe, int batchesPerWorker, float intervalSeconds)
         {
-            if (producedPerWorker <= 0) return string.Empty;
+            if (recipe == null || batchesPerWorker <= 0) return string.Empty;
 
-            var output = $"Производит: {ResourceNames.Of(produces)} {producedPerWorker}";
-            if (consumedPerWorker > 0) output += $" из {consumedPerWorker} {ResourceNames.Of(consumes)}";
-
-            return $"{output} / {intervalSeconds:0.#} с на работника";
+            var batches = batchesPerWorker > 1 ? $" x{batchesPerWorker}" : string.Empty;
+            return $"Производит: {recipe.Describe()}{batches} / {intervalSeconds:0.#} с на работника";
         }
+
+        /// <summary>
+        /// The metal buttons on a Плавильня. Built at runtime and only for a building that has a
+        /// real choice -- a sawmill with one recipe would otherwise get a row holding a single
+        /// button that does nothing, which reads as broken rather than as "no choice here".
+        /// </summary>
+        private void RefreshRecipeControls()
+        {
+            var hasChoice = _currentProduction != null && _currentProduction.HasRecipeChoice;
+            if (recipeControls != null) recipeControls.SetActive(hasChoice);
+            if (!hasChoice || recipeRow == null) return;
+
+            // Rebuilt only when a different building is selected: unlike the workforce list this is
+            // a handful of buttons that never change while one card is open.
+            if (_recipeButtonsOwner != _currentProduction)
+            {
+                for (var i = recipeRow.childCount - 1; i >= 0; i--)
+                {
+                    Destroy(recipeRow.GetChild(i).gameObject);
+                }
+                _recipeButtons.Clear();
+                _recipeButtonsOwner = _currentProduction;
+
+                for (var i = 0; i < _currentProduction.Recipes.Count; i++)
+                {
+                    _recipeButtons.Add(CreateRecipeButton(i, _currentProduction.Recipes[i]));
+                }
+            }
+
+            for (var i = 0; i < _recipeButtons.Count; i++)
+            {
+                _recipeButtons[i].color = i == _currentProduction.SelectedRecipeIndex ? SelectedRecipeColor : UnselectedRecipeColor;
+            }
+        }
+
+        private Image CreateRecipeButton(int index, BuildingRecipe recipe)
+        {
+            const float width = 210f;
+            const float spacing = 12f;
+            var count = _currentProduction.Recipes.Count;
+
+            var go = new GameObject($"Recipe_{recipe.id}", typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(recipeRow, false);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2((index - (count - 1) * 0.5f) * (width + spacing), 0f);
+            rect.sizeDelta = new Vector2(width, 58f);
+
+            var image = go.GetComponent<Image>();
+            image.sprite = recipeButtonSprite;
+            image.type = Image.Type.Sliced;
+
+            var labelGO = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelGO.transform.SetParent(go.transform, false);
+            var labelRect = labelGO.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(6f, 4f);
+            labelRect.offsetMax = new Vector2(-6f, -4f);
+
+            var label = labelGO.GetComponent<Text>();
+            label.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 18;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white;
+            label.text = recipe.displayName;
+
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+            var captured = index;
+            button.onClick.AddListener(() => SelectRecipe(captured));
+
+            return image;
+        }
+
+        public void SelectRecipe(int index)
+        {
+            _currentProduction?.SelectRecipe(index);
+            Refresh();
+        }
+
+        private static readonly Color SelectedRecipeColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
+        private static readonly Color UnselectedRecipeColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
+
+        private readonly List<Image> _recipeButtons = new List<Image>();
+        private ProductionBuilding _recipeButtonsOwner;
 
         /// <summary>
         /// Recruitment lives on the Barracks only. The label doubles as the refusal reason (army

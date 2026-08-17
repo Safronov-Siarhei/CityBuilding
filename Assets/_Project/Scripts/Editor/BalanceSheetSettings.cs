@@ -21,5 +21,8 @@ namespace CityBuilder.EditorTools
 
         [Tooltip("Опубликованная как CSV вкладка buildings")]
         public string buildingsCsvUrl = string.Empty;
+
+        [Tooltip("Опубликованная как CSV вкладка recipes")]
+        public string recipesCsvUrl = string.Empty;
     }
 }

@@ -73,9 +73,12 @@ namespace CityBuilder.Tests.PlayMode
             var resources = ResourceManager.Instance;
 
             Assert.AreEqual(config.BaseCapacityMaterials, resources.GetCapacity(ResourceType.Wood));
+            // Iron and Gold are the ORE now (the Плавильня makes the metal), so both are raw goods
+            // and live in the Склад -- it is the bar that goes in the treasury.
             Assert.AreEqual(config.BaseCapacityMaterials, resources.GetCapacity(ResourceType.Iron));
+            Assert.AreEqual(config.BaseCapacityMaterials, resources.GetCapacity(ResourceType.Gold));
             Assert.AreEqual(config.BaseCapacityFood, resources.GetCapacity(ResourceType.Food));
-            Assert.AreEqual(config.BaseCapacityValuables, resources.GetCapacity(ResourceType.Gold));
+            Assert.AreEqual(config.BaseCapacityValuables, resources.GetCapacity(ResourceType.GoldBar));
             Assert.AreEqual(config.BaseCapacityValuables, resources.GetCapacity(ResourceType.Coins));
 
             // Headcount is not warehoused -- a ceiling here would quietly cap the town's growth.

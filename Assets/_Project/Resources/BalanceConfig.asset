@@ -42,8 +42,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 10
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -52,22 +51,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 5
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 128
       defense: 0
       citizensGranted: 8
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 200
       defense: 0
       citizensGranted: 10
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -84,8 +80,7 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 8
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -94,22 +89,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 8
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 192
       defense: 0
       citizensGranted: 12
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 300
       defense: 0
       citizensGranted: 16
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: Hovel
     upgradeToLevel2Cost:
@@ -130,8 +122,7 @@ MonoBehaviour:
       amount: 55
     - type: 1
       amount: 25
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -140,22 +131,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 14
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 320
       defense: 0
       citizensGranted: 20
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 500
       defense: 0
       citizensGranted: 28
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: Cottage
     upgradeToLevel2Cost:
@@ -172,8 +160,7 @@ MonoBehaviour:
     displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
     category: 0
     cost: []
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 20
     storageGroup: 0
@@ -182,22 +169,19 @@ MonoBehaviour:
       defense: 20
       citizensGranted: 5
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 640
       defense: 32
       citizensGranted: 8
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 1000
       defense: 50
       citizensGranted: 10
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -220,8 +204,12 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 15
-    producesResource: 2
-    consumesResource: 0
+    recipes:
+    - id: fish
+      displayName: "\u0415\u0434\u0430"
+      inputs: []
+      output: 2
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -230,22 +218,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 144
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 225
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -262,8 +247,12 @@ MonoBehaviour:
       amount: 15
     - type: 1
       amount: 5
-    producesResource: 8
-    consumesResource: 0
+    recipes:
+    - id: grain
+      displayName: "\u041F\u0448\u0435\u043D\u0438\u0446\u0430"
+      inputs: []
+      output: 8
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -272,22 +261,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
     - maxHealth: 112
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
     - maxHealth: 175
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -308,8 +294,12 @@ MonoBehaviour:
       amount: 20
     - type: 1
       amount: 5
-    producesResource: 0
-    consumesResource: 0
+    recipes:
+    - id: wood
+      displayName: "\u0414\u0435\u0440\u0435\u0432\u043E"
+      inputs: []
+      output: 0
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 15
     storageGroup: 0
@@ -318,22 +308,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 160
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 250
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -352,8 +339,12 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 20
-    producesResource: 1
-    consumesResource: 0
+    recipes:
+    - id: stone
+      displayName: "\u041A\u0430\u043C\u0435\u043D\u044C"
+      inputs: []
+      output: 1
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -362,22 +353,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -394,8 +382,12 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 15
-    producesResource: 5
-    consumesResource: 0
+    recipes:
+    - id: iron_ore
+      displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 5
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -404,22 +396,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -444,8 +433,12 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 10
-    producesResource: 6
-    consumesResource: 0
+    recipes:
+    - id: coal
+      displayName: "\u0423\u0433\u043E\u043B\u044C"
+      inputs: []
+      output: 6
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -454,22 +447,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 160
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 250
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -494,8 +484,7 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 10
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 1
@@ -504,22 +493,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 300
     - maxHealth: 192
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 600
     - maxHealth: 300
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1000
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -540,8 +526,7 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 5
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 4
@@ -550,22 +535,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 200
     - maxHealth: 160
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 400
     - maxHealth: 250
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 700
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -586,8 +568,7 @@ MonoBehaviour:
       amount: 10
     - type: 1
       amount: 40
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 3
@@ -596,22 +577,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 500
     - maxHealth: 320
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1000
     - maxHealth: 500
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1800
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -632,8 +610,7 @@ MonoBehaviour:
       amount: 80
     - type: 1
       amount: 40
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 1
@@ -642,22 +619,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 800
     - maxHealth: 416
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1600
     - maxHealth: 650
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 2600
     requiredBuildingId: Warehouse
     upgradeToLevel2Cost:
@@ -678,8 +652,7 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 30
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 4
@@ -688,22 +661,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 550
     - maxHealth: 352
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1100
     - maxHealth: 550
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1900
     requiredBuildingId: Barn
     upgradeToLevel2Cost:
@@ -724,8 +694,7 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 110
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 3
@@ -734,22 +703,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1300
     - maxHealth: 672
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 2600
     - maxHealth: 1050
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 4600
     requiredBuildingId: Treasury
     upgradeToLevel2Cost:
@@ -770,8 +736,7 @@ MonoBehaviour:
       amount: 5
     - type: 1
       amount: 15
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 18
     storageGroup: 0
@@ -780,22 +745,19 @@ MonoBehaviour:
       defense: 25
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 352
       defense: 40
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 550
       defense: 63
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: Fence
     upgradeToLevel2Cost:
@@ -820,8 +782,7 @@ MonoBehaviour:
       amount: 15
     - type: 1
       amount: 30
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -830,22 +791,19 @@ MonoBehaviour:
       defense: 10
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 288
       defense: 16
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 450
       defense: 25
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -870,8 +828,7 @@ MonoBehaviour:
       amount: 5
     - type: 1
       amount: 12
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 0
@@ -880,22 +837,19 @@ MonoBehaviour:
       defense: 12
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 256
       defense: 19
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 400
       defense: 30
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -921,10 +875,9 @@ MonoBehaviour:
       amount: 10
     - type: 1
       amount: 40
-    - type: 5
+    - type: 12
       amount: 8
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 20
     storageGroup: 0
@@ -933,22 +886,19 @@ MonoBehaviour:
       defense: 55
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 768
       defense: 88
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 1200
       defense: 138
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: Tower
     upgradeToLevel2Cost:
@@ -974,10 +924,9 @@ MonoBehaviour:
       amount: 10
     - type: 1
       amount: 30
-    - type: 5
+    - type: 12
       amount: 6
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 0
@@ -986,22 +935,19 @@ MonoBehaviour:
       defense: 26
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 544
       defense: 42
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 850
       defense: 65
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: Gate
     upgradeToLevel2Cost:
@@ -1024,8 +970,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 3
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
     storageGroup: 0
@@ -1034,22 +979,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 80
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 125
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1064,8 +1006,7 @@ MonoBehaviour:
     cost:
     - type: 1
       amount: 3
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
     storageGroup: 0
@@ -1074,22 +1015,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 64
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 100
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1104,8 +1042,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 8
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
     storageGroup: 0
@@ -1114,22 +1051,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 64
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 100
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1146,8 +1080,7 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 10
-    producesResource: 2
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -1155,23 +1088,20 @@ MonoBehaviour:
     - maxHealth: 90
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 144
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 225
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      productionPerWorkerPerTick: 3
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1192,8 +1122,7 @@ MonoBehaviour:
       amount: 20
     - type: 1
       amount: 8
-    producesResource: 3
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -1201,23 +1130,20 @@ MonoBehaviour:
     - maxHealth: 80
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 128
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 200
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1238,8 +1164,7 @@ MonoBehaviour:
       amount: 5
     - type: 1
       amount: 20
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 6
     storageGroup: 0
@@ -1248,22 +1173,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 144
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 225
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1284,8 +1206,7 @@ MonoBehaviour:
       amount: 4
     - type: 1
       amount: 1
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 6
     storageGroup: 0
@@ -1294,22 +1215,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 64
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 100
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1329,8 +1247,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 3
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 3
     storageGroup: 0
@@ -1339,22 +1256,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 64
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 100
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1370,8 +1284,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 2
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 3
     storageGroup: 0
@@ -1380,22 +1293,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 48
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 75
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1413,8 +1323,7 @@ MonoBehaviour:
       amount: 5
     - type: 1
       amount: 2
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
     storageGroup: 0
@@ -1423,22 +1332,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 96
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 150
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1459,8 +1365,7 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 5
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 2
@@ -1469,22 +1374,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 200
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 400
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 700
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1505,8 +1407,7 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 30
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
     storageGroup: 2
@@ -1515,22 +1416,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 550
     - maxHealth: 368
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1100
     - maxHealth: 575
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 1900
     requiredBuildingId: Granary
     upgradeToLevel2Cost:
@@ -1551,8 +1449,14 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 10
-    producesResource: 10
-    consumesResource: 9
+    recipes:
+    - id: bread
+      displayName: "\u0425\u043B\u0435\u0431"
+      inputs:
+      - type: 9
+        amount: 1
+      output: 10
+      outputAmount: 2
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -1561,22 +1465,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 1
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 1
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
       maxWorkers: 4
-      productionPerWorkerPerTick: 2
-      consumptionPerWorkerPerTick: 1
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: Windmill
     upgradeToLevel2Cost:
@@ -1597,8 +1498,14 @@ MonoBehaviour:
       amount: 35
     - type: 1
       amount: 10
-    producesResource: 9
-    consumesResource: 8
+    recipes:
+    - id: flour
+      displayName: "\u041C\u0443\u043A\u0430"
+      inputs:
+      - type: 8
+        amount: 2
+      output: 9
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -1607,22 +1514,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 192
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 300
       defense: 0
       citizensGranted: 0
       maxWorkers: 4
-      productionPerWorkerPerTick: 1
-      consumptionPerWorkerPerTick: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: Farm
     upgradeToLevel2Cost:
@@ -1643,8 +1547,7 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 8
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -1653,22 +1556,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1689,8 +1589,7 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 5
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -1699,22 +1598,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 192
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 300
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1733,8 +1629,7 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 20
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -1743,22 +1638,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 128
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 200
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1775,8 +1667,34 @@ MonoBehaviour:
       amount: 35
     - type: 1
       amount: 25
-    producesResource: 0
-    consumesResource: 0
+    recipes:
+    - id: iron_bar
+      displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 5
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 12
+      outputAmount: 1
+    - id: copper_bar
+      displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 11
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 13
+      outputAmount: 1
+    - id: gold_bar
+      displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 3
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 14
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -1784,23 +1702,20 @@ MonoBehaviour:
     - maxHealth: 150
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 240
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 375
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1821,8 +1736,12 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 15
-    producesResource: 0
-    consumesResource: 0
+    recipes:
+    - id: copper_ore
+      displayName: "\u041C\u0435\u0434\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 11
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -1830,23 +1749,20 @@ MonoBehaviour:
     - maxHealth: 110
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1867,8 +1783,12 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 20
-    producesResource: 0
-    consumesResource: 0
+    recipes:
+    - id: gold_ore
+      displayName: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 3
+      outputAmount: 1
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -1876,23 +1796,20 @@ MonoBehaviour:
     - maxHealth: 120
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 192
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 300
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1913,10 +1830,9 @@ MonoBehaviour:
       amount: 40
     - type: 1
       amount: 30
-    - type: 5
+    - type: 12
       amount: 10
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 12
     storageGroup: 0
@@ -1925,22 +1841,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 256
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 400
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1965,8 +1878,7 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 15
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -1975,22 +1887,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 208
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 325
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2011,8 +1920,7 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 15
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -2021,22 +1929,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 208
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 325
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2057,8 +1962,7 @@ MonoBehaviour:
       amount: 5
     - type: 1
       amount: 10
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 6
     storageGroup: 0
@@ -2067,22 +1971,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 96
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 150
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2103,8 +2004,7 @@ MonoBehaviour:
       amount: 40
     - type: 1
       amount: 30
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -2113,22 +2013,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 288
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 450
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2149,8 +2046,7 @@ MonoBehaviour:
       amount: 35
     - type: 1
       amount: 15
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -2159,22 +2055,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 240
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 375
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2195,8 +2088,7 @@ MonoBehaviour:
       amount: 50
     - type: 1
       amount: 35
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
     storageGroup: 0
@@ -2205,22 +2097,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 288
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 450
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -2241,8 +2130,7 @@ MonoBehaviour:
       amount: 90
     - type: 1
       amount: 80
-    producesResource: 0
-    consumesResource: 0
+    recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     storageGroup: 0
@@ -2251,22 +2139,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 512
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 800
       defense: 0
       citizensGranted: 0
       maxWorkers: 0
-      productionPerWorkerPerTick: 0
-      consumptionPerWorkerPerTick: 0
+      batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:

@@ -135,10 +135,13 @@ namespace CityBuilder.Saving
                     }
                 }
 
-                if (entry.assignedWorkers > 0)
+                var production = instance.GetComponent<ProductionBuilding>();
+                if (production != null)
                 {
-                    var production = instance.GetComponent<ProductionBuilding>();
-                    production?.SetAssignedWorkers(entry.assignedWorkers);
+                    // Before the workers: the recipe decides what those workers will be making on
+                    // the very first tick after the load.
+                    production.SelectRecipeById(entry.selectedRecipeId);
+                    if (entry.assignedWorkers > 0) production.SetAssignedWorkers(entry.assignedWorkers);
                 }
             }
         }
@@ -172,6 +175,7 @@ namespace CityBuilder.Saving
                     cellX = instance.OriginCell.x,
                     cellY = instance.OriginCell.y,
                     assignedWorkers = production != null ? production.AssignedWorkers : 0,
+                    selectedRecipeId = production != null && production.SelectedRecipe != null ? production.SelectedRecipe.id : string.Empty,
                     level = instance.Level,
                     currentHealth = instance.CurrentHealth,
                     decay = instance.Decay,

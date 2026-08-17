@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Smelter
   displayName: "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
-  prefab: {fileID: 717022616818547499, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
+  prefab: {fileID: 823347192360573200, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
   footprintSize: {x: 2, y: 3}
   cost:
   - type: 0
@@ -31,27 +31,50 @@ MonoBehaviour:
   - maxHealth: 150
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 2
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 240
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 375
     defense: 0
     citizensGranted: 0
-    maxWorkers: 0
-    productionPerWorkerPerTick: 0
-    consumptionPerWorkerPerTick: 0
+    maxWorkers: 4
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 0
+  recipes:
+  - id: iron_bar
+    displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    inputs:
+    - type: 5
+      amount: 2
+    - type: 6
+      amount: 1
+    output: 12
+    outputAmount: 1
+  - id: copper_bar
+    displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    inputs:
+    - type: 11
+      amount: 2
+    - type: 6
+      amount: 1
+    output: 13
+    outputAmount: 1
+  - id: gold_bar
+    displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+    inputs:
+    - type: 3
+      amount: 2
+    - type: 6
+      amount: 1
+    output: 14
+    outputAmount: 1
   productionIntervalSeconds: 6
-  consumesResource: 0
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

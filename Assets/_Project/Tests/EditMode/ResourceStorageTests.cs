@@ -14,6 +14,8 @@ namespace CityBuilder.Tests.EditMode
         [TestCase(ResourceType.Wood)]
         [TestCase(ResourceType.Stone)]
         [TestCase(ResourceType.Iron)]
+        [TestCase(ResourceType.CopperOre)]
+        [TestCase(ResourceType.Gold)]
         [TestCase(ResourceType.Coal)]
         public void RawGoods_GoInTheWarehouse(ResourceType type)
         {
@@ -36,9 +38,12 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(ResourceStorageGroup.Grain, ResourceStorage.GroupOf(ResourceType.Grain));
         }
 
-        [TestCase(ResourceType.Gold)]
+        /// <summary>Smelted metal and coin. The ORE those bars came from is a raw good and belongs in the Склад -- see RawGoods_GoInTheWarehouse, which now covers Gold and Iron for exactly that reason.</summary>
         [TestCase(ResourceType.Coins)]
-        public void MoneyGoesInTheTreasury(ResourceType type)
+        [TestCase(ResourceType.IronBar)]
+        [TestCase(ResourceType.CopperBar)]
+        [TestCase(ResourceType.GoldBar)]
+        public void MoneyAndMetalGoInTheTreasury(ResourceType type)
         {
             Assert.AreEqual(ResourceStorageGroup.Valuables, ResourceStorage.GroupOf(type));
         }

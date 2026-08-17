@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Baker
   displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
-  prefab: {fileID: 2081417576422523710, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
+  prefab: {fileID: 3075615271074275760, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
   footprintSize: {x: 1, y: 2}
   cost:
   - type: 0
@@ -32,26 +32,29 @@ MonoBehaviour:
     defense: 0
     citizensGranted: 0
     maxWorkers: 2
-    productionPerWorkerPerTick: 2
-    consumptionPerWorkerPerTick: 1
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 176
     defense: 0
     citizensGranted: 0
     maxWorkers: 3
-    productionPerWorkerPerTick: 2
-    consumptionPerWorkerPerTick: 1
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
   - maxHealth: 275
     defense: 0
     citizensGranted: 0
     maxWorkers: 4
-    productionPerWorkerPerTick: 2
-    consumptionPerWorkerPerTick: 1
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
-  producesResource: 10
+  recipes:
+  - id: bread
+    displayName: "\u0425\u043B\u0435\u0431"
+    inputs:
+    - type: 9
+      amount: 1
+    output: 10
+    outputAmount: 2
   productionIntervalSeconds: 6
-  consumesResource: 9
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

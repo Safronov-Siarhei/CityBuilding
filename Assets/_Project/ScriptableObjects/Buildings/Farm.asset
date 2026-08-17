@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Farm
   displayName: "\u0424\u0435\u0440\u043C\u0430"
-  prefab: {fileID: 192849264741360647, guid: ec6283a6c8502bf439dfabff28cc73a3, type: 3}
+  prefab: {fileID: 6485743587876891067, guid: ec6283a6c8502bf439dfabff28cc73a3, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -32,26 +32,27 @@ MonoBehaviour:
     defense: 0
     citizensGranted: 0
     maxWorkers: 3
-    productionPerWorkerPerTick: 3
-    consumptionPerWorkerPerTick: 0
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
   - maxHealth: 112
     defense: 0
     citizensGranted: 0
     maxWorkers: 3
-    productionPerWorkerPerTick: 3
-    consumptionPerWorkerPerTick: 0
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
   - maxHealth: 175
     defense: 0
     citizensGranted: 0
     maxWorkers: 3
-    productionPerWorkerPerTick: 3
-    consumptionPerWorkerPerTick: 0
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
-  producesResource: 8
+  recipes:
+  - id: grain
+    displayName: "\u041F\u0448\u0435\u043D\u0438\u0446\u0430"
+    inputs: []
+    output: 8
+    outputAmount: 1
   productionIntervalSeconds: 6
-  consumesResource: 0
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

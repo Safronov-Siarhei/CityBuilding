@@ -146,10 +146,10 @@ namespace CityBuilder.Tests.EditMode
                     Assert.GreaterOrEqual(stats.defense, 0, $"{building.id} lvl {level}: negative defence would heal the raiders.");
                     Assert.GreaterOrEqual(stats.maxWorkers, 0, $"{building.id} lvl {level}: negative worker slots.");
 
-                    if (stats.productionPerWorkerPerTick > 0)
+                    if (stats.batchesPerWorkerPerTick > 0)
                     {
                         Assert.Greater(stats.maxWorkers, 0,
-                            $"{building.id} lvl {level}: produces something but has no worker slots, so it can never produce anything.");
+                            $"{building.id} lvl {level}: works through batches but has no worker slots, so it can never produce anything.");
                     }
                 }
 
@@ -203,7 +203,7 @@ namespace CityBuilder.Tests.EditMode
                     Assert.GreaterOrEqual(current.defense, previous.defense, $"{building.id}: level {level} defends worse than level {level - 1}.");
                     Assert.GreaterOrEqual(current.citizensGranted, previous.citizensGranted, $"{building.id}: level {level} houses fewer people than level {level - 1}.");
                     Assert.GreaterOrEqual(current.maxWorkers, previous.maxWorkers, $"{building.id}: level {level} employs fewer people than level {level - 1}.");
-                    Assert.GreaterOrEqual(current.productionPerWorkerPerTick, previous.productionPerWorkerPerTick, $"{building.id}: level {level} produces less than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.batchesPerWorkerPerTick, previous.batchesPerWorkerPerTick, $"{building.id}: level {level} produces less than level {level - 1}.");
                 }
             }
         }

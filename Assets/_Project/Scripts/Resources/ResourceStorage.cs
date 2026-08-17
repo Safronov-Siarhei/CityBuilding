@@ -41,8 +41,12 @@ namespace CityBuilder.Resources
                     return ResourceStorageGroup.Food;
                 case ResourceType.Grain:
                     return ResourceStorageGroup.Grain;
-                case ResourceType.Gold:
+                // Smelted metal and money go in the Сокровищница; the ore they came out of is a
+                // raw good and stays in the Склад with the timber and stone (see the default).
                 case ResourceType.Coins:
+                case ResourceType.IronBar:
+                case ResourceType.CopperBar:
+                case ResourceType.GoldBar:
                     return ResourceStorageGroup.Valuables;
                 default:
                     return ResourceStorageGroup.Materials;

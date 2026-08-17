@@ -52,10 +52,12 @@ namespace CityBuilder.Core
         /// <summary>Placement cost. Built from the tab's cost_wood/cost_stone/... columns, zeroes omitted.</summary>
         public List<ResourceAmount> cost = new List<ResourceAmount>();
 
-        public ResourceType producesResource = ResourceType.Wood;
-
-        /// <summary>What the building turns into its output. Read only where the levels ask for a non-zero consumption_per_tick -- see BuildingLevelStats.</summary>
-        public ResourceType consumesResource = ResourceType.Wood;
+        /// <summary>
+        /// What this building can make, from the recipes tab -- matched to this row by its id.
+        /// Empty means it produces nothing, which is the ordinary case for a house or a wall and
+        /// also the deliberate answer for the Пристань and the Водяная мельница.
+        /// </summary>
+        public List<BuildingRecipe> recipes = new List<BuildingRecipe>();
 
         public float productionIntervalSeconds = 6f;
         public int fogRevealRadius = 8;
