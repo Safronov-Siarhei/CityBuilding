@@ -135,6 +135,71 @@ namespace CityBuilder.Tests.EditMode
             return found;
         }
 
+        /// <summary>
+        /// Google Sheets parses a cell that starts with =, +, - or @ as a formula, and the string
+        /// comes back as "#NAME?" -- which is what the two worker buttons did on 2026-08-17, having
+        /// been written "+ Назначить" and "- Снять". Nothing downstream can tell that from a real
+        /// translation, so it has to be caught here.
+        /// </summary>
+        [Test]
+        public void NoTextStartsWithSomethingTheSheetWouldReadAsAFormula()
+        {
+            var config = Config();
+
+            foreach (var key in EveryKey(config))
+            {
+                for (var language = 0; language < config.Languages.Count; language++)
+                {
+                    var text = config.Find(key, language);
+                    if (string.IsNullOrEmpty(text)) continue;
+
+                    Assert.IsFalse("=+-@".IndexOf(text[0]) >= 0,
+                        $"'{key}' in '{config.Languages[language]}' starts with '{text[0]}', which Google Sheets turns into a formula: \"{text}\"");
+                }
+            }
+        }
+
+        /// <summary>Every key in the sheet, gathered the only way the config exposes -- by asking about the ones the game builds plus the ones written by hand.</summary>
+        private static IEnumerable<string> EveryKey(LocalizationConfig config)
+        {
+            foreach (var key in KeysWithPlaceholders) yield return key;
+
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+            {
+                yield return ResourceNames.KeyFor(type);
+            }
+
+            var balance = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            foreach (var building in balance.Buildings)
+            {
+                yield return "#building_" + building.id.ToLowerInvariant();
+                foreach (var recipe in building.recipes) yield return "#recipe_" + recipe.id.ToLowerInvariant();
+            }
+
+            // The fixed captions SetupProject hangs on buttons and titles.
+            foreach (var key in new[]
+            {
+                "#menu_title", "#menu_subtitle", "#menu_new_game", "#menu_load_game", "#menu_settings", "#menu_quit",
+                "#settings_title", "#settings_language", "#settings_back",
+                "#ui_close", "#ui_cancel", "#ui_back", "#ui_free",
+                "#hud_menu", "#hud_save", "#hud_workforce",
+                "#exit_title", "#exit_warning", "#exit_confirm",
+                "#save_title", "#save_confirm", "#load_title", "#load_empty", "#load_confirm",
+                "#building_no_decay", "#building_assign", "#building_unassign", "#building_upgrade",
+                "#building_repair", "#building_recruit",
+                "#workforce_title", "#workforce_empty", "#workforce_idle_building",
+                "#army_target_units", "#army_target_buildings", "#army_no_citizens", "#army_no_coins",
+                "#unit_militia", "#over_victory", "#over_defeat", "#over_victory_reason",
+                "#over_defeat_reason", "#over_to_menu",
+                "#log_fed", "#log_soldier_died", "#log_portal_opened", "#log_portal_destroyed",
+                "#log_defeat_townhall", "#log_defeat_empty", "#log_victory",
+                "#tier_hamlet", "#tier_village", "#tier_town", "#tier_city", "#tier_kingdom",
+            })
+            {
+                yield return key;
+            }
+        }
+
         /// <summary>A key the sheet does not have must be obvious, not blank -- see Localization.Get.</summary>
         [Test]
         public void AMissingKeyShowsItself()

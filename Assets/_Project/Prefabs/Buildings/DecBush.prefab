@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4382025322434105001
+--- !u!1 &526224467388045902
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5498151103865089761}
-  - component: {fileID: 6306730304388782931}
-  - component: {fileID: 4177498554082701045}
+  - component: {fileID: 796648848796344179}
+  - component: {fileID: 5777776543015252870}
+  - component: {fileID: 2263671987824404596}
   m_Layer: 0
   m_Name: DecBush1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5498151103865089761
+--- !u!4 &796648848796344179
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4382025322434105001}
+  m_GameObject: {fileID: 526224467388045902}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.000000059604645, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7324582271041391781}
+  m_Father: {fileID: 7905991676270465673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6306730304388782931
+--- !u!33 &5777776543015252870
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4382025322434105001}
+  m_GameObject: {fileID: 526224467388045902}
   m_Mesh: {fileID: 719007689284787045, guid: 6ac9e170c4f82a84da670275e1d920fc, type: 3}
---- !u!23 &4177498554082701045
+--- !u!23 &2263671987824404596
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4382025322434105001}
+  m_GameObject: {fileID: 526224467388045902}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &9123429839864046980
+--- !u!1 &5621271599932717232
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7324582271041391781}
-  - component: {fileID: 3528036678209830581}
-  - component: {fileID: 5434271979323747006}
+  - component: {fileID: 7905991676270465673}
+  - component: {fileID: 7869134046156053526}
+  - component: {fileID: 2827082539339841891}
   m_Layer: 0
   m_Name: DecBush
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7324582271041391781
+--- !u!4 &7905991676270465673
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9123429839864046980}
+  m_GameObject: {fileID: 5621271599932717232}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5498151103865089761}
+  - {fileID: 796648848796344179}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3528036678209830581
+--- !u!114 &7869134046156053526
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9123429839864046980}
+  m_GameObject: {fileID: 5621271599932717232}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &5434271979323747006
+--- !u!65 &2827082539339841891
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9123429839864046980}
+  m_GameObject: {fileID: 5621271599932717232}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
