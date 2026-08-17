@@ -27,7 +27,7 @@ namespace CityBuilder.UI
 
             if (happinessLabel != null)
             {
-                happinessLabel.text = Localization.Format("happiness.title", HappinessManager.Instance.HappinessPercent);
+                happinessLabel.text = Localization.Format("#happiness_title", HappinessManager.Instance.HappinessPercent);
                 happinessLabel.color = ColorForScore(HappinessManager.Instance.HappinessPercent);
             }
             if (breakdownLabel != null)
@@ -35,7 +35,7 @@ namespace CityBuilder.UI
                 // Two lines: five factors do not fit across the panel's width at this font size.
                 // The line break lives in the translation, so a language with longer words can
                 // break somewhere else without a code change.
-                breakdownLabel.text = Localization.Format("happiness.breakdown",
+                breakdownLabel.text = Localization.Format("#happiness_breakdown",
                     HappinessManager.Instance.TaxScore, HappinessManager.Instance.DecayScore,
                     HappinessManager.Instance.DefenseScore, HappinessManager.Instance.FoodScore,
                     HappinessManager.Instance.DeathScore);

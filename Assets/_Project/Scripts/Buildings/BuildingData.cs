@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -119,8 +119,8 @@ namespace CityBuilder.Buildings
         // placed. Checked by BuildingPlacer alongside affordability, not by GridManager.
         public BuildingData requiredBuilding;
 
-        /// <summary>What to show the player: the localization sheet's `building.<id>`, falling back to the buildings tab's own display_name.</summary>
-        public string LocalizedName => Core.Localization.GetOrDefault("building." + buildingName, displayName);
+        /// <summary>What to show the player: the localization sheet's `#building_<id>`, falling back to the buildings tab's own display_name.</summary>
+        public string LocalizedName => Core.Localization.GetOrDefault("#building_" + buildingName.ToLowerInvariant(), displayName);
 
         /// <summary>
         /// This building's stats at the given level (1..3), clamped into whatever the sheet

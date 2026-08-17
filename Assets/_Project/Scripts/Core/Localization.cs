@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace CityBuilder.Core
@@ -11,7 +11,7 @@ namespace CityBuilder.Core
     /// Instance would mean a game full of blank labels. The config is loaded from Resources on
     /// first use and never touched again.
     ///
-    /// A missing key renders as the key itself ("ui.close"), which is deliberately ugly: an
+    /// A missing key renders as the key itself ("#ui_close"), which is deliberately ugly: an
     /// untranslated string should be obvious on the screen of whoever is testing, not silently
     /// blank or silently English.
     /// </summary>
@@ -89,7 +89,7 @@ namespace CityBuilder.Core
         /// The text for a key, falling back to something already sensible rather than to the key.
         /// For names that the balance sheet also carries in Russian (a building's display_name):
         /// a row missing from the localization tab then reads as the Russian name instead of
-        /// "building.Smelter", which matters because those rows are added building by building.
+        /// "#building_smelter", which matters because those rows are added building by building.
         /// </summary>
         public static string GetOrDefault(string key, string fallback)
         {

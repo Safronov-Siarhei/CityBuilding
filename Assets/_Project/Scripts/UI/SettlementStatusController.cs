@@ -34,7 +34,7 @@ namespace CityBuilder.UI
 
             var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
             var tier = tierManager != null ? tierManager.CurrentTierName : string.Empty;
-            statusText.text = Localization.Format("hud.status", tier, day);
+            statusText.text = Localization.Format("#hud_status", tier, day);
         }
     }
 }

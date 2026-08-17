@@ -119,7 +119,7 @@ namespace CityBuilder.UI
             if (summaryLabel != null)
             {
                 var total = citizens != null ? citizens.TotalPopulation : 0;
-                summaryLabel.text = Localization.Format("workforce.summary", idle, total);
+                summaryLabel.text = Localization.Format("#workforce_summary", idle, total);
             }
 
             var lostABuilding = false;
@@ -156,9 +156,9 @@ namespace CityBuilder.UI
             if (building == null) return string.Empty;
 
             var recipe = building.SelectedRecipe;
-            if (recipe == null) return Localization.Get("workforce.idle_building");
+            if (recipe == null) return Localization.Get("#workforce_idle_building");
 
-            return Localization.Format("workforce.gives", recipe.Describe());
+            return Localization.Format("#workforce_gives", recipe.Describe());
         }
 
         private void CreateRow(ProductionBuilding building)

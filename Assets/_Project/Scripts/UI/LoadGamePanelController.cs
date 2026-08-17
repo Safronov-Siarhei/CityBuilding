@@ -115,7 +115,7 @@ namespace CityBuilder.UI
         private void UpdateSelectionUI()
         {
             if (loadSelectedButton != null) loadSelectedButton.interactable = !string.IsNullOrEmpty(_selectedName);
-            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : Localization.Format("load.selected", _selectedName);
+            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : Localization.Format("#load_selected", _selectedName);
         }
     }
 }

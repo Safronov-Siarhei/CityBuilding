@@ -37,7 +37,7 @@ namespace CityBuilder.Core
         public void Log(string message)
         {
             var day = GameCalendar.Instance != null ? GameCalendar.Instance.CurrentDay : 1;
-            _entries.Insert(0, Localization.Format("log.day", day, message));
+            _entries.Insert(0, Localization.Format("#log_day", day, message));
             while (_entries.Count > MaxEntries) _entries.RemoveAt(_entries.Count - 1);
             OnLogChanged?.Invoke();
         }

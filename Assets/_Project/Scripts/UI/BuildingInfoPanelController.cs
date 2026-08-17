@@ -99,7 +99,7 @@ namespace CityBuilder.UI
             var data = _currentInstance.Data;
 
             if (titleLabel != null) titleLabel.text = data.LocalizedName;
-            if (levelLabel != null) levelLabel.text = Localization.Format("building.level", _currentInstance.Level, BuildingInstance.MaxLevel);
+            if (levelLabel != null) levelLabel.text = Localization.Format("#building_level", _currentInstance.Level, BuildingInstance.MaxLevel);
             if (conditionLabel != null)
             {
                 // Roads/Town Hall never accrue decay at all (see BuildingInstance.DecaysOverTime) --
@@ -107,8 +107,8 @@ namespace CityBuilder.UI
                 // aged yet, so they get their own label instead.
                 var decayText = _currentInstance.DecaysOverTime
                     ? $"{Mathf.RoundToInt(_currentInstance.Decay * 100f)}%"
-                    : Localization.Get("building.no_decay");
-                conditionLabel.text = Localization.Format("building.condition", _currentInstance.CurrentHealth, _currentInstance.MaxHealth, _currentInstance.Defense, decayText);
+                    : Localization.Get("#building_no_decay");
+                conditionLabel.text = Localization.Format("#building_condition", _currentInstance.CurrentHealth, _currentInstance.MaxHealth, _currentInstance.Defense, decayText);
             }
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
@@ -122,11 +122,11 @@ namespace CityBuilder.UI
             RefreshRecipeControls();
             if (hasProduction)
             {
-                if (workersLabel != null) workersLabel.text = Localization.Format("building.workers", _currentProduction.AssignedWorkers, _currentProduction.MaxWorkers);
+                if (workersLabel != null) workersLabel.text = Localization.Format("#building_workers", _currentProduction.AssignedWorkers, _currentProduction.MaxWorkers);
                 if (idleLabel != null)
                 {
                     var idle = CitizenManager.Instance != null ? CitizenManager.Instance.IdlePopulation : 0;
-                    idleLabel.text = Localization.Format("building.idle_citizens", idle);
+                    idleLabel.text = Localization.Format("#building_idle_citizens", idle);
                 }
             }
 
@@ -152,8 +152,8 @@ namespace CityBuilder.UI
         {
             if (recipe == null || batchesPerWorker <= 0) return string.Empty;
 
-            var batches = batchesPerWorker > 1 ? Localization.Format("recipe.batches", batchesPerWorker) : string.Empty;
-            return Localization.Format("building.produces", recipe.Describe() + batches, intervalSeconds.ToString("0.#"));
+            var batches = batchesPerWorker > 1 ? Localization.Format("#recipe_batches", batchesPerWorker) : string.Empty;
+            return Localization.Format("#building_produces", recipe.Describe() + batches, intervalSeconds.ToString("0.#"));
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace CityBuilder.UI
 
             if (recruitLabel == null) return;
             var blocker = army.DescribeRecruitBlocker(RecruitableType);
-            recruitLabel.text = blocker ?? Localization.Format("army.summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
+            recruitLabel.text = blocker ?? Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace CityBuilder.UI
 
             if (cost.Count == 0)
             {
-                CreateChipText(row, Localization.Get("ui.free"));
+                CreateChipText(row, Localization.Get("#ui_free"));
                 return;
             }
 

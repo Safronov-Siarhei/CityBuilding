@@ -145,12 +145,12 @@ namespace CityBuilder.Core
             if (!_isCritical && HappinessPercent <= CriticalThreshold)
             {
                 _isCritical = true;
-                EventLogManager.Instance?.Log(Localization.Format("log.happiness_low", HappinessPercent));
+                EventLogManager.Instance?.Log(Localization.Format("#log_happiness_low", HappinessPercent));
             }
             else if (_isCritical && HappinessPercent >= RecoveredThreshold)
             {
                 _isCritical = false;
-                EventLogManager.Instance?.Log(Localization.Format("log.happiness_recovered", HappinessPercent));
+                EventLogManager.Instance?.Log(Localization.Format("#log_happiness_recovered", HappinessPercent));
             }
         }
 

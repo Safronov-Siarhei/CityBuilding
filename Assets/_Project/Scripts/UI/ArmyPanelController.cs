@@ -70,7 +70,7 @@ namespace CityBuilder.UI
 
             if (summaryLabel != null)
             {
-                summaryLabel.text = Localization.Format("army.summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
+                summaryLabel.text = Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
             }
 
             var index = 0;
@@ -130,7 +130,7 @@ namespace CityBuilder.UI
 
         private static string PriorityLabel(TargetPriority priority)
         {
-            return Localization.Get(priority == TargetPriority.Units ? "army.target_units" : "army.target_buildings");
+            return Localization.Get(priority == TargetPriority.Units ? "#army_target_units" : "#army_target_buildings");
         }
 
         private Button CreateButton(Transform parent, string name, string label, Color background, Color textColor)

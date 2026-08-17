@@ -75,7 +75,7 @@ namespace CityBuilder.Core
 
             if (IsGameOver || !_hadCitizens) return;
 
-            EndGame(victory: false, Localization.Get("log.defeat_empty"));
+            EndGame(victory: false, Localization.Get("#log_defeat_empty"));
         }
 
         private bool _hadCitizens;
@@ -84,7 +84,7 @@ namespace CityBuilder.Core
         {
             if (IsGameOver || instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) return;
 
-            EndGame(victory: false, Localization.Get("log.defeat_townhall"));
+            EndGame(victory: false, Localization.Get("#log_defeat_townhall"));
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace CityBuilder.Core
         {
             if (IsGameOver || OrcPortal.All.Count > 0) return;
 
-            EndGame(victory: true, Localization.Get("log.victory"));
+            EndGame(victory: true, Localization.Get("#log_victory"));
         }
 
         private void EndGame(bool victory, string logMessage)

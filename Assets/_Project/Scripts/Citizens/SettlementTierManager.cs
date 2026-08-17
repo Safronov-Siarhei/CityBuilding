@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace CityBuilder.Citizens
@@ -14,14 +14,14 @@ namespace CityBuilder.Citizens
     {
         public static SettlementTierManager Instance { get; private set; }
 
-        // Localization keys, not names: the tier's text lives in the sheet under tier.<code>.
+        // Localization keys, not names: the tier's text lives in the sheet under #tier_<code>.
         private static readonly (int minPopulation, string key)[] Tiers =
         {
-            (0, "tier.hamlet"),
-            (20, "tier.village"),
-            (50, "tier.town"),
-            (100, "tier.city"),
-            (200, "tier.kingdom"),
+            (0, "#tier_hamlet"),
+            (20, "#tier_village"),
+            (50, "#tier_town"),
+            (100, "#tier_city"),
+            (200, "#tier_kingdom"),
         };
 
         [SerializeField] private CitizenManager citizenManager;

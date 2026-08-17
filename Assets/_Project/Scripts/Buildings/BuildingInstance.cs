@@ -190,7 +190,7 @@ namespace CityBuilder.Buildings
         /// <summary>Grid occupancy, NavMesh obstacle carving, and worker release (via ProductionBuilding.OnDestroy -> CitizenVisualsManager) are all cleaned up automatically by destroying the GameObject -- nothing here needs to touch those systems directly.</summary>
         private void HandleFullyDecayed()
         {
-            EventLogManager.Instance?.Log(Localization.Format("log.destroyed_decay", Data.LocalizedName));
+            EventLogManager.Instance?.Log(Localization.Format("#log_destroyed_decay", Data.LocalizedName));
             FreeCellsAndDestroy();
         }
 
@@ -207,7 +207,7 @@ namespace CityBuilder.Buildings
             ShowHealthBar();
             if (CurrentHealth > 0) return;
 
-            EventLogManager.Instance?.Log(Localization.Format("log.destroyed_combat", Data.LocalizedName));
+            EventLogManager.Instance?.Log(Localization.Format("#log_destroyed_combat", Data.LocalizedName));
             OnDestroyedInCombat?.Invoke(this);
             FreeCellsAndDestroy();
         }

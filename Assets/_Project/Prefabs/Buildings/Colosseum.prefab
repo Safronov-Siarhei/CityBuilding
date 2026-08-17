@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4122667439533220985
+--- !u!1 &5122279741731462758
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8837993902526006542}
-  - component: {fileID: 7195292033577926229}
-  - component: {fileID: 4076795304781370451}
+  - component: {fileID: 7039500414386585014}
+  - component: {fileID: 1420150375574927680}
+  - component: {fileID: 7799986169244211620}
   m_Layer: 0
   m_Name: Colosseum1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8837993902526006542
+--- !u!4 &7039500414386585014
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4122667439533220985}
+  m_GameObject: {fileID: 5122279741731462758}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000035762787, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6797154407352060389}
+  m_Father: {fileID: 2403253309766378986}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7195292033577926229
+--- !u!33 &1420150375574927680
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4122667439533220985}
+  m_GameObject: {fileID: 5122279741731462758}
   m_Mesh: {fileID: -4526627455707494842, guid: f6f67efe914d56041b8a6bb27e5680f4, type: 3}
---- !u!23 &4076795304781370451
+--- !u!23 &7799986169244211620
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4122667439533220985}
+  m_GameObject: {fileID: 5122279741731462758}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &5064097675050285111
+--- !u!1 &7067151959959704162
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6797154407352060389}
-  - component: {fileID: 5897473680181285468}
-  - component: {fileID: 2268735407287415998}
+  - component: {fileID: 2403253309766378986}
+  - component: {fileID: 508671591000912156}
+  - component: {fileID: 129414746497905824}
   m_Layer: 0
   m_Name: Colosseum
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6797154407352060389
+--- !u!4 &2403253309766378986
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5064097675050285111}
+  m_GameObject: {fileID: 7067151959959704162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8837993902526006542}
+  - {fileID: 7039500414386585014}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5897473680181285468
+--- !u!114 &508671591000912156
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5064097675050285111}
+  m_GameObject: {fileID: 7067151959959704162}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &2268735407287415998
+--- !u!65 &129414746497905824
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5064097675050285111}
+  m_GameObject: {fileID: 7067151959959704162}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

@@ -129,7 +129,7 @@ namespace CityBuilder.Resources
         {
             if (shortfall <= 0)
             {
-                if (HungryDaysInARow > 0) EventLogManager.Instance?.Log(Localization.Get("log.fed"));
+                if (HungryDaysInARow > 0) EventLogManager.Instance?.Log(Localization.Get("#log_fed"));
                 HungryDaysInARow = 0;
                 return 0;
             }
@@ -139,7 +139,7 @@ namespace CityBuilder.Resources
             var config = BalanceConfig.Instance;
             if (HungryDaysInARow < config.HungryDaysBeforeDeaths)
             {
-                EventLogManager.Instance?.Log(Localization.Format("log.hungry", shortfall));
+                EventLogManager.Instance?.Log(Localization.Format("#log_hungry", shortfall));
                 return 0;
             }
 
@@ -148,7 +148,7 @@ namespace CityBuilder.Resources
             var deaths = citizenManager.KillCitizens(ComputeStarvationDeaths(shortfall));
             if (deaths <= 0) return 0;
 
-            EventLogManager.Instance?.Log(Localization.Format("log.starved", deaths));
+            EventLogManager.Instance?.Log(Localization.Format("#log_starved", deaths));
             return deaths;
         }
 

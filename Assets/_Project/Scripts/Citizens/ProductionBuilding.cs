@@ -211,7 +211,7 @@ namespace CityBuilder.Citizens
             if (!_reportedMissingInput)
             {
                 _reportedMissingInput = true;
-                EventLogManager.Instance?.Log(Localization.Format("log.no_input", DisplayName, DescribeInputs(recipe)));
+                EventLogManager.Instance?.Log(Localization.Format("#log_no_input", DisplayName, DescribeInputs(recipe)));
             }
             return false;
         }
@@ -245,7 +245,7 @@ namespace CityBuilder.Citizens
 
             if (_reportedOverflow) return;
             _reportedOverflow = true;
-            EventLogManager.Instance?.Log(Localization.Format("log.no_storage", data.LocalizedName));
+            EventLogManager.Instance?.Log(Localization.Format("#log_no_storage", data.LocalizedName));
         }
 
         private bool _reportedOverflow;

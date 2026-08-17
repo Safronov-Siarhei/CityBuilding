@@ -31,12 +31,12 @@ namespace CityBuilder.UI
         {
             if (titleLabel != null)
             {
-                titleLabel.text = Localization.Get(victory ? "over.victory" : "over.defeat");
+                titleLabel.text = Localization.Get(victory ? "#over_victory" : "#over_defeat");
                 titleLabel.color = victory ? VictoryColor : DefeatColor;
             }
             if (reasonLabel != null)
             {
-                reasonLabel.text = Localization.Get(victory ? "over.victory_reason" : "over.defeat_reason");
+                reasonLabel.text = Localization.Get(victory ? "#over_victory_reason" : "#over_defeat_reason");
             }
 
             if (panelRoot != null) panelRoot.SetActive(true);

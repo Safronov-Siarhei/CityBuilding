@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using CityBuilder.Resources;
@@ -27,8 +27,8 @@ namespace CityBuilder.Buildings
         /// <summary>The recipes tab's own Russian label. What the player actually reads is <see cref="LocalizedName"/>.</summary>
         public string displayName = string.Empty;
 
-        /// <summary>What goes on the selector button -- the localization sheet's `recipe.<id>`, falling back to the sheet's own label.</summary>
-        public string LocalizedName => Core.Localization.GetOrDefault("recipe." + id, displayName);
+        /// <summary>What goes on the selector button -- the localization sheet's `#recipe_<id>`, falling back to the sheet's own label.</summary>
+        public string LocalizedName => Core.Localization.GetOrDefault("#recipe_" + id.ToLowerInvariant(), displayName);
 
         /// <summary>
         /// Everything one batch consumes. Empty for a gatherer: a mine makes ore out of the ground,
@@ -59,7 +59,7 @@ namespace CityBuilder.Buildings
                 eaten.Append(input.amount).Append(' ').Append(ResourceNames.Of(input.type));
             }
 
-            return Core.Localization.Format("recipe.conversion", eaten.ToString(), made);
+            return Core.Localization.Format("#recipe_conversion", eaten.ToString(), made);
         }
     }
 }

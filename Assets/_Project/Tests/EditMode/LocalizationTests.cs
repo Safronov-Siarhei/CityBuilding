@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -12,7 +12,7 @@ namespace CityBuilder.Tests.EditMode
     ///
     /// Text breaks differently from code: nothing here can fail to compile. A key renamed in the
     /// sheet, a building added without its row, a translator dropping the {0} out of a sentence --
-    /// each of those ships a game that runs perfectly and shows "building.Smelter" or throws
+    /// each of those ships a game that runs perfectly and shows "#building_smelter" or throws
     /// inside a UI refresh. These check the shapes that no compiler can.
     /// </summary>
     public class LocalizationTests
@@ -36,7 +36,7 @@ namespace CityBuilder.Tests.EditMode
                 "Russian must stay the first column: it is the fallback every untranslated cell falls back to.");
         }
 
-        /// <summary>Every resource shows its name somewhere -- the HUD, a recipe line, a cost chip. A missing one reads as "resource.CopperOre" on screen.</summary>
+        /// <summary>Every resource shows its name somewhere -- the HUD, a recipe line, a cost chip. A missing one reads as "#resource_copperore" on screen.</summary>
         [Test]
         public void EveryResourceHasAName()
         {
@@ -58,8 +58,8 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var building in balance.Buildings)
             {
-                Assert.IsNotNull(config.Find("building." + building.id, 0),
-                    $"The localization tab has no row for 'building.{building.id}'.");
+                Assert.IsNotNull(config.Find("#building_" + building.id.ToLowerInvariant(), 0),
+                    $"The localization tab has no row for '#building_{building.id.ToLowerInvariant()}'.");
             }
         }
 
@@ -74,8 +74,8 @@ namespace CityBuilder.Tests.EditMode
             {
                 foreach (var recipe in building.recipes)
                 {
-                    Assert.IsNotNull(config.Find("recipe." + recipe.id, 0),
-                        $"The localization tab has no row for 'recipe.{recipe.id}' ({building.id}).");
+                    Assert.IsNotNull(config.Find("#recipe_" + recipe.id.ToLowerInvariant(), 0),
+                        $"The localization tab has no row for '#recipe_{recipe.id.ToLowerInvariant()}' ({building.id}).");
                 }
             }
         }
@@ -111,16 +111,16 @@ namespace CityBuilder.Tests.EditMode
         /// <summary>Every key the code passes to Localization.Format. Listed by hand, because a placeholder mismatch is invisible until the string is actually formatted.</summary>
         private static readonly string[] KeysWithPlaceholders =
         {
-            "hud.status", "hud.place_hint", "load.selected",
-            "building.level", "building.condition", "building.workers", "building.idle_citizens",
-            "building.produces", "recipe.conversion", "recipe.batches",
-            "workforce.summary", "workforce.gives",
-            "happiness.title", "happiness.breakdown", "tax.rate",
-            "army.summary", "army.full",
-            "log.day", "log.built", "log.destroyed_decay", "log.destroyed_combat",
-            "log.no_input", "log.no_storage", "log.hungry", "log.starved",
-            "log.recruited", "log.disbanded", "log.raid",
-            "log.happiness_low", "log.happiness_recovered", "log.tier_up",
+            "#hud_status", "#hud_place_hint", "#load_selected",
+            "#building_level", "#building_condition", "#building_workers", "#building_idle_citizens",
+            "#building_produces", "#recipe_conversion", "#recipe_batches",
+            "#workforce_summary", "#workforce_gives",
+            "#happiness_title", "#happiness_breakdown", "#tax_rate",
+            "#army_summary", "#army_full",
+            "#log_day", "#log_built", "#log_destroyed_decay", "#log_destroyed_combat",
+            "#log_no_input", "#log_no_storage", "#log_hungry", "#log_starved",
+            "#log_recruited", "#log_disbanded", "#log_raid",
+            "#log_happiness_low", "#log_happiness_recovered", "#log_tier_up",
         };
 
         private static List<string> Placeholders(string text)
@@ -139,14 +139,14 @@ namespace CityBuilder.Tests.EditMode
         [Test]
         public void AMissingKeyShowsItself()
         {
-            Assert.AreEqual("no.such.key.exists", Localization.Get("no.such.key.exists"));
+            Assert.AreEqual("#no_such_key_exists", Localization.Get("#no_such_key_exists"));
         }
 
         /// <summary>Names that the balance sheet also carries fall back to it, so a building added to one tab and not the other reads in Russian rather than as its key.</summary>
         [Test]
         public void AMissingNameFallsBackToTheBalanceSheet()
         {
-            Assert.AreEqual("Плавильня", Localization.GetOrDefault("building.NoSuchBuilding", "Плавильня"));
+            Assert.AreEqual("Плавильня", Localization.GetOrDefault("#building_nosuchbuilding", "Плавильня"));
         }
 
         /// <summary>A recipe with no localization row still names itself from the recipes tab -- BuildingRecipe.LocalizedName is what the metal buttons read.</summary>

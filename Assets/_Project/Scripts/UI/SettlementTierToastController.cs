@@ -25,9 +25,9 @@ namespace CityBuilder.UI
         {
             if (toastText == null) return;
 
-            toastText.text = Localization.Format("log.tier_up", tierName);
+            toastText.text = Localization.Format("#log_tier_up", tierName);
             toastText.gameObject.SetActive(true);
-            EventLogManager.Instance?.Log(Localization.Format("log.tier_up", tierName));
+            EventLogManager.Instance?.Log(Localization.Format("#log_tier_up", tierName));
 
             if (_hideRoutine != null) StopCoroutine(_hideRoutine);
             _hideRoutine = StartCoroutine(HideAfterDelay());

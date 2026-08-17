@@ -33,7 +33,7 @@ namespace CityBuilder.UI
         private void Refresh()
         {
             if (rateLabel == null || TaxManager.Instance == null) return;
-            rateLabel.text = Localization.Format("tax.rate", TaxManager.Instance.TaxRatePercent);
+            rateLabel.text = Localization.Format("#tax_rate", TaxManager.Instance.TaxRatePercent);
         }
     }
 }
