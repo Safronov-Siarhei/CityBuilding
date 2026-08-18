@@ -586,6 +586,15 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<HappinessManager>();
 
+            // What contentment is finally FOR: it sets how fast people find their way here, or
+            // away. Needs the placer as well as the citizens, because the settling-in grace period
+            // starts when the Town Hall is placed rather than when the scene loads.
+            var migrationManager = managers.AddComponent<MigrationManager>();
+            var migrationManagerSO = new SerializedObject(migrationManager);
+            migrationManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            migrationManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            migrationManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
             managers.AddComponent<GameOverManager>();
 
             var orcRaidManager = managers.AddComponent<OrcRaidManager>();
@@ -836,6 +845,7 @@ namespace CityBuilder.EditorTools
             BuildTaxRateControl(canvasGO.transform, panelSprite);
             BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
             BuildHappinessPanel(canvasGO.transform, panelSprite);
+            BuildMigrationPanel(canvasGO.transform, panelSprite);
             BuildWorkforcePanel(canvasGO.transform, panelSprite);
             BuildArmyPanel(canvasGO.transform, panelSprite);
             BuildArmyOrderInput(canvasGO.transform, targetCamera, placer);
@@ -929,6 +939,45 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(controller);
             so.FindProperty("happinessLabel").objectReferenceValue = happinessLabel;
             so.FindProperty("breakdownLabel").objectReferenceValue = breakdownLabel;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// The migration line, in the bottom-right corner where the player's thumb already is.
+        ///
+        /// Its own panel rather than another line inside the Happiness one, because it is a live
+        /// countdown and the happiness panel is a thing you glance at -- and because the resource
+        /// bar along the top is laid out in fixed-width slots (see ResourceHUDController.PlaceChip)
+        /// where squeezing in a seventh chip would re-proportion the whole row.
+        ///
+        /// y is 200, which is what it takes to clear everything already stacked in that corner:
+        /// the rotate button (40 to 130) and, more to the point, the hotbar (28 to 158), which at
+        /// a full category of twelve buildings is 1736 wide and reaches well past x 520. The
+        /// category bar above it is only 656 wide and never gets out this far. The Army panel is
+        /// the ceiling, at 370 up from the bottom.
+        ///
+        /// Anchored to the corner itself rather than positioned from the centre, so it stays put
+        /// on a phone's aspect ratio instead of drifting off the edge the way the Happiness panel
+        /// had to be pulled in from 810 to 760 to avoid.
+        /// </summary>
+        private static void BuildMigrationPanel(Transform canvasParent, Sprite panelSprite)
+        {
+            var frame = CreateImage(canvasParent, "Migration", new Color(0.16f, 0.18f, 0.15f, 0.85f));
+            frame.sprite = panelSprite;
+            frame.type = Image.Type.Sliced;
+            var frameRect = frame.GetComponent<RectTransform>();
+            frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 0f);
+            frameRect.anchoredPosition = new Vector2(-40f, 200f);
+            frameRect.sizeDelta = new Vector2(400f, 72f);
+
+            var label = CreateText(frame.transform, "MigrationLabel", string.Empty, 22, Vector2.zero, new Vector2(370f, 60f));
+
+            var go = new GameObject("MigrationController");
+            go.transform.SetParent(canvasParent, false);
+            var controller = go.AddComponent<MigrationController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panel").objectReferenceValue = frame.gameObject;
+            so.FindProperty("label").objectReferenceValue = label;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -2012,6 +2061,7 @@ namespace CityBuilder.EditorTools
             data.recipes = CopyRecipes(balance.recipes);
             data.productionIntervalSeconds = balance.productionIntervalSeconds;
             data.fogRevealRadius = balance.fogRevealRadius;
+            data.citizensOnBuild = balance.citizensOnBuild;
             data.storageGroup = balance.storageGroup;
             data.levels = CopyLevels(balance.levels);
             data.upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
@@ -2058,7 +2108,7 @@ namespace CityBuilder.EditorTools
                 {
                     maxHealth = level.maxHealth,
                     defense = level.defense,
-                    citizensGranted = level.citizensGranted,
+                    housingCapacity = level.housingCapacity,
                     maxWorkers = level.maxWorkers,
                     batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,

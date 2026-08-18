@@ -68,6 +68,18 @@ namespace CityBuilder.Saving
         public float secondsUntilNextRaid;
 
         public List<OrcEntry> orcs = new List<OrcEntry>();
+
+        /// <summary>
+        /// Where migration had got to. Without these, reloading reset the wait for the next
+        /// settler and handed a town still inside its settling-in grace the whole grace back --
+        /// small either way, but both are things a player could learn to reload for.
+        ///
+        /// Whether the settlement exists at all is deliberately NOT here: MigrationManager asks
+        /// the restored buildings, which cannot disagree with them.
+        /// </summary>
+        public float migrationTimerSeconds;
+
+        public float settlingInSecondsRemaining;
     }
 
     [Serializable]

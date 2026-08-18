@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Hovel
   displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
-  prefab: {fileID: 365207587627823805, guid: 8f14f73d957574a47a8f2069f5f9cead, type: 3}
+  prefab: {fileID: 144973046145836643, guid: 8f14f73d957574a47a8f2069f5f9cead, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -28,21 +28,21 @@ MonoBehaviour:
   levels:
   - maxHealth: 80
     defense: 0
-    citizensGranted: 5
+    housingCapacity: 5
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
     happiness: 0
   - maxHealth: 128
     defense: 0
-    citizensGranted: 8
+    housingCapacity: 8
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
     happiness: 0
   - maxHealth: 200
     defense: 0
-    citizensGranted: 10
+    housingCapacity: 10
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
@@ -57,4 +57,5 @@ MonoBehaviour:
   - type: 0
     amount: 28
   fogRevealRadius: 10
+  citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Castle
   displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
-  prefab: {fileID: 465516078125365979, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
+  prefab: {fileID: 7116214961669003341, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
   footprintSize: {x: 5, y: 5}
   cost: []
   category: 0
@@ -26,21 +26,21 @@ MonoBehaviour:
   levels:
   - maxHealth: 400
     defense: 20
-    citizensGranted: 5
+    housingCapacity: 7
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
     happiness: 0
   - maxHealth: 640
     defense: 32
-    citizensGranted: 8
+    housingCapacity: 7
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
     happiness: 0
   - maxHealth: 1000
     defense: 50
-    citizensGranted: 10
+    housingCapacity: 7
     maxWorkers: 0
     batchesPerWorkerPerTick: 0
     storageCapacity: 0
@@ -63,4 +63,5 @@ MonoBehaviour:
   - type: 3
     amount: 40
   fogRevealRadius: 20
+  citizensOnBuild: 5
   requiredBuilding: {fileID: 0}

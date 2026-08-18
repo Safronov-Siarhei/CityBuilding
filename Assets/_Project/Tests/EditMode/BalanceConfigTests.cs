@@ -208,7 +208,7 @@ namespace CityBuilder.Tests.EditMode
 
                     Assert.GreaterOrEqual(current.maxHealth, previous.maxHealth, $"{building.id}: level {level} is less sturdy than level {level - 1}.");
                     Assert.GreaterOrEqual(current.defense, previous.defense, $"{building.id}: level {level} defends worse than level {level - 1}.");
-                    Assert.GreaterOrEqual(current.citizensGranted, previous.citizensGranted, $"{building.id}: level {level} houses fewer people than level {level - 1}.");
+                    Assert.GreaterOrEqual(current.housingCapacity, previous.housingCapacity, $"{building.id}: level {level} houses fewer people than level {level - 1}.");
                     Assert.GreaterOrEqual(current.maxWorkers, previous.maxWorkers, $"{building.id}: level {level} employs fewer people than level {level - 1}.");
                     Assert.GreaterOrEqual(current.batchesPerWorkerPerTick, previous.batchesPerWorkerPerTick, $"{building.id}: level {level} produces less than level {level - 1}.");
                 }

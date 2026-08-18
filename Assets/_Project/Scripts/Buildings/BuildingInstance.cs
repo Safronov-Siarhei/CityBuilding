@@ -43,6 +43,9 @@ namespace CityBuilder.Buildings
         /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment.</summary>
         public int Happiness => Data != null ? Data.LevelStats(Level).happiness : 0;
 
+        /// <summary>How many people this building houses at the level it currently stands at -- handed to CitizenManager as room, not as people.</summary>
+        public int HousingCapacity => Data != null ? Data.LevelStats(Level).housingCapacity : 0;
+
         /// <summary>
         /// 0 (new) to 1 (fully dilapidated). Accrues one step per GameCalendar day (see
         /// HandleDayPassed) for every building except roads/bridges (not really "buildings") and
@@ -98,6 +101,7 @@ namespace CityBuilder.Buildings
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 if (data.connectsToFences) RegisterFenceCells();
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
+                ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
             }
         }
@@ -144,6 +148,7 @@ namespace CityBuilder.Buildings
             {
                 if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
+                ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
                 {
                     // Leaves a real gap: the segments either side re-shape into dead ends, which is
@@ -163,6 +168,18 @@ namespace CityBuilder.Buildings
         {
             if (delta == 0 || Data == null || Data.storageGroup == ResourceStorageGroup.None) return;
             ResourceManager.Instance?.AddCapacity(Data.storageGroup, delta);
+        }
+
+        /// <summary>
+        /// Hands this building's housing to the settlement, or takes it back -- the exact mirror of
+        /// ChangeStoredCapacity above, paired the same way with Initialize, OnDestroy, SetLevel and
+        /// TryUpgrade. Room only: whether anyone comes to live in it is MigrationManager's business,
+        /// and losing the house does not evict the people already counted.
+        /// </summary>
+        private void ChangeHousingCapacity(int delta)
+        {
+            if (delta == 0) return;
+            CitizenManager.Instance?.ChangeCapacity(delta);
         }
 
         private static void ChangeCount(string buildingName, int delta)
@@ -337,8 +354,13 @@ namespace CityBuilder.Buildings
             // higher level owes the settlement the difference -- otherwise a loaded save would
             // quietly hold less than the same town did before it was saved.
             var before = Data != null ? Data.LevelStats(Level).storageCapacity : 0;
+            var housedBefore = Data != null ? Data.LevelStats(Level).housingCapacity : 0;
             Level = Mathf.Clamp(level, 1, MaxLevel);
-            if (Data != null) ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity - before);
+            if (Data != null)
+            {
+                ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity - before);
+                ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity - housedBefore);
+            }
 
             // A loaded building has to look its level straight away -- nothing else will tell it to,
             // since it was never upgraded during this session.
@@ -394,10 +416,9 @@ namespace CityBuilder.Buildings
             CurrentHealth = Mathf.Clamp(CurrentHealth + (after.maxHealth - before.maxHealth), 1, after.maxHealth);
             if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)after.maxHealth);
 
-            // Housing that gets roomier with its level brings the difference in, once -- the
-            // citizens the building already granted stay granted (see CitizenManager).
-            var extraCitizens = after.citizensGranted - before.citizensGranted;
-            if (extraCitizens > 0) CitizenManager.Instance?.AddCitizens(extraCitizens);
+            // A roomier house is room, not people: the settlement can now hold more, and whether
+            // anyone comes to fill it is migration's business (see MigrationManager).
+            ChangeHousingCapacity(after.housingCapacity - before.housingCapacity);
 
             ChangeStoredCapacity(after.storageCapacity - before.storageCapacity);
 

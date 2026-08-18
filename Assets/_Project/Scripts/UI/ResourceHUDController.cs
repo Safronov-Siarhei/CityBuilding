@@ -97,7 +97,7 @@ namespace CityBuilder.UI
             if (populationText != null)
             {
                 populationText.text = CitizenManager.Instance != null
-                    ? $"{CitizenManager.Instance.TotalPopulation} ({CitizenManager.Instance.IdlePopulation})"
+                    ? $"{CitizenManager.Instance.TotalPopulation}/{CitizenManager.Instance.Capacity} ({CitizenManager.Instance.IdlePopulation})"
                     : "0";
             }
         }

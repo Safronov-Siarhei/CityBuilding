@@ -159,6 +159,11 @@ namespace CityBuilder.Saving
 
             // After the army: what the settlement has to feed tomorrow counts its soldiers too.
             FoodConsumptionManager.Instance?.RestoreFromSave(data.hungryDaysInARow, data.recentStarvationDeaths);
+
+            // After the buildings, which is the whole point: MigrationManager decides whether a
+            // settlement exists by asking whether a Town Hall is standing, and until the loop
+            // above ran, none was.
+            Citizens.MigrationManager.Instance?.RestoreFromSave(data.migrationTimerSeconds, data.settlingInSecondsRemaining);
         }
 
         /// <summary>
@@ -214,6 +219,13 @@ namespace CityBuilder.Saving
                 currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1,
                 taxRatePercent = taxManager != null ? taxManager.TaxRatePercent : 10
             };
+
+            var migration = Citizens.MigrationManager.Instance;
+            if (migration != null)
+            {
+                data.migrationTimerSeconds = migration.Timer;
+                data.settlingInSecondsRemaining = migration.SettlingInRemaining;
+            }
 
             if (researchManager != null)
             {

@@ -28,7 +28,13 @@ namespace CityBuilder.Buildings
     {
         public int maxHealth = 100;
         public int defense;
-        public int citizensGranted;
+        /// <summary>
+        /// How many people this building gives the settlement room for. Room, not people: nobody
+        /// arrives because a house went up, they arrive because there is now somewhere to put them
+        /// and the settlement is content enough to be worth moving to -- see MigrationManager.
+        /// </summary>
+        public int housingCapacity;
+
         public int maxWorkers;
 
         /// <summary>
@@ -119,6 +125,14 @@ namespace CityBuilder.Buildings
         // Cells around this building permanently cleared of fog once placed -- see
         // FogOfWarManager.RevealPermanent, called from BuildingInstance.Initialize.
         public int fogRevealRadius = 8;
+
+        /// <summary>
+        /// People who arrive with the building itself, the moment it is placed, on top of the room
+        /// it adds. Only the Town Hall has any: a founding party turns up with it, so a new game
+        /// starts with hands to work rather than with an empty plot and a countdown. Level-free by
+        /// nature -- a building is only ever placed at level 1.
+        /// </summary>
+        public int citizensOnBuild;
 
         [Header("Requirements")]
         // Null = no prerequisite. Otherwise at least one already-placed instance of this building

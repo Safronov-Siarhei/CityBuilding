@@ -11,8 +11,12 @@ namespace CityBuilder.Core
     /// wired up: tax rate, building decay, defence coverage, food variety, recent deaths and
     /// entertainment. The work week is the one still deferred, for want of a week. The score is a
     /// flat average of whatever factors exist, so adding the seventh extends the list instead of
-    /// redesigning the aggregation. Not yet linked to anything downstream (no gameplay consequence
-    /// reads HappinessPercent yet) -- this is the stat itself, first.
+    /// redesigning the aggregation.
+    ///
+    /// What reads it: MigrationManager, and so far only MigrationManager. Contentment above its
+    /// threshold brings settlers in and the happier the town the sooner; below it, people leave.
+    /// That is the first and currently the only consequence the score has -- the design backlog
+    /// also wants it touching production, which is still unbuilt.
     /// </summary>
     public class HappinessManager : MonoBehaviour
     {
@@ -65,6 +69,13 @@ namespace CityBuilder.Core
             // itself makes that ordering stop mattering: whichever way round the day ticks, the
             // score is recomputed once more with the food numbers the day actually produced.
             if (FoodConsumptionManager.Instance != null) FoodConsumptionManager.Instance.OnFoodConsumed += Recompute;
+            // Three of the six factors are per head -- defence, entertainment and the losses the
+            // town remembers. Until migration existed the population only moved when the player
+            // built something, so a daily recompute was close enough; now it drifts on its own
+            // between arrivals, and a stale score would be one MigrationManager then acts on.
+            // This is also what makes the loop self-correcting rather than a spiral: as a
+            // miserable town loses people, its defence and entertainment per citizen rise.
+            if (CitizenManager.Instance != null) CitizenManager.Instance.OnPopulationChanged += Recompute;
             Recompute();
         }
 
@@ -73,6 +84,7 @@ namespace CityBuilder.Core
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= Recompute;
             if (TaxManager.Instance != null) TaxManager.Instance.OnTaxRateChanged -= Recompute;
             if (FoodConsumptionManager.Instance != null) FoodConsumptionManager.Instance.OnFoodConsumed -= Recompute;
+            if (CitizenManager.Instance != null) CitizenManager.Instance.OnPopulationChanged -= Recompute;
         }
 
         public void Recompute()

@@ -236,7 +236,7 @@ namespace CityBuilder.Tests.PlayMode
             {
                 var before = houseData.LevelStats(level - 1);
                 var after = houseData.LevelStats(level);
-                var populationBefore = CitizenManager.Instance.TotalPopulation;
+                var capacityBefore = CitizenManager.Instance.Capacity;
                 var healthBefore = house.CurrentHealth;
 
                 Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
@@ -245,8 +245,8 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.AreEqual(after.maxHealth, house.MaxHealth, $"A level-{level} House is not as tough as its balance row says.");
                 Assert.AreEqual(healthBefore + (after.maxHealth - before.maxHealth), house.CurrentHealth,
                     "An upgrade should add the difference in hit points, not silently repair the building.");
-                Assert.AreEqual(populationBefore + (after.citizensGranted - before.citizensGranted), CitizenManager.Instance.TotalPopulation,
-                    $"A level-{level} House did not bring in the extra citizens it houses.");
+                Assert.AreEqual(capacityBefore + (after.housingCapacity - before.housingCapacity), CitizenManager.Instance.Capacity,
+                    $"A level-{level} House did not give the settlement the extra room it houses.");
 
                 Assert.Greater(after.maxHealth, before.maxHealth, $"Level {level} of the House is no tougher than level {level - 1} -- there is nothing to upgrade for.");
             }

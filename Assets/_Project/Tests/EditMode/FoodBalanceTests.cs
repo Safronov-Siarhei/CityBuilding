@@ -66,7 +66,7 @@ namespace CityBuilder.Tests.EditMode
         [Test]
         public void OneFisherHut_FeedsOnlyACoupleOfHouses()
         {
-            var housefuls = MouthsFedBy(OutputPerDay(Building("FisherHut"))) / Building("Hovel").levels[0].citizensGranted;
+            var housefuls = MouthsFedBy(OutputPerDay(Building("FisherHut"))) / Building("Hovel").levels[0].housingCapacity;
 
             Assert.GreaterOrEqual(housefuls, 1f, "A fully staffed hut that cannot even feed the house its fishermen came from makes food unplayable rather than tight.");
             Assert.LessOrEqual(housefuls, 3f, "One hut feeding more than three houses is how food stopped being a constraint at all -- hunger became unreachable and the bread chain decoration.");

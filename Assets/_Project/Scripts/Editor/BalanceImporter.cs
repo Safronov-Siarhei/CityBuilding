@@ -282,6 +282,7 @@ namespace CityBuilder.EditorTools
                     cost = ReadCost(header, row, "cost_", path),
                     productionIntervalSeconds = Number(header, row, "production_interval_sec", path),
                     fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
+                    citizensOnBuild = (int)OptionalNumber(header, row, "citizens_on_build", 0f, path),
                     storageGroup = ParseEnum(header, row, "storage_group", ResourceStorageGroup.None, path),
                     levels = ReadLevels(header, row, path),
                     requiredBuildingId = Text(header, row, "requires"),
@@ -492,7 +493,7 @@ namespace CityBuilder.EditorTools
                 {
                     maxHealth = LevelNumber(header, row, "max_health", level, previous?.maxHealth, path),
                     defense = LevelNumber(header, row, "defense", level, previous?.defense, path),
-                    citizensGranted = LevelNumber(header, row, "citizens_granted", level, previous?.citizensGranted, path),
+                    housingCapacity = LevelNumber(header, row, "housing_capacity", level, previous?.housingCapacity, path),
                     maxWorkers = LevelNumber(header, row, "max_workers", level, previous?.maxWorkers, path),
                     batchesPerWorkerPerTick = LevelNumber(header, row, "batches_per_tick", level, previous?.batchesPerWorkerPerTick, path),
                     storageCapacity = LevelNumber(header, row, "storage_capacity", level, previous?.storageCapacity, path),
@@ -678,6 +679,23 @@ namespace CityBuilder.EditorTools
         {
             var index = header.IndexOf(column);
             return index >= 0 && index < row.Count ? row[index].Trim() : string.Empty;
+        }
+
+        /// <summary>
+        /// Number for a column most rows leave blank. An empty cell means the fallback rather than
+        /// an error -- citizens_on_build is filled in for exactly one building out of forty-nine,
+        /// and making the other forty-eight type a zero would be noise nobody would keep honest.
+        /// </summary>
+        private static float OptionalNumber(List<string> header, List<string> row, string column, float fallback, string path)
+        {
+            if (header.IndexOf(column) < 0) return fallback;
+
+            var raw = Text(header, row, column);
+            if (raw.Length == 0) return fallback;
+            if (TryParseNumber(raw, out var value)) return value;
+
+            Debug.LogError($"BalanceImporter: {path} column '{column}' has '{raw}', which is not a number. Using {fallback}.");
+            return fallback;
         }
 
         private static float Number(List<string> header, List<string> row, string column, string path)

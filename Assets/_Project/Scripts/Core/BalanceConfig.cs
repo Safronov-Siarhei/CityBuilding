@@ -127,6 +127,9 @@ namespace CityBuilder.Core
         public float productionIntervalSeconds = 6f;
         public int fogRevealRadius = 8;
 
+        /// <summary>People who arrive with the building itself when it is placed -- see BuildingData.citizensOnBuild. Only the Town Hall has any.</summary>
+        public int citizensOnBuild;
+
         /// <summary>Which family of resources this building stores, if any. How much it holds is per level.</summary>
         public ResourceStorageGroup storageGroup = ResourceStorageGroup.None;
 
@@ -242,6 +245,22 @@ namespace CityBuilder.Core
         /// <summary>Entertainment points per citizen that count as a fully entertained settlement -- the same shape as the defence factor's own target, which is a constant in HappinessManager.</summary>
         [SerializeField] private float happinessPerCitizenTarget = 0.8f;
 
+        [Header("Migration (economy.csv)")]
+        // How fast people find their way to the settlement, or away from it. Contentment above the
+        // threshold brings settlers in and below it drives them out, and the further from the
+        // threshold in either direction the shorter the wait -- the threshold itself is the dead
+        // point where nobody moves. The floor is what keeps unhappiness from ever ending the map:
+        // a miserable town stalls, it does not empty, and starvation stays the way to lose people.
+        [SerializeField] private int migrationHappinessThreshold = 30;
+        [SerializeField] private float migrationArriveIntervalAtThresholdSeconds = 90f;
+        [SerializeField] private float migrationArriveIntervalAtFullSeconds = 30f;
+        [SerializeField] private float migrationLeaveIntervalAtThresholdSeconds = 90f;
+        [SerializeField] private float migrationLeaveIntervalAtZeroSeconds = 30f;
+        [SerializeField] private int migrationMinPopulation = 1;
+
+        /// <summary>How long after the Town Hall goes up the settlement is left alone to find its feet -- migration frozen, contentment still reported honestly. Without it a first settlement is abandoned before the player has anything to be content about.</summary>
+        [SerializeField] private float settlingInSeconds = 420f;
+
         [Header("Research (economy.csv)")]
         // How the Laboratory's scientists shorten a research, what a cancelled one pays back, and
         // the floor a fully staffed lab can never dip below. The first `research_free_workers`
@@ -292,6 +311,13 @@ namespace CityBuilder.Core
         public int ResearchFreeWorkers => researchFreeWorkers;
         public int ResearchCancelRefundPercent => researchCancelRefundPercent;
         public float ResearchMinSeconds => researchMinSeconds;
+        public int MigrationHappinessThreshold => migrationHappinessThreshold;
+        public float MigrationArriveIntervalAtThresholdSeconds => migrationArriveIntervalAtThresholdSeconds;
+        public float MigrationArriveIntervalAtFullSeconds => migrationArriveIntervalAtFullSeconds;
+        public float MigrationLeaveIntervalAtThresholdSeconds => migrationLeaveIntervalAtThresholdSeconds;
+        public float MigrationLeaveIntervalAtZeroSeconds => migrationLeaveIntervalAtZeroSeconds;
+        public int MigrationMinPopulation => migrationMinPopulation;
+        public float SettlingInSeconds => settlingInSeconds;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -377,6 +403,13 @@ namespace CityBuilder.Core
             researchFreeWorkers = (int)Read(economy, "research_free_workers", researchFreeWorkers);
             researchCancelRefundPercent = (int)Read(economy, "research_cancel_refund_percent", researchCancelRefundPercent);
             researchMinSeconds = Read(economy, "research_min_seconds", researchMinSeconds);
+            migrationHappinessThreshold = (int)Read(economy, "migration_happiness_threshold", migrationHappinessThreshold);
+            migrationArriveIntervalAtThresholdSeconds = Read(economy, "migration_arrive_interval_at_threshold_sec", migrationArriveIntervalAtThresholdSeconds);
+            migrationArriveIntervalAtFullSeconds = Read(economy, "migration_arrive_interval_at_full_sec", migrationArriveIntervalAtFullSeconds);
+            migrationLeaveIntervalAtThresholdSeconds = Read(economy, "migration_leave_interval_at_threshold_sec", migrationLeaveIntervalAtThresholdSeconds);
+            migrationLeaveIntervalAtZeroSeconds = Read(economy, "migration_leave_interval_at_zero_sec", migrationLeaveIntervalAtZeroSeconds);
+            migrationMinPopulation = (int)Read(economy, "migration_min_population", migrationMinPopulation);
+            settlingInSeconds = Read(economy, "settling_in_seconds", settlingInSeconds);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

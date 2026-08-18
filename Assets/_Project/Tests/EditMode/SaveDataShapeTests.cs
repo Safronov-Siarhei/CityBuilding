@@ -44,6 +44,9 @@ namespace CityBuilder.Tests.EditMode
             data.secondsUntilNextRaid = 41.5f;
             data.orcs.Add(new OrcEntry { position = new Vector3(-8f, 0f, 5f), level = 3, currentHealth = 44 });
 
+            data.migrationTimerSeconds = 37.5f;
+            data.settlingInSecondsRemaining = 118.25f;
+
             return data;
         }
 
@@ -103,6 +106,15 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsFalse(loaded.portalPlaced, "An older save has to load as a game whose portal has not opened yet, so the raid manager opens one as usual.");
             Assert.IsNotNull(loaded.orcs);
             Assert.IsEmpty(loaded.orcs);
+        }
+
+        [Test]
+        public void TheMigrationClocks_SurviveTheSaveFile()
+        {
+            var loaded = RoundTrip(WithAnArmyAndAHungryTown());
+
+            Assert.AreEqual(37.5f, loaded.migrationTimerSeconds, 0.001f, "The wait for the next settler restarted -- reloading would be a way to skip it.");
+            Assert.AreEqual(118.25f, loaded.settlingInSecondsRemaining, 0.001f, "The settling-in grace came back whole -- reloading would be a way to extend it.");
         }
 
         /// <summary>The empty group is not an oversight: ArmyManager keeps a group whose last member died because it still holds the player's rally point and priority.</summary>

@@ -105,6 +105,63 @@ namespace CityBuilder.Tests.EditMode
         }
 
         [Test]
+        public void Capacity_IsRoomForPeople_NotPeople()
+        {
+            // A house does not hand the settlement citizens any more; it hands it somewhere to put
+            // them, and migration decides whether anybody comes.
+            _manager.ChangeCapacity(7);
+
+            Assert.AreEqual(0, _manager.TotalPopulation, "Adding housing must not conjure up anybody to live in it.");
+            Assert.AreEqual(7, _manager.Capacity);
+            Assert.AreEqual(7, _manager.FreeSpace);
+        }
+
+        [Test]
+        public void FreeSpace_IsNeverNegative_WhenPopulationOutgrowsItsHousing()
+        {
+            // Two ways this happens for real: the Town Hall's founding party outnumbers its own
+            // seven beds, and a raid burns down a house full of people. Neither evicts anyone --
+            // but a negative free space would have MigrationManager reading "room available".
+            _manager.ChangeCapacity(7);
+            _manager.AddCitizens(12);
+
+            Assert.AreEqual(0, _manager.FreeSpace);
+        }
+
+        [Test]
+        public void ChangeCapacity_TakesTheRoomBackWhenABuildingGoes()
+        {
+            _manager.ChangeCapacity(10);
+            _manager.ChangeCapacity(-4);
+
+            Assert.AreEqual(6, _manager.Capacity);
+        }
+
+        [Test]
+        public void RemoveCitizens_TakesTheIdleFirstAndLaysOffOnlyWhatIsLeft()
+        {
+            // Same body as KillCitizens, and it matters here for the same reason: a departure that
+            // left more workers assigned than the settlement has people would leave every workshop
+            // ticking on staff who walked out.
+            _manager.AddCitizens(4);
+            _manager.NotifyWorkerAssigned();
+            _manager.NotifyWorkerAssigned();
+
+            Assert.AreEqual(2, _manager.RemoveCitizens(2));
+            Assert.AreEqual(2, _manager.TotalPopulation);
+            Assert.AreEqual(0, _manager.IdlePopulation, "The two who left should have been the two who were not working.");
+        }
+
+        [Test]
+        public void RemoveCitizens_CannotTakeMorePeopleThanTheSettlementHas()
+        {
+            _manager.AddCitizens(3);
+
+            Assert.AreEqual(3, _manager.RemoveCitizens(10));
+            Assert.AreEqual(0, _manager.TotalPopulation);
+        }
+
+        [Test]
         public void NotifyWorkersAssignedBulk_SkipsTheIdleAvailabilityCheck()
         {
             // Used by save/load to restore an already-valid worker count directly -- must not
