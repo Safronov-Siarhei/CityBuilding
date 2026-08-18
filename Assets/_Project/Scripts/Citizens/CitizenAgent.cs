@@ -24,7 +24,6 @@ namespace CityBuilder.Citizens
         private const float MaxIdleSeconds = 5f;
         private const float GroundRaycastHeight = 200f;
         private const float GroundHeightTolerance = 0.5f;
-        private const float WorkPauseSeconds = 3f;
         private const float BuildingRestSeconds = 1.5f;
         private const float ArrivalThreshold = 0.05f;
         private const int MaxTargetAttempts = 8;
@@ -48,8 +47,14 @@ namespace CityBuilder.Citizens
         // the citizen froze rather than the game giving up on an impossible order.
         private const int MaxManualMoveStuckRetries = 3;
 
-        // How long a citizen spends actually chopping/quarrying once in reach of the node.
-        private const float GatherSeconds = 2.5f;
+        /// <summary>
+        /// How long a citizen spends actually chopping or quarrying once in reach of the node --
+        /// the same figure whether they were sent by hand or are working a Sawmill's shift, since
+        /// it is the tree that takes the time, not the employment arrangement. From the sheet
+        /// (harvest_seconds), because it is now the tempo of the whole wood and stone economy
+        /// rather than a cosmetic pause.
+        /// </summary>
+        private static float HarvestSeconds => Core.BalanceConfig.Instance.HarvestSeconds;
         // Close enough to work a resource node, instead of demanding its exact center: trees carve
         // themselves out of the NavMesh (see TreesAreaSpawner's NavMeshObstacle), so a route to a
         // tree's center can never fully complete -- the agent would grind against the carve until
@@ -64,6 +69,12 @@ namespace CityBuilder.Citizens
 
         /// <summary>The node this citizen was sent to hand-gather (see GatherFrom). Claimed by the caller, always released by this component -- on completion, on giving up, on being reassigned, and on destruction.</summary>
         private ResourceNode _gatherNode;
+
+        /// <summary>The node this citizen commutes to on a working shift. Claimed and released by CitizenVisualsManager, not here -- this is only borrowed to draw the progress bar on it.</summary>
+        private ResourceNode _workNode;
+
+        /// <summary>How long the pause currently counting down was set to, so the harvest bar knows what fraction of it has elapsed.</summary>
+        private float _pauseDuration;
 
         private Vector3 _buildingPos;
         private Vector3? _nodePos;
@@ -94,8 +105,11 @@ namespace CityBuilder.Citizens
         // synchronously and skip its own (now-stale) default transition below.
         private bool _reassignedDuringCallback;
 
-        /// <summary>Fired once per completed "at the node" work visit (Working mode only) -- e.g. drives tree felling in CitizenVisualsManager.</summary>
+        /// <summary>Fired once per completed "at the node" work visit (Working mode only) -- what takes a slice out of the node in CitizenVisualsManager.</summary>
         public event Action OnWorkVisitCompleted;
+
+        /// <summary>Fired once the worker has walked back and rested at its building (Working mode only) -- what banks the load it was carrying. Separate from the visit above because the resource is earned at the tree but delivered at the yard, and a worker killed on the way home should arrive with nothing.</summary>
+        public event Action OnReturnedToBuilding;
 
         /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>
         public bool IsIdle => _mode == Mode.Wandering;
@@ -134,26 +148,34 @@ namespace CityBuilder.Citizens
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
             ReleaseGatherNode();
+            ClearWorkNodeProgress();
+            _workNode = null;
             _mode = Mode.Wandering;
             _townCenter = townCenter;
             BeginIdlePause();
         }
 
         /// <summary>
-        /// Switches the agent into a building&lt;-&gt;node commute loop. If nodePos is null (e.g. a
-        /// Food-producing building with no tree/rock concept) the agent just walks to the
-        /// building and stays.
+        /// Switches the agent into a building&lt;-&gt;node commute loop. If node is null (e.g. a
+        /// Food-producing building with no tree/rock concept, or a gatherer with nothing left
+        /// inside its radius) the agent just walks to the building and stays.
+        ///
+        /// The node is held as well as its position: the position is what survives the node being
+        /// felled mid-walk, and the reference is what lets the agent fill in the progress bar over
+        /// the thing it is actually chopping.
         /// </summary>
-        public void SetWorking(Vector3 buildingPos, Vector3? nodePos)
+        public void SetWorking(Vector3 buildingPos, ResourceNode node)
         {
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
             ReleaseGatherNode();
+            ClearWorkNodeProgress();
             _mode = Mode.Working;
             _buildingPos = buildingPos;
-            _nodePos = nodePos;
-            _headingToNode = nodePos.HasValue;
-            WalkTo(_headingToNode ? nodePos.Value : buildingPos);
+            _workNode = node;
+            _nodePos = node != null ? node.transform.position : (Vector3?)null;
+            _headingToNode = _nodePos.HasValue;
+            WalkTo(_headingToNode ? _nodePos.Value : buildingPos);
         }
 
         /// <summary>
@@ -218,7 +240,7 @@ namespace CityBuilder.Citizens
                 if (_mode == Mode.Gathering && IsWithinReachOf(_gatherNode.transform.position))
                 {
                     _isWalking = false;
-                    _pauseTimer = GatherSeconds;
+                    BeginPause(HarvestSeconds);
                     return;
                 }
 
@@ -288,6 +310,7 @@ namespace CityBuilder.Citizens
             }
 
             _pauseTimer -= Time.deltaTime;
+            ReportHarvestProgress();
             if (_pauseTimer <= 0f)
             {
                 if (_resumingAfterStuck)
@@ -356,7 +379,7 @@ namespace CityBuilder.Citizens
                     }
                     else
                     {
-                        _pauseTimer = _headingToNode ? WorkPauseSeconds : BuildingRestSeconds;
+                        BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
                     }
                     return;
                 }
@@ -433,7 +456,7 @@ namespace CityBuilder.Citizens
                     return;
                 }
 
-                _pauseTimer = GatherSeconds;
+                BeginPause(HarvestSeconds);
                 return;
             }
 
@@ -448,7 +471,7 @@ namespace CityBuilder.Citizens
                 else
                 {
                     // Working: resume the interrupted commute leg from here.
-                    _pauseTimer = _headingToNode ? WorkPauseSeconds : BuildingRestSeconds;
+                    BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
                 }
                 return;
             }
@@ -460,7 +483,14 @@ namespace CityBuilder.Citizens
             }
 
             // Working: pause at whichever end was just reached before looping to the other.
-            _pauseTimer = _headingToNode ? WorkPauseSeconds : BuildingRestSeconds;
+            BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
+        }
+
+        /// <summary>Starts a timed pause and remembers how long it was, which is the only way the harvest bar can report a fraction rather than a countdown.</summary>
+        private void BeginPause(float seconds)
+        {
+            _pauseTimer = seconds;
+            _pauseDuration = Mathf.Max(0.0001f, seconds);
         }
 
         private void OnPauseElapsed()
@@ -480,7 +510,7 @@ namespace CityBuilder.Citizens
             if (!_nodePos.HasValue)
             {
                 // No node to commute to (Food-type building) — just keep resting at the building.
-                _pauseTimer = BuildingRestSeconds;
+                BeginPause(BuildingRestSeconds);
                 return;
             }
 
@@ -499,11 +529,21 @@ namespace CityBuilder.Citizens
                     return;
                 }
 
+                ClearWorkNodeProgress();
                 _reassignedDuringCallback = false;
                 OnWorkVisitCompleted?.Invoke();
                 // A subscriber may have synchronously called SetWorking/SetIdleWander on this
                 // same agent (e.g. felled the tree and reassigned it) -- if so, its fresh state
                 // must not be immediately overwritten by the default transition below.
+                if (_reassignedDuringCallback) return;
+            }
+            else
+            {
+                // The pause that just elapsed was the one spent AT THE BUILDING, which means the
+                // worker walked home carrying whatever the last visit prised loose. This is where
+                // a Sawmill and a Quarry actually earn their keep -- see CitizenVisualsManager.
+                _reassignedDuringCallback = false;
+                OnReturnedToBuilding?.Invoke();
                 if (_reassignedDuringCallback) return;
             }
 
@@ -524,6 +564,24 @@ namespace CityBuilder.Citizens
             }
 
             SetIdleWander(_townCenter);
+        }
+
+        /// <summary>
+        /// Fills in the bar over whichever node this citizen is currently working. Only the pause
+        /// spent at the node counts: the rest at the building is not work anyone is watching, and
+        /// drawing a bar over a tree while the worker walks away from it would be a lie.
+        /// </summary>
+        private void ReportHarvestProgress()
+        {
+            var node = _mode == Mode.Gathering ? _gatherNode : (_headingToNode ? _workNode : null);
+            if (node == null || _mode == Mode.Wandering || _mode == Mode.ManualMove) return;
+
+            node.ReportHarvestProgress(1f - Mathf.Clamp01(_pauseTimer / _pauseDuration));
+        }
+
+        private void ClearWorkNodeProgress()
+        {
+            if (_workNode != null) _workNode.ClearHarvestProgress();
         }
 
         /// <summary>Gives up on the order without harvesting (unreachable node, or it vanished first) and returns to idle wandering.</summary>

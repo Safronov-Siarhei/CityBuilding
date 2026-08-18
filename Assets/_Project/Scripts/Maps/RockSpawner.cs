@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
@@ -7,8 +6,13 @@ using UnityEngine;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Scatters harvestable stone boulders across a mesh map's dry land, and replaces each one a
-    /// while after it's gathered -- the Stone counterpart to TreesAreaSpawner.
+    /// Scatters harvestable stone boulders across a mesh map's dry land. The Stone counterpart to
+    /// TreesAreaSpawner with one decisive difference: a worked-out boulder is never replaced. The
+    /// map is made with a fixed amount of stone in it and that is all it will ever have.
+    ///
+    /// Which is why the boulders are in the save file. They are scattered by unseeded Random, so
+    /// without saving them a reload would deal a fresh map AND refill every one -- depletion would
+    /// have been undone by the act of saving, which is no mechanic at all.
     ///
     /// Mesh maps (MeshMapDefinition) only carry tree prefabs, so before this existed the current
     /// maps had zero Stone ResourceNodes anywhere: only the legacy PNG map path
@@ -26,7 +30,6 @@ namespace CityBuilder.Maps
         public static RockSpawner Instance { get; private set; }
 
         private const int InitialRockCount = 140;
-        private const float RespawnDelaySeconds = 90f;
         private const int MaxPlacementAttempts = 40;
         // Wider than the forest's 1-cell spacing -- boulders read as scattered landmarks rather
         // than a field, and keeps them from crowding a build site.
@@ -41,6 +44,56 @@ namespace CityBuilder.Maps
         private Material _rockMaterial;
         private Material _rockShadeMaterial;
         private bool _initialized;
+
+        /// <summary>Every boulder standing, with its cell and what is left in it -- what the save writes down.</summary>
+        public IEnumerable<(Vector2Int cell, int remaining)> LiveRocks
+        {
+            get
+            {
+                foreach (var pair in _rockCellByInstance)
+                {
+                    if (pair.Key == null) continue;
+                    var node = pair.Key.GetComponent<ResourceNode>();
+                    yield return (pair.Value, node != null ? node.RemainingYield : 0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Replaces the freshly scattered boulders with the exact ones a save was made with, each
+        /// as picked-over as it was. Called after Initialize has already run (MeshMapApplier does
+        /// it as the map comes up), so the first job is clearing what it scattered -- otherwise
+        /// the loaded map would carry both sets.
+        ///
+        /// An empty list means a save made before boulders were written down. That is left alone
+        /// rather than clearing the map to nothing: an older save should come back playable, not
+        /// stripped of every rock on it.
+        /// </summary>
+        public void RestoreFromSave(IReadOnlyList<(Vector2Int cell, int remaining)> rocks)
+        {
+            if (rocks == null || rocks.Count == 0) return;
+
+            foreach (var pair in new List<KeyValuePair<GameObject, Vector2Int>>(_rockCellByInstance))
+            {
+                GridManager.Instance?.SetAreaOccupied(pair.Value, Vector2Int.one, false);
+                if (pair.Key != null) Destroy(pair.Key);
+            }
+            _rockCellByInstance.Clear();
+            _rockCells.Clear();
+
+            EnsureMaterials();
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            foreach (var (cell, remaining) in rocks)
+            {
+                if (remaining <= 0) continue; // an emptied boulder is gone; it is not coming back
+
+                var rock = CreateRock(grid.GetFootprintCenterWorld(cell, Vector2Int.one), cell);
+                var node = rock != null ? rock.GetComponent<ResourceNode>() : null;
+                if (node != null) node.SetRemainingYield(remaining);
+            }
+        }
 
         private void Awake()
         {
@@ -69,7 +122,13 @@ namespace CityBuilder.Maps
             }
         }
 
-        /// <summary>Called once a citizen finishes gathering this boulder by hand (see ManualGathering.Harvest) -- frees its cell and schedules a replacement elsewhere.</summary>
+        /// <summary>
+        /// A boulder has been worked out -- its cell is freed and it is gone. No replacement is
+        /// scheduled, deliberately: stone is the map's one finite resource, and the whole point of
+        /// the boulder holding a stock is that the map contains a fixed amount of it and never
+        /// makes more. A quarry that has cleared its radius has to be replaced, not waited out.
+        /// Contrast TreesAreaSpawner, which does grow a new tree.
+        /// </summary>
         public void NotifyRockHarvested(GameObject rockInstance)
         {
             if (rockInstance == null) return;
@@ -82,13 +141,6 @@ namespace CityBuilder.Maps
             }
 
             Destroy(rockInstance);
-            StartCoroutine(RespawnAfterDelay());
-        }
-
-        private IEnumerator RespawnAfterDelay()
-        {
-            yield return new WaitForSeconds(RespawnDelaySeconds);
-            SpawnOneRock();
         }
 
         private void SpawnOneRock()
@@ -118,7 +170,7 @@ namespace CityBuilder.Maps
             }
         }
 
-        private void CreateRock(Vector3 position, Vector2Int cell)
+        private GameObject CreateRock(Vector3 position, Vector2Int cell)
         {
             var root = new GameObject("Rock");
             root.transform.SetParent(transform, false);
@@ -150,6 +202,7 @@ namespace CityBuilder.Maps
             GridManager.Instance?.SetAreaOccupied(cell, Vector2Int.one, true);
             _rockCells.Add(cell);
             _rockCellByInstance[root] = cell;
+            return root;
         }
 
         private bool HasNearbyRock(Vector2Int cell)

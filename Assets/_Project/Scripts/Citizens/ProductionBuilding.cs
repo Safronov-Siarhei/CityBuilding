@@ -66,6 +66,34 @@ namespace CityBuilder.Citizens
         /// <summary>Whether this building produces anything at all -- the Пристань and the Водяная мельница deliberately do not.</summary>
         public bool ProducesAnything => Recipes.Count > 0;
 
+        /// <summary>
+        /// Whether this building's output is carried in by its workers instead of ticked out on a
+        /// timer. True for the Sawmill and the Quarry and nothing else.
+        ///
+        /// For these two the walk IS the production: a worker goes to a tree or a boulder, spends
+        /// harvest_seconds on it, takes a slice out of the node's own stock and carries it home
+        /// (see CitizenVisualsManager). Which means a Quarry with no boulders left inside its
+        /// radius really does earn nothing, rather than quietly conjuring stone off a timer while
+        /// the ground around it lies bare.
+        ///
+        /// ProducesAnything is checked FIRST and not as a formality: a building with no recipe at
+        /// all reports Wood (there is no "nothing" in ResourceType), so without this the
+        /// Laboratory's scientists would set off across the map to fell trees.
+        /// </summary>
+        public bool GathersFromNodes
+        {
+            get
+            {
+                if (!ProducesAnything) return false;
+
+                var resourceType = ProducesResource;
+                return resourceType == ResourceType.Wood || resourceType == ResourceType.Stone;
+            }
+        }
+
+        /// <summary>How far this building's workers may roam for a node, in metres, at its current level. Zero everywhere except the Sawmill and the Quarry, and it grows with every upgrade.</summary>
+        public int HarvestRadius => Data != null ? Data.LevelStats(CurrentLevel).harvestRadius : 0;
+
         /// <summary>Batches of the selected recipe one worker gets through per tick, at this building's current level.</summary>
         public int BatchesPerWorkerPerTick => Data != null ? Data.LevelStats(CurrentLevel).batchesPerWorkerPerTick : 0;
 
@@ -121,6 +149,11 @@ namespace CityBuilder.Citizens
         {
             var data = Data;
             if (data == null || AssignedWorkers <= 0 || data.productionIntervalSeconds <= 0f) return;
+
+            // A gatherer earns nothing here. Its wood and stone arrive on a worker's back, and
+            // ticking as well would pay it twice -- and would keep paying after the last boulder
+            // in reach was gone, which is exactly the thing depletion is supposed to mean.
+            if (GathersFromNodes) return;
 
             _timer += Time.deltaTime;
             if (_timer < data.productionIntervalSeconds) return;

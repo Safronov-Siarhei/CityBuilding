@@ -47,6 +47,9 @@ namespace CityBuilder.Tests.EditMode
             data.migrationTimerSeconds = 37.5f;
             data.settlingInSecondsRemaining = 118.25f;
 
+            data.rocks.Add(new RockEntry { cellX = 40, cellY = 91, remaining = 14 });
+            data.rocks.Add(new RockEntry { cellX = 7, cellY = 3, remaining = 2 });
+
             return data;
         }
 
@@ -115,6 +118,20 @@ namespace CityBuilder.Tests.EditMode
 
             Assert.AreEqual(37.5f, loaded.migrationTimerSeconds, 0.001f, "The wait for the next settler restarted -- reloading would be a way to skip it.");
             Assert.AreEqual(118.25f, loaded.settlingInSecondsRemaining, 0.001f, "The settling-in grace came back whole -- reloading would be a way to extend it.");
+        }
+
+        [Test]
+        public void TheBoulders_SurviveTheSaveFile()
+        {
+            // Stone is the one resource the map never makes more of, and the boulders are
+            // scattered by unseeded Random -- so without these a reload dealt a fresh map with
+            // every rock full again, and saving became a way to undo an hour of quarrying.
+            var loaded = RoundTrip(WithAnArmyAndAHungryTown());
+
+            Assert.AreEqual(2, loaded.rocks.Count, "The boulders did not survive serialization -- depletion would be undone by every load.");
+            Assert.AreEqual(40, loaded.rocks[0].cellX);
+            Assert.AreEqual(91, loaded.rocks[0].cellY);
+            Assert.AreEqual(14, loaded.rocks[0].remaining, "A half-worked boulder came back with a different amount of stone in it.");
         }
 
         /// <summary>The empty group is not an oversight: ArmyManager keeps a group whose last member died because it still holds the player's rally point and priority.</summary>

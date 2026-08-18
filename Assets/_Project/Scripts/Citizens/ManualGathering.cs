@@ -6,8 +6,8 @@ using UnityEngine;
 namespace CityBuilder.Citizens
 {
     /// <summary>
-    /// Resolves a hand-gathered ResourceNode: grants the resource, then hands the node itself to
-    /// whichever spawner owns it so it despawns and eventually comes back.
+    /// Resolves a hand-gathered ResourceNode: takes one trip's worth out of it, and hands the
+    /// node to whichever spawner owns it if that was the last of it.
     ///
     /// Exists to break the game's bootstrap deadlock: production buildings are the only resource
     /// income, but every one of them costs the very resource it produces (no Wood -> no
@@ -16,35 +16,27 @@ namespace CityBuilder.Citizens
     /// </summary>
     public static class ManualGathering
     {
-        // Deliberately small relative to building costs (a Lumberjack is 40 Wood) -- hand
-        // gathering is the anti-deadlock floor, not a competitive alternative to actually
-        // building an economy. First-pass, tunable.
-        // Both from the balance sheet's economy tab (wood_per_tree / stone_per_rock).
-
-        /// <summary>How much of its own resource one node yields when gathered by hand. 0 for anything not hand-gatherable.</summary>
-        public static int YieldFor(ResourceType resourceType)
-        {
-            switch (resourceType)
-            {
-                case ResourceType.Wood: return BalanceConfig.Instance.WoodPerTree;
-                case ResourceType.Stone: return BalanceConfig.Instance.StonePerRock;
-                default: return 0;
-            }
-        }
-
         /// <summary>
-        /// Grants the node's yield and despawns it. Routed through the owning spawner
-        /// (TreesAreaSpawner/RockSpawner) rather than destroyed directly, so its grid cell is
-        /// freed and a replacement is scheduled exactly like a Lumberjack-felled tree already is.
-        /// The plain Destroy fallback covers nodes from the legacy PNG map path
-        /// (MapTerrainGenerator), which no spawner tracks.
+        /// One trip's worth out of the node and into the stores, and the node itself removed only
+        /// if that emptied it.
+        ///
+        /// A hand-gatherer takes exactly what a hired worker takes -- the node decides, not who is
+        /// swinging the axe. So a tree still comes down in one go, and a boulder still needs ten
+        /// visits, whether the player is doing it by hand or a Quarry is doing it for them.
+        ///
+        /// Despawning is routed through the owning spawner (TreesAreaSpawner/RockSpawner) rather
+        /// than a direct Destroy, so the grid cell is freed -- and so a felled tree is replaced
+        /// while an emptied boulder is not. The plain Destroy fallback covers nodes from the
+        /// legacy PNG map path (MapTerrainGenerator), which no spawner tracks.
         /// </summary>
         public static void Harvest(ResourceNode node)
         {
             if (node == null) return;
 
-            var yield = YieldFor(node.ResourceType);
-            if (yield > 0) ResourceManager.Instance?.Add(node.ResourceType, yield);
+            var taken = node.TakeYield();
+            if (taken > 0) ResourceManager.Instance?.Add(node.ResourceType, taken);
+
+            if (!node.IsDepleted) return;
 
             if (node.ResourceType == ResourceType.Wood && TreesAreaSpawner.Instance != null)
             {

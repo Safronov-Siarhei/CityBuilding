@@ -229,8 +229,14 @@ namespace CityBuilder.Core
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
         [SerializeField] private float repairCostFraction = 0.4f;
+        // What one tree or one boulder holds in total, what a worker carries away per trip, and
+        // how long that trip's digging takes. A tree's per-trip yield equals its whole stock, so
+        // one visit fells it; a boulder is chipped away over many, and never comes back.
         [SerializeField] private int woodPerTree = 5;
-        [SerializeField] private int stonePerRock = 4;
+        [SerializeField] private int stonePerRock = 20;
+        [SerializeField] private int woodPerHarvest = 5;
+        [SerializeField] private int stonePerHarvest = 2;
+        [SerializeField] private float harvestSeconds = 15f;
 
         [Header("Food (economy.csv)")]
         // What one mouth -- citizen or soldier -- eats per day, how long a settlement may go short
@@ -297,6 +303,9 @@ namespace CityBuilder.Core
         public float RepairCostFraction => repairCostFraction;
         public int WoodPerTree => woodPerTree;
         public int StonePerRock => stonePerRock;
+        public int WoodPerHarvest => woodPerHarvest;
+        public int StonePerHarvest => stonePerHarvest;
+        public float HarvestSeconds => harvestSeconds;
         public int BaseCapacityMaterials => baseCapacityMaterials;
         public int BaseCapacityFood => baseCapacityFood;
         public int BaseCapacityValuables => baseCapacityValuables;
@@ -389,6 +398,9 @@ namespace CityBuilder.Core
             repairCostFraction = Read(economy, "repair_cost_fraction", repairCostFraction);
             woodPerTree = (int)Read(economy, "wood_per_tree", woodPerTree);
             stonePerRock = (int)Read(economy, "stone_per_rock", stonePerRock);
+            woodPerHarvest = (int)Read(economy, "wood_per_harvest", woodPerHarvest);
+            stonePerHarvest = (int)Read(economy, "stone_per_harvest", stonePerHarvest);
+            harvestSeconds = Read(economy, "harvest_seconds", harvestSeconds);
             baseCapacityMaterials = (int)Read(economy, "base_capacity_materials", baseCapacityMaterials);
             baseCapacityFood = (int)Read(economy, "base_capacity_food", baseCapacityFood);
             baseCapacityValuables = (int)Read(economy, "base_capacity_valuables", baseCapacityValuables);

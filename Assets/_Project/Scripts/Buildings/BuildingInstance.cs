@@ -43,6 +43,9 @@ namespace CityBuilder.Buildings
         /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment.</summary>
         public int Happiness => Data != null ? Data.LevelStats(Level).happiness : 0;
 
+        /// <summary>How far this building's workers may roam for a tree or a boulder at the level it currently stands at. Zero for anything that does not gather.</summary>
+        public int HarvestRadius => Data != null ? Data.LevelStats(Level).harvestRadius : 0;
+
         /// <summary>How many people this building houses at the level it currently stands at -- handed to CitizenManager as room, not as people.</summary>
         public int HousingCapacity => Data != null ? Data.LevelStats(Level).housingCapacity : 0;
 

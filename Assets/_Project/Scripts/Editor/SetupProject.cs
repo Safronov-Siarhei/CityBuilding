@@ -2113,6 +2113,7 @@ namespace CityBuilder.EditorTools
                     batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
                     happiness = level.happiness,
+                    harvestRadius = level.harvestRadius,
                 });
             }
             return copy;

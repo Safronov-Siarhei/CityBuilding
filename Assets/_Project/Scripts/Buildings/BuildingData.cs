@@ -49,6 +49,14 @@ namespace CityBuilder.Buildings
         public int storageCapacity;
 
         /// <summary>
+        /// How far from this building its workers will walk to fell a tree or chip a boulder, in
+        /// metres. Zero for everything that is not a Sawmill or a Quarry. Nothing outside it is
+        /// touched, so where the player puts a gatherer is a decision about what it can reach --
+        /// and upgrading it is what widens that reach rather than only speeding it up.
+        /// </summary>
+        public int harvestRadius;
+
+        /// <summary>
         /// What standing here does for the settlement's mood -- the design's third happiness factor,
         /// "each entertainment building contributes its own happiness value". Zero for everything
         /// outside the Развлечения category, which is most of the roster.

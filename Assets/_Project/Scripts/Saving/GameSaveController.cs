@@ -164,6 +164,28 @@ namespace CityBuilder.Saving
             // settlement exists by asking whether a Town Hall is standing, and until the loop
             // above ran, none was.
             Citizens.MigrationManager.Instance?.RestoreFromSave(data.migrationTimerSeconds, data.settlingInSecondsRemaining);
+
+            RestoreRocks(data);
+        }
+
+        /// <summary>
+        /// Puts back the exact boulders the save was made with, each as worked-out as it was.
+        /// Runs after the buildings so the cells a restored building sits on are already marked
+        /// occupied -- a boulder never shared a cell with a building when the save was written,
+        /// and it must not be dropped onto one now.
+        /// </summary>
+        private static void RestoreRocks(GameSaveData data)
+        {
+            var spawner = Maps.RockSpawner.Instance;
+            if (spawner == null || data.rocks == null || data.rocks.Count == 0) return;
+
+            var rocks = new List<(Vector2Int cell, int remaining)>(data.rocks.Count);
+            foreach (var entry in data.rocks)
+            {
+                rocks.Add((new Vector2Int(entry.cellX, entry.cellY), entry.remaining));
+            }
+
+            spawner.RestoreFromSave(rocks);
         }
 
         /// <summary>
@@ -225,6 +247,15 @@ namespace CityBuilder.Saving
             {
                 data.migrationTimerSeconds = migration.Timer;
                 data.settlingInSecondsRemaining = migration.SettlingInRemaining;
+            }
+
+            var rocks = Maps.RockSpawner.Instance;
+            if (rocks != null)
+            {
+                foreach (var (cell, remaining) in rocks.LiveRocks)
+                {
+                    data.rocks.Add(new RockEntry { cellX = cell.x, cellY = cell.y, remaining = remaining });
+                }
             }
 
             if (researchManager != null)

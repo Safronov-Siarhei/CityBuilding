@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -49,6 +50,13 @@ namespace CityBuilder.Citizens
         private readonly Dictionary<ProductionBuilding, List<CitizenAgent>> _workingAgents = new Dictionary<ProductionBuilding, List<CitizenAgent>>();
         private readonly Dictionary<CitizenAgent, ResourceNode> _claimedNodes = new Dictionary<CitizenAgent, ResourceNode>();
         private readonly Dictionary<CitizenAgent, Action> _workVisitHandlers = new Dictionary<CitizenAgent, Action>();
+        private readonly Dictionary<CitizenAgent, Action> _deliveryHandlers = new Dictionary<CitizenAgent, Action>();
+
+        /// <summary>What each worker prised out of a node on its last visit and has not yet walked home. Zero for anyone standing at a building that does not gather.</summary>
+        private readonly Dictionary<CitizenAgent, int> _carriedByAgent = new Dictionary<CitizenAgent, int>();
+
+        /// <summary>Gatherers already told, once, that there is nothing left inside their radius -- see ReportRadiusEmpty.</summary>
+        private readonly HashSet<ProductionBuilding> _reportedEmptyRadius = new HashSet<ProductionBuilding>();
 
         private Material[] _clothingMaterials;
         private Material _skinMaterial;
@@ -87,7 +95,7 @@ namespace CityBuilder.Citizens
             foreach (var pair in _workingAgents)
             {
                 var building = pair.Key;
-                if (!GathersFromNodes(building)) continue;
+                if (!building.GathersFromNodes) continue;
 
                 foreach (var agent in pair.Value)
                 {
@@ -178,33 +186,54 @@ namespace CityBuilder.Citizens
                 ? gridManager.GetFootprintCenterWorld(buildingInstance.OriginCell, buildingInstance.RotatedFootprint())
                 : building.transform.position;
 
-            Vector3? nodePos = null;
-            if (GathersFromNodes(building))
+            ResourceNode claimed = null;
+            if (building.GathersFromNodes)
             {
-                var node = FindNearestFreeNode(buildingPos, building.ProducesResource);
-                if (node != null && node.TryClaim())
+                // Already holding one (a boulder with stone left in it) -- keep going back to the
+                // same rock rather than re-searching every trip and hopping between two of them.
+                if (_claimedNodes.TryGetValue(agent, out var held) && held != null && !held.IsDepleted)
                 {
-                    _claimedNodes[agent] = node;
-                    nodePos = node.transform.position;
+                    claimed = held;
                 }
+                else
+                {
+                    var node = FindNearestFreeNode(buildingPos, building.ProducesResource, building.HarvestRadius);
+                    if (node != null && node.TryClaim())
+                    {
+                        _claimedNodes[agent] = node;
+                        claimed = node;
+                    }
+                }
+
+                ReportRadiusEmpty(building, claimed == null);
             }
 
-            agent.SetWorking(buildingPos, nodePos);
+            agent.SetWorking(buildingPos, claimed);
             EnsureWorkVisitSubscription(agent, building);
         }
 
         /// <summary>
-        /// Whether this building's workers walk out to a tree or a boulder rather than staying on the
-        /// plot. ProducesAnything is checked FIRST and not as a formality: a building with no recipe
-        /// at all reports Wood (there is no "nothing" in ResourceType), so without this the
-        /// Laboratory's scientists would set off across the map to fell trees.
+        /// Says once that a gatherer has nothing left within reach, and stays quiet until it does
+        /// again -- the same latch ProductionBuilding uses for a starved converter, and needed for
+        /// the same reason: the node search retries every few seconds forever.
+        ///
+        /// This is the one message a player genuinely cannot work out for themselves. A quarry
+        /// whose boulders are gone looks exactly like a quarry that is working, because the
+        /// workers still stand on the plot -- and stone never comes back, so "wait a while" is the
+        /// wrong thing to conclude.
         /// </summary>
-        private static bool GathersFromNodes(ProductionBuilding building)
+        private void ReportRadiusEmpty(ProductionBuilding building, bool empty)
         {
-            if (!building.ProducesAnything) return false;
+            var wasEmpty = _reportedEmptyRadius.Contains(building);
+            if (!empty)
+            {
+                if (wasEmpty) _reportedEmptyRadius.Remove(building);
+                return;
+            }
 
-            var resourceType = building.ProducesResource;
-            return resourceType == ResourceType.Wood || resourceType == ResourceType.Stone;
+            if (wasEmpty) return;
+            _reportedEmptyRadius.Add(building);
+            EventLogManager.Instance?.Log(Localization.Format("#log_nothing_in_radius", building.DisplayName));
         }
 
         /// <summary>
@@ -220,32 +249,96 @@ namespace CityBuilder.Citizens
             void Handler() => HandleWorkVisitCompleted(agent, building);
             agent.OnWorkVisitCompleted += Handler;
             _workVisitHandlers[agent] = Handler;
+
+            void DeliveryHandler() => HandleReturnedToBuilding(agent, building);
+            agent.OnReturnedToBuilding += DeliveryHandler;
+            _deliveryHandlers[agent] = DeliveryHandler;
         }
 
-        /// <summary>A citizen just finished one visit at its claimed node. Wood nodes (real trees) are felled by a single visit; Stone (no node source yet) and anything else is left alone.</summary>
+        /// <summary>
+        /// A citizen just finished one dig at its claimed node: a slice comes out of the node and
+        /// onto the citizen's back. It is banked at the building, not here -- see
+        /// HandleReturnedToBuilding.
+        ///
+        /// A node emptied by this visit leaves the map. A tree always is, in one visit, and the
+        /// forest grows another; a boulder usually is not, and the same worker walks back to the
+        /// same rock until it is.
+        /// </summary>
         private void HandleWorkVisitCompleted(CitizenAgent agent, ProductionBuilding building)
         {
             if (!_claimedNodes.TryGetValue(agent, out var node) || node == null) return;
-            if (node.ResourceType != ResourceType.Wood) return;
+
+            _carriedByAgent[agent] = node.TakeYield();
+            if (!node.IsDepleted) return;
 
             _claimedNodes.Remove(agent);
-            TreesAreaSpawner.Instance?.NotifyTreeHarvested(node.gameObject);
-            AssignAgentToBuilding(agent, building); // re-search; comes up empty until the tree respawns
+            node.Release();
+            DespawnNode(node);
         }
 
-        private static ResourceNode FindNearestFreeNode(Vector3 fromPosition, ResourceType resourceType)
+        /// <summary>
+        /// The worker got home. Whatever came out of the node is the settlement's now -- and this,
+        /// not any timer, is the entire income of every Sawmill and Quarry standing (see
+        /// ProductionBuilding.Update, which steps aside for them).
+        ///
+        /// Then straight back out: a re-search here is what finds the next tree once this one has
+        /// been felled, and what keeps a worker on the same half-worked boulder otherwise.
+        /// </summary>
+        private void HandleReturnedToBuilding(CitizenAgent agent, ProductionBuilding building)
+        {
+            if (_carriedByAgent.TryGetValue(agent, out var carried) && carried > 0)
+            {
+                ResourceManager.Instance?.Add(building.ProducesResource, carried);
+            }
+            _carriedByAgent[agent] = 0;
+
+            AssignAgentToBuilding(agent, building);
+        }
+
+        /// <summary>
+        /// Hands an emptied node to whichever spawner owns it. A felled tree comes back after a
+        /// while; an exhausted boulder does not, and RockSpawner is where that difference lives.
+        /// The plain Destroy fallback covers nodes from the legacy PNG map path, which no spawner
+        /// tracks.
+        /// </summary>
+        private static void DespawnNode(ResourceNode node)
+        {
+            if (node.ResourceType == ResourceType.Wood && TreesAreaSpawner.Instance != null)
+            {
+                TreesAreaSpawner.Instance.NotifyTreeHarvested(node.gameObject);
+            }
+            else if (node.ResourceType == ResourceType.Stone && RockSpawner.Instance != null)
+            {
+                RockSpawner.Instance.NotifyRockHarvested(node.gameObject);
+            }
+            else
+            {
+                Destroy(node.gameObject);
+            }
+        }
+
+        /// <summary>
+        /// The closest unclaimed, fully grown, non-empty node of this kind INSIDE the building's
+        /// reach. The radius is the point: where a gatherer is put decides what it can ever work,
+        /// and upgrading it is what widens that. A radius of zero means unlimited, which is what
+        /// every building that is not a Sawmill or Quarry has and what the hand-gathering path
+        /// wants.
+        /// </summary>
+        private static ResourceNode FindNearestFreeNode(Vector3 fromPosition, ResourceType resourceType, int radiusMetres)
         {
             ResourceNode nearest = null;
             var nearestDistanceSq = float.MaxValue;
+            var radiusSq = radiusMetres > 0 ? (float)radiusMetres * radiusMetres : float.MaxValue;
 
             foreach (var node in ResourceNode.All)
             {
-                if (node.IsClaimed || node.ResourceType != resourceType) continue;
+                if (node.IsClaimed || node.ResourceType != resourceType || node.IsDepleted) continue;
 
                 var growth = node.GetComponent<TreeGrowth>();
                 if (growth != null && !growth.IsFullyGrown) continue;
 
                 var distanceSq = (node.transform.position - fromPosition).sqrMagnitude;
+                if (distanceSq > radiusSq) continue;
                 if (distanceSq < nearestDistanceSq)
                 {
                     nearestDistanceSq = distanceSq;
@@ -291,6 +384,13 @@ namespace CityBuilder.Citizens
                 agent.OnWorkVisitCompleted -= handler;
             }
             _workVisitHandlers.Remove(agent);
+
+            if (agent != null && _deliveryHandlers.TryGetValue(agent, out var deliveryHandler))
+            {
+                agent.OnReturnedToBuilding -= deliveryHandler;
+            }
+            _deliveryHandlers.Remove(agent);
+            _carriedByAgent.Remove(agent);
         }
 
         private CitizenAgent SpawnAgent()

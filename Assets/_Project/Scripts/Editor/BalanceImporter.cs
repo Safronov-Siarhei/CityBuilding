@@ -498,6 +498,7 @@ namespace CityBuilder.EditorTools
                     batchesPerWorkerPerTick = LevelNumber(header, row, "batches_per_tick", level, previous?.batchesPerWorkerPerTick, path),
                     storageCapacity = LevelNumber(header, row, "storage_capacity", level, previous?.storageCapacity, path),
                     happiness = LevelNumber(header, row, "happiness", level, previous?.happiness, path),
+                    harvestRadius = LevelNumber(header, row, "harvest_radius", level, previous?.harvestRadius, path),
                 });
             }
 

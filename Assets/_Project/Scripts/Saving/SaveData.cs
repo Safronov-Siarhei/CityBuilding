@@ -80,6 +80,30 @@ namespace CityBuilder.Saving
         public float migrationTimerSeconds;
 
         public float settlingInSecondsRemaining;
+
+        /// <summary>
+        /// Every boulder still standing and how much stone is left in it.
+        ///
+        /// Here because stone is the one resource the map never makes more of (see RockSpawner):
+        /// boulders are scattered by unseeded Random, so a reload without this dealt a brand new
+        /// map with every rock full again, and a player could undo an hour of quarrying by saving
+        /// and loading. Empty in saves made before this existed, which correctly reads as "leave
+        /// the map as it was scattered".
+        ///
+        /// Trees are deliberately NOT here: a felled one grows back on its own within the minute,
+        /// so there is nothing about a forest that a reload could unfairly restore.
+        /// </summary>
+        public List<RockEntry> rocks = new List<RockEntry>();
+    }
+
+    [Serializable]
+    public class RockEntry
+    {
+        public int cellX;
+        public int cellY;
+
+        /// <summary>Stone left in this boulder. A boulder worked out to zero is simply absent from the list.</summary>
+        public int remaining;
     }
 
     [Serializable]
