@@ -88,13 +88,18 @@ namespace CityBuilder.Combat
             // In Awake, not Initialize: an orc left uninitialized is a valid level 1 and still
             // needs its stats.
             var stats = BalanceConfig.Instance.Unit(SheetId);
-            _baseMaxHealth = stats.maxHealth;
-            _baseAttackDamage = stats.attackDamage;
-            _attackIntervalSeconds = stats.attackIntervalSeconds;
             _buildingAttackRange = stats.attackRangeStructures;
             _soldierAttackRange = stats.attackRangeUnits;
             _soldierAggroRadius = stats.engageRadius;
-            _walkSpeed = stats.walkSpeed;
+
+            // An orc's "level" is the raid's own scaling (see Initialize), not a researched one --
+            // the sheet's per-level columns belong to the player's army, and the orcs' row leaves
+            // them empty, so level 1 is the whole of their balance.
+            var level1 = stats.LevelStats(1);
+            _baseMaxHealth = level1.maxHealth;
+            _baseAttackDamage = level1.attackDamage;
+            _attackIntervalSeconds = level1.attackIntervalSeconds;
+            _walkSpeed = level1.walkSpeed;
 
             _maxHealth = _baseMaxHealth;
             _attackDamage = _baseAttackDamage;

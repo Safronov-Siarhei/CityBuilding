@@ -54,10 +54,17 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var unit in config.Units)
             {
-                Assert.Greater(unit.maxHealth, 0, $"{unit.id}: zero health dies the frame it spawns.");
-                Assert.Greater(unit.attackDamage, 0, $"{unit.id}: zero damage can never finish a fight.");
-                Assert.Greater(unit.attackIntervalSeconds, 0f, $"{unit.id}: a zero attack interval swings every frame.");
-                Assert.Greater(unit.walkSpeed, 0f, $"{unit.id}: zero speed never reaches anything.");
+                // Every level, not just the first: a blank _2/_3 column inherits, so a level that
+                // came out at zero means a cell was filled in wrongly rather than left empty.
+                for (var level = 1; level <= UnitBalance.MaxLevel; level++)
+                {
+                    var stats = unit.LevelStats(level);
+                    Assert.Greater(stats.maxHealth, 0, $"{unit.id} level {level}: zero health dies the frame it spawns.");
+                    Assert.Greater(stats.attackDamage, 0, $"{unit.id} level {level}: zero damage can never finish a fight.");
+                    Assert.Greater(stats.attackIntervalSeconds, 0f, $"{unit.id} level {level}: a zero attack interval swings every frame.");
+                    Assert.Greater(stats.walkSpeed, 0f, $"{unit.id} level {level}: zero speed never reaches anything.");
+                }
+
                 Assert.Greater(unit.attackRangeUnits, 0f, $"{unit.id}: zero reach can never land a hit.");
                 Assert.GreaterOrEqual(unit.attackRangeStructures, unit.attackRangeUnits,
                     $"{unit.id}: reach against a structure should be at least the melee reach -- a building's transform sits at its centre.");

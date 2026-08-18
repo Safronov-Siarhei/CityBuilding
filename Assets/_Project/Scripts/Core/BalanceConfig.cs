@@ -6,15 +6,52 @@ using UnityEngine;
 
 namespace CityBuilder.Core
 {
+    /// <summary>
+    /// What one research costs and how long it takes at an unstaffed Laboratory. Seconds are the
+    /// BASE duration: scientists shorten it (see CityBuilder.Research.ResearchManager), they don't
+    /// multiply it, which is why this is a plain number and not a rate.
+    /// </summary>
+    [Serializable]
+    public class ResearchStep
+    {
+        public int coins;
+        public float seconds;
+
+        /// <summary>A step the sheet never filled in -- nothing to research, so nothing to gate on.</summary>
+        public bool IsAuthored => seconds > 0f || coins > 0;
+    }
+
+    /// <summary>
+    /// What a fighting unit is worth at one level. The same reasoning as BuildingLevelStats: these
+    /// are exactly the stats a Laboratory upgrade improves, so nobody can read a soldier's strength
+    /// without saying which level they mean.
+    ///
+    /// Authored per level in the units tab -- max_health / max_health_2 / max_health_3 and so on,
+    /// where an empty higher-level column repeats the level below it.
+    /// </summary>
+    [Serializable]
+    public class UnitLevelStats
+    {
+        public int maxHealth = 1;
+        public int attackDamage;
+        public float attackIntervalSeconds = 1f;
+        public float walkSpeed = 1.3f;
+
+        /// <summary>Recruitment cost in coins. Zero for units the player can't recruit (orcs).</summary>
+        public int recruitCoins;
+
+        public int upkeepCoinsPerDay;
+    }
+
     /// <summary>One row of the balance sheet's "units" tab -- everything that makes a fighting unit what it is.</summary>
     [Serializable]
     public class UnitBalance
     {
+        /// <summary>Levels a unit can reach. Level 1 is how it is recruited; 2 and 3 come from the Laboratory.</summary>
+        public const int MaxLevel = 3;
+
         public string id = string.Empty;
         public string displayName = string.Empty;
-        public int maxHealth = 1;
-        public int attackDamage;
-        public float attackIntervalSeconds = 1f;
 
         /// <summary>Melee reach against another unit.</summary>
         public float attackRangeUnits = 1.4f;
@@ -22,15 +59,43 @@ namespace CityBuilder.Core
         /// <summary>Reach against a building/portal. Wider on purpose: a structure's transform sits at its centre, metres from the wall being hit.</summary>
         public float attackRangeStructures = 3f;
 
-        public float walkSpeed = 1.3f;
-
         /// <summary>How far from where it belongs a unit will engage something it wasn't ordered to.</summary>
         public float engageRadius = 6f;
 
-        /// <summary>Recruitment cost in coins. Zero for units the player can't recruit (orcs).</summary>
-        public int recruitCoins;
+        /// <summary>
+        /// Reach and engage radius are deliberately NOT per level: they are the unit's geometry, not
+        /// its strength, and a tier that suddenly outranges itself would be a surprise rather than an
+        /// upgrade. Everything the player would call a stat is in `levels`.
+        /// </summary>
+        public List<UnitLevelStats> levels = new List<UnitLevelStats>();
 
-        public int upkeepCoinsPerDay;
+        /// <summary>False = this unit type cannot be recruited until it is opened in the Laboratory. Militia starts open; later tiers will not.</summary>
+        public bool startsUnlocked = true;
+
+        /// <summary>What it costs to research levels 2 and 3, index 0 being level 2. Shorter than MaxLevel-1 for a unit the sheet gives no upgrades.</summary>
+        public List<ResearchStep> levelResearch = new List<ResearchStep>();
+
+        /// <summary>What it costs to make this type recruitable at all. Unused for a type that starts open.</summary>
+        public ResearchStep unlockResearch = new ResearchStep();
+
+        /// <summary>This unit's stats at the given level, clamped into what the sheet actually provided (see BuildingData.LevelStats for why this never returns null).</summary>
+        public UnitLevelStats LevelStats(int level)
+        {
+            if (levels == null || levels.Count == 0) return FallbackLevel;
+
+            var index = Mathf.Clamp(level, 1, levels.Count) - 1;
+            return levels[index] ?? FallbackLevel;
+        }
+
+        /// <summary>The research that reaches the given level (2 or 3), or null when the sheet authors none.</summary>
+        public ResearchStep ResearchToReach(int level)
+        {
+            var index = level - 2;
+            if (levelResearch == null || index < 0 || index >= levelResearch.Count) return null;
+            return levelResearch[index] != null && levelResearch[index].IsAuthored ? levelResearch[index] : null;
+        }
+
+        private static readonly UnitLevelStats FallbackLevel = new UnitLevelStats();
     }
 
     /// <summary>
@@ -86,6 +151,31 @@ namespace CityBuilder.Core
         /// </summary>
         public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
         public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
+
+        /// <summary>
+        /// False = this building cannot be built until it is opened in the Laboratory. Eighteen of
+        /// the forty-nine start open (the Town Hall, the first houses, the first two gatherers, the
+        /// fence line); everything else is a research away.
+        /// </summary>
+        public bool startsUnlocked = true;
+
+        /// <summary>What opening this building for construction costs. Unused for a building that starts open.</summary>
+        public ResearchStep unlockResearch = new ResearchStep();
+
+        /// <summary>
+        /// What researching each higher level costs, index 0 being level 2. Paying the upgrade cost
+        /// in BuildingInstance.TryUpgrade is a separate, later transaction -- the research permits the
+        /// upgrade, it does not perform it.
+        /// </summary>
+        public List<ResearchStep> levelResearch = new List<ResearchStep>();
+
+        /// <summary>The research that permits upgrading to the given level (2 or 3), or null when the sheet authors none -- which is how the Laboratory itself stays outside its own gate.</summary>
+        public ResearchStep ResearchToReach(int level)
+        {
+            var index = level - 2;
+            if (levelResearch == null || index < 0 || index >= levelResearch.Count) return null;
+            return levelResearch[index] != null && levelResearch[index].IsAuthored ? levelResearch[index] : null;
+        }
     }
 
     /// <summary>
@@ -149,6 +239,16 @@ namespace CityBuilder.Core
         [SerializeField] private int deathsMemoryDays = 3;
         [SerializeField] private int happinessPenaltyPerDeath = 10;
 
+        [Header("Research (economy.csv)")]
+        // How the Laboratory's scientists shorten a research, what a cancelled one pays back, and
+        // the floor a fully staffed lab can never dip below. The first `research_free_workers`
+        // scientists buy no speed at all -- one of them is what makes the research run in the first
+        // place, so the bonus starts with the second.
+        [SerializeField] private float researchSecondsPerWorker = 5f;
+        [SerializeField] private int researchFreeWorkers = 1;
+        [SerializeField] private int researchCancelRefundPercent = 70;
+        [SerializeField] private float researchMinSeconds = 5f;
+
         [Header("Storage (economy.csv)")]
         // What the settlement can hold before a single storehouse is built. Without these a new
         // game would be unable to keep the resources it starts with.
@@ -184,6 +284,10 @@ namespace CityBuilder.Core
         public int FoodVarietyTarget => foodVarietyTarget;
         public int DeathsMemoryDays => deathsMemoryDays;
         public int HappinessPenaltyPerDeath => happinessPenaltyPerDeath;
+        public float ResearchSecondsPerWorker => researchSecondsPerWorker;
+        public int ResearchFreeWorkers => researchFreeWorkers;
+        public int ResearchCancelRefundPercent => researchCancelRefundPercent;
+        public float ResearchMinSeconds => researchMinSeconds;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -264,6 +368,10 @@ namespace CityBuilder.Core
             foodVarietyTarget = (int)Read(economy, "food_variety_target", foodVarietyTarget);
             deathsMemoryDays = (int)Read(economy, "deaths_memory_days", deathsMemoryDays);
             happinessPenaltyPerDeath = (int)Read(economy, "happiness_penalty_per_death", happinessPenaltyPerDeath);
+            researchSecondsPerWorker = Read(economy, "research_seconds_per_worker", researchSecondsPerWorker);
+            researchFreeWorkers = (int)Read(economy, "research_free_workers", researchFreeWorkers);
+            researchCancelRefundPercent = (int)Read(economy, "research_cancel_refund_percent", researchCancelRefundPercent);
+            researchMinSeconds = Read(economy, "research_min_seconds", researchMinSeconds);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

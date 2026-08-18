@@ -29,6 +29,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text idleLabel;
         [SerializeField] private GameObject upgradeControls;
         [SerializeField] private Transform upgradeCostRow;
+        [SerializeField] private Button upgradeButton;
+        [SerializeField] private Text upgradeLockLabel;
         [SerializeField] private GameObject repairControls;
         [SerializeField] private Transform repairCostRow;
         [SerializeField] private GameObject recruitControls;
@@ -130,9 +132,20 @@ namespace CityBuilder.UI
                 }
             }
 
+            // Three states, not two: no next level at all (the block disappears), a next level the
+            // Laboratory has not permitted yet (the price is replaced by what is missing), or an
+            // upgrade the player can actually pay for.
             var upgradeCost = _currentInstance.GetUpgradeCost();
+            var researched = _currentInstance.NextLevelResearched;
             if (upgradeControls != null) upgradeControls.SetActive(upgradeCost != null);
-            BuildCostRow(upgradeCostRow, upgradeCost);
+            if (upgradeButton != null) upgradeButton.gameObject.SetActive(researched);
+            if (upgradeCostRow != null) upgradeCostRow.gameObject.SetActive(researched);
+            if (upgradeLockLabel != null)
+            {
+                upgradeLockLabel.gameObject.SetActive(!researched);
+                if (!researched) upgradeLockLabel.text = Localization.Format("#building_upgrade_locked", _currentInstance.Level + 1);
+            }
+            BuildCostRow(upgradeCostRow, researched ? upgradeCost : null);
 
             var repairCost = _currentInstance.GetRepairCost();
             if (repairControls != null) repairControls.SetActive(repairCost != null);
@@ -264,57 +277,10 @@ namespace CityBuilder.UI
             recruitLabel.text = blocker ?? Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
         }
 
-        /// <summary>
-        /// Rebuilds an icon+number chip per resource in cost (icon from iconLibrary, number as a
-        /// small Text next to it) instead of a "40 дерева, 24 камня" sentence -- cost lists vary
-        /// per building/action, so this runs at runtime rather than being laid out once in
-        /// SetupProject. The row's own HorizontalLayoutGroup (see SetupProject.BuildBuildingInfoPanel)
-        /// handles spacing/centering; this only needs to add/remove the leaf icon+text children.
-        /// </summary>
+        /// <summary>The icon+number chips for one cost -- see CostRowBuilder, which the Laboratory's window shares.</summary>
         private void BuildCostRow(Transform row, List<ResourceAmount> cost)
         {
-            if (row == null) return;
-
-            for (var i = row.childCount - 1; i >= 0; i--)
-            {
-                Destroy(row.GetChild(i).gameObject);
-            }
-            if (cost == null) return;
-
-            if (cost.Count == 0)
-            {
-                CreateChipText(row, Localization.Get("#ui_free"));
-                return;
-            }
-
-            foreach (var amount in cost)
-            {
-                CreateChipIcon(row, iconLibrary != null ? iconLibrary.GetIcon(amount.type) : null);
-                CreateChipText(row, amount.amount.ToString());
-            }
-        }
-
-        private static void CreateChipIcon(Transform parent, Sprite sprite)
-        {
-            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(parent, false);
-            go.GetComponent<RectTransform>().sizeDelta = new Vector2(28f, 28f);
-            var image = go.GetComponent<Image>();
-            image.sprite = sprite;
-            image.preserveAspect = true;
-        }
-
-        private static void CreateChipText(Transform parent, string content)
-        {
-            var go = new GameObject("Amount", typeof(RectTransform), typeof(Text));
-            go.transform.SetParent(parent, false);
-            go.GetComponent<RectTransform>().sizeDelta = new Vector2(70f, 32f);
-            var text = go.GetComponent<Text>();
-            text.text = content;
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 22;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
+            CostRowBuilder.Build(row, cost, iconLibrary);
         }
 
         /// <summary>

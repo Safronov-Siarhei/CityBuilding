@@ -118,6 +118,12 @@ namespace CityBuilder.Buildings
 
         public void SelectBuilding(BuildingData data)
         {
+            // A building still locked in the Laboratory cannot be picked up at all -- the hotbar
+            // already hides it (see BuildingCategoryPanel), so this catches the number keys and
+            // anything else reaching in from outside.
+            if (data != null && data != mandatoryFirstBuilding
+                && !Research.ResearchManager.BuildingUnlocked(data.buildingName)) return;
+
             ClearSelection();
             _selectedBuilding = data;
             _rotationSteps = 0;

@@ -1,5 +1,6 @@
 ﻿using CityBuilder.Core;
 using CityBuilder.Resources;
+using System;
 using System.Collections.Generic;
 
 namespace CityBuilder.Combat
@@ -41,7 +42,7 @@ namespace CityBuilder.Combat
     public static class SoldierStats
     {
         /// <summary>Maps the code's unit types onto the sheet's row ids. The sheet is keyed by a readable id rather than by an enum's numeric value, so reordering the enum can't silently repoint a row.</summary>
-        private static string SheetId(SoldierType type)
+        public static string SheetIdOf(SoldierType type)
         {
             switch (type)
             {
@@ -51,8 +52,39 @@ namespace CityBuilder.Combat
             }
         }
 
+        /// <summary>The reverse lookup, for anything walking the sheet rather than the enum -- ResearchCatalog uses it to leave the orcs' row out of the player's tech list.</summary>
+        public static bool TryTypeFromSheetId(string sheetId, out SoldierType type)
+        {
+            foreach (SoldierType candidate in Enum.GetValues(typeof(SoldierType)))
+            {
+                if (SheetIdOf(candidate) != sheetId) continue;
+                type = candidate;
+                return true;
+            }
+
+            type = default;
+            return false;
+        }
+
         /// <summary>The whole sheet row, for callers (SoldierUnit) that want several of its numbers at once and cache them.</summary>
-        public static UnitBalance Row(SoldierType type) => BalanceConfig.Instance.Unit(SheetId(type));
+        public static UnitBalance Row(SoldierType type) => BalanceConfig.Instance.Unit(SheetIdOf(type));
+
+        /// <summary>
+        /// The level this type currently fights at -- the highest one researched in the Laboratory,
+        /// or 1 before any research (and in a scene with no ResearchManager at all, which is how the
+        /// balance tests read the sheet without a running game).
+        /// </summary>
+        public static int CurrentLevel(SoldierType type)
+        {
+            var research = Research.ResearchManager.Instance;
+            return research != null ? research.UnitLevel(type) : 1;
+        }
+
+        /// <summary>This type's stats at its currently researched level -- what a soldier actually fights with.</summary>
+        public static UnitLevelStats Stats(SoldierType type) => Row(type).LevelStats(CurrentLevel(type));
+
+        /// <summary>This type's stats at a named level, for the window that has to show what the next one is worth.</summary>
+        public static UnitLevelStats StatsAt(SoldierType type, int level) => Row(type).LevelStats(level);
 
         /// <summary>
         /// Army-wide cap across every group and type, per the design backlog: chosen partly for
@@ -68,20 +100,24 @@ namespace CityBuilder.Combat
         public static string DisplayName(SoldierType type) => Localization.Get("#unit_" + type.ToString().ToLowerInvariant());
 
         /// <summary>Militia are meant to lose a 1v1 against a level 1 orc and win by numbers -- see ArmyBalanceTests, which pins that relationship down against whatever the sheet currently says.</summary>
-        public static int MaxHealth(SoldierType type) => Row(type).maxHealth;
+        public static int MaxHealth(SoldierType type) => Stats(type).maxHealth;
 
-        public static int AttackDamage(SoldierType type) => Row(type).attackDamage;
+        public static int AttackDamage(SoldierType type) => Stats(type).attackDamage;
 
-        public static float AttackIntervalSeconds(SoldierType type) => Row(type).attackIntervalSeconds;
+        public static float AttackIntervalSeconds(SoldierType type) => Stats(type).attackIntervalSeconds;
 
-        /// <summary>Coins only for Militia -- an armed peasant needs no forge. Later tiers will add their equipment items on top of this.</summary>
+        /// <summary>
+        /// Coins only for Militia -- an armed peasant needs no forge. Later tiers will add their
+        /// equipment items on top of this. A researched level makes them dearer to raise, per the
+        /// design: the upgrade is army-wide, so it has to cost something ongoing.
+        /// </summary>
         public static List<ResourceAmount> RecruitCost(SoldierType type)
         {
-            return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = Row(type).recruitCoins } };
+            return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = Stats(type).recruitCoins } };
         }
 
-        /// <summary>Coins deducted per soldier per game day. Unpayable upkeep disbands soldiers one at a time -- see ArmyManager.</summary>
-        public static int UpkeepCoinsPerDay(SoldierType type) => Row(type).upkeepCoinsPerDay;
+        /// <summary>Coins deducted per soldier per game day, at the type's researched level. Unpayable upkeep disbands soldiers one at a time -- see ArmyManager.</summary>
+        public static int UpkeepCoinsPerDay(SoldierType type) => Stats(type).upkeepCoinsPerDay;
 
         /// <summary>Total coins per day for a whole army -- extracted so the UI and the tests share one formula with the daily charge itself.</summary>
         public static int TotalUpkeepPerDay(IEnumerable<SoldierType> soldierTypes)

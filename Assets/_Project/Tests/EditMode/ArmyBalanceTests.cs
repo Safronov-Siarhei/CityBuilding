@@ -20,9 +20,9 @@ namespace CityBuilder.Tests.EditMode
         // Both sides straight from the balance sheet, so a retune of either one is checked against
         // the other rather than against a number copied into this file once.
         private static UnitBalance Orc => BalanceConfig.Instance.Unit("orc");
-        private static int OrcHealth => Orc.maxHealth;
-        private static int OrcDamage => Orc.attackDamage;
-        private static float OrcAttackInterval => Orc.attackIntervalSeconds;
+        private static int OrcHealth => Orc.LevelStats(1).maxHealth;
+        private static int OrcDamage => Orc.LevelStats(1).attackDamage;
+        private static float OrcAttackInterval => Orc.LevelStats(1).attackIntervalSeconds;
 
         private static float TimeToKill(int targetHealth, int damagePerHit, float interval, int attackers = 1)
         {

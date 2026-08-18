@@ -15,6 +15,10 @@ namespace CityBuilder.UI
         [SerializeField] private Camera targetCamera;
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private BuildingInfoPanelController infoPanel;
+
+        /// <summary>The Laboratory opens this instead of the ordinary card -- see ResearchPanelController, whose header carries the worker/upgrade/repair controls it displaces.</summary>
+        [SerializeField] private ResearchPanelController researchPanel;
+
         [SerializeField] private LayerMask raycastMask = ~0;
 
         // Reused across clicks rather than using Physics.RaycastAll, which allocates every call.
@@ -57,7 +61,16 @@ namespace CityBuilder.UI
                 nearestDistance = _hits[i].distance;
             }
 
-            if (nearest != null && infoPanel != null) infoPanel.Show(nearest);
+            if (nearest == null) return;
+
+            if (researchPanel != null && nearest.Data != null
+                && nearest.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
+            {
+                researchPanel.Show(nearest);
+                return;
+            }
+
+            if (infoPanel != null) infoPanel.Show(nearest);
         }
 
         private static bool IsPointerOverUI()

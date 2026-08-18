@@ -76,16 +76,47 @@ namespace CityBuilder.Combat
         {
             Type = type;
             Group = group;
-            MaxHealth = SoldierStats.MaxHealth(type);
-            CurrentHealth = MaxHealth;
 
-            var stats = SoldierStats.Row(type);
+            ReadStats();
+            CurrentHealth = MaxHealth;
+        }
+
+        /// <summary>
+        /// Re-reads this soldier's numbers at the type's currently researched level, carrying its
+        /// damage across rather than healing it for free -- the same rule BuildingInstance.TryUpgrade
+        /// follows, and for the same reason: a level researched while a raid is on must not be a full heal.
+        /// </summary>
+        public void RefreshStats()
+        {
+            var wasMissing = MaxHealth - CurrentHealth;
+            ReadStats();
+            CurrentHealth = Mathf.Clamp(MaxHealth - wasMissing, 1, MaxHealth);
+        }
+
+        /// <summary>Every living soldier brought up to date after a level is researched (see CityBuilder.Research.ResearchManager) or a save is loaded.</summary>
+        public static void RefreshStatsForAll()
+        {
+            // Backwards: RefreshStats cannot remove a soldier from the list, but a future caller
+            // reading a dead unit would, and the cost is the same.
+            for (var i = _all.Count - 1; i >= 0; i--)
+            {
+                _all[i]?.RefreshStats();
+            }
+        }
+
+        private void ReadStats()
+        {
+            MaxHealth = SoldierStats.MaxHealth(Type);
+
+            var stats = SoldierStats.Row(Type);
             _unitAttackRange = stats.attackRangeUnits;
             _structureAttackRange = stats.attackRangeStructures;
             _engageRadius = stats.engageRadius;
-            _walkSpeed = stats.walkSpeed;
-            _attackIntervalSeconds = stats.attackIntervalSeconds;
-            _attackDamage = stats.attackDamage;
+
+            var level = SoldierStats.Stats(Type);
+            _walkSpeed = level.walkSpeed;
+            _attackIntervalSeconds = level.attackIntervalSeconds;
+            _attackDamage = level.attackDamage;
         }
 
         private void Update()

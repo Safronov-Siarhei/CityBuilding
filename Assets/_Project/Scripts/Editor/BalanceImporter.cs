@@ -169,18 +169,85 @@ namespace CityBuilder.EditorTools
                 {
                     id = Text(header, row, "id"),
                     displayName = Text(header, row, "display_name"),
-                    maxHealth = (int)Number(header, row, "max_health", path),
-                    attackDamage = (int)Number(header, row, "attack_damage", path),
-                    attackIntervalSeconds = Number(header, row, "attack_interval_sec", path),
                     attackRangeUnits = Number(header, row, "attack_range_units", path),
                     attackRangeStructures = Number(header, row, "attack_range_structures", path),
-                    walkSpeed = Number(header, row, "walk_speed", path),
                     engageRadius = Number(header, row, "engage_radius", path),
-                    recruitCoins = (int)Number(header, row, "recruit_coins", path),
-                    upkeepCoinsPerDay = (int)Number(header, row, "upkeep_coins_per_day", path),
+                    levels = ReadUnitLevels(header, row, path),
+                    startsUnlocked = Flag(header, row, "starts_unlocked", true, path),
+                    unlockResearch = ReadResearchStep(header, row, "research_coins", "research_sec", path),
+                    levelResearch = ReadLevelResearch(header, row, path),
                 });
             }
             return units;
+        }
+
+        /// <summary>
+        /// A unit's three levels, on exactly the same inheritance rule as a building's (see
+        /// ReadLevels): the plain column is level 1, `_2`/`_3` are the Laboratory's upgrades, and a
+        /// blank higher-level cell means that level leaves the stat alone.
+        /// </summary>
+        private static List<UnitLevelStats> ReadUnitLevels(List<string> header, List<string> row, string path)
+        {
+            var levels = new List<UnitLevelStats>(UnitBalance.MaxLevel);
+
+            for (var level = 1; level <= UnitBalance.MaxLevel; level++)
+            {
+                var previous = levels.Count > 0 ? levels[levels.Count - 1] : null;
+                levels.Add(new UnitLevelStats
+                {
+                    maxHealth = LevelNumber(header, row, "max_health", level, previous?.maxHealth, path),
+                    attackDamage = LevelNumber(header, row, "attack_damage", level, previous?.attackDamage, path),
+                    attackIntervalSeconds = LevelFloat(header, row, "attack_interval_sec", level, previous?.attackIntervalSeconds, path),
+                    walkSpeed = LevelFloat(header, row, "walk_speed", level, previous?.walkSpeed, path),
+                    recruitCoins = LevelNumber(header, row, "recruit_coins", level, previous?.recruitCoins, path),
+                    upkeepCoinsPerDay = LevelNumber(header, row, "upkeep_coins_per_day", level, previous?.upkeepCoinsPerDay, path),
+                });
+            }
+
+            return levels;
+        }
+
+        /// <summary>
+        /// The research that reaches levels 2 and 3, from research_coins_2/research_sec_2 onwards.
+        /// A row that names neither is a thing whose levels are not gated at all -- which is exactly
+        /// how the Laboratory escapes its own gate, by leaving those cells at zero.
+        /// </summary>
+        private static List<ResearchStep> ReadLevelResearch(List<string> header, List<string> row, string path)
+        {
+            var steps = new List<ResearchStep>(2);
+            for (var level = 2; level <= UnitBalance.MaxLevel; level++)
+            {
+                steps.Add(ReadResearchStep(header, row, $"research_coins_{level}", $"research_sec_{level}", path));
+            }
+            return steps;
+        }
+
+        /// <summary>One coins/seconds pair. Absent columns are not an error: a sheet that predates research simply gates nothing.</summary>
+        private static ResearchStep ReadResearchStep(List<string> header, List<string> row, string coinsColumn, string secondsColumn, string path)
+        {
+            return new ResearchStep
+            {
+                coins = CostAmount(header, row, coinsColumn, path),
+                seconds = OptionalNumber(header, row, secondsColumn, path),
+            };
+        }
+
+        /// <summary>
+        /// A 1/0 (or true/false) cell. A MISSING column keeps the fallback rather than reading as
+        /// false -- an un-migrated sheet must not lock every building in the game behind research
+        /// nobody can reach.
+        /// </summary>
+        private static bool Flag(List<string> header, List<string> row, string column, bool fallback, string path)
+        {
+            if (header.IndexOf(column) < 0) return fallback;
+
+            var raw = Text(header, row, column);
+            if (raw.Length == 0) return fallback;
+            if (bool.TryParse(raw, out var parsed)) return parsed;
+            if (TryParseNumber(raw, out var value)) return value > 0.5f;
+
+            Debug.LogError($"BalanceImporter: {path} column '{column}' has '{raw}', which is neither 1/0 nor true/false. Using {fallback}.");
+            return fallback;
         }
 
         /// <summary>
@@ -220,6 +287,9 @@ namespace CityBuilder.EditorTools
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
                     upgradeToLevel3Cost = ReadCost(header, row, "up3_", path),
+                    startsUnlocked = Flag(header, row, "starts_unlocked", true, path),
+                    unlockResearch = ReadResearchStep(header, row, "research_coins", "research_sec", path),
+                    levelResearch = ReadLevelResearch(header, row, path),
                 });
             }
             return buildings;
@@ -448,6 +518,33 @@ namespace CityBuilder.EditorTools
             }
 
             return (int)Number(header, row, name, path);
+        }
+
+        /// <summary>LevelNumber for a stat that is not a whole number -- an attack interval or a walking speed.</summary>
+        private static float LevelFloat(List<string> header, List<string> row, string column, int level, float? inherited, string path)
+        {
+            var name = level == 1 ? column : $"{column}_{level}";
+
+            if (header.IndexOf(name) < 0 || Text(header, row, name).Length == 0)
+            {
+                if (inherited.HasValue) return inherited.Value;
+                return Number(header, row, column, path); // level 1: report the miss properly
+            }
+
+            return Number(header, row, name, path);
+        }
+
+        /// <summary>Number() for a column that is allowed to be absent or blank -- quiet about both, loud only about a cell holding something that is not a number.</summary>
+        private static float OptionalNumber(List<string> header, List<string> row, string column, string path)
+        {
+            if (header.IndexOf(column) < 0) return 0f;
+
+            var raw = Text(header, row, column);
+            if (raw.Length == 0) return 0f;
+            if (TryParseNumber(raw, out var value)) return value;
+
+            Debug.LogError($"BalanceImporter: {path} has '{raw}' in column '{column}', which is not a number. Treating it as 0.");
+            return 0f;
         }
 
         /// <summary>

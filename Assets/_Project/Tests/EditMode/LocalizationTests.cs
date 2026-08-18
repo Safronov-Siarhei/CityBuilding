@@ -121,6 +121,11 @@ namespace CityBuilder.Tests.EditMode
             "#log_no_input", "#log_no_storage", "#log_hungry", "#log_starved",
             "#log_recruited", "#log_disbanded", "#log_raid",
             "#log_happiness_low", "#log_happiness_recovered", "#log_tier_up",
+            "#research_running", "#research_paused", "#research_cancel", "#research_cost",
+            "#research_unit_gain", "#research_scientists", "#research_lab_state",
+            "#research_unlock", "#research_level",
+            "#research_blocked_lab_level", "#research_blocked_prereq", "#building_upgrade_locked",
+            "#log_research_started", "#log_research_done", "#log_research_cancelled", "#log_research_lost",
         };
 
         private static List<string> Placeholders(string text)
@@ -194,6 +199,13 @@ namespace CityBuilder.Tests.EditMode
                 "#log_fed", "#log_soldier_died", "#log_portal_opened", "#log_portal_destroyed",
                 "#log_defeat_townhall", "#log_defeat_empty", "#log_victory",
                 "#tier_hamlet", "#tier_village", "#tier_town", "#tier_city", "#tier_kingdom",
+                "#research_tab_buildings", "#research_tab_units", "#research_empty", "#research_start",
+                "#research_done", "#research_idle", "#research_blocked_busy", "#research_blocked_no_lab",
+                "#research_blocked_workers", "#research_blocked_coins", "#research_blocked_unknown",
+                "#workforce_research",
+                // The Laboratory's building tab heads its sections with these.
+                "#category_city", "#category_storage", "#category_entertainment", "#category_defence",
+                "#category_production", "#category_food", "#category_water",
             })
             {
                 yield return key;

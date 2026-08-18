@@ -87,8 +87,7 @@ namespace CityBuilder.Citizens
             foreach (var pair in _workingAgents)
             {
                 var building = pair.Key;
-                var resourceType = building.ProducesResource;
-                if (resourceType != ResourceType.Wood && resourceType != ResourceType.Stone) continue;
+                if (!GathersFromNodes(building)) continue;
 
                 foreach (var agent in pair.Value)
                 {
@@ -180,10 +179,9 @@ namespace CityBuilder.Citizens
                 : building.transform.position;
 
             Vector3? nodePos = null;
-            var resourceType = building.ProducesResource;
-            if (resourceType == ResourceType.Wood || resourceType == ResourceType.Stone)
+            if (GathersFromNodes(building))
             {
-                var node = FindNearestFreeNode(buildingPos, resourceType);
+                var node = FindNearestFreeNode(buildingPos, building.ProducesResource);
                 if (node != null && node.TryClaim())
                 {
                     _claimedNodes[agent] = node;
@@ -193,6 +191,20 @@ namespace CityBuilder.Citizens
 
             agent.SetWorking(buildingPos, nodePos);
             EnsureWorkVisitSubscription(agent, building);
+        }
+
+        /// <summary>
+        /// Whether this building's workers walk out to a tree or a boulder rather than staying on the
+        /// plot. ProducesAnything is checked FIRST and not as a formality: a building with no recipe
+        /// at all reports Wood (there is no "nothing" in ResourceType), so without this the
+        /// Laboratory's scientists would set off across the map to fell trees.
+        /// </summary>
+        private static bool GathersFromNodes(ProductionBuilding building)
+        {
+            if (!building.ProducesAnything) return false;
+
+            var resourceType = building.ProducesResource;
+            return resourceType == ResourceType.Wood || resourceType == ResourceType.Stone;
         }
 
         /// <summary>

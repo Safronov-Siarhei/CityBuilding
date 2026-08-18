@@ -15,6 +15,18 @@ namespace CityBuilder.Saving
         public int taxRatePercent = 10;
         public List<ResourceEntry> resources = new List<ResourceEntry>();
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
+
+        /// <summary>
+        /// Ids of everything researched in the Laboratory (see CityBuilder.Research.ResearchTopic),
+        /// and the one research under way with how far in it is and what was paid for it -- so
+        /// reloading neither forgets it nor refunds it twice. Empty in saves made before research
+        /// existed, which read correctly as "nothing researched yet".
+        /// </summary>
+        public List<string> completedResearch = new List<string>();
+
+        public string currentResearchId = string.Empty;
+        public float currentResearchElapsedSeconds;
+        public int currentResearchPaidCoins;
     }
 
     [Serializable]

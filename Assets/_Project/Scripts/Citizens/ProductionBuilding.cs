@@ -38,6 +38,9 @@ namespace CityBuilder.Citizens
         private int CurrentLevel => _buildingInstance != null ? _buildingInstance.Level : 1;
         public string DisplayName => Data != null ? Data.LocalizedName : "?";
 
+        /// <summary>The sheet/save id of the building these workers are at -- how a caller tells one workplace from another without matching on a translated name.</summary>
+        public string BuildingId => Data != null ? Data.buildingName : string.Empty;
+
         /// <summary>Everything this building knows how to make. One entry for almost everything; the Плавильня is why this is a list.</summary>
         public IReadOnlyList<BuildingRecipe> Recipes => Data != null ? Data.recipes : EmptyRecipes;
 

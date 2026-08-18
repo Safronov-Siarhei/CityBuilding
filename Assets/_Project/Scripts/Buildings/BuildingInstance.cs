@@ -357,8 +357,28 @@ namespace CityBuilder.Buildings
             return Level == 1 ? Data.upgradeToLevel2Cost : Data.upgradeToLevel3Cost;
         }
 
+        /// <summary>
+        /// Whether the Laboratory has permitted the next level yet. True at max level as well --
+        /// there is nothing left to gate there, and "is there a next level at all" is what
+        /// GetUpgradeCost answers. True with no ResearchManager in the scene, so a scene assembled
+        /// without one (an EditMode fixture) is not silently un-upgradeable.
+        /// </summary>
+        public bool NextLevelResearched
+        {
+            get
+            {
+                if (Data == null || Level >= MaxLevel) return true;
+
+                var research = Research.ResearchManager.Instance;
+                return research == null || research.IsBuildingLevelResearched(Data.buildingName, Level + 1);
+            }
+        }
+
         public bool TryUpgrade()
         {
+            // Before the cost, so a player who cannot upgrade yet is never charged for finding out.
+            if (!NextLevelResearched) return false;
+
             var cost = GetUpgradeCost();
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
 

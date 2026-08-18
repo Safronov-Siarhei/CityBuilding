@@ -52,6 +52,11 @@ namespace CityBuilder.Tests.PlayMode
             Time.timeScale = 1f;
             ResourceManager.Instance.SetInfiniteResources(false);
             CitizenManager.Instance.SetPopulation(20);
+
+            // Upgrading now needs the level researched in the Laboratory (see ResearchGateTests,
+            // which is where that rule is actually tested). These tests are about what an upgrade
+            // DOES, so they start with the whole tech list granted.
+            Research.ResearchManager.Instance?.CompleteEverything();
             yield return null;
         }
 

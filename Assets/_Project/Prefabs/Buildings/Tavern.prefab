@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &727056474422165717
+--- !u!1 &4040639363977526665
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8922289354622988908}
-  - component: {fileID: 9158152072372531095}
-  - component: {fileID: 6469880550771504467}
+  - component: {fileID: 1648405661556038517}
+  - component: {fileID: 1087664662012093984}
+  - component: {fileID: 4687232640915447783}
   m_Layer: 0
   m_Name: Tavern1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8922289354622988908
+--- !u!4 &1648405661556038517
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 727056474422165717}
+  m_GameObject: {fileID: 4040639363977526665}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.000000059604645, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4712181291456736389}
+  m_Father: {fileID: 3173489587895276733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &9158152072372531095
+--- !u!33 &1087664662012093984
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 727056474422165717}
+  m_GameObject: {fileID: 4040639363977526665}
   m_Mesh: {fileID: -7037294537080110193, guid: 1103aebb0462ff1428344d2cd0e17b52, type: 3}
---- !u!23 &6469880550771504467
+--- !u!23 &4687232640915447783
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 727056474422165717}
+  m_GameObject: {fileID: 4040639363977526665}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &1875680867204053646
+--- !u!1 &7072193695441290562
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4712181291456736389}
-  - component: {fileID: 4515034149586286386}
-  - component: {fileID: 4893785369301539361}
+  - component: {fileID: 3173489587895276733}
+  - component: {fileID: 3017133547154809237}
+  - component: {fileID: 4150501810014659349}
   m_Layer: 0
   m_Name: Tavern
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4712181291456736389
+--- !u!4 &3173489587895276733
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1875680867204053646}
+  m_GameObject: {fileID: 7072193695441290562}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8922289354622988908}
+  - {fileID: 1648405661556038517}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4515034149586286386
+--- !u!114 &3017133547154809237
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1875680867204053646}
+  m_GameObject: {fileID: 7072193695441290562}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &4893785369301539361
+--- !u!65 &4150501810014659349
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1875680867204053646}
+  m_GameObject: {fileID: 7072193695441290562}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

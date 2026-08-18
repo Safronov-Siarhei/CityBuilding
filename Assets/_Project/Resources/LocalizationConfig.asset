@@ -735,3 +735,131 @@ MonoBehaviour:
     values:
     - "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
     - Gold Bar
+  - key: '#research_tab_buildings'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0435\u043D\u0438\u0435 \u0437\u0434\u0430\u043D\u0438\u0439"
+    - Buildings
+  - key: '#research_tab_units'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0435\u043D\u0438\u0435 \u0441\u043E\u043B\u0434\u0430\u0442"
+    - Soldiers
+  - key: '#research_empty'
+    values:
+    - "\u0417\u0434\u0435\u0441\u044C \u043F\u043E\u043A\u0430 \u043D\u0435\u0447\u0435\u0433\u043E
+      \u0438\u0437\u0443\u0447\u0430\u0442\u044C"
+    - Nothing to research here yet
+  - key: '#research_start'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0438\u0442\u044C"
+    - Research
+  - key: '#research_done'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0435\u043D\u043E"
+    - Researched
+  - key: '#research_idle'
+    values:
+    - "\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0438\u0437\u0443\u0447\u0430\u0435\u0442\u0441\u044F"
+    - Nothing is being researched
+  - key: '#research_running'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0430\u0435\u0442\u0441\u044F: {0} \u2014 \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C
+      {1} \u0441"
+    - "Researching: {0} \u2014 {1}s left"
+  - key: '#research_paused'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0430\u0435\u0442\u0441\u044F: {0} \u2014 \u043D\u0435\u0442
+      \u0443\u0447\u0451\u043D\u044B\u0445"
+    - "Researching: {0} \u2014 no scientists"
+  - key: '#research_cancel'
+    values:
+    - "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C (\u0432\u0435\u0440\u043D\u0451\u0442\u0441\u044F
+      {0} \u043C\u043E\u043D\u0435\u0442)"
+    - Cancel (refunds {0} coins)
+  - key: '#research_cost'
+    values:
+    - "{0} \u043C\u043E\u043D\u0435\u0442 \xB7 {1} \u0441"
+    - "{0} coins \xB7 {1}s"
+  - key: '#research_unit_gain'
+    values:
+    - "\u043F\u0440\u043E\u0447\u043D\u043E\u0441\u0442\u044C +{0}, \u0443\u0440\u043E\u043D
+      +{1}"
+    - health +{0}, damage +{1}
+  - key: '#research_scientists'
+    values:
+    - "\u0423\u0447\u0451\u043D\u044B\u0435: {0} / {1}   \xB7   \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445:
+      {2}"
+    - "Scientists: {0} / {1}   \xB7   idle: {2}"
+  - key: '#research_lab_state'
+    values:
+    - "\u0423\u0440\u043E\u0432\u0435\u043D\u044C {0} / {1}   \xB7   \u041F\u0440\u043E\u0447\u043D\u043E\u0441\u0442\u044C
+      {2}/{3}   \xB7   \u0412\u0435\u0442\u0445\u043E\u0441\u0442\u044C {4}"
+    - "Level {0} / {1}   \xB7   Health {2}/{3}   \xB7   Wear {4}"
+  - key: '#research_unlock'
+    values:
+    - "\u041E\u0442\u043A\u0440\u044B\u0442\u044C: {0}"
+    - 'Unlock: {0}'
+  - key: '#research_level'
+    values:
+    - "{0} \u2014 \u0443\u0440\u043E\u0432\u0435\u043D\u044C {1}"
+    - "{0} \u2014 level {1}"
+  - key: '#research_blocked_busy'
+    values:
+    - "\u0423\u0436\u0435 \u0438\u0434\u0451\u0442 \u0434\u0440\u0443\u0433\u043E\u0435
+      \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u0435"
+    - Another research is under way
+  - key: '#research_blocked_no_lab'
+    values:
+    - "\u041D\u0443\u0436\u043D\u0430 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F"
+    - A Laboratory is needed
+  - key: '#research_blocked_lab_level'
+    values:
+    - "\u041D\u0443\u0436\u043D\u0430 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F
+      {0} \u0443\u0440\u043E\u0432\u043D\u044F"
+    - Needs a level {0} Laboratory
+  - key: '#research_blocked_prereq'
+    values:
+    - "\u0421\u043D\u0430\u0447\u0430\u043B\u0430: {0}"
+    - 'First: {0}'
+  - key: '#research_blocked_workers'
+    values:
+    - "\u041D\u0443\u0436\u0435\u043D \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D
+      \u0443\u0447\u0451\u043D\u044B\u0439"
+    - Needs at least one scientist
+  - key: '#research_blocked_coins'
+    values:
+    - "\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u043D\u0435\u0442"
+    - Not enough coins
+  - key: '#research_blocked_unknown'
+    values:
+    - "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u0442\u0435\u043C\u0430
+      \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u044F"
+    - Unknown research topic
+  - key: '#building_upgrade_locked'
+    values:
+    - "\u0423\u0440\u043E\u0432\u0435\u043D\u044C {0} \u0435\u0449\u0451 \u043D\u0435
+      \u0438\u0437\u0443\u0447\u0435\u043D \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438"
+    - Level {0} is not researched yet
+  - key: '#workforce_research'
+    values:
+    - "\u0432\u0435\u0434\u0451\u0442 \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u0435"
+    - does research
+  - key: '#log_research_started'
+    values:
+    - "\u041D\u0430\u0447\u0430\u0442\u043E \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u0435:
+      {0}"
+    - 'Research started: {0}'
+  - key: '#log_research_done'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0435\u043D\u043E: {0}"
+    - 'Researched: {0}'
+  - key: '#log_research_cancelled'
+    values:
+    - "\u0418\u0437\u0443\u0447\u0435\u043D\u0438\u0435 \u043E\u0442\u043C\u0435\u043D\u0435\u043D\u043E:
+      {0}"
+    - 'Research cancelled: {0}'
+  - key: '#log_research_lost'
+    values:
+    - "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F \u043F\u043E\u0442\u0435\u0440\u044F\u043D\u0430
+      \u2014 \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u0435 \xAB{0}\xBB \u043F\u0440\u0435\u0440\u0432\u0430\u043D\u043E,
+      \u043C\u043E\u043D\u0435\u0442\u044B \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u044B"
+    - "Laboratory lost \u2014 research {0} stopped, coins refunded"

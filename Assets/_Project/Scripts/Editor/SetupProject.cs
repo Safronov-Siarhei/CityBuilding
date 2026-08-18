@@ -600,6 +600,10 @@ namespace CityBuilder.EditorTools
             armyManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // The Laboratory's brain. No wiring of its own: it finds the Laboratory through
+            // BuildingInstance's registry, because the building comes and goes while it does not.
+            var researchManager = managers.AddComponent<CityBuilder.Research.ResearchManager>();
+
             var citizenVisualsManager = managers.AddComponent<CitizenVisualsManager>();
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
@@ -618,6 +622,7 @@ namespace CityBuilder.EditorTools
             saveControllerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             saveControllerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
             saveControllerSO.FindProperty("taxManager").objectReferenceValue = taxManager;
+            saveControllerSO.FindProperty("researchManager").objectReferenceValue = researchManager;
             var knownBuildingsProp = saveControllerSO.FindProperty("knownBuildings");
             knownBuildingsProp.arraySize = allBuildingData.Count;
             for (var i = 0; i < allBuildingData.Count; i++)
@@ -823,7 +828,8 @@ namespace CityBuilder.EditorTools
             var iconLibrary = CreateResourceIconLibrary();
 
             var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite, iconLibrary);
-            BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel);
+            var researchPanel = BuildResearchPanel(canvasGO.transform, panelSprite, iconLibrary);
+            BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel, researchPanel);
             BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
             BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
             BuildEventLog(canvasGO.transform, panelSprite);
@@ -944,6 +950,12 @@ namespace CityBuilder.EditorTools
             var resources = new GameObject("Resources");
             resources.transform.SetParent(root.transform, false);
             resources.AddComponent<ResourceCheat>();
+
+            // The Laboratory gates thirty-one buildings and every upgrade level, so testing anything
+            // late in the game without this would mean playing the whole tech list first.
+            var research = new GameObject("Research");
+            research.transform.SetParent(root.transform, false);
+            research.AddComponent<ResearchCheat>();
         }
 
         /// <summary>
@@ -1284,6 +1296,10 @@ namespace CityBuilder.EditorTools
             var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(0f, -55f));
             var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(0f, -125f), new Vector2(360f, 70f));
 
+            // Stands in for the price and the button when the next level has not been researched --
+            // in the same band, so the card does not change height depending on the answer.
+            var upgradeLock = CreateText(upgradeControls.transform, "UpgradeLock", string.Empty, 22, new Vector2(0f, -90f), new Vector2(640f, 60f), new Color(1f, 0.78f, 0.5f));
+
             var repairControls = new GameObject("RepairControls", typeof(RectTransform));
             repairControls.transform.SetParent(card.transform, false);
             StretchFull(repairControls.GetComponent<RectTransform>());
@@ -1319,6 +1335,8 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
             controllerSO.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
             controllerSO.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
+            controllerSO.FindProperty("upgradeButton").objectReferenceValue = upgradeButton;
+            controllerSO.FindProperty("upgradeLockLabel").objectReferenceValue = upgradeLock;
             controllerSO.FindProperty("repairControls").objectReferenceValue = repairControls;
             controllerSO.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
             controllerSO.FindProperty("recruitControls").objectReferenceValue = recruitControls;
@@ -1338,7 +1356,8 @@ namespace CityBuilder.EditorTools
             return controller;
         }
 
-        private static void BuildBuildingSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer, BuildingInfoPanelController infoPanel)
+        private static void BuildBuildingSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer,
+            BuildingInfoPanelController infoPanel, ResearchPanelController researchPanel)
         {
             var go = new GameObject("BuildingSelector");
             go.transform.SetParent(canvasParent, false);
@@ -1347,7 +1366,134 @@ namespace CityBuilder.EditorTools
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
             so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
+            so.FindProperty("researchPanel").objectReferenceValue = researchPanel;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// The Laboratory's own window, opened by tapping the Laboratory INSTEAD of the ordinary
+        /// building card -- which is why its header carries the scientists, the upgrade and the
+        /// repair: nothing else would reach them (see ResearchPanelController).
+        ///
+        /// Wider and taller than the other cards (1240x980 against the workforce panel's 960x780)
+        /// because a row here holds a title, a price and a button, and there are two tabs of them.
+        /// 980 tall spans y -490..490 on a 1080-high canvas, which clears the edge.
+        /// </summary>
+        private static ResearchPanelController BuildResearchPanel(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
+        {
+            var panelRoot = new GameObject("ResearchPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(1240f, 980f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 430f), new Vector2(1160f, 60f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 390f), new Vector2(1160f, 36f), new Color(1f, 1f, 1f, 0.6f));
+
+            // Header band: the scientists on the left, the building's own two actions on the right.
+            var scientists = CreateText(card.transform, "Scientists", string.Empty, 24, new Vector2(-330f, 335f), new Vector2(500f, 44f), new Color(1f, 1f, 1f, 0.9f), addShadow: false);
+            scientists.alignment = TextAnchor.MiddleLeft;
+            var removeScientist = CreateButton(card.transform, panelSprite, "RemoveScientistButton", "-", new Vector2(-120f, 335f), new Vector2(64f, 64f));
+            var addScientist = CreateButton(card.transform, panelSprite, "AddScientistButton", "+", new Vector2(-40f, 335f), new Vector2(64f, 64f));
+
+            var upgradeControls = new GameObject("UpgradeControls", typeof(RectTransform));
+            upgradeControls.transform.SetParent(card.transform, false);
+            StretchFull(upgradeControls.GetComponent<RectTransform>());
+            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(200f, 345f), new Vector2(260f, 64f));
+            var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(200f, 297f));
+
+            var repairControls = new GameObject("RepairControls", typeof(RectTransform));
+            repairControls.transform.SetParent(card.transform, false);
+            StretchFull(repairControls.GetComponent<RectTransform>());
+            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(490f, 345f), new Vector2(260f, 64f));
+            var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(490f, 297f));
+
+            // What is being researched right now, and the way out of it.
+            var progress = CreateText(card.transform, "Progress", string.Empty, 22, new Vector2(-160f, 240f), new Vector2(840f, 40f), new Color(0.82f, 0.88f, 0.7f));
+            progress.alignment = TextAnchor.MiddleLeft;
+
+            var cancelControls = new GameObject("CancelControls", typeof(RectTransform));
+            cancelControls.transform.SetParent(card.transform, false);
+            StretchFull(cancelControls.GetComponent<RectTransform>());
+            var cancelButton = CreateDynamicButton(cancelControls.transform, panelSprite, "CancelResearchButton", new Vector2(400f, 240f), new Vector2(420f, 60f), out var cancelLabel);
+
+            var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-200f, 178f), new Vector2(380f, 60f));
+            var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(200f, 178f), new Vector2(380f, 60f));
+
+            BuildScrollList(card.transform, new Vector2(0f, -130f), new Vector2(1180f, 560f),
+                "#research_empty", out var content, out var emptyLabelGO);
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -450f), new Vector2(300f, 70f));
+
+            var controller = panelRoot.AddComponent<ResearchPanelController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("titleLabel").objectReferenceValue = title;
+            so.FindProperty("conditionLabel").objectReferenceValue = condition;
+            so.FindProperty("scientistsLabel").objectReferenceValue = scientists;
+            so.FindProperty("addScientistButton").objectReferenceValue = addScientist;
+            so.FindProperty("removeScientistButton").objectReferenceValue = removeScientist;
+            so.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
+            so.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
+            so.FindProperty("repairControls").objectReferenceValue = repairControls;
+            so.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
+            so.FindProperty("progressLabel").objectReferenceValue = progress;
+            so.FindProperty("cancelControls").objectReferenceValue = cancelControls;
+            so.FindProperty("cancelLabel").objectReferenceValue = cancelLabel;
+            so.FindProperty("buildingsTabBackground").objectReferenceValue = buildingsTab.GetComponent<Image>();
+            so.FindProperty("unitsTabBackground").objectReferenceValue = unitsTab.GetComponent<Image>();
+            so.FindProperty("listContent").objectReferenceValue = content;
+            so.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
+            so.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            so.FindProperty("completedIcon").objectReferenceValue = CreateCheckIcon();
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(addScientist.onClick, controller.AddScientist);
+            UnityEventTools.AddPersistentListener(removeScientist.onClick, controller.RemoveScientist);
+            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.UpgradeLab);
+            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.RepairLab);
+            UnityEventTools.AddPersistentListener(cancelButton.onClick, controller.CancelResearch);
+            UnityEventTools.AddPersistentListener(buildingsTab.onClick, controller.SelectBuildingsTab);
+            UnityEventTools.AddPersistentListener(unitsTab.onClick, controller.SelectUnitsTab);
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+
+            panelRoot.SetActive(false);
+            return controller;
+        }
+
+        /// <summary>The tick on a researched row. Drawn rather than typed: the built-in font has no check-mark glyph, and a missing one renders as an empty box.</summary>
+        private static Sprite CreateCheckIcon()
+        {
+            return CreateIconSprite("Action_Check", 64, (p, s) =>
+            {
+                var stroke = new Color(0.95f, 0.98f, 0.95f);
+                FillIconStroke(p, s, new Vector2(0.16f, 0.52f), new Vector2(0.4f, 0.26f), 0.11f, stroke);
+                FillIconStroke(p, s, new Vector2(0.4f, 0.26f), new Vector2(0.86f, 0.76f), 0.11f, stroke);
+            });
+        }
+
+        /// <summary>A thick line between two normalized points, as two triangles -- the icon painters only rasterize rects and triangles.</summary>
+        private static void FillIconStroke(Color[] pixels, int size, Vector2 from, Vector2 to, float thickness, Color color)
+        {
+            var direction = (to - from).normalized;
+            var offset = new Vector2(-direction.y, direction.x) * (thickness * 0.5f);
+
+            var a = from + offset;
+            var b = to + offset;
+            var c = to - offset;
+            var d = from - offset;
+            FillIconTriangle(pixels, size, a, b, c, color);
+            FillIconTriangle(pixels, size, a, c, d, color);
         }
 
         /// <summary>
@@ -3402,6 +3548,29 @@ namespace CityBuilder.EditorTools
             image.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
             Localize(CreateText(go.transform, "Label", string.Empty, 28, Vector2.zero, sizeDelta - new Vector2(20f, 20f)), labelKey);
+            return go.GetComponent<Button>();
+        }
+
+        /// <summary>
+        /// A button whose caption its controller writes at play time. Deliberately NOT CreateButton:
+        /// that hangs a LocalizedText on the label, which refills it from a fixed key and would wipe
+        /// out a caption carrying a number in it (the cancel button's refund).
+        /// </summary>
+        private static Button CreateDynamicButton(Transform parent, Sprite sprite, string name, Vector2 anchoredPos, Vector2 sizeDelta, out Text label)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            var image = go.GetComponent<Image>();
+            image.sprite = sprite;
+            image.type = Image.Type.Sliced;
+            image.color = new Color(0.26f, 0.29f, 0.24f, 0.95f);
+
+            label = CreateText(go.transform, "Label", string.Empty, 24, Vector2.zero, sizeDelta - new Vector2(20f, 20f));
             return go.GetComponent<Button>();
         }
 

@@ -155,6 +155,10 @@ namespace CityBuilder.UI
         {
             if (building == null) return string.Empty;
 
+            // The Laboratory employs people and makes no resource at all: "ничего не производит"
+            // would be true and useless, since scientists are the only reason it has worker slots.
+            if (building.BuildingId == Research.ResearchManager.LaboratoryBuildingId) return Localization.Get("#workforce_research");
+
             var recipe = building.SelectedRecipe;
             if (recipe == null) return Localization.Get("#workforce_idle_building");
 

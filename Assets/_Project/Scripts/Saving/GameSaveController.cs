@@ -20,6 +20,7 @@ namespace CityBuilder.Saving
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private GameCalendar gameCalendar;
         [SerializeField] private TaxManager taxManager;
+        [SerializeField] private Research.ResearchManager researchManager;
         [SerializeField] private MapTerrainGenerator mapTerrainGenerator;
         [SerializeField] private MeshMapApplier meshMapApplier;
         [SerializeField] private List<BuildingData> knownBuildings = new List<BuildingData>();
@@ -99,6 +100,14 @@ namespace CityBuilder.Saving
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
             }
 
+            // Before the buildings: a restored building asks whether its level is researched the
+            // moment it is placed, and a fresh ResearchManager would answer "no".
+            if (researchManager != null)
+            {
+                researchManager.RestoreFromSave(data.completedResearch, data.currentResearchId,
+                    data.currentResearchElapsedSeconds, data.currentResearchPaidCoins);
+            }
+
             foreach (var entry in data.buildings)
             {
                 if (!_catalog.TryGetValue(entry.buildingName, out var buildingData) || buildingData.prefab == null) continue;
@@ -158,6 +167,15 @@ namespace CityBuilder.Saving
                 currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1,
                 taxRatePercent = taxManager != null ? taxManager.TaxRatePercent : 10
             };
+
+            if (researchManager != null)
+            {
+                data.completedResearch.AddRange(researchManager.CompletedTopicIds);
+                researchManager.ReadCurrentForSave(out var currentResearchId, out var elapsed, out var paid);
+                data.currentResearchId = currentResearchId;
+                data.currentResearchElapsedSeconds = elapsed;
+                data.currentResearchPaidCoins = paid;
+            }
 
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))
             {

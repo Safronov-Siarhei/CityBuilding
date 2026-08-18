@@ -15,26 +15,70 @@ MonoBehaviour:
   units:
   - id: militia
     displayName: "\u041E\u043F\u043E\u043B\u0447\u0435\u043D\u0438\u0435"
-    maxHealth: 12
-    attackDamage: 5
-    attackIntervalSeconds: 1.1
     attackRangeUnits: 1.4
     attackRangeStructures: 2.6
-    walkSpeed: 1.5
     engageRadius: 7
-    recruitCoins: 25
-    upkeepCoinsPerDay: 1
+    levels:
+    - maxHealth: 12
+      attackDamage: 5
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.5
+      recruitCoins: 25
+      upkeepCoinsPerDay: 1
+    - maxHealth: 18
+      attackDamage: 7
+      attackIntervalSeconds: 1
+      walkSpeed: 1.5
+      recruitCoins: 40
+      upkeepCoinsPerDay: 2
+    - maxHealth: 26
+      attackDamage: 10
+      attackIntervalSeconds: 0.9
+      walkSpeed: 1.5
+      recruitCoins: 60
+      upkeepCoinsPerDay: 3
+    startsUnlocked: 1
+    levelResearch:
+    - coins: 80
+      seconds: 90
+    - coins: 150
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
   - id: orc
     displayName: "\u041E\u0440\u043A"
-    maxHealth: 20
-    attackDamage: 4
-    attackIntervalSeconds: 1.2
     attackRangeUnits: 1.4
     attackRangeStructures: 3
-    walkSpeed: 1.3
     engageRadius: 6
-    recruitCoins: 0
-    upkeepCoinsPerDay: 0
+    levels:
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
   buildings:
   - id: Hovel
     displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
@@ -72,6 +116,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 28
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Cottage
     displayName: "\u041A\u043E\u0442\u0442\u0435\u0434\u0436"
     category: 0
@@ -114,6 +167,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
   - id: Manor
     displayName: "\u041E\u0441\u043E\u0431\u043D\u044F\u043A"
     category: 0
@@ -156,6 +218,15 @@ MonoBehaviour:
       amount: 154
     - type: 1
       amount: 70
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 50
+      seconds: 60
+    levelResearch:
+    - coins: 70
+      seconds: 60
+    - coins: 120
+      seconds: 120
   - id: Castle
     displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
     category: 0
@@ -198,6 +269,15 @@ MonoBehaviour:
       amount: 20
     - type: 3
       amount: 40
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: FisherHut
     displayName: "\u0420\u044B\u0431\u0430\u0446\u043A\u0430\u044F \u0445\u0438\u0436\u0438\u043D\u0430"
     category: 5
@@ -239,6 +319,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 42
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Farm
     displayName: "\u0424\u0435\u0440\u043C\u0430"
     category: 5
@@ -286,6 +375,15 @@ MonoBehaviour:
       amount: 42
     - type: 1
       amount: 14
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
   - id: Sawmill
     displayName: "\u041B\u0435\u0441\u043E\u043F\u0438\u043B\u043A\u0430"
     category: 4
@@ -333,6 +431,15 @@ MonoBehaviour:
       amount: 56
     - type: 1
       amount: 14
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 40
+      seconds: 120
   - id: Quarry
     displayName: "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
     category: 4
@@ -374,6 +481,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 56
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
   - id: IronMine
     displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
     category: 4
@@ -425,6 +541,15 @@ MonoBehaviour:
       amount: 42
     - type: 6
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
   - id: CoalMine
     displayName: "\u0423\u0433\u043E\u043B\u044C\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
     category: 4
@@ -476,6 +601,15 @@ MonoBehaviour:
       amount: 28
     - type: 5
       amount: 14
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
   - id: Warehouse
     displayName: "\u0421\u043A\u043B\u0430\u0434"
     category: 1
@@ -518,6 +652,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 28
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
   - id: Barn
     displayName: "\u0410\u043C\u0431\u0430\u0440"
     category: 1
@@ -560,6 +703,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 14
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 45
+      seconds: 120
   - id: Treasury
     displayName: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
     category: 1
@@ -602,6 +754,15 @@ MonoBehaviour:
       amount: 28
     - type: 1
       amount: 112
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
   - id: BigWarehouse
     displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0441\u043A\u043B\u0430\u0434"
     category: 1
@@ -644,6 +805,15 @@ MonoBehaviour:
       amount: 224
     - type: 1
       amount: 112
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 70
+      seconds: 60
+    levelResearch:
+    - coins: 110
+      seconds: 60
+    - coins: 180
+      seconds: 120
   - id: BigBarn
     displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0430\u043C\u0431\u0430\u0440"
     category: 1
@@ -686,6 +856,15 @@ MonoBehaviour:
       amount: 196
     - type: 1
       amount: 84
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 60
+      seconds: 60
+    levelResearch:
+    - coins: 90
+      seconds: 60
+    - coins: 150
+      seconds: 120
   - id: BigTreasury
     displayName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u0441\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
     category: 1
@@ -728,6 +907,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 308
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 85
+      seconds: 60
+    levelResearch:
+    - coins: 125
+      seconds: 60
+    - coins: 210
+      seconds: 120
   - id: Tower
     displayName: "\u0411\u0430\u0448\u043D\u044F"
     category: 3
@@ -774,6 +962,15 @@ MonoBehaviour:
       amount: 42
     - type: 5
       amount: 26
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
   - id: Barracks
     displayName: "\u041A\u0430\u0437\u0430\u0440\u043C\u0430"
     category: 3
@@ -820,6 +1017,15 @@ MonoBehaviour:
       amount: 84
     - type: 5
       amount: 32
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
   - id: Gate
     displayName: "\u0412\u043E\u0440\u043E\u0442\u0430"
     category: 3
@@ -866,6 +1072,15 @@ MonoBehaviour:
       amount: 34
     - type: 5
       amount: 18
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: FortifiedTower
     displayName: "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u0430\u044F
       \u0431\u0430\u0448\u043D\u044F"
@@ -915,6 +1130,15 @@ MonoBehaviour:
       amount: 112
     - type: 5
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 35
+      seconds: 60
+    levelResearch:
+    - coins: 50
+      seconds: 60
+    - coins: 85
+      seconds: 120
   - id: FortifiedGate
     displayName: "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u044B\u0435
       \u0432\u043E\u0440\u043E\u0442\u0430"
@@ -964,6 +1188,15 @@ MonoBehaviour:
       amount: 84
     - type: 5
       amount: 17
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
   - id: Fence
     displayName: "\u0417\u0430\u0431\u043E\u0440"
     category: 3
@@ -1000,6 +1233,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 1
       amount: 20
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Road
     displayName: "\u0414\u043E\u0440\u043E\u0433\u0430"
     category: 0
@@ -1036,6 +1278,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 1
       amount: 8
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Bridge
     displayName: "\u041C\u043E\u0441\u0442"
     category: 6
@@ -1072,6 +1323,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: WaterMill
     displayName: "\u0412\u043E\u0434\u044F\u043D\u0430\u044F \u043C\u0435\u043B\u044C\u043D\u0438\u0446\u0430"
     category: 6
@@ -1114,6 +1374,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 28
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
   - id: Dock
     displayName: "\u041F\u0440\u0438\u0441\u0442\u0430\u043D\u044C"
     category: 6
@@ -1156,6 +1425,15 @@ MonoBehaviour:
       amount: 56
     - type: 1
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 15
+      seconds: 60
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 40
+      seconds: 120
   - id: TownSquare
     displayName: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C"
     category: 2
@@ -1198,6 +1476,15 @@ MonoBehaviour:
       amount: 14
     - type: 1
       amount: 56
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 40
+      seconds: 120
   - id: Flag
     displayName: "\u0424\u043B\u0430\u0433"
     category: 2
@@ -1240,6 +1527,15 @@ MonoBehaviour:
       amount: 11
     - type: 1
       amount: 3
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: DecTree
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0435
       \u0434\u0435\u0440\u0435\u0432\u043E"
@@ -1277,6 +1573,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 8
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: DecBush
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
       \u043A\u0443\u0441\u0442"
@@ -1314,6 +1619,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 6
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: DecGarden
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
       \u0441\u0430\u0434"
@@ -1357,6 +1671,15 @@ MonoBehaviour:
       amount: 14
     - type: 1
       amount: 6
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Granary
     displayName: "\u041A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
     category: 1
@@ -1399,6 +1722,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 14
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 45
+      seconds: 120
   - id: BigGranary
     displayName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
     category: 1
@@ -1441,6 +1773,15 @@ MonoBehaviour:
       amount: 196
     - type: 1
       amount: 84
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 60
+      seconds: 60
+    levelResearch:
+    - coins: 90
+      seconds: 60
+    - coins: 150
+      seconds: 120
   - id: Baker
     displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
     category: 5
@@ -1490,6 +1831,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 28
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
   - id: Windmill
     displayName: "\u0412\u0435\u0442\u0440\u044F\u043A"
     category: 5
@@ -1539,6 +1889,15 @@ MonoBehaviour:
       amount: 98
     - type: 1
       amount: 28
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
   - id: Smokehouse
     displayName: "\u041A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u044F"
     category: 5
@@ -1581,6 +1940,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 22
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
   - id: PigFarm
     displayName: "\u0421\u0432\u0438\u043D\u043E\u0444\u0435\u0440\u043C\u0430"
     category: 5
@@ -1623,6 +1991,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 14
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
   - id: Orchard
     displayName: "\u0424\u0440\u0443\u043A\u0442\u043E\u0432\u044B\u0439 \u0441\u0430\u0434"
     category: 5
@@ -1659,6 +2036,15 @@ MonoBehaviour:
     upgradeToLevel3Cost:
     - type: 0
       amount: 56
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
   - id: Smelter
     displayName: "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
     category: 4
@@ -1728,6 +2114,15 @@ MonoBehaviour:
       amount: 98
     - type: 1
       amount: 70
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 35
+      seconds: 60
+    levelResearch:
+    - coins: 55
+      seconds: 60
+    - coins: 90
+      seconds: 120
   - id: CopperMine
     displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
     category: 4
@@ -1775,6 +2170,15 @@ MonoBehaviour:
       amount: 70
     - type: 1
       amount: 42
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
   - id: GoldMine
     displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
     category: 4
@@ -1822,6 +2226,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 56
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
   - id: Laboratory
     displayName: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F"
     category: 0
@@ -1830,8 +2243,6 @@ MonoBehaviour:
       amount: 40
     - type: 1
       amount: 30
-    - type: 12
-      amount: 10
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 12
@@ -1840,19 +2251,19 @@ MonoBehaviour:
     - maxHealth: 160
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
+      maxWorkers: 10
       batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 256
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
+      maxWorkers: 10
       batchesPerWorkerPerTick: 0
       storageCapacity: 0
     - maxHealth: 400
       defense: 0
       citizensGranted: 0
-      maxWorkers: 0
+      maxWorkers: 10
       batchesPerWorkerPerTick: 0
       storageCapacity: 0
     requiredBuildingId: 
@@ -1870,6 +2281,15 @@ MonoBehaviour:
       amount: 84
     - type: 5
       amount: 28
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: HealerHouse
     displayName: "\u0414\u043E\u043C \u043B\u0435\u043A\u0430\u0440\u044F"
     category: 0
@@ -1912,6 +2332,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 42
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
   - id: FireBrigade
     displayName: "\u041F\u043E\u0436\u0430\u0440\u043D\u0430\u044F \u0431\u0440\u0438\u0433\u0430\u0434\u0430"
     category: 0
@@ -1954,6 +2383,15 @@ MonoBehaviour:
       amount: 84
     - type: 1
       amount: 42
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
   - id: Well
     displayName: "\u041A\u043E\u043B\u043E\u0434\u0435\u0446"
     category: 0
@@ -1996,6 +2434,15 @@ MonoBehaviour:
       amount: 14
     - type: 1
       amount: 28
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
   - id: Church
     displayName: "\u0426\u0435\u0440\u043A\u043E\u0432\u044C"
     category: 2
@@ -2038,6 +2485,15 @@ MonoBehaviour:
       amount: 112
     - type: 1
       amount: 84
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 40
+      seconds: 60
+    levelResearch:
+    - coins: 65
+      seconds: 60
+    - coins: 105
+      seconds: 120
   - id: Tavern
     displayName: "\u0422\u0430\u0432\u0435\u0440\u043D\u0430"
     category: 2
@@ -2080,6 +2536,15 @@ MonoBehaviour:
       amount: 98
     - type: 1
       amount: 42
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
   - id: Theater
     displayName: "\u0422\u0435\u0430\u0442\u0440"
     category: 2
@@ -2122,6 +2587,15 @@ MonoBehaviour:
       amount: 140
     - type: 1
       amount: 98
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 50
+      seconds: 60
+    levelResearch:
+    - coins: 75
+      seconds: 60
+    - coins: 130
+      seconds: 120
   - id: Colosseum
     displayName: "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
     category: 2
@@ -2164,6 +2638,15 @@ MonoBehaviour:
       amount: 252
     - type: 1
       amount: 224
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 100
+      seconds: 60
+    levelResearch:
+    - coins: 150
+      seconds: 60
+    - coins: 250
+      seconds: 120
   armyMaxSize: 20
   raidIntervalSeconds: 90
   raidBaseSize: 2
@@ -2185,6 +2668,10 @@ MonoBehaviour:
   foodVarietyTarget: 2
   deathsMemoryDays: 3
   happinessPenaltyPerDeath: 10
+  researchSecondsPerWorker: 5
+  researchFreeWorkers: 1
+  researchCancelRefundPercent: 70
+  researchMinSeconds: 5
   baseCapacityMaterials: 200
   baseCapacityFood: 100
   baseCapacityValuables: 300

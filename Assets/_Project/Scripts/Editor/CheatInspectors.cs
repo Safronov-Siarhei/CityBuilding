@@ -64,4 +64,33 @@ namespace CityBuilder.EditorTools
             }
         }
     }
+
+    [CustomEditor(typeof(ResearchCheat))]
+    public class ResearchCheatEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+
+            var cheat = (ResearchCheat)target;
+
+            EditorGUILayout.Space();
+
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.HelpBox("Кнопки работают только в режиме Play.", MessageType.Info);
+                return;
+            }
+
+            if (GUILayout.Button("Изучить тему выше", GUILayout.Height(28f)))
+            {
+                cheat.GrantOne();
+            }
+
+            if (GUILayout.Button("Изучить всё"))
+            {
+                cheat.GrantEverything();
+            }
+        }
+    }
 }

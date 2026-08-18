@@ -20,10 +20,33 @@ namespace CityBuilder.UI
         private CategoryButtonHandler[] _categoryButtons;
         private HotbarButtonHandler[] _buildingButtons;
 
+        // Which category is on show, so the hotbar can be rebuilt in place when a research opens a
+        // new building -- without it, a finished research would only appear after the player tapped
+        // a category button.
+        private BuildingCategory _category;
+        private bool _hasCategory;
+
         private void Awake()
         {
             _categoryButtons = GetComponentsInChildren<CategoryButtonHandler>(true);
             _buildingButtons = GetComponentsInChildren<HotbarButtonHandler>(true);
+        }
+
+        private void OnEnable()
+        {
+            var research = Research.ResearchManager.Instance;
+            if (research != null) research.OnResearchChanged += HandleResearchChanged;
+
+            // The hotbar spends the whole mandatory-Town-Hall placement deactivated (see
+            // BuildingPlacerUIVisibility), so this runs again when it comes back -- catching up on
+            // anything researched while it was hidden.
+            if (_hasCategory) SelectCategory(_category);
+        }
+
+        private void OnDisable()
+        {
+            var research = Research.ResearchManager.Instance;
+            if (research != null) research.OnResearchChanged -= HandleResearchChanged;
         }
 
         private void Start()
@@ -31,8 +54,16 @@ namespace CityBuilder.UI
             if (_categoryButtons.Length > 0) SelectCategory(_categoryButtons[0].Category);
         }
 
+        private void HandleResearchChanged()
+        {
+            if (_hasCategory) SelectCategory(_category);
+        }
+
         public void SelectCategory(BuildingCategory category)
         {
+            _category = category;
+            _hasCategory = true;
+
             foreach (var categoryButton in _categoryButtons)
             {
                 var image = categoryButton.GetComponent<Image>();
@@ -41,7 +72,14 @@ namespace CityBuilder.UI
 
             foreach (var buildingButton in _buildingButtons)
             {
-                buildingButton.gameObject.SetActive(buildingButton.Building != null && buildingButton.Building.category == category);
+                var building = buildingButton.Building;
+                // A building nobody has researched yet is absent, not greyed: the hotbar is a row of
+                // icons with no room to explain itself, and the Laboratory's window is where the
+                // player is told what is still locked and what it costs.
+                var show = building != null
+                           && building.category == category
+                           && Research.ResearchManager.BuildingUnlocked(building.buildingName);
+                buildingButton.gameObject.SetActive(show);
             }
         }
     }
