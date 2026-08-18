@@ -301,6 +301,71 @@ namespace CityBuilder.Tests.PlayMode
             yield break;
         }
 
+        /// <summary>Finds the bar the node builds for itself on first use. Null until somebody has actually started working it.</summary>
+        private static GameObject BarOn(ResourceNode node)
+        {
+            var bar = node.GetComponentInChildren<HarvestProgressBar>(true);
+            return bar != null ? bar.gameObject : null;
+        }
+
+        [UnityTest]
+        public IEnumerator ANodeNobodyIsWorking_HasNoBarAtAll()
+        {
+            // Not a detail: there are 600 trees and 140 boulders on this map, and building a bar
+            // for every one of them up front is exactly the sort of thing that quietly costs a
+            // phone its frame rate for something nobody is looking at.
+            var tree = PlaceNode(ResourceType.Wood, Vector3.zero, 0f);
+
+            Assert.IsNull(BarOn(tree), "A tree nobody has touched already carries a progress bar.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator ReportingProgress_ShowsTheBar_AndReleasingHidesIt()
+        {
+            var tree = PlaceNode(ResourceType.Wood, Vector3.zero, 0f);
+
+            tree.ReportHarvestProgress(0.5f);
+            var bar = BarOn(tree);
+            Assert.IsNotNull(bar, "Working a tree built no progress bar over it.");
+            Assert.IsTrue(bar.activeSelf, "The bar exists but is not on screen while the tree is being chopped.");
+
+            // Release is the path that matters when a worker is pulled off mid-dig: the bar must
+            // not be left hanging over a tree nobody is at.
+            tree.Release();
+            Assert.IsFalse(bar.activeSelf, "Letting go of a tree left its progress bar up.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator ACitizenSentToChop_FillsTheBarOverTheTree()
+        {
+            // End to end, and the only test here that proves the bar is wired to the actual work
+            // rather than merely capable of being shown. Fifteen seconds is a long time to watch a
+            // citizen stand next to a tree with no idea whether anything is happening -- that is
+            // the entire reason the bar exists, so it is worth one slow test.
+            var agent = CitizenVisualsManager.Instance.AllAgents[0];
+            Assert.IsNotNull(agent, "No citizen to send.");
+
+            // Right under their feet, so the walk is over before it starts and the test is timing
+            // the dig rather than the pathfinding.
+            var tree = PlaceNode(ResourceType.Wood, agent.transform.position, 0f);
+            Assert.IsTrue(tree.TryClaim());
+            agent.GatherFrom(tree);
+
+            yield return new WaitForSeconds(2f);
+
+            var bar = BarOn(tree);
+            Assert.IsNotNull(bar, "Two seconds into chopping and the tree has no progress bar.");
+            Assert.IsTrue(bar.activeSelf, "The bar was built but never shown while the citizen worked.");
+
+            // Well short of the whole dig: what is being pinned is that it MOVES with the work,
+            // not the exact fraction, which would just be re-deriving harvest_seconds here.
+            var filled = bar.transform.Find("Fill");
+            Assert.IsNotNull(filled);
+            Assert.Greater(filled.localScale.x, 0f, "The bar is showing but has not filled at all -- it is not tracking the dig.");
+        }
+
         [UnityTest]
         public IEnumerator ATreeComesDownWhole()
         {
