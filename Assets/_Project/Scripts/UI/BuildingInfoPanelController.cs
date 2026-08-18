@@ -115,7 +115,14 @@ namespace CityBuilder.UI
 
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
             if (workerControls != null) workerControls.SetActive(hasProduction);
-            if (productionLabel != null)
+            if (productionLabel != null && !hasProduction && _currentInstance.Happiness > 0)
+            {
+                // An entertainment building has no workers and makes nothing, so this line would
+                // otherwise be blank -- and a tavern whose card says nothing about what it is for
+                // reads exactly like the placeholder it used to be.
+                productionLabel.text = Localization.Format("#building_happiness", _currentInstance.Happiness);
+            }
+            else if (productionLabel != null)
             {
                 productionLabel.text = hasProduction
                     ? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds)

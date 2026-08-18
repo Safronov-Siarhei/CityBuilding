@@ -41,6 +41,13 @@ namespace CityBuilder.Buildings
 
         /// <summary>How much room this building adds to its storage group (see BuildingData.storageGroup). Zero for anything that isn't a storehouse.</summary>
         public int storageCapacity;
+
+        /// <summary>
+        /// What standing here does for the settlement's mood -- the design's third happiness factor,
+        /// "each entertainment building contributes its own happiness value". Zero for everything
+        /// outside the Развлечения category, which is most of the roster.
+        /// </summary>
+        public int happiness;
     }
 
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]

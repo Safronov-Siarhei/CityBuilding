@@ -7,13 +7,12 @@ using UnityEngine;
 namespace CityBuilder.Core
 {
     /// <summary>
-    /// Composite settlement happiness (Довольство), 0-100. First slice of the happiness model from
-    /// the design backlog -- only wires up the factors that already have a real system behind them
-    /// (tax rate, building decay, defense coverage). Food diversity, recent deaths, entertainment
-    /// buildings and the work week are explicitly deferred until those systems exist; this averages
-    /// whatever factor scores are available so adding a fourth/fifth later just extends the list
-    /// instead of redesigning the aggregation. Not yet linked to anything downstream (no gameplay
-    /// consequence reads HappinessPercent yet) -- this is the stat itself, first.
+    /// Composite settlement happiness (Довольство), 0-100. Six of the design backlog's factors are
+    /// wired up: tax rate, building decay, defence coverage, food variety, recent deaths and
+    /// entertainment. The work week is the one still deferred, for want of a week. The score is a
+    /// flat average of whatever factors exist, so adding the seventh extends the list instead of
+    /// redesigning the aggregation. Not yet linked to anything downstream (no gameplay consequence
+    /// reads HappinessPercent yet) -- this is the stat itself, first.
     /// </summary>
     public class HappinessManager : MonoBehaviour
     {
@@ -39,6 +38,9 @@ namespace CityBuilder.Core
 
         /// <summary>Factor 2: citizens lost over the last few days -- starvation today, other causes as they arrive.</summary>
         public int DeathScore { get; private set; } = 100;
+
+        /// <summary>Factor 3: somewhere to go. Every entertainment building standing in the settlement adds its own value (see BuildingData.happiness), against a target that grows with the population.</summary>
+        public int EntertainmentScore { get; private set; } = 100;
 
         private bool _isCritical;
 
@@ -76,15 +78,16 @@ namespace CityBuilder.Core
         public void Recompute()
         {
             TaxScore = TaxManager.Instance != null ? ComputeTaxScore(TaxManager.Instance.TaxRatePercent) : 100;
-            ComputeBuildingScores(out var decayScore, out var defenseScore);
+            ComputeBuildingScores(out var decayScore, out var defenseScore, out var entertainmentScore);
             DecayScore = decayScore;
             DefenseScore = defenseScore;
+            EntertainmentScore = entertainmentScore;
 
             var food = FoodConsumptionManager.Instance;
             FoodScore = ComputeFoodScore(food != null ? food.LastVariety : 0, food != null ? food.HungryDaysInARow : 0);
             DeathScore = ComputeDeathScore(food != null ? food.RecentDeaths : 0);
 
-            HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore + FoodScore + DeathScore) / 5f);
+            HappinessPercent = Mathf.RoundToInt((TaxScore + DecayScore + DefenseScore + FoodScore + DeathScore + EntertainmentScore) / 6f);
             UpdateCriticalState();
             OnHappinessChanged?.Invoke();
         }
@@ -130,6 +133,25 @@ namespace CityBuilder.Core
         }
 
         /// <summary>
+        /// Factor 3 of the design's model: entertainment. Every building that offers the settlement
+        /// something to do adds its value, and what counts as enough grows with the town -- one
+        /// tavern delights a hamlet and is nothing to a city.
+        ///
+        /// Settlement-wide, with no radius: the design says each building "contributes its own
+        /// happiness value", and a distance rule would be a mechanic the player was never told
+        /// about -- plus a per-citizen proximity scan on a phone, for a stat recomputed once a day.
+        ///
+        /// Pure, so an EditMode test covers it without a live scene.
+        /// </summary>
+        public static int ComputeEntertainmentScore(int totalHappiness, int population)
+        {
+            if (population <= 0) return 100;
+
+            var target = population * BalanceConfig.Instance.HappinessPerCitizenTarget;
+            return target <= 0f ? 100 : Mathf.Clamp(Mathf.RoundToInt(100f * totalHappiness / target), 0, 100);
+        }
+
+        /// <summary>
         /// Factor 2: recent deaths. Full marks for a settlement that has buried nobody, falling by
         /// the sheet's penalty for each citizen lost inside the remembered window. Pure, as above.
         /// </summary>
@@ -154,14 +176,15 @@ namespace CityBuilder.Core
             }
         }
 
-        /// <summary>Single pass over every BuildingInstance for both scores -- decay and defense
-        /// each need to scan the same building list, so this avoids two separate FindObjectsByType
-        /// calls per Recompute.</summary>
-        private static void ComputeBuildingScores(out int decayScore, out int defenseScore)
+        /// <summary>Single pass over every BuildingInstance for all three building-derived scores --
+        /// decay, defence and entertainment each need to scan the same building list, so this avoids
+        /// three separate FindObjectsByType calls per Recompute.</summary>
+        private static void ComputeBuildingScores(out int decayScore, out int defenseScore, out int entertainmentScore)
         {
             var totalDecay = 0f;
             var decayCounted = 0;
             var totalDefense = 0;
+            var totalHappiness = 0;
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
@@ -175,12 +198,18 @@ namespace CityBuilder.Core
                 // already resolves it for the level a building actually stands at -- so this reads
                 // it straight and must NOT scale by Level on top, which would count the upgrade twice.
                 totalDefense += instance.Defense;
+
+                // Read at the building's current level, like defence above and for the same reason:
+                // BuildingInstance has already resolved the level, so scaling by Level here would
+                // count the upgrade twice.
+                totalHappiness += instance.Happiness;
             }
 
             decayScore = ComputeDecayScore(totalDecay, decayCounted);
 
             var population = CitizenManager.Instance != null ? CitizenManager.Instance.TotalPopulation : 0;
             defenseScore = ComputeDefenseScore(totalDefense, population);
+            entertainmentScore = ComputeEntertainmentScore(totalHappiness, population);
         }
     }
 }

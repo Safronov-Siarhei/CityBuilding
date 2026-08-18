@@ -40,6 +40,9 @@ namespace CityBuilder.Buildings
         /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
         public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
 
+        /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment.</summary>
+        public int Happiness => Data != null ? Data.LevelStats(Level).happiness : 0;
+
         /// <summary>
         /// 0 (new) to 1 (fully dilapidated). Accrues one step per GameCalendar day (see
         /// HandleDayPassed) for every building except roads/bridges (not really "buildings") and

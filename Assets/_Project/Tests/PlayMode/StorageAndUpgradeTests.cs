@@ -71,6 +71,30 @@ namespace CityBuilder.Tests.PlayMode
             _placed.Clear();
         }
 
+        /// <summary>
+        /// The entertainment factor end to end: a Таверна is a building with no workers and no
+        /// recipe, so the only thing it does is lift the settlement's mood -- and the only way to
+        /// see that it does is to put one down and ask HappinessManager. Every one of these
+        /// buildings was a placeholder until this worked.
+        /// </summary>
+        [Test]
+        public void ATavern_LiftsTheSettlementsMood()
+        {
+            var happiness = HappinessManager.Instance;
+            Assert.IsNotNull(happiness, "The scene has no HappinessManager.");
+
+            happiness.Recompute();
+            var before = happiness.EntertainmentScore;
+            Assert.AreEqual(0, before, "A settlement with nothing to do is supposed to score nothing on this factor.");
+
+            var tavern = Place(PlaytestWorld.Building("Tavern"));
+            Assert.Greater(tavern.Happiness, 0, "The Таверна's own row says it is worth nothing to the settlement.");
+
+            happiness.Recompute();
+            Assert.Greater(happiness.EntertainmentScore, before,
+                "The Таверна is standing and the settlement is no happier for it -- its happiness value never reaches the score.");
+        }
+
         [Test]
         public void EveryResource_StartsAtTheSettlementsOwnCeiling()
         {

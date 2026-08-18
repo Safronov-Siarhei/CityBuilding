@@ -239,6 +239,9 @@ namespace CityBuilder.Core
         [SerializeField] private int deathsMemoryDays = 3;
         [SerializeField] private int happinessPenaltyPerDeath = 10;
 
+        /// <summary>Entertainment points per citizen that count as a fully entertained settlement -- the same shape as the defence factor's own target, which is a constant in HappinessManager.</summary>
+        [SerializeField] private float happinessPerCitizenTarget = 0.8f;
+
         [Header("Research (economy.csv)")]
         // How the Laboratory's scientists shorten a research, what a cancelled one pays back, and
         // the floor a fully staffed lab can never dip below. The first `research_free_workers`
@@ -284,6 +287,7 @@ namespace CityBuilder.Core
         public int FoodVarietyTarget => foodVarietyTarget;
         public int DeathsMemoryDays => deathsMemoryDays;
         public int HappinessPenaltyPerDeath => happinessPenaltyPerDeath;
+        public float HappinessPerCitizenTarget => happinessPerCitizenTarget;
         public float ResearchSecondsPerWorker => researchSecondsPerWorker;
         public int ResearchFreeWorkers => researchFreeWorkers;
         public int ResearchCancelRefundPercent => researchCancelRefundPercent;
@@ -368,6 +372,7 @@ namespace CityBuilder.Core
             foodVarietyTarget = (int)Read(economy, "food_variety_target", foodVarietyTarget);
             deathsMemoryDays = (int)Read(economy, "deaths_memory_days", deathsMemoryDays);
             happinessPenaltyPerDeath = (int)Read(economy, "happiness_penalty_per_death", happinessPenaltyPerDeath);
+            happinessPerCitizenTarget = Read(economy, "happiness_per_citizen_target", happinessPerCitizenTarget);
             researchSecondsPerWorker = Read(economy, "research_seconds_per_worker", researchSecondsPerWorker);
             researchFreeWorkers = (int)Read(economy, "research_free_workers", researchFreeWorkers);
             researchCancelRefundPercent = (int)Read(economy, "research_cancel_refund_percent", researchCancelRefundPercent);

@@ -2062,6 +2062,7 @@ namespace CityBuilder.EditorTools
                     maxWorkers = level.maxWorkers,
                     batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
+                    happiness = level.happiness,
                 });
             }
             return copy;

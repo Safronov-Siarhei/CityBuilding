@@ -32,13 +32,13 @@ namespace CityBuilder.UI
             }
             if (breakdownLabel != null)
             {
-                // Two lines: five factors do not fit across the panel's width at this font size.
+                // Two lines: the factors do not fit across the panel's width at this font size.
                 // The line break lives in the translation, so a language with longer words can
                 // break somewhere else without a code change.
                 breakdownLabel.text = Localization.Format("#happiness_breakdown",
                     HappinessManager.Instance.TaxScore, HappinessManager.Instance.DecayScore,
                     HappinessManager.Instance.DefenseScore, HappinessManager.Instance.FoodScore,
-                    HappinessManager.Instance.DeathScore);
+                    HappinessManager.Instance.DeathScore, HappinessManager.Instance.EntertainmentScore);
             }
         }
 

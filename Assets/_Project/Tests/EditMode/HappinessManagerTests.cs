@@ -17,6 +17,33 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(expected, HappinessManager.ComputeTaxScore(taxRatePercent));
         }
 
+        /// <summary>Nobody to entertain, nothing to answer for -- the same answer the defence factor gives an empty settlement.</summary>
+        [Test]
+        public void ComputeEntertainmentScore_NoCitizens_Returns100()
+        {
+            Assert.AreEqual(100, HappinessManager.ComputeEntertainmentScore(totalHappiness: 0, population: 0));
+        }
+
+        [Test]
+        public void ComputeEntertainmentScore_NothingBuilt_Returns0()
+        {
+            Assert.AreEqual(0, HappinessManager.ComputeEntertainmentScore(totalHappiness: 0, population: 20));
+        }
+
+        /// <summary>The target is per citizen, so the same tavern that delights a hamlet is not enough for a town -- read from the sheet rather than restated here.</summary>
+        [Test]
+        public void ComputeEntertainmentScore_MeetsTheTargetForTheTown_Returns100()
+        {
+            var perCitizen = BalanceConfig.Instance.HappinessPerCitizenTarget;
+            var enoughForTwenty = UnityEngine.Mathf.CeilToInt(20 * perCitizen);
+
+            Assert.AreEqual(100, HappinessManager.ComputeEntertainmentScore(enoughForTwenty, population: 20));
+            Assert.AreEqual(100, HappinessManager.ComputeEntertainmentScore(enoughForTwenty * 5, population: 20),
+                "Building more than enough must not push the factor past full marks.");
+            Assert.Less(HappinessManager.ComputeEntertainmentScore(enoughForTwenty, population: 100), 100,
+                "What entertains twenty citizens cannot still be full marks for a hundred -- the target grows with the town.");
+        }
+
         [Test]
         public void ComputeDecayScore_NoDecayingBuildings_Returns100()
         {

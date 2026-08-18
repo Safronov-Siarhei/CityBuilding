@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2005862008022105599
+--- !u!1 &285155662799643151
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7679645462420695276}
-  - component: {fileID: 2738128177917111383}
-  - component: {fileID: 7277799100115319299}
+  - component: {fileID: 7249436926701234921}
+  - component: {fileID: 7954069829294756551}
+  - component: {fileID: 4035523109190687785}
   m_Layer: 0
   m_Name: HealerHouse1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7679645462420695276
+--- !u!4 &7249436926701234921
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2005862008022105599}
+  m_GameObject: {fileID: 285155662799643151}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000023841858, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 200, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 941057836975817805}
+  m_Father: {fileID: 6736732936715430424}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2738128177917111383
+--- !u!33 &7954069829294756551
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2005862008022105599}
+  m_GameObject: {fileID: 285155662799643151}
   m_Mesh: {fileID: -4067593480299857353, guid: 16eaa61016f668e4d8b9c87a597bc341, type: 3}
---- !u!23 &7277799100115319299
+--- !u!23 &4035523109190687785
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2005862008022105599}
+  m_GameObject: {fileID: 285155662799643151}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &6790326375718360033
+--- !u!1 &2782146920064092007
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 941057836975817805}
-  - component: {fileID: 6352045411573192923}
-  - component: {fileID: 5114011505395909152}
+  - component: {fileID: 6736732936715430424}
+  - component: {fileID: 43921309774270585}
+  - component: {fileID: 7138388013739432003}
   m_Layer: 0
   m_Name: HealerHouse
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &941057836975817805
+--- !u!4 &6736732936715430424
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6790326375718360033}
+  m_GameObject: {fileID: 2782146920064092007}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7679645462420695276}
+  - {fileID: 7249436926701234921}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6352045411573192923
+--- !u!114 &43921309774270585
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6790326375718360033}
+  m_GameObject: {fileID: 2782146920064092007}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &5114011505395909152
+--- !u!65 &7138388013739432003
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6790326375718360033}
+  m_GameObject: {fileID: 2782146920064092007}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
