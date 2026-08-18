@@ -290,7 +290,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
-    productionIntervalSeconds: 6
+    productionIntervalSeconds: 24
     fogRevealRadius: 12
     storageGroup: 0
     levels:
@@ -298,19 +298,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 2
-      batchesPerWorkerPerTick: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 144
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      batchesPerWorkerPerTick: 2
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     - maxHealth: 225
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      batchesPerWorkerPerTick: 2
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -342,7 +342,7 @@ MonoBehaviour:
       inputs: []
       output: 8
       outputAmount: 1
-    productionIntervalSeconds: 6
+    productionIntervalSeconds: 24
     fogRevealRadius: 10
     storageGroup: 0
     levels:
@@ -350,19 +350,19 @@ MonoBehaviour:
       defense: 0
       citizensGranted: 0
       maxWorkers: 3
-      batchesPerWorkerPerTick: 3
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
     - maxHealth: 112
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      batchesPerWorkerPerTick: 3
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
     - maxHealth: 175
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      batchesPerWorkerPerTick: 3
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
     requiredBuildingId: 
     upgradeToLevel2Cost:
@@ -1798,27 +1798,27 @@ MonoBehaviour:
         amount: 1
       output: 10
       outputAmount: 2
-    productionIntervalSeconds: 6
+    productionIntervalSeconds: 24
     fogRevealRadius: 10
     storageGroup: 0
     levels:
     - maxHealth: 110
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 176
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 275
       defense: 0
       citizensGranted: 0
-      maxWorkers: 4
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: Windmill
     upgradeToLevel2Cost:
@@ -1856,27 +1856,27 @@ MonoBehaviour:
         amount: 2
       output: 9
       outputAmount: 1
-    productionIntervalSeconds: 6
+    productionIntervalSeconds: 24
     fogRevealRadius: 12
     storageGroup: 0
     levels:
     - maxHealth: 120
       defense: 0
       citizensGranted: 0
-      maxWorkers: 2
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 192
       defense: 0
       citizensGranted: 0
-      maxWorkers: 3
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     - maxHealth: 300
       defense: 0
       citizensGranted: 0
-      maxWorkers: 4
-      batchesPerWorkerPerTick: 1
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
     requiredBuildingId: Farm
     upgradeToLevel2Cost:
@@ -2663,7 +2663,7 @@ MonoBehaviour:
   repairCostFraction: 0.4
   woodPerTree: 5
   stonePerRock: 4
-  foodPerMouthPerDay: 0.5
+  foodPerMouthPerDay: 1
   hungryDaysBeforeDeaths: 2
   foodVarietyTarget: 2
   deathsMemoryDays: 3

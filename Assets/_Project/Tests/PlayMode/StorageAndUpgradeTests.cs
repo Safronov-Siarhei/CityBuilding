@@ -163,7 +163,7 @@ namespace CityBuilder.Tests.PlayMode
 
         /// <summary>
         /// The player-facing half of a full store: a producer working for nothing has to say so, and
-        /// has to say it once rather than every six seconds for every farm in the settlement.
+        /// has to say it once rather than every tick for every farm in the settlement.
         /// </summary>
         [UnityTest]
         public IEnumerator AProducerWithNowhereToPutItsOutput_SaysSoOnce()
