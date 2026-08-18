@@ -301,11 +301,21 @@ namespace CityBuilder.Tests.PlayMode
             yield break;
         }
 
-        /// <summary>Finds the bar the node builds for itself on first use. Null until somebody has actually started working it.</summary>
+        /// <summary>
+        /// Finds the bar a node built for itself. Searched in the scene rather than among the
+        /// node's children ON PURPOSE: the bar deliberately does not live under the node (see
+        /// HarvestProgressBar.CreateFor), and a helper that looked there would go on reporting
+        /// "no bar" however well the thing worked.
+        /// </summary>
         private static GameObject BarOn(ResourceNode node)
         {
-            var bar = node.GetComponentInChildren<HarvestProgressBar>(true);
-            return bar != null ? bar.gameObject : null;
+            foreach (var bar in Object.FindObjectsByType<HarvestProgressBar>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var offset = bar.transform.position - node.transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude < 0.25f) return bar.gameObject;
+            }
+            return null;
         }
 
         [UnityTest]
@@ -334,6 +344,34 @@ namespace CityBuilder.Tests.PlayMode
             // not be left hanging over a tree nobody is at.
             tree.Release();
             Assert.IsFalse(bar.activeSelf, "Letting go of a tree left its progress bar up.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator TheBar_HangsAboveTheNode_WhateverRotationAndScaleTheModelArrivedWith()
+        {
+            // The bug this is here for: the real tree prefabs are FBX models carrying a corrective
+            // 90-degree root rotation from Blender's Z-up authoring, so the bar's original local
+            // +Y offset pointed SIDEWAYS. It sat two metres from the trunk at ground level, which
+            // is why the player reported seeing no indicator at all. The old test missed it by
+            // building its node out of a bare GameObject with no rotation and no scale -- exactly
+            // the one shape the bug could not show up in.
+            var tree = PlaceNode(ResourceType.Wood, Vector3.zero, 0f);
+            tree.transform.rotation = Quaternion.Euler(-90f, 37f, 0f);
+            tree.transform.localScale = Vector3.one * 0.1f;
+
+            tree.ReportHarvestProgress(0.4f);
+            var bar = BarOn(tree);
+            Assert.IsNotNull(bar, "The bar is not anywhere near the tree it belongs to.");
+
+            var offset = bar.transform.position - tree.transform.position;
+            Assert.Less(new Vector2(offset.x, offset.z).magnitude, 0.05f,
+                "The bar drifted sideways off the tree -- it is being positioned in the model's local space again.");
+            Assert.Greater(offset.y, 0f, "The bar is not above the tree.");
+
+            // And it must not shrink with a sapling: TreeGrowth scales young trees to a tenth.
+            Assert.AreEqual(1f, bar.transform.lossyScale.x, 0.001f,
+                "The bar inherited the tree's scale -- on a sapling it would be a tenth of the size.");
             yield break;
         }
 

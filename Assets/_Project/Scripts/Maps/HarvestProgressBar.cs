@@ -17,12 +17,18 @@ namespace CityBuilder.Maps
     /// </summary>
     public class HarvestProgressBar : MonoBehaviour
     {
-        private const float BarWidth = 0.9f;
-        private const float BarHeight = 0.14f;
-        private const float BackdropPadding = 0.05f;
-        // Trees and boulders are far shorter than buildings, and this has to clear the canopy
-        // without floating off on its own.
-        private const float HeightAboveNode = 2.2f;
+        // Bigger than the building health bar (1.5 x 0.18), which is a bar you glance at: this is
+        // one the player watches for fifteen seconds, and at the game's camera height the first
+        // version came out about twenty pixels wide and three tall -- drawn, and invisible.
+        private const float BarWidth = 2f;
+        private const float BarHeight = 0.26f;
+        private const float BackdropPadding = 0.07f;
+
+        /// <summary>Clearance above whatever the node actually is -- measured, not guessed, because a fir and a knee-high boulder are nothing alike.</summary>
+        private const float ClearanceAboveNode = 0.6f;
+
+        /// <summary>Fallback height for a node with no renderers at all (a bare test node, or a model that failed to load).</summary>
+        private const float FallbackNodeHeight = 1.5f;
 
         private static readonly Color BackdropColor = new Color(0.08f, 0.08f, 0.09f, 1f);
         private static readonly Color FillColor = new Color(0.95f, 0.82f, 0.35f);
@@ -30,17 +36,49 @@ namespace CityBuilder.Maps
         private Transform _fill;
         private Camera _camera;
 
-        /// <summary>Creates the bar as a child of the node, hidden until the first Report call.</summary>
+        /// <summary>
+        /// Creates the bar hovering over the node, hidden until the first Report call.
+        ///
+        /// Deliberately NOT a child of the node, which is how the first version of this got it
+        /// wrong twice over. The tree prefabs are FBX models carrying a corrective 90-degree root
+        /// rotation from Blender's Z-up authoring (the same trap TreesAreaSpawner.AddClickCollider
+        /// documents), so a local +Y offset does not point up at all -- it points sideways, and
+        /// the bar sat two metres beside the trunk at ground level instead of over the crown. And
+        /// a sapling under TreeGrowth is scaled down to a tenth, which would have shrunk the bar
+        /// along with it. Living in world space is immune to both.
+        ///
+        /// The owning node destroys it (see ResourceNode.OnDestroy), since nothing else would.
+        /// </summary>
         public static HarvestProgressBar CreateFor(Transform node)
         {
             var root = new GameObject("HarvestProgress");
-            root.transform.SetParent(node, false);
-            root.transform.localPosition = new Vector3(0f, HeightAboveNode, 0f);
+            root.transform.position = node.position + Vector3.up * (MeasuredHeightOf(node) + ClearanceAboveNode);
 
             var bar = root.AddComponent<HarvestProgressBar>();
             bar.Build();
             root.SetActive(false);
             return bar;
+        }
+
+        /// <summary>
+        /// How tall this node stands, from its renderers' world bounds. World bounds are the right
+        /// tool HERE (unlike the collider sizing in TreesAreaSpawner, which needed local space):
+        /// what is wanted is a world-space height to clear, whatever rotation and scale the model
+        /// arrived with.
+        /// </summary>
+        private static float MeasuredHeightOf(Transform node)
+        {
+            var measured = false;
+            var top = node.position.y;
+
+            foreach (var renderer in node.GetComponentsInChildren<Renderer>())
+            {
+                var max = renderer.bounds.max.y;
+                if (!measured || max > top) top = max;
+                measured = true;
+            }
+
+            return measured ? Mathf.Max(0f, top - node.position.y) : FallbackNodeHeight;
         }
 
         /// <summary>Shows the bar filled to this fraction (0..1) of the current dig.</summary>

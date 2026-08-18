@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &929708944262298377
+--- !u!1 &2958541964124441785
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2221483257571838180}
-  - component: {fileID: 88724933656054854}
-  - component: {fileID: 6194917223629958423}
+  - component: {fileID: 8652442296218037620}
+  - component: {fileID: 6783758385821684662}
+  - component: {fileID: 4161174916215878468}
   m_Layer: 0
   m_Name: FireBrigade
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2221483257571838180
+--- !u!4 &8652442296218037620
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929708944262298377}
+  m_GameObject: {fileID: 2958541964124441785}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 9071924307724527785}
+  - {fileID: 3109971652947610255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &88724933656054854
+--- !u!114 &6783758385821684662
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929708944262298377}
+  m_GameObject: {fileID: 2958541964124441785}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &6194917223629958423
+--- !u!65 &4161174916215878468
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929708944262298377}
+  m_GameObject: {fileID: 2958541964124441785}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.92, y: 0.025000237, z: 1.92}
   m_Center: {x: 0, y: 0.012500118, z: 0}
---- !u!1 &6322174061076926786
+--- !u!1 &6993719247430084141
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 9071924307724527785}
-  - component: {fileID: 1032760436018310508}
-  - component: {fileID: 6691745340639810172}
+  - component: {fileID: 3109971652947610255}
+  - component: {fileID: 2815875801250155102}
+  - component: {fileID: 3229892343677040798}
   m_Layer: 0
   m_Name: FireBrigade1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &9071924307724527785
+--- !u!4 &3109971652947610255
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6322174061076926786}
+  m_GameObject: {fileID: 6993719247430084141}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000011920929, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2221483257571838180}
+  m_Father: {fileID: 8652442296218037620}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1032760436018310508
+--- !u!33 &2815875801250155102
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6322174061076926786}
+  m_GameObject: {fileID: 6993719247430084141}
   m_Mesh: {fileID: -42267801837964239, guid: 684ff14b90ff54241af22f405b3b10c3, type: 3}
---- !u!23 &6691745340639810172
+--- !u!23 &3229892343677040798
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6322174061076926786}
+  m_GameObject: {fileID: 6993719247430084141}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

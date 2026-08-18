@@ -110,6 +110,13 @@ namespace CityBuilder.Maps
         private void OnDisable()
         {
             _all.Remove(this);
+            ClearHarvestProgress();
+        }
+
+        /// <summary>The bar lives in world space rather than under this transform (see HarvestProgressBar.CreateFor for why), so it has to be taken down by hand instead of going with the tree.</summary>
+        private void OnDestroy()
+        {
+            if (_progressBar != null) Destroy(_progressBar.gameObject);
         }
 
         public bool TryClaim()
