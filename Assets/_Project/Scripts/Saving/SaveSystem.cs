@@ -50,6 +50,15 @@ namespace CityBuilder.Saving
 
         public static bool HasAnySave() => Directory.Exists(SavesFolder) && Directory.GetFiles(SavesFolder, "*.json").Length > 0;
 
+        /// <summary>Removes a save slot. Missing file is not an error -- the caller wanted it gone, and it is.</summary>
+        public static void Delete(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+
+            var path = GetPath(name);
+            if (File.Exists(path)) File.Delete(path);
+        }
+
         public static void Save(string name, GameSaveData data)
         {
             if (string.IsNullOrEmpty(name)) return;

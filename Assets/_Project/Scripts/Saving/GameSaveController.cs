@@ -153,6 +153,33 @@ namespace CityBuilder.Saving
                     if (entry.assignedWorkers > 0) production.SetAssignedWorkers(entry.assignedWorkers);
                 }
             }
+
+            RestoreArmy(data);
+
+            // After the army: what the settlement has to feed tomorrow counts its soldiers too.
+            FoodConsumptionManager.Instance?.RestoreFromSave(data.hungryDaysInARow, data.recentStarvationDeaths);
+        }
+
+        /// <summary>
+        /// Rebuilds the army the save was written with. Runs after the research above, not before:
+        /// a soldier reads its health and damage off the level its type has been researched to, and
+        /// a militia restored against a fresh ResearchManager would come back at level 1.
+        /// </summary>
+        private static void RestoreArmy(GameSaveData data)
+        {
+            var army = Combat.ArmyManager.Instance;
+            if (army == null || data.armyGroups == null) return;
+
+            foreach (var groupEntry in data.armyGroups)
+            {
+                var group = army.RestoreGroup(groupEntry.type, groupEntry.holdPosition, groupEntry.priority);
+                if (groupEntry.soldiers == null) continue;
+
+                foreach (var soldier in groupEntry.soldiers)
+                {
+                    army.RestoreSoldier(group, soldier.position, soldier.currentHealth);
+                }
+            }
         }
 
         private GameSaveData CollectSaveData()
@@ -180,6 +207,31 @@ namespace CityBuilder.Saving
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))
             {
                 data.resources.Add(new ResourceEntry { type = type, amount = ResourceManager.Instance.GetAmount(type) });
+            }
+
+            var army = Combat.ArmyManager.Instance;
+            if (army != null)
+            {
+                foreach (var group in army.Groups)
+                {
+                    // An empty group is still worth writing down: it carries the rally point and
+                    // priority the player set, which ArmyManager deliberately keeps when the last
+                    // member dies.
+                    var entry = new ArmyGroupEntry { type = group.Type, holdPosition = group.HoldPosition, priority = group.Priority };
+                    foreach (var soldier in group.Members)
+                    {
+                        if (soldier == null) continue;
+                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth });
+                    }
+                    data.armyGroups.Add(entry);
+                }
+            }
+
+            var food = FoodConsumptionManager.Instance;
+            if (food != null)
+            {
+                data.hungryDaysInARow = food.HungryDaysInARow;
+                data.recentStarvationDeaths.AddRange(food.RecentDeathsPerDay);
             }
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))

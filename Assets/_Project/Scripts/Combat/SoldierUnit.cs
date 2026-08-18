@@ -82,6 +82,17 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
+        /// Puts a loaded soldier on the health it was saved with, clamped into what its type can
+        /// have today -- a save made before the militia's level 2 was researched holds a smaller
+        /// number than the unit now has room for, and one made after holds a bigger one.
+        /// Never below 1: a soldier restored dead would stand there unkillable and unable to fight.
+        /// </summary>
+        public void SetCurrentHealth(int health)
+        {
+            CurrentHealth = Mathf.Clamp(health, 1, MaxHealth);
+        }
+
+        /// <summary>
         /// Re-reads this soldier's numbers at the type's currently researched level, carrying its
         /// damage across rather than healing it for free -- the same rule BuildingInstance.TryUpgrade
         /// follows, and for the same reason: a level researched while a raid is on must not be a full heal.

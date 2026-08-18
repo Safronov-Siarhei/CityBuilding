@@ -183,6 +183,37 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
+        /// Puts a saved group back, with the rally point and target priority the player had given
+        /// it. Empty of members until RestoreSoldier fills it -- the two are separate so the group
+        /// exists before its first soldier asks for a formation slot in it.
+        /// </summary>
+        public ArmyGroup RestoreGroup(SoldierType type, Vector3 holdPosition, TargetPriority priority)
+        {
+            var group = GetOrCreateGroup(type, holdPosition);
+            group.OrderMoveTo(holdPosition);
+            group.SetPriority(priority);
+            return group;
+        }
+
+        /// <summary>
+        /// Puts one saved soldier back where it stood, on the health it had.
+        ///
+        /// Deliberately NOT TryRecruit: it takes no citizen and no coins. The citizen was taken when
+        /// this soldier was first recruited, and the saved population already has them subtracted --
+        /// charging again on load would quietly eat the town one reload at a time.
+        /// </summary>
+        public SoldierUnit RestoreSoldier(ArmyGroup group, Vector3 position, int currentHealth)
+        {
+            if (group == null) return null;
+
+            var unit = SpawnSoldier(group.Type, position, group, scatter: false);
+            group.Add(unit);
+            unit.SetCurrentHealth(currentHealth);
+            OnArmyChanged?.Invoke();
+            return unit;
+        }
+
+        /// <summary>
         /// Daily pay, charged once per game day. When the treasury can't cover the whole army,
         /// soldiers are disbanded one at a time (each one walking home as a citizen) until what's
         /// left is affordable -- per the design, an unpaid soldier simply leaves, with no further
@@ -274,11 +305,12 @@ namespace CityBuilder.Combat
             }
         }
 
-        private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group)
+        /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
+        private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true)
         {
             EnsureMaterials();
 
-            var jitter = UnityEngine.Random.insideUnitCircle * SpawnJitterRadius;
+            var jitter = scatter ? UnityEngine.Random.insideUnitCircle * SpawnJitterRadius : Vector2.zero;
             var spawnPosition = origin + new Vector3(jitter.x, 0f, jitter.y);
 
             // Built to read as a citizen who picked up a tool, not as a knight: same cube body and

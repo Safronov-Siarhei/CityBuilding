@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CityBuilder.Combat;
 using CityBuilder.Resources;
+using UnityEngine;
 
 namespace CityBuilder.Saving
 {
@@ -27,6 +29,45 @@ namespace CityBuilder.Saving
         public string currentResearchId = string.Empty;
         public float currentResearchElapsedSeconds;
         public int currentResearchPaidCoins;
+
+        /// <summary>
+        /// The player's army, group by group. Empty in saves made before the army was saved at all,
+        /// which reads correctly as "no soldiers" -- and which is exactly what those saves used to
+        /// do to a real army, silently.
+        /// </summary>
+        public List<ArmyGroupEntry> armyGroups = new List<ArmyGroupEntry>();
+
+        /// <summary>
+        /// How the settlement was eating. Without these two a reload forgave a starving town: the
+        /// hunger streak restarted at zero, so a settlement one day away from its first deaths got
+        /// its whole grace period back, and the happiness penalty for the people it had already
+        /// buried disappeared with it.
+        /// </summary>
+        public int hungryDaysInARow;
+
+        /// <summary>Starvation deaths per day over the window happiness remembers, oldest first.</summary>
+        public List<int> recentStarvationDeaths = new List<int>();
+    }
+
+    [Serializable]
+    public class ArmyGroupEntry
+    {
+        public SoldierType type;
+
+        /// <summary>The group's rally point and its standing target priority -- orders the player gave, not state the group can work out again.</summary>
+        public Vector3 holdPosition;
+        public TargetPriority priority;
+
+        public List<SoldierEntry> soldiers = new List<SoldierEntry>();
+    }
+
+    [Serializable]
+    public class SoldierEntry
+    {
+        public Vector3 position;
+
+        /// <summary>Carried across rather than reset to full: reloading in the middle of a raid must not heal the survivors, the same rule BuildingInstance follows for a damaged building.</summary>
+        public int currentHealth;
     }
 
     [Serializable]

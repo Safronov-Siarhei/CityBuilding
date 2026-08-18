@@ -87,6 +87,32 @@ namespace CityBuilder.Resources
             }
         }
 
+        /// <summary>Starvation deaths per day over the window happiness remembers, oldest first -- read by the save, which has to carry the penalty across a reload rather than pardon it.</summary>
+        public IEnumerable<int> RecentDeathsPerDay => _recentDeaths;
+
+        /// <summary>
+        /// Puts a loaded settlement back on the hunger it was saved with. Without this a reload was
+        /// a pardon: the streak restarted at zero, so a town one day from its first deaths got its
+        /// whole grace period back, and the people it had already buried stopped counting against
+        /// its happiness.
+        /// </summary>
+        public void RestoreFromSave(int hungryDaysInARow, IEnumerable<int> recentDeaths)
+        {
+            HungryDaysInARow = Mathf.Max(0, hungryDaysInARow);
+
+            _recentDeaths.Clear();
+            if (recentDeaths == null) return;
+
+            foreach (var deaths in recentDeaths)
+            {
+                _recentDeaths.Enqueue(Mathf.Max(0, deaths));
+            }
+
+            // A save written when the sheet allowed a longer memory than it does now would
+            // otherwise keep counting days the model no longer looks at.
+            while (_recentDeaths.Count > BalanceConfig.Instance.DeathsMemoryDays) _recentDeaths.Dequeue();
+        }
+
         /// <summary>
         /// One day's meal. Public so a test can pass a day directly rather than waiting out the
         /// calendar -- the same reason ArmyManager.ChargeDailyUpkeep is public.
