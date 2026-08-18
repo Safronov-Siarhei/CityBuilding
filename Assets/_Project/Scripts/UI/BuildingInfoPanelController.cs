@@ -40,8 +40,6 @@ namespace CityBuilder.UI
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
-        private GameObject _radiusIndicator;
-        private Material _radiusIndicatorMaterial;
 
         public void Show(BuildingInstance instance)
         {
@@ -50,7 +48,7 @@ namespace CityBuilder.UI
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             Refresh();
-            ShowRadiusIndicator();
+            ShowHarvestRadius();
         }
 
         public void Close()
@@ -59,7 +57,7 @@ namespace CityBuilder.UI
             _currentProduction = null;
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
-            HideRadiusIndicator();
+            HideHarvestRadius();
         }
 
         public void AssignWorker()
@@ -291,73 +289,30 @@ namespace CityBuilder.UI
         }
 
         /// <summary>
-        /// Ground-flat hollow square around the selected building sized to its fogRevealRadius --
-        /// otherwise that stat (how far it permanently clears fog) has no visible representation
-        /// anywhere in the game. Square, not a circle, matching the project's straight-edges-only
-        /// icon/highlight style (see CitizenSelector's target-cell frame, same 4-bar approach).
+        /// The gatherer's reach, at the level it actually stands at rather than the level it was
+        /// built at -- upgrading a Sawmill widens it, and watching that happen is most of the
+        /// reason to upgrade one. Nothing is drawn for the other 47 buildings.
+        ///
+        /// There used to be a second overlay here as well: a blue square sized to fogRevealRadius,
+        /// added because that stat had no visible representation anywhere. It is gone at the
+        /// user's decision -- how far a building lifts the fog is not a number the player is asked
+        /// to make decisions with, and two radii around one building read as clutter. It also
+        /// lied: the fog is revealed in a CIRCLE (see FogOfWarManager.RevealPermanent) and the
+        /// indicator drew a square, whose corners promised ground that stayed fogged.
         /// </summary>
-        private void ShowRadiusIndicator()
+        private void ShowHarvestRadius()
         {
             if (_currentInstance == null || _currentInstance.Data == null) return;
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            var data = _currentInstance.Data;
-            var center = grid.GetFootprintCenterWorld(_currentInstance.OriginCell, data.footprintSize);
-
-            // The gatherer's reach, at the level it actually stands at rather than the level it
-            // was built at -- upgrading a Sawmill widens this, and seeing that happen is most of
-            // the reason to upgrade one. Separate from the blue square below, which is the fog
-            // reveal and a different thing entirely.
+            var center = grid.GetFootprintCenterWorld(_currentInstance.OriginCell, _currentInstance.Data.footprintSize);
             Grid.HarvestRadiusOverlay.ShowFor(center, _currentInstance.HarvestRadius);
-
-            var size = data.fogRevealRadius * 2f * grid.CellSize;
-
-            EnsureRadiusIndicator();
-            _radiusIndicator.transform.position = new Vector3(center.x, grid.GroundHeight + 0.05f, center.z);
-            _radiusIndicator.transform.localScale = new Vector3(size, size, 1f);
-            _radiusIndicator.SetActive(true);
         }
 
-        private void HideRadiusIndicator()
+        private void HideHarvestRadius()
         {
             Grid.HarvestRadiusOverlay.HideIfShown();
-            if (_radiusIndicator != null) _radiusIndicator.SetActive(false);
-        }
-
-        private void EnsureRadiusIndicator()
-        {
-            if (_radiusIndicator != null) return;
-
-            _radiusIndicator = new GameObject("BuildingRadiusIndicator");
-            _radiusIndicator.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-            // Fraction of the square's own (radius-dependent) size, same approach as
-            // CitizenSelector's target-cell frame -- absolute border thickness varies a bit
-            // between a small and a large fogRevealRadius, which reads fine in practice.
-            const float t = 0.02f;
-            CreateBar(_radiusIndicator.transform, "Top", new Vector3(0f, 0.5f - t * 0.5f, 0f), new Vector3(1f, t, 1f));
-            CreateBar(_radiusIndicator.transform, "Bottom", new Vector3(0f, -0.5f + t * 0.5f, 0f), new Vector3(1f, t, 1f));
-            CreateBar(_radiusIndicator.transform, "Left", new Vector3(-0.5f + t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
-            CreateBar(_radiusIndicator.transform, "Right", new Vector3(0.5f - t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
-
-            _radiusIndicatorMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = new Color(0.4f, 0.8f, 0.95f) };
-            foreach (var bar in _radiusIndicator.GetComponentsInChildren<Renderer>())
-            {
-                bar.sharedMaterial = _radiusIndicatorMaterial;
-            }
-
-            _radiusIndicator.SetActive(false);
-        }
-
-        private static void CreateBar(Transform parent, string name, Vector3 localPos, Vector3 localScale)
-        {
-            var bar = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            bar.name = name;
-            Destroy(bar.GetComponent<Collider>());
-            bar.transform.SetParent(parent, false);
-            bar.transform.localPosition = localPos;
-            bar.transform.localScale = localScale;
         }
     }
 }
