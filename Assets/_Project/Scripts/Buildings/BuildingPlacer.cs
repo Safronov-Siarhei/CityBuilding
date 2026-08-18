@@ -150,6 +150,7 @@ namespace CityBuilder.Buildings
         public void ClearSelection()
         {
             _selectedBuilding = null;
+            HarvestRadiusOverlay.HideIfShown();
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
             _ghostRenderers.Clear();
@@ -219,6 +220,12 @@ namespace CityBuilder.Buildings
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
             _ghostInstance.transform.position = center;
             _ghostInstance.transform.rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);
+
+            // What a gatherer will be able to reach from here, laid out in cells under the ghost.
+            // Level 1's radius, because that is what is about to be built -- see
+            // HarvestRadiusOverlay for why this is worth showing before the decision rather than
+            // after it. Costs nothing for the other 47 buildings: a zero radius hides it.
+            HarvestRadiusOverlay.ShowFor(center, _selectedBuilding.LevelStats(1).harvestRadius);
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_selectedBuilding.cost);

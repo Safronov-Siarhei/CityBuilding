@@ -304,6 +304,13 @@ namespace CityBuilder.UI
 
             var data = _currentInstance.Data;
             var center = grid.GetFootprintCenterWorld(_currentInstance.OriginCell, data.footprintSize);
+
+            // The gatherer's reach, at the level it actually stands at rather than the level it
+            // was built at -- upgrading a Sawmill widens this, and seeing that happen is most of
+            // the reason to upgrade one. Separate from the blue square below, which is the fog
+            // reveal and a different thing entirely.
+            Grid.HarvestRadiusOverlay.ShowFor(center, _currentInstance.HarvestRadius);
+
             var size = data.fogRevealRadius * 2f * grid.CellSize;
 
             EnsureRadiusIndicator();
@@ -314,6 +321,7 @@ namespace CityBuilder.UI
 
         private void HideRadiusIndicator()
         {
+            Grid.HarvestRadiusOverlay.HideIfShown();
             if (_radiusIndicator != null) _radiusIndicator.SetActive(false);
         }
 

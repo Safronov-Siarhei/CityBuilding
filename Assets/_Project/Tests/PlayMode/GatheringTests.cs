@@ -72,6 +72,9 @@ namespace CityBuilder.Tests.PlayMode
         [TearDown]
         public void CleanUp()
         {
+            ModalGate.SetBlocked(false);
+            Grid.HarvestRadiusOverlay.HideIfShown();
+
             foreach (var node in _hidden)
             {
                 if (node != null) node.SetActive(true);
@@ -247,6 +250,36 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.Greater(sawmill.HarvestRadius, atLevelOne);
             yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator SelectingAGatherer_ShowsItsReach_AndOtherBuildingsShowNone()
+        {
+            var panel = Object.FindFirstObjectByType<UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(panel, "No building info panel in the scene.");
+
+            var sawmill = Place("Sawmill");
+            panel.Show(sawmill);
+            yield return null;
+
+            Assert.IsTrue(Grid.HarvestRadiusOverlay.Instance.gameObject.activeSelf,
+                "Tapping a Sawmill showed no reach -- the player is being asked to judge it by eye.");
+
+            panel.Close();
+            yield return null;
+            Assert.IsFalse(Grid.HarvestRadiusOverlay.Instance.gameObject.activeSelf,
+                "The reach stayed on screen after the panel closed.");
+
+            // A building with no reach must not leave the last one's carpet lying under it.
+            var farm = Place("Farm");
+            panel.Show(farm);
+            yield return null;
+
+            Assert.IsFalse(Grid.HarvestRadiusOverlay.Instance.gameObject.activeSelf,
+                "A Farm was drawn with a harvest radius it does not have.");
+
+            panel.Close();
+            ModalGate.SetBlocked(false);
         }
 
         [UnityTest]
