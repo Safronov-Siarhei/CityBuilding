@@ -48,11 +48,54 @@ namespace CityBuilder.Combat
         private Material _orcSkinMaterial;
         private Material _orcGearMaterial;
         private Vector3 _portalPosition;
+        private Vector2Int _portalCell;
         private bool _portalSpawned;
         private float _raidTimer;
 
         /// <summary>Pauses the automatic raid clock without touching the portal. Set by the OrcSpawn cheat so hand-spawned squads can be observed in isolation; nothing in normal gameplay sets it.</summary>
         public bool RaidsSuspended { get; set; }
+
+        /// <summary>Whether the portal has already been placed -- false only while the player has yet to put down a Town Hall for it to be anchored to.</summary>
+        public bool PortalPlaced => _portalSpawned;
+
+        /// <summary>Where it stands. The save keeps the cell rather than the world position, because that is what the placement rule produced and what the grid has reserved.</summary>
+        public Vector2Int PortalCell => _portalCell;
+
+        /// <summary>How long the settlement has before the next wave. Saved, so reloading is not a way to push the raid clock back to a full interval.</summary>
+        public float SecondsUntilNextRaid => _raidTimer;
+
+        /// <summary>
+        /// Puts the raid source back the way the save left it: the portal where it stood and on the
+        /// health the player had ground it down to, and the clock where it was.
+        ///
+        /// Single portal, matching what this class spawns today. The design calls for about five per
+        /// map, hand-placed; when they arrive this and the save entry beside it both become lists.
+        /// </summary>
+        public void RestoreFromSave(bool portalPlaced, Vector2Int portalCell, int portalHealth, float secondsUntilNextRaid)
+        {
+            if (!portalPlaced) return;
+
+            // Placed once and since destroyed: the flag alone stops Update from opening a fresh one
+            // over the ruins of the one the player fought for.
+            _portalSpawned = true;
+            if (portalHealth <= 0) return;
+
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+
+            SpawnPortal(grid, portalCell);
+            if (OrcPortal.All.Count > 0) OrcPortal.All[OrcPortal.All.Count - 1].SetCurrentHealth(portalHealth);
+
+            // After SpawnPortal, which starts a fresh interval of its own.
+            _raidTimer = Mathf.Max(0f, secondsUntilNextRaid);
+        }
+
+        /// <summary>Puts one saved orc back where it stood, on the health it had. Like the army's restore, it is deliberately not the spawn path: no jitter, and nothing is announced in the event log.</summary>
+        public void RestoreOrc(Vector3 position, int level, int currentHealth)
+        {
+            EnsureMaterials();
+            SpawnOrc(position, level, scatter: false).SetCurrentHealth(currentHealth);
+        }
 
         private void Awake()
         {
@@ -176,6 +219,7 @@ namespace CityBuilder.Combat
 
         private void SpawnPortal(GridManager grid, Vector2Int cell)
         {
+            _portalCell = cell;
             _portalPosition = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
 
             EnsureMaterials();
@@ -262,9 +306,10 @@ namespace CityBuilder.Combat
             return ComputeRaidSize(day, balance.RaidBaseSize, balance.RaidDaysPerExtraRaider, balance.RaidMaxSize);
         }
 
-        private void SpawnOrc(Vector3 origin, int level)
+        /// <summary>Builds one orc. `scatter` is what separates a raider stepping out of the portal from a loaded one, which has to land exactly where the save says.</summary>
+        private OrcUnit SpawnOrc(Vector3 origin, int level, bool scatter = true)
         {
-            var jitter = Random.insideUnitCircle * 1.5f;
+            var jitter = scatter ? Random.insideUnitCircle * 1.5f : Vector2.zero;
             var spawnPos = origin + new Vector3(jitter.x, 0f, jitter.y);
 
             var root = new GameObject(level > 1 ? $"Orc (lvl {level})" : "Orc");
@@ -286,7 +331,9 @@ namespace CityBuilder.Combat
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
-            root.AddComponent<OrcUnit>().Initialize(level);
+            var unit = root.AddComponent<OrcUnit>();
+            unit.Initialize(level);
+            return unit;
         }
 
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)

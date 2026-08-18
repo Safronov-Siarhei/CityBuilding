@@ -155,9 +155,29 @@ namespace CityBuilder.Saving
             }
 
             RestoreArmy(data);
+            RestoreRaids(data);
 
             // After the army: what the settlement has to feed tomorrow counts its soldiers too.
             FoodConsumptionManager.Instance?.RestoreFromSave(data.hungryDaysInARow, data.recentStarvationDeaths);
+        }
+
+        /// <summary>
+        /// Puts the portal, the raid clock and the orcs already in the field back. Runs here in
+        /// Start rather than being left to OrcRaidManager's own Update, which opens a portal on the
+        /// first frame it sees a Town Hall -- and the buildings above have just given it one.
+        /// </summary>
+        private static void RestoreRaids(GameSaveData data)
+        {
+            var raids = Combat.OrcRaidManager.Instance;
+            if (raids == null) return;
+
+            raids.RestoreFromSave(data.portalPlaced, data.portalCell, data.portalHealth, data.secondsUntilNextRaid);
+
+            if (data.orcs == null) return;
+            foreach (var orc in data.orcs)
+            {
+                raids.RestoreOrc(orc.position, orc.level, orc.currentHealth);
+            }
         }
 
         /// <summary>
@@ -225,6 +245,23 @@ namespace CityBuilder.Saving
                     }
                     data.armyGroups.Add(entry);
                 }
+            }
+
+            var raids = Combat.OrcRaidManager.Instance;
+            if (raids != null)
+            {
+                data.portalPlaced = raids.PortalPlaced;
+                data.portalCell = raids.PortalCell;
+                // No portal in the registry means the one that was placed has since been destroyed,
+                // which zero says -- and which is what stops a fresh one opening on load.
+                data.portalHealth = Combat.OrcPortal.All.Count > 0 ? Combat.OrcPortal.All[0].CurrentHealth : 0;
+                data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
+            }
+
+            foreach (var orc in Combat.OrcUnit.All)
+            {
+                if (orc == null) continue;
+                data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth });
             }
 
             var food = FoodConsumptionManager.Instance;

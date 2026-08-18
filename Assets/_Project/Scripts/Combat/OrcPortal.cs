@@ -39,6 +39,12 @@ namespace CityBuilder.Combat
             CurrentHealth = MaxHealth;
         }
 
+        /// <summary>Puts a loaded portal back on the health the player had ground it down to. Clamped to at least 1: a portal restored at zero would stand there whole and unkillable, since only TakeDamage retires one.</summary>
+        public void SetCurrentHealth(int health)
+        {
+            CurrentHealth = Mathf.Clamp(health, 1, MaxHealth);
+        }
+
         Transform IDamageTarget.Transform => this != null ? transform : null;
         bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0;
 

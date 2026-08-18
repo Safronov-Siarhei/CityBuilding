@@ -115,6 +115,12 @@ namespace CityBuilder.Combat
             CurrentHealth = _maxHealth;
         }
 
+        /// <summary>Puts a loaded orc back on the health it had, clamped into what its level allows. Never below 1 -- a raider restored dead would stand in the field forever, since only TakeDamage removes one.</summary>
+        public void SetCurrentHealth(int health)
+        {
+            CurrentHealth = Mathf.Clamp(health, 1, _maxHealth);
+        }
+
         private void OnEnable()
         {
             _all.Add(this);

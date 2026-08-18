@@ -71,6 +71,12 @@ namespace CityBuilder.UI
         private BuildingInstance _lab;
         private ProductionBuilding _labWorkplace;
         private bool _unitsTab;
+
+        /// <summary>The empty-list caption, resolved from its GameObject once -- SetupProject builds the label and the Text on the same object.</summary>
+        private Text _emptyText;
+
+        /// <summary>What the caption says when the list is empty for no reason worth explaining. Matches the key SetupProject builds the label with.</summary>
+        private const string EmptyListKey = "#research_empty";
         private float _refreshTimer;
 
         /// <summary>How many rows the list holds, for the PlayMode test -- Destroy is deferred to end of frame, so counting the hierarchy's children counts last time's rows too (see WorkforcePanelController).</summary>
@@ -79,11 +85,19 @@ namespace CityBuilder.UI
         /// <summary>Which tab is showing, for the test that switches them.</summary>
         public bool IsUnitsTab => _unitsTab;
 
+        /// <summary>What the window says when it has no rows, for the test that an empty tab explains itself. Empty while the list has anything in it.</summary>
+        public string EmptyMessage => emptyLabel != null && emptyLabel.activeSelf && _emptyText != null ? _emptyText.text : string.Empty;
+
         /// <summary>Opens the window on a particular Laboratory (the one that was tapped).</summary>
         public void Show(BuildingInstance laboratory)
         {
             _lab = laboratory;
             _labWorkplace = laboratory != null ? laboratory.GetComponent<ProductionBuilding>() : null;
+
+            // Always opens on the buildings tab. Carrying the last tab over sounds helpful and is
+            // not: the soldiers' tab is empty for most of a game, so a player who once looked at it
+            // would keep reopening the Laboratory onto a page with nothing on it.
+            _unitsTab = false;
 
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -215,9 +229,54 @@ namespace CityBuilder.UI
                 shown++;
             }
 
-            if (emptyLabel != null) emptyLabel.SetActive(shown == 0);
+            if (emptyLabel != null)
+            {
+                emptyLabel.SetActive(shown == 0);
+                if (shown == 0) ExplainTheEmptyList(topics);
+            }
 
             Refresh();
+        }
+
+        /// <summary>
+        /// Says WHY there is nothing here. The soldiers' tab is the case that needs it: the militia
+        /// starts unlocked, so its only topics are its two levels, and a level-N research needs a
+        /// level-N Laboratory -- which leaves the tab empty on a level-1 Laboratory with no hint
+        /// that upgrading the building is what opens it. "Nothing to research here yet" reads as a
+        /// bug; naming the level turns a dead end into a goal.
+        /// </summary>
+        private void ExplainTheEmptyList(IReadOnlyList<ResearchTopic> topics)
+        {
+            if (_emptyText == null) _emptyText = emptyLabel.GetComponent<Text>();
+            if (_emptyText == null) return;
+
+            var caption = _emptyText.GetComponent<LocalizedText>();
+            var research = ResearchManager.Instance;
+            var neededLabLevel = int.MaxValue;
+
+            foreach (var topic in topics)
+            {
+                if (research == null || research.IsCompleted(topic.Id)) continue;
+
+                // Only what a bigger Laboratory would actually reveal. A topic still waiting on the
+                // level below it stays hidden either way, so promising it would be a lie.
+                if (topic.PrerequisiteTopicId != null && !research.IsCompleted(topic.PrerequisiteTopicId)) continue;
+
+                if (topic.RequiredLabLevel < neededLabLevel) neededLabLevel = topic.RequiredLabLevel;
+            }
+
+            if (neededLabLevel == int.MaxValue)
+            {
+                // Nothing is waiting on anything -- everything here is already researched.
+                if (caption != null) caption.SetKey(EmptyListKey);
+                return;
+            }
+
+            // The caption's own key is cleared first: LocalizedText re-applies itself whenever the
+            // label is enabled or the language changes, and it cannot format a number into a
+            // string, so the two of them would take turns overwriting each other.
+            if (caption != null) caption.SetKey(string.Empty);
+            _emptyText.text = Localization.Format("#research_empty_lab_level", neededLabLevel);
         }
 
         /// <summary>Re-reads every number the window shows, without touching the rows themselves.</summary>

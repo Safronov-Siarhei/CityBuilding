@@ -246,6 +246,36 @@ namespace CityBuilder.Tests.PlayMode
             panel.Close();
         }
 
+        /// <summary>
+        /// The soldiers' tab is empty on a level-1 Laboratory and there is nothing wrong with that:
+        /// the militia starts unlocked, so its only topics are its two levels, and a level-N
+        /// research needs a level-N Laboratory. What was wrong was the window saying only "nothing
+        /// to research here yet", which reads as a broken tab rather than as a locked one.
+        /// </summary>
+        [Test]
+        public void TheSoldiersTabNamesTheLabLevelThatWouldOpenIt()
+        {
+            var lab = PlaceStaffedLab(out _);
+            var panel = Object.FindFirstObjectByType<ResearchPanelController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(panel, "The scene has no research window.");
+
+            var wanted = int.MaxValue;
+            foreach (var topic in ResearchCatalog.UnitTopics)
+            {
+                if (topic.RequiredLabLevel < wanted) wanted = topic.RequiredLabLevel;
+            }
+            Assert.AreNotEqual(int.MaxValue, wanted, "The units tab of the sheet authors no research at all, so there is nothing for this tab to promise.");
+
+            panel.Show(lab);
+            panel.SelectUnitsTab();
+
+            Assert.AreEqual(0, panel.RowCount, "A level-1 Laboratory is not supposed to be able to research a level-2 soldier.");
+            Assert.AreEqual(Localization.Format("#research_empty_lab_level", wanted), panel.EmptyMessage,
+                "The empty soldiers tab does not say which Laboratory level would fill it.");
+
+            panel.Close();
+        }
+
         private static ResearchManager Research()
         {
             var research = ResearchManager.Instance;

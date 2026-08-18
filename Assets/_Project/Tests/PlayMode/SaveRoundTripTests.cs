@@ -73,6 +73,24 @@ namespace CityBuilder.Tests.PlayMode
             var populationWithArmy = CitizenManager.Instance.TotalPopulation;
             Assert.AreEqual(4, populationWithArmy, "Two of the six citizens went into the army.");
 
+            // The raid side: a portal the army has already ground down, and one orc in the field.
+            // The portal only opens once a Town Hall exists for it to be anchored to.
+            var townHall = PlaytestWorld.Building("Castle");
+            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
+            yield return WaitForPortal();
+
+            var portal = OrcPortal.All[0];
+            portal.TakeDamage(portal.MaxHealth / 4);
+            var portalHealth = portal.CurrentHealth;
+            Assert.Greater(portalHealth, 0, "The test's own damage was meant to wound the portal, not to close it.");
+
+            // Well away from the soldiers: within their engage radius they would start trading
+            // blows with it, and the health this test is about would drift between save and assert.
+            OrcRaidManager.Instance.SpawnOrcs(WalkablePointAwayFrom(holdPosition, 25f), 1, level: 1);
+            var orc = OrcUnit.All[0];
+            orc.TakeDamage(1);
+            var orcHealth = orc.CurrentHealth;
+
             Object.FindAnyObjectByType<GameSaveController>().SaveGame(SaveName);
 
             yield return StartGame(SaveName);
@@ -93,6 +111,29 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.AreEqual(1, FoodConsumptionManager.Instance.HungryDaysInARow,
                 "The hunger streak restarted at zero, so reloading hands a starving town its whole grace period back.");
+
+            Assert.AreEqual(1, OrcPortal.All.Count,
+                OrcPortal.All.Count == 0
+                    ? "The portal did not come back at all."
+                    : "A second portal was opened on top of the restored one -- the raid manager did not know one already stood there.");
+            Assert.AreEqual(portalHealth, OrcPortal.All[0].CurrentHealth,
+                "The portal reloaded repaired, which makes saving and loading a way to undo an assault on the map's objective.");
+
+            Assert.AreEqual(1, OrcUnit.All.Count, "The orc already in the field vanished, so reloading is a way to call off a raid.");
+            Assert.AreEqual(orcHealth, OrcUnit.All[0].CurrentHealth, "The orc came back healed.");
+
+            Assert.Greater(OrcRaidManager.Instance.SecondsUntilNextRaid, 0f, "The raid clock came back stopped.");
+        }
+
+        /// <summary>OrcRaidManager opens the portal in its own Update, on the first frame it sees a Town Hall.</summary>
+        private static IEnumerator WaitForPortal()
+        {
+            for (var frame = 0; frame < 120 && OrcPortal.All.Count == 0; frame++)
+            {
+                yield return null;
+            }
+
+            Assert.AreEqual(1, OrcPortal.All.Count, "No portal opened next to the Town Hall, so there is nothing to save.");
         }
 
         /// <summary>
@@ -134,6 +175,28 @@ namespace CityBuilder.Tests.PlayMode
 
             ModalGate.SetBlocked(false);
             if (OrcRaidManager.Instance != null) OrcRaidManager.Instance.RaidsSuspended = true;
+        }
+
+        /// <summary>The same, but at arm's length from somewhere -- for putting an enemy on the map without putting it in a fight.</summary>
+        private static Vector3 WalkablePointAwayFrom(Vector3 avoid, float minDistance)
+        {
+            var mapApplier = MeshMapApplier.Instance;
+
+            for (var radius = minDistance; radius <= minDistance + 40f; radius += 5f)
+            {
+                for (var i = 0; i < 16; i++)
+                {
+                    var angle = i * Mathf.PI / 8f;
+                    var candidate = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+                    if (Vector3.Distance(candidate, avoid) < minDistance) continue;
+                    if (mapApplier != null && !mapApplier.IsGroundAt(candidate)) continue;
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(candidate, out var hit, 2f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                    return hit.position;
+                }
+            }
+
+            Assert.Fail($"No walkable ground at least {minDistance}m from {avoid} -- the test cannot separate the orc from the soldiers.");
+            return Vector3.zero;
         }
 
         /// <summary>Somewhere a soldier can actually stand -- dry ground with NavMesh under it.</summary>

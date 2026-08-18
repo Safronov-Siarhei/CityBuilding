@@ -47,6 +47,37 @@ namespace CityBuilder.Saving
 
         /// <summary>Starvation deaths per day over the window happiness remembers, oldest first.</summary>
         public List<int> recentStarvationDeaths = new List<int>();
+
+        /// <summary>
+        /// The raid source. Without it a reload healed the map's objective: the portal is placed
+        /// relative to the Town Hall on the first frame one exists, so a fresh one opened at full
+        /// health however far the player's army had ground the old one down -- and the orcs already
+        /// on their way vanished, which made reloading a way to call off a raid.
+        ///
+        /// One portal, matching what OrcRaidManager spawns today; the design's five per map turn
+        /// this into a list.
+        /// </summary>
+        public bool portalPlaced;
+
+        public Vector2Int portalCell;
+
+        /// <summary>Zero means it was placed and then destroyed -- no new one is opened over it.</summary>
+        public int portalHealth;
+
+        /// <summary>Seconds left on the raid clock, so reloading cannot push the next wave back to a full interval.</summary>
+        public float secondsUntilNextRaid;
+
+        public List<OrcEntry> orcs = new List<OrcEntry>();
+    }
+
+    [Serializable]
+    public class OrcEntry
+    {
+        public Vector3 position;
+
+        /// <summary>Raids send level 1; anything higher came from the OrcSpawn cheat, and its health and damage are scaled by it.</summary>
+        public int level = 1;
+        public int currentHealth;
     }
 
     [Serializable]

@@ -38,6 +38,12 @@ namespace CityBuilder.Tests.EditMode
             group.soldiers.Add(new SoldierEntry { position = new Vector3(3f, 0f, 4f), currentHealth = 12 });
             data.armyGroups.Add(group);
 
+            data.portalPlaced = true;
+            data.portalCell = new Vector2Int(11, 23);
+            data.portalHealth = 190;
+            data.secondsUntilNextRaid = 41.5f;
+            data.orcs.Add(new OrcEntry { position = new Vector3(-8f, 0f, 5f), level = 3, currentHealth = 44 });
+
             return data;
         }
 
@@ -67,6 +73,21 @@ namespace CityBuilder.Tests.EditMode
             CollectionAssert.AreEqual(new[] { 0, 3, 1 }, loaded.recentStarvationDeaths, "Happiness remembers recent deaths by day, in order.");
         }
 
+        [Test]
+        public void ThePortalAndTheOrcs_SurviveTheSaveFile()
+        {
+            var loaded = RoundTrip(WithAnArmyAndAHungryTown());
+
+            Assert.IsTrue(loaded.portalPlaced);
+            Assert.AreEqual(new Vector2Int(11, 23), loaded.portalCell, "A portal restored somewhere else is a second portal, not the same one.");
+            Assert.AreEqual(190, loaded.portalHealth, "A repaired portal would make reloading a way to undo an assault on the map's objective.");
+            Assert.AreEqual(41.5f, loaded.secondsUntilNextRaid, 0.01f);
+
+            Assert.AreEqual(1, loaded.orcs.Count, "The orcs already in the field vanished, so reloading would call off a raid.");
+            Assert.AreEqual(3, loaded.orcs[0].level, "Level is what an orc's health and damage are scaled by; losing it downgrades the raider.");
+            Assert.AreEqual(44, loaded.orcs[0].currentHealth);
+        }
+
         /// <summary>A file written before any of this existed has no such fields at all, and has to read as a town with no army that has never gone hungry -- not as a crash.</summary>
         [Test]
         public void AnOlderSave_ReadsAsNoArmyAndNoHunger()
@@ -79,6 +100,9 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(0, loaded.hungryDaysInARow);
             Assert.IsNotNull(loaded.recentStarvationDeaths);
             Assert.IsEmpty(loaded.recentStarvationDeaths);
+            Assert.IsFalse(loaded.portalPlaced, "An older save has to load as a game whose portal has not opened yet, so the raid manager opens one as usual.");
+            Assert.IsNotNull(loaded.orcs);
+            Assert.IsEmpty(loaded.orcs);
         }
 
         /// <summary>The empty group is not an oversight: ArmyManager keeps a group whose last member died because it still holds the player's rally point and priority.</summary>
