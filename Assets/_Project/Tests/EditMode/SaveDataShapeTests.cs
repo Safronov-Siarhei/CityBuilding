@@ -27,6 +27,7 @@ namespace CityBuilder.Tests.EditMode
             var data = new GameSaveData { population = 12, hungryDaysInARow = 2 };
             data.recentStarvationDeaths.AddRange(new[] { 0, 3, 1 });
             data.resources.Add(new ResourceEntry { type = ResourceType.Bread, amount = 7 });
+            data.lifetimeProduced = 8123;
 
             var group = new ArmyGroupEntry
             {
@@ -124,6 +125,17 @@ namespace CityBuilder.Tests.EditMode
 
             Assert.AreEqual(ArmyAttackTargetKind.Portal, loaded.armyGroups[0].attackTargetKind);
             Assert.AreEqual(-1, loaded.armyGroups[0].attackTargetOrcIndex, "A portal order carries no orc index -- pointing it at orc 0 would retarget the group on load.");
+        }
+
+        /// <summary>
+        /// One of the five terms raids are sized against, and the one that grows for the whole game
+        /// and never falls -- so losing it was the biggest of the save's gaps: a reload handed the
+        /// player back the raids of a settlement founded a minute ago.
+        /// </summary>
+        [Test]
+        public void TheLifetimeProduction_SurvivesTheSaveFile()
+        {
+            Assert.AreEqual(8123, RoundTrip(WithAnArmyAndAHungryTown()).lifetimeProduced);
         }
 
         /// <summary>Only the OrcSpawn cheat turns this off, which is the whole reason it is saved: a wave arriving because the flag reset itself lands in the middle of whatever it was turned off to watch.</summary>

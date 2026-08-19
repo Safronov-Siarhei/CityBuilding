@@ -214,9 +214,30 @@ namespace CityBuilder.Core
         [Header("Raids (economy.csv)")]
         [SerializeField] private float raidIntervalSeconds = 90f;
         [SerializeField] private int raidBaseSize = 2;
-        [SerializeField] private int raidDaysPerExtraRaider = 3;
+        [SerializeField] private int raidProgressPerExtraRaider = 40;
         [SerializeField] private int raidMaxSize = 8;
+        // A raid grows in two directions, not one: more raiders up to the cap, and tougher ones
+        // past it. Without the second, a settlement that has out-built the size ceiling is never
+        // threatened again.
+        [SerializeField] private int raidProgressPerOrcLevel = 150;
+        [SerializeField] private int raidMaxOrcLevel = 5;
+        // And they come more often. raidIntervalSeconds is the wait at a standing start, this is
+        // the wait once the player has become the score below -- interpolated in between.
+        [SerializeField] private float raidMinIntervalSeconds = 45f;
+        [SerializeField] private int raidProgressAtMinInterval = 400;
         [SerializeField] private int portalMaxHealth = 320;
+
+        [Header("Player progression (economy.csv)")]
+        // What each part of the settlement is worth to the progression score raids are measured
+        // against -- see PlayerProgression, which explains why these five terms and not others.
+        // Defence is weighted per POINT of defence rather than per building, and the sheet's
+        // defence values run from 10 to 138, which is why its weight is a fraction where the
+        // others are whole numbers.
+        [SerializeField] private float progressPerBuildingLevel = 1f;
+        [SerializeField] private float progressPerCitizen = 1f;
+        [SerializeField] private float progressPerSoldierLevel = 2f;
+        [SerializeField] private float progressPerDefencePoint = 0.2f;
+        [SerializeField] private float progressPerProducedUnit = 0.02f;
 
         [Header("Defensive buildings (economy.csv)")]
         [SerializeField] private float defenceAttackIntervalSeconds = 1f;
@@ -290,8 +311,17 @@ namespace CityBuilder.Core
         public int ArmyMaxSize => armyMaxSize;
         public float RaidIntervalSeconds => raidIntervalSeconds;
         public int RaidBaseSize => raidBaseSize;
-        public int RaidDaysPerExtraRaider => raidDaysPerExtraRaider;
+        public int RaidProgressPerExtraRaider => raidProgressPerExtraRaider;
         public int RaidMaxSize => raidMaxSize;
+        public int RaidProgressPerOrcLevel => raidProgressPerOrcLevel;
+        public int RaidMaxOrcLevel => raidMaxOrcLevel;
+        public float RaidMinIntervalSeconds => raidMinIntervalSeconds;
+        public int RaidProgressAtMinInterval => raidProgressAtMinInterval;
+        public float ProgressPerBuildingLevel => progressPerBuildingLevel;
+        public float ProgressPerCitizen => progressPerCitizen;
+        public float ProgressPerSoldierLevel => progressPerSoldierLevel;
+        public float ProgressPerDefencePoint => progressPerDefencePoint;
+        public float ProgressPerProducedUnit => progressPerProducedUnit;
         public int PortalMaxHealth => portalMaxHealth;
         public float DefenceAttackIntervalSeconds => defenceAttackIntervalSeconds;
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
@@ -385,8 +415,17 @@ namespace CityBuilder.Core
             armyMaxSize = (int)Read(economy, "army_max_size", armyMaxSize);
             raidIntervalSeconds = Read(economy, "raid_interval_seconds", raidIntervalSeconds);
             raidBaseSize = (int)Read(economy, "raid_base_size", raidBaseSize);
-            raidDaysPerExtraRaider = (int)Read(economy, "raid_days_per_extra_raider", raidDaysPerExtraRaider);
+            raidProgressPerExtraRaider = (int)Read(economy, "raid_progress_per_extra_raider", raidProgressPerExtraRaider);
             raidMaxSize = (int)Read(economy, "raid_max_size", raidMaxSize);
+            raidProgressPerOrcLevel = (int)Read(economy, "raid_progress_per_orc_level", raidProgressPerOrcLevel);
+            raidMaxOrcLevel = (int)Read(economy, "raid_max_orc_level", raidMaxOrcLevel);
+            raidMinIntervalSeconds = Read(economy, "raid_min_interval_seconds", raidMinIntervalSeconds);
+            raidProgressAtMinInterval = (int)Read(economy, "raid_progress_at_min_interval", raidProgressAtMinInterval);
+            progressPerBuildingLevel = Read(economy, "progress_per_building_level", progressPerBuildingLevel);
+            progressPerCitizen = Read(economy, "progress_per_citizen", progressPerCitizen);
+            progressPerSoldierLevel = Read(economy, "progress_per_soldier_level", progressPerSoldierLevel);
+            progressPerDefencePoint = Read(economy, "progress_per_defence_point", progressPerDefencePoint);
+            progressPerProducedUnit = Read(economy, "progress_per_produced_unit", progressPerProducedUnit);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             defenceAttackIntervalSeconds = Read(economy, "defence_attack_interval_seconds", defenceAttackIntervalSeconds);
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);

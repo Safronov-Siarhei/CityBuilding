@@ -100,6 +100,8 @@ namespace CityBuilder.Saving
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
             }
 
+            ResourceManager.Instance.RestoreLifetimeProduced(data.lifetimeProduced);
+
             // Before the buildings: a restored building asks whether its level is researched the
             // moment it is placed, and a fresh ResearchManager would answer "no".
             if (researchManager != null)
@@ -357,6 +359,8 @@ namespace CityBuilder.Saving
             {
                 data.resources.Add(new ResourceEntry { type = type, amount = ResourceManager.Instance.GetAmount(type) });
             }
+
+            data.lifetimeProduced = ResourceManager.Instance.LifetimeProduced;
 
             var raids = Combat.OrcRaidManager.Instance;
             if (raids != null)

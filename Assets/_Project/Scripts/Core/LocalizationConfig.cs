@@ -33,6 +33,9 @@ namespace CityBuilder.Core
 
         public IReadOnlyList<string> Languages => languages;
 
+        /// <summary>Every row, for the tests that have to sweep the whole sheet rather than ask about one key -- see LocalizationTests.</summary>
+        public IReadOnlyList<Entry> Entries => entries;
+
         /// <summary>
         /// The text for a key in a language, or null when the sheet has no such key. Null rather
         /// than the key itself so the caller can decide -- Localization shows the key, which makes

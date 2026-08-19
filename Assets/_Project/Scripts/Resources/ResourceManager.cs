@@ -39,6 +39,18 @@ namespace CityBuilder.Resources
         /// <summary>Debug/testing cheat — toggled with <see cref="infiniteResourcesToggleKey"/>, not exposed to the player.</summary>
         public bool InfiniteResources { get; private set; }
 
+        /// <summary>
+        /// Everything the settlement has ever made or gathered, in units, and never decreased --
+        /// the "total output over time" term of the player's progression score (see
+        /// PlayerProgression), which is what raids are now sized and paced against.
+        ///
+        /// Deliberately NOT fed by Add. Refunds, the treasury and the cheats all go through Add,
+        /// and a progression score that a cancelled research could raise is not measuring
+        /// progression. Only the three paths that genuinely make something -- a workshop's output,
+        /// a gatherer coming home, and the player's own tap on a tree -- call AddProduced.
+        /// </summary>
+        public int LifetimeProduced { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -155,6 +167,26 @@ namespace CityBuilder.Resources
             _resources[type] = updated;
             OnResourceChanged?.Invoke(type, updated);
             return stored;
+        }
+
+        /// <summary>
+        /// Add, plus the tally that says the settlement MADE this rather than being handed it.
+        ///
+        /// Counts what actually fitted, not what was offered: output that overflowed a full
+        /// granary went on the floor, and a town whose stores have been full for an hour has not
+        /// been getting richer for that hour.
+        /// </summary>
+        public int AddProduced(ResourceType type, int amount)
+        {
+            var stored = Add(type, amount);
+            if (stored > 0) LifetimeProduced += stored;
+            return stored;
+        }
+
+        /// <summary>Puts the lifetime tally back from a save. Without it every reload knocked the player's progression to zero and the next raid arrived as though they had just founded the place -- which would make saving and loading a way to call the war off.</summary>
+        public void RestoreLifetimeProduced(int produced)
+        {
+            LifetimeProduced = Mathf.Max(0, produced);
         }
 
         public void SetAmount(ResourceType type, int amount)

@@ -34,7 +34,7 @@ namespace CityBuilder.Citizens
             if (node == null) return;
 
             var taken = node.TakeYield();
-            if (taken > 0) ResourceManager.Instance?.Add(node.ResourceType, taken);
+            if (taken > 0) ResourceManager.Instance?.AddProduced(node.ResourceType, taken);
 
             if (!node.IsDepleted) return;
 

@@ -597,10 +597,10 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<GameOverManager>();
 
-            var orcRaidManager = managers.AddComponent<OrcRaidManager>();
-            var orcRaidManagerSO = new SerializedObject(orcRaidManager);
-            orcRaidManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
-            orcRaidManagerSO.ApplyModifiedPropertiesWithoutUndo();
+            // No wiring: raids are sized and paced against the player's progression score rather
+            // than the calendar (see PlayerProgression), so the raid clock stopped needing the day
+            // count the moment that changed.
+            managers.AddComponent<OrcRaidManager>();
 
             // The player's side of the war: recruitment, groups and the daily upkeep charge (hence
             // the calendar reference, same as the raid clock's).

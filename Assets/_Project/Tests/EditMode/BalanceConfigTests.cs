@@ -286,6 +286,15 @@ namespace CityBuilder.Tests.EditMode
             Assert.Greater(config.PortalMaxHealth, 0, "A portal with no health is destroyed by the first swing, ending the map instantly.");
             Assert.Greater(config.RaidIntervalSeconds, 0f, "A zero raid interval spawns a squad every frame.");
             Assert.GreaterOrEqual(config.RaidMaxSize, config.RaidBaseSize, "The raid ceiling can't be below the opening squad.");
+            Assert.Greater(config.RaidProgressPerExtraRaider, 0, "A zero step would freeze the raid size at the opening squad forever.");
+            Assert.Greater(config.RaidProgressPerOrcLevel, 0, "A zero step would freeze the raiders at level 1, so a player past the size cap is never threatened again.");
+            Assert.GreaterOrEqual(config.RaidMaxOrcLevel, 1, "A ceiling below level 1 would spawn orcs with no health.");
+            Assert.Greater(config.RaidMinIntervalSeconds, 0f, "A zero floor spawns a squad every frame once the player has grown into it.");
+            Assert.LessOrEqual(config.RaidMinIntervalSeconds, config.RaidIntervalSeconds, "The endgame wait between raids is longer than the opening one, so growing the town makes the map calmer.");
+            Assert.Greater(config.RaidProgressAtMinInterval, 0, "Without a threshold the interval never falls and the pacing half of the ramp does nothing.");
+            Assert.Greater(config.ProgressPerBuildingLevel + config.ProgressPerCitizen + config.ProgressPerSoldierLevel
+                           + config.ProgressPerDefencePoint + config.ProgressPerProducedUnit, 0f,
+                "Every progression weight is zero, so the score is always zero and raids never grow at all.");
             Assert.Greater(config.DefenceAttackIntervalSeconds, 0f);
             Assert.GreaterOrEqual(config.CoinsPerCitizenPerDayAtMaxTax, 0f);
             Assert.Greater(config.DecayPerDayAtLevel1, 0f, "Zero decay per day quietly disables the whole decay/repair loop.");

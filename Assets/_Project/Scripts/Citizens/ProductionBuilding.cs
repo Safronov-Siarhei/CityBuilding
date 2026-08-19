@@ -192,7 +192,7 @@ namespace CityBuilder.Citizens
                 }
             }
 
-            var stored = resources != null ? resources.Add(recipe.output, amount) : amount;
+            var stored = resources != null ? resources.AddProduced(recipe.output, amount) : amount;
             ReportOverflow(data, amount - stored);
         }
 

@@ -23,6 +23,55 @@ namespace CityBuilder.Tests.EditMode
             if (_go != null) Object.DestroyImmediate(_go);
         }
 
+        /// <summary>
+        /// The tally raids are sized against (see PlayerProgression). Spending is what it must not
+        /// notice: a stockpile-based score would make emptying the stores just before a raid the
+        /// cheapest defence in the game, and this is the property that rules that out.
+        /// </summary>
+        [Test]
+        public void LifetimeProduced_CountsOutputAndIgnoresSpending()
+        {
+            _manager.AddProduced(ResourceType.Wood, 30);
+            Assert.AreEqual(30, _manager.LifetimeProduced);
+
+            _manager.Add(ResourceType.Wood, -30);
+            Assert.AreEqual(30, _manager.LifetimeProduced, "Spending lowered the lifetime total, so a player could be poor on demand and be raided as a pauper.");
+            Assert.AreEqual(0, _manager.GetAmount(ResourceType.Wood), "The test's own spending was supposed to empty the store.");
+        }
+
+        /// <summary>
+        /// Refunds, taxes and the cheats all go through plain Add, and none of them is the
+        /// settlement producing anything. A progression score a cancelled research could raise is
+        /// not measuring progression.
+        /// </summary>
+        [Test]
+        public void LifetimeProduced_IgnoresResourcesTheSettlementDidNotMake()
+        {
+            _manager.Add(ResourceType.Coins, 100);
+            Assert.AreEqual(0, _manager.LifetimeProduced);
+        }
+
+        /// <summary>Output that overflowed a full store went on the floor: a town whose granary has been full for an hour has not been getting richer for that hour.</summary>
+        [Test]
+        public void LifetimeProduced_CountsOnlyWhatFitted()
+        {
+            var capacity = _manager.GetCapacity(ResourceType.Wood);
+            _manager.SetAmount(ResourceType.Wood, capacity - 5);
+
+            var stored = _manager.AddProduced(ResourceType.Wood, 100);
+
+            Assert.AreEqual(5, stored, "The fixture was meant to leave room for exactly five.");
+            Assert.AreEqual(5, _manager.LifetimeProduced);
+        }
+
+        /// <summary>Without the restore every reload knocked the player's progression to zero and the next raid arrived as though the town had just been founded.</summary>
+        [Test]
+        public void LifetimeProduced_ComesBackFromASave()
+        {
+            _manager.RestoreLifetimeProduced(4321);
+            Assert.AreEqual(4321, _manager.LifetimeProduced);
+        }
+
         [Test]
         public void GetAmount_UnsetType_IsZero()
         {

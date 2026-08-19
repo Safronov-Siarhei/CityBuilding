@@ -108,6 +108,39 @@ namespace CityBuilder.Tests.EditMode
             }
         }
 
+        /// <summary>
+        /// The same check, swept over the WHOLE sheet rather than over the hand-written list below.
+        ///
+        /// It exists because the list is hand-written: a key added to the sheet and to the code but
+        /// not to that list is checked by nothing, and on 2026-08-19 exactly that let a row through
+        /// whose Russian cell held an unquoted comma -- the CSV split it in two, the English column
+        /// silently became the back half of the Russian sentence, and the only visible symptom
+        /// would have been an English player reading "уровень {1})".
+        ///
+        /// Sweeping needs the raw rows rather than Find, which falls back to Russian for an empty
+        /// cell and would compare the reference against itself.
+        /// </summary>
+        [Test]
+        public void NoTranslationAnywhereLosesOrGainsAPlaceholder()
+        {
+            var config = Config();
+
+            foreach (var entry in config.Entries)
+            {
+                if (entry == null || entry.values.Count == 0) continue;
+
+                var expected = Placeholders(entry.values[0]);
+                for (var language = 1; language < entry.values.Count; language++)
+                {
+                    if (string.IsNullOrEmpty(entry.values[language])) continue;
+
+                    CollectionAssert.AreEquivalent(expected, Placeholders(entry.values[language]),
+                        $"'{entry.key}' in '{config.Languages[language]}' does not use the same placeholders as '{config.Languages[0]}': " +
+                        $"[{entry.values[0]}] vs [{entry.values[language]}]");
+                }
+            }
+        }
+
         /// <summary>Every key the code passes to Localization.Format. Listed by hand, because a placeholder mismatch is invisible until the string is actually formatted.</summary>
         private static readonly string[] KeysWithPlaceholders =
         {
@@ -126,6 +159,7 @@ namespace CityBuilder.Tests.EditMode
             "#research_unlock", "#research_level",
             "#research_blocked_lab_level", "#research_blocked_prereq", "#building_upgrade_locked",
             "#log_research_started", "#log_research_done", "#log_research_cancelled", "#log_research_lost",
+            "#log_raid_levelled",
         };
 
         private static List<string> Placeholders(string text)

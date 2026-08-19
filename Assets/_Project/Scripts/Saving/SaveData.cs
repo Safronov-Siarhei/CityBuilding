@@ -16,6 +16,14 @@ namespace CityBuilder.Saving
         public int currentDay = 1;
         public int taxRatePercent = 10;
         public List<ResourceEntry> resources = new List<ResourceEntry>();
+
+        /// <summary>
+        /// Everything the settlement has ever produced (see ResourceManager.LifetimeProduced). It
+        /// is one of the five terms raids are sized against, and the only one that grows for the
+        /// whole game and never falls -- so without it a reload handed the player back the raids of
+        /// a town founded a minute ago.
+        /// </summary>
+        public int lifetimeProduced;
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
 
         /// <summary>

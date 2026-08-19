@@ -20,8 +20,10 @@ namespace CityBuilder.Combat
     {
         public static OrcRaidManager Instance { get; private set; }
 
-        // Raid pacing and size come from the balance sheet's economy tab (raid_*): interval, the
-        // day-1 squad, how many days buy one more raider, and the ceiling.
+        // Raid pacing, size and strength all come from the balance sheet's economy tab (raid_*),
+        // and all three are read against the PLAYER'S PROGRESSION SCORE rather than the calendar
+        // (see PlayerProgression). The day count used to do this job, and it measured how long the
+        // player had sat there rather than what they had built.
 
         // Placeholder placement rule for testing, not the final design: the user's intent is
         // hand-authored portal locations per map (like the TreesArea zone), which don't exist as
@@ -37,8 +39,6 @@ namespace CityBuilder.Combat
         // the player scouts it.
         private const int PortalFogRevealRadiusCells = 12;
         private const string TownHallBuildingName = BuildingIds.TownHall;
-
-        [SerializeField] private GameCalendar gameCalendar;
 
         private static readonly Color PortalColor = new Color(0.32f, 0.1f, 0.42f);
         private static readonly Color OrcSkinColor = new Color(0.28f, 0.42f, 0.22f);
@@ -139,9 +139,13 @@ namespace CityBuilder.Combat
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
-            _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
 
-            SpawnRaid();
+            // The score is read ONCE here and used for all three of size, strength and the wait
+            // until the next wave -- it costs a scan over the buildings, and this is the once a
+            // minute where that is affordable.
+            var score = PlayerProgression.Score();
+            _raidTimer = ComputeRaidIntervalSeconds(score);
+            SpawnRaid(score);
         }
 
         /// <summary>
@@ -261,6 +265,10 @@ namespace CityBuilder.Combat
             _portalSpawned = true;
             // Only starts counting once the portal actually exists, so the player isn't raided
             // from nowhere during the time it takes them to place the Town Hall.
+            //
+            // The full interval rather than the score's, deliberately: a portal opens on the frame
+            // the Town Hall goes down, when the score IS a Town Hall and five settlers, and asking
+            // PlayerProgression for that would buy a scan over the buildings to be told so.
             _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
             EventLogManager.Instance?.Log(Localization.Get("#log_portal_opened"));
         }
@@ -276,13 +284,17 @@ namespace CityBuilder.Combat
             part.GetComponent<Renderer>().sharedMaterial = _portalMaterial;
         }
 
-        private void SpawnRaid()
+        private void SpawnRaid(int score)
         {
-            var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
-            var size = ComputeRaidSize(day);
+            var size = ComputeRaidSize(score);
+            var level = ComputeOrcLevel(score);
 
-            SpawnOrcs(_portalPosition, size, level: 1);
-            EventLogManager.Instance?.Log(Localization.Format("#log_raid", size));
+            SpawnOrcs(_portalPosition, size, level);
+            // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
+            // quietly become five times as hard as the last one at the very same size.
+            EventLogManager.Instance?.Log(level > 1
+                ? Localization.Format("#log_raid_levelled", size, level)
+                : Localization.Format("#log_raid", size));
         }
 
         /// <summary>
@@ -302,17 +314,58 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Pure formula, kept separate so an EditMode test can check the ramp without a live scene. Takes its numbers explicitly so the test can state them rather than depend on today's sheet.</summary>
-        public static int ComputeRaidSize(int day, int baseSize, int daysPerExtraRaider, int maxSize)
+        public static int ComputeRaidSize(int score, int baseSize, int progressPerExtraRaider, int maxSize)
         {
-            var bonus = daysPerExtraRaider > 0 ? Mathf.Max(0, day - 1) / daysPerExtraRaider : 0;
+            var bonus = progressPerExtraRaider > 0 ? Mathf.Max(0, score) / progressPerExtraRaider : 0;
             return Mathf.Min(maxSize, baseSize + bonus);
         }
 
-        /// <summary>The size of the raid that would go out on the given day at the sheet's current numbers.</summary>
-        public static int ComputeRaidSize(int day)
+        /// <summary>The size of the raid a settlement at this score would draw, at the sheet's current numbers.</summary>
+        public static int ComputeRaidSize(int score)
         {
             var balance = BalanceConfig.Instance;
-            return ComputeRaidSize(day, balance.RaidBaseSize, balance.RaidDaysPerExtraRaider, balance.RaidMaxSize);
+            return ComputeRaidSize(score, balance.RaidBaseSize, balance.RaidProgressPerExtraRaider, balance.RaidMaxSize);
+        }
+
+        /// <summary>
+        /// How hard each raider hits, as a level -- OrcUnit scales health and damage by it, and
+        /// makes itself visibly bigger. This is what keeps a raid meaningful once the size cap is
+        /// reached: past that point, growing stops making the orcs more numerous and starts making
+        /// them worse.
+        /// </summary>
+        public static int ComputeOrcLevel(int score, int progressPerOrcLevel, int maxOrcLevel)
+        {
+            if (progressPerOrcLevel <= 0) return 1;
+            return Mathf.Clamp(1 + Mathf.Max(0, score) / progressPerOrcLevel, 1, Mathf.Max(1, maxOrcLevel));
+        }
+
+        public static int ComputeOrcLevel(int score)
+        {
+            var balance = BalanceConfig.Instance;
+            return ComputeOrcLevel(score, balance.RaidProgressPerOrcLevel, balance.RaidMaxOrcLevel);
+        }
+
+        /// <summary>
+        /// How long until the next wave: the full interval at a standing start, falling linearly to
+        /// the floor by the time the player has reached scoreAtMinInterval, and never past it.
+        ///
+        /// Interpolated rather than stepped, so growing the town never causes a jump in pressure
+        /// the player cannot account for -- and clamped at both ends so a sheet edited to nonsense
+        /// (a floor above the ceiling, a zero threshold) slows raids down rather than dividing by
+        /// zero or spawning one per frame.
+        /// </summary>
+        public static float ComputeRaidIntervalSeconds(int score, float intervalAtZeroScore, float minIntervalSeconds, int scoreAtMinInterval)
+        {
+            if (scoreAtMinInterval <= 0 || minIntervalSeconds >= intervalAtZeroScore) return intervalAtZeroScore;
+
+            var t = Mathf.Clamp01(Mathf.Max(0, score) / (float)scoreAtMinInterval);
+            return Mathf.Lerp(intervalAtZeroScore, minIntervalSeconds, t);
+        }
+
+        public static float ComputeRaidIntervalSeconds(int score)
+        {
+            var balance = BalanceConfig.Instance;
+            return ComputeRaidIntervalSeconds(score, balance.RaidIntervalSeconds, balance.RaidMinIntervalSeconds, balance.RaidProgressAtMinInterval);
         }
 
         /// <summary>Builds one orc. `scatter` is what separates a raider stepping out of the portal from a loaded one, which has to land exactly where the save says.</summary>

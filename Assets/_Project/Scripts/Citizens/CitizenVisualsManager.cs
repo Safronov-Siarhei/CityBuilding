@@ -288,7 +288,7 @@ namespace CityBuilder.Citizens
         {
             if (_carriedByAgent.TryGetValue(agent, out var carried) && carried > 0)
             {
-                ResourceManager.Instance?.Add(building.ProducesResource, carried);
+                ResourceManager.Instance?.AddProduced(building.ProducesResource, carried);
             }
             _carriedByAgent[agent] = 0;
 
