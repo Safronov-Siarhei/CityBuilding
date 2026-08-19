@@ -38,6 +38,8 @@ MonoBehaviour:
       recruitCoins: 60
       upkeepCoinsPerDay: 3
     startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
     levelResearch:
     - coins: 80
       seconds: 90
@@ -71,6 +73,8 @@ MonoBehaviour:
       recruitCoins: 0
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -79,6 +83,111 @@ MonoBehaviour:
     unlockResearch:
       coins: 0
       seconds: 0
+  - id: spearman
+    displayName: "\u041A\u043E\u043F\u0435\u0439\u0449\u0438\u043A"
+    attackRangeUnits: 2
+    attackRangeStructures: 2.8
+    engageRadius: 7
+    levels:
+    - maxHealth: 20
+      attackDamage: 7
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.5
+      recruitCoins: 45
+      upkeepCoinsPerDay: 2
+    - maxHealth: 30
+      attackDamage: 10
+      attackIntervalSeconds: 1
+      walkSpeed: 1.5
+      recruitCoins: 70
+      upkeepCoinsPerDay: 3
+    - maxHealth: 44
+      attackDamage: 14
+      attackIntervalSeconds: 0.9
+      walkSpeed: 1.5
+      recruitCoins: 105
+      upkeepCoinsPerDay: 4
+    startsUnlocked: 0
+    recruitIronBars: 1
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 120
+      seconds: 90
+    - coins: 220
+      seconds: 120
+    unlockResearch:
+      coins: 60
+      seconds: 60
+  - id: archer
+    displayName: "\u041B\u0443\u0447\u043D\u0438\u043A"
+    attackRangeUnits: 8
+    attackRangeStructures: 8
+    engageRadius: 10
+    levels:
+    - maxHealth: 14
+      attackDamage: 6
+      attackIntervalSeconds: 1.4
+      walkSpeed: 1.4
+      recruitCoins: 60
+      upkeepCoinsPerDay: 3
+    - maxHealth: 20
+      attackDamage: 9
+      attackIntervalSeconds: 1.3
+      walkSpeed: 1.4
+      recruitCoins: 90
+      upkeepCoinsPerDay: 4
+    - maxHealth: 29
+      attackDamage: 13
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.4
+      recruitCoins: 135
+      upkeepCoinsPerDay: 6
+    startsUnlocked: 0
+    recruitIronBars: 0
+    recruitCopperBars: 1
+    levelResearch:
+    - coins: 200
+      seconds: 110
+    - coins: 320
+      seconds: 140
+    unlockResearch:
+      coins: 140
+      seconds: 90
+  - id: manatarms
+    displayName: "\u041B\u0430\u0442\u043D\u0438\u043A"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 2.6
+    engageRadius: 7
+    levels:
+    - maxHealth: 45
+      attackDamage: 9
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.2
+      recruitCoins: 90
+      upkeepCoinsPerDay: 4
+    - maxHealth: 65
+      attackDamage: 13
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.2
+      recruitCoins: 135
+      upkeepCoinsPerDay: 6
+    - maxHealth: 95
+      attackDamage: 18
+      attackIntervalSeconds: 1
+      walkSpeed: 1.2
+      recruitCoins: 200
+      upkeepCoinsPerDay: 9
+    startsUnlocked: 0
+    recruitIronBars: 2
+    recruitCopperBars: 1
+    levelResearch:
+    - coins: 380
+      seconds: 150
+    - coins: 600
+      seconds: 180
+    unlockResearch:
+      coins: 260
+      seconds: 120
   buildings:
   - id: Hovel
     displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
