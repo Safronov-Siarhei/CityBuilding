@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1634100188438684709
+--- !u!1 &4950587589854783680
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1222535487705809140}
-  - component: {fileID: 267969191719481489}
-  - component: {fileID: 5323666297606065058}
+  - component: {fileID: 9025547240326386284}
+  - component: {fileID: 3445459715232321545}
+  - component: {fileID: 6492335380067707836}
+  - component: {fileID: 8143222741823215809}
   m_Layer: 0
   m_Name: FireBrigade
   m_TagString: Untagged
@@ -18,41 +19,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1222535487705809140
+--- !u!4 &9025547240326386284
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1634100188438684709}
+  m_GameObject: {fileID: 4950587589854783680}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5233142284149867460}
+  - {fileID: 6744089246824336723}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &267969191719481489
+--- !u!114 &3445459715232321545
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1634100188438684709}
+  m_GameObject: {fileID: 4950587589854783680}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &5323666297606065058
+--- !u!114 &6492335380067707836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4950587589854783680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70482574febad6f44b69817ae91c40c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Citizens.ProductionBuilding
+--- !u!65 &8143222741823215809
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1634100188438684709}
+  m_GameObject: {fileID: 4950587589854783680}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +80,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.92, y: 0.025000237, z: 1.92}
   m_Center: {x: 0, y: 0.012500118, z: 0}
---- !u!1 &7518968627006975747
+--- !u!1 &8398202478994096782
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +88,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5233142284149867460}
-  - component: {fileID: 8381295015210096727}
-  - component: {fileID: 4407182051600030395}
+  - component: {fileID: 6744089246824336723}
+  - component: {fileID: 2675677613150578500}
+  - component: {fileID: 194066331105949404}
   m_Layer: 0
   m_Name: FireBrigade1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +98,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5233142284149867460
+--- !u!4 &6744089246824336723
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7518968627006975747}
+  m_GameObject: {fileID: 8398202478994096782}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000011920929, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1222535487705809140}
+  m_Father: {fileID: 9025547240326386284}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8381295015210096727
+--- !u!33 &2675677613150578500
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7518968627006975747}
+  m_GameObject: {fileID: 8398202478994096782}
   m_Mesh: {fileID: -42267801837964239, guid: 684ff14b90ff54241af22f405b3b10c3, type: 3}
---- !u!23 &4407182051600030395
+--- !u!23 &194066331105949404
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7518968627006975747}
+  m_GameObject: {fileID: 8398202478994096782}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

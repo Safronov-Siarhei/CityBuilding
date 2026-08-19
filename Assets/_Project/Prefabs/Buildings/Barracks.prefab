@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3923711664797269739
+--- !u!1 &107511809990214975
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2947815551828684280}
-  - component: {fileID: 7409005027620406150}
-  - component: {fileID: 510434893279080931}
+  - component: {fileID: 5443955491277502516}
+  - component: {fileID: 6924709004085672615}
+  - component: {fileID: 2620279822583871098}
   m_Layer: 0
   m_Name: Barracks1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2947815551828684280
+--- !u!4 &5443955491277502516
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3923711664797269739}
+  m_GameObject: {fileID: 107511809990214975}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.00000017881393, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2064701235056210734}
+  m_Father: {fileID: 4807148518404209621}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7409005027620406150
+--- !u!33 &6924709004085672615
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3923711664797269739}
+  m_GameObject: {fileID: 107511809990214975}
   m_Mesh: {fileID: -859281410875972467, guid: 296c2b065e3a79e439abffe4ee8754eb, type: 3}
---- !u!23 &510434893279080931
+--- !u!23 &2620279822583871098
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3923711664797269739}
+  m_GameObject: {fileID: 107511809990214975}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &6541665341025001937
+--- !u!1 &6016654858125950706
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2064701235056210734}
-  - component: {fileID: 2111473071504361155}
-  - component: {fileID: 7855716522308984451}
-  - component: {fileID: 8933761930595933115}
+  - component: {fileID: 4807148518404209621}
+  - component: {fileID: 490056082158024556}
+  - component: {fileID: 8659037671313981857}
+  - component: {fileID: -2113109596700189672}
   m_Layer: 0
   m_Name: Barracks
   m_TagString: Untagged
@@ -109,41 +109,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2064701235056210734
+--- !u!4 &4807148518404209621
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6541665341025001937}
+  m_GameObject: {fileID: 6016654858125950706}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2947815551828684280}
+  - {fileID: 5443955491277502516}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2111473071504361155
+--- !u!114 &490056082158024556
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6541665341025001937}
+  m_GameObject: {fileID: 6016654858125950706}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &7855716522308984451
+--- !u!65 &8659037671313981857
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6541665341025001937}
+  m_GameObject: {fileID: 6016654858125950706}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -158,13 +158,13 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.92, y: 0.025000356, z: 2.92}
   m_Center: {x: 0, y: 0.012500178, z: 0}
---- !u!114 &8933761930595933115
+--- !u!114 &-2113109596700189672
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6541665341025001937}
+  m_GameObject: {fileID: 6016654858125950706}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3fc8daff3b6c6345b3b7fa07e32a924, type: 3}
