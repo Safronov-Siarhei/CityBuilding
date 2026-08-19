@@ -12,6 +12,7 @@ using CityBuilder.Resources;
 using CityBuilder.Saving;
 using CityBuilder.UI;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -117,6 +118,14 @@ namespace CityBuilder.EditorTools
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = true;
+
+            // The project was created from the URP template and inherited its identifier
+            // (com.UnityTechnologies.com.unity.template.urpblank) -- which is not ours, and which
+            // every other project made from that template also claims. Android treats the
+            // identifier as the app's identity: installing this build would replace, or be replaced
+            // by, any other app carrying it.
+            PlayerSettings.companyName = "Depigo Games";
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.depigogames.citybuilding");
         }
 
         /// <summary>
