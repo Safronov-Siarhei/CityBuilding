@@ -23,9 +23,21 @@ namespace CityBuilder.Citizens
         private int _totalPopulation;
         private int _assignedPopulation;
         private int _capacity;
+        private int _sickPopulation;
 
         public int TotalPopulation => _totalPopulation;
-        public int IdlePopulation => Mathf.Max(0, _totalPopulation - _assignedPopulation);
+
+        /// <summary>
+        /// How many of them are ill (see SicknessManager). A count rather than a set of people,
+        /// because population here has never been individuals -- it is a headcount pool, and the
+        /// citizens walking about the map are visuals drawn from it.
+        /// </summary>
+        public int SickPopulation => _sickPopulation;
+
+        /// <summary>Everyone well enough to hold a job. This, not TotalPopulation, is what the settlement can staff -- an illness that did not cost the town its work would not be worth having.</summary>
+        public int HealthyPopulation => Mathf.Max(0, _totalPopulation - _sickPopulation);
+
+        public int IdlePopulation => Mathf.Max(0, HealthyPopulation - _assignedPopulation);
 
         /// <summary>How many people the settlement has room for, summed over every standing building at the level it stands at.</summary>
         public int Capacity => _capacity;
@@ -129,35 +141,89 @@ namespace CityBuilder.Citizens
             if (left <= 0) return 0;
 
             _totalPopulation -= left;
-            LayOffWorkersBeyondPopulation();
+            // Whoever left, the sick can never outnumber the living -- and a sick count above the
+            // population would drive HealthyPopulation to zero and lay the whole town off.
+            _sickPopulation = Mathf.Min(_sickPopulation, _totalPopulation);
+            LayOffWorkersBeyondWorkforce();
             OnPopulationChanged?.Invoke();
             return left;
         }
 
-        /// <summary>Hands back worker slots until the assigned count fits the surviving population. Each ProductionBuilding owns its own count, so they have to be asked one at a time.</summary>
-        private void LayOffWorkersBeyondPopulation()
+        /// <summary>
+        /// Somebody fell ill. Returns how many actually did, which is fewer than asked for once
+        /// everyone left is already in bed.
+        ///
+        /// Taking to bed lays workers off, which is the whole cost of an epidemic: the buildings
+        /// with nobody left in them stop producing, and the player watches their economy stall
+        /// before anybody dies.
+        /// </summary>
+        public int AddSick(int amount)
         {
-            if (_assignedPopulation <= _totalPopulation) return;
+            if (amount <= 0) return 0;
+
+            var fell = Mathf.Min(amount, _totalPopulation - _sickPopulation);
+            if (fell <= 0) return 0;
+
+            _sickPopulation += fell;
+            LayOffWorkersBeyondWorkforce();
+            OnPopulationChanged?.Invoke();
+            return fell;
+        }
+
+        /// <summary>Back on their feet. Their old jobs are NOT given back -- the player reassigns them, the same as for any other idle citizen.</summary>
+        public int HealSick(int amount)
+        {
+            if (amount <= 0) return 0;
+
+            var recovered = Mathf.Min(amount, _sickPopulation);
+            if (recovered <= 0) return 0;
+
+            _sickPopulation -= recovered;
+            OnPopulationChanged?.Invoke();
+            return recovered;
+        }
+
+        /// <summary>Used by save/load, like SetPopulation beside it. Clamped, because a save written before this existed has no sick at all and a corrupted one must not empty the workforce.</summary>
+        public void SetSickPopulation(int amount)
+        {
+            _sickPopulation = Mathf.Clamp(amount, 0, _totalPopulation);
+            LayOffWorkersBeyondWorkforce();
+            OnPopulationChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Hands back worker slots until the assigned count fits the people well enough to fill
+        /// them. Each ProductionBuilding owns its own count, so they have to be asked one at a
+        /// time.
+        ///
+        /// Measured against HealthyPopulation rather than the headcount, so that taking to one's
+        /// bed empties a workplace exactly the way dying does.
+        /// </summary>
+        private void LayOffWorkersBeyondWorkforce()
+        {
+            var workforce = HealthyPopulation;
+            if (_assignedPopulation <= workforce) return;
 
             foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
             {
-                while (_assignedPopulation > _totalPopulation && building.AssignedWorkers > 0)
+                while (_assignedPopulation > workforce && building.AssignedWorkers > 0)
                 {
                     // Decrements _assignedPopulation through NotifyWorkerUnassigned.
                     building.TryUnassignWorker();
                 }
-                if (_assignedPopulation <= _totalPopulation) return;
+                if (_assignedPopulation <= workforce) return;
             }
 
             // Nothing left to unassign (buildings gone, counts already out of step) -- the invariant
             // matters more than where the discrepancy came from.
-            _assignedPopulation = Mathf.Min(_assignedPopulation, _totalPopulation);
+            _assignedPopulation = Mathf.Min(_assignedPopulation, workforce);
         }
 
         /// <summary>Used by save/load to set population directly, bypassing the placement-grant path.</summary>
         public void SetPopulation(int amount)
         {
             _totalPopulation = amount;
+            _sickPopulation = Mathf.Min(_sickPopulation, _totalPopulation);
             OnPopulationChanged?.Invoke();
         }
 

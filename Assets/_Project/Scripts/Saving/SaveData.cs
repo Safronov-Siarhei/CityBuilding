@@ -65,8 +65,24 @@ namespace CityBuilder.Saving
         /// </summary>
         public int hungryDaysInARow;
 
-        /// <summary>Starvation deaths per day over the window happiness remembers, oldest first.</summary>
+        /// <summary>Deaths per day over the window happiness remembers, oldest first. Named for starvation because that is all it once held; illness now goes in here too, and the name is kept so the field does not vanish out of every save already written (see FoodConsumptionManager.RecordDeaths).</summary>
         public List<int> recentStarvationDeaths = new List<int>();
+
+        /// <summary>
+        /// How the settlement was ailing: how many are in bed, and how many days in a row have
+        /// ended without the beds being cleared. Both matter -- the sick are people the player
+        /// cannot put to work, and the streak is how close they are to burying them.
+        /// </summary>
+        public int sickPopulation;
+
+        public int sicknessUntreatedDays;
+
+        /// <summary>
+        /// Everything alight, and how far into its burn it is. Without this a reload was a fire
+        /// brigade: every fire went out at once, the buildings kept whatever health the flames had
+        /// left them, and saving mid-blaze was the cheapest way to put one out.
+        /// </summary>
+        public List<FireEntry> fires = new List<FireEntry>();
 
         /// <summary>
         /// The raid source. Without it a reload healed the map's objective: the portal is placed
@@ -121,6 +137,17 @@ namespace CityBuilder.Saving
         /// so there is nothing about a forest that a reload could unfairly restore.
         /// </summary>
         public List<RockEntry> rocks = new List<RockEntry>();
+    }
+
+    [Serializable]
+    public class FireEntry
+    {
+        /// <summary>The burning building's origin cell -- the same key BuildingEntry uses, and the only thing that identifies one building among several of a kind.</summary>
+        public int cellX;
+        public int cellY;
+
+        /// <summary>Seconds burnt so far. Not seconds REMAINING: how long a fire has left depends on how many firefighters can reach it, which is a question about the town as it stands after the load, not before the save.</summary>
+        public float elapsedSeconds;
     }
 
     [Serializable]

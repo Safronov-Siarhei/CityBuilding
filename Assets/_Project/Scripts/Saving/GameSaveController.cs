@@ -83,6 +83,9 @@ namespace CityBuilder.Saving
             if (citizenManager != null)
             {
                 citizenManager.SetPopulation(data.population);
+                // After the headcount, which it is clamped into, and before the buildings, whose
+                // restored worker counts were written by a save that already knew who was ill.
+                citizenManager.SetSickPopulation(data.sickPopulation);
             }
 
             if (gameCalendar != null)
@@ -171,6 +174,39 @@ namespace CityBuilder.Saving
             Citizens.MigrationManager.Instance?.RestoreFromSave(data.migrationTimerSeconds, data.settlingInSecondsRemaining);
 
             RestoreRocks(data);
+            RestoreFires(data);
+            Citizens.SicknessManager.Instance?.RestoreFromSave(data.sicknessUntreatedDays);
+        }
+
+        /// <summary>
+        /// Sets alight again everything that was burning, as far in as it was.
+        ///
+        /// After the buildings, obviously -- but also after the ROCKS, for no reason other than
+        /// keeping every "put the world back" pass in one place at the end of the load.
+        /// </summary>
+        private static void RestoreFires(GameSaveData data)
+        {
+            if (data.fires == null || data.fires.Count == 0) return;
+
+            foreach (var entry in data.fires)
+            {
+                var cell = new Vector2Int(entry.cellX, entry.cellY);
+                var building = FindBuildingAt(cell);
+                if (building == null) continue;
+
+                Buildings.FireManager.Ignite(building);
+                var fire = building.GetComponent<Buildings.BuildingFire>();
+                if (fire != null) fire.RestoreElapsed(entry.elapsedSeconds);
+            }
+        }
+
+        private static BuildingInstance FindBuildingAt(Vector2Int cell)
+        {
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.OriginCell == cell) return instance;
+            }
+            return null;
         }
 
         /// <summary>
@@ -413,9 +449,25 @@ namespace CityBuilder.Saving
                 data.recentStarvationDeaths.AddRange(food.RecentDeathsPerDay);
             }
 
+            data.sickPopulation = citizenManager != null ? citizenManager.SickPopulation : 0;
+            data.sicknessUntreatedDays = Citizens.SicknessManager.Instance != null
+                ? Citizens.SicknessManager.Instance.UntreatedDaysInARow
+                : 0;
+
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
                 if (instance.Data == null) continue;
+
+                var fire = instance.GetComponent<Buildings.BuildingFire>();
+                if (fire != null)
+                {
+                    data.fires.Add(new FireEntry
+                    {
+                        cellX = instance.OriginCell.x,
+                        cellY = instance.OriginCell.y,
+                        elapsedSeconds = fire.ElapsedSeconds
+                    });
+                }
 
                 var production = instance.GetComponent<ProductionBuilding>();
                 data.buildings.Add(new BuildingEntry

@@ -178,6 +178,19 @@ namespace CityBuilder.Resources
             return deaths;
         }
 
+        /// <summary>
+        /// Records deaths this class did not cause. Illness kills too (see SicknessManager), and
+        /// the happiness model has exactly one window of recent dead -- so this class has quietly
+        /// become the settlement's death register rather than starvation's.
+        ///
+        /// The save field beside it is still called recentStarvationDeaths, and stays that way on
+        /// purpose: renaming it would drop the value out of every save already written.
+        /// </summary>
+        public void RecordDeaths(int deaths)
+        {
+            if (deaths > 0) RememberDeaths(deaths);
+        }
+
         private void RememberDeaths(int deaths)
         {
             _recentDeaths.Enqueue(deaths);

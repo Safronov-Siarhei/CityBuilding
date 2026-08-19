@@ -57,6 +57,17 @@ namespace CityBuilder.Buildings
         public int harvestRadius;
 
         /// <summary>
+        /// How far this building's service reaches, in metres. Three buildings have one and they
+        /// all mean the same thing by it: a Колодец waters the houses inside it, a Дом лекаря
+        /// treats the settlement while it stands staffed inside it, and a Пожарная бригада can
+        /// reach a fire inside it. Zero for the other 46, which serve nothing.
+        ///
+        /// Per level, unlike fogRevealRadius: upgrading one of the three is meant to be a way to
+        /// cover more of a town that has outgrown it, rather than only a way to make it faster.
+        /// </summary>
+        public int serviceRadius;
+
+        /// <summary>
         /// What standing here does for the settlement's mood -- the design's third happiness factor,
         /// "each entertainment building contributes its own happiness value". Zero for everything
         /// outside the Развлечения category, which is most of the roster.

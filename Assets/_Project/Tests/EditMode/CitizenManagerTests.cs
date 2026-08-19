@@ -22,6 +22,63 @@ namespace CityBuilder.Tests.EditMode
             if (_go != null) Object.DestroyImmediate(_go);
         }
 
+        /// <summary>
+        /// Illness is a headcount, and the whole cost of it is that the ill cannot be put to work.
+        /// A sick count that left IdlePopulation alone would be a number on a panel and nothing else.
+        /// </summary>
+        [Test]
+        public void TheSick_AreNotAvailableToWork()
+        {
+            _manager.AddCitizens(10);
+            Assert.AreEqual(10, _manager.IdlePopulation);
+
+            Assert.AreEqual(4, _manager.AddSick(4));
+
+            Assert.AreEqual(10, _manager.TotalPopulation, "Falling ill is not leaving the settlement.");
+            Assert.AreEqual(4, _manager.SickPopulation);
+            Assert.AreEqual(6, _manager.HealthyPopulation);
+            Assert.AreEqual(6, _manager.IdlePopulation, "The ill were still counted as hands available for hire.");
+        }
+
+        [Test]
+        public void TheSick_CanNeverOutnumberTheLiving()
+        {
+            _manager.AddCitizens(3);
+
+            Assert.AreEqual(3, _manager.AddSick(99), "More people took to their beds than the settlement has.");
+            Assert.AreEqual(0, _manager.AddSick(1), "Somebody fell ill twice.");
+            Assert.AreEqual(0, _manager.HealthyPopulation);
+            Assert.AreEqual(0, _manager.IdlePopulation);
+        }
+
+        /// <summary>Their old job is deliberately NOT given back: a recovered citizen is an idle one, and where they go next is the player's business.</summary>
+        [Test]
+        public void Recovering_ReturnsThemToTheIdlePool()
+        {
+            _manager.AddCitizens(8);
+            _manager.AddSick(5);
+
+            Assert.AreEqual(5, _manager.HealSick(9), "More people recovered than were ever ill.");
+            Assert.AreEqual(0, _manager.SickPopulation);
+            Assert.AreEqual(8, _manager.IdlePopulation);
+        }
+
+        /// <summary>
+        /// Deaths shrink the town, and the sickbed has to shrink with it -- a sick count left above
+        /// the survivors would drive HealthyPopulation to zero and lay the whole settlement off.
+        /// </summary>
+        [Test]
+        public void DeathsClampTheSickbed()
+        {
+            _manager.AddCitizens(6);
+            _manager.AddSick(6);
+
+            _manager.KillCitizens(4);
+
+            Assert.AreEqual(2, _manager.TotalPopulation);
+            Assert.AreEqual(2, _manager.SickPopulation);
+        }
+
         [Test]
         public void FreshManager_HasZeroPopulation()
         {

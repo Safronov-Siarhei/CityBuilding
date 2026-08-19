@@ -40,6 +40,9 @@ namespace CityBuilder.Buildings
         /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
         public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
 
+        /// <summary>How far this building serves, at the level it stands at -- see BuildingLevelStats.serviceRadius. Zero for everything that serves nothing.</summary>
+        public int ServiceRadius => Data != null ? Data.LevelStats(Level).serviceRadius : 0;
+
         /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment.</summary>
         public int Happiness => Data != null ? Data.LevelStats(Level).happiness : 0;
 

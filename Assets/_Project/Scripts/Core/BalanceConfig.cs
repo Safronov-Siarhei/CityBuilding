@@ -285,6 +285,31 @@ namespace CityBuilder.Core
         /// <summary>Entertainment points per citizen that count as a fully entertained settlement -- the same shape as the defence factor's own target, which is a constant in HappinessManager.</summary>
         [SerializeField] private float happinessPerCitizenTarget = 0.8f;
 
+        [Header("Fires (economy.csv)")]
+        // A building only burns if it has been let go: the chance is the full-decay figure scaled
+        // by how decayed it actually is, so a maintained town never catches fire at all and repair
+        // stops being a chore and starts being fire insurance.
+        [SerializeField] private float fireChancePerDayAtFullDecay = 0.3f;
+        [SerializeField] private float fireSpreadChancePerDay = 0.4f;
+        [SerializeField] private float fireSpreadRadiusMeters = 6f;
+        [SerializeField] private int fireDamagePerSecond = 3;
+        // How long a fire nobody attends lasts, and what each firefighter within reach takes off
+        // that -- the same shape the Laboratory's scientists use on a research, and floored the
+        // same way so no number of them makes a fire instantaneous.
+        [SerializeField] private float fireBurnSeconds = 60f;
+        [SerializeField] private float fireSecondsSavedPerFirefighter = 12f;
+        [SerializeField] private float fireMinBurnSeconds = 5f;
+
+        [Header("Illness (economy.csv)")]
+        // Three chances that add up to one: the background risk, what going hungry adds, and what
+        // living out of reach of a well adds. Then how long the ill last untreated, and how many
+        // one healer gets back on their feet in a day.
+        [SerializeField] private float sicknessBaseChancePerDay = 0.01f;
+        [SerializeField] private float sicknessHungerChancePerDay = 0.15f;
+        [SerializeField] private float sicknessThirstChancePerDay = 0.12f;
+        [SerializeField] private int sicknessDaysBeforeDeath = 3;
+        [SerializeField] private int healPerHealerPerDay = 2;
+
         [Header("Migration (economy.csv)")]
         // How fast people find their way to the settlement, or away from it. Contentment above the
         // threshold brings settlers in and below it drives them out, and the further from the
@@ -335,6 +360,18 @@ namespace CityBuilder.Core
         public float ProgressPerSoldierLevel => progressPerSoldierLevel;
         public float ProgressPerDefencePoint => progressPerDefencePoint;
         public float ProgressPerProducedUnit => progressPerProducedUnit;
+        public float FireChancePerDayAtFullDecay => fireChancePerDayAtFullDecay;
+        public float FireSpreadChancePerDay => fireSpreadChancePerDay;
+        public float FireSpreadRadiusMeters => fireSpreadRadiusMeters;
+        public int FireDamagePerSecond => fireDamagePerSecond;
+        public float FireBurnSeconds => fireBurnSeconds;
+        public float FireSecondsSavedPerFirefighter => fireSecondsSavedPerFirefighter;
+        public float FireMinBurnSeconds => fireMinBurnSeconds;
+        public float SicknessBaseChancePerDay => sicknessBaseChancePerDay;
+        public float SicknessHungerChancePerDay => sicknessHungerChancePerDay;
+        public float SicknessThirstChancePerDay => sicknessThirstChancePerDay;
+        public int SicknessDaysBeforeDeath => sicknessDaysBeforeDeath;
+        public int HealPerHealerPerDay => healPerHealerPerDay;
         public int PortalMaxHealth => portalMaxHealth;
         public float DefenceAttackIntervalSeconds => defenceAttackIntervalSeconds;
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
@@ -439,6 +476,18 @@ namespace CityBuilder.Core
             progressPerSoldierLevel = Read(economy, "progress_per_soldier_level", progressPerSoldierLevel);
             progressPerDefencePoint = Read(economy, "progress_per_defence_point", progressPerDefencePoint);
             progressPerProducedUnit = Read(economy, "progress_per_produced_unit", progressPerProducedUnit);
+            fireChancePerDayAtFullDecay = Read(economy, "fire_chance_per_day_at_full_decay", fireChancePerDayAtFullDecay);
+            fireSpreadChancePerDay = Read(economy, "fire_spread_chance_per_day", fireSpreadChancePerDay);
+            fireSpreadRadiusMeters = Read(economy, "fire_spread_radius_meters", fireSpreadRadiusMeters);
+            fireDamagePerSecond = (int)Read(economy, "fire_damage_per_second", fireDamagePerSecond);
+            fireBurnSeconds = Read(economy, "fire_burn_seconds", fireBurnSeconds);
+            fireSecondsSavedPerFirefighter = Read(economy, "fire_seconds_saved_per_firefighter", fireSecondsSavedPerFirefighter);
+            fireMinBurnSeconds = Read(economy, "fire_min_burn_seconds", fireMinBurnSeconds);
+            sicknessBaseChancePerDay = Read(economy, "sickness_base_chance_per_day", sicknessBaseChancePerDay);
+            sicknessHungerChancePerDay = Read(economy, "sickness_hunger_chance_per_day", sicknessHungerChancePerDay);
+            sicknessThirstChancePerDay = Read(economy, "sickness_thirst_chance_per_day", sicknessThirstChancePerDay);
+            sicknessDaysBeforeDeath = (int)Read(economy, "sickness_days_before_death", sicknessDaysBeforeDeath);
+            healPerHealerPerDay = (int)Read(economy, "heal_per_healer_per_day", healPerHealerPerDay);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             defenceAttackIntervalSeconds = Read(economy, "defence_attack_interval_seconds", defenceAttackIntervalSeconds);
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);

@@ -584,6 +584,17 @@ namespace CityBuilder.EditorTools
             foodConsumptionManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             foodConsumptionManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // Illness, on the same daily clock as the meal above and reading it: hunger is half of
+            // why people fall ill, and a well being out of reach is the other half.
+            var sicknessManager = managers.AddComponent<CityBuilder.Citizens.SicknessManager>();
+            var sicknessManagerSO = new SerializedObject(sicknessManager);
+            sicknessManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
+            sicknessManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Fires. No wiring: it finds what is standing, what is burning and who can reach it by
+            // scanning, once a game day, and every number it needs is in the sheet.
+            managers.AddComponent<FireManager>();
+
             managers.AddComponent<HappinessManager>();
 
             // What contentment is finally FOR: it sets how fast people find their way here, or
@@ -2126,6 +2137,7 @@ namespace CityBuilder.EditorTools
                     storageCapacity = level.storageCapacity,
                     happiness = level.happiness,
                     harvestRadius = level.harvestRadius,
+                    serviceRadius = level.serviceRadius,
                 });
             }
             return copy;
