@@ -69,8 +69,21 @@ namespace CityBuilder.Core
         /// </summary>
         public List<UnitLevelStats> levels = new List<UnitLevelStats>();
 
-        /// <summary>False = this unit type cannot be recruited until it is opened in the Laboratory. Militia starts open; later tiers will not.</summary>
+        /// <summary>False = this unit type cannot be recruited until it is opened in the Laboratory. Militia starts open; every tier above it does not.</summary>
         public bool startsUnlocked = true;
+
+        /// <summary>
+        /// Smelted metal a recruit of this type has to be equipped with, on top of the coins.
+        /// Militia is zero on both -- an armed peasant needs no forge, which is what makes it the
+        /// tier a settlement can raise before it has an industry.
+        ///
+        /// FLAT, not per level, and deliberately: a level is training, and the kit a spearman is
+        /// handed is the same kit whether or not the Laboratory has taught him to use it better.
+        /// The level tax is paid in coins, where recruitCoins already rises.
+        /// </summary>
+        public int recruitIronBars;
+
+        public int recruitCopperBars;
 
         /// <summary>What it costs to research levels 2 and 3, index 0 being level 2. Shorter than MaxLevel-1 for a unit the sheet gives no upgrades.</summary>
         public List<ResearchStep> levelResearch = new List<ResearchStep>();

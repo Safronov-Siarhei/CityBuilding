@@ -1363,6 +1363,17 @@ namespace CityBuilder.EditorTools
             recruitControls.transform.SetParent(card.transform, false);
             StretchFull(recruitControls.GetComponent<RectTransform>());
 
+            // Which tier to raise. In the same band as the Плавильня's metal buttons (y 160) --
+            // the two are the same question asked of two buildings, and the recipe block is hidden
+            // for a Barracks anyway, so nothing overlaps. The buttons are built at play time by the
+            // controller: how many tiers there are is a property of the sheet, not of the scene.
+            var recruitTypeRow = new GameObject("RecruitTypeRow", typeof(RectTransform));
+            recruitTypeRow.transform.SetParent(recruitControls.transform, false);
+            var recruitTypeRowRect = recruitTypeRow.GetComponent<RectTransform>();
+            recruitTypeRowRect.anchorMin = recruitTypeRowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            recruitTypeRowRect.anchoredPosition = new Vector2(0f, 160f);
+            recruitTypeRowRect.sizeDelta = new Vector2(660f, 58f);
+
             var recruitLabel = CreateText(recruitControls.transform, "RecruitLabel", string.Empty, 22, new Vector2(0f, 105f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.8f));
             var recruitCostRow = CreateCostRow(recruitControls.transform, "RecruitCostRow", new Vector2(0f, 62f));
             var recruitButton = CreateButton(recruitControls.transform, panelSprite, "RecruitButton", "#building_recruit", new Vector2(0f, 10f), new Vector2(360f, 70f));
@@ -1391,6 +1402,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("recruitControls").objectReferenceValue = recruitControls;
             controllerSO.FindProperty("recruitLabel").objectReferenceValue = recruitLabel;
             controllerSO.FindProperty("recruitCostRow").objectReferenceValue = recruitCostRow;
+            controllerSO.FindProperty("recruitTypeRow").objectReferenceValue = recruitTypeRowRect;
             controllerSO.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 

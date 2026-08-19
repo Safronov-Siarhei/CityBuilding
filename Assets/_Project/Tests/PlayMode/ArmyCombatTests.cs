@@ -165,6 +165,93 @@ namespace CityBuilder.Tests.PlayMode
                 "Soldiers let go for lack of pay walk home as citizens -- being unpaid is not the same as dying.");
         }
 
+        /// <summary>
+        /// The two gates on a tier above the militia: the Laboratory has to open it, and the
+        /// Плавильня has to have made the metal it is equipped with. Both are checked here rather
+        /// than by eye, because a tier that is quietly recruitable for coins alone looks exactly
+        /// like a tier that is working.
+        /// </summary>
+        [Test]
+        public void ALockedTier_NeedsBothItsResearchAndItsMetal()
+        {
+            var research = Research.ResearchManager.Instance;
+            Assert.IsNotNull(research, "No ResearchManager in the loaded scene.");
+            research.ResetForTesting();
+
+            var army = ArmyManager.Instance;
+            Assert.IsNull(army.DescribeRecruitBlocker(SoldierType.Militia),
+                "Militia is the tier a settlement starts with; nothing should be refusing it with coins and citizens to spare.");
+
+            Assert.IsNotNull(army.DescribeRecruitBlocker(SoldierType.ManAtArms),
+                "An unresearched tier was recruitable, so the Laboratory has nothing to do with the army.");
+            Assert.IsFalse(army.TryRecruit(SoldierType.ManAtArms, WalkablePoint()));
+
+            research.CompleteInstantly(Research.ResearchTopic.UnlockUnitId(SoldierStats.SheetIdOf(SoldierType.ManAtArms)));
+
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 0);
+            ResourceManager.Instance.SetAmount(ResourceType.CopperBar, 0);
+            Assert.IsNotNull(army.DescribeRecruitBlocker(SoldierType.ManAtArms),
+                "A researched tier was raised out of an empty treasury of metal, so the bars in its cost are decoration.");
+
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 10);
+            ResourceManager.Instance.SetAmount(ResourceType.CopperBar, 10);
+            Assert.IsNull(army.DescribeRecruitBlocker(SoldierType.ManAtArms), "Researched and paid for, and still refused.");
+            Assert.IsTrue(army.TryRecruit(SoldierType.ManAtArms, WalkablePoint()));
+
+            Assert.AreEqual(8, ResourceManager.Instance.GetAmount(ResourceType.IronBar),
+                "Two iron bars are what a man-at-arms is armoured with, and they have to actually leave the store.");
+        }
+
+        /// <summary>
+        /// The reason the archer tier is a trade rather than a free win. It shoots from eight
+        /// metres and an orc only looks six, so without OrcUnit.NotifyAttackedBy a line of archers
+        /// would take a raid apart untouched.
+        ///
+        /// There is no building anywhere on this map -- ArmyCombatTests never places one -- so an
+        /// orc has nothing to walk towards and stands exactly where it was spawned. That makes
+        /// "the orc moved" mean one thing only: it came for the archer.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AnOrcComesAfterTheArcherShootingIt()
+        {
+            Research.ResearchManager.Instance.CompleteEverything();
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 20);
+            ResourceManager.Instance.SetAmount(ResourceType.CopperBar, 20);
+
+            var orcSpot = WalkablePoint();
+            OrcRaidManager.Instance.SpawnOrcs(orcSpot, count: 1, level: 1);
+            Assert.AreEqual(1, OrcUnit.All.Count, "Nothing to shoot at.");
+            var orc = OrcUnit.All[0];
+            var orcStart = orc.transform.position;
+
+            // Beyond the orc's six-metre awareness and inside the archer's ten-metre watch, so the
+            // archer opens fire on something that has no idea it is there.
+            var archerSpot = WalkablePointNear(orcStart, 8.5f);
+            var army = ArmyManager.Instance;
+            Assert.IsTrue(army.TryRecruit(SoldierType.Archer, archerSpot), "The archer was refused even with everything researched and paid for.");
+
+            // Explicitly, because a group survives its last member: an Archer group left over from
+            // an earlier test would still be holding wherever that test put it.
+            ArcherGroup(army).OrderMoveTo(archerSpot);
+
+            yield return WaitUntil(() => orc == null || Vector3.Distance(orc.transform.position, orcStart) > 1.5f, realSecondsTimeout: 25f);
+
+            Assert.IsTrue(orc != null, "The archer killed the orc before it had moved at all, so this could not see whether it would have come.");
+            Assert.Greater(Vector3.Distance(orc.transform.position, orcStart), 1.5f,
+                "The orc stood still while it was shot from eight metres. With nothing on the map for it to walk to, only retaliation could have moved it -- so archers take raids apart without ever being touched.");
+        }
+
+        private static ArmyGroup ArcherGroup(ArmyManager army)
+        {
+            foreach (var group in army.Groups)
+            {
+                if (group.Type == SoldierType.Archer) return group;
+            }
+
+            Assert.Fail("The recruited archer is in no group.");
+            return null;
+        }
+
         [UnityTest]
         public IEnumerator AGroupKillsAnOrcThatWalksIntoIt()
         {
@@ -254,6 +341,27 @@ namespace CityBuilder.Tests.PlayMode
             }
 
             Assert.Fail("No walkable ground found anywhere near the middle of the map.");
+            return Vector3.zero;
+        }
+
+        /// <summary>
+        /// Walkable ground about `distance` metres from `origin` -- for standing two units at a
+        /// chosen range from each other, which is what a test about reach is made of.
+        /// </summary>
+        private static Vector3 WalkablePointNear(Vector3 origin, float distance)
+        {
+            var mapApplier = MeshMapApplier.Instance;
+
+            for (var i = 0; i < 16; i++)
+            {
+                var angle = i * Mathf.PI / 8f;
+                var candidate = origin + new Vector3(Mathf.Cos(angle) * distance, 0f, Mathf.Sin(angle) * distance);
+                if (mapApplier != null && !mapApplier.IsGroundAt(candidate)) continue;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(candidate, out var hit, 1f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                return hit.position;
+            }
+
+            Assert.Fail($"No walkable ground {distance}m from {origin}, so the two units cannot be stood at the range this test needs.");
             return Vector3.zero;
         }
 

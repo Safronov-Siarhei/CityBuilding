@@ -6,15 +6,34 @@ using System.Collections.Generic;
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// The kinds of soldier the player can recruit. One entry today -- Militia, the design's
-    /// "жители с вилами": no armour, little health, respectable damage, and coins as the only
-    /// recruitment cost. Later tiers (armoured spearmen, archers) are the ones that will need the
-    /// equipment buildings and the Laboratory unlock from the design backlog; the type-driven
-    /// stat table below is what lets those be added as data rather than as new unit classes.
+    /// The kinds of soldier the player can recruit -- four rungs of one ladder, and every rung
+    /// beyond the first has to be opened in the Laboratory before the Barracks will raise it.
+    ///
+    /// The tiers differ in what they cost as much as in what they do. Militia is coins alone, which
+    /// is what makes it the tier a settlement can raise before it has an industry at all; the other
+    /// three are paid for partly in smelted bars, so an army becomes a reason to have built the
+    /// Плавильня rather than something bought out of the treasury.
+    ///
+    /// Adding one is a row in the units tab plus an entry here and in SheetIdOf -- everything else
+    /// (stats, levels, research, cost, upkeep) is read from the sheet.
+    ///
+    /// The numbers are pinned, and Militia stays 0: SoldierType is written into the save file as an
+    /// integer (see ArmyGroupEntry), so renumbering would turn every saved militiaman into whatever
+    /// took its place.
     /// </summary>
     public enum SoldierType
     {
+        /// <summary>The design's "жители с вилами": no armour, little health, respectable damage, coins only, and open from the start.</summary>
         Militia = 0,
+
+        /// <summary>A reach of two metres, so it hits first -- the cheap middle of the line, and one iron bar.</summary>
+        Spearman = 1,
+
+        /// <summary>Shoots from eight metres, and is made of paper if anything reaches it. The one tier that changes how a fight is fought rather than how long it lasts.</summary>
+        Archer = 2,
+
+        /// <summary>Armour: four times a militiaman's health, and slower than everything it fights beside. The tier a settlement builds an industry for.</summary>
+        ManAtArms = 3,
     }
 
     /// <summary>
@@ -46,10 +65,41 @@ namespace CityBuilder.Combat
         {
             switch (type)
             {
+                case SoldierType.Spearman: return "spearman";
+                case SoldierType.Archer: return "archer";
+                case SoldierType.ManAtArms: return "manatarms";
                 case SoldierType.Militia:
                 default:
                     return "militia";
             }
+        }
+
+        /// <summary>
+        /// Every tier, in the order the Barracks offers them: cheapest first, which is also the
+        /// order the Laboratory opens them in.
+        ///
+        /// A fixed array rather than Enum.GetValues, which allocates -- the recruitment panel walks
+        /// this on every refresh.
+        /// </summary>
+        public static readonly SoldierType[] All =
+        {
+            SoldierType.Militia,
+            SoldierType.Spearman,
+            SoldierType.Archer,
+            SoldierType.ManAtArms,
+        };
+
+        /// <summary>
+        /// Whether the Laboratory has opened this tier for recruitment.
+        /// </summary>
+        /// <remarks>
+        /// True when there is no ResearchManager at all, which is how the balance tests read the
+        /// sheet without a running game -- the same rule CurrentLevel follows.
+        /// </remarks>
+        public static bool IsUnlocked(SoldierType type)
+        {
+            var research = Research.ResearchManager.Instance;
+            return research == null || research.IsUnitUnlocked(type);
         }
 
         /// <summary>The reverse lookup, for anything walking the sheet rather than the enum -- ResearchCatalog uses it to leave the orcs' row out of the player's tech list.</summary>
@@ -107,13 +157,33 @@ namespace CityBuilder.Combat
         public static float AttackIntervalSeconds(SoldierType type) => Stats(type).attackIntervalSeconds;
 
         /// <summary>
-        /// Coins only for Militia -- an armed peasant needs no forge. Later tiers will add their
-        /// equipment items on top of this. A researched level makes them dearer to raise, per the
-        /// design: the upgrade is army-wide, so it has to cost something ongoing.
+        /// Coins, plus the smelted metal the recruit is equipped with. Coins only for Militia -- an
+        /// armed peasant needs no forge, and that is the whole reason it is the tier available on
+        /// day one.
+        ///
+        /// The user's decision (2026-08-19), taken over the design's earlier "one workshop per
+        /// equipment type": the roster of 49 buildings has no armoury in it, and the Плавильня
+        /// already makes bars that until now nothing much wanted. So the kit is paid for straight
+        /// at the Barracks, in bars.
+        ///
+        /// A researched level makes a recruit dearer in COINS but not in metal -- see
+        /// UnitBalance.recruitIronBars for why the kit is flat.
+        ///
+        /// Zero-valued entries are left out rather than listed: the panel draws this as a row of
+        /// icon chips, and a chip reading "0 iron" is worse than no chip.
         /// </summary>
         public static List<ResourceAmount> RecruitCost(SoldierType type)
         {
-            return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = Stats(type).recruitCoins } };
+            var row = Row(type);
+            var cost = new List<ResourceAmount>(3)
+            {
+                new ResourceAmount { type = ResourceType.Coins, amount = Stats(type).recruitCoins }
+            };
+
+            if (row.recruitIronBars > 0) cost.Add(new ResourceAmount { type = ResourceType.IronBar, amount = row.recruitIronBars });
+            if (row.recruitCopperBars > 0) cost.Add(new ResourceAmount { type = ResourceType.CopperBar, amount = row.recruitCopperBars });
+
+            return cost;
         }
 
         /// <summary>Coins deducted per soldier per game day, at the type's researched level. Unpayable upkeep disbands soldiers one at a time -- see ArmyManager.</summary>

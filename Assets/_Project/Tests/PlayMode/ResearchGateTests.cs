@@ -247,31 +247,36 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// The soldiers' tab is empty on a level-1 Laboratory and there is nothing wrong with that:
-        /// the militia starts unlocked, so its only topics are its two levels, and a level-N
-        /// research needs a level-N Laboratory. What was wrong was the window saying only "nothing
-        /// to research here yet", which reads as a broken tab rather than as a locked one.
+        /// The soldiers' tab used to be empty on a level-1 Laboratory, and legitimately so: the
+        /// militia started unlocked, its only topics were its two levels, and a level-N research
+        /// needs a level-N Laboratory. Three tiers above it now exist and their UNLOCKS are level-1
+        /// topics, so the first thing a player sees in that tab is the ladder they can start
+        /// climbing today.
+        ///
+        /// The old guarantee is still checked, below the new one: a level-1 Laboratory must still
+        /// not offer a level-2 soldier.
         /// </summary>
         [Test]
-        public void TheSoldiersTabNamesTheLabLevelThatWouldOpenIt()
+        public void TheSoldiersTab_OffersTheTiersALevelOneLaboratoryCanOpen()
         {
             var lab = PlaceStaffedLab(out _);
             var panel = Object.FindFirstObjectByType<ResearchPanelController>(FindObjectsInactive.Include);
             Assert.IsNotNull(panel, "The scene has no research window.");
 
-            var wanted = int.MaxValue;
-            foreach (var topic in ResearchCatalog.UnitTopics)
-            {
-                if (topic.RequiredLabLevel < wanted) wanted = topic.RequiredLabLevel;
-            }
-            Assert.AreNotEqual(int.MaxValue, wanted, "The units tab of the sheet authors no research at all, so there is nothing for this tab to promise.");
-
             panel.Show(lab);
             panel.SelectUnitsTab();
 
-            Assert.AreEqual(0, panel.RowCount, "A level-1 Laboratory is not supposed to be able to research a level-2 soldier.");
-            Assert.AreEqual(Localization.Format("#research_empty_lab_level", wanted), panel.EmptyMessage,
-                "The empty soldiers tab does not say which Laboratory level would fill it.");
+            Assert.Greater(panel.RowCount, 0,
+                "The soldiers' tab is empty on a fresh Laboratory, so the three tiers above the militia are unreachable.");
+            Assert.AreEqual(string.Empty, panel.EmptyMessage, "The window is explaining an empty list while showing rows.");
+
+            var research = Research();
+            foreach (var topic in ResearchCatalog.UnitTopics)
+            {
+                if (topic.RequiredLabLevel <= 1) continue;
+                Assert.IsFalse(research.IsAvailable(topic),
+                    $"{topic.Id} is offered by a level-1 Laboratory, which cannot research it.");
+            }
 
             panel.Close();
         }

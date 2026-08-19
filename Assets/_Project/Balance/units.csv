@@ -1,10 +1,13 @@
-id,display_name,max_health,attack_damage,attack_interval_sec,attack_range_units,attack_range_structures,walk_speed,engage_radius,recruit_coins,upkeep_coins_per_day,dps,ttk_vs_militia_sec,ttk_vs_orc_sec,coins_per_hp,starts_unlocked,max_health_2,max_health_3,attack_damage_2,attack_damage_3,attack_interval_sec_2,attack_interval_sec_3,walk_speed_2,walk_speed_3,recruit_coins_2,recruit_coins_3,upkeep_coins_per_day_2,upkeep_coins_per_day_3,research_coins_2,research_sec_2,research_coins_3,research_sec_3
-militia,Ополчение,12,5,"1,1","1,4","2,6","1,5",7,25,1,"4,55","3,30","4,40","2,08",1,18,26,7,10,"1,0","0,9",,,40,60,2,3,80,90,150,150
-orc,Орк,20,4,"1,2","1,4","3,0","1,3",6,0,0,"3,33","3,60","6,00","0,00",1,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-"Жёлтые ячейки — правишь ты. Серые считаются формулами: их можно смотреть, но менять бессмысленно.",,,,,,,,,,,,,,
-"Колонки id и display_name читает код. Порядок колонок не важен — импортёр ищет их по названию, лишние колонки игнорирует.",,,,,,,,,,,,,,
-Добавить нового юнита = добавить строку. Но код узнает о нём только когда для него появится тип в игре.,,,,,,,,,,,,,,
-"Уровни солдата: _2 и _3 — то, что даёт изучение в лаборатории. Пустая клетка = уровень ничего не меняет.",,,,,,,,,,,,,,
-"starts_unlocked=0 = тип нельзя нанимать, пока его не откроют в лаборатории. Ополчение открыто с начала.",,,,,,,,,,,,,,
-"research_coins_2 / research_sec_2 — цена и время изучения второго уровня; лаборатория тоже должна быть 2 уровня.",,,,,,,,,,,,,,
+id,display_name,max_health,attack_damage,attack_interval_sec,attack_range_units,attack_range_structures,walk_speed,engage_radius,recruit_coins,upkeep_coins_per_day,dps,ttk_vs_militia_sec,ttk_vs_orc_sec,coins_per_hp,starts_unlocked,max_health_2,max_health_3,attack_damage_2,attack_damage_3,attack_interval_sec_2,attack_interval_sec_3,walk_speed_2,walk_speed_3,recruit_coins_2,recruit_coins_3,upkeep_coins_per_day_2,upkeep_coins_per_day_3,research_coins_2,research_sec_2,research_coins_3,research_sec_3,research_coins,research_sec,recruit_ironbar,recruit_copperbar
+militia,Ополчение,12,5,"1,1","1,4","2,6","1,5",7,25,1,"4,55","3,30","4,40","2,08",1,18,26,7,10,"1,0","0,9",,,40,60,2,3,80,90,150,150,,,,
+orc,Орк,20,4,"1,2","1,4","3,0","1,3",6,0,0,"3,33","3,60","6,00","0,00",1,,,,,,,,,,,,,,,,,,,,
+spearman,Копейщик,20,7,"1,1","2,0","2,8","1,5",7,45,2,,,,,0,30,44,10,14,"1,0","0,9",,,70,105,3,4,120,90,220,120,60,60,1,0
+archer,Лучник,14,6,"1,4","8,0","8,0","1,4",10,60,3,,,,,0,20,29,9,13,"1,3","1,2",,,90,135,4,6,200,110,320,140,140,90,0,1
+manatarms,Латник,45,9,"1,2","1,4","2,6","1,2",7,90,4,,,,,0,65,95,13,18,"1,1","1,0",,,135,200,6,9,380,150,600,180,260,120,2,1
+,,,,,,,,,,,,,,,,,,
+"Жёлтые ячейки — правишь ты. Серые считаются формулами: их можно смотреть, но менять бессмысленно.",,,,,,,,,,,,,,,,,,
+"Колонки id и display_name читает код. Порядок колонок не важен — импортёр ищет их по названию, лишние колонки игнорирует.",,,,,,,,,,,,,,,,,,
+Добавить нового юнита = добавить строку. Но код узнает о нём только когда для него появится тип в игре.,,,,,,,,,,,,,,,,,,
+"Уровни солдата: _2 и _3 — то, что даёт изучение в лаборатории. Пустая клетка = уровень ничего не меняет.",,,,,,,,,,,,,,,,,,
+"starts_unlocked=0 = тип нельзя нанимать, пока его не откроют в лаборатории. Ополчение открыто с начала.",,,,,,,,,,,,,,,,,,
+research_coins_2 / research_sec_2 — цена и время изучения второго уровня; лаборатория тоже должна быть 2 уровня.,,,,,,,,,,,,,,,,,,

@@ -35,6 +35,15 @@ namespace CityBuilder.Combat
         // can't reach past that wall for something behind it.
         private const float BlockerReachRadius = 2.5f;
 
+        /// <summary>
+        /// How far past its own aggro radius an orc will chase whoever is SHOOTING it, as a
+        /// multiple of that radius. Bounded rather than unlimited for two reasons: FightSoldier
+        /// closes in a straight line rather than over the NavMesh, which is honest over a few
+        /// metres and would walk through a wall over twenty; and an unleashed orc could be kited
+        /// across the whole map, away from the town it came for.
+        /// </summary>
+        private const float RetaliationLeashMultiplier = 2.5f;
+
         private static readonly List<OrcUnit> _all = new List<OrcUnit>();
         public static IReadOnlyList<OrcUnit> All => _all;
 
@@ -50,6 +59,9 @@ namespace CityBuilder.Combat
         private float _attackTimer;
         private float _retargetTimer;
         private float _soldierScanTimer;
+
+        /// <summary>The soldier it is after was handed over by being hit rather than found by the scan, so the scan must not immediately forget it -- see NotifyAttackedBy.</summary>
+        private bool _retaliating;
 
         public int CurrentHealth { get; private set; }
 
@@ -143,7 +155,15 @@ namespace CityBuilder.Combat
             if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
             {
                 _soldierScanTimer = SoldierScanIntervalSeconds;
-                _soldierTarget = FindNearestSoldierInAggroRange();
+
+                // A target handed over by being SHOT is kept while the chase is still worth it.
+                // Without this exception the very next scan -- which looks no further than the
+                // aggro radius -- would forget the archer standing eight metres away killing it.
+                if (!_retaliating || !StillWorthChasing(_soldierTarget))
+                {
+                    _retaliating = false;
+                    _soldierTarget = FindNearestSoldierInAggroRange();
+                }
             }
 
             if (_soldierTarget != null)
@@ -186,6 +206,37 @@ namespace CityBuilder.Combat
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth <= 0) Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Told that a soldier just hit it, and turns on that soldier even when the soldier stands
+        /// outside its own aggro radius.
+        ///
+        /// This is the only thing that stops the archer tier being free. An archer shoots from
+        /// eight metres and an orc looks six, so without retaliation a line of archers would take a
+        /// raid apart without ever being touched, and the tier would be strictly better than the
+        /// others rather than a trade.
+        ///
+        /// A fight already in progress wins: an orc with a spearman in its face does not turn its
+        /// back on him to walk towards an archer.
+        /// </summary>
+        public void NotifyAttackedBy(SoldierUnit attacker)
+        {
+            if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0) return;
+            if (_soldierTarget != null && _soldierTarget.CurrentHealth > 0) return;
+
+            _soldierTarget = attacker;
+            _retaliating = true;
+            _soldierScanTimer = SoldierScanIntervalSeconds;
+        }
+
+        /// <summary>Whether the soldier it is chasing is alive and still inside the retaliation leash.</summary>
+        private bool StillWorthChasing(SoldierUnit soldier)
+        {
+            if (soldier == null || soldier.CurrentHealth <= 0) return false;
+
+            var leash = _soldierAggroRadius * RetaliationLeashMultiplier;
+            return (soldier.transform.position - transform.position).sqrMagnitude <= leash * leash;
         }
 
         /// <summary>

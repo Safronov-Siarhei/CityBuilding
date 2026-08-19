@@ -174,6 +174,8 @@ namespace CityBuilder.EditorTools
                     engageRadius = Number(header, row, "engage_radius", path),
                     levels = ReadUnitLevels(header, row, path),
                     startsUnlocked = Flag(header, row, "starts_unlocked", true, path),
+                    recruitIronBars = CostAmount(header, row, "recruit_ironbar", path),
+                    recruitCopperBars = CostAmount(header, row, "recruit_copperbar", path),
                     unlockResearch = ReadResearchStep(header, row, "research_coins", "research_sec", path),
                     levelResearch = ReadLevelResearch(header, row, path),
                 });

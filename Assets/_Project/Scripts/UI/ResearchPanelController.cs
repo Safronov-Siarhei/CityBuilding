@@ -95,8 +95,9 @@ namespace CityBuilder.UI
             _labWorkplace = laboratory != null ? laboratory.GetComponent<ProductionBuilding>() : null;
 
             // Always opens on the buildings tab. Carrying the last tab over sounds helpful and is
-            // not: the soldiers' tab is empty for most of a game, so a player who once looked at it
-            // would keep reopening the Laboratory onto a page with nothing on it.
+            // not: the buildings tab is where almost all of the tech list lives -- thirty-one
+            // buildings against four soldier tiers -- and a player who once looked at the soldiers
+            // would keep reopening the Laboratory onto the shorter of the two lists.
             _unitsTab = false;
 
             if (panelRoot != null) panelRoot.SetActive(true);
@@ -239,11 +240,15 @@ namespace CityBuilder.UI
         }
 
         /// <summary>
-        /// Says WHY there is nothing here. The soldiers' tab is the case that needs it: the militia
-        /// starts unlocked, so its only topics are its two levels, and a level-N research needs a
-        /// level-N Laboratory -- which leaves the tab empty on a level-1 Laboratory with no hint
-        /// that upgrading the building is what opens it. "Nothing to research here yet" reads as a
-        /// bug; naming the level turns a dead end into a goal.
+        /// Says WHY there is nothing here: "nothing to research here yet" reads as a broken tab,
+        /// and naming the Laboratory level that would fill it turns a dead end into a goal.
+        ///
+        /// Written for the soldiers' tab, which used to be empty on a level-1 Laboratory -- the
+        /// militia started unlocked, so its only topics were its two levels, and a level-N research
+        /// needs a level-N Laboratory. Three recruitable tiers later that tab is never empty, since
+        /// this list shows completed topics as well as available ones. So this is now a safety net
+        /// rather than a path a player walks: it fires only if a sheet is ever authored with every
+        /// topic on a tab gated behind a bigger building.
         /// </summary>
         private void ExplainTheEmptyList(IReadOnlyList<ResearchTopic> topics)
         {

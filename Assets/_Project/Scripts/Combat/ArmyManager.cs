@@ -26,15 +26,26 @@ namespace CityBuilder.Combat
 
         [SerializeField] private GameCalendar gameCalendar;
 
+        // Cube-primitive silhouettes, in the same style as every other prop in the game. Each tier
+        // has to be tellable from the others at the camera's height and at a glance, so what
+        // separates them is COLOUR and SHAPE rather than detail: a militiaman is brown with a
+        // pitchfork over one shoulder, a spearman is blue with a shaft taller than he is, an archer
+        // is green with a bow held out in front, and a man-at-arms is bare steel and visibly bigger.
         private static readonly Color MilitiaClothingColor = new Color(0.45f, 0.36f, 0.24f);
-        private static readonly Color MilitiaSkinColor = new Color(0.85f, 0.68f, 0.52f);
-        private static readonly Color PitchforkColor = new Color(0.55f, 0.55f, 0.58f);
+        private static readonly Color SpearmanClothingColor = new Color(0.3f, 0.34f, 0.5f);
+        private static readonly Color ArcherClothingColor = new Color(0.24f, 0.4f, 0.26f);
+        private static readonly Color ArmourColor = new Color(0.62f, 0.64f, 0.68f);
+        private static readonly Color TabardColor = new Color(0.5f, 0.16f, 0.16f);
+        private static readonly Color SkinColor = new Color(0.85f, 0.68f, 0.52f);
+        private static readonly Color WoodColor = new Color(0.45f, 0.33f, 0.2f);
+        private static readonly Color SteelColor = new Color(0.55f, 0.55f, 0.58f);
 
         private readonly List<ArmyGroup> _groups = new List<ArmyGroup>();
 
-        private Material _clothingMaterial;
-        private Material _skinMaterial;
-        private Material _pitchforkMaterial;
+        // Keyed by colour rather than held in a field each: four tiers over eight colours is more
+        // than a field list stays readable at, and every soldier of a type shares one material,
+        // which is what keeps them batching.
+        private readonly Dictionary<Color, Material> _materials = new Dictionary<Color, Material>();
 
         /// <summary>Every group, in creation order -- the order the army panel lists them in.</summary>
         public IReadOnlyList<ArmyGroup> Groups => _groups;
@@ -121,6 +132,10 @@ namespace CityBuilder.Combat
         /// </summary>
         public string DescribeRecruitBlocker(SoldierType type)
         {
+            // First, because it is the only one of the four the player cannot fix in the next
+            // minute: the others say "wait" and this one says "go and research it".
+            if (!SoldierStats.IsUnlocked(type)) return Localization.Get("#army_not_researched");
+
             if (SoldierCount >= SoldierStats.MaxArmySize) return Localization.Format("#army_full", SoldierStats.MaxArmySize);
 
             var citizens = CitizenManager.Instance;
@@ -308,22 +323,14 @@ namespace CityBuilder.Combat
         /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
         private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true)
         {
-            EnsureMaterials();
-
             var jitter = scatter ? UnityEngine.Random.insideUnitCircle * SpawnJitterRadius : Vector2.zero;
             var spawnPosition = origin + new Vector3(jitter.x, 0f, jitter.y);
 
-            // Built to read as a citizen who picked up a tool, not as a knight: same cube body and
-            // head proportions CitizenVisualsManager uses, plus a pitchfork shaft over the
-            // shoulder. When armoured tiers arrive they get their own silhouette.
             var root = new GameObject($"Soldier ({SoldierStats.DisplayName(type)})");
             root.transform.SetParent(transform, false);
             root.transform.position = spawnPosition;
 
-            AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), _clothingMaterial);
-            AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
-            AddCubePart(root.transform, "PitchforkShaft", new Vector3(0.19f, 0.45f, 0f), new Vector3(0.05f, 0.9f, 0.05f), _pitchforkMaterial);
-            AddCubePart(root.transform, "PitchforkHead", new Vector3(0.19f, 0.92f, 0f), new Vector3(0.18f, 0.06f, 0.05f), _pitchforkMaterial);
+            BuildAppearance(root.transform, type);
 
             var controller = root.AddComponent<CharacterController>();
             controller.height = 0.72f;
@@ -337,6 +344,58 @@ namespace CityBuilder.Combat
             return unit;
         }
 
+        /// <summary>
+        /// The tier's silhouette. Every one of them starts from the same cube body and head
+        /// CitizenVisualsManager gives an ordinary citizen -- these are townsfolk who picked
+        /// something up, not a separate species -- and then differs in colour and in what it is
+        /// holding.
+        /// </summary>
+        private void BuildAppearance(Transform root, SoldierType type)
+        {
+            switch (type)
+            {
+                case SoldierType.Spearman:
+                    AddBodyAndHead(root, SpearmanClothingColor);
+                    // Held upright and taller than he is: the two-metre reach in the sheet is this
+                    // tier's whole point, and it should be visible before the first fight.
+                    AddCubePart(root, "SpearShaft", new Vector3(0.19f, 0.6f, 0f), new Vector3(0.045f, 1.2f, 0.045f), MaterialFor(WoodColor));
+                    AddCubePart(root, "SpearTip", new Vector3(0.19f, 1.24f, 0f), new Vector3(0.07f, 0.18f, 0.07f), MaterialFor(SteelColor));
+                    break;
+
+                case SoldierType.Archer:
+                    AddBodyAndHead(root, ArcherClothingColor);
+                    // Out in FRONT rather than over the shoulder, so the one tier that fights at
+                    // range is the one whose weapon points where it is looking.
+                    AddCubePart(root, "Bow", new Vector3(0f, 0.45f, 0.2f), new Vector3(0.04f, 0.62f, 0.04f), MaterialFor(WoodColor));
+                    AddCubePart(root, "BowString", new Vector3(0f, 0.45f, 0.14f), new Vector3(0.02f, 0.5f, 0.02f), MaterialFor(SteelColor));
+                    break;
+
+                case SoldierType.ManAtArms:
+                    // Wider and a head taller than the rest of the line, before a single stat is
+                    // read: forty-five health against a militiaman's twelve has to look like
+                    // something.
+                    AddCubePart(root, "Body", new Vector3(0f, 0.27f, 0f), new Vector3(0.36f, 0.54f, 0.36f), MaterialFor(ArmourColor));
+                    AddCubePart(root, "Tabard", new Vector3(0f, 0.3f, 0.19f), new Vector3(0.16f, 0.34f, 0.02f), MaterialFor(TabardColor));
+                    AddCubePart(root, "Helmet", new Vector3(0f, 0.66f, 0f), new Vector3(0.25f, 0.25f, 0.25f), MaterialFor(ArmourColor));
+                    AddCubePart(root, "SwordBlade", new Vector3(0.23f, 0.6f, 0f), new Vector3(0.06f, 0.7f, 0.03f), MaterialFor(SteelColor));
+                    AddCubePart(root, "SwordGuard", new Vector3(0.23f, 0.26f, 0f), new Vector3(0.2f, 0.05f, 0.05f), MaterialFor(SteelColor));
+                    break;
+
+                case SoldierType.Militia:
+                default:
+                    AddBodyAndHead(root, MilitiaClothingColor);
+                    AddCubePart(root, "PitchforkShaft", new Vector3(0.19f, 0.45f, 0f), new Vector3(0.05f, 0.9f, 0.05f), MaterialFor(SteelColor));
+                    AddCubePart(root, "PitchforkHead", new Vector3(0.19f, 0.92f, 0f), new Vector3(0.18f, 0.06f, 0.05f), MaterialFor(SteelColor));
+                    break;
+            }
+        }
+
+        private void AddBodyAndHead(Transform root, Color clothing)
+        {
+            AddCubePart(root, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), MaterialFor(clothing));
+            AddCubePart(root, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), MaterialFor(SkinColor));
+        }
+
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)
         {
             var part = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -348,14 +407,14 @@ namespace CityBuilder.Combat
             part.GetComponent<Renderer>().sharedMaterial = material;
         }
 
-        private void EnsureMaterials()
+        /// <summary>One shared material per colour, built the first time a soldier wants it.</summary>
+        private Material MaterialFor(Color color)
         {
-            if (_clothingMaterial != null) return;
+            if (_materials.TryGetValue(color, out var material) && material != null) return material;
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            _clothingMaterial = new Material(shader) { color = MilitiaClothingColor };
-            _skinMaterial = new Material(shader) { color = MilitiaSkinColor };
-            _pitchforkMaterial = new Material(shader) { color = PitchforkColor };
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = color };
+            _materials[color] = material;
+            return material;
         }
     }
 }

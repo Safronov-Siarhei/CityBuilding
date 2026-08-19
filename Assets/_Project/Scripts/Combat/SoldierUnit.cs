@@ -225,7 +225,16 @@ namespace CityBuilder.Combat
             _attackTimer = _attackIntervalSeconds;
 
             _target.TakeDamage(_attackDamage);
-            if (!_target.IsAlive) _target = null;
+            if (!_target.IsAlive)
+            {
+                _target = null;
+                return;
+            }
+
+            // An orc has to be able to come after whoever is shooting it, or the archer tier --
+            // which outranges an orc's own eyes -- would kill raids from a distance without ever
+            // being touched. A portal is not told: a structure cannot come after anyone.
+            if (_target is OrcUnit orc) orc.NotifyAttackedBy(this);
         }
 
         /// <summary>Routes to a destination, replanning when the destination has moved or the plan has gone stale. Movement itself is one step along the current route.</summary>

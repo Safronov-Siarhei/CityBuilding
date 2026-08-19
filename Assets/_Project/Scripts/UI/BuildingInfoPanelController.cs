@@ -12,9 +12,8 @@ namespace CityBuilder.UI
 {
     public class BuildingInfoPanelController : MonoBehaviour
     {
-        /// <summary>The one building that recruits, and the one tier it can recruit today -- armoured tiers need the equipment buildings and the Laboratory unlock that don't exist yet.</summary>
+        /// <summary>The one building that recruits. Which tiers it offers is SoldierStats.All, and which of those it will actually raise is the Laboratory's business (see ArmyManager.DescribeRecruitBlocker).</summary>
         private const string RecruitBuildingName = "Barracks";
-        private const SoldierType RecruitableType = SoldierType.Militia;
 
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Text titleLabel;
@@ -36,6 +35,7 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject recruitControls;
         [SerializeField] private Text recruitLabel;
         [SerializeField] private Transform recruitCostRow;
+        [SerializeField] private RectTransform recruitTypeRow;
         [SerializeField] private ResourceIconLibrary iconLibrary;
 
         private BuildingInstance _currentInstance;
@@ -84,12 +84,25 @@ namespace CityBuilder.UI
             Refresh();
         }
 
-        /// <summary>Recruits one militiaman at this Barracks -- costs coins and one idle citizen (see ArmyManager). The panel stays open so the player can raise several in a row.</summary>
+        /// <summary>
+        /// Raises one soldier of the selected tier at this Barracks -- costs coins, the tier's
+        /// smelted kit, and one idle citizen (see ArmyManager). The panel stays open so the player
+        /// can raise several in a row.
+        /// </summary>
         public void Recruit()
         {
             if (_currentInstance == null || ArmyManager.Instance == null) return;
 
-            ArmyManager.Instance.TryRecruit(RecruitableType, _currentInstance.transform.position);
+            ArmyManager.Instance.TryRecruit(_recruitType, _currentInstance.transform.position);
+            Refresh();
+        }
+
+        /// <summary>Picks the tier the Recruit button will raise. A locked tier can be selected on purpose: the label then says what is missing and the price is still readable, which is how a player finds out what the Laboratory would buy them.</summary>
+        public void SelectRecruitType(int index)
+        {
+            if (index < 0 || index >= SoldierStats.All.Length) return;
+
+            _recruitType = SoldierStats.All[index];
             Refresh();
         }
 
@@ -258,8 +271,16 @@ namespace CityBuilder.UI
         private static readonly Color SelectedRecipeColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
         private static readonly Color UnselectedRecipeColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
+        /// <summary>A tier the Laboratory has not opened yet: dimmer than an available one, and still tappable so its price and its refusal can be read.</summary>
+        private static readonly Color LockedTierColor = new Color(0.22f, 0.2f, 0.2f, 0.95f);
+
         private readonly List<Image> _recipeButtons = new List<Image>();
         private ProductionBuilding _recipeButtonsOwner;
+
+        private readonly List<Image> _recruitButtons = new List<Image>();
+
+        /// <summary>The tier the Recruit button will raise. Starts on Militia, the one tier open from the first minute.</summary>
+        private SoldierType _recruitType = SoldierType.Militia;
 
         /// <summary>
         /// Recruitment lives on the Barracks only. The label doubles as the refusal reason (army
@@ -275,11 +296,86 @@ namespace CityBuilder.UI
             if (recruitControls != null) recruitControls.SetActive(isBarracks && army != null);
             if (!isBarracks || army == null) return;
 
-            BuildCostRow(recruitCostRow, SoldierStats.RecruitCost(RecruitableType));
+            RefreshRecruitTypeButtons();
+            BuildCostRow(recruitCostRow, SoldierStats.RecruitCost(_recruitType));
 
             if (recruitLabel == null) return;
-            var blocker = army.DescribeRecruitBlocker(RecruitableType);
+            var blocker = army.DescribeRecruitBlocker(_recruitType);
             recruitLabel.text = blocker ?? Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
+        }
+
+        /// <summary>
+        /// One button per tier, in the sheet's own order. Built once for the lifetime of the panel
+        /// -- unlike the recipe row there is nothing per-building about them, every Barracks offers
+        /// the same four.
+        ///
+        /// Three colours rather than two: selected, available, and locked. A locked tier stays
+        /// tappable, because a greyed-out row that says nothing is how a player never learns what
+        /// the Laboratory is for.
+        /// </summary>
+        private void RefreshRecruitTypeButtons()
+        {
+            if (recruitTypeRow == null) return;
+
+            if (_recruitButtons.Count == 0)
+            {
+                for (var i = 0; i < SoldierStats.All.Length; i++)
+                {
+                    _recruitButtons.Add(CreateRecruitTypeButton(i, SoldierStats.All[i]));
+                }
+            }
+
+            for (var i = 0; i < _recruitButtons.Count; i++)
+            {
+                var type = SoldierStats.All[i];
+                _recruitButtons[i].color = type == _recruitType
+                    ? SelectedRecipeColor
+                    : (SoldierStats.IsUnlocked(type) ? UnselectedRecipeColor : LockedTierColor);
+            }
+        }
+
+        private Image CreateRecruitTypeButton(int index, SoldierType type)
+        {
+            // Narrower than the recipe buttons because there are four of them rather than three:
+            // 4 x 155 plus the gaps is 644, which fits the row's 660.
+            const float width = 155f;
+            const float spacing = 8f;
+            var count = SoldierStats.All.Length;
+
+            var go = new GameObject($"Recruit_{type}", typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(recruitTypeRow, false);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2((index - (count - 1) * 0.5f) * (width + spacing), 0f);
+            rect.sizeDelta = new Vector2(width, 58f);
+
+            var image = go.GetComponent<Image>();
+            image.sprite = recipeButtonSprite;
+            image.type = Image.Type.Sliced;
+
+            var labelGO = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelGO.transform.SetParent(go.transform, false);
+            var labelRect = labelGO.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(4f, 4f);
+            labelRect.offsetMax = new Vector2(-4f, -4f);
+
+            var label = labelGO.GetComponent<Text>();
+            label.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 17;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.color = Color.white;
+            label.text = SoldierStats.DisplayName(type);
+
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+            var captured = index;
+            button.onClick.AddListener(() => SelectRecruitType(captured));
+
+            return image;
         }
 
         /// <summary>The icon+number chips for one cost -- see CostRowBuilder, which the Laboratory's window shares.</summary>
