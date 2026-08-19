@@ -91,6 +91,7 @@ namespace CityBuilder.EditorTools
             // revert PlayerSettings changes made beforehand, so nothing here can precede a scene
             // switch -- including the MainMenu re-open just above.
             ConfigureMobileLandscape();
+            NameTerrainLayer();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -116,6 +117,27 @@ namespace CityBuilder.EditorTools
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = true;
+        }
+
+        /// <summary>
+        /// Gives the map's physics layer a name in the Inspector. The layer INDEX is what actually
+        /// matters (TerrainPhysicsLayer.Layer, applied at runtime where the map is built) -- this
+        /// only stops it reading as "Layer 6" to anyone looking at the ground object.
+        /// </summary>
+        private static void NameTerrainLayer()
+        {
+            var tagManagerAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset");
+            if (tagManagerAssets == null || tagManagerAssets.Length == 0) return;
+
+            var tagManager = new SerializedObject(tagManagerAssets[0]);
+            var layers = tagManager.FindProperty("layers");
+            if (layers == null || layers.arraySize <= TerrainPhysicsLayer.Layer) return;
+
+            var slot = layers.GetArrayElementAtIndex(TerrainPhysicsLayer.Layer);
+            if (slot.stringValue == TerrainPhysicsLayer.LayerName) return;
+
+            slot.stringValue = TerrainPhysicsLayer.LayerName;
+            tagManager.ApplyModifiedProperties();
         }
 
         private static void BuildMainMenuScene()

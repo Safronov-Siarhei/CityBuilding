@@ -190,6 +190,11 @@ namespace CityBuilder.Maps
             if (baseGroundToHide != null) baseGroundToHide.SetActive(false);
             if (baseForestBorderToHide != null) baseForestBorderToHide.SetActive(false);
 
+            // Before any of the map's colliders exist, so nothing is ever swept against even once:
+            // half the cost of a walking citizen was the capsule hitting this geometry, and none of
+            // it was ever holding an agent up. See TerrainPhysicsLayer for the measurement.
+            TerrainPhysicsLayer.ExcludeFromCollisions();
+
             // These FBX assets carry a corrective root rotation from Blender's Z-up authoring
             // (visible in the Inspector, e.g. ~90 degrees on X) that must NOT be overridden with
             // Quaternion.identity -- doing so would leave the mesh (and its collider, used below
@@ -203,6 +208,7 @@ namespace CityBuilder.Maps
                 // only the first one found left the rest of the terrain with nothing to raycast
                 // against (silently misclassified as water / unreachable ground).
                 AddMeshCollidersToAll(groundInstance);
+                TerrainPhysicsLayer.Assign(groundInstance);
                 _groundColliders = groundInstance.GetComponentsInChildren<Collider>();
                 BuildNavMesh();
             }
@@ -215,6 +221,7 @@ namespace CityBuilder.Maps
                 var sourceEuler = map.WaterPrefab.transform.rotation.eulerAngles;
                 var waterRotation = Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
                 var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
+                TerrainPhysicsLayer.Assign(waterInstance);
                 if (map.WaterMaterial != null)
                 {
                     foreach (var renderer in waterInstance.GetComponentsInChildren<Renderer>())
@@ -230,6 +237,7 @@ namespace CityBuilder.Maps
                 var waterZoneInstance = Instantiate(map.WaterPlacementZonePrefab, Vector3.zero, map.WaterPlacementZonePrefab.transform.rotation, transform);
                 SetRenderersEnabled(waterZoneInstance, false);
                 AddMeshCollidersToAll(waterZoneInstance);
+                TerrainPhysicsLayer.Assign(waterZoneInstance);
                 waterZoneColliders = waterZoneInstance.GetComponentsInChildren<Collider>();
             }
 
@@ -244,6 +252,7 @@ namespace CityBuilder.Maps
                 // patches, and deriving a single collider from just the first one found would
                 // silently make the rest of the zone read as outside the zone below.
                 AddMeshCollidersToAll(treesAreaInstance);
+                TerrainPhysicsLayer.Assign(treesAreaInstance);
                 treesZoneColliders = treesAreaInstance.GetComponentsInChildren<Collider>();
             }
 
