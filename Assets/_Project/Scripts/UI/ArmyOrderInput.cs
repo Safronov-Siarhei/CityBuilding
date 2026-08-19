@@ -180,7 +180,7 @@ namespace CityBuilder.UI
             _marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             _marker.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
 
-            _markerMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            _markerMaterial = new Material(RuntimeShaders.Unlit);
             _marker.GetComponent<Renderer>().sharedMaterial = _markerMaterial;
             _marker.SetActive(false);
         }

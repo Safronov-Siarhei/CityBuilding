@@ -310,7 +310,7 @@ namespace CityBuilder.Buildings
             marker.transform.localPosition = new Vector3(0f, DecayMarkerHeight, 0f);
             marker.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
             marker.transform.localRotation = Quaternion.Euler(45f, 45f, 0f);
-            marker.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            marker.GetComponent<Renderer>().sharedMaterial = new Material(RuntimeShaders.Lit)
             {
                 color = new Color(0.95f, 0.4f, 0.1f)
             };

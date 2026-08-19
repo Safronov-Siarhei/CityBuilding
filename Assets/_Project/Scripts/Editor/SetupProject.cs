@@ -93,6 +93,7 @@ namespace CityBuilder.EditorTools
             // switch -- including the MainMenu re-open just above.
             ConfigureMobileLandscape();
             NameTerrainLayer();
+            IncludeRuntimeShadersInBuilds();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -126,6 +127,56 @@ namespace CityBuilder.EditorTools
             // by, any other app carrying it.
             PlayerSettings.companyName = "Depigo Games";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.depigogames.citybuilding");
+        }
+
+        /// <summary>
+        /// Puts the shaders that only runtime code asks for into every build.
+        ///
+        /// A shader reaches a player only if something references it. Every material this project
+        /// generates is Lit, so URP/Lit travelled in on their backs -- but URP/Unlit is referenced
+        /// by no material at all, only by `new Material(RuntimeShaders.Unlit)` in a dozen runtime
+        /// call sites. It was therefore left out of the first Android build entirely, `Shader.Find`
+        /// returned null in the player, and every progress bar, health bar, radius carpet and cell
+        /// highlight rendered as a magenta rectangle. The editor could never reproduce it: there
+        /// `Shader.Find` searches the whole project.
+        ///
+        /// Always Included Shaders is the setting that says "build this in regardless", which is
+        /// exactly the guarantee those call sites need.
+        /// </summary>
+        private static void IncludeRuntimeShadersInBuilds()
+        {
+            var graphicsSettings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
+            if (graphicsSettings == null || graphicsSettings.Length == 0) return;
+
+            var settings = new SerializedObject(graphicsSettings[0]);
+            var included = settings.FindProperty("m_AlwaysIncludedShaders");
+            if (included == null) return;
+
+            var wanted = new[] { RuntimeShaders.LitName, RuntimeShaders.UnlitName };
+            var changed = false;
+
+            foreach (var shaderName in wanted)
+            {
+                var shader = Shader.Find(shaderName);
+                if (shader == null)
+                {
+                    Debug.LogWarning($"[SetupProject] Shader '{shaderName}' not found in the project -- cannot always-include it.");
+                    continue;
+                }
+
+                var alreadyThere = false;
+                for (var i = 0; i < included.arraySize; i++)
+                {
+                    if (included.GetArrayElementAtIndex(i).objectReferenceValue == shader) { alreadyThere = true; break; }
+                }
+                if (alreadyThere) continue;
+
+                included.InsertArrayElementAtIndex(included.arraySize);
+                included.GetArrayElementAtIndex(included.arraySize - 1).objectReferenceValue = shader;
+                changed = true;
+            }
+
+            if (changed) settings.ApplyModifiedProperties();
         }
 
         /// <summary>
@@ -593,6 +644,13 @@ namespace CityBuilder.EditorTools
             }
             placerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // Wired here rather than where the rig is built, since the placer does not exist yet at
+            // that point. Without it a drag during placement moves the ghost AND pans the camera
+            // under it -- see RTSCameraController's Placement header.
+            var placerOnCameraSO = new SerializedObject(rtsCamera);
+            placerOnCameraSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            placerOnCameraSO.ApplyModifiedPropertiesWithoutUndo();
+
             var citizenManager = managers.AddComponent<CitizenManager>();
             var citizenManagerSO = new SerializedObject(citizenManager);
             citizenManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
@@ -869,6 +927,28 @@ namespace CityBuilder.EditorTools
             rotateVisibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             rotateVisibilitySO.FindProperty("target").objectReferenceValue = rotateButton.gameObject;
             rotateVisibilitySO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Cancel. On a phone there was NO way to put a building back down: ClearSelection was
+            // reachable only through Escape and the right mouse button, so a selected building the
+            // player could not afford stayed stuck to their finger for the rest of the game.
+            // Sits left of the rotate button, and stays hidden while the mandatory Town Hall is
+            // being placed -- that one genuinely cannot be cancelled.
+            var cancelIcon = CreateCancelIcon();
+            var cancelButton = CreateIconButton(canvasGO.transform, panelSprite, cancelIcon, "CancelPlacementButton", Vector2.zero, new Vector2(90f, 90f));
+            var cancelRect = cancelButton.GetComponent<RectTransform>();
+            cancelRect.anchorMin = new Vector2(1f, 0f);
+            cancelRect.anchorMax = new Vector2(1f, 0f);
+            cancelRect.pivot = new Vector2(1f, 0f);
+            cancelRect.anchoredPosition = new Vector2(-40f, 140f);
+
+            UnityEventTools.AddPersistentListener(cancelButton.onClick, placer.ClearSelection);
+
+            var cancelVisibility = canvasGO.AddComponent<ShowWhileSelectingBuilding>();
+            var cancelVisibilitySO = new SerializedObject(cancelVisibility);
+            cancelVisibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            cancelVisibilitySO.FindProperty("target").objectReferenceValue = cancelButton.gameObject;
+            cancelVisibilitySO.FindProperty("hideWhilePlacingMandatory").boolValue = true;
+            cancelVisibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildSaveUI(canvasGO.transform, panelSprite, saveController);
             BuildExitUI(canvasGO.transform, panelSprite);
@@ -3480,6 +3560,29 @@ namespace CityBuilder.EditorTools
                 FillIconRect(p, s, 0.72f, 0.24f, 0.8f, 0.86f, line);
                 FillIconRect(p, s, 0.2f, 0.24f, 0.8f, 0.32f, line);
                 FillIconTriangle(p, s, new Vector2(0.06f, 0.44f), new Vector2(0.28f, 0.56f), new Vector2(0.28f, 0.32f), line);
+            });
+        }
+
+        /// <summary>A plain X, drawn as two thick diagonals. Deliberately not a "back" arrow: this abandons the placement, it does not step anywhere.</summary>
+        private static Sprite CreateCancelIcon()
+        {
+            return CreateIconSprite("Action_Cancel", 64, (p, s) =>
+            {
+                var line = new Color(0.95f, 0.72f, 0.68f);
+                var margin = Mathf.RoundToInt(s * 0.18f);
+                // Thick enough to survive being scaled down to a phone-sized button.
+                const int halfThickness = 3;
+
+                for (var i = margin; i < s - margin; i++)
+                {
+                    for (var offset = -halfThickness; offset <= halfThickness; offset++)
+                    {
+                        var x = i + offset;
+                        if (x < 0 || x >= s) continue;
+                        p[i * s + x] = line;
+                        p[(s - 1 - i) * s + x] = line;
+                    }
+                }
             });
         }
 

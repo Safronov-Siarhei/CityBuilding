@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
@@ -102,7 +103,7 @@ namespace CityBuilder.Maps
             _chunkFilters = new MeshFilter[_chunksX, _chunksZ];
             _chunkMeshes = new Mesh[_chunksX, _chunksZ];
 
-            _cloudMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.05f, 0.05f, 0.06f) };
+            _cloudMaterial = new Material(RuntimeShaders.Lit) { color = new Color(0.05f, 0.05f, 0.06f) };
 
             for (var cx = 0; cx < _chunksX; cx++)
             {

@@ -30,6 +30,11 @@ namespace CityBuilder.Buildings
         private Color? _lastGhostColor;
         private bool _mandatoryBuildingPlaced;
 
+        /// <summary>Seconds between two "you cannot afford this" lines, so a player tapping repeatedly at an unaffordable building does not push everything else out of an eight-line log.</summary>
+        private const float AffordabilityComplaintCooldown = 3f;
+
+        private float _lastAffordabilityComplaint = -999f;
+
         // 0-3, each a 90-degree step around Y. Reset to 0 on every new SelectBuilding so rotation
         // never carries over from whatever the player was placing before.
         private int _rotationSteps;
@@ -295,7 +300,19 @@ namespace CityBuilder.Buildings
             var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             if (!CanPlaceSelectedBuilding(cell, footprint)) return;
             if (!HasRequiredBuilding()) return;
-            if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost)) return;
+            if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost))
+            {
+                // Said out loud, because the silent version is genuinely confusing: the tap does
+                // nothing, the building stays on the finger, and the only difference between "you
+                // cannot afford this" and "the game is broken" is a number in the HUD the player
+                // was not looking at. Throttled so holding a finger down does not flood the log.
+                if (Time.unscaledTime - _lastAffordabilityComplaint > AffordabilityComplaintCooldown)
+                {
+                    _lastAffordabilityComplaint = Time.unscaledTime;
+                    EventLogManager.Instance?.Log(Localization.Format("#log_build_no_resources", _selectedBuilding.LocalizedName));
+                }
+                return;
+            }
 
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
             var rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);

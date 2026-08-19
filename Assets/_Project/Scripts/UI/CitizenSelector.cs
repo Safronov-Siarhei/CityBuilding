@@ -276,7 +276,7 @@ namespace CityBuilder.UI
             Destroy(marker.GetComponent<BoxCollider>());
             marker.transform.localScale = new Vector3(0.16f, 0.16f, 0.16f);
             marker.transform.rotation = Quaternion.Euler(45f, 45f, 0f);
-            marker.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"))
+            marker.GetComponent<Renderer>().sharedMaterial = new Material(RuntimeShaders.Lit)
             {
                 color = new Color(1f, 0.85f, 0.2f)
             };
@@ -304,7 +304,7 @@ namespace CityBuilder.UI
             CreateHighlightBar(_cellHighlight.transform, "Left", new Vector3(-0.5f + t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
             CreateHighlightBar(_cellHighlight.transform, "Right", new Vector3(0.5f - t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
 
-            _cellHighlightMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            _cellHighlightMaterial = new Material(RuntimeShaders.Unlit);
             foreach (var bar in _cellHighlight.GetComponentsInChildren<Renderer>())
             {
                 bar.sharedMaterial = _cellHighlightMaterial;

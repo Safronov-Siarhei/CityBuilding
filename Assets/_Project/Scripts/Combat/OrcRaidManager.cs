@@ -413,9 +413,9 @@ namespace CityBuilder.Combat
         {
             if (_portalMaterial != null) return;
 
-            _portalMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = PortalColor };
-            _orcSkinMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = OrcSkinColor };
-            _orcGearMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = OrcGearColor };
+            _portalMaterial = new Material(RuntimeShaders.Lit) { color = PortalColor };
+            _orcSkinMaterial = new Material(RuntimeShaders.Lit) { color = OrcSkinColor };
+            _orcGearMaterial = new Material(RuntimeShaders.Lit) { color = OrcGearColor };
         }
     }
 }

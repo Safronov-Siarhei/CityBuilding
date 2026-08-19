@@ -1,3 +1,4 @@
+using CityBuilder.Buildings;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -27,6 +28,20 @@ namespace CityBuilder.CameraControl
         [Header("Touch")]
         [SerializeField] private float touchPanSpeed = 0.06f;
         [SerializeField] private float touchZoomSpeed = 0.05f;
+
+        [Header("Placement")]
+        // While a building is on the player's finger, that finger belongs to the BUILDING. A drag
+        // used to move both at once -- the ghost followed the touch and the camera panned under it,
+        // so the building appeared to slide across the map at double speed and could never be put
+        // where it was aimed. Panning during placement now happens only from the screen EDGE, which
+        // is how the player carries a building somewhere off-screen.
+        [SerializeField] private BuildingPlacer buildingPlacer;
+
+        /// <summary>Width of the edge band, as a fraction of the screen's shorter side -- a fraction rather than pixels because the same band has to feel the same on a 1080p phone and a 1440p one.</summary>
+        [SerializeField] private float edgePanZoneFraction = 0.08f;
+
+        /// <summary>Screen pixels per second at the very edge, fed through touchPanSpeed like any other drag. Ramps up from zero at the band's inner boundary, so grazing the edge does not fling the camera.</summary>
+        [SerializeField] private float edgePanPixelsPerSecond = 320f;
 
         private float _lastPinchDistance;
 
@@ -78,6 +93,15 @@ namespace CityBuilder.CameraControl
             if (activeCount == 1)
             {
                 _lastPinchDistance = 0f;
+
+                // Two fingers still pinch-zoom while placing: that gesture cannot be confused with
+                // dragging a building, and losing zoom mid-placement would be its own annoyance.
+                if (buildingPlacer != null && buildingPlacer.IsSelecting)
+                {
+                    EdgePan(posA, dt);
+                    return true;
+                }
+
                 var delta = touchscreen.primaryTouch.delta.ReadValue();
                 if (delta != Vector2.zero) PanByScreenDelta(delta, touchPanSpeed);
             }
@@ -95,6 +119,41 @@ namespace CityBuilder.CameraControl
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Pans while the finger sits in the band along a screen edge, at a speed that ramps from
+        /// zero at the band's inner boundary to full at the very edge. Pure geometry, exposed for
+        /// a test: EdgePush is what decides whether a touch pans at all and how hard.
+        /// </summary>
+        private void EdgePan(Vector2 touchPosition, float dt)
+        {
+            var push = EdgePush(touchPosition, Screen.width, Screen.height, edgePanZoneFraction);
+            if (push == Vector2.zero) return;
+
+            // Negated because PanByScreenDelta takes a FINGER delta and moves the world with it:
+            // a finger at the right edge means "show me what is further right", i.e. the camera
+            // travels right, which is the opposite of dragging the world rightwards.
+            PanByScreenDelta(-push * (edgePanPixelsPerSecond * dt), touchPanSpeed);
+        }
+
+        /// <summary>
+        /// How hard a touch at this screen position pushes the camera, per axis, in -1..1. Zero
+        /// anywhere outside the edge band, so a player dragging a building around the middle of the
+        /// screen never moves the camera by accident.
+        /// </summary>
+        public static Vector2 EdgePush(Vector2 touchPosition, float screenWidth, float screenHeight, float zoneFraction)
+        {
+            var zone = Mathf.Min(screenWidth, screenHeight) * Mathf.Max(0.0001f, zoneFraction);
+            var push = Vector2.zero;
+
+            if (touchPosition.x < zone) push.x = -(zone - touchPosition.x) / zone;
+            else if (touchPosition.x > screenWidth - zone) push.x = (touchPosition.x - (screenWidth - zone)) / zone;
+
+            if (touchPosition.y < zone) push.y = -(zone - touchPosition.y) / zone;
+            else if (touchPosition.y > screenHeight - zone) push.y = (touchPosition.y - (screenHeight - zone)) / zone;
+
+            return new Vector2(Mathf.Clamp(push.x, -1f, 1f), Mathf.Clamp(push.y, -1f, 1f));
         }
 
         private void PanByScreenDelta(Vector2 screenDelta, float speed)

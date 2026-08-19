@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Maps
@@ -138,7 +139,7 @@ namespace CityBuilder.Maps
             Destroy(quad.GetComponent<Collider>());
             quad.transform.SetParent(transform, false);
 
-            var material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = color };
+            var material = new Material(RuntimeShaders.Unlit) { color = color };
             quad.GetComponent<Renderer>().sharedMaterial = material;
             return quad.transform;
         }

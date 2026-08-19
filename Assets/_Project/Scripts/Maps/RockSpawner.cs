@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
@@ -232,8 +233,8 @@ namespace CityBuilder.Maps
         {
             if (_rockMaterial != null) return;
 
-            _rockMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = RockColor };
-            _rockShadeMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = RockShadeColor };
+            _rockMaterial = new Material(RuntimeShaders.Lit) { color = RockColor };
+            _rockShadeMaterial = new Material(RuntimeShaders.Lit) { color = RockShadeColor };
         }
     }
 }

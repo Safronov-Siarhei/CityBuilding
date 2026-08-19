@@ -463,9 +463,9 @@ namespace CityBuilder.Citizens
             _clothingMaterials = new Material[ClothingColors.Length];
             for (var i = 0; i < ClothingColors.Length; i++)
             {
-                _clothingMaterials[i] = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = ClothingColors[i] };
+                _clothingMaterials[i] = new Material(RuntimeShaders.Lit) { color = ClothingColors[i] };
             }
-            _skinMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = SkinColor };
+            _skinMaterial = new Material(RuntimeShaders.Lit) { color = SkinColor };
         }
 
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)

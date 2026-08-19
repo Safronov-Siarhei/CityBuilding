@@ -136,7 +136,7 @@ namespace CityBuilder.Buildings
             _marker.transform.localPosition = new Vector3(0f, height + 0.6f, 0f);
             _marker.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
 
-            _markerMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = FlameColor };
+            _markerMaterial = new Material(RuntimeShaders.Lit) { color = FlameColor };
             _marker.GetComponent<Renderer>().sharedMaterial = _markerMaterial;
         }
     }

@@ -412,7 +412,7 @@ namespace CityBuilder.Combat
         {
             if (_materials.TryGetValue(color, out var material) && material != null) return material;
 
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = color };
+            material = new Material(RuntimeShaders.Lit) { color = color };
             _materials[color] = material;
             return material;
         }

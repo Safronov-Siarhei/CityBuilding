@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
@@ -141,7 +142,7 @@ namespace CityBuilder.Maps
             planeGO.AddComponent<MeshFilter>().sharedMesh = mesh;
             var meshRenderer = planeGO.AddComponent<MeshRenderer>();
 
-            var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { mainTexture = texture };
+            var material = new Material(RuntimeShaders.Lit) { mainTexture = texture };
             meshRenderer.sharedMaterial = material;
         }
 

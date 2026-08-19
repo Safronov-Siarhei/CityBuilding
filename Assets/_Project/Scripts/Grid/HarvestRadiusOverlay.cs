@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -113,7 +114,7 @@ namespace CityBuilder.Grid
         /// </summary>
         private static Material CreateTransparentMaterial()
         {
-            var material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = FillColor };
+            var material = new Material(RuntimeShaders.Unlit) { color = FillColor };
 
             material.SetFloat("_Surface", 1f);
             material.SetFloat("_Blend", 0f);

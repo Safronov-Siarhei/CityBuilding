@@ -1,3 +1,4 @@
+using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Buildings
@@ -107,7 +108,7 @@ namespace CityBuilder.Buildings
             Destroy(quad.GetComponent<Collider>());
             quad.transform.SetParent(transform, false);
 
-            material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = color };
+            material = new Material(RuntimeShaders.Unlit) { color = color };
             quad.GetComponent<Renderer>().sharedMaterial = material;
             return quad.transform;
         }
