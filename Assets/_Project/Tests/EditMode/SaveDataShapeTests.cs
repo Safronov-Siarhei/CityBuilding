@@ -32,7 +32,9 @@ namespace CityBuilder.Tests.EditMode
             {
                 type = SoldierType.Militia,
                 holdPosition = new Vector3(4f, 0f, -9f),
-                priority = TargetPriority.Structures
+                priority = TargetPriority.Structures,
+                attackTargetKind = ArmyAttackTargetKind.Orc,
+                attackTargetOrcIndex = 0
             };
             group.soldiers.Add(new SoldierEntry { position = new Vector3(1f, 0f, 2f), currentHealth = 5 });
             group.soldiers.Add(new SoldierEntry { position = new Vector3(3f, 0f, 4f), currentHealth = 12 });
@@ -43,6 +45,8 @@ namespace CityBuilder.Tests.EditMode
             data.portalHealth = 190;
             data.secondsUntilNextRaid = 41.5f;
             data.orcs.Add(new OrcEntry { position = new Vector3(-8f, 0f, 5f), level = 3, currentHealth = 44 });
+            data.raidsSuspended = true;
+            data.selectedGroupIndex = 0;
 
             data.migrationTimerSeconds = 37.5f;
             data.settlingInSecondsRemaining = 118.25f;
@@ -94,6 +98,41 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(44, loaded.orcs[0].currentHealth);
         }
 
+        /// <summary>
+        /// The order the player gave and the group they were giving it to. Both used to be dropped:
+        /// a group sent to break the portal came back holding its ground, and the player came back
+        /// in build mode instead of command mode.
+        /// </summary>
+        [Test]
+        public void TheAttackOrderAndTheSelection_SurviveTheSaveFile()
+        {
+            var loaded = RoundTrip(WithAnArmyAndAHungryTown());
+
+            Assert.AreEqual(ArmyAttackTargetKind.Orc, loaded.armyGroups[0].attackTargetKind, "The group came back holding instead of attacking.");
+            Assert.AreEqual(0, loaded.armyGroups[0].attackTargetOrcIndex, "The order came back pointing at nothing, which is the same as no order at all.");
+            Assert.AreEqual(0, loaded.selectedGroupIndex, "Selection decides what a tap on the world does, so losing it changes the player's input mode under them.");
+        }
+
+        /// <summary>The other half of the same field: the map's objective, which is what a group is actually sent to break.</summary>
+        [Test]
+        public void APortalAttackOrder_SurvivesTheSaveFile()
+        {
+            var data = new GameSaveData();
+            data.armyGroups.Add(new ArmyGroupEntry { type = SoldierType.Militia, attackTargetKind = ArmyAttackTargetKind.Portal });
+
+            var loaded = RoundTrip(data);
+
+            Assert.AreEqual(ArmyAttackTargetKind.Portal, loaded.armyGroups[0].attackTargetKind);
+            Assert.AreEqual(-1, loaded.armyGroups[0].attackTargetOrcIndex, "A portal order carries no orc index -- pointing it at orc 0 would retarget the group on load.");
+        }
+
+        /// <summary>Only the OrcSpawn cheat turns this off, which is the whole reason it is saved: a wave arriving because the flag reset itself lands in the middle of whatever it was turned off to watch.</summary>
+        [Test]
+        public void TheSuspendedRaidClock_SurvivesTheSaveFile()
+        {
+            Assert.IsTrue(RoundTrip(WithAnArmyAndAHungryTown()).raidsSuspended);
+        }
+
         /// <summary>A file written before any of this existed has no such fields at all, and has to read as a town with no army that has never gone hungry -- not as a crash.</summary>
         [Test]
         public void AnOlderSave_ReadsAsNoArmyAndNoHunger()
@@ -109,6 +148,8 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsFalse(loaded.portalPlaced, "An older save has to load as a game whose portal has not opened yet, so the raid manager opens one as usual.");
             Assert.IsNotNull(loaded.orcs);
             Assert.IsEmpty(loaded.orcs);
+            Assert.AreEqual(-1, loaded.selectedGroupIndex, "A missing field deserializes to zero, and zero here would select the first group of an army that does not exist.");
+            Assert.IsFalse(loaded.raidsSuspended, "An older save has to load as a game whose raids run normally.");
         }
 
         [Test]
@@ -146,6 +187,7 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(1, loaded.armyGroups.Count);
             Assert.IsEmpty(loaded.armyGroups[0].soldiers);
             Assert.AreEqual(TargetPriority.Structures, loaded.armyGroups[0].priority);
+            Assert.AreEqual(ArmyAttackTargetKind.None, loaded.armyGroups[0].attackTargetKind, "A group with nobody in it cannot be attacking anything.");
         }
     }
 }

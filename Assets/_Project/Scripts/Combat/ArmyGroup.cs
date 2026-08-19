@@ -83,6 +83,19 @@ namespace CityBuilder.Combat
             OnChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Puts a saved attack order back WITHOUT moving the rally point, which is the whole
+        /// reason this is not just OrderAttack. OrderAttack sets HoldPosition to wherever the
+        /// target stands at the moment of the order; replaying it on load would set it to wherever
+        /// the target stands NOW, quietly overwriting the rally point the save just restored.
+        /// </summary>
+        public void RestoreAttackOrder(IDamageTarget target)
+        {
+            if (target == null || !target.IsAlive) return;
+            AttackTarget = target;
+            OnChanged?.Invoke();
+        }
+
         public void SetPriority(TargetPriority priority)
         {
             if (Priority == priority) return;

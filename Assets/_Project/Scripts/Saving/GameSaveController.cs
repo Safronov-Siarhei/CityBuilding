@@ -154,8 +154,11 @@ namespace CityBuilder.Saving
                 }
             }
 
-            RestoreArmy(data);
-            RestoreRaids(data);
+            var restoredGroups = RestoreArmy(data);
+            var restoredOrcs = RestoreRaids(data);
+            // Last of the three: an attack order points at the portal or at an orc, and neither of
+            // them exists until RestoreRaids above has put them back.
+            RestoreArmyOrders(data, restoredGroups, restoredOrcs);
 
             // After the army: what the settlement has to feed tomorrow counts its soldiers too.
             FoodConsumptionManager.Instance?.RestoreFromSave(data.hungryDaysInARow, data.recentStarvationDeaths);
@@ -193,18 +196,27 @@ namespace CityBuilder.Saving
         /// Start rather than being left to OrcRaidManager's own Update, which opens a portal on the
         /// first frame it sees a Town Hall -- and the buildings above have just given it one.
         /// </summary>
-        private static void RestoreRaids(GameSaveData data)
+        private static List<Combat.OrcUnit> RestoreRaids(GameSaveData data)
         {
+            // In save order, so a group's attack order can find the orc it was chasing by the
+            // position that orc had in the saved list.
+            var restored = new List<Combat.OrcUnit>();
+
             var raids = Combat.OrcRaidManager.Instance;
-            if (raids == null) return;
+            if (raids == null) return restored;
 
             raids.RestoreFromSave(data.portalPlaced, data.portalCell, data.portalHealth, data.secondsUntilNextRaid);
+            // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
+            // at the next load arrive in the middle of whatever they were switched off to watch.
+            raids.RaidsSuspended = data.raidsSuspended;
 
-            if (data.orcs == null) return;
+            if (data.orcs == null) return restored;
             foreach (var orc in data.orcs)
             {
-                raids.RestoreOrc(orc.position, orc.level, orc.currentHealth);
+                restored.Add(raids.RestoreOrc(orc.position, orc.level, orc.currentHealth));
             }
+
+            return restored;
         }
 
         /// <summary>
@@ -212,20 +224,94 @@ namespace CityBuilder.Saving
         /// a soldier reads its health and damage off the level its type has been researched to, and
         /// a militia restored against a fresh ResearchManager would come back at level 1.
         /// </summary>
-        private static void RestoreArmy(GameSaveData data)
+        private static List<Combat.ArmyGroup> RestoreArmy(GameSaveData data)
         {
+            // Parallel to data.armyGroups, so the orders pass below can pair the two up by index.
+            var restored = new List<Combat.ArmyGroup>();
+
             var army = Combat.ArmyManager.Instance;
-            if (army == null || data.armyGroups == null) return;
+            if (army == null || data.armyGroups == null) return restored;
 
             foreach (var groupEntry in data.armyGroups)
             {
                 var group = army.RestoreGroup(groupEntry.type, groupEntry.holdPosition, groupEntry.priority);
+                restored.Add(group);
                 if (groupEntry.soldiers == null) continue;
 
                 foreach (var soldier in groupEntry.soldiers)
                 {
                     army.RestoreSoldier(group, soldier.position, soldier.currentHealth);
                 }
+            }
+
+            return restored;
+        }
+
+        /// <summary>
+        /// Re-issues the two things the player chose that the groups cannot work out again for
+        /// themselves: what each group was ordered to attack, and which group was selected.
+        ///
+        /// Separate from RestoreArmy because both answers live outside the army -- an attack target
+        /// is a portal or an orc, and neither exists until the raid restore has run.
+        /// </summary>
+        private static void RestoreArmyOrders(GameSaveData data, List<Combat.ArmyGroup> groups, List<Combat.OrcUnit> orcs)
+        {
+            var army = Combat.ArmyManager.Instance;
+            if (army == null) return;
+
+            for (var i = 0; i < groups.Count && i < data.armyGroups.Count; i++)
+            {
+                var entry = data.armyGroups[i];
+                switch (entry.attackTargetKind)
+                {
+                    case ArmyAttackTargetKind.Portal:
+                        // One portal today; with the design's five per map this gains an index of
+                        // its own, the way the orcs already have one.
+                        if (Combat.OrcPortal.All.Count > 0) groups[i].RestoreAttackOrder(Combat.OrcPortal.All[0]);
+                        break;
+                    case ArmyAttackTargetKind.Orc:
+                        // Out of range means the save predates this field, or the orc list came
+                        // back shorter -- either way the group simply holds, which is what it would
+                        // have done a moment after its target died anyway.
+                        if (entry.attackTargetOrcIndex >= 0 && entry.attackTargetOrcIndex < orcs.Count)
+                        {
+                            groups[i].RestoreAttackOrder(orcs[entry.attackTargetOrcIndex]);
+                        }
+                        break;
+                }
+            }
+
+            // Restored last, and deliberately not folded into the loop above: selection belongs to
+            // the player rather than to a group, and the index means nothing until every group is
+            // back in place.
+            if (data.selectedGroupIndex >= 0 && data.selectedGroupIndex < groups.Count)
+            {
+                army.SelectGroup(groups[data.selectedGroupIndex]);
+            }
+        }
+
+        /// <summary>
+        /// Writes down what a group was ordered to attack, in terms the load can find again.
+        ///
+        /// A target that has already died is left as None. That is not laziness: the order was over
+        /// anyway, and an index pointing at a dead orc would restore an attack on whichever orc
+        /// ends up in that slot instead.
+        /// </summary>
+        private static void WriteAttackOrder(Combat.ArmyGroup group, ArmyGroupEntry entry, Dictionary<Combat.OrcUnit, int> orcIndices)
+        {
+            var target = group.AttackTarget;
+            if (target == null || !target.IsAlive) return;
+
+            if (target is Combat.OrcPortal)
+            {
+                entry.attackTargetKind = ArmyAttackTargetKind.Portal;
+                return;
+            }
+
+            if (target is Combat.OrcUnit orc && orcIndices.TryGetValue(orc, out var index))
+            {
+                entry.attackTargetKind = ArmyAttackTargetKind.Orc;
+                entry.attackTargetOrcIndex = index;
             }
         }
 
@@ -272,24 +358,6 @@ namespace CityBuilder.Saving
                 data.resources.Add(new ResourceEntry { type = type, amount = ResourceManager.Instance.GetAmount(type) });
             }
 
-            var army = Combat.ArmyManager.Instance;
-            if (army != null)
-            {
-                foreach (var group in army.Groups)
-                {
-                    // An empty group is still worth writing down: it carries the rally point and
-                    // priority the player set, which ArmyManager deliberately keeps when the last
-                    // member dies.
-                    var entry = new ArmyGroupEntry { type = group.Type, holdPosition = group.HoldPosition, priority = group.Priority };
-                    foreach (var soldier in group.Members)
-                    {
-                        if (soldier == null) continue;
-                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth });
-                    }
-                    data.armyGroups.Add(entry);
-                }
-            }
-
             var raids = Combat.OrcRaidManager.Instance;
             if (raids != null)
             {
@@ -299,12 +367,39 @@ namespace CityBuilder.Saving
                 // which zero says -- and which is what stops a fresh one opening on load.
                 data.portalHealth = Combat.OrcPortal.All.Count > 0 ? Combat.OrcPortal.All[0].CurrentHealth : 0;
                 data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
+                data.raidsSuspended = raids.RaidsSuspended;
             }
 
+            // Written BEFORE the army below, not after: a group's attack order on an orc is stored
+            // as that orc's position in this list, so the list has to exist to point into.
+            var orcIndices = new Dictionary<Combat.OrcUnit, int>();
             foreach (var orc in Combat.OrcUnit.All)
             {
                 if (orc == null) continue;
+                orcIndices[orc] = data.orcs.Count;
                 data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth });
+            }
+
+            var army = Combat.ArmyManager.Instance;
+            if (army != null)
+            {
+                for (var i = 0; i < army.Groups.Count; i++)
+                {
+                    var group = army.Groups[i];
+                    // An empty group is still worth writing down: it carries the rally point and
+                    // priority the player set, which ArmyManager deliberately keeps when the last
+                    // member dies.
+                    var entry = new ArmyGroupEntry { type = group.Type, holdPosition = group.HoldPosition, priority = group.Priority };
+                    WriteAttackOrder(group, entry, orcIndices);
+                    foreach (var soldier in group.Members)
+                    {
+                        if (soldier == null) continue;
+                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth });
+                    }
+                    data.armyGroups.Add(entry);
+
+                    if (group == army.SelectedGroup) data.selectedGroupIndex = i;
+                }
             }
 
             var food = FoodConsumptionManager.Instance;

@@ -38,6 +38,18 @@ namespace CityBuilder.Saving
         public List<ArmyGroupEntry> armyGroups = new List<ArmyGroupEntry>();
 
         /// <summary>
+        /// Which group the player was commanding, as an index into <see cref="armyGroups"/>, or -1
+        /// for none. Not cosmetic: while a group is selected a tap on the world is an order to it
+        /// and the building and citizen selectors stand down (see ArmyManager.SelectedGroup), so a
+        /// load used to hand the player back a different input mode than the one they saved in.
+        ///
+        /// An INDEX rather than the group's own Id: ArmyGroup hands ids out of a static counter
+        /// that a scene reload resets, so a saved id would point at whichever group happened to be
+        /// created first next time.
+        /// </summary>
+        public int selectedGroupIndex = -1;
+
+        /// <summary>
         /// How the settlement was eating. Without these two a reload forgave a starving town: the
         /// hunger streak restarted at zero, so a settlement one day away from its first deaths got
         /// its whole grace period back, and the happiness penalty for the people it had already
@@ -68,6 +80,13 @@ namespace CityBuilder.Saving
         public float secondsUntilNextRaid;
 
         public List<OrcEntry> orcs = new List<OrcEntry>();
+
+        /// <summary>
+        /// Whether the automatic raid clock was switched off. Only the OrcSpawn cheat sets it, and
+        /// that is why it is worth saving: a cheat that quietly switches itself back on at the next
+        /// load lets a wave arrive in the middle of whatever it was turned off to observe.
+        /// </summary>
+        public bool raidsSuspended;
 
         /// <summary>
         /// Where migration had got to. Without these, reloading reset the wait for the next
@@ -125,7 +144,33 @@ namespace CityBuilder.Saving
         public Vector3 holdPosition;
         public TargetPriority priority;
 
+        /// <summary>
+        /// The "attack that" order the group was carrying out, if any. Without it a group sent
+        /// across the map to break the portal came back standing where it had got to, holding --
+        /// the one order in the game that a reload cancelled silently.
+        /// </summary>
+        public ArmyAttackTargetKind attackTargetKind;
+
+        /// <summary>Index into <see cref="GameSaveData.orcs"/> when the target was an orc, -1 otherwise. A position would not do: the orc is walking, and it and the group are written at the same instant.</summary>
+        public int attackTargetOrcIndex = -1;
+
         public List<SoldierEntry> soldiers = new List<SoldierEntry>();
+    }
+
+    /// <summary>
+    /// What a saved group's attack order pointed at. Spelled out as kinds rather than as one id
+    /// because the two targetable things come back by completely different routes on load: the
+    /// portal from OrcRaidManager's own restore, an orc from the saved orc list beside it.
+    ///
+    /// One portal, matching what the game spawns today; the design's five per map turn Portal into
+    /// an index, the way orcs already are.
+    /// </summary>
+    public enum ArmyAttackTargetKind
+    {
+        /// <summary>The group was holding. Also what an older save reads as -- a missing field deserializes to zero.</summary>
+        None = 0,
+        Portal = 1,
+        Orc = 2
     }
 
     [Serializable]

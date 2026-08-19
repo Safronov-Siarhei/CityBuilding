@@ -125,6 +125,62 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(OrcRaidManager.Instance.SecondsUntilNextRaid, 0f, "The raid clock came back stopped.");
         }
 
+        /// <summary>
+        /// The orders half of the army: what the group was told to attack, and which group the
+        /// player was commanding. Both used to be dropped, and both are invisible losses -- a group
+        /// sent across the map to break the portal came back standing where it had got to, doing
+        /// nothing, and the player came back in build mode instead of command mode.
+        ///
+        /// A separate test from the one above because an attack order is not inert: the soldiers
+        /// set off towards the portal and start damaging it, which is exactly the number the other
+        /// test asserts has not changed.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheAttackOrderAndTheSelection_ComeBackFromASave()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            yield return StartGame(null);
+
+            // The portal is the target worth testing: it is the map's objective, and unlike an orc
+            // it stands still, so the group's rally point cannot drift between the save and the
+            // assert and disguise a lost order as a moved one.
+            var townHall = PlaytestWorld.Building("Castle");
+            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
+            yield return WaitForPortal();
+
+            var army = ArmyManager.Instance;
+            CitizenManager.Instance.SetPopulation(6);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 500);
+            Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()), "Recruitment was refused with population and coins to spare.");
+
+            var group = army.Groups[0];
+            group.OrderAttack(OrcPortal.All[0]);
+            army.SelectGroup(group);
+            Assert.IsNotNull(group.AttackTarget, "The test's own order did not take, so there is nothing to save.");
+
+            Object.FindAnyObjectByType<GameSaveController>().SaveGame(SaveName);
+
+            // Loaded WITHOUT the usual suspend, so that the flag coming back true can only have
+            // come out of the save file -- a fresh OrcRaidManager has it false.
+            yield return StartGame(SaveName, suspendRaidsAfterLoad: false);
+
+            var loadedArmy = ArmyManager.Instance;
+            Assert.AreEqual(1, loadedArmy.Groups.Count, "The group did not come back, so there is nothing to have been ordered.");
+
+            var loadedGroup = loadedArmy.Groups[0];
+            Assert.AreEqual(1, OrcPortal.All.Count, "The portal did not come back, so the order has nothing to point at.");
+            Assert.AreSame(OrcPortal.All[0], loadedGroup.AttackTarget,
+                loadedGroup.AttackTarget == null
+                    ? "The assault was called off by the reload: the group came back holding its ground."
+                    : "The group came back attacking something other than the portal it was sent to break.");
+
+            Assert.AreSame(loadedGroup, loadedArmy.SelectedGroup,
+                "The player came back with no group selected, so a tap on the world opens a building panel instead of ordering the army.");
+
+            Assert.IsTrue(OrcRaidManager.Instance.RaidsSuspended,
+                "The suspended raid clock started itself again on load, so a wave arrives in the middle of whatever it was switched off to watch.");
+        }
+
         /// <summary>OrcRaidManager opens the portal in its own Update, on the first frame it sees a Town Hall.</summary>
         private static IEnumerator WaitForPortal()
         {
@@ -161,8 +217,15 @@ namespace CityBuilder.Tests.PlayMode
             return found;
         }
 
-        /// <summary>Loads the game scene the way the main menu does: a save name to continue one, null to start fresh.</summary>
-        private static IEnumerator StartGame(string saveNameToLoad)
+        /// <summary>
+        /// Loads the game scene the way the main menu does: a save name to continue one, null to
+        /// start fresh.
+        ///
+        /// Raids are switched off afterwards so a wave cannot wander into the middle of a test --
+        /// except for the test that is about the flag itself, which needs to see what the save put
+        /// there rather than what this helper put there.
+        /// </summary>
+        private static IEnumerator StartGame(string saveNameToLoad, bool suspendRaidsAfterLoad = true)
         {
             Time.timeScale = 1f;
             GameSessionIntent.SaveNameToLoad = saveNameToLoad;
@@ -174,7 +237,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
 
             ModalGate.SetBlocked(false);
-            if (OrcRaidManager.Instance != null) OrcRaidManager.Instance.RaidsSuspended = true;
+            if (suspendRaidsAfterLoad && OrcRaidManager.Instance != null) OrcRaidManager.Instance.RaidsSuspended = true;
         }
 
         /// <summary>The same, but at arm's length from somewhere -- for putting an enemy on the map without putting it in a fight.</summary>

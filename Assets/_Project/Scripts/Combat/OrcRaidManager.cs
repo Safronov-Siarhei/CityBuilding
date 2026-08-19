@@ -90,11 +90,20 @@ namespace CityBuilder.Combat
             _raidTimer = Mathf.Max(0f, secondsUntilNextRaid);
         }
 
-        /// <summary>Puts one saved orc back where it stood, on the health it had. Like the army's restore, it is deliberately not the spawn path: no jitter, and nothing is announced in the event log.</summary>
-        public void RestoreOrc(Vector3 position, int level, int currentHealth)
+        /// <summary>
+        /// Puts one saved orc back where it stood, on the health it had. Like the army's restore,
+        /// it is deliberately not the spawn path: no jitter, and nothing is announced in the event
+        /// log.
+        ///
+        /// Hands the unit back so the caller can match it to the save's orc list by position in
+        /// that list -- which is how a group's attack order finds the orc it was chasing again.
+        /// </summary>
+        public OrcUnit RestoreOrc(Vector3 position, int level, int currentHealth)
         {
             EnsureMaterials();
-            SpawnOrc(position, level, scatter: false).SetCurrentHealth(currentHealth);
+            var unit = SpawnOrc(position, level, scatter: false);
+            unit.SetCurrentHealth(currentHealth);
+            return unit;
         }
 
         private void Awake()
