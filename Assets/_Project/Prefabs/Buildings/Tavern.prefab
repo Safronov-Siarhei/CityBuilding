@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5489122772214493996
+--- !u!1 &5617311692818148709
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5845297910923232926}
-  - component: {fileID: 6098469002430289876}
-  - component: {fileID: 538089614222825121}
+  - component: {fileID: 7791734458789206743}
+  - component: {fileID: 5784886489434144053}
+  - component: {fileID: 3316771316594160965}
   m_Layer: 0
   m_Name: Tavern
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5845297910923232926
+--- !u!4 &7791734458789206743
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5489122772214493996}
+  m_GameObject: {fileID: 5617311692818148709}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5765801041987406016}
+  - {fileID: 6734923299463799160}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6098469002430289876
+--- !u!114 &5784886489434144053
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5489122772214493996}
+  m_GameObject: {fileID: 5617311692818148709}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &538089614222825121
+--- !u!65 &3316771316594160965
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5489122772214493996}
+  m_GameObject: {fileID: 5617311692818148709}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.92, y: 0.025000118, z: 0.92}
   m_Center: {x: 0, y: 0.012500059, z: 0}
---- !u!1 &9051038266884931337
+--- !u!1 &7982707218609674514
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5765801041987406016}
-  - component: {fileID: 7601381046230102296}
-  - component: {fileID: 6300693658511828953}
+  - component: {fileID: 6734923299463799160}
+  - component: {fileID: 7692503646407438988}
+  - component: {fileID: 3070176229832855625}
   m_Layer: 0
   m_Name: Tavern1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5765801041987406016
+--- !u!4 &6734923299463799160
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9051038266884931337}
+  m_GameObject: {fileID: 7982707218609674514}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.000000059604645, z: -0.0000000014901161}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 5845297910923232926}
+  m_Father: {fileID: 7791734458789206743}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7601381046230102296
+--- !u!33 &7692503646407438988
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9051038266884931337}
+  m_GameObject: {fileID: 7982707218609674514}
   m_Mesh: {fileID: -7037294537080110193, guid: 1103aebb0462ff1428344d2cd0e17b52, type: 3}
---- !u!23 &6300693658511828953
+--- !u!23 &3070176229832855625
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9051038266884931337}
+  m_GameObject: {fileID: 7982707218609674514}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
