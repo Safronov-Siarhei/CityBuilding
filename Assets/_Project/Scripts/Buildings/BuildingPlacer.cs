@@ -210,7 +210,7 @@ namespace CityBuilder.Buildings
 
         private void RefreshTargetCell()
         {
-            _hasCurrentCell = TryGetGroundCell(CurrentAimScreenPosition, out _currentCell);
+            _hasCurrentCell = TryGetPlacementOrigin(CurrentAimScreenPosition, out _currentCell);
             if (_hasCurrentCell) UpdateGhost(_currentCell);
             else SetStatus(false, string.Empty);
         }
@@ -228,13 +228,13 @@ namespace CityBuilder.Buildings
 
             if (!UsesTouchAiming)
             {
-                if (TryGetGroundCell(screenPosition, out var mouseCell)) TryPlace(mouseCell);
+                if (TryGetPlacementOrigin(screenPosition, out var mouseCell)) TryPlace(mouseCell);
                 return;
             }
 
             if (IsDrawMode)
             {
-                if (TryGetGroundCell(screenPosition, out var drawCell)) TryPlace(drawCell);
+                if (TryGetPlacementOrigin(screenPosition, out var drawCell)) TryPlace(drawCell);
                 return;
             }
 
@@ -246,7 +246,7 @@ namespace CityBuilder.Buildings
             // building back under the thumb that was covering it and reintroduced exactly the
             // mis-taps this whole flow exists to remove: the ghost is pinned to the screen so it
             // travels WITH the camera, and the only way to move it is to move the world.
-            if (_hasCurrentCell && TryGetGroundCell(screenPosition, out var tappedCell) && tappedCell == _currentCell)
+            if (_hasCurrentCell && TryGetGroundCell(screenPosition, out var tappedCell) && CoveredByGhost(tappedCell))
             {
                 ConfirmPlacement();
             }
@@ -262,7 +262,7 @@ namespace CityBuilder.Buildings
         private void HandleDragStarted(Vector2 screenPosition)
         {
             if (!IsDrawMode || !UsesTouchAiming) return;
-            if (!TryGetGroundCell(screenPosition, out var cell)) return;
+            if (!TryGetPlacementOrigin(screenPosition, out var cell)) return;
 
             _drawing = true;
             _lineStart = cell;
@@ -274,7 +274,7 @@ namespace CityBuilder.Buildings
         private void HandleDragMoved(Vector2 screenPosition)
         {
             if (!_drawing) return;
-            if (!TryGetGroundCell(screenPosition, out var cell)) return;
+            if (!TryGetPlacementOrigin(screenPosition, out var cell)) return;
 
             if (_selectedBuilding.isRoad) ExtendFreeformLine(cell);
             else BuildStraightLine(cell);
@@ -496,6 +496,43 @@ namespace CityBuilder.Buildings
 
             cell = GridManager.Instance.WorldToCell(hit.point);
             return true;
+        }
+
+        /// <summary>
+        /// The ORIGIN cell of a footprint CENTRED on this screen point.
+        ///
+        /// The raw grid lookup answers "which cell is under this pixel", and placement used that
+        /// as the origin -- the footprint's lowest corner -- so a 5x5 Town Hall grew up and to the
+        /// right of the crosshair instead of standing on it. The player aims at where the BUILDING
+        /// should be, not at where its corner should be.
+        /// </summary>
+        private bool TryGetPlacementOrigin(Vector2 screenPosition, out Vector2Int origin)
+        {
+            origin = default;
+            if (!TryGetGroundCell(screenPosition, out var aimCell)) return false;
+
+            origin = OriginForCentredFootprint(aimCell, RotatedFootprint(_selectedBuilding.footprintSize));
+            return true;
+        }
+
+        /// <summary>
+        /// Half the footprint, back from the aimed cell. For an ODD size this puts the aimed cell
+        /// exactly in the middle; for an even one the true centre falls on a cell boundary, and
+        /// this rounds the building half a cell towards the origin -- there is no cell to centre on.
+        ///
+        /// Pure and static so it is covered by a test without a scene or a grid.
+        /// </summary>
+        public static Vector2Int OriginForCentredFootprint(Vector2Int aimCell, Vector2Int footprint)
+        {
+            return aimCell - new Vector2Int(footprint.x / 2, footprint.y / 2);
+        }
+
+        /// <summary>Whether this cell is one of the cells the ghost currently covers -- the confirm tap accepts anywhere on the building, which on a 5x5 is a far easier target than one cell.</summary>
+        private bool CoveredByGhost(Vector2Int cell)
+        {
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
+            var delta = cell - _currentCell;
+            return delta.x >= 0 && delta.y >= 0 && delta.x < footprint.x && delta.y < footprint.y;
         }
 
         private void UpdateGhost(Vector2Int cell)
