@@ -263,6 +263,9 @@ namespace CityBuilder.Core
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
         [SerializeField] private float repairCostFraction = 0.4f;
+
+        /// <summary>Share of everything sunk into a building (its cost plus every upgrade) handed back when it is demolished.</summary>
+        [SerializeField] private float demolishRefundFraction = 0.5f;
         // What one tree or one boulder holds in total, what a worker carries away per trip, and
         // how long that trip's digging takes. A tree's per-trip yield equals its whole stock, so
         // one visit fells it; a boulder is chipped away over many, and never comes back.
@@ -381,6 +384,7 @@ namespace CityBuilder.Core
         public float DecayPenaltyThreshold => decayPenaltyThreshold;
         public float MinDecayProductionMultiplier => minDecayProductionMultiplier;
         public float RepairCostFraction => repairCostFraction;
+        public float DemolishRefundFraction => demolishRefundFraction;
         public int WoodPerTree => woodPerTree;
         public int StonePerRock => stonePerRock;
         public int WoodPerHarvest => woodPerHarvest;
@@ -497,6 +501,7 @@ namespace CityBuilder.Core
             decayPenaltyThreshold = Read(economy, "decay_penalty_threshold", decayPenaltyThreshold);
             minDecayProductionMultiplier = Read(economy, "min_decay_production_multiplier", minDecayProductionMultiplier);
             repairCostFraction = Read(economy, "repair_cost_fraction", repairCostFraction);
+            demolishRefundFraction = Read(economy, "demolish_refund_fraction", demolishRefundFraction);
             woodPerTree = (int)Read(economy, "wood_per_tree", woodPerTree);
             stonePerRock = (int)Read(economy, "stone_per_rock", stonePerRock);
             woodPerHarvest = (int)Read(economy, "wood_per_harvest", woodPerHarvest);

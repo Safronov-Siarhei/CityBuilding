@@ -36,6 +36,9 @@ namespace CityBuilder.UI
         [SerializeField] private Text recruitLabel;
         [SerializeField] private Transform recruitCostRow;
         [SerializeField] private RectTransform recruitTypeRow;
+        [SerializeField] private GameObject demolishControls;
+        [SerializeField] private GameObject demolishConfirmRoot;
+        [SerializeField] private Text demolishConfirmLabel;
         [SerializeField] private ResourceIconLibrary iconLibrary;
 
         private BuildingInstance _currentInstance;
@@ -53,11 +56,59 @@ namespace CityBuilder.UI
 
         public void Close()
         {
+            CancelDemolish();
             _currentInstance = null;
             _currentProduction = null;
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
             HideHarvestRadius();
+        }
+
+        /// <summary>
+        /// Demolition asks first, and says what comes back before it does. It is the only
+        /// irreversible button on the card, it sits a finger's width from Upgrade, and a phone is
+        /// where the wrong one gets pressed -- so a confirmation is not ceremony here.
+        /// </summary>
+        public void OpenDemolishConfirm()
+        {
+            if (_currentInstance == null || !_currentInstance.CanDemolish) return;
+
+            if (demolishConfirmLabel != null)
+            {
+                demolishConfirmLabel.text = Localization.Format(
+                    "#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
+            }
+            if (demolishConfirmRoot != null) demolishConfirmRoot.SetActive(true);
+        }
+
+        public void CancelDemolish()
+        {
+            if (demolishConfirmRoot != null) demolishConfirmRoot.SetActive(false);
+        }
+
+        public void ConfirmDemolish()
+        {
+            var instance = _currentInstance;
+
+            // Closed BEFORE the building goes, or the card is left pointing at a destroyed object
+            // and its next Refresh walks into a null.
+            Close();
+            if (instance != null) instance.Demolish();
+        }
+
+        /// <summary>What the refund actually is, spelled out -- "half of everything" is not a number a player can act on.</summary>
+        private string DescribeRefund()
+        {
+            var refund = _currentInstance != null ? _currentInstance.GetDemolishRefund() : null;
+            if (refund == null || refund.Count == 0) return Localization.Get("#demolish_no_refund");
+
+            var text = string.Empty;
+            foreach (var amount in refund)
+            {
+                if (text.Length > 0) text += ", ";
+                text += ResourceNames.Of(amount.type) + " " + amount.amount;
+            }
+            return text;
         }
 
         public void AssignWorker()
@@ -168,6 +219,10 @@ namespace CityBuilder.UI
             var repairCost = _currentInstance.GetRepairCost();
             if (repairControls != null) repairControls.SetActive(repairCost != null);
             BuildCostRow(repairCostRow, repairCost);
+
+            // Hidden entirely on the Town Hall rather than shown greyed out: there is no version of
+            // this game where demolishing it is a thing the player may do.
+            if (demolishControls != null) demolishControls.SetActive(_currentInstance.CanDemolish);
 
             RefreshRecruitControls(data);
         }

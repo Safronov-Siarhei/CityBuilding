@@ -6,17 +6,17 @@ using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Turns a tap on the world into an order for the group the player has selected in the army
-    /// panel: tap an enemy to attack it, tap the ground to march there. Does nothing at all while
-    /// no group is selected, which is what keeps it from fighting with CitizenSelector and
-    /// BuildingSelector over the same tap -- those two stand down for the opposite reason (see
-    /// their ArmyManager.SelectedGroup checks).
+    /// Turns a world tap into an order for the group the player selected in the army panel: tap an
+    /// enemy to attack it, tap the ground to march there.
+    ///
+    /// Reached only through WorldInputDispatcher, and only while a group is actually selected --
+    /// which is what keeps it from fighting with CitizenSelector and BuildingSelector over the
+    /// same tap without any of the three having to know about the other two.
     ///
     /// The ground point comes from MeshMapApplier.TryRaycastGround rather than from whatever
     /// collider the ray hits first, for exactly the reasons documented there: over a forest the
@@ -32,9 +32,9 @@ namespace CityBuilder.UI
 
         private static readonly Color MoveMarkerColor = new Color(0.95f, 0.82f, 0.2f);
         private static readonly Color AttackMarkerColor = new Color(0.9f, 0.3f, 0.25f);
+        private static readonly Color RefusedMarkerColor = new Color(0.9f, 0.3f, 0.25f);
 
         [SerializeField] private Camera targetCamera;
-        [SerializeField] private BuildingPlacer buildingPlacer;
 
         // Same sizing rationale as CitizenSelector: a shallow camera ray crosses a lot of forest,
         // and RaycastNonAlloc drops hits arbitrarily once the buffer is full.
@@ -47,31 +47,34 @@ namespace CityBuilder.UI
         private void Update()
         {
             if (ModalGate.IsBlocked) return;
-            if (targetCamera == null) return;
-            if (buildingPlacer != null && buildingPlacer.IsSelecting) return;
 
             var army = ArmyManager.Instance;
             if (army == null || army.SelectedGroup == null) return;
 
-            // Escape / right click releases command mode on desktop; on touch the group's own icon
-            // does it (ArmyManager.ToggleSelection).
+            // Desktop escape hatches. On touch the group's own icon does it (ArmyManager
+            // .ToggleSelection), as does a long press or a tap on any building.
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard[Key.Escape].wasPressedThisFrame)
             {
                 army.SelectGroup(null);
                 return;
             }
-            if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
-            {
-                army.SelectGroup(null);
-                return;
-            }
+            if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame) army.SelectGroup(null);
+        }
 
-            var pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame) return;
-            if (IsPointerOverUI()) return;
+        /// <summary>
+        /// Returns false only for a tap on a BUILDING: command mode ends and the same tap opens
+        /// that building's card. Everything else is an order, including one that resolves nowhere
+        /// walkable -- that gets a red marker rather than the silence it used to get.
+        /// </summary>
+        public bool HandleWorldTap(Vector2 screenPosition)
+        {
+            if (targetCamera == null) return false;
 
-            var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
+            var army = ArmyManager.Instance;
+            if (army == null || army.SelectedGroup == null) return false;
+
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, ~0);
 
             var enemy = FindNearestEnemy(hitCount);
@@ -79,16 +82,29 @@ namespace CityBuilder.UI
             {
                 army.SelectedGroup.OrderAttack(enemy);
                 ShowMarker(enemy.Transform.position, AttackMarkerColor);
-                return;
+                return true;
             }
 
-            if (!TryResolveDestination(ray, hitCount, out var destination)) return;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].collider.GetComponentInParent<BuildingInstance>() == null) continue;
+                army.SelectGroup(null);
+                return false;
+            }
+
+            if (!TryResolveDestination(ray, hitCount, out var destination))
+            {
+                // A refused order used to look exactly like an order that landed off-screen.
+                if (hitCount > 0) ShowMarker(_hits[0].point, RefusedMarkerColor);
+                return true;
+            }
 
             army.SelectedGroup.OrderMoveTo(destination);
             ShowMarker(destination, MoveMarkerColor);
+            return true;
         }
 
-        /// <summary>Nearest attackable thing under the cursor. Scans every hit, not just the closest collider, so a tree standing in front of an orc doesn't swallow the order.</summary>
+        /// <summary>Nearest attackable thing under the finger. Scans every hit, not just the closest collider, so a tree standing in front of an orc doesn't swallow the order.</summary>
         private IDamageTarget FindNearestEnemy(int hitCount)
         {
             IDamageTarget nearest = null;
@@ -183,19 +199,6 @@ namespace CityBuilder.UI
             _markerMaterial = new Material(RuntimeShaders.Unlit);
             _marker.GetComponent<Renderer>().sharedMaterial = _markerMaterial;
             _marker.SetActive(false);
-        }
-
-        private static bool IsPointerOverUI()
-        {
-            if (EventSystem.current == null) return false;
-
-            var touchscreen = Touchscreen.current;
-            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
-            {
-                return EventSystem.current.IsPointerOverGameObject(touchscreen.primaryTouch.touchId.ReadValue());
-            }
-
-            return EventSystem.current.IsPointerOverGameObject();
         }
     }
 }

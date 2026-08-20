@@ -1,19 +1,19 @@
 using CityBuilder.Buildings;
-using CityBuilder.Core;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Tap/click an already-placed building (when not currently placing a new one) to open its
-    /// info panel -- worker assignment for production buildings, upgrade for every building.
+    /// Opens an already-placed building's card -- worker assignment, upgrade, repair, demolition.
+    ///
+    /// Driven by WorldInputDispatcher rather than by its own pointer polling. The tap that gets
+    /// here has already been confirmed as a tap (finger released without travelling) and has
+    /// already lost to placement, army orders and citizen orders, so all the mutual stand-down
+    /// checks this class used to carry are gone.
     /// </summary>
     public class BuildingSelector : MonoBehaviour
     {
         [SerializeField] private Camera targetCamera;
-        [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private BuildingInfoPanelController infoPanel;
 
         /// <summary>The Laboratory opens this instead of the ordinary card -- see ResearchPanelController, whose header carries the worker/upgrade/repair controls it displaces.</summary>
@@ -27,28 +27,43 @@ namespace CityBuilder.UI
         // and keep a dozen tree click boxes instead. Same sizing as CitizenSelector.
         private readonly RaycastHit[] _hits = new RaycastHit[64];
 
-        private void Update()
+        /// <summary>
+        /// Opens the card of the building under this screen point. A tap on open ground closes
+        /// whatever card is open instead -- on a phone the card covers a good part of the screen
+        /// and hunting for its close button is a chore.
+        /// </summary>
+        public void HandleWorldTap(Vector2 screenPosition)
         {
-            if (ModalGate.IsBlocked) return;
-            if (buildingPlacer != null && buildingPlacer.IsSelecting) return;
             if (targetCamera == null) return;
-            // Command mode owns world taps while a group is selected -- see ArmyOrderInput.
-            if (CityBuilder.Combat.ArmyManager.Instance != null && CityBuilder.Combat.ArmyManager.Instance.SelectedGroup != null) return;
 
-            var pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame) return;
-            if (IsPointerOverUI()) return;
+            var nearest = FindBuilding(screenPosition);
+            if (nearest == null)
+            {
+                if (infoPanel != null) infoPanel.Close();
+                if (researchPanel != null) researchPanel.Close();
+                return;
+            }
 
-            var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
+            if (researchPanel != null && nearest.Data != null
+                && nearest.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
+            {
+                researchPanel.Show(nearest);
+                return;
+            }
 
-            // All hits, not just the nearest: a tree's click collider is a box around its whole
-            // canopy, so one standing between the camera and a building would otherwise swallow
-            // the click and the info panel would never open. Same fix as CitizenSelector.
+            if (infoPanel != null) infoPanel.Show(nearest);
+        }
+
+        /// <summary>
+        /// The nearest building along the ray, looking past everything else. All hits, not just
+        /// the closest collider: a tree's click box is a box around its whole canopy, so one
+        /// standing between the camera and a building would otherwise swallow the tap entirely.
+        /// </summary>
+        private BuildingInstance FindBuilding(Vector2 screenPosition)
+        {
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
 
-            // The nearest building along the ray, not the first one the unsorted hit list happens
-            // to mention -- clicking a building with another one behind it opened whichever panel
-            // PhysX felt like.
             BuildingInstance nearest = null;
             var nearestDistance = float.MaxValue;
             for (var i = 0; i < hitCount; i++)
@@ -61,29 +76,7 @@ namespace CityBuilder.UI
                 nearestDistance = _hits[i].distance;
             }
 
-            if (nearest == null) return;
-
-            if (researchPanel != null && nearest.Data != null
-                && nearest.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
-            {
-                researchPanel.Show(nearest);
-                return;
-            }
-
-            if (infoPanel != null) infoPanel.Show(nearest);
-        }
-
-        private static bool IsPointerOverUI()
-        {
-            if (EventSystem.current == null) return false;
-
-            var touchscreen = Touchscreen.current;
-            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
-            {
-                return EventSystem.current.IsPointerOverGameObject(touchscreen.primaryTouch.touchId.ReadValue());
-            }
-
-            return EventSystem.current.IsPointerOverGameObject();
+            return nearest;
         }
     }
 }

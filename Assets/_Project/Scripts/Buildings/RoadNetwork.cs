@@ -30,6 +30,12 @@ namespace CityBuilder.Buildings
             _roadCells.Add(cell);
         }
 
+        /// <summary>Takes a cell back out of the network -- demolition, which until now the game had no way to do at all. Without it a demolished road would keep speeding citizens up over bare grass forever.</summary>
+        public void UnregisterRoad(Vector2Int cell)
+        {
+            _roadCells.Remove(cell);
+        }
+
         public bool IsRoad(Vector2Int cell)
         {
             return _roadCells.Contains(cell);

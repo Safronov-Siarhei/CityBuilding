@@ -1,15 +1,36 @@
-using CityBuilder.Buildings;
 using CityBuilder.Core;
+using CityBuilder.Grid;
+using CityBuilder.InputControl;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace CityBuilder.CameraControl
 {
+    /// <summary>
+    /// The camera, driven entirely by gestures that <see cref="TouchInputRouter"/> has already
+    /// recognised -- this class never reads a pointer itself.
+    ///
+    /// Panning is WORLD-ANCHORED: the ground point under the finger when the drag began stays
+    /// under the finger for the whole drag. That replaces a <c>touchPanSpeed</c> constant that
+    /// multiplied a pixel delta, which was wrong twice over -- the same swipe moved the town by
+    /// different amounts on screens of different density, and by the same number of METRES whether
+    /// the camera was 8 m up or 220 m up, so the map crawled when zoomed out and shot away when
+    /// zoomed in. Anchoring to the world needs no constant at all and is correct at every zoom by
+    /// construction.
+    ///
+    /// Edge panning is gone. It existed because a finger carrying a building could not also pan,
+    /// so the camera had to be driven from a band at the screen border; placement now keeps the
+    /// ghost at a fixed aim point and lets the player drag the world underneath it (see
+    /// BuildingPlacer), which is both more precise and one fewer thing to explain.
+    /// </summary>
     public class RTSCameraController : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private Transform pivot;
         [SerializeField] private Transform cameraTransform;
+
+        /// <summary>Needed for the screen-to-ground ray every gesture is resolved through.</summary>
+        [SerializeField] private Camera targetCamera;
 
         [Header("Pan (PC)")]
         // Keyboard only, deliberately: edge scrolling (camera pans when the cursor nears a screen
@@ -20,30 +41,68 @@ namespace CityBuilder.CameraControl
         [SerializeField] private Vector2 panBoundsMin = new Vector2(-100f, -100f);
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
-        [Header("Zoom (PC)")]
+        [Header("Zoom")]
         [SerializeField] private float zoomSpeed = 40f;
         [SerializeField] private float minDistance = 8f;
         [SerializeField] private float maxDistance = 220f;
 
-        [Header("Touch")]
-        [SerializeField] private float touchPanSpeed = 0.06f;
-        [SerializeField] private float touchZoomSpeed = 0.05f;
+        [Header("Inertia")]
+        /// <summary>How fast a fling dies out: velocity is multiplied by exp(-damping * dt) every frame.</summary>
+        [SerializeField] private float flingDamping = 6f;
 
-        [Header("Placement")]
-        // While a building is on the player's finger, that finger belongs to the BUILDING. A drag
-        // used to move both at once -- the ghost followed the touch and the camera panned under it,
-        // so the building appeared to slide across the map at double speed and could never be put
-        // where it was aimed. Panning during placement now happens only from the screen EDGE, which
-        // is how the player carries a building somewhere off-screen.
-        [SerializeField] private BuildingPlacer buildingPlacer;
+        /// <summary>Below this world speed the glide stops rather than creeping for another second.</summary>
+        [SerializeField] private float minFlingSpeed = 0.5f;
 
-        /// <summary>Width of the edge band, as a fraction of the screen's shorter side -- a fraction rather than pixels because the same band has to feel the same on a 1080p phone and a 1440p one.</summary>
-        [SerializeField] private float edgePanZoneFraction = 0.08f;
+        /// <summary>
+        /// Turned off by placement and by road drawing. A camera that keeps gliding after the
+        /// finger lifts is pleasant while looking around and actively harmful while aiming: the
+        /// aim point would drift off the cell the player just lined up.
+        /// </summary>
+        public bool InertiaEnabled { get; set; } = true;
 
-        /// <summary>Screen pixels per second at the very edge, fed through touchPanSpeed like any other drag. Ramps up from zero at the band's inner boundary, so grazing the edge does not fling the camera.</summary>
-        [SerializeField] private float edgePanPixelsPerSecond = 320f;
+        /// <summary>The world point held under the finger (or under the pinch centroid) for the duration of the gesture.</summary>
+        private Vector3 _grabPoint;
+        private bool _hasGrab;
 
-        private float _lastPinchDistance;
+        private Vector3 _flingVelocity;
+        private Vector3 _lastPanStep;
+
+        private void OnEnable()
+        {
+            var router = TouchInputRouter.Instance;
+            if (router == null) return;
+
+            router.DragStarted += HandleDragStarted;
+            router.DragMoved += HandleDragMoved;
+            router.DragEnded += HandleDragEnded;
+            router.PinchStarted += HandlePinchStarted;
+            router.PinchMoved += HandlePinchMoved;
+            router.PinchEnded += HandlePinchEnded;
+        }
+
+        private void OnDisable()
+        {
+            var router = TouchInputRouter.Instance;
+            if (router == null) return;
+
+            router.DragStarted -= HandleDragStarted;
+            router.DragMoved -= HandleDragMoved;
+            router.DragEnded -= HandleDragEnded;
+            router.PinchStarted -= HandlePinchStarted;
+            router.PinchMoved -= HandlePinchMoved;
+            router.PinchEnded -= HandlePinchEnded;
+        }
+
+        /// <summary>
+        /// Subscribing in Start as well as OnEnable, because the router may not have existed yet
+        /// when this component was enabled -- both live on scene objects with no guaranteed order.
+        /// The handlers are removed first so a double subscription is impossible.
+        /// </summary>
+        private void Start()
+        {
+            OnDisable();
+            OnEnable();
+        }
 
         private void Update()
         {
@@ -51,123 +110,109 @@ namespace CityBuilder.CameraControl
 
             var dt = Time.unscaledDeltaTime;
 
-            var handledByTouch = HandleTouch(dt);
-            if (handledByTouch) return;
+            ApplyFling(dt);
 
-            // Panning and zooming are checked independently now that panning no longer reads the
-            // mouse -- previously both were skipped entirely if no mouse was present, so keyboard
-            // panning silently did nothing on a machine without one.
             var keyboard = Keyboard.current;
-            if (keyboard != null) HandlePan(keyboard, dt);
+            if (keyboard != null) HandleKeyboardPan(keyboard, dt);
 
             var mouse = Mouse.current;
-            if (mouse != null) HandleZoom(mouse, dt);
+            if (mouse != null) HandleScrollZoom(mouse, dt);
         }
 
-        private bool HandleTouch(float dt)
+        // ---------------------------------------------------------------- gestures
+
+        private void HandleDragStarted(Vector2 screenPosition)
         {
-            var touchscreen = Touchscreen.current;
-            if (touchscreen == null) return false;
+            if (!OwnsSingleDrag()) return;
 
-            var touches = touchscreen.touches;
-            var activeCount = 0;
-            Vector2 posA = default;
-            Vector2 posB = default;
+            _flingVelocity = Vector3.zero;
+            _lastPanStep = Vector3.zero;
+            _hasGrab = TryGroundPoint(screenPosition, out _grabPoint);
+        }
 
-            for (var i = 0; i < touches.Count; i++)
-            {
-                var touch = touches[i];
-                if (!touch.press.isPressed) continue;
+        private void HandleDragMoved(Vector2 screenPosition)
+        {
+            if (!OwnsSingleDrag() || !_hasGrab) return;
+            PanToKeepGrabUnder(screenPosition);
+        }
 
-                if (activeCount == 0) posA = touch.position.ReadValue();
-                else if (activeCount == 1) posB = touch.position.ReadValue();
-                activeCount++;
-            }
+        private void HandleDragEnded(bool completed)
+        {
+            _hasGrab = false;
 
-            if (activeCount == 0)
-            {
-                _lastPinchDistance = 0f;
-                return false;
-            }
+            // A drag cancelled by a second finger must not fling: the player is starting a pinch,
+            // not throwing the map.
+            if (!InertiaEnabled || !completed) return;
 
-            if (activeCount == 1)
-            {
-                _lastPinchDistance = 0f;
+            var dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
+            var velocity = _lastPanStep / dt;
+            if (velocity.magnitude >= minFlingSpeed) _flingVelocity = velocity;
+        }
 
-                // Two fingers still pinch-zoom while placing: that gesture cannot be confused with
-                // dragging a building, and losing zoom mid-placement would be its own annoyance.
-                if (buildingPlacer != null && buildingPlacer.IsSelecting)
-                {
-                    EdgePan(posA, dt);
-                    return true;
-                }
-
-                var delta = touchscreen.primaryTouch.delta.ReadValue();
-                if (delta != Vector2.zero) PanByScreenDelta(delta, touchPanSpeed);
-            }
-            else
-            {
-                var distance = Vector2.Distance(posA, posB);
-                if (_lastPinchDistance > 0f)
-                {
-                    // Fingers spreading apart (distance increasing) should zoom in, i.e. reduce
-                    // the camera's distance from the pivot — hence the sign flip.
-                    var pinchDelta = distance - _lastPinchDistance;
-                    ApplyZoomDelta(-pinchDelta * touchZoomSpeed);
-                }
-                _lastPinchDistance = distance;
-            }
-
-            return true;
+        private void HandlePinchStarted(Vector2 centroid, float distance)
+        {
+            _flingVelocity = Vector3.zero;
+            _lastPanStep = Vector3.zero;
+            _hasGrab = TryGroundPoint(centroid, out _grabPoint);
         }
 
         /// <summary>
-        /// Pans while the finger sits in the band along a screen edge, at a speed that ramps from
-        /// zero at the band's inner boundary to full at the very edge. Pure geometry, exposed for
-        /// a test: EdgePush is what decides whether a touch pans at all and how hard.
+        /// Zoom first, then pan the grabbed point back under the centroid. Doing it in that order
+        /// is what makes the zoom happen AT THE FINGERS rather than at the middle of the screen:
+        /// the zoom moves the world under the centroid, and the pan puts it back.
         /// </summary>
-        private void EdgePan(Vector2 touchPosition, float dt)
+        private void HandlePinchMoved(Vector2 centroid, float distance, float previousDistance)
         {
-            var push = EdgePush(touchPosition, Screen.width, Screen.height, edgePanZoneFraction);
-            if (push == Vector2.zero) return;
+            if (previousDistance > 0.01f && distance > 0.01f)
+            {
+                // Fingers spreading (distance up) must bring the camera closer, hence previous/current.
+                ApplyZoomFactor(previousDistance / distance);
+            }
 
-            // Negated because PanByScreenDelta takes a FINGER delta and moves the world with it:
-            // a finger at the right edge means "show me what is further right", i.e. the camera
-            // travels right, which is the opposite of dragging the world rightwards.
-            PanByScreenDelta(-push * (edgePanPixelsPerSecond * dt), touchPanSpeed);
+            if (_hasGrab) PanToKeepGrabUnder(centroid);
         }
+
+        private void HandlePinchEnded()
+        {
+            _hasGrab = false;
+        }
+
+        /// <summary>A one-finger drag belongs to the camera unless the drawing mode has taken it (see DragOwner).</summary>
+        private static bool OwnsSingleDrag()
+        {
+            var router = TouchInputRouter.Instance;
+            return router == null || router.SingleDragOwner == DragOwner.Camera;
+        }
+
+        // ---------------------------------------------------------------- movement
 
         /// <summary>
-        /// How hard a touch at this screen position pushes the camera, per axis, in -1..1. Zero
-        /// anywhere outside the edge band, so a player dragging a building around the middle of the
-        /// screen never moves the camera by accident.
+        /// Moves the rig so the world point grabbed at the start of the gesture sits under this
+        /// screen position again. Both points are measured with the camera where it is NOW, so the
+        /// correction is exact for a single frame and self-correcting across frames.
         /// </summary>
-        public static Vector2 EdgePush(Vector2 touchPosition, float screenWidth, float screenHeight, float zoneFraction)
+        private void PanToKeepGrabUnder(Vector2 screenPosition)
         {
-            var zone = Mathf.Min(screenWidth, screenHeight) * Mathf.Max(0.0001f, zoneFraction);
-            var push = Vector2.zero;
+            if (!TryGroundPoint(screenPosition, out var current)) return;
 
-            if (touchPosition.x < zone) push.x = -(zone - touchPosition.x) / zone;
-            else if (touchPosition.x > screenWidth - zone) push.x = (touchPosition.x - (screenWidth - zone)) / zone;
-
-            if (touchPosition.y < zone) push.y = -(zone - touchPosition.y) / zone;
-            else if (touchPosition.y > screenHeight - zone) push.y = (touchPosition.y - (screenHeight - zone)) / zone;
-
-            return new Vector2(Mathf.Clamp(push.x, -1f, 1f), Mathf.Clamp(push.y, -1f, 1f));
+            var step = _grabPoint - current;
+            step.y = 0f;
+            MoveClamped(step);
+            _lastPanStep = step;
         }
 
-        private void PanByScreenDelta(Vector2 screenDelta, float speed)
+        private void ApplyFling(float dt)
         {
-            var forward = transform.forward;
-            forward.y = 0f;
-            forward.Normalize();
-            var right = transform.right;
-            right.y = 0f;
-            right.Normalize();
+            if (_flingVelocity.sqrMagnitude <= 0f) return;
 
-            // Dragging the finger moves the world with it, so the camera moves opposite the delta.
-            var move = (-right * screenDelta.x - forward * screenDelta.y) * speed;
-            MoveClamped(move);
+            if (!InertiaEnabled || _flingVelocity.magnitude < minFlingSpeed)
+            {
+                _flingVelocity = Vector3.zero;
+                return;
+            }
+
+            MoveClamped(_flingVelocity * dt);
+            _flingVelocity *= Mathf.Exp(-flingDamping * dt);
         }
 
         private void MoveClamped(Vector3 move)
@@ -178,7 +223,30 @@ namespace CityBuilder.CameraControl
             transform.position = newPos;
         }
 
-        private void HandlePan(Keyboard keyboard, float dt)
+        /// <summary>
+        /// Where this screen ray meets the ground PLANE -- not the ground mesh. A mesh raycast
+        /// would make the anchor jump every time the finger crossed a hillside, and panning would
+        /// jitter with the terrain; the plane gives a stable frame of reference at exactly the
+        /// height the grid itself uses.
+        /// </summary>
+        private bool TryGroundPoint(Vector2 screenPosition, out Vector3 point)
+        {
+            point = default;
+            if (targetCamera == null) return false;
+
+            var groundY = GridManager.Instance != null ? GridManager.Instance.GroundHeight : 0f;
+            var plane = new Plane(Vector3.up, new Vector3(0f, groundY, 0f));
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
+
+            if (!plane.Raycast(ray, out var enter)) return false;
+
+            point = ray.GetPoint(enter);
+            return true;
+        }
+
+        // ---------------------------------------------------------------- desktop
+
+        private void HandleKeyboardPan(Keyboard keyboard, float dt)
         {
             var input = Vector2.zero;
             if (keyboard[Key.W].isPressed || keyboard[Key.UpArrow].isPressed) input.y += 1f;
@@ -187,6 +255,8 @@ namespace CityBuilder.CameraControl
             if (keyboard[Key.A].isPressed || keyboard[Key.LeftArrow].isPressed) input.x -= 1f;
 
             if (input == Vector2.zero) return;
+
+            _flingVelocity = Vector3.zero;
 
             var forward = transform.forward;
             forward.y = 0f;
@@ -199,7 +269,7 @@ namespace CityBuilder.CameraControl
             MoveClamped(move);
         }
 
-        private void HandleZoom(Mouse mouse, float dt)
+        private void HandleScrollZoom(Mouse mouse, float dt)
         {
             var scroll = mouse.scroll.ReadValue().y;
             if (Mathf.Approximately(scroll, 0f)) return;
@@ -211,11 +281,25 @@ namespace CityBuilder.CameraControl
             if (cameraTransform == null) return;
 
             var localPos = cameraTransform.localPosition;
-            var distance = -localPos.z;
-            distance = Mathf.Clamp(distance + distanceDelta, minDistance, maxDistance);
+            var distance = Mathf.Clamp(-localPos.z + distanceDelta, minDistance, maxDistance);
             localPos.z = -distance;
             cameraTransform.localPosition = localPos;
         }
 
+        /// <summary>
+        /// Multiplicative zoom, which is what a pinch actually expresses: the fingers report a
+        /// RATIO, and a ratio applied to the distance feels identical whether the camera is close
+        /// or far. The old pixel-linear step took forever to cross the range from 220 m and was
+        /// twitchy at 8 m.
+        /// </summary>
+        private void ApplyZoomFactor(float factor)
+        {
+            if (cameraTransform == null || factor <= 0f) return;
+
+            var localPos = cameraTransform.localPosition;
+            var distance = Mathf.Clamp(-localPos.z * factor, minDistance, maxDistance);
+            localPos.z = -distance;
+            cameraTransform.localPosition = localPos;
+        }
     }
 }

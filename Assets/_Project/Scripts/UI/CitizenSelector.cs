@@ -6,7 +6,6 @@ using CityBuilder.Grid;
 using CityBuilder.Maps;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -46,7 +45,6 @@ namespace CityBuilder.UI
         private const float DestinationSampleRadius = 2f;
 
         [SerializeField] private Camera targetCamera;
-        [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private Text feedbackText;
         [SerializeField] private LayerMask raycastMask = ~0;
 
@@ -69,76 +67,79 @@ namespace CityBuilder.UI
         private void Update()
         {
             if (ModalGate.IsBlocked) return;
-            if (buildingPlacer != null && buildingPlacer.IsSelecting) return;
-            if (targetCamera == null) return;
-            // While an army group is selected every world tap is an order to it (see
-            // ArmyOrderInput) -- one tap must not also grab a citizen and send them walking.
-            if (Combat.ArmyManager.Instance != null && Combat.ArmyManager.Instance.SelectedGroup != null)
+            if (_selected == null) return;
+
+            BobMarker();
+
+            // The persistent (green, order-in-progress) highlight tracks the agent's own
+            // manual-move state rather than a fixed timer -- it disappears the moment the
+            // citizen either arrives or gives up (see CitizenAgent.OnStuck's retry cap).
+            if (_cellHighlightPersistent && !_selected.IsExecutingOrder) HideCellHighlight();
+
+            // Desktop escape hatches only. Touch has three of its own -- tap the citizen again,
+            // tap a building, long press -- plus the HUD's cancel button. See WorldInputDispatcher.
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard[Key.Escape].wasPressedThisFrame)
             {
                 Deselect();
                 return;
             }
+            if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame) Deselect();
+        }
 
-            if (_selected != null)
+        /// <summary>True while a citizen is selected -- the dispatcher reads it to decide whether a world tap is an ORDER or plain selection.</summary>
+        public bool HasSelection => _selected != null;
+
+        /// <summary>
+        /// Plain selection, from browsing mode: picks up an idle citizen. Returns false when the
+        /// tap met no citizen at all, so the dispatcher can pass it on to the building card.
+        ///
+        /// A BUSY citizen still consumes the tap, and says so out loud. Silence here is what made
+        /// "I tapped my woodcutter and nothing happened" indistinguishable from a broken game:
+        /// redirecting a working citizen is refused on purpose (it would desync the job
+        /// bookkeeping CitizenVisualsManager keeps), but the refusal has to be visible.
+        /// </summary>
+        public bool TrySelectCitizen(Vector2 screenPosition)
+        {
+            if (targetCamera == null) return false;
+
+            var hitCount = RaycastWorld(screenPosition);
+            var citizen = FindNearestCitizen(hitCount);
+            if (citizen == null) return false;
+
+            if (citizen.IsIdle) Select(citizen);
+            else ShowMessage(Localization.Get("#citizen_busy"), false);
+
+            return true;
+        }
+
+        /// <summary>
+        /// A tap while a citizen is selected. Returns false only for the one case this mode
+        /// deliberately hands on: a tap on a BUILDING, which drops the selection and lets the
+        /// same tap open that building's card.
+        /// </summary>
+        public bool HandleWorldTap(Vector2 screenPosition)
+        {
+            if (targetCamera == null || _selected == null) return false;
+
+            var hitCount = RaycastWorld(screenPosition);
+
+            // Tapping the selected citizen again puts them down. On a phone this was the missing
+            // half of selection -- there was no way to cancel one at all, at any point, so the
+            // only way out was to select somebody else.
+            var citizen = FindNearestCitizen(hitCount);
+            if (citizen != null)
             {
-                BobMarker();
-
-                // The persistent (green, order-in-progress) highlight tracks the agent's own
-                // manual-move state rather than a fixed timer -- it disappears the moment the
-                // citizen either arrives or gives up (see CitizenAgent.OnStuck's retry cap).
-                if (_cellHighlightPersistent && !_selected.IsExecutingOrder) HideCellHighlight();
-
-                var keyboard = Keyboard.current;
-                if (keyboard != null && keyboard[Key.Escape].wasPressedThisFrame)
-                {
-                    Deselect();
-                    return;
-                }
-                if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
-                {
-                    Deselect();
-                    return;
-                }
+                if (citizen == _selected) Deselect();
+                else if (citizen.IsIdle) Select(citizen);
+                else ShowMessage(Localization.Get("#citizen_busy"), false);
+                return true;
             }
 
-            var pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame) return;
-            if (IsPointerOverUI()) return;
-
-            var ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-
-            // Every hit along the ray, not just the nearest one. A tree's click collider is a box
-            // around its whole canopy, so with the camera looking down at an angle it sits between
-            // the cursor and any citizen standing near that tree -- a plain Physics.Raycast
-            // returned the tree, the citizen check missed, and clicking your own people simply did
-            // nothing. Selection now looks past whatever happens to be in front.
-            var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
-            if (hitCount == 0) return;
-
-            // Citizens win over scenery at any depth: they're the thing the player is aiming at.
-            // The NEAREST citizen along the ray, not the first one the unsorted hit list happens
-            // to mention -- with two citizens under the cursor that was picking between them at
-            // random.
-            var citizenHit = -1;
-            for (var i = 0; i < hitCount; i++)
-            {
-                if (_hits[i].collider.GetComponent<CitizenAgent>() == null) continue;
-                if (citizenHit < 0 || _hits[i].distance < _hits[citizenHit].distance) citizenHit = i;
-            }
-            if (citizenHit >= 0)
-            {
-                var citizen = _hits[citizenHit].collider.GetComponent<CitizenAgent>();
-                if (citizen.IsIdle) Select(citizen);
-                return;
-            }
-
-            if (_selected == null) return;
-
-            // The nearest resource node along the ray, if the click met one at all. Scanning every
+            // The nearest resource node along the ray, if the tap met one at all. Scanning every
             // hit rather than testing only the single nearest collider: a tree's click box is wide
-            // enough that a boulder or a second tree standing just in front of the cursor can be
-            // the nearest hit while the thing actually under the cursor is a few entries further
-            // down the list.
+            // enough that a boulder or a second tree standing just in front of the finger can be
+            // the nearest hit while the thing actually under it is a few entries further down.
             //
             // GetComponentInParent, not GetComponent: a tree's click collider sits on its prefab
             // root but a boulder's cluster parts are children, and either could be what the
@@ -156,15 +157,28 @@ namespace CityBuilder.UI
             if (node != null)
             {
                 CommandGather(node);
-                return;
+                return true;
             }
 
-            // Where the click landed on the map, asked of the ground mesh itself (see
+            // A building is not a destination. Ordering someone to walk into a wall is what the
+            // old code did here -- the tap fell through to the ground branch, landed on the
+            // building's collider and resolved to the NavMesh next to its wall -- and it was
+            // never once what the player meant.
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].collider.GetComponentInParent<BuildingInstance>() == null) continue;
+                Deselect();
+                return false;
+            }
+
+            if (hitCount == 0) return true;
+
+            // Where the tap landed on the map, asked of the ground mesh itself (see
             // MeshMapApplier.TryRaycastGround) rather than read off whatever collider the ray met
-            // first. Everything standing on the ground -- a tree's canopy box, a boulder, a
-            // building, an authored zone volume -- is metres above and beside the ground beneath
-            // it, and any of those as "where the player clicked" skews the destination before the
-            // NavMesh ever sees it.
+            // first. Everything standing on the ground -- a tree's canopy box, a boulder, an
+            // authored zone volume -- is metres above and beside the ground beneath it, and any of
+            // those as "where the player tapped" skews the destination before the NavMesh sees it.
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
             var clickPoint = _hits[0].point;
             var solid = -1;
             for (var i = 0; i < hitCount; i++)
@@ -173,7 +187,7 @@ namespace CityBuilder.UI
                 if (solid < 0 || _hits[i].distance < _hits[solid].distance) solid = i;
             }
             if (solid >= 0) clickPoint = _hits[solid].point;
-            // No ground under the cursor (water, off the map edge) leaves clickPoint as that
+            // No ground under the tap (water, off the map edge) leaves clickPoint as that
             // fallback, which TryResolveDestination then refuses with the usual red NO!.
             if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryRaycastGround(ray, out var groundHit))
             {
@@ -186,6 +200,31 @@ namespace CityBuilder.UI
             ShowCellHighlight(resolved ? destination : clickPoint, resolved);
 
             if (resolved) _selected.MoveTo(destination);
+            return true;
+        }
+
+        /// <summary>
+        /// Every hit along the ray, not just the nearest one. A tree's click collider is a box
+        /// around its whole canopy, so with the camera looking down at an angle it sits between
+        /// the finger and any citizen standing near that tree -- a plain Physics.Raycast returned
+        /// the tree, the citizen check missed, and tapping your own people simply did nothing.
+        /// </summary>
+        private int RaycastWorld(Vector2 screenPosition)
+        {
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
+            return Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
+        }
+
+        /// <summary>The NEAREST citizen along the ray, not the first one the unsorted hit list happens to mention -- with two citizens under the finger that was choosing between them at random.</summary>
+        private CitizenAgent FindNearestCitizen(int hitCount)
+        {
+            var best = -1;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].collider.GetComponent<CitizenAgent>() == null) continue;
+                if (best < 0 || _hits[i].distance < _hits[best].distance) best = i;
+            }
+            return best >= 0 ? _hits[best].collider.GetComponent<CitizenAgent>() : null;
         }
 
         /// <summary>
@@ -255,7 +294,8 @@ namespace CityBuilder.UI
             HideCellHighlight();
         }
 
-        private void Deselect()
+        /// <summary>Public because the HUD cancel button and the long-press escape hatch both reach it (see WorldInputDispatcher).</summary>
+        public void Deselect()
         {
             _selected = null;
             if (_marker != null) _marker.SetActive(false);
@@ -373,9 +413,15 @@ namespace CityBuilder.UI
 
         private void ShowFeedback(bool ok)
         {
+            ShowMessage(ok ? "OK!" : "NO!", ok);
+        }
+
+        /// <summary>The same one-second centre-screen flash, with words in it -- used for refusals that a bare "NO!" would leave the player guessing about.</summary>
+        private void ShowMessage(string message, bool ok)
+        {
             if (feedbackText == null) return;
 
-            feedbackText.text = ok ? "OK!" : "NO!";
+            feedbackText.text = message;
             feedbackText.color = ok ? new Color(0.4f, 0.9f, 0.4f) : new Color(0.95f, 0.35f, 0.3f);
             feedbackText.gameObject.SetActive(true);
 
@@ -388,19 +434,6 @@ namespace CityBuilder.UI
             yield return new WaitForSeconds(FeedbackSeconds);
             if (feedbackText != null) feedbackText.gameObject.SetActive(false);
             _feedbackRoutine = null;
-        }
-
-        private static bool IsPointerOverUI()
-        {
-            if (EventSystem.current == null) return false;
-
-            var touchscreen = Touchscreen.current;
-            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
-            {
-                return EventSystem.current.IsPointerOverGameObject(touchscreen.primaryTouch.touchId.ReadValue());
-            }
-
-            return EventSystem.current.IsPointerOverGameObject();
         }
     }
 }

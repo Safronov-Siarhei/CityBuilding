@@ -289,6 +289,76 @@ namespace CityBuilder.Buildings
             return true;
         }
 
+        /// <summary>
+        /// Everything the Town Hall is not. Demolishing it would end the game (its loss is the
+        /// defeat condition), so the card simply does not offer the button.
+        /// </summary>
+        public bool CanDemolish => Data != null && Data.buildingName != BuildingIds.TownHall;
+
+        /// <summary>
+        /// What comes back: a share of everything ever sunk into this building -- its build cost
+        /// plus every upgrade actually paid for. Counting the upgrades matters, or demolishing a
+        /// level-3 workshop would refund the price of a level-1 one and quietly burn the rest.
+        /// </summary>
+        public List<ResourceAmount> GetDemolishRefund()
+        {
+            if (Data == null) return null;
+
+            var totals = new Dictionary<ResourceType, int>();
+            AccumulateCost(totals, Data.cost);
+            if (Level >= 2) AccumulateCost(totals, Data.upgradeToLevel2Cost);
+            if (Level >= 3) AccumulateCost(totals, Data.upgradeToLevel3Cost);
+
+            var fraction = BalanceConfig.Instance.DemolishRefundFraction;
+            var refund = new List<ResourceAmount>();
+            foreach (var pair in totals)
+            {
+                var amount = Mathf.FloorToInt(pair.Value * fraction);
+                if (amount > 0) refund.Add(new ResourceAmount { type = pair.Key, amount = amount });
+            }
+            return refund;
+        }
+
+        private static void AccumulateCost(Dictionary<ResourceType, int> totals, List<ResourceAmount> cost)
+        {
+            if (cost == null) return;
+            foreach (var amount in cost)
+            {
+                totals.TryGetValue(amount.type, out var running);
+                totals[amount.type] = running + amount.amount;
+            }
+        }
+
+        /// <summary>
+        /// Takes the building down on purpose, which until now the game had no way to do at all --
+        /// a misplaced building was permanent, and so was a fence drawn crooked.
+        ///
+        /// Workers, storage room, housing, fence shape and the NavMesh obstacle all unwind through
+        /// OnDestroy exactly as they do when orcs burn the place down; the road registry is the one
+        /// thing that does not, because roads have never been removed before.
+        /// </summary>
+        public void Demolish()
+        {
+            if (!CanDemolish) return;
+
+            var refund = GetDemolishRefund();
+            if (refund != null && ResourceManager.Instance != null)
+            {
+                // Add, not AddProduced: giving materials back is not production, and counting it
+                // as such would let a player inflate the score raids are sized against by building
+                // and demolishing the same hut all day.
+                foreach (var amount in refund) ResourceManager.Instance.Add(amount.type, amount.amount);
+            }
+
+            if (Data.isRoad && RoadNetwork.Instance != null)
+            {
+                foreach (var cell in OccupiedCells()) RoadNetwork.Instance.UnregisterRoad(cell);
+            }
+
+            EventLogManager.Instance?.Log(Localization.Format("#log_demolished", Data.LocalizedName));
+            FreeCellsAndDestroy();
+        }
+
         /// <summary>Small floating marker above the building while its decay is in the production-penalty band (see DecayPenaltyThreshold) -- a HUD-less, at-a-glance "this needs attention" cue without having to open every building's info panel.</summary>
         private void UpdateDecayWarningMarker()
         {

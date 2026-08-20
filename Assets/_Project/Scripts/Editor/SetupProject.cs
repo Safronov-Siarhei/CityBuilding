@@ -610,6 +610,7 @@ namespace CityBuilder.EditorTools
             var rigSO = new SerializedObject(rtsCamera);
             rigSO.FindProperty("pivot").objectReferenceValue = pivot.transform;
             rigSO.FindProperty("cameraTransform").objectReferenceValue = mainCameraGO.transform;
+            rigSO.FindProperty("targetCamera").objectReferenceValue = camera;
             var boundsMargin = 6f;
             rigSO.FindProperty("panBoundsMin").vector2Value = new Vector2(GroundOrigin.x + boundsMargin, GroundOrigin.z + boundsMargin);
             rigSO.FindProperty("panBoundsMax").vector2Value = new Vector2(-GroundOrigin.x - boundsMargin, -GroundOrigin.z - boundsMargin);
@@ -625,6 +626,10 @@ namespace CityBuilder.EditorTools
             gridSO.FindProperty("gridSize").vector2IntValue = new Vector2Int(GridCellsX, GridCellsZ);
             gridSO.FindProperty("groundHeight").floatValue = GroundHeight;
             gridSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Every world gesture in the game is recognised here and nowhere else -- added before
+            // the camera, the placer and the selectors so its Instance exists when they subscribe.
+            managers.AddComponent<CityBuilder.InputControl.TouchInputRouter>();
 
             managers.AddComponent<ResourceManager>();
             managers.AddComponent<RoadNetwork>();
@@ -644,12 +649,11 @@ namespace CityBuilder.EditorTools
             }
             placerSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // Wired here rather than where the rig is built, since the placer does not exist yet at
-            // that point. Without it a drag during placement moves the ghost AND pans the camera
-            // under it -- see RTSCameraController's Placement header.
-            var placerOnCameraSO = new SerializedObject(rtsCamera);
-            placerOnCameraSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
-            placerOnCameraSO.ApplyModifiedPropertiesWithoutUndo();
+            // The placer switches the camera's inertia off while a building is being aimed: a
+            // glide after the finger lifts would slide the aim point off the cell just lined up.
+            var placerCameraSO = new SerializedObject(placer);
+            placerCameraSO.FindProperty("cameraController").objectReferenceValue = rtsCamera;
+            placerCameraSO.ApplyModifiedPropertiesWithoutUndo();
 
             var citizenManager = managers.AddComponent<CitizenManager>();
             var citizenManagerSO = new SerializedObject(citizenManager);
@@ -797,8 +801,19 @@ namespace CityBuilder.EditorTools
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 1f;
 
+            // Everything in the HUD hangs off this rather than off the Canvas directly: it is the
+            // rect that shrinks to Screen.safeArea, keeping the HUD clear of the camera cutout and
+            // the system gesture bar. The Canvas itself cannot do the job -- Unity drives its own
+            // RectTransform, so anchors written onto it are overwritten every frame.
+            var safeAreaGO = new GameObject("SafeArea", typeof(RectTransform));
+            safeAreaGO.transform.SetParent(canvasGO.transform, false);
+            StretchFull(safeAreaGO.GetComponent<RectTransform>());
+            safeAreaGO.AddComponent<SafeAreaFitter>();
+            var uiRoot = safeAreaGO.transform;
+
+
             // Hint shown only while the player must place the mandatory Town Hall.
-            var hintRoot = CreateImage(canvasGO.transform, "PlacementHint", new Color(0f, 0f, 0f, 0.6f));
+            var hintRoot = CreateImage(uiRoot, "PlacementHint", new Color(0f, 0f, 0f, 0.6f));
             hintRoot.sprite = panelSprite;
             hintRoot.type = Image.Type.Sliced;
             var hintRect = hintRoot.GetComponent<RectTransform>();
@@ -814,7 +829,7 @@ namespace CityBuilder.EditorTools
             // point). Number-key hotkeys still work on PC, against the same availableBuildings
             // list regardless of which category is currently shown.
             var menuGO = new GameObject("BuildingMenu", typeof(RectTransform));
-            menuGO.transform.SetParent(canvasGO.transform, false);
+            menuGO.transform.SetParent(uiRoot, false);
             StretchFull(menuGO.GetComponent<RectTransform>());
             var categoryPanel = menuGO.AddComponent<BuildingCategoryPanel>();
 
@@ -870,7 +885,9 @@ namespace CityBuilder.EditorTools
                 if (hotbarBuildings.Exists(b => b.category == cat)) presentCategories.Add(cat);
             }
 
-            const float categoryButtonSize = 80f;
+            // 110, not 80: at a 1080-high reference 80 px lands at roughly 5 mm on a dense
+            // phone screen, half of what a finger reliably hits.
+            const float categoryButtonSize = 110f;
             var categoryTotalWidth = presentCategories.Count * categoryButtonSize + Mathf.Max(0, presentCategories.Count - 1) * spacing;
 
             var categoryBarGO = new GameObject("CategoryBar", typeof(RectTransform));
@@ -905,72 +922,98 @@ namespace CityBuilder.EditorTools
             visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = menuGO;
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
-            // Mobile rotate button (PC also has the 'R' key -- see BuildingPlacer.Update).
-            // Lives outside menuGO/BuildingPlacerUIVisibility's mandatory-placement gating since
-            // rotation is useful even while placing the mandatory Town Hall; ShowWhileSelectingBuilding
-            // handles its own visibility instead, tied directly to IsSelecting.
+            // The placement controls, stacked up the right edge: confirm at thumb height, then
+            // rotate, then cancel. Confirm is the biggest of the three because it is pressed on
+            // every single building, and because a mis-tap there costs a wrong placement -- see
+            // PlacementHudController for which of them is visible when.
+            var confirmIcon = CreateConfirmIcon();
+            var confirmButton = CreateIconButton(uiRoot, panelSprite, confirmIcon, "ConfirmPlacementButton", Vector2.zero, new Vector2(130f, 130f));
+            var confirmRect = confirmButton.GetComponent<RectTransform>();
+            confirmRect.anchorMin = confirmRect.anchorMax = confirmRect.pivot = new Vector2(1f, 0f);
+            confirmRect.anchoredPosition = new Vector2(-40f, 40f);
+            UnityEventTools.AddPersistentListener(confirmButton.onClick, placer.ConfirmPlacement);
+
+            // Rotation stays available even while placing the mandatory Town Hall -- it is not a
+            // cancel, so there is no dead end to protect against. PC also has the R key.
             var rotateIcon = CreateRotateIcon();
-            var rotateButton = CreateIconButton(canvasGO.transform, panelSprite, rotateIcon, "RotateButton", Vector2.zero, new Vector2(90f, 90f));
+            var rotateButton = CreateIconButton(uiRoot, panelSprite, rotateIcon, "RotateButton", Vector2.zero, new Vector2(110f, 110f));
             var rotateRect = rotateButton.GetComponent<RectTransform>();
-            rotateRect.anchorMin = new Vector2(1f, 0f);
-            rotateRect.anchorMax = new Vector2(1f, 0f);
-            rotateRect.pivot = new Vector2(1f, 0f);
-            rotateRect.anchoredPosition = new Vector2(-40f, 40f);
-
+            rotateRect.anchorMin = rotateRect.anchorMax = rotateRect.pivot = new Vector2(1f, 0f);
+            rotateRect.anchoredPosition = new Vector2(-50f, 190f);
             UnityEventTools.AddPersistentListener(rotateButton.onClick, placer.RotateSelection);
-
-            // Lives on the Canvas itself (an always-active object), not on the button it
-            // controls -- a script polling its own GameObject's active state would stop
-            // receiving Update() calls the moment it deactivates it, and never reactivate it.
-            var rotateVisibility = canvasGO.AddComponent<ShowWhileSelectingBuilding>();
-            var rotateVisibilitySO = new SerializedObject(rotateVisibility);
-            rotateVisibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
-            rotateVisibilitySO.FindProperty("target").objectReferenceValue = rotateButton.gameObject;
-            rotateVisibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
             // Cancel. On a phone there was NO way to put a building back down: ClearSelection was
             // reachable only through Escape and the right mouse button, so a selected building the
-            // player could not afford stayed stuck to their finger for the rest of the game.
-            // Sits left of the rotate button, and stays hidden while the mandatory Town Hall is
-            // being placed -- that one genuinely cannot be cancelled.
+            // player could not afford stayed stuck for the rest of the game.
             var cancelIcon = CreateCancelIcon();
-            var cancelButton = CreateIconButton(canvasGO.transform, panelSprite, cancelIcon, "CancelPlacementButton", Vector2.zero, new Vector2(90f, 90f));
+            var cancelButton = CreateIconButton(uiRoot, panelSprite, cancelIcon, "CancelPlacementButton", Vector2.zero, new Vector2(110f, 110f));
             var cancelRect = cancelButton.GetComponent<RectTransform>();
-            cancelRect.anchorMin = new Vector2(1f, 0f);
-            cancelRect.anchorMax = new Vector2(1f, 0f);
-            cancelRect.pivot = new Vector2(1f, 0f);
-            cancelRect.anchoredPosition = new Vector2(-40f, 140f);
-
+            cancelRect.anchorMin = cancelRect.anchorMax = cancelRect.pivot = new Vector2(1f, 0f);
+            cancelRect.anchoredPosition = new Vector2(-50f, 310f);
             UnityEventTools.AddPersistentListener(cancelButton.onClick, placer.ClearSelection);
 
-            var cancelVisibility = canvasGO.AddComponent<ShowWhileSelectingBuilding>();
-            var cancelVisibilitySO = new SerializedObject(cancelVisibility);
-            cancelVisibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
-            cancelVisibilitySO.FindProperty("target").objectReferenceValue = cancelButton.gameObject;
-            cancelVisibilitySO.FindProperty("hideWhilePlacingMandatory").boolValue = true;
-            cancelVisibilitySO.ApplyModifiedPropertiesWithoutUndo();
+            // The crosshair marking where the ghost is aimed. Positioned in SCREEN pixels by the
+            // controller, which is why it is anchored to a corner rather than centred here.
+            var aimMarker = CreateAimMarker(uiRoot);
 
-            BuildSaveUI(canvasGO.transform, panelSprite, saveController);
-            BuildExitUI(canvasGO.transform, panelSprite);
-            BuildGameOverUI(canvasGO.transform, panelSprite);
-            BuildResourceHUD(canvasGO.transform);
-            BuildMinimap(canvasGO.transform, panelSprite, minimapTexture, cameraRig);
+            // One line saying why confirm is dark, or what a drawn line will cost. Bottom-centre
+            // above the hotbar, where the eye already is while placing.
+            var placementStatus = CreateText(uiRoot, "PlacementStatus", string.Empty, 30,
+                Vector2.zero, new Vector2(900f, 44f), new Color(1f, 0.72f, 0.62f), addShadow: true);
+            var statusRect = placementStatus.GetComponent<RectTransform>();
+            statusRect.anchorMin = statusRect.anchorMax = statusRect.pivot = new Vector2(0.5f, 0f);
+            statusRect.anchoredPosition = new Vector2(0f, 200f);
+            placementStatus.gameObject.SetActive(false);
+
+            // Lives on the Canvas itself (an always-active object), not on the buttons it
+            // controls -- a script polling its own GameObject's active state would stop
+            // receiving Update() calls the moment it deactivated it, and never reactivate it.
+            var placementHud = canvasGO.AddComponent<PlacementHudController>();
+            var placementHudSO = new SerializedObject(placementHud);
+            placementHudSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            placementHudSO.FindProperty("confirmButton").objectReferenceValue = confirmButton.gameObject;
+            placementHudSO.FindProperty("confirmImage").objectReferenceValue = confirmButton.GetComponent<Image>();
+            placementHudSO.FindProperty("rotateButton").objectReferenceValue = rotateButton.gameObject;
+            placementHudSO.FindProperty("cancelButton").objectReferenceValue = cancelButton.gameObject;
+            placementHudSO.FindProperty("aimMarker").objectReferenceValue = aimMarker;
+            placementHudSO.FindProperty("statusLabel").objectReferenceValue = placementStatus;
+            placementHudSO.ApplyModifiedPropertiesWithoutUndo();
+
+            BuildSaveUI(uiRoot, panelSprite, saveController);
+            BuildExitUI(uiRoot, panelSprite);
+            BuildGameOverUI(uiRoot, panelSprite);
+            BuildResourceHUD(uiRoot);
+            BuildMinimap(uiRoot, panelSprite, minimapTexture, cameraRig);
 
             var iconLibrary = CreateResourceIconLibrary();
 
-            var infoPanel = BuildBuildingInfoPanel(canvasGO.transform, panelSprite, iconLibrary);
-            var researchPanel = BuildResearchPanel(canvasGO.transform, panelSprite, iconLibrary);
-            BuildBuildingSelector(canvasGO.transform, targetCamera, placer, infoPanel, researchPanel);
-            BuildCitizenSelector(canvasGO.transform, targetCamera, placer);
-            BuildSettlementTierToast(canvasGO.transform, settlementTierManager);
-            BuildEventLog(canvasGO.transform, panelSprite);
-            BuildTaxRateControl(canvasGO.transform, panelSprite);
-            BuildSettlementStatus(canvasGO.transform, gameCalendar, settlementTierManager);
-            BuildHappinessPanel(canvasGO.transform, panelSprite);
-            BuildMigrationPanel(canvasGO.transform, panelSprite);
-            BuildWorkforcePanel(canvasGO.transform, panelSprite);
-            BuildArmyPanel(canvasGO.transform, panelSprite);
-            BuildArmyOrderInput(canvasGO.transform, targetCamera, placer);
+            var infoPanel = BuildBuildingInfoPanel(uiRoot, panelSprite, iconLibrary);
+            var researchPanel = BuildResearchPanel(uiRoot, panelSprite, iconLibrary);
+            var buildingSelector = BuildBuildingSelector(uiRoot, targetCamera, infoPanel, researchPanel);
+            var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
+            BuildSettlementTierToast(uiRoot, settlementTierManager);
+            BuildEventLog(uiRoot, panelSprite);
+            BuildTaxRateControl(uiRoot, panelSprite);
+            BuildSettlementStatus(uiRoot, gameCalendar, settlementTierManager);
+            BuildHappinessPanel(uiRoot, panelSprite);
+            BuildMigrationPanel(uiRoot, panelSprite);
+            BuildWorkforcePanel(uiRoot, panelSprite);
+            BuildArmyPanel(uiRoot, panelSprite);
+            var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
+
+            // One tap, one owner, decided in one place -- see WorldInputDispatcher for why the
+            // four systems no longer check each other's state.
+            var dispatcherGO = new GameObject("WorldInputDispatcher");
+            dispatcherGO.transform.SetParent(uiRoot, false);
+            var dispatcher = dispatcherGO.AddComponent<CityBuilder.InputControl.WorldInputDispatcher>();
+            var dispatcherSO = new SerializedObject(dispatcher);
+            dispatcherSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            dispatcherSO.FindProperty("armyOrderInput").objectReferenceValue = armyOrderInput;
+            dispatcherSO.FindProperty("citizenSelector").objectReferenceValue = citizenSelector;
+            dispatcherSO.FindProperty("buildingSelector").objectReferenceValue = buildingSelector;
+            dispatcherSO.ApplyModifiedPropertiesWithoutUndo();
+
+            BuildSelectionBadge(uiRoot, panelSprite, citizenSelector);
         }
 
         /// <summary>
@@ -1019,15 +1062,15 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>Turns world taps into orders for the selected group (see ArmyOrderInput) -- inert while no group is selected, which is how it coexists with the citizen/building selectors.</summary>
-        private static void BuildArmyOrderInput(Transform canvasParent, Camera targetCamera, BuildingPlacer placer)
+        private static ArmyOrderInput BuildArmyOrderInput(Transform canvasParent, Camera targetCamera)
         {
             var go = new GameObject("ArmyOrderInput");
             go.transform.SetParent(canvasParent, false);
             var input = go.AddComponent<ArmyOrderInput>();
             var so = new SerializedObject(input);
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
-            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.ApplyModifiedPropertiesWithoutUndo();
+            return input;
         }
 
         /// <summary>
@@ -1500,7 +1543,43 @@ namespace CityBuilder.EditorTools
             var recruitCostRow = CreateCostRow(recruitControls.transform, "RecruitCostRow", new Vector2(0f, 62f));
             var recruitButton = CreateButton(recruitControls.transform, panelSprite, "RecruitButton", "#building_recruit", new Vector2(0f, 10f), new Vector2(360f, 70f));
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -345f), new Vector2(300f, 70f));
+            // Demolition shares the bottom row with Close, and is deliberately the one button on
+            // this card wearing a warning colour: it is the only irreversible thing here, and it
+            // sits a finger's width from Upgrade.
+            var demolishControls = new GameObject("DemolishControls", typeof(RectTransform));
+            demolishControls.transform.SetParent(card.transform, false);
+            StretchFull(demolishControls.GetComponent<RectTransform>());
+
+            var demolishButton = CreateButton(demolishControls.transform, panelSprite, "DemolishButton", "#building_demolish", new Vector2(-170f, -345f), new Vector2(300f, 70f));
+            demolishButton.GetComponent<Image>().color = new Color(0.45f, 0.2f, 0.18f, 0.95f);
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(170f, -345f), new Vector2(300f, 70f));
+
+            // The confirmation, over the card rather than over the world -- the card is already
+            // modal (ModalGate), so this only has to beat it in draw order.
+            var demolishConfirm = new GameObject("DemolishConfirm", typeof(RectTransform));
+            demolishConfirm.transform.SetParent(panelRoot.transform, false);
+            StretchFull(demolishConfirm.GetComponent<RectTransform>());
+
+            var demolishBackdrop = CreateImage(demolishConfirm.transform, "Backdrop", new Color(0f, 0f, 0f, 0.75f));
+            StretchFull(demolishBackdrop.GetComponent<RectTransform>());
+
+            var demolishCard = CreateImage(demolishConfirm.transform, "Card", new Color(0.18f, 0.14f, 0.13f, 0.98f));
+            demolishCard.sprite = panelSprite;
+            demolishCard.type = Image.Type.Sliced;
+            var demolishCardRect = demolishCard.GetComponent<RectTransform>();
+            demolishCardRect.anchorMin = demolishCardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            demolishCardRect.sizeDelta = new Vector2(760f, 320f);
+            demolishCardRect.anchoredPosition = Vector2.zero;
+
+            // Filled in at run time: it names the building and what the refund actually is.
+            var demolishConfirmLabel = CreateText(demolishCard.transform, "Question", string.Empty, 28, new Vector2(0f, 60f), new Vector2(680f, 120f));
+
+            var demolishConfirmButton = CreateButton(demolishCard.transform, panelSprite, "ConfirmDemolishButton", "#building_demolish", new Vector2(-160f, -80f), new Vector2(300f, 84f));
+            demolishConfirmButton.GetComponent<Image>().color = new Color(0.45f, 0.2f, 0.18f, 0.95f);
+            var demolishCancelButton = CreateButton(demolishCard.transform, panelSprite, "CancelDemolishButton", "#ui_cancel", new Vector2(160f, -80f), new Vector2(300f, 84f));
+
+            demolishConfirm.SetActive(false);
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -1509,6 +1588,9 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("levelLabel").objectReferenceValue = level;
             controllerSO.FindProperty("conditionLabel").objectReferenceValue = condition;
             controllerSO.FindProperty("productionLabel").objectReferenceValue = production;
+            controllerSO.FindProperty("demolishControls").objectReferenceValue = demolishControls;
+            controllerSO.FindProperty("demolishConfirmRoot").objectReferenceValue = demolishConfirm;
+            controllerSO.FindProperty("demolishConfirmLabel").objectReferenceValue = demolishConfirmLabel;
             controllerSO.FindProperty("recipeControls").objectReferenceValue = recipeControls;
             controllerSO.FindProperty("recipeRow").objectReferenceValue = recipeRowRect;
             controllerSO.FindProperty("recipeButtonSprite").objectReferenceValue = panelSprite;
@@ -1532,6 +1614,9 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(unassignButton.onClick, controller.UnassignWorker);
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
             UnityEventTools.AddPersistentListener(repairButton.onClick, controller.Repair);
+            UnityEventTools.AddPersistentListener(demolishButton.onClick, controller.OpenDemolishConfirm);
+            UnityEventTools.AddPersistentListener(demolishConfirmButton.onClick, controller.ConfirmDemolish);
+            UnityEventTools.AddPersistentListener(demolishCancelButton.onClick, controller.CancelDemolish);
             UnityEventTools.AddPersistentListener(recruitButton.onClick, controller.Recruit);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
@@ -1539,7 +1624,7 @@ namespace CityBuilder.EditorTools
             return controller;
         }
 
-        private static void BuildBuildingSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer,
+        private static BuildingSelector BuildBuildingSelector(Transform canvasParent, Camera targetCamera,
             BuildingInfoPanelController infoPanel, ResearchPanelController researchPanel)
         {
             var go = new GameObject("BuildingSelector");
@@ -1547,10 +1632,10 @@ namespace CityBuilder.EditorTools
             var selector = go.AddComponent<BuildingSelector>();
             var so = new SerializedObject(selector);
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
-            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
             so.FindProperty("researchPanel").objectReferenceValue = researchPanel;
             so.ApplyModifiedPropertiesWithoutUndo();
+            return selector;
         }
 
         /// <summary>
@@ -1685,7 +1770,7 @@ namespace CityBuilder.EditorTools
         /// OK!/NO! flash reads clearly regardless of what's behind it; hidden until the first
         /// destination click.
         /// </summary>
-        private static void BuildCitizenSelector(Transform canvasParent, Camera targetCamera, BuildingPlacer placer)
+        private static CitizenSelector BuildCitizenSelector(Transform canvasParent, Camera targetCamera)
         {
             var feedbackText = CreateText(canvasParent, "CitizenMoveFeedback", string.Empty, 64, Vector2.zero, new Vector2(400f, 100f), addShadow: true);
             feedbackText.gameObject.SetActive(false);
@@ -1695,9 +1780,82 @@ namespace CityBuilder.EditorTools
             var selector = go.AddComponent<CitizenSelector>();
             var so = new SerializedObject(selector);
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
-            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
             so.ApplyModifiedPropertiesWithoutUndo();
+            return selector;
+        }
+
+        /// <summary>
+        /// The crosshair sitting at the placement aim point: a hollow square of four thin bars,
+        /// which reads as "this cell" without covering the ghost standing in it. Positioned in
+        /// screen pixels every frame by PlacementHudController.
+        /// </summary>
+        private static RectTransform CreateAimMarker(Transform canvasParent)
+        {
+            var root = new GameObject("PlacementAimMarker", typeof(RectTransform));
+            root.transform.SetParent(canvasParent, false);
+            var rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(96f, 96f);
+
+            var color = new Color(1f, 1f, 1f, 0.85f);
+            const float length = 34f;
+            const float thickness = 4f;
+
+            CreateAimBar(root.transform, "Top", new Vector2(0f, 48f), new Vector2(length, thickness), color);
+            CreateAimBar(root.transform, "Bottom", new Vector2(0f, -48f), new Vector2(length, thickness), color);
+            CreateAimBar(root.transform, "Left", new Vector2(-48f, 0f), new Vector2(thickness, length), color);
+            CreateAimBar(root.transform, "Right", new Vector2(48f, 0f), new Vector2(thickness, length), color);
+
+            root.SetActive(false);
+            return rect;
+        }
+
+        private static void CreateAimBar(Transform parent, string name, Vector2 anchoredPos, Vector2 size, Color color)
+        {
+            var bar = CreateImage(parent, name, color);
+            var rect = bar.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = size;
+        }
+
+        /// <summary>
+        /// The badge naming whatever is selected, with the X that clears it. Top-centre, clear of
+        /// the minimap on the right and the event log on the left.
+        ///
+        /// It exists because selection had no visible exit on a phone at all: a selected citizen
+        /// could only be released with Escape or a right click, and while one is selected every
+        /// world tap is an order to them -- so the player was stuck in a mode they could not see
+        /// and could not leave.
+        /// </summary>
+        private static void BuildSelectionBadge(Transform canvasParent, Sprite panelSprite, CitizenSelector citizenSelector)
+        {
+            var badge = CreateImage(canvasParent, "SelectionBadge", new Color(0.16f, 0.18f, 0.15f, 0.92f));
+            badge.sprite = panelSprite;
+            badge.type = Image.Type.Sliced;
+            var badgeRect = badge.GetComponent<RectTransform>();
+            badgeRect.anchorMin = badgeRect.anchorMax = badgeRect.pivot = new Vector2(0.5f, 1f);
+            badgeRect.anchoredPosition = new Vector2(0f, -30f);
+            badgeRect.sizeDelta = new Vector2(460f, 96f);
+
+            var label = CreateText(badge.transform, "Label", string.Empty, 30, new Vector2(-40f, 0f), new Vector2(300f, 60f));
+
+            var cancelIcon = CreateCancelIcon();
+            var clearButton = CreateIconButton(badge.transform, panelSprite, cancelIcon, "ClearSelectionButton", new Vector2(170f, 0f), new Vector2(76f, 76f));
+
+            // On the Canvas, not on the badge: a component that deactivates its own GameObject
+            // stops getting Update() and could never switch itself back on.
+            var controller = canvasParent.gameObject.AddComponent<SelectionBadgeController>();
+            var controllerSO = new SerializedObject(controller);
+            controllerSO.FindProperty("citizenSelector").objectReferenceValue = citizenSelector;
+            controllerSO.FindProperty("badgeRoot").objectReferenceValue = badge.gameObject;
+            controllerSO.FindProperty("label").objectReferenceValue = label;
+            controllerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(clearButton.onClick, controller.ClearSelection);
+
+            badge.gameObject.SetActive(false);
         }
 
         private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
@@ -1766,7 +1924,7 @@ namespace CityBuilder.EditorTools
             // A component on a deactivated GameObject never gets Start(), so putting it on
             // panelRoot (deactivated just below) meant it never subscribed to
             // GameOverManager.OnGameOver -- the Town Hall could be destroyed and the defeat
-            // screen would simply never appear. Same reasoning as ShowWhileSelectingBuilding.
+            // screen would simply never appear. Same reasoning as PlacementHudController.
             var controllerGO = new GameObject("GameOverController");
             controllerGO.transform.SetParent(canvasParent, false);
             var controller = controllerGO.AddComponent<GameOverController>();
@@ -3561,6 +3719,49 @@ namespace CityBuilder.EditorTools
                 FillIconRect(p, s, 0.2f, 0.24f, 0.8f, 0.32f, line);
                 FillIconTriangle(p, s, new Vector2(0.06f, 0.44f), new Vector2(0.28f, 0.56f), new Vector2(0.28f, 0.32f), line);
             });
+        }
+
+        /// <summary>A tick, drawn as two thick strokes -- the short one down-right, the long one up-right. Straight edges only, like every other icon here.</summary>
+        private static Sprite CreateConfirmIcon()
+        {
+            return CreateIconSprite("Action_Confirm", 64, (p, s) =>
+            {
+                var line = new Color(0.82f, 0.98f, 0.82f);
+                const int halfThickness = 3;
+
+                // Short stroke: down from the left toward the elbow.
+                var elbow = new Vector2Int(Mathf.RoundToInt(s * 0.42f), Mathf.RoundToInt(s * 0.28f));
+                var start = new Vector2Int(Mathf.RoundToInt(s * 0.18f), Mathf.RoundToInt(s * 0.52f));
+                var end = new Vector2Int(Mathf.RoundToInt(s * 0.84f), Mathf.RoundToInt(s * 0.78f));
+
+                StrokeIconLine(p, s, start, elbow, halfThickness, line);
+                StrokeIconLine(p, s, elbow, end, halfThickness, line);
+            });
+        }
+
+        /// <summary>A straight line between two pixel positions, thickened square. Used by the tick; kept general because every icon here is drawn from straight strokes.</summary>
+        private static void StrokeIconLine(Color[] pixels, int size, Vector2Int from, Vector2Int to, int halfThickness, Color color)
+        {
+            var steps = Mathf.Max(Mathf.Abs(to.x - from.x), Mathf.Abs(to.y - from.y));
+            if (steps <= 0) return;
+
+            for (var i = 0; i <= steps; i++)
+            {
+                var t = i / (float)steps;
+                var cx = Mathf.RoundToInt(Mathf.Lerp(from.x, to.x, t));
+                var cy = Mathf.RoundToInt(Mathf.Lerp(from.y, to.y, t));
+
+                for (var dy = -halfThickness; dy <= halfThickness; dy++)
+                {
+                    for (var dx = -halfThickness; dx <= halfThickness; dx++)
+                    {
+                        var x = cx + dx;
+                        var y = cy + dy;
+                        if (x < 0 || x >= size || y < 0 || y >= size) continue;
+                        pixels[y * size + x] = color;
+                    }
+                }
+            }
         }
 
         /// <summary>A plain X, drawn as two thick diagonals. Deliberately not a "back" arrow: this abandons the placement, it does not step anywhere.</summary>
