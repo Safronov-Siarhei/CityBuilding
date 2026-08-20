@@ -24,8 +24,9 @@ namespace CityBuilder.Buildings
     /// touched, sight unseen, with the resources already spent. There was no way to aim. The phone
     /// flow instead pins the ghost to an AIM POINT fixed on screen (up in the clear area above the
     /// hotbar, where a finger cannot cover it) and lets the player drag the world underneath it
-    /// until the right cell is under the ghost, then confirm with a button. A tap re-aims -- it
-    /// throws the aim point to roughly where the player wants to build, and the drag does the rest.
+    /// until the right cell is under the ghost, then confirm. The aim point never moves: the
+    /// building travels WITH the camera, so the only way to aim is to move the world, and there is
+    /// no gesture that can throw the ghost somewhere the player did not mean.
     ///
     /// Roads and fences (anything <see cref="BuildingData.keepSelectedAfterPlacement"/>) get a
     /// third mode on top: the finger DRAWS a line of them, and the camera moves on two fingers for
@@ -61,7 +62,6 @@ namespace CityBuilder.Buildings
         // never carries over from whatever the player was placing before.
         private int _rotationSteps;
 
-        private Vector2 _aimScreenPosition;
         private Vector2Int _currentCell;
         private bool _hasCurrentCell;
 
@@ -103,7 +103,6 @@ namespace CityBuilder.Buildings
 
         private void Start()
         {
-            ResetAimPoint();
             SubscribeToRouter();
 
             if (IsPlacingMandatoryBuilding)
@@ -188,22 +187,26 @@ namespace CityBuilder.Buildings
             if (_selectedBuilding != null && keyboard != null && keyboard[Key.R].wasPressedThisFrame) RotateSelection();
         }
 
-        /// <summary>Where the ghost currently sits: the fixed aim point on touch, the cursor on a mouse.</summary>
+        /// <summary>
+        /// Where the ghost sits: a fixed point on the screen for touch, the cursor for a mouse.
+        ///
+        /// Recomputed rather than stored, so it stays correct if the surface ever changes size
+        /// (split screen, a foldable) instead of pointing at a spot that no longer exists.
+        /// </summary>
         private Vector2 CurrentAimScreenPosition
         {
             get
             {
-                if (UsesTouchAiming) return _aimScreenPosition;
+                if (UsesTouchAiming) return FixedAimPoint;
 
                 var mouse = Mouse.current;
-                return mouse != null ? mouse.position.ReadValue() : _aimScreenPosition;
+                return mouse != null ? mouse.position.ReadValue() : FixedAimPoint;
             }
         }
 
-        private void ResetAimPoint()
-        {
-            _aimScreenPosition = new Vector2(Screen.width * 0.5f, Screen.height * Mathf.Clamp01(aimScreenHeightFraction));
-        }
+        /// <summary>Horizontally centred, and above the middle so neither the hotbar nor the hand holding the phone covers the building being aimed.</summary>
+        private Vector2 FixedAimPoint =>
+            new Vector2(Screen.width * 0.5f, Screen.height * Mathf.Clamp01(aimScreenHeightFraction));
 
         private void RefreshTargetCell()
         {
@@ -235,17 +238,18 @@ namespace CityBuilder.Buildings
                 return;
             }
 
-            // Tapping the cell the ghost is already standing on confirms, rather than re-aiming at
-            // where it already is. That makes the ghost itself a second, much bigger confirm
-            // target -- useful, since the button is at the far edge of a phone held one-handed.
+            // The aim point does NOT move. Tapping the cell the ghost already stands on confirms
+            // -- that makes the ghost a second, much bigger confirm target than the button at the
+            // far edge of a one-handed phone -- and a tap anywhere else does nothing at all.
+            //
+            // It used to re-aim, throwing the ghost to wherever the finger landed. That put the
+            // building back under the thumb that was covering it and reintroduced exactly the
+            // mis-taps this whole flow exists to remove: the ghost is pinned to the screen so it
+            // travels WITH the camera, and the only way to move it is to move the world.
             if (_hasCurrentCell && TryGetGroundCell(screenPosition, out var tappedCell) && tappedCell == _currentCell)
             {
                 ConfirmPlacement();
-                return;
             }
-
-            _aimScreenPosition = screenPosition;
-            RefreshTargetCell();
         }
 
         /// <summary>The confirm button. Puts the building on the cell the ghost has been previewing all along.</summary>
@@ -400,7 +404,6 @@ namespace CityBuilder.Buildings
             ClearSelection();
             _selectedBuilding = data;
             _rotationSteps = 0;
-            ResetAimPoint();
 
             // The camera stops gliding while anything is being placed: inertia after the finger
             // lifts would slide the aim point off the cell the player just lined up.
