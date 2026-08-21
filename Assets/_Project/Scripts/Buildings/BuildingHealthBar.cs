@@ -38,6 +38,7 @@ namespace CityBuilder.Buildings
         public static BuildingHealthBar CreateFor(Transform building)
         {
             var root = new GameObject("HealthBar");
+            root.AddComponent<WorldIndicator>();
             root.transform.SetParent(building, false);
             root.transform.localPosition = new Vector3(0f, HeightAboveBuilding, 0f);
 

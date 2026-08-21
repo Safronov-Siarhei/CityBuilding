@@ -24,6 +24,23 @@ namespace CityBuilder.Buildings
         // Both from the balance sheet's economy tab (decay_per_day_at_level1 / repair_cost_fraction).
         private const float DecayMarkerHeight = 3f;
 
+        // How far above the roof the level disc floats, and how wide it is at each level. Measured
+        // from the building rather than pinned to a fixed height like the markers above: a disc
+        // sunk into the roof of the Ратуша and one hanging three metres over a Лачуга are the same
+        // bug, and buildings here range from a fence post to a castle.
+        private const float LevelMarkerClearance = 0.5f;
+        private const float LevelMarkerRadius = 0.28f;
+        private const float TopLevelMarkerRadius = 0.36f;
+
+        private static readonly Color LevelTwoColor = new Color(0.86f, 0.88f, 0.92f);
+        private static readonly Color TopLevelColor = new Color(1f, 0.79f, 0.25f);
+
+        // One material per level for the whole settlement, not one per building: a fully upgraded
+        // town is a hundred of these, and a material each would be a hundred draw calls that no
+        // batcher can merge.
+        private static Material _levelTwoMarkerMaterial;
+        private static Material _topLevelMarkerMaterial;
+
         public BuildingData Data { get; private set; }
         public Vector2Int OriginCell { get; private set; }
         public int Level { get; private set; } = 1;
@@ -65,6 +82,7 @@ namespace CityBuilder.Buildings
         private GameObject _decayWarningMarker;
         private BuildingHealthBar _healthBar;
         private BuildingLevelAppearance _levelAppearance;
+        private GameObject _levelMarker;
 
         // Self-registering count-by-name registry (same pattern as ResourceNode.All) so
         // BuildingPlacer can answer "does at least one X exist yet" for the requiredBuilding
@@ -109,6 +127,12 @@ namespace CityBuilder.Buildings
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
+
+                // Level 1's model is the one already active in the prefab, so this changes nothing
+                // on a fresh placement -- it is here for the click box, which Apply sizes to
+                // whatever model is on screen, and for the load path, where SetLevel follows.
+                _levelAppearance?.Apply(Level);
+                UpdateLevelMarker();
             }
         }
 
@@ -375,7 +399,8 @@ namespace CityBuilder.Buildings
         {
             var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
             marker.name = "DecayWarningMarker";
-            Destroy(marker.GetComponent<BoxCollider>());
+            marker.AddComponent<WorldIndicator>();
+            DisownCollider(marker);
             marker.transform.SetParent(transform, false);
             marker.transform.localPosition = new Vector3(0f, DecayMarkerHeight, 0f);
             marker.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
@@ -384,6 +409,94 @@ namespace CityBuilder.Buildings
             {
                 color = new Color(0.95f, 0.4f, 0.1f)
             };
+            return marker;
+        }
+
+        /// <summary>
+        /// A small disc over any building that has been upgraded -- silver at level 2, gold at
+        /// level 3, nothing at all at level 1.
+        ///
+        /// Levels are otherwise completely invisible: 49 buildings at three levels each is 98
+        /// models nobody has drawn yet, and until they exist an upgrade reads as resources
+        /// vanishing -- the number on the card changes and the town looks exactly as it did. The
+        /// disc is what makes a levelled-up district legible from the map, without waiting on art
+        /// and without opening a card per building.
+        ///
+        /// One renderer per upgraded building, on a material shared by every building at that
+        /// level, and nothing of it runs per frame.
+        /// </summary>
+        private void UpdateLevelMarker()
+        {
+            // Roads are laid by the dozen; a disc floating over every tile of a road network would
+            // bury the town it is supposed to describe.
+            var shouldShow = Level > 1 && Data != null && !Data.isRoad;
+
+            if (shouldShow && _levelMarker == null) _levelMarker = CreateLevelMarker();
+            if (_levelMarker == null) return;
+
+            _levelMarker.SetActive(shouldShow);
+            if (!shouldShow) return;
+
+            var isTopLevel = Level >= MaxLevel;
+            var radius = isTopLevel ? TopLevelMarkerRadius : LevelMarkerRadius;
+
+            // A cylinder primitive is 1 unit across and 2 tall, so this is a disc of `radius`,
+            // roughly a hand's width thick.
+            _levelMarker.transform.localScale = new Vector3(radius * 2f, 0.04f, radius * 2f);
+            _levelMarker.transform.localPosition = new Vector3(0f, RoofHeight() + LevelMarkerClearance, 0f);
+            _levelMarker.GetComponent<Renderer>().sharedMaterial = LevelMarkerMaterial(isTopLevel);
+        }
+
+        /// <summary>
+        /// How tall this building stands, taken from the click box -- which is measured from the
+        /// model at project setup and re-measured on every upgrade (see
+        /// BuildingLevelAppearance.Apply), so it is the one number that already tracks the model on
+        /// screen. Falls back to the fixed height the decay marker uses if a building somehow has
+        /// no collider at all.
+        /// </summary>
+        private float RoofHeight()
+        {
+            var box = GetComponent<BoxCollider>();
+            return box != null && box.size.y > 0.01f ? box.size.y : DecayMarkerHeight;
+        }
+
+        private static Material LevelMarkerMaterial(bool isTopLevel)
+        {
+            if (isTopLevel)
+            {
+                if (_topLevelMarkerMaterial == null) _topLevelMarkerMaterial = new Material(RuntimeShaders.Lit) { color = TopLevelColor };
+                return _topLevelMarkerMaterial;
+            }
+
+            if (_levelTwoMarkerMaterial == null) _levelTwoMarkerMaterial = new Material(RuntimeShaders.Lit) { color = LevelTwoColor };
+            return _levelTwoMarkerMaterial;
+        }
+
+        /// <summary>
+        /// Takes the collider off a marker built from a primitive. Both markers float over the
+        /// roof, where a collider would swallow the taps meant for the building underneath.
+        ///
+        /// Disabled AND destroyed, in that order, because Destroy is deferred to the end of the
+        /// frame: the marker would otherwise spend the frame it was born in catching the very taps
+        /// it must never catch, and on the frame a building is upgraded the player's finger is
+        /// already on it.
+        /// </summary>
+        private static void DisownCollider(GameObject marker)
+        {
+            var collider = marker.GetComponent<Collider>();
+            if (collider == null) return;
+
+            collider.enabled = false;
+            Destroy(collider);
+        }
+
+        private GameObject CreateLevelMarker()
+        {
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            marker.name = "LevelMarker";
+            marker.AddComponent<WorldIndicator>();
+            DisownCollider(marker);
+            marker.transform.SetParent(transform, false);
             return marker;
         }
 
@@ -441,6 +554,7 @@ namespace CityBuilder.Buildings
             // A loaded building has to look its level straight away -- nothing else will tell it to,
             // since it was never upgraded during this session.
             _levelAppearance?.Apply(Level);
+            UpdateLevelMarker();
         }
 
         /// <summary>Used by save/load to restore already-valid runtime condition directly.</summary>
@@ -499,6 +613,7 @@ namespace CityBuilder.Buildings
             ChangeStoredCapacity(after.storageCapacity - before.storageCapacity);
 
             _levelAppearance?.Apply(Level);
+            UpdateLevelMarker();
             return true;
         }
     }

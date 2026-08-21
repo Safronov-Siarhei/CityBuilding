@@ -275,6 +275,84 @@ namespace CityBuilder.Tests.PlayMode
                 "The House changed shape on upgrade -- which would be the right answer once levels 2 and 3 have models, and means this test now needs to check the new ones instead.");
         }
 
+        /// <summary>
+        /// An upgrade the player can SEE. Until levels 2 and 3 have models of their own, a
+        /// building that has been upgraded is pixel-for-pixel the building that was not, and the
+        /// only trace of the coins is a number on a card the player has to open. The disc is the
+        /// whole feedback loop, so it is worth a test that it appears at all, that it appears
+        /// nowhere at level 1, and that it never becomes something the player can tap by accident.
+        /// </summary>
+        [Test]
+        public void UpgradingABuilding_HangsALevelDiscOverIt()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var house = Place(PlaytestWorld.Building("Hovel"));
+            Assert.IsNull(LevelMarker(house), "A freshly placed building is already wearing a level marker -- level 1 is not an achievement.");
+
+            Assert.IsTrue(house.TryUpgrade(), "The House refused to upgrade with infinite resources.");
+            var marker = LevelMarker(house);
+            Assert.IsNotNull(marker, "An upgraded building shows nothing at all: the player has no way to tell it apart from one they never paid for.");
+            Assert.IsTrue(marker.activeInHierarchy, "The level marker exists but is switched off.");
+
+            // Not IsNull: Destroy only takes effect at the end of the frame, and the frame that
+            // matters is this one -- the player's finger is on the building they just upgraded.
+            var markerCollider = marker.GetComponent<Collider>();
+            Assert.IsTrue(markerCollider == null || !markerCollider.enabled,
+                "The level marker is still catching taps: it floats over the roof, so it swallows the ones meant for the building underneath it.");
+
+            var box = house.GetComponent<BoxCollider>();
+            Assert.Greater(marker.transform.localPosition.y, box.size.y,
+                "The level marker is sunk into the building instead of floating over its roof.");
+        }
+
+        /// <summary>The top level has to be legible as the top level -- otherwise the second upgrade is the invisible one.</summary>
+        [Test]
+        public void TheTopLevel_LooksDifferentFromTheOneBelowIt()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var house = Place(PlaytestWorld.Building("Hovel"));
+            Assert.IsTrue(house.TryUpgrade(), "The House refused to upgrade with infinite resources.");
+
+            var marker = LevelMarker(house);
+            var atLevelTwo = marker.transform.localScale.x;
+            var colorAtLevelTwo = marker.GetComponent<Renderer>().sharedMaterial.color;
+
+            Assert.IsTrue(house.TryUpgrade(), "The House refused its second upgrade with infinite resources.");
+
+            Assert.AreEqual(BuildingInstance.MaxLevel, house.Level);
+            Assert.AreNotEqual(colorAtLevelTwo, marker.GetComponent<Renderer>().sharedMaterial.color,
+                "Levels 2 and 3 wear the same marker -- the second upgrade changes nothing the player can see.");
+            Assert.Greater(marker.transform.localScale.x, atLevelTwo, "The top level's marker is no bigger than the one below it.");
+        }
+
+        /// <summary>
+        /// Roads are laid a tile at a time, dozens at a time. A disc over every tile of an upgraded
+        /// road would bury the town it is meant to describe.
+        /// </summary>
+        [Test]
+        public void AnUpgradedRoad_WearsNoMarker()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var road = Place(PlaytestWorld.Building("Road"));
+            Assert.IsTrue(road.TryUpgrade(), "The Road refused to upgrade with infinite resources.");
+
+            Assert.AreEqual(2, road.Level);
+            Assert.IsNull(LevelMarker(road), "An upgraded road tile is wearing a level marker.");
+        }
+
+        /// <summary>The marker as the player would find it: a child object of the building, not a component anyone can ask for.</summary>
+        private static GameObject LevelMarker(BuildingInstance building)
+        {
+            foreach (var indicator in building.GetComponentsInChildren<WorldIndicator>(true))
+            {
+                if (indicator.name == "LevelMarker") return indicator.gameObject;
+            }
+            return null;
+        }
+
         [UnityTest]
         public IEnumerator Photograph_TheStorehouses()
         {
@@ -295,6 +373,32 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("storehouses", PlaytestWorld.CellCenter(origin + new Vector2Int(4, 1)), 14f, 35f, 20f);
         }
 
+        /// <summary>
+        /// The three levels standing next to each other, for a human to look at. Nothing here is
+        /// asserted: the question a picture answers is whether a silver disc and a gold one are
+        /// actually TELLABLE APART on a phone-sized screen from the game's own camera angle, and no
+        /// assertion can answer that.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Photograph_TheLevelMarkers()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var origin = PlaytestWorld.FindFreeArea(new Vector2Int(9, 3));
+            Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "Nowhere free to stand three houses side by side.");
+
+            var houseData = PlaytestWorld.Building("Hovel");
+            for (var level = 1; level <= BuildingInstance.MaxLevel; level++)
+            {
+                var house = PlaytestWorld.Place(houseData, origin + new Vector2Int((level - 1) * 3, 0));
+                _placed.Add(house);
+                for (var step = 1; step < level; step++) house.TryUpgrade();
+            }
+            yield return null;
+
+            yield return PlaytestCapture.Shoot("building-levels", PlaytestWorld.CellCenter(origin + new Vector2Int(4, 1)), 13f, 30f, 20f);
+        }
+
         private BuildingInstance Place(BuildingData data)
         {
             var cell = PlaytestWorld.FindFreeArea(data.footprintSize + Vector2Int.one);
@@ -305,13 +409,32 @@ namespace CityBuilder.Tests.PlayMode
             return building;
         }
 
+        /// <summary>
+        /// What the building itself draws. The in-world indicators hung on it -- the level disc,
+        /// the decay diamond, the health bar -- are deliberately left out: they are HUD drawn in
+        /// world space, and an upgraded building would otherwise measure taller than its own model
+        /// purely because a disc is floating over the roof.
+        /// </summary>
         private static Bounds VisibleBounds(BuildingInstance building)
         {
             var renderers = building.GetComponentsInChildren<MeshRenderer>();
-            Assert.Greater(renderers.Length, 0, $"{building.Data.buildingName} draws nothing at all.");
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            var bounds = new Bounds();
+            var found = false;
+            foreach (var renderer in renderers)
+            {
+                if (renderer.GetComponentInParent<WorldIndicator>() != null) continue;
+
+                if (!found)
+                {
+                    bounds = renderer.bounds;
+                    found = true;
+                    continue;
+                }
+                bounds.Encapsulate(renderer.bounds);
+            }
+
+            Assert.IsTrue(found, $"{building.Data.buildingName} draws nothing at all.");
             return bounds;
         }
 

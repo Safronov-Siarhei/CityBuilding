@@ -2151,14 +2151,15 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The authored model for a building, found by name rather than wired up in code:
-        /// `<id>1-lvl1.fbx` in Models/Buildings, matching the naming the models themselves use
-        /// (the digit is the building variant, lvl1 its upgrade level). Null while nobody has drawn
-        /// it and the procedural placeholder is still standing in.
+        /// The authored model for one of a building's levels, found by name rather than wired up in
+        /// code: `<id>1-lvl<level>.fbx` in Models/Buildings, matching the naming the models
+        /// themselves use (the digit is the building variant, lvl1 its upgrade level). Null while
+        /// nobody has drawn it -- at level 1 the procedural placeholder stands in, above it the
+        /// level below keeps being shown (see AddLevelModels).
         /// </summary>
-        private static GameObject AuthoredModel(string id)
+        private static GameObject AuthoredModel(string id, int level = 1)
         {
-            return AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{id}1-lvl1.fbx");
+            return AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{id}1-lvl{level}.fbx");
         }
 
         /// <summary>
@@ -2192,7 +2193,67 @@ namespace CityBuilder.EditorTools
             collider.size = new Vector3(footprint.x * CellSize - BuildingInset, height, footprint.y * CellSize - BuildingInset);
             collider.center = new Vector3(0f, height * 0.5f, 0f);
 
+            AddLevelModels(root, id, model, height, footprint);
+
             return SavePrefab(root, id);
+        }
+
+        /// <summary>
+        /// Hangs the models for levels 2 and 3 in the same prefab, where the artist has drawn them:
+        /// `<id>1-lvl2.fbx`, `<id>1-lvl3.fbx`, found by name exactly the way level 1 is. Upgrading
+        /// then swaps which one is active (see BuildingLevelAppearance) instead of rebuilding the
+        /// building, so its workers, damage, storage and NavMesh hole all survive the upgrade.
+        ///
+        /// Two rules worth keeping in mind before exporting a level-2 model:
+        ///
+        /// The FOOTPRINT stays level 1's, whatever the later models measure. A level-2 model a cell
+        /// wider would otherwise have to fit into ground the player has already built over -- an
+        /// upgrade that fails on geometry at the exact moment it has been paid for. A wider model is
+        /// warned about here and left to overhang, the same tolerance a too-wide level-1 model gets.
+        ///
+        /// The HEIGHT does follow the level, and carries the click box with it, so a tower that
+        /// doubles in height at level 3 is still clickable at the top.
+        ///
+        /// Nothing is attached at all when only level 1 exists, which is every building today: the
+        /// component would resolve every level back to the one model and cost a component on 45
+        /// prefabs to do it. The day an FBX lands, this build wires it up.
+        /// </summary>
+        private static void AddLevelModels(GameObject root, string id, GameObject levelOneModel, float levelOneHeight, Vector2Int footprint)
+        {
+            var models = new List<GameObject> { levelOneModel };
+            var heights = new List<float> { levelOneHeight };
+            var anyDrawn = false;
+
+            for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
+            {
+                var source = AuthoredModel(id, level);
+                if (source == null)
+                {
+                    // A hole, not a shortened list: the levels have to stay at their own index, or
+                    // a building with only levels 1 and 3 drawn would show level 3's model at 2.
+                    models.Add(null);
+                    heights.Add(0f);
+                    continue;
+                }
+
+                anyDrawn = true;
+                var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, root.transform);
+                model.name = $"{id}-lvl{level}";
+                var size = FitModelToGround(model, $"{id} lvl{level}");
+                var levelFootprint = FootprintOf(size, $"{id} lvl{level}");
+                if (levelFootprint != footprint)
+                {
+                    Debug.LogWarning($"[SetupProject] '{id}' level {level} measures {levelFootprint.x}x{levelFootprint.y} cells against level 1's {footprint.x}x{footprint.y}. The building keeps level 1's footprint, so this model will overhang its neighbours instead of claiming more ground.");
+                }
+
+                // Level 1 is what a newly placed building shows; the rest wait to be upgraded into.
+                model.SetActive(false);
+                models.Add(model);
+                heights.Add(size.y);
+            }
+
+            if (!anyDrawn) return;
+            root.AddComponent<BuildingLevelAppearance>().SetModels(models, heights);
         }
 
         /// <summary>
