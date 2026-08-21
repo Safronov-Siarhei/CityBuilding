@@ -119,6 +119,43 @@ namespace CityBuilder.Tests.PlayMode
         /// single grid a full catalogue would need has not fitted on it since the twenty-eighth
         /// building.
         /// </summary>
+        /// <summary>
+        /// Every part of every building draws with a material that still exists.
+        ///
+        /// Unity draws a renderer whose material is missing in bright magenta and says nothing about
+        /// it -- no error, no warning, and every test still green. That is how the entire fence
+        /// shipped pink: the straight run and the corner both asked the generator for a material
+        /// called `Building_Fence_Wood`, and creating the second one deleted the asset the first was
+        /// already using. The geometry was perfect. Only a screenshot caught it.
+        ///
+        /// Checked on the PREFABS rather than on placed buildings, inactive children included, so a
+        /// model that is only shown in one shape of fence or at one upgrade level is covered too.
+        /// </summary>
+        [Test]
+        public void NoBuildingDrawsWithAMissingMaterial()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            Assert.IsNotNull(placer, "No BuildingPlacer in the scene -- there is no catalogue to check.");
+            Assert.IsNotEmpty(placer.AvailableBuildings, "The building catalogue is empty.");
+
+            foreach (var data in placer.AvailableBuildings)
+            {
+                if (data == null || data.prefab == null) continue;
+
+                var renderers = data.prefab.GetComponentsInChildren<MeshRenderer>(true);
+                Assert.Greater(renderers.Length, 0, $"{data.buildingName} draws nothing at all.");
+
+                foreach (var renderer in renderers)
+                {
+                    Assert.IsNotNull(renderer.sharedMaterial,
+                        $"{data.buildingName}/{renderer.name} has no material -- it will be drawn bright magenta. " +
+                        "The usual cause is two parts asking CreateLitMaterial for the same name, where the second call deletes the first one's asset.");
+                    Assert.IsNotNull(renderer.sharedMaterial.shader,
+                        $"{data.buildingName}/{renderer.name} has a material with no shader -- it will be drawn bright magenta.");
+                }
+            }
+        }
+
         [UnityTest]
         public IEnumerator Photograph_EveryBuilding()
         {

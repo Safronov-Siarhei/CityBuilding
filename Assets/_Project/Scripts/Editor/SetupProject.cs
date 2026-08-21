@@ -24,7 +24,7 @@ using Object = UnityEngine.Object;
 
 namespace CityBuilder.EditorTools
 {
-    public static class SetupProject
+    public static partial class SetupProject
     {
         private const string ScenesFolder = "Assets/_Project/Scenes";
         private const string MaterialsFolder = "Assets/_Project/Materials";
@@ -327,169 +327,187 @@ namespace CityBuilder.EditorTools
             // production, defence, upgrades, prerequisites -- comes from the balance sheet's
             // buildings tab, looked up by the id in the first argument (see ApplyBalance).
             var houseData = CreateBuildingData(
-                "Hovel", new Vector2Int(1, 1), height: 2f,
+                "Hovel", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.75f, 0.55f, 0.35f), roofColor: new Color(0.25f, 0.45f, 0.65f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
 
             var cottageData = CreateBuildingData(
-                "Cottage", new Vector2Int(1, 1), height: 2.3f,
+                "Cottage", new Vector2Int(2, 2), height: 3f,
                 wallColor: new Color(0.62f, 0.42f, 0.55f), roofColor: new Color(0.3f, 0.2f, 0.4f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
 
-            // Its model is authored (TownHall1-lvl1.fbx) and picked up by name -- the colours and
-            // height below are only what it would fall back to if that file went missing.
-            // The third rung of the housing ladder: Лачуга -> Коттедж -> Поместье.
+            // The third rung of the housing ladder: Лачуга -> Коттедж -> Поместье, told apart by
+            // size and height rather than by any ornament -- a manor is a bigger house.
             var manorData = CreateBuildingData(
-                "Manor", new Vector2Int(3, 3), height: 3.4f,
+                "Manor", new Vector2Int(3, 3), height: 3.8f,
                 wallColor: new Color(0.78f, 0.72f, 0.6f), roofColor: new Color(0.35f, 0.28f, 0.42f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 hasChimney: true);
 
-            // Decorations. They cost something, they stand somewhere, and that is all they do today
-            // -- nothing in the game reads them yet. They are here because happiness is going to
-            // (factor 3, entertainment/decor, see the design backlog) and because a town of nothing
-            // but workshops does not look like a town.
+            // Decorations, and the town square people gather on. They cost something, they stand
+            // somewhere, and (bar the happiness they carry) that is all they do -- but a town of
+            // nothing but workshops does not look like a town.
             var townSquareData = CreateBuildingData(
-                "TownSquare", new Vector2Int(3, 3), height: 0.1f,
+                "TownSquare", new Vector2Int(2, 2), height: 1f,
                 wallColor: new Color(0.62f, 0.6f, 0.56f), roofColor: new Color(0.5f, 0.48f, 0.45f),
-                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Fountain);
 
             var flagData = CreateBuildingData(
                 "Flag", new Vector2Int(1, 1), height: 2.4f,
-                wallColor: new Color(0.7f, 0.2f, 0.18f), roofColor: new Color(0.45f, 0.32f, 0.18f),
-                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                wallColor: new Color(0.6f, 0.58f, 0.54f), roofColor: new Color(0.45f, 0.32f, 0.18f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.FlagPole);
 
             var decTreeData = CreateBuildingData(
                 "DecTree", new Vector2Int(1, 1), height: 2.6f,
-                wallColor: new Color(0.32f, 0.6f, 0.28f), roofColor: new Color(0.42f, 0.28f, 0.16f),
-                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                wallColor: new Color(0.42f, 0.5f, 0.34f), roofColor: new Color(0.36f, 0.44f, 0.3f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Tree);
 
             var decBushData = CreateBuildingData(
-                "DecBush", new Vector2Int(1, 1), height: 0.8f,
-                wallColor: new Color(0.36f, 0.55f, 0.3f), roofColor: new Color(0.28f, 0.45f, 0.24f),
-                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                "DecBush", new Vector2Int(1, 1), height: 0.9f,
+                wallColor: new Color(0.44f, 0.5f, 0.36f), roofColor: new Color(0.38f, 0.46f, 0.32f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Bush);
 
             var decGardenData = CreateBuildingData(
-                "DecGarden", new Vector2Int(2, 2), height: 0.4f,
-                wallColor: new Color(0.5f, 0.62f, 0.34f), roofColor: new Color(0.8f, 0.5f, 0.6f),
-                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                "DecGarden", new Vector2Int(3, 1), height: 0.6f,
+                wallColor: new Color(0.5f, 0.55f, 0.4f), roofColor: new Color(0.46f, 0.52f, 0.36f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.GardenBeds);
 
+            // The one building whose loss ends the game, so it is the one silhouette that has to be
+            // findable from anywhere on the map: a walled base with a keep and a banner over it.
             var townHallData = CreateBuildingData(
-                BuildingIds.TownHall, new Vector2Int(4, 4), height: 3f,
-                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                BuildingIds.TownHall, new Vector2Int(5, 5), height: 4.4f,
+                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: new Color(0.42f, 0.24f, 0.22f),
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Keep);
 
             var fishermanHutData = CreateBuildingData(
-                "FisherHut", new Vector2Int(2, 1), height: 2f,
+                "FisherHut", new Vector2Int(1, 1), height: 2f,
                 wallColor: new Color(0.55f, 0.52f, 0.45f), roofColor: new Color(0.2f, 0.5f, 0.55f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: true);
+                motif: BuildingMotif.DryingRacks);
 
             var farmData = CreateBuildingData(
-                "Farm", new Vector2Int(2, 2), height: 1.8f,
+                "Farm", new Vector2Int(1, 1), height: 1.9f,
                 wallColor: new Color(0.68f, 0.55f, 0.3f), roofColor: new Color(0.42f, 0.58f, 0.24f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Field);
 
             var lumberjackData = CreateBuildingData(
                 "Sawmill", new Vector2Int(2, 2), height: 2.4f,
                 wallColor: new Color(0.45f, 0.3f, 0.18f), roofColor: new Color(0.32f, 0.22f, 0.13f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.LogPile);
 
             var quarryData = CreateBuildingData(
                 "Quarry", new Vector2Int(2, 2), height: 2f,
                 wallColor: new Color(0.55f, 0.53f, 0.48f), roofColor: new Color(0.3f, 0.29f, 0.27f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.StoneYard);
 
+            // All four mines share the pit-head frame and are told apart by what comes out of the
+            // ground: the ore heap and the walls carry the metal's own colour.
             var mineData = CreateBuildingData(
                 "IronMine", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.36f), roofColor: new Color(0.5f, 0.5f, 0.56f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Headframe);
 
             var coalMineData = CreateBuildingData(
                 "CoalMine", new Vector2Int(2, 2), height: 2.2f,
                 wallColor: new Color(0.3f, 0.28f, 0.27f), roofColor: new Color(0.14f, 0.14f, 0.15f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Headframe);
 
             var towerData = CreateBuildingData(
-                "Tower", new Vector2Int(2, 2), height: 4.2f,
-                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
+                "Tower", new Vector2Int(1, 1), height: 4.2f,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: new Color(0.42f, 0.24f, 0.22f),
                 style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 connectsToFences: true);
 
             var barracksData = CreateBuildingData(
-                "Barracks", new Vector2Int(2, 2), height: 2.6f,
-                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                "Barracks", new Vector2Int(3, 3), height: 2.8f,
+                wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: new Color(0.42f, 0.24f, 0.22f),
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Banner);
 
             // Towers and gates stand IN the fence line rather than beside it: connectsToFences
             // registers their cells with FenceNetwork, so the segments either side shape themselves
-            // as if the line ran straight through. They keep their own model -- only the fence
-            // changes shape (see FenceAppearance).
+            // as if the line ran straight through. A gate is built on the flat shell rather than the
+            // fortified one on purpose -- it has to read as something you can walk through.
             var gateData = CreateBuildingData(
-                "Gate", new Vector2Int(2, 1), height: 1.8f,
-                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
-                connectsToFences: true);
+                "Gate", new Vector2Int(1, 2), height: 2.2f,
+                wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: new Color(0.34f, 0.32f, 0.3f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true, motif: BuildingMotif.Archway);
 
             // The second tier of the defensive line. Separate buildings, not upgrade levels -- the
             // taxonomy treats them that way, and each still has its own three levels on top.
             var fortifiedTowerData = CreateBuildingData(
                 "FortifiedTower", new Vector2Int(2, 2), height: 5f,
-                wallColor: new Color(0.46f, 0.45f, 0.42f), roofColor: Color.white,
+                wallColor: new Color(0.46f, 0.45f, 0.42f), roofColor: new Color(0.42f, 0.24f, 0.22f),
                 style: BuildingStyle.Tower, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
-                connectsToFences: true);
+                connectsToFences: true, motif: BuildingMotif.Banner);
 
             var fortifiedGateData = CreateBuildingData(
-                "FortifiedGate", new Vector2Int(2, 1), height: 2.2f,
-                wallColor: new Color(0.44f, 0.42f, 0.4f), roofColor: Color.white,
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
-                connectsToFences: true);
+                "FortifiedGate", new Vector2Int(2, 2), height: 2.8f,
+                wallColor: new Color(0.44f, 0.42f, 0.4f), roofColor: new Color(0.34f, 0.32f, 0.3f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                connectsToFences: true, motif: BuildingMotif.Archway);
 
             // One storehouse per resource family, so every group has somewhere to go -- what each
-            // one holds is the storage_group column, not anything decided here. Placeholder
-            // geometry from the same hut generator as everything else; the authored models
-            // (Warehouse1-lvl1 and friends) replace it when they arrive.
+            // one holds is the storage_group column, not anything decided here. A store is a wide
+            // double door and no windows; a granary is bins; a treasury is a strongbox behind walls.
             var warehouseData = CreateBuildingData(
                 "Warehouse", new Vector2Int(2, 2), height: 2.6f,
                 wallColor: new Color(0.58f, 0.46f, 0.3f), roofColor: new Color(0.36f, 0.3f, 0.24f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.BarnDoors);
 
             var barnData = CreateBuildingData(
-                "Barn", new Vector2Int(2, 2), height: 2.8f,
+                "Barn", new Vector2Int(1, 1), height: 2.4f,
                 wallColor: new Color(0.7f, 0.5f, 0.28f), roofColor: new Color(0.5f, 0.36f, 0.2f),
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
-                hasChimney: false);
+                motif: BuildingMotif.BarnDoors);
 
             var treasuryData = CreateBuildingData(
-                "Treasury", new Vector2Int(2, 2), height: 2.4f,
+                "Treasury", new Vector2Int(3, 2), height: 2.4f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: new Color(0.72f, 0.6f, 0.24f),
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Vault);
 
             // The second tier of each storehouse. Nothing new mechanically -- storage_group and
             // storage_capacity already do all of it -- so what these add is the reason to keep
             // building outward once the first three are full. Each needs its smaller version
-            // standing first (the `requires` column), which is also what keeps them out of the
+            // standing first (the requires column), which is also what keeps them out of the
             // opening minutes of a game.
             var bigWarehouseData = CreateBuildingData(
                 "BigWarehouse", new Vector2Int(3, 3), height: 3.2f,
                 wallColor: new Color(0.52f, 0.41f, 0.27f), roofColor: new Color(0.3f, 0.25f, 0.2f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.BarnDoors);
 
             var bigBarnData = CreateBuildingData(
-                "BigBarn", new Vector2Int(3, 3), height: 3.4f,
+                "BigBarn", new Vector2Int(2, 2), height: 3.4f,
                 wallColor: new Color(0.66f, 0.45f, 0.24f), roofColor: new Color(0.45f, 0.31f, 0.17f),
-                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.BarnDoors);
 
             var bigTreasuryData = CreateBuildingData(
-                "BigTreasury", new Vector2Int(3, 3), height: 3f,
+                "BigTreasury", new Vector2Int(4, 3), height: 3f,
                 wallColor: new Color(0.46f, 0.44f, 0.41f), roofColor: new Color(0.78f, 0.66f, 0.28f),
-                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial);
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Vault);
 
-            // Two models, no colours or size of its own: everything about how a fence segment looks
-            // comes from the FBX pair and from which neighbours it finds (see FenceShape).
-            var fenceData = CreateFenceBuildingData("Fence", "Fence1-lvl1-Straight.fbx", "Fence1-lvl1-Corner.fbx");
+            // Two models, one prefab: a fence segment shows the straight run or the corner depending
+            // on the neighbours it finds (see FenceShape), and neither is a separate building.
+            var fenceData = CreateFenceBuildingData("Fence", trimMaterial);
 
             var roadData = CreateBuildingData(
                 "Road", new Vector2Int(1, 1), height: 0.05f,
@@ -525,30 +543,31 @@ namespace CityBuilder.EditorTools
             var shellBuildings = new List<BuildingData>();
             foreach (var shell in new[]
             {
-                ("Granary", new Vector2Int(2, 2), 2.6f, new Color(0.68f, 0.56f, 0.34f), new Color(0.45f, 0.35f, 0.22f), BuildingStyle.Hut),
-                ("BigGranary", new Vector2Int(3, 3), 3.2f, new Color(0.64f, 0.52f, 0.3f), new Color(0.4f, 0.31f, 0.2f), BuildingStyle.Hut),
-                ("Baker", new Vector2Int(2, 2), 2.4f, new Color(0.8f, 0.66f, 0.46f), new Color(0.5f, 0.3f, 0.2f), BuildingStyle.Hut),
-                ("Windmill", new Vector2Int(2, 2), 3.6f, new Color(0.75f, 0.72f, 0.64f), new Color(0.42f, 0.34f, 0.24f), BuildingStyle.Hut),
-                ("Smokehouse", new Vector2Int(2, 2), 2.2f, new Color(0.5f, 0.4f, 0.32f), new Color(0.3f, 0.24f, 0.2f), BuildingStyle.Hut),
-                ("PigFarm", new Vector2Int(2, 2), 1.8f, new Color(0.72f, 0.6f, 0.5f), new Color(0.45f, 0.36f, 0.26f), BuildingStyle.Hut),
-                ("Orchard", new Vector2Int(2, 2), 1.6f, new Color(0.46f, 0.6f, 0.32f), new Color(0.36f, 0.5f, 0.26f), BuildingStyle.Hut),
-                ("Smelter", new Vector2Int(2, 2), 2.8f, new Color(0.42f, 0.4f, 0.38f), new Color(0.28f, 0.26f, 0.25f), BuildingStyle.Hut),
-                ("CopperMine", new Vector2Int(2, 2), 2.2f, new Color(0.55f, 0.4f, 0.3f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut),
-                ("GoldMine", new Vector2Int(2, 2), 2.2f, new Color(0.6f, 0.55f, 0.35f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut),
-                ("Laboratory", new Vector2Int(2, 2), 2.8f, new Color(0.55f, 0.5f, 0.6f), new Color(0.3f, 0.28f, 0.4f), BuildingStyle.Hut),
-                ("HealerHouse", new Vector2Int(2, 2), 2.4f, new Color(0.86f, 0.84f, 0.8f), new Color(0.6f, 0.25f, 0.22f), BuildingStyle.Hut),
-                ("FireBrigade", new Vector2Int(2, 2), 2.4f, new Color(0.7f, 0.3f, 0.24f), new Color(0.35f, 0.3f, 0.28f), BuildingStyle.Hut),
-                ("Well", new Vector2Int(1, 1), 1.2f, new Color(0.55f, 0.53f, 0.5f), new Color(0.4f, 0.3f, 0.2f), BuildingStyle.Hut),
-                ("Church", new Vector2Int(2, 2), 4f, new Color(0.82f, 0.8f, 0.76f), new Color(0.35f, 0.4f, 0.5f), BuildingStyle.Hut),
-                ("Tavern", new Vector2Int(2, 2), 2.6f, new Color(0.66f, 0.48f, 0.3f), new Color(0.4f, 0.28f, 0.18f), BuildingStyle.Hut),
-                ("Theater", new Vector2Int(3, 3), 3.2f, new Color(0.78f, 0.74f, 0.66f), new Color(0.5f, 0.34f, 0.3f), BuildingStyle.Hut),
-                ("Colosseum", new Vector2Int(4, 4), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Fortification),
+                ("Granary", new Vector2Int(2, 1), 2.6f, new Color(0.68f, 0.56f, 0.34f), new Color(0.45f, 0.35f, 0.22f), BuildingStyle.Hut, BuildingMotif.Silo),
+                ("BigGranary", new Vector2Int(3, 2), 3.2f, new Color(0.64f, 0.52f, 0.3f), new Color(0.4f, 0.31f, 0.2f), BuildingStyle.Hut, BuildingMotif.Silo),
+                ("Baker", new Vector2Int(1, 2), 2.4f, new Color(0.8f, 0.66f, 0.46f), new Color(0.5f, 0.3f, 0.2f), BuildingStyle.Hut, BuildingMotif.Stack),
+                ("Windmill", new Vector2Int(2, 2), 3.4f, new Color(0.75f, 0.72f, 0.64f), new Color(0.42f, 0.34f, 0.24f), BuildingStyle.Hut, BuildingMotif.Sails),
+                ("Smokehouse", new Vector2Int(1, 2), 2.4f, new Color(0.5f, 0.4f, 0.32f), new Color(0.3f, 0.24f, 0.2f), BuildingStyle.Hut, BuildingMotif.Stack),
+                ("PigFarm", new Vector2Int(3, 4), 1.9f, new Color(0.72f, 0.6f, 0.5f), new Color(0.45f, 0.36f, 0.26f), BuildingStyle.Hut, BuildingMotif.Pen),
+                ("Orchard", new Vector2Int(3, 3), 2.6f, new Color(0.46f, 0.5f, 0.32f), new Color(0.4f, 0.46f, 0.28f), BuildingStyle.Plot, BuildingMotif.Orchard),
+                ("Smelter", new Vector2Int(2, 3), 2.8f, new Color(0.42f, 0.4f, 0.38f), new Color(0.28f, 0.26f, 0.25f), BuildingStyle.Hut, BuildingMotif.Stack),
+                ("CopperMine", new Vector2Int(2, 2), 2.2f, new Color(0.55f, 0.4f, 0.3f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut, BuildingMotif.Headframe),
+                ("GoldMine", new Vector2Int(2, 2), 2.2f, new Color(0.6f, 0.55f, 0.35f), new Color(0.5f, 0.5f, 0.55f), BuildingStyle.Hut, BuildingMotif.Headframe),
+                ("Laboratory", new Vector2Int(4, 4), 3f, new Color(0.55f, 0.5f, 0.6f), new Color(0.3f, 0.28f, 0.4f), BuildingStyle.Hut, BuildingMotif.Dome),
+                ("HealerHouse", new Vector2Int(2, 4), 2.6f, new Color(0.86f, 0.84f, 0.8f), new Color(0.6f, 0.25f, 0.22f), BuildingStyle.Hut, BuildingMotif.Cross),
+                ("FireBrigade", new Vector2Int(2, 2), 2.6f, new Color(0.7f, 0.3f, 0.24f), new Color(0.35f, 0.3f, 0.28f), BuildingStyle.Hut, BuildingMotif.HoseTower),
+                ("Well", new Vector2Int(1, 1), 1.4f, new Color(0.55f, 0.53f, 0.5f), new Color(0.45f, 0.43f, 0.4f), BuildingStyle.Plot, BuildingMotif.WellHead),
+                ("Church", new Vector2Int(3, 3), 3.4f, new Color(0.82f, 0.8f, 0.76f), new Color(0.35f, 0.4f, 0.5f), BuildingStyle.Hut, BuildingMotif.Spire),
+                ("Tavern", new Vector2Int(2, 1), 2.6f, new Color(0.66f, 0.48f, 0.3f), new Color(0.4f, 0.28f, 0.18f), BuildingStyle.Hut, BuildingMotif.TavernSign),
+                ("Theater", new Vector2Int(4, 4), 3.2f, new Color(0.78f, 0.74f, 0.66f), new Color(0.5f, 0.34f, 0.3f), BuildingStyle.Hut, BuildingMotif.Colonnade),
+                ("Colosseum", new Vector2Int(4, 6), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Plot, BuildingMotif.Arena),
             })
             {
                 shellBuildings.Add(CreateBuildingData(
                     shell.Item1, shell.Item2, height: shell.Item3,
                     wallColor: shell.Item4, roofColor: shell.Item5,
-                    style: shell.Item6, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial));
+                    style: shell.Item6, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                    motif: shell.Item7));
             }
 
             var hotbarBuildingData = new List<BuildingData>
@@ -2076,15 +2095,24 @@ namespace CityBuilder.EditorTools
             emptyLabelGO = emptyLabel.gameObject;
         }
 
-        /// <summary>Architectural archetype driving which procedural generator builds a prefab.</summary>
-        private enum BuildingStyle { Hut, Fortification, Tower, Road }
+        /// <summary>
+        /// Architectural archetype driving which procedural generator builds a prefab. What makes
+        /// one building look like ITSELF on top of the shell is its BuildingMotif -- see
+        /// SetupProjectMotifs.cs.
+        ///
+        /// `Plot` is the shell for everything that is not really a building: a well, a flag, a
+        /// garden, a gate you walk through, an arena with an open floor. It lays a paved base the
+        /// size of the footprint and leaves the rest to the motif.
+        /// </summary>
+        private enum BuildingStyle { Hut, Fortification, Tower, Road, Plot }
 
         private static BuildingData CreateBuildingData(
             string id, Vector2Int footprint, float height, Color wallColor, Color roofColor,
             BuildingStyle style, Material trimMaterial, Material windowMaterial, Material doorMaterial = null,
             bool hasChimney = false,
             bool isRoad = false, bool keepSelectedAfterPlacement = false, bool isWaterCategory = false,
-            bool providesWalkableSurface = false, bool connectsToFences = false)
+            bool providesWalkableSurface = false, bool connectsToFences = false,
+            BuildingMotif motif = BuildingMotif.None)
         {
             // Two of the sheet's numbers shape the prefab rather than just sitting on the data asset,
             // so the row has to be read before it's built: worker slots become geometry, and a real
@@ -2108,16 +2136,19 @@ namespace CityBuilder.EditorTools
                 case BuildingStyle.Hut:
                     // Level 1's worker count: the hut's geometry is built once, and its level-2
                     // model is a separate FBX rather than a re-generated mesh.
-                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, LevelOne(balance).maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial);
+                    prefab = CreateHutPrefab(id, footprint, height, wallColor, roofColor, LevelOne(balance).maxWorkers, hasChimney, trimMaterial, doorMaterial, windowMaterial, motif);
                     break;
                 case BuildingStyle.Fortification:
-                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: false);
+                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, roofColor, trimMaterial, isTower: false, motif: motif);
                     break;
                 case BuildingStyle.Tower:
-                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, trimMaterial, isTower: true);
+                    prefab = CreateFortificationPrefab(id, footprint, height, wallColor, roofColor, trimMaterial, isTower: true, motif: motif);
                     break;
                 case BuildingStyle.Road:
                     prefab = CreateRoadPrefab(id, wallColor, roofColor);
+                    break;
+                case BuildingStyle.Plot:
+                    prefab = CreatePlotPrefab(id, footprint, height, wallColor, roofColor, LevelOne(balance).maxWorkers, trimMaterial, motif);
                     break;
                 default:
                     throw new System.ArgumentOutOfRangeException(nameof(style), style, null);
@@ -2309,14 +2340,16 @@ namespace CityBuilder.EditorTools
         /// model hangs inside a wrapper so FenceAppearance can turn the wrapper without disturbing
         /// whatever local rotation the FBX brought with it.
         /// </summary>
-        private static BuildingData CreateFenceBuildingData(string id, string straightFbxFileName, string cornerFbxFileName)
+        private static BuildingData CreateFenceBuildingData(string id, Material trimMaterial)
         {
             var root = new GameObject(id);
             root.AddComponent<BuildingInstance>();
             var appearance = root.AddComponent<FenceAppearance>();
 
-            var straight = CreateFenceModelWrapper("Straight", straightFbxFileName, root.transform, out var modelHeight);
-            var corner = CreateFenceModelWrapper("Corner", cornerFbxFileName, root.transform, out _);
+            // One wood material for both models, made here rather than inside each of them.
+            var woodMaterial = CreateLitMaterial("Building_Fence_Wood", new Color(0.5f, 0.36f, 0.22f));
+            var straight = CreateFenceModel("Straight", root.transform, trimMaterial, woodMaterial, isCorner: false, height: out var modelHeight);
+            var corner = CreateFenceModel("Corner", root.transform, trimMaterial, woodMaterial, isCorner: true, height: out _);
             appearance.SetModels(straight, corner);
             // The straight run is what a lone segment shows; FenceAppearance swaps them the moment
             // the piece learns about its neighbours.
@@ -2346,47 +2379,63 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// One fence model, parented under a wrapper that FenceAppearance rotates, and re-centred on
-        /// the cell.
-        ///
-        /// The re-centring is not cosmetic tidying: these FBX carry their geometry offset from the
-        /// object origin (the two models were authored side by side in one Blender scene and
-        /// exported with a zero Lcl Translation), so instantiated as-is a segment would stand
-        /// several metres away from the cell it belongs to. Measuring the renderer bounds instead of
-        /// hardcoding that offset means a re-export with a different layout still lands correctly.
+        /// One fence segment, built rather than imported: posts and two rails, laid along Z for a
+        /// straight run and turned into the south-east elbow for a corner. FenceAppearance shows
+        /// whichever of the two matches the neighbours and rotates the wrapper to face them, so the
+        /// geometry below only ever has to describe ONE orientation of each -- see FenceShape, and
+        /// FenceShapeTests, which fails deliberately if either is drawn facing another way.
         /// </summary>
-        private static GameObject CreateFenceModelWrapper(string wrapperName, string fbxFileName, Transform parent, out float height)
+        private static GameObject CreateFenceModel(string wrapperName, Transform parent, Material trimMaterial, Material woodMaterial, bool isCorner, out float height)
         {
-            height = 0f;
-
-            var source = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{fbxFileName}");
-            if (source == null)
-            {
-                Debug.LogError($"CreateFenceModelWrapper: FBX not found at {ModelsBuildingsFolder}/{fbxFileName} -- the fence will have no '{wrapperName}' model.");
-                return null;
-            }
+            const float postSide = 0.14f;
+            const float postHeight = 0.95f;
+            const float railThickness = 0.07f;
+            var half = CellSize * 0.5f;
 
             var wrapper = new GameObject(wrapperName);
             wrapper.transform.SetParent(parent, false);
 
-            var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, wrapper.transform);
-
-            var renderers = model.GetComponentsInChildren<MeshRenderer>();
-            if (renderers.Length == 0)
+            void Post(string partName, float x, float z)
             {
-                Debug.LogError($"CreateFenceModelWrapper: '{fbxFileName}' has no MeshRenderer -- nothing to place or measure.");
-                return wrapper;
+                AddCubePart(wrapper.transform, partName, new Vector3(x, postHeight * 0.5f, z), new Vector3(postSide, postHeight, postSide), woodMaterial);
+                AddCubePart(wrapper.transform, partName + "Cap", new Vector3(x, postHeight + 0.03f, z), new Vector3(postSide * 1.3f, 0.06f, postSide * 1.3f), trimMaterial);
             }
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            // A rail from the centre of the cell out to one edge, so a straight run is two of them
+            // back to back and a corner is two at right angles. Length half a cell either way, which
+            // is what makes neighbouring segments meet exactly on the cell border.
+            void Rail(string partName, float y, Vector3 direction)
+            {
+                var centre = direction * (half * 0.5f);
+                var size = direction.z != 0f
+                    ? new Vector3(railThickness, railThickness * 1.6f, half)
+                    : new Vector3(half, railThickness * 1.6f, railThickness);
+                AddCubePart(wrapper.transform, partName, new Vector3(centre.x, y, centre.z), size, woodMaterial);
+            }
 
-            // Centre horizontally on the cell and drop the model onto the ground plane.
-            model.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
-            height = bounds.size.y;
+            Post("PostCentre", 0f, 0f);
 
-            Debug.Log($"CreateFenceModelWrapper: '{fbxFileName}' -> {wrapperName}, footprint {bounds.size.x:0.###}x{bounds.size.z:0.###}, " +
-                      $"height {bounds.size.y:0.###}, recentred by ({-bounds.center.x:0.###}, {-bounds.min.y:0.###}, {-bounds.center.z:0.###}).");
+            if (isCorner)
+            {
+                // South and east, matching the corner the fence network expects.
+                Post("PostSouth", 0f, -half);
+                Post("PostEast", half, 0f);
+                Rail("RailSouthHigh", postHeight * 0.74f, Vector3.back);
+                Rail("RailSouthLow", postHeight * 0.36f, Vector3.back);
+                Rail("RailEastHigh", postHeight * 0.74f, Vector3.right);
+                Rail("RailEastLow", postHeight * 0.36f, Vector3.right);
+            }
+            else
+            {
+                Post("PostSouth", 0f, -half);
+                Post("PostNorth", 0f, half);
+                Rail("RailSouthHigh", postHeight * 0.74f, Vector3.back);
+                Rail("RailSouthLow", postHeight * 0.36f, Vector3.back);
+                Rail("RailNorthHigh", postHeight * 0.74f, Vector3.forward);
+                Rail("RailNorthLow", postHeight * 0.36f, Vector3.forward);
+            }
+
+            height = postHeight + 0.06f;
             return wrapper;
         }
 
@@ -2545,7 +2594,7 @@ namespace CityBuilder.EditorTools
         /// footprint/height, not hand-picked positions, so the same generator produces a small
         /// House and a wider Lumberjack alike.
         /// </summary>
-        private static GameObject CreateHutPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, int maxWorkers, bool hasChimney, Material trimMaterial, Material doorMaterial, Material windowMaterial)
+        private static GameObject CreateHutPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, int maxWorkers, bool hasChimney, Material trimMaterial, Material doorMaterial, Material windowMaterial, BuildingMotif motif = BuildingMotif.None)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
@@ -2599,6 +2648,8 @@ namespace CityBuilder.EditorTools
                 y = Mathf.Max(y, chimneyBase + chimneyHeight + 0.06f);
             }
 
+            y = AddMotif(root.transform, motif, name, sizeX, sizeZ, y, height, wallMaterial, roofMaterial, trimMaterial);
+
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX * 1.1f, y, sizeZ * 1.1f);
             collider.center = new Vector3(0f, y * 0.5f, 0f);
@@ -2613,7 +2664,7 @@ namespace CityBuilder.EditorTools
         /// Towers get two stacked, slightly inset wall tiers plus a lookout cap instead of one
         /// solid block, reading as noticeably taller and more fortified than a plain wall.
         /// </summary>
-        private static GameObject CreateFortificationPrefab(string name, Vector2Int footprint, float height, Color wallColor, Material trimMaterial, bool isTower)
+        private static GameObject CreateFortificationPrefab(string name, Vector2Int footprint, float height, Color wallColor, Color roofColor, Material trimMaterial, bool isTower, BuildingMotif motif = BuildingMotif.None)
         {
             var sizeX = footprint.x * CellSize - BuildingInset;
             var sizeZ = footprint.y * CellSize - BuildingInset;
@@ -2623,6 +2674,7 @@ namespace CityBuilder.EditorTools
 
             var wallMaterial = CreateLitMaterial($"Building_{name}_Walls", wallColor);
             var shadeMaterial = CreateLitMaterial($"Building_{name}_Shade", Shade(wallColor, 0.85f));
+            var roofMaterial = CreateLitMaterial($"Building_{name}_Roof", roofColor);
 
             var y = AddSteppedPlinth(root.transform, sizeX, sizeZ, height * 0.08f, trimMaterial, wallMaterial);
 
@@ -2660,8 +2712,47 @@ namespace CityBuilder.EditorTools
                 y += merlonHeight;
             }
 
+            y = AddMotif(root.transform, motif, name, sizeX, sizeZ, y, height, wallMaterial, roofMaterial, trimMaterial);
+
             var collider = root.AddComponent<BoxCollider>();
             collider.size = new Vector3(sizeX * 1.1f, y, sizeZ * 1.1f);
+            collider.center = new Vector3(0f, y * 0.5f, 0f);
+
+            return SavePrefab(root, name);
+        }
+
+        /// <summary>
+        /// The shell for everything that is not a building with walls: a well, a flag, a garden, a
+        /// gate you walk through, an arena with an open floor. It lays a paved base the size of the
+        /// footprint and leaves the rest to the motif, which is the whole object here rather than
+        /// an ornament on top of one.
+        ///
+        /// The base is deliberately thin and NOT a trigger, unlike a road: these are things a
+        /// player taps and a citizen walks around, not surfaces they walk over.
+        /// </summary>
+        private static GameObject CreatePlotPrefab(string name, Vector2Int footprint, float height, Color baseColor, Color accentColor, int maxWorkers, Material trimMaterial, BuildingMotif motif)
+        {
+            var sizeX = footprint.x * CellSize - BuildingInset;
+            var sizeZ = footprint.y * CellSize - BuildingInset;
+
+            var root = new GameObject(name);
+            root.AddComponent<BuildingInstance>();
+            if (maxWorkers > 0) root.AddComponent<ProductionBuilding>();
+
+            var baseMaterial = CreateLitMaterial($"Building_{name}_Base", baseColor);
+            var accentMaterial = CreateLitMaterial($"Building_{name}_Accent", accentColor);
+
+            const float paving = 0.08f;
+            AddCubePart(root.transform, "Paving", new Vector3(0f, paving * 0.5f, 0f), new Vector3(sizeX, paving, sizeZ), baseMaterial);
+            AddCubePart(root.transform, "PavingEdge", new Vector3(0f, paving * 0.5f + 0.01f, 0f), new Vector3(sizeX * 0.86f, paving, sizeZ * 0.86f), accentMaterial);
+
+            var y = AddMotif(root.transform, motif, name, sizeX, sizeZ, paving, height, baseMaterial, accentMaterial, trimMaterial);
+            // Never flatter than a step: a collider a few centimetres tall is a building nobody can
+            // tap, and half of these are one cell across to begin with.
+            y = Mathf.Max(y, 0.4f);
+
+            var collider = root.AddComponent<BoxCollider>();
+            collider.size = new Vector3(sizeX * 1.05f, y, sizeZ * 1.05f);
             collider.center = new Vector3(0f, y * 0.5f, 0f);
 
             return SavePrefab(root, name);
@@ -2945,13 +3036,31 @@ namespace CityBuilder.EditorTools
             }
         }
 
+        /// <summary>
+        /// A material asset, one per name.
+        ///
+        /// **Asking for the same name twice used to destroy the first one.** This deletes the asset
+        /// at that path before writing a new one, so a second call for a name already used in this
+        /// run left every renderer that had taken the first material pointing at a destroyed object
+        /// -- which Unity draws in bright magenta. It cost the whole fence: the straight run and the
+        /// corner each asked for `Building_Fence_Wood`, and the straight run came out pink. Nothing
+        /// warned; the geometry was perfect and the colour was not.
+        ///
+        /// So a name asked for twice now answers with the SAME material rather than a replacement.
+        /// The cache lives as long as the batchmode process, which is exactly one SetupProject run.
+        /// </summary>
+        private static readonly Dictionary<string, Material> _litMaterialsByName = new Dictionary<string, Material>();
+
         private static Material CreateLitMaterial(string name, Color color)
         {
+            if (_litMaterialsByName.TryGetValue(name, out var existing) && existing != null) return existing;
+
             var path = $"{MaterialsFolder}/{name}.mat";
             Directory.CreateDirectory(MaterialsFolder);
             DeleteIfExists(path);
             var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = color };
             AssetDatabase.CreateAsset(material, path);
+            _litMaterialsByName[name] = material;
             return material;
         }
 
