@@ -1497,6 +1497,14 @@ namespace CityBuilder.EditorTools
             // conversion is written down at all.
             var production = CreateText(card.transform, "Production", string.Empty, 20, new Vector2(0f, 205f), new Vector2(640f, 30f), new Color(0.82f, 0.88f, 0.7f));
 
+            // Why this gatherer is earning nothing, in the band the recipe buttons use -- a
+            // Sawmill or a Quarry has exactly one recipe, so that band is empty on every building
+            // this line can appear on. Amber rather than red: the building is not broken, it is
+            // standing in the wrong place.
+            var warning = CreateText(card.transform, "Warning", string.Empty, 22, new Vector2(0f, 160f), new Vector2(600f, 56f), new Color(1f, 0.72f, 0.35f));
+            warning.horizontalOverflow = HorizontalWrapMode.Wrap;
+            warning.gameObject.SetActive(false);
+
             // The metal buttons on a Плавильня, hidden for every building that has only one recipe.
             // The buttons themselves are built at play time by the controller: how many there are
             // is a property of the sheet, not of the scene.
@@ -1607,6 +1615,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("levelLabel").objectReferenceValue = level;
             controllerSO.FindProperty("conditionLabel").objectReferenceValue = condition;
             controllerSO.FindProperty("productionLabel").objectReferenceValue = production;
+            controllerSO.FindProperty("warningLabel").objectReferenceValue = warning;
             controllerSO.FindProperty("demolishControls").objectReferenceValue = demolishControls;
             controllerSO.FindProperty("demolishConfirmRoot").objectReferenceValue = demolishConfirm;
             controllerSO.FindProperty("demolishConfirmLabel").objectReferenceValue = demolishConfirmLabel;

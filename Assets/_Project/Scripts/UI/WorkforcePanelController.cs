@@ -138,8 +138,15 @@ namespace CityBuilder.UI
 
                 row.Count.text = $"{assigned} / {max}";
                 row.Background.color = assigned > 0 ? RowColor : IdleRowColor;
-                row.Detail.text = DescribeWork(row.Building);
-                row.Detail.color = assigned > 0 ? new Color(1f, 1f, 1f, 0.65f) : StarvedTextColor;
+                // A gatherer with an empty radius says so INSTEAD of what it makes: "даёт Дерево"
+                // is a promise the building cannot keep, and this panel is where the player comes
+                // to ask why nothing is arriving. Warned rather than dimmed, since a staffed
+                // building with nothing to gather still reads as busy on the row above.
+                var stranded = row.Building.NothingLeftInReach;
+                row.Detail.text = stranded
+                    ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(row.Building.ProducesResource))
+                    : DescribeWork(row.Building);
+                row.Detail.color = assigned > 0 && !stranded ? new Color(1f, 1f, 1f, 0.65f) : StarvedTextColor;
                 row.Add.interactable = assigned < max && idle > 0;
                 row.Remove.interactable = assigned > 0;
             }

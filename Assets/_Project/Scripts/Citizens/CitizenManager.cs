@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Citizens
@@ -206,10 +207,21 @@ namespace CityBuilder.Citizens
 
             foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
             {
+                var hadWorkers = building.AssignedWorkers;
                 while (_assignedPopulation > workforce && building.AssignedWorkers > 0)
                 {
                     // Decrements _assignedPopulation through NotifyWorkerUnassigned.
                     building.TryUnassignWorker();
+                }
+
+                // Only the building that went completely quiet is worth a line -- losing one of
+                // three farmhands slows a farm down, losing the last one stops it. This is the
+                // other half of the silent failure the empty-radius warning covers: an epidemic
+                // empties workplaces, the jobs are never handed back (see HealSick), and a farm
+                // standing in good fields can be idle for a reason nothing on screen mentions.
+                if (hadWorkers > 0 && building.AssignedWorkers == 0)
+                {
+                    EventLogManager.Instance?.Log(Localization.Format("#log_workplace_emptied", building.DisplayName));
                 }
                 if (_assignedPopulation <= workforce) return;
             }

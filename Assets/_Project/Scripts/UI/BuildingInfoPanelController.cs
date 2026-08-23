@@ -20,6 +20,7 @@ namespace CityBuilder.UI
         [SerializeField] private Text levelLabel;
         [SerializeField] private Text conditionLabel;
         [SerializeField] private Text productionLabel;
+        [SerializeField] private Text warningLabel;
         [SerializeField] private GameObject recipeControls;
         [SerializeField] private RectTransform recipeRow;
         [SerializeField] private Sprite recipeButtonSprite;
@@ -191,6 +192,7 @@ namespace CityBuilder.UI
                     : string.Empty;
             }
             RefreshRecipeControls();
+            RefreshGatherWarning();
             if (hasProduction)
             {
                 if (workersLabel != null) workersLabel.text = Localization.Format("#building_workers", _currentProduction.AssignedWorkers, _currentProduction.MaxWorkers);
@@ -225,6 +227,41 @@ namespace CityBuilder.UI
             if (demolishControls != null) demolishControls.SetActive(_currentInstance.CanDemolish);
 
             RefreshRecruitControls(data);
+        }
+
+        /// <summary>
+        /// Says, for as long as it is true, that this gatherer has nothing left inside its radius.
+        ///
+        /// The event log alone was not enough and cost a real game: the line is written ONCE, the
+        /// day it becomes true (CitizenVisualsManager.ReportRadiusEmpty), and by the time the
+        /// player wonders why no wood is arriving it has scrolled out of an eight-line log. After
+        /// that a starved sawmill and a working one are the same picture -- the workers stand on
+        /// the plot either way.
+        ///
+        /// Asked fresh on every Refresh rather than mirroring that latch, because the latch only
+        /// moves while somebody is employed here (CitizenVisualsManager.AssignAgentToBuilding): an
+        /// unstaffed building would otherwise report whatever was true when its last worker left.
+        /// </summary>
+        private void RefreshGatherWarning()
+        {
+            if (warningLabel == null) return;
+
+            var empty = _currentProduction != null && _currentProduction.NothingLeftInReach;
+
+            warningLabel.gameObject.SetActive(empty);
+            if (empty)
+            {
+                warningLabel.text = Localization.Format(
+                    "#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource));
+            }
+        }
+
+        /// <summary>Where the building actually stands, footprint and rotation included -- the same point its workers measure their radius from.</summary>
+        private Vector3 FootprintCenter()
+        {
+            var grid = GridManager.Instance;
+            if (grid == null || _currentInstance == null) return Vector3.zero;
+            return grid.GetFootprintCenterWorld(_currentInstance.OriginCell, _currentInstance.RotatedFootprint());
         }
 
         /// <summary>
@@ -457,8 +494,7 @@ namespace CityBuilder.UI
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            var center = grid.GetFootprintCenterWorld(_currentInstance.OriginCell, _currentInstance.Data.footprintSize);
-            Grid.HarvestRadiusOverlay.ShowFor(center, _currentInstance.HarvestRadius);
+            Grid.HarvestRadiusOverlay.ShowFor(FootprintCenter(), _currentInstance.HarvestRadius);
         }
 
         private void HideHarvestRadius()

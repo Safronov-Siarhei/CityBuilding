@@ -147,6 +147,7 @@ namespace CityBuilder.Tests.EditMode
             "#hud_status", "#hud_place_hint", "#load_selected",
             "#building_level", "#building_condition", "#building_workers", "#building_idle_citizens",
             "#building_produces", "#recipe_conversion", "#recipe_batches",
+            "#building_nothing_in_reach",
             "#workforce_summary", "#workforce_gives",
             "#happiness_title", "#happiness_breakdown", "#tax_rate",
             "#army_summary", "#army_full",
@@ -160,6 +161,7 @@ namespace CityBuilder.Tests.EditMode
             "#research_blocked_lab_level", "#research_blocked_prereq", "#building_upgrade_locked",
             "#log_research_started", "#log_research_done", "#log_research_cancelled", "#log_research_lost",
             "#log_raid_levelled",
+            "#log_workplace_emptied",
         };
 
         private static List<string> Placeholders(string text)

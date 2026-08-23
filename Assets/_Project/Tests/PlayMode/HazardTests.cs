@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -140,6 +140,65 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.AreEqual(0, workplace.AssignedWorkers,
                 "A workplace kept its staff after every one of them took to bed, so illness costs the settlement nothing.");
+        }
+
+        /// <summary>
+        /// The other half of the silent failure: illness empties a workplace, the jobs are never
+        /// handed back, and until this line existed nothing on screen said which building went
+        /// quiet. Only the LAST worker earns a line -- see CitizenManager.LayOffWorkersBeyondWorkforce.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AWorkplaceEmptiedByIllness_SaysSoInTheLog()
+        {
+            var citizens = CitizenManager.Instance;
+            var log = EventLogManager.Instance;
+            Assert.IsNotNull(log, "The scene has no EventLogManager.");
+
+            // Every other workplace in the scene stands down first, so the headcount below belongs
+            // to this building alone and each new patient costs it exactly one worker.
+            // One at a time, through the same door the player's + and - use. SetAssignedWorkers is
+            // the SAVE's door: it adds its whole count to the settlement's tally and subtracts
+            // nothing on the way down, so a fixture built on it leaves CitizenManager counting
+            // workers who do not exist -- and then lays off two buildings' worth to get straight.
+            foreach (var other in Object.FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
+            {
+                while (other.AssignedWorkers > 0) other.TryUnassignWorker();
+            }
+
+            var workplace = Place("Sawmill").GetComponent<ProductionBuilding>();
+            while (workplace.TryAssignWorker()) { }
+            var staffed = workplace.AssignedWorkers;
+            Assert.Greater(staffed, 1, "This test needs a building that can lose a worker and still be working.");
+            var name = workplace.DisplayName;
+
+            citizens.SetPopulation(staffed);
+            yield return null;
+
+            // Read off the TOP of the log, and with no frame allowed to pass in between. The log
+            // is never cleared between tests and holds only its last eight lines, so both "is it
+            // in there" and "how many are in there" answer about an earlier test's Sawmill instead
+            // of this one -- one line drops off the bottom exactly as the new one arrives.
+            var expected = Localization.Format("#log_workplace_emptied", name);
+
+            // Everyone but the last: a building that is short-handed is still a building the
+            // player can see working, and a line for each hand lost would bury the one that matters.
+            citizens.AddSick(staffed - 1);
+            Assert.AreEqual(1, workplace.AssignedWorkers, "The fixture did not lay workers off one at a time.");
+            Assert.IsFalse(Newest(log).Contains(expected),
+                "Losing hands one at a time was reported as the workplace standing empty.");
+
+            citizens.AddSick(1);
+
+            Assert.AreEqual(0, workplace.AssignedWorkers, "The fixture failed to empty the workplace.");
+            StringAssert.Contains(expected, Newest(log),
+                "A workplace emptied by illness said nothing at all -- exactly the silence that cost a real game.");
+            yield return null;
+        }
+
+        /// <summary>The line the log wrote most recently -- EventLogManager prepends, so index 0 is the newest.</summary>
+        private static string Newest(EventLogManager log)
+        {
+            return log.Entries.Count > 0 ? log.Entries[0] : string.Empty;
         }
 
         /// <summary>The Дом лекаря, finally doing something. Empty it does nothing; staffed it clears beds.</summary>

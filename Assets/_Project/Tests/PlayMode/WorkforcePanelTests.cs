@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -30,6 +30,7 @@ namespace CityBuilder.Tests.PlayMode
         private static bool _sceneLoaded;
 
         private readonly List<BuildingInstance> _placed = new List<BuildingInstance>();
+        private readonly List<GameObject> _hidden = new List<GameObject>();
 
         [UnitySetUp]
         public IEnumerator PrepareScene()
@@ -62,6 +63,12 @@ namespace CityBuilder.Tests.PlayMode
                 if (building != null) Object.DestroyImmediate(building.gameObject);
             }
             _placed.Clear();
+
+            foreach (var node in _hidden)
+            {
+                if (node != null) node.SetActive(true);
+            }
+            _hidden.Clear();
             ModalGate.SetBlocked(false);
         }
 
@@ -152,6 +159,78 @@ namespace CityBuilder.Tests.PlayMode
             var panel = Object.FindFirstObjectByType<WorkforcePanelController>(FindObjectsInactive.Include);
             Assert.IsNotNull(panel, "The scene has no WorkforcePanelController -- SetupProject did not build the panel.");
             return panel;
+        }
+
+        /// <summary>
+        /// The panel is where a player goes to ask why nothing is arriving, so a gatherer with an
+        /// empty radius has to answer there -- "даёт Дерево" on a sawmill that has felled its last
+        /// tree is the exact lie that cost a real seven-day game.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AStrandedGathererSaysSoOnItsRow()
+        {
+            PlaceWorkplaces("Quarry");
+            var quarry = _placed[0].GetComponent<ProductionBuilding>();
+
+            // The map scatters 140 boulders of its own; without clearing them out of the way the
+            // quarry is never stranded and this test passes with the warning deleted.
+            foreach (var node in new List<Maps.ResourceNode>(Maps.ResourceNode.All))
+            {
+                if (node == null || node.ResourceType != ResourceType.Stone) continue;
+                node.gameObject.SetActive(false);
+                _hidden.Add(node.gameObject);
+            }
+            yield return null;
+
+            var panel = Panel();
+            panel.OpenPanel();
+            yield return null;
+
+            Assert.AreEqual(
+                Localization.Format("#building_nothing_in_reach", ResourceNames.Of(ResourceType.Stone)),
+                RowDetail(panel, quarry.DisplayName),
+                "A quarry with no stone left in reach still advertised what it makes.");
+        }
+
+        /// <summary>
+        /// A building that dies hands its people back. It never did: the settlement counted them
+        /// as employed at a building that no longer existed, so every farm lost to orcs or fire
+        /// cost the player worker slots permanently AND silently -- the panel simply showed fewer
+        /// free citizens than the town had, forever.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ABuildingThatBurnsDown_HandsItsWorkersBack()
+        {
+            PlaceWorkplaces("Farm");
+            var farm = _placed[0].GetComponent<ProductionBuilding>();
+            var citizens = CitizenManager.Instance;
+
+            var idleBefore = citizens.IdlePopulation;
+            while (farm.TryAssignWorker()) { }
+            var hired = farm.AssignedWorkers;
+            Assert.Greater(hired, 0, "Nobody could be hired, so there is nothing for the building to hand back.");
+            Assert.AreEqual(idleBefore - hired, citizens.IdlePopulation);
+            yield return null;
+
+            // The orcs' own door, and demolition's: both end at Destroy.
+            Object.DestroyImmediate(farm.gameObject);
+            _placed.Clear();
+            yield return null;
+
+            Assert.AreEqual(idleBefore, citizens.IdlePopulation,
+                "The farm took its workers with it -- they are still counted as employed at a building that no longer exists.");
+        }
+
+        /// <summary>The Detail line of one building's row, found the way the player sees it -- by the building's name.</summary>
+        private static string RowDetail(WorkforcePanelController panel, string buildingName)
+        {
+            foreach (var text in panel.GetComponentsInChildren<UnityEngine.UI.Text>(true))
+            {
+                if (text.name == "Detail" && text.transform.parent.name == $"Workplace_{buildingName}") return text.text;
+            }
+
+            Assert.Fail($"No row for '{buildingName}' in the workforce panel.");
+            return string.Empty;
         }
 
         private static int OpenAndCountRows()

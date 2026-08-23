@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -69,6 +69,28 @@ namespace CityBuilder.Maps
                 case ResourceType.Stone: return BalanceConfig.Instance.StonePerHarvest;
                 default: return 0;
             }
+        }
+
+        /// <summary>
+        /// Is there anything of this kind left standing within reach of a point? The question a
+        /// GATHERER's card asks -- and deliberately not the same question its workers ask.
+        ///
+        /// A worker needs a node nobody else has claimed and, for a tree, one that has finished
+        /// growing. Neither of those means the building is in the wrong place: a claimed boulder
+        /// is one its own crew is working, and a sapling is wood that arrives shortly. Only "the
+        /// radius holds nothing at all" is worth telling the player about, because only that is
+        /// fixed by moving the building.
+        /// </summary>
+        public static bool AnyHarvestableWithin(Vector3 fromPosition, ResourceType resourceType, int radiusMetres)
+        {
+            var radiusSq = radiusMetres > 0 ? (float)radiusMetres * radiusMetres : float.MaxValue;
+
+            foreach (var node in _all)
+            {
+                if (node == null || node.ResourceType != resourceType || node.IsDepleted) continue;
+                if ((node.transform.position - fromPosition).sqrMagnitude <= radiusSq) return true;
+            }
+            return false;
         }
 
         /// <summary>

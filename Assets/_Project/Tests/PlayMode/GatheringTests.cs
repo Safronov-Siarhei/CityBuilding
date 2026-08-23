@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -280,6 +280,61 @@ namespace CityBuilder.Tests.PlayMode
 
             panel.Close();
             ModalGate.SetBlocked(false);
+        }
+
+        /// <summary>
+        /// The card has to say why a gatherer is earning nothing, for as long as that is true.
+        ///
+        /// The event log says it once, on the day it becomes true, and a player who only wonders
+        /// about it a week later finds nothing on screen at all -- which is exactly how a real
+        /// seven-day game was lost to a Sawmill with no trees in reach.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AGathererWithNothingInReach_SaysSoOnItsCard()
+        {
+            var panel = Object.FindFirstObjectByType<UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(panel, "No building info panel in the scene.");
+            var warning = FindWarningLabel(panel);
+
+            var quarry = Place("Quarry");
+            HideScatteredNodes(ResourceType.Stone);
+            yield return null;
+
+            panel.Show(quarry);
+            yield return null;
+            Assert.IsTrue(warning.gameObject.activeInHierarchy,
+                "A quarry standing on bare ground looks exactly like a working one, and its card said nothing.");
+            StringAssert.Contains(ResourceNames.Of(ResourceType.Stone), warning.text,
+                "The warning does not say WHICH resource is missing, which is the half that tells the player where to move it.");
+            panel.Close();
+
+            // One boulder inside the radius, and the same card has to go quiet again.
+            PlaceNode(ResourceType.Stone, quarry.transform.position, quarry.HarvestRadius - 2f);
+            panel.Show(quarry);
+            yield return null;
+            Assert.IsFalse(warning.gameObject.activeInHierarchy,
+                "The warning stayed up over a quarry with stone in reach.");
+            panel.Close();
+
+            // And it is a GATHERER's line: a farm grows its own food and never reads a radius.
+            panel.Show(Place("Farm"));
+            yield return null;
+            Assert.IsFalse(warning.gameObject.activeInHierarchy, "A farm was told there was nothing to gather.");
+
+            panel.Close();
+            ModalGate.SetBlocked(false);
+        }
+
+        /// <summary>The card's own warning line, by name -- the field itself is private, and what this test is really checking is that SetupProject wired one up at all.</summary>
+        private static UnityEngine.UI.Text FindWarningLabel(UI.BuildingInfoPanelController panel)
+        {
+            foreach (var text in panel.GetComponentsInChildren<UnityEngine.UI.Text>(true))
+            {
+                if (text.name == "Warning") return text;
+            }
+
+            Assert.Fail("The building card has no Warning label -- SetupProject never built one.");
+            return null;
         }
 
         [UnityTest]

@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Grid;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
 
@@ -91,6 +93,33 @@ namespace CityBuilder.Citizens
             }
         }
 
+        /// <summary>
+        /// A gatherer standing where there is nothing left to gather -- the failure that looks
+        /// exactly like success. The workers stay on the plot, the animation runs, and the only
+        /// thing missing is the resource, so this is asked wherever the player is looking at the
+        /// building: its card and the workforce panel.
+        ///
+        /// False for everything that is not a gatherer. A workshop with no input has its own
+        /// (differently worded, differently fixed) complaint -- see #log_no_input.
+        ///
+        /// Not cached, and asked only when something is redrawn: the answer changes as the forest
+        /// regrows and as boulders are worked out, and a stale "move me" is worse than none.
+        /// </summary>
+        public bool NothingLeftInReach
+        {
+            get
+            {
+                if (!GathersFromNodes) return false;
+
+                var grid = GridManager.Instance;
+                var instance = _buildingInstance != null ? _buildingInstance : GetComponent<BuildingInstance>();
+                if (grid == null || instance == null) return false;
+
+                var centre = grid.GetFootprintCenterWorld(instance.OriginCell, instance.RotatedFootprint());
+                return !ResourceNode.AnyHarvestableWithin(centre, ProducesResource, HarvestRadius);
+            }
+        }
+
         /// <summary>How far this building's workers may roam for a node, in metres, at its current level. Zero everywhere except the Sawmill and the Quarry, and it grows with every upgrade.</summary>
         public int HarvestRadius => Data != null ? Data.LevelStats(CurrentLevel).harvestRadius : 0;
 
@@ -143,6 +172,24 @@ namespace CityBuilder.Citizens
         private void OnDestroy()
         {
             CitizenVisualsManager.Instance?.UnregisterProductionBuilding(this);
+
+            // The crew goes back into the idle pool. Until this existed they did not: a farm lost
+            // to orcs, fire, neglect or the demolish button took its three workers off the board
+            // for good -- CitizenManager kept counting them as employed at a building that no
+            // longer exists, so the settlement quietly lost three pairs of hands it could never
+            // hire again. (Demolish's own comment already claimed workers unwound through
+            // OnDestroy "exactly as they do when orcs burn the place down"; storage and housing
+            // did, workers never had.)
+            //
+            // Deliberately NOT TryUnassignWorker in a loop: that raises OnAssignedWorkersChanged
+            // per worker, and the listeners are UI panels reading a building that is halfway
+            // through being destroyed.
+            var citizens = CitizenManager.Instance;
+            if (AssignedWorkers > 0 && citizens != null)
+            {
+                for (var i = 0; i < AssignedWorkers; i++) citizens.NotifyWorkerUnassigned();
+                AssignedWorkers = 0;
+            }
         }
 
         private void Update()
