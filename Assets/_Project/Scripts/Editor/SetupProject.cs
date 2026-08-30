@@ -622,7 +622,9 @@ namespace CityBuilder.EditorTools
             pivot.transform.localRotation = Quaternion.Euler(50f, 0f, 0f);
 
             mainCameraGO.transform.SetParent(pivot.transform, false);
-            mainCameraGO.transform.localPosition = new Vector3(0f, 0f, -25f);
+            // The zoom distance the game opens on, and it must sit inside RTSCameraController's
+            // min/max or the first zoom input snaps the view somewhere the player did not ask for.
+            mainCameraGO.transform.localPosition = new Vector3(0f, 0f, -15f);
             mainCameraGO.transform.localRotation = Quaternion.identity;
             rig.transform.position = Vector3.zero;
 
