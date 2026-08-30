@@ -111,7 +111,12 @@ namespace CityBuilder.Maps
                 {
                     var go = new GameObject($"FogChunk_{cx}_{cz}", typeof(MeshFilter), typeof(MeshRenderer));
                     go.transform.SetParent(transform, false);
-                    go.GetComponent<MeshRenderer>().sharedMaterial = _cloudMaterial;
+                    var chunkRenderer = go.GetComponent<MeshRenderer>();
+                    chunkRenderer.sharedMaterial = _cloudMaterial;
+                    // Fog is an opaque lid lying over ground the player cannot see anyway, and
+                    // there are 100 of these chunks covering the whole map. Its shadow would fall
+                    // on hidden ground and cost a second draw of every chunk -- see SceneryShadows.
+                    chunkRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     go.SetActive(false);
                     _chunkObjects[cx, cz] = go;
                     _chunkFilters[cx, cz] = go.GetComponent<MeshFilter>();

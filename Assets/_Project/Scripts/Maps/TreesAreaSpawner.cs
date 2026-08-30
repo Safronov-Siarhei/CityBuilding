@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -123,6 +124,9 @@ namespace CityBuilder.Maps
                 // scales down/up along with the transform as the sapling grows, instead of being
                 // permanently sized to a 10% sapling.
                 AddClickCollider(instance);
+                // Per instance rather than on the prefab: these are imported FBX model assets, whose
+                // renderer settings cannot be overridden without introducing a prefab variant.
+                SceneryShadows.DisableCasting(instance);
                 if (!startGrown)
                 {
                     instance.AddComponent<TreeGrowth>();

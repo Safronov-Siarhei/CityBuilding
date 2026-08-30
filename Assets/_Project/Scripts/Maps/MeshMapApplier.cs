@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
 using UnityEngine;
@@ -209,6 +210,9 @@ namespace CityBuilder.Maps
                 // against (silently misclassified as water / unreachable ground).
                 AddMeshCollidersToAll(groundInstance);
                 TerrainPhysicsLayer.Assign(groundInstance);
+                // The floor casts into nothing but still RECEIVES, so buildings keep their shadows
+                // on it. Worth 35 728 triangles a frame on this map -- see SceneryShadows.
+                SceneryShadows.DisableCasting(groundInstance);
                 _groundColliders = groundInstance.GetComponentsInChildren<Collider>();
                 BuildNavMesh();
             }
@@ -222,6 +226,7 @@ namespace CityBuilder.Maps
                 var waterRotation = Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
                 var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
                 TerrainPhysicsLayer.Assign(waterInstance);
+                SceneryShadows.DisableCasting(waterInstance);
                 if (map.WaterMaterial != null)
                 {
                     foreach (var renderer in waterInstance.GetComponentsInChildren<Renderer>())

@@ -18,6 +18,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -3140,6 +3141,10 @@ namespace CityBuilder.EditorTools
             minimapCamera.backgroundColor = new Color(0.08f, 0.14f, 0.22f);
             minimapCamera.targetTexture = renderTexture;
             minimapCamera.cullingMask = ~0;
+            // No shadows in a 512x512 top-down minimap: at that scale a building's shadow is a
+            // pixel or two, but rendering it means a full shadow map pass on every refresh, over
+            // the WHOLE map (this camera frames all of it, so nothing it draws is ever culled).
+            minimapCamera.GetUniversalAdditionalCameraData().renderShadows = false;
 
             var updater = cameraGO.AddComponent<MinimapCameraUpdater>();
             var updaterSO = new SerializedObject(updater);

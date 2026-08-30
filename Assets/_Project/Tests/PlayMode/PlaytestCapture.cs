@@ -29,8 +29,8 @@ namespace CityBuilder.Tests.PlayMode
 
         public static string OutputFolder => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "playtest_shots"));
 
-        /// <summary>Looks at `focus` from `distance` metres away, down `pitch` degrees, turned `yaw` degrees -- the same over-the-shoulder angle the game's own camera uses when pointed at something.</summary>
-        public static IEnumerator Shoot(string shotName, Vector3 focus, float distance = 14f, float pitch = 40f, float yaw = 30f)
+        /// <summary>Looks at `focus` from `distance` metres away, down `pitch` degrees, turned `yaw` degrees -- the same over-the-shoulder angle the game's own camera uses when pointed at something. `fieldOfView` defaults to a tighter lens than the game's own 60; pass 60 when the shot has to show exactly what the player would see from that distance.</summary>
+        public static IEnumerator Shoot(string shotName, Vector3 focus, float distance = 14f, float pitch = 40f, float yaw = 30f, float fieldOfView = 45f)
         {
             if (!Available)
             {
@@ -42,7 +42,7 @@ namespace CityBuilder.Tests.PlayMode
             var camera = cameraObject.AddComponent<Camera>();
             camera.transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
             camera.transform.position = focus - camera.transform.forward * distance;
-            camera.fieldOfView = 45f;
+            camera.fieldOfView = fieldOfView;
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 500f;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CityBuilder.Grid;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace CityBuilder.Maps
 {
@@ -226,7 +227,12 @@ namespace CityBuilder.Maps
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPosition;
             go.transform.localScale = size;
-            go.GetComponent<Renderer>().sharedMaterial = material;
+
+            var renderer = go.GetComponent<Renderer>();
+            renderer.sharedMaterial = material;
+            // A boulder is 30-55 cm: its own shadow reads as noise at this camera distance, and
+            // casting costs a second draw of every one of the ~420 boulder cubes on the map.
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
         }
 
         private void EnsureMaterials()

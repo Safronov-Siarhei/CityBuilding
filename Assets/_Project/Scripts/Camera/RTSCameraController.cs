@@ -42,9 +42,25 @@ namespace CityBuilder.CameraControl
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
         [Header("Zoom")]
+        /// <summary>
+        /// How far the camera may sit from the rig point, in metres. These two numbers decide how
+        /// much of the world is on screen, so they are a performance setting as much as a feel one.
+        ///
+        /// **Why the ceiling is 35 and not the 220 it used to be.** At 50 degrees of pitch and a 60
+        /// degree lens, distance d puts a strip of ground roughly 2x d deep in frame: 25 m shows
+        /// about 49 m (which is why the camera STARTS there -- see SetupProject, where the camera's
+        /// local z is -25), 35 m shows about 69 m, and the old 220 showed the entire 200x200 map at
+        /// once. That last case was the worst frame in the game and the one nothing could be culled
+        /// out of: every one of the ~600 trees, ~140 rock clusters and every building was inside the
+        /// frustum, all of it drawn. It also put the grey nothing beyond the map's edge on screen.
+        ///
+        /// 35 keeps room to pull back from the starting view while a town still reads as a town, and
+        /// keeps the map's edge out of shot. The player's overview comes from the minimap instead,
+        /// which frames the whole map and marks where this camera is looking.
+        /// </summary>
         [SerializeField] private float zoomSpeed = 40f;
-        [SerializeField] private float minDistance = 8f;
-        [SerializeField] private float maxDistance = 220f;
+        [SerializeField] private float minDistance = 15f;
+        [SerializeField] private float maxDistance = 35f;
 
         [Header("Inertia")]
         /// <summary>How fast a fling dies out: velocity is multiplied by exp(-damping * dt) every frame.</summary>

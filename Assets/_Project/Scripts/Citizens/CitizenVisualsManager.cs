@@ -6,6 +6,7 @@ using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace CityBuilder.Citizens
 {
@@ -476,7 +477,12 @@ namespace CityBuilder.Citizens
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPosition;
             go.transform.localScale = size;
-            go.GetComponent<Renderer>().sharedMaterial = material;
+
+            var renderer = go.GetComponent<Renderer>();
+            renderer.sharedMaterial = material;
+            // Two cubes per citizen, up to 150 citizens: casting would put 300 more objects through
+            // the shadow pass to draw shadows the player cannot make out at this zoom.
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
         }
     }
 }
