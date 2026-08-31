@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -83,10 +83,10 @@ namespace CityBuilder.Tests.EditMode
 
         /// <summary>The furnace is the one building with a choice, and the reason recipes are a list at all.</summary>
         [Test]
-        public void TheFurnaceOffersEveryMetal()
+        public void TheFurnaceOffersEveryMetalAndTheMint()
         {
             var recipes = Building("Smelter").recipes;
-            Assert.AreEqual(3, recipes.Count, "The Плавильня should offer iron, copper and gold.");
+            Assert.AreEqual(4, recipes.Count, "The Плавильня should offer iron, copper, gold and the mint.");
 
             var outputs = new List<ResourceType>();
             foreach (var recipe in recipes)
@@ -97,7 +97,69 @@ namespace CityBuilder.Tests.EditMode
             }
 
             CollectionAssert.AreEquivalent(
-                new[] { ResourceType.IronBar, ResourceType.CopperBar, ResourceType.GoldBar }, outputs);
+                new[] { ResourceType.IronBar, ResourceType.CopperBar, ResourceType.GoldBar, ResourceType.Coins }, outputs);
+        }
+
+        /// <summary>
+        /// Minting: the gold bar's only destination, and the only source of coins that is not tax.
+        ///
+        /// Both halves matter. **A gold bar was spent on nothing at all** -- the Плавильня made
+        /// them and no building, upgrade or unit ever asked for one, so the whole gold branch was
+        /// a dead end that produced a trophy. And **tax was the only tap coins ever came out of**,
+        /// at 0,5 per citizen per day and paid for directly out of happiness, which put the full
+        /// research tree 860 game days away.
+        ///
+        /// The furnace runs ONE recipe at a time, which is what stops this being free money: a
+        /// settlement minting coins is a settlement not making iron.
+        /// </summary>
+        [Test]
+        public void TheFurnaceMintsCoinsOutOfGoldBars()
+        {
+            var mint = FindRecipe("Smelter", "coins");
+            Assert.IsNotNull(mint, "The Плавильня has no 'coins' recipe -- check the recipes tab.");
+
+            Assert.AreEqual(ResourceType.Coins, mint.output);
+            Assert.Greater(mint.outputAmount, 0);
+
+            var eatsGoldBars = false;
+            foreach (var input in mint.inputs)
+            {
+                if (input.type == ResourceType.GoldBar) eatsGoldBars = true;
+            }
+            Assert.IsTrue(eatsGoldBars, "Minting no longer consumes gold bars, which leaves GoldBar a resource nothing in the game spends.");
+        }
+
+        /// <summary>
+        /// The gold bar has somewhere to go. It is checked on its own because the other two metals
+        /// are spent OUTSIDE the recipes tab -- a spearman costs an iron bar and an archer a copper
+        /// one (`recruit_ironbar`/`recruit_copperbar` on the units tab) -- while gold was spent
+        /// nowhere at all, in any tab, until minting. That is the exact shape of the dead end this
+        /// guards: a building that faithfully produces a trophy.
+        /// </summary>
+        [Test]
+        public void TheGoldBarIsSpentOnSomething()
+        {
+            var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);
+            foreach (var building in config.Buildings)
+            {
+                foreach (var recipe in building.recipes)
+                {
+                    foreach (var input in recipe.inputs)
+                    {
+                        if (input.type == ResourceType.GoldBar) return;
+                    }
+                }
+            }
+            Assert.Fail("Nothing consumes GoldBar. The Плавильня is back to producing a trophy, and the whole gold branch with it.");
+        }
+
+        private static BuildingRecipe FindRecipe(string buildingId, string recipeId)
+        {
+            foreach (var recipe in Building(buildingId).recipes)
+            {
+                if (recipe.id == recipeId) return recipe;
+            }
+            return null;
         }
 
         /// <summary>Coal was produced by a mine and consumed by nothing at all until the furnace needed firing.</summary>
