@@ -2238,7 +2238,9 @@ namespace CityBuilder.EditorTools
 
             AddLevelModels(root, id, model, height, footprint);
 
-            return SavePrefab(root, id);
+            // Not merged: BuildingLevelAppearance switches these level models on and off at
+            // runtime, so they have to stay separate objects.
+            return SavePrefab(root, id, combineParts: false);
         }
 
         /// <summary>
@@ -2362,6 +2364,14 @@ namespace CityBuilder.EditorTools
             var woodMaterial = CreateLitMaterial("Building_Fence_Wood", new Color(0.5f, 0.36f, 0.22f));
             var straight = CreateFenceModel("Straight", root.transform, trimMaterial, woodMaterial, isCorner: false, height: out var modelHeight);
             var corner = CreateFenceModel("Corner", root.transform, trimMaterial, woodMaterial, isCorner: true, height: out _);
+
+            // Each variant is baked on its own. The PAIR has to stay two objects for
+            // FenceAppearance to switch and turn between them, but the ten posts, caps and rails
+            // inside each one are decoration nothing addresses -- and a fence is placed in runs of
+            // dozens, so ten draws per segment is one of the largest bills on the map.
+            CombineParts(straight, $"{id}_Straight");
+            CombineParts(corner, $"{id}_Corner");
+
             appearance.SetModels(straight, corner);
             // The straight run is what a lone segment shows; FenceAppearance swaps them the moment
             // the piece learns about its neighbours.
@@ -2372,7 +2382,9 @@ namespace CityBuilder.EditorTools
             collider.size = new Vector3(CellSize, height, CellSize);
             collider.center = new Vector3(0f, height * 0.5f, 0f);
 
-            var prefab = SavePrefab(root, id);
+            // The two variants were baked individually above; merging at the ROOT would fuse them
+            // into one object and lose the switch entirely.
+            var prefab = SavePrefab(root, id, combineParts: false);
 
             var data = ScriptableObject.CreateInstance<BuildingData>();
             data.buildingName = id;
@@ -2991,14 +3003,167 @@ namespace CityBuilder.EditorTools
             return go;
         }
 
-        private static GameObject SavePrefab(GameObject root, string name)
+        /// <summary>
+        /// Writes the assembled building out as a prefab, baking its loose parts into one mesh on
+        /// the way (see CombineParts) unless the caller keeps its own child models.
+        ///
+        /// `combineParts: false` is for the two prefab shapes whose children are switched at
+        /// RUNTIME and therefore have to stay separate objects: an authored model with level 2/3
+        /// variants (BuildingLevelAppearance) and a fence with its straight/corner pair
+        /// (FenceAppearance). Merging at their root would fuse the alternatives into one object
+        /// and lose the switch. The level models are single-mesh FBX instances with nothing to
+        /// merge; the fence's two variants are built from parts and are each baked on their own,
+        /// at their own root, in CreateFenceBuildingData.
+        /// </summary>
+        private static GameObject SavePrefab(GameObject root, string name, bool combineParts = true)
         {
+            if (combineParts) CombineParts(root, name);
+
             Directory.CreateDirectory(BuildingPrefabsFolder);
             var prefabPath = $"{BuildingPrefabsFolder}/{name}.prefab";
             DeleteIfExists(prefabPath);
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
             Object.DestroyImmediate(root);
             return prefab;
+        }
+
+        /// <summary>
+        /// Bakes a procedurally assembled building's cube and sphere parts into ONE mesh on the
+        /// root, with one submesh per material, and deletes the part objects.
+        ///
+        /// **This is the biggest single draw-call saving in the game, and it was found by
+        /// measuring rather than by reading the code.** RenderCostTests counted the live scene on
+        /// 2026-08-31: thirty placed buildings added 488 forward draws and 488 shadow draws, about
+        /// 16 of each per building, against a note in the performance baseline that guessed "4-5
+        /// parts per building". A hut is a stepped plinth, four corner posts, a framed door, a
+        /// doorstep, up to four framed windows, a fascia, three roof tiers, a ridge, a chimney and
+        /// its cap -- twenty to thirty separate renderers, every one of them its own draw call on
+        /// a phone, per building, twice over once shadows are counted.
+        ///
+        /// They can all be merged because none of them is ever addressed on its own: the parts
+        /// carry no colliders (AddCubePart strips them), nothing looks a part up by name, and
+        /// every system that touches a building's appearance -- the ghost preview, the fire tint,
+        /// the health bar -- already works through GetComponentsInChildren&lt;Renderer&gt; and an
+        /// ARRAY of materials, so one renderer with six submeshes is the same to them as six
+        /// renderers.
+        ///
+        /// What it does NOT do is reduce the material count: the submeshes are still drawn once
+        /// each. A building of six materials is six draws instead of twenty-five, and the way to
+        /// get from six to one is fewer materials, not more merging.
+        ///
+        /// The merged mesh has to be saved as its own asset. A prefab does not embed mesh data --
+        /// saving one that points at a mesh living only in memory writes a broken reference, and
+        /// the building comes back invisible.
+        /// </summary>
+        private static void CombineParts(GameObject root, string name)
+        {
+            if (root == null) return;
+
+            // Only children that are pure decoration are swallowed. A child carrying anything
+            // else -- a collider, a script, a light -- is something the game addresses on its own,
+            // and merging its mesh away would leave that behind pointing at nothing. Nothing
+            // generated today is in that position; the check is here so that adding such a child
+            // later degrades to "this one is not merged" instead of to a silent breakage.
+            var mergeable = new List<Transform>();
+            for (var i = 0; i < root.transform.childCount; i++)
+            {
+                var child = root.transform.GetChild(i);
+                if (IsPureMeshPart(child)) mergeable.Add(child);
+            }
+
+            var filters = new List<MeshFilter>();
+            foreach (var child in mergeable) filters.AddRange(child.GetComponentsInChildren<MeshFilter>(true));
+
+            // One part is already one draw; merging it would only copy the mesh into a second
+            // asset. This is the normal answer for an authored single-mesh FBX.
+            if (filters.Count <= 1) return;
+
+            // Grouped by material, and the ORDER those materials were first seen is kept: it
+            // becomes the submesh order, which has to line up with the renderer's material array.
+            var order = new List<Material>();
+            var byMaterial = new Dictionary<Material, List<CombineInstance>>();
+            var worldToLocal = root.transform.worldToLocalMatrix;
+            var vertexCount = 0;
+
+            foreach (var filter in filters)
+            {
+                var mesh = filter.sharedMesh;
+                var renderer = filter.GetComponent<MeshRenderer>();
+                if (mesh == null || renderer == null) continue;
+
+                var material = renderer.sharedMaterial;
+                if (material == null) continue;
+
+                if (!byMaterial.TryGetValue(material, out var group))
+                {
+                    group = new List<CombineInstance>();
+                    byMaterial[material] = group;
+                    order.Add(material);
+                }
+
+                // Into the ROOT's space, not the world's: the prefab is instantiated anywhere on
+                // the map, and its parts are positioned relative to it.
+                var toRoot = worldToLocal * filter.transform.localToWorldMatrix;
+                for (var sub = 0; sub < mesh.subMeshCount; sub++)
+                {
+                    group.Add(new CombineInstance { mesh = mesh, subMeshIndex = sub, transform = toRoot });
+                }
+                vertexCount += mesh.vertexCount;
+            }
+
+            if (order.Count == 0) return;
+
+            // Two passes, because one CombineMeshes call cannot do both jobs. The first merges
+            // each material's parts into a single sub-mesh-less blob (mergeSubMeshes: true); the
+            // second lays those blobs side by side as separate submeshes (mergeSubMeshes: false),
+            // which is what lets one renderer keep one material per submesh.
+            var perMaterial = new CombineInstance[order.Count];
+            for (var i = 0; i < order.Count; i++)
+            {
+                var merged = new Mesh { name = $"{name}_part{i}" };
+                if (vertexCount > 65000) merged.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                merged.CombineMeshes(byMaterial[order[i]].ToArray(), true, true);
+                perMaterial[i] = new CombineInstance { mesh = merged, subMeshIndex = 0, transform = Matrix4x4.identity };
+            }
+
+            var combined = new Mesh { name = name };
+            if (vertexCount > 65000) combined.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            combined.CombineMeshes(perMaterial, false, false);
+            combined.RecalculateBounds();
+
+            // The per-material blobs were scaffolding. Left alive they leak into the editor's
+            // memory for the rest of the run, one set per building.
+            foreach (var instance in perMaterial) Object.DestroyImmediate(instance.mesh);
+
+            // Normals are deliberately NOT recalculated. The parts are boxes whose normals are
+            // already correct under the axis-aligned scales AddCubePart applies, and
+            // RecalculateNormals would average the ones that now share a vertex position across
+            // two different parts -- turning a crisp 90-degree corner into a smeared one.
+
+            Directory.CreateDirectory(GeneratedMeshFolder);
+            var meshPath = $"{GeneratedMeshFolder}/{name}.asset";
+            DeleteIfExists(meshPath);
+            AssetDatabase.CreateAsset(combined, meshPath);
+
+            foreach (var child in mergeable) Object.DestroyImmediate(child.gameObject);
+
+            root.AddComponent<MeshFilter>().sharedMesh = combined;
+            root.AddComponent<MeshRenderer>().sharedMaterials = order.ToArray();
+        }
+
+        /// <summary>
+        /// True when this subtree is nothing but geometry -- every object in it carries only a
+        /// Transform, a MeshFilter and a MeshRenderer. Those are the parts CombineParts is allowed
+        /// to bake away, because deleting them deletes nothing the game refers to.
+        /// </summary>
+        private static bool IsPureMeshPart(Transform child)
+        {
+            foreach (var component in child.GetComponentsInChildren<Component>(true))
+            {
+                if (component is Transform || component is MeshFilter || component is MeshRenderer) continue;
+                return false;
+            }
+            return true;
         }
 
         private static void CreateForestBorder(float innerHalfWidth, float innerHalfDepth, float outerHalfWidth, float outerHalfDepth, Material trunkMaterial, Material canopyMaterial)
