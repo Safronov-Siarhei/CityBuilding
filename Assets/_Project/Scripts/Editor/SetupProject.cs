@@ -128,6 +128,14 @@ namespace CityBuilder.EditorTools
             // by, any other app carrying it.
             PlayerSettings.companyName = "Depigo Games";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.depigogames.citybuilding");
+
+            // Optimized Frame Pacing (Google's Swappy), off by default and wrong for this game.
+            // FrameRateController caps the game at 60, and four of the six phones this is tested
+            // on have 90 or 120 Hz screens: without Swappy, Android hands those 60 frames to a
+            // 90 Hz display unevenly, so two frames are shown for one refresh and the next for
+            // two. That reads as judder at a perfectly healthy frame time -- the kind of defect
+            // that gets blamed on a slow phone and hunted in the wrong place for months.
+            PlayerSettings.Android.optimizedFramePacing = true;
         }
 
         /// <summary>
