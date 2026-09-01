@@ -147,6 +147,14 @@ turned up `#recipe_batches` differing by a leading space (`" x{0}"` in the repo,
 sheet) — a suffix that would have rendered "Мукаx2" after the next Pull. That defect predated the
 change and nothing else would have found it.
 
+The fix for that one is worth generalising: **do not put load-bearing whitespace in a sheet cell.**
+The space had to be there because the summary concatenates the description and the multiplier
+directly, which made a single invisible character at the front of a cell decide the layout — a
+character nobody editing the sheet can see, review, or protect, and which Sheets had already
+dropped once. It moved into `BuildingInfoPanelController.ProductionSummary`, where it is visible
+code, and the cell now says `x{0}`, which is what it means. When a string's spacing matters, the
+spacing belongs to the code and the words belong to the sheet.
+
 ## Localization rows
 
 Keys are derived from ids: a recipe's label is `#recipe_<recipe_id>`, a building's

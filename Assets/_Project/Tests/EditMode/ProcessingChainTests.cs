@@ -260,6 +260,42 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsEmpty(BuildingInfoPanelController.ProductionSummary(new BuildingRecipe(), 0, 6f));
         }
 
+        /// <summary>
+        /// The batch multiplier is separated from the recipe by exactly one space, and the space
+        /// comes from the CODE rather than from the sheet.
+        ///
+        /// It used to be the first character of `#recipe_batches` (" x{0}"), because the summary
+        /// concatenates the two directly. That put a load-bearing space at the front of a
+        /// spreadsheet cell, where it is invisible to everyone who edits the sheet -- and Sheets
+        /// had already dropped it, so the repo said " x{0}" and the sheet said "x{0}" and the next
+        /// Pull would have rendered "Мукаx2". Found by diffing the published tabs against the repo,
+        /// not by anyone looking at the game.
+        ///
+        /// So the assertion is about the SPACING, which is the thing that broke, rather than about
+        /// the wording, which the sheet is allowed to change.
+        /// </summary>
+        [Test]
+        public void TheBatchMultiplier_IsSpacedAwayFromTheRecipe()
+        {
+            var recipe = new BuildingRecipe { output = ResourceType.Flour, outputAmount = 1 };
+            var described = recipe.Describe();
+            var multiplier = Localization.Format("#recipe_batches", 3);
+
+            var several = BuildingInfoPanelController.ProductionSummary(recipe, 3, 6f);
+
+            StringAssert.Contains(described + " " + multiplier, several,
+                "The batch multiplier is stuck to the end of the recipe -- \"Мукаx3\". The space " +
+                "between them is added by ProductionSummary; it is not the sheet's job.");
+            StringAssert.DoesNotContain(described + "  " + multiplier.Trim(), several,
+                "Two spaces before the multiplier -- the sheet's string has grown its leading " +
+                "space back, on top of the one the code now adds.");
+
+            // A single batch says nothing at all rather than "x1".
+            var one = BuildingInfoPanelController.ProductionSummary(recipe, 1, 6f);
+            StringAssert.DoesNotContain(Localization.Format("#recipe_batches", 1), one,
+                "A building running one batch per worker is advertising a multiplier of one.");
+        }
+
         private static List<ResourceAmount> Inputs(params (ResourceType type, int amount)[] inputs)
         {
             var list = new List<ResourceAmount>();

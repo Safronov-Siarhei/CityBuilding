@@ -275,7 +275,15 @@ namespace CityBuilder.UI
         {
             if (recipe == null || batchesPerWorker <= 0) return string.Empty;
 
-            var batches = batchesPerWorker > 1 ? Localization.Format("#recipe_batches", batchesPerWorker) : string.Empty;
+            // The space belongs HERE, not inside the localized string. It used to live at the
+            // front of `#recipe_batches` (" x{0}" with a leading space) because this line
+            // concatenates directly -- and an invisible leading space in a spreadsheet cell is a
+            // thing nobody can see, nobody can review, and Sheets had already silently dropped
+            // once. The symptom was "Мукаx2" with no clue where the space went. The cell now says
+            // `x{0}`, which is what it means, and the layout decision lives in the layout code.
+            var batches = batchesPerWorker > 1
+                ? " " + Localization.Format("#recipe_batches", batchesPerWorker)
+                : string.Empty;
             return Localization.Format("#building_produces", recipe.Describe() + batches, intervalSeconds.ToString("0.#"));
         }
 
