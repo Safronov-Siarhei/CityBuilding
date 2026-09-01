@@ -1,4 +1,5 @@
-﻿using CityBuilder.Buildings;
+﻿using System.Collections.Generic;
+using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -7,14 +8,20 @@ using UnityEngine;
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// First-pass Orc raid source: spawns a single portal near a corner of the map, then
-    /// periodically spawns a squad of OrcUnits from it. Raid size grows slowly with the day count
-    /// as a simple stand-in for the design backlog's full "player progression score" formula
-    /// (buildings/citizens/soldiers/defense/production) -- that composite doesn't exist yet, and
-    /// this slice has no player army to weigh into it anyway. Numbers here are first-pass, tunable.
-    /// No win condition yet -- the portal isn't destructible (see OrcPortal); this is the threat
-    /// side only, defended against with existing Wall/Tower/Gate/Barracks defense (see
-    /// DefensiveBuilding) until a player army exists to go on the offensive.
+    /// The map's raid sources: opens every portal the template calls for once the Town Hall is
+    /// down (see PortalPlacement for where they go and why), then periodically sends a squad of
+    /// OrcUnits out of one of them. Closing them all is how the map is won -- see OrcPortal and
+    /// GameOverManager.
+    ///
+    /// Raid size, strength and pacing are read against the player's progression score rather than
+    /// the calendar (see PlayerProgression), and all three come from the balance sheet.
+    ///
+    /// ONE wave per interval, out of a portal picked at random from those still standing --
+    /// deliberately not one wave per portal. Five portals each running their own clock would put
+    /// five simultaneous squads on the settlement on day one, when the player has no coins and no
+    /// soldiers; this way opening the map up to five objectives does not multiply the pressure on
+    /// the way there, it multiplies the work of finishing it. What closing a portal buys the player
+    /// beyond one fewer direction to watch is a balance question still open with the user.
     /// </summary>
     public class OrcRaidManager : MonoBehaviour
     {
@@ -25,15 +32,15 @@ namespace CityBuilder.Combat
         // (see PlayerProgression). The day count used to do this job, and it measured how long the
         // player had sat there rather than what they had built.
 
-        // Placeholder placement rule for testing, not the final design: the user's intent is
-        // hand-authored portal locations per map (like the TreesArea zone), which don't exist as
-        // map data yet. Until then one portal goes a fixed distance from the Town Hall -- close
-        // enough to reach on foot while testing raids, and anchored to the player's base so it's
-        // never stranded in an unreachable corner.
-        private const float PortalDistanceFromTownHallMeters = 20f;
-        // Directions tried around the Town Hall at each radius before widening the search.
+        // Where the portals go is PortalPlacement's job now; what is left here is the search that
+        // turns one of its slots into a cell that is actually standable.
         private const int PortalDirectionSamples = 16;
-        private static readonly float[] PortalFallbackRadiiMeters = { 0f, -4f, 4f, -8f, 8f };
+        // How far in and out along the bearing the search will walk, and in what steps. Deliberately
+        // long: moving a portal thirty metres further out along its OWN direction costs the design
+        // nothing, while turning it far enough to sit beside its neighbour costs the spread, which
+        // is the point of having five of them. So the distance gives way and the bearing does not.
+        private const float PortalRadiusStepMeters = 4f;
+        private const float PortalMaxRadiusDeltaMeters = 32f;
         // Revealed permanently so the portal is visible from the start -- explicitly a testing
         // convenience the user asked for; the intended behaviour is for it to stay hidden until
         // the player scouts it.
@@ -47,46 +54,56 @@ namespace CityBuilder.Combat
         private Material _portalMaterial;
         private Material _orcSkinMaterial;
         private Material _orcGearMaterial;
-        private Vector3 _portalPosition;
-        private Vector2Int _portalCell;
-        private bool _portalSpawned;
+        private bool _portalsPlaced;
         private float _raidTimer;
 
         /// <summary>Pauses the automatic raid clock without touching the portal. Set by the OrcSpawn cheat so hand-spawned squads can be observed in isolation; nothing in normal gameplay sets it.</summary>
         public bool RaidsSuspended { get; set; }
 
-        /// <summary>Whether the portal has already been placed -- false only while the player has yet to put down a Town Hall for it to be anchored to.</summary>
-        public bool PortalPlaced => _portalSpawned;
-
-        /// <summary>Where it stands. The save keeps the cell rather than the world position, because that is what the placement rule produced and what the grid has reserved.</summary>
-        public Vector2Int PortalCell => _portalCell;
+        /// <summary>Whether the map's portals have already been opened -- false only while the player has yet to put down a Town Hall for them to be anchored to.</summary>
+        public bool PortalsPlaced => _portalsPlaced;
 
         /// <summary>How long the settlement has before the next wave. Saved, so reloading is not a way to push the raid clock back to a full interval.</summary>
         public float SecondsUntilNextRaid => _raidTimer;
 
-        /// <summary>
-        /// Puts the raid source back the way the save left it: the portal where it stood and on the
-        /// health the player had ground it down to, and the clock where it was.
-        ///
-        /// Single portal, matching what this class spawns today. The design calls for about five per
-        /// map, hand-placed; when they arrive this and the save entry beside it both become lists.
-        /// </summary>
-        public void RestoreFromSave(bool portalPlaced, Vector2Int portalCell, int portalHealth, float secondsUntilNextRaid)
+        /// <summary>One saved portal: where it stood, and the health the player had ground it down to.</summary>
+        public readonly struct PortalRestoreState
         {
-            if (!portalPlaced) return;
+            public PortalRestoreState(Vector2Int cell, int health)
+            {
+                Cell = cell;
+                Health = health;
+            }
 
-            // Placed once and since destroyed: the flag alone stops Update from opening a fresh one
-            // over the ruins of the one the player fought for.
-            _portalSpawned = true;
-            if (portalHealth <= 0) return;
+            public Vector2Int Cell { get; }
+            public int Health { get; }
+        }
+
+        /// <summary>
+        /// Puts the raid sources back the way the save left them: every portal still standing where
+        /// it stood and on the health it had, and the clock where it was.
+        ///
+        /// The portals come back IN SAVE ORDER, because that is the order a group's saved attack
+        /// order indexes into -- see GameSaveController.RestoreArmyOrders.
+        /// </summary>
+        /// <param name="portalsPlaced">Whether the map had opened its portals at all. True with an empty list means the player had destroyed every one of them, and no fresh ones are opened over the ruins.</param>
+        public void RestoreFromSave(bool portalsPlaced, IReadOnlyList<PortalRestoreState> portals, float secondsUntilNextRaid)
+        {
+            if (!portalsPlaced) return;
+
+            // The flag alone stops Update from opening a fresh set over the ruins of the ones the
+            // player fought for.
+            _portalsPlaced = true;
 
             var grid = GridManager.Instance;
-            if (grid == null) return;
+            if (grid == null || portals == null) return;
 
-            SpawnPortal(grid, portalCell);
-            if (OrcPortal.All.Count > 0) OrcPortal.All[OrcPortal.All.Count - 1].SetCurrentHealth(portalHealth);
+            foreach (var state in portals)
+            {
+                if (state.Health <= 0) continue;
+                SpawnPortal(grid, state.Cell).SetCurrentHealth(state.Health);
+            }
 
-            // After SpawnPortal, which starts a fresh interval of its own.
             _raidTimer = Mathf.Max(0f, secondsUntilNextRaid);
         }
 
@@ -118,9 +135,9 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
-            if (!_portalSpawned)
+            if (!_portalsPlaced)
             {
-                // The portal is positioned relative to the Town Hall, so nothing can happen until
+                // The portals are positioned relative to the Town Hall, so nothing can happen until
                 // the player has placed it. HasAny is an O(1) registry lookup (see
                 // BuildingInstance), so polling it per frame is free -- the one real scan below
                 // runs exactly once, on the frame the Town Hall appears. Also covers a loaded
@@ -128,7 +145,7 @@ namespace CityBuilder.Combat
                 // placement event ever fires.
                 if (!BuildingInstance.HasAny(TownHallBuildingName)) return;
 
-                TrySpawnPortalNearTownHall();
+                TrySpawnPortalsNearTownHall();
                 return;
             }
 
@@ -149,14 +166,17 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// Places the single portal on solid ground at roughly PortalDistanceFromTownHallMeters
-        /// from the Town Hall, sampling directions around it and widening the radius if none of
-        /// them land somewhere valid. "Valid" is MeshMapApplier.IsGroundAt, i.e. actually standing
-        /// on the map's Ground mesh at the flat playable height -- which rules out the lake and
-        /// the decorative cliffs, either of which would strand every spawned orc off the NavMesh
-        /// and send them walking through the world in a straight line.
+        /// Opens the map's portals: one per slot of PortalPlacement's template, each on solid
+        /// ground as near its slot as the map allows. "Solid" is MeshMapApplier.IsGroundAt, i.e.
+        /// actually standing on the map's Ground mesh at the flat playable height -- which rules
+        /// out the lake and the decorative cliffs, either of which would strand every spawned orc
+        /// off the NavMesh and send them walking through the world in a straight line.
+        ///
+        /// A slot with no standable ground anywhere near it is SKIPPED rather than fatal: a map
+        /// whose outermost ring falls in the water should lose that one portal, not all of them.
+        /// Losing every slot is the error, because then the map has no objective at all.
         /// </summary>
-        private void TrySpawnPortalNearTownHall()
+        private void TrySpawnPortalsNearTownHall()
         {
             var grid = GridManager.Instance;
             if (grid == null) return;
@@ -168,18 +188,51 @@ namespace CityBuilder.Combat
                 return;
             }
 
-            if (!TryFindPortalSpot(grid, townHallPosition, out var cell))
+            // Random starting bearing so repeat playthroughs on the same map don't always put the
+            // portals in the exact same places relative to the base.
+            var template = PortalPlacement.BuildTemplate(Random.Range(0f, Mathf.PI * 2f));
+            var opened = 0;
+
+            var maxBearingDeviation = PortalPlacement.MaxBearingDeviationRadians(template.Count);
+            // The first slot's own distance is the nearest any portal may end up, however the
+            // search has to move it -- that is what the sheet's portal_distance_from_town_hall
+            // means, and the template puts every other slot further out again.
+            var nearestAllowed = template[0].DistanceMeters;
+
+            foreach (var slot in template)
             {
-                Debug.LogError($"OrcRaidManager: no valid ground found for the portal around the Town Hall at {townHallPosition} " +
-                               $"({PortalDirectionSamples} directions x {PortalFallbackRadiiMeters.Length} radii, all water/cliff/occupied). " +
-                               "No portal will exist and no raids will happen this session.");
-                // Stops the per-frame retry: the map geometry won't change, so re-running this
-                // every frame would just repeat the same failure forever.
-                _portalSpawned = true;
+                if (!TryFindPortalSpot(grid, townHallPosition, slot, maxBearingDeviation, nearestAllowed, out var cell))
+                {
+                    Debug.LogWarning($"OrcRaidManager: no valid ground for the portal slot at {slot.DistanceMeters:0.#} m " +
+                                     $"from the Town Hall at {townHallPosition} (all water/cliff/occupied). That portal is skipped.");
+                    continue;
+                }
+
+                SpawnPortal(grid, cell);
+                opened++;
+            }
+
+            // Set before the early return below, and whatever happened: the map geometry won't
+            // change, so re-running this every frame would just repeat the same failure forever.
+            _portalsPlaced = true;
+
+            if (opened == 0)
+            {
+                Debug.LogError($"OrcRaidManager: not one of the {template.Count} portal slots around the Town Hall at {townHallPosition} " +
+                               "found valid ground. No portals will exist, no raids will happen, and the map cannot be won this session.");
                 return;
             }
 
-            SpawnPortal(grid, cell);
+            // Only starts counting once the portals actually exist, so the player isn't raided
+            // from nowhere during the time it takes them to place the Town Hall.
+            //
+            // The full interval rather than the score's, deliberately: the portals open on the
+            // frame the Town Hall goes down, when the score IS a Town Hall and five settlers, and
+            // asking PlayerProgression for that would buy a scan over the buildings to be told so.
+            _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
+            EventLogManager.Instance?.Log(opened == 1
+                ? Localization.Get("#log_portal_opened")
+                : Localization.Format("#log_portals_opened", opened));
         }
 
         private static bool TryFindTownHallPosition(out Vector3 position)
@@ -197,21 +250,28 @@ namespace CityBuilder.Combat
             return false;
         }
 
-        private static bool TryFindPortalSpot(GridManager grid, Vector3 townHallPosition, out Vector2Int cell)
+        /// <summary>
+        /// The nearest standable cell to one template slot: its own bearing at its own distance
+        /// first, then the same bearing walked in and out to either side, and only then a bearing
+        /// nudged off it -- never by more than the cap the spread depends on.
+        ///
+        /// BEARING outside, radius inside, and the nesting is the whole point. The other way round
+        /// -- sweeping every bearing before nudging the radius by four metres -- is what a first
+        /// cut of this did, and it would rather send a portal a hundred and eighty degrees around
+        /// the settlement than move it four metres. On the real map that produced two portals four
+        /// degrees apart (PortalOpeningTests caught it), which is exactly the crowding the spread
+        /// exists to prevent. A portal's bearing is what the player plans their walls around; its
+        /// exact distance is not, so the distance is what gives way.
+        /// </summary>
+        private static bool TryFindPortalSpot(GridManager grid, Vector3 townHallPosition, PortalPlacement.Slot slot,
+            float maxBearingDeviationRadians, float nearestAllowedMeters, out Vector2Int cell)
         {
             var mapApplier = MeshMapApplier.Instance;
-            // Random starting angle so repeat playthroughs on the same map don't always put the
-            // portal in the exact same spot relative to the base.
-            var angleOffset = Random.Range(0f, Mathf.PI * 2f);
 
-            foreach (var radiusDelta in PortalFallbackRadiiMeters)
+            foreach (var angle in PortalPlacement.BearingsToTry(slot.AngleRadians, PortalDirectionSamples, maxBearingDeviationRadians))
             {
-                var radius = PortalDistanceFromTownHallMeters + radiusDelta;
-                if (radius <= 0f) continue;
-
-                for (var i = 0; i < PortalDirectionSamples; i++)
+                foreach (var radius in RadiiToTry(slot.DistanceMeters, nearestAllowedMeters))
                 {
-                    var angle = angleOffset + i * (Mathf.PI * 2f / PortalDirectionSamples);
                     var candidate = townHallPosition + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                     var candidateCell = grid.WorldToCell(candidate);
 
@@ -230,16 +290,41 @@ namespace CityBuilder.Combat
             return false;
         }
 
-        private void SpawnPortal(GridManager grid, Vector2Int cell)
+        /// <summary>
+        /// The distances to try along one bearing, nearest the slot's own first: it, then a step
+        /// out, a step in, two steps out, two steps in, and so on.
+        ///
+        /// The inward walk stops at the template's FIRST slot -- the distance the sheet says a
+        /// portal may not be nearer than. Letting it run to PortalPlacement's absolute floor
+        /// instead put a portal eight metres from the Town Hall on a real map, inside the
+        /// settlement and past every wall, which is precisely what that sheet number exists to
+        /// prevent. Outward has no such limit: the grid bounds check turns back anything that
+        /// leaves the map, and a portal further out costs the design nothing.
+        /// </summary>
+        private static IEnumerable<float> RadiiToTry(float slotDistanceMeters, float nearestAllowedMeters)
         {
-            _portalCell = cell;
-            _portalPosition = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+            yield return slotDistanceMeters;
+
+            for (var delta = PortalRadiusStepMeters; delta <= PortalMaxRadiusDeltaMeters; delta += PortalRadiusStepMeters)
+            {
+                yield return slotDistanceMeters + delta;
+
+                var inward = slotDistanceMeters - delta;
+                if (inward >= nearestAllowedMeters) yield return inward;
+            }
+        }
+
+        /// <summary>Builds one portal on a cell already known to be standable, and hands it back so the caller can set the health a save left it on.</summary>
+        private OrcPortal SpawnPortal(GridManager grid, Vector2Int cell)
+        {
+            var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
 
             EnsureMaterials();
 
             var root = new GameObject("OrcPortal");
-            root.transform.position = _portalPosition;
-            root.AddComponent<OrcPortal>();
+            root.transform.position = position;
+            var portal = root.AddComponent<OrcPortal>();
+            portal.SetCell(cell);
 
             // A simple freestanding stone arch -- two posts and a lintel, in the same
             // cube-primitive style as every other procedural prop in the game.
@@ -256,21 +341,15 @@ namespace CityBuilder.Combat
             clickCollider.center = new Vector3(0f, 1.7f, 0f);
             clickCollider.size = new Vector3(2f, 3.4f, 0.8f);
 
-            // Occupies its cell so the player can't drop a building on top of the arch.
+            // Occupies its cell so the player can't drop a building on top of the arch -- and, with
+            // several portals, so the search for the next slot cannot pick a cell one of them is
+            // already standing on.
             grid.SetAreaOccupied(cell, Vector2Int.one, true);
             // Testing convenience (see PortalFogRevealRadiusCells) -- the player can see where
             // raids come from instead of having them arrive out of unexplored fog.
             FogOfWarManager.Instance?.RevealPermanent(cell, PortalFogRevealRadiusCells);
 
-            _portalSpawned = true;
-            // Only starts counting once the portal actually exists, so the player isn't raided
-            // from nowhere during the time it takes them to place the Town Hall.
-            //
-            // The full interval rather than the score's, deliberately: a portal opens on the frame
-            // the Town Hall goes down, when the score IS a Town Hall and five settlers, and asking
-            // PlayerProgression for that would buy a scan over the buildings to be told so.
-            _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
-            EventLogManager.Instance?.Log(Localization.Get("#log_portal_opened"));
+            return portal;
         }
 
         private void AddPortalPart(Transform parent, Vector3 localPosition, Vector3 size)
@@ -286,10 +365,17 @@ namespace CityBuilder.Combat
 
         private void SpawnRaid(int score)
         {
+            // Out of one of the portals still standing, picked at random -- so which side of the
+            // settlement a wave arrives on is not something the player can settle once and then
+            // stop watching, and so the portals the player has closed stop sending anything. None
+            // left means the map has just been won; the win handler runs on the same frame.
+            var portals = OrcPortal.All;
+            if (portals.Count == 0) return;
+
             var size = ComputeRaidSize(score);
             var level = ComputeOrcLevel(score);
 
-            SpawnOrcs(_portalPosition, size, level);
+            SpawnOrcs(portals[Random.Range(0, portals.Count)].transform.position, size, level);
             // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
             // quietly become five times as hard as the last one at the very same size.
             EventLogManager.Instance?.Log(level > 1

@@ -1,4 +1,5 @@
-﻿using CityBuilder.Core;
+﻿using CityBuilder.Combat;
+using CityBuilder.Core;
 using NUnit.Framework;
 
 namespace CityBuilder.Tests.EditMode
@@ -284,6 +285,11 @@ namespace CityBuilder.Tests.EditMode
             Assert.Greater(config.DayLengthSeconds, 0f, "A zero-length day fires every day-based system every frame.");
             Assert.Greater(config.ArmyMaxSize, 0);
             Assert.Greater(config.PortalMaxHealth, 0, "A portal with no health is destroyed by the first swing, ending the map instantly.");
+            Assert.GreaterOrEqual(config.PortalCount, 1, "A map with no portals has no objective and can never be won.");
+            Assert.GreaterOrEqual(config.PortalDistanceFromTownHallMeters, PortalPlacement.MinDistanceMeters,
+                "A portal that close spawns its raiders inside the settlement, past every wall the player has built.");
+            Assert.GreaterOrEqual(config.PortalDistanceStepMeters, 0f,
+                "A negative step marches each portal nearer the Town Hall than the last, and the outermost one lands inside the town.");
             Assert.Greater(config.RaidIntervalSeconds, 0f, "A zero raid interval spawns a squad every frame.");
             Assert.GreaterOrEqual(config.RaidMaxSize, config.RaidBaseSize, "The raid ceiling can't be below the opening squad.");
             Assert.Greater(config.RaidProgressPerExtraRaider, 0, "A zero step would freeze the raid size at the opening squad forever.");

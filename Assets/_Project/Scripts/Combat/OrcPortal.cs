@@ -6,9 +6,9 @@ using UnityEngine;
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// An Orc portal: the raid source OrcRaidManager spawns OrcUnits from, and -- since the player
-    /// now has an army that can reach it -- the map's objective. Destroying the last portal wins
-    /// the map (see GameOverManager.NotifyPortalDestroyed).
+    /// An Orc portal: a raid source OrcRaidManager spawns OrcUnits from, and -- since the player
+    /// now has an army that can reach it -- one of the map's objectives. There are several per map
+    /// (see PortalPlacement); destroying the LAST one wins the map (see GameOverManager).
     ///
     /// The health pool is deliberately large: per the design, a portal is not a quick strike but
     /// something a group has to stand and work on, long enough for the defenders (today: the raids
@@ -33,10 +33,24 @@ namespace CityBuilder.Combat
 
         public int CurrentHealth { get; private set; }
 
+        /// <summary>
+        /// The grid cell this portal stands on and has reserved. Carried by the portal rather than
+        /// by the spawner, because with several per map the save has to write out each one's place
+        /// next to its own health -- and a portal already destroyed must not leave a cell behind in
+        /// a list the survivors are indexed by.
+        /// </summary>
+        public Vector2Int Cell { get; private set; }
+
         private void Awake()
         {
             MaxHealth = BalanceConfig.Instance.PortalMaxHealth;
             CurrentHealth = MaxHealth;
+        }
+
+        /// <summary>Tells the portal where it was put. Called by OrcRaidManager immediately after spawning it, on both the fresh and the restored path.</summary>
+        public void SetCell(Vector2Int cell)
+        {
+            Cell = cell;
         }
 
         /// <summary>Puts a loaded portal back on the health the player had ground it down to. Clamped to at least 1: a portal restored at zero would stand there whole and unkillable, since only TakeDamage retires one.</summary>
@@ -71,7 +85,13 @@ namespace CityBuilder.Combat
             // Out of the registry before the event fires: handlers (the win check) ask how many
             // portals are left, and a destroyed one must not still be counted among them.
             _all.Remove(this);
-            EventLogManager.Instance?.Log(Localization.Get("#log_portal_destroyed"));
+            // With several portals per map, "the portal is destroyed" no longer tells the player
+            // whether the map is over -- the count of what is still standing is the whole point of
+            // taking one down. The bare message is kept for the last one, where the victory line
+            // follows it immediately and a "0 left" would only be in its way.
+            EventLogManager.Instance?.Log(_all.Count > 0
+                ? Localization.Format("#log_portal_destroyed_remaining", _all.Count)
+                : Localization.Get("#log_portal_destroyed"));
             OnPortalDestroyed?.Invoke(this);
             Destroy(gameObject);
         }

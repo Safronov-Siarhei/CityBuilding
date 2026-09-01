@@ -12,7 +12,7 @@ namespace CityBuilder.Cheats
     /// Conflict handling with the real raid system was called out explicitly: while
     /// suspendNormalRaids is on, OrcRaidManager's automatic waves are paused (see its
     /// RaidsSuspended) so hand-spawned squads can be watched in isolation. Portal placement is NOT
-    /// paused -- the cheat needs a portal to aim at. Turning the flag off, or disabling this
+    /// paused -- the cheat needs the portals to aim at. Turning the flag off, or disabling this
     /// component, hands control straight back.
     ///
     /// Event-driven, with no Update of its own: this ships in builds like everything else in the
@@ -36,7 +36,7 @@ namespace CityBuilder.Cheats
         [SerializeField, Min(1)] private int orcLevel = 1;
 
         [Header("Место")]
-        [Tooltip("Индекс портала из OrcPortal.All. Сейчас портал на карте один, так что 0.")]
+        [Tooltip("Индекс портала из OrcPortal.All, в порядке открытия: 0 — ближайший к ратуше, дальше — по спирали наружу. Больше числа порталов на карте — берётся последний.")]
         [SerializeField, Min(0)] private int portalIndex;
 
         [Header("Момент")]

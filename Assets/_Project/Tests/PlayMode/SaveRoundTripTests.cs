@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
 using CityBuilder.Core;
@@ -73,16 +74,24 @@ namespace CityBuilder.Tests.PlayMode
             var populationWithArmy = CitizenManager.Instance.TotalPopulation;
             Assert.AreEqual(4, populationWithArmy, "Two of the six citizens went into the army.");
 
-            // The raid side: a portal the army has already ground down, and one orc in the field.
-            // The portal only opens once a Town Hall exists for it to be anchored to.
+            // The raid side: portals the army has already started grinding down, and one orc in the
+            // field. The portals only open once a Town Hall exists for them to be anchored to.
             var townHall = PlaytestWorld.Building("Castle");
             PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
-            yield return WaitForPortal();
+            yield return WaitForPortals();
 
-            var portal = OrcPortal.All[0];
-            portal.TakeDamage(portal.MaxHealth / 4);
-            var portalHealth = portal.CurrentHealth;
-            Assert.Greater(portalHealth, 0, "The test's own damage was meant to wound the portal, not to close it.");
+            var portalCount = OrcPortal.All.Count;
+            // Two of them wounded, by DIFFERENT amounts: a save that wrote one portal's health over
+            // all of them, or that restored the list in some other order, passes a single-portal
+            // check and fails this one.
+            OrcPortal.All[0].TakeDamage(OrcPortal.All[0].MaxHealth / 4);
+            OrcPortal.All[portalCount - 1].TakeDamage(OrcPortal.All[portalCount - 1].MaxHealth / 2);
+            var portalHealths = PortalHealthByCell();
+            CollectionAssert.IsNotEmpty(portalHealths, "No portals opened, so there is nothing to save.");
+            foreach (var health in portalHealths.Values)
+            {
+                Assert.Greater(health, 0, "The test's own damage was meant to wound the portals, not to close one.");
+            }
 
             // Well away from the soldiers: within their engage radius they would start trading
             // blows with it, and the health this test is about would drift between save and assert.
@@ -112,12 +121,12 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(1, FoodConsumptionManager.Instance.HungryDaysInARow,
                 "The hunger streak restarted at zero, so reloading hands a starving town its whole grace period back.");
 
-            Assert.AreEqual(1, OrcPortal.All.Count,
+            Assert.AreEqual(portalCount, OrcPortal.All.Count,
                 OrcPortal.All.Count == 0
-                    ? "The portal did not come back at all."
-                    : "A second portal was opened on top of the restored one -- the raid manager did not know one already stood there.");
-            Assert.AreEqual(portalHealth, OrcPortal.All[0].CurrentHealth,
-                "The portal reloaded repaired, which makes saving and loading a way to undo an assault on the map's objective.");
+                    ? "The portals did not come back at all."
+                    : "A fresh set of portals was opened on top of the restored ones -- the raid manager did not know they already stood there.");
+            CollectionAssert.AreEquivalent(portalHealths, PortalHealthByCell(),
+                "The portals came back somewhere else or repaired, which makes saving and loading a way to undo an assault on the map's objective.");
 
             Assert.AreEqual(1, OrcUnit.All.Count, "The orc already in the field vanished, so reloading is a way to call off a raid.");
             Assert.AreEqual(orcHealth, OrcUnit.All[0].CurrentHealth, "The orc came back healed.");
@@ -141,12 +150,12 @@ namespace CityBuilder.Tests.PlayMode
             LogAssert.ignoreFailingMessages = true;
             yield return StartGame(null);
 
-            // The portal is the target worth testing: it is the map's objective, and unlike an orc
-            // it stands still, so the group's rally point cannot drift between the save and the
-            // assert and disguise a lost order as a moved one.
+            // A portal is the target worth testing: it is the map's objective, and unlike an orc it
+            // stands still, so the group's rally point cannot drift between the save and the assert
+            // and disguise a lost order as a moved one.
             var townHall = PlaytestWorld.Building("Castle");
             PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
-            yield return WaitForPortal();
+            yield return WaitForPortals();
 
             var army = ArmyManager.Instance;
             CitizenManager.Instance.SetPopulation(6);
@@ -154,7 +163,12 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()), "Recruitment was refused with population and coins to spare.");
 
             var group = army.Groups[0];
-            group.OrderAttack(OrcPortal.All[0]);
+            // The LAST portal, not the first: with several on the map, a save that stores "a
+            // portal" rather than WHICH portal restores the order onto whichever one comes back
+            // first, and pointing at index zero is exactly the bug that would hide.
+            var targetPortal = OrcPortal.All[OrcPortal.All.Count - 1];
+            var targetCell = targetPortal.Cell;
+            group.OrderAttack(targetPortal);
             army.SelectGroup(group);
             Assert.IsNotNull(group.AttackTarget, "The test's own order did not take, so there is nothing to save.");
 
@@ -168,11 +182,13 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(1, loadedArmy.Groups.Count, "The group did not come back, so there is nothing to have been ordered.");
 
             var loadedGroup = loadedArmy.Groups[0];
-            Assert.AreEqual(1, OrcPortal.All.Count, "The portal did not come back, so the order has nothing to point at.");
-            Assert.AreSame(OrcPortal.All[0], loadedGroup.AttackTarget,
-                loadedGroup.AttackTarget == null
-                    ? "The assault was called off by the reload: the group came back holding its ground."
-                    : "The group came back attacking something other than the portal it was sent to break.");
+            CollectionAssert.IsNotEmpty(OrcPortal.All, "The portals did not come back, so the order has nothing to point at.");
+            Assert.IsNotNull(loadedGroup.AttackTarget,
+                "The assault was called off by the reload: the group came back holding its ground.");
+            var restoredTarget = loadedGroup.AttackTarget as OrcPortal;
+            Assert.IsNotNull(restoredTarget, "The group came back attacking something that is not a portal at all.");
+            Assert.AreEqual(targetCell, restoredTarget.Cell,
+                "The group came back attacking a different portal than the one it was sent to break.");
 
             Assert.AreSame(loadedGroup, loadedArmy.SelectedGroup,
                 "The player came back with no group selected, so a tap on the world opens a building panel instead of ordering the army.");
@@ -181,15 +197,40 @@ namespace CityBuilder.Tests.PlayMode
                 "The suspended raid clock started itself again on load, so a wave arrives in the middle of whatever it was switched off to watch.");
         }
 
-        /// <summary>OrcRaidManager opens the portal in its own Update, on the first frame it sees a Town Hall.</summary>
-        private static IEnumerator WaitForPortal()
+        /// <summary>
+        /// OrcRaidManager opens the map's portals in its own Update, on the first frame it sees a
+        /// Town Hall -- all of them within that one frame, so this is really waiting for the Town
+        /// Hall to register rather than for them to trickle in.
+        ///
+        /// Asserts on the count only enough for the tests here to mean something: at least two, so
+        /// that "the save restored the RIGHT portal" is a question with a wrong answer. Not the
+        /// sheet's full count, deliberately -- these tests place their Town Hall wherever
+        /// PlaytestWorld finds room, which is the map's corner, and a slot pointing off the edge of
+        /// the map is skipped by design. What is on trial here is the save surviving whatever the
+        /// map opened, not how many it opened; PortalOpeningTests is where the count belongs.
+        /// </summary>
+        private static IEnumerator WaitForPortals()
         {
-            for (var frame = 0; frame < 120 && OrcPortal.All.Count == 0; frame++)
+            for (var frame = 0; frame < 120 && !OrcRaidManager.Instance.PortalsPlaced; frame++)
             {
                 yield return null;
             }
 
-            Assert.AreEqual(1, OrcPortal.All.Count, "No portal opened next to the Town Hall, so there is nothing to save.");
+            Assert.IsTrue(OrcRaidManager.Instance.PortalsPlaced, "The raid manager never got round to opening the portals.");
+            Assert.GreaterOrEqual(OrcPortal.All.Count, 2,
+                "Fewer than two portals opened next to the Town Hall, so there is nothing here to tell one apart from another.");
+        }
+
+        /// <summary>Every standing portal's health, keyed by the cell it stands on -- the only identity a portal keeps across a save, since the load builds new objects.</summary>
+        private static Dictionary<Vector2Int, int> PortalHealthByCell()
+        {
+            var healths = new Dictionary<Vector2Int, int>();
+            foreach (var portal in OrcPortal.All)
+            {
+                healths[portal.Cell] = portal.CurrentHealth;
+            }
+
+            return healths;
         }
 
         /// <summary>

@@ -13,9 +13,9 @@ namespace CityBuilder.Core
     /// citizens -- starvation can now do that on its own (see FoodConsumptionManager), which is
     /// what the second condition had been waiting on.
     ///
-    /// Victory: every Orc portal on the map destroyed -- one portal today, so the first kill wins
-    /// it. Both are event-driven (BuildingInstance.OnDestroyedInCombat / OrcPortal.OnPortalDestroyed)
-    /// rather than polled.
+    /// Victory: every Orc portal on the map destroyed -- five of them as the sheet stands (see
+    /// PortalPlacement), so the map is won on the last one, not the first. Both are event-driven
+    /// (BuildingInstance.OnDestroyedInCombat / OrcPortal.OnPortalDestroyed) rather than polled.
     /// </summary>
     public class GameOverManager : MonoBehaviour
     {
@@ -89,8 +89,7 @@ namespace CityBuilder.Core
 
         /// <summary>
         /// OrcPortal removes itself from its registry before raising this, so All.Count here is
-        /// the number still standing. With several portals per map (the design's ~5) this is
-        /// already the right check -- the map is won on the last one, not the first.
+        /// the number still standing, and the map ends only once that reaches zero.
         /// </summary>
         private void HandlePortalDestroyed(OrcPortal portal)
         {

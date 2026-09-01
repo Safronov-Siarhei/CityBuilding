@@ -230,9 +230,9 @@ namespace CityBuilder.Saving
         }
 
         /// <summary>
-        /// Puts the portal, the raid clock and the orcs already in the field back. Runs here in
-        /// Start rather than being left to OrcRaidManager's own Update, which opens a portal on the
-        /// first frame it sees a Town Hall -- and the buildings above have just given it one.
+        /// Puts the portals, the raid clock and the orcs already in the field back. Runs here in
+        /// Start rather than being left to OrcRaidManager's own Update, which opens the portals on
+        /// the first frame it sees a Town Hall -- and the buildings above have just given it one.
         /// </summary>
         private static List<Combat.OrcUnit> RestoreRaids(GameSaveData data)
         {
@@ -243,7 +243,7 @@ namespace CityBuilder.Saving
             var raids = Combat.OrcRaidManager.Instance;
             if (raids == null) return restored;
 
-            raids.RestoreFromSave(data.portalPlaced, data.portalCell, data.portalHealth, data.secondsUntilNextRaid);
+            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.secondsUntilNextRaid);
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
@@ -255,6 +255,38 @@ namespace CityBuilder.Saving
             }
 
             return restored;
+        }
+
+        /// <summary>
+        /// The portals the save holds, in save order.
+        ///
+        /// Falls back to the single-portal fields the save used to carry when the list is empty but
+        /// a portal was placed: without this, loading a save written before the map had five
+        /// portals would open none at all -- and the flag alone would then leave that map
+        /// permanently un-raided and unwinnable.
+        /// </summary>
+        private static List<Combat.OrcRaidManager.PortalRestoreState> ReadSavedPortals(GameSaveData data)
+        {
+            var portals = new List<Combat.OrcRaidManager.PortalRestoreState>();
+
+            if (data.portals != null && data.portals.Count > 0)
+            {
+                foreach (var entry in data.portals)
+                {
+                    portals.Add(new Combat.OrcRaidManager.PortalRestoreState(entry.cell, entry.health));
+                }
+
+                return portals;
+            }
+
+            // A legacy health of zero is the other meaningful case: the one portal had already been
+            // destroyed, and an empty list next to a true flag is exactly how that reads today.
+            if (data.portalPlaced && data.portalHealth > 0)
+            {
+                portals.Add(new Combat.OrcRaidManager.PortalRestoreState(data.portalCell, data.portalHealth));
+            }
+
+            return portals;
         }
 
         /// <summary>
@@ -303,9 +335,14 @@ namespace CityBuilder.Saving
                 switch (entry.attackTargetKind)
                 {
                     case ArmyAttackTargetKind.Portal:
-                        // One portal today; with the design's five per map this gains an index of
-                        // its own, the way the orcs already have one.
-                        if (Combat.OrcPortal.All.Count > 0) groups[i].RestoreAttackOrder(Combat.OrcPortal.All[0]);
+                        // The restore above rebuilds the portals in save order, so the saved index
+                        // picks out the same one. Out of range means the portal was destroyed
+                        // between the save and this load -- impossible today, but the group simply
+                        // holds, which is what it would have done a moment after its target fell.
+                        if (entry.attackTargetPortalIndex >= 0 && entry.attackTargetPortalIndex < Combat.OrcPortal.All.Count)
+                        {
+                            groups[i].RestoreAttackOrder(Combat.OrcPortal.All[entry.attackTargetPortalIndex]);
+                        }
                         break;
                     case ArmyAttackTargetKind.Orc:
                         // Out of range means the save predates this field, or the orc list came
@@ -340,9 +377,13 @@ namespace CityBuilder.Saving
             var target = group.AttackTarget;
             if (target == null || !target.IsAlive) return;
 
-            if (target is Combat.OrcPortal)
+            if (target is Combat.OrcPortal portal)
             {
                 entry.attackTargetKind = ArmyAttackTargetKind.Portal;
+                // The saved portal list is written straight out of this same registry, in this same
+                // order, so the position in it IS the index the load reads back. A linear scan over
+                // at most a handful of portals, once per group, at save time.
+                entry.attackTargetPortalIndex = Mathf.Max(0, IndexOfPortal(portal));
                 return;
             }
 
@@ -351,6 +392,18 @@ namespace CityBuilder.Saving
                 entry.attackTargetKind = ArmyAttackTargetKind.Orc;
                 entry.attackTargetOrcIndex = index;
             }
+        }
+
+        /// <summary>Where a portal sits in the registry, or -1 if it is not in it -- which only a portal destroyed on this very frame could manage, and which the caller reads as the first one.</summary>
+        private static int IndexOfPortal(Combat.OrcPortal portal)
+        {
+            var portals = Combat.OrcPortal.All;
+            for (var i = 0; i < portals.Count; i++)
+            {
+                if (portals[i] == portal) return i;
+            }
+
+            return -1;
         }
 
         private GameSaveData CollectSaveData()
@@ -401,11 +454,15 @@ namespace CityBuilder.Saving
             var raids = Combat.OrcRaidManager.Instance;
             if (raids != null)
             {
-                data.portalPlaced = raids.PortalPlaced;
-                data.portalCell = raids.PortalCell;
-                // No portal in the registry means the one that was placed has since been destroyed,
-                // which zero says -- and which is what stops a fresh one opening on load.
-                data.portalHealth = Combat.OrcPortal.All.Count > 0 ? Combat.OrcPortal.All[0].CurrentHealth : 0;
+                data.portalPlaced = raids.PortalsPlaced;
+                // Only the survivors, in registry order -- which is the order the load rebuilds
+                // them in, and the order a group's attack order indexes into. An empty list next
+                // to a true flag is the player having closed every portal on the map, and is what
+                // stops a fresh set opening over the ruins on load.
+                foreach (var portal in Combat.OrcPortal.All)
+                {
+                    data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth });
+                }
                 data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
                 data.raidsSuspended = raids.RaidsSuspended;
             }

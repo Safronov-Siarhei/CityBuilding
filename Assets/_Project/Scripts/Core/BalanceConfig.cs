@@ -239,6 +239,13 @@ namespace CityBuilder.Core
         [SerializeField] private float raidMinIntervalSeconds = 45f;
         [SerializeField] private int raidProgressAtMinInterval = 400;
         [SerializeField] private int portalMaxHealth = 320;
+        // How many raid sources the map opens and where they stand -- see PortalPlacement, which
+        // turns these three into the spiral of slots around the Town Hall. Kept here rather than
+        // as constants because "spread the portals over the whole map" has to be a number the user
+        // can try in the sheet, not a code change.
+        [SerializeField] private int portalCount = 5;
+        [SerializeField] private float portalDistanceFromTownHallMeters = 20f;
+        [SerializeField] private float portalDistanceStepMeters = 8f;
 
         [Header("Player progression (economy.csv)")]
         // What each part of the settlement is worth to the progression score raids are measured
@@ -376,6 +383,9 @@ namespace CityBuilder.Core
         public int SicknessDaysBeforeDeath => sicknessDaysBeforeDeath;
         public int HealPerHealerPerDay => healPerHealerPerDay;
         public int PortalMaxHealth => portalMaxHealth;
+        public int PortalCount => portalCount;
+        public float PortalDistanceFromTownHallMeters => portalDistanceFromTownHallMeters;
+        public float PortalDistanceStepMeters => portalDistanceStepMeters;
         public float DefenceAttackIntervalSeconds => defenceAttackIntervalSeconds;
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
         public float DayLengthSeconds => dayLengthSeconds;
@@ -493,6 +503,9 @@ namespace CityBuilder.Core
             sicknessDaysBeforeDeath = (int)Read(economy, "sickness_days_before_death", sicknessDaysBeforeDeath);
             healPerHealerPerDay = (int)Read(economy, "heal_per_healer_per_day", healPerHealerPerDay);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
+            portalCount = (int)Read(economy, "portal_count", portalCount);
+            portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
+            portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);
             defenceAttackIntervalSeconds = Read(economy, "defence_attack_interval_seconds", defenceAttackIntervalSeconds);
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);

@@ -162,6 +162,7 @@ namespace CityBuilder.Tests.EditMode
             "#log_research_started", "#log_research_done", "#log_research_cancelled", "#log_research_lost",
             "#log_raid_levelled",
             "#log_workplace_emptied",
+            "#log_portals_opened", "#log_portal_destroyed_remaining",
         };
 
         private static List<string> Placeholders(string text)
@@ -232,7 +233,8 @@ namespace CityBuilder.Tests.EditMode
                 "#army_target_units", "#army_target_buildings", "#army_no_citizens", "#army_no_coins",
                 "#unit_militia", "#over_victory", "#over_defeat", "#over_victory_reason",
                 "#over_defeat_reason", "#over_to_menu",
-                "#log_fed", "#log_soldier_died", "#log_portal_opened", "#log_portal_destroyed",
+                "#log_fed", "#log_soldier_died", "#log_portal_opened", "#log_portals_opened",
+                "#log_portal_destroyed", "#log_portal_destroyed_remaining",
                 "#log_defeat_townhall", "#log_defeat_empty", "#log_victory",
                 "#tier_hamlet", "#tier_village", "#tier_town", "#tier_city", "#tier_kingdom",
                 "#research_tab_buildings", "#research_tab_units", "#research_empty", "#research_start",

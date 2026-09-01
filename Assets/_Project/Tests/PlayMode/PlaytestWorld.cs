@@ -57,7 +57,43 @@ namespace CityBuilder.Tests.PlayMode
             if (building != null) building.TryDamage(building.MaxHealth);
         }
 
-        /// <summary>The bottom-left cell of the first size-sized block of dry, unoccupied, in-bounds cells -- somewhere a test can build without fighting the map's trees, rocks and water.</summary>
+        /// <summary>
+        /// A free block as near the middle of the map as one can be found, searched outward in
+        /// rings from the centre cell.
+        ///
+        /// FindFreeArea below starts at cell (1,1) and so hands back a spot in the map's CORNER,
+        /// which is fine for a test that only needs somewhere to stand a building -- and wrong for
+        /// any test about what happens AROUND a building. A Town Hall in the corner has half the
+        /// compass off the edge of the map, and PortalOpeningTests spent a run proving that no
+        /// placement rule can spread five portals around one.
+        /// </summary>
+        public static Vector2Int FindFreeAreaNearTheMiddle(Vector2Int size)
+        {
+            var grid = GridManager.Instance;
+            var centre = new Vector2Int((grid.GridSize.x - size.x) / 2, (grid.GridSize.y - size.y) / 2);
+            var reach = Mathf.Max(grid.GridSize.x, grid.GridSize.y) / 2;
+
+            for (var ring = 0; ring < reach; ring++)
+            {
+                for (var dy = -ring; dy <= ring; dy++)
+                {
+                    for (var dx = -ring; dx <= ring; dx++)
+                    {
+                        // Only the ring's own edge: the inside of it was covered by earlier rings.
+                        if (ring > 0 && Mathf.Abs(dx) != ring && Mathf.Abs(dy) != ring) continue;
+
+                        var origin = centre + new Vector2Int(dx, dy);
+                        if (origin.x < 1 || origin.y < 1) continue;
+                        if (origin.x + size.x >= grid.GridSize.x - 1 || origin.y + size.y >= grid.GridSize.y - 1) continue;
+                        if (IsBuildableArea(origin, size)) return origin;
+                    }
+                }
+            }
+
+            return new Vector2Int(-1, -1);
+        }
+
+        /// <summary>The bottom-left cell of the first size-sized block of dry, unoccupied, in-bounds cells -- somewhere a test can build without fighting the map's trees, rocks and water. In the map's CORNER; see FindFreeAreaNearTheMiddle when what surrounds the building matters.</summary>
         public static Vector2Int FindFreeArea(Vector2Int size)
         {
             var grid = GridManager.Instance;

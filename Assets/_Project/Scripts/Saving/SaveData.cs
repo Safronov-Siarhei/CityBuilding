@@ -85,19 +85,28 @@ namespace CityBuilder.Saving
         public List<FireEntry> fires = new List<FireEntry>();
 
         /// <summary>
-        /// The raid source. Without it a reload healed the map's objective: the portal is placed
-        /// relative to the Town Hall on the first frame one exists, so a fresh one opened at full
-        /// health however far the player's army had ground the old one down -- and the orcs already
-        /// on their way vanished, which made reloading a way to call off a raid.
+        /// Whether the map has opened its portals at all. Without it a reload healed the map's
+        /// objective: the portals are placed relative to the Town Hall on the first frame one
+        /// exists, so a fresh set opened at full health however far the player's army had ground
+        /// the old ones down -- and the orcs already on their way vanished, which made reloading a
+        /// way to call off a raid.
         ///
-        /// One portal, matching what OrcRaidManager spawns today; the design's five per map turn
-        /// this into a list.
+        /// True with an empty <see cref="portals"/> list is the meaningful case of the player
+        /// having closed every portal on the map: nothing is reopened over the ruins.
         /// </summary>
         public bool portalPlaced;
 
+        /// <summary>Every portal still standing, in the order they were opened -- which is the order a group's saved attack order indexes into.</summary>
+        public List<PortalEntry> portals = new List<PortalEntry>();
+
+        /// <summary>
+        /// Where the ONE portal stood, back when there was only one. Read on load when
+        /// <see cref="portals"/> is empty and a portal was placed, so a save written before the map
+        /// had five of them still comes back with its portal on the health it had. Never written.
+        /// </summary>
         public Vector2Int portalCell;
 
-        /// <summary>Zero means it was placed and then destroyed -- no new one is opened over it.</summary>
+        /// <summary>The legacy single portal's health -- see <see cref="portalCell"/>. Zero means it had been destroyed. Never written.</summary>
         public int portalHealth;
 
         /// <summary>Seconds left on the raid clock, so reloading cannot push the next wave back to a full interval.</summary>
@@ -160,6 +169,14 @@ namespace CityBuilder.Saving
         public int remaining;
     }
 
+    /// <summary>One portal still standing. The cell rather than the world position, because that is what the placement rule produced and what the grid has reserved.</summary>
+    [Serializable]
+    public class PortalEntry
+    {
+        public Vector2Int cell;
+        public int health;
+    }
+
     [Serializable]
     public class OrcEntry
     {
@@ -189,16 +206,21 @@ namespace CityBuilder.Saving
         /// <summary>Index into <see cref="GameSaveData.orcs"/> when the target was an orc, -1 otherwise. A position would not do: the orc is walking, and it and the group are written at the same instant.</summary>
         public int attackTargetOrcIndex = -1;
 
+        /// <summary>
+        /// Index into <see cref="GameSaveData.portals"/> when the target was a portal. Defaults to
+        /// zero rather than to -1 on purpose: that is exactly what a save written when the map had
+        /// one portal means, and it makes those saves come back pointing at it.
+        /// </summary>
+        public int attackTargetPortalIndex;
+
         public List<SoldierEntry> soldiers = new List<SoldierEntry>();
     }
 
     /// <summary>
     /// What a saved group's attack order pointed at. Spelled out as kinds rather than as one id
     /// because the two targetable things come back by completely different routes on load: the
-    /// portal from OrcRaidManager's own restore, an orc from the saved orc list beside it.
-    ///
-    /// One portal, matching what the game spawns today; the design's five per map turn Portal into
-    /// an index, the way orcs already are.
+    /// portal from OrcRaidManager's own restore, an orc from the saved orc list beside it. Which
+    /// one of each is then an index into the matching saved list.
     /// </summary>
     public enum ArmyAttackTargetKind
     {
