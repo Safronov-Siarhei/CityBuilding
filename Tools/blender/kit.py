@@ -451,15 +451,17 @@ def _size_collection():
     return coll
 
 
-def refresh_placeholder(obj_name):
-    """Loads `obj_name` from the user's source file and makes it the wireframe `<name>-size`
-    reference here. Returns (location, min_xyz, max_xyz) of the box in local space."""
+def refresh_placeholder(obj_name, source_name=None):
+    """Loads the placeholder (`source_name`, default `obj_name`) from the user's source file and
+    makes it the wireframe `<obj_name>-size` reference here. Returns (location, min_xyz, max_xyz)
+    of the box in local space."""
     import os
     source = os.path.join(os.path.dirname(bpy.data.filepath), SOURCE_FILE)
+    wanted = source_name or obj_name
     with bpy.data.libraries.load(source, link=False) as (data_from, data_to):
-        if obj_name not in data_from.objects:
-            raise RuntimeError(f"{obj_name} is not in {source}")
-        data_to.objects = [obj_name]
+        if wanted not in data_from.objects:
+            raise RuntimeError(f"{wanted} is not in {source}")
+        data_to.objects = [wanted]
     src = data_to.objects[0]
     ref_name = obj_name + "-size"
     old = bpy.data.objects.get(ref_name)
@@ -480,8 +482,12 @@ def refresh_placeholder(obj_name):
     return src.location.copy(), lo, hi
 
 
-def install_model(obj_name, builder, material, location):
-    obj = bpy.data.objects[obj_name]
+def install_model(obj_name, builder, material, location, collection=None):
+    obj = bpy.data.objects.get(obj_name)
+    if obj is None:  # a piece the user's file has no placeholder of its own for (a fence's T)
+        obj = bpy.data.objects.new(obj_name, bpy.data.meshes.new(obj_name + "-empty"))
+        coll = bpy.data.collections.get(collection) if collection else None
+        (coll or bpy.context.scene.collection).objects.link(obj)
     old = obj.data
     me = builder.to_mesh(obj_name)
     me.materials.append(material)
@@ -506,20 +512,26 @@ def report_bounds(obj, lo, hi):
           f"hi={tuple(round(x, 3) for x in hi)}")
 
 
-def run(obj_name, build):
+def run(obj_name, build, source_name=None, offset=(0, 0, 0), collection=None, save=True):
     """The whole per-building pipeline: palette, material, size box, model, check, save.
-    `build(lo, hi)` gets the placeholder box and returns a Builder."""
+    `build(lo, hi)` gets the placeholder box and returns a Builder. A model without a placeholder
+    of its own borrows `source_name`'s box and stands `offset` away from it."""
     import os
     img = ensure_palette(os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Palette.png"))
     mat = ensure_material(img)
-    location, lo, hi = refresh_placeholder(obj_name)
+    location, lo, hi = refresh_placeholder(obj_name, source_name)
     if lo[2] > 1e-4:
         print(f"NOTE: the {obj_name} box starts {lo[2]:.3f} above the ground; modelling from 0")
         lo = (lo[0], lo[1], 0.0)
-    obj = install_model(obj_name, build(lo, hi), mat, location)
+    location = location + Vector(offset)
+    ref = bpy.data.objects.get(obj_name + "-size")
+    if ref is not None:
+        ref.location = location
+    obj = install_model(obj_name, build(lo, hi), mat, location, collection)
     report_bounds(obj, lo, hi)
     file_display_settings()
-    bpy.ops.wm.save_mainfile()
+    if save:
+        bpy.ops.wm.save_mainfile()
 
 
 def file_display_settings():

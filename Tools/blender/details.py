@@ -333,3 +333,67 @@ def lamp(b, x, y, h=0.62):
     b.box(x - 0.018, x + 0.018, y - 0.018, y + 0.018, 0, h, 'iron')
     b.box(x - 0.045, x + 0.045, y - 0.045, y + 0.045, h, h + 0.09, 'window_light')
     b.pyramid(x, y, h + 0.09, 0.06, 0.06, h + 0.15, 'iron')
+
+
+# -- defensive lines -------------------------------------------------------------------------------
+# A fence piece fills its cell edge to edge so neighbours meet without a gap; its gate and tower
+# must carry the same height and thickness so the join has no step.
+
+PALISADE_H = 0.72              # wooden tier: taller than a citizen, points included
+PALISADE_LOG = 0.09
+STONE_WALL_T = 0.30            # stone tier: the same WALL_H as the Town Hall's curtain wall
+FENCE_MERLON_STEP = 0.25       # divides a cell, so the rhythm runs on across joins
+DEFENCE = dict(color='roof_blue', dark='roof_blue_dark')   # Defence shares the castle's blue
+
+
+def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5):
+    """Pointed logs from t0 to t1 out of (ox, oy) along (dx, dy), on the 0.1 grid every piece
+    shares (logs at 0.05, 0.15 ...), with two binding beams through them."""
+    t = 0.05
+    i = 0
+    while t < t1 - 1e-6:
+        if t > t0:
+            x, y = ox + dx * t, oy + dy * t
+            h = PALISADE_LOG / 2
+            col = 'wood_light' if i % 2 else 'wood_mid'
+            b.box(x - h, x + h, y - h, y + h, 0, PALISADE_H - 0.08, col, skip=('-z', '+z'))
+            b.pyramid(x, y, PALISADE_H - 0.08, h, h, PALISADE_H, col)
+        t += 0.1
+        i += 1
+    for z in (0.2, 0.5):
+        xa, ya, xb, yb = ox + dx * t0, oy + dy * t0, ox + dx * t1, oy + dy * t1
+        w = PALISADE_LOG / 2 + 0.012
+        b.box(min(xa, xb) - (w if dx == 0 else 0), max(xa, xb) + (w if dx == 0 else 0),
+              min(ya, yb) - (w if dy == 0 else 0), max(ya, yb) + (w if dy == 0 else 0),
+              z, z + 0.05, 'wood_dark', skip=())
+
+
+def stone_wall_arm(b, ox, oy, dx, dy, t0, t1):
+    """Stone curtain wall from t0 to t1 along (dx, dy): plinth, wall, merlons on the shared grid,
+    an arrow slit on each face."""
+    hw = STONE_WALL_T / 2
+
+    def span(a, c, pad):
+        xa, ya, xb, yb = ox + dx * a, oy + dy * a, ox + dx * c, oy + dy * c
+        return (min(xa, xb) - (pad if dx == 0 else 0), max(xa, xb) + (pad if dx == 0 else 0),
+                min(ya, yb) - (pad if dy == 0 else 0), max(ya, yb) + (pad if dy == 0 else 0))
+
+    x0, x1, y0, y1 = span(t0, t1, hw + 0.03)
+    b.box(x0, x1, y0, y1, 0, FOOTING, 'stone_mid')
+    x0, x1, y0, y1 = span(t0, t1, hw)
+    b.box(x0, x1, y0, y1, FOOTING, WALL_H, 'stone_light')
+    t = FENCE_MERLON_STEP / 2
+    while t < t1 - 1e-6:
+        if t >= t0 - 1e-6:
+            x0, x1, y0, y1 = span(t - MERLON_L / 2, t + MERLON_L / 2, hw)
+            b.box(x0, x1, y0, y1, WALL_H, WALL_H + MERLON_H, 'stone_light')
+        t += FENCE_MERLON_STEP
+    ts = (t0 + t1) / 2 if t1 - t0 > 0.3 else None
+    if ts is not None:
+        for side in (-1, 1):
+            if dx == 0:
+                cx, cy = ox + side * (hw + 0.004), oy + dy * ts
+                b.box(cx - 0.004, cx + 0.004, cy - 0.03, cy + 0.03, 0.3, 0.5, 'window', skip=())
+            else:
+                cx, cy = ox + dx * ts, oy + side * (hw + 0.004)
+                b.box(cx - 0.03, cx + 0.03, cy - 0.004, cy + 0.004, 0.3, 0.5, 'window', skip=())
