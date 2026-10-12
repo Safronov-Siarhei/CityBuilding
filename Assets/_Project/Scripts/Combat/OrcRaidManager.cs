@@ -466,7 +466,7 @@ namespace CityBuilder.Combat
             // glance without opening the inspector. Deliberately sublinear -- a level 5 orc has 5x
             // the health but must not be a five-times-wider wall of cubes.
             var scale = 1f + (Mathf.Max(1, level) - 1) * 0.12f;
-            root.transform.localScale = Vector3.one * scale;
+            root.transform.localScale = Vector3.one * (scale * UnitSize.Scale);
 
             AddCubePart(root.transform, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.36f, 0.6f, 0.36f), _orcSkinMaterial);
             AddCubePart(root.transform, "Head", new Vector3(0f, 0.72f, 0f), new Vector3(0.26f, 0.26f, 0.26f), _orcSkinMaterial);

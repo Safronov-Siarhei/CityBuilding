@@ -329,6 +329,7 @@ namespace CityBuilder.Combat
             var root = new GameObject($"Soldier ({SoldierStats.DisplayName(type)})");
             root.transform.SetParent(transform, false);
             root.transform.position = spawnPosition;
+            root.transform.localScale = Vector3.one * UnitSize.Scale;
 
             BuildAppearance(root.transform, type);
 

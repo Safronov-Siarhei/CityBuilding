@@ -403,6 +403,7 @@ namespace CityBuilder.Citizens
 
             var root = new GameObject("Citizen");
             root.transform.SetParent(transform, false);
+            root.transform.localScale = Vector3.one * UnitSize.Scale;
 
             var clothing = _clothingMaterials[UnityEngine.Random.Range(0, _clothingMaterials.Length)];
             AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);

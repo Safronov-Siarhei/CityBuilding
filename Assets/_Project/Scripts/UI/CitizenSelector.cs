@@ -30,7 +30,7 @@ namespace CityBuilder.UI
     public class CitizenSelector : MonoBehaviour
     {
         private const float FeedbackSeconds = 1f;
-        private const float MarkerHeight = 1.15f;
+        private const float MarkerHeight = 0.75f; // ~0.3 m over a citizen drawn at UnitSize.Scale
         private const float MarkerBobSpeed = 3f;
         private const float MarkerBobAmount = 0.08f;
         private const float InvalidHighlightSeconds = 1f;
