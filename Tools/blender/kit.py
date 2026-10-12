@@ -38,6 +38,9 @@ PALETTE = [
     ("leaf", "3E8C3F"), ("cobble", "A8A194"),
     ("water", "4DB6E6"), ("banner_red", "D8393C"),
     ("banner_blue", "2F5FD0"), ("white", "FFFFFF"),
+
+    ("roof_red_dark", "A82E2B"), ("burlap", "D6B98C"),
+    ("hay", "EBCB5E"), ("fire", "FF8A2A"),
 ]
 NAMES = [n for n, _ in PALETTE]
 
@@ -52,12 +55,12 @@ def _rgb(h):
 def ensure_palette(png_path):
     """(Re)paints the palette image, saves it next to the .blend and packs it in."""
     w, h = COLS * CELL, ROWS * CELL
-    img = bpy.data.images.get(PALETTE_IMAGE)
-    if img is not None and tuple(img.size) != (w, h):
-        bpy.data.images.remove(img)
-        img = None
-    if img is None:
-        img = bpy.data.images.new(PALETTE_IMAGE, w, h, alpha=False)
+    # Always a fresh image: repainting a PACKED one changes its buffer but the file keeps the old
+    # packed bytes, so a colour added to the palette rendered black (found 2026-10-12).
+    old = bpy.data.images.get(PALETTE_IMAGE)
+    if old is not None:
+        bpy.data.images.remove(old)
+    img = bpy.data.images.new(PALETTE_IMAGE, w, h, alpha=False)
     px = [0.0] * (w * h * 4)
     for i, (_, hx) in enumerate(PALETTE):
         c, r = i % COLS, i // COLS

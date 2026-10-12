@@ -199,3 +199,108 @@ def merlons(b, axis, a0, a1, c0, c1, z, color='stone_light'):
             b.box(a - MERLON_L / 2, a + MERLON_L / 2, c0, c1, z, z + MERLON_H, color)
         else:
             b.box(c0, c1, a - MERLON_L / 2, a + MERLON_L / 2, z, z + MERLON_H, color)
+
+
+# -- storage -------------------------------------------------------------------------------------
+
+RED = dict(color='roof_red', dark='roof_red_dark')   # the Storage category's roofs
+
+
+def barn_door(f, s, base=FOOTING, w=GATE_W, h=DOOR_H, color='roof_red'):
+    """Double plank door braced with a white X on each leaf -- the barn's own door."""
+    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, base, base + h + 0.03, 0.015, 'wood_dark')
+    for k in (-1, 1):
+        c = s + k * w / 4
+        f.rect(c - w / 4 + 0.005, c + w / 4 - 0.005, base, base + h, 0.03, color)
+        f.beam(c - w / 4 + 0.02, base + 0.02, c + w / 4 - 0.02, base + h - 0.02, 0.025, 0.04,
+               'plaster_white')
+        f.beam(c - w / 4 + 0.02, base + h - 0.02, c + w / 4 - 0.02, base + 0.02, 0.025, 0.04,
+               'plaster_white')
+
+
+def barred_window(f, s, base, w=WIN_W):
+    z0 = base + WIN_SILL
+    f.rect(s - w / 2, s + w / 2, z0, z0 + WIN_H, 0.01, 'window')
+    for k in (-1, 0, 1):
+        f.rect(s + k * w / 3.2 - 0.008, s + k * w / 3.2 + 0.008, z0, z0 + WIN_H, 0.02, 'iron')
+    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.03, 'stone_mid')
+
+
+def sack(b, x, y, z0=0.0, r=0.07):
+    b.blob(x, y, z0, r, r * 2.1, 'burlap', sides=5)
+
+
+def log_pile(b, x, y, length=0.4, rows=(3, 2, 1), r=0.05, axis='x'):
+    """Logs stacked in a pyramid, lying along `axis`, centred on (x, y)."""
+    for level, count in enumerate(rows):
+        z = r + level * r * 1.7
+        for i in range(count):
+            off = (i - (count - 1) / 2) * r * 2.05
+            c = (x, y + off, z) if axis == 'x' else (x + off, y, z)
+            b.hcylinder(axis, c, length / 2, r, 'wood_light' if (i + level) % 2 else 'wood_mid',
+                        sides=5)
+
+
+def stone_pile(b, x, y, size=0.13):
+    """Cut stone blocks, two rows and one on top."""
+    for i, (dx, dy, dz, a) in enumerate(((-0.07, -0.05, 0, 4), (0.08, -0.04, 0, -6),
+                                         (0.0, 0.09, 0, 10), (0.01, 0.0, size, 20))):
+        b.zbox(x + dx, y + dy, dz, dz + size, size / 2 + 0.01, size / 2 - 0.01, a,
+               'stone_light' if i % 2 else 'stone_mid', bevel=0.01)
+
+
+def ore_heap(b, x, y, r=0.18):
+    b.blob(x, y, 0, r, r * 1.2, 'iron', sides=6)
+    b.blob(x + r * 0.5, y - r * 0.3, 0, r * 0.55, r * 0.8, 'stone_dark', sides=5)
+
+
+def cart(b, x, y, load=None):
+    """Hand cart along x with two wheels and shafts; `load` is drawn by the caller on top."""
+    b.box(x - 0.2, x + 0.2, y - 0.12, y + 0.12, 0.1, 0.14, 'wood_mid')
+    for sy in (-1, 1):
+        b.box(x - 0.2, x + 0.2, y + sy * 0.12 - 0.015, y + sy * 0.12 + 0.015, 0.14, 0.22, 'wood_light')
+        b.hcylinder('y', (x, y + sy * 0.15, 0.1), 0.02, 0.1, 'wood_dark', sides=8)
+    b.rod((x + 0.2, y - 0.08, 0.12), (x + 0.48, y - 0.08, 0.05), 0.025, 'wood_dark')
+    b.rod((x + 0.2, y + 0.08, 0.12), (x + 0.48, y + 0.08, 0.05), 0.025, 'wood_dark')
+
+
+def brazier(b, x, y):
+    b.box(x - 0.02, x + 0.02, y - 0.02, y + 0.02, 0, 0.3, 'iron')
+    b.cylinder(x, y, 0.3, 0.36, 0.07, 'iron', sides=6)
+    b.blob(x, y, 0.33, 0.05, 0.12, 'fire', sides=4)
+
+
+def hay_loft(f, s, base, w=0.22, h=0.24):
+    """Loft hatch in a gable with hay spilling out and a hoist beam over it."""
+    f.rect(s - w / 2 - 0.025, s + w / 2 + 0.025, base, base + h + 0.025, 0.012, 'wood_dark')
+    f.rect(s - w / 2, s + w / 2, base, base + h, 0.02, 'window')
+    f.rect(s - w / 2 + 0.02, s + w / 2 - 0.02, base, base + 0.07, 0.05, 'hay')
+    f.rect(s - 0.02, s + 0.02, base + h + 0.04, base + h + 0.08, 0.16, 'wood_dark')
+
+
+LOFT = 0.28                    # a storage building's half storey over the doors (hay, goods)
+L_TOP = G_TOP + LOFT           # 0.94: wall top of a one-and-a-half-storey store
+
+
+def shed_roof(b, axis, a0, a1, wall, out, z_wall, z_out, color='roof_red', dark='roof_red_dark'):
+    """Lean-to roof: runs along `axis` from a0 to a1, falls from the wall line `wall` (at height
+    z_wall) to the outer edge `out` (at z_out). Ribbed like every other roof in the set."""
+    from mathutils import Vector
+    if axis == 'x':
+        p0, p1 = Vector((0, wall, z_wall)), Vector((0, out, z_out))
+        r = Vector((1, 0, 0))
+    else:
+        p0, p1 = Vector((wall, 0, z_wall)), Vector((out, 0, z_out))
+        r = Vector((0, 1, 0))
+    dvec = p1 - p0
+    dd = dvec.normalized()
+    ax = r if r.cross(dd).z > 0 else -r
+    n = ax.cross(dd)
+    mid = (p0 + p1) / 2 + r * ((a0 + a1) / 2)
+    half_len, half_w = (a1 - a0) / 2, dvec.length / 2 + 0.05
+    t, rib_w, rib_h = ROOF['t'] * 0.8, ROOF['rib_w'], ROOF['rib_h']
+    b.obox(mid + n * (t / 2), ax, dd, n, half_len, half_w, t / 2, dark)
+    a = -half_len + rib_w
+    while a < half_len - rib_w * 0.7:
+        b.obox(mid + n * (t + rib_h / 2) + r * a, ax, dd, n, rib_w / 2, half_w, rib_h / 2, color)
+        a += ROOF['rib_step']
