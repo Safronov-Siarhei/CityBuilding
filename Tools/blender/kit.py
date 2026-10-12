@@ -305,6 +305,34 @@ class Builder:
         az = ax.cross(ay)
         self.obox((p0 + p1) / 2, ax, ay, az, d.length / 2, w / 2, w / 2, color, skip=())
 
+    def segment_ring(self, pts_out, pts_in, z0, z1, colors, bevel=0.0):
+        """A wall built from one block per segment between two outlines of equal length (an
+        ellipse, an octagon), colours cycling."""
+        n = len(pts_out)
+        for i in range(n):
+            j = (i + 1) % n
+            self.prism([pts_out[i], pts_out[j], pts_in[j], pts_in[i]], (0, 0, z0), (1, 0, 0),
+                       (0, 1, 0), z1 - z0, colors[i % len(colors)], bevel)
+
+    def ring_roof(self, pts_out, pts_in, z_out, z_in, colors, fascia=0.04):
+        """Roof over a ring building (a round theatre): one sloped quad per segment from the outer
+        outline (counter-clockwise, at z_out) to the inner one (at z_in), colours alternating, with
+        a fascia along the outer eave."""
+        n = len(pts_out)
+        for i in range(n):
+            j = (i + 1) % n
+            col = colors[i % len(colors)]
+            o0 = self.bm.verts.new((pts_out[i][0], pts_out[i][1], z_out))
+            o1 = self.bm.verts.new((pts_out[j][0], pts_out[j][1], z_out))
+            i1 = self.bm.verts.new((pts_in[j][0], pts_in[j][1], z_in))
+            i0 = self.bm.verts.new((pts_in[i][0], pts_in[i][1], z_in))
+            self._face([o0, o1, i1, i0], col)
+            if fascia <= 0:
+                continue
+            l0 = self.bm.verts.new((pts_out[i][0], pts_out[i][1], z_out - fascia))
+            l1 = self.bm.verts.new((pts_out[j][0], pts_out[j][1], z_out - fascia))
+            self._face([l0, l1, o1, o0], colors[-1])
+
     # -- output -----------------------------------------------------------------------------
 
     def triangles(self):
@@ -378,6 +406,32 @@ class Facade:
         pts = [(s + r * math.cos(math.radians(22.5 + 360 * i / sides)),
                 z + r * math.sin(math.radians(22.5 + 360 * i / sides))) for i in range(sides)]
         self.poly(pts, depth, color)
+
+
+class FaceAt(Facade):
+    """A Facade on a wall facing any horizontal direction: the face of a polygonal tower, a
+    round theatre, an arena. `s` is measured from the face's centre along the wall."""
+
+    def __init__(self, builder, cx, cy, angle_deg):
+        self.b = builder
+        a = math.radians(angle_deg)
+        self.n = Vector((math.cos(a), math.sin(a), 0))
+        self.up = Vector((0, 0, 1))
+        self.a = self.up.cross(self.n)
+        self.sa = 1
+        self.w = self.a
+        self.origin = Vector((cx, cy, 0))
+
+
+def polygon_faces(points):
+    """For a convex outline given counter-clockwise, yields (cx, cy, angle_deg, width) for each
+    edge: its midpoint, the direction it faces, and its length -- ready for FaceAt."""
+    for i in range(len(points)):
+        x0, y0 = points[i]
+        x1, y1 = points[(i + 1) % len(points)]
+        ex, ey = x1 - x0, y1 - y0
+        yield ((x0 + x1) / 2, (y0 + y1) / 2, math.degrees(math.atan2(-ex, ey)),
+               math.hypot(ex, ey))
 
 
 # -- scene plumbing ---------------------------------------------------------------------------

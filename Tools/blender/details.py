@@ -304,3 +304,32 @@ def shed_roof(b, axis, a0, a1, wall, out, z_wall, z_out, color='roof_red', dark=
     while a < half_len - rib_w * 0.7:
         b.obox(mid + n * (t + rib_h / 2) + r * a, ax, dd, n, rib_w / 2, half_w, rib_h / 2, color)
         a += ROOF['rib_step']
+
+
+PURPLE = dict(color='roof_purple', dark='roof_purple_dark')   # Entertainment's roofs
+
+
+def lit_window(f, s, base, w=WIN_W):
+    """A window with warm light behind it -- a tavern, a theatre in the evening."""
+    z0 = base + WIN_SILL
+    z1 = z0 + WIN_H
+    f.rect(s - w / 2, s + w / 2, z0, z1, 0.01, 'window_light')
+    f.rect(s - 0.011, s + 0.011, z0, z1, 0.02, 'wood_dark')
+    f.rect(s - w / 2, s + w / 2, (z0 + z1) / 2 - 0.01, (z0 + z1) / 2 + 0.01, 0.02, 'wood_dark')
+    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.035, 'wood_mid')
+
+
+def flowers(b, x, y, z0=0.0, colors=('roof_red', 'plaster_yellow', 'roof_purple', 'white'), r=0.05):
+    """A clump of flowers: a leafy mound with coloured heads."""
+    import math
+    b.blob(x, y, z0, r * 1.6, r * 1.4, 'grass_dark', sides=5)
+    for i, c in enumerate(colors[:3]):
+        a = 2.1 * i
+        b.blob(x + r * 0.8 * math.cos(a), y + r * 0.8 * math.sin(a), z0 + r * 0.9, r * 0.6, r * 0.8,
+               c, sides=4)
+
+
+def lamp(b, x, y, h=0.62):
+    b.box(x - 0.018, x + 0.018, y - 0.018, y + 0.018, 0, h, 'iron')
+    b.box(x - 0.045, x + 0.045, y - 0.045, y + 0.045, h, h + 0.09, 'window_light')
+    b.pyramid(x, y, h + 0.09, 0.06, 0.06, h + 0.15, 'iron')
