@@ -1,10 +1,13 @@
-"""Road1-lvl1 -- the Road (Дорога). Footprint 1x1, laid cell by cell.
+"""Road1-lvl1 and Road1-lvl2 -- the Road (Дорога). Footprint 1x1, laid cell by cell.
 
-A cobbled tile 3 cm high, edge to edge: packed earth with stones set in staggered rows. Roads
-do not autotile (every cell is this one model), so there are no kerbs -- they would leave seams
-at every turn -- and the pattern is built to continue across every edge: whole stones stay
-inside the cell, and the stones cut by the left and right edges are halves that meet their
-neighbour's halves.
+Level 1 is a sand track: a packed sand tile 2 cm high with a few pebbles pressed into it
+(worn patches were tried and dropped: repeated cell by cell they read as a stamp). Level 2 is the paved street: a cobbled tile 3 cm high, earth with stones set in
+staggered rows.
+
+Roads do not autotile (every cell is this one model), so neither level has kerbs or ruts --
+they would leave seams at every turn -- and both are built to continue across every edge: the
+sand's details stay well inside the cell, and of the cobbles the halves cut by the left and
+right edges meet their neighbour's halves.
 
 It is deliberately not an obstacle: the game does not carve roads out of the NavMesh and pins
 citizens to the ground height, so they walk on it with their feet sunk a couple of centimetres.
@@ -13,16 +16,28 @@ Hundreds are on screen at once, so it stays near a hundred triangles.
 import os
 import sys
 
+import bpy
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import kit  # noqa: E402
 from kit import Builder  # noqa: E402
 
-OBJ = "Road1-lvl1"
+SAND_H = 0.02
 BASE, TOP = 0.015, 0.03
 STONES = ('cobble', 'stone_mid', 'cobble', 'stone_dark')   # muted: a street, not a chessboard
 
 
-def build(lo, hi):
+def sand(lo, hi):
+    b = Builder()
+    b.box(-0.5, 0.5, -0.5, 0.5, 0, SAND_H, 'sand')
+    for x, y, r, a, c in ((-0.3, -0.28, 0.035, 10, 'stone_mid'), (0.05, -0.05, 0.028, 40, 'cobble'),
+                          (0.3, 0.25, 0.032, -20, 'stone_mid'), (-0.08, 0.34, 0.024, 65, 'cobble'),
+                          (0.36, -0.36, 0.022, 0, 'cobble')):
+        b.zbox(x, y, SAND_H - 0.005, SAND_H + 0.012, r * 1.3, r, a, c)   # pebbles
+    return b
+
+
+def cobble(lo, hi):
     b = Builder()
     b.box(-0.5, 0.5, -0.5, 0.5, 0, BASE, 'burlap')
     rows = 3
@@ -45,4 +60,11 @@ def build(lo, hi):
     return b
 
 
-kit.run(OBJ, build)
+def main():
+    kit.run("Road1-lvl1", sand, save=False)
+    kit.run("Road1-lvl2", cobble, source_name="Road1-lvl1", offset=(1.3, 0, 0),
+            collection="Город", save=False)
+    bpy.ops.wm.save_mainfile()
+
+
+main()
