@@ -120,7 +120,8 @@ namespace CityBuilder.Tests.PlayMode
             {
                 for (var z = 0; z < size.y; z++)
                 {
-                    if (water.IsWaterCell(origin + new Vector2Int(x, z))) return false;
+                    var cell = origin + new Vector2Int(x, z);
+                    if (water.IsWaterCell(cell) || water.IsNoBuildCell(cell)) return false;
                 }
             }
             return true;

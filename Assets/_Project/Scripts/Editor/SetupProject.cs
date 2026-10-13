@@ -75,6 +75,7 @@ namespace CityBuilder.EditorTools
             // Before the models are reimported: their `Buildings` material is remapped onto this
             // one at import (ModelImportDefaults), so it has to exist by then.
             EnsurePaletteMaterial();
+            EnsureTerrainPaletteMaterial();
             ForceReimportModels();
             EnsureUiTextures();
 
@@ -151,6 +152,38 @@ namespace CityBuilder.EditorTools
             material.SetTexture("_BaseMap", texture);
             material.SetColor("_BaseColor", Color.white);
             material.SetFloat("_Smoothness", 0.15f);
+            material.DisableKeyword("_SPECULAR_COLOR");
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// The map's own palette material (Map 3 onwards; see ModelImportDefaults) -- same rules as
+        /// EnsurePaletteMaterial: Simple Lit, updated in place because the importers remap onto it
+        /// by GUID. Without the texture it is simply not made, and the maps that need it say so.
+        /// </summary>
+        private static void EnsureTerrainPaletteMaterial()
+        {
+            AssetDatabase.ImportAsset(ModelImportDefaults.TerrainPaletteTexturePath, ImportAssetOptions.ForceUpdate);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelImportDefaults.TerrainPaletteTexturePath);
+            if (texture == null) return;
+
+            var shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+            var material = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, ModelImportDefaults.TerrainPaletteMaterialPath);
+            }
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
+            }
+
+            material.SetTexture("_BaseMap", texture);
+            material.SetColor("_BaseColor", Color.white);
+            material.SetFloat("_Smoothness", 0.1f);
             material.DisableKeyword("_SPECULAR_COLOR");
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
@@ -825,6 +858,10 @@ namespace CityBuilder.EditorTools
             // Claude's map, made in Blender (Tools/blender/map1_claude.py, exported by
             // export_map.py): one mainland between mountains and the sea, on the buildings' palette.
             CreateMeshMapDefinition("Map2", "Map-2", waterMaterial);
+            // Map 3, the summer valley (Tools/blender/map3.py): faceted land and water on the map's
+            // own palette, relief as its own mesh, stony clearings, and thousands of props. Its
+            // water keeps its imported (palette) material -- the depth bands are in the mesh.
+            CreateMeshMapDefinition("Map3", "Map-3", null);
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
@@ -3471,10 +3508,82 @@ namespace CityBuilder.EditorTools
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
             map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, rocks.ToArray(), waterMaterial);
 
+            // Map 3's extra parts, each optional: relief, stony clearings, the no-build slopes and
+            // the props. A map with a relief mesh is a new-style map and keeps its water as modelled.
+            var relief = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Relief.fbx");
+            var rocksArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-RocksArea.fbx");
+            var noBuildArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-NoBuildArea.fbx");
+            var decor = CreateMapDecorData(mapId, folder, prefix);
+            var terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
+            map.EditorInitializeExtras(relief, rocksArea, noBuildArea, decor, terrainMaterial, keepWaterRot: relief != null);
+
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{mapId}.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(map, path);
+        }
+
+        /// <summary>
+        /// The props of a map from the list its generator exported (<prefix>-Decor.csv: kind,
+        /// variant, x, y, z, rot, scale in Blender's axes) and the prototype meshes in
+        /// <prefix>-DecorKit.fbx (one object per kind and variant, named <prefix>-DecorKit-kind_v).
+        /// Blender (x, y, z) is Unity (x, z, y); a turn about Blender's up axis is the opposite
+        /// turn about Unity's. Null when the map has no props.
+        /// </summary>
+        private static MapDecorData CreateMapDecorData(string mapId, string folder, string prefix)
+        {
+            var csvPath = $"{folder}/{prefix}-Decor.csv";
+            var kit = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-DecorKit.fbx");
+            if (!File.Exists(csvPath) || kit == null) return null;
+
+            var meshByName = new Dictionary<string, Mesh>();
+            foreach (var filter in kit.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var name = filter.gameObject.name;
+                var at = name.IndexOf("DecorKit-", System.StringComparison.Ordinal);
+                if (at < 0 || filter.sharedMesh == null) continue;
+                meshByName[name.Substring(at + "DecorKit-".Length)] = filter.sharedMesh;
+            }
+
+            var prototypes = new List<Mesh>();
+            var prototypeIndex = new Dictionary<string, ushort>();
+            var index = new List<ushort>();
+            var positions = new List<Vector3>();
+            var yaw = new List<float>();
+            var scales = new List<float>();
+            var skipped = 0;
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+
+            foreach (var line in File.ReadAllLines(csvPath))
+            {
+                var f = line.Split(',');
+                if (f.Length < 7 || f[0] == "kind") continue;
+                var key = $"{f[0]}_{f[1]}";
+                if (!prototypeIndex.TryGetValue(key, out var p))
+                {
+                    if (!meshByName.TryGetValue(key, out var mesh))
+                    {
+                        skipped++;
+                        continue;
+                    }
+                    p = (ushort)prototypes.Count;
+                    prototypes.Add(mesh);
+                    prototypeIndex[key] = p;
+                }
+                index.Add(p);
+                positions.Add(new Vector3(float.Parse(f[2], culture), float.Parse(f[4], culture), float.Parse(f[3], culture)));
+                yaw.Add(-float.Parse(f[5], culture) * Mathf.Rad2Deg);
+                scales.Add(float.Parse(f[6], culture));
+            }
+            if (skipped > 0) Debug.LogWarning($"CreateMapDecorData: {skipped} props of {mapId} name a model {prefix}-DecorKit.fbx does not have.");
+
+            var data = ScriptableObject.CreateInstance<MapDecorData>();
+            data.EditorInitialize(prototypes.ToArray(), index.ToArray(), positions.ToArray(), yaw.ToArray(), scales.ToArray());
+            Directory.CreateDirectory(MeshMapsFolder);
+            var path = $"{MeshMapsFolder}/{mapId}Decor.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(data, path);
+            return data;
         }
 
         /// <summary>

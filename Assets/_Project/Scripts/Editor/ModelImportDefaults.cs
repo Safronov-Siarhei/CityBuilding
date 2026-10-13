@@ -30,6 +30,12 @@ namespace CityBuilder.EditorTools
         /// <summary>The material name every Blender-made model is exported with (Tools/blender/kit.py).</summary>
         public const string ExportedMaterialName = "Buildings";
 
+        // Map 3 onwards draws its ground, water, relief and props through a palette of its own
+        // (Tools/blender/terrain.py): the buildings' one is full, and the land needs many greens.
+        public const string TerrainPaletteTexturePath = "Assets/_Project/Models/Palette/TerrainPalette.png";
+        public const string TerrainPaletteMaterialPath = "Assets/_Project/Models/Palette/TerrainPalette.mat";
+        public const string ExportedTerrainMaterialName = "Terrain";
+
         private void OnPreprocessModel()
         {
             if (!assetPath.StartsWith(ModelsFolder)) return;
@@ -44,6 +50,11 @@ namespace CityBuilder.EditorTools
             if (palette != null)
             {
                 modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedMaterialName), palette);
+            }
+            var terrainPalette = AssetDatabase.LoadAssetAtPath<Material>(TerrainPaletteMaterialPath);
+            if (terrainPalette != null)
+            {
+                modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedTerrainMaterialName), terrainPalette);
             }
 
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder);
@@ -67,7 +78,7 @@ namespace CityBuilder.EditorTools
 
         private void OnPreprocessTexture()
         {
-            if (assetPath != PaletteTexturePath) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would

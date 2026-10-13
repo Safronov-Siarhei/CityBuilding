@@ -15,11 +15,28 @@ namespace CityBuilder.Maps
     /// </summary>
     public static class MapSelector
     {
+        /// <summary>
+        /// While a map is being tested every new game starts on it (the user asked for Map 3 only,
+        /// 2026-10-13). The other maps stay in the catalog, so their saves still load. Empty
+        /// restores the unseen-first pick below.
+        /// </summary>
+        public const string OnlyMapId = "Map3";
+
         /// <summary>Returns null if no maps have been imported into the catalog yet.</summary>
         public static MeshMapDefinition PickForNewGame()
         {
             var all = MeshMapCatalog.All;
             if (all.Count == 0) return null;
+
+            if (!string.IsNullOrEmpty(OnlyMapId))
+            {
+                var only = MeshMapCatalog.GetById(OnlyMapId);
+                if (only != null)
+                {
+                    MapHistoryStore.MarkSeen(only.MapId);
+                    return only;
+                }
+            }
 
             var unseen = new List<MeshMapDefinition>();
             foreach (var map in all)

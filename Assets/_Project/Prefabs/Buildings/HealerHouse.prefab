@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3655090440521511583
+--- !u!1 &2728963734833176025
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,10 +8,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3502980552725855898}
-  - component: {fileID: 3852917540855999788}
-  - component: {fileID: 2585289425425585728}
-  - component: {fileID: 261156228508791782}
+  - component: {fileID: 9152377455140563300}
+  - component: {fileID: 801982539328072502}
+  - component: {fileID: 3847106263106083906}
+  - component: {fileID: 8289723289124239525}
   m_Layer: 0
   m_Name: HealerHouse
   m_TagString: Untagged
@@ -19,53 +19,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3502980552725855898
+--- !u!4 &9152377455140563300
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3655090440521511583}
+  m_GameObject: {fileID: 2728963734833176025}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7893556744458844381}
+  - {fileID: 2184676100964190569}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3852917540855999788
+--- !u!114 &801982539328072502
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3655090440521511583}
+  m_GameObject: {fileID: 2728963734833176025}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!114 &2585289425425585728
+--- !u!114 &3847106263106083906
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3655090440521511583}
+  m_GameObject: {fileID: 2728963734833176025}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70482574febad6f44b69817ae91c40c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Citizens.ProductionBuilding
---- !u!65 &261156228508791782
+--- !u!65 &8289723289124239525
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3655090440521511583}
+  m_GameObject: {fileID: 2728963734833176025}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -80,7 +80,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.92, y: 1.5, z: 3.92}
   m_Center: {x: 0, y: 0.75, z: 0}
---- !u!1 &7077574494514634832
+--- !u!1 &3933326951026707161
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -88,9 +88,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7893556744458844381}
-  - component: {fileID: 2414426617733204535}
-  - component: {fileID: 5180946331570613836}
+  - component: {fileID: 2184676100964190569}
+  - component: {fileID: 6533932307407045982}
+  - component: {fileID: 3101658604987388120}
   m_Layer: 0
   m_Name: HealerHouse1-lvl1(Clone)
   m_TagString: Untagged
@@ -98,36 +98,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7893556744458844381
+--- !u!4 &2184676100964190569
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7077574494514634832}
+  m_GameObject: {fileID: 3933326951026707161}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3502980552725855898}
+  m_Father: {fileID: 9152377455140563300}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2414426617733204535
+--- !u!33 &6533932307407045982
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7077574494514634832}
+  m_GameObject: {fileID: 3933326951026707161}
   m_Mesh: {fileID: -4067593480299857353, guid: 4c93e16f072b26448bd3b685b5f808b3, type: 3}
---- !u!23 &5180946331570613836
+--- !u!23 &3101658604987388120
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7077574494514634832}
+  m_GameObject: {fileID: 3933326951026707161}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

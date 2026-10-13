@@ -41,6 +41,9 @@ namespace CityBuilder.Maps
         // Wider than the forest's 1-cell spacing -- boulders read as scattered landmarks rather
         // than a field, and keeps them from crowding a build site.
         private const int MinSpacingCells = 3;
+        // Inside a stony clearing boulders lie a cell apart: the clearing is the landmark, and a
+        // map's whole stock (InitialRockCount) has to fit into a few of them.
+        private const int ZoneSpacingCells = 1;
 
         private static readonly Color RockColor = new Color(0.55f, 0.53f, 0.48f);
         private static readonly Color RockShadeColor = new Color(0.43f, 0.42f, 0.39f);
@@ -160,12 +163,20 @@ namespace CityBuilder.Maps
             var mapApplier = MeshMapApplier.Instance;
             EnsureMaterials();
 
+            // A map with stony clearings (Map 3's RocksArea) keeps its stone there, packed close the
+            // way an outcrop lies; a map without them scatters it over all dry land, spaced out.
+            var zone = mapApplier != null ? mapApplier.RocksZoneCells : null;
+            var inZone = zone != null && zone.Count > 0;
+            var spacing = inZone ? ZoneSpacingCells : MinSpacingCells;
+
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
             {
-                var cell = new Vector2Int(Random.Range(0, grid.GridSize.x), Random.Range(0, grid.GridSize.y));
+                var cell = inZone
+                    ? zone[Random.Range(0, zone.Count)]
+                    : new Vector2Int(Random.Range(0, grid.GridSize.x), Random.Range(0, grid.GridSize.y));
 
                 if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
-                if (_rockCells.Contains(cell) || HasNearbyRock(cell)) continue;
+                if (_rockCells.Contains(cell) || HasNearbyRock(cell, spacing)) continue;
                 if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
 
                 var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
@@ -276,11 +287,11 @@ namespace CityBuilder.Maps
             return bounds.max.y - instance.transform.position.y;
         }
 
-        private bool HasNearbyRock(Vector2Int cell)
+        private bool HasNearbyRock(Vector2Int cell, int spacing)
         {
-            for (var dx = -MinSpacingCells; dx <= MinSpacingCells; dx++)
+            for (var dx = -spacing; dx <= spacing; dx++)
             {
-                for (var dz = -MinSpacingCells; dz <= MinSpacingCells; dz++)
+                for (var dz = -spacing; dz <= spacing; dz++)
                 {
                     if (_rockCells.Contains(cell + new Vector2Int(dx, dz))) return true;
                 }

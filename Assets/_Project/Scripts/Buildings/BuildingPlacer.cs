@@ -668,6 +668,8 @@ namespace CityBuilder.Buildings
                 for (var z = 0; z < footprint.y; z++)
                 {
                     var c = cell + new Vector2Int(x, z);
+                    // The slopes of the map's hills and mountains: scenery, never a building site.
+                    if (mapApplier.IsNoBuildCell(c)) return false;
                     var isWater = mapApplier.IsWaterCell(c);
 
                     if (_selectedBuilding.isWaterCategory)

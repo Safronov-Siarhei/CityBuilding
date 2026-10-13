@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
@@ -14,6 +15,12 @@ namespace CityBuilder.Grid
         [SerializeField] private float groundHeight = 1f;
 
         private readonly HashSet<Vector2Int> _occupiedCells = new HashSet<Vector2Int>();
+
+        /// <summary>
+        /// A footprint was taken or freed -- a building, a road tile, a tree, a boulder. The map's
+        /// decoration listens, so a tuft of grass never pokes through a floor (see MapDecorRenderer).
+        /// </summary>
+        public event Action<Vector2Int, Vector2Int> OnAreaOccupancyChanged;
 
         public float CellSize => cellSize;
         public Vector2Int GridSize => gridSize;
@@ -89,6 +96,8 @@ namespace CityBuilder.Grid
                     else _occupiedCells.Remove(cell);
                 }
             }
+
+            OnAreaOccupancyChanged?.Invoke(originCell, footprintSize);
         }
     }
 }

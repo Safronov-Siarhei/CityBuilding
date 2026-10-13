@@ -18,7 +18,7 @@ for a in argv[1:]:
 
 sc = bpy.context.scene
 for o in sc.objects:
-    if o.name.endswith(("-TreesArea", "-RocksArea", "-PlaceForWaterObjects")):
+    if o.name.endswith(("-TreesArea", "-RocksArea", "-NoBuildArea", "-PlaceForWaterObjects")) or "-DecorKit-" in o.name:
         o.hide_render = True
 
 sun_data = bpy.data.lights.new("Sun", 'SUN')

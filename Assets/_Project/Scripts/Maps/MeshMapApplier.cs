@@ -62,6 +62,13 @@ namespace CityBuilder.Maps
         // cells from it, which wants indexing.
         private readonly List<Vector2Int> _treesZoneCells = new List<Vector2Int>();
         private Collider[] _groundColliders = new Collider[0];
+        // A map's hills and mountains when it carries them as their own mesh (Map 3): land for the
+        // water test, the camera ray and IsGroundAt's height check, but never a NavMesh source --
+        // citizens are pinned to the plain's height, so a path over a hill would walk them
+        // through it.
+        private Collider[] _reliefColliders = new Collider[0];
+        private readonly List<Vector2Int> _rocksZoneCells = new List<Vector2Int>();
+        private readonly HashSet<Vector2Int> _noBuildCells = new HashSet<Vector2Int>();
         private NavMeshDataInstance _navMeshDataInstance;
 
         // Kept past the initial bake so walkable-surface buildings can be folded in later without
@@ -103,6 +110,12 @@ namespace CityBuilder.Maps
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
+
+        /// <summary>A cell on the slope or at the foot of the map's relief: nothing is built there.</summary>
+        public bool IsNoBuildCell(Vector2Int cell) => _noBuildCells.Contains(cell);
+
+        /// <summary>The map's stony clearings, where the boulders go -- empty when the map has none (they then go anywhere).</summary>
+        public IReadOnlyList<Vector2Int> RocksZoneCells => _rocksZoneCells;
 
         // Map-1-Ground.fbx isn't one flat plane -- it also carries decorative relief (rises/dips
         // outside the flat playable field) as part of the same mesh/collider set. Citizens are
@@ -151,6 +164,10 @@ namespace CityBuilder.Maps
             {
                 if (collider != null && collider.Raycast(ray, out hit, rayLength)) return true;
             }
+            foreach (var collider in _reliefColliders)
+            {
+                if (collider != null && collider.Raycast(ray, out hit, rayLength)) return true;
+            }
             hit = default;
             return false;
         }
@@ -173,12 +190,15 @@ namespace CityBuilder.Maps
 
             hit = default;
             var found = false;
-            foreach (var collider in _groundColliders)
+            foreach (var colliders in new[] { _groundColliders, _reliefColliders })
             {
-                if (collider == null || !collider.Raycast(ray, out var candidate, rayLength)) continue;
-                if (found && candidate.distance >= hit.distance) continue;
-                hit = candidate;
-                found = true;
+                foreach (var collider in colliders)
+                {
+                    if (collider == null || !collider.Raycast(ray, out var candidate, rayLength)) continue;
+                    if (found && candidate.distance >= hit.distance) continue;
+                    hit = candidate;
+                    found = true;
+                }
             }
             return found;
         }
@@ -217,13 +237,24 @@ namespace CityBuilder.Maps
                 BuildNavMesh();
             }
 
+            if (map.ReliefPrefab != null)
+            {
+                var reliefInstance = Instantiate(map.ReliefPrefab, Vector3.zero, map.ReliefPrefab.transform.rotation, transform);
+                AddMeshCollidersToAll(reliefInstance);
+                TerrainPhysicsLayer.Assign(reliefInstance);
+                SceneryShadows.DisableCasting(reliefInstance);
+                _reliefColliders = reliefInstance.GetComponentsInChildren<Collider>();
+            }
+
             if (map.WaterPrefab != null)
             {
                 // Y is pinned to -90 regardless of whatever the FBX bake produces for it --
                 // X/Z are kept from the source prefab since those carry the Blender Z-up
                 // correction (see the comment above on GroundPrefab).
                 var sourceEuler = map.WaterPrefab.transform.rotation.eulerAngles;
-                var waterRotation = Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
+                var waterRotation = map.KeepWaterRotation
+                    ? map.WaterPrefab.transform.rotation
+                    : Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
                 var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
                 TerrainPhysicsLayer.Assign(waterInstance);
                 SceneryShadows.DisableCasting(waterInstance);
@@ -261,7 +292,19 @@ namespace CityBuilder.Maps
                 treesZoneColliders = treesAreaInstance.GetComponentsInChildren<Collider>();
             }
 
-            ComputeWaterAndZoneCells(grid, waterZoneColliders, treesZoneColliders);
+            var rocksZone = InstantiateZone(map.RocksAreaPrefab);
+            var noBuildZone = InstantiateZone(map.NoBuildAreaPrefab);
+
+            ComputeWaterAndZoneCells(grid, waterZoneColliders, treesZoneColliders,
+                rocksZone != null ? rocksZone.GetComponentsInChildren<Collider>() : new Collider[0],
+                noBuildZone != null ? noBuildZone.GetComponentsInChildren<Collider>() : new Collider[0]);
+
+            foreach (var zone in new[] { rocksZone, noBuildZone })
+            {
+                if (zone == null) continue;
+                zone.SetActive(false);
+                Destroy(zone);
+            }
 
             // The zone is spawn DATA, and now that it's been read into cells it must stop being
             // physics. Map-1-TreesArea.fbx is not a flat marker plane: it's an extruded volume a
@@ -298,6 +341,25 @@ namespace CityBuilder.Maps
             // GridManager occupancy), and after ComputeWaterAndZoneCells so they stay out of the
             // water.
             RockSpawner.Instance?.Initialize(map.RockPrefabs);
+
+            // Last, so the props start out hidden under every tree and boulder just placed.
+            if (map.DecorData != null && map.DecorMaterial != null)
+            {
+                var decor = GetComponent<MapDecorRenderer>();
+                if (decor == null) decor = gameObject.AddComponent<MapDecorRenderer>();
+                decor.Initialize(map.DecorData, map.DecorMaterial);
+            }
+        }
+
+        /// <summary>A zone mesh read only for its cells: invisible, raycastable until ComputeWaterAndZoneCells has run, then destroyed.</summary>
+        private GameObject InstantiateZone(GameObject prefab)
+        {
+            if (prefab == null) return null;
+            var instance = Instantiate(prefab, Vector3.zero, prefab.transform.rotation, transform);
+            SetRenderersEnabled(instance, false);
+            AddMeshCollidersToAll(instance);
+            TerrainPhysicsLayer.Assign(instance);
+            return instance;
         }
 
         /// <summary>
@@ -456,7 +518,8 @@ namespace CityBuilder.Maps
         /// zones. Runs once at map load; afterwards the zone geometry itself is disposable (see
         /// Apply) and every later query is a plain set/list lookup.
         /// </summary>
-        private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders, Collider[] treesZoneColliders)
+        private void ComputeWaterAndZoneCells(GridManager grid, Collider[] waterZoneColliders, Collider[] treesZoneColliders,
+            Collider[] rocksZoneColliders, Collider[] noBuildColliders)
         {
             const float rayStartHeight = 500f;
             const float rayLength = 1000f;
@@ -495,6 +558,9 @@ namespace CityBuilder.Maps
                         _treesZoneCells.Add(cell);
                         break;
                     }
+
+                    if (HitsAny(rocksZoneColliders, ray, rayLength)) _rocksZoneCells.Add(cell);
+                    if (HitsAny(noBuildColliders, ray, rayLength)) _noBuildCells.Add(cell);
                 }
             }
         }
@@ -515,6 +581,15 @@ namespace CityBuilder.Maps
                 var collider = meshFilter.gameObject.AddComponent<MeshCollider>();
                 collider.sharedMesh = meshFilter.sharedMesh;
             }
+        }
+
+        private static bool HitsAny(Collider[] colliders, Ray ray, float length)
+        {
+            foreach (var collider in colliders)
+            {
+                if (collider != null && collider.Raycast(ray, out _, length)) return true;
+            }
+            return false;
         }
 
         private static void SetRenderersEnabled(GameObject root, bool enabled)

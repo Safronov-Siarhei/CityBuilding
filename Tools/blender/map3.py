@@ -370,8 +370,18 @@ def relief_colour(z, nz, x, y, f):
     return ["rock_mid", "rock_dark", "rock"][band] if z < 12 else "rock_light"
 
 
+CHUNKS = 4                                      # ground and relief come in CHUNKS^2 pieces
+
+
+def _chunk_of(x, y):
+    size = N / CHUNKS
+    return (min(CHUNKS - 1, max(0, int((x + HALF) // size))),
+            min(CHUNKS - 1, max(0, int((y + HALF) // size))))
+
+
 def build_surface(verts):
-    ground, relief = TerrainBuilder(), TerrainBuilder()
+    """{(cx, cy): builder} for the plain and for the relief, and the buildable-flat mask."""
+    ground, relief = {}, {}
     flat = [[True] * N for _ in range(N)]         # every corner at exactly 0: buildable plain
     for i in range(N):
         for j in range(N):
@@ -390,13 +400,15 @@ def build_surface(verts):
                 for piece in _split(above, FIELD_KS):
                     c = _centre(piece)
                     f = c[4:]
+                    key = _chunk_of(c[0], c[1])
                     if is_relief:
                         a, b, d = (Vector(p[:3]) for p in piece[:3])
                         n = (b - a).cross(d - a)
                         nz = abs(n.z) / max(n.length, 1e-9)
-                        relief.poly([p[:3] for p in piece], relief_colour(c[2], nz, c[0], c[1], f))
+                        relief.setdefault(key, TerrainBuilder()).poly(
+                            [p[:3] for p in piece], relief_colour(c[2], nz, c[0], c[1], f))
                     else:
-                        ground.poly([p[:3] for p in piece], zone_colour(f))
+                        ground.setdefault(key, TerrainBuilder()).poly([p[:3] for p in piece], zone_colour(f))
     return ground, relief, flat
 
 
@@ -521,7 +533,7 @@ def scatter_decor(flat, forest_cells, rnd):
                 clump = fbm(x / 3, y / 3, 139)          # tufts grow in clumps, not evenly
                 if flowers > 0.64 and not town and r < 0.45:
                     add("flowers", x, y, rnd.uniform(0.9, 1.3))
-                elif r < (0.05 if town else 0.32) * clump * 1.6:
+                elif r < (0.04 if town else 0.16) * clump * 1.6:
                     add("tuft", x, y, rnd.uniform(0.8, 1.4))
                 elif r < 0.03 * clump and not town:
                     add("bush", x, y, rnd.uniform(0.7, 1.1))
@@ -541,14 +553,23 @@ def make_object(name, builder, material, collection):
     return obj
 
 
+def decor_variant(kind, x, y, count):
+    return int(_hash(int(x * 7), int(y * 7), 151) * count) % count
+
+
+def decor_z(kind, x, y):
+    if kind == "lily":
+        return WATER_Z + 0.005
+    return max(height_at(x, y)[0], WATER_Z)
+
+
 def place_decor(items, protos, coll, rnd):
     """Linked duplicates of the prototype meshes -- for the pictures; the game takes the list."""
     for kind, x, y, rot, s in items:
         variants = protos[kind]
-        me = variants[int(_hash(int(x * 7), int(y * 7), 151) * len(variants)) % len(variants)]
+        me = variants[decor_variant(kind, x, y, len(variants))]
         o = bpy.data.objects.new(f"d_{kind}", me)
-        z = height_at(x, y)[0]
-        o.location = (x, y, max(z, WATER_Z) if kind != "lily" else WATER_Z + 0.005)
+        o.location = (x, y, decor_z(kind, x, y))
         o.rotation_euler = (0, 0, rot)
         o.scale = (s, s, s)
         coll.objects.link(o)
@@ -624,16 +645,17 @@ def main():
     mat = terrain.ensure_material(img)
 
     verts = build_vertices()
-    ground_b, relief_b, flat = build_surface(verts)
+    ground_parts, relief_parts, flat = build_surface(verts)
 
     coll = bpy.data.collections.new("Map")
     bpy.context.scene.collection.children.link(coll)
-    raw_ground = ground_b.triangles()
-    ground = make_object(f"{PREFIX}-Ground", ground_b, mat, coll)
-    relief = make_object(f"{PREFIX}-Relief", relief_b, mat, coll)
+    raw_ground = sum(b.triangles() for b in ground_parts.values())
+    g_tris = r_tris = 0
+    for (cx, cy), b in sorted(ground_parts.items()):
+        g_tris += merge_flat(make_object(f"{PREFIX}-Ground-c{cx}{cy}", b, mat, coll))
+    for (cx, cy), b in sorted(relief_parts.items()):
+        r_tris += merge_flat(make_object(f"{PREFIX}-Relief-c{cx}{cy}", b, mat, coll))
     water = make_object(f"{PREFIX}-Water", build_water(verts), mat, coll)
-    g_tris = merge_flat(ground)
-    r_tris = merge_flat(relief)
     w_tris = merge_flat(water)
 
     # zones, by cell: flat ground only, clear of the beach
@@ -646,9 +668,13 @@ def main():
                    if flat[i][j] and (i, j) not in forest_cells and cell_sd[i, j] > BEACH + 1
                    and outcrop(i - HALF + 0.5, j - HALF + 0.5)}
     shore_cells = {(i, j) for i in range(N) for j in range(N) if -3.0 < cell_sd[i, j] < 0}
+    # where nothing may be built: any cell the relief touches (a corner above the plain)
+    no_build = {(i, j) for i in range(N) for j in range(N)
+                if cell_sd[i, j] > 0 and any(verts[c][2] > 0.02 for c in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)))}
     zones = []
     for name, cells, z, col in (("TreesArea", forest_cells, -0.02, "leaf"),
                                 ("RocksArea", rocks_cells, -0.03, "rock_dark"),
+                                ("NoBuildArea", no_build, -0.04, "rock_deep"),
                                 ("PlaceForWaterObjects", shore_cells, -0.6, "water_deep")):
         o = make_object(f"{PREFIX}-{name}", build_mask(cells, z, col), mat, coll)
         merge_flat(o)
@@ -661,7 +687,7 @@ def main():
     print(f"MAP3 ground tris={g_tris} (from {raw_ground}), relief tris={r_tris}, water tris={w_tris}")
     print(f"MAP3 buildable flat cells={land} ({100 * land / N / N:.0f}%), water cells={water_cells} "
           f"({100 * water_cells / N / N:.0f}%), forest cells={len(forest_cells)}, rock cells={len(rocks_cells)}, "
-          f"shore cells={len(shore_cells)}")
+          f"shore cells={len(shore_cells)}, no-build cells={len(no_build)}")
 
     rnd = random.Random(31)
     items = scatter_decor(flat, forest_cells, rnd)
@@ -669,19 +695,26 @@ def main():
     for it in items:
         counts[it[0]] = counts.get(it[0], 0) + 1
     print("MAP3 decor", len(items), counts)
+    kcoll = bpy.data.collections.new("DecorKit")
+    bpy.context.scene.collection.children.link(kcoll)
+    protos = terrain.build_prototypes(mat, kcoll)
+    for kind, meshes in protos.items():
+        for v, me in enumerate(meshes):
+            o = bpy.data.objects.new(f"{PREFIX}-DecorKit-{kind}_{v}", me)
+            kcoll.objects.link(o)
+            o.hide_render = True
+    total = 0
     with open(os.path.splitext(OUT)[0] + "-decor.csv", "w", encoding="utf-8") as f:
-        f.write("kind,x,y,rot,scale\n")
-        for kind, x, y, rot, s in items:
-            f.write(f"{kind},{x:.3f},{y:.3f},{rot:.3f},{s:.3f}\n")
+        f.write("kind,variant,x,y,z,rot,scale\n")
+        for kind, x, y, rot, sc in items:
+            v = decor_variant(kind, x, y, len(protos[kind]))
+            total += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
+            f.write(f"{kind},{v},{x:.3f},{y:.3f},{decor_z(kind, x, y):.3f},{rot:.3f},{sc:.3f}\n")
+    print(f"MAP3 decor triangles {total}")
 
     if PREVIEW:
         dcoll = bpy.data.collections.new("Decor")
         bpy.context.scene.collection.children.link(dcoll)
-        protos = terrain.build_prototypes(mat, dcoll)
-        total = 0
-        for kind, *_ in items:
-            total += sum(len(p.vertices) - 2 for p in protos[kind][0].polygons)
-        print(f"MAP3 decor triangles ~{total}")
         place_decor(items, protos, dcoll, rnd)
         preview_population(flat, forest_cells, rocks_cells)
     kit.file_display_settings()
