@@ -19,7 +19,9 @@ namespace CityBuilder.EditorTools
     /// </summary>
     public static class BuildWindows
     {
-        private const string OutputFolder = "Builds/Windows";
+        // Where the player goes unless the command line says otherwise (-buildOutput <folder>):
+        // the wrapper script passes the user's build folder, D:/Builds CB.
+        private const string DefaultOutputFolder = "Builds/Windows";
         private const string ExeName = "CityBuilding.exe";
 
         /// <summary>Entry point for -executeMethod. Pass -development for the profiler-carrying build.</summary>
@@ -35,9 +37,10 @@ namespace CityBuilder.EditorTools
             }
 
             // A clean folder each time: leftovers from an older build would ride along in the zip.
-            if (Directory.Exists(OutputFolder)) Directory.Delete(OutputFolder, true);
-            Directory.CreateDirectory(OutputFolder);
-            var exePath = Path.Combine(OutputFolder, ExeName);
+            var outputFolder = ArgumentAfter("-buildOutput") ?? DefaultOutputFolder;
+            if (Directory.Exists(outputFolder)) Directory.Delete(outputFolder, true);
+            Directory.CreateDirectory(outputFolder);
+            var exePath = Path.Combine(outputFolder, ExeName);
 
             var options = BuildOptions.None;
             if (development) options |= BuildOptions.Development | BuildOptions.ConnectWithProfiler;
@@ -72,6 +75,16 @@ namespace CityBuilder.EditorTools
                 if (scene != null && scene.enabled) enabled.Add(scene.path);
             }
             return enabled.ToArray();
+        }
+
+        private static string ArgumentAfter(string flag)
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (var i = 0; i < args.Length - 1; i++)
+            {
+                if (string.Equals(args[i], flag, StringComparison.OrdinalIgnoreCase)) return args[i + 1];
+            }
+            return null;
         }
 
         private static bool HasFlag(string flag)
