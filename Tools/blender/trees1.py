@@ -1,8 +1,9 @@
 """Tree1..Tree5 -- the forest the map is covered with. The user's placeholders are all the same
 1x1x2 box; the species set their own heights inside it (HEIGHT) so a forest has a skyline.
 
-Five species so a forest never looks stamped: a young round tree, a tall fir, a broad oak, a
-birch and a slim spruce. A map draws some 250 of them at once, so each stays in the budget of
+Ten species so a forest never looks stamped: a young round tree, a tall fir, a broad oak, a
+birch, a slim spruce, a pine with a bare trunk, a poplar, a twin-stemmed tree, a fir sapling and
+a maple. A map draws some 250 of them at once, so each stays in the budget of
 the old tree models (~100-160 triangles): faceted crowns, six-sided trunks, no hidden faces.
 """
 import math
@@ -16,7 +17,8 @@ import kit  # noqa: E402
 from kit import Builder  # noqa: E402
 
 
-HEIGHT = {"Tree1": 1.0, "Tree2": 2.0, "Tree3": 1.75, "Tree4": 1.25, "Tree5": 1.5}
+HEIGHT = {"Tree1": 1.0, "Tree2": 2.0, "Tree3": 1.75, "Tree4": 1.25, "Tree5": 1.5,
+          "Tree6": 1.9, "Tree7": 1.8, "Tree8": 1.1, "Tree9": 0.8, "Tree10": 1.4}
 
 
 def trunk(b, x, y, z1, r, color='wood_mid', z0=0.0):
@@ -82,10 +84,55 @@ def spruce(lo, hi, h=HEIGHT["Tree5"]):         # Tree5, 1.5: a slim spruce, a st
     return b
 
 
+def pine(lo, hi, h=HEIGHT["Tree6"]):           # Tree6, 1.9: a pine, tall bare trunk, crown on top
+    b = Builder()
+    trunk(b, 0, 0, h - 0.5, 0.055, 'wood_light')
+    b.rod((0, 0, h - 0.75), (0.2, 0.05, h - 0.48), 0.04, 'wood_light')
+    b.ball(0.0, 0.0, h - 0.62, 0.3, 0.46, 'grass_dark', sides=7, top='leaf')
+    b.ball(0.2, 0.05, h - 0.56, 0.17, 0.3, 'grass_dark', sides=6, top='leaf')
+    b.ball(-0.06, -0.02, h - 0.34, 0.18, 0.34, 'grass_dark', sides=6, top='leaf')
+    return b
+
+
+def poplar(lo, hi, h=HEIGHT["Tree7"]):         # Tree7, 1.8: a poplar, a tall narrow column
+    b = Builder()
+    trunk(b, 0, 0, 0.4, 0.045)
+    b.ball(0.0, 0.0, 0.26, 0.21, h - 0.26, 'roof_green', sides=7, top='grass')
+    return b
+
+
+def twin(lo, hi, h=HEIGHT["Tree8"]):           # Tree8, 1.1: two stems from one root, two crowns
+    b = Builder()
+    b.cylinder(0, 0, 0, 0.12, 0.08, 'wood_mid', sides=6, rot_deg=0)
+    b.rod((0, 0, 0.08), (-0.14, 0.04, 0.5), 0.05, 'wood_mid')
+    b.rod((0, 0, 0.08), (0.15, -0.05, 0.42), 0.045, 'wood_mid')
+    b.ball(-0.14, 0.05, 0.42, 0.24, h - 0.42, 'leaf', sides=7, top='grass_dark')
+    b.ball(0.18, -0.07, 0.34, 0.2, 0.5, 'leaf', sides=6, top='grass_dark')
+    return b
+
+
+def sapling(lo, hi, h=HEIGHT["Tree9"]):        # Tree9, 0.8: a young fir, two tiers
+    b = Builder()
+    trunk(b, 0, 0, 0.14, 0.035, 'wood_dark')
+    cone(b, 0, 0, 0.1, 0.24, 0.52, 'leaf', sides=6)
+    cone(b, 0, 0, 0.36, 0.16, h, 'grass_dark', sides=6, rot=30)
+    return b
+
+
+def maple(lo, hi, h=HEIGHT["Tree10"]):         # Tree10, 1.4: a maple, a low broad dome
+    b = Builder()
+    trunk(b, 0, 0, 0.5, 0.06)
+    for x, y in ((0.17, 0.04), (-0.15, -0.06)):
+        b.rod((0, 0, 0.38), (x, y, 0.62), 0.045, 'wood_mid')
+    b.ball(0.0, 0.0, 0.5, 0.44, h - 0.5, 'grass', sides=8, top='roof_green')
+    return b
+
+
 def main():
     for name, build in (("Tree1", young), ("Tree2", fir), ("Tree3", oak), ("Tree4", birch),
-                        ("Tree5", spruce)):
-        kit.run(name, build, save=False)
+                        ("Tree5", spruce), ("Tree6", pine), ("Tree7", poplar), ("Tree8", twin),
+                        ("Tree9", sapling), ("Tree10", maple)):
+        kit.run(name, build, collection="Collection", save=False)
     bpy.ops.wm.save_mainfile()
 
 
