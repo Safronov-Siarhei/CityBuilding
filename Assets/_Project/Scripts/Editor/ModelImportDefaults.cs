@@ -12,9 +12,9 @@ namespace CityBuilder.EditorTools
     /// Models/ folder gets the axis conversion baked into its mesh data at import time instead,
     /// keeping the root Transform at zero rotation.
     ///
-    /// The building and tree models (Models/Buildings, Models/Terrain) are the set modelled in
-    /// Blender (Tools/blender): every one of them draws through ONE material, `Buildings`, whose
-    /// colour comes from a small palette texture. That material is remapped here onto the
+    /// The building, tree and boulder models (Models/Buildings, Models/Terrain) and Map 2's ground
+    /// are made in Blender (Tools/blender): every one of them draws through ONE material,
+    /// `Buildings`, whose colour comes from a small palette texture. That material is remapped here onto the
     /// project's own palette material, so the whole set is one material on the device -- and the
     /// palette image is imported as what it is, a lookup table, not a picture.
     /// </summary>
@@ -37,6 +37,15 @@ namespace CityBuilder.EditorTools
 
             modelImporter.bakeAxisConversion = true;
 
+            // Anything made in Blender by Tools/blender -- buildings, trees, boulders, and a map's
+            // ground -- draws through the one palette material. Files without a `Buildings`
+            // material are untouched by the remap.
+            var palette = AssetDatabase.LoadAssetAtPath<Material>(PaletteMaterialPath);
+            if (palette != null)
+            {
+                modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedMaterialName), palette);
+            }
+
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder);
             if (!isSetPiece)
             {
@@ -54,12 +63,6 @@ namespace CityBuilder.EditorTools
             modelImporter.isReadable = false;
             modelImporter.importAnimation = false;
             modelImporter.animationType = ModelImporterAnimationType.None;
-
-            var palette = AssetDatabase.LoadAssetAtPath<Material>(PaletteMaterialPath);
-            if (palette != null)
-            {
-                modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedMaterialName), palette);
-            }
         }
 
         private void OnPreprocessTexture()

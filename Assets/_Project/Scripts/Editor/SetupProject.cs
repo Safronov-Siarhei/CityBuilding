@@ -819,7 +819,13 @@ namespace CityBuilder.EditorTools
             }
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
-            CreateMeshMapDefinition("Map1");
+            // One water material for every map: CreateWaterMaterial replaces the asset at its
+            // path, so a second call would destroy the one the first map already holds.
+            var waterMaterial = CreateWaterMaterial();
+            CreateMeshMapDefinition("Map1", "Map-1", waterMaterial);
+            // Claude's map, made in Blender (Tools/blender/map1_claude.py, exported by
+            // export_map.py): one mainland between mountains and the sea, on the buildings' palette.
+            CreateMeshMapDefinition("Map2", "Map-2", waterMaterial);
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
@@ -3324,12 +3330,13 @@ namespace CityBuilder.EditorTools
         /// it. Parameterized rather than folder-scanning like the old MapImporter — a second map
         /// is just one more call to this with a different id/paths, not a new system.
         /// </summary>
-        private static void CreateMeshMapDefinition(string mapId)
+        private static void CreateMeshMapDefinition(string mapId, string prefix, Material waterMaterial)
         {
-            var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-Ground.fbx");
-            var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-Water.fbx");
-            var waterPlacementZone = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-PlaceForWaterObjects.fbx");
-            var treesArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsMap1Folder}/Map-1-TreesArea.fbx");
+            var folder = $"Assets/_Project/Models/{mapId}";
+            var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Ground.fbx");
+            var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Water.fbx");
+            var waterPlacementZone = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-PlaceForWaterObjects.fbx");
+            var treesArea = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-TreesArea.fbx");
             // Every Tree*.fbx variant, so TreesAreaSpawner has the full set to pick from at random
             // (see SpawnOneTree). Adding a sixth model is one more file plus a bump of
             // TreeModelCount -- nothing here is written per-model.
@@ -3353,11 +3360,9 @@ namespace CityBuilder.EditorTools
 
             if (ground == null || water == null || waterPlacementZone == null || treesArea == null || treesMissing)
             {
-                Debug.LogWarning($"CreateMeshMapDefinition: one or more Map1 FBX assets not found under {ModelsMap1Folder}/{ModelsTerrainFolder} -- skipping Map1 MeshMapDefinition.");
+                Debug.LogWarning($"CreateMeshMapDefinition: one or more {mapId} FBX assets not found under {folder}/{ModelsTerrainFolder} -- skipping the {mapId} MeshMapDefinition.");
                 return;
             }
-
-            var waterMaterial = CreateWaterMaterial();
 
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
             map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, rocks.ToArray(), waterMaterial);
