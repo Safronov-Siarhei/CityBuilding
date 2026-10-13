@@ -1,7 +1,8 @@
 """Stone1..Stone10 -- the boulders citizens break up by hand for stone, no quarry needed.
 
-The ten are a SIZE LADDER, smallest first: a few pebbles at Stone1 up to a mossy outcrop filling
-its cell at Stone10. The game is meant to make a boulder's stone stock follow its size, so the
+The ten are a SIZE LADDER, smallest first, up to a mossy outcrop filling its cell at Stone10.
+The first three are one size (about 20 cm tall, half a metre across) in three shapes: the user's
+call, after pebbles any smaller turned out nearly invisible from the game camera. The game is meant to make a boulder's stone stock follow its size, so the
 ladder has to read at a glance from the game camera and its steps have to be even -- each model's
 rough volume is printed (VOLUME ...) for that mapping. All ten use the faceted crags the mines'
 hills are built from, so loose rock and mountain read as one material.
@@ -21,11 +22,11 @@ from kit import Builder  # noqa: E402
 
 # (x, y, radius x, radius y, height, colour, crown, seed, rotation, taper) per crag, smallest first.
 STONES = {
-    "Stone1": [(-0.1, -0.05, 0.09, 0.07, 0.1, 'stone_mid', None, 1, 10, 0.5),
-               (0.1, 0.06, 0.07, 0.06, 0.08, 'stone_light', None, 4, 40, 0.5),
-               (0.0, 0.14, 0.05, 0.05, 0.06, 'stone_dark', None, 7, 0, 0.5)],
-    "Stone2": [(-0.06, 0.0, 0.14, 0.11, 0.17, 'stone_mid', None, 2, 15, 0.55),
-               (0.14, -0.08, 0.08, 0.07, 0.1, 'stone_dark', None, 5, 50, 0.5)],
+    "Stone1": [(-0.1, -0.03, 0.16, 0.13, 0.2, 'stone_mid', None, 1, 10, 0.6),
+               (0.13, 0.05, 0.13, 0.11, 0.17, 'stone_light', None, 4, 40, 0.6),
+               (-0.02, 0.15, 0.09, 0.08, 0.12, 'stone_dark', None, 7, 0, 0.55)],
+    "Stone2": [(-0.05, 0.0, 0.2, 0.15, 0.2, 'stone_mid', None, 2, 15, 0.6),
+               (0.17, -0.07, 0.11, 0.09, 0.13, 'stone_dark', None, 5, 50, 0.55)],
     "Stone3": [(0.0, 0.0, 0.22, 0.17, 0.2, 'stone_light', None, 3, 25, 0.6),
                (-0.2, 0.14, 0.07, 0.06, 0.08, 'stone_mid', None, 8, 0, 0.5)],
     "Stone4": [(-0.04, 0.02, 0.2, 0.18, 0.32, 'stone_mid', None, 6, 5, 0.55),
