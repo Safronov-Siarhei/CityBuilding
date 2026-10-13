@@ -249,6 +249,30 @@ class Builder:
         self._face(rings[2], top or color)
         return faces  # (centre, outward normal) of each side face: where ore can show
 
+    def ball(self, cx, cy, z0, r, h, color, sides=7, top=None):
+        """A rounded faceted crown: a flat underside, a waist at mid height and a domed top --
+        a leafy tree, not the two points of a blob. `top` colours the upper band (sunlit
+        leaves)."""
+        rings = [(0.55, 0.0), (0.95, 0.28), (1.0, 0.55), (0.62, 0.86)]
+        vs = [[self.bm.verts.new((cx + r * f * math.cos(2 * math.pi * (i + 0.5 * (k % 2)) / sides),
+                                  cy + r * f * math.sin(2 * math.pi * (i + 0.5 * (k % 2)) / sides),
+                                  z0 + h * fz)) for i in range(sides)]
+              for k, (f, fz) in enumerate(rings)]
+        apex = self.bm.verts.new((cx, cy, z0 + h))
+        self._face(list(reversed(vs[0])), color)
+        for k in range(len(rings) - 1):
+            col = (top or color) if k == len(rings) - 2 else color
+            for i in range(sides):
+                j = (i + 1) % sides
+                if k % 2 == 0:
+                    self._face([vs[k][i], vs[k][j], vs[k + 1][i]], col)
+                    self._face([vs[k][j], vs[k + 1][j], vs[k + 1][i]], col)
+                else:
+                    self._face([vs[k][i], vs[k][j], vs[k + 1][j]], col)
+                    self._face([vs[k][i], vs[k + 1][j], vs[k + 1][i]], col)
+        for i in range(sides):
+            self._face([vs[-1][i], vs[-1][(i + 1) % sides], apex], top or color)
+
     def blob(self, cx, cy, z0, r, h, color, sides=6):
         """Faceted bush/tree crown: a ring with a point above and a point below."""
         ring = [self.bm.verts.new((cx + r * math.cos(2 * math.pi * i / sides),
