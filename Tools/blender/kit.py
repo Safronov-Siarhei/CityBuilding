@@ -41,6 +41,8 @@ PALETTE = [
 
     ("roof_red_dark", "A82E2B"), ("burlap", "D6B98C"),
     ("hay", "EBCB5E"), ("fire", "FF8A2A"),
+    ("roof_slate", "6A7789"), ("roof_slate_dark", "475263"),
+    ("roof_straw", "EDB63E"), ("roof_straw_dark", "B98128"),
 ]
 NAMES = [n for n, _ in PALETTE]
 
@@ -203,6 +205,49 @@ class Builder:
         apex = self.bm.verts.new((cx, cy, apex_z))
         for i in range(len(bv)):
             self._face([bv[i], bv[(i + 1) % len(bv)], apex], color)
+
+    def frustum(self, cx, cy, z0, z1, r0, r1, color, sides=8, rot_deg=22.5, cap=True):
+        """Tapered shaft: a `sides`-gon of radius r0 at z0 narrowing to r1 at z1 (a windmill's
+        tower, a furnace stack)."""
+        def ring(r, z):
+            return [self.bm.verts.new((cx + r * math.cos(math.radians(rot_deg + 360 * i / sides)),
+                                       cy + r * math.sin(math.radians(rot_deg + 360 * i / sides)), z))
+                    for i in range(sides)]
+        lo, hi = ring(r0, z0), ring(r1, z1)
+        for i in range(sides):
+            j = (i + 1) % sides
+            self._face([lo[i], lo[j], hi[j], hi[i]], color)
+        if cap:
+            self._face(hi, color)
+
+    _JITTER = (0.0, 0.18, -0.12, 0.1, -0.2, 0.14, -0.06, 0.2, -0.16, 0.08, -0.1, 0.16, -0.04)
+
+    def crag(self, cx, cy, rx, ry, h, color, top=None, sides=6, rot_deg=0.0, taper=0.55,
+             lean=(0.0, 0.0), seed=0):
+        """A faceted rock: an irregular `sides`-gon on the ground narrowing through a shoulder to
+        a tilted crown, which can take its own colour (`top`: turf on a hill). Deterministic --
+        `seed` picks the irregularity."""
+        rings = []
+        for k, (fz, fr) in enumerate(((0.0, 1.0), (0.55, 0.86), (1.0, taper))):
+            ring = []
+            for i in range(sides):
+                a = math.radians(rot_deg + 360 * i / sides)
+                j = 1.0 + self._JITTER[(seed + i * 3 + k) % len(self._JITTER)]
+                ring.append(self.bm.verts.new((
+                    cx + lean[0] * fz + rx * fr * j * math.cos(a),
+                    cy + lean[1] * fz + ry * fr * j * math.sin(a),
+                    h * fz * (1.0 + (0.08 * self._JITTER[(seed + i) % len(self._JITTER)]
+                                     if k == 2 else 0.0)))))
+            rings.append(ring)
+        faces = []
+        for k in range(2):
+            for i in range(sides):
+                j = (i + 1) % sides
+                f = self._face([rings[k][i], rings[k][j], rings[k + 1][j], rings[k + 1][i]], color)
+                f.normal_update()
+                faces.append((f.calc_center_median().copy(), f.normal.copy()))
+        self._face(rings[2], top or color)
+        return faces  # (centre, outward normal) of each side face: where ore can show
 
     def blob(self, cx, cy, z0, r, h, color, sides=6):
         """Faceted bush/tree crown: a ring with a point above and a point below."""

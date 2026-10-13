@@ -249,9 +249,9 @@ def stone_pile(b, x, y, size=0.13):
                'stone_light' if i % 2 else 'stone_mid', bevel=0.01)
 
 
-def ore_heap(b, x, y, r=0.18):
-    b.blob(x, y, 0, r, r * 1.2, 'iron', sides=6)
-    b.blob(x + r * 0.5, y - r * 0.3, 0, r * 0.55, r * 0.8, 'stone_dark', sides=5)
+def ore_heap(b, x, y, r=0.18, color='iron', second='stone_dark'):
+    b.blob(x, y, 0, r, r * 1.2, color, sides=6)
+    b.blob(x + r * 0.5, y - r * 0.3, 0, r * 0.55, r * 0.8, second, sides=5)
 
 
 def cart(b, x, y, load=None):
@@ -397,3 +397,126 @@ def stone_wall_arm(b, ox, oy, dx, dy, t0, t1):
             else:
                 cx, cy = ox + dx * ts, oy + side * (hw + 0.004)
                 b.box(cx - 0.03, cx + 0.03, cy - 0.004, cy + 0.004, 0.3, 0.5, 'window', skip=())
+
+
+# -- production ----------------------------------------------------------------------------------
+
+SLATE = dict(color='roof_slate', dark='roof_slate_dark')   # Production's roofs
+ADIT_W, ADIT_H = GATE_W, GATE_H    # a mine mouth is a gate a laden cart goes through
+
+
+def rock(b, x, y, rx, ry, h, color='stone_mid', top=None, seed=0, rot=0.0, taper=0.55,
+         ore=None, veins=0):
+    """One crag of living rock; `top='grass'` gives it a turfed crown. With `ore`, `veins`
+    crystals of that colour show on the faces turned most towards the front (-y) and the camera."""
+    faces = b.crag(x, y, rx, ry, h, color, top=top, sides=6, rot_deg=rot, taper=taper, seed=seed)
+    if ore and veins:
+        front = sorted(faces, key=lambda cn: cn[1].y - 0.4 * cn[1].z)
+        for i, (c, n) in enumerate(front[:veins]):
+            r = 0.065 if i % 2 == 0 else 0.05
+            ore_vein(b, c.x + n.x * 0.01, c.y + n.y * 0.01, c.z, ore, r)
+            if i % 2 == 0:
+                ore_vein(b, c.x + n.x * 0.01 + 0.06 * n.y, c.y + n.y * 0.01 - 0.06 * n.x,
+                         c.z + 0.07, ore, r * 0.6)
+
+
+def rock_hill(b, x0, x1, y0, y1, h, ore=None):
+    """A hill of crags filling x0..x1, y0..y1 and peaking at h, turf on the high crowns, `ore`
+    showing in the faces. The front (-y) is left low on purpose: that is where a mine opens or
+    a quarry is cut."""
+    w, dp = x1 - x0, y1 - y0
+    pieces = (  # x, y, radius x, radius y as fractions of the area; height as a fraction of h
+        (0.50, 0.62, 0.30, 0.34, 1.00, 'stone_mid', 'grass', 0, 10, 2),
+        (0.19, 0.50, 0.17, 0.30, 0.70, 'stone_dark', 'grass_dark', 3, -15, 3),
+        (0.81, 0.52, 0.17, 0.30, 0.78, 'stone_dark', 'grass', 5, 20, 3),
+        (0.30, 0.82, 0.22, 0.15, 0.84, 'stone_light', None, 7, 5, 1),
+        (0.72, 0.82, 0.22, 0.15, 0.90, 'stone_mid', 'grass_dark', 9, -8, 1),
+    )
+    for fx, fy, frx, fry, fh, col, top, seed, rot, veins in pieces:
+        rock(b, x0 + fx * w, y0 + fy * dp, frx * w, fry * dp, fh * h, col, top, seed, rot,
+             ore=ore, veins=veins)
+
+
+def ore_vein(b, x, y, z, color, r=0.05):
+    """A crystal of ore showing in the rock: the mine's resource, read from the game camera."""
+    b.blob(x, y, z - r * 0.9, r, r * 1.8, color, sides=4)
+
+
+def adit(b, s, yf, roof_depth=0.26, w=ADIT_W, h=ADIT_H, beam='wood_dark'):
+    """A mine mouth in a rock face at y=yf facing -y: a dark opening in a timber frame under a
+    small slate lean-to. Returns the height of the lintel."""
+    from kit import Facade
+    b.box(s - w / 2 - 0.07, s + w / 2 + 0.07, yf, yf + 0.3, 0, h + 0.14, 'stone_dark', bevel=0.02)
+    f = Facade(b, '-y', yf)
+    f.rect(s - w / 2, s + w / 2, 0, h, 0.01, 'window')
+    for k in (-1, 1):
+        x = s + k * (w / 2 + 0.03)
+        b.box(x - 0.035, x + 0.035, yf - 0.075, yf + 0.005, 0, h + 0.04, beam)
+    b.box(s - w / 2 - 0.08, s + w / 2 + 0.08, yf - 0.08, yf + 0.005, h + 0.0, h + 0.07, beam)
+    shed_roof(b, 'x', s - w / 2 - 0.12, s + w / 2 + 0.12, yf + 0.02, yf - roof_depth, h + 0.2,
+              h + 0.07, **SLATE)
+    return h + 0.07
+
+
+def rails(b, s, y0, y1, gauge=0.16):
+    """A cart track along y from y0 to y1 (y0 < y1): sleepers and two iron rails."""
+    y = y0 + 0.05
+    while y < y1 - 0.02:
+        b.box(s - gauge / 2 - 0.05, s + gauge / 2 + 0.05, y - 0.025, y + 0.025, 0, 0.02, 'wood_mid')
+        y += 0.12
+    for k in (-1, 1):
+        x = s + k * gauge / 2
+        b.box(x - 0.012, x + 0.012, y0, y1, 0.02, 0.04, 'iron')
+
+
+def minecart(b, x, y, load, angle=0.0, gauge=0.16):
+    """An ore cart on the track, heaped with `load` (the ore's colour)."""
+    b.zbox(x, y, 0.07, 0.2, gauge / 2 + 0.03, 0.14, angle, 'wood_mid', bevel=0.01)
+    b.zbox(x, y, 0.13, 0.15, gauge / 2 + 0.045, 0.155, angle, 'iron')
+    for k in (-1, 1):
+        b.hcylinder('x', (x, y + k * 0.08, 0.06), gauge / 2 + 0.02, 0.045, 'iron', sides=6)
+    b.blob(x, y, 0.17, 0.11, 0.12, load, sides=5)
+
+
+def pickaxe(b, x, y, lean_to_y=None):
+    """A pick standing against a wall: handle up to (x, lean_to_y), iron head on top."""
+    top_y = y + 0.08 if lean_to_y is None else lean_to_y
+    b.rod((x, y, 0.01), (x, top_y, 0.34), 0.022, 'wood_light')
+    b.rod((x - 0.09, top_y - 0.01, 0.33), (x + 0.09, top_y - 0.01, 0.35), 0.026, 'iron')
+
+
+# -- food ----------------------------------------------------------------------------------------
+
+STRAW = dict(color='roof_straw', dark='roof_straw_dark')   # Food's roofs: thatch
+
+
+def rail_fence(b, pts, h=0.26, post_step=0.34, closed=False, color='wood_mid', post='wood_dark'):
+    """A low farm fence of posts and two rails along a polyline of (x, y) points."""
+    from mathutils import Vector
+    pts = list(pts) + ([pts[0]] if closed else [])
+    for i in range(len(pts) - 1):
+        a, c = Vector((*pts[i], 0)), Vector((*pts[i + 1], 0))
+        n = max(1, round((c - a).length / post_step))
+        for k in range(n + (1 if i == len(pts) - 2 and not closed else 0)):
+            p = a + (c - a) * (k / n)
+            b.box(p.x - 0.022, p.x + 0.022, p.y - 0.022, p.y + 0.022, 0, h, post)
+        for z in (h * 0.45, h * 0.85):
+            b.rod((a.x, a.y, z), (c.x, c.y, z), 0.022, color)
+
+
+def hay_bale(b, x, y, angle=0.0, z0=0.0, size=0.2):
+    b.zbox(x, y, z0, z0 + size * 0.75, size * 0.7, size / 2, angle, 'hay', bevel=0.02)
+    b.zbox(x, y, z0, z0 + size * 0.76, size * 0.72 - 0.06, size / 2 + 0.005, angle, 'roof_straw_dark')
+    b.zbox(x, y, z0, z0 + size * 0.765, size * 0.72 - 0.08, size / 2 + 0.006, angle, 'hay')
+
+
+def basket(b, x, y, fill, r=0.065, z0=0.0):
+    """A wicker basket heaped with fruit, fish or loaves (`fill` is their colour)."""
+    b.cylinder(x, y, z0, z0 + r * 1.1, r, 'wood_light', sides=6)
+    b.cylinder(x, y, z0 + r * 0.7, z0 + r * 0.85, r * 1.06, 'wood_mid', sides=6)
+    b.blob(x, y, z0 + r * 0.9, r * 0.85, r * 0.7, fill, sides=5)
+
+
+def trough(b, x0, x1, y, w=0.12, h=0.1):
+    b.box(x0, x1, y - w / 2, y + w / 2, 0, h, 'wood_mid', bevel=0.008)
+    b.box(x0 + 0.02, x1 - 0.02, y - w / 2 + 0.02, y + w / 2 - 0.02, h - 0.03, h + 0.002, 'water')
