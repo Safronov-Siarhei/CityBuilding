@@ -39,7 +39,7 @@ namespace CityBuilder.EditorTools
         private const string ModelsBuildingsFolder = "Assets/_Project/Models/Buildings";
 
         /// <summary>How many Tree{n}.fbx variants live in ModelsTerrainFolder -- the forest picks between all of them.</summary>
-        private const int TreeModelCount = 5;
+        private const int TreeModelCount = 10;
 
         private const int GridCellsX = 200;
         private const int GridCellsZ = 200;
@@ -69,6 +69,9 @@ namespace CityBuilder.EditorTools
             // batchmode build reproducible on any machine.
             _balance = BalanceImporter.RebuildConfig();
 
+            // Before the models are reimported: their `Buildings` material is remapped onto this
+            // one at import (ModelImportDefaults), so it has to exist by then.
+            EnsurePaletteMaterial();
             ForceReimportModels();
 
             BuildMainMenuScene();
@@ -109,6 +112,45 @@ namespace CityBuilder.EditorTools
         private static void ForceReimportModels()
         {
             AssetDatabase.ImportAsset("Assets/_Project/Models", ImportAssetOptions.ForceUpdate | ImportAssetOptions.ImportRecursive);
+        }
+
+        /// <summary>
+        /// The one material every Blender-made building and tree draws through: the palette
+        /// texture on a Simple Lit surface. Updated in place rather than deleted and recreated like
+        /// the generated materials, because the FBX importers point at it by GUID -- recreating it
+        /// would leave every model's remap dangling until the next reimport. Simple Lit rather
+        /// than Lit: the set is flat colour with no specular look to lose, and it is the cheaper
+        /// fragment on the phones this targets.
+        /// </summary>
+        private static void EnsurePaletteMaterial()
+        {
+            AssetDatabase.ImportAsset(ModelImportDefaults.PaletteTexturePath, ImportAssetOptions.ForceUpdate);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelImportDefaults.PaletteTexturePath);
+            if (texture == null)
+            {
+                Debug.LogError($"EnsurePaletteMaterial: no palette at {ModelImportDefaults.PaletteTexturePath} -- run Tools/blender/export_fbx.py. Every Blender-made model will draw without its colours.");
+                return;
+            }
+
+            var shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+            var material = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.PaletteMaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, ModelImportDefaults.PaletteMaterialPath);
+            }
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
+            }
+
+            material.SetTexture("_BaseMap", texture);
+            material.SetColor("_BaseColor", Color.white);
+            material.SetFloat("_Smoothness", 0.15f);
+            material.DisableKeyword("_SPECULAR_COLOR");
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
         }
 
         private static void ConfigureMobileLandscape()
@@ -2149,7 +2191,7 @@ namespace CityBuilder.EditorTools
             var authoredModel = AuthoredModel(id);
             if (authoredModel != null)
             {
-                prefab = CreateAuthoredModelPrefab(id, height, authoredModel, balance, out footprint);
+                prefab = CreateAuthoredModelPrefab(id, height, authoredModel, balance, footprint);
             }
             else switch (style)
             {
@@ -2218,15 +2260,19 @@ namespace CityBuilder.EditorTools
         /// its components -- is unchanged from the generated version, so swapping the file in
         /// changes the picture and nothing else.
         ///
-        /// Both of the numbers that used to be typed in by hand are MEASURED here instead. The
-        /// height, because it is what the player's clicks meet: a hand-written height that
-        /// disagrees with the model gives either a roof that cannot be clicked or an invisible box
-        /// beside the building that eats clicks meant for the ground, and stand-in models are
-        /// deliberately not the final height. The footprint, because the models carry the sizes the
-        /// design wants -- a 2x2 model IS a 2x2 building -- and the alternative is two sources of
-        /// truth that drift apart every time something is re-exported.
+        /// The HEIGHT is measured from the model, because it is what the player's clicks meet: a
+        /// hand-written height that disagrees with the model gives either a roof that cannot be
+        /// clicked or an invisible box beside the building that eats clicks meant for the ground.
+        ///
+        /// The FOOTPRINT is the written one, not measured. It used to be measured, back when the
+        /// models were stand-in boxes exactly their plot's size; the Blender set (Tools/blender) is
+        /// modelled INSIDE the plot with a margin, so measuring it rounds wrongly -- a fortified
+        /// gate drawn 1.04 m wide inside its 2x2 plot came out 1x2, a treasury 2.5 m wide inside
+        /// 3x2 came out 2x2. The written footprints are the same plots the models were drawn in
+        /// (both come from the user's placeholder file). A model that measures LARGER than its plot
+        /// is warned about, since it will hang over the neighbours.
         /// </summary>
-        private static GameObject CreateAuthoredModelPrefab(string id, float fallbackHeight, GameObject source, BuildingBalance balance, out Vector2Int footprint)
+        private static GameObject CreateAuthoredModelPrefab(string id, float fallbackHeight, GameObject source, BuildingBalance balance, Vector2Int footprint)
         {
             var root = new GameObject(id);
             root.AddComponent<BuildingInstance>();
@@ -2237,7 +2283,7 @@ namespace CityBuilder.EditorTools
             var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, root.transform);
             var size = FitModelToGround(model, id);
 
-            footprint = FootprintOf(size, id);
+            WarnIfOverhangs(size, footprint, id);
             var height = size.y > 0.01f ? size.y : fallbackHeight;
 
             var collider = root.AddComponent<BoxCollider>();
@@ -2293,11 +2339,9 @@ namespace CityBuilder.EditorTools
                 var model = Object.Instantiate(source, Vector3.zero, source.transform.rotation, root.transform);
                 model.name = $"{id}-lvl{level}";
                 var size = FitModelToGround(model, $"{id} lvl{level}");
-                var levelFootprint = FootprintOf(size, $"{id} lvl{level}");
-                if (levelFootprint != footprint)
-                {
-                    Debug.LogWarning($"[SetupProject] '{id}' level {level} measures {levelFootprint.x}x{levelFootprint.y} cells against level 1's {footprint.x}x{footprint.y}. The building keeps level 1's footprint, so this model will overhang its neighbours instead of claiming more ground.");
-                }
+                // The building keeps level 1's plot whatever this model measures: a wider one
+                // overhangs its neighbours instead of claiming more ground.
+                WarnIfOverhangs(size, footprint, $"{id} lvl{level}");
 
                 // Level 1 is what a newly placed building shows; the rest wait to be upgraded into.
                 model.SetActive(false);
@@ -2331,23 +2375,32 @@ namespace CityBuilder.EditorTools
             var bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
 
-            model.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            // Only the base is corrected. The horizontal origin is trusted: Tools/blender/export_fbx.py
+            // writes every model with its origin at the centre of its plot, and the models are
+            // deliberately not symmetric in it (a yard in front, a stack in one corner), so
+            // centring on the bounds would slide a building up to a tenth of a cell off its plot.
+            // An origin far from the geometry still means a bad export, and is reported.
+            var off = new Vector2(bounds.center.x - model.transform.position.x, bounds.center.z - model.transform.position.z);
+            if (off.magnitude > CellSize * 0.35f)
+            {
+                Debug.LogWarning($"FitModelToGround: '{id}' has its geometry {off.magnitude:0.##} m from its origin -- was it exported with the origin at its plot's centre (Tools/blender/export_fbx.py)?");
+            }
+            model.transform.position -= new Vector3(0f, bounds.min.y, 0f);
             return bounds.size;
         }
 
         /// <summary>
-        /// How many cells a model claims: its own size in metres, rounded to the nearest whole cell
-        /// and never less than one. Rounding rather than ceiling on purpose -- a roof overhanging its
-        /// walls by a few centimetres is a roof, not another cell of ground.
+        /// A model drawn wider than its plot hangs over the neighbours' ground. Allowed -- the
+        /// footprint is the written one either way -- but said out loud, since it is nearly always
+        /// a roof overhang or a prop nobody meant to leave outside. A few centimetres are tolerated.
         /// </summary>
-        private static Vector2Int FootprintOf(Vector3 size, string id)
+        private static void WarnIfOverhangs(Vector3 size, Vector2Int footprint, string id)
         {
-            var footprint = new Vector2Int(
-                Mathf.Max(1, Mathf.RoundToInt(size.x / CellSize)),
-                Mathf.Max(1, Mathf.RoundToInt(size.z / CellSize)));
-
-            Debug.Log($"FootprintOf: '{id}' measures {size.x:0.##}x{size.z:0.##}m, {size.y:0.##}m tall -> {footprint.x}x{footprint.y} cells.");
-            return footprint;
+            const float tolerance = 0.03f;
+            if (size.x > footprint.x * CellSize + tolerance || size.z > footprint.y * CellSize + tolerance)
+            {
+                Debug.LogWarning($"[SetupProject] '{id}' measures {size.x:0.##}x{size.z:0.##} m, wider than its {footprint.x}x{footprint.y} plot -- it will overhang its neighbours.");
+            }
         }
 
         /// <summary>
@@ -2426,6 +2479,19 @@ namespace CityBuilder.EditorTools
 
             var wrapper = new GameObject(wrapperName);
             wrapper.transform.SetParent(parent, false);
+
+            // The Blender-made piece wins when it is there (`Fence1-lvl1-Straight.fbx`,
+            // `-Corner.fbx`), exported in exactly this orientation: straight along Z, corner
+            // joining south and east. The T and Cross pieces exported next to them wait for
+            // FenceShape to learn those shapes.
+            var authored = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Fence1-lvl1-{wrapperName}.fbx");
+            if (authored != null)
+            {
+                var piece = Object.Instantiate(authored, Vector3.zero, authored.transform.rotation, wrapper.transform);
+                piece.name = authored.name;
+                height = FitModelToGround(piece, $"Fence {wrapperName}").y;
+                return wrapper;
+            }
 
             void Post(string partName, float x, float z)
             {
