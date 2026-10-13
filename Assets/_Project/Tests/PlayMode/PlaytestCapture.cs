@@ -46,7 +46,19 @@ namespace CityBuilder.Tests.PlayMode
             return Shoot(shotName, focus, distance, pitch, yaw, 60f, includeUi: true);
         }
 
-        private static IEnumerator Shoot(string shotName, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView, bool includeUi)
+        /// <summary>
+        /// The same photograph at a given screen size -- the interface lays itself out at the
+        /// texture's size, so this is how a 20:9 phone or a 4:3 window is seen from a test.
+        /// `onUiReady` runs once the canvases have been laid out at that size, before the shot,
+        /// for a test that wants to measure the layout as well as see it.
+        /// </summary>
+        public static IEnumerator ShootWithUiAt(string shotName, int width, int height, Vector3 focus, float distance, float pitch, float yaw, System.Action onUiReady = null)
+        {
+            return Shoot(shotName, focus, distance, pitch, yaw, 60f, includeUi: true, width, height, onUiReady);
+        }
+
+        private static IEnumerator Shoot(string shotName, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView, bool includeUi,
+            int width = Width, int height = Height, System.Action onUiReady = null)
         {
             if (!Available)
             {
@@ -62,7 +74,7 @@ namespace CityBuilder.Tests.PlayMode
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 500f;
 
-            var texture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            var texture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             camera.targetTexture = texture;
 
             var switched = new System.Collections.Generic.List<Canvas>();
@@ -78,6 +90,8 @@ namespace CityBuilder.Tests.PlayMode
                 }
                 // One more frame for the layout to settle at the texture's size.
                 yield return null;
+                Canvas.ForceUpdateCanvases();
+                onUiReady?.Invoke();
             }
 
             // An enabled camera with a target texture is drawn by the pipeline every frame like any

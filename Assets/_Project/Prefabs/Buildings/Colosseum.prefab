@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4884392346477197859
+--- !u!1 &8508851806343964470
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5578781107484374257}
-  - component: {fileID: 778641820242608132}
-  - component: {fileID: 4419508074316330954}
+  - component: {fileID: 2403422072296673533}
+  - component: {fileID: 5350568683740376247}
+  - component: {fileID: 8709734138212991635}
   m_Layer: 0
   m_Name: Colosseum1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5578781107484374257
+--- !u!4 &2403422072296673533
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4884392346477197859}
+  m_GameObject: {fileID: 8508851806343964470}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1034033966289032533}
+  m_Father: {fileID: 8528707463208759808}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &778641820242608132
+--- !u!33 &5350568683740376247
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4884392346477197859}
+  m_GameObject: {fileID: 8508851806343964470}
   m_Mesh: {fileID: -4526627455707494842, guid: 8ac82a1e25fbd21478eb2b41fe16552e, type: 3}
---- !u!23 &4419508074316330954
+--- !u!23 &8709734138212991635
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4884392346477197859}
+  m_GameObject: {fileID: 8508851806343964470}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &8299678137921755279
+--- !u!1 &8823522396982030338
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1034033966289032533}
-  - component: {fileID: 7997440647861637653}
-  - component: {fileID: 7172462439132395407}
+  - component: {fileID: 8528707463208759808}
+  - component: {fileID: 5819657203931478110}
+  - component: {fileID: 3808018114860384037}
   m_Layer: 0
   m_Name: Colosseum
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1034033966289032533
+--- !u!4 &8528707463208759808
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8299678137921755279}
+  m_GameObject: {fileID: 8823522396982030338}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5578781107484374257}
+  - {fileID: 2403422072296673533}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7997440647861637653
+--- !u!114 &5819657203931478110
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8299678137921755279}
+  m_GameObject: {fileID: 8823522396982030338}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &7172462439132395407
+--- !u!65 &3808018114860384037
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8299678137921755279}
+  m_GameObject: {fileID: 8823522396982030338}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

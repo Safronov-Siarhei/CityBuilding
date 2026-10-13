@@ -282,12 +282,9 @@ namespace CityBuilder.EditorTools
             var canvasGO = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGO.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGO.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            // Landscape mobile screens vary a lot in width but far less in height, so anchoring
-            // UI scale to height keeps button/text sizes consistent across phones and tablets.
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 1f;
+            // Expand, not match-height: a tablet or a 4:3 window is narrower than 16:9 and would
+            // push the menu's sides off the screen (see SetupProjectLayout).
+            ConfigureScaler(canvasGO.GetComponent<CanvasScaler>());
 
             Localize(CreateText(canvasGO.transform, "Title", string.Empty, 72, new Vector2(0f, 260f), new Vector2(1200f, 140f), addShadow: true), "#menu_title");
             Localize(CreateText(canvasGO.transform, "Subtitle", string.Empty, 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f), addShadow: true), "#menu_subtitle");
@@ -879,10 +876,7 @@ namespace CityBuilder.EditorTools
             var canvasGO = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGO.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGO.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 1f;
+            ConfigureScaler(canvasGO.GetComponent<CanvasScaler>());
 
             // Everything in the HUD hangs off this rather than off the Canvas directly: it is the
             // rect that shrinks to Screen.safeArea, keeping the HUD clear of the camera cutout and
@@ -1112,6 +1106,7 @@ namespace CityBuilder.EditorTools
 
             BuildSelectionBadge(uiRoot, panelSprite, citizenSelector);
 
+            PinHudToEdges(uiRoot);
             ApplyTheme(canvasGO.transform);
         }
 
@@ -1368,9 +1363,17 @@ namespace CityBuilder.EditorTools
             frameRect.anchoredPosition = new Vector2(-760f, 318f);
             frameRect.sizeDelta = new Vector2(400f, 64f);
 
-            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(52f, 52f));
+            // An en dash, not "-": a hyphen is a short stroke sitting low and reads as nothing on a
+            // round button. Not U+2212 either -- Rubik is not certain to carry it, an en dash it does.
+            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "–", new Vector2(-150f, 0f), new Vector2(52f, 52f));
             var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 52f));
             var plusButton = CreateButton(frame.transform, panelSprite, "PlusButton", "+", new Vector2(150f, 0f), new Vector2(52f, 52f));
+            foreach (var sign in new[] { minusButton, plusButton })
+            {
+                var signLabel = sign.GetComponentInChildren<Text>();
+                signLabel.fontStyle = FontStyle.Bold;
+                signLabel.fontSize = 34;
+            }
 
             var go = new GameObject("TaxRateController");
             go.transform.SetParent(canvasParent, false);
@@ -1395,19 +1398,29 @@ namespace CityBuilder.EditorTools
             frame.sprite = panelSprite;
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
+            // Hung from its top edge (y 260), so EventLogController can grow it downwards to fit
+            // what is logged instead of standing as a 320-tall empty sheet of parchment.
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-760f, 100f);
+            frameRect.pivot = new Vector2(0.5f, 1f);
+            frameRect.anchoredPosition = new Vector2(-760f, 260f);
             frameRect.sizeDelta = new Vector2(400f, 320f);
 
-            var logText = CreateText(frame.transform, "LogText", string.Empty, 20, Vector2.zero, new Vector2(370f, 290f), new Color(1f, 1f, 1f, 0.85f));
+            var logText = CreateText(frame.transform, "LogText", string.Empty, 20, Vector2.zero, Vector2.zero, new Color(1f, 1f, 1f, 0.85f));
             logText.alignment = TextAnchor.UpperLeft;
             logText.verticalOverflow = VerticalWrapMode.Truncate;
+            var logRect = logText.rectTransform;
+            logRect.anchorMin = Vector2.zero;
+            logRect.anchorMax = Vector2.one;
+            logRect.offsetMin = new Vector2(15f, 12f);
+            logRect.offsetMax = new Vector2(-15f, -12f);
 
             var go = new GameObject("EventLogController");
             go.transform.SetParent(canvasParent, false);
             var controller = go.AddComponent<EventLogController>();
             var so = new SerializedObject(controller);
             so.FindProperty("logText").objectReferenceValue = logText;
+            so.FindProperty("frame").objectReferenceValue = frameRect;
+            so.FindProperty("maxHeight").floatValue = 320f;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1440,14 +1453,18 @@ namespace CityBuilder.EditorTools
             var root = new GameObject("ResourceHUD", typeof(RectTransform));
             root.transform.SetParent(canvasParent, false);
             var rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            // The second row from the top, under Меню/Сохранить/the status, starting at the left
-            // edge: each resource a parchment pill (ResourceHUDController packs them).
-            rect.anchoredPosition = new Vector2(0f, 405f);
-
+            // The second row from the top, under Меню/Сохранить/the status, across the whole
+            // width of the screen with a 20-unit margin each side: each resource a parchment pill,
+            // packed from the left by ResourceHUDController, which reads the row's real width --
+            // 1880 on 16:9, ~2360 on a 20:9 phone.
             const float barWidth = 1880f;
             const float chipHeight = 60f;
-            rect.sizeDelta = new Vector2(barWidth, chipHeight);
+            const float margin = 20f;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 405f - ReferenceResolution.y * 0.5f);
+            rect.sizeDelta = new Vector2(-2f * margin, chipHeight);
             var chipSprite = SkinSprite("pill_parchment");
 
             // Reading order: raw materials, then the ore and the metal it becomes side by side,
@@ -1482,6 +1499,9 @@ namespace CityBuilder.EditorTools
                 amountText.resizeTextForBestFit = true;
                 amountText.resizeTextMinSize = 15;
                 amountText.resizeTextMaxSize = 24;
+                // Set here, not by ApplyTheme: the number is the chip's SIBLING, drawn over it,
+                // so the theme pass sees nothing under it and left it white -- on parchment.
+                if (chipSprite != null) amountText.color = UiTheme.Ink;
                 return amountText;
             }
 
@@ -2004,7 +2024,9 @@ namespace CityBuilder.EditorTools
             badge.type = Image.Type.Sliced;
             var badgeRect = badge.GetComponent<RectTransform>();
             badgeRect.anchorMin = badgeRect.anchorMax = badgeRect.pivot = new Vector2(0.5f, 1f);
-            badgeRect.anchoredPosition = new Vector2(0f, -30f);
+            // Under the resource row (which ends 165 down), not over it: at -30 it covered the
+            // status pill and the right end of the chips whenever a citizen was selected.
+            badgeRect.anchoredPosition = new Vector2(0f, -180f);
             badgeRect.sizeDelta = new Vector2(460f, 96f);
 
             var label = CreateText(badge.transform, "Label", string.Empty, 30, new Vector2(-40f, 0f), new Vector2(300f, 60f));

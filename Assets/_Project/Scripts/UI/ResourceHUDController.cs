@@ -54,6 +54,12 @@ namespace CityBuilder.UI
             Refresh();
         }
 
+        /// <summary>A rotation, a resized window or a fold changes the row's width: lay the chips out again.</summary>
+        private void OnRectTransformDimensionsChange()
+        {
+            if (_seen != null) Refresh();
+        }
+
         private void HandleResourceChanged(ResourceType type, int amount)
         {
             Refresh();
@@ -67,6 +73,10 @@ namespace CityBuilder.UI
         private void Refresh()
         {
             if (ResourceManager.Instance == null || resourceOrder == null || amountTexts == null) return;
+
+            // The row stretches across the screen, so its width is the screen's, not a constant.
+            var rowWidth = ((RectTransform)transform).rect.width;
+            if (rowWidth > 0f) barWidth = rowWidth;
 
             var resources = ResourceManager.Instance;
             var infinite = resources.InfiniteResources;

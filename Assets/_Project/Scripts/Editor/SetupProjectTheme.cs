@@ -94,6 +94,15 @@ namespace CityBuilder.EditorTools
             foreach (var text in root.GetComponentsInChildren<Text>(true))
             {
                 ApplyFont(text);
+
+                // A caption is one line on a button sized for it. Rubik's line is taller than
+                // Arial's, and a legacy Text whose line does not fit its box draws NOTHING rather
+                // than a clipped line -- which left the tax control's 52-unit +/- buttons blank.
+                if (text.transform.parent != null && text.transform.parent.GetComponent<Button>() != null)
+                {
+                    text.verticalOverflow = VerticalWrapMode.Overflow;
+                }
+
                 var backing = BackingImage(text.transform.parent);
                 if (backing == null) continue;          // over the world: keeps its light colour and shadow
 
