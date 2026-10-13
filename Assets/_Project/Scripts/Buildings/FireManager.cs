@@ -98,7 +98,7 @@ namespace CityBuilder.Buildings
             if (building == null || building.GetComponent<BuildingFire>() != null) return;
 
             building.gameObject.AddComponent<BuildingFire>();
-            if (logKey != null) EventLogManager.Instance?.Log(Localization.Format(logKey, building.Data != null ? building.Data.LocalizedName : string.Empty));
+            if (logKey != null) EventLogManager.Instance?.Post(GameEvent.About(building, Localization.Format(logKey, building.Data != null ? building.Data.LocalizedName : string.Empty), EventSeverity.Danger, EventGlyph.Fire));
         }
 
         private static void SpreadFrom(List<BuildingInstance> burning, BuildingInstance[] standing, BalanceConfig config)

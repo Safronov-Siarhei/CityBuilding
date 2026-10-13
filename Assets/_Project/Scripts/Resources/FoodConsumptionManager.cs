@@ -27,6 +27,10 @@ namespace CityBuilder.Resources
 
         [SerializeField] private CitizenManager citizenManager;
 
+        /// <summary>What the event feed shows for food, and where it sends the camera: the store the food comes out of.</summary>
+        private const string FoodPicture = "Res_Food";
+        private const string GranaryBuildingName = "Granary";
+
         /// <summary>How much the settlement needed on the last day it ate, and how much of that it found.</summary>
         public int LastDemand { get; private set; }
         public int LastEaten { get; private set; }
@@ -155,7 +159,7 @@ namespace CityBuilder.Resources
         {
             if (shortfall <= 0)
             {
-                if (HungryDaysInARow > 0) EventLogManager.Instance?.Log(Localization.Get("#log_fed"));
+                if (HungryDaysInARow > 0) EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Get("#log_fed"), EventSeverity.Good, EventGlyph.Check, FoodPicture, GranaryBuildingName));
                 HungryDaysInARow = 0;
                 return 0;
             }
@@ -165,7 +169,7 @@ namespace CityBuilder.Resources
             var config = BalanceConfig.Instance;
             if (HungryDaysInARow < config.HungryDaysBeforeDeaths)
             {
-                EventLogManager.Instance?.Log(Localization.Format("#log_hungry", shortfall));
+                EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_hungry", shortfall), EventSeverity.Warning, EventGlyph.Alert, FoodPicture, GranaryBuildingName));
                 return 0;
             }
 
@@ -174,7 +178,7 @@ namespace CityBuilder.Resources
             var deaths = citizenManager.KillCitizens(ComputeStarvationDeaths(shortfall));
             if (deaths <= 0) return 0;
 
-            EventLogManager.Instance?.Log(Localization.Format("#log_starved", deaths));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_starved", deaths), EventSeverity.Danger, EventGlyph.Skull, FoodPicture, GranaryBuildingName));
             return deaths;
         }
 

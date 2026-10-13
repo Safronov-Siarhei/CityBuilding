@@ -40,7 +40,7 @@ namespace CityBuilder.EditorTools
             Pin(uiRoot, "SaveButton", TopLeft);
             Pin(uiRoot, "WorkforceButton", TopLeft);
             Pin(uiRoot, "TaxRate", TopLeft);
-            Pin(uiRoot, "EventLog", TopLeft);
+            Pin(uiRoot, "EventFeed", TopLeft);
 
             Pin(uiRoot, "SettlementStatusPill", TopCentre);
             Pin(uiRoot, "SettlementStatus", TopCentre);

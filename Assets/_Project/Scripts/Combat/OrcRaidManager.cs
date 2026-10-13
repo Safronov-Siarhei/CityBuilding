@@ -230,9 +230,25 @@ namespace CityBuilder.Combat
             // frame the Town Hall goes down, when the score IS a Town Hall and five settlers, and
             // asking PlayerProgression for that would buy a scan over the buildings to be told so.
             _raidTimer = BalanceConfig.Instance.RaidIntervalSeconds;
-            EventLogManager.Instance?.Log(opened == 1
-                ? Localization.Get("#log_portal_opened")
-                : Localization.Format("#log_portals_opened", opened));
+            // The nearest portal is the one the camera goes to: the closest threat to the town.
+            EventLogManager.Instance?.Post(GameEvent.At(opened == 1
+                    ? Localization.Get("#log_portal_opened")
+                    : Localization.Format("#log_portals_opened", opened),
+                EventSeverity.Danger, EventGlyph.Portal, null, NearestPortal(townHallPosition)));
+        }
+
+        private static Vector3 NearestPortal(Vector3 from)
+        {
+            var nearest = from;
+            var best = float.MaxValue;
+            foreach (var portal in OrcPortal.All)
+            {
+                var distance = (portal.transform.position - from).sqrMagnitude;
+                if (distance >= best) continue;
+                best = distance;
+                nearest = portal.transform.position;
+            }
+            return nearest;
         }
 
         private static bool TryFindTownHallPosition(out Vector3 position)
@@ -375,12 +391,16 @@ namespace CityBuilder.Combat
             var size = ComputeRaidSize(score);
             var level = ComputeOrcLevel(score);
 
-            SpawnOrcs(portals[Random.Range(0, portals.Count)].transform.position, size, level);
+            var origin = portals[Random.Range(0, portals.Count)].transform.position;
+            var leader = SpawnOrcs(origin, size, level);
             // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
-            // quietly become five times as hard as the last one at the very same size.
-            EventLogManager.Instance?.Log(level > 1
-                ? Localization.Format("#log_raid_levelled", size, level)
-                : Localization.Format("#log_raid", size));
+            // quietly become five times as hard as the last one at the very same size. The icon
+            // follows the first orc of the wave, so a tap a minute later finds the orcs, not the
+            // portal they left.
+            EventLogManager.Instance?.Post(GameEvent.At(level > 1
+                    ? Localization.Format("#log_raid_levelled", size, level)
+                    : Localization.Format("#log_raid", size),
+                EventSeverity.Danger, EventGlyph.Swords, null, origin, leader != null ? leader.transform : null));
         }
 
         /// <summary>
@@ -388,15 +408,19 @@ namespace CityBuilder.Combat
         /// place orcs at a chosen portal, at a chosen level, on demand. Safe to call before the
         /// portal exists: it builds its own materials rather than assuming SpawnPortal ran first.
         /// </summary>
-        public void SpawnOrcs(Vector3 origin, int count, int level)
+        /// <returns>The first orc of the squad, or null when none was spawned.</returns>
+        public OrcUnit SpawnOrcs(Vector3 origin, int count, int level)
         {
-            if (count <= 0) return;
+            if (count <= 0) return null;
 
             EnsureMaterials();
+            OrcUnit first = null;
             for (var i = 0; i < count; i++)
             {
-                SpawnOrc(origin, level);
+                var orc = SpawnOrc(origin, level);
+                if (first == null) first = orc;
             }
+            return first;
         }
 
         /// <summary>Pure formula, kept separate so an EditMode test can check the ramp without a live scene. Takes its numbers explicitly so the test can state them rather than depend on today's sheet.</summary>

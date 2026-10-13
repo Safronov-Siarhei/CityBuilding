@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace CityBuilder.UI
 
             toastText.text = Localization.Format("#log_tier_up", tierName);
             toastText.gameObject.SetActive(true);
-            EventLogManager.Instance?.Log(Localization.Format("#log_tier_up", tierName));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_tier_up", tierName), EventSeverity.Good, EventGlyph.Star, BuildingIds.TownHall));
 
             if (_hideRoutine != null) StopCoroutine(_hideRoutine);
             _hideRoutine = StartCoroutine(HideAfterDelay());

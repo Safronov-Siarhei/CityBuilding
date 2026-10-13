@@ -294,7 +294,7 @@ namespace CityBuilder.Citizens
             if (!_reportedMissingInput)
             {
                 _reportedMissingInput = true;
-                EventLogManager.Instance?.Log(Localization.Format("#log_no_input", DisplayName, DescribeInputs(recipe)));
+                EventLogManager.Instance?.Post(GameEvent.About(GetComponent<BuildingInstance>(), Localization.Format("#log_no_input", DisplayName, DescribeInputs(recipe)), EventSeverity.Warning, EventGlyph.Alert));
             }
             return false;
         }
@@ -328,7 +328,7 @@ namespace CityBuilder.Citizens
 
             if (_reportedOverflow) return;
             _reportedOverflow = true;
-            EventLogManager.Instance?.Log(Localization.Format("#log_no_storage", data.LocalizedName));
+            EventLogManager.Instance?.Post(GameEvent.About(GetComponent<BuildingInstance>(), Localization.Format("#log_no_storage", data.LocalizedName), EventSeverity.Warning, EventGlyph.Alert));
         }
 
         private bool _reportedOverflow;

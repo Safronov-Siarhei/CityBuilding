@@ -193,7 +193,8 @@ namespace CityBuilder.Combat
 
             RemoveFromGroup(unit);
             Destroy(unit.gameObject);
-            EventLogManager.Instance?.Log(Localization.Get("#log_soldier_died"));
+            // Where they fell, which is the fight the player may want to look at.
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_soldier_died"), EventSeverity.Danger, EventGlyph.Skull, "Barracks", unit.transform.position));
             OnArmyChanged?.Invoke();
         }
 
@@ -255,7 +256,7 @@ namespace CityBuilder.Combat
 
             if (disbanded > 0)
             {
-                EventLogManager.Instance?.Log(Localization.Format("#log_disbanded", disbanded));
+                EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_disbanded", disbanded), EventSeverity.Warning, EventGlyph.Alert, "Res_Coins", "Barracks"));
             }
 
             var upkeep = DailyUpkeep;

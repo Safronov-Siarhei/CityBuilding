@@ -78,6 +78,36 @@ def circle(name, size, fill, edge=None, edge_w=0, inner=None, inner_w=0, hole=Fa
     BORDERS[name] = [0, 0, 0, 0]
 
 
+def event_disc(name, size, track, edge):
+    """Dark rim, wooden track `track` wide, a thin dark line, then parchment."""
+    S, T, E = size * SS, track * SS, edge * SS
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([0, 0, S - 1, S - 1], fill=WOOD_DARK)
+    d.ellipse([E, E, S - 1 - E, S - 1 - E], fill=WOOD)
+    o = E + T
+    d.ellipse([o, o, S - 1 - o, S - 1 - o], fill=WOOD_EDGE)
+    o += E // 2
+    d.ellipse([o, o, S - 1 - o, S - 1 - o], fill=PARCHMENT)
+    img = img.resize((size, size), Image.LANCZOS)
+    img.save(os.path.join(OUT, name + ".png"))
+    BORDERS[name] = [0, 0, 0, 0]
+
+
+def event_rim(name, size, track, edge):
+    """A white band exactly over event_disc's track, a hair inside it so the dark lines show."""
+    S, T, E = size * SS, track * SS, edge * SS
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    o = E + SS
+    d.ellipse([o, o, S - 1 - o, S - 1 - o], fill="#ffffff")
+    o = E + T - SS
+    d.ellipse([o, o, S - 1 - o, S - 1 - o], fill=(0, 0, 0, 0))
+    img = img.resize((size, size), Image.LANCZOS)
+    img.save(os.path.join(OUT, name + ".png"))
+    BORDERS[name] = [0, 0, 0, 0]
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # pills: resource chips, status, tabs, round buttons (a square pill is a circle)
@@ -97,6 +127,12 @@ def main():
     # the round minimap: a mask and the ring drawn over its edge
     circle("circle_mask", 256, "#ffffff")
     circle("minimap_ring", 256, None, edge=WOOD_EDGE, edge_w=8, inner=GOLD, inner_w=6, hole=True)
+    # the event feed's round icon: a parchment disc in a dark wooden track, the white ring that
+    # fills that track (tinted by the event, drained radially as its time runs out), and the
+    # white badge for its corner glyph (tinted too). The ring's band matches the track's.
+    event_disc("event_disc", 184, track=24, edge=6)
+    event_rim("event_rim", 184, track=24, edge=6)
+    circle("event_badge", 76, "#ffffff", edge=WOOD_DARK, edge_w=6)
     with open(os.path.join(OUT, "borders.json"), "w", encoding="utf-8") as f:
         json.dump(BORDERS, f, indent=1, sort_keys=True)
     print("SKIN", len(BORDERS), "sprites ->", OUT)

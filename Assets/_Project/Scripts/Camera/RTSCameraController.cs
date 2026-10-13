@@ -86,6 +86,28 @@ namespace CityBuilder.CameraControl
         private Vector3 _flingVelocity;
         private Vector3 _lastPanStep;
 
+        [Header("Focus")]
+        /// <summary>How fast FocusOn closes on its target -- a rate, so a long trip is quick and a short one gentle.</summary>
+        [SerializeField] private float focusSharpness = 6f;
+
+        private Vector3 _focusTarget;
+        private bool _focusing;
+
+        /// <summary>
+        /// Glides the view to centre on this world point -- an event icon's tap (see
+        /// UI.EventFeedController). Any gesture of the player's takes the camera back at once.
+        /// The rig's position IS the point the camera looks at: the pivot sits on it and the camera
+        /// looks down the pivot's forward axis.
+        /// </summary>
+        public void FocusOn(Vector3 worldPoint)
+        {
+            _focusTarget = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
+            _focusing = true;
+            _flingVelocity = Vector3.zero;
+        }
+
+        public bool IsFocusing => _focusing;
+
         private void OnEnable()
         {
             var router = TouchInputRouter.Instance;
@@ -129,6 +151,7 @@ namespace CityBuilder.CameraControl
 
             var dt = Time.unscaledDeltaTime;
 
+            ApplyFocus(dt);
             ApplyFling(dt);
 
             var keyboard = Keyboard.current;
@@ -144,6 +167,7 @@ namespace CityBuilder.CameraControl
         {
             if (!OwnsSingleDrag()) return;
 
+            _focusing = false;
             _flingVelocity = Vector3.zero;
             _lastPanStep = Vector3.zero;
             _hasGrab = TryGroundPoint(screenPosition, out _grabPoint);
@@ -170,6 +194,7 @@ namespace CityBuilder.CameraControl
 
         private void HandlePinchStarted(Vector2 centroid, float distance)
         {
+            _focusing = false;
             _flingVelocity = Vector3.zero;
             _lastPanStep = Vector3.zero;
             _hasGrab = TryGroundPoint(centroid, out _grabPoint);
@@ -218,6 +243,26 @@ namespace CityBuilder.CameraControl
             step.y = 0f;
             MoveClamped(step);
             _lastPanStep = step;
+        }
+
+        private void ApplyFocus(float dt)
+        {
+            if (!_focusing) return;
+
+            var offset = _focusTarget - transform.position;
+            offset.y = 0f;
+            if (offset.sqrMagnitude < 0.01f)
+            {
+                MoveClamped(offset);
+                _focusing = false;
+                return;
+            }
+
+            var before = transform.position;
+            MoveClamped(offset * (1f - Mathf.Exp(-focusSharpness * dt)));
+
+            // A target beyond the pan bounds is never reached: stop once the clamp holds the rig still.
+            if ((transform.position - before).sqrMagnitude < 1e-6f) _focusing = false;
         }
 
         private void ApplyFling(float dt)
@@ -276,6 +321,7 @@ namespace CityBuilder.CameraControl
             if (input == Vector2.zero) return;
 
             _flingVelocity = Vector3.zero;
+            _focusing = false;
 
             var forward = transform.forward;
             forward.y = 0f;

@@ -21,10 +21,13 @@ namespace CityBuilder.EditorTools
         public const string SkinFolder = "Assets/_Project/UI/Skin";
         public const string IconsFolder = "Assets/_Project/UI/Icons";
 
+        /// <summary>The event feed's white glyphs (Tools/ui/make_event_glyphs.py) -- imported as icons are.</summary>
+        public const string GlyphsFolder = "Assets/_Project/UI/Glyphs";
+
         private void OnPreprocessTexture()
         {
             var isSkin = assetPath.StartsWith(SkinFolder + "/");
-            var isIcon = assetPath.StartsWith(IconsFolder + "/");
+            var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/");
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
 

@@ -33,6 +33,9 @@ namespace CityBuilder.Citizens
         private const string WellBuildingName = "Well";
         private const string HealerBuildingName = "HealerHouse";
 
+        /// <summary>The event feed's picture for the townsfolk as a whole -- an icon file in Assets/_Project/UI/Icons.</summary>
+        private const string PeoplePicture = "Res_Population";
+
         /// <summary>How many days in a row have ended with somebody still ill and nobody left to treat them. Reset by a single day that clears the beds.</summary>
         public int UntreatedDaysInARow { get; private set; }
 
@@ -128,12 +131,12 @@ namespace CityBuilder.Citizens
             LastFellIll = citizens.AddSick(fell);
             if (LastFellIll <= 0) return;
 
-            EventLogManager.Instance?.Log(Localization.Format("#log_sick", LastFellIll));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_sick", LastFellIll), EventSeverity.Warning, EventGlyph.Sick, PeoplePicture, HealerBuildingName));
 
             // Said once, and only when thirst is actually part of it: an epidemic in a town with a
             // well is a food problem, and telling the player to dig wells would send them the wrong
             // way entirely.
-            if (UnwateredShare > 0f) EventLogManager.Instance?.Log(Localization.Get("#log_no_well"));
+            if (UnwateredShare > 0f) EventLogManager.Instance?.Post(NoWellEvent());
         }
 
         private void Heal(CitizenManager citizens)
@@ -145,7 +148,7 @@ namespace CityBuilder.Citizens
             if (capacity <= 0) return;
 
             LastHealed = citizens.HealSick(capacity);
-            if (LastHealed > 0) EventLogManager.Instance?.Log(Localization.Format("#log_healed", LastHealed));
+            if (LastHealed > 0) EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_healed", LastHealed), EventSeverity.Good, EventGlyph.Heal, PeoplePicture, HealerBuildingName));
         }
 
         /// <summary>
@@ -201,7 +204,7 @@ namespace CityBuilder.Citizens
             // Into the same window starvation's dead go into, so illness drags the settlement's
             // mood down exactly as hunger does -- see FoodConsumptionManager.RecordDeaths.
             FoodConsumptionManager.Instance?.RecordDeaths(deaths);
-            EventLogManager.Instance?.Log(Localization.Format("#log_plague_deaths", deaths));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_plague_deaths", deaths), EventSeverity.Danger, EventGlyph.Skull, PeoplePicture, HealerBuildingName));
         }
 
         /// <summary>
@@ -241,6 +244,34 @@ namespace CityBuilder.Citizens
             // No housing at all reads as watered, not as parched: a settlement with nowhere to live
             // has no thirsty homes to punish, and dividing by zero would hand it the full penalty.
             return total <= 0 ? 0f : dry / (float)total;
+        }
+
+        /// <summary>
+        /// "Homes without a well", pointing at one of them -- the camera should land on a house
+        /// the player needs to water, not on the well they already have. A second scan of the
+        /// buildings, but this is said at most once a game day.
+        /// </summary>
+        private static GameEvent NoWellEvent()
+        {
+            var text = Localization.Get("#log_no_well");
+            var wells = new List<(Vector3 position, float radiusSquared)>();
+            var all = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
+            foreach (var instance in all)
+            {
+                if (instance.Data == null || instance.Data.buildingName != WellBuildingName) continue;
+                var radius = instance.ServiceRadius;
+                if (radius > 0) wells.Add((instance.transform.position, radius * (float)radius));
+            }
+
+            foreach (var instance in all)
+            {
+                if (instance.Data == null || instance.Data.LevelStats(instance.Level).housingCapacity <= 0) continue;
+                if (IsWatered(instance.transform.position, wells)) continue;
+
+                return GameEvent.At(text, EventSeverity.Warning, EventGlyph.Water, WellBuildingName, instance.transform.position, instance.transform);
+            }
+
+            return GameEvent.Nowhere(text, EventSeverity.Warning, EventGlyph.Water, WellBuildingName);
         }
 
         private static bool IsWatered(Vector3 position, List<(Vector3 position, float radiusSquared)> wells)

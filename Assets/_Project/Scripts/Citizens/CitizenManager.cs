@@ -221,7 +221,7 @@ namespace CityBuilder.Citizens
                 // standing in good fields can be idle for a reason nothing on screen mentions.
                 if (hadWorkers > 0 && building.AssignedWorkers == 0)
                 {
-                    EventLogManager.Instance?.Log(Localization.Format("#log_workplace_emptied", building.DisplayName));
+                    EventLogManager.Instance?.Post(GameEvent.About(building.GetComponent<BuildingInstance>(), Localization.Format("#log_workplace_emptied", building.DisplayName), EventSeverity.Warning, EventGlyph.Alert));
                 }
                 if (_assignedPopulation <= workforce) return;
             }

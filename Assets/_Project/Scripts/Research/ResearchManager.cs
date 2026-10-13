@@ -306,7 +306,7 @@ namespace CityBuilder.Research
             if (Current == null) return;
 
             Refund(_paidCoins);
-            EventLogManager.Instance?.Log(Localization.Format("#log_research_lost", Current.Title));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_lost", Current.Title), EventSeverity.Warning, EventGlyph.Alert, LaboratoryBuildingId));
             ClearCurrent();
         }
 
@@ -320,7 +320,7 @@ namespace CityBuilder.Research
             // level being researched rather than bought per recruit.
             if (finished.Kind == ResearchKind.UnitLevel) SoldierUnit.RefreshStatsForAll();
 
-            EventLogManager.Instance?.Log(Localization.Format("#log_research_done", finished.Title));
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_done", finished.Title), EventSeverity.Good, EventGlyph.Star, LaboratoryBuildingId, LaboratoryBuildingId));
         }
 
         private void ClearCurrent()

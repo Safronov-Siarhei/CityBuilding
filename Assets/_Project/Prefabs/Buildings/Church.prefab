@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1553586533646544984
+--- !u!1 &1906046690295614776
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 699577495216798139}
-  - component: {fileID: 1276100177233587143}
-  - component: {fileID: 285394381145342345}
+  - component: {fileID: 6527070898679740201}
+  - component: {fileID: 321520619089461303}
+  - component: {fileID: 5521801994676758058}
   m_Layer: 0
   m_Name: Church
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &699577495216798139
+--- !u!4 &6527070898679740201
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1553586533646544984}
+  m_GameObject: {fileID: 1906046690295614776}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6121821043393807123}
+  - {fileID: 1832521775872780521}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1276100177233587143
+--- !u!114 &321520619089461303
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1553586533646544984}
+  m_GameObject: {fileID: 1906046690295614776}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &285394381145342345
+--- !u!65 &5521801994676758058
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1553586533646544984}
+  m_GameObject: {fileID: 1906046690295614776}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.92, y: 3, z: 2.92}
   m_Center: {x: 0, y: 1.5, z: 0}
---- !u!1 &5221253235373312253
+--- !u!1 &4191178740707228305
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6121821043393807123}
-  - component: {fileID: 4152312452792554243}
-  - component: {fileID: 8446081711920525439}
+  - component: {fileID: 1832521775872780521}
+  - component: {fileID: 8945890649803492417}
+  - component: {fileID: 7450125405452800624}
   m_Layer: 0
   m_Name: Church1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6121821043393807123
+--- !u!4 &1832521775872780521
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5221253235373312253}
+  m_GameObject: {fileID: 4191178740707228305}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 699577495216798139}
+  m_Father: {fileID: 6527070898679740201}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4152312452792554243
+--- !u!33 &8945890649803492417
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5221253235373312253}
+  m_GameObject: {fileID: 4191178740707228305}
   m_Mesh: {fileID: 6961222393973646130, guid: c43c0058dd40aa3439ad3201fb8a9fc4, type: 3}
---- !u!23 &8446081711920525439
+--- !u!23 &7450125405452800624
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5221253235373312253}
+  m_GameObject: {fileID: 4191178740707228305}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

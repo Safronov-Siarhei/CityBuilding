@@ -87,7 +87,7 @@ namespace CityBuilder.Buildings
 
             if (_elapsedSeconds < TotalSeconds) return;
 
-            EventLogManager.Instance?.Log(Localization.Format("#log_fire_out", _building.Data != null ? _building.Data.LocalizedName : string.Empty));
+            EventLogManager.Instance?.Post(GameEvent.About(_building, Localization.Format("#log_fire_out", _building.Data != null ? _building.Data.LocalizedName : string.Empty), EventSeverity.Good, EventGlyph.Check));
             Destroy(this);
         }
 

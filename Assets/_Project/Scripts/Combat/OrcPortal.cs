@@ -89,9 +89,10 @@ namespace CityBuilder.Combat
             // whether the map is over -- the count of what is still standing is the whole point of
             // taking one down. The bare message is kept for the last one, where the victory line
             // follows it immediately and a "0 left" would only be in its way.
-            EventLogManager.Instance?.Log(_all.Count > 0
-                ? Localization.Format("#log_portal_destroyed_remaining", _all.Count)
-                : Localization.Get("#log_portal_destroyed"));
+            EventLogManager.Instance?.Post(GameEvent.At(_all.Count > 0
+                    ? Localization.Format("#log_portal_destroyed_remaining", _all.Count)
+                    : Localization.Get("#log_portal_destroyed"),
+                EventSeverity.Good, EventGlyph.Portal, null, transform.position));
             OnPortalDestroyed?.Invoke(this);
             Destroy(gameObject);
         }

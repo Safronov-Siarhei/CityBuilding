@@ -1120,7 +1120,7 @@ namespace CityBuilder.EditorTools
             var buildingSelector = BuildBuildingSelector(uiRoot, targetCamera, infoPanel, researchPanel);
             var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
             BuildSettlementTierToast(uiRoot, settlementTierManager);
-            BuildEventLog(uiRoot, panelSprite);
+            BuildEventFeed(uiRoot, cameraRig);
             BuildTaxRateControl(uiRoot, panelSprite);
             BuildSettlementStatus(uiRoot, gameCalendar, settlementTierManager);
             BuildHappinessPanel(uiRoot, panelSprite);
@@ -1421,44 +1421,6 @@ namespace CityBuilder.EditorTools
 
             UnityEventTools.AddPersistentListener(minusButton.onClick, controller.Decrease);
             UnityEventTools.AddPersistentListener(plusButton.onClick, controller.Increase);
-        }
-
-        /// <summary>
-        /// Left side, below the Меню button (y 465) and clear of the hotbar at the bottom --
-        /// a standing panel (not a toast) since it's meant to be glanced at over time, unlike
-        /// SettlementTierToast's momentary flash for the same kind of milestone. x is -760, not
-        /// -810 -- see BuildTaxRateControl's comment on why (same off-screen-clipping fix).
-        /// </summary>
-        private static void BuildEventLog(Transform canvasParent, Sprite panelSprite)
-        {
-            var frame = CreateImage(canvasParent, "EventLog", new Color(0.16f, 0.18f, 0.15f, 0.85f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
-            var frameRect = frame.GetComponent<RectTransform>();
-            // Hung from its top edge (y 260), so EventLogController can grow it downwards to fit
-            // what is logged instead of standing as a 320-tall empty sheet of parchment.
-            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.pivot = new Vector2(0.5f, 1f);
-            frameRect.anchoredPosition = new Vector2(-760f, 260f);
-            frameRect.sizeDelta = new Vector2(400f, 320f);
-
-            var logText = CreateText(frame.transform, "LogText", string.Empty, 20, Vector2.zero, Vector2.zero, new Color(1f, 1f, 1f, 0.85f));
-            logText.alignment = TextAnchor.UpperLeft;
-            logText.verticalOverflow = VerticalWrapMode.Truncate;
-            var logRect = logText.rectTransform;
-            logRect.anchorMin = Vector2.zero;
-            logRect.anchorMax = Vector2.one;
-            logRect.offsetMin = new Vector2(15f, 12f);
-            logRect.offsetMax = new Vector2(-15f, -12f);
-
-            var go = new GameObject("EventLogController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<EventLogController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("logText").objectReferenceValue = logText;
-            so.FindProperty("frame").objectReferenceValue = frameRect;
-            so.FindProperty("maxHeight").floatValue = 320f;
-            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>

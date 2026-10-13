@@ -234,7 +234,7 @@ namespace CityBuilder.Citizens
 
             if (wasEmpty) return;
             _reportedEmptyRadius.Add(building);
-            EventLogManager.Instance?.Log(Localization.Format("#log_nothing_in_radius", building.DisplayName));
+            EventLogManager.Instance?.Post(GameEvent.About(building.GetComponent<BuildingInstance>(), Localization.Format("#log_nothing_in_radius", building.DisplayName), EventSeverity.Warning, EventGlyph.Alert));
         }
 
         /// <summary>

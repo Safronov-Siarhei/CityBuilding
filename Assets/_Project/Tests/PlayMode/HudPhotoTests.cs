@@ -114,7 +114,7 @@ namespace CityBuilder.Tests.PlayMode
         private static readonly string[] HudPieces =
         {
             "MenuButton", "SaveButton", "WorkforceButton", "SettlementStatusPill",
-            "TaxRate", "EventLog", "Happiness", "Army", "Migration", "Minimap",
+            "TaxRate", "EventFeed", "Happiness", "Army", "Migration", "Minimap",
             "BuildingMenu/Hotbar", "BuildingMenu/CategoryBar",
         };
 
