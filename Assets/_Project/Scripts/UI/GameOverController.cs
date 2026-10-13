@@ -14,8 +14,8 @@ namespace CityBuilder.UI
     /// </summary>
     public class GameOverController : MonoBehaviour
     {
-        private static readonly Color DefeatColor = new Color(0.9f, 0.35f, 0.3f);
-        private static readonly Color VictoryColor = new Color(0.55f, 0.85f, 0.45f);
+        private static readonly Color DefeatColor = UiTheme.Danger;
+        private static readonly Color VictoryColor = UiTheme.Good;
 
         [SerializeField] private string mainMenuSceneName = "MainMenu";
         [SerializeField] private GameObject panelRoot;

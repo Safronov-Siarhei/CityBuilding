@@ -348,10 +348,10 @@ namespace CityBuilder.UI
             labelRect.offsetMax = new Vector2(-6f, -4f);
 
             var label = labelGO.GetComponent<Text>();
-            label.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.font = UiTheme.Regular;
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
+            label.color = UiTheme.Ink;
             label.text = recipe.LocalizedName;
 
             var button = go.GetComponent<Button>();
@@ -368,11 +368,11 @@ namespace CityBuilder.UI
             Refresh();
         }
 
-        private static readonly Color SelectedRecipeColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
-        private static readonly Color UnselectedRecipeColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
+        private static readonly Color SelectedRecipeColor = UiTheme.RowSelected;
+        private static readonly Color UnselectedRecipeColor = UiTheme.RowNormal;
 
         /// <summary>A tier the Laboratory has not opened yet: dimmer than an available one, and still tappable so its price and its refusal can be read.</summary>
-        private static readonly Color LockedTierColor = new Color(0.22f, 0.2f, 0.2f, 0.95f);
+        private static readonly Color LockedTierColor = UiTheme.RowLocked;
 
         private readonly List<Image> _recipeButtons = new List<Image>();
         private ProductionBuilding _recipeButtonsOwner;
@@ -463,11 +463,11 @@ namespace CityBuilder.UI
             labelRect.offsetMax = new Vector2(-4f, -4f);
 
             var label = labelGO.GetComponent<Text>();
-            label.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.font = UiTheme.Regular;
             label.fontSize = 17;
             label.alignment = TextAnchor.MiddleCenter;
             label.horizontalOverflow = HorizontalWrapMode.Wrap;
-            label.color = Color.white;
+            label.color = UiTheme.Ink;
             label.text = SoldierStats.DisplayName(type);
 
             var button = go.GetComponent<Button>();

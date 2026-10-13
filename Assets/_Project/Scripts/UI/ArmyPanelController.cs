@@ -23,10 +23,10 @@ namespace CityBuilder.UI
         private const float RowSpacing = 6f;
         private const float PriorityButtonWidth = 150f;
 
-        private static readonly Color SelectedRowColor = new Color(0.95f, 0.82f, 0.2f, 0.95f);
-        private static readonly Color RowColor = new Color(0.16f, 0.18f, 0.15f, 0.92f);
-        private static readonly Color SelectedTextColor = new Color(0.1f, 0.1f, 0.1f);
-        private static readonly Color TextColor = new Color(1f, 1f, 1f, 0.92f);
+        private static readonly Color SelectedRowColor = UiTheme.Rgb(0xf5c95a);
+        private static readonly Color RowColor = UiTheme.RowNormal;
+        private static readonly Color SelectedTextColor = UiTheme.Ink;
+        private static readonly Color TextColor = UiTheme.Ink;
 
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private RectTransform rowContainer;
@@ -155,7 +155,7 @@ namespace CityBuilder.UI
             text.text = label;
             // Fully qualified: inside CityBuilder.UI a bare "Resources" would bind to the sibling
             // CityBuilder.Resources namespace, not UnityEngine's.
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UiTheme.Regular;
             text.fontSize = 22;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = textColor;

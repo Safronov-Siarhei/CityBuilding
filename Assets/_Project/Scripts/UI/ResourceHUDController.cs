@@ -28,6 +28,15 @@ namespace CityBuilder.UI
         [SerializeField] private Text populationText;
         [SerializeField] private float barWidth = 1800f;
 
+        // Optional pill behind each chip (the skin's resource chip). With them the chips are
+        // packed from the left at their own width, like a row of tokens, instead of being spread
+        // across the whole bar -- a settlement with three resources should not have three chips
+        // half a screen apart. Index-aligned with resourceOrder.
+        [SerializeField] private RectTransform[] chipBackgrounds;
+        [SerializeField] private RectTransform populationBackground;
+        [SerializeField] private float chipWidth = 190f;
+        [SerializeField] private float chipGap = 10f;
+
         /// <summary>Which resources have ever been in the settlement's hands. Index-aligned with resourceOrder.</summary>
         private bool[] _seen;
 
@@ -73,7 +82,10 @@ namespace CityBuilder.UI
             }
 
             var slots = visible + 1; // + the population chip, which is always there
-            var slotWidth = barWidth / slots;
+            var packed = HasBackgrounds;
+            var slotWidth = packed
+                ? Mathf.Min(chipWidth + chipGap, barWidth / slots)
+                : barWidth / slots;
             var slot = 0;
 
             for (var i = 0; i < count; i++)
@@ -81,9 +93,11 @@ namespace CityBuilder.UI
                 var shown = _seen[i];
                 if (icons[i] != null) icons[i].gameObject.SetActive(shown);
                 if (amountTexts[i] != null) amountTexts[i].gameObject.SetActive(shown);
+                var background = Background(i);
+                if (background != null) background.gameObject.SetActive(shown);
                 if (!shown) continue;
 
-                PlaceChip(icons[i], amountTexts[i], slot++, slotWidth);
+                PlaceChip(icons[i], amountTexts[i], background, slot++, slotWidth);
                 if (amountTexts[i] != null)
                 {
                     amountTexts[i].text = Format(
@@ -93,7 +107,7 @@ namespace CityBuilder.UI
                 }
             }
 
-            PlaceChip(populationIcon, populationText, slot, slotWidth);
+            PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
             if (populationText != null)
             {
                 populationText.text = CitizenManager.Instance != null
@@ -103,9 +117,28 @@ namespace CityBuilder.UI
         }
 
         /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>
-        private void PlaceChip(RectTransform icon, Text amount, int slot, float slotWidth)
+        private void PlaceChip(RectTransform icon, Text amount, RectTransform background, int slot, float slotWidth)
         {
             var center = -barWidth * 0.5f + slotWidth * (slot + 0.5f);
+
+            if (background != null)
+            {
+                // A pill: the icon sits in its left end, the number fills the rest.
+                var width = slotWidth - chipGap;
+                background.anchoredPosition = new Vector2(center, 0f);
+                background.sizeDelta = new Vector2(width, background.sizeDelta.y);
+                var left = center - width * 0.5f;
+                if (icon != null) icon.anchoredPosition = new Vector2(left + icon.sizeDelta.x * 0.5f + 6f, 0f);
+                if (amount != null)
+                {
+                    var rect = amount.GetComponent<RectTransform>();
+                    var textLeft = left + (icon != null ? icon.sizeDelta.x + 10f : 14f);
+                    var textWidth = width - (textLeft - left) - 12f;
+                    rect.anchoredPosition = new Vector2(textLeft + textWidth * 0.5f, 0f);
+                    rect.sizeDelta = new Vector2(textWidth, rect.sizeDelta.y);
+                }
+                return;
+            }
 
             if (icon != null) icon.anchoredPosition = new Vector2(center - slotWidth * 0.22f, 0f);
             if (amount != null)
@@ -114,6 +147,13 @@ namespace CityBuilder.UI
                 rect.anchoredPosition = new Vector2(center + slotWidth * 0.14f, 0f);
                 rect.sizeDelta = new Vector2(slotWidth * 0.6f, 50f);
             }
+        }
+
+        private bool HasBackgrounds => chipBackgrounds != null && chipBackgrounds.Length > 0;
+
+        private RectTransform Background(int index)
+        {
+            return chipBackgrounds != null && index < chipBackgrounds.Length ? chipBackgrounds[index] : null;
         }
 
         /// <summary>

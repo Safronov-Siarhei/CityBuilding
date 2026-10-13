@@ -17,6 +17,12 @@ namespace CityBuilder.UI
         [SerializeField] private Color selectedColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
         [SerializeField] private Color unselectedColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
 
+        // The skin's way of marking the open tab (see UiTheme): parchment for the open one, dark
+        // wood for the rest, each sprite carrying its own colours. When both are set they replace
+        // the tint above, which only made sense on the old grey stone.
+        [SerializeField] private Sprite selectedSprite;
+        [SerializeField] private Sprite unselectedSprite;
+
         private CategoryButtonHandler[] _categoryButtons;
         private HotbarButtonHandler[] _buildingButtons;
 
@@ -67,7 +73,17 @@ namespace CityBuilder.UI
             foreach (var categoryButton in _categoryButtons)
             {
                 var image = categoryButton.GetComponent<Image>();
-                if (image != null) image.color = categoryButton.Category == category ? selectedColor : unselectedColor;
+                if (image == null) continue;
+                var selected = categoryButton.Category == category;
+                if (selectedSprite != null && unselectedSprite != null)
+                {
+                    image.sprite = selected ? selectedSprite : unselectedSprite;
+                    image.color = Color.white;
+                }
+                else
+                {
+                    image.color = selected ? selectedColor : unselectedColor;
+                }
             }
 
             foreach (var buildingButton in _buildingButtons)

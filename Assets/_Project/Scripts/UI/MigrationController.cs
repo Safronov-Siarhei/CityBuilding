@@ -77,14 +77,14 @@ namespace CityBuilder.UI
             switch (state)
             {
                 case MigrationManager.MigrationState.Arriving:
-                    return new Color(0.55f, 0.85f, 0.45f);
+                    return UiTheme.Good;
                 case MigrationManager.MigrationState.Leaving:
                 case MigrationManager.MigrationState.Deserted:
-                    return new Color(0.9f, 0.35f, 0.3f);
+                    return UiTheme.Danger;
                 case MigrationManager.MigrationState.NoRoom:
-                    return new Color(0.95f, 0.85f, 0.35f);
+                    return UiTheme.Warning;
                 default:
-                    return new Color(1f, 1f, 1f, 0.8f);
+                    return UiTheme.InkSoft;
             }
         }
     }

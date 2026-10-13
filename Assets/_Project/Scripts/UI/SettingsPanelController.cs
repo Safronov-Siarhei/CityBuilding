@@ -20,8 +20,8 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform languageRow;
         [SerializeField] private Sprite buttonSprite;
 
-        private static readonly Color SelectedColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
-        private static readonly Color UnselectedColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
+        private static readonly Color SelectedColor = UiTheme.TabSelected;
+        private static readonly Color UnselectedColor = UiTheme.TabIdle;
 
         /// <summary>A language's name in its own language. A code with no entry here shows as the code itself, which is still recognisable.</summary>
         private static readonly Dictionary<string, string> NativeNames = new Dictionary<string, string>
@@ -92,10 +92,10 @@ namespace CityBuilder.UI
             labelRect.offsetMax = new Vector2(-8f, -6f);
 
             var label = labelGO.GetComponent<Text>();
-            label.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.font = UiTheme.Regular;
             label.fontSize = 26;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
+            label.color = UiTheme.Ink;
             label.text = NativeNames.TryGetValue(code, out var native) ? native : code;
 
             var button = go.GetComponent<Button>();

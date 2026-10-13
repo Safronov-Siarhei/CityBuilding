@@ -41,16 +41,40 @@ def res_stone(b):
     d.stone_pile(b, 0, 0, size=0.16)
 
 
-def res_iron(b):
-    for i, (x, y, z, a) in enumerate(((-0.07, 0, 0, 0), (0.07, 0, 0, 0), (0.0, 0, 0.055, 90))):
-        b.zbox(x, y, z, z + 0.05, 0.05, 0.12, a, 'iron', bevel=0.01)
-        b.zbox(x, y, z + 0.05, z + 0.055, 0.035, 0.1, a, 'stone_mid')
-
-
-def res_gold(b):
+def _bars(b, top, side):
     for x, y, z, a in ((-0.07, 0, 0, 0), (0.07, 0, 0, 0), (0.0, 0, 0.055, 90)):
-        b.zbox(x, y, z, z + 0.05, 0.05, 0.12, a, 'gold', bevel=0.01)
-        b.zbox(x, y, z + 0.05, z + 0.055, 0.035, 0.1, a, 'plaster_yellow')
+        b.zbox(x, y, z, z + 0.05, 0.05, 0.12, a, side, bevel=0.01)
+        b.zbox(x, y, z + 0.05, z + 0.055, 0.035, 0.1, a, top)
+
+
+def res_iron_ore(b):
+    d.ore_heap(b, 0, 0, r=0.16, color='roof_slate', second='stone_dark')
+
+
+def res_iron_bar(b):
+    _bars(b, 'stone_mid', 'iron')
+
+
+def res_gold_ore(b):
+    d.ore_heap(b, 0, 0, r=0.16, color='gold', second='stone_mid')
+
+
+def res_gold_bar(b):
+    _bars(b, 'plaster_yellow', 'gold')
+
+
+def res_copper_ore(b):
+    d.ore_heap(b, 0, 0, r=0.16, color='roof_orange', second='roof_green')
+
+
+def res_copper_bar(b):
+    _bars(b, 'roof_orange', 'roof_orange_dark')
+
+
+def res_flour(b):
+    b.blob(0, 0, 0, 0.13, 0.27, 'plaster_white', sides=6)
+    b.cylinder(0, 0, 0.2, 0.225, 0.06, 'burlap', sides=6)
+    b.blob(0, 0, 0.22, 0.05, 0.07, 'plaster_white', sides=5)
 
 
 def res_coins(b):
@@ -88,10 +112,13 @@ def res_people(b):
     b.box(-0.045, 0.045, -0.045, 0.045, 0.2, 0.29, 'plaster_pink', bevel=0.01)
 
 
-RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Iron": res_iron,
-             "Res_Gold": res_gold, "Res_Coins": res_coins, "Res_Food": res_food,
-             "Res_Bread": res_bread, "Res_Grain": res_grain, "Res_Coal": res_coal,
-             "Res_People": res_people}
+# Named after ResourceType, which is how the game finds them (Res_<ResourceType>.png).
+RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
+             "Res_Iron": res_iron_ore, "Res_IronBar": res_iron_bar,
+             "Res_CopperOre": res_copper_ore, "Res_CopperBar": res_copper_bar,
+             "Res_Gold": res_gold_ore, "Res_GoldBar": res_gold_bar, "Res_Coins": res_coins,
+             "Res_Grain": res_grain, "Res_Flour": res_flour, "Res_Bread": res_bread,
+             "Res_Food": res_food, "Res_Population": res_people}
 
 
 # -- staging ---------------------------------------------------------------------------------------
@@ -155,7 +182,11 @@ def main():
     sc, cam, cam_data = stage()
     img = kit.ensure_palette(os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Palette.png"))
     mat = kit.ensure_material(img)
-    wanted = NAMES or BUILDINGS + list(RESOURCES)
+    # every building of the catalogue by default, named by its game id (Hovel1-lvl1 -> Hovel);
+    # the fence by its corner piece, the most recognisable of the four
+    every = sorted(o.name for o in bpy.data.objects if o.name.endswith("1-lvl1") and o.type == 'MESH'
+                   and len(o.data.polygons) > 6)
+    wanted = NAMES or every + ["Fence1-lvl1-Corner"] + list(RESOURCES)
     for name in wanted:
         if name in RESOURCES:
             b = Builder()
@@ -169,7 +200,7 @@ def main():
             if obj is None:
                 print("MISSING", name)
                 continue
-        shoot(sc, cam, cam_data, obj, name.replace("1-lvl1", ""))
+        shoot(sc, cam, cam_data, obj, name.replace("1-lvl1-Corner", "").replace("1-lvl1", ""))
 
 
 main()

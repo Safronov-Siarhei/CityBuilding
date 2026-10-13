@@ -32,6 +32,22 @@ namespace CityBuilder.Tests.PlayMode
         /// <summary>Looks at `focus` from `distance` metres away, down `pitch` degrees, turned `yaw` degrees -- the same over-the-shoulder angle the game's own camera uses when pointed at something. `fieldOfView` defaults to a tighter lens than the game's own 60; pass 60 when the shot has to show exactly what the player would see from that distance.</summary>
         public static IEnumerator Shoot(string shotName, Vector3 focus, float distance = 14f, float pitch = 40f, float yaw = 30f, float fieldOfView = 45f)
         {
+            return Shoot(shotName, focus, distance, pitch, yaw, fieldOfView, includeUi: false);
+        }
+
+        /// <summary>
+        /// The same photograph with the interface on it. A screen-space overlay canvas is drawn
+        /// straight to the screen, never into a camera's texture, so for the length of the shot
+        /// every overlay canvas is switched to render through the photographing camera instead,
+        /// then put back exactly as it was.
+        /// </summary>
+        public static IEnumerator ShootWithUi(string shotName, Vector3 focus, float distance = 40f, float pitch = 50f, float yaw = 25f)
+        {
+            return Shoot(shotName, focus, distance, pitch, yaw, 60f, includeUi: true);
+        }
+
+        private static IEnumerator Shoot(string shotName, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView, bool includeUi)
+        {
             if (!Available)
             {
                 Debug.Log($"[Playtest] No graphics device -- skipping the '{shotName}' screenshot. Re-run without -nographics to get one.");
@@ -49,6 +65,21 @@ namespace CityBuilder.Tests.PlayMode
             var texture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             camera.targetTexture = texture;
 
+            var switched = new System.Collections.Generic.List<Canvas>();
+            if (includeUi)
+            {
+                foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                {
+                    if (!canvas.isRootCanvas || canvas.renderMode != RenderMode.ScreenSpaceOverlay) continue;
+                    canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                    canvas.worldCamera = camera;
+                    canvas.planeDistance = 1f;
+                    switched.Add(canvas);
+                }
+                // One more frame for the layout to settle at the texture's size.
+                yield return null;
+            }
+
             // An enabled camera with a target texture is drawn by the pipeline every frame like any
             // other, so two plain frames are enough to have one in the texture: one for the scene to
             // settle (anything placed a moment ago may still be waiting on its own Start), one to
@@ -57,6 +88,13 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
 
             Write(shotName, texture);
+
+            foreach (var canvas in switched)
+            {
+                if (canvas == null) continue;
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.worldCamera = null;
+            }
 
             camera.targetTexture = null;
             texture.Release();

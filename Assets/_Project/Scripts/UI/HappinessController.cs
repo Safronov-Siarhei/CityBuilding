@@ -44,9 +44,9 @@ namespace CityBuilder.UI
 
         private static Color ColorForScore(int score)
         {
-            if (score >= 70) return new Color(0.55f, 0.85f, 0.45f);
-            if (score >= 40) return new Color(0.95f, 0.85f, 0.35f);
-            return new Color(0.9f, 0.35f, 0.3f);
+            if (score >= 70) return UiTheme.Good;
+            if (score >= 40) return UiTheme.Warning;
+            return UiTheme.Danger;
         }
     }
 }

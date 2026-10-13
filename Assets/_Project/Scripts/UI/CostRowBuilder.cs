@@ -57,10 +57,10 @@ namespace CityBuilder.UI
             go.GetComponent<RectTransform>().sizeDelta = new Vector2(70f, 32f);
             var text = go.GetComponent<Text>();
             text.text = content;
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UiTheme.Regular;
             text.fontSize = 22;
             text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
+            text.color = UiTheme.Ink;
         }
     }
 }

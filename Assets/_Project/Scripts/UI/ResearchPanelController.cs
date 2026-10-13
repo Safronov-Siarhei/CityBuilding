@@ -46,13 +46,13 @@ namespace CityBuilder.UI
         [SerializeField] private Sprite completedIcon;
         [SerializeField] private ResourceIconLibrary iconLibrary;
 
-        private static readonly Color RowColor = new Color(0.22f, 0.24f, 0.2f, 0.95f);
-        private static readonly Color CompletedRowColor = new Color(0.17f, 0.18f, 0.16f, 0.75f);
-        private static readonly Color HeaderColor = new Color(0.12f, 0.13f, 0.11f, 0.9f);
-        private static readonly Color SelectedTabColor = new Color(0.36f, 0.5f, 0.3f, 0.95f);
-        private static readonly Color UnselectedTabColor = new Color(0.26f, 0.29f, 0.24f, 0.95f);
-        private static readonly Color DetailColor = new Color(1f, 1f, 1f, 0.65f);
-        private static readonly Color BlockedColor = new Color(0.95f, 0.72f, 0.4f);
+        private static readonly Color RowColor = UiTheme.RowNormal;
+        private static readonly Color CompletedRowColor = UiTheme.RowDim;
+        private static readonly Color HeaderColor = UiTheme.RowHeader;
+        private static readonly Color SelectedTabColor = UiTheme.TabSelected;
+        private static readonly Color UnselectedTabColor = UiTheme.TabIdle;
+        private static readonly Color DetailColor = UiTheme.InkSoft;
+        private static readonly Color BlockedColor = UiTheme.Warning;
 
         /// <summary>One built row, kept so a tick of the refresh timer can update its numbers instead of rebuilding the list under the player's finger.</summary>
         private class Row
@@ -410,7 +410,7 @@ namespace CityBuilder.UI
             background.color = HeaderColor;
 
             CreateRowText(go.transform, "Caption", caption, 22, TextAnchor.MiddleLeft,
-                new Vector2(-230f, 0f), new Vector2(620f, 40f), new Color(0.82f, 0.88f, 0.7f));
+                new Vector2(-230f, 0f), new Vector2(620f, 40f), UiTheme.Ink);
         }
 
         private void CreateRow(ResearchTopic topic)
@@ -428,7 +428,7 @@ namespace CityBuilder.UI
             background.color = RowColor;
 
             CreateRowText(rowGO.transform, "Title", topic.Title, 24, TextAnchor.LowerLeft,
-                new Vector2(-230f, 16f), new Vector2(620f, 34f), Color.white);
+                new Vector2(-230f, 16f), new Vector2(620f, 34f), UiTheme.Ink);
             var detail = CreateRowText(rowGO.transform, "Detail", string.Empty, 18, TextAnchor.UpperLeft,
                 new Vector2(-230f, -18f), new Vector2(620f, 30f), DetailColor);
 
@@ -449,7 +449,7 @@ namespace CityBuilder.UI
                 var tickImage = tick.GetComponent<Image>();
                 tickImage.sprite = completedIcon;
                 tickImage.preserveAspect = true;
-                tickImage.color = new Color(0.6f, 0.85f, 0.5f);
+                tickImage.color = UiTheme.Good;
             }
             else
             {
@@ -479,7 +479,7 @@ namespace CityBuilder.UI
             rect.sizeDelta = size;
 
             var text = go.GetComponent<Text>();
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UiTheme.Regular;
             text.fontSize = fontSize;
             text.alignment = anchor;
             text.color = color;
@@ -500,9 +500,9 @@ namespace CityBuilder.UI
             var image = go.GetComponent<Image>();
             image.sprite = rowSprite;
             image.type = Image.Type.Sliced;
-            image.color = new Color(0.3f, 0.34f, 0.28f, 0.95f);
+            image.color = UiTheme.RowNormal;
 
-            CreateRowText(go.transform, "Label", label, 22, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(200f, 64f), Color.white);
+            CreateRowText(go.transform, "Label", label, 22, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(200f, 64f), UiTheme.Ink);
 
             var button = go.GetComponent<Button>();
             button.targetGraphic = image;

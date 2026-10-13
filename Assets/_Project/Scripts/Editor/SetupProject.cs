@@ -76,6 +76,7 @@ namespace CityBuilder.EditorTools
             // one at import (ModelImportDefaults), so it has to exist by then.
             EnsurePaletteMaterial();
             ForceReimportModels();
+            EnsureUiTextures();
 
             BuildMainMenuScene();
             BuildCityScene();
@@ -312,6 +313,7 @@ namespace CityBuilder.EditorTools
 
             BuildLoadPanel(canvasGO.transform, panelSprite, menuController);
             BuildSettingsPanel(canvasGO.transform, panelSprite, settingsButton);
+            ApplyTheme(canvasGO.transform);
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists($"{ScenesFolder}/MainMenu.unity");
@@ -356,7 +358,7 @@ namespace CityBuilder.EditorTools
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
-            controllerSO.FindProperty("buttonSprite").objectReferenceValue = panelSprite;
+            controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(backButton.onClick, controller.ClosePanel);
@@ -914,24 +916,31 @@ namespace CityBuilder.EditorTools
             StretchFull(menuGO.GetComponent<RectTransform>());
             var categoryPanel = menuGO.AddComponent<BuildingCategoryPanel>();
 
-            const float buttonSize = 130f;
-            const float spacing = 16f;
+            // Cards, not bare icons: the rendered icon with the building's name and price under it
+            // (see CreateHotbarCard), on a parchment panel with a wooden lip -- the skin's hotbar.
+            var cardSize = new Vector2(124f, 164f);
+            const float spacing = 10f;
+            const float buttonSize = 164f + 36f; // the card plus the panel's padding around it
 
             // HorizontalLayoutGroup (not manual per-button positions) because only one category's
             // buildings are active at a time (see BuildingCategoryPanel) -- the layout group
             // automatically excludes inactive children and re-centers around whichever subset is
             // currently shown, where fixed absolute offsets computed from the full 12-building
             // list would leave a category's buttons stranded off-center.
-            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
             hotbarGO.transform.SetParent(menuGO.transform, false);
             var hotbarRect = hotbarGO.GetComponent<RectTransform>();
             hotbarRect.anchorMin = new Vector2(0.5f, 0f);
             hotbarRect.anchorMax = new Vector2(0.5f, 0f);
             hotbarRect.pivot = new Vector2(0.5f, 0f);
-            hotbarRect.anchoredPosition = new Vector2(0f, 28f);
+            hotbarRect.anchoredPosition = new Vector2(0f, 20f);
             hotbarRect.sizeDelta = new Vector2(0f, buttonSize);
+            var hotbarImage = hotbarGO.GetComponent<Image>();
+            hotbarImage.sprite = SkinSprite("panel_banded") ?? panelSprite;
+            hotbarImage.type = Image.Type.Sliced;
 
             var hotbarLayout = hotbarGO.GetComponent<HorizontalLayoutGroup>();
+            hotbarLayout.padding = new RectOffset(14, 14, 20, 16);
             hotbarLayout.spacing = spacing;
             hotbarLayout.childAlignment = TextAnchor.MiddleCenter;
             hotbarLayout.childControlWidth = false;
@@ -946,8 +955,7 @@ namespace CityBuilder.EditorTools
             for (var i = 0; i < hotbarBuildings.Count; i++)
             {
                 var data = hotbarBuildings[i];
-                var icon = CreateBuildingIcon(data.buildingName);
-                var button = CreateIconButton(hotbarGO.transform, panelSprite, icon, $"Building_{data.buildingName}", Vector2.zero, new Vector2(buttonSize, buttonSize));
+                var button = CreateHotbarCard(hotbarGO.transform, data, cardSize);
 
                 var handler = button.gameObject.AddComponent<HotbarButtonHandler>();
                 var handlerSO = new SerializedObject(handler);
@@ -968,7 +976,7 @@ namespace CityBuilder.EditorTools
 
             // 110, not 80: at a 1080-high reference 80 px lands at roughly 5 mm on a dense
             // phone screen, half of what a finger reliably hits.
-            const float categoryButtonSize = 110f;
+            const float categoryButtonSize = 96f;
             var categoryTotalWidth = presentCategories.Count * categoryButtonSize + Mathf.Max(0, presentCategories.Count - 1) * spacing;
 
             var categoryBarGO = new GameObject("CategoryBar", typeof(RectTransform));
@@ -977,7 +985,7 @@ namespace CityBuilder.EditorTools
             categoryBarRect.anchorMin = new Vector2(0.5f, 0f);
             categoryBarRect.anchorMax = new Vector2(0.5f, 0f);
             categoryBarRect.pivot = new Vector2(0.5f, 0f);
-            categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y + buttonSize + spacing);
+            categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y + buttonSize + 12f);
             categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonSize);
 
             for (var i = 0; i < presentCategories.Count; i++)
@@ -996,6 +1004,12 @@ namespace CityBuilder.EditorTools
                 UnityEventTools.AddPersistentListener(categoryButton.onClick, categoryHandler.SelectThisCategory);
             }
 
+            // The open tab in parchment, the rest in wood (see BuildingCategoryPanel).
+            var categorySO = new SerializedObject(categoryPanel);
+            categorySO.FindProperty("selectedSprite").objectReferenceValue = SkinSprite("pill_parchment");
+            categorySO.FindProperty("unselectedSprite").objectReferenceValue = SkinSprite("pill_wood_light");
+            categorySO.ApplyModifiedPropertiesWithoutUndo();
+
             var visibility = canvasGO.AddComponent<BuildingPlacerUIVisibility>();
             var visibilitySO = new SerializedObject(visibility);
             visibilitySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
@@ -1009,6 +1023,8 @@ namespace CityBuilder.EditorTools
             // PlacementHudController for which of them is visible when.
             var confirmIcon = CreateConfirmIcon();
             var confirmButton = CreateIconButton(uiRoot, panelSprite, confirmIcon, "ConfirmPlacementButton", Vector2.zero, new Vector2(130f, 130f));
+            // A neutral pill, because PlacementHudController tints it: green when it can be placed.
+            if (SkinSprite("pill_white") != null) confirmButton.GetComponent<Image>().sprite = SkinSprite("pill_white");
             var confirmRect = confirmButton.GetComponent<RectTransform>();
             confirmRect.anchorMin = confirmRect.anchorMax = confirmRect.pivot = new Vector2(1f, 0f);
             confirmRect.anchoredPosition = new Vector2(-40f, 40f);
@@ -1043,7 +1059,7 @@ namespace CityBuilder.EditorTools
                 Vector2.zero, new Vector2(900f, 44f), new Color(1f, 0.72f, 0.62f), addShadow: true);
             var statusRect = placementStatus.GetComponent<RectTransform>();
             statusRect.anchorMin = statusRect.anchorMax = statusRect.pivot = new Vector2(0.5f, 0f);
-            statusRect.anchoredPosition = new Vector2(0f, 200f);
+            statusRect.anchoredPosition = new Vector2(0f, 345f);
             placementStatus.gameObject.SetActive(false);
 
             // Lives on the Canvas itself (an always-active object), not on the buttons it
@@ -1095,6 +1111,8 @@ namespace CityBuilder.EditorTools
             dispatcherSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildSelectionBadge(uiRoot, panelSprite, citizenSelector);
+
+            ApplyTheme(canvasGO.transform);
         }
 
         /// <summary>
@@ -1136,7 +1154,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("panelRoot").objectReferenceValue = frame.gameObject;
             so.FindProperty("rowContainer").objectReferenceValue = rowContainer.GetComponent<RectTransform>();
             so.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
-            so.FindProperty("buttonSprite").objectReferenceValue = panelSprite;
+            so.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             frame.gameObject.SetActive(false);
@@ -1171,7 +1189,7 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(760f, 100f);
+            frameRect.anchoredPosition = new Vector2(740f, 296f);
             // 130 rather than 110: the breakdown became two lines when food and losses joined the
             // three original factors (see HappinessController).
             frameRect.sizeDelta = new Vector2(400f, 130f);
@@ -1293,14 +1311,14 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("listContent").objectReferenceValue = content;
             controllerSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
             controllerSO.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
-            controllerSO.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            controllerSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
 
             // In the top row's left gap: Меню occupies -930..-690 and the settlement status text
             // -250..250, so a 240-wide button centred at -520 sits clear of both.
-            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "#hud_workforce", new Vector2(-520f, 465f), new Vector2(240f, 90f));
+            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "#hud_workforce", new Vector2(-500f, 488f), new Vector2(180f, 72f));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);
@@ -1309,7 +1327,16 @@ namespace CityBuilder.EditorTools
         /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>
         private static void BuildSettlementStatus(Transform canvasParent, GameCalendar gameCalendar, SettlementTierManager settlementTierManager)
         {
-            var statusText = CreateText(canvasParent, "SettlementStatus", string.Empty, 26, new Vector2(0f, 465f), new Vector2(500f, 60f), new Color(1f, 1f, 1f, 0.85f), addShadow: true);
+            // On a wooden pill in the middle of the top row (white on wood, see ApplyTheme).
+            Transform statusParent = canvasParent;
+            var statusPosition = new Vector2(0f, 465f);
+            if (SkinSprite("pill_wood") != null)
+            {
+                statusParent = CreateSkinImage(canvasParent, "SettlementStatusPill", "pill_wood", new Vector2(0f, 488f), new Vector2(520f, 72f)).transform;
+                statusPosition = new Vector2(0f, 3f);
+            }
+            var statusText = CreateText(statusParent, "SettlementStatus", string.Empty, 26, statusPosition, new Vector2(500f, 60f), new Color(1f, 1f, 1f, 0.85f), addShadow: true);
+            statusText.font = UiTheme.Bold;
 
             var go = new GameObject("SettlementStatusController");
             go.transform.SetParent(canvasParent, false);
@@ -1338,8 +1365,8 @@ namespace CityBuilder.EditorTools
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
             frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-760f, 302f);
-            frameRect.sizeDelta = new Vector2(400f, 60f);
+            frameRect.anchoredPosition = new Vector2(-760f, 318f);
+            frameRect.sizeDelta = new Vector2(400f, 64f);
 
             var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "-", new Vector2(-150f, 0f), new Vector2(52f, 52f));
             var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 52f));
@@ -1414,10 +1441,14 @@ namespace CityBuilder.EditorTools
             root.transform.SetParent(canvasParent, false);
             var rect = root.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, 370f);
+            // The second row from the top, under Меню/Сохранить/the status, starting at the left
+            // edge: each resource a parchment pill (ResourceHUDController packs them).
+            rect.anchoredPosition = new Vector2(0f, 405f);
 
-            const float barWidth = 1800f;
-            rect.sizeDelta = new Vector2(barWidth, 50f);
+            const float barWidth = 1880f;
+            const float chipHeight = 60f;
+            rect.sizeDelta = new Vector2(barWidth, chipHeight);
+            var chipSprite = SkinSprite("pill_parchment");
 
             // Reading order: raw materials, then the ore and the metal it becomes side by side,
             // then money, then the food chain in the order it is actually made. A chip is only on
@@ -1434,30 +1465,48 @@ namespace CityBuilder.EditorTools
             };
             var icons = new RectTransform[resourceTypes.Length];
             var amountTexts = new Text[resourceTypes.Length];
+            var backgrounds = new RectTransform[resourceTypes.Length];
+
+            RectTransform Chip(string name)
+            {
+                if (chipSprite == null) return null;
+                // Created before its icon and number, so it draws behind them.
+                return CreateSkinImage(root.transform, $"Chip_{name}", "pill_parchment", Vector2.zero, new Vector2(190f, chipHeight)).rectTransform;
+            }
+
+            Text Amount(string name)
+            {
+                var amountText = CreateText(root.transform, $"Amount_{name}", "0", 24, Vector2.zero, new Vector2(160f, chipHeight - 8f));
+                amountText.alignment = TextAnchor.MiddleLeft;
+                amountText.font = UiTheme.Heavy;
+                amountText.resizeTextForBestFit = true;
+                amountText.resizeTextMinSize = 15;
+                amountText.resizeTextMaxSize = 24;
+                return amountText;
+            }
 
             for (var i = 0; i < resourceTypes.Length; i++)
             {
+                backgrounds[i] = Chip(resourceTypes[i].ToString());
                 var icon = CreateImage(root.transform, $"Icon_{resourceTypes[i]}", Color.white);
                 icon.sprite = CreateResourceIcon(resourceTypes[i]);
+                icon.preserveAspect = true;
                 var iconRect = icon.GetComponent<RectTransform>();
                 iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-                iconRect.sizeDelta = new Vector2(32f, 32f);
+                iconRect.sizeDelta = new Vector2(48f, 48f);
                 icons[i] = iconRect;
-
-                var amountText = CreateText(root.transform, $"Amount_{resourceTypes[i]}", "0", 24,
-                    Vector2.zero, new Vector2(160f, 50f));
-                amountText.alignment = TextAnchor.MiddleLeft;
-                amountTexts[i] = amountText;
+                amountTexts[i] = Amount(resourceTypes[i].ToString());
             }
 
+            var populationBackground = Chip("Population");
             var popIcon = CreateImage(root.transform, "Icon_Population", Color.white);
             popIcon.sprite = CreatePopulationIcon();
+            popIcon.preserveAspect = true;
             var popIconRect = popIcon.GetComponent<RectTransform>();
             popIconRect.anchorMin = popIconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            popIconRect.sizeDelta = new Vector2(32f, 32f);
+            popIconRect.sizeDelta = new Vector2(48f, 48f);
 
-            var populationText = CreateText(root.transform, "Amount_Population", "0", 24, Vector2.zero, new Vector2(160f, 50f));
-            populationText.alignment = TextAnchor.MiddleLeft;
+            var populationText = Amount("Population");
 
             var hud = root.AddComponent<ResourceHUDController>();
             var hudSO = new SerializedObject(hud);
@@ -1476,6 +1525,13 @@ namespace CityBuilder.EditorTools
             hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
             hudSO.FindProperty("barWidth").floatValue = barWidth;
+            if (chipSprite != null)
+            {
+                var backgroundsProp = hudSO.FindProperty("chipBackgrounds");
+                backgroundsProp.arraySize = backgrounds.Length;
+                for (var i = 0; i < backgrounds.Length; i++) backgroundsProp.GetArrayElementAtIndex(i).objectReferenceValue = backgrounds[i];
+                hudSO.FindProperty("populationBackground").objectReferenceValue = populationBackground;
+            }
             hudSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1488,16 +1544,30 @@ namespace CityBuilder.EditorTools
         {
             if (minimapTexture == null) return;
 
-            const float size = 200f;
-            const float border = 8f;
+            // Round, in the bottom-left corner, in a wooden ring with a gold rim (the skin's
+            // minimap). Without the skin files it falls back to the old square frame top-right.
+            var round = SkinSprite("circle_mask") != null && SkinSprite("minimap_ring") != null;
+            const float size = 212f;
+            var border = round ? 6f : 8f;
 
-            var frame = CreateImage(canvasParent, "Minimap", new Color(0.26f, 0.29f, 0.24f, 0.95f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
-            var frameRect = frame.GetComponent<RectTransform>();
-            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(810f, 300f);
-            frameRect.sizeDelta = new Vector2(size + border * 2f, size + border * 2f);
+            Image frame;
+            if (round)
+            {
+                frame = CreateSkinImage(canvasParent, "Minimap", "circle_mask", new Vector2(-834f, -414f), new Vector2(size + border * 2f, size + border * 2f));
+                frame.type = Image.Type.Simple;
+                frame.color = UiTheme.Parchment;
+                frame.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            }
+            else
+            {
+                frame = CreateImage(canvasParent, "Minimap", new Color(0.26f, 0.29f, 0.24f, 0.95f));
+                frame.sprite = panelSprite;
+                frame.type = Image.Type.Sliced;
+                var squareRect = frame.GetComponent<RectTransform>();
+                squareRect.anchorMin = squareRect.anchorMax = new Vector2(0.5f, 0.5f);
+                squareRect.anchoredPosition = new Vector2(810f, 300f);
+                squareRect.sizeDelta = new Vector2(size + border * 2f, size + border * 2f);
+            }
 
             var viewGO = new GameObject("MinimapView", typeof(RectTransform), typeof(RawImage));
             viewGO.transform.SetParent(frame.transform, false);
@@ -1519,6 +1589,14 @@ namespace CityBuilder.EditorTools
             markerRect.sizeDelta = new Vector2(12f, 12f);
             markerRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
             markerGO.GetComponent<Image>().color = new Color(1f, 0.92f, 0.3f);
+
+            if (round)
+            {
+                // Over the map rather than inside the mask, so the ring is never clipped.
+                var ring = CreateSkinImage(canvasParent, "MinimapRing", "minimap_ring", frame.rectTransform.anchoredPosition, frame.rectTransform.sizeDelta + new Vector2(10f, 10f));
+                ring.type = Image.Type.Simple;
+                ring.raycastTarget = false;
+            }
 
             var indicator = viewGO.AddComponent<MinimapCameraIndicator>();
             var indicatorSO = new SerializedObject(indicator);
@@ -1683,7 +1761,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("demolishConfirmLabel").objectReferenceValue = demolishConfirmLabel;
             controllerSO.FindProperty("recipeControls").objectReferenceValue = recipeControls;
             controllerSO.FindProperty("recipeRow").objectReferenceValue = recipeRowRect;
-            controllerSO.FindProperty("recipeButtonSprite").objectReferenceValue = panelSprite;
+            controllerSO.FindProperty("recipeButtonSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
             controllerSO.FindProperty("workerControls").objectReferenceValue = workerControls;
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;
@@ -1811,7 +1889,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("unitsTabBackground").objectReferenceValue = unitsTab.GetComponent<Image>();
             so.FindProperty("listContent").objectReferenceValue = content;
             so.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
-            so.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            so.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
             so.FindProperty("completedIcon").objectReferenceValue = CreateCheckIcon();
             so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -1950,7 +2028,11 @@ namespace CityBuilder.EditorTools
 
         private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
         {
-            var menuButton = CreateButton(canvasParent, panelSprite, "MenuButton", "#hud_menu", new Vector2(-810f, 465f), new Vector2(240f, 90f));
+            // The top row, left to right: Меню in gold, then Сохранить and Жители (BuildSaveUI,
+            // BuildWorkforcePanel); the settlement status sits in the middle of the same row.
+            var menuButton = SkinSprite("pill_gold") != null
+                ? CreateSkinButton(canvasParent, "pill_gold", "MenuButton", "#hud_menu", new Vector2(-865f, 488f), new Vector2(150f, 72f))
+                : CreateButton(canvasParent, panelSprite, "MenuButton", "#hud_menu", new Vector2(-810f, 465f), new Vector2(240f, 90f));
 
             var dialogRoot = new GameObject("ExitDialog", typeof(RectTransform));
             dialogRoot.transform.SetParent(canvasParent, false);
@@ -2033,7 +2115,7 @@ namespace CityBuilder.EditorTools
         {
             // Manual save only, per design: the player decides if/when to save, so this button
             // is the only way a save ever happens — there is no autosave to fall back on.
-            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "#hud_save", new Vector2(810f, 465f), new Vector2(240f, 90f));
+            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "#hud_save", new Vector2(-690f, 488f), new Vector2(180f, 72f));
 
             var dialogRoot = new GameObject("SaveDialog", typeof(RectTransform));
             dialogRoot.transform.SetParent(canvasParent, false);
@@ -2104,7 +2186,7 @@ namespace CityBuilder.EditorTools
             panelSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
             panelSO.FindProperty("loadSelectedButton").objectReferenceValue = loadButton;
             panelSO.FindProperty("selectedNameLabel").objectReferenceValue = selectedLabel;
-            panelSO.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            panelSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
             panelSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(loadButton.onClick, panelController.ConfirmLoad);
@@ -3460,6 +3542,11 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static Sprite CreatePanelSprite()
         {
+            // The skin's parchment panel when it is there (see SetupProjectTheme); the carved stone
+            // below is what a project without the skin files falls back to.
+            var skinPanel = SkinSprite("panel");
+            if (skinPanel != null) return skinPanel;
+
             // Thick border (roughly a third of the texture per side) and near-black/near-white
             // contrast -- an earlier, subtler version (thin 8px border in a 32px texture) turned
             // out imperceptible once shrunk to actual button size and compressed in a screenshot.
@@ -3635,6 +3722,7 @@ namespace CityBuilder.EditorTools
 
         private static Sprite CreateCategoryIcon(BuildingCategory category)
         {
+            if (CategoryIconBuilding.TryGetValue(category, out var stand) && IconSprite(stand) != null) return IconSprite(stand);
             switch (category)
             {
                 case BuildingCategory.City:
@@ -3707,6 +3795,9 @@ namespace CityBuilder.EditorTools
 
         private static Sprite CreateBuildingIcon(string buildingId)
         {
+            // Rendered from the building's own model when it has one (Tools/blender/render_icons.py).
+            var rendered = IconSprite(buildingId);
+            if (rendered != null) return rendered;
             switch (buildingId)
             {
                 case "Hovel":
@@ -3968,6 +4059,8 @@ namespace CityBuilder.EditorTools
         /// <summary>Small pictogram per ResourceType, used by the top resource HUD bar in place of plain-text resource names (see ResourceHUDController/BuildResourceHUD).</summary>
         private static Sprite CreateResourceIcon(ResourceType type)
         {
+            var rendered = IconSprite("Res_" + type);
+            if (rendered != null) return rendered;
             switch (type)
             {
                 case ResourceType.Wood:
@@ -4143,6 +4236,8 @@ namespace CityBuilder.EditorTools
 
         private static Sprite CreatePopulationIcon()
         {
+            var rendered = IconSprite("Res_Population");
+            if (rendered != null) return rendered;
             return CreateIconSprite("Res_Population", 64, (p, s) =>
             {
                 var body = new Color(0.85f, 0.82f, 0.75f);
@@ -4318,7 +4413,7 @@ namespace CityBuilder.EditorTools
             textRect.offsetMin = new Vector2(20f, 6f);
             textRect.offsetMax = new Vector2(-20f, -6f);
             var textComp = textGO.GetComponent<Text>();
-            textComp.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textComp.font = UiTheme.Regular;
             textComp.fontSize = 30;
             textComp.alignment = TextAnchor.MiddleLeft;
             textComp.color = Color.black;
@@ -4358,7 +4453,7 @@ namespace CityBuilder.EditorTools
 
             var text = go.GetComponent<Text>();
             text.text = content;
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UiTheme.Regular;
             text.fontSize = fontSize;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = color ?? Color.white;

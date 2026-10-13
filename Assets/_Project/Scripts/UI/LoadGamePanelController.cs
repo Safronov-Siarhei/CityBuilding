@@ -22,8 +22,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text selectedNameLabel;
         [SerializeField] private Sprite rowSprite;
 
-        private static readonly Color NormalRowColor = new Color(0.22f, 0.24f, 0.2f, 0.95f);
-        private static readonly Color SelectedRowColor = new Color(0.32f, 0.5f, 0.28f, 0.95f);
+        private static readonly Color NormalRowColor = UiTheme.RowNormal;
+        private static readonly Color SelectedRowColor = UiTheme.RowSelected;
 
         private readonly List<(string name, Image image)> _rows = new List<(string, Image)>();
         private string _selectedName;
@@ -88,10 +88,10 @@ namespace CityBuilder.UI
             textRect.offsetMax = new Vector2(-28f, -6f);
 
             var text = textGO.GetComponent<Text>();
-            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UiTheme.Regular;
             text.fontSize = 24;
             text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
+            text.color = UiTheme.Ink;
             var localTime = info.LastModifiedUtc.ToLocalTime();
             text.text = $"{info.Name}\n{localTime:yyyy-MM-dd HH:mm}";
 
