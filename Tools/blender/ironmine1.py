@@ -1,6 +1,6 @@
 """IronMine1-lvl1 -- the Iron Mine (Железный рудник). Footprint 2x2. Front is -Y.
 
-A rock hill with turf on its crown and rust-red ore showing in it; a timber-framed mine mouth
+A rock hill with turf on its crown and dark iron ore showing in it; a timber-framed mine mouth
 under a slate lean-to; a cart track running out of it with a cart of ore; a heap of ore; a
 plank tool shed with picks leaning on it; a lantern on a post.
 """
@@ -13,7 +13,7 @@ import kit  # noqa: E402
 from kit import Builder, Facade  # noqa: E402
 
 OBJ = "IronMine1-lvl1"
-ORE = 'roof_red_dark'          # iron ore: rust
+ORE = 'iron'                   # iron ore: dark metal grey
 
 
 def build(lo, hi):
@@ -25,7 +25,7 @@ def build(lo, hi):
 
     d.rails(b, s, -0.98, yf)
     d.minecart(b, s, -0.62, ORE)
-    d.ore_heap(b, -0.68, -0.62, r=0.17, color=ORE, second='iron')
+    d.ore_heap(b, -0.68, -0.62, r=0.17, color=ORE, second='stone_dark')
 
     # tool shed against the hill on the right
     x0, x1, y0, y1 = 0.42, 0.92, -0.62, -0.18
