@@ -16,6 +16,7 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject waterPlacementZonePrefab;
         [SerializeField] private GameObject treesAreaPrefab;
         [SerializeField] private GameObject[] treePrefabs = new GameObject[0];
+        [SerializeField] private GameObject[] rockPrefabs = new GameObject[0];
         [SerializeField] private Material waterMaterial;
 
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
@@ -24,10 +25,12 @@ namespace CityBuilder.Maps
         public GameObject WaterPlacementZonePrefab => waterPlacementZonePrefab;
         public GameObject TreesAreaPrefab => treesAreaPrefab;
         public GameObject[] TreePrefabs => treePrefabs;
+        /// <summary>The hand-gathered boulders, smallest first (Stone1..Stone10) -- RockSpawner relies on that order.</summary>
+        public GameObject[] RockPrefabs => rockPrefabs;
         public Material WaterMaterial => waterMaterial;
 
 #if UNITY_EDITOR
-        public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, Material waterMat)
+        public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, GameObject[] rocks, Material waterMat)
         {
             mapId = id;
             groundPrefab = ground;
@@ -35,6 +38,7 @@ namespace CityBuilder.Maps
             waterPlacementZonePrefab = waterPlacementZone;
             treesAreaPrefab = treesArea;
             treePrefabs = trees;
+            rockPrefabs = rocks;
             waterMaterial = waterMat;
         }
 #endif

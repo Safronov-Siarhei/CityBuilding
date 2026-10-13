@@ -3,11 +3,12 @@
     blender --background Buildings-Size1-Models.blend --python export_fbx.py -- <unity project> [Name ...]
 
 One FBX per object, holding one mesh, named after the object -- the contract SetupProject reads
-by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) to
-Models/Terrain. Each is written with its origin at the centre of its footprint on the ground (the
-object's placement in the scene is dropped), so the game can trust the origin instead of guessing
-it from the bounds. The palette image goes next to the buildings; every model's one material is
-named `Buildings` and the game swaps in its own palette material for it.
+by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) and
+boulders (`Stone<n>`) to Models/Terrain. Each is written with its origin at the centre of its
+footprint on the ground (the object's placement in the scene is dropped), so the game can trust
+the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
+every model's one material is named `Buildings` and the game swaps in its own palette material
+for it.
 
 Axes: Blender is right-handed Z-up, Unity left-handed Y-up, and Unity's FBX import mirrors X to
 change hands. Exported with Blender's +Y as FBX +Z (axis_forward='Z'), Blender X arrives as FBX -X
@@ -40,7 +41,7 @@ def is_model(o):
 
 
 def target(o):
-    folder = TERRAIN if o.name.startswith("Tree") else BUILDINGS
+    folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS
     return os.path.join(folder, o.name + ".fbx")
 
 

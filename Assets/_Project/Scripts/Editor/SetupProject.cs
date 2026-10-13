@@ -41,6 +41,9 @@ namespace CityBuilder.EditorTools
         /// <summary>How many Tree{n}.fbx variants live in ModelsTerrainFolder -- the forest picks between all of them.</summary>
         private const int TreeModelCount = 10;
 
+        /// <summary>How many Stone{n}.fbx boulders live in ModelsTerrainFolder, smallest first -- RockSpawner weights them by that order.</summary>
+        private const int StoneModelCount = 10;
+
         private const int GridCellsX = 200;
         private const int GridCellsZ = 200;
         private const int ForestMarginCells = 20; // same 20m world-space margin as before the cellSize halved
@@ -3338,6 +3341,16 @@ namespace CityBuilder.EditorTools
                 if (trees[i] == null) treesMissing = true;
             }
 
+            // The hand-gathered boulders, Stone1 (pebbles) to Stone10 (an outcrop). Optional: with
+            // none, RockSpawner falls back to its cube clusters rather than the map losing its stone.
+            var rocks = new List<GameObject>();
+            for (var i = 0; i < StoneModelCount; i++)
+            {
+                var rock = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Stone{i + 1}.fbx");
+                if (rock != null) rocks.Add(rock);
+                else Debug.LogWarning($"CreateMeshMapDefinition: {ModelsTerrainFolder}/Stone{i + 1}.fbx is missing -- the boulders will be drawn from the models that exist.");
+            }
+
             if (ground == null || water == null || waterPlacementZone == null || treesArea == null || treesMissing)
             {
                 Debug.LogWarning($"CreateMeshMapDefinition: one or more Map1 FBX assets not found under {ModelsMap1Folder}/{ModelsTerrainFolder} -- skipping Map1 MeshMapDefinition.");
@@ -3347,7 +3360,7 @@ namespace CityBuilder.EditorTools
             var waterMaterial = CreateWaterMaterial();
 
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
-            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, waterMaterial);
+            map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, rocks.ToArray(), waterMaterial);
 
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{mapId}.asset";

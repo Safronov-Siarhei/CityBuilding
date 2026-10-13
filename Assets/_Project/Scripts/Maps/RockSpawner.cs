@@ -16,11 +16,16 @@ namespace CityBuilder.Maps
     /// without saving them a reload would deal a fresh map AND refill every one -- depletion would
     /// have been undone by the act of saving, which is no mechanic at all.
     ///
-    /// Mesh maps (MeshMapDefinition) only carry tree prefabs, so before this existed the current
-    /// maps had zero Stone ResourceNodes anywhere: only the legacy PNG map path
-    /// (MapTerrainGenerator.SpawnRock) ever produced any, and new games don't use it. Boulders are
-    /// built from cube primitives here rather than an FBX for the same reason every other prop in
-    /// the project is (no rock model exists in Models/), and it matches the game's low-poly style.
+    /// The boulders are the ten Blender models Stone1..Stone10 (Models/Terrain), carried by the
+    /// map (MeshMapDefinition.RockPrefabs) and ordered smallest first. Small ones are common and
+    /// big ones rare -- the weight falls linearly with size. Which model stands on a cell is a
+    /// function of the CELL, not a dice roll, so a reloaded save puts the same boulder back on
+    /// the same spot without the save having to say which one it was. Without models the old
+    /// cluster of cubes stands in.
+    ///
+    /// Every boulder holds the same stock for now (StonePerRock). Making the stock follow the
+    /// size is planned and deliberately not done yet; when it is, the per-size numbers belong in
+    /// the balance sheet next to these weights.
     ///
     /// Unlike trees these carry no NavMeshObstacle: they're knee-high, 100+ more carving obstacles
     /// on top of the forest's ~600 would cost real frame time, and citizens visually stepping over
@@ -40,6 +45,7 @@ namespace CityBuilder.Maps
         private static readonly Color RockColor = new Color(0.55f, 0.53f, 0.48f);
         private static readonly Color RockShadeColor = new Color(0.43f, 0.42f, 0.39f);
 
+        private GameObject[] _rockPrefabs = new GameObject[0];
         private readonly HashSet<Vector2Int> _rockCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _rockCellByInstance = new Dictionary<GameObject, Vector2Int>();
 
@@ -108,10 +114,11 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>Called once from MeshMapApplier.Apply, after the map's water cells are known (boulders must not land in the lake) and its ground colliders exist (IsGroundAt raycasts against them).</summary>
-        public void Initialize()
+        public void Initialize(GameObject[] rockPrefabs = null)
         {
             if (_initialized) return;
             _initialized = true;
+            _rockPrefabs = rockPrefabs ?? new GameObject[0];
 
             for (var i = 0; i < InitialRockCount; i++)
             {
@@ -177,15 +184,31 @@ namespace CityBuilder.Maps
             var root = new GameObject("Rock");
             root.transform.SetParent(transform, false);
             root.transform.position = position;
-            root.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
-            var boulderCount = Random.Range(2, 5);
-            for (var i = 0; i < boulderCount; i++)
+            var hash = CellHash(cell);
+            var model = ModelFor(hash);
+            var height = 0.6f;
+            if (model != null)
             {
-                var offset = new Vector3(Random.Range(-0.28f, 0.28f), 0f, Random.Range(-0.28f, 0.28f));
-                var size = Random.Range(0.3f, 0.55f);
-                var material = i % 2 == 0 ? _rockMaterial : _rockShadeMaterial;
-                AddCubePart(root.transform, $"Boulder{i}", offset + new Vector3(0f, size * 0.5f, 0f), Vector3.one * size, material);
+                // Turned by the cell too, so a reload shows the same face to the camera.
+                root.transform.rotation = Quaternion.Euler(0f, (hash >> 8) % 360u, 0f);
+                var instance = Instantiate(model, root.transform);
+                instance.transform.localPosition = Vector3.zero;
+                instance.transform.localRotation = model.transform.localRotation;
+                SceneryShadows.DisableCasting(instance);
+                height = Mathf.Max(0.3f, MeasuredHeight(instance));
+            }
+            else
+            {
+                root.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                var boulderCount = Random.Range(2, 5);
+                for (var i = 0; i < boulderCount; i++)
+                {
+                    var offset = new Vector3(Random.Range(-0.28f, 0.28f), 0f, Random.Range(-0.28f, 0.28f));
+                    var size = Random.Range(0.3f, 0.55f);
+                    var material = i % 2 == 0 ? _rockMaterial : _rockShadeMaterial;
+                    AddCubePart(root.transform, $"Boulder{i}", offset + new Vector3(0f, size * 0.5f, 0f), Vector3.one * size, material);
+                }
             }
 
             // One collider on the root (the cube parts' own are stripped) purely so the player can
@@ -196,8 +219,9 @@ namespace CityBuilder.Maps
             // over rather than becoming hundreds of new things to get wedged against.
             var clickCollider = root.AddComponent<BoxCollider>();
             clickCollider.isTrigger = true;
-            clickCollider.center = new Vector3(0f, 0.3f, 0f);
-            clickCollider.size = new Vector3(1f, 0.6f, 1f);
+            // The whole cell wide whatever the boulder's size, so even the pebbles are easy to tap.
+            clickCollider.center = new Vector3(0f, height * 0.5f, 0f);
+            clickCollider.size = new Vector3(1f, height, 1f);
 
             root.AddComponent<ResourceNode>().Initialize(ResourceType.Stone);
 
@@ -205,6 +229,51 @@ namespace CityBuilder.Maps
             _rockCells.Add(cell);
             _rockCellByInstance[root] = cell;
             return root;
+        }
+
+        /// <summary>
+        /// Which boulder model stands on a cell: a weighted pick driven by the cell's hash, so it is
+        /// the same every time the cell is asked. The models are ordered smallest first and model i
+        /// of n weighs n - i, so pebbles are the commonest find and the great outcrop the rarest
+        /// (with ten: 18% down to under 2%).
+        /// </summary>
+        private GameObject ModelFor(uint hash)
+        {
+            var n = _rockPrefabs.Length;
+            if (n == 0) return null;
+
+            var total = n * (n + 1) / 2;
+            var pick = (int)(hash % (uint)total);
+            for (var i = 0; i < n; i++)
+            {
+                pick -= n - i;
+                if (pick < 0) return _rockPrefabs[i];
+            }
+            return _rockPrefabs[n - 1];
+        }
+
+        /// <summary>A well-mixed integer from a cell's coordinates (stable across runs and saves).</summary>
+        private static uint CellHash(Vector2Int cell)
+        {
+            unchecked
+            {
+                var h = (uint)cell.x * 73856093u ^ (uint)cell.y * 19349663u;
+                h ^= h >> 16;
+                h *= 0x7feb352du;
+                h ^= h >> 15;
+                h *= 0x846ca68bu;
+                h ^= h >> 16;
+                return h;
+            }
+        }
+
+        private static float MeasuredHeight(GameObject instance)
+        {
+            var renderers = instance.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return 0f;
+            var bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            return bounds.max.y - instance.transform.position.y;
         }
 
         private bool HasNearbyRock(Vector2Int cell)
