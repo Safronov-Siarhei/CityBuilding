@@ -6,9 +6,9 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The settings card. One setting today -- the language -- and the buttons for it are built at
-    /// play time from whatever columns the localization sheet has, so adding a third language is a
-    /// column in the spreadsheet and nothing here.
+    /// The settings card: the language, and how the fog of war looks (see GameSettings.FogStyle).
+    /// The language buttons are built at play time from whatever columns the localization sheet
+    /// has, so adding a third language is a column in the spreadsheet and nothing here.
     ///
     /// Each language is labelled in ITSELF ("Русский", "English"), never translated: a player who
     /// opened this screen because the game is in a language they cannot read needs to recognise
@@ -18,6 +18,7 @@ namespace CityBuilder.UI
     {
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private RectTransform languageRow;
+        [SerializeField] private RectTransform fogRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -31,10 +32,19 @@ namespace CityBuilder.UI
         };
 
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
+        private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
+
+        /// <summary>The fog styles in the order their buttons stand, each with the sheet key of its caption.</summary>
+        private static readonly (FogStyle style, string key)[] FogStyles =
+        {
+            (FogStyle.Clouds, "#settings_fog_clouds"),
+            (FogStyle.Parchment, "#settings_fog_parchment"),
+        };
 
         public void OpenPanel()
         {
             if (_buttons.Count == 0) BuildLanguageButtons();
+            if (_fogButtons.Count == 0) BuildFogButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -50,6 +60,31 @@ namespace CityBuilder.UI
         {
             Localization.SetLanguage(code);
             HighlightSelected();
+        }
+
+        public void SelectFogStyle(FogStyle style)
+        {
+            GameSettings.FogStyle = style;
+            HighlightSelected();
+        }
+
+        private void BuildFogButtons()
+        {
+            if (fogRow == null) return;
+
+            const float width = 260f;
+            const float spacing = 16f;
+            for (var i = 0; i < FogStyles.Length; i++)
+            {
+                var (style, key) = FogStyles[i];
+                var x = (i - (FogStyles.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(fogRow, $"Fog_{style}", x, width, out var label);
+                // Translated, unlike the language names, and re-translated when the language changes.
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                var captured = style;
+                image.GetComponent<Button>().onClick.AddListener(() => SelectFogStyle(captured));
+                _fogButtons.Add((style, image));
+            }
         }
 
         private void BuildLanguageButtons()
@@ -71,8 +106,17 @@ namespace CityBuilder.UI
 
         private Image CreateLanguageButton(string code, float x, float width)
         {
-            var go = new GameObject($"Language_{code}", typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(languageRow, false);
+            var image = CreateRowButton(languageRow, $"Language_{code}", x, width, out var label);
+            label.text = NativeNames.TryGetValue(code, out var native) ? native : code;
+            var captured = code;
+            image.GetComponent<Button>().onClick.AddListener(() => SelectLanguage(captured));
+            return image;
+        }
+
+        private Image CreateRowButton(RectTransform row, string name, float x, float width, out Text label)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(row, false);
 
             var rect = go.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -91,18 +135,13 @@ namespace CityBuilder.UI
             labelRect.offsetMin = new Vector2(8f, 6f);
             labelRect.offsetMax = new Vector2(-8f, -6f);
 
-            var label = labelGO.GetComponent<Text>();
+            label = labelGO.GetComponent<Text>();
             label.font = UiTheme.Regular;
             label.fontSize = 26;
             label.alignment = TextAnchor.MiddleCenter;
             label.color = UiTheme.Ink;
-            label.text = NativeNames.TryGetValue(code, out var native) ? native : code;
 
-            var button = go.GetComponent<Button>();
-            button.targetGraphic = image;
-            var captured = code;
-            button.onClick.AddListener(() => SelectLanguage(captured));
-
+            go.GetComponent<Button>().targetGraphic = image;
             return image;
         }
 
@@ -111,6 +150,10 @@ namespace CityBuilder.UI
             foreach (var (code, background) in _buttons)
             {
                 background.color = code == Localization.Language ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (style, background) in _fogButtons)
+            {
+                background.color = style == GameSettings.FogStyle ? SelectedColor : UnselectedColor;
             }
         }
     }

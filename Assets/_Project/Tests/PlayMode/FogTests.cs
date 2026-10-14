@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Saving;
@@ -49,10 +50,100 @@ namespace CityBuilder.Tests.PlayMode
             _sceneLoaded = true;
         }
 
+        private static FogStyle _playersStyle;
+
+        [OneTimeSetUp]
+        public void RememberThePlayersStyle()
+        {
+            // The setting lives in the same PlayerPrefs the developer plays with.
+            _playersStyle = GameSettings.FogStyle;
+            GameSettings.FogStyle = FogStyle.Clouds;
+        }
+
         [OneTimeTearDown]
         public void ForgetTheScene()
         {
             _sceneLoaded = false;
+            GameSettings.FogStyle = _playersStyle;
+        }
+
+        [UnityTest]
+        public IEnumerator SwitchingToParchment_RedrawsTheFogAsAChartOfTheLand()
+        {
+            GameSettings.FogStyle = FogStyle.Parchment;
+            try
+            {
+                yield return WaitForChart();
+
+                foreach (var chunk in Chunks())
+                {
+                    Assert.AreEqual("CityBuilder/FogParchment", chunk.sharedMaterial.shader.name, $"{chunk.name} still draws clouds.");
+                }
+
+                // The chart must say what the map says: water where the map has water, forest
+                // where the trees stand, height where the hills are.
+                var grid = GridManager.Instance;
+                var waterCell = FindCell(cell => MeshMapApplier.Instance.IsWaterCell(cell) && AllAround(cell, 3, MeshMapApplier.Instance.IsWaterCell));
+                Assert.IsNotNull(waterCell, "Map 3 has no open water to check the chart against.");
+                Assert.Greater(Fog.ChartAt(waterCell.Value).r, 0.9f, "Open water is not water on the chart.");
+
+                Vector2Int? treeCell = null;
+                foreach (var node in ResourceNode.All)
+                {
+                    if (node != null && node.ResourceType == CityBuilder.Resources.ResourceType.Wood) { treeCell = grid.WorldToCell(node.transform.position); break; }
+                }
+                Assert.IsNotNull(treeCell, "No tree on the map to check the chart against.");
+                Assert.Greater(Fog.ChartAt(treeCell.Value).b, 0.3f, "A tree's cell is not forest on the chart.");
+
+                var highest = 0f;
+                for (var x = 0; x < grid.GridSize.x; x += 2)
+                {
+                    for (var z = 0; z < grid.GridSize.y; z += 2) highest = Mathf.Max(highest, Fog.ChartAt(new Vector2Int(x, z)).g);
+                }
+                Assert.Greater(highest * 32f, 4f, "The chart shows no hill higher than 4 m -- Map 3's mountains are missing from it.");
+            }
+            finally
+            {
+                GameSettings.FogStyle = FogStyle.Clouds;
+            }
+
+            foreach (var chunk in Chunks())
+            {
+                Assert.AreEqual("CityBuilder/FogClouds", chunk.sharedMaterial.shader.name, $"{chunk.name} did not go back to clouds.");
+            }
+        }
+
+        private static IEnumerator WaitForChart()
+        {
+            var deadline = Time.unscaledTime + 6f;
+            while (!Fog.ChartBuilt && Time.unscaledTime < deadline) yield return null;
+            Assert.IsTrue(Fog.ChartBuilt, "The parchment never drew its chart of the map.");
+        }
+
+        private static Vector2Int? FindCell(System.Func<Vector2Int, bool> wanted)
+        {
+            var size = GridManager.Instance.GridSize;
+            for (var x = 4; x < size.x - 4; x++)
+            {
+                for (var z = 4; z < size.y - 4; z++)
+                {
+                    var cell = new Vector2Int(x, z);
+                    if (wanted(cell)) return cell;
+                }
+            }
+            return null;
+        }
+
+        private static bool AllAround(Vector2Int cell, int radius, System.Func<Vector2Int, bool> test)
+        {
+            for (var dx = -radius; dx <= radius; dx++)
+            {
+                for (var dz = -radius; dz <= radius; dz++)
+                {
+                    if (!test(cell + new Vector2Int(dx, dz))) return false;
+                }
+            }
+            return true;
         }
 
         private static FogOfWarManager Fog
@@ -161,6 +252,21 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("fog-25m", _townHall, 25f, 50f, 0f, 60f);
             yield return PlaytestCapture.Shoot("fog-45m", _townHall, 45f, 50f, 20f, 60f);
             yield return PlaytestCapture.Shoot("fog-edge-close", _townHall + new Vector3(-14f, 0f, 10f), 9f, 45f, -30f, 60f);
+
+            // The other look, the same views.
+            GameSettings.FogStyle = FogStyle.Parchment;
+            try
+            {
+                yield return WaitForChart();
+                yield return PlaytestCapture.Shoot("parchment-15m", _townHall, 15f, 50f, 0f, 60f);
+                yield return PlaytestCapture.Shoot("parchment-25m", _townHall, 25f, 50f, 0f, 60f);
+                yield return PlaytestCapture.Shoot("parchment-45m", _townHall, 45f, 50f, 20f, 60f);
+                yield return PlaytestCapture.Shoot("parchment-edge-close", _townHall + new Vector3(-14f, 0f, 10f), 9f, 45f, -30f, 60f);
+            }
+            finally
+            {
+                GameSettings.FogStyle = FogStyle.Clouds;
+            }
         }
 
         private static Vector2Int FarCorner()

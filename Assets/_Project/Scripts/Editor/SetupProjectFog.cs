@@ -14,25 +14,32 @@ namespace CityBuilder.EditorTools
         private const string FogCloudShaderPath = ShaderTextureImport.ShadersFolder + "/FogClouds.shader";
         private const string CloudNoisePath = ShaderTextureImport.ShadersFolder + "/CloudNoise.png";
 
-        private static Material CreateFogCloudMaterial()
+        private const string FogParchmentShaderPath = ShaderTextureImport.ShadersFolder + "/FogParchment.shader";
+
+        private static Material CreateFogCloudMaterial() => CreateFogMaterial("FogClouds", FogCloudShaderPath);
+
+        /// <summary>The other look of the fog, an old map on parchment -- the player picks one in the settings.</summary>
+        private static Material CreateFogParchmentMaterial() => CreateFogMaterial("FogParchment", FogParchmentShaderPath);
+
+        private static Material CreateFogMaterial(string name, string shaderPath)
         {
             // Through the importer first, so the noise is linear and tiling before anything samples it.
             AssetDatabase.ImportAsset(CloudNoisePath, ImportAssetOptions.ForceUpdate);
 
-            var shader = AssetDatabase.LoadAssetAtPath<Shader>(FogCloudShaderPath);
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
             if (shader == null)
             {
-                Debug.LogError($"SetupProject: no cloud shader at {FogCloudShaderPath} -- the fog of war will not be drawn.");
+                Debug.LogError($"SetupProject: no shader at {shaderPath} -- that look of the fog of war will not be drawn.");
                 return null;
             }
 
             var noise = AssetDatabase.LoadAssetAtPath<Texture2D>(CloudNoisePath);
             if (noise == null) Debug.LogWarning($"SetupProject: no cloud noise at {CloudNoisePath} -- run Tools/ui/make_cloud_noise.py.");
 
-            var material = new Material(shader) { name = "FogClouds" };
+            var material = new Material(shader) { name = name };
             material.SetTexture("_NoiseTex", noise);
 
-            var path = $"{MaterialsFolder}/FogClouds.mat";
+            var path = $"{MaterialsFolder}/{name}.mat";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(material, path);
             return material;

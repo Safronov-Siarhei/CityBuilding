@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &531942746509897219
+--- !u!1 &3988126035546127362
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 28388174211464944}
-  - component: {fileID: 6224761030506333844}
-  - component: {fileID: 8436093032714526726}
+  - component: {fileID: 274502339180523964}
+  - component: {fileID: 2499264195340031344}
+  - component: {fileID: 4178807350411316791}
   m_Layer: 0
   m_Name: Castle1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &28388174211464944
+--- !u!4 &274502339180523964
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531942746509897219}
+  m_GameObject: {fileID: 3988126035546127362}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3145001884756456276}
+  m_Father: {fileID: 1285081884059345340}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6224761030506333844
+--- !u!33 &2499264195340031344
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531942746509897219}
+  m_GameObject: {fileID: 3988126035546127362}
   m_Mesh: {fileID: 6207395573029169238, guid: ec1b3b530acc7704a99bb706c109eb8c, type: 3}
---- !u!23 &8436093032714526726
+--- !u!23 &4178807350411316791
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531942746509897219}
+  m_GameObject: {fileID: 3988126035546127362}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &8345039923829987838
+--- !u!1 &6968645944426281232
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3145001884756456276}
-  - component: {fileID: 1286756670998632627}
-  - component: {fileID: 7983781508007744869}
-  - component: {fileID: -9183415630653112370}
+  - component: {fileID: 1285081884059345340}
+  - component: {fileID: 8829549933450878106}
+  - component: {fileID: 1204962328585115952}
+  - component: {fileID: 6809557100746374661}
   m_Layer: 0
   m_Name: Castle
   m_TagString: Untagged
@@ -109,41 +109,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3145001884756456276
+--- !u!4 &1285081884059345340
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8345039923829987838}
+  m_GameObject: {fileID: 6968645944426281232}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 28388174211464944}
+  - {fileID: 274502339180523964}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1286756670998632627
+--- !u!114 &8829549933450878106
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8345039923829987838}
+  m_GameObject: {fileID: 6968645944426281232}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &7983781508007744869
+--- !u!65 &1204962328585115952
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8345039923829987838}
+  m_GameObject: {fileID: 6968645944426281232}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -158,13 +158,13 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4.92, y: 2.6399999, z: 4.92}
   m_Center: {x: 0, y: 1.3199999, z: 0}
---- !u!114 &-9183415630653112370
+--- !u!114 &6809557100746374661
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8345039923829987838}
+  m_GameObject: {fileID: 6968645944426281232}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3fc8daff3b6c6345b3b7fa07e32a924, type: 3}

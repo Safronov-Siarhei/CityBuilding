@@ -35,6 +35,11 @@ namespace CityBuilder.Maps
     /// easing. The blanket is cut into chunks, and a chunk with no fog anywhere near it is switched
     /// off -- the explored town, which is where the camera spends its time, draws no cloud at all.
     /// Transparent, unlit, no shadows.
+    ///
+    /// **Two looks, the player's choice** (GameSettings.FogStyle, in the main menu's settings):
+    /// the clouds, or an old map on parchment (Shaders/FogParchment.shader) with the land under it
+    /// drawn in ink. Both draw on the same blanket from the same mask; the parchment also reads a
+    /// chart of the map (<see cref="BuildChart"/>), made once, the first time it is shown.
     /// </summary>
     public class FogOfWarManager : MonoBehaviour
     {
@@ -45,6 +50,15 @@ namespace CityBuilder.Maps
 
         /// <summary>The cloud material (Shaders/FogClouds.shader). Copied at runtime, so the asset is never written to.</summary>
         [SerializeField] private Material cloudMaterial;
+
+        /// <summary>The parchment material (Shaders/FogParchment.shader). Copied at runtime, like the clouds.</summary>
+        [SerializeField] private Material parchmentMaterial;
+
+        /// <summary>The metres of height the chart's height channel spans above the plain -- Map 3's tallest mountain with room to spare.</summary>
+        private const float ChartHeightScale = 32f;
+
+        /// <summary>How long the parchment waits for the trees and rocks to be placed before charting the map without them.</summary>
+        private const float ChartWaitSeconds = 3f;
 
         private const int ChunkSize = 20;
         private const int CitizenRevealRadiusCells = 7;
@@ -96,6 +110,12 @@ namespace CityBuilder.Maps
         private bool _anyRecheck;
         private float _recheckTimer;
         private Material _cloudMaterialInstance;
+        private Material _parchmentMaterialInstance;
+        private Texture2D _chart;
+        private bool _chartBuilt;
+        private float _chartWait;
+        private FogStyle _style;
+        private bool _listeningToSettings;
 
         private bool _active;
         private bool _initialized;
@@ -151,21 +171,12 @@ namespace CityBuilder.Maps
             _chunkFilters = new MeshFilter[_chunksX, _chunksZ];
             _chunkRecheck = new bool[_chunksX, _chunksZ];
 
-            var material = cloudMaterial;
-            if (material == null)
-            {
-                var shader = Shader.Find("CityBuilder/FogClouds");
-                if (shader != null) material = new Material(shader);
-            }
-            if (material != null)
-            {
-                _cloudMaterialInstance = new Material(material) { name = "FogClouds (runtime)" };
-                ConfigureMaterial(grid);
-            }
-            else
-            {
-                Debug.LogError("[FogOfWar] The cloud shader 'CityBuilder/FogClouds' is not in this build -- the fog will not be drawn.");
-            }
+            _cloudMaterialInstance = RuntimeCopy(cloudMaterial, "CityBuilder/FogClouds", "FogClouds (runtime)");
+            _parchmentMaterialInstance = RuntimeCopy(parchmentMaterial, "CityBuilder/FogParchment", "FogParchment (runtime)");
+            ConfigureMaterial(_cloudMaterialInstance, grid);
+            ConfigureMaterial(_parchmentMaterialInstance, grid);
+            if (_parchmentMaterialInstance != null) _parchmentMaterialInstance.SetFloat("_HeightScale", ChartHeightScale);
+            _style = GameSettings.FogStyle;
 
             // World-aligned and unscaled whatever this component's object is, because the chunk
             // meshes are written in world coordinates.
@@ -181,7 +192,7 @@ namespace CityBuilder.Maps
                     var go = new GameObject($"FogChunk_{cx}_{cz}", typeof(MeshFilter), typeof(MeshRenderer));
                     go.transform.SetParent(_cloudRoot.transform, false);
                     var chunkRenderer = go.GetComponent<MeshRenderer>();
-                    chunkRenderer.sharedMaterial = _cloudMaterialInstance;
+                    chunkRenderer.sharedMaterial = CurrentMaterial;
                     // Cloud lying over ground the player cannot see: its shadow would fall on
                     // hidden ground and cost a second draw of every chunk -- see SceneryShadows.
                     chunkRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -195,15 +206,69 @@ namespace CityBuilder.Maps
             }
         }
 
-        private void ConfigureMaterial(GridManager grid)
+        private static Material RuntimeCopy(Material asset, string shaderName, string name)
         {
+            var source = asset;
+            if (source == null)
+            {
+                var shader = Shader.Find(shaderName);
+                if (shader == null)
+                {
+                    Debug.LogError($"[FogOfWar] The shader '{shaderName}' is not in this build -- that look of the fog will not be drawn.");
+                    return null;
+                }
+                source = new Material(shader);
+            }
+            return new Material(source) { name = name };
+        }
+
+        private void ConfigureMaterial(Material material, GridManager grid)
+        {
+            if (material == null) return;
             var origin = grid.CellToWorld(Vector2Int.zero);
             var sizeX = _width * grid.CellSize;
             var sizeZ = _depth * grid.CellSize;
-            _cloudMaterialInstance.SetTexture("_MaskTex", _mask);
-            _cloudMaterialInstance.SetVector("_MapRect", new Vector4(origin.x, origin.z, 1f / sizeX, 1f / sizeZ));
-            _cloudMaterialInstance.SetVector("_MaskStep", new Vector4(MaskBlurMeters / sizeX, MaskBlurMeters / sizeZ, 0f, 0f));
-            _cloudMaterialInstance.SetFloat("_Clearance", Clearance);
+            material.SetTexture("_MaskTex", _mask);
+            material.SetVector("_MapRect", new Vector4(origin.x, origin.z, 1f / sizeX, 1f / sizeZ));
+            material.SetVector("_MaskStep", new Vector4(MaskBlurMeters / sizeX, MaskBlurMeters / sizeZ, 0f, 0f));
+            material.SetFloat("_Clearance", Clearance);
+        }
+
+        /// <summary>The look in use, falling back to the other one if its shader is missing from the build.</summary>
+        private Material CurrentMaterial =>
+            _style == FogStyle.Parchment && _parchmentMaterialInstance != null
+                ? _parchmentMaterialInstance
+                : _cloudMaterialInstance != null ? _cloudMaterialInstance : _parchmentMaterialInstance;
+
+        public FogStyle Style => _style;
+
+        private void ApplyStyle()
+        {
+            if (!_initialized) return;
+            _style = GameSettings.FogStyle;
+            var material = CurrentMaterial;
+            for (var cx = 0; cx < _chunksX; cx++)
+            {
+                for (var cz = 0; cz < _chunksZ; cz++)
+                {
+                    _chunkObjects[cx, cz].GetComponent<MeshRenderer>().sharedMaterial = material;
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_listeningToSettings) return;
+            GameSettings.OnChanged += ApplyStyle;
+            _listeningToSettings = true;
+            ApplyStyle();
+        }
+
+        private void OnDisable()
+        {
+            if (!_listeningToSettings) return;
+            GameSettings.OnChanged -= ApplyStyle;
+            _listeningToSettings = false;
         }
 
         private void Start()
@@ -225,6 +290,14 @@ namespace CityBuilder.Maps
             // run, and every Start runs before the first Update.
             if (!_blanketBuilt) BuildBlanket();
             if (_needsSnap) Snap();
+
+            // The chart is wanted only by the parchment, and only once: when the player first
+            // sees it, after the trees and rocks are standing (or once it is clear none will be).
+            if (_style == FogStyle.Parchment && !_chartBuilt)
+            {
+                _chartWait += Time.deltaTime;
+                if (ResourceNode.All.Count > 0 || _chartWait >= ChartWaitSeconds) BuildChart();
+            }
 
             _citizenTimer -= Time.deltaTime;
             if (_citizenTimer <= 0f)
@@ -625,11 +698,183 @@ namespace CityBuilder.Maps
             return heights;
         }
 
+        // ---------------------------------------------------------------- the chart
+
+        /// <summary>Whether the parchment's chart of the map has been drawn.</summary>
+        public bool ChartBuilt => _chartBuilt;
+
+        /// <summary>The chart's value at a cell, 0..1 per channel: water, height above the plain / ChartHeightScale, forest, stony ground. For tests.</summary>
+        public Color ChartAt(Vector2Int cell)
+        {
+            return _chart != null ? _chart.GetPixel(cell.x, cell.y) : Color.clear;
+        }
+
+        /// <summary>
+        /// A survey of the map for the parchment to draw from, one texel per cell, made once. Every
+        /// channel is softened a little after it is filled, so the 0.5 contour the shader inks is a
+        /// smooth curve rather than the cell grid's staircase.
+        ///
+        /// Height comes from rasterising the land's own triangles -- exact at every cell, where
+        /// binning vertices would leave holes wherever the plain's large flat triangles have none.
+        /// Forests and stony ground come from where the trees and rocks actually stand.
+        /// </summary>
+        private void BuildChart()
+        {
+            _chartBuilt = true;
+            var grid = GridManager.Instance;
+            var cells = _width * _depth;
+            var water = new float[cells];
+            var height = new float[cells];
+            var forest = new float[cells];
+            var stone = new float[cells];
+
+            var applier = MeshMapApplier.Instance;
+            if (applier != null)
+            {
+                for (var z = 0; z < _depth; z++)
+                {
+                    for (var x = 0; x < _width; x++)
+                    {
+                        if (applier.IsWaterCell(new Vector2Int(x, z))) water[z * _width + x] = 1f;
+                    }
+                }
+
+                var meshes = new List<MeshFilter>();
+                applier.CollectTerrainMeshes(meshes);
+                foreach (var filter in meshes) RasteriseHeights(filter, grid, height);
+            }
+
+            foreach (var node in ResourceNode.All)
+            {
+                if (node == null) continue;
+                var target = node.ResourceType == CityBuilder.Resources.ResourceType.Wood ? forest
+                    : node.ResourceType == CityBuilder.Resources.ResourceType.Stone ? stone : null;
+                if (target == null) continue;
+
+                var cell = grid.WorldToCell(node.transform.position);
+                for (var dz = -1; dz <= 1; dz++)
+                {
+                    for (var dx = -1; dx <= 1; dx++)
+                    {
+                        var x = cell.x + dx;
+                        var z = cell.y + dz;
+                        if (x >= 0 && z >= 0 && x < _width && z < _depth) target[z * _width + x] = 1f;
+                    }
+                }
+            }
+
+            Soften(water, 2);
+            Soften(height, 1);
+            Soften(forest, 2);
+            Soften(stone, 2);
+
+            var pixels = new Color32[cells];
+            for (var i = 0; i < cells; i++)
+            {
+                pixels[i] = new Color32(ToByte(water[i]), ToByte(height[i] / ChartHeightScale), ToByte(forest[i]), ToByte(stone[i]));
+            }
+
+            _chart = new Texture2D(_width, _depth, TextureFormat.RGBA32, false, true)
+            {
+                name = "FogChart",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            _chart.SetPixels32(pixels);
+            _chart.Apply(false, false);
+            if (_parchmentMaterialInstance != null) _parchmentMaterialInstance.SetTexture("_ChartTex", _chart);
+        }
+
+        private static byte ToByte(float value) => (byte)Mathf.RoundToInt(Mathf.Clamp01(value) * 255f);
+
+        /// <summary>Writes into `heights` (metres above the plain, per cell) the land's height at every cell centre one mesh's triangles cover, keeping the highest.</summary>
+        private void RasteriseHeights(MeshFilter filter, GridManager grid, float[] heights)
+        {
+            var mesh = filter.sharedMesh;
+            if (mesh == null || !mesh.isReadable) return;
+
+            var toWorld = filter.transform.localToWorldMatrix;
+            var local = mesh.vertices;
+            var world = new Vector3[local.Length];
+            for (var i = 0; i < local.Length; i++) world[i] = toWorld.MultiplyPoint3x4(local[i]);
+
+            var origin = grid.CellToWorld(Vector2Int.zero);
+            var cellSize = grid.CellSize;
+            var plain = grid.GroundHeight;
+            var triangles = mesh.triangles;
+            for (var t = 0; t < triangles.Length; t += 3)
+            {
+                var a = world[triangles[t]];
+                var b = world[triangles[t + 1]];
+                var c = world[triangles[t + 2]];
+
+                // The cells whose centres can lie inside this triangle.
+                var x0 = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(a.x, Mathf.Min(b.x, c.x)) - origin.x) / cellSize - 0.5f));
+                var x1 = Mathf.Min(_width - 1, Mathf.CeilToInt((Mathf.Max(a.x, Mathf.Max(b.x, c.x)) - origin.x) / cellSize - 0.5f));
+                var z0 = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(a.z, Mathf.Min(b.z, c.z)) - origin.z) / cellSize - 0.5f));
+                var z1 = Mathf.Min(_depth - 1, Mathf.CeilToInt((Mathf.Max(a.z, Mathf.Max(b.z, c.z)) - origin.z) / cellSize - 0.5f));
+                if (x0 > x1 || z0 > z1) continue;
+
+                var area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+                if (Mathf.Abs(area) < 1e-6f) continue;
+
+                for (var z = z0; z <= z1; z++)
+                {
+                    var pz = origin.z + (z + 0.5f) * cellSize;
+                    for (var x = x0; x <= x1; x++)
+                    {
+                        var px = origin.x + (x + 0.5f) * cellSize;
+                        var wa = ((b.x - px) * (c.z - pz) - (c.x - px) * (b.z - pz)) / area;
+                        var wb = ((c.x - px) * (a.z - pz) - (a.x - px) * (c.z - pz)) / area;
+                        var wc = 1f - wa - wb;
+                        if (wa < -1e-4f || wb < -1e-4f || wc < -1e-4f) continue;
+
+                        var h = wa * a.y + wb * b.y + wc * c.y - plain;
+                        var index = z * _width + x;
+                        if (h > heights[index]) heights[index] = h;
+                    }
+                }
+            }
+        }
+
+        /// <summary>A 3x3 box blur, `passes` times, in place.</summary>
+        private void Soften(float[] field, int passes)
+        {
+            var scratch = new float[field.Length];
+            for (var pass = 0; pass < passes; pass++)
+            {
+                for (var z = 0; z < _depth; z++)
+                {
+                    for (var x = 0; x < _width; x++)
+                    {
+                        var sum = 0f;
+                        var count = 0;
+                        for (var dz = -1; dz <= 1; dz++)
+                        {
+                            var sz = z + dz;
+                            if (sz < 0 || sz >= _depth) continue;
+                            for (var dx = -1; dx <= 1; dx++)
+                            {
+                                var sx = x + dx;
+                                if (sx < 0 || sx >= _width) continue;
+                                sum += field[sz * _width + sx];
+                                count++;
+                            }
+                        }
+                        scratch[z * _width + x] = sum / count;
+                    }
+                }
+                Array.Copy(scratch, field, field.Length);
+            }
+        }
+
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
             if (_mask != null) Destroy(_mask);
+            if (_chart != null) Destroy(_chart);
             if (_cloudMaterialInstance != null) Destroy(_cloudMaterialInstance);
+            if (_parchmentMaterialInstance != null) Destroy(_parchmentMaterialInstance);
         }
     }
 }

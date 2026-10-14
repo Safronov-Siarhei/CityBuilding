@@ -369,25 +369,24 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(760f, 420f);
+            // Taller for the second setting, the fog's look.
+            cardRect.sizeDelta = new Vector2(760f, 600f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 140f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 66f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 230f), new Vector2(680f, 70f)), "#settings_title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 156f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 86f);
 
-            var languageRow = new GameObject("LanguageRow", typeof(RectTransform));
-            languageRow.transform.SetParent(card.transform, false);
-            var languageRowRect = languageRow.GetComponent<RectTransform>();
-            languageRowRect.anchorMin = languageRowRect.anchorMax = new Vector2(0.5f, 0.5f);
-            languageRowRect.anchoredPosition = new Vector2(0f, -10f);
-            languageRowRect.sizeDelta = new Vector2(700f, 72f);
+            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 0f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", -70f);
 
-            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -140f), new Vector2(300f, 80f));
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -210f), new Vector2(300f, 80f));
 
             var controller = panelRoot.AddComponent<SettingsPanelController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
+            controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -395,6 +394,18 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);
+        }
+
+        /// <summary>An empty row the settings panel fills with buttons at play time.</summary>
+        private static RectTransform CreateSettingsRow(Transform card, string name, float y)
+        {
+            var row = new GameObject(name, typeof(RectTransform));
+            row.transform.SetParent(card, false);
+            var rect = row.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, y);
+            rect.sizeDelta = new Vector2(700f, 72f);
+            return rect;
         }
 
         private static void BuildCityScene()
@@ -835,6 +846,7 @@ namespace CityBuilder.EditorTools
             fogOfWarManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             fogOfWarManagerSO.FindProperty("citizenVisualsManager").objectReferenceValue = citizenVisualsManager;
             fogOfWarManagerSO.FindProperty("cloudMaterial").objectReferenceValue = CreateFogCloudMaterial();
+            fogOfWarManagerSO.FindProperty("parchmentMaterial").objectReferenceValue = CreateFogParchmentMaterial();
             fogOfWarManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var saveController = managers.AddComponent<GameSaveController>();
