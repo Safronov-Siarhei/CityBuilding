@@ -67,6 +67,10 @@ namespace CityBuilder.Maps
         // citizens are pinned to the plain's height, so a path over a hill would walk them
         // through it.
         private Collider[] _reliefColliders = new Collider[0];
+
+        // The ground and relief as instantiated, kept for TerrainMeshes.
+        private GameObject _groundInstance;
+        private GameObject _reliefInstance;
         private readonly List<Vector2Int> _rocksZoneCells = new List<Vector2Int>();
         private readonly HashSet<Vector2Int> _noBuildCells = new HashSet<Vector2Int>();
         private NavMeshDataInstance _navMeshDataInstance;
@@ -184,6 +188,19 @@ namespace CityBuilder.Maps
         /// that was clicked (a citizen, a tree) still scan all hits themselves; this answers the
         /// separate question of where on the map that click landed.
         /// </summary>
+        /// <summary>
+        /// The meshes the land is drawn with -- the plain and, where the map has them, its hills and
+        /// mountains -- for anything that has to follow the land's shape without a physics query
+        /// per point (the fog's cloud layer, see FogOfWarManager). Empty before the map is applied.
+        /// </summary>
+        public void CollectTerrainMeshes(List<MeshFilter> into)
+        {
+            foreach (var instance in new[] { _groundInstance, _reliefInstance })
+            {
+                if (instance != null) into.AddRange(instance.GetComponentsInChildren<MeshFilter>());
+            }
+        }
+
         public bool TryRaycastGround(Ray ray, out RaycastHit hit)
         {
             const float rayLength = 1000f;
@@ -224,6 +241,7 @@ namespace CityBuilder.Maps
             if (map.GroundPrefab != null)
             {
                 var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
+                _groundInstance = groundInstance;
                 // Every sub-mesh gets its own collider, not just the first -- Map-1-Ground.fbx is
                 // authored as several separate mesh pieces, and a single collider derived from
                 // only the first one found left the rest of the terrain with nothing to raycast
@@ -240,6 +258,7 @@ namespace CityBuilder.Maps
             if (map.ReliefPrefab != null)
             {
                 var reliefInstance = Instantiate(map.ReliefPrefab, Vector3.zero, map.ReliefPrefab.transform.rotation, transform);
+                _reliefInstance = reliefInstance;
                 AddMeshCollidersToAll(reliefInstance);
                 TerrainPhysicsLayer.Assign(reliefInstance);
                 SceneryShadows.DisableCasting(reliefInstance);

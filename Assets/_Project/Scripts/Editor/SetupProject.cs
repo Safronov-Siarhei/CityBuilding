@@ -834,6 +834,7 @@ namespace CityBuilder.EditorTools
             var fogOfWarManagerSO = new SerializedObject(fogOfWarManager);
             fogOfWarManagerSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             fogOfWarManagerSO.FindProperty("citizenVisualsManager").objectReferenceValue = citizenVisualsManager;
+            fogOfWarManagerSO.FindProperty("cloudMaterial").objectReferenceValue = CreateFogCloudMaterial();
             fogOfWarManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var saveController = managers.AddComponent<GameSaveController>();

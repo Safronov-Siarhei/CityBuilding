@@ -9,21 +9,32 @@ using UnityEngine;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Simple flat-overlay fog-of-war (classic RTS style): the whole map is visible until the
-    /// mandatory Town Hall is placed (see Activate, called from BuildingPlacer.TryPlace), then
-    /// everything not yet explored is covered by a dark, opaque plane hovering above the terrain
-    /// -- high enough to clear the tallest building/tree, so nothing pokes through it, but with no
-    /// visible side walls the way a solid cloud block would have. Buildings permanently clear a
-    /// radius around themselves (BuildingData.fogRevealRadius, applied from BuildingInstance.
-    /// Initialize -- the single hook point for both fresh placement and save/load, so no separate
-    /// persistence is needed here). Citizens temporarily clear a radius around themselves that
-    /// closes back up once they move on.
+    /// Fog of war: the whole map is visible until the mandatory Town Hall is placed (see Activate,
+    /// called from BuildingPlacer.TryPlace), then the land not yet explored lies under cloud.
+    /// Buildings permanently clear a radius around themselves (BuildingData.fogRevealRadius,
+    /// applied from BuildingInstance.Initialize -- the single hook point for both fresh placement
+    /// and save/load, so no separate persistence is needed here). Citizens temporarily clear a
+    /// radius around themselves that closes back up once they move on.
     ///
-    /// Reveal bookkeeping is exact, at the same 1m grid resolution as gameplay; rendering is
-    /// chunked (ChunkSize cells per chunk, one combined mesh each) and each chunk merges
-    /// contiguous fogged cells along a row into a single quad before triangulating, so a mesh
-    /// rebuild -- which happens only for chunks whose reveal state actually changed -- stays cheap
-    /// even for a mostly-fogged 200x200 map.
+    /// **How it looks.** It used to be a flat black lid hovering 5 m over the map, cut to the 1 m
+    /// grid: the explored land read as an island floating in a void, its edge was a staircase,
+    /// the mountains poked through it, and land appeared and vanished in one frame. The user found
+    /// it crude and cheap and chose clouds (2026-10-14). Now:
+    ///
+    /// - a cloud BLANKET follows the land's shape a few metres above it (<see cref="Clearance"/>),
+    ///   so hills are covered like the plain and nothing pokes through;
+    /// - its shader (Shaders/FogClouds.shader) draws drifting white cloud with a lumpy edge, and
+    ///   reads the reveal state from a one-texel-per-cell mask where the view ray meets the
+    ///   GROUND, so the holes sit exactly over the explored land instead of sliding towards the
+    ///   camera as the lid's did;
+    /// - the mask eases every cell from fogged to revealed and back over <see cref="RevealSeconds"/>,
+    ///   so new land clears gradually.
+    ///
+    /// **What it costs.** Reveal bookkeeping is exact, at the gameplay grid's resolution, and runs
+    /// as before. The mask is 1 byte a cell and is uploaded only on frames where some cell is still
+    /// easing. The blanket is cut into chunks, and a chunk with no fog anywhere near it is switched
+    /// off -- the explored town, which is where the camera spends its time, draws no cloud at all.
+    /// Transparent, unlit, no shadows.
     /// </summary>
     public class FogOfWarManager : MonoBehaviour
     {
@@ -32,12 +43,32 @@ namespace CityBuilder.Maps
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenVisualsManager citizenVisualsManager;
 
+        /// <summary>The cloud material (Shaders/FogClouds.shader). Copied at runtime, so the asset is never written to.</summary>
+        [SerializeField] private Material cloudMaterial;
+
         private const int ChunkSize = 20;
         private const int CitizenRevealRadiusCells = 7;
         private const float CitizenUpdateInterval = 0.3f;
-        // Clears the tallest building (Tower, ~4.2m) and every tree with room to spare, so nothing
-        // ever pokes up through the overlay from below.
-        private const float OverlayHeight = 5f;
+
+        /// <summary>How far the blanket hangs above the highest land near it: over the portals (3.3 m) and every tree, under the camera at its closest zoom on the plain (3.8 m).</summary>
+        public const float Clearance = 3.5f;
+
+        /// <summary>How long a cell takes to clear (or cloud over again).</summary>
+        public const float RevealSeconds = 0.8f;
+
+        /// <summary>Chunks of cloud beyond the map's edge on every side: the camera can look about 40 m past it at its widest zoom.</summary>
+        private const int MarginChunks = 2;
+
+        /// <summary>The blanket's vertex spacing -- fine enough to follow the hills, coarse enough to be a few hundred vertices a chunk.</summary>
+        private const float LatticeStep = 2f;
+
+        /// <summary>A chunk stays on while any fog lies this many cells around it: the cloud's edge reaches past the fog by the mask blur, the noise and the view-ray offset.</summary>
+        private const int ActivityMarginCells = 8;
+
+        private const float RecheckInterval = 0.5f;
+
+        /// <summary>The mask blur radius, in metres.</summary>
+        private const float MaskBlurMeters = 2.2f;
 
         private bool[,] _permanent;
         private bool[,] _citizenRevealed;
@@ -46,24 +77,31 @@ namespace CityBuilder.Maps
         // GC allocation several times a second for the life of the session, a steady source of GC
         // pressure/stutter that has nothing to do with how many citizens are actually on screen.
         private bool[,] _citizenRevealedScratch;
-        private bool[,] _chunkDirty;
-        private GameObject[,] _chunkObjects;
-        private MeshFilter[,] _chunkFilters;
-        private Mesh[,] _chunkMeshes;
+
+        // What the clouds show, per cell, 0 (fog) .. 255 (revealed), eased towards IsRevealed.
+        private byte[] _display;
+        private bool[] _easing;
+        private readonly List<int> _easingCells = new List<int>();
+        private Texture2D _mask;
+        private bool _maskDirty;
+
+        private int _width;
+        private int _depth;
         private int _chunksX;
         private int _chunksZ;
+        private GameObject _cloudRoot;
+        private GameObject[,] _chunkObjects;
+        private MeshFilter[,] _chunkFilters;
+        private bool[,] _chunkRecheck;
+        private bool _anyRecheck;
+        private float _recheckTimer;
+        private Material _cloudMaterialInstance;
+
         private bool _active;
         private bool _initialized;
+        private bool _blanketBuilt;
+        private bool _needsSnap;
         private float _citizenTimer;
-        private Material _cloudMaterial;
-
-        // Reused across every RebuildChunk call instead of allocating fresh Lists each time --
-        // citizen movement can dirty several chunks per UpdateCitizenReveal tick (every 0.3s), so
-        // this was a recurring GC source scaling with how many citizens are near a chunk boundary.
-        // Safe as shared instance state: RebuildChunk always runs one chunk to completion (mesh
-        // upload included) before the next one starts, never overlapping or recursing.
-        private readonly List<Vector3> _chunkVertices = new List<Vector3>();
-        private readonly List<int> _chunkTriangles = new List<int>();
 
         private void Awake()
         {
@@ -92,36 +130,80 @@ namespace CityBuilder.Maps
             if (grid == null) return;
             _initialized = true;
 
-            _permanent = new bool[grid.GridSize.x, grid.GridSize.y];
-            _citizenRevealed = new bool[grid.GridSize.x, grid.GridSize.y];
-            _citizenRevealedScratch = new bool[grid.GridSize.x, grid.GridSize.y];
+            _width = grid.GridSize.x;
+            _depth = grid.GridSize.y;
+            _permanent = new bool[_width, _depth];
+            _citizenRevealed = new bool[_width, _depth];
+            _citizenRevealedScratch = new bool[_width, _depth];
+            _display = new byte[_width * _depth];
+            _easing = new bool[_width * _depth];
 
-            _chunksX = Mathf.CeilToInt(grid.GridSize.x / (float)ChunkSize);
-            _chunksZ = Mathf.CeilToInt(grid.GridSize.y / (float)ChunkSize);
-            _chunkDirty = new bool[_chunksX, _chunksZ];
+            _mask = new Texture2D(_width, _depth, TextureFormat.R8, false, true)
+            {
+                name = "FogRevealMask",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+
+            _chunksX = Mathf.CeilToInt(_width / (float)ChunkSize) + MarginChunks * 2;
+            _chunksZ = Mathf.CeilToInt(_depth / (float)ChunkSize) + MarginChunks * 2;
             _chunkObjects = new GameObject[_chunksX, _chunksZ];
             _chunkFilters = new MeshFilter[_chunksX, _chunksZ];
-            _chunkMeshes = new Mesh[_chunksX, _chunksZ];
+            _chunkRecheck = new bool[_chunksX, _chunksZ];
 
-            _cloudMaterial = new Material(RuntimeShaders.Lit) { color = new Color(0.05f, 0.05f, 0.06f) };
+            var material = cloudMaterial;
+            if (material == null)
+            {
+                var shader = Shader.Find("CityBuilder/FogClouds");
+                if (shader != null) material = new Material(shader);
+            }
+            if (material != null)
+            {
+                _cloudMaterialInstance = new Material(material) { name = "FogClouds (runtime)" };
+                ConfigureMaterial(grid);
+            }
+            else
+            {
+                Debug.LogError("[FogOfWar] The cloud shader 'CityBuilder/FogClouds' is not in this build -- the fog will not be drawn.");
+            }
+
+            // World-aligned and unscaled whatever this component's object is, because the chunk
+            // meshes are written in world coordinates.
+            _cloudRoot = new GameObject("FogClouds");
+            _cloudRoot.transform.SetParent(transform, false);
+            _cloudRoot.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            _cloudRoot.SetActive(false);
 
             for (var cx = 0; cx < _chunksX; cx++)
             {
                 for (var cz = 0; cz < _chunksZ; cz++)
                 {
                     var go = new GameObject($"FogChunk_{cx}_{cz}", typeof(MeshFilter), typeof(MeshRenderer));
-                    go.transform.SetParent(transform, false);
+                    go.transform.SetParent(_cloudRoot.transform, false);
                     var chunkRenderer = go.GetComponent<MeshRenderer>();
-                    chunkRenderer.sharedMaterial = _cloudMaterial;
-                    // Fog is an opaque lid lying over ground the player cannot see anyway, and
-                    // there are 100 of these chunks covering the whole map. Its shadow would fall
-                    // on hidden ground and cost a second draw of every chunk -- see SceneryShadows.
+                    chunkRenderer.sharedMaterial = _cloudMaterialInstance;
+                    // Cloud lying over ground the player cannot see: its shadow would fall on
+                    // hidden ground and cost a second draw of every chunk -- see SceneryShadows.
                     chunkRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    chunkRenderer.receiveShadows = false;
+                    chunkRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                    chunkRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
                     go.SetActive(false);
                     _chunkObjects[cx, cz] = go;
                     _chunkFilters[cx, cz] = go.GetComponent<MeshFilter>();
                 }
             }
+        }
+
+        private void ConfigureMaterial(GridManager grid)
+        {
+            var origin = grid.CellToWorld(Vector2Int.zero);
+            var sizeX = _width * grid.CellSize;
+            var sizeZ = _depth * grid.CellSize;
+            _cloudMaterialInstance.SetTexture("_MaskTex", _mask);
+            _cloudMaterialInstance.SetVector("_MapRect", new Vector4(origin.x, origin.z, 1f / sizeX, 1f / sizeZ));
+            _cloudMaterialInstance.SetVector("_MaskStep", new Vector4(MaskBlurMeters / sizeX, MaskBlurMeters / sizeZ, 0f, 0f));
+            _cloudMaterialInstance.SetFloat("_Clearance", Clearance);
         }
 
         private void Start()
@@ -130,14 +212,19 @@ namespace CityBuilder.Maps
             // A loaded save already has mandatoryFirstBuilding placed (see GameSaveController.
             // Awake -> MarkMandatoryBuildingAlreadyPlaced, guaranteed to run before this Start
             // since Unity runs every Awake before any Start) -- fog starts active immediately.
-            _active = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding;
-            if (_active) MarkAllChunksDirtyAndRebuild();
+            if (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) Activate();
         }
 
         private void Update()
         {
             if (!_active) return;
             EnsureInitialized();
+            if (!_initialized) return;
+
+            // Here rather than in Activate: the land's meshes exist once MeshMapApplier.Start has
+            // run, and every Start runs before the first Update.
+            if (!_blanketBuilt) BuildBlanket();
+            if (_needsSnap) Snap();
 
             _citizenTimer -= Time.deltaTime;
             if (_citizenTimer <= 0f)
@@ -146,7 +233,16 @@ namespace CityBuilder.Maps
                 UpdateCitizenReveal();
             }
 
-            RebuildDirtyChunks();
+            Ease(Time.deltaTime);
+
+            _recheckTimer -= Time.deltaTime;
+            if (_anyRecheck && _recheckTimer <= 0f)
+            {
+                _recheckTimer = RecheckInterval;
+                RecheckChunks();
+            }
+
+            if (_maskDirty) UploadMask();
         }
 
         /// <summary>Turns fog on for the first time -- called once, right after the mandatory Town Hall is placed.</summary>
@@ -155,7 +251,24 @@ namespace CityBuilder.Maps
             EnsureInitialized();
             if (_active) return;
             _active = true;
-            MarkAllChunksDirtyAndRebuild();
+            // Whatever is known when the fog first appears is shown as it is, without easing: a
+            // map that starts by un-clouding the Town Hall's surroundings would be a show nobody
+            // asked for.
+            _needsSnap = true;
+        }
+
+        /// <summary>Whether this cell is open to view right now (a building's permanent reveal, or a citizen nearby).</summary>
+        public bool IsCellRevealed(Vector2Int cell)
+        {
+            if (!_initialized || cell.x < 0 || cell.y < 0 || cell.x >= _width || cell.y >= _depth) return false;
+            return IsRevealed(cell.x, cell.y);
+        }
+
+        /// <summary>How clear of cloud this cell is drawn right now, 0..1 -- the eased value the shader sees.</summary>
+        public float DisplayedClearness(Vector2Int cell)
+        {
+            if (!_initialized || cell.x < 0 || cell.y < 0 || cell.x >= _width || cell.y >= _depth) return 0f;
+            return _display[cell.y * _width + cell.x] / 255f;
         }
 
         /// <summary>Permanently clears a circular radius (in grid cells) around center. Cheap no-op for cells already revealed.</summary>
@@ -163,14 +276,12 @@ namespace CityBuilder.Maps
         {
             EnsureInitialized();
             if (_permanent == null || radiusCells <= 0) return;
-            var grid = GridManager.Instance;
-            if (grid == null) return;
 
             var radiusSq = radiusCells * radiusCells;
             var minX = Mathf.Max(0, center.x - radiusCells);
-            var maxX = Mathf.Min(grid.GridSize.x - 1, center.x + radiusCells);
+            var maxX = Mathf.Min(_width - 1, center.x + radiusCells);
             var minZ = Mathf.Max(0, center.y - radiusCells);
-            var maxZ = Mathf.Min(grid.GridSize.y - 1, center.y + radiusCells);
+            var maxZ = Mathf.Min(_depth - 1, center.y + radiusCells);
 
             for (var x = minX; x <= maxX; x++)
             {
@@ -181,7 +292,7 @@ namespace CityBuilder.Maps
                     if (dx * dx + dz * dz > radiusSq) continue;
                     if (_permanent[x, z]) continue;
                     _permanent[x, z] = true;
-                    MarkChunkDirty(x, z);
+                    MarkCellChanged(x, z);
                 }
             }
         }
@@ -201,16 +312,16 @@ namespace CityBuilder.Maps
                 {
                     if (agent == null) continue;
                     var cell = grid.WorldToCell(agent.transform.position);
-                    RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, grid);
+                    RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, _width, _depth);
                 }
             }
 
-            for (var x = 0; x < grid.GridSize.x; x++)
+            for (var x = 0; x < _width; x++)
             {
-                for (var z = 0; z < grid.GridSize.y; z++)
+                for (var z = 0; z < _depth; z++)
                 {
                     if (fresh[x, z] == _citizenRevealed[x, z]) continue;
-                    MarkChunkDirty(x, z);
+                    MarkCellChanged(x, z);
                 }
             }
 
@@ -220,13 +331,13 @@ namespace CityBuilder.Maps
             _citizenRevealed = fresh;
         }
 
-        private static void RevealCircleInto(bool[,] target, Vector2Int center, int radiusCells, GridManager grid)
+        private static void RevealCircleInto(bool[,] target, Vector2Int center, int radiusCells, int width, int depth)
         {
             var radiusSq = radiusCells * radiusCells;
             var minX = Mathf.Max(0, center.x - radiusCells);
-            var maxX = Mathf.Min(grid.GridSize.x - 1, center.x + radiusCells);
+            var maxX = Mathf.Min(width - 1, center.x + radiusCells);
             var minZ = Mathf.Max(0, center.y - radiusCells);
-            var maxZ = Mathf.Min(grid.GridSize.y - 1, center.y + radiusCells);
+            var maxZ = Mathf.Min(depth - 1, center.y + radiusCells);
 
             for (var x = minX; x <= maxX; x++)
             {
@@ -241,121 +352,284 @@ namespace CityBuilder.Maps
 
         private bool IsRevealed(int x, int z) => _permanent[x, z] || _citizenRevealed[x, z];
 
-        private void MarkChunkDirty(int x, int z)
+        // ---------------------------------------------------------------- easing the mask
+
+        private void MarkCellChanged(int x, int z)
         {
-            if (_chunkDirty == null) return;
-            _chunkDirty[x / ChunkSize, z / ChunkSize] = true;
+            if (_easing == null) return;
+            var index = z * _width + x;
+            if (_easing[index]) return;
+            _easing[index] = true;
+            _easingCells.Add(index);
         }
 
-        private void MarkAllChunksDirtyAndRebuild()
+        /// <summary>Moves every changing cell one frame's worth towards what it should show.</summary>
+        private void Ease(float deltaTime)
         {
+            if (_easingCells.Count == 0) return;
+
+            var step = Mathf.Max(1, Mathf.RoundToInt(deltaTime * 255f / RevealSeconds));
+            for (var i = _easingCells.Count - 1; i >= 0; i--)
+            {
+                var index = _easingCells[i];
+                var x = index % _width;
+                var z = index / _width;
+                var target = IsRevealed(x, z) ? 255 : 0;
+                int shown = _display[index];
+
+                if (shown == 255 && target == 0) ActivateChunksAround(x, z);
+                shown = shown < target ? Mathf.Min(target, shown + step) : Mathf.Max(target, shown - step);
+                _display[index] = (byte)shown;
+                if (shown == 255) RequestRecheckAround(x, z);
+
+                if (shown != target) continue;
+                _easing[index] = false;
+                var last = _easingCells.Count - 1;
+                _easingCells[i] = _easingCells[last];
+                _easingCells.RemoveAt(last);
+            }
+            _maskDirty = true;
+        }
+
+        /// <summary>Shows every cell as it is now, with no easing -- when the fog first comes on.</summary>
+        private void Snap()
+        {
+            _needsSnap = false;
+            for (var x = 0; x < _width; x++)
+            {
+                for (var z = 0; z < _depth; z++)
+                {
+                    _display[z * _width + x] = IsRevealed(x, z) ? (byte)255 : (byte)0;
+                }
+            }
+            foreach (var index in _easingCells) _easing[index] = false;
+            _easingCells.Clear();
+
+            for (var cx = 0; cx < _chunksX; cx++)
+            {
+                for (var cz = 0; cz < _chunksZ; cz++) _chunkRecheck[cx, cz] = true;
+            }
+            _anyRecheck = true;
+            RecheckChunks();
+            _maskDirty = true;
+            if (_cloudRoot != null) _cloudRoot.SetActive(true);
+        }
+
+        private void UploadMask()
+        {
+            _maskDirty = false;
+            _mask.SetPixelData(_display, 0);
+            _mask.Apply(false, false);
+        }
+
+        // ---------------------------------------------------------------- which chunks draw
+
+        private void ChunkRangeAround(int x, int z, out int cx0, out int cx1, out int cz0, out int cz1)
+        {
+            // Floored, not truncated: a margin reaching below cell 0 belongs to the chunk before it.
+            cx0 = Mathf.Max(0, Mathf.FloorToInt((x - ActivityMarginCells) / (float)ChunkSize) + MarginChunks);
+            cx1 = Mathf.Min(_chunksX - 1, Mathf.FloorToInt((x + ActivityMarginCells) / (float)ChunkSize) + MarginChunks);
+            cz0 = Mathf.Max(0, Mathf.FloorToInt((z - ActivityMarginCells) / (float)ChunkSize) + MarginChunks);
+            cz1 = Mathf.Min(_chunksZ - 1, Mathf.FloorToInt((z + ActivityMarginCells) / (float)ChunkSize) + MarginChunks);
+        }
+
+        /// <summary>A cell is clouding over: every chunk that may draw its cloud must be on now, not at the next recheck.</summary>
+        private void ActivateChunksAround(int x, int z)
+        {
+            ChunkRangeAround(x, z, out var cx0, out var cx1, out var cz0, out var cz1);
+            for (var cx = cx0; cx <= cx1; cx++)
+            {
+                for (var cz = cz0; cz <= cz1; cz++) SetChunkActive(cx, cz, true);
+            }
+        }
+
+        /// <summary>A cell has cleared completely: the chunks around it may have nothing left to draw.</summary>
+        private void RequestRecheckAround(int x, int z)
+        {
+            ChunkRangeAround(x, z, out var cx0, out var cx1, out var cz0, out var cz1);
+            for (var cx = cx0; cx <= cx1; cx++)
+            {
+                for (var cz = cz0; cz <= cz1; cz++) _chunkRecheck[cx, cz] = true;
+            }
+            _anyRecheck = true;
+        }
+
+        private void RecheckChunks()
+        {
+            _anyRecheck = false;
             for (var cx = 0; cx < _chunksX; cx++)
             {
                 for (var cz = 0; cz < _chunksZ; cz++)
                 {
-                    _chunkDirty[cx, cz] = true;
-                }
-            }
-            RebuildDirtyChunks();
-        }
-
-        private void RebuildDirtyChunks()
-        {
-            for (var cx = 0; cx < _chunksX; cx++)
-            {
-                for (var cz = 0; cz < _chunksZ; cz++)
-                {
-                    if (_chunkDirty[cx, cz]) RebuildChunk(cx, cz);
+                    if (!_chunkRecheck[cx, cz]) continue;
+                    _chunkRecheck[cx, cz] = false;
+                    SetChunkActive(cx, cz, ChunkHasFogNearby(cx, cz));
                 }
             }
         }
 
-        /// <summary>Rebuilds one chunk's combined mesh from scratch: contiguous fogged cells along each row are merged into a single quad before triangulating, keeping a mostly- or fully-fogged chunk far cheaper than one quad per cell.</summary>
-        private void RebuildChunk(int cx, int cz)
+        private bool ChunkHasFogNearby(int cx, int cz)
         {
-            var grid = GridManager.Instance;
-            var x0 = cx * ChunkSize;
-            var z0 = cz * ChunkSize;
-            var x1 = Mathf.Min(x0 + ChunkSize, grid.GridSize.x);
-            var z1 = Mathf.Min(z0 + ChunkSize, grid.GridSize.y);
+            var x0 = (cx - MarginChunks) * ChunkSize - ActivityMarginCells;
+            var z0 = (cz - MarginChunks) * ChunkSize - ActivityMarginCells;
+            var x1 = x0 + ChunkSize + ActivityMarginCells * 2;
+            var z1 = z0 + ChunkSize + ActivityMarginCells * 2;
 
-            var vertices = _chunkVertices;
-            var triangles = _chunkTriangles;
-            vertices.Clear();
-            triangles.Clear();
+            // Beyond the map is cloud for good.
+            if (x0 < 0 || z0 < 0 || x1 > _width || z1 > _depth) return true;
 
             for (var z = z0; z < z1; z++)
             {
-                var runStartX = -1;
-                for (var x = x0; x <= x1; x++)
+                var row = z * _width;
+                for (var x = x0; x < x1; x++)
                 {
-                    var fogged = x < x1 && !IsRevealed(x, z);
-                    if (fogged && runStartX < 0) runStartX = x;
-                    if (!fogged && runStartX >= 0)
+                    if (_display[row + x] < 255) return true;
+                }
+            }
+            return false;
+        }
+
+        private void SetChunkActive(int cx, int cz, bool active)
+        {
+            var go = _chunkObjects[cx, cz];
+            if (go.activeSelf != active) go.SetActive(active);
+        }
+
+        // ---------------------------------------------------------------- the blanket
+
+        /// <summary>
+        /// Builds every chunk's mesh: a lattice <see cref="LatticeStep"/> metres apart, each point
+        /// <see cref="Clearance"/> above the highest land around it. The land's height comes from
+        /// its own meshes' vertices, binned once -- no physics query per point, and nothing that
+        /// depends on colliders having been baked yet.
+        /// </summary>
+        private void BuildBlanket()
+        {
+            _blanketBuilt = true;
+            var grid = GridManager.Instance;
+            var chunkWorld = ChunkSize * grid.CellSize;
+            var steps = Mathf.Max(1, Mathf.RoundToInt(chunkWorld / LatticeStep));
+            var step = chunkWorld / steps;
+            var origin = grid.CellToWorld(Vector2Int.zero) - new Vector3(MarginChunks * chunkWorld, 0f, MarginChunks * chunkWorld);
+            var nodesX = _chunksX * steps + 1;
+            var nodesZ = _chunksZ * steps + 1;
+
+            var heights = LandHeights(origin, step, nodesX, nodesZ, grid.GroundHeight);
+
+            var vertices = new List<Vector3>((steps + 1) * (steps + 1));
+            var triangles = new List<int>(steps * steps * 6);
+            for (var cx = 0; cx < _chunksX; cx++)
+            {
+                for (var cz = 0; cz < _chunksZ; cz++)
+                {
+                    vertices.Clear();
+                    triangles.Clear();
+                    for (var j = 0; j <= steps; j++)
                     {
-                        AddOverlayRow(vertices, triangles, grid, runStartX, x, z);
-                        runStartX = -1;
+                        for (var i = 0; i <= steps; i++)
+                        {
+                            var nx = cx * steps + i;
+                            var nz = cz * steps + j;
+                            vertices.Add(new Vector3(origin.x + nx * step, heights[nx, nz], origin.z + nz * step));
+                        }
                     }
+                    for (var j = 0; j < steps; j++)
+                    {
+                        for (var i = 0; i < steps; i++)
+                        {
+                            var a = j * (steps + 1) + i;
+                            var b = a + steps + 1;
+                            triangles.Add(a); triangles.Add(b); triangles.Add(a + 1);
+                            triangles.Add(a + 1); triangles.Add(b); triangles.Add(b + 1);
+                        }
+                    }
+
+                    var mesh = new Mesh { name = $"FogChunk_{cx}_{cz}" };
+                    mesh.SetVertices(vertices);
+                    mesh.SetTriangles(triangles, 0);
+                    mesh.RecalculateBounds();
+                    _chunkFilters[cx, cz].sharedMesh = mesh;
+                }
+            }
+        }
+
+        /// <summary>The blanket's height at every lattice node: the highest land within two nodes, plus the clearance, smoothed once so the cloud has no creases.</summary>
+        private static float[,] LandHeights(Vector3 origin, float step, int nodesX, int nodesZ, float groundHeight)
+        {
+            var highest = new float[nodesX, nodesZ];
+            for (var x = 0; x < nodesX; x++)
+            {
+                for (var z = 0; z < nodesZ; z++) highest[x, z] = groundHeight;
+            }
+
+            var meshes = new List<MeshFilter>();
+            if (MeshMapApplier.Instance != null) MeshMapApplier.Instance.CollectTerrainMeshes(meshes);
+            foreach (var filter in meshes)
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null || !mesh.isReadable) continue;
+
+                var toWorld = filter.transform.localToWorldMatrix;
+                foreach (var local in mesh.vertices)
+                {
+                    var p = toWorld.MultiplyPoint3x4(local);
+                    var nx = Mathf.RoundToInt((p.x - origin.x) / step);
+                    var nz = Mathf.RoundToInt((p.z - origin.z) / step);
+                    if (nx < 0 || nz < 0 || nx >= nodesX || nz >= nodesZ) continue;
+                    if (p.y > highest[nx, nz]) highest[nx, nz] = p.y;
                 }
             }
 
-            var mesh = _chunkMeshes[cx, cz];
-            if (mesh == null)
+            // Two nodes either way: a peak between lattice points must not slip under the cloud.
+            var grown = new float[nodesX, nodesZ];
+            for (var x = 0; x < nodesX; x++)
             {
-                mesh = new Mesh { name = $"FogChunk_{cx}_{cz}" };
-                _chunkMeshes[cx, cz] = mesh;
-                _chunkFilters[cx, cz].sharedMesh = mesh;
+                for (var z = 0; z < nodesZ; z++)
+                {
+                    var top = groundHeight;
+                    for (var dx = -2; dx <= 2; dx++)
+                    {
+                        for (var dz = -2; dz <= 2; dz++)
+                        {
+                            var sx = x + dx;
+                            var sz = z + dz;
+                            if (sx < 0 || sz < 0 || sx >= nodesX || sz >= nodesZ) continue;
+                            if (highest[sx, sz] > top) top = highest[sx, sz];
+                        }
+                    }
+                    grown[x, z] = top;
+                }
             }
 
-            mesh.Clear();
-            if (vertices.Count > 0)
+            var heights = new float[nodesX, nodesZ];
+            for (var x = 0; x < nodesX; x++)
             {
-                mesh.indexFormat = vertices.Count > 60000
-                    ? UnityEngine.Rendering.IndexFormat.UInt32
-                    : UnityEngine.Rendering.IndexFormat.UInt16;
-                mesh.SetVertices(vertices);
-                mesh.SetTriangles(triangles, 0);
-                mesh.RecalculateNormals();
-                mesh.RecalculateBounds();
+                for (var z = 0; z < nodesZ; z++)
+                {
+                    var sum = 0f;
+                    var count = 0;
+                    for (var dx = -1; dx <= 1; dx++)
+                    {
+                        for (var dz = -1; dz <= 1; dz++)
+                        {
+                            var sx = x + dx;
+                            var sz = z + dz;
+                            if (sx < 0 || sz < 0 || sx >= nodesX || sz >= nodesZ) continue;
+                            sum += grown[sx, sz];
+                            count++;
+                        }
+                    }
+                    heights[x, z] = sum / count + Clearance;
+                }
             }
-            _chunkObjects[cx, cz].SetActive(vertices.Count > 0);
-            _chunkDirty[cx, cz] = false;
+            return heights;
         }
 
-        /// <summary>A single flat quad at OverlayHeight, spanning the merged run -- no side walls, so it reads as a hovering dark plane rather than a solid block.</summary>
-        private static void AddOverlayRow(List<Vector3> vertices, List<int> triangles, GridManager grid, int xStart, int xEndExclusive, int z)
+        private void OnDestroy()
         {
-            var corner = grid.CellToWorld(new Vector2Int(xStart, z));
-            var x0 = corner.x;
-            var x1 = corner.x + (xEndExclusive - xStart) * grid.CellSize;
-            var z0 = corner.z;
-            var z1 = corner.z + grid.CellSize;
-
-            // Both winding orders, so it renders regardless of which one Unity treats as
-            // front-facing, without needing shared vertices (which would otherwise average
-            // opposing normals to near-zero).
-            AddQuadBothSides(vertices, triangles, new Vector3(x0, OverlayHeight, z0), new Vector3(x0, OverlayHeight, z1), new Vector3(x1, OverlayHeight, z1), new Vector3(x1, OverlayHeight, z0));
-        }
-
-        private static void AddQuadBothSides(List<Vector3> vertices, List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-        {
-            AddFace(vertices, triangles, a, b, c, d);
-            AddFace(vertices, triangles, a, d, c, b);
-        }
-
-        private static void AddFace(List<Vector3> vertices, List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-        {
-            var baseIndex = vertices.Count;
-            vertices.Add(a);
-            vertices.Add(b);
-            vertices.Add(c);
-            vertices.Add(d);
-            triangles.Add(baseIndex);
-            triangles.Add(baseIndex + 1);
-            triangles.Add(baseIndex + 2);
-            triangles.Add(baseIndex);
-            triangles.Add(baseIndex + 2);
-            triangles.Add(baseIndex + 3);
+            if (Instance == this) Instance = null;
+            if (_mask != null) Destroy(_mask);
+            if (_cloudMaterialInstance != null) Destroy(_cloudMaterialInstance);
         }
     }
 }
