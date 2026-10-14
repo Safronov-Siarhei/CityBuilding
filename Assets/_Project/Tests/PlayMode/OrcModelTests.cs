@@ -59,6 +59,7 @@ namespace CityBuilder.Tests.PlayMode
             var closed = OrcRaidManager.Instance.NextRaidSource;
             Assert.IsNotNull(closed, "No portal was picked as the next wave's source.");
             var cell = closed.Cell;
+            closed.IsShielded = false;   // its camp's totem would otherwise turn the blow -- see OrcCampTests
             closed.TakeDamage(closed.MaxHealth);
             yield return null;
 
@@ -109,6 +110,7 @@ namespace CityBuilder.Tests.PlayMode
             {
                 yield return PlaytestCapture.Shoot("orc-portal-passive", smouldering.transform.position, distance: 6f, pitch: 40f, yaw: 20f);
                 var cell = smouldering.Cell;
+                smouldering.IsShielded = false;
                 smouldering.TakeDamage(smouldering.MaxHealth);
                 yield return null;
                 yield return PlaytestCapture.Shoot("orc-portal-closed", PlaytestWorld.CellCenter(cell) + new Vector3(0.5f, 0f, 0.5f), distance: 6f, pitch: 40f, yaw: 20f);

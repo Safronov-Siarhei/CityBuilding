@@ -1928,7 +1928,8 @@ namespace CityBuilder.EditorTools
         /// </summary>
         /// <summary>
         /// Hands the raid manager the orc faction's Blender models (Tools/blender/orc*.py, exported
-        /// to Models/Orcs): the portal's two looks and its ruin, the grunt and the brute. A missing
+        /// to Models/Orcs): the portal's two looks and its ruin, the grunt and the brute, and the
+        /// camp's buildings with their ruins and the palisade piece. A missing
         /// file only warns -- the manager falls back to the cube figure it replaced.
         /// </summary>
         private static void WireOrcModels(OrcRaidManager raidManager)
@@ -1939,6 +1940,10 @@ namespace CityBuilder.EditorTools
                      {
                          ("portalActiveModel", "OrcPortal1-lvl1"), ("portalPassiveModel", "OrcPortal1-lvl1-Passive"),
                          ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("gruntModel", "OrcGrunt"), ("bruteModel", "OrcBrute"),
+                         ("watchtowerModel", "OrcWatchtower1-lvl1"), ("watchtowerRuinModel", "OrcWatchtower1-lvl1-Ruin"),
+                         ("warTentModel", "OrcWarTent1-lvl1"), ("warTentRuinModel", "OrcWarTent1-lvl1-Ruin"),
+                         ("totemModel", "OrcTotem1-lvl1"), ("totemRuinModel", "OrcTotem1-lvl1-Ruin"),
+                         ("palisadeModel", "OrcFence1-lvl1-Straight"),
                      })
             {
                 var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{file}.fbx");

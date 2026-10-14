@@ -182,6 +182,9 @@ namespace CityBuilder.Combat
             foreach (var candidate in EnumerateEnemies())
             {
                 if (candidate == null || !candidate.IsAlive) continue;
+                // Hitting a shielded portal does nothing (see OrcPortal.IsShielded): left to choose,
+                // a soldier goes for what can actually be broken -- the camp around it.
+                if (candidate is OrcPortal portal && portal.IsShielded) continue;
 
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
                 if (distance > _engageRadius) continue;
@@ -215,6 +218,10 @@ namespace CityBuilder.Combat
             foreach (var portal in OrcPortal.All)
             {
                 yield return portal;
+            }
+            foreach (var building in OrcCampBuilding.All)
+            {
+                yield return building;
             }
         }
 

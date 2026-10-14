@@ -50,6 +50,18 @@ namespace CityBuilder.Combat
         /// <summary>Whether this portal is showing the bright look -- the source of the next wave (see OrcRaidManager).</summary>
         public bool IsShownActive { get; private set; } = true;
 
+        /// <summary>
+        /// Set by its camp while the camp's totem stands (see OrcCamp): a shielded portal takes no
+        /// damage, so the camp has to be broken first. Soldiers left to choose their own targets
+        /// pass a shielded portal by; one ordered at it is told why nothing happens.
+        /// </summary>
+        public bool IsShielded { get; set; }
+
+        // The "shielded" line at most this often, so a group hammering the portal does not flood
+        // the event feed with one icon per swing.
+        private const float ShieldMessageIntervalSeconds = 8f;
+        private float _lastShieldMessageTime = float.NegativeInfinity;
+
         private void Awake()
         {
             MaxHealth = BalanceConfig.Instance.PortalMaxHealth;
@@ -103,6 +115,16 @@ namespace CityBuilder.Combat
         public void TakeDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
+            if (IsShielded)
+            {
+                if (Time.time - _lastShieldMessageTime >= ShieldMessageIntervalSeconds)
+                {
+                    _lastShieldMessageTime = Time.time;
+                    EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_portal_shielded"),
+                        EventSeverity.Warning, EventGlyph.Alert, null, transform.position));
+                }
+                return;
+            }
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth > 0) return;

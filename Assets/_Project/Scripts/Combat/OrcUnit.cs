@@ -148,8 +148,35 @@ namespace CityBuilder.Combat
             AcquireTarget();
         }
 
+        // Guard duty (see OrcCamp): a garrison orc holds its camp instead of marching on the town.
+        private bool _guarding;
+        private Vector3 _guardPost;
+        private float _guardRadius;
+
+        /// <summary>A camp's garrison, not a raider: it is not saved (the tent musters it again on load).</summary>
+        public bool IsGuard => _guarding;
+
+        /// <summary>
+        /// Puts the orc on guard at a camp: it fights soldiers who come within `radius` of `post`
+        /// (or who shoot it from a little further), never chases past that, and walks back to its
+        /// post when the fight is over. It never goes for the player's buildings.
+        /// </summary>
+        public void SetGuardPost(Vector3 post, float radius)
+        {
+            _guarding = true;
+            _guardPost = post;
+            _guardRadius = radius;
+            _target = null;
+        }
+
         private void Update()
         {
+            if (_guarding)
+            {
+                GuardUpdate();
+                return;
+            }
+
             // Defenders in reach come first -- see SoldierAggroRadius.
             _soldierScanTimer -= Time.deltaTime;
             if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
@@ -230,10 +257,72 @@ namespace CityBuilder.Combat
             _soldierScanTimer = SoldierScanIntervalSeconds;
         }
 
-        /// <summary>Whether the soldier it is chasing is alive and still inside the retaliation leash.</summary>
+        private void GuardUpdate()
+        {
+            _soldierScanTimer -= Time.deltaTime;
+            if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
+            {
+                _soldierScanTimer = SoldierScanIntervalSeconds;
+                if (!_retaliating || !StillWorthChasing(_soldierTarget))
+                {
+                    _retaliating = false;
+                    _soldierTarget = FindNearestSoldierNearPost();
+                }
+            }
+
+            if (_soldierTarget != null)
+            {
+                FightSoldier();
+                return;
+            }
+
+            // Back to the post, in a straight line: it is a few metres inside its own camp.
+            var toPost = _guardPost - transform.position;
+            toPost.y = 0f;
+            var distance = toPost.magnitude;
+            if (distance < 0.6f) return;
+            var step = toPost / distance * _walkSpeed * Time.deltaTime;
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(step);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += step;
+            }
+        }
+
+        private SoldierUnit FindNearestSoldierNearPost()
+        {
+            SoldierUnit nearest = null;
+            var best = float.MaxValue;
+            var reachSq = _guardRadius * _guardRadius;
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                var fromPost = soldier.transform.position - _guardPost;
+                fromPost.y = 0f;
+                if (fromPost.sqrMagnitude > reachSq) continue;
+                var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
+                if (distSq >= best) continue;
+                best = distSq;
+                nearest = soldier;
+            }
+            return nearest;
+        }
+
+        /// <summary>Whether the soldier it is chasing is alive and still inside the retaliation leash -- for a guard, measured from its post.</summary>
         private bool StillWorthChasing(SoldierUnit soldier)
         {
             if (soldier == null || soldier.CurrentHealth <= 0) return false;
+            if (_guarding)
+            {
+                var leashFromPost = _guardRadius * 1.5f;
+                var fromPost = soldier.transform.position - _guardPost;
+                fromPost.y = 0f;
+                return fromPost.sqrMagnitude <= leashFromPost * leashFromPost;
+            }
 
             var leash = _soldierAggroRadius * RetaliationLeashMultiplier;
             return (soldier.transform.position - transform.position).sqrMagnitude <= leash * leash;

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -81,12 +82,23 @@ namespace CityBuilder.Tests.PlayMode
             yield return WaitForPortals();
 
             var portalCount = OrcPortal.All.Count;
+            // The camps' totems shield the portals (see OrcCamp); dropped here so the hits land.
+            // The save writes the totems, so the shields come back with them on load.
+            foreach (var portal in OrcPortal.All) portal.IsShielded = false;
             // Two of them wounded, by DIFFERENT amounts: a save that wrote one portal's health over
             // all of them, or that restored the list in some other order, passes a single-portal
             // check and fails this one.
             OrcPortal.All[0].TakeDamage(OrcPortal.All[0].MaxHealth / 4);
             OrcPortal.All[portalCount - 1].TakeDamage(OrcPortal.All[portalCount - 1].MaxHealth / 2);
             var portalHealths = PortalHealthByCell();
+
+            // One camp loses its totem: its ruin and its portal's lost shield must survive the
+            // reload, and the other camps' shields must come back up.
+            var brokenCamp = OrcCamp.All[0];
+            var brokenTotem = brokenCamp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Totem);
+            var brokenTotemCell = brokenTotem.Cell;
+            var brokenPortalCell = brokenCamp.PortalCell;
+            brokenTotem.TakeDamage(brokenTotem.MaxHealth);
             CollectionAssert.IsNotEmpty(portalHealths, "No portals opened, so there is nothing to save.");
             foreach (var health in portalHealths.Values)
             {
@@ -95,8 +107,9 @@ namespace CityBuilder.Tests.PlayMode
 
             // Well away from the soldiers: within their engage radius they would start trading
             // blows with it, and the health this test is about would drift between save and assert.
-            OrcRaidManager.Instance.SpawnOrcs(WalkablePointAwayFrom(holdPosition, 25f), 1, level: 1);
-            var orc = OrcUnit.All[0];
+            // The orc the raid sent, not one of the camps' guards (those are not saved: the tents
+            // muster them again on load).
+            var orc = OrcRaidManager.Instance.SpawnOrcs(WalkablePointAwayFrom(holdPosition, 25f), 1, level: 1);
             orc.TakeDamage(1);
             var orcHealth = orc.CurrentHealth;
 
@@ -128,10 +141,25 @@ namespace CityBuilder.Tests.PlayMode
             CollectionAssert.AreEquivalent(portalHealths, PortalHealthByCell(),
                 "The portals came back somewhere else or repaired, which makes saving and loading a way to undo an assault on the map's objective.");
 
-            Assert.AreEqual(1, OrcUnit.All.Count, "The orc already in the field vanished, so reloading is a way to call off a raid.");
-            Assert.AreEqual(orcHealth, OrcUnit.All[0].CurrentHealth, "The orc came back healed.");
+            var raiders = OrcUnit.All.Where(o => !o.IsGuard).ToList();
+            Assert.AreEqual(1, raiders.Count, "The orc already in the field vanished, so reloading is a way to call off a raid.");
+            Assert.AreEqual(orcHealth, raiders[0].CurrentHealth, "The orc came back healed.");
 
             Assert.Greater(OrcRaidManager.Instance.SecondsUntilNextRaid, 0f, "The raid clock came back stopped.");
+
+            Assert.AreEqual(portalCount, OrcCamp.All.Count, "The camps did not come back one per portal.");
+            Assert.IsNotNull(GameObject.Find($"OrcCampRuin {brokenTotemCell.x},{brokenTotemCell.y}"), "The broken totem's ruin did not come back.");
+            foreach (var portal in OrcPortal.All)
+            {
+                Assert.AreEqual(portal.Cell != brokenPortalCell, portal.IsShielded,
+                    portal.Cell == brokenPortalCell
+                        ? "The portal whose totem the player broke came back shielded -- reloading would undo the assault."
+                        : $"The portal at {portal.Cell} came back unshielded though its totem still stands.");
+            }
+            foreach (var camp in OrcCamp.All)
+            {
+                Assert.AreEqual(BalanceConfig.Instance.OrcGarrisonSize, camp.Guards.Count, "A camp came back without its garrison.");
+            }
         }
 
         /// <summary>

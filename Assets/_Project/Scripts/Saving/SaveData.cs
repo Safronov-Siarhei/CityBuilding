@@ -102,6 +102,9 @@ namespace CityBuilder.Saving
         /// <summary>Where the portals the player destroyed stood, so their ruins come back with the save. Empty in saves written before portals left ruins.</summary>
         public List<Vector2Int> closedPortalCells = new List<Vector2Int>();
 
+        /// <summary>Every orc camp building, standing or fallen (health 0 = its ruin), keyed by the cell of the portal its camp was built around. Empty in saves written before the camps existed -- those get fresh camps.</summary>
+        public List<OrcCampEntry> orcCampBuildings = new List<OrcCampEntry>();
+
         /// <summary>
         /// Where the ONE portal stood, back when there was only one. Read on load when
         /// <see cref="portals"/> is empty and a portal was placed, so a save written before the map
@@ -170,6 +173,17 @@ namespace CityBuilder.Saving
 
         /// <summary>Stone left in this boulder. A boulder worked out to zero is simply absent from the list.</summary>
         public int remaining;
+    }
+
+    /// <summary>One orc camp building: its camp (by portal cell), what it is, where, which way it faces, and how much is left of it.</summary>
+    [Serializable]
+    public class OrcCampEntry
+    {
+        public Vector2Int portalCell;
+        public int kind;
+        public Vector2Int cell;
+        public float yaw;
+        public int health;
     }
 
     /// <summary>One portal still standing. The cell rather than the world position, because that is what the placement rule produced and what the grid has reserved.</summary>

@@ -59,6 +59,15 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject portalClosedModel;
         [SerializeField] private GameObject gruntModel;
         [SerializeField] private GameObject bruteModel;
+        // The camp around each portal (see OrcCamp): its three buildings, their ruins, and the
+        // decorative palisade pieces flanking the totem.
+        [SerializeField] private GameObject watchtowerModel;
+        [SerializeField] private GameObject watchtowerRuinModel;
+        [SerializeField] private GameObject warTentModel;
+        [SerializeField] private GameObject warTentRuinModel;
+        [SerializeField] private GameObject totemModel;
+        [SerializeField] private GameObject totemRuinModel;
+        [SerializeField] private GameObject palisadeModel;
 
         /// <summary>
         /// The level from which a raider is drawn as the brute rather than the grunt (the user's
@@ -97,6 +106,25 @@ namespace CityBuilder.Combat
         /// <summary>How long the settlement has before the next wave. Saved, so reloading is not a way to push the raid clock back to a full interval.</summary>
         public float SecondsUntilNextRaid => _raidTimer;
 
+        /// <summary>One saved camp building: its camp (by portal cell), what it is, where, facing, and its health (0 = its ruin).</summary>
+        public readonly struct CampBuildingRestoreState
+        {
+            public CampBuildingRestoreState(Vector2Int portalCell, OrcCampBuildingKind kind, Vector2Int cell, float yaw, int health)
+            {
+                PortalCell = portalCell;
+                Kind = kind;
+                Cell = cell;
+                Yaw = yaw;
+                Health = health;
+            }
+
+            public Vector2Int PortalCell { get; }
+            public OrcCampBuildingKind Kind { get; }
+            public Vector2Int Cell { get; }
+            public float Yaw { get; }
+            public int Health { get; }
+        }
+
         /// <summary>One saved portal: where it stood, and the health the player had ground it down to.</summary>
         public readonly struct PortalRestoreState
         {
@@ -119,8 +147,10 @@ namespace CityBuilder.Combat
         /// </summary>
         /// <param name="portalsPlaced">Whether the map had opened its portals at all. True with an empty list means the player had destroyed every one of them, and no fresh ones are opened over the ruins.</param>
         /// <param name="closedPortalCells">Where the portals the player had already destroyed stood: each gets its ruin back.</param>
+        /// <param name="campBuildings">Every camp building the save holds, standing or fallen. Empty means a save from before the camps: fresh camps go up round the standing portals.</param>
         public void RestoreFromSave(bool portalsPlaced, IReadOnlyList<PortalRestoreState> portals,
-            IReadOnlyList<Vector2Int> closedPortalCells, float secondsUntilNextRaid)
+            IReadOnlyList<Vector2Int> closedPortalCells, IReadOnlyList<CampBuildingRestoreState> campBuildings,
+            float secondsUntilNextRaid)
         {
             if (!portalsPlaced) return;
 
@@ -147,6 +177,8 @@ namespace CityBuilder.Combat
                     SpawnRuin(cell, position, FacingTownHall(position));
                 }
             }
+
+            RestoreCamps(grid, campBuildings);
 
             // Which portal sends the next wave is not saved -- it is shown, not counted on -- so
             // a load picks afresh.
@@ -285,7 +317,8 @@ namespace CityBuilder.Combat
                     continue;
                 }
 
-                SpawnPortal(grid, cell);
+                var portal = SpawnPortal(grid, cell);
+                BuildCamp(grid, portal);
                 opened++;
             }
 
@@ -385,10 +418,15 @@ namespace CityBuilder.Combat
         /// <summary>Every cell of a portal's plot is dry, flat playable ground -- one cell of lake under a corner of the platform would leave the arch hanging over the water.</summary>
         private static bool IsSolidGround(GridManager grid, MeshMapApplier mapApplier, Vector2Int cell)
         {
+            return IsSolidGround(grid, mapApplier, cell, PortalFootprint);
+        }
+
+        private static bool IsSolidGround(GridManager grid, MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
+        {
             if (mapApplier == null) return true;
-            for (var dx = 0; dx < PortalFootprint.x; dx++)
+            for (var dx = 0; dx < footprint.x; dx++)
             {
-                for (var dy = 0; dy < PortalFootprint.y; dy++)
+                for (var dy = 0; dy < footprint.y; dy++)
                 {
                     var c = cell + new Vector2Int(dx, dy);
                     if (mapApplier.IsWaterCell(c)) return false;
@@ -469,6 +507,225 @@ namespace CityBuilder.Combat
             FogOfWarManager.Instance?.RevealPermanent(cell, PortalFogRevealRadiusCells);
 
             return portal;
+        }
+
+        // ---------------------------------------------------------------------------------------
+        // Orc camps (the user's design, 2026-10-14): a camp without walls round each portal --
+        // a watchtower that shoots soldiers, a war tent that keeps a garrison, and a totem that
+        // shields the portal. See OrcCamp.
+
+        /// <summary>
+        /// Where each camp building wants to stand, in the portal's own frame (metres; +x its
+        /// right, +z its BACK -- the portal faces the town along -z): the tower forward on the left
+        /// to meet an army coming from the town, the tent off to the right, and the totem behind
+        /// the portal so it can only be reached through the camp. Each has a mirrored spare and a
+        /// further-out pair, tried in order, for when the map is in the way.
+        /// </summary>
+        private static readonly (OrcCampBuildingKind kind, Vector2 offset)[] CampLayout =
+        {
+            (OrcCampBuildingKind.Watchtower, new Vector2(-2.5f, -1.5f)),
+            (OrcCampBuildingKind.WarTent, new Vector2(3f, 0.5f)),
+            (OrcCampBuildingKind.Totem, new Vector2(0f, 2.5f)),
+        };
+
+        /// <summary>
+        /// Where to try a camp building, best first: its own spot, mirrored, the pair further out,
+        /// then right round the portal at both distances -- so a camp backed onto the lake or the
+        /// map's edge still gets every building (the totem above all: without it the portal has
+        /// no shield).
+        /// </summary>
+        private static IEnumerable<Vector2> CampSpots(Vector2 offset)
+        {
+            yield return offset;
+            yield return new Vector2(-offset.x, offset.y);
+            yield return offset * 1.4f;
+            yield return new Vector2(-offset.x, offset.y) * 1.4f;
+            var start = Mathf.Atan2(offset.y, offset.x);
+            foreach (var scale in new[] { 1f, 1.4f, 1.8f })
+            {
+                for (var step = 1; step < 12; step++)
+                {
+                    // alternate either side of the preferred bearing: +30, -30, +60, -60 ...
+                    var turn = ((step + 1) / 2) * (Mathf.PI / 6f) * (step % 2 == 1 ? 1f : -1f);
+                    var angle = start + turn;
+                    var radius = offset.magnitude * scale;
+                    yield return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                }
+            }
+        }
+
+        private static Vector2Int FootprintOf(OrcCampBuildingKind kind)
+        {
+            return kind == OrcCampBuildingKind.WarTent ? new Vector2Int(2, 2) : Vector2Int.one;
+        }
+
+        private GameObject ModelOf(OrcCampBuildingKind kind) => kind switch
+        {
+            OrcCampBuildingKind.Watchtower => watchtowerModel,
+            OrcCampBuildingKind.WarTent => warTentModel,
+            _ => totemModel,
+        };
+
+        private GameObject RuinOf(OrcCampBuildingKind kind) => kind switch
+        {
+            OrcCampBuildingKind.Watchtower => watchtowerRuinModel,
+            OrcCampBuildingKind.WarTent => warTentRuinModel,
+            _ => totemRuinModel,
+        };
+
+        private OrcCamp CreateCamp(Vector2Int portalCell, OrcPortal portal, Vector3 position, Quaternion rotation)
+        {
+            var root = new GameObject($"OrcCamp {portalCell.x},{portalCell.y}");
+            root.transform.SetPositionAndRotation(position, rotation);
+            var camp = root.AddComponent<OrcCamp>();
+            camp.Initialize(portalCell, portal);
+            return camp;
+        }
+
+        /// <summary>Puts up a fresh camp round a portal and musters its garrison. A building with nowhere to stand is left out rather than failing the camp.</summary>
+        private void BuildCamp(GridManager grid, OrcPortal portal)
+        {
+            var camp = CreateCamp(portal.Cell, portal, portal.transform.position, portal.transform.rotation);
+            var mapApplier = MeshMapApplier.Instance;
+            var rotation = portal.transform.rotation;
+
+            foreach (var (kind, offset) in CampLayout)
+            {
+                var footprint = FootprintOf(kind);
+                foreach (var candidate in CampSpots(offset))
+                {
+                    var world = portal.transform.position + rotation * new Vector3(candidate.x, 0f, candidate.y);
+                    var cell = grid.WorldToCell(world - new Vector3((footprint.x - 1) * 0.5f * grid.CellSize, 0f, (footprint.y - 1) * 0.5f * grid.CellSize));
+                    if (!grid.IsWithinBounds(cell, footprint) || !grid.IsAreaFree(cell, footprint)) continue;
+                    if (!IsSolidGround(grid, mapApplier, cell, footprint)) continue;
+
+                    SpawnCampBuilding(grid, camp, kind, cell, rotation.eulerAngles.y);
+                    if (kind == OrcCampBuildingKind.Totem) FlankWithPalisade(grid, mapApplier, cell, rotation);
+                    break;
+                }
+            }
+
+            camp.FillGarrison();
+        }
+
+        /// <summary>A short run of palisade either side of the totem -- decoration, not a wall: the camp has no walls (the user's call).</summary>
+        private void FlankWithPalisade(GridManager grid, MeshMapApplier mapApplier, Vector2Int totemCell, Quaternion rotation)
+        {
+            if (palisadeModel == null) return;
+            var right = rotation * Vector3.right;
+            var side = new Vector2Int(Mathf.RoundToInt(right.x), Mathf.RoundToInt(right.z));
+            foreach (var cell in new[] { totemCell + side, totemCell - side })
+            {
+                if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
+                if (!IsSolidGround(grid, mapApplier, cell, Vector2Int.one)) continue;
+
+                grid.SetAreaOccupied(cell, Vector2Int.one, true);
+                // The straight piece runs along its local Z; turned a quarter from the portal's
+                // facing, it runs across the camp, beside the totem.
+                var piece = Instantiate(palisadeModel, grid.GetFootprintCenterWorld(cell, Vector2Int.one),
+                    rotation * Quaternion.Euler(0f, 90f, 0f));
+                piece.name = $"OrcPalisade {cell.x},{cell.y}";
+            }
+        }
+
+        private OrcCampBuilding SpawnCampBuilding(GridManager grid, OrcCamp camp, OrcCampBuildingKind kind, Vector2Int cell, float yaw)
+        {
+            EnsureMaterials();
+            var footprint = FootprintOf(kind);
+            grid.SetAreaOccupied(cell, footprint, true);
+
+            var root = new GameObject($"OrcCamp{kind} {cell.x},{cell.y}");
+            root.transform.SetPositionAndRotation(grid.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, yaw, 0f));
+            var building = root.AddComponent<OrcCampBuilding>();
+            building.Initialize(kind, camp, cell, RuinOf(kind));
+
+            var model = ModelOf(kind);
+            if (model != null)
+            {
+                Instantiate(model, root.transform, false).name = "Model";
+            }
+            else
+            {
+                AddPortalPart(root.transform, new Vector3(0f, 0.6f, 0f), new Vector3(footprint.x * 0.8f, 1.2f, footprint.y * 0.8f));
+            }
+
+            // Tappable, so a group can be sent at it (ArmyOrderInput), and a trigger so it never
+            // becomes a wall units wedge against; the NavMesh carve is what routes them round it.
+            var height = kind == OrcCampBuildingKind.Watchtower ? 2.4f : kind == OrcCampBuildingKind.WarTent ? 1.2f : 1.6f;
+            var click = root.AddComponent<BoxCollider>();
+            click.isTrigger = true;
+            click.center = new Vector3(0f, height / 2f, 0f);
+            click.size = new Vector3(footprint.x * 0.95f, height, footprint.y * 0.95f);
+            var obstacle = root.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = new Vector3(footprint.x * 0.9f, 2f, footprint.y * 0.9f);
+            obstacle.center = new Vector3(0f, 1f, 0f);
+            obstacle.carving = true;
+
+            camp.Add(building);
+            return building;
+        }
+
+        /// <summary>One guard for a camp's garrison, posted where it came out of the tent.</summary>
+        public OrcUnit SpawnGuard(Vector3 position, int level, OrcCamp camp)
+        {
+            EnsureMaterials();
+            var unit = SpawnOrc(position, level, scatter: true);
+            var post = unit.transform.position;
+            unit.SetGuardPost(post, BalanceConfig.Instance.OrcGarrisonGuardRadiusMeters);
+            return unit;
+        }
+
+        /// <summary>
+        /// Puts the camps back from the save: every building where it stood on the health it had,
+        /// every ruin where it fell, and a full garrison (guards are not saved). A save from before
+        /// the camps existed gets fresh camps round its standing portals.
+        /// </summary>
+        private void RestoreCamps(GridManager grid, IReadOnlyList<CampBuildingRestoreState> campBuildings)
+        {
+            if (campBuildings == null || campBuildings.Count == 0)
+            {
+                foreach (var portal in OrcPortal.All)
+                {
+                    BuildCamp(grid, portal);
+                }
+                return;
+            }
+
+            var camps = new Dictionary<Vector2Int, OrcCamp>();
+            foreach (var entry in campBuildings)
+            {
+                if (!camps.TryGetValue(entry.PortalCell, out var camp))
+                {
+                    OrcPortal portal = null;
+                    foreach (var p in OrcPortal.All)
+                    {
+                        if (p.Cell == entry.PortalCell) portal = p;
+                    }
+                    var position = grid.GetFootprintCenterWorld(entry.PortalCell, PortalFootprint);
+                    camp = CreateCamp(entry.PortalCell, portal, position, portal != null ? portal.transform.rotation : FacingTownHall(position));
+                    camps[entry.PortalCell] = camp;
+                }
+
+                if (entry.Health > 0)
+                {
+                    SpawnCampBuilding(grid, camp, entry.Kind, entry.Cell, entry.Yaw).SetCurrentHealth(entry.Health);
+                }
+                else
+                {
+                    var footprint = FootprintOf(entry.Kind);
+                    grid.SetAreaOccupied(entry.Cell, footprint, true);
+                    OrcCampBuilding.SpawnRuin(RuinOf(entry.Kind), entry.Cell, grid.GetFootprintCenterWorld(entry.Cell, footprint),
+                        Quaternion.Euler(0f, entry.Yaw, 0f));
+                    camp.AddFallen(new OrcCamp.FallenBuilding(entry.Kind, entry.Cell, entry.Yaw));
+                }
+            }
+
+            foreach (var camp in camps.Values)
+            {
+                if (camp.Portal != null) camp.Portal.IsShielded = camp.TotemStanding;
+                camp.FillGarrison();
+            }
         }
 
         /// <summary>The closed portal's ruin, on the plot the portal stood on. Scenery only: no collider, nothing to attack.</summary>

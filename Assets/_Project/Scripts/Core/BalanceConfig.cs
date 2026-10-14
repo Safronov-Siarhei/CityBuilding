@@ -239,6 +239,16 @@ namespace CityBuilder.Core
         [SerializeField] private float raidMinIntervalSeconds = 45f;
         [SerializeField] private int raidProgressAtMinInterval = 400;
         [SerializeField] private int portalMaxHealth = 320;
+        // The orc camp round each portal (see OrcCamp).
+        [SerializeField] private int orcTowerHealth = 160;
+        [SerializeField] private int orcTowerDamage = 3;
+        [SerializeField] private float orcTowerIntervalSeconds = 1.5f;
+        [SerializeField] private float orcTowerRangeMeters = 7f;
+        [SerializeField] private int orcTentHealth = 220;
+        [SerializeField] private int orcTotemHealth = 120;
+        [SerializeField] private int orcGarrisonSize = 3;
+        [SerializeField] private float orcGarrisonRespawnSeconds = 30f;
+        [SerializeField] private float orcGarrisonGuardRadiusMeters = 8f;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
         // turns these three into the spiral of slots around the Town Hall. Kept here rather than
         // as constants because "spread the portals over the whole map" has to be a number the user
@@ -383,6 +393,15 @@ namespace CityBuilder.Core
         public int SicknessDaysBeforeDeath => sicknessDaysBeforeDeath;
         public int HealPerHealerPerDay => healPerHealerPerDay;
         public int PortalMaxHealth => portalMaxHealth;
+        public int OrcTowerHealth => orcTowerHealth;
+        public int OrcTowerDamage => orcTowerDamage;
+        public float OrcTowerIntervalSeconds => orcTowerIntervalSeconds;
+        public float OrcTowerRangeMeters => orcTowerRangeMeters;
+        public int OrcTentHealth => orcTentHealth;
+        public int OrcTotemHealth => orcTotemHealth;
+        public int OrcGarrisonSize => orcGarrisonSize;
+        public float OrcGarrisonRespawnSeconds => orcGarrisonRespawnSeconds;
+        public float OrcGarrisonGuardRadiusMeters => orcGarrisonGuardRadiusMeters;
         public int PortalCount => portalCount;
         public float PortalDistanceFromTownHallMeters => portalDistanceFromTownHallMeters;
         public float PortalDistanceStepMeters => portalDistanceStepMeters;
@@ -503,6 +522,15 @@ namespace CityBuilder.Core
             sicknessDaysBeforeDeath = (int)Read(economy, "sickness_days_before_death", sicknessDaysBeforeDeath);
             healPerHealerPerDay = (int)Read(economy, "heal_per_healer_per_day", healPerHealerPerDay);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
+            orcTowerHealth = (int)Read(economy, "orc_tower_health", orcTowerHealth);
+            orcTowerDamage = (int)Read(economy, "orc_tower_damage", orcTowerDamage);
+            orcTowerIntervalSeconds = Read(economy, "orc_tower_interval_seconds", orcTowerIntervalSeconds);
+            orcTowerRangeMeters = Read(economy, "orc_tower_range_meters", orcTowerRangeMeters);
+            orcTentHealth = (int)Read(economy, "orc_tent_health", orcTentHealth);
+            orcTotemHealth = (int)Read(economy, "orc_totem_health", orcTotemHealth);
+            orcGarrisonSize = (int)Read(economy, "orc_garrison_size", orcGarrisonSize);
+            orcGarrisonRespawnSeconds = Read(economy, "orc_garrison_respawn_seconds", orcGarrisonRespawnSeconds);
+            orcGarrisonGuardRadiusMeters = Read(economy, "orc_garrison_guard_radius_meters", orcGarrisonGuardRadiusMeters);
             portalCount = (int)Read(economy, "portal_count", portalCount);
             portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);

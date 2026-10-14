@@ -298,7 +298,16 @@ namespace CityBuilder.Saving
             var raids = Combat.OrcRaidManager.Instance;
             if (raids == null) return restored;
 
-            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, data.secondsUntilNextRaid);
+            var campBuildings = new List<Combat.OrcRaidManager.CampBuildingRestoreState>();
+            if (data.orcCampBuildings != null)
+            {
+                foreach (var entry in data.orcCampBuildings)
+                {
+                    campBuildings.Add(new Combat.OrcRaidManager.CampBuildingRestoreState(entry.portalCell,
+                        (Combat.OrcCampBuildingKind)entry.kind, entry.cell, entry.yaw, entry.health));
+                }
+            }
+            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, campBuildings, data.secondsUntilNextRaid);
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
@@ -519,6 +528,25 @@ namespace CityBuilder.Saving
                     data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth });
                 }
                 data.closedPortalCells.AddRange(raids.ClosedPortalCells);
+                // Every camp building, standing (its health) or fallen (0, its ruin).
+                foreach (var camp in Combat.OrcCamp.All)
+                {
+                    foreach (var building in camp.Buildings)
+                    {
+                        data.orcCampBuildings.Add(new OrcCampEntry
+                        {
+                            portalCell = camp.PortalCell, kind = (int)building.Kind, cell = building.Cell,
+                            yaw = building.transform.eulerAngles.y, health = building.CurrentHealth,
+                        });
+                    }
+                    foreach (var fallen in camp.Fallen)
+                    {
+                        data.orcCampBuildings.Add(new OrcCampEntry
+                        {
+                            portalCell = camp.PortalCell, kind = (int)fallen.Kind, cell = fallen.Cell, yaw = fallen.Yaw, health = 0,
+                        });
+                    }
+                }
                 data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
                 data.raidsSuspended = raids.RaidsSuspended;
             }
@@ -528,7 +556,8 @@ namespace CityBuilder.Saving
             var orcIndices = new Dictionary<Combat.OrcUnit, int>();
             foreach (var orc in Combat.OrcUnit.All)
             {
-                if (orc == null) continue;
+                // A camp's guards are not raiders: the tent musters them again on load.
+                if (orc == null || orc.IsGuard) continue;
                 orcIndices[orc] = data.orcs.Count;
                 data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth });
             }
