@@ -99,6 +99,9 @@ namespace CityBuilder.Saving
         /// <summary>Every portal still standing, in the order they were opened -- which is the order a group's saved attack order indexes into.</summary>
         public List<PortalEntry> portals = new List<PortalEntry>();
 
+        /// <summary>Where the portals the player destroyed stood, so their ruins come back with the save. Empty in saves written before portals left ruins.</summary>
+        public List<Vector2Int> closedPortalCells = new List<Vector2Int>();
+
         /// <summary>
         /// Where the ONE portal stood, back when there was only one. Read on load when
         /// <see cref="portals"/> is empty and a portal was placed, so a save written before the map

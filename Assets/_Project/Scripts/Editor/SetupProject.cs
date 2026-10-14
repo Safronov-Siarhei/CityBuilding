@@ -838,7 +838,8 @@ namespace CityBuilder.EditorTools
             // No wiring: raids are sized and paced against the player's progression score rather
             // than the calendar (see PlayerProgression), so the raid clock stopped needing the day
             // count the moment that changed.
-            managers.AddComponent<OrcRaidManager>();
+            var raidManager = managers.AddComponent<OrcRaidManager>();
+            WireOrcModels(raidManager);
 
             // The player's side of the war: recruitment, groups and the daily upkeep charge (hence
             // the calendar reference, same as the raid clock's).
@@ -1925,6 +1926,28 @@ namespace CityBuilder.EditorTools
         /// OK!/NO! flash reads clearly regardless of what's behind it; hidden until the first
         /// destination click.
         /// </summary>
+        /// <summary>
+        /// Hands the raid manager the orc faction's Blender models (Tools/blender/orc*.py, exported
+        /// to Models/Orcs): the portal's two looks and its ruin, the grunt and the brute. A missing
+        /// file only warns -- the manager falls back to the cube figure it replaced.
+        /// </summary>
+        private static void WireOrcModels(OrcRaidManager raidManager)
+        {
+            const string folder = "Assets/_Project/Models/Orcs";
+            var so = new SerializedObject(raidManager);
+            foreach (var (field, file) in new[]
+                     {
+                         ("portalActiveModel", "OrcPortal1-lvl1"), ("portalPassiveModel", "OrcPortal1-lvl1-Passive"),
+                         ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("gruntModel", "OrcGrunt"), ("bruteModel", "OrcBrute"),
+                     })
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{file}.fbx");
+                if (model == null) Debug.LogWarning($"[SetupProject] {folder}/{file}.fbx is missing -- run Tools/blender/export_fbx.py. The orcs fall back to cubes there.");
+                so.FindProperty(field).objectReferenceValue = model;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static CitizenSelector BuildCitizenSelector(Transform canvasParent, Camera targetCamera)
         {
             var feedbackText = CreateText(canvasParent, "CitizenMoveFeedback", string.Empty, 64, Vector2.zero, new Vector2(400f, 100f), addShadow: true);

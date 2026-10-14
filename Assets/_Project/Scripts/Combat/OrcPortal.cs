@@ -41,6 +41,15 @@ namespace CityBuilder.Combat
         /// </summary>
         public Vector2Int Cell { get; private set; }
 
+        // The two looks a standing portal has (Tools/blender/orcportal1.py): the whirlpool
+        // burning bright on the portal the NEXT wave will come out of, banked down on the rest.
+        // Both are children, switched rather than swapped, so a look change costs nothing.
+        private GameObject _activeLook;
+        private GameObject _passiveLook;
+
+        /// <summary>Whether this portal is showing the bright look -- the source of the next wave (see OrcRaidManager).</summary>
+        public bool IsShownActive { get; private set; } = true;
+
         private void Awake()
         {
             MaxHealth = BalanceConfig.Instance.PortalMaxHealth;
@@ -51,6 +60,22 @@ namespace CityBuilder.Combat
         public void SetCell(Vector2Int cell)
         {
             Cell = cell;
+        }
+
+        /// <summary>Hands the portal its two looks. Without them (no models in the build) it keeps whatever it was built with and the switch does nothing.</summary>
+        public void SetLooks(GameObject activeLook, GameObject passiveLook)
+        {
+            _activeLook = activeLook;
+            _passiveLook = passiveLook;
+            ShowActive(IsShownActive);
+        }
+
+        /// <summary>Shows the bright look (this portal sends the next wave) or the banked-down one.</summary>
+        public void ShowActive(bool active)
+        {
+            IsShownActive = active;
+            if (_activeLook != null) _activeLook.SetActive(active);
+            if (_passiveLook != null) _passiveLook.SetActive(!active);
         }
 
         /// <summary>Puts a loaded portal back on the health the player had ground it down to. Clamped to at least 1: a portal restored at zero would stand there whole and unkillable, since only TakeDamage retires one.</summary>

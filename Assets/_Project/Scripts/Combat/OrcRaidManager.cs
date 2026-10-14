@@ -51,11 +51,42 @@ namespace CityBuilder.Combat
         private static readonly Color OrcSkinColor = new Color(0.28f, 0.42f, 0.22f);
         private static readonly Color OrcGearColor = new Color(0.22f, 0.2f, 0.18f);
 
+        // The faction's Blender models (Tools/blender/orc*.py, exported to Models/Orcs), wired by
+        // SetupProject. Any left empty falls back to the cube figure it replaced, so a build
+        // without the models still plays.
+        [SerializeField] private GameObject portalActiveModel;
+        [SerializeField] private GameObject portalPassiveModel;
+        [SerializeField] private GameObject portalClosedModel;
+        [SerializeField] private GameObject gruntModel;
+        [SerializeField] private GameObject bruteModel;
+
+        /// <summary>
+        /// The level from which a raider is drawn as the brute rather than the grunt (the user's
+        /// call, 2026-10-14): the game has one orc that grows by level, and a strong one should
+        /// look strong. The thrower and the chief wait for unit types of their own.
+        /// </summary>
+        public const int BruteFromLevel = 4;
+
+        /// <summary>A portal's plot: the model is a 2x2 arch on its platform.</summary>
+        public static readonly Vector2Int PortalFootprint = new Vector2Int(2, 2);
+
         private Material _portalMaterial;
         private Material _orcSkinMaterial;
         private Material _orcGearMaterial;
         private bool _portalsPlaced;
         private float _raidTimer;
+        private OrcPortal _nextSource;
+        private readonly List<Vector2Int> _closedPortalCells = new List<Vector2Int>();
+
+        /// <summary>
+        /// The portal the next wave will come out of, picked when the last one left -- and shown
+        /// burning bright while the others smoulder, so the player can see where it is coming
+        /// from. Which portal it is changes nothing about the raids' size or pace.
+        /// </summary>
+        public OrcPortal NextRaidSource => _nextSource;
+
+        /// <summary>Where the portals the player destroyed stood -- each leaves its ruin, which the save keeps.</summary>
+        public IReadOnlyList<Vector2Int> ClosedPortalCells => _closedPortalCells;
 
         /// <summary>Pauses the automatic raid clock without touching the portal. Set by the OrcSpawn cheat so hand-spawned squads can be observed in isolation; nothing in normal gameplay sets it.</summary>
         public bool RaidsSuspended { get; set; }
@@ -87,7 +118,9 @@ namespace CityBuilder.Combat
         /// order indexes into -- see GameSaveController.RestoreArmyOrders.
         /// </summary>
         /// <param name="portalsPlaced">Whether the map had opened its portals at all. True with an empty list means the player had destroyed every one of them, and no fresh ones are opened over the ruins.</param>
-        public void RestoreFromSave(bool portalsPlaced, IReadOnlyList<PortalRestoreState> portals, float secondsUntilNextRaid)
+        /// <param name="closedPortalCells">Where the portals the player had already destroyed stood: each gets its ruin back.</param>
+        public void RestoreFromSave(bool portalsPlaced, IReadOnlyList<PortalRestoreState> portals,
+            IReadOnlyList<Vector2Int> closedPortalCells, float secondsUntilNextRaid)
         {
             if (!portalsPlaced) return;
 
@@ -104,6 +137,20 @@ namespace CityBuilder.Combat
                 SpawnPortal(grid, state.Cell).SetCurrentHealth(state.Health);
             }
 
+            if (closedPortalCells != null)
+            {
+                foreach (var cell in closedPortalCells)
+                {
+                    _closedPortalCells.Add(cell);
+                    grid.SetAreaOccupied(cell, PortalFootprint, true);
+                    var position = grid.GetFootprintCenterWorld(cell, PortalFootprint);
+                    SpawnRuin(cell, position, FacingTownHall(position));
+                }
+            }
+
+            // Which portal sends the next wave is not saved -- it is shown, not counted on -- so
+            // a load picks afresh.
+            PickNextSource();
             _raidTimer = Mathf.Max(0f, secondsUntilNextRaid);
         }
 
@@ -131,6 +178,36 @@ namespace CityBuilder.Combat
                 return;
             }
             Instance = this;
+        }
+
+        private void OnEnable()
+        {
+            OrcPortal.OnPortalDestroyed += HandlePortalDestroyed;
+        }
+
+        private void OnDisable()
+        {
+            OrcPortal.OnPortalDestroyed -= HandlePortalDestroyed;
+        }
+
+        /// <summary>A portal the player has closed leaves its ruin where it stood (still taking up its plot), and if it was the one the next wave was coming from, another takes over.</summary>
+        private void HandlePortalDestroyed(OrcPortal portal)
+        {
+            if (portal == null) return;
+            _closedPortalCells.Add(portal.Cell);
+            SpawnRuin(portal.Cell, portal.transform.position, portal.transform.rotation);
+            if (_nextSource == portal || _nextSource == null) PickNextSource();
+        }
+
+        /// <summary>Picks the portal the next wave comes out of, at random among those standing, and lights it.</summary>
+        private void PickNextSource()
+        {
+            var portals = OrcPortal.All;
+            _nextSource = portals.Count > 0 ? portals[Random.Range(0, portals.Count)] : null;
+            foreach (var portal in portals)
+            {
+                portal.ShowActive(portal == _nextSource);
+            }
         }
 
         private void Update()
@@ -212,6 +289,8 @@ namespace CityBuilder.Combat
                 opened++;
             }
 
+            PickNextSource();
+
             // Set before the early return below, and whatever happened: the map geometry won't
             // change, so re-running this every frame would just repeat the same failure forever.
             _portalsPlaced = true;
@@ -291,11 +370,8 @@ namespace CityBuilder.Combat
                     var candidate = townHallPosition + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                     var candidateCell = grid.WorldToCell(candidate);
 
-                    if (!grid.IsWithinBounds(candidateCell, Vector2Int.one) || !grid.IsAreaFree(candidateCell, Vector2Int.one)) continue;
-                    if (mapApplier != null && mapApplier.IsWaterCell(candidateCell)) continue;
-
-                    var worldPosition = grid.GetFootprintCenterWorld(candidateCell, Vector2Int.one);
-                    if (mapApplier != null && !mapApplier.IsGroundAt(worldPosition)) continue;
+                    if (!grid.IsWithinBounds(candidateCell, PortalFootprint) || !grid.IsAreaFree(candidateCell, PortalFootprint)) continue;
+                    if (!IsSolidGround(grid, mapApplier, candidateCell)) continue;
 
                     cell = candidateCell;
                     return true;
@@ -304,6 +380,22 @@ namespace CityBuilder.Combat
 
             cell = default;
             return false;
+        }
+
+        /// <summary>Every cell of a portal's plot is dry, flat playable ground -- one cell of lake under a corner of the platform would leave the arch hanging over the water.</summary>
+        private static bool IsSolidGround(GridManager grid, MeshMapApplier mapApplier, Vector2Int cell)
+        {
+            if (mapApplier == null) return true;
+            for (var dx = 0; dx < PortalFootprint.x; dx++)
+            {
+                for (var dy = 0; dy < PortalFootprint.y; dy++)
+                {
+                    var c = cell + new Vector2Int(dx, dy);
+                    if (mapApplier.IsWaterCell(c)) return false;
+                    if (!mapApplier.IsGroundAt(grid.GetFootprintCenterWorld(c, Vector2Int.one))) return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -333,20 +425,31 @@ namespace CityBuilder.Combat
         /// <summary>Builds one portal on a cell already known to be standable, and hands it back so the caller can set the health a save left it on.</summary>
         private OrcPortal SpawnPortal(GridManager grid, Vector2Int cell)
         {
-            var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+            var position = grid.GetFootprintCenterWorld(cell, PortalFootprint);
 
             EnsureMaterials();
 
             var root = new GameObject("OrcPortal");
-            root.transform.position = position;
+            root.transform.SetPositionAndRotation(position, FacingTownHall(position));
             var portal = root.AddComponent<OrcPortal>();
             portal.SetCell(cell);
 
-            // A simple freestanding stone arch -- two posts and a lintel, in the same
-            // cube-primitive style as every other procedural prop in the game.
-            AddPortalPart(root.transform, new Vector3(-0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
-            AddPortalPart(root.transform, new Vector3(0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
-            AddPortalPart(root.transform, new Vector3(0f, 3.1f, 0f), new Vector3(1.6f, 0.4f, 0.4f));
+            if (portalActiveModel != null && portalPassiveModel != null)
+            {
+                // Both looks are built once and switched (see OrcPortal.ShowActive).
+                var active = Instantiate(portalActiveModel, root.transform, false);
+                var passive = Instantiate(portalPassiveModel, root.transform, false);
+                active.name = "PortalActive";
+                passive.name = "PortalPassive";
+                portal.SetLooks(active, passive);
+            }
+            else
+            {
+                // The cube arch the models replaced: two posts and a lintel.
+                AddPortalPart(root.transform, new Vector3(-0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
+                AddPortalPart(root.transform, new Vector3(0.6f, 1.5f, 0f), new Vector3(0.4f, 3f, 0.4f));
+                AddPortalPart(root.transform, new Vector3(0f, 3.1f, 0f), new Vector3(1.6f, 0.4f, 0.4f));
+            }
 
             // One click target covering the whole arch (the parts' own colliders are stripped), so
             // the player can tap the portal to order an assault on it -- see ArmyOrderInput. A
@@ -354,18 +457,41 @@ namespace CityBuilder.Combat
             // wall that raiding orcs and marching soldiers get wedged against.
             var clickCollider = root.AddComponent<BoxCollider>();
             clickCollider.isTrigger = true;
-            clickCollider.center = new Vector3(0f, 1.7f, 0f);
-            clickCollider.size = new Vector3(2f, 3.4f, 0.8f);
+            clickCollider.center = new Vector3(0f, 1.2f, 0f);
+            clickCollider.size = new Vector3(1.9f, 2.4f, 1.2f);
 
             // Occupies its cell so the player can't drop a building on top of the arch -- and, with
             // several portals, so the search for the next slot cannot pick a cell one of them is
             // already standing on.
-            grid.SetAreaOccupied(cell, Vector2Int.one, true);
+            grid.SetAreaOccupied(cell, PortalFootprint, true);
             // Testing convenience (see PortalFogRevealRadiusCells) -- the player can see where
             // raids come from instead of having them arrive out of unexplored fog.
             FogOfWarManager.Instance?.RevealPermanent(cell, PortalFogRevealRadiusCells);
 
             return portal;
+        }
+
+        /// <summary>The closed portal's ruin, on the plot the portal stood on. Scenery only: no collider, nothing to attack.</summary>
+        private void SpawnRuin(Vector2Int cell, Vector3 position, Quaternion rotation)
+        {
+            if (portalClosedModel == null) return;
+            var ruin = Instantiate(portalClosedModel, position, rotation);
+            ruin.name = $"OrcPortalRuin {cell.x},{cell.y}";
+        }
+
+        /// <summary>
+        /// A portal turns its front -- the side the whirlpool and the steps face -- towards the
+        /// Town Hall, snapped to a quarter turn so the square platform keeps to its plot.
+        /// </summary>
+        private static Quaternion FacingTownHall(Vector3 position)
+        {
+            if (!TryFindTownHallPosition(out var townHall)) return Quaternion.identity;
+            var toTown = townHall - position;
+            toTown.y = 0f;
+            if (toTown.sqrMagnitude < 0.01f) return Quaternion.identity;
+            // The model's front is its -Z, so its +Z points away from the town.
+            var yaw = Mathf.Atan2(-toTown.x, -toTown.z) * Mathf.Rad2Deg;
+            return Quaternion.Euler(0f, Mathf.Round(yaw / 90f) * 90f, 0f);
         }
 
         private void AddPortalPart(Transform parent, Vector3 localPosition, Vector3 size)
@@ -391,8 +517,13 @@ namespace CityBuilder.Combat
             var size = ComputeRaidSize(score);
             var level = ComputeOrcLevel(score);
 
-            var origin = portals[Random.Range(0, portals.Count)].transform.position;
+            // Out of the portal that was lit for it; then the next one is picked and lit.
+            var source = _nextSource != null && _nextSource.CurrentHealth > 0
+                ? _nextSource
+                : portals[Random.Range(0, portals.Count)];
+            var origin = source.transform.position;
             var leader = SpawnOrcs(origin, size, level);
+            PickNextSource();
             // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
             // quietly become five times as hard as the last one at the very same size. The icon
             // follows the first orc of the wave, so a tap a minute later finds the orcs, not the
@@ -489,12 +620,29 @@ namespace CityBuilder.Combat
             // Visibly bigger with level, so a cheat-spawned elite is tellable from a raider at a
             // glance without opening the inspector. Deliberately sublinear -- a level 5 orc has 5x
             // the health but must not be a five-times-wider wall of cubes.
-            var scale = 1f + (Mathf.Max(1, level) - 1) * 0.12f;
+            var scale = LevelScale(level);
             root.transform.localScale = Vector3.one * (scale * UnitSize.Scale);
 
-            AddCubePart(root.transform, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.36f, 0.6f, 0.36f), _orcSkinMaterial);
-            AddCubePart(root.transform, "Head", new Vector3(0f, 0.72f, 0f), new Vector3(0.26f, 0.26f, 0.26f), _orcSkinMaterial);
-            AddCubePart(root.transform, "Shoulders", new Vector3(0f, 0.55f, 0f), new Vector3(0.5f, 0.14f, 0.4f), _orcGearMaterial);
+            var brute = level >= BruteFromLevel && bruteModel != null;
+            var model = brute ? bruteModel : gruntModel;
+            if (model != null)
+            {
+                // The models are authored at their real size (a grunt 0.58 m, a brute 0.73), so
+                // the root's unit scale is divided back out -- and for the brute, the growth the
+                // levels below it already bought, or a level-4 brute would stand a metre tall.
+                var figure = Instantiate(model, root.transform, false);
+                figure.name = brute ? "Brute" : "Grunt";
+                var undo = UnitSize.Scale * (brute ? LevelScale(BruteFromLevel) : 1f);
+                figure.transform.localScale = Vector3.one / undo;
+                // Units stay out of the shadow pass, like the citizens.
+                SceneryShadows.DisableCasting(figure);
+            }
+            else
+            {
+                AddCubePart(root.transform, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.36f, 0.6f, 0.36f), _orcSkinMaterial);
+                AddCubePart(root.transform, "Head", new Vector3(0f, 0.72f, 0f), new Vector3(0.26f, 0.26f, 0.26f), _orcSkinMaterial);
+                AddCubePart(root.transform, "Shoulders", new Vector3(0f, 0.55f, 0f), new Vector3(0.5f, 0.14f, 0.4f), _orcGearMaterial);
+            }
 
             var controller = root.AddComponent<CharacterController>();
             controller.height = 0.86f;
@@ -506,6 +654,12 @@ namespace CityBuilder.Combat
             var unit = root.AddComponent<OrcUnit>();
             unit.Initialize(level);
             return unit;
+        }
+
+        /// <summary>How much bigger a raider of this level is drawn than a level-1 one. Deliberately sublinear: a level-5 orc has five times the health, not five times the width.</summary>
+        public static float LevelScale(int level)
+        {
+            return 1f + (Mathf.Max(1, level) - 1) * 0.12f;
         }
 
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)

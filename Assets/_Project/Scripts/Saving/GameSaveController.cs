@@ -298,7 +298,7 @@ namespace CityBuilder.Saving
             var raids = Combat.OrcRaidManager.Instance;
             if (raids == null) return restored;
 
-            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.secondsUntilNextRaid);
+            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, data.secondsUntilNextRaid);
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
@@ -518,6 +518,7 @@ namespace CityBuilder.Saving
                 {
                     data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth });
                 }
+                data.closedPortalCells.AddRange(raids.ClosedPortalCells);
                 data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
                 data.raidsSuspended = raids.RaidsSuspended;
             }
