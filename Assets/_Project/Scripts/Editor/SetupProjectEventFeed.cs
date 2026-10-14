@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using CityBuilder.CameraControl;
 using CityBuilder.Core;
 using CityBuilder.UI;
@@ -20,19 +20,18 @@ namespace CityBuilder.EditorTools
         private const float EventIconSpacing = 104f;
 
         /// <summary>
-        /// Below the tax control (y 318) and above the round minimap (whose top is near y -300), at
-        /// the left edge -- the strip the old log panel occupied, so nothing else had to move. Four
-        /// rows end at about y -150.
+        /// Down the left edge, under the menu and citizens buttons and above the round minimap
+        /// (SetupProjectHud.LeftColumnTop).
         /// </summary>
         private static void BuildEventFeed(Transform canvasParent, RTSCameraController cameraRig)
         {
             var feed = new GameObject("EventFeed", typeof(RectTransform));
             feed.transform.SetParent(canvasParent, false);
             var feedRect = (RectTransform)feed.transform;
-            // The left edge under the menu button, the zone the user's layout keeps for it.
+            // The left edge under the menu and citizens buttons, the zone the user's layout keeps for it.
             feedRect.anchorMin = feedRect.anchorMax = new Vector2(0f, 1f);
             feedRect.pivot = new Vector2(0.5f, 1f);
-            feedRect.anchoredPosition = new Vector2(HudMargin + EventIconSize * 0.5f + 8f, -200f);
+            feedRect.anchoredPosition = new Vector2(HudMargin + EventIconSize * 0.5f + 8f, LeftColumnTop);
             feedRect.sizeDelta = new Vector2(EventIconSize, EventIconSize + EventIconSpacing * (EventFeedSlots - 1));
 
             // A canvas of its own: the rings drain every frame, and a change inside a nested canvas

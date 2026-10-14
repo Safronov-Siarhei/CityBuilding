@@ -1380,9 +1380,10 @@ namespace CityBuilder.EditorTools
 
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
 
-            // Under the day, in the middle of the top (the user's layout): two figures, no word.
-            var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "pill_wood", "People", CreatePopulationIcon(), 96f, 0.62f);
-            Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -164f), new Vector2(96f, 96f));
+            // On the left edge under the menu button (the user moved it there, 2026-10-14): two figures, no word.
+            var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "pill_wood", "People", CreatePopulationIcon(), WorkforceButtonSize, 0.62f);
+            Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(HudMargin + (RoundButton - WorkforceButtonSize) * 0.5f, WorkforceButtonTop), new Vector2(WorkforceButtonSize, WorkforceButtonSize));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);

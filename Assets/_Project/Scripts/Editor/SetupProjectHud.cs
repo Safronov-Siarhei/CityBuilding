@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
@@ -14,13 +14,14 @@ namespace CityBuilder.EditorTools
     /// The HUD after the user's layout sketch (2026-10-14): pictures instead of words, and each
     /// piece on the edge it belongs to --
     ///
-    ///   top-left      the menu (save, settings, main menu), which pauses the game;
-    ///   top-centre    one resource bar, the day under it, the citizens button under that;
+    ///   top-left      the menu (save, settings, main menu), which pauses the game, and the
+    ///                 citizens button under it;
+    ///   top-centre    one resource bar, the day under it;
     ///   top-right     happiness as a round number (tap for the breakdown), then migration, army;
     ///   left          the event feed;
     ///   bottom-left   the minimap;
     ///   bottom-centre the build menu -- swapped for cancel/rotate/confirm while placing;
-    ///   bottom-right  the tax: minus, coin and rate, plus.
+    ///   bottom-right  the tax: minus, "Налог: N%" in words, plus.
     ///
     /// Everything here is anchored to its own corner or edge directly, so nothing needs
     /// SetupProjectLayout's centre-to-corner pinning.
@@ -29,6 +30,11 @@ namespace CityBuilder.EditorTools
     {
         private const float HudMargin = 28f;
         private const float RoundButton = 108f;
+        private const float MenuButtonTop = -HudMargin * 0.7f;
+        private const float WorkforceButtonSize = 96f;
+        private const float WorkforceButtonTop = MenuButtonTop - RoundButton - 18f;
+        /// <summary>Where the left column under the menu and the citizens button frees up -- the event feed starts here.</summary>
+        private const float LeftColumnTop = WorkforceButtonTop - WorkforceButtonSize - 20f;
 
         /// <summary>One of Tools/ui/make_hud_glyphs.py's white silhouettes, or null if it was never drawn.</summary>
         private static Sprite HudGlyph(string name)
@@ -72,7 +78,7 @@ namespace CityBuilder.EditorTools
             SaveDialogController saveDialog, GameObject saveDialogRoot)
         {
             var menuButton = CreateGlyphButton(uiRoot, "MenuButton", "pill_gold", "Menu", null, RoundButton);
-            Anchor(menuButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, -HudMargin * 0.7f), new Vector2(RoundButton, RoundButton));
+            Anchor(menuButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
             var root = new GameObject("GameMenu", typeof(RectTransform));
             root.transform.SetParent(uiRoot, false);
@@ -86,7 +92,7 @@ namespace CityBuilder.EditorTools
 
             // The menu's own button again, on top of the dim layer, so the same spot closes it.
             var closeButton = CreateGlyphButton(root.transform, "MenuCloseButton", "pill_gold", "Menu", null, RoundButton);
-            Anchor(closeButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, -HudMargin * 0.7f), new Vector2(RoundButton, RoundButton));
+            Anchor(closeButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
             var entries = new[] { ("SaveEntry", "Save"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
             var buttons = new Button[entries.Length];
@@ -94,7 +100,7 @@ namespace CityBuilder.EditorTools
             {
                 buttons[i] = CreateGlyphButton(root.transform, entries[i].Item1, "pill_parchment", entries[i].Item2, null, 96f);
                 Anchor(buttons[i].GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                    new Vector2(HudMargin + (RoundButton - 96f) * 0.5f, -HudMargin * 0.7f - RoundButton - 18f - i * 112f), new Vector2(96f, 96f));
+                    new Vector2(HudMargin + (RoundButton - 96f) * 0.5f, MenuButtonTop - RoundButton - 18f - i * 112f), new Vector2(96f, 96f));
             }
 
             var settings = BuildSettingsPanel(uiRoot, panelSprite, null);
@@ -152,32 +158,33 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- bottom-right: the tax
 
-        /// <summary>Minus, the rate beside a coin, plus -- on the bottom-right corner, where the thumb is.</summary>
+        /// <summary>
+        /// Minus, "Налог: N%", plus -- on the bottom-right corner, where the thumb is. The one HUD
+        /// control that keeps a word: a coin and a number alone did not say what they were (the
+        /// user, 2026-10-14).
+        /// </summary>
         private static void BuildTaxControl(Transform uiRoot)
         {
+            const float sign = 76f, plaqueWidth = 232f, gap = 8f;
             var root = new GameObject("TaxRate", typeof(RectTransform));
             root.transform.SetParent(uiRoot, false);
-            Anchor((RectTransform)root.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-HudMargin, HudMargin), new Vector2(352f, 84f));
+            Anchor((RectTransform)root.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-HudMargin, HudMargin), new Vector2(sign * 2f + gap * 2f + plaqueWidth, 84f));
 
-            var minus = CreateGlyphButton(root.transform, "MinusButton", "pill_wood", "Minus", null, 76f);
-            Anchor(minus.GetComponent<RectTransform>(), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(76f, 76f));
-            var plus = CreateGlyphButton(root.transform, "PlusButton", "pill_wood", "Plus", null, 76f);
-            Anchor(plus.GetComponent<RectTransform>(), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(76f, 76f));
-            foreach (var (button, sign) in new[] { (minus, "–"), (plus, "+") })
+            var minus = CreateGlyphButton(root.transform, "MinusButton", "pill_wood", "Minus", null, sign);
+            Anchor(minus.GetComponent<RectTransform>(), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(sign, sign));
+            var plus = CreateGlyphButton(root.transform, "PlusButton", "pill_wood", "Plus", null, sign);
+            Anchor(plus.GetComponent<RectTransform>(), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(sign, sign));
+            foreach (var (button, glyph) in new[] { (minus, "–"), (plus, "+") })
             {
                 // Signs, not words: the glyph files have no minus/plus, the font draws them crisply.
                 Object.DestroyImmediate(button.transform.Find("Icon").gameObject);
-                var label = CreateText(button.transform, "Sign", sign, 44, new Vector2(0f, 4f), new Vector2(70f, 70f));
+                var label = CreateText(button.transform, "Sign", glyph, 44, new Vector2(0f, 4f), new Vector2(70f, 70f));
                 label.font = UiTheme.Heavy;
                 label.color = UiTheme.OnWood;
             }
 
-            var plaque = CreateSkinImage(root.transform, "RatePlaque", "pill_parchment", Vector2.zero, new Vector2(172f, 72f));
-            var coin = CreateImage(plaque.transform, "Coin", Color.white);
-            coin.sprite = CreateResourceIcon(ResourceType.Coins);
-            coin.preserveAspect = true;
-            Anchor(coin.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-46f, 2f), new Vector2(50f, 50f));
-            var rateLabel = CreateText(plaque.transform, "RateLabel", "10%", 30, new Vector2(24f, 3f), new Vector2(100f, 56f));
+            var plaque = CreateSkinImage(root.transform, "RatePlaque", "pill_parchment", Vector2.zero, new Vector2(plaqueWidth, 72f));
+            var rateLabel = CreateText(plaque.transform, "RateLabel", "Налог: 10%", 28, new Vector2(0f, 3f), new Vector2(plaqueWidth - 24f, 56f));
             rateLabel.font = UiTheme.Heavy;
             rateLabel.color = UiTheme.Ink;
 

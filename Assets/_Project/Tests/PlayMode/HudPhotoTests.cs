@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
@@ -469,10 +469,28 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
-        public void TheTax_ReadsAsAPercentage()
+        public void TheTax_SaysWhatItIs()
         {
+            // The one HUD control that keeps a word (the user, 2026-10-14): "Налог: 10%", not a coin and a number.
             var rate = HudRoot().Find("TaxRate/RatePlaque/RateLabel").GetComponent<Text>().text;
-            StringAssert.IsMatch(@"^\d+%$", rate, "The tax plaque should carry the rate alone, next to its coin.");
+            var rateNow = TaxManager.Instance != null ? TaxManager.Instance.TaxRatePercent : 10;
+            Assert.AreEqual(Core.Localization.Format("#tax_rate", rateNow), rate, "The tax plaque should name the tax in words.");
+            Assert.IsNull(HudRoot().Find("TaxRate/RatePlaque/Coin"), "The coin picture is still on the tax plaque.");
+        }
+
+        [Test]
+        public void TheCitizensButton_StandsUnderTheMenuOnTheLeft()
+        {
+            var menu = (RectTransform)HudRoot().Find("MenuButton");
+            var citizens = (RectTransform)HudRoot().Find("WorkforceButton");
+            var menuCorners = new Vector3[4];
+            var citizenCorners = new Vector3[4];
+            menu.GetWorldCorners(menuCorners);
+            citizens.GetWorldCorners(citizenCorners);
+            Assert.Less(citizenCorners[1].y, menuCorners[0].y + 0.01f, "The citizens button is not below the menu button.");
+            var menuMid = (menuCorners[0].x + menuCorners[2].x) * 0.5f;
+            var citizenMid = (citizenCorners[0].x + citizenCorners[2].x) * 0.5f;
+            Assert.AreEqual(menuMid, citizenMid, Mathf.Abs(menuCorners[2].x - menuCorners[0].x) * 0.05f, "The citizens button is not in the menu's column.");
         }
 
         [UnityTest]

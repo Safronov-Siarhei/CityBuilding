@@ -33,8 +33,8 @@ namespace CityBuilder.UI
         private void Refresh()
         {
             if (rateLabel == null || TaxManager.Instance == null) return;
-            // The coin beside it says what the number is; the HUD has no words (2026-10-14).
-            rateLabel.text = $"{TaxManager.Instance.TaxRatePercent}%";
+            // In words: the one HUD control the user wanted labelled (2026-10-14).
+            rateLabel.text = Localization.Format("#tax_rate", TaxManager.Instance.TaxRatePercent);
         }
     }
 }
