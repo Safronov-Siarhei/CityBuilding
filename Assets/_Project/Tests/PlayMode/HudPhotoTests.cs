@@ -132,7 +132,17 @@ namespace CityBuilder.Tests.PlayMode
             {
                 var label = $"{shape.x}x{shape.y}";
                 yield return PlaytestCapture.ShootWithUiAt($"hud-{label}", shape.x, shape.y, _townHall, 34f, 52f, 20f,
-                    () => CheckLayout(label, failures));
+                    () =>
+                    {
+                        // Closed, as the player first sees it -- then open, the tallest the menu gets.
+                        CheckLayout(label, failures);
+                        var menu = Menu();
+                        menu.Open(FirstCategory(), true);
+                        Canvas.ForceUpdateCanvases();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)menu.transform.Find("Hotbar"));
+                        CheckLayout(label + " with the build menu open", failures);
+                        menu.Close(true);
+                    });
             }
 
             Assert.IsEmpty(failures, string.Join("\n", failures));
@@ -212,6 +222,128 @@ namespace CityBuilder.Tests.PlayMode
             var path = t.name;
             for (var p = t.parent; p != null && p != root; p = p.parent) path = p.name + "/" + path;
             return path;
+        }
+
+        // ---------------------------------------------------------------- the build menu
+
+        private static BuildingCategoryPanel Menu() => Object.FindAnyObjectByType<BuildingCategoryPanel>();
+
+        private static CategoryButtonHandler[] Tabs() =>
+            Menu().GetComponentsInChildren<CategoryButtonHandler>(true);
+
+        private static CityBuilder.Buildings.BuildingCategory FirstCategory() => Tabs()[0].Category;
+
+        private static void TapTab(CategoryButtonHandler tab) => tab.GetComponent<Button>().onClick.Invoke();
+
+        private static IEnumerator LetItSlide()
+        {
+            for (var i = 0; i < 40; i++) yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TheBuildMenu_StartsClosed_WithOnlyTheTabsOnTheBottomEdge()
+        {
+            var menu = Menu();
+            menu.Close(true);
+            yield return null;
+
+            Assert.IsFalse(menu.IsOpen);
+            var hotbar = menu.transform.Find("Hotbar");
+            Assert.IsFalse(hotbar.gameObject.activeSelf, "The cards show before any category was tapped -- the player sees what is in a category without opening it.");
+            var bar = (RectTransform)menu.transform.Find("CategoryBar");
+            Assert.Less(bar.anchoredPosition.y, 60f, "The closed tab row is not down on the bottom edge.");
+        }
+
+        [UnityTest]
+        public IEnumerator ATab_OpensItsCardsUnderTheRaisedRow_AndTappingItAgainClosesIt()
+        {
+            var menu = Menu();
+            menu.Close(true);
+            var tab = Tabs()[0];
+
+            TapTab(tab);
+            yield return LetItSlide();
+
+            Assert.IsTrue(menu.IsOpen, "Tapping a tab did not open its category.");
+            var hotbar = (RectTransform)menu.transform.Find("Hotbar");
+            Assert.IsTrue(hotbar.gameObject.activeSelf, "The category opened but its cards did not appear.");
+            var shown = 0;
+            foreach (var card in hotbar.GetComponentsInChildren<HotbarButtonHandler>(false))
+            {
+                Assert.AreEqual(tab.Category, card.Building.category, $"'{card.Building.buildingName}' shows under the wrong tab.");
+                shown++;
+            }
+            Assert.Greater(shown, 0, "The open category shows no cards at all.");
+
+            var bar = (RectTransform)menu.transform.Find("CategoryBar");
+            var safeArea = Object.FindAnyObjectByType<SafeAreaFitter>().GetComponent<RectTransform>();
+            Assert.GreaterOrEqual(RectIn(safeArea, bar).yMin, RectIn(safeArea, hotbar).yMax - 1f,
+                "The tab row did not rise above the cards -- they sit on top of each other.");
+
+            TapTab(tab);
+            yield return LetItSlide();
+            Assert.IsFalse(menu.IsOpen, "Tapping the open tab again did not close the menu.");
+            Assert.IsFalse(hotbar.gameObject.activeSelf, "The menu closed but the cards stayed up.");
+            Assert.Less(bar.anchoredPosition.y, 60f, "The tab row did not come back down to the bottom edge.");
+        }
+
+        [UnityTest]
+        public IEnumerator AnotherTab_SwitchesTheOpenCategory()
+        {
+            var menu = Menu();
+            menu.Close(true);
+            var tabs = Tabs();
+            Assert.Greater(tabs.Length, 1, "Only one category -- nothing to switch to.");
+
+            TapTab(tabs[0]);
+            TapTab(tabs[1]);
+            yield return null;
+
+            Assert.IsTrue(menu.IsOpen, "Tapping a second tab closed the menu instead of switching to it.");
+            Assert.AreEqual(tabs[1].Category, menu.OpenCategory);
+            menu.Close(true);
+        }
+
+        [UnityTest]
+        public IEnumerator AMapTap_ClosesTheMenu_ButNotWhileABuildingIsBeingPlaced()
+        {
+            // The fixture places the Town Hall by hand, so the placer is still holding the Town Hall
+            // the game would have dropped on placing it -- put it down first, as the game does.
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.ClearSelection();
+
+            var menu = Menu();
+            menu.Open(FirstCategory(), true);
+            menu.HandleMapTap(new Vector2(500f, 500f));
+            yield return null;
+            Assert.IsFalse(menu.IsOpen, "A tap on the map left the build menu open.");
+
+            menu.Open(FirstCategory(), true);
+            var card = menu.transform.Find("Hotbar").GetComponentInChildren<HotbarButtonHandler>(false);
+            Assert.IsNotNull(card, "The open category has no card to pick.");
+            placer.SelectBuilding(card.Building);
+            try
+            {
+                Assert.IsTrue(placer.IsSelecting, $"'{card.Building.buildingName}' could not be picked up -- the test proves nothing.");
+                menu.HandleMapTap(new Vector2(500f, 500f));
+                yield return null;
+                Assert.IsTrue(menu.IsOpen, "A tap that placed or aimed a building closed the build menu under the player's thumb.");
+            }
+            finally
+            {
+                placer.ClearSelection();
+                menu.Close(true);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Photograph_TheOpenBuildMenu()
+        {
+            var menu = Menu();
+            menu.Open(FirstCategory(), true);
+            yield return null;
+            yield return PlaytestCapture.ShootWithUi("hud-build-open", _townHall, 34f, 52f, 20f);
+            menu.Close(true);
         }
 
         [UnityTest]

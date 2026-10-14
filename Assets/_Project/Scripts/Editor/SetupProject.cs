@@ -961,8 +961,9 @@ namespace CityBuilder.EditorTools
             var footprint = mandatoryBuilding != null ? mandatoryBuilding.footprintSize : new Vector2Int(4, 4);
             CreateText(hintRoot.transform, "Text", Localization.Format("#hud_place_hint", footprint.x, footprint.y), 30, Vector2.zero, new Vector2(740f, 74f));
 
-            // Touch-friendly building hotbar, grouped into categories (a small category row above
-            // it picks which category's buildings the hotbar shows -- see BuildingCategoryPanel).
+            // Touch-friendly building hotbar, grouped into categories. Closed at rest: only the row
+            // of category tabs, on the bottom edge; a tab slides it up and opens that category's
+            // cards beneath it -- see BuildingCategoryPanel.
             // Shown only once the Town Hall is placed (there's nothing else buildable before that
             // point). Number-key hotkeys still work on PC, against the same availableBuildings
             // list regardless of which category is currently shown.
@@ -1040,8 +1041,10 @@ namespace CityBuilder.EditorTools
             categoryBarRect.anchorMin = new Vector2(0.5f, 0f);
             categoryBarRect.anchorMax = new Vector2(0.5f, 0f);
             categoryBarRect.pivot = new Vector2(0.5f, 0f);
-            categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y + buttonSize + 12f);
+            var openBarY = hotbarRect.anchoredPosition.y + buttonSize + 12f;
+            categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y);
             categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonSize);
+            hotbarGO.SetActive(false);
 
             for (var i = 0; i < presentCategories.Count; i++)
             {
@@ -1063,6 +1066,11 @@ namespace CityBuilder.EditorTools
             var categorySO = new SerializedObject(categoryPanel);
             categorySO.FindProperty("selectedSprite").objectReferenceValue = SkinSprite("pill_parchment");
             categorySO.FindProperty("unselectedSprite").objectReferenceValue = SkinSprite("pill_wood_light");
+            categorySO.FindProperty("categoryBar").objectReferenceValue = categoryBarRect;
+            categorySO.FindProperty("hotbar").objectReferenceValue = hotbarGO;
+            categorySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            categorySO.FindProperty("closedBarY").floatValue = hotbarRect.anchoredPosition.y;
+            categorySO.FindProperty("openBarY").floatValue = openBarY;
             categorySO.ApplyModifiedPropertiesWithoutUndo();
 
             var visibility = canvasGO.AddComponent<BuildingPlacerUIVisibility>();

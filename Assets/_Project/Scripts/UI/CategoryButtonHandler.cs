@@ -12,7 +12,7 @@ namespace CityBuilder.UI
 
         public void SelectThisCategory()
         {
-            if (panel != null) panel.SelectCategory(category);
+            if (panel != null) panel.TapCategory(category);
         }
     }
 }
