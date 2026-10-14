@@ -10,7 +10,9 @@ namespace CityBuilder.UI
     /// edge instead of a panel of text. Each icon is a picture (a building's own icon, a resource)
     /// with a small glyph in its corner saying what happened, ringed in the event's colour; the
     /// ring drains as its time runs out and the icon fades away. Tapping one sends the camera to
-    /// where it happened -- the building, the place a soldier fell, the orcs of a raid.
+    /// where it happened -- the building, the place a soldier fell, the orcs of a raid -- and
+    /// leaves the icon up: it goes only when its time runs out (the user's rule, 2026-10-14), so
+    /// the player can tap it again to go back there.
     ///
     /// The bookkeeping is EventFeedModel's; this class only draws it. The icons are built ahead of
     /// time (one per slot, see SetupProject.BuildEventFeed) and live on a canvas of their own, so a
@@ -139,10 +141,6 @@ namespace CityBuilder.UI
             if (clicked == null) return;
 
             if (cameraRig != null && clicked.Event.TryGetTarget(out var target)) cameraRig.FocusOn(target);
-
-            // Seen to: the icon has done its job.
-            _model.Remove(clicked);
-            ReleaseView(clicked);
         }
 
         private void ReleaseView(EventFeedSlot slot)

@@ -101,7 +101,14 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.Less(Vector3.Distance(Flat(rig.transform.position), Flat(well.transform.position)), 0.5f,
                 "A tap on the icon did not bring the camera to the upgraded building.");
-            Assert.IsFalse(view.gameObject.activeSelf, "A tapped icon has done its job and should go.");
+            Assert.IsTrue(view.gameObject.activeSelf, "A tapped icon vanished -- it should only lead to the event and go when its time runs out.");
+
+            // ...and it does go then. The longest clock still running bounds the Well icon's own.
+            var feed = Object.FindAnyObjectByType<EventFeedController>();
+            var remaining = 0f;
+            foreach (var slot in feed.Model.Slots) remaining = Mathf.Max(remaining, slot.Remaining);
+            yield return new WaitForSecondsRealtime(remaining + 0.3f);
+            Assert.IsFalse(view.gameObject.activeSelf, "The tapped icon outlived its timer.");
         }
 
         [UnityTest]
@@ -122,8 +129,10 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.Less(Vector3.Distance(Flat(rig.transform.position), Flat(orc.position)), 0.5f);
             Object.Destroy(orc.gameObject);
-            // The live town may well have posted something of its own meanwhile; only the raid's icon must be gone.
-            foreach (var slot in feed.Model.Slots) Assert.AreNotSame(raid, slot.Event, "The tapped raid icon is still up.");
+            // Tapping leads to the raid; it does not take the raid's icon down before its time.
+            var stillUp = false;
+            foreach (var slot in feed.Model.Slots) stillUp |= ReferenceEquals(raid, slot.Event);
+            Assert.IsTrue(stillUp, "Tapping the raid's icon took it down -- it should stay until its timer runs out.");
         }
 
         [UnityTest]
