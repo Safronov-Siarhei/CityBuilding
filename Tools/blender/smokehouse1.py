@@ -32,7 +32,7 @@ def build(lo, hi):
     f.rect(-0.06, 0.06, G_TOP + 0.12, G_TOP + 0.2, 0.01, 'window')   # smoke vent
     for nm, plane in (('-x', x0), ('+x', x1)):
         sf = Facade(b, nm, plane)
-        sf.rect(0.4, 0.5, FOOTING + 0.25, FOOTING + 0.33, 0.01, 'window')
+        sf.rect(0.4, 0.5, FOOTING + 0.25, FOOTING + 0.33, 0.01, d.GLASS)
 
     # the chimney at the back with smoke rising
     cx, cy = 0.0, 0.7

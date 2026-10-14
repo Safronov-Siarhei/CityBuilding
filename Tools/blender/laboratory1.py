@@ -51,7 +51,7 @@ def build(lo, hi):
     for s in (yc - 0.35, yc + 0.35):
         d.arch_window(f, s, FOOTING)
         d.arch_window(f, s, G_TOP)
-    f.disc(yc, U_TOP + (zr - U_TOP) * 0.4, 0.1, 0.02, 'window')
+    f.disc(yc, U_TOP + (zr - U_TOP) * 0.4, 0.1, 0.02, d.GLASS)
 
     # -- observatory: octagonal tower, a link to the academy, dome, telescope ------------------
     ox, oy, r = 1.2, 1.1, 0.6

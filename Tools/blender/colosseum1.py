@@ -46,7 +46,7 @@ def build(lo, hi):
                 d.gate(f, 0, FOOTING, w=0.36, h=0.5)
                 continue
             f.arch(0, base + 0.06, 0.3, 0.44, 0.01, 'window')
-        f.rect(-0.05, 0.05, T_TOP + 0.05, T_TOP + 0.15, 0.01, 'window')
+        f.rect(-0.05, 0.05, T_TOP + 0.05, T_TOP + 0.15, 0.01, d.GLASS)
         if gate_face:
             d.banner(f, -0.36, U_TOP - 0.04, 0.4, w=0.12, color='roof_purple')
             d.banner(f, 0.36, U_TOP - 0.04, 0.4, w=0.12, color='roof_purple')

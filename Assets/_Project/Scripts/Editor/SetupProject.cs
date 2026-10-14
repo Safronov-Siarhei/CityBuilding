@@ -120,12 +120,12 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The one material every Blender-made building and tree draws through: the palette
-        /// texture on a Simple Lit surface. Updated in place rather than deleted and recreated like
-        /// the generated materials, because the FBX importers point at it by GUID -- recreating it
-        /// would leave every model's remap dangling until the next reimport. Simple Lit rather
-        /// than Lit: the set is flat colour with no specular look to lose, and it is the cheaper
-        /// fragment on the phones this targets.
+        /// The one material every Blender-made building and tree draws through: the palette's flat
+        /// colour times the soft painted detail (Shaders/BuildingDetail.shader -- tiles, plaster,
+        /// planks, stone, laid by Tools/blender/detail.py), lit the way Simple Lit lit it before.
+        /// Updated in place rather than deleted and recreated like the generated materials,
+        /// because the FBX importers point at it by GUID -- recreating it would leave every model's
+        /// remap dangling until the next reimport. Still one material for the whole set.
         /// </summary>
         private static void EnsurePaletteMaterial()
         {
@@ -137,7 +137,14 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            var shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+            AssetDatabase.ImportAsset(ModelImportDefaults.DetailAtlasPath, ImportAssetOptions.ForceUpdate);
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelImportDefaults.DetailAtlasPath);
+            if (atlas == null)
+            {
+                Debug.LogError($"EnsurePaletteMaterial: no detail atlas at {ModelImportDefaults.DetailAtlasPath} -- run Tools/blender/export_fbx.py. The buildings will draw as flat colour.");
+            }
+
+            var shader = Shader.Find(BuildingDetailShaderName);
             var material = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.PaletteMaterialPath);
             if (material == null)
             {
@@ -150,13 +157,17 @@ namespace CityBuilder.EditorTools
             }
 
             material.SetTexture("_BaseMap", texture);
+            material.SetTexture("_DetailAtlas", atlas);
             material.SetColor("_BaseColor", Color.white);
             material.SetFloat("_Smoothness", 0.15f);
-            material.DisableKeyword("_SPECULAR_COLOR");
+            material.SetFloat("_DetailStrength", 1f);
+            material.SetFloat("_ShadeStrength", 1f);
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             AssetDatabase.SaveAssets();
         }
+
+        public const string BuildingDetailShaderName = "CityBuilder/BuildingDetail";
 
         /// <summary>
         /// The map's own palette material (Map 3 onwards; see ModelImportDefaults) -- same rules as

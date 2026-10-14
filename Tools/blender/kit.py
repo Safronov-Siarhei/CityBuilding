@@ -287,9 +287,18 @@ class Builder:
 
     def gable_roof(self, cx, cy, axis, half_len, half_span, ze, zr, color, color_dark,
                    overhang=0.1, t=0.05, rib_w=0.07, rib_step=0.16, rib_h=0.025,
-                   cap_w=0.14, cap_h=0.08, cap_lift=0.03):
-        """Two slabs in `color_dark` meeting at a ridge along `axis`, ribbed in `color`, with a
-        ridge cap. ze is the eave height at +-half_span, zr the slab underside at the ridge."""
+                   cap_w=0.14, cap_h=0.08, cap_lift=0.03, smooth=True):
+        """Two slabs meeting at a ridge along `axis`. ze is the eave height at +-half_span, zr the
+        slab underside at the ridge.
+
+        smooth (the set's look since 2026-10-14): each slope is one softly chamfered slab in
+        `color` -- the tiles are painted on by the detail atlas (detail.py), not built -- with a
+        thin verge board in `color_dark` along each gable end and a round ridge roll. The old
+        look, a `color_dark` slab ribbed in `color` with a square cap, is smooth=False."""
+        if smooth:
+            self._smooth_gable(cx, cy, axis, half_len, half_span, ze, zr, color, color_dark,
+                               overhang, t + rib_h * 0.5, cap_lift)
+            return
         up = Vector((0, 0, 1))
         r = Vector((1, 0, 0)) if axis == 'x' else Vector((0, 1, 0))
         s = Vector((0, 1, 0)) if axis == 'x' else Vector((-1, 0, 0))
@@ -310,6 +319,31 @@ class Builder:
                 x += rib_step
         self.obox(c + up * (zr + cap_lift + cap_h / 2), r, s, up, half_len, cap_w / 2, cap_h / 2,
                   color_dark, bevel=min(0.01, cap_h / 4))
+
+    def _smooth_gable(self, cx, cy, axis, half_len, half_span, ze, zr, color, color_dark,
+                      overhang, t, cap_lift):
+        up = Vector((0, 0, 1))
+        r = Vector((1, 0, 0)) if axis == 'x' else Vector((0, 1, 0))
+        s = Vector((0, 1, 0)) if axis == 'x' else Vector((-1, 0, 0))
+        c = Vector((cx, cy, 0))
+        verge = min(0.014, half_len * 0.05)
+        for side in (-1, 1):
+            eave = c + s * (side * half_span) + up * ze
+            ridge = c + up * zr
+            d = (ridge - eave).normalized()
+            length = (ridge - eave).length + overhang
+            ax = r * (-side)
+            n = ax.cross(d)
+            mid = (eave - d * overhang + ridge) / 2
+            self.obox(mid + n * (t / 2), ax, d, n, half_len, length / 2, t / 2, color,
+                      bevel=min(0.012, t / 3))
+            for e in (-1, 1):
+                # inside the slab's own length, so the roof never grows past where it used to end
+                self.obox(mid + r * (e * (half_len - verge)) + n * (t * 0.6), ax, d, n, verge,
+                          length / 2, t * 0.75, color_dark)
+        roll = max(0.025, min(0.055, half_span * 0.12))
+        self.hcylinder(axis, (cx, cy, zr + t + cap_lift * 0.5 + roll * 0.4), half_len,
+                       roll, color_dark, sides=8)
 
     def ring(self, cx, cy, z0, z1, r_in, r_out, colors, sides=8, rot_deg=22.5, bevel=0.0):
         """Wall of a round shaft built from `sides` blocks, colours cycling through `colors`."""
@@ -461,6 +495,11 @@ class Facade:
         local = [(s * self.sa, z) for s, z in pts]
         self.b.prism(local, self.origin, self.a, self.up, depth, color, bevel)
 
+    def blossom(self, s, z, depth, r, color):
+        """One flower head standing `depth` proud of the wall (a planter's bloom)."""
+        p = self._p(s, z) + self.n * depth
+        self.b.blob(p.x, p.y, p.z - r * 0.4, r, r * 1.5, color, sides=4)
+
     def arch(self, s, z0, w, h, depth, color, segments=6, bevel=0.0):
         """Round-topped opening: straight sides, semicircle on top. h is the total height."""
         r = w / 2
@@ -510,6 +549,7 @@ def polygon_faces(points):
 
 SIZE_COLLECTION = "Габариты"
 SOURCE_FILE = "Buildings-Size1.blend"
+PLOT = None  # the current model's placeholder box (lo, hi), set by run()
 
 
 def _size_collection():
@@ -586,17 +626,23 @@ def run(obj_name, build, source_name=None, offset=(0, 0, 0), collection=None, sa
     `build(lo, hi)` gets the placeholder box and returns a Builder. A model without a placeholder
     of its own borrows `source_name`'s box and stands `offset` away from it."""
     import os
+    import detail
     img = ensure_palette(os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Palette.png"))
     mat = ensure_material(img)
+    atlas = detail.ensure_atlas(os.path.join(os.path.dirname(bpy.data.filepath), detail.ATLAS_FILE))
+    detail.build_material_nodes(mat, img, atlas)
     location, lo, hi = refresh_placeholder(obj_name, source_name)
     if lo[2] > 1e-4:
         print(f"NOTE: the {obj_name} box starts {lo[2]:.3f} above the ground; modelling from 0")
         lo = (lo[0], lo[1], 0.0)
+    global PLOT
+    PLOT = (lo, hi)  # what shared details (a grass tuft) must stay inside -- see details.grass_tuft
     location = location + Vector(offset)
     ref = bpy.data.objects.get(obj_name + "-size")
     if ref is not None:
         ref.location = location
     obj = install_model(obj_name, build(lo, hi), mat, location, collection)
+    detail.add_layers(obj.data, NAMES, COLS, ROWS)
     report_bounds(obj, lo, hi)
     file_display_settings()
     if save:

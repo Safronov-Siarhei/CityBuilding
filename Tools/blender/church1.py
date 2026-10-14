@@ -33,7 +33,7 @@ def build(lo, hi):
     for nm, plane, sx in (('-x', x0, -1), ('+x', x1, 1)):
         f = Facade(b, nm, plane)
         for s in (-0.15, 0.45, 1.05):
-            f.arch(s, FOOTING + 0.25, d.ARCH_W, LANCET_H, 0.01, 'window')
+            f.arch(s, FOOTING + 0.25, d.ARCH_W, LANCET_H, 0.01, d.GLASS)
             f.rect(s - 0.12, s + 0.12, FOOTING + 0.22, FOOTING + 0.25, 0.03, 'stone_mid')
         for s in (0.15, 0.75):  # buttresses between the windows
             bx0, bx1 = (x1, x1 + 0.1) if sx > 0 else (x0 - 0.1, x0)
@@ -42,7 +42,7 @@ def build(lo, hi):
     back.disc(0, U_TOP + 0.22, 0.2, 0.015, 'stone_mid')
     back.disc(0, U_TOP + 0.22, 0.16, 0.025, 'roof_purple')
     back.disc(0, U_TOP + 0.22, 0.07, 0.035, 'gold')
-    back.arch(0, FOOTING + 0.25, d.ARCH_W, LANCET_H, 0.01, 'window')
+    back.arch(0, FOOTING + 0.25, d.ARCH_W, LANCET_H, 0.01, d.GLASS)
 
     # bell tower on the front
     tx, ty, th = 0.0, -0.88, 0.4

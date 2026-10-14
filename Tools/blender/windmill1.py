@@ -38,7 +38,7 @@ def build(lo, hi):
         ap = radius(z + 0.12) * math.cos(math.radians(22.5)) - 0.01
         a = math.radians(ang)
         f = FaceAt(b, cx + ap * math.cos(a), cy + ap * math.sin(a), ang)
-        f.rect(-0.06, 0.06, z, z + 0.16, 0.03, 'window')
+        f.rect(-0.06, 0.06, z, z + 0.16, 0.03, d.GLASS)
         f.rect(-0.08, 0.08, z - 0.03, z, 0.045, 'wood_dark')
 
     # porch with the door

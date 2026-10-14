@@ -38,7 +38,7 @@ def build(lo, hi):
     d.roof(b, 0, yc, 'x', x1 + 0.09, hs, L_TOP, **d.RED)
     for nm, plane in (('-x', x0), ('+x', x1)):
         f = Facade(b, nm, plane)
-        f.rect(yc - 0.06, yc + 0.06, L_TOP + 0.08, L_TOP + 0.2, 0.012, 'window')
+        f.rect(yc - 0.06, yc + 0.06, L_TOP + 0.08, L_TOP + 0.2, 0.012, d.GLASS)
         d.plain_window(f, yc, FOOTING)
 
     # loading platform and its awning along the front

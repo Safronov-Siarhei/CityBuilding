@@ -27,6 +27,9 @@ namespace CityBuilder.EditorTools
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
         public const string PaletteMaterialPath = "Assets/_Project/Models/Palette/BuildingsPalette.mat";
 
+        /// <summary>The grey pattern atlas the palette material multiplies in (Tools/blender/detail.py, BuildingDetail.shader).</summary>
+        public const string DetailAtlasPath = "Assets/_Project/Models/Palette/BuildingsDetail.png";
+
         /// <summary>The material name every Blender-made model is exported with (Tools/blender/kit.py).</summary>
         public const string ExportedMaterialName = "Buildings";
 
@@ -78,6 +81,23 @@ namespace CityBuilder.EditorTools
 
         private void OnPreprocessTexture()
         {
+            if (assetPath == DetailAtlasPath)
+            {
+                // Grey values that MULTIPLY the palette (0.5 = no change), so they must arrive as
+                // written: linear, not sRGB. Filtered and mipmapped -- it is a picture, unlike the
+                // palette -- and sampled within its own cell by the shader, so the wrap mode only
+                // matters at the atlas edge.
+                if (!(assetImporter is TextureImporter detailImporter)) return;
+                detailImporter.textureType = TextureImporterType.Default;
+                detailImporter.sRGBTexture = false;
+                detailImporter.mipmapEnabled = true;
+                detailImporter.filterMode = FilterMode.Bilinear;
+                detailImporter.wrapMode = TextureWrapMode.Clamp;
+                detailImporter.textureCompression = TextureImporterCompression.CompressedHQ;
+                detailImporter.isReadable = false;
+                return;
+            }
+
             if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 

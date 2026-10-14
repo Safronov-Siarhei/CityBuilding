@@ -39,7 +39,7 @@ def build(lo, hi):
         f = Facade(b, nm, plane)
         f.rect(y0, y1, G_TOP - 0.02, G_TOP + 0.02, d.BEAM_D, 'wood_dark')
         for s in (-0.1, 0.45):
-            f.rect(s - 0.07, s + 0.07, G_TOP + 0.2, G_TOP + 0.34, 0.01, 'window')
+            f.rect(s - 0.07, s + 0.07, G_TOP + 0.2, G_TOP + 0.34, 0.01, d.GLASS)
 
     # lean-to shed against the +x wall, open to the front, hay inside
     sx1 = 0.88

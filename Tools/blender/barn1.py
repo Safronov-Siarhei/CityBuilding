@@ -34,7 +34,7 @@ def build(lo, hi):
     d.barn_door(f, 0)
     d.hay_loft(f, 0, G_TOP + 0.02, w=0.2, h=0.2)
     f = Facade(b, '+x', x1)
-    f.rect(0.0, 0.12, 0.42, 0.54, 0.01, 'window')
+    f.rect(0.0, 0.12, 0.42, 0.54, 0.01, d.GLASS)
 
     d.sack(b, -0.3, -0.4)
     d.sack(b, -0.18, -0.41)

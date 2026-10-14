@@ -31,8 +31,30 @@ WALL_BEVEL = 0.015
 
 # -- volumes -----------------------------------------------------------------------------------
 
-def footing(b, x0, x1, y0, y1, color='stone_mid'):
+def footing(b, x0, x1, y0, y1, color='stone_mid', tufts=True):
+    """The stone footing every house stands on, with a few tufts of grass growing against it, so
+    the building sits in the meadow rather than on it. Tufts that would leave the plot
+    (kit.PLOT, set by kit.run) are skipped."""
     b.box(x0 - 0.035, x1 + 0.035, y0 - 0.035, y1 + 0.035, 0, FOOTING, color)
+    if not tufts:
+        return
+    e = 0.04
+    spots = [(x0 - e, y0 - e, 0.045), (x1 + e, y0 - e, 0.04), (x0 - e, y1 + e, 0.04),
+             (x1 + e, y1 + e, 0.045), (x0 + (x1 - x0) * 0.3, y0 - e, 0.035),
+             (x1 + e, (y0 + y1) / 2, 0.035)]
+    for i, (x, y, r) in enumerate(spots):
+        grass_tuft(b, x, y, r, 'grass' if i % 2 else 'grass_dark')
+
+
+def grass_tuft(b, x, y, r=0.04, color='grass'):
+    """A small clump of grass at a wall's foot; skipped if it would poke out of the plot."""
+    import kit
+    plot = getattr(kit, 'PLOT', None)
+    if plot is not None:
+        lo, hi = plot
+        if x - r < lo[0] or x + r > hi[0] or y - r < lo[1] or y + r > hi[1]:
+            return
+    b.blob(x, y, 0.0, r, r * 1.4, color, sides=5)
 
 
 def roof(b, cx, cy, axis, half_len, half_span, ze, color='roof_orange', dark='roof_orange_dark',
@@ -53,52 +75,100 @@ def chimney(b, cx, cy, z0, z1, hw=0.09, color='stone_mid'):
 
 # -- openings ----------------------------------------------------------------------------------
 
-def plain_window(f, s, base, w=WIN_W, sill='wood_mid'):
-    z0 = base + WIN_SILL
-    f.rect(s - w / 2, s + w / 2, z0, z0 + WIN_H, 0.01, 'window')
-    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.035, sill)
+# Glass is blue-grey, not a black hole: the set's windows used to be the hardest marks on the
+# screen. roof_slate on a VERTICAL face gets no slate pattern (detail.py), so it reads as glass.
+GLASS = 'roof_slate'
+CURTAIN = 'plaster_white'
+FRAME = 'wood_light'
 
 
-def cross_window(f, s, base, w=WIN_W, sill='wood_mid', bars='wood_dark'):
+def _glass(f, s, z0, z1, w, curtains=True, depth=0.012):
+    """Pane, and white curtains tied back in its upper corners -- the softest detail per
+    triangle there is."""
+    f.rect(s - w / 2, s + w / 2, z0, z1, depth, GLASS)
+    if curtains:
+        hgt = z1 - z0
+        f.poly([(s - w / 2, z1), (s - w / 2 + w * 0.34, z1), (s - w / 2, z0 + hgt * 0.32)],
+               depth + 0.006, CURTAIN)
+        f.poly([(s + w / 2 - w * 0.34, z1), (s + w / 2, z1), (s + w / 2, z0 + hgt * 0.32)],
+               depth + 0.006, CURTAIN)
+
+
+def plain_window(f, s, base, w=WIN_W, sill=FRAME):
     z0 = base + WIN_SILL
     z1 = z0 + WIN_H
-    f.rect(s - w / 2, s + w / 2, z0, z1, 0.01, 'window')
-    f.rect(s - 0.011, s + 0.011, z0, z1, 0.02, bars)
-    f.rect(s - w / 2, s + w / 2, (z0 + z1) / 2 - 0.01, (z0 + z1) / 2 + 0.01, 0.02, bars)
-    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.035, sill)
+    f.rect(s - w / 2 - 0.02, s + w / 2 + 0.02, z0 - 0.02, z1 + 0.02, 0.008, FRAME)
+    _glass(f, s, z0, z1, w)
+    f.rect(s - w / 2 - 0.035, s + w / 2 + 0.035, z0 - 0.035, z0 - 0.005, 0.04, sill)
+
+
+def cross_window(f, s, base, w=WIN_W, sill=FRAME, bars=FRAME):
+    z0 = base + WIN_SILL
+    z1 = z0 + WIN_H
+    f.rect(s - w / 2 - 0.02, s + w / 2 + 0.02, z0 - 0.02, z1 + 0.02, 0.008, FRAME)
+    _glass(f, s, z0, z1, w, curtains=False)
+    f.rect(s - 0.009, s + 0.009, z0, z1, 0.02, bars)
+    f.rect(s - w / 2, s + w / 2, (z0 + z1) / 2 - 0.009, (z0 + z1) / 2 + 0.009, 0.02, bars)
+    f.rect(s - w / 2 - 0.035, s + w / 2 + 0.035, z0 - 0.035, z0 - 0.005, 0.04, sill)
 
 
 def shutter_window(f, s, base, w=WIN_W, shutter='wood_mid'):
     z0 = base + WIN_SILL
     z1 = z0 + WIN_H
-    f.rect(s - w / 2, s + w / 2, z0, z1, 0.01, 'window')
-    f.rect(s - w / 2 - 0.02, s + w / 2 + 0.02, z0 - 0.03, z0, 0.035, 'wood_dark')
+    _glass(f, s, z0, z1, w)
+    f.rect(s - w / 2 - 0.02, s + w / 2 + 0.02, z0 - 0.03, z0, 0.035, FRAME)
     f.rect(s - w / 2 - 0.09, s - w / 2 - 0.01, z0, z1, 0.02, shutter)
     f.rect(s + w / 2 + 0.01, s + w / 2 + 0.09, z0, z1, 0.02, shutter)
 
 
 def arch_window(f, s, base, w=ARCH_W, h=ARCH_H, sill='stone_mid'):
     z0 = base + ARCH_SILL
-    f.arch(s, z0, w, h, 0.01, 'window')
+    f.arch(s, z0, w + 0.04, h + 0.02, 0.008, 'stone_light')
+    f.arch(s, z0, w, h, 0.012, GLASS)
+    spring = z0 + h - w / 2
+    f.poly([(s - w / 2, spring), (s - w / 2 + w * 0.3, spring), (s - w / 2, z0 + (spring - z0) * 0.4)],
+           0.018, CURTAIN)
+    f.poly([(s + w / 2 - w * 0.3, spring), (s + w / 2, spring), (s + w / 2, z0 + (spring - z0) * 0.4)],
+           0.018, CURTAIN)
     f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.03, sill)
 
 
 def slit(f, s, z0, z1):
-    f.rect(s - 0.035, s + 0.035, z0, z1, 0.01, 'window')
+    f.rect(s - 0.035, s + 0.035, z0, z1, 0.01, GLASS)
 
 
 def flower_box(f, s, base, w=WIN_W + 0.08, flowers='roof_red'):
-    z = base + WIN_SILL - 0.03
+    """A planter under a window, spilling over: a green mound with three blossoms on it."""
+    z = base + WIN_SILL - 0.035
     f.rect(s - w / 2, s + w / 2, z - 0.05, z, 0.06, 'wood_mid')
-    f.rect(s - w / 2 + 0.01, s + w / 2 - 0.01, z, z + 0.035, 0.05, flowers)
+    f.rect(s - w / 2 + 0.01, s + w / 2 - 0.01, z - 0.005, z + 0.025, 0.055, 'leaf', bevel=0.008)
+    for k, c in enumerate((flowers, 'white', flowers)):
+        f.blossom(s - w / 3 + k * w / 3, z + 0.02, 0.07, 0.024, c)
 
 
-def plank_door(f, s, base=FOOTING, w=DOOR_W, h=DOOR_H, color='door', frame='wood_dark'):
+def climber(b, x, y, h=0.6, flowers=('roof_red', 'plaster_pink')):
+    """A climbing rose against a wall at (x, y): three leafy crowns of falling size, petals
+    dotted over them."""
+    crowns = ((0.0, 0.0, 0.12, h * 0.48), (0.07, h * 0.4, 0.09, h * 0.38), (0.02, h * 0.7, 0.065, h * 0.3))
+    for dx, z, r, hh in crowns:
+        b.ball(x + dx, y, z, r, hh, 'leaf', sides=6, top='grass')
+    for k, (dx, z) in enumerate(((0.09, h * 0.33), (-0.05, h * 0.22), (0.13, h * 0.6), (0.05, h * 0.88))):
+        b.blob(x + dx, y - 0.08, z, 0.022, 0.035, flowers[k % len(flowers)], sides=4)
+
+
+def wall_lantern(f, s, z):
+    """A small lantern on a bracket beside a door."""
+    f.rect(s - 0.006, s + 0.006, z + 0.06, z + 0.1, 0.07, 'wood_dark')
+    f.rect(s - 0.028, s + 0.028, z - 0.03, z + 0.05, 0.075, 'window_light')
+    f.rect(s - 0.035, s + 0.035, z + 0.05, z + 0.07, 0.085, 'wood_dark')
+
+
+def plank_door(f, s, base=FOOTING, w=DOOR_W, h=DOOR_H, color='door', frame=FRAME):
     f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, base, base + h + 0.03, 0.015, frame)
     f.rect(s - w / 2, s + w / 2, base, base + h, 0.03, color)
     f.rect(s - 0.006, s + 0.006, base, base + h, 0.036, frame)
     f.rect(s + w / 2 - 0.06, s + w / 2 - 0.035, base + h * 0.45, base + h * 0.45 + 0.025, 0.045,
-           'iron')
+           'gold')
 
 
 def arch_door(f, s, base=FOOTING, w=DOOR_W, h=DOOR_H, frame='stone_mid'):
@@ -220,7 +290,7 @@ def barn_door(f, s, base=FOOTING, w=GATE_W, h=DOOR_H, color='roof_red'):
 
 def barred_window(f, s, base, w=WIN_W):
     z0 = base + WIN_SILL
-    f.rect(s - w / 2, s + w / 2, z0, z0 + WIN_H, 0.01, 'window')
+    f.rect(s - w / 2, s + w / 2, z0, z0 + WIN_H, 0.01, GLASS)
     for k in (-1, 0, 1):
         f.rect(s + k * w / 3.2 - 0.008, s + k * w / 3.2 + 0.008, z0, z0 + WIN_H, 0.02, 'iron')
     f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, z0 - 0.03, z0, 0.03, 'stone_mid')
@@ -284,7 +354,8 @@ L_TOP = G_TOP + LOFT           # 0.94: wall top of a one-and-a-half-storey store
 
 def shed_roof(b, axis, a0, a1, wall, out, z_wall, z_out, color='roof_red', dark='roof_red_dark'):
     """Lean-to roof: runs along `axis` from a0 to a1, falls from the wall line `wall` (at height
-    z_wall) to the outer edge `out` (at z_out). Ribbed like every other roof in the set."""
+    z_wall) to the outer edge `out` (at z_out). One smooth slab in `color` like every other roof in
+    the set (the tiles come from the detail atlas), with a darker edge board along the eave."""
     from mathutils import Vector
     if axis == 'x':
         p0, p1 = Vector((0, wall, z_wall)), Vector((0, out, z_out))
@@ -298,12 +369,10 @@ def shed_roof(b, axis, a0, a1, wall, out, z_wall, z_out, color='roof_red', dark=
     n = ax.cross(dd)
     mid = (p0 + p1) / 2 + r * ((a0 + a1) / 2)
     half_len, half_w = (a1 - a0) / 2, dvec.length / 2 + 0.05
-    t, rib_w, rib_h = ROOF['t'] * 0.8, ROOF['rib_w'], ROOF['rib_h']
-    b.obox(mid + n * (t / 2), ax, dd, n, half_len, half_w, t / 2, dark)
-    a = -half_len + rib_w
-    while a < half_len - rib_w * 0.7:
-        b.obox(mid + n * (t + rib_h / 2) + r * a, ax, dd, n, rib_w / 2, half_w, rib_h / 2, color)
-        a += ROOF['rib_step']
+    t = ROOF['t'] * 0.8 + ROOF['rib_h'] * 0.5
+    b.obox(mid + n * (t / 2), ax, dd, n, half_len, half_w, t / 2, color, bevel=0.01)
+    edge = (p1 - p0).normalized() * (half_w - 0.012)
+    b.obox(mid + edge + n * (t * 0.5), ax, dd, n, half_len + 0.01, 0.014, t * 0.7, dark)
 
 
 PURPLE = dict(color='roof_purple', dark='roof_purple_dark')   # Entertainment's roofs

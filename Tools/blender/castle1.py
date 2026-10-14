@@ -105,7 +105,7 @@ def build(lo, hi):
         d.cross_window(f, yc, G_TOP)
         d.gable_frame(f, yc, hs, U_TOP, zr)
         for s in (yc - 0.12, yc + 0.12):
-            f.rect(s - 0.045, s + 0.045, U_TOP + 0.12, U_TOP + 0.26, 0.01, 'window')
+            f.rect(s - 0.045, s + 0.045, U_TOP + 0.12, U_TOP + 0.26, 0.01, d.GLASS)
 
     # -- clock and bell tower, standing out of the hall's front -------------------------------
     tx0, tx1, ty0, ty1 = -0.42, 0.42, -0.42, 0.5

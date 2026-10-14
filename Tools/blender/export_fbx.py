@@ -8,7 +8,8 @@ boulders (`Stone<n>`) to Models/Terrain. Each is written with its origin at the 
 footprint on the ground (the object's placement in the scene is dropped), so the game can trust
 the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
 every model's one material is named `Buildings` and the game swaps in its own palette material
-for it.
+for it. The detail atlas (detail.py) goes there too, and each model carries the detail's two
+extra UV sets and its vertex colour.
 
 Axes: Blender is right-handed Z-up, Unity left-handed Y-up, and Unity's FBX import mirrors X to
 change hands. Exported with Blender's +Y as FBX +Z (axis_forward='Z'), Blender X arrives as FBX -X
@@ -56,7 +57,10 @@ def export(o):
         filepath=path, use_selection=True, object_types={'MESH'},
         axis_forward='Z', axis_up='Y', apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
         bake_space_transform=True, use_mesh_modifiers=True, mesh_smooth_type='FACE',
-        add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False)
+        add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False,
+        # the detail's ground darkening (detail.py) rides as vertex colour; LINEAR keeps the grey
+        # value as written, which is what BuildingDetail.shader multiplies by
+        colors_type='LINEAR', prioritize_active_color=True)
     o.location = saved
     return path
 
@@ -77,6 +81,8 @@ def main():
         count += 1
     palette = os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Palette.png")
     shutil.copyfile(palette, os.path.join(PALETTE_DIR, "BuildingsPalette.png"))
+    atlas = os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Detail.png")
+    shutil.copyfile(atlas, os.path.join(PALETTE_DIR, "BuildingsDetail.png"))
     print("EXPORT DONE", count, "models")
 
 

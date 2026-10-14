@@ -51,7 +51,7 @@ def build(lo, hi):
         for s in ss:
             d.barred_window(f, s, G_TOP)
     for nm, plane in (('-x', x0), ('+x', x1)):
-        Facade(b, nm, plane).disc(yc, U_TOP + (zr - U_TOP) * 0.4, 0.08, 0.02, 'window')
+        Facade(b, nm, plane).disc(yc, U_TOP + (zr - U_TOP) * 0.4, 0.08, 0.02, d.GLASS)
 
     b.box(-0.36, 0.36, y0 - 0.22, y0, 0, 0.05, 'stone_mid', bevel=0.008)
     b.box(-0.36, 0.36, y0 - 0.12, y0, 0.05, FOOTING, 'stone_mid', bevel=0.008)

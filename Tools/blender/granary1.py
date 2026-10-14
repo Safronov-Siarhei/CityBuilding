@@ -32,7 +32,7 @@ def build(lo, hi):
     d.roof(b, 0, yc, 'x', x1 + 0.09, hs, G_TOP, **d.RED)
     for nm, plane in (('-x', x0), ('+x', x1)):
         f = Facade(b, nm, plane)
-        f.rect(yc - 0.05, yc + 0.05, G_TOP + 0.06, G_TOP + 0.16, 0.012, 'window')
+        f.rect(yc - 0.05, yc + 0.05, G_TOP + 0.06, G_TOP + 0.16, 0.012, d.GLASS)
 
     f = Facade(b, '-y', y0)
     d.plank_door(f, -0.4)

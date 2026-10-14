@@ -40,7 +40,7 @@ def build(lo, hi):
             top = zr - (zr - G_TOP) * abs(s - yc) / hs - 0.03
             f.rect(s - 0.008, s + 0.008, G_TOP, top, 0.008, 'wood_dark')
         f.rect(yc - 0.07, yc + 0.07, G_TOP + 0.2, G_TOP + 0.34, 0.012, 'wood_dark')
-        f.rect(yc - 0.05, yc + 0.05, G_TOP + 0.22, G_TOP + 0.32, 0.02, 'window')
+        f.rect(yc - 0.05, yc + 0.05, G_TOP + 0.22, G_TOP + 0.32, 0.02, d.GLASS)
     d.roof(b, 0, yc, 'x', x1 + 0.1, hs, G_TOP)
     d.chimney(b, 0.52, 0.42, 0.9, zr + 0.12)
 
@@ -49,6 +49,7 @@ def build(lo, hi):
     d.plank_door(front, -0.32)
     d.shutter_window(front, 0.33, FOOTING)
     d.step(b, -0.5, -0.14, y0)
+    d.climber(b, x1 - 0.05, y0 - 0.07, 0.5, flowers=('plaster_yellow', 'white'))
     d.shutter_window(Facade(b, '+x', x1), yc, FOOTING)
     d.shutter_window(Facade(b, '+y', y1), -0.3, FOOTING)
 

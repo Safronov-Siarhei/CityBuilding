@@ -35,7 +35,8 @@ def build(lo, hi):
         for py in (y0, y1):
             b.box(px - 0.04, px + 0.04, py - 0.04, py + 0.04, FOOTING, G_TOP, 'wood_dark')
     front = Facade(b, '-y', y0)
-    d.plank_door(front, -0.3)
+    d.arch_door(front, -0.3, frame='wood_light')
+    d.wall_lantern(front, -0.07, FOOTING + 0.36)
     d.shutter_window(front, 0.36, FOOTING)
     d.step(b, -0.47, -0.13, y0)
     for nm, plane, s in (('+y', y1, 0.0), ('-x', x0, yc), ('+x', x1, yc)):
@@ -58,8 +59,12 @@ def build(lo, hi):
         d.plain_window(f, (yc + uy1) / 2, G_TOP)
         d.gable_frame(f, yc, hs, U_TOP, zr)
 
-    # yard: path, bench, flower bed
-    b.box(-0.45, -0.15, -0.98, y0 - 0.14, 0, 0.012, 'sand')
+    # a climbing rose up the front corner
+    d.climber(b, x0 + 0.03, y0 - 0.07, 0.62)
+
+    # yard: stepping stones, bench, flower bed
+    for px, py in ((-0.3, -0.66), (-0.27, -0.79), (-0.32, -0.92)):
+        b.cylinder(px, py, 0, 0.016, 0.055, 'stone_light', sides=7)
     d.bench(b, 0.12, 0.62, -0.68, -0.56)
     b.box(-0.95, -0.55, -0.95, -0.62, 0, 0.05, 'wood_mid')
     for x, c in ((-0.86, 'roof_red'), (-0.75, 'plaster_yellow'), (-0.64, 'roof_red')):
