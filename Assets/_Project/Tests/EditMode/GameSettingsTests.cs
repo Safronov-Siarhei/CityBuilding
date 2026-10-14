@@ -6,7 +6,7 @@ namespace CityBuilder.Tests.EditMode
 {
     public class GameSettingsTests
     {
-        private const string FogStyleKey = "settings.fog_style";
+        private const string FogStyleKey = "settings.fog_style.v2";
 
         private bool _hadValue;
         private int _savedValue;
@@ -30,21 +30,22 @@ namespace CityBuilder.Tests.EditMode
         }
 
         [Test]
-        public void TheFogStyle_IsCloudsUntilChosen()
+        public void TheFogStyle_IsParchmentUntilChosen()
         {
             PlayerPrefs.DeleteKey(FogStyleKey);
             GameSettings.ReloadForTests();
 
-            Assert.AreEqual(FogStyle.Clouds, GameSettings.FogStyle);
+            Assert.AreEqual(FogStyle.Parchment, GameSettings.FogStyle);
         }
 
         [Test]
         public void TheFogStyle_IsRememberedAcrossSessions()
         {
-            GameSettings.FogStyle = FogStyle.Parchment;
+            // Clouds, not the default: remembering the default proves nothing.
+            GameSettings.FogStyle = FogStyle.Clouds;
             GameSettings.ReloadForTests();   // as a fresh launch would read it
 
-            Assert.AreEqual(FogStyle.Parchment, GameSettings.FogStyle);
+            Assert.AreEqual(FogStyle.Clouds, GameSettings.FogStyle);
         }
 
         [Test]
@@ -68,12 +69,12 @@ namespace CityBuilder.Tests.EditMode
         }
 
         [Test]
-        public void AnUnknownSavedValue_FallsBackToClouds()
+        public void AnUnknownSavedValue_FallsBackToTheDefault()
         {
             PlayerPrefs.SetInt(FogStyleKey, 99);
             GameSettings.ReloadForTests();
 
-            Assert.AreEqual(FogStyle.Clouds, GameSettings.FogStyle);
+            Assert.AreEqual(FogStyle.Parchment, GameSettings.FogStyle);
         }
     }
 }

@@ -20,7 +20,13 @@ namespace CityBuilder.Core
     /// </summary>
     public static class GameSettings
     {
-        private const string FogStyleKey = "settings.fog_style";
+        // The ".v2" is deliberate: the default changed from clouds to parchment (2026-10-14), and
+        // a fresh key is what makes everyone who tried the switch while clouds were the default
+        // start on parchment once. Nobody had a real choice to lose -- the game is not released.
+        private const string FogStyleKey = "settings.fog_style.v2";
+
+        /// <summary>What the fog looks like until the player picks otherwise.</summary>
+        public const FogStyle DefaultFogStyle = FogStyle.Parchment;
 
         private static bool _loaded;
         private static FogStyle _fogStyle;
@@ -34,8 +40,8 @@ namespace CityBuilder.Core
                 if (!_loaded)
                 {
                     _loaded = true;
-                    var saved = PlayerPrefs.GetInt(FogStyleKey, (int)FogStyle.Clouds);
-                    _fogStyle = Enum.IsDefined(typeof(FogStyle), saved) ? (FogStyle)saved : FogStyle.Clouds;
+                    var saved = PlayerPrefs.GetInt(FogStyleKey, (int)DefaultFogStyle);
+                    _fogStyle = Enum.IsDefined(typeof(FogStyle), saved) ? (FogStyle)saved : DefaultFogStyle;
                 }
                 return _fogStyle;
             }

@@ -1981,6 +1981,11 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(selector);
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
             so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
+            // The flag a move order plants (Tools/blender/orderflag.py). Referenced from the scene
+            // so it travels into the build; without it the order still shows its ripple and trail.
+            var orderFlag = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/OrderFlag.fbx");
+            if (orderFlag == null) Debug.LogWarning("[SetupProject] Models/Buildings/OrderFlag.fbx is missing -- move orders will show no flag.");
+            so.FindProperty("orderFlagPrefab").objectReferenceValue = orderFlag;
             so.ApplyModifiedPropertiesWithoutUndo();
             return selector;
         }

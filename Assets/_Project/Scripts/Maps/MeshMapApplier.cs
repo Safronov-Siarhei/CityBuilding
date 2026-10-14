@@ -153,6 +153,23 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>
+        /// The height of the land's surface straight below worldPos -- plain or hill, whatever is
+        /// drawn there. For things laid on the ground that must neither sink into a slope nor
+        /// float over a dip (the move order's flag and trail, see MoveOrderMarker). False over
+        /// water and off the map.
+        /// </summary>
+        public bool TryGetGroundHeight(Vector3 worldPos, out float height)
+        {
+            if (TryRaycastGround(worldPos, out var hit))
+            {
+                height = hit.point.y;
+                return true;
+            }
+            height = 0f;
+            return false;
+        }
+
+        /// <summary>
         /// Live downward raycast against the real Ground mesh collider(s) directly beneath
         /// worldPos, used internally to classify each grid cell as land or water (see
         /// ComputeWaterAndZoneCells / IsWaterCell). Ground can be several disconnected mesh

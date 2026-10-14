@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -60,7 +61,7 @@ namespace CityBuilder.Citizens
         // tree's center can never fully complete -- the agent would grind against the carve until
         // the stuck timeout instead of ever starting work. Doubles as the "did I actually get
         // there?" test, see OnArrived/OnPauseElapsed.
-        private const float NodeReachDistance = 1.6f;
+        public const float NodeReachDistance = 1.6f;
 
         private enum Mode { Wandering, Working, ManualMove, Gathering }
 
@@ -116,6 +117,16 @@ namespace CityBuilder.Citizens
 
         /// <summary>True from a player-issued order (MoveTo/GatherFrom) until the agent either finishes it or gives up (see MaxManualMoveStuckRetries) -- CitizenSelector uses this to know when to hide the persistent target-cell highlight.</summary>
         public bool IsExecutingOrder => _mode == Mode.ManualMove || _mode == Mode.Gathering;
+
+        /// <summary>
+        /// The route currently being walked (NavMesh corners, or the one-point straight-line
+        /// fallback) and the corner the agent is heading for. Read-only views for MoveOrderMarker,
+        /// which draws the trail of dots along it; RouteVersion changes whenever a new route is
+        /// planned, so the trail is rebuilt on a re-route instead of every frame.
+        /// </summary>
+        public IReadOnlyList<Vector3> Route => _route;
+        public int RouteIndex => _routeIndex;
+        public int RouteVersion { get; private set; }
 
         private void Awake()
         {
@@ -644,6 +655,7 @@ namespace CityBuilder.Citizens
         private void BuildRoute(Vector3 from, Vector3 to)
         {
             _sharedPath ??= new NavMeshPath();
+            RouteVersion++;
 
             if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
             {

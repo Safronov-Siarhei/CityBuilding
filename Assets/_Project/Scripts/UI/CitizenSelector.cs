@@ -20,12 +20,10 @@ namespace CityBuilder.UI
     ///
     /// A destination click reads the point where the camera ray meets the ground mesh and pulls
     /// it onto the nearest walkable NavMesh position (see TryResolveDestination), so a click that
-    /// lands on something unwalkable aims next to it rather than into it. That cell gets a hollow
-    /// square outline (yellow while
-    /// the order is still in progress, red and brief if the click had nowhere valid to resolve
-    /// to) alongside the existing center-screen OK!/NO! flash, so it's obvious both what was
-    /// clicked and where the citizen actually ended up heading -- without a filled highlight
-    /// blotting out whatever's on that cell.
+    /// lands on something unwalkable aims next to it rather than into it. The order is drawn on
+    /// the ground by MoveOrderMarker -- a ripple where the tap landed, a flag at the destination and
+    /// a trail of dots along the route the citizen will walk; a red ripple when the tap had nowhere
+    /// valid to go -- alongside the centre-screen OK!/NO! flash.
     /// </summary>
     public class CitizenSelector : MonoBehaviour
     {
@@ -33,10 +31,6 @@ namespace CityBuilder.UI
         private const float MarkerHeight = 0.75f; // ~0.3 m over a citizen drawn at UnitSize.Scale
         private const float MarkerBobSpeed = 3f;
         private const float MarkerBobAmount = 0.08f;
-        private const float InvalidHighlightSeconds = 1f;
-        private const float HighlightHeightOffset = 0.03f;
-        private const float HighlightCellFraction = 0.9f;
-        private const float HighlightBorderFraction = 0.14f;
         // How far a clicked point may be pulled onto walkable NavMesh (see TryResolveDestination).
         // Deliberately tight: this is the click's precision budget, and anything larger starts
         // silently sending citizens somewhere the player didn't point at. Enough to forgive a
@@ -47,6 +41,7 @@ namespace CityBuilder.UI
         [SerializeField] private Camera targetCamera;
         [SerializeField] private Text feedbackText;
         [SerializeField] private LayerMask raycastMask = ~0;
+        [SerializeField] private GameObject orderFlagPrefab;
 
         // Reused across clicks rather than using Physics.RaycastAll, which allocates a fresh array
         // every call. Sized generously: the camera looks down at a shallow angle, so the ray
@@ -58,11 +53,22 @@ namespace CityBuilder.UI
 
         private CitizenAgent _selected;
         private GameObject _marker;
-        private GameObject _cellHighlight;
-        private Material _cellHighlightMaterial;
-        private bool _cellHighlightPersistent;
+        private MoveOrderMarker _orderMarker;
         private Coroutine _feedbackRoutine;
-        private Coroutine _highlightRoutine;
+
+        private MoveOrderMarker OrderMarker
+        {
+            get
+            {
+                if (_orderMarker != null) return _orderMarker;
+                // Its own object, not this one: this selector lives under the UI canvas, and the
+                // marker's pieces are world objects that must not inherit a canvas transform.
+                var go = new GameObject("MoveOrderMarker");
+                _orderMarker = go.AddComponent<MoveOrderMarker>();
+                _orderMarker.Configure(orderFlagPrefab);
+                return _orderMarker;
+            }
+        }
 
         private void Update()
         {
@@ -70,11 +76,6 @@ namespace CityBuilder.UI
             if (_selected == null) return;
 
             BobMarker();
-
-            // The persistent (green, order-in-progress) highlight tracks the agent's own
-            // manual-move state rather than a fixed timer -- it disappears the moment the
-            // citizen either arrives or gives up (see CitizenAgent.OnStuck's retry cap).
-            if (_cellHighlightPersistent && !_selected.IsExecutingOrder) HideCellHighlight();
 
             // Desktop escape hatches only. Touch has three of its own -- tap the citizen again,
             // tap a building, long press -- plus the HUD's cancel button. See WorldInputDispatcher.
@@ -197,9 +198,15 @@ namespace CityBuilder.UI
             var resolved = TryResolveDestination(clickPoint, out var destination);
 
             ShowFeedback(resolved);
-            ShowCellHighlight(resolved ? destination : clickPoint, resolved);
+            if (!resolved)
+            {
+                OrderMarker.ShowRefused(clickPoint);
+                return true;
+            }
 
-            if (resolved) _selected.MoveTo(destination);
+            // Order first, marker second: the marker draws the route MoveTo has just planned.
+            _selected.MoveTo(destination);
+            OrderMarker.ShowOrder(_selected, destination, true);
             return true;
         }
 
@@ -277,13 +284,13 @@ namespace CityBuilder.UI
             if (isUnripeSapling || !node.TryClaim())
             {
                 ShowFeedback(false);
-                ShowCellHighlight(node.transform.position, false);
+                OrderMarker.ShowRefused(node.transform.position);
                 return;
             }
 
             _selected.GatherFrom(node);
             ShowFeedback(true);
-            ShowCellHighlight(node.transform.position, true);
+            OrderMarker.ShowOrder(_selected, node.transform.position, false);
         }
 
         private void Select(CitizenAgent citizen)
@@ -291,7 +298,7 @@ namespace CityBuilder.UI
             _selected = citizen;
             if (_marker == null) _marker = CreateMarker();
             _marker.SetActive(true);
-            HideCellHighlight();
+            if (_orderMarker != null) _orderMarker.HideOrder();
         }
 
         /// <summary>Public because the HUD cancel button and the long-press escape hatch both reach it (see WorldInputDispatcher).</summary>
@@ -299,7 +306,7 @@ namespace CityBuilder.UI
         {
             _selected = null;
             if (_marker != null) _marker.SetActive(false);
-            HideCellHighlight();
+            if (_orderMarker != null) _orderMarker.HideOrder();
         }
 
         private void BobMarker()
@@ -321,94 +328,6 @@ namespace CityBuilder.UI
                 color = new Color(1f, 0.85f, 0.2f)
             };
             return marker;
-        }
-
-        /// <summary>
-        /// Hollow square frame (4 thin bars around a unit cell, empty in the middle) instead of a
-        /// filled quad -- reads as "this cell" without blotting out whatever's on it (a tree,
-        /// part of a building) the way a solid fill did. Built once in local unit-cell space;
-        /// ShowCellHighlight scales/positions/colors the whole group per click.
-        /// </summary>
-        private void EnsureCellHighlight()
-        {
-            if (_cellHighlight != null) return;
-
-            _cellHighlight = new GameObject("CitizenTargetCellHighlight");
-            // Lies flat facing up (local -Z normal -> world +Y) instead of standing upright like
-            // a default Quad, matching how a ground-decal-style highlight should sit.
-            _cellHighlight.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-            var t = HighlightBorderFraction;
-            CreateHighlightBar(_cellHighlight.transform, "Top", new Vector3(0f, 0.5f - t * 0.5f, 0f), new Vector3(1f, t, 1f));
-            CreateHighlightBar(_cellHighlight.transform, "Bottom", new Vector3(0f, -0.5f + t * 0.5f, 0f), new Vector3(1f, t, 1f));
-            CreateHighlightBar(_cellHighlight.transform, "Left", new Vector3(-0.5f + t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
-            CreateHighlightBar(_cellHighlight.transform, "Right", new Vector3(0.5f - t * 0.5f, 0f, 0f), new Vector3(t, 1f, 1f));
-
-            _cellHighlightMaterial = new Material(RuntimeShaders.Unlit);
-            foreach (var bar in _cellHighlight.GetComponentsInChildren<Renderer>())
-            {
-                bar.sharedMaterial = _cellHighlightMaterial;
-            }
-
-            _cellHighlight.SetActive(false);
-        }
-
-        private static void CreateHighlightBar(Transform parent, string name, Vector3 localPos, Vector3 localScale)
-        {
-            var bar = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            bar.name = name;
-            Destroy(bar.GetComponent<Collider>());
-            bar.transform.SetParent(parent, false);
-            bar.transform.localPosition = localPos;
-            bar.transform.localScale = localScale;
-        }
-
-        /// <summary>
-        /// Snaps the frame onto the cell at worldPos (grid-cell-sized, matching how the ghost
-        /// building preview reads during placement). Yellow + stays up while the order is in
-        /// progress (persistent=true, cleared once IsManualMoving goes false); red + a one-second
-        /// flash when the click had nowhere valid to resolve to.
-        /// </summary>
-        private void ShowCellHighlight(Vector3 worldPos, bool ok)
-        {
-            var grid = GridManager.Instance;
-            if (grid == null) return;
-
-            EnsureCellHighlight();
-
-            _cellHighlight.transform.position = new Vector3(worldPos.x, grid.GroundHeight + HighlightHeightOffset, worldPos.z);
-            var size = grid.CellSize * HighlightCellFraction;
-            _cellHighlight.transform.localScale = new Vector3(size, size, 1f);
-            _cellHighlightMaterial.color = ok
-                ? new Color(0.95f, 0.82f, 0.2f)
-                : new Color(0.9f, 0.3f, 0.25f);
-            _cellHighlight.SetActive(true);
-            _cellHighlightPersistent = ok;
-
-            if (_highlightRoutine != null)
-            {
-                StopCoroutine(_highlightRoutine);
-                _highlightRoutine = null;
-            }
-            if (!ok) _highlightRoutine = StartCoroutine(HideHighlightAfterDelay());
-        }
-
-        private void HideCellHighlight()
-        {
-            if (_highlightRoutine != null)
-            {
-                StopCoroutine(_highlightRoutine);
-                _highlightRoutine = null;
-            }
-            _cellHighlightPersistent = false;
-            if (_cellHighlight != null) _cellHighlight.SetActive(false);
-        }
-
-        private IEnumerator HideHighlightAfterDelay()
-        {
-            yield return new WaitForSeconds(InvalidHighlightSeconds);
-            if (_cellHighlight != null) _cellHighlight.SetActive(false);
-            _highlightRoutine = null;
         }
 
         private void ShowFeedback(bool ok)
