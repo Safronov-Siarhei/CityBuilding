@@ -11,8 +11,12 @@ using UnityEngine;
 namespace CityBuilder.Saving
 {
     /// <summary>
-    /// Saving is entirely player-initiated (see SaveDialogController) — the player decides
-    /// when and under what name to save, there is no autosave.
+    /// The player saves when and under what name they like (see SaveDialogController). Besides
+    /// that there is ONE autosave slot (AutosaveName) that overwrites itself: every
+    /// autosaveIntervalSeconds of real time (4 minutes, the user's choice), and whenever the app
+    /// goes to the background or quits -- on a phone, the moment Android may kill the game and take
+    /// everything since the last manual save with it. The autosave never becomes the "current"
+    /// save, so the save dialog keeps offering the player's own name.
     /// </summary>
     public class GameSaveController : MonoBehaviour
     {
@@ -29,6 +33,22 @@ namespace CityBuilder.Saving
         private GameSaveData _pendingLoad;
 
         public string CurrentSaveName { get; private set; } = string.Empty;
+
+        /// <summary>
+        /// The autosave's file name. It starts with '_', which SaveSystem.SanitizeName strips from
+        /// anything the player types, so no save the player names can ever collide with it.
+        /// </summary>
+        public const string AutosaveName = "_autosave";
+
+        [SerializeField] private float autosaveIntervalSeconds = 240f;
+        private float _sinceAutosave;
+
+        /// <summary>Seconds of real time between autosaves (unscaled: a paused game still has a player who can lose it).</summary>
+        public float AutosaveIntervalSeconds
+        {
+            get => autosaveIntervalSeconds;
+            set => autosaveIntervalSeconds = Mathf.Max(1f, value);
+        }
 
         /// <summary>Map id carried by the save being loaded this session, resolved in Awake so MapTerrainGenerator's Start() can read it. Empty when starting a fresh game.</summary>
         public string LoadedMapId { get; private set; } = string.Empty;
@@ -48,7 +68,9 @@ namespace CityBuilder.Saving
             _pendingLoad = SaveSystem.Load(nameToLoad);
             if (_pendingLoad == null) return;
 
-            CurrentSaveName = nameToLoad;
+            // Resuming from the autosave gives no name to save back under: the dialog should ask
+            // for one, not offer "_autosave".
+            CurrentSaveName = nameToLoad == AutosaveName ? string.Empty : nameToLoad;
             LoadedMapId = _pendingLoad.mapId;
 
             // Marked here (Awake, guaranteed to run before every Start() in the scene,
@@ -68,6 +90,39 @@ namespace CityBuilder.Saving
             if (_pendingLoad == null) return;
             ApplyLoadedState(_pendingLoad);
             _pendingLoad = null;
+        }
+
+        private void Update()
+        {
+            if (!CanAutosave) return;
+            _sinceAutosave += Time.unscaledDeltaTime;
+            if (_sinceAutosave >= autosaveIntervalSeconds) Autosave();
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) Autosave();
+        }
+
+        private void OnApplicationQuit() => Autosave();
+
+        /// <summary>Nothing worth keeping before the Town Hall stands -- a new game starts there anyway.</summary>
+        private bool CanAutosave => buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding;
+
+        /// <summary>Writes the autosave slot now and starts the interval over. Does not touch CurrentSaveName.</summary>
+        public void Autosave()
+        {
+            _sinceAutosave = 0f;
+            if (!CanAutosave) return;
+            try
+            {
+                SaveSystem.Save(AutosaveName, CollectSaveData());
+            }
+            catch (Exception e)
+            {
+                // A full disk or a revoked folder must not take the running game down with it.
+                Debug.LogWarning($"[GameSaveController] Autosave failed: {e.Message}");
+            }
         }
 
         /// <summary>Explicit, player-triggered save under the given (already sanitized) name.</summary>

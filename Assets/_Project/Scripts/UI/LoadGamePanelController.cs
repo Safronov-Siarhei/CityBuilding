@@ -59,6 +59,15 @@ namespace CityBuilder.UI
             var saves = SaveSystem.ListSaves();
             if (emptyLabel != null) emptyLabel.SetActive(saves.Count == 0);
 
+            // The autosave heads the list whatever its date: it is the "pick up where I was" row.
+            var autosave = saves.FindIndex(s => s.Name == GameSaveController.AutosaveName);
+            if (autosave > 0)
+            {
+                var row = saves[autosave];
+                saves.RemoveAt(autosave);
+                saves.Insert(0, row);
+            }
+
             foreach (var save in saves)
             {
                 CreateRow(save);
@@ -93,7 +102,7 @@ namespace CityBuilder.UI
             text.alignment = TextAnchor.MiddleLeft;
             text.color = UiTheme.Ink;
             var localTime = info.LastModifiedUtc.ToLocalTime();
-            text.text = $"{info.Name}\n{localTime:yyyy-MM-dd HH:mm}";
+            text.text = $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm}";
 
             var button = rowGO.GetComponent<Button>();
             var capturedName = info.Name;
@@ -101,6 +110,9 @@ namespace CityBuilder.UI
 
             _rows.Add((info.Name, image));
         }
+
+        private static string DisplayName(string saveName) =>
+            saveName == GameSaveController.AutosaveName ? Localization.Get("#save_autosave") : saveName;
 
         private void Select(string name)
         {
@@ -115,7 +127,7 @@ namespace CityBuilder.UI
         private void UpdateSelectionUI()
         {
             if (loadSelectedButton != null) loadSelectedButton.interactable = !string.IsNullOrEmpty(_selectedName);
-            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : Localization.Format("#load_selected", _selectedName);
+            if (selectedNameLabel != null) selectedNameLabel.text = string.IsNullOrEmpty(_selectedName) ? string.Empty : Localization.Format("#load_selected", DisplayName(_selectedName));
         }
     }
 }
