@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -24,9 +24,13 @@ namespace CityBuilder.EditorTools
         /// <summary>The event feed's white glyphs (Tools/ui/make_event_glyphs.py) -- imported as icons are.</summary>
         public const string GlyphsFolder = "Assets/_Project/UI/Glyphs";
 
+        /// <summary>The HUD's looks (Tools/ui/make_hud_skins.py), a folder per look with its own borders.json -- imported as the skin is.</summary>
+        public const string HudSkinsFolder = "Assets/_Project/Resources/HudSkins";
+
         private void OnPreprocessTexture()
         {
-            var isSkin = assetPath.StartsWith(SkinFolder + "/");
+            var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/");
+            var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/");
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
@@ -40,17 +44,18 @@ namespace CityBuilder.EditorTools
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.spritePixelsPerUnit = isSkin ? 200f : 100f;
 
-            if (isSkin && Borders().TryGetValue(Path.GetFileNameWithoutExtension(assetPath), out var b))
+            var folder = isHudSkin ? Path.GetDirectoryName(assetPath) : SkinFolder;
+            if (isSkin && Borders(folder).TryGetValue(Path.GetFileNameWithoutExtension(assetPath), out var b))
             {
                 // borders.json is (left, bottom, right, top); Unity's spriteBorder is (left, bottom, right, top) too.
                 importer.spriteBorder = new Vector4(b[0], b[1], b[2], b[3]);
             }
         }
 
-        private static Dictionary<string, int[]> Borders()
+        private static Dictionary<string, int[]> Borders(string folder)
         {
             var result = new Dictionary<string, int[]>();
-            var path = Path.Combine(SkinFolder, "borders.json");
+            var path = Path.Combine(folder, "borders.json");
             if (!File.Exists(path)) return result;
 
             // A flat {"name": [l, b, r, t], ...} object -- small enough not to need a JSON library.

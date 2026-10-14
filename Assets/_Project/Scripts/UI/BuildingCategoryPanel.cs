@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.InputControl;
 using UnityEngine;
 using UnityEngine.UI;
@@ -148,6 +148,21 @@ namespace CityBuilder.UI
             if (hotbar != null) hotbar.SetActive(false);
             PaintTabs(null);
             if (instant) SnapBar();
+        }
+
+        /// <summary>
+        /// The HUD's look changed (HudSkinApplier): the tabs' two sprites, and where the row stands
+        /// -- in the Dock layout the tabs stay down in the dock and the cards open above it.
+        /// </summary>
+        public void SetLook(Sprite selected, Sprite unselected, float closedY, float openY)
+        {
+            selectedSprite = selected;
+            unselectedSprite = unselected;
+            closedBarY = closedY;
+            openBarY = openY;
+            if (_open) ShowCards(_category);   // repaints the tabs and re-fits the cards row the layout may have reset
+            else PaintTabs(null);
+            SnapBar();
         }
 
         private void SnapBar()

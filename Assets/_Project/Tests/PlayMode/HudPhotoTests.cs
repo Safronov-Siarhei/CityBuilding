@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
 using CityBuilder.UI;
@@ -65,6 +66,13 @@ namespace CityBuilder.Tests.PlayMode
         public void ForgetTheScene()
         {
             _sceneLoaded = false;
+        }
+
+        // Every test starts and ends in the default look; the look tests switch it themselves.
+        [TearDown]
+        public void BackToTheDefaultLook()
+        {
+            GameSettings.HudSkin = GameSettings.DefaultHudSkin;
         }
 
         [Test]
@@ -138,14 +146,23 @@ namespace CityBuilder.Tests.PlayMode
                 yield return PlaytestCapture.ShootWithUiAt($"hud-{label}", shape.x, shape.y, _townHall, 34f, 52f, 20f,
                     () =>
                     {
-                        // Closed, as the player first sees it -- then open, the tallest the menu gets.
-                        CheckLayout(label, failures);
-                        var menu = Menu();
-                        menu.Open(FirstCategory(), true);
+                        // In every look (Dock moves the pieces), closed as the player first sees
+                        // it -- then open, the tallest the menu gets.
+                        foreach (var skin in HudSkins.All)
+                        {
+                            GameSettings.HudSkin = skin;
+                            Canvas.ForceUpdateCanvases();
+                            var look = $"{label} {skin}";
+                            CheckLayout(look, failures);
+                            var menu = Menu();
+                            menu.Open(FirstCategory(), true);
+                            Canvas.ForceUpdateCanvases();
+                            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)menu.transform.Find("Hotbar"));
+                            CheckLayout(look + " with the build menu open", failures);
+                            menu.Close(true);
+                        }
+                        GameSettings.HudSkin = GameSettings.DefaultHudSkin;
                         Canvas.ForceUpdateCanvases();
-                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)menu.transform.Find("Hotbar"));
-                        CheckLayout(label + " with the build menu open", failures);
-                        menu.Close(true);
                     });
             }
 
@@ -348,6 +365,103 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             yield return PlaytestCapture.ShootWithUi("hud-build-open", _townHall, 34f, 52f, 20f);
             menu.Close(true);
+        }
+
+        // ---------------------------------------------------------------- the four looks (2026-10-14)
+
+        private static HudSkinApplier Looks() => Object.FindAnyObjectByType<HudSkinApplier>();
+
+        private static Image HudImage(string path) => HudRoot().Find(path).GetComponent<Image>();
+
+        [UnityTest]
+        public IEnumerator EveryLook_RedrawsTheHud_InItsOwnSprites()
+        {
+            var menuSprites = new HashSet<Sprite>();
+            foreach (var skin in HudSkins.All)
+            {
+                GameSettings.HudSkin = skin;
+                yield return null;
+                Assert.AreEqual(skin, Looks().Applied, $"The HUD did not follow the setting to {skin}.");
+
+                var menu = HudImage("MenuButton");
+                Assert.IsNotNull(menu.sprite, $"{skin}: the menu button has no sprite.");
+                Assert.IsTrue(menu.enabled, $"{skin}: the menu button is hidden.");
+                menuSprites.Add(menu.sprite);
+
+                // What only some looks draw: the bar behind the resources (Glass), the rails (Dock).
+                Assert.AreEqual(skin == HudSkin.Glass, HudImage("ResourceHUD/ResourceBar").enabled, $"{skin}: the resource bar's plaque.");
+                Assert.AreEqual(skin == HudSkin.Dock, HudImage("DockTop").enabled, $"{skin}: the top rail.");
+                Assert.AreEqual(skin == HudSkin.Dock, HudImage("DockBottom").enabled, $"{skin}: the bottom dock.");
+            }
+            Assert.AreEqual(HudSkins.All.Length, menuSprites.Count, "Two looks drew the menu button with the same sprite.");
+        }
+
+        [UnityTest]
+        public IEnumerator TheGlassLook_WritesLight_AndTheOthersDark()
+        {
+            foreach (var skin in HudSkins.All)
+            {
+                GameSettings.HudSkin = skin;
+                yield return null;
+                var rate = HudRoot().Find("TaxRate/RatePlaque/RateLabel").GetComponent<Text>();
+                Color.RGBToHSV(rate.color, out _, out _, out var v);
+                if (skin == HudSkin.Glass) Assert.Greater(v, 0.8f, "On dark glass the tax rate is written dark.");
+                else Assert.Less(v, 0.5f, $"{skin}: on a light plaque the tax rate is written light.");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheDockLook_KeepsTheTabsInTheDock_AndOpensTheCardsAboveIt()
+        {
+            GameSettings.HudSkin = HudSkin.Dock;
+            yield return null;
+            var menu = Menu();
+            var dock = RectIn(HudRoot() as RectTransform, (RectTransform)HudRoot().Find("DockBottom"));
+            var bar = (RectTransform)menu.transform.Find("CategoryBar");
+
+            menu.Close(true);
+            yield return null;
+            var closed = RectIn(HudRoot() as RectTransform, bar);
+            TapTab(Tabs()[0]);
+            yield return LetItSlide();
+            var open = RectIn(HudRoot() as RectTransform, bar);
+            var cards = RectIn(HudRoot() as RectTransform, (RectTransform)menu.transform.Find("Hotbar"));
+
+            Assert.AreEqual(closed.yMin, open.yMin, 0.5f, "In the dock the tabs move when the menu opens.");
+            Assert.LessOrEqual(open.yMax, dock.yMax + 0.5f, "The tab row stands out of the dock.");
+            // The tabs themselves, not only their row: they once stood half a tab above it.
+            foreach (var tab in Tabs())
+            {
+                var r = RectIn(HudRoot() as RectTransform, (RectTransform)tab.transform);
+                Assert.LessOrEqual(r.yMax, dock.yMax + 0.5f, $"The tab '{tab.name}' stands out of the dock.");
+                Assert.GreaterOrEqual(r.yMin, dock.yMin - 0.5f, $"The tab '{tab.name}' hangs below the screen.");
+            }
+            Assert.GreaterOrEqual(cards.yMin, dock.yMax - 8f, "The cards open inside the dock instead of above it.");
+            menu.Close(true);
+        }
+
+        [Test]
+        public void TheLook_IsRemembered()
+        {
+            GameSettings.HudSkin = HudSkin.Soft;
+            GameSettings.ReloadForTests();
+            Assert.AreEqual(HudSkin.Soft, GameSettings.HudSkin, "The picked look was not kept.");
+        }
+
+        [UnityTest]
+        public IEnumerator Photograph_EveryLook()
+        {
+            foreach (var skin in HudSkins.All)
+            {
+                GameSettings.HudSkin = skin;
+                yield return null;
+                yield return PlaytestCapture.ShootWithUiAt($"look-{skin}", 2400, 1080, _townHall, 34f, 52f, 20f);
+                var menu = Menu();
+                menu.Open(FirstCategory(), true);
+                yield return null;
+                yield return PlaytestCapture.ShootWithUiAt($"look-{skin}-open", 2400, 1080, _townHall, 34f, 52f, 20f);
+                menu.Close(true);
+            }
         }
 
         // ---------------------------------------------------------------- the layout sketch (2026-10-14)

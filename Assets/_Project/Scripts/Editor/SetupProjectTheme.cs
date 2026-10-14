@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
 using CityBuilder.UI;
@@ -35,7 +35,7 @@ namespace CityBuilder.EditorTools
         /// <summary>Makes sure the skin and icon files carry UiTextureImport's settings, the same way ForceReimportModels does for the models.</summary>
         private static void EnsureUiTextures()
         {
-            foreach (var folder in new[] { UiTextureImport.SkinFolder, UiTextureImport.IconsFolder, UiTextureImport.GlyphsFolder })
+            foreach (var folder in new[] { UiTextureImport.SkinFolder, UiTextureImport.IconsFolder, UiTextureImport.GlyphsFolder, UiTextureImport.HudSkinsFolder })
             {
                 if (AssetDatabase.IsValidFolder(folder))
                 {
@@ -171,7 +171,7 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static Button CreateHotbarCard(Transform parent, BuildingData data, Vector2 size)
         {
-            var card = CreateSkinImage(parent, $"Building_{data.buildingName}", "card", Vector2.zero, size);
+            var card = HudImage(parent, $"Building_{data.buildingName}", "card", size);
             var button = card.gameObject.AddComponent<Button>();
 
             var icon = CreateImage(card.transform, "Icon", Color.white);
@@ -186,6 +186,7 @@ namespace CityBuilder.EditorTools
             var name = Localize(CreateText(card.transform, "Name", data.displayName, 19, new Vector2(0f, -size.y * 0.5f + 46f), new Vector2(size.x - 8f, 26f), UiTheme.Ink),
                 "#building_" + data.buildingName.ToLowerInvariant());
             name.font = UiTheme.Bold;
+            SkinInk(name, HudInk.OnCard);
             name.resizeTextForBestFit = true;
             name.resizeTextMinSize = 13;
             name.resizeTextMaxSize = 19;
@@ -218,6 +219,7 @@ namespace CityBuilder.EditorTools
                 var amount = CreateText(row.transform, $"Amount_{cost.type}", cost.amount.ToString(), 18, Vector2.zero, new Vector2(cost.amount >= 100 ? 36f : 26f, 26f), UiTheme.Ink);
                 amount.font = UiTheme.Heavy;
                 amount.alignment = TextAnchor.MiddleLeft;
+                SkinInk(amount, HudInk.OnCard);
             }
             return button;
         }

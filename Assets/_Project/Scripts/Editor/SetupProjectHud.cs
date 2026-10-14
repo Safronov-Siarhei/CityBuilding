@@ -50,16 +50,20 @@ namespace CityBuilder.EditorTools
             rect.sizeDelta = size;
         }
 
-        /// <summary>A round skin button with a picture on it and no words. Wood buttons carry a light glyph, parchment ones a dark one.</summary>
-        private static Button CreateGlyphButton(Transform parent, string name, string skin, string glyph, Sprite fallback, float size, float glyphScale = 0.56f)
+        /// <summary>
+        /// A round button with a picture on it and no words, drawn by the HUD's look (`role`, see
+        /// Tools/ui/make_hud_skins.py); the white glyph takes the look's ink for that role.
+        /// </summary>
+        private static Button CreateGlyphButton(Transform parent, string name, string role, HudInk ink, string glyph, Sprite fallback, float size, float glyphScale = 0.56f)
         {
-            var image = CreateSkinImage(parent, name, skin, Vector2.zero, new Vector2(size, size));
+            var image = HudImage(parent, name, role, new Vector2(size, size), sliced: false);
             var button = image.gameObject.AddComponent<Button>();
 
-            var icon = CreateImage(image.transform, "Icon", IsWoodSprite(image.sprite) ? UiTheme.OnWood : UiTheme.Ink);
+            var icon = CreateImage(image.transform, "Icon", Color.white);
             icon.sprite = HudGlyph(glyph) ?? fallback;
             icon.preserveAspect = true;
             icon.raycastTarget = false;
+            if (ink != HudInk.Keep) SkinInk(icon, ink);
             var iconRect = icon.rectTransform;
             iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
             iconRect.anchoredPosition = new Vector2(0f, 3f);
@@ -77,7 +81,7 @@ namespace CityBuilder.EditorTools
         private static void BuildGameMenu(Transform uiRoot, Sprite panelSprite, HudHider hud, GameSaveController saveController,
             SaveDialogController saveDialog, GameObject saveDialogRoot)
         {
-            var menuButton = CreateGlyphButton(uiRoot, "MenuButton", "pill_gold", "Menu", null, RoundButton);
+            var menuButton = CreateGlyphButton(uiRoot, "MenuButton", "round_main", HudInk.OnMain, "Menu", null, RoundButton);
             Anchor(menuButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
             var root = new GameObject("GameMenu", typeof(RectTransform));
@@ -91,14 +95,14 @@ namespace CityBuilder.EditorTools
             backdropButton.transition = Selectable.Transition.None;
 
             // The menu's own button again, on top of the dim layer, so the same spot closes it.
-            var closeButton = CreateGlyphButton(root.transform, "MenuCloseButton", "pill_gold", "Menu", null, RoundButton);
+            var closeButton = CreateGlyphButton(root.transform, "MenuCloseButton", "round_main", HudInk.OnMain, "Menu", null, RoundButton);
             Anchor(closeButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
             var entries = new[] { ("SaveEntry", "Save"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
             var buttons = new Button[entries.Length];
             for (var i = 0; i < entries.Length; i++)
             {
-                buttons[i] = CreateGlyphButton(root.transform, entries[i].Item1, "pill_parchment", entries[i].Item2, null, 96f);
+                buttons[i] = CreateGlyphButton(root.transform, entries[i].Item1, "round_alt", HudInk.OnAlt, entries[i].Item2, null, 96f);
                 Anchor(buttons[i].GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
                     new Vector2(HudMargin + (RoundButton - 96f) * 0.5f, MenuButtonTop - RoundButton - 18f - i * 112f), new Vector2(96f, 96f));
             }
@@ -148,10 +152,10 @@ namespace CityBuilder.EditorTools
             layout.childControlWidth = layout.childControlHeight = false;
             layout.childForceExpandWidth = layout.childForceExpandHeight = false;
 
-            var cancel = CreateGlyphButton(row.transform, "CancelPlacementButton", "pill_wood", "Cancel", CreateCancelIcon(), 112f);
-            var rotate = CreateGlyphButton(row.transform, "RotateButton", "pill_wood", "Rotate", CreateRotateIcon(), 112f);
+            var cancel = CreateGlyphButton(row.transform, "CancelPlacementButton", "round", HudInk.OnRound, "Cancel", CreateCancelIcon(), 112f);
+            var rotate = CreateGlyphButton(row.transform, "RotateButton", "round", HudInk.OnRound, "Rotate", CreateRotateIcon(), 112f);
             // A neutral pill, because PlacementHudController tints it: green when it can be placed.
-            var confirm = CreateGlyphButton(row.transform, "ConfirmPlacementButton", "pill_white", "Check", CreateConfirmIcon(), 136f);
+            var confirm = CreateGlyphButton(row.transform, "ConfirmPlacementButton", "round_tint", HudInk.Keep, "Check", CreateConfirmIcon(), 136f);
             confirm.transform.Find("Icon").GetComponent<Image>().color = Color.white;
             return (cancel, rotate, confirm, rowRect);
         }
@@ -170,9 +174,9 @@ namespace CityBuilder.EditorTools
             root.transform.SetParent(uiRoot, false);
             Anchor((RectTransform)root.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-HudMargin, HudMargin), new Vector2(sign * 2f + gap * 2f + plaqueWidth, 84f));
 
-            var minus = CreateGlyphButton(root.transform, "MinusButton", "pill_wood", "Minus", null, sign);
+            var minus = CreateGlyphButton(root.transform, "MinusButton", "round_step", HudInk.Keep, "Minus", null, sign);
             Anchor(minus.GetComponent<RectTransform>(), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(sign, sign));
-            var plus = CreateGlyphButton(root.transform, "PlusButton", "pill_wood", "Plus", null, sign);
+            var plus = CreateGlyphButton(root.transform, "PlusButton", "round_step", HudInk.Keep, "Plus", null, sign);
             Anchor(plus.GetComponent<RectTransform>(), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(sign, sign));
             foreach (var (button, glyph) in new[] { (minus, "–"), (plus, "+") })
             {
@@ -180,13 +184,13 @@ namespace CityBuilder.EditorTools
                 Object.DestroyImmediate(button.transform.Find("Icon").gameObject);
                 var label = CreateText(button.transform, "Sign", glyph, 44, new Vector2(0f, 4f), new Vector2(70f, 70f));
                 label.font = UiTheme.Heavy;
-                label.color = UiTheme.OnWood;
+                SkinInk(label, HudInk.OnStep);
             }
 
-            var plaque = CreateSkinImage(root.transform, "RatePlaque", "pill_parchment", Vector2.zero, new Vector2(plaqueWidth, 72f));
+            var plaque = HudImage(root.transform, "RatePlaque", "plaque", new Vector2(plaqueWidth, 72f));
             var rateLabel = CreateText(plaque.transform, "RateLabel", "Налог: 10%", 28, new Vector2(0f, 3f), new Vector2(plaqueWidth - 24f, 56f));
             rateLabel.font = UiTheme.Heavy;
-            rateLabel.color = UiTheme.Ink;
+            SkinInk(rateLabel, HudInk.OnPlaque);
 
             var go = new GameObject("TaxRateController");
             go.transform.SetParent(uiRoot, false);
@@ -204,7 +208,7 @@ namespace CityBuilder.EditorTools
         /// <summary>The percentage on a round parchment button; a tap opens the factor breakdown under the corner.</summary>
         private static void BuildHappiness(Transform uiRoot)
         {
-            var button = CreateGlyphButton(uiRoot, "Happiness", "pill_parchment", "-", null, RoundButton);
+            var button = CreateGlyphButton(uiRoot, "Happiness", "round_value", HudInk.Keep, "-", null, RoundButton);
             Object.DestroyImmediate(button.transform.Find("Icon").gameObject);
             Anchor(button.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f), new Vector2(RoundButton, RoundButton));
             var label = CreateText(button.transform, "HappinessLabel", "99%", 30, new Vector2(0f, 4f), new Vector2(RoundButton - 12f, 50f));

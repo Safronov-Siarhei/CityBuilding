@@ -380,24 +380,28 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            // Taller for the second setting, the fog's look.
-            cardRect.sizeDelta = new Vector2(760f, 600f);
+            // Taller for the second and third settings: the fog's look, the HUD's look.
+            cardRect.sizeDelta = new Vector2(800f, 760f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 230f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 156f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
-            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 86f);
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 310f), new Vector2(680f, 70f)), "#settings_title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 236f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 170f);
 
-            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 0f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
-            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", -70f);
+            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 90f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 24f);
 
-            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -210f), new Vector2(300f, 80f));
+            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, -56f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
+            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -122f);
+
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -290f), new Vector2(300f, 80f));
 
             var controller = panelRoot.AddComponent<SettingsPanelController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
             controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
+            controllerSO.FindProperty("hudRow").objectReferenceValue = hudRowRect;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -949,6 +953,8 @@ namespace CityBuilder.EditorTools
             StretchFull(safeAreaGO.GetComponent<RectTransform>());
             safeAreaGO.AddComponent<SafeAreaFitter>();
             var uiRoot = safeAreaGO.transform;
+            BeginHudSkins();
+            BuildDockRails(uiRoot);
 
 
             // Hint shown only while the player must place the mandatory Town Hall.
@@ -993,8 +999,7 @@ namespace CityBuilder.EditorTools
             hotbarRect.anchoredPosition = new Vector2(0f, 20f);
             hotbarRect.sizeDelta = new Vector2(600f, rowHeight);
             var hotbarImage = hotbarGO.GetComponent<Image>();
-            hotbarImage.sprite = SkinSprite("panel_banded") ?? panelSprite;
-            hotbarImage.type = Image.Type.Sliced;
+            SkinRole(hotbarImage, "panel");
 
             var viewportGO = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D));
             viewportGO.transform.SetParent(hotbarGO.transform, false);
@@ -1032,14 +1037,12 @@ namespace CityBuilder.EditorTools
             scrollbarRect.offsetMin = new Vector2(30f, 12f);
             scrollbarRect.offsetMax = new Vector2(-30f, 24f);
             var scrollbarTrack = scrollbarGO.GetComponent<Image>();
-            scrollbarTrack.sprite = SkinSprite("bar_track");
-            scrollbarTrack.type = Image.Type.Sliced;
+            SkinRole(scrollbarTrack, "scroll_track");
             var handleArea = new GameObject("SlidingArea", typeof(RectTransform));
             handleArea.transform.SetParent(scrollbarGO.transform, false);
             StretchFull((RectTransform)handleArea.transform);
-            var handle = CreateImage(handleArea.transform, "Handle", UiTheme.Rgb(0x7a4a22));
-            handle.sprite = SkinSprite("bar_fill");
-            handle.type = Image.Type.Sliced;
+            var handle = CreateImage(handleArea.transform, "Handle", Color.white);
+            SkinRole(handle, "scroll_handle");
             StretchFull(handle.rectTransform);
             var scrollbar = scrollbarGO.GetComponent<Scrollbar>();
             scrollbar.direction = Scrollbar.Direction.LeftToRight;
@@ -1094,12 +1097,25 @@ namespace CityBuilder.EditorTools
             categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonSize);
             hotbarGO.SetActive(false);
 
+            // Behind the tabs, moving with them: a tray in the looks that draw one (Soft, Glass).
+            var tray = HudImage(categoryBarGO.transform, "Tray", "tray", Vector2.zero);
+            tray.raycastTarget = false;
+            tray.rectTransform.anchorMin = Vector2.zero;
+            tray.rectTransform.anchorMax = Vector2.one;
+            tray.rectTransform.offsetMin = new Vector2(-12f, -10f);
+            tray.rectTransform.offsetMax = new Vector2(12f, 10f);
+
             for (var i = 0; i < presentCategories.Count; i++)
             {
                 var category = presentCategories[i];
                 var icon = CreateCategoryIcon(category);
                 var x = -categoryTotalWidth * 0.5f + categoryButtonSize * 0.5f + i * (categoryButtonSize + spacing);
-                var categoryButton = CreateIconButton(categoryBarGO.transform, panelSprite, icon, $"Category_{category}", new Vector2(x, categoryButtonSize * 0.5f), new Vector2(categoryButtonSize, categoryButtonSize));
+                var categoryButton = CreateIconButton(categoryBarGO.transform, panelSprite, icon, $"Category_{category}", new Vector2(x, 0f), new Vector2(categoryButtonSize, categoryButtonSize));
+                // The tab's sprite is the look's (BuildingCategoryPanel.SetLook paints them).
+                var tabImage = categoryButton.GetComponent<Image>();
+                tabImage.sprite = HudSprite("tab");
+                tabImage.type = Image.Type.Simple;
+                tabImage.color = Color.white;
 
                 var categoryHandler = categoryButton.gameObject.AddComponent<CategoryButtonHandler>();
                 var categoryHandlerSO = new SerializedObject(categoryHandler);
@@ -1110,10 +1126,10 @@ namespace CityBuilder.EditorTools
                 UnityEventTools.AddPersistentListener(categoryButton.onClick, categoryHandler.SelectThisCategory);
             }
 
-            // The open tab in parchment, the rest in wood (see BuildingCategoryPanel).
+            // The open tab and the rest, in the default look (HudSkinApplier swaps them per look).
             var categorySO = new SerializedObject(categoryPanel);
-            categorySO.FindProperty("selectedSprite").objectReferenceValue = SkinSprite("pill_parchment");
-            categorySO.FindProperty("unselectedSprite").objectReferenceValue = SkinSprite("pill_wood_light");
+            categorySO.FindProperty("selectedSprite").objectReferenceValue = HudSprite("tab_selected");
+            categorySO.FindProperty("unselectedSprite").objectReferenceValue = HudSprite("tab");
             categorySO.FindProperty("categoryBar").objectReferenceValue = categoryBarRect;
             categorySO.FindProperty("hotbar").objectReferenceValue = hotbarGO;
             categorySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
@@ -1206,6 +1222,7 @@ namespace CityBuilder.EditorTools
 
             PinHudToEdges(uiRoot);
             ApplyTheme(canvasGO.transform);
+            BuildHudSkinApplier(uiRoot, categoryPanel, hotbarRect.anchoredPosition.y, openBarY);
         }
 
         /// <summary>
@@ -1286,9 +1303,7 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static void BuildMigrationPanel(Transform canvasParent, Sprite panelSprite)
         {
-            var frame = CreateImage(canvasParent, "Migration", new Color(0.16f, 0.18f, 0.15f, 0.85f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
+            var frame = HudImage(canvasParent, "Migration", "plaque", new Vector2(360f, 60f));
             var frameRect = frame.GetComponent<RectTransform>();
             // Under the happiness number in the top-right corner (the user's layout, 2026-10-14).
             frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 1f);
@@ -1381,7 +1396,7 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
 
             // On the left edge under the menu button (the user moved it there, 2026-10-14): two figures, no word.
-            var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "pill_wood", "People", CreatePopulationIcon(), WorkforceButtonSize, 0.62f);
+            var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "round", HudInk.OnRound, "People", CreatePopulationIcon(), WorkforceButtonSize, 0.62f);
             Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
                 new Vector2(HudMargin + (RoundButton - WorkforceButtonSize) * 0.5f, WorkforceButtonTop), new Vector2(WorkforceButtonSize, WorkforceButtonSize));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
@@ -1414,8 +1429,9 @@ namespace CityBuilder.EditorTools
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2(0f, -64f);
             rect.sizeDelta = new Vector2(-2f * margin, chipHeight);
-            var chipSprite = SkinSprite("pill_parchment");
-            var barPlaque = CreateSkinImage(root.transform, "ResourceBar", "pill_wood", Vector2.zero, new Vector2(400f, chipHeight + 18f));
+            // In the looks: a capsule behind each resource (chip), one behind them all (bar), or both.
+            var chipSprite = HudSprite("chip") ?? HudSprite("bar");
+            var barPlaque = HudImage(root.transform, "ResourceBar", "bar", new Vector2(400f, chipHeight + 18f));
 
             // Reading order: raw materials, then the ore and the metal it becomes side by side,
             // then money, then the food chain in the order it is actually made. A chip is only on
@@ -1438,7 +1454,7 @@ namespace CityBuilder.EditorTools
             {
                 if (chipSprite == null) return null;
                 // Created before its icon and number, so it draws behind them.
-                return CreateSkinImage(root.transform, $"Chip_{name}", "pill_parchment", Vector2.zero, new Vector2(190f, chipHeight)).rectTransform;
+                return HudImage(root.transform, $"Chip_{name}", "chip", new Vector2(190f, chipHeight)).rectTransform;
             }
 
             Text Amount(string name)
@@ -1451,7 +1467,7 @@ namespace CityBuilder.EditorTools
                 amountText.resizeTextMaxSize = 24;
                 // Set here, not by ApplyTheme: the number is the chip's SIBLING, drawn over it,
                 // so the theme pass sees nothing under it and left it white -- on parchment.
-                if (chipSprite != null) amountText.color = UiTheme.Ink;
+                SkinInk(amountText, HudInk.OnChip);
                 return amountText;
             }
 
@@ -1564,8 +1580,8 @@ namespace CityBuilder.EditorTools
             if (round)
             {
                 // Over the map rather than inside the mask, so the ring is never clipped.
-                var ring = CreateSkinImage(canvasParent, "MinimapRing", "minimap_ring", frame.rectTransform.anchoredPosition, frame.rectTransform.sizeDelta + new Vector2(10f, 10f));
-                ring.type = Image.Type.Simple;
+                var ring = HudImage(canvasParent, "MinimapRing", "minimap_ring", frame.rectTransform.sizeDelta + new Vector2(10f, 10f), sliced: false);
+                ring.rectTransform.anchoredPosition = frame.rectTransform.anchoredPosition;
                 ring.raycastTarget = false;
             }
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,7 +6,8 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The settings card: the language, and how the fog of war looks (see GameSettings.FogStyle).
+    /// The settings card: the language, how the fog of war looks (see GameSettings.FogStyle), and
+    /// how the HUD looks (GameSettings.HudSkin -- four looks, see HudSkinApplier).
     /// The language buttons are built at play time from whatever columns the localization sheet
     /// has, so adding a third language is a column in the spreadsheet and nothing here.
     ///
@@ -19,6 +20,7 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private RectTransform languageRow;
         [SerializeField] private RectTransform fogRow;
+        [SerializeField] private RectTransform hudRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -33,6 +35,16 @@ namespace CityBuilder.UI
 
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
+        private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
+
+        /// <summary>The HUD's looks in the order their buttons stand -- А, В, Г, Д of the mockups -- each with its caption's sheet key.</summary>
+        private static readonly (HudSkin skin, string key)[] HudSkinChoices =
+        {
+            (HudSkin.Classic, "#settings_hud_classic"),
+            (HudSkin.Soft, "#settings_hud_soft"),
+            (HudSkin.Glass, "#settings_hud_glass"),
+            (HudSkin.Dock, "#settings_hud_dock"),
+        };
 
         /// <summary>The fog styles in the order their buttons stand, each with the sheet key of its caption.</summary>
         private static readonly (FogStyle style, string key)[] FogStyles =
@@ -45,6 +57,7 @@ namespace CityBuilder.UI
         {
             if (_buttons.Count == 0) BuildLanguageButtons();
             if (_fogButtons.Count == 0) BuildFogButtons();
+            if (_hudButtons.Count == 0) BuildHudButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -66,6 +79,30 @@ namespace CityBuilder.UI
         {
             GameSettings.FogStyle = style;
             HighlightSelected();
+        }
+
+        public void SelectHudSkin(HudSkin skin)
+        {
+            GameSettings.HudSkin = skin;
+            HighlightSelected();
+        }
+
+        private void BuildHudButtons()
+        {
+            if (hudRow == null) return;
+
+            const float width = 170f;
+            const float spacing = 12f;
+            for (var i = 0; i < HudSkinChoices.Length; i++)
+            {
+                var (skin, key) = HudSkinChoices[i];
+                var x = (i - (HudSkinChoices.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(hudRow, $"Hud_{skin}", x, width, out var label);
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                var captured = skin;
+                image.GetComponent<Button>().onClick.AddListener(() => SelectHudSkin(captured));
+                _hudButtons.Add((skin, image));
+            }
         }
 
         private void BuildFogButtons()
@@ -154,6 +191,10 @@ namespace CityBuilder.UI
             foreach (var (style, background) in _fogButtons)
             {
                 background.color = style == GameSettings.FogStyle ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (skin, background) in _hudButtons)
+            {
+                background.color = skin == GameSettings.HudSkin ? SelectedColor : UnselectedColor;
             }
         }
     }

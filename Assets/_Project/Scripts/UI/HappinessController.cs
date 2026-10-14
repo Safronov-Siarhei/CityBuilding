@@ -29,7 +29,14 @@ namespace CityBuilder.UI
         private void Start()
         {
             if (HappinessManager.Instance != null) HappinessManager.Instance.OnHappinessChanged += Refresh;
+            // The HUD's look decides the ink (HudSkins.Status).
+            GameSettings.OnChanged += Refresh;
             Refresh();
+        }
+
+        private void OnDestroy()
+        {
+            GameSettings.OnChanged -= Refresh;
         }
 
         private void Refresh()
@@ -39,7 +46,7 @@ namespace CityBuilder.UI
             if (happinessLabel != null)
             {
                 happinessLabel.text = $"{HappinessManager.Instance.HappinessPercent}%";
-                happinessLabel.color = ColorForScore(HappinessManager.Instance.HappinessPercent);
+                happinessLabel.color = HudSkins.Status(ColorForScore(HappinessManager.Instance.HappinessPercent));
             }
             if (breakdownLabel != null)
             {

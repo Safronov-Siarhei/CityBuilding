@@ -1,4 +1,4 @@
-using CityBuilder.Citizens;
+﻿using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,12 +25,15 @@ namespace CityBuilder.UI
         private void Start()
         {
             if (MigrationManager.Instance != null) MigrationManager.Instance.OnMigrationChanged += Refresh;
+            // The HUD's look decides the ink (HudSkins.Status).
+            GameSettings.OnChanged += Refresh;
             Refresh();
         }
 
         private void OnDestroy()
         {
             if (MigrationManager.Instance != null) MigrationManager.Instance.OnMigrationChanged -= Refresh;
+            GameSettings.OnChanged -= Refresh;
         }
 
         private void Refresh()
@@ -43,7 +46,7 @@ namespace CityBuilder.UI
             if (!visible || label == null) return;
 
             label.text = Describe(migration);
-            label.color = ColorFor(migration.State);
+            label.color = HudSkins.Status(ColorFor(migration.State));
         }
 
         private static string Describe(MigrationManager migration)

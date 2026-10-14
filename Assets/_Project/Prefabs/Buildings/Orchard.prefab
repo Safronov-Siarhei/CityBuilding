@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3799649059256319285
+--- !u!1 &268576131209249304
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8605256342330259443}
-  - component: {fileID: 1231460083032254057}
-  - component: {fileID: 6005243889177110070}
+  - component: {fileID: 6023909770718602036}
+  - component: {fileID: 7540044287265665498}
+  - component: {fileID: 1152279837735275744}
   m_Layer: 0
   m_Name: Orchard1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8605256342330259443
+--- !u!4 &6023909770718602036
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799649059256319285}
+  m_GameObject: {fileID: 268576131209249304}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6785319328276280776}
+  m_Father: {fileID: 6751301499712162260}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1231460083032254057
+--- !u!33 &7540044287265665498
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799649059256319285}
+  m_GameObject: {fileID: 268576131209249304}
   m_Mesh: {fileID: -7283545131471835254, guid: d7e2e30f0bf07fe4b8947446962619cc, type: 3}
---- !u!23 &6005243889177110070
+--- !u!23 &1152279837735275744
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799649059256319285}
+  m_GameObject: {fileID: 268576131209249304}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &5070590361483893623
+--- !u!1 &8241131274283586184
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6785319328276280776}
-  - component: {fileID: 3300491073937299976}
-  - component: {fileID: 1340022812536979851}
+  - component: {fileID: 6751301499712162260}
+  - component: {fileID: 3184382393807272118}
+  - component: {fileID: 3855990317949517006}
   m_Layer: 0
   m_Name: Orchard
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6785319328276280776
+--- !u!4 &6751301499712162260
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5070590361483893623}
+  m_GameObject: {fileID: 8241131274283586184}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8605256342330259443}
+  - {fileID: 6023909770718602036}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3300491073937299976
+--- !u!114 &3184382393807272118
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5070590361483893623}
+  m_GameObject: {fileID: 8241131274283586184}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &1340022812536979851
+--- !u!65 &3855990317949517006
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5070590361483893623}
+  m_GameObject: {fileID: 8241131274283586184}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

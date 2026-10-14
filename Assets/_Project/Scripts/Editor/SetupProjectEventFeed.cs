@@ -69,6 +69,8 @@ namespace CityBuilder.EditorTools
             // The disc is the one image that takes the tap; the view on the root above it handles it.
             var disc = EventIconPart(root.transform, "Disc", SkinSprite("event_disc"), Vector2.zero, EventIconSize);
             disc.raycastTarget = true;
+            SkinRole(disc, "event_disc", sliced: false);
+            disc.preserveAspect = true;
 
             var rim = EventIconPart(root.transform, "Rim", SkinSprite("event_rim"), Vector2.zero, EventIconSize);
             rim.type = Image.Type.Filled;
