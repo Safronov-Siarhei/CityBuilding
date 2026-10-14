@@ -5,15 +5,26 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Readout panel for HappinessManager -- the headline percentage plus its current factor
-    /// breakdown. The breakdown is shown (not just the composite) because the model is still
-    /// first-pass/tunable (see HappinessManager) -- seeing which factor is dragging the score down
-    /// is more useful while balancing than one opaque number.
+    /// Readout for HappinessManager: the percentage alone on a round button in the top-right
+    /// corner, coloured by how good it is, and -- one tap away -- the factor breakdown under it
+    /// (the user's layout, 2026-10-14: a number, no words, details on demand). The breakdown
+    /// matters while the model is still being tuned: it says which factor drags the score down.
     /// </summary>
     public class HappinessController : MonoBehaviour
     {
         [SerializeField] private Text happinessLabel;
         [SerializeField] private Text breakdownLabel;
+        [SerializeField] private GameObject breakdownPanel;
+
+        public bool BreakdownShown => breakdownPanel != null && breakdownPanel.activeSelf;
+
+        /// <summary>The round button: shows or hides the breakdown.</summary>
+        public void ToggleBreakdown()
+        {
+            if (breakdownPanel == null) return;
+            breakdownPanel.SetActive(!breakdownPanel.activeSelf);
+            Refresh();
+        }
 
         private void Start()
         {
@@ -27,7 +38,7 @@ namespace CityBuilder.UI
 
             if (happinessLabel != null)
             {
-                happinessLabel.text = Localization.Format("#happiness_title", HappinessManager.Instance.HappinessPercent);
+                happinessLabel.text = $"{HappinessManager.Instance.HappinessPercent}%";
                 happinessLabel.color = ColorForScore(HappinessManager.Instance.HappinessPercent);
             }
             if (breakdownLabel != null)

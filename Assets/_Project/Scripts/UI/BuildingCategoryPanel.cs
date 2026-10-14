@@ -38,6 +38,15 @@ namespace CityBuilder.UI
         [SerializeField] private float closedBarY = 20f;
         [SerializeField] private float openBarY = 232f;
 
+        [Header("Cards row")]
+        // The cards sit in a scroll view: a category with more buildings than fit between the
+        // minimap and the tax control scrolls sideways, with a scrollbar under the cards saying
+        // so (the user's layout, 2026-10-14). The row is as wide as its cards, up to maxCardsWidth.
+        [SerializeField] private ScrollRect cardsScroll;
+        [SerializeField] private RectTransform cardsContent;
+        [SerializeField] private float maxCardsWidth = 1040f;
+        [SerializeField] private float cardsPaddingX = 28f;
+
         /// <summary>How fast the row slides to its new height -- a rate, not a duration.</summary>
         private const float SlideSharpness = 18f;
 
@@ -162,7 +171,25 @@ namespace CityBuilder.UI
                            && Research.ResearchManager.BuildingUnlocked(building.buildingName);
                 buildingButton.gameObject.SetActive(show);
             }
+
+            FitCardsRow();
         }
+
+        /// <summary>Sizes the row to the cards now showing, capped; the scroll view takes over beyond the cap.</summary>
+        private void FitCardsRow()
+        {
+            if (cardsContent == null || hotbar == null) return;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(cardsContent);
+            var row = (RectTransform)hotbar.transform;
+            var width = Mathf.Min(cardsContent.rect.width + cardsPaddingX, maxCardsWidth);
+            row.sizeDelta = new Vector2(width, row.sizeDelta.y);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(row);
+            if (cardsScroll != null) cardsScroll.horizontalNormalizedPosition = 0f;
+        }
+
+        /// <summary>True when the open category has more cards than fit, i.e. the row scrolls.</summary>
+        public bool CardsScroll => cardsContent != null && hotbar != null
+                                   && cardsContent.rect.width + cardsPaddingX > ((RectTransform)hotbar.transform).rect.width + 0.5f;
 
         /// <summary>The open tab in parchment, the rest in wood; null paints them all as closed.</summary>
         private void PaintTabs(BuildingCategory? open)

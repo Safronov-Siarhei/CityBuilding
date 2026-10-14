@@ -29,9 +29,10 @@ namespace CityBuilder.EditorTools
             var feed = new GameObject("EventFeed", typeof(RectTransform));
             feed.transform.SetParent(canvasParent, false);
             var feedRect = (RectTransform)feed.transform;
-            feedRect.anchorMin = feedRect.anchorMax = new Vector2(0.5f, 0.5f);
+            // The left edge under the menu button, the zone the user's layout keeps for it.
+            feedRect.anchorMin = feedRect.anchorMax = new Vector2(0f, 1f);
             feedRect.pivot = new Vector2(0.5f, 1f);
-            feedRect.anchoredPosition = new Vector2(-892f, 262f);
+            feedRect.anchoredPosition = new Vector2(HudMargin + EventIconSize * 0.5f + 8f, -200f);
             feedRect.sizeDelta = new Vector2(EventIconSize, EventIconSize + EventIconSpacing * (EventFeedSlots - 1));
 
             // A canvas of its own: the rings drain every frame, and a change inside a nested canvas

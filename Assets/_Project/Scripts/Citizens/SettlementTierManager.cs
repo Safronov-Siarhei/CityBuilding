@@ -6,8 +6,9 @@ namespace CityBuilder.Citizens
     /// <summary>
     /// Names the settlement by population tier (K&amp;C-style: "Год 1: Поселение выросло. Теперь
     /// это Тихая гавань") and fires OnTierChanged the moment population growth crosses into a new
-    /// tier -- see SettlementTierToastController for the on-screen toast. Purely presentational,
-    /// no gameplay effect. Tiers only ever advance, never regress: a future population dip
+    /// tier. Purely presentational, no gameplay effect -- and since 2026-10-14 not shown to the
+    /// player at all (the user had every mention of tiers removed). Tiers only ever advance, never
+    /// regress: a future population dip
     /// (starvation, raids) shouldn't flicker the settlement's name back down.
     /// </summary>
     public class SettlementTierManager : MonoBehaviour

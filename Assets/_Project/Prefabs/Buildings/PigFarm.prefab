@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1826355442994987156
+--- !u!1 &2372802103156152134
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5211133166762149080}
-  - component: {fileID: 4592677998028053197}
-  - component: {fileID: 2698348219200556698}
+  - component: {fileID: 3648454878575186713}
+  - component: {fileID: 8626183960947335948}
+  - component: {fileID: 6538997279704101940}
   m_Layer: 0
   m_Name: PigFarm
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5211133166762149080
+--- !u!4 &3648454878575186713
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1826355442994987156}
+  m_GameObject: {fileID: 2372802103156152134}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1277343890523598899}
+  - {fileID: 8970090065438048588}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4592677998028053197
+--- !u!114 &8626183960947335948
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1826355442994987156}
+  m_GameObject: {fileID: 2372802103156152134}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &2698348219200556698
+--- !u!65 &6538997279704101940
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1826355442994987156}
+  m_GameObject: {fileID: 2372802103156152134}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.92, y: 1.5356001, z: 3.92}
   m_Center: {x: 0, y: 0.76780003, z: 0}
---- !u!1 &8206593591675838759
+--- !u!1 &4149483954138501590
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1277343890523598899}
-  - component: {fileID: 6829906263122161064}
-  - component: {fileID: 1669525884355305228}
+  - component: {fileID: 8970090065438048588}
+  - component: {fileID: 530402641965496888}
+  - component: {fileID: 1973188667931092706}
   m_Layer: 0
   m_Name: PigFarm1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1277343890523598899
+--- !u!4 &8970090065438048588
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8206593591675838759}
+  m_GameObject: {fileID: 4149483954138501590}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 5211133166762149080}
+  m_Father: {fileID: 3648454878575186713}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6829906263122161064
+--- !u!33 &530402641965496888
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8206593591675838759}
+  m_GameObject: {fileID: 4149483954138501590}
   m_Mesh: {fileID: 3563621458087032001, guid: c63006c2e1915cf4f944df4aae292eb1, type: 3}
---- !u!23 &1669525884355305228
+--- !u!23 &1973188667931092706
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8206593591675838759}
+  m_GameObject: {fileID: 4149483954138501590}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

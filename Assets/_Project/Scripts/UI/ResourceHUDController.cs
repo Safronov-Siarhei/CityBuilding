@@ -37,6 +37,16 @@ namespace CityBuilder.UI
         [SerializeField] private float chipWidth = 190f;
         [SerializeField] private float chipGap = 10f;
 
+        // The one plaque the chips sit on (the user's layout, 2026-10-14: one resource bar along
+        // the top). Sized to the chips, not to the row, and the chips centred on it -- a young
+        // settlement's three resources make a short bar in the middle, not three tokens at the
+        // left end of a long empty one.
+        [SerializeField] private RectTransform barBackground;
+        [SerializeField] private float barPadding = 10f;
+
+        // Where the packed chips start, measured from the row's left end; recomputed each layout.
+        private float _packOffset;
+
         /// <summary>Which resources have ever been in the settlement's hands. Index-aligned with resourceOrder.</summary>
         private bool[] _seen;
 
@@ -96,6 +106,13 @@ namespace CityBuilder.UI
             var slotWidth = packed
                 ? Mathf.Min(chipWidth + chipGap, barWidth / slots)
                 : barWidth / slots;
+            var span = slotWidth * slots;
+            _packOffset = packed ? (barWidth - span) * 0.5f : 0f;
+            if (barBackground != null)
+            {
+                barBackground.anchoredPosition = Vector2.zero;
+                barBackground.sizeDelta = new Vector2(Mathf.Min(barWidth, span - chipGap + barPadding * 2f), barBackground.sizeDelta.y);
+            }
             var slot = 0;
 
             for (var i = 0; i < count; i++)
@@ -129,7 +146,7 @@ namespace CityBuilder.UI
         /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>
         private void PlaceChip(RectTransform icon, Text amount, RectTransform background, int slot, float slotWidth)
         {
-            var center = -barWidth * 0.5f + slotWidth * (slot + 0.5f);
+            var center = -barWidth * 0.5f + _packOffset + slotWidth * (slot + 0.5f);
 
             if (background != null)
             {

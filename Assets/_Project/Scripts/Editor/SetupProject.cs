@@ -366,7 +366,7 @@ namespace CityBuilder.EditorTools
         /// from whatever columns the localization sheet has -- see SettingsPanelController -- so a
         /// third language never needs this method touched.
         /// </summary>
-        private static void BuildSettingsPanel(Transform canvasParent, Sprite panelSprite, Button openButton)
+        private static SettingsPanelController BuildSettingsPanel(Transform canvasParent, Sprite panelSprite, Button openButton)
         {
             var panelRoot = new GameObject("SettingsPanel", typeof(RectTransform));
             panelRoot.transform.SetParent(canvasParent, false);
@@ -402,9 +402,10 @@ namespace CityBuilder.EditorTools
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(backButton.onClick, controller.ClosePanel);
-            UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
+            if (openButton != null) UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);
+            return controller;
         }
 
         /// <summary>An empty row the settings panel fills with buttons at play time.</summary>
@@ -956,7 +957,7 @@ namespace CityBuilder.EditorTools
             hintRoot.type = Image.Type.Sliced;
             var hintRect = hintRoot.GetComponent<RectTransform>();
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 1f);
-            hintRect.anchoredPosition = new Vector2(0f, -70f);
+            hintRect.anchoredPosition = new Vector2(0f, -310f);
             hintRect.sizeDelta = new Vector2(780f, 84f);
             var footprint = mandatoryBuilding != null ? mandatoryBuilding.footprintSize : new Vector2Int(4, 4);
             CreateText(hintRoot.transform, "Text", Localization.Format("#hud_place_hint", footprint.x, footprint.y), 30, Vector2.zero, new Vector2(740f, 74f));
@@ -978,40 +979,87 @@ namespace CityBuilder.EditorTools
             const float spacing = 10f;
             const float buttonSize = 164f + 36f; // the card plus the panel's padding around it
 
-            // HorizontalLayoutGroup (not manual per-button positions) because only one category's
-            // buildings are active at a time (see BuildingCategoryPanel) -- the layout group
-            // automatically excludes inactive children and re-centers around whichever subset is
-            // currently shown, where fixed absolute offsets computed from the full 12-building
-            // list would leave a category's buttons stranded off-center.
-            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            // The cards row: a panel the width of its cards (BuildingCategoryPanel sizes it, up to
+            // maxCardsWidth), holding a scroll view -- a category with more buildings than fit between
+            // the minimap and the tax control scrolls sideways, with a scrollbar under the cards. The
+            // layout group inside excludes inactive cards and re-packs whichever category is shown.
+            const float rowHeight = buttonSize + 14f; // + the scrollbar's strip under the cards
+            var hotbarGO = new GameObject("Hotbar", typeof(RectTransform), typeof(Image), typeof(ScrollRect));
             hotbarGO.transform.SetParent(menuGO.transform, false);
             var hotbarRect = hotbarGO.GetComponent<RectTransform>();
             hotbarRect.anchorMin = new Vector2(0.5f, 0f);
             hotbarRect.anchorMax = new Vector2(0.5f, 0f);
             hotbarRect.pivot = new Vector2(0.5f, 0f);
             hotbarRect.anchoredPosition = new Vector2(0f, 20f);
-            hotbarRect.sizeDelta = new Vector2(0f, buttonSize);
+            hotbarRect.sizeDelta = new Vector2(600f, rowHeight);
             var hotbarImage = hotbarGO.GetComponent<Image>();
             hotbarImage.sprite = SkinSprite("panel_banded") ?? panelSprite;
             hotbarImage.type = Image.Type.Sliced;
 
-            var hotbarLayout = hotbarGO.GetComponent<HorizontalLayoutGroup>();
-            hotbarLayout.padding = new RectOffset(14, 14, 20, 16);
+            var viewportGO = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D));
+            viewportGO.transform.SetParent(hotbarGO.transform, false);
+            var viewportRect = (RectTransform)viewportGO.transform;
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = new Vector2(14f, 30f);
+            viewportRect.offsetMax = new Vector2(-14f, -20f);
+
+            var contentGO = new GameObject("Content", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            contentGO.transform.SetParent(viewportGO.transform, false);
+            var contentRect = (RectTransform)contentGO.transform;
+            contentRect.anchorMin = new Vector2(0f, 0f);
+            contentRect.anchorMax = new Vector2(0f, 1f);
+            contentRect.pivot = new Vector2(0f, 0.5f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0f, 0f);
+            var hotbarLayout = contentGO.GetComponent<HorizontalLayoutGroup>();
             hotbarLayout.spacing = spacing;
-            hotbarLayout.childAlignment = TextAnchor.MiddleCenter;
+            hotbarLayout.childAlignment = TextAnchor.MiddleLeft;
             hotbarLayout.childControlWidth = false;
             hotbarLayout.childControlHeight = false;
             hotbarLayout.childForceExpandWidth = false;
             hotbarLayout.childForceExpandHeight = false;
-
-            var hotbarFitter = hotbarGO.GetComponent<ContentSizeFitter>();
+            var hotbarFitter = contentGO.GetComponent<ContentSizeFitter>();
             hotbarFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             hotbarFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            var scrollbarGO = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            scrollbarGO.transform.SetParent(hotbarGO.transform, false);
+            var scrollbarRect = (RectTransform)scrollbarGO.transform;
+            scrollbarRect.anchorMin = new Vector2(0f, 0f);
+            scrollbarRect.anchorMax = new Vector2(1f, 0f);
+            scrollbarRect.pivot = new Vector2(0.5f, 0f);
+            scrollbarRect.offsetMin = new Vector2(30f, 12f);
+            scrollbarRect.offsetMax = new Vector2(-30f, 24f);
+            var scrollbarTrack = scrollbarGO.GetComponent<Image>();
+            scrollbarTrack.sprite = SkinSprite("bar_track");
+            scrollbarTrack.type = Image.Type.Sliced;
+            var handleArea = new GameObject("SlidingArea", typeof(RectTransform));
+            handleArea.transform.SetParent(scrollbarGO.transform, false);
+            StretchFull((RectTransform)handleArea.transform);
+            var handle = CreateImage(handleArea.transform, "Handle", UiTheme.Rgb(0x7a4a22));
+            handle.sprite = SkinSprite("bar_fill");
+            handle.type = Image.Type.Sliced;
+            StretchFull(handle.rectTransform);
+            var scrollbar = scrollbarGO.GetComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.LeftToRight;
+            scrollbar.handleRect = handle.rectTransform;
+            scrollbar.targetGraphic = handle;
+
+            var scroll = hotbarGO.GetComponent<ScrollRect>();
+            scroll.content = contentRect;
+            scroll.viewport = viewportRect;
+            scroll.horizontal = true;
+            scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.inertia = true;
+            scroll.horizontalScrollbar = scrollbar;
+            scroll.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 
             for (var i = 0; i < hotbarBuildings.Count; i++)
             {
                 var data = hotbarBuildings[i];
-                var button = CreateHotbarCard(hotbarGO.transform, data, cardSize);
+                var button = CreateHotbarCard(contentGO.transform, data, cardSize);
 
                 var handler = button.gameObject.AddComponent<HotbarButtonHandler>();
                 var handlerSO = new SerializedObject(handler);
@@ -1041,7 +1089,7 @@ namespace CityBuilder.EditorTools
             categoryBarRect.anchorMin = new Vector2(0.5f, 0f);
             categoryBarRect.anchorMax = new Vector2(0.5f, 0f);
             categoryBarRect.pivot = new Vector2(0.5f, 0f);
-            var openBarY = hotbarRect.anchoredPosition.y + buttonSize + 12f;
+            var openBarY = hotbarRect.anchoredPosition.y + rowHeight + 12f;
             categoryBarRect.anchoredPosition = new Vector2(0f, hotbarRect.anchoredPosition.y);
             categoryBarRect.sizeDelta = new Vector2(categoryTotalWidth, categoryButtonSize);
             hotbarGO.SetActive(false);
@@ -1071,6 +1119,8 @@ namespace CityBuilder.EditorTools
             categorySO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             categorySO.FindProperty("closedBarY").floatValue = hotbarRect.anchoredPosition.y;
             categorySO.FindProperty("openBarY").floatValue = openBarY;
+            categorySO.FindProperty("cardsScroll").objectReferenceValue = scroll;
+            categorySO.FindProperty("cardsContent").objectReferenceValue = contentRect;
             categorySO.ApplyModifiedPropertiesWithoutUndo();
 
             var visibility = canvasGO.AddComponent<BuildingPlacerUIVisibility>();
@@ -1080,36 +1130,13 @@ namespace CityBuilder.EditorTools
             visibilitySO.FindProperty("hideWhilePlacingMandatory").objectReferenceValue = menuGO;
             visibilitySO.ApplyModifiedPropertiesWithoutUndo();
 
-            // The placement controls, stacked up the right edge: confirm at thumb height, then
-            // rotate, then cancel. Confirm is the biggest of the three because it is pressed on
-            // every single building, and because a mis-tap there costs a wrong placement -- see
-            // PlacementHudController for which of them is visible when.
-            var confirmIcon = CreateConfirmIcon();
-            var confirmButton = CreateIconButton(uiRoot, panelSprite, confirmIcon, "ConfirmPlacementButton", Vector2.zero, new Vector2(130f, 130f));
-            // A neutral pill, because PlacementHudController tints it: green when it can be placed.
-            if (SkinSprite("pill_white") != null) confirmButton.GetComponent<Image>().sprite = SkinSprite("pill_white");
-            var confirmRect = confirmButton.GetComponent<RectTransform>();
-            confirmRect.anchorMin = confirmRect.anchorMax = confirmRect.pivot = new Vector2(1f, 0f);
-            confirmRect.anchoredPosition = new Vector2(-40f, 40f);
-            UnityEventTools.AddPersistentListener(confirmButton.onClick, placer.ConfirmPlacement);
-
-            // Rotation stays available even while placing the mandatory Town Hall -- it is not a
-            // cancel, so there is no dead end to protect against. PC also has the R key.
-            var rotateIcon = CreateRotateIcon();
-            var rotateButton = CreateIconButton(uiRoot, panelSprite, rotateIcon, "RotateButton", Vector2.zero, new Vector2(110f, 110f));
-            var rotateRect = rotateButton.GetComponent<RectTransform>();
-            rotateRect.anchorMin = rotateRect.anchorMax = rotateRect.pivot = new Vector2(1f, 0f);
-            rotateRect.anchoredPosition = new Vector2(-50f, 190f);
+            // The placement controls: cancel, rotate, confirm in a row at the bottom centre, where the
+            // build menu stands -- it steps aside while a building is in hand (see
+            // BuildingPlacerUIVisibility and PlacementHudController for which are visible when).
+            var (cancelButton, rotateButton, confirmButton, placementRow) = BuildPlacementControls(uiRoot);
             UnityEventTools.AddPersistentListener(rotateButton.onClick, placer.RotateSelection);
-
             // Cancel. On a phone there was NO way to put a building back down: ClearSelection was
-            // reachable only through Escape and the right mouse button, so a selected building the
-            // player could not afford stayed stuck for the rest of the game.
-            var cancelIcon = CreateCancelIcon();
-            var cancelButton = CreateIconButton(uiRoot, panelSprite, cancelIcon, "CancelPlacementButton", Vector2.zero, new Vector2(110f, 110f));
-            var cancelRect = cancelButton.GetComponent<RectTransform>();
-            cancelRect.anchorMin = cancelRect.anchorMax = cancelRect.pivot = new Vector2(1f, 0f);
-            cancelRect.anchoredPosition = new Vector2(-50f, 310f);
+            // reachable only through Escape and the right mouse button.
             UnityEventTools.AddPersistentListener(cancelButton.onClick, placer.ClearSelection);
 
             // The crosshair marking where the ghost is aimed. Positioned in SCREEN pixels by the
@@ -1122,7 +1149,7 @@ namespace CityBuilder.EditorTools
                 Vector2.zero, new Vector2(900f, 44f), new Color(1f, 0.72f, 0.62f), addShadow: true);
             var statusRect = placementStatus.GetComponent<RectTransform>();
             statusRect.anchorMin = statusRect.anchorMax = statusRect.pivot = new Vector2(0.5f, 0f);
-            statusRect.anchoredPosition = new Vector2(0f, 345f);
+            statusRect.anchoredPosition = new Vector2(0f, 190f);
             placementStatus.gameObject.SetActive(false);
 
             // Lives on the Canvas itself (an always-active object), not on the buttons it
@@ -1138,9 +1165,12 @@ namespace CityBuilder.EditorTools
             placementHudSO.FindProperty("aimMarker").objectReferenceValue = aimMarker;
             placementHudSO.FindProperty("statusLabel").objectReferenceValue = placementStatus;
             placementHudSO.ApplyModifiedPropertiesWithoutUndo();
+            // Confirm places the building -- or, while drawing a road, finishes drawing.
+            UnityEventTools.AddPersistentListener(confirmButton.onClick, placementHud.ConfirmPressed);
 
-            BuildSaveUI(uiRoot, panelSprite, saveController);
-            BuildExitUI(uiRoot, panelSprite);
+            var hud = safeAreaGO.AddComponent<HudHider>();
+            var (saveDialog, saveDialogRoot) = BuildSaveUI(uiRoot, panelSprite, saveController);
+            BuildGameMenu(uiRoot, panelSprite, hud, saveController, saveDialog, saveDialogRoot);
             BuildGameOverUI(uiRoot, panelSprite);
             BuildResourceHUD(uiRoot);
             BuildMinimap(uiRoot, panelSprite, minimapTexture, cameraRig);
@@ -1151,13 +1181,12 @@ namespace CityBuilder.EditorTools
             var researchPanel = BuildResearchPanel(uiRoot, panelSprite, iconLibrary);
             var buildingSelector = BuildBuildingSelector(uiRoot, targetCamera, infoPanel, researchPanel);
             var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
-            BuildSettlementTierToast(uiRoot, settlementTierManager);
             BuildEventFeed(uiRoot, cameraRig);
-            BuildTaxRateControl(uiRoot, panelSprite);
-            BuildSettlementStatus(uiRoot, gameCalendar, settlementTierManager);
-            BuildHappinessPanel(uiRoot, panelSprite);
+            BuildTaxControl(uiRoot);
+            BuildDayLabel(uiRoot, gameCalendar);
+            BuildHappiness(uiRoot);
             BuildMigrationPanel(uiRoot, panelSprite);
-            BuildWorkforcePanel(uiRoot, panelSprite);
+            BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 
@@ -1192,8 +1221,9 @@ namespace CityBuilder.EditorTools
             frame.sprite = panelSprite;
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
-            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(760f, -60f);
+            // Down the right edge under the migration line.
+            frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 1f);
+            frameRect.anchoredPosition = new Vector2(-HudMargin, -HudMargin * 0.7f - RoundButton - 90f);
             frameRect.sizeDelta = new Vector2(400f, 220f);
 
             var summaryLabel = CreateText(frame.transform, "ArmySummary", string.Empty, 19, new Vector2(0f, 88f), new Vector2(370f, 36f), new Color(1f, 1f, 1f, 0.75f));
@@ -1237,40 +1267,6 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Right side, mirroring the EventLog panel's position/size on the left (x -760, y 100) --
-        /// sits below the Minimap's bottom edge (y 192, see BuildMinimap) with a clear gap, same
-        /// standing-panel treatment as EventLog/TaxRate rather than a toast, since happiness is
-        /// meant to be glanced at over time. x is 760, not the 810 the Minimap/Menu/Save corners
-        /// use -- at this panel's 400 width that would put its right edge at 1010, past the
-        /// canvas's actual visible edge (960 at exact 16:9) and clip it, as seen in a real
-        /// gameplay screenshot (2026-08-12) where the equivalent TaxRate panel's minus button was
-        /// invisible off-screen for the same reason.
-        /// </summary>
-        private static void BuildHappinessPanel(Transform canvasParent, Sprite panelSprite)
-        {
-            var frame = CreateImage(canvasParent, "Happiness", new Color(0.16f, 0.18f, 0.15f, 0.85f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
-            var frameRect = frame.GetComponent<RectTransform>();
-            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(740f, 296f);
-            // 130 rather than 110: the breakdown became two lines when food and losses joined the
-            // three original factors (see HappinessController).
-            frameRect.sizeDelta = new Vector2(400f, 130f);
-
-            var happinessLabel = CreateText(frame.transform, "HappinessLabel", string.Empty, 26, new Vector2(0f, 32f), new Vector2(370f, 44f));
-            var breakdownLabel = CreateText(frame.transform, "BreakdownLabel", string.Empty, 17, new Vector2(0f, -22f), new Vector2(370f, 56f), new Color(1f, 1f, 1f, 0.7f));
-
-            var go = new GameObject("HappinessController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<HappinessController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("happinessLabel").objectReferenceValue = happinessLabel;
-            so.FindProperty("breakdownLabel").objectReferenceValue = breakdownLabel;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        /// <summary>
         /// The migration line, in the bottom-right corner where the player's thumb already is.
         ///
         /// Its own panel rather than another line inside the Happiness one, because it is a live
@@ -1294,11 +1290,13 @@ namespace CityBuilder.EditorTools
             frame.sprite = panelSprite;
             frame.type = Image.Type.Sliced;
             var frameRect = frame.GetComponent<RectTransform>();
-            frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 0f);
-            frameRect.anchoredPosition = new Vector2(-40f, 200f);
-            frameRect.sizeDelta = new Vector2(400f, 72f);
+            // Under the happiness number in the top-right corner (the user's layout, 2026-10-14).
+            frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 1f);
+            frameRect.anchoredPosition = new Vector2(-HudMargin, -HudMargin * 0.7f - RoundButton - 14f);
+            frameRect.sizeDelta = new Vector2(360f, 60f);
 
-            var label = CreateText(frame.transform, "MigrationLabel", string.Empty, 22, Vector2.zero, new Vector2(370f, 60f));
+            var label = CreateText(frame.transform, "MigrationLabel", string.Empty, 24, Vector2.zero, new Vector2(336f, 52f), UiTheme.Ink);
+            label.font = UiTheme.Bold;
 
             var go = new GameObject("MigrationController");
             go.transform.SetParent(canvasParent, false);
@@ -1344,9 +1342,10 @@ namespace CityBuilder.EditorTools
         /// worth of workshops this list is far too tall to leave on screen, and it is something the
         /// player consults when rearranging rather than watches.
         /// </summary>
-        private static void BuildWorkforcePanel(Transform canvasParent, Sprite panelSprite)
+        private static void BuildWorkforcePanel(Transform canvasParent, Sprite panelSprite, HudHider hud)
         {
             var panelRoot = new GameObject("WorkforcePanel", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
@@ -1376,102 +1375,17 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
             controllerSO.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
             controllerSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
+            controllerSO.FindProperty("hud").objectReferenceValue = hud;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
 
-            // In the top row's left gap: Меню occupies -930..-690 and the settlement status text
-            // -250..250, so a 240-wide button centred at -520 sits clear of both.
-            var openButton = CreateButton(canvasParent, panelSprite, "WorkforceButton", "#hud_workforce", new Vector2(-500f, 488f), new Vector2(180f, 72f));
+            // Under the day, in the middle of the top (the user's layout): two figures, no word.
+            var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "pill_wood", "People", CreatePopulationIcon(), 96f, 0.62f);
+            Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -164f), new Vector2(96f, 96f));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);
-        }
-
-        /// <summary>Top-center, same y band as the Меню/Сохранить corner buttons (465) but in the open gap between them (each 240 wide at x +-810, leaving -690..690 clear).</summary>
-        private static void BuildSettlementStatus(Transform canvasParent, GameCalendar gameCalendar, SettlementTierManager settlementTierManager)
-        {
-            // On a wooden pill in the middle of the top row (white on wood, see ApplyTheme).
-            Transform statusParent = canvasParent;
-            var statusPosition = new Vector2(0f, 465f);
-            if (SkinSprite("pill_wood") != null)
-            {
-                statusParent = CreateSkinImage(canvasParent, "SettlementStatusPill", "pill_wood", new Vector2(0f, 488f), new Vector2(520f, 72f)).transform;
-                statusPosition = new Vector2(0f, 3f);
-            }
-            var statusText = CreateText(statusParent, "SettlementStatus", string.Empty, 26, statusPosition, new Vector2(500f, 60f), new Color(1f, 1f, 1f, 0.85f), addShadow: true);
-            statusText.font = UiTheme.Bold;
-
-            var go = new GameObject("SettlementStatusController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<SettlementStatusController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
-            so.FindProperty("tierManager").objectReferenceValue = settlementTierManager;
-            so.FindProperty("statusText").objectReferenceValue = statusText;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        /// <summary>
-        /// Wedged into the x -760 column between the ResourceHUD's bottom edge (y 345) and the
-        /// EventLog panel's top edge (y 260) -- centered at y 302 with a 60-tall frame keeps a
-        /// ~12px clear margin on both sides instead of the two overlapping (an earlier pass at y
-        /// 340/70-tall clipped into the ResourceHUD's leftmost icon column). x moved in from -810
-        /// to -760 (2026-08-12): at 400 wide, -810 put this panel's left edge at -1010, past the
-        /// canvas's actual visible edge (-960 at exact 16:9) -- confirmed in a real gameplay
-        /// screenshot where the minus button (the panel's leftmost element) was clipped off-screen
-        /// entirely, not just visually tight.
-        /// </summary>
-        private static void BuildTaxRateControl(Transform canvasParent, Sprite panelSprite)
-        {
-            var frame = CreateImage(canvasParent, "TaxRate", new Color(0.16f, 0.18f, 0.15f, 0.85f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
-            var frameRect = frame.GetComponent<RectTransform>();
-            frameRect.anchorMin = frameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            frameRect.anchoredPosition = new Vector2(-760f, 318f);
-            frameRect.sizeDelta = new Vector2(400f, 64f);
-
-            // An en dash, not "-": a hyphen is a short stroke sitting low and reads as nothing on a
-            // round button. Not U+2212 either -- Rubik is not certain to carry it, an en dash it does.
-            var minusButton = CreateButton(frame.transform, panelSprite, "MinusButton", "–", new Vector2(-150f, 0f), new Vector2(52f, 52f));
-            var rateLabel = CreateText(frame.transform, "RateLabel", string.Empty, 24, Vector2.zero, new Vector2(220f, 52f));
-            var plusButton = CreateButton(frame.transform, panelSprite, "PlusButton", "+", new Vector2(150f, 0f), new Vector2(52f, 52f));
-            foreach (var sign in new[] { minusButton, plusButton })
-            {
-                var signLabel = sign.GetComponentInChildren<Text>();
-                signLabel.fontStyle = FontStyle.Bold;
-                signLabel.fontSize = 34;
-            }
-
-            var go = new GameObject("TaxRateController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<TaxRateController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("rateLabel").objectReferenceValue = rateLabel;
-            so.ApplyModifiedPropertiesWithoutUndo();
-
-            UnityEventTools.AddPersistentListener(minusButton.onClick, controller.Decrease);
-            UnityEventTools.AddPersistentListener(plusButton.onClick, controller.Increase);
-        }
-
-        /// <summary>
-        /// Sits between the ResourceHUD (y 370) and the dead-center CitizenMoveFeedback text (y
-        /// 0) so a tier-up toast never overlaps either -- hidden until SettlementTierManager
-        /// actually reports one (see SettlementTierToastController).
-        /// </summary>
-        private static void BuildSettlementTierToast(Transform canvasParent, SettlementTierManager settlementTierManager)
-        {
-            var toastText = CreateText(canvasParent, "SettlementTierToast", string.Empty, 32, new Vector2(0f, 300f), new Vector2(1100f, 70f), addShadow: true);
-            toastText.gameObject.SetActive(false);
-
-            var go = new GameObject("SettlementTierToastController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<SettlementTierToastController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("tierManager").objectReferenceValue = settlementTierManager;
-            so.FindProperty("toastText").objectReferenceValue = toastText;
-            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void BuildResourceHUD(Transform canvasParent)
@@ -1488,15 +1402,19 @@ namespace CityBuilder.EditorTools
             // width of the screen with a 20-unit margin each side: each resource a parchment pill,
             // packed from the left by ResourceHUDController, which reads the row's real width --
             // 1880 on 16:9, ~2360 on a 20:9 phone.
-            const float barWidth = 1880f;
+            // One bar along the top between the menu button and the happiness number (the user's
+            // layout, 2026-10-14): the row spans the gap between the two corners, and the chips sit
+            // centred on a wooden plaque sized to them (ResourceHUDController).
+            const float barWidth = 1580f;
             const float chipHeight = 60f;
-            const float margin = 20f;
+            const float margin = 170f;
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, 405f - ReferenceResolution.y * 0.5f);
+            rect.anchoredPosition = new Vector2(0f, -64f);
             rect.sizeDelta = new Vector2(-2f * margin, chipHeight);
             var chipSprite = SkinSprite("pill_parchment");
+            var barPlaque = CreateSkinImage(root.transform, "ResourceBar", "pill_wood", Vector2.zero, new Vector2(400f, chipHeight + 18f));
 
             // Reading order: raw materials, then the ore and the metal it becomes side by side,
             // then money, then the food chain in the order it is actually made. A chip is only on
@@ -1576,6 +1494,7 @@ namespace CityBuilder.EditorTools
             hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
             hudSO.FindProperty("barWidth").floatValue = barWidth;
+            hudSO.FindProperty("barBackground").objectReferenceValue = barPlaque.rectTransform;
             if (chipSprite != null)
             {
                 var backgroundsProp = hudSO.FindProperty("chipBackgrounds");
@@ -2062,7 +1981,7 @@ namespace CityBuilder.EditorTools
             badgeRect.anchorMin = badgeRect.anchorMax = badgeRect.pivot = new Vector2(0.5f, 1f);
             // Under the resource row (which ends 165 down), not over it: at -30 it covered the
             // status pill and the right end of the chips whenever a citizen was selected.
-            badgeRect.anchoredPosition = new Vector2(0f, -180f);
+            badgeRect.anchoredPosition = new Vector2(0f, -274f);
             badgeRect.sizeDelta = new Vector2(460f, 96f);
 
             var label = CreateText(badge.transform, "Label", string.Empty, 30, new Vector2(-40f, 0f), new Vector2(300f, 60f));
@@ -2084,51 +2003,11 @@ namespace CityBuilder.EditorTools
             badge.gameObject.SetActive(false);
         }
 
-        private static void BuildExitUI(Transform canvasParent, Sprite panelSprite)
-        {
-            // The top row, left to right: Меню in gold, then Сохранить and Жители (BuildSaveUI,
-            // BuildWorkforcePanel); the settlement status sits in the middle of the same row.
-            var menuButton = SkinSprite("pill_gold") != null
-                ? CreateSkinButton(canvasParent, "pill_gold", "MenuButton", "#hud_menu", new Vector2(-865f, 488f), new Vector2(150f, 72f))
-                : CreateButton(canvasParent, panelSprite, "MenuButton", "#hud_menu", new Vector2(-810f, 465f), new Vector2(240f, 90f));
-
-            var dialogRoot = new GameObject("ExitDialog", typeof(RectTransform));
-            dialogRoot.transform.SetParent(canvasParent, false);
-            StretchFull(dialogRoot.GetComponent<RectTransform>());
-
-            var backdrop = CreateImage(dialogRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
-
-            var card = CreateImage(dialogRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
-            card.sprite = panelSprite;
-            card.type = Image.Type.Sliced;
-            var cardRect = card.GetComponent<RectTransform>();
-            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(760f, 380f);
-            cardRect.anchoredPosition = Vector2.zero;
-
-            Localize(CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 120f), new Vector2(680f, 70f)), "#exit_title");
-            Localize(CreateText(card.transform, "Warning", string.Empty, 24, new Vector2(0f, 40f), new Vector2(680f, 60f), new Color(1f, 0.7f, 0.6f, 1f)), "#exit_warning");
-
-            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmExitButton", "#exit_confirm", new Vector2(-160f, -90f), new Vector2(300f, 90f));
-            var cancelButton = CreateButton(card.transform, panelSprite, "CancelExitButton", "#ui_cancel", new Vector2(160f, -90f), new Vector2(300f, 90f));
-
-            var dialogController = dialogRoot.AddComponent<ExitToMenuController>();
-            var dialogSO = new SerializedObject(dialogController);
-            dialogSO.FindProperty("dialogRoot").objectReferenceValue = dialogRoot;
-            dialogSO.ApplyModifiedPropertiesWithoutUndo();
-
-            UnityEventTools.AddPersistentListener(menuButton.onClick, dialogController.OpenDialog);
-            UnityEventTools.AddPersistentListener(confirmButton.onClick, dialogController.ConfirmExit);
-            UnityEventTools.AddPersistentListener(cancelButton.onClick, dialogController.CloseDialog);
-
-            dialogRoot.SetActive(false);
-        }
-
         /// <summary>Full-screen defeat panel, same backdrop+card pattern as the dialog above -- shown by GameOverController once GameOverManager reports the Town Hall destroyed. Only action is back to the menu; there's nothing left to confirm/cancel.</summary>
         private static void BuildGameOverUI(Transform canvasParent, Sprite panelSprite)
         {
             var panelRoot = new GameObject("GameOverPanel", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
@@ -2169,13 +2048,11 @@ namespace CityBuilder.EditorTools
             panelRoot.SetActive(false);
         }
 
-        private static void BuildSaveUI(Transform canvasParent, Sprite panelSprite, GameSaveController saveController)
+        /// <summary>The save dialog, opened from the in-game menu (BuildGameMenu); the autosave runs on its own.</summary>
+        private static (SaveDialogController dialog, GameObject root) BuildSaveUI(Transform canvasParent, Sprite panelSprite, GameSaveController saveController)
         {
-            // Manual save only, per design: the player decides if/when to save, so this button
-            // is the only way a save ever happens — there is no autosave to fall back on.
-            var saveButton = CreateButton(canvasParent, panelSprite, "SaveButton", "#hud_save", new Vector2(-690f, 488f), new Vector2(180f, 72f));
-
             var dialogRoot = new GameObject("SaveDialog", typeof(RectTransform));
+            dialogRoot.AddComponent<HudOverlay>();
             dialogRoot.transform.SetParent(canvasParent, false);
             StretchFull(dialogRoot.GetComponent<RectTransform>());
 
@@ -2204,11 +2081,11 @@ namespace CityBuilder.EditorTools
             dialogSO.FindProperty("nameInput").objectReferenceValue = nameInput;
             dialogSO.ApplyModifiedPropertiesWithoutUndo();
 
-            UnityEventTools.AddPersistentListener(saveButton.onClick, dialogController.OpenDialog);
             UnityEventTools.AddPersistentListener(confirmButton.onClick, dialogController.ConfirmSave);
             UnityEventTools.AddPersistentListener(cancelButton.onClick, dialogController.CloseDialog);
 
             dialogRoot.SetActive(false);
+            return (dialogController, dialogRoot);
         }
 
         private static void BuildLoadPanel(Transform canvasParent, Sprite panelSprite, MainMenuController menuController)

@@ -40,9 +40,10 @@ namespace CityBuilder.UI
             var touchAiming = selecting && buildingPlacer.UsesTouchAiming;
             var drawing = selecting && buildingPlacer.IsDrawMode;
 
-            // Confirm and the crosshair belong to the aim-and-place flow only. A drawn road is
-            // committed by lifting the finger, so a confirm button there would have nothing to do.
-            SetActive(confirmButton, touchAiming && !drawing);
+            // Confirm belongs to every placement on a touch screen. In the aim-and-place flow it
+            // places the building; a drawn road or fence is laid by lifting the finger, so there
+            // it says "done" and hands the screen back to the build menu (see ConfirmPressed).
+            SetActive(confirmButton, touchAiming || (selecting && drawing));
             SetActive(aimMarker != null ? aimMarker.gameObject : null, touchAiming && !drawing);
 
             // Rotation is meaningless for a road or a fence -- their shape comes from their
@@ -58,9 +59,17 @@ namespace CityBuilder.UI
                 aimMarker.position = buildingPlacer.AimScreenPosition;
             }
 
-            if (confirmImage != null) confirmImage.color = buildingPlacer.CanConfirm ? ConfirmReady : ConfirmBlocked;
+            if (confirmImage != null) confirmImage.color = drawing || buildingPlacer.CanConfirm ? ConfirmReady : ConfirmBlocked;
 
             UpdateStatus(selecting, drawing);
+        }
+
+        /// <summary>The confirm button: places the building in hand -- or, while drawing a road or a fence, finishes drawing.</summary>
+        public void ConfirmPressed()
+        {
+            if (buildingPlacer == null) return;
+            if (buildingPlacer.IsDrawMode) buildingPlacer.ClearSelection();
+            else buildingPlacer.ConfirmPlacement();
         }
 
         private void UpdateStatus(bool selecting, bool drawing)

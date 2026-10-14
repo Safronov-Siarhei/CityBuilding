@@ -41,7 +41,11 @@ namespace CityBuilder.Tests.PlayMode
             var origin = PlaytestWorld.FindFreeAreaNearTheMiddle(hall.footprintSize + new Vector2Int(4, 4));
             var placed = PlaytestWorld.Place(hall, origin + new Vector2Int(2, 2));
             _townHall = placed.transform.position;
-            Object.FindAnyObjectByType<BuildingPlacer>().MarkMandatoryBuildingAlreadyPlaced();
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.MarkMandatoryBuildingAlreadyPlaced();
+            // The game drops the Town Hall from the hand once it stands; placed by hand here, it
+            // has to be put down by hand too, or the build menu stays hidden as if mid-placement.
+            placer.ClearSelection();
 
             var resources = ResourceManager.Instance;
             resources.SetAmount(ResourceType.Wood, 148);
@@ -113,7 +117,7 @@ namespace CityBuilder.Tests.PlayMode
         // The HUD's standing pieces, which must neither leave the screen nor sit on each other.
         private static readonly string[] HudPieces =
         {
-            "MenuButton", "SaveButton", "WorkforceButton", "SettlementStatusPill",
+            "MenuButton", "WorkforceButton", "SettlementStatus",
             "TaxRate", "EventFeed", "Happiness", "Army", "Migration", "Minimap",
             "BuildingMenu/Hotbar", "BuildingMenu/CategoryBar",
         };
@@ -226,7 +230,7 @@ namespace CityBuilder.Tests.PlayMode
 
         // ---------------------------------------------------------------- the build menu
 
-        private static BuildingCategoryPanel Menu() => Object.FindAnyObjectByType<BuildingCategoryPanel>();
+        private static BuildingCategoryPanel Menu() => Object.FindAnyObjectByType<BuildingCategoryPanel>(FindObjectsInactive.Include);
 
         private static CategoryButtonHandler[] Tabs() =>
             Menu().GetComponentsInChildren<CategoryButtonHandler>(true);
@@ -346,14 +350,208 @@ namespace CityBuilder.Tests.PlayMode
             menu.Close(true);
         }
 
-        [UnityTest]
-        public IEnumerator Photograph_TheExitDialog()
+        // ---------------------------------------------------------------- the layout sketch (2026-10-14)
+
+        private static GameMenuController GameMenu() => Object.FindAnyObjectByType<GameMenuController>();
+        private static HudHider Hud() => Object.FindAnyObjectByType<HudHider>();
+        private static Transform HudRoot() => Object.FindAnyObjectByType<SafeAreaFitter>().transform;
+
+        private static float Alpha(string piece)
         {
-            var dialog = Object.FindAnyObjectByType<ExitToMenuController>(FindObjectsInactive.Include);
-            if (dialog != null) dialog.OpenDialog();
+            var group = HudRoot().Find(piece).GetComponent<CanvasGroup>();
+            return group != null ? group.alpha : 1f;
+        }
+
+        [UnityTest]
+        public IEnumerator TheMenu_PausesTheGame_AndHidesTheHudBehindIt()
+        {
+            var menu = GameMenu();
+            Assert.IsNotNull(menu, "No in-game menu.");
+            Time.timeScale = 1f;
+
+            menu.Open();
             yield return null;
-            yield return PlaytestCapture.ShootWithUi("hud-exit-dialog", _townHall, 34f, 52f, 20f);
-            if (dialog != null) dialog.CloseDialog();
+            try
+            {
+                Assert.AreEqual(0f, Time.timeScale, "The game keeps running behind the open menu.");
+                Assert.IsTrue(HudRoot().Find("GameMenu").gameObject.activeSelf, "The menu did not open.");
+                foreach (var entry in new[] { "SaveEntry", "SettingsEntry", "MainMenuEntry" })
+                {
+                    Assert.IsNotNull(HudRoot().Find("GameMenu/" + entry), $"The menu has no {entry}.");
+                }
+                foreach (var piece in new[] { "ResourceHUD", "TaxRate", "Happiness", "WorkforceButton", "BuildingMenu", "Minimap" })
+                {
+                    Assert.AreEqual(0f, Alpha(piece), $"'{piece}' still shows behind the open menu.");
+                }
+            }
+            finally
+            {
+                menu.Close();
+            }
+            yield return null;
+
+            Assert.AreEqual(1f, Time.timeScale, "Closing the menu left the game paused.");
+            Assert.AreEqual(1f, Alpha("ResourceHUD"), "Closing the menu did not bring the HUD back.");
+            Assert.IsFalse(Core.ModalGate.IsBlocked, "Closing the menu left the world blocked.");
+        }
+
+        [UnityTest]
+        public IEnumerator SavingFromTheMenu_ComesBackToTheMenu_StillPaused()
+        {
+            var menu = GameMenu();
+            menu.Open();
+            menu.OpenSave();
+            yield return null;
+            try
+            {
+                var dialog = HudRoot().Find("SaveDialog").gameObject;
+                Assert.IsTrue(dialog.activeSelf, "The save entry did not open the save dialog.");
+                Assert.IsFalse(HudRoot().Find("GameMenu").gameObject.activeSelf, "The menu stays drawn over the save dialog.");
+
+                Object.FindAnyObjectByType<CityBuilder.Saving.SaveDialogController>(FindObjectsInactive.Include).CloseDialog();
+                yield return null;
+                yield return null;
+                Assert.IsTrue(HudRoot().Find("GameMenu").gameObject.activeSelf, "Closing the save dialog dropped the player out of the menu.");
+                Assert.AreEqual(0f, Time.timeScale, "The game started running again behind the menu.");
+                Assert.AreEqual(0f, Alpha("ResourceHUD"), "The HUD came back while the menu is still open.");
+            }
+            finally
+            {
+                menu.Close();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheCitizensPanel_HidesTheHudBehindIt()
+        {
+            var panel = Object.FindAnyObjectByType<WorkforcePanelController>(FindObjectsInactive.Include);
+            panel.OpenPanel();
+            yield return null;
+            try
+            {
+                Assert.AreEqual(0f, Alpha("ResourceHUD"), "The HUD still shows behind the citizens panel.");
+                Assert.AreEqual(1f, Alpha("WorkforcePanel"), "The citizens panel hid itself with the rest.");
+            }
+            finally
+            {
+                panel.ClosePanel();
+            }
+            yield return null;
+            Assert.AreEqual(1f, Alpha("ResourceHUD"), "Closing the citizens panel did not bring the HUD back.");
+        }
+
+        [UnityTest]
+        public IEnumerator Happiness_IsANumber_AndATapShowsItsBreakdown()
+        {
+            var label = HudRoot().Find("Happiness/HappinessLabel").GetComponent<Text>();
+            StringAssert.IsMatch(@"^\d+%$", label.text, "The happiness button should carry the number alone.");
+
+            var breakdown = HudRoot().Find("HappinessBreakdown").gameObject;
+            Assert.IsFalse(breakdown.activeSelf, "The breakdown shows before anyone asked for it.");
+            HudRoot().Find("Happiness").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.IsTrue(breakdown.activeSelf, "Tapping the happiness number did not show its breakdown.");
+            HudRoot().Find("Happiness").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.IsFalse(breakdown.activeSelf, "A second tap did not hide the breakdown.");
+        }
+
+        [Test]
+        public void TheDayLine_NamesNoSettlementTier()
+        {
+            var day = HudRoot().Find("SettlementStatus").GetComponent<Text>().text;
+            Assert.IsFalse(string.IsNullOrEmpty(day), "The day line is empty.");
+            foreach (var tier in new[] { "hamlet", "village", "town", "city", "kingdom" })
+            {
+                StringAssert.DoesNotContain(Core.Localization.Get("#tier_" + tier), day, "The day line still names the settlement's tier.");
+            }
+            Assert.IsNull(HudRoot().Find("SettlementTierToast"), "The tier-up toast is still in the HUD.");
+        }
+
+        [Test]
+        public void TheTax_ReadsAsAPercentage()
+        {
+            var rate = HudRoot().Find("TaxRate/RatePlaque/RateLabel").GetComponent<Text>().text;
+            StringAssert.IsMatch(@"^\d+%$", rate, "The tax plaque should carry the rate alone, next to its coin.");
+        }
+
+        [UnityTest]
+        public IEnumerator PlacingABuilding_SwapsTheBuildMenuForCancelRotateConfirm()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.ClearSelection();
+            var menu = Menu();
+            menu.Open(FirstCategory(), true);
+            var card = menu.transform.Find("Hotbar").GetComponentInChildren<HotbarButtonHandler>(false);
+            Assert.IsNotNull(card, "The open category has no card to pick.");
+
+            placer.SelectBuilding(card.Building);
+            yield return null;
+            yield return null;
+            try
+            {
+                Assert.IsTrue(placer.IsSelecting, "The building could not be picked up -- the test proves nothing.");
+                Assert.IsFalse(menu.gameObject.activeSelf, "The build menu stays up while a building is being placed.");
+                Assert.IsTrue(HudRoot().Find("PlacementControls/CancelPlacementButton").gameObject.activeSelf, "No cancel button while placing.");
+                Assert.IsTrue(HudRoot().Find("PlacementControls/RotateButton").gameObject.activeSelf, "No rotate button while placing.");
+            }
+            finally
+            {
+                placer.ClearSelection();
+            }
+            yield return null;
+            yield return null;
+            Assert.IsTrue(menu.gameObject.activeSelf, "The build menu did not come back once the building was put down.");
+            Assert.IsFalse(HudRoot().Find("PlacementControls/CancelPlacementButton").gameObject.activeSelf, "The cancel button stayed after placing ended.");
+            menu.Close(true);
+        }
+
+        [UnityTest]
+        public IEnumerator ACategoryTooLongForTheScreen_Scrolls_WithAScrollbarUnderTheCards()
+        {
+            Research.ResearchManager.Instance?.CompleteEverything();
+            yield return null;
+            var menu = Menu();
+            var scrolled = 0;
+            foreach (var tab in Tabs())
+            {
+                menu.Open(tab.Category, true);
+                yield return null;
+                var row = (RectTransform)menu.transform.Find("Hotbar");
+                var scrollbar = menu.transform.Find("Hotbar/Scrollbar").gameObject;
+                Assert.LessOrEqual(row.rect.width, 1040.5f, $"The {tab.Category} cards run wider than the room between the minimap and the tax.");
+                Assert.AreEqual(menu.CardsScroll, scrollbar.activeSelf,
+                    $"{tab.Category}: the scrollbar {(scrollbar.activeSelf ? "shows with nothing to scroll" : "is missing while the cards overflow")}.");
+                if (menu.CardsScroll) scrolled++;
+            }
+            menu.Close(true);
+            Assert.Greater(scrolled, 0, "No category overflows with everything researched -- the scroll was never exercised.");
+        }
+
+        [UnityTest]
+        public IEnumerator Photograph_TheGameMenu()
+        {
+            var menu = GameMenu();
+            menu.Open();
+            yield return null;
+            yield return PlaytestCapture.ShootWithUi("hud-game-menu", _townHall, 34f, 52f, 20f);
+            menu.Close();
+        }
+
+        [UnityTest]
+        public IEnumerator Photograph_PlacingABuilding()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.ClearSelection();
+            var menu = Menu();
+            menu.Open(FirstCategory(), true);
+            var card = menu.transform.Find("Hotbar").GetComponentInChildren<HotbarButtonHandler>(false);
+            placer.SelectBuilding(card.Building);
+            yield return null;
+            yield return null;
+            yield return PlaytestCapture.ShootWithUi("hud-placing", _townHall, 34f, 52f, 20f);
+            placer.ClearSelection();
+            menu.Close(true);
         }
 
         [UnityTest]

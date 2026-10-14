@@ -56,13 +56,18 @@ namespace CityBuilder.UI
             Populate();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
+            // The buttons behind the panel go while it is open (the user's rule, 2026-10-14).
+            if (hud != null) hud.Hide(this);
         }
 
         public void ClosePanel()
         {
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
+            if (hud != null) hud.Show(this);
         }
+
+        [SerializeField] private HudHider hud;
 
         public void AssignTo(ProductionBuilding building)
         {

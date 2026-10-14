@@ -36,19 +36,7 @@ namespace CityBuilder.EditorTools
         /// <summary>The HUD's standing pieces, each moved onto the corner it lives in. Direct children of the safe-area root only.</summary>
         private static void PinHudToEdges(Transform uiRoot)
         {
-            Pin(uiRoot, "MenuButton", TopLeft);
-            Pin(uiRoot, "SaveButton", TopLeft);
-            Pin(uiRoot, "WorkforceButton", TopLeft);
-            Pin(uiRoot, "TaxRate", TopLeft);
-            Pin(uiRoot, "EventFeed", TopLeft);
-
-            Pin(uiRoot, "SettlementStatusPill", TopCentre);
-            Pin(uiRoot, "SettlementStatus", TopCentre);
-            Pin(uiRoot, "SettlementTierToast", TopCentre);
-
-            Pin(uiRoot, "Happiness", TopRight);
-            Pin(uiRoot, "Army", TopRight);
-
+            // Everything else is anchored to its own edge where it is built (SetupProjectHud).
             Pin(uiRoot, "Minimap", BottomLeft);
             Pin(uiRoot, "MinimapRing", BottomLeft);
         }

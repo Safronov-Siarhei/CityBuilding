@@ -6,25 +6,18 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Small persistent "{tier name} · День {N}" label -- SettlementTierToast and EventLog both
-    /// only surface this momentarily/in passing, so there was no standing place to just glance at
-    /// the current day or settlement name otherwise.
+    /// The day, under the resource bar: "День {N}". The settlement's tier name used to stand in
+    /// front of it; the user had every mention of tiers taken away from the player (2026-10-14) --
+    /// SettlementTierManager still names the tiers, but nothing shows them.
     /// </summary>
     public class SettlementStatusController : MonoBehaviour
     {
         [SerializeField] private GameCalendar gameCalendar;
-        [SerializeField] private SettlementTierManager tierManager;
         [SerializeField] private Text statusText;
 
         private void Start()
         {
             if (gameCalendar != null) gameCalendar.OnDayPassed += Refresh;
-            if (tierManager != null) tierManager.OnTierChanged += HandleTierChanged;
-            Refresh();
-        }
-
-        private void HandleTierChanged(string newTierName)
-        {
             Refresh();
         }
 
@@ -33,8 +26,7 @@ namespace CityBuilder.UI
             if (statusText == null) return;
 
             var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
-            var tier = tierManager != null ? tierManager.CurrentTierName : string.Empty;
-            statusText.text = Localization.Format("#hud_status", tier, day);
+            statusText.text = Localization.Format("#hud_day", day);
         }
     }
 }
