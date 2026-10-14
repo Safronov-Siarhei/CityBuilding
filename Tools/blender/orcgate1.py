@@ -64,5 +64,36 @@ def build(lo, hi):
     return b
 
 
-o.ensure_collection()
-kit.run(OBJ, build, offset=(o.COLUMN_X, 0, 0), source_name="Gate1-lvl1", collection=o.COLLECTION)
+def build_ruin(lo, hi):
+    """Broken in: the palisade either side snapped to stumps of uneven height, one post
+    standing with its horns, the other a stump; the leaves thrown flat outward, the crossbeam
+    down across them, skulls rolled away."""
+    b = Builder()
+    o.scorch(b, 0.0, 0.0, 0.34, 0.62, seed=1)
+    for end in (-1, 1):
+        for i in range(4):
+            y = end * (1.0 - o.PALISADE_STEP / 2 - i * o.PALISADE_STEP)
+            h = (0.62, 0.3, 0.46, 0.18)[(i + (end > 0)) % 4]
+            o.broken_log(b, 0, y, 0.01, h, r=o.PALISADE_R,
+                         color=o.TIMBER_LIGHT if i % 2 else o.TIMBER)
+        b.box(-0.058, 0.058, end * 0.54 - 0.06, end * 0.54 + 0.06, 0.18, 0.21, o.RUST, skip=())
+    post_h = o.PALISADE_H + 0.5
+    o.tube(b, [(0, -0.44, 0.01), (0, -0.44, post_h)], [0.1, 0.085], o.TIMBER, sides=7, tip=False)
+    b.cylinder(0, -0.44, 0.25, 0.31, 0.11, o.RUST, sides=7)
+    o.horn(b, (0, -0.44, post_h - 0.02), (-0.3, -0.44, 0), 0.16, 0.035, up=1.4)
+    o.broken_log(b, 0, 0.44, 0.01, 0.4, r=0.1)
+    # the leaves, flat in the gateway, logs side by side across it, bars along
+    for i in range(6):
+        y = -0.32 + 0.64 * i / 5
+        o.fallen_log(b, (0.42, y, 0.055), (-0.42, y + 0.03, 0.055), r=0.05,
+                     color=o.TIMBER_LIGHT if i % 2 else o.TIMBER)
+    for x in (-0.22, 0.2):
+        b.box(x - 0.03, x + 0.03, -0.36, 0.38, 0.1, 0.13, o.RUST, skip=())
+    # the crossbeam fallen across, skulls rolled away
+    o.fallen_log(b, (0.3, -0.74, 0.07), (-0.3, 0.7, 0.17), r=0.055)
+    for x, y, f in ((0.36, 0.62, (1, -0.3)), (-0.36, -0.62, (-0.4, -1)), (0.28, -0.5, (0.6, -1))):
+        o.skull(b, x, y, 0.02, s=0.09, facing=f)
+    return b
+
+
+o.run_with_ruin(OBJ, build, build_ruin, "Gate1-lvl1", (o.COLUMN_X, 0, 0))

@@ -203,6 +203,49 @@ def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
               z, z + w, col, skip=())
 
 
+# -- ruins ---------------------------------------------------------------------------------------
+#
+# A cleared base leaves its buildings as ruins (the user's decision 2026-10-14). Each building
+# script builds its ruin beside the intact model, named <Name>-Ruin: what was tall is broken off,
+# what was up is down, the fire is out and the ground is scorched.
+
+RUIN_DX = 10.0                 # how far right of the intact model its ruin stands
+
+
+def broken_log(b, x, y, z0, z1, r=0.045, color=TIMBER, lean=(0.0, 0.0)):
+    """A log snapped off at z1: a jagged, splintered top instead of a point."""
+    p0 = Vector((x, y, z0))
+    p1 = Vector((x + lean[0], y + lean[1], z1))
+    tube(b, [p0, p1], [r, r * 0.95], color, sides=6, tip=False)
+    a, c = _frame(p1 - p0)
+    for k, (da, dc, h) in enumerate(((1, 0, 0.06), (-0.6, 0.7, 0.035), (-0.4, -0.8, 0.05))):
+        base = p1 + (a * da + c * dc) * (r * 0.45)
+        tube(b, [base, base + (p1 - p0).normalized() * h], [r * 0.45, 0.0], TIMBER_LIGHT, sides=4)
+
+
+def fallen_log(b, p0, p1, r=0.045, color=TIMBER):
+    """A log lying where it fell, both ends cut square."""
+    tube(b, [p0, p1], [r, r], color, sides=6, tip=False)
+
+
+def scorch(b, x, y, rx, ry, seed=0):
+    """A burnt patch on the ground: a flat black crag."""
+    b.crag(x, y, rx, ry, 0.012, HAIR, sides=8, taper=0.96, seed=seed)
+
+
+def run_with_ruin(obj, build, build_ruin, source_name, offset, collection=None):
+    """Builds the intact model and its ruin (RUIN_DX to the right) and saves once."""
+    import bpy
+    import kit
+    ensure_collection()
+    kit.run(obj, build, source_name=source_name, offset=offset,
+            collection=collection or COLLECTION, save=False)
+    kit.run(obj + "-Ruin", build_ruin, source_name=source_name,
+            offset=(offset[0] + RUIN_DX, offset[1], offset[2]),
+            collection=collection or COLLECTION, save=False)
+    bpy.ops.wm.save_mainfile()
+
+
 def mark(b):
     """Where the builder's vertex list stands now -- pass to scale_since."""
     return len(b.bm.verts)

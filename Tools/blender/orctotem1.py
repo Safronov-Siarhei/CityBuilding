@@ -79,6 +79,38 @@ def build(lo, hi):
     return b
 
 
-o.ensure_collection()
-kit.run(OBJ, build, source_name="DecTree1-lvl1", offset=(o.COLUMN_X, 0, 0),
-        collection=o.COLLECTION)
+def build_ruin(lo, hi):
+    """Toppled: the pole snapped above the first face, the rest lying across the cairn with
+    the great skull split off beside it, the wings scattered as bones, the fire bowls over."""
+    b = Builder()
+    for i, (x, y, r, h) in enumerate(((0, 0, 0.32, 0.16), (-0.24, -0.18, 0.12, 0.1),
+                                      (0.26, -0.12, 0.1, 0.08), (0.2, 0.24, 0.12, 0.1),
+                                      (-0.22, 0.22, 0.1, 0.09))):
+        b.crag(x, y, r, r * 0.9, h, o.ROCK, top=o.ROCK_LIGHT, sides=6, taper=0.7, seed=i)
+    o.scorch(b, 0.02, 0.0, 0.4, 0.36, seed=5)
+    # the stump with its one surviving face
+    b.cylinder(0, 0, 0.1, 0.5, POLE_R, o.TIMBER, sides=8)
+    seg = (TOP - 0.16) / 3
+    carved_face(b, 0.16, seg - 0.04, o.RUST)
+    o.broken_log(b, 0, 0, 0.48, 0.56, r=POLE_R)
+    # the fallen top, lying across the cairn towards the back right
+    o.fallen_log(b, (0.06, 0.1, 0.2), (0.4, 0.4, 0.1), r=POLE_R * 0.95)
+    # the great skull split off, one horn snapped
+    o.skull(b, -0.28, 0.3, 0.06, s=0.2, facing=(-0.3, -1))
+    o.horn(b, (-0.36, 0.32, 0.16), (-1, 0.2, 0), 0.12, 0.04, up=1.2)
+    o.tube(b, [(0.18, -0.3, 0.03), (0.36, -0.22, 0.04), (0.44, -0.08, 0.03)], [0.04, 0.03, 0.0],
+           o.BONE, sides=5)
+    # the wings, scattered bones
+    for x, y, a in ((-0.36, -0.08, 30), (0.38, 0.06, -60), (-0.1, -0.4, 80), (0.04, 0.42, 10)):
+        r = math.radians(a)
+        b.rod((x - 0.08 * math.cos(r), y - 0.08 * math.sin(r), 0.015),
+              (x + 0.08 * math.cos(r), y + 0.08 * math.sin(r), 0.015), 0.018, o.BONE)
+    # fire bowls knocked over
+    for k in (-1, 1):
+        x, y = k * 0.3, -0.36
+        b.rod((x, y, 0.02), (x + k * 0.1, y - 0.06, 0.02), 0.02, o.TIMBER)
+        b.cylinder(x + k * 0.04, y + 0.06, 0.0, 0.04, 0.06, o.METAL, sides=6)
+    return b
+
+
+o.run_with_ruin(OBJ, build, build_ruin, "DecTree1-lvl1", (o.COLUMN_X, 0, 0))

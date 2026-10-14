@@ -7,7 +7,8 @@ rust hide stretched over the front as a shield, and a ragged hide roof on crosse
 poke out above it, crowned with horns. A skull hangs under the platform, a brazier burns on it,
 a banner flies from the back.
 
-Borrows Tower1's box and stands in the orc column.
+Borrows Tower1's box and stands in the orc column. Its ruin, OrcWatchtower1-lvl1-Ruin, stands
+orcs.RUIN_DX to the right.
 """
 import math
 import os
@@ -113,5 +114,39 @@ def build(lo, hi):
     return b
 
 
-o.ensure_collection()
-kit.run(OBJ, build, source_name="Tower1-lvl1", offset=(o.COLUMN_X, 0, 0), collection=o.COLLECTION)
+def build_ruin(lo, hi):
+    """Pulled down: two legs snapped off, two lying where they fell, the platform tipped onto
+    the mound, the hide roof crumpled beside it, stakes and the ladder scattered, a scorch."""
+    b = Builder()
+    b.crag(0, 0, 0.46, 0.44, 0.05, o.STONE, top='cobble', sides=7, taper=0.9, seed=2)
+    o.scorch(b, 0.08, 0.05, 0.36, 0.3, seed=4)
+    o.broken_log(b, -FOOT, -FOOT, 0.01, 0.52, r=0.045, lean=(0.05, 0.05))
+    o.broken_log(b, FOOT, FOOT, 0.01, 0.34, r=0.045, lean=(-0.03, -0.03))
+    for k in (-1, 1):
+        x, y = k * FOOT, -k * FOOT
+        b.cylinder(x, y, 0.0, 0.06, 0.05, o.TIMBER_LIGHT, sides=6)
+    o.fallen_log(b, (-0.4, 0.36, 0.06), (0.42, 0.18, 0.06))
+    o.fallen_log(b, (0.38, -0.42, 0.05), (-0.1, 0.0, 0.17), r=0.04)
+    # the platform, tipped against the mound
+    # the platform, broken in two: one half tipped steeply against the mound, a loose plank
+    b.obox((-0.14, -0.16, 0.2), (0.82, 0.0, 0.57), (0, 1, 0), (-0.57, 0, 0.82), 0.2, 0.2,
+           0.03, o.TIMBER, bevel=0.01)
+    b.obox((-0.14, -0.37, 0.2), (0.82, 0.0, 0.57), (0, 1, 0), (-0.57, 0, 0.82), 0.2, 0.02, 0.035,
+           o.RUST)
+    b.zbox(0.12, -0.3, 0.0, 0.03, 0.2, 0.05, -25, o.TIMBER_LIGHT)
+    # the hide roof, crumpled in a heap on the far side
+    b.pyramid(0.18, 0.24, 0.05, 0.24, 0.2, 0.26, 'door')
+    b.zbox(0.36, 0.1, 0.0, 0.06, 0.1, 0.006, 30, o.RUST)
+    # stakes and ladder rungs scattered, one horn, the skull
+    for x0, y0, x1, y1 in ((-0.42, -0.1, -0.2, -0.42), (0.1, 0.42, 0.42, 0.34),
+                           (-0.3, 0.1, -0.44, 0.38)):
+        b.rod((x0, y0, 0.03), (x1, y1, 0.03), 0.026, o.TIMBER_LIGHT)
+    for t in (0.2, 0.4, 0.6):
+        b.box(-0.3 + t * 0.4 - 0.1, -0.3 + t * 0.4 + 0.1, -0.33 + t * 0.1, -0.31 + t * 0.1,
+              0.0, 0.02, o.TIMBER)
+    o.horn(b, (0.3, -0.24, 0.03), (1, -0.3, 0), 0.1, 0.025, up=0.2)
+    o.skull(b, -0.24, -0.3, 0.02, s=0.07, facing=(0.4, -1))
+    return b
+
+
+o.run_with_ruin(OBJ, build, build_ruin, "Tower1-lvl1", (o.COLUMN_X, 0, 0))

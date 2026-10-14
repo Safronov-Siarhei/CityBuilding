@@ -106,6 +106,46 @@ def build(lo, hi):
     return b
 
 
-o.ensure_collection()
-kit.run(OBJ, build, source_name="BigBarn1-lvl1", offset=(o.COLUMN_X + 2.0, 0, 0),
-        collection=o.COLLECTION)
+def build_ruin(lo, hi):
+    """Burnt down: the hides collapsed into a low charred heap, the front poles still crossed
+    over it, the back pair fallen; the fire pit cold, the rack toppled, the drum stove in, the
+    banner pole snapped."""
+    b = Builder()
+    b.crag(0.0, 0.08, 0.8, 0.76, 0.03, o.STONE, top='cobble', sides=8, taper=0.97, seed=6)
+    o.scorch(b, 0.0, 0.22, 0.62, 0.62, seed=2)
+    # the collapsed hides: a low ridge, sagging, burnt through in patches
+    b.gable_block('y', Y0 + 0.1, Y1 - 0.1, -HALF + 0.04, HALF - 0.04, 0.03, 0.34, HIDE)
+    for x, y, r in ((-0.2, 0.0, 0.16), (0.24, 0.4, 0.14), (-0.1, 0.6, 0.12)):
+        b.crag(x, y, r, r * 0.8, 0.3 - abs(x) * 0.4, o.HAIR, sides=6, taper=0.4, seed=int(y * 10))
+    b.obox((0.3, 0.1, 0.16), (0, 1, 0), (-0.48, 0, 0.88), (0.88, 0, 0.48), 0.2, 0.06, 0.008,
+           o.RUST, skip=())
+    # the front poles, still crossed; the back pair fallen across the heap
+    for k in (-1, 1):
+        b.rod((k * HALF, Y0 - 0.01, 0.01), (-k * 0.16, Y0 - 0.01, RIDGE + 0.2), 0.03, o.TIMBER)
+    b.cylinder(0, Y0 - 0.01, RIDGE - 0.02, RIDGE + 0.04, 0.04, o.RUST, sides=5)
+    o.horn(b, (0, Y0 - 0.03, RIDGE + 0.04), (1, -0.3, 0), 0.14, 0.03, up=1.3)
+    o.fallen_log(b, (-0.7, 0.72, 0.05), (0.5, 0.2, 0.4), r=0.03)
+    o.fallen_log(b, (0.7, 0.82, 0.05), (-0.3, 0.5, 0.36), r=0.03)
+    # the cold fire pit: stones and ash
+    fx, fy = -0.42, -0.72
+    for i in range(7):
+        a = 2 * math.pi * i / 7
+        o.rubble(b, fx + 0.13 * math.cos(a), fy + 0.13 * math.sin(a), r=0.045, seed=i)
+    b.crag(fx, fy, 0.08, 0.08, 0.04, o.STONE_LIGHT, sides=5, seed=3)
+    # the rack, toppled with its weapons
+    rx, ry = 0.5, -0.66
+    b.rod((rx - 0.2, ry, 0.03), (rx + 0.2, ry - 0.08, 0.03), 0.022, o.TIMBER)
+    b.rod((rx - 0.15, ry + 0.06, 0.02), (rx + 0.25, ry + 0.16, 0.02), 0.018, o.TIMBER_LIGHT)
+    b.prism([(0.0, 0.0), (0.0, 0.08), (-0.07, 0.1), (-0.08, 0.01)], (rx + 0.3, ry + 0.1, 0.012),
+            (0, 1, 0), (1, 0, 0), 0.012, o.METAL, back_cap=True)
+    # the drum stove in, the banner pole snapped, the skull stake fallen
+    b.cylinder(0.15, -0.82, 0.0, 0.1, 0.09, o.RUST, sides=8)
+    b.cylinder(0.15, -0.82, 0.03, 0.05, 0.095, o.TIMBER, sides=8)
+    b.crag(0.15, -0.82, 0.07, 0.07, 0.11, o.HAIR, sides=6, taper=0.9, seed=1)
+    b.cylinder(-0.8, 0.82, 0.0, 0.5, 0.018, o.TIMBER, sides=5)
+    b.rod((0.82, -0.2, 0.03), (0.5, -0.36, 0.03), 0.025, o.TIMBER)
+    o.skull(b, 0.46, -0.4, 0.02, s=0.08, facing=(-0.3, -1))
+    return b
+
+
+o.run_with_ruin(OBJ, build, build_ruin, "BigBarn1-lvl1", (o.COLUMN_X + 2.0, 0, 0))
