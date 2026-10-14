@@ -30,6 +30,11 @@ PORTAL, PORTAL_DARK, PORTAL_CORE = 'roof_purple', 'roof_purple_dark', 'white'
 FIRE = 'fire'
 
 
+# Rust is a ROOF colour to the detail atlas and would draw as the town's neat tiles; the stone
+# colours would draw as dressed courses and paving. Orc work is rough: all of them draw plain.
+import detail  # noqa: E402
+detail.OVERRIDE.update({c: detail.PLAIN for c in (RUST, RUST_LIGHT, STONE, 'cobble')})
+
 COLLECTION = "Орки"
 COLUMN_X = 8.0                 # orc models stand in their own column beside the settlement's
 
@@ -161,6 +166,86 @@ def torch(b, x, y, h=0.42):
     b.cylinder(x, y, 0.0, h, 0.016, TIMBER, sides=5)
     b.cylinder(x, y, h, h + 0.04, 0.035, METAL, sides=5)
     b.blob(x, y, h + 0.02, 0.035, 0.1, FIRE, sides=4)
+
+
+PALISADE_H = 0.82             # taller than the settlement's 0.72, and ragged
+PALISADE_STEP = 0.125         # divides a cell: four logs an arm, the rhythm runs across joins
+PALISADE_R = 0.05
+_JAG = (0.0, 0.07, -0.04, 0.1, 0.02, -0.06, 0.08, -0.02)
+
+
+def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
+    """Rough logs from t0 to t1 out of (ox, oy) along (dx, dy): thick, ragged in height, each
+    leaning a little its own way, lashed by two rust bands and a rope of hide. Logs stand at
+    0.0625, 0.1875 ... from the centre, so a run of cells keeps one rhythm."""
+    t = PALISADE_STEP / 2
+    i = 0
+    first = None
+    while t < t1 - 1e-6:
+        if t > t0:
+            x, y = ox + dx * t, oy + dy * t
+            j = (seed + i * 3 + int(abs(x) * 40 + abs(y) * 40)) % len(_JAG)
+            h = PALISADE_H + _JAG[j]
+            lean = _JAG[(j + 3) % len(_JAG)] * 0.25
+            stake(b, x, y, 0.01, h, PALISADE_R, TIMBER_LIGHT if i % 2 else TIMBER,
+                  lean=(-dy * lean, dx * lean), point=0.12)
+            first = first if first is not None else t
+        t += PALISADE_STEP
+        i += 1
+    if first is None:
+        return
+    a0, a1 = max(t0, first - PALISADE_R), t1
+    for z, col, w in ((0.22, RUST, 0.03), (0.56, RUST, 0.03), (0.4, HIDE, 0.012)):
+        xa, ya, xb, yb = ox + dx * a0, oy + dy * a0, ox + dx * a1, oy + dy * a1
+        hw = PALISADE_R + 0.008
+        b.box(min(xa, xb) - (hw if dx == 0 else 0), max(xa, xb) + (hw if dx == 0 else 0),
+              min(ya, yb) - (hw if dy == 0 else 0), max(ya, yb) + (hw if dy == 0 else 0),
+              z, z + w, col, skip=())
+
+
+def mark(b):
+    """Where the builder's vertex list stands now -- pass to scale_since."""
+    return len(b.bm.verts)
+
+
+def scale_since(b, since, sx, sy=None, sz=None, origin=(0.0, 0.0, 0.0)):
+    """Scales every vertex made after `since` about `origin`: a brute is a grunt's body grown."""
+    sy = sx if sy is None else sy
+    sz = sx if sz is None else sz
+    ox, oy, oz = origin
+    b.bm.verts.ensure_lookup_table()
+    for v in list(b.bm.verts)[since:]:
+        v.co.x = ox + (v.co.x - ox) * sx
+        v.co.y = oy + (v.co.y - oy) * sy
+        v.co.z = oz + (v.co.z - oz) * sz
+
+
+def legs_and_hips(b, wide=1.0):
+    """An orc from the belt down, as the grunt is built: boots, hide wraps, green knees, a hide
+    kilt, a belt with a skull buckle, rust loincloth front and back."""
+    for k in (-1, 1):
+        x = k * 0.065 * wide
+        b.box(x - 0.045, x + 0.045, -0.06, 0.04, 0.0, 0.045, TIMBER, bevel=0.01)
+        b.box(x - 0.042, x + 0.042, -0.04, 0.04, 0.045, 0.12, HIDE, bevel=0.012)
+        b.box(x - 0.038, x + 0.038, -0.036, 0.036, 0.12, 0.185, SKIN, bevel=0.012)
+    w = 0.11 * wide
+    b.box(-w, w, -0.065, 0.065, 0.16, 0.22, HIDE, bevel=0.014)
+    b.box(-w - 0.005, w + 0.005, -0.07, 0.07, 0.205, 0.235, TIMBER, bevel=0.008)
+    b.box(-0.055, 0.055, -0.08, -0.07, 0.09, 0.22, RUST)
+    b.box(-0.05, 0.05, 0.07, 0.08, 0.1, 0.22, RUST)
+    skull(b, 0, -0.08, 0.2, s=0.045)
+
+
+def orc_head(b, hy=-0.06, z=0.0):
+    """The grunt's head: skull jutting forward, heavy jaw, brow, glowing eyes, tusks, ears.
+    `z` lifts it. Hair or a helmet is the caller's."""
+    b.box(-0.062, 0.062, hy - 0.06, hy + 0.055, z + 0.41, z + 0.52, SKIN, bevel=0.02)
+    b.box(-0.074, 0.074, hy - 0.072, hy + 0.03, z + 0.39, z + 0.445, SKIN_LIGHT, bevel=0.015)
+    b.box(-0.066, 0.066, hy - 0.072, hy - 0.05, z + 0.47, z + 0.49, HAIR)
+    for k in (-1, 1):
+        b.box(k * 0.03 - 0.014, k * 0.03 + 0.014, hy - 0.066, hy - 0.058, z + 0.452, z + 0.466, FIRE)
+        horn(b, (k * 0.045, hy - 0.07, z + 0.432), (k * 0.2, -1, 0), 0.04, 0.012, up=1.5)
+        b.box(k * 0.07 - 0.012, k * 0.07 + 0.012, hy - 0.01, hy + 0.02, z + 0.45, z + 0.49, SKIN_LIGHT)
 
 
 def rubble(b, x, y, r=0.08, seed=0, color=STONE):

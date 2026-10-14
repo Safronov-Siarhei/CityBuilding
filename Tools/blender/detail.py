@@ -35,7 +35,15 @@ SHADE_LOW = 0.84      # a wall's tone at the ground...
 SHADE_HEIGHT = 0.55   # ...rising to full by this height
 
 
+# Colour -> pattern exceptions for one family of models, set by the family's own module before
+# its models are built (orcs.py: rust and rough ground draw plain, not as the town's tiles and
+# paving). Each model script runs in its own Blender process, so this never leaks between sets.
+OVERRIDE = {}
+
+
 def pattern_of(name):
+    if name in OVERRIDE:
+        return OVERRIDE[name]
     if name.startswith("roof_slate"):
         return SLATE
     if name.startswith("roof_straw") or name == "hay":
