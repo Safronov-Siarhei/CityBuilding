@@ -147,9 +147,9 @@ namespace CityBuilder.Core
         public ResourceStorageGroup storageGroup = ResourceStorageGroup.None;
 
         /// <summary>
-        /// One entry per upgrade level, always three of them. The sheet authors level 1 in the
+        /// One entry per upgrade level, always BuildingInstance.MaxLevel of them. The sheet authors level 1 in the
         /// plain columns (max_health, defense, ...) and the higher levels in suffixed ones
-        /// (max_health_2, max_health_3); an absent or empty suffixed column repeats the level below,
+        /// (max_health_2 .. max_health_5); an absent or empty suffixed column repeats the level below,
         /// so a building that gains nothing from upgrading simply has nothing extra to fill in.
         /// </summary>
         public List<BuildingLevelStats> levels = new List<BuildingLevelStats>();
@@ -167,6 +167,8 @@ namespace CityBuilder.Core
         /// </summary>
         public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
         public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel4Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel5Cost = new List<ResourceAmount>();
 
         /// <summary>
         /// False = this building cannot be built until it is opened in the Laboratory. Eighteen of
@@ -185,7 +187,7 @@ namespace CityBuilder.Core
         /// </summary>
         public List<ResearchStep> levelResearch = new List<ResearchStep>();
 
-        /// <summary>The research that permits upgrading to the given level (2 or 3), or null when the sheet authors none -- which is how the Laboratory itself stays outside its own gate.</summary>
+        /// <summary>The research that permits upgrading to the given level (2..MaxLevel), or null when the sheet authors none -- which is how the Laboratory itself stays outside its own gate.</summary>
         public ResearchStep ResearchToReach(int level)
         {
             var index = level - 2;

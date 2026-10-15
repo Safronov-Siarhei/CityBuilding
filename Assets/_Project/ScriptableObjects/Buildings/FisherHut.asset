@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: FisherHut
   displayName: "\u0420\u044B\u0431\u0430\u0446\u043A\u0430\u044F \u0445\u0438\u0436\u0438\u043D\u0430"
-  prefab: {fileID: 406267346671466051, guid: 819a01bc2f70ada4da92380fc2e241a0, type: 3}
+  prefab: {fileID: 6149164735860954742, guid: 819a01bc2f70ada4da92380fc2e241a0, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -53,6 +53,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 324
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 4
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 450
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes:
   - id: fish
     displayName: "\u0415\u0434\u0430"
@@ -67,6 +85,12 @@ MonoBehaviour:
   upgradeToLevel3Cost:
   - type: 0
     amount: 42
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 74
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 129
   fogRevealRadius: 12
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

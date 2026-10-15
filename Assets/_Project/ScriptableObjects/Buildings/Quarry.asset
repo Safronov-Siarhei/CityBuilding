@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Quarry
   displayName: "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
-  prefab: {fileID: 7523159735936497585, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
+  prefab: {fileID: 1209238753701028437, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -53,6 +53,24 @@ MonoBehaviour:
     harvestRadius: 38
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 396
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 2
+    storageCapacity: 0
+    harvestRadius: 46
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 550
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 7
+    batchesPerWorkerPerTick: 2
+    storageCapacity: 0
+    harvestRadius: 55
+    serviceRadius: 0
+    happiness: 0
   recipes:
   - id: stone
     displayName: "\u041A\u0430\u043C\u0435\u043D\u044C"
@@ -67,6 +85,12 @@ MonoBehaviour:
   upgradeToLevel3Cost:
   - type: 0
     amount: 56
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 98
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 172
   fogRevealRadius: 14
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: GoldMine
   displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
-  prefab: {fileID: 906855275230830131, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
+  prefab: {fileID: 3359464428448487492, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 432
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 600
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 7
+    batchesPerWorkerPerTick: 6
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes:
   - id: gold_ore
     displayName: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
@@ -73,6 +91,16 @@ MonoBehaviour:
     amount: 84
   - type: 1
     amount: 56
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 147
+  - type: 1
+    amount: 98
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 257
+  - type: 1
+    amount: 172
   fogRevealRadius: 14
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

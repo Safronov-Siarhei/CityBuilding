@@ -254,43 +254,81 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// Levels 2 and 3 have no models yet, and the agreed rule is that a building must never
-        /// vanish because a file has not been drawn: it shows the nearest level below instead. This
-        /// is that rule, checked on the thing the player sees rather than on the resolver.
+        /// Every level of a roster building has its own model since 2026-10-15: an upgrade swaps it
+        /// in, and exactly one model is on screen at any level -- never two stacked, never none.
         /// </summary>
         [Test]
-        public void AnUpgradedBuilding_KeepsShowingExactlyOneModel()
-        {
-            ResourceManager.Instance.SetInfiniteResources(true);
-
-            var houseData = PlaytestWorld.Building("Hovel");
-            var house = Place(houseData);
-            var atLevelOne = VisibleBounds(house);
-
-            Assert.IsTrue(house.TryUpgrade() && house.TryUpgrade(), "The House refused to upgrade with infinite resources.");
-
-            var atLevelThree = VisibleBounds(house);
-            Assert.Greater(atLevelThree.size.sqrMagnitude, 0f, "The House stopped drawing anything at all after being upgraded.");
-            Assert.AreEqual(atLevelOne.size, atLevelThree.size,
-                "The House changed shape on upgrade -- which would be the right answer once levels 2 and 3 have models, and means this test now needs to check the new ones instead.");
-        }
-
-        /// <summary>
-        /// An upgrade the player can SEE. Until levels 2 and 3 have models of their own, a
-        /// building that has been upgraded is pixel-for-pixel the building that was not, and the
-        /// only trace of the coins is a number on a card the player has to open. The disc is the
-        /// whole feedback loop, so it is worth a test that it appears at all, that it appears
-        /// nowhere at level 1, and that it never becomes something the player can tap by accident.
-        /// </summary>
-        [Test]
-        public void UpgradingABuilding_HangsALevelDiscOverIt()
+        public void EveryLevel_ShowsItsOwnModelAndOnlyThatOne()
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
             var house = Place(PlaytestWorld.Building("Hovel"));
+            var previous = ActiveLevelModels(house)[0].GetComponentInChildren<MeshFilter>().sharedMesh;
+
+            for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
+            {
+                Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
+
+                var shown = ActiveLevelModels(house);
+                Assert.AreEqual(1, shown.Count, $"A level-{level} House shows {shown.Count} models at once.");
+                Assert.AreEqual($"Hovel-lvl{level}", shown[0].name, $"A level-{level} House is not showing its own model.");
+
+                // The mesh, not the bounds: level 5 is level 4's shape with golden roofs, so only
+                // its colours (its UVs) tell the two apart.
+                var mesh = shown[0].GetComponentInChildren<MeshFilter>().sharedMesh;
+                Assert.AreNotSame(previous, mesh, $"Level {level} of the House draws the same mesh as level {level - 1}.");
+                previous = mesh;
+            }
+        }
+
+        /// <summary>
+        /// The agreed rule for a level nobody has drawn: the building must never vanish, it shows
+        /// the nearest level below instead. The road has a level-2 model and nothing above it.
+        /// </summary>
+        [Test]
+        public void AnUndrawnLevel_KeepsShowingTheLevelBelow()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var road = Place(PlaytestWorld.Building("Road"));
+            Assert.IsTrue(road.TryUpgrade(), "The Road refused to upgrade with infinite resources.");
+            var atLevelTwo = VisibleBounds(road);
+
+            Assert.IsTrue(road.TryUpgrade(), "The Road refused its second upgrade with infinite resources.");
+            var atLevelThree = VisibleBounds(road);
+
+            Assert.Greater(atLevelThree.size.sqrMagnitude, 0f, "The Road stopped drawing anything at all after being upgraded.");
+            Assert.AreEqual(atLevelTwo.size, atLevelThree.size, "A level-3 road should still show its level-2 model -- it has no other.");
+        }
+
+        /// <summary>The model children the level appearance switches between, those switched on.</summary>
+        private static List<GameObject> ActiveLevelModels(BuildingInstance building)
+        {
+            var active = new List<GameObject>();
+            foreach (Transform child in building.transform)
+            {
+                if (child.gameObject.activeSelf && child.GetComponent<WorldIndicator>() == null
+                    && child.GetComponentInChildren<MeshRenderer>() != null) active.Add(child.gameObject);
+            }
+            return active;
+        }
+
+        /// <summary>
+        /// An upgrade the player can SEE on a building with no level models of its own (the
+        /// fence): upgraded, it is pixel-for-pixel the fence that was not, and the only trace of
+        /// the resources is a number on a card. The disc is its whole feedback loop, so it is worth
+        /// a test that it appears at all, that it appears nowhere at level 1, and that it never
+        /// becomes something the player can tap by accident.
+        /// </summary>
+        [Test]
+        public void UpgradingAnUndrawnBuilding_HangsALevelDiscOverIt()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var house = Place(PlaytestWorld.Building("Fence"));
             Assert.IsNull(LevelMarker(house), "A freshly placed building is already wearing a level marker -- level 1 is not an achievement.");
 
-            Assert.IsTrue(house.TryUpgrade(), "The House refused to upgrade with infinite resources.");
+            Assert.IsTrue(house.TryUpgrade(), "The Fence refused to upgrade with infinite resources.");
             var marker = LevelMarker(house);
             Assert.IsNotNull(marker, "An upgraded building shows nothing at all: the player has no way to tell it apart from one they never paid for.");
             Assert.IsTrue(marker.activeInHierarchy, "The level marker exists but is switched off.");
@@ -306,25 +344,43 @@ namespace CityBuilder.Tests.PlayMode
                 "The level marker is sunk into the building instead of floating over its roof.");
         }
 
-        /// <summary>The top level has to be legible as the top level -- otherwise the second upgrade is the invisible one.</summary>
+        /// <summary>The top level has to be legible as the top level on an undrawn building -- otherwise the last upgrade is the invisible one.</summary>
         [Test]
         public void TheTopLevel_LooksDifferentFromTheOneBelowIt()
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var house = Place(PlaytestWorld.Building("Hovel"));
-            Assert.IsTrue(house.TryUpgrade(), "The House refused to upgrade with infinite resources.");
+            var house = Place(PlaytestWorld.Building("Fence"));
+            Assert.IsTrue(house.TryUpgrade(), "The Fence refused to upgrade with infinite resources.");
 
             var marker = LevelMarker(house);
             var atLevelTwo = marker.transform.localScale.x;
             var colorAtLevelTwo = marker.GetComponent<Renderer>().sharedMaterial.color;
 
-            Assert.IsTrue(house.TryUpgrade(), "The House refused its second upgrade with infinite resources.");
+            while (house.Level < BuildingInstance.MaxLevel)
+            {
+                Assert.IsTrue(house.TryUpgrade(), $"The Fence refused to upgrade past level {house.Level} with infinite resources.");
+            }
 
             Assert.AreEqual(BuildingInstance.MaxLevel, house.Level);
             Assert.AreNotEqual(colorAtLevelTwo, marker.GetComponent<Renderer>().sharedMaterial.color,
-                "Levels 2 and 3 wear the same marker -- the second upgrade changes nothing the player can see.");
+                "Level 2 and the top level wear the same marker -- the last upgrade changes nothing the player can see.");
             Assert.Greater(marker.transform.localScale.x, atLevelTwo, "The top level's marker is no bigger than the one below it.");
+        }
+
+        /// <summary>A building whose every level is modelled needs no disc: the model is the feedback, and a disc over it is clutter.</summary>
+        [Test]
+        public void AModelledBuilding_WearsNoMarkerAtAnyLevel()
+        {
+            ResourceManager.Instance.SetInfiniteResources(true);
+
+            var house = Place(PlaytestWorld.Building("Hovel"));
+            for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
+            {
+                Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
+                var marker = LevelMarker(house);
+                Assert.IsTrue(marker == null || !marker.activeSelf, $"A level-{level} House wears a level disc over its own level model.");
+            }
         }
 
         /// <summary>
@@ -374,29 +430,34 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// The three levels standing next to each other, for a human to look at. Nothing here is
-        /// asserted: the question a picture answers is whether a silver disc and a gold one are
-        /// actually TELLABLE APART on a phone-sized screen from the game's own camera angle, and no
-        /// assertion can answer that.
+        /// Every level standing in a row, for a human to look at: whether the levels are TELLABLE
+        /// APART on a phone-sized screen from the game's own camera angle, which no assertion can
+        /// answer. One row per building.
         /// </summary>
         [UnityTest]
-        public IEnumerator Photograph_TheLevelMarkers()
+        public IEnumerator Photograph_TheBuildingLevels()
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var origin = PlaytestWorld.FindFreeArea(new Vector2Int(9, 3));
-            Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "Nowhere free to stand three houses side by side.");
+            var ids = new[] { "Hovel", "Cottage", "Sawmill", "Farm" };
+            var width = 3 * BuildingInstance.MaxLevel;
+            var origin = PlaytestWorld.FindFreeArea(new Vector2Int(width, 3 * ids.Length));
+            Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "Nowhere free to stand every level side by side.");
 
-            var houseData = PlaytestWorld.Building("Hovel");
-            for (var level = 1; level <= BuildingInstance.MaxLevel; level++)
+            for (var row = 0; row < ids.Length; row++)
             {
-                var house = PlaytestWorld.Place(houseData, origin + new Vector2Int((level - 1) * 3, 0));
-                _placed.Add(house);
-                for (var step = 1; step < level; step++) house.TryUpgrade();
+                var data = PlaytestWorld.Building(ids[row]);
+                if (data == null) continue;
+                for (var level = 1; level <= BuildingInstance.MaxLevel; level++)
+                {
+                    var building = PlaytestWorld.Place(data, origin + new Vector2Int((level - 1) * 3, row * 3));
+                    _placed.Add(building);
+                    for (var step = 1; step < level; step++) building.TryUpgrade();
+                }
             }
             yield return null;
 
-            yield return PlaytestCapture.Shoot("building-levels", PlaytestWorld.CellCenter(origin + new Vector2Int(4, 1)), 13f, 30f, 20f);
+            yield return PlaytestCapture.Shoot("building-levels", PlaytestWorld.CellCenter(origin + new Vector2Int(width / 2, 3 * ids.Length / 2)), 20f, 40f, 20f);
         }
 
         private BuildingInstance Place(BuildingData data)

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Barn
   displayName: "\u0410\u043C\u0431\u0430\u0440"
-  prefab: {fileID: 6582902122045206567, guid: a7c8409440523894d88850c1e9512167, type: 3}
+  prefab: {fileID: 4413269369142058600, guid: a7c8409440523894d88850c1e9512167, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 360
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 1000
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 500
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 1400
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 4
@@ -68,6 +86,16 @@ MonoBehaviour:
     amount: 70
   - type: 1
     amount: 14
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 122
+  - type: 1
+    amount: 24
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 214
+  - type: 1
+    amount: 43
   fogRevealRadius: 8
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

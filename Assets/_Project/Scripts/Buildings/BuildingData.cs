@@ -139,6 +139,8 @@ namespace CityBuilder.Buildings
         // `levels` above, and which model each one shows in BuildingLevelAppearance.
         public List<ResourceAmount> upgradeToLevel2Cost = new List<ResourceAmount>();
         public List<ResourceAmount> upgradeToLevel3Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel4Cost = new List<ResourceAmount>();
+        public List<ResourceAmount> upgradeToLevel5Cost = new List<ResourceAmount>();
 
         [Header("Fog of War")]
         // Cells around this building permanently cleared of fog once placed -- see
@@ -178,5 +180,18 @@ namespace CityBuilder.Buildings
         }
 
         private static readonly BuildingLevelStats Fallback = new BuildingLevelStats();
+
+        /// <summary>What upgrading INTO the given level costs (2..MaxLevel), or null for a level that has no upgrade into it.</summary>
+        public List<ResourceAmount> UpgradeCostTo(int level)
+        {
+            switch (level)
+            {
+                case 2: return upgradeToLevel2Cost;
+                case 3: return upgradeToLevel3Cost;
+                case 4: return upgradeToLevel4Cost;
+                case 5: return upgradeToLevel5Cost;
+                default: return null;
+            }
+        }
     }
 }

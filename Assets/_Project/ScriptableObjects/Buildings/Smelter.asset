@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Smelter
   displayName: "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
-  prefab: {fileID: 2943529187485484571, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
+  prefab: {fileID: 8915212789660806204, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
   footprintSize: {x: 2, y: 3}
   cost:
   - type: 0
@@ -51,6 +51,24 @@ MonoBehaviour:
     housingCapacity: 0
     maxWorkers: 4
     batchesPerWorkerPerTick: 4
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 540
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 5
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 750
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 6
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -104,6 +122,16 @@ MonoBehaviour:
     amount: 98
   - type: 1
     amount: 70
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 172
+  - type: 1
+    amount: 122
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 300
+  - type: 1
+    amount: 214
   fogRevealRadius: 12
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

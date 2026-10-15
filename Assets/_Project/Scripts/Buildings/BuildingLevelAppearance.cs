@@ -71,6 +71,12 @@ namespace CityBuilder.Buildings
             box.center = new Vector3(box.center.x, height * 0.5f, box.center.z);
         }
 
+        /// <summary>True when this level was modelled itself rather than borrowing the model of a level below it.</summary>
+        public bool HasOwnModel(int level)
+        {
+            return levelModels != null && level >= 1 && level <= levelModels.Count && levelModels[level - 1] != null;
+        }
+
         /// <summary>The index of the model for this level, or of the nearest one below it -- see the fallback rule in the class summary. -1 when there are no models at all.</summary>
         private int Resolve(int level)
         {

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Flag
   displayName: "\u0424\u043B\u0430\u0433"
-  prefab: {fileID: 1191819897560239649, guid: c631bddafb509dc48b75fcc1b9674de4, type: 3}
+  prefab: {fileID: 7937978441326382255, guid: c631bddafb509dc48b75fcc1b9674de4, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 3
+  - maxHealth: 144
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 4
+  - maxHealth: 200
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 6
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -68,6 +86,16 @@ MonoBehaviour:
     amount: 11
   - type: 1
     amount: 3
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 19
+  - type: 1
+    amount: 5
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 34
+  - type: 1
+    amount: 9
   fogRevealRadius: 6
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

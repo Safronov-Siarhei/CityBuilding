@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Windmill
   displayName: "\u0412\u0435\u0442\u0440\u044F\u043A"
-  prefab: {fileID: 300374807125774797, guid: 44a4e4f07d3dc264c860f0e0012e6275, type: 3}
+  prefab: {fileID: 7788181028199218726, guid: 44a4e4f07d3dc264c860f0e0012e6275, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 432
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 600
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 7
+    batchesPerWorkerPerTick: 6
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes:
   - id: flour
     displayName: "\u041C\u0443\u043A\u0430"
@@ -75,6 +93,16 @@ MonoBehaviour:
     amount: 98
   - type: 1
     amount: 28
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 172
+  - type: 1
+    amount: 49
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 300
+  - type: 1
+    amount: 86
   fogRevealRadius: 12
   citizensOnBuild: 0
   requiredBuilding: {fileID: 11400000, guid: 04f42c35759c2c04db28628faf115e39, type: 2}

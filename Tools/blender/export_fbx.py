@@ -43,7 +43,8 @@ def is_model(o):
 
 
 def target(o):
-    if o.name.startswith("Orc"):
+    # "Orchard" starts with "Orc" too -- it is a building, not part of the orc faction
+    if o.name.startswith("Orc") and not o.name.startswith("Orchard"):
         return os.path.join(ORCS, o.name + ".fbx")
     folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS
     return os.path.join(folder, o.name + ".fbx")

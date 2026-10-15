@@ -12,7 +12,7 @@ namespace CityBuilder.Buildings
 {
     public class BuildingInstance : MonoBehaviour
     {
-        public const int MaxLevel = 3;
+        public const int MaxLevel = 5;
 
         // Above this fraction, ProductionBuilding scales output down (see its
         // DecayProductionMultiplier) -- exposed here since decay itself is owned by this class.
@@ -330,8 +330,7 @@ namespace CityBuilder.Buildings
 
             var totals = new Dictionary<ResourceType, int>();
             AccumulateCost(totals, Data.cost);
-            if (Level >= 2) AccumulateCost(totals, Data.upgradeToLevel2Cost);
-            if (Level >= 3) AccumulateCost(totals, Data.upgradeToLevel3Cost);
+            for (var level = 2; level <= Level; level++) AccumulateCost(totals, Data.UpgradeCostTo(level));
 
             var fraction = BalanceConfig.Instance.DemolishRefundFraction;
             var refund = new List<ResourceAmount>();
@@ -413,14 +412,13 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>
-        /// A small disc over any building that has been upgraded -- silver at level 2, gold at
-        /// level 3, nothing at all at level 1.
+        /// A small disc over an upgraded building that has no model of its own for its level --
+        /// silver below the top level, gold at it, nothing at all at level 1.
         ///
-        /// Levels are otherwise completely invisible: 49 buildings at three levels each is 98
-        /// models nobody has drawn yet, and until they exist an upgrade reads as resources
-        /// vanishing -- the number on the card changes and the town looks exactly as it did. The
-        /// disc is what makes a levelled-up district legible from the map, without waiting on art
-        /// and without opening a card per building.
+        /// Since 2026-10-15 every roster building has a model for each of its five levels, and the
+        /// model IS the feedback, so the disc stays off over them. It remains for the few that do
+        /// not (the water buildings, the fence), where an upgrade would otherwise read as resources
+        /// vanishing -- the number on the card changes and the town looks exactly as it did.
         ///
         /// One renderer per upgraded building, on a material shared by every building at that
         /// level, and nothing of it runs per frame.
@@ -429,7 +427,8 @@ namespace CityBuilder.Buildings
         {
             // Roads are laid by the dozen; a disc floating over every tile of a road network would
             // bury the town it is supposed to describe.
-            var shouldShow = Level > 1 && Data != null && !Data.isRoad;
+            var shouldShow = Level > 1 && Data != null && !Data.isRoad
+                             && (_levelAppearance == null || !_levelAppearance.HasOwnModel(Level));
 
             if (shouldShow && _levelMarker == null) _levelMarker = CreateLevelMarker();
             if (_levelMarker == null) return;
@@ -569,7 +568,7 @@ namespace CityBuilder.Buildings
         public List<ResourceAmount> GetUpgradeCost()
         {
             if (Data == null || Level >= MaxLevel) return null;
-            return Level == 1 ? Data.upgradeToLevel2Cost : Data.upgradeToLevel3Cost;
+            return Data.UpgradeCostTo(Level + 1);
         }
 
         /// <summary>

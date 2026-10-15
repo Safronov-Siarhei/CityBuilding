@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: HealerHouse
   displayName: "\u0414\u043E\u043C \u043B\u0435\u043A\u0430\u0440\u044F"
-  prefab: {fileID: 1819998704004423970, guid: 281a18d4257d98d49b32dd3275015c46, type: 3}
+  prefab: {fileID: 6300960928118318224, guid: 281a18d4257d98d49b32dd3275015c46, type: 3}
   footprintSize: {x: 2, y: 4}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 26
     happiness: 0
+  - maxHealth: 468
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 31
+    happiness: 0
+  - maxHealth: 650
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 37
+    happiness: 0
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -68,6 +86,16 @@ MonoBehaviour:
     amount: 84
   - type: 1
     amount: 42
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 147
+  - type: 1
+    amount: 74
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 257
+  - type: 1
+    amount: 129
   fogRevealRadius: 10
   citizensOnBuild: 0
   requiredBuilding: {fileID: 0}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Baker
   displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
-  prefab: {fileID: 6336544968021759511, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
+  prefab: {fileID: 4994814809049287589, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
   footprintSize: {x: 1, y: 2}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 396
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 550
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 7
+    batchesPerWorkerPerTick: 6
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes:
   - id: bread
     displayName: "\u0425\u043B\u0435\u0431"
@@ -75,6 +93,16 @@ MonoBehaviour:
     amount: 84
   - type: 1
     amount: 28
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 147
+  - type: 1
+    amount: 49
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 257
+  - type: 1
+    amount: 86
   fogRevealRadius: 10
   citizensOnBuild: 0
   requiredBuilding: {fileID: 11400000, guid: 04fda69031619844392113fa31c06f65, type: 2}

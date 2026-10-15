@@ -177,7 +177,7 @@ namespace CityBuilder.EditorTools
                     recruitIronBars = CostAmount(header, row, "recruit_ironbar", path),
                     recruitCopperBars = CostAmount(header, row, "recruit_copperbar", path),
                     unlockResearch = ReadResearchStep(header, row, "research_coins", "research_sec", path),
-                    levelResearch = ReadLevelResearch(header, row, path),
+                    levelResearch = ReadLevelResearch(header, row, UnitBalance.MaxLevel, path),
                 });
             }
             return units;
@@ -210,14 +210,14 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The research that reaches levels 2 and 3, from research_coins_2/research_sec_2 onwards.
+        /// The research that reaches levels 2 up to maxLevel, from research_coins_2/research_sec_2 onwards.
         /// A row that names neither is a thing whose levels are not gated at all -- which is exactly
         /// how the Laboratory escapes its own gate, by leaving those cells at zero.
         /// </summary>
-        private static List<ResearchStep> ReadLevelResearch(List<string> header, List<string> row, string path)
+        private static List<ResearchStep> ReadLevelResearch(List<string> header, List<string> row, int maxLevel, string path)
         {
-            var steps = new List<ResearchStep>(2);
-            for (var level = 2; level <= UnitBalance.MaxLevel; level++)
+            var steps = new List<ResearchStep>(maxLevel - 1);
+            for (var level = 2; level <= maxLevel; level++)
             {
                 steps.Add(ReadResearchStep(header, row, $"research_coins_{level}", $"research_sec_{level}", path));
             }
@@ -290,9 +290,11 @@ namespace CityBuilder.EditorTools
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
                     upgradeToLevel3Cost = ReadCost(header, row, "up3_", path),
+                    upgradeToLevel4Cost = ReadCost(header, row, "up4_", path),
+                    upgradeToLevel5Cost = ReadCost(header, row, "up5_", path),
                     startsUnlocked = Flag(header, row, "starts_unlocked", true, path),
                     unlockResearch = ReadResearchStep(header, row, "research_coins", "research_sec", path),
-                    levelResearch = ReadLevelResearch(header, row, path),
+                    levelResearch = ReadLevelResearch(header, row, BuildingInstance.MaxLevel, path),
                 });
             }
             return buildings;
@@ -474,9 +476,9 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The three upgrade levels of one building.
+        /// The upgrade levels of one building, MaxLevel of them.
         ///
-        /// Level 1 comes from the plain column, levels 2 and 3 from the same name with a _2 / _3
+        /// Level 1 comes from the plain column, levels 2..5 from the same name with a _2 .. _5
         /// suffix, and anything the sheet doesn't say repeats the level below -- an upgrade that
         /// leaves a stat alone is the common case, and making every building spell out every stat
         /// three times would be a wall of duplicated numbers nobody would keep honest.

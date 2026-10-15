@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Manor
   displayName: "\u041E\u0441\u043E\u0431\u043D\u044F\u043A"
-  prefab: {fileID: 6538796345623397610, guid: 2daab41d62d5f4b4cb69d1545b0c2c5f, type: 3}
+  prefab: {fileID: 2533990542572421737, guid: 2daab41d62d5f4b4cb69d1545b0c2c5f, type: 3}
   footprintSize: {x: 3, y: 3}
   cost:
   - type: 0
@@ -55,6 +55,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 720
+    defense: 0
+    housingCapacity: 36
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 1000
+    defense: 0
+    housingCapacity: 44
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -68,6 +86,16 @@ MonoBehaviour:
     amount: 154
   - type: 1
     amount: 70
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 270
+  - type: 1
+    amount: 122
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 472
+  - type: 1
+    amount: 214
   fogRevealRadius: 12
   citizensOnBuild: 0
   requiredBuilding: {fileID: 11400000, guid: 6673b6b16b420904598e5b0bd351c80e, type: 2}

@@ -2637,6 +2637,8 @@ namespace CityBuilder.EditorTools
             data.levels = CopyLevels(balance.levels);
             data.upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
             data.upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);
+            data.upgradeToLevel4Cost = CopyCost(balance.upgradeToLevel4Cost);
+            data.upgradeToLevel5Cost = CopyCost(balance.upgradeToLevel5Cost);
         }
 
         /// <summary>The level-1 stats of a sheet row, or defaults if the row is missing its levels entirely (already reported by Balance).</summary>

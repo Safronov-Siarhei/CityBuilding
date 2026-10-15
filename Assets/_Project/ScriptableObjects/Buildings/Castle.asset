@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Castle
   displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
-  prefab: {fileID: 4431482968242572077, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
+  prefab: {fileID: 3898662840860201009, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
   footprintSize: {x: 5, y: 5}
   cost: []
   category: 0
@@ -51,6 +51,24 @@ MonoBehaviour:
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
+  - maxHealth: 1440
+    defense: 72
+    housingCapacity: 7
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
+  - maxHealth: 2000
+    defense: 100
+    housingCapacity: 7
+    maxWorkers: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    happiness: 0
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -68,6 +86,24 @@ MonoBehaviour:
     amount: 20
   - type: 3
     amount: 40
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 385
+  - type: 1
+    amount: 262
+  - type: 6
+    amount: 35
+  - type: 3
+    amount: 70
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 674
+  - type: 1
+    amount: 459
+  - type: 6
+    amount: 61
+  - type: 3
+    amount: 122
   fogRevealRadius: 20
   citizensOnBuild: 5
   requiredBuilding: {fileID: 0}

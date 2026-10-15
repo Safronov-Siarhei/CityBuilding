@@ -1,4 +1,5 @@
 ﻿using CityBuilder.Combat;
+using CityBuilder.Buildings;
 using CityBuilder.Core;
 using NUnit.Framework;
 
@@ -145,7 +146,7 @@ namespace CityBuilder.Tests.EditMode
                 Assert.IsNotEmpty(building.displayName, $"{building.id}: an empty display name shows up as a blank hotbar tooltip.");
                 Assert.Greater(building.productionIntervalSeconds, 0f, $"{building.id}: a zero production interval ticks every frame.");
                 Assert.GreaterOrEqual(building.fogRevealRadius, 0, $"{building.id}: negative reveal radius.");
-                Assert.AreEqual(3, building.levels.Count, $"{building.id}: every building needs stats for all three upgrade levels.");
+                Assert.AreEqual(BuildingInstance.MaxLevel, building.levels.Count, $"{building.id}: every building needs stats for every upgrade level.");
 
                 for (var level = 1; level <= building.levels.Count; level++)
                 {
@@ -225,14 +226,20 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var building in config.Buildings)
             {
-                var level2 = 0;
-                foreach (var amount in building.upgradeToLevel2Cost) level2 += amount.amount;
+                var costs = new[] { building.upgradeToLevel2Cost, building.upgradeToLevel3Cost, building.upgradeToLevel4Cost, building.upgradeToLevel5Cost };
+                Assert.AreEqual(BuildingInstance.MaxLevel - 1, costs.Length, "A level was added without an upgrade cost to reach it.");
 
-                var level3 = 0;
-                foreach (var amount in building.upgradeToLevel3Cost) level3 += amount.amount;
+                var previous = 0;
+                for (var i = 0; i < costs.Length; i++)
+                {
+                    var total = 0;
+                    foreach (var amount in costs[i]) total += amount.amount;
 
-                Assert.GreaterOrEqual(level3, level2,
-                    $"{building.id}: reaching level 3 costs {level3} resources in total, less than the {level2} level 2 costs.");
+                    Assert.GreaterOrEqual(total, previous,
+                        $"{building.id}: reaching level {i + 2} costs {total} resources in total, less than the {previous} level {i + 1} costs.");
+                    if (i > 0 && previous > 0) Assert.Greater(total, 0, $"{building.id}: level {i + 2} is free to reach.");
+                    previous = total;
+                }
             }
         }
 
