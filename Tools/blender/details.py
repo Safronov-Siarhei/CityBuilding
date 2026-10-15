@@ -819,3 +819,76 @@ def bunting(b, p0, p1, sag=0.08, step=0.09, colors=('banner_red', 'plaster_yello
         x, y, z = at(t)
         b.prism([(-0.025, 0.0), (0.025, 0.0), (0.0, -0.065)], (x, y, z - 0.004), (ux, uy, 0),
                 (0, 0, 1), 0.006, colors[i % len(colors)], back_cap=True)
+
+
+# -- level 4: the glazed roof ------------------------------------------------------------------------
+# Level 3 crowned the building in gold; level 4 re-lays its roof in glazed tiles: a lattice of
+# diamonds in the category's dark shade and gold over the base tiles, and a gilded crest along the
+# ridge. The roof is what the game's camera sees most, so this is the tier you read from afar.
+
+def _slopes(cx, cy, axis, half_len, half_span, ze, overhang=None, t=None):
+    """The top surface of each slope of a standard d.roof: (origin at the eave's middle,
+    unit along the ridge, unit up the slope, unit normal, slope length)."""
+    from mathutils import Vector
+    overhang = ROOF['overhang'] if overhang is None else overhang
+    t = (ROOF['t'] + ROOF['rib_h'] * 0.5) if t is None else t
+    zr = ze + half_span * PITCH
+    up = Vector((0, 0, 1))
+    r = Vector((1, 0, 0)) if axis == 'x' else Vector((0, 1, 0))
+    s = Vector((0, 1, 0)) if axis == 'x' else Vector((-1, 0, 0))
+    c = Vector((cx, cy, 0))
+    out = []
+    for side in (-1, 1):
+        eave = c + s * (side * half_span) + up * ze
+        ridge = c + up * zr
+        dvec = (ridge - eave).normalized()
+        ax = r * (-side)
+        n = ax.cross(dvec)
+        start = eave - dvec * overhang + n * (t + 0.004)
+        out.append((start, r, dvec, n, (ridge - eave).length + overhang))
+    return out
+
+
+def glazed_roof(b, cx, cy, axis, half_len, half_span, ze, dark, accent='gold', w=0.075,
+                step=0.22, row=0.17, overhang=None, t=None):
+    """Lays a lattice of flat diamonds over both slopes of a standard d.roof (same arguments):
+    rows alternate `dark` and `accent`, every other row offset by half a step. Two triangles a
+    diamond; skips any that would hang over a verge or the eave."""
+    for start, r, dvec, n, length in _slopes(cx, cy, axis, half_len, half_span, ze, overhang, t):
+        k = 0
+        v = row * 0.75
+        while v < length - w - 0.06:
+            off = (step / 2) if k % 2 else 0.0
+            col = dark if k % 2 == 0 else accent
+            u = -half_len + 0.03 + w + off
+            while u < half_len - 0.03 - w:
+                cpt = start + r * u + dvec * v
+                pts = [cpt - r * w, cpt - dvec * w * 1.3, cpt + r * w, cpt + dvec * w * 1.3]
+                verts = [b.bm.verts.new(p) for p in pts]
+                f = b._face(verts, col)
+                f.normal_update()
+                if f.normal.dot(n) < 0:
+                    f.normal_flip()
+                u += step
+            v += row
+            k += 1
+
+
+def ridge_crest(b, cx, cy, axis, half_len, half_span, ze, step=0.14, h=0.07, t=None):
+    """A gilded crest along the ridge roll of a standard d.roof: small gold spikes with a ball
+    between each pair."""
+    zr = ze + half_span * PITCH
+    t = (ROOF['t'] + ROOF['rib_h'] * 0.5) if t is None else t
+    roll = max(0.025, min(0.055, half_span * 0.12))
+    z = zr + t + ROOF['cap_lift'] * 0.5 + roll * 1.3
+    a = -half_len + step / 2
+    while a < half_len - step / 2 + 1e-6:
+        x, y = (cx + a, cy) if axis == 'x' else (cx, cy + a)
+        b.pyramid(x, y, z - 0.01, 0.014, 0.014, z + h, 'gold')
+        a += step
+
+
+def glazed(b, cx, cy, axis, half_len, half_span, ze, dark, **kw):
+    """Level 4's whole roof treatment: the diamond lattice and the gilded ridge crest."""
+    glazed_roof(b, cx, cy, axis, half_len, half_span, ze, dark, **kw)
+    ridge_crest(b, cx, cy, axis, half_len, half_span, ze)
