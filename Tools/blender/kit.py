@@ -649,6 +649,26 @@ def run(obj_name, build, source_name=None, offset=(0, 0, 0), collection=None, sa
         bpy.ops.wm.save_mainfile()
 
 
+
+def borrow(script):
+    """Another model script's namespace, loaded WITHOUT its kit.run: a level-3 script takes
+    level 2's build() and adds to the Builder it returns, so level 3 is always level 2 grown.
+    (Importing the script instead would rebuild and save level 2.)"""
+    import os
+    import sys
+    global run
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), script)
+    with open(path, encoding='utf-8') as fh:
+        code = compile(fh.read(), path, 'exec')
+    ns = {'__file__': path, '__name__': 'borrowed_' + os.path.splitext(script)[0]}
+    real = run
+    run = lambda *a, **k: None  # noqa: E731
+    try:
+        exec(code, ns)
+    finally:
+        run = real
+    return ns
+
 def file_display_settings():
     """Standard view transform (what Unity's linear pipeline shows) and textured solid view."""
     sc = bpy.context.scene

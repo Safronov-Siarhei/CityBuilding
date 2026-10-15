@@ -721,3 +721,57 @@ def pennant(b, x, y, z, h=0.32, color='banner_red', length=0.2):
              (x + length, zt - 0.01), (x, zt)], (0, y + 0.005, 0), (1, 0, 0), (0, 0, 1), 0.012,
             color, back_cap=True)
     b.ball(x, y, z + h, 0.022, 0.04, 'gold', sides=6)
+
+
+def cupola(b, x, y, z0, r=0.13, h=0.24, roof='roof_orange', wall='stone_light'):
+    """A glazed octagonal lantern on a ridge: a base sitting into the roof from z0, glass all
+    round under a cornice, a cone roof and a gold finial. Returns the apex."""
+    b.cylinder(x, y, z0 - 0.08, z0 + 0.04, r + 0.02, wall, sides=8)
+    b.cylinder(x, y, z0 + 0.04, z0 + h, r, GLASS, sides=8)
+    for i in range(8):
+        import math
+        a = math.radians(22.5 + 45 * i)
+        px, py = x + r * math.cos(a), y + r * math.sin(a)
+        b.box(px - 0.012, px + 0.012, py - 0.012, py + 0.012, z0 + 0.04, z0 + h, 'wood_light')
+    b.cylinder(x, y, z0 + h, z0 + h + 0.03, r + 0.035, wall, sides=8)
+    apex = z0 + h + 0.03 + r * 1.8
+    b.pyramid(x, y, z0 + h + 0.03, r + 0.05, r + 0.05, apex, roof, sides=8, rot_deg=22.5)
+    finial(b, x, y, apex - 0.02, h=0.13)
+    return apex
+
+
+def statue(b, x, y, z0=0.0, scale=1.0, plinth='stone_light'):
+    """A gilded figure with a raised arm on a stepped stone plinth -- a town that can afford a
+    monument (level 3)."""
+    s = scale
+    b.box(x - 0.13 * s, x + 0.13 * s, y - 0.13 * s, y + 0.13 * s, z0, z0 + 0.06 * s, 'stone_mid',
+          bevel=0.006)
+    b.box(x - 0.09 * s, x + 0.09 * s, y - 0.09 * s, y + 0.09 * s, z0 + 0.06 * s, z0 + 0.3 * s,
+          plinth, bevel=0.006)
+    b.box(x - 0.11 * s, x + 0.11 * s, y - 0.11 * s, y + 0.11 * s, z0 + 0.3 * s, z0 + 0.33 * s,
+          'stone_mid')
+    zb = z0 + 0.33 * s
+    b.frustum(x, y, zb, zb + 0.2 * s, 0.06 * s, 0.035 * s, 'gold', sides=6)
+    b.ball(x, y, zb + 0.19 * s, 0.035 * s, 0.07 * s, 'gold', sides=6)
+    b.rod((x + 0.03 * s, y, zb + 0.16 * s), (x + 0.08 * s, y, zb + 0.3 * s), 0.022 * s, 'gold')
+    b.rod((x - 0.03 * s, y, zb + 0.15 * s), (x - 0.06 * s, y, zb + 0.06 * s), 0.022 * s, 'gold')
+
+
+def armillary(b, x, y, z0=0.0, r=0.16):
+    """A gold armillary sphere -- three crossed rings on an axis -- on a stone column."""
+    import math
+    b.cylinder(x, y, z0, z0 + 0.05, 0.14, 'stone_mid', sides=8)
+    b.cylinder(x, y, z0 + 0.05, z0 + 0.32, 0.055, 'stone_light', sides=8)
+    zc = z0 + 0.32 + r + 0.02
+    n = 10
+    for plane in ('xz', 'yz', 'xy'):
+        pts = []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            u, v = r * math.cos(a), r * math.sin(a)
+            pts.append((x + u, y, zc + v) if plane == 'xz' else
+                       (x, y + u, zc + v) if plane == 'yz' else (x + u, y + v, zc))
+        for i in range(n):
+            b.rod(pts[i], pts[(i + 1) % n], 0.018, 'gold')
+    b.rod((x, y, z0 + 0.32), (x + 0.06, y, zc + r + 0.06), 0.014, 'iron')
+    b.ball(x, y, zc - 0.035, 0.035, 0.07, 'gold', sides=6)
