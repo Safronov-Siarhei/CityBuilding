@@ -891,4 +891,94 @@ def ridge_crest(b, cx, cy, axis, half_len, half_span, ze, step=0.14, h=0.07, t=N
 def glazed(b, cx, cy, axis, half_len, half_span, ze, dark, **kw):
     """Level 4's whole roof treatment: the diamond lattice and the gilded ridge crest."""
     glazed_roof(b, cx, cy, axis, half_len, half_span, ze, dark, **kw)
-    ridge_crest(b, cx, cy, axis, half_len, half_span, ze)
+    ridge_crest(b, cx, cy, axis, half_len, half_span, ze, t=kw.get('t'))
+
+
+def _diamond(b, c, r, dvec, n, w, col):
+    verts = [b.bm.verts.new(p) for p in (c - r * w, c - dvec * w * 1.3, c + r * w, c + dvec * w * 1.3)]
+    f = b._face(verts, col)
+    f.normal_update()
+    if f.normal.dot(n) < 0:
+        f.normal_flip()
+
+
+def glazed_pyramid(b, cx, cy, z0, hx, hy, apex, dark, accent='gold', w=0.055, step=0.18,
+                   row=0.15, crest=True):
+    """The level-4 lattice on the four faces of a square b.pyramid roof (same cx, cy, z0, hx,
+    hy, apex), rows narrowing towards the apex, and a gold finial on its tip."""
+    from mathutils import Vector
+    corners = [Vector((cx - hx, cy - hy, z0)), Vector((cx + hx, cy - hy, z0)),
+               Vector((cx + hx, cy + hy, z0)), Vector((cx - hx, cy + hy, z0))]
+    top = Vector((cx, cy, apex))
+    for i in range(4):
+        a, bb = corners[i], corners[(i + 1) % 4]
+        base_mid = (a + bb) / 2
+        dvec = (top - base_mid).normalized()
+        r = (bb - a).normalized()
+        n = r.cross(dvec).normalized()
+        if n.dot(base_mid - Vector((cx, cy, z0))) < 0:
+            n = -n
+        height = (top - base_mid).length
+        k, v = 0, row * 0.7
+        while v < height - w * 2.5:
+            t = v / height
+            half = (bb - a).length / 2 * (1 - t) - w - 0.03
+            col = dark if k % 2 == 0 else accent
+            off = step / 2 if k % 2 else 0.0
+            u = -half + off
+            while u <= half + 1e-6:
+                c = base_mid + dvec * v + r * u + n * 0.006
+                _diamond(b, c, r, dvec, n, w, col)
+                u += step
+            v += row
+            k += 1
+    if crest:
+        finial(b, cx, cy, apex - 0.02, h=0.12)
+
+
+def glazed_shed(b, axis, a0, a1, wall, out, z_wall, z_out, dark, accent='gold', w=0.055,
+                step=0.18, row=0.15):
+    """The level-4 lattice over a d.shed_roof (same first seven arguments), and a row of gold
+    spikes along its high edge."""
+    from mathutils import Vector
+    if axis == 'x':
+        p0, p1, r = Vector((0, wall, z_wall)), Vector((0, out, z_out)), Vector((1, 0, 0))
+    else:
+        p0, p1, r = Vector((wall, 0, z_wall)), Vector((out, 0, z_out)), Vector((0, 1, 0))
+    dvec = (p1 - p0).normalized()
+    ax = r if r.cross(dvec).z > 0 else -r
+    n = ax.cross(dvec)
+    t = ROOF['t'] * 0.8 + ROOF['rib_h'] * 0.5
+    half_len = (a1 - a0) / 2
+    mid_a = (a0 + a1) / 2
+    length = (p1 - p0).length
+    hi, lo_ = (p0, p1) if p0.z >= p1.z else (p1, p0)
+    down = (lo_ - hi).normalized()
+    k, v = 0, row * 0.6
+    while v < length - w:
+        col = dark if k % 2 == 0 else accent
+        off = step / 2 if k % 2 else 0.0
+        u = -half_len + 0.03 + w + off
+        while u < half_len - 0.03 - w:
+            c = hi + down * v + r * (mid_a + u) + n * (t + 0.004)
+            _diamond(b, c, r, -down, n, w, col)
+            u += step
+        v += row
+        k += 1
+    u = -half_len + 0.07
+    while u < half_len - 0.05:
+        p = hi + r * (mid_a + u) + n * t
+        b.pyramid(p.x, p.y, p.z - 0.01, 0.012, 0.012, p.z + 0.06, 'gold')
+        u += 0.14
+
+
+def ring_crest(b, pts, z, step=0.2, h=0.08):
+    """Gold spikes along a closed outline `pts` at height z -- a ring roof's or a rim's crest."""
+    import math
+    for (ax, ay), (bx, by) in zip(pts, pts[1:] + pts[:1]):
+        seg = math.hypot(bx - ax, by - ay)
+        n = max(1, int(seg / step))
+        for i in range(n):
+            t = i / n
+            x, y = ax + (bx - ax) * t, ay + (by - ay) * t
+            b.pyramid(x, y, z - 0.01, 0.014, 0.014, z + h, 'gold')
