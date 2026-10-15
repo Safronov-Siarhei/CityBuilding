@@ -775,3 +775,24 @@ def armillary(b, x, y, z0=0.0, r=0.16):
             b.rod(pts[i], pts[(i + 1) % n], 0.018, 'gold')
     b.rod((x, y, z0 + 0.32), (x + 0.06, y, zc + r + 0.06), 0.014, 'iron')
     b.ball(x, y, zc - 0.035, 0.035, 0.07, 'gold', sides=6)
+
+
+def louvre(b, x, y, z0, half=0.11, h=0.3, roof='roof_red'):
+    """A louvred vent turret on a store's ridge: a plank box with slatted openings on all four
+    sides under a pyramid roof and a gold finial. z0 sits just under the ridge. Returns the apex."""
+    from kit import Facade
+    z1 = z0 + h
+    b.box(x - half, x + half, y - half, y + half, z0, z1, 'wood_light', bevel=0.008)
+    for nm, plane, s in (('-y', y - half, x), ('+y', y + half, x), ('-x', x - half, y),
+                         ('+x', x + half, y)):
+        f = Facade(b, nm, plane)
+        f.rect(s - half + 0.04, s + half - 0.04, z0 + 0.1, z1 - 0.03, 0.006, 'window')
+        for k in range(4):
+            z = z0 + 0.115 + k * 0.032
+            f.rect(s - half + 0.04, s + half - 0.04, z, z + 0.014, 0.016, 'wood_dark')
+    b.box(x - half - 0.02, x + half + 0.02, y - half - 0.02, y + half + 0.02, z1, z1 + 0.025,
+          'wood_dark')
+    apex = z1 + 0.2
+    b.pyramid(x, y, z1 + 0.025, half + 0.04, half + 0.04, apex, roof)
+    finial(b, x, y, apex - 0.01)
+    return apex
