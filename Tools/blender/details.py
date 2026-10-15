@@ -796,3 +796,26 @@ def louvre(b, x, y, z0, half=0.11, h=0.3, roof='roof_red'):
     b.pyramid(x, y, z1 + 0.025, half + 0.04, half + 0.04, apex, roof)
     finial(b, x, y, apex - 0.01)
     return apex
+
+
+def bunting(b, p0, p1, sag=0.08, step=0.09, colors=('banner_red', 'plaster_yellow', 'roof_purple',
+                                                      'white', 'banner_blue')):
+    """A string of little triangular flags sagging between two points p0, p1 (x, y, z) -- the
+    festival look of an entertainment building at level 3."""
+    import math
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    length = math.hypot(dx, dy)
+    ux, uy = dx / length, dy / length
+
+    def at(t):
+        return (p0[0] + dx * t, p0[1] + dy * t,
+                p0[2] + (p1[2] - p0[2]) * t - sag * 4 * t * (1 - t))
+    segs = 6
+    for k in range(segs):
+        b.rod(at(k / segs), at((k + 1) / segs), 0.008, 'iron')
+    n = max(2, int(length / step))
+    for i in range(1, n):
+        t = i / n
+        x, y, z = at(t)
+        b.prism([(-0.025, 0.0), (0.025, 0.0), (0.0, -0.065)], (x, y, z - 0.004), (ux, uy, 0),
+                (0, 0, 1), 0.006, colors[i % len(colors)], back_cap=True)
