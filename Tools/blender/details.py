@@ -656,3 +656,68 @@ def basket(b, x, y, fill, r=0.065, z0=0.0):
 def trough(b, x0, x1, y, w=0.12, h=0.1):
     b.box(x0, x1, y - w / 2, y + w / 2, 0, h, 'wood_mid', bevel=0.008)
     b.box(x0 + 0.02, x1 - 0.02, y - w / 2 + 0.02, y + w / 2 - 0.02, h - 0.03, h + 0.002, 'water')
+
+
+# -- level 3: the building at its grandest ----------------------------------------------------------
+# Level 2 is the same house grown richer; level 3 keeps the silhouette and crowns it: gold on the
+# ridges and spires, a turret or tower where the plot allows, paved yards and low stone walls.
+
+def finial(b, x, y, z, h=0.16):
+    """A gilded spike with a ball, on a ridge end or a cone's tip -- level 3's gold."""
+    b.cylinder(x, y, z, z + h * 0.35, 0.016, 'gold', sides=6)
+    b.ball(x, y, z + h * 0.3, 0.036, h * 0.42, 'gold', sides=6)
+    b.pyramid(x, y, z + h * 0.68, 0.012, 0.012, z + h, 'gold')
+
+
+def turret(b, x, y, z0, z1, r, wall='stone_light', roof='roof_orange', spire=None, face='-y',
+           band='stone_mid'):
+    """A round turret: an 8-sided shaft from z0 to z1 under a corbelled band, a tall cone roof
+    and a gold finial, with a slit window facing `face`. Returns the cone's apex."""
+    b.cylinder(x, y, z0, z1, r, wall, sides=8, bevel=0.008)
+    b.cylinder(x, y, z1 - 0.06, z1, r + 0.03, band, sides=8)
+    apex = z1 + (spire if spire is not None else r * 2.6)
+    b.pyramid(x, y, z1 - 0.01, r + 0.07, r + 0.07, apex, roof, sides=8, rot_deg=22.5)
+    finial(b, x, y, apex - 0.02)
+    a = r * 0.924   # an octagon's flat face, rotated 22.5 so one faces each axis
+    sx, sy = {'-y': (0, -1), '+y': (0, 1), '-x': (-1, 0), '+x': (1, 0)}[face]
+    zw = (z0 + z1) / 2
+    if sx:
+        b.box(x + sx * a - 0.008, x + sx * a + 0.008, y - 0.03, y + 0.03, zw - 0.09, zw + 0.09,
+              GLASS)
+    else:
+        b.box(x - 0.03, x + 0.03, y + sy * a - 0.008, y + sy * a + 0.008, zw - 0.09, zw + 0.09,
+              GLASS)
+    return apex
+
+
+def paving(b, x0, x1, y0, y1, z=0.014, color='cobble'):
+    """Flagstones over a path or yard: the town has paved the doorstep (level 3)."""
+    b.box(x0, x1, y0, y1, 0, z, color)
+
+
+def garden_wall(b, pts, h=0.17, t=0.07, color='stone_light', cap='stone_mid'):
+    """A low stone wall with a coping along an axis-aligned polyline `pts` -- level 3's answer
+    to the rail and picket fences."""
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        xa, xb = sorted((ax, bx))
+        ya, yb = sorted((ay, by))
+        b.box(xa - t / 2, xb + t / 2, ya - t / 2, yb + t / 2, 0, h, color, bevel=0.006)
+        b.box(xa - t / 2 - 0.012, xb + t / 2 + 0.012, ya - t / 2 - 0.012, yb + t / 2 + 0.012,
+              h, h + 0.03, cap, bevel=0.006)
+
+
+def pier(b, x, y, h=0.3, w=0.06, color='stone_light'):
+    """A square gate pier with a gold ball on its cap."""
+    b.box(x - w, x + w, y - w, y + w, 0, h, color, bevel=0.008)
+    b.box(x - w - 0.015, x + w + 0.015, y - w - 0.015, y + w + 0.015, h, h + 0.03, 'stone_mid')
+    b.ball(x, y, h + 0.03, 0.04, 0.07, 'gold', sides=6)
+
+
+def pennant(b, x, y, z, h=0.32, color='banner_red', length=0.2):
+    """An iron pole with a long swallow-tailed pennant flying along +x, for a spire or turret."""
+    b.box(x - 0.009, x + 0.009, y - 0.009, y + 0.009, z, z + h, 'iron')
+    zt = z + h - 0.02
+    b.prism([(x, zt - 0.09), (x + length, zt - 0.06), (x + length * 0.82, zt - 0.035),
+             (x + length, zt - 0.01), (x, zt)], (0, y + 0.005, 0), (1, 0, 0), (0, 0, 1), 0.012,
+            color, back_cap=True)
+    b.ball(x, y, z + h, 0.022, 0.04, 'gold', sides=6)
