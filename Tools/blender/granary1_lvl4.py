@@ -1,9 +1,9 @@
-"""Granary1-lvl4 -- the Larder (Кладовая) at level 4. Footprint 2x1 (level 1's).
+"""Granary1-lvl4 -- the Larder (Кладовая) at level 4.
 
-Level 3 (granary1_lvl3.build) with the roof and the awning re-laid in glazed tiles, gilded
-crests along the ridge and the awning's top. Level 4's mark across the set is the glazed roof: a
-lattice of the category's dark shade and gold diamonds over the tiles. Models only -- the game
-stops at level 3 for now.
+Footprint 2x1 (level 1's). Level 3 (granary1_lvl3.build) with the roof and the awning re-laid in
+glazed tiles, gilded crests along the ridge and the awning's top. Level 4's mark across the set
+is the glazed roof: a lattice of the category's dark shade and gold diamonds over the tiles.
+Models only -- the game stops at level 3 for now.
 """
 import os
 import sys

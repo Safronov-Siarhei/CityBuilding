@@ -1,9 +1,10 @@
-"""Castle1-lvl4 -- the Town Hall (Ратуша) at level 4. Footprint 5x5 (level 1's).
+"""Castle1-lvl4 -- the Town Hall (Ратуша) at level 4.
 
-Level 3 (castle1_lvl3.build) with the hall's roof and the blue cones of the four corner turrets
-and the clock tower's spire re-laid in glazed tiles, and a gilded crest along the hall's ridge.
-Level 4's mark across the set is the glazed roof: a lattice of the category's dark shade and
-gold diamonds over the tiles. Models only -- the game stops at level 3 for now.
+Footprint 5x5 (level 1's). Level 3 (castle1_lvl3.build) with the hall's roof and the blue cones
+of the four corner turrets and the clock tower's spire re-laid in glazed tiles, and a gilded
+crest along the hall's ridge. Level 4's mark across the set is the glazed roof: a lattice of the
+category's dark shade and gold diamonds over the tiles. Models only -- the game stops at level 3
+for now.
 """
 import os
 import sys
@@ -28,7 +29,8 @@ def build(lo, hi):
             d.glazed_pyramid(b, sx * 2.06, sy * 2.06, t_top + 0.06, 0.43, 0.43, t_top + 0.52,
                              'roof_blue_dark', crest=False)
     bell1 = U_TOP + 0.38 + 0.44
-    d.glazed_pyramid(b, 0, 0.04, bell1 + 0.01, 0.52, 0.56, bell1 + 0.5, 'roof_blue_dark', crest=False)
+    d.glazed_pyramid(b, 0, 0.04, bell1 + 0.01, 0.52, 0.56, bell1 + 0.5, 'roof_blue_dark',
+                     crest=False)
     return b
 
 

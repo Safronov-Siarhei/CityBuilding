@@ -982,3 +982,49 @@ def ring_crest(b, pts, z, step=0.2, h=0.08):
             t = i / n
             x, y = ax + (bx - ax) * t, ay + (by - ay) * t
             b.pyramid(x, y, z - 0.01, 0.014, 0.014, z + h, 'gold')
+
+
+def glazed_ring(b, pts_out, pts_in, z_out, z_in, dark, accent='gold', w=0.055, step=0.2,
+                row=0.15):
+    """The level-4 lattice over a b.ring_roof (same outlines and heights): every segment's
+    sloped quad gets rows of diamonds from the outer eave inwards."""
+    from mathutils import Vector
+    n_seg = len(pts_out)
+    for i in range(n_seg):
+        j = (i + 1) % n_seg
+        o0, o1 = Vector((*pts_out[i], z_out)), Vector((*pts_out[j], z_out))
+        i0, i1 = Vector((*pts_in[i], z_in)), Vector((*pts_in[j], z_in))
+        om, im = (o0 + o1) / 2, (i0 + i1) / 2
+        r = (o1 - o0).normalized()
+        dvec = (im - om).normalized()
+        nrm = r.cross(dvec).normalized()
+        if nrm.z < 0:
+            nrm = -nrm
+        depth = (im - om).length
+        k, v = 0, row * 0.7
+        while v < depth - w * 1.5:
+            t = v / depth
+            a, c = o0.lerp(i0, t), o1.lerp(i1, t)
+            half = (c - a).length / 2 - w - 0.03
+            mid = (a + c) / 2
+            col = dark if k % 2 == 0 else accent
+            off = step / 2 if k % 2 else 0.0
+            u = -half + off
+            while u <= half + 1e-6:
+                _diamond(b, mid + r * u + nrm * 0.008, r, dvec, nrm, w, col)
+                u += step
+            v += row
+            k += 1
+
+
+def glazed_dome(b, cx, cy, z0, r, h, dark, accent='gold', sides=8, rot_deg=22.5, **kw):
+    """The level-4 lattice over the two lower bands of a b.dome (same centre, base, radius and
+    height): a windmill's cap, an observatory."""
+    import math
+
+    def ring(rr):
+        return [(cx + rr * math.cos(math.radians(rot_deg + 360 * i / sides)),
+                 cy + rr * math.sin(math.radians(rot_deg + 360 * i / sides))) for i in range(sides)]
+    glazed_ring(b, ring(r), ring(r * 0.82), z0, z0 + h * 0.45, dark, accent, **kw)
+    glazed_ring(b, ring(r * 0.82), ring(r * 0.45), z0 + h * 0.45, z0 + h * 0.82, dark, accent,
+                **kw)

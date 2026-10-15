@@ -1,9 +1,9 @@
-"""Manor1-lvl4 -- the Manor (Особняк) at level 4. Footprint 3x3 (level 1's).
+"""Manor1-lvl4 -- the Manor (Особняк) at level 4.
 
-Level 3 (manor1_lvl3.build) with both wings' roofs re-laid in glazed tiles and gilded crests
-along their ridges (the side wing's stops where its ridge runs under the main roof). Level 4's
-mark across the set is the glazed roof: a lattice of the category's dark shade and gold diamonds
-over the tiles. Models only -- the game stops at level 3 for now.
+Footprint 3x3 (level 1's). Level 3 (manor1_lvl3.build) with both wings' roofs re-laid in glazed
+tiles and gilded crests along their ridges (the side wing's stops where its ridge runs under the
+main roof). Level 4's mark across the set is the glazed roof: a lattice of the category's dark
+shade and gold diamonds over the tiles. Models only -- the game stops at level 3 for now.
 """
 import os
 import sys

@@ -1,8 +1,9 @@
-"""HealerHouse1-lvl4 -- the Healer's House (Дом лекаря) at level 4. Footprint 2x4 (level 1's).
+"""HealerHouse1-lvl4 -- the Healer's House (Дом лекаря) at level 4.
 
-Level 3 (healerhouse1_lvl3.build) with the long roof re-laid in glazed tiles and a gilded crest
-along the ridge. Level 4's mark across the set is the glazed roof: a lattice of the category's
-dark shade and gold diamonds over the tiles. Models only -- the game stops at level 3 for now.
+Footprint 2x4 (level 1's). Level 3 (healerhouse1_lvl3.build) with the long roof re-laid in
+glazed tiles and a gilded crest along the ridge. Level 4's mark across the set is the glazed
+roof: a lattice of the category's dark shade and gold diamonds over the tiles. Models only --
+the game stops at level 3 for now.
 """
 import os
 import sys

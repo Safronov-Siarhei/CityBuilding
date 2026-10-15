@@ -1,8 +1,9 @@
-"""Well1-lvl4 -- the Well (Колодец) at level 4. Footprint 1x1 (level 1's).
+"""Well1-lvl4 -- the Well (Колодец) at level 4.
 
-Level 3 (well1_lvl3.build) with its little roof re-laid in glazed tiles with a gilded crest
-along the ridge. Level 4's mark across the set is the glazed roof: a lattice of the category's
-dark shade and gold diamonds over the tiles. Models only -- the game stops at level 3 for now.
+Footprint 1x1 (level 1's). Level 3 (well1_lvl3.build) with its little roof re-laid in glazed
+tiles with a gilded crest along the ridge. Level 4's mark across the set is the glazed roof: a
+lattice of the category's dark shade and gold diamonds over the tiles. Models only -- the game
+stops at level 3 for now.
 """
 import os
 import sys

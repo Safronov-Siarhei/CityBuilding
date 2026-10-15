@@ -1,8 +1,9 @@
-"""BigBarn1-lvl4 -- the Big Barn (Большой амбар) at level 4. Footprint 2x2 (level 1's).
+"""BigBarn1-lvl4 -- the Big Barn (Большой амбар) at level 4.
 
-Level 3 (bigbarn1_lvl3.build) with the roof and the lean-to re-laid in glazed tiles, with gilded
-crests. Level 4's mark across the set is the glazed roof: a lattice of the category's dark shade
-and gold diamonds over the tiles. Models only -- the game stops at level 3 for now.
+Footprint 2x2 (level 1's). Level 3 (bigbarn1_lvl3.build) with the roof and the lean-to re-laid
+in glazed tiles, with gilded crests. Level 4's mark across the set is the glazed roof: a lattice
+of the category's dark shade and gold diamonds over the tiles. Models only -- the game stops at
+level 3 for now.
 """
 import os
 import sys
