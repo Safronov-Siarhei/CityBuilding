@@ -1037,7 +1037,7 @@ def glazed_dome(b, cx, cy, z0, r, h, dark, accent='gold', sides=8, rot_deg=22.5,
 ROOF_BASES = ('roof_orange', 'roof_red', 'roof_blue', 'roof_purple', 'roof_slate', 'roof_straw')
 
 
-def gild_roofs(b, min_area=0.006, bases=ROOF_BASES):
+def gild_roofs(b, min_area=0.006, bases=ROOF_BASES, color='gold'):
     """Recolours every roof slope of a finished Builder to gold: a face whose palette colour is
     a roof base (not its dark trim), that slopes (not a wall -- slate is also the windows' glass),
     and that is big enough to be roofing rather than a pumpkin or an apple. The model script must
@@ -1045,7 +1045,7 @@ def gild_roofs(b, min_area=0.006, bases=ROOF_BASES):
     faces it gilded."""
     import kit
     names = kit.NAMES
-    gold_uv = b._uv('gold')
+    gold_uv = b._uv(color)
     n = 0
     for f in b.bm.faces:
         u, v = f.loops[0][b.uv].uv
@@ -1058,5 +1058,30 @@ def gild_roofs(b, min_area=0.006, bases=ROOF_BASES):
             continue
         for loop in f.loops:
             loop[b.uv].uv = gold_uv
+        n += 1
+    return n
+
+
+def recolor(b, mapping, where=None, min_area=0.0):
+    """Repaints a finished Builder's faces: a face whose palette colour is a key of `mapping`
+    takes the value's colour, if its centre passes `where(center)` (a mathutils Vector) and it is
+    at least `min_area`. Colours are read before any are written, so a swap ({a: b, b: a}) works.
+    Returns how many faces changed. Level 5's gilding for the buildings with no roof to gild."""
+    import kit
+    uvs = {k: b._uv(v) for k, v in mapping.items()}
+    n = 0
+    for f in b.bm.faces:
+        u, v = f.loops[0][b.uv].uv
+        c = min(max(int(u * kit.COLS), 0), kit.COLS - 1)
+        r = min(max(int((1 - v) * kit.ROWS), 0), kit.ROWS - 1)
+        name = kit.NAMES[r * kit.COLS + c]
+        if name not in uvs:
+            continue
+        if where is not None and not where(f.calc_center_median()):
+            continue
+        if min_area and f.calc_area() < min_area:
+            continue
+        for loop in f.loops:
+            loop[b.uv].uv = uvs[name]
         n += 1
     return n
