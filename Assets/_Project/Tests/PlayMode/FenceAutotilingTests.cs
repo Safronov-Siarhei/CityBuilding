@@ -106,22 +106,77 @@ namespace CityBuilder.Tests.PlayMode
                     Connects(cell, Vector2Int.down), Connects(cell, Vector2Int.left),
                     out var expectedVariant, out var expectedSteps);
 
-                var straight = ModelWrapper(pair.Value, "Straight");
-                var corner = ModelWrapper(pair.Value, "Corner");
-                Assert.IsNotNull(straight, $"The fence prefab at {cell} has no 'Straight' model child at all.");
-                Assert.IsNotNull(corner, $"The fence prefab at {cell} has no 'Corner' model child at all.");
+                AssertShows(pair.Value, cell, expectedVariant, expectedSteps);
+            }
+        }
 
-                var expected = expectedVariant == FenceVariant.Corner ? corner : straight;
-                var other = expectedVariant == FenceVariant.Corner ? straight : corner;
+        /// <summary>One model of the segment's set active -- the expected one, turned as expected -- and every other one off.</summary>
+        private void AssertShows(BuildingInstance segment, Vector2Int cell, FenceVariant expectedVariant, int expectedSteps)
+        {
+            var expected = ModelWrapper(segment, expectedVariant.ToString());
+            Assert.IsNotNull(expected, $"The fence prefab at {cell} has no '{expectedVariant}' model child at all.");
+            Assert.IsTrue(expected.gameObject.activeSelf,
+                $"The segment at {cell} ({Describe(cell)}) should be showing its {expectedVariant} model and is not.");
 
-                Assert.IsTrue(expected.gameObject.activeSelf,
-                    $"The segment at {cell} ({Describe(cell)}) should be showing its {expectedVariant} model and is not.");
-                Assert.IsFalse(other.gameObject.activeSelf,
-                    $"The segment at {cell} ({Describe(cell)}) is showing BOTH models at once -- they will z-fight.");
+            foreach (FenceVariant variant in System.Enum.GetValues(typeof(FenceVariant)))
+            {
+                if (variant == expectedVariant) continue;
+                var other = ModelWrapper(segment, variant.ToString());
+                Assert.IsTrue(other == null || !other.gameObject.activeSelf,
+                    $"The segment at {cell} ({Describe(cell)}) is showing its {variant} model as well -- they will z-fight.");
+            }
 
-                var actualSteps = Mathf.RoundToInt(expected.rotation.eulerAngles.y / 90f) % 4;
-                Assert.AreEqual(expectedSteps, actualSteps,
-                    $"The segment at {cell} ({Describe(cell)}) is turned {actualSteps * 90} degrees instead of {expectedSteps * 90}.");
+            var actualSteps = Mathf.RoundToInt(expected.rotation.eulerAngles.y / 90f) % 4;
+            Assert.AreEqual(expectedSteps, actualSteps,
+                $"The segment at {cell} ({Describe(cell)}) is turned {actualSteps * 90} degrees instead of {expectedSteps * 90}.");
+        }
+
+        /// <summary>
+        /// The junction pieces on a real map: a plus sign of five segments puts the crossroads in
+        /// the middle, and taking one arm away turns it into a T with its gap on that side. Both
+        /// must reach every border they share -- a T arm stopping short is a hole in the wall.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AJunction_ShowsTheCrossThenTheT()
+        {
+            ClearTheRing();
+            var fence = PlaytestWorld.Building("Fence");
+            var origin = PlaytestWorld.FindFreeArea(new Vector2Int(3, 3));
+            Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "Nowhere free for a 3x3 fence junction.");
+
+            var middle = origin + Vector2Int.one;
+            foreach (var cell in new[] { middle, middle + Vector2Int.up, middle + Vector2Int.right, middle + Vector2Int.down, middle + Vector2Int.left })
+            {
+                _segments[cell] = PlaytestWorld.Place(fence, cell);
+                _placed.Add(_segments[cell]);
+            }
+            yield return null;
+
+            AssertShows(_segments[middle], middle, FenceVariant.Cross, 0);
+            AssertReachesEveryNeighbour(middle);
+
+            var west = middle + Vector2Int.left;
+            PlaytestWorld.Demolish(_segments[west]);
+            _placed.Remove(_segments[west]);
+            _segments.Remove(west);
+            yield return null;
+
+            AssertShows(_segments[middle], middle, FenceVariant.T, 0);
+            AssertReachesEveryNeighbour(middle);
+
+            yield return PlaytestCapture.Shoot("fence-junction", PlaytestWorld.CellCenter(middle), 5f, 45f, 25f);
+        }
+
+        private void AssertReachesEveryNeighbour(Vector2Int cell)
+        {
+            var half = GridManager.Instance.CellSize * 0.5f;
+            var bounds = VisibleBounds(_segments[cell]);
+            var centre = PlaytestWorld.CellCenter(cell);
+            foreach (var direction in Directions)
+            {
+                if (!Connects(cell, direction)) continue;
+                Assert.LessOrEqual(half - ReachTowards(bounds, centre, direction), MaxGapPerSide,
+                    $"The junction at {cell} ({Describe(cell)}) stops short of its {Name(direction)} border.");
             }
         }
 

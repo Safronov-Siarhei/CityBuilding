@@ -92,6 +92,43 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(1, OrcLevel(-500), "A negative score would otherwise produce a level 0 orc with no health at all.");
         }
 
+        private static OrcKind Kind(int index, int level, bool withChief = true) =>
+            OrcRaidManager.KindInGroup(index, level, withChief, throwerFromLevel: 2, throwerEvery: 3, chiefFromLevel: 3);
+
+        /// <summary>The opening raids stay exactly what they were: plain raiders, however many.</summary>
+        [Test]
+        public void KindInGroup_BelowBothLevels_IsAllRaiders()
+        {
+            for (var i = 0; i < 8; i++) Assert.AreEqual(OrcKind.Raider, Kind(i, 1), $"orc {i} of a level-1 wave");
+        }
+
+        [Test]
+        public void KindInGroup_EveryThirdOrcThrowsOnceTheLevelIsReached()
+        {
+            CollectionAssert.AreEqual(
+                new[] { OrcKind.Raider, OrcKind.Raider, OrcKind.Thrower, OrcKind.Raider, OrcKind.Raider, OrcKind.Thrower },
+                new[] { Kind(0, 2), Kind(1, 2), Kind(2, 2), Kind(3, 2), Kind(4, 2), Kind(5, 2) });
+        }
+
+        [Test]
+        public void KindInGroup_AChiefLeadsTheWaveButNeverAGarrison()
+        {
+            Assert.AreEqual(OrcKind.Chief, Kind(0, 3), "a level-3 wave has no chief at its head");
+            Assert.AreEqual(OrcKind.Raider, Kind(1, 3), "only the first orc is the chief");
+            Assert.AreEqual(OrcKind.Thrower, Kind(2, 3), "the chief does not displace the throwers");
+            Assert.AreEqual(OrcKind.Raider, Kind(0, 5, withChief: false), "a camp's garrison is not led by a chief");
+        }
+
+        /// <summary>A zero in the sheet switches the kind off rather than dividing by it.</summary>
+        [Test]
+        public void KindInGroup_ZeroesSwitchTheKindsOff()
+        {
+            for (var i = 0; i < 6; i++)
+            {
+                Assert.AreEqual(OrcKind.Raider, OrcRaidManager.KindInGroup(i, 5, true, 0, 0, 0), $"orc {i}");
+            }
+        }
+
         [Test]
         public void ComputeOrcLevel_SurvivesAZeroStep()
         {

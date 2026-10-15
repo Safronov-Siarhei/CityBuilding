@@ -59,6 +59,8 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject portalClosedModel;
         [SerializeField] private GameObject gruntModel;
         [SerializeField] private GameObject bruteModel;
+        [SerializeField] private GameObject throwerModel;
+        [SerializeField] private GameObject chiefModel;
         // The camp around each portal (see OrcCamp): its three buildings, their ruins, and the
         // decorative palisade pieces flanking the totem.
         [SerializeField] private GameObject watchtowerModel;
@@ -72,7 +74,7 @@ namespace CityBuilder.Combat
         /// <summary>
         /// The level from which a raider is drawn as the brute rather than the grunt (the user's
         /// call, 2026-10-14): the game has one orc that grows by level, and a strong one should
-        /// look strong. The thrower and the chief wait for unit types of their own.
+        /// look strong. The thrower and the chief are kinds of their own (OrcKind), not levels.
         /// </summary>
         public const int BruteFromLevel = 4;
 
@@ -194,10 +196,10 @@ namespace CityBuilder.Combat
         /// Hands the unit back so the caller can match it to the save's orc list by position in
         /// that list -- which is how a group's attack order finds the orc it was chasing again.
         /// </summary>
-        public OrcUnit RestoreOrc(Vector3 position, int level, int currentHealth)
+        public OrcUnit RestoreOrc(Vector3 position, int level, int currentHealth, OrcKind kind = OrcKind.Raider)
         {
             EnsureMaterials();
-            var unit = SpawnOrc(position, level, scatter: false);
+            var unit = SpawnOrc(position, level, kind, scatter: false);
             unit.SetCurrentHealth(currentHealth);
             return unit;
         }
@@ -666,11 +668,11 @@ namespace CityBuilder.Combat
             return building;
         }
 
-        /// <summary>One guard for a camp's garrison, posted where it came out of the tent.</summary>
-        public OrcUnit SpawnGuard(Vector3 position, int level, OrcCamp camp)
+        /// <summary>One guard for a camp's garrison, posted where it came out of the tent. `index` is its place in the garrison, which decides whether it is a thrower (see KindInGroup; a garrison has no chief).</summary>
+        public OrcUnit SpawnGuard(Vector3 position, int level, OrcCamp camp, int index = 0)
         {
             EnsureMaterials();
-            var unit = SpawnOrc(position, level, scatter: true);
+            var unit = SpawnOrc(position, level, KindInGroup(index, level, withChief: false), scatter: true);
             var post = unit.transform.position;
             unit.SetGuardPost(post, BalanceConfig.Instance.OrcGarrisonGuardRadiusMeters);
             return unit;
@@ -779,7 +781,7 @@ namespace CityBuilder.Combat
                 ? _nextSource
                 : portals[Random.Range(0, portals.Count)];
             var origin = source.transform.position;
-            var leader = SpawnOrcs(origin, size, level);
+            var leader = SpawnWave(origin, size, level);
             PickNextSource();
             // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
             // quietly become five times as hard as the last one at the very same size. The icon
@@ -809,6 +811,38 @@ namespace CityBuilder.Combat
                 if (first == null) first = orc;
             }
             return first;
+        }
+
+        /// <summary>A raid's wave: raiders, with throwers among them and a chief at its head once the raids have grown enough (KindInGroup). The first orc is the one handed back -- the chief when there is one.</summary>
+        private OrcUnit SpawnWave(Vector3 origin, int count, int level)
+        {
+            EnsureMaterials();
+            OrcUnit first = null;
+            for (var i = 0; i < count; i++)
+            {
+                var orc = SpawnOrc(origin, level, KindInGroup(i, level, withChief: true));
+                if (first == null) first = orc;
+            }
+            return first;
+        }
+
+        /// <summary>
+        /// What the orc at `index` of a wave or a garrison is. The chief leads (index 0) once the
+        /// orcs reach chiefFromLevel; from throwerFromLevel every `throwerEvery`-th orc throws.
+        /// Below both levels everything is a raider, so the opening raids are unchanged.
+        /// Pure, with its numbers passed in, so a test can state them.
+        /// </summary>
+        public static OrcKind KindInGroup(int index, int level, bool withChief, int throwerFromLevel, int throwerEvery, int chiefFromLevel)
+        {
+            if (withChief && index == 0 && chiefFromLevel > 0 && level >= chiefFromLevel) return OrcKind.Chief;
+            if (throwerFromLevel > 0 && throwerEvery > 0 && level >= throwerFromLevel && (index + 1) % throwerEvery == 0) return OrcKind.Thrower;
+            return OrcKind.Raider;
+        }
+
+        public static OrcKind KindInGroup(int index, int level, bool withChief)
+        {
+            var balance = BalanceConfig.Instance;
+            return KindInGroup(index, level, withChief, balance.RaidThrowerFromLevel, balance.RaidThrowerEvery, balance.RaidChiefFromLevel);
         }
 
         /// <summary>Pure formula, kept separate so an EditMode test can check the ramp without a live scene. Takes its numbers explicitly so the test can state them rather than depend on today's sheet.</summary>
@@ -869,10 +903,16 @@ namespace CityBuilder.Combat
         /// <summary>Builds one orc. `scatter` is what separates a raider stepping out of the portal from a loaded one, which has to land exactly where the save says.</summary>
         private OrcUnit SpawnOrc(Vector3 origin, int level, bool scatter = true)
         {
+            return SpawnOrc(origin, level, OrcKind.Raider, scatter);
+        }
+
+        private OrcUnit SpawnOrc(Vector3 origin, int level, OrcKind kind, bool scatter = true)
+        {
             var jitter = scatter ? Random.insideUnitCircle * 1.5f : Vector2.zero;
             var spawnPos = origin + new Vector3(jitter.x, 0f, jitter.y);
 
-            var root = new GameObject(level > 1 ? $"Orc (lvl {level})" : "Orc");
+            var label = kind == OrcKind.Raider ? "Orc" : $"Orc {kind}";
+            var root = new GameObject(level > 1 ? $"{label} (lvl {level})" : label);
             root.transform.position = spawnPos;
             // Visibly bigger with level, so a cheat-spawned elite is tellable from a raider at a
             // glance without opening the inspector. Deliberately sublinear -- a level 5 orc has 5x
@@ -880,15 +920,19 @@ namespace CityBuilder.Combat
             var scale = LevelScale(level);
             root.transform.localScale = Vector3.one * (scale * UnitSize.Scale);
 
-            var brute = level >= BruteFromLevel && bruteModel != null;
-            var model = brute ? bruteModel : gruntModel;
+            var brute = kind == OrcKind.Raider && level >= BruteFromLevel && bruteModel != null;
+            var model = gruntModel;
+            var figureName = "Grunt";
+            if (kind == OrcKind.Thrower && throwerModel != null) { model = throwerModel; figureName = "Thrower"; }
+            else if (kind == OrcKind.Chief && chiefModel != null) { model = chiefModel; figureName = "Chief"; }
+            else if (brute) { model = bruteModel; figureName = "Brute"; }
             if (model != null)
             {
                 // The models are authored at their real size (a grunt 0.58 m, a brute 0.73), so
                 // the root's unit scale is divided back out -- and for the brute, the growth the
                 // levels below it already bought, or a level-4 brute would stand a metre tall.
                 var figure = Instantiate(model, root.transform, false);
-                figure.name = brute ? "Brute" : "Grunt";
+                figure.name = figureName;
                 var undo = UnitSize.Scale * (brute ? LevelScale(BruteFromLevel) : 1f);
                 figure.transform.localScale = Vector3.one / undo;
                 // Units stay out of the shadow pass, like the citizens.
@@ -909,7 +953,7 @@ namespace CityBuilder.Combat
             controller.minMoveDistance = 0f;
 
             var unit = root.AddComponent<OrcUnit>();
-            unit.Initialize(level);
+            unit.Initialize(level, kind);
             return unit;
         }
 

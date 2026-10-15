@@ -315,7 +315,7 @@ namespace CityBuilder.Saving
             if (data.orcs == null) return restored;
             foreach (var orc in data.orcs)
             {
-                restored.Add(raids.RestoreOrc(orc.position, orc.level, orc.currentHealth));
+                restored.Add(raids.RestoreOrc(orc.position, orc.level, orc.currentHealth, orc.kind));
             }
 
             return restored;
@@ -559,7 +559,7 @@ namespace CityBuilder.Saving
                 // A camp's guards are not raiders: the tent musters them again on load.
                 if (orc == null || orc.IsGuard) continue;
                 orcIndices[orc] = data.orcs.Count;
-                data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth });
+                data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth, kind = orc.Kind });
             }
 
             var army = Combat.ArmyManager.Instance;

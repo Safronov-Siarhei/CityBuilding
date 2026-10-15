@@ -14,6 +14,7 @@ import bpy
 from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import detail  # noqa: E402
 import details as d  # noqa: E402
 import kit  # noqa: E402
 from kit import Builder  # noqa: E402
@@ -182,6 +183,10 @@ def main():
     sc, cam, cam_data = stage()
     img = kit.ensure_palette(os.path.join(os.path.dirname(bpy.data.filepath), "Buildings-Palette.png"))
     mat = kit.ensure_material(img)
+    # the same palette x detail-atlas material kit.run gives every model, so an icon shows the tiles,
+    # planks and plaster the building wears in the game rather than flat palette colour
+    atlas = detail.ensure_atlas(os.path.join(os.path.dirname(bpy.data.filepath), detail.ATLAS_FILE))
+    detail.build_material_nodes(mat, img, atlas)
     # every building of the catalogue by default, named by its game id (Hovel1-lvl1 -> Hovel);
     # the fence by its corner piece, the most recognisable of the four
     every = sorted(o.name for o in bpy.data.objects if o.name.endswith("1-lvl1") and o.type == 'MESH'
@@ -193,6 +198,7 @@ def main():
             RESOURCES[name](b)
             me = b.to_mesh(name)
             me.materials.append(mat)
+            detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
             obj = bpy.data.objects.new(name, me)
             sc.collection.objects.link(obj)
         else:

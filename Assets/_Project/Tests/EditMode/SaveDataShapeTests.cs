@@ -45,7 +45,7 @@ namespace CityBuilder.Tests.EditMode
             data.portalCell = new Vector2Int(11, 23);
             data.portalHealth = 190;
             data.secondsUntilNextRaid = 41.5f;
-            data.orcs.Add(new OrcEntry { position = new Vector3(-8f, 0f, 5f), level = 3, currentHealth = 44 });
+            data.orcs.Add(new OrcEntry { position = new Vector3(-8f, 0f, 5f), level = 3, currentHealth = 44, kind = OrcKind.Thrower });
             data.raidsSuspended = true;
             data.selectedGroupIndex = 0;
 
@@ -97,6 +97,7 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(1, loaded.orcs.Count, "The orcs already in the field vanished, so reloading would call off a raid.");
             Assert.AreEqual(3, loaded.orcs[0].level, "Level is what an orc's health and damage are scaled by; losing it downgrades the raider.");
             Assert.AreEqual(44, loaded.orcs[0].currentHealth);
+            Assert.AreEqual(OrcKind.Thrower, loaded.orcs[0].kind, "A thrower reloaded as a raider walks up to the archers it used to outrange.");
         }
 
         /// <summary>

@@ -88,6 +88,30 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0.86f, HeightOf(brute.transform, "Brute"), 0.08f, "The brute is drawn at the wrong size.");
         }
 
+        /// <summary>
+        /// The thrower and the chief wear their own models and read their own sheet rows -- a
+        /// thrower that looked like a grunt would be an orc hitting from six metres for no reason
+        /// the player can see.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheThrowerAndTheChiefWearTheirOwnModelsAndRows()
+        {
+            yield return OpenPortals();
+            var origin = OrcPortal.All[0].transform.position;
+
+            var thrower = OrcRaidManager.Instance.RestoreOrc(origin, 1, int.MaxValue, OrcKind.Thrower);
+            var chief = OrcRaidManager.Instance.RestoreOrc(origin, 1, int.MaxValue, OrcKind.Chief);
+            yield return null;
+
+            Assert.IsNotNull(thrower.transform.Find("Thrower"), "The thrower is not drawn as the thrower model.");
+            Assert.IsNotNull(chief.transform.Find("Chief"), "The chief is not drawn as the chief model.");
+            Assert.AreEqual(OrcKind.Thrower, thrower.Kind);
+            Assert.AreEqual(OrcKind.Chief, chief.Kind);
+            Assert.AreEqual(BalanceConfig.Instance.Unit("orc_thrower").LevelStats(1).maxHealth, thrower.CurrentHealth, "The thrower is not on its own row's health.");
+            Assert.AreEqual(BalanceConfig.Instance.Unit("orc_chief").LevelStats(1).maxHealth, chief.CurrentHealth, "The chief is not on its own row's health.");
+            Assert.Greater(chief.CurrentHealth, BalanceConfig.Instance.Unit("orc").LevelStats(1).maxHealth, "The chief is no tougher than the raiders it leads.");
+        }
+
         /// <summary>Photographs a lit portal, a smouldering one and a squad of both kinds (needs a run with graphics).</summary>
         [UnityTest]
         public IEnumerator PhotographThePortalsAndASquad()

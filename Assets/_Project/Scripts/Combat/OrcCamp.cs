@@ -120,7 +120,7 @@ namespace CityBuilder.Combat
 
             // Out of the tent's door, at the strength the raids have grown to.
             var door = tent.transform.position - tent.transform.forward * 1.3f;
-            var guard = raids.SpawnGuard(door, OrcRaidManager.ComputeOrcLevel(PlayerProgression.Score()), this);
+            var guard = raids.SpawnGuard(door, OrcRaidManager.ComputeOrcLevel(PlayerProgression.Score()), this, _guards.Count);
             if (guard == null) return false;
             _guards.Add(guard);
             return true;

@@ -202,6 +202,9 @@ namespace CityBuilder.Saving
         /// <summary>Raids send level 1; anything higher came from the OrcSpawn cheat, and its health and damage are scaled by it.</summary>
         public int level = 1;
         public int currentHealth;
+
+        /// <summary>Raider, thrower or chief. Absent in saves from before the kinds existed, which reads as a raider -- what every orc then was.</summary>
+        public Combat.OrcKind kind = Combat.OrcKind.Raider;
     }
 
     [Serializable]

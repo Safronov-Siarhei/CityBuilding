@@ -51,19 +51,64 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual((FenceVariant.Corner, 3), Resolve(true, true, false, false), "north+east");
         }
 
+        /// <summary>The T as exported joins north, south and east; every other T is that one turned so its gap faces the empty side.</summary>
+        [Test]
+        public void ThreeNeighbours_UseTheTTurnedSoItsGapFacesTheEmptySide()
+        {
+            Assert.AreEqual((FenceVariant.T, 0), Resolve(true, true, true, false), "open to the west: the T as modelled");
+            Assert.AreEqual((FenceVariant.T, 1), Resolve(false, true, true, true), "open to the north");
+            Assert.AreEqual((FenceVariant.T, 2), Resolve(true, false, true, true), "open to the east");
+            Assert.AreEqual((FenceVariant.T, 3), Resolve(true, true, false, true), "open to the south");
+        }
+
         /// <summary>
-        /// There is no T model and no crossroads model, so those have to degrade to something that
-        /// still reads as a continuous fence rather than a hole -- the straight run laid along
-        /// whichever axis is occupied on both sides.
+        /// The rotation rule, checked by turning the model's own arms: each step maps north to east,
+        /// east to south, south to west, west to north. If the T's arms after the turn are not
+        /// exactly the occupied sides, the junction shows an arm into nothing and a gap where the
+        /// fence is.
         /// </summary>
         [Test]
-        public void ThreeOrFourNeighbours_FallBackToTheStraightRunAlongTheFullAxis()
+        public void EveryT_HasItsArmsExactlyOnTheOccupiedSides()
         {
-            Assert.AreEqual((FenceVariant.Straight, 0), Resolve(true, true, true, false), "north+south is complete, east tees in");
-            Assert.AreEqual((FenceVariant.Straight, 0), Resolve(true, false, true, true), "north+south is complete, west tees in");
-            Assert.AreEqual((FenceVariant.Straight, 1), Resolve(true, true, false, true), "east+west is complete, north tees in");
-            Assert.AreEqual((FenceVariant.Straight, 1), Resolve(false, true, true, true), "east+west is complete, south tees in");
-            Assert.AreEqual((FenceVariant.Straight, 0), Resolve(true, true, true, true), "a crossroads picks an axis and keeps it");
+            for (var mask = 0; mask < 16; mask++)
+            {
+                var sides = new[] { (mask & 1) != 0, (mask & 2) != 0, (mask & 4) != 0, (mask & 8) != 0 }; // N E S W
+                var (variant, steps) = Resolve(sides[0], sides[1], sides[2], sides[3]);
+                if (variant != FenceVariant.T) continue;
+
+                var modelArms = new[] { true, true, true, false }; // N E S, open to the west
+                for (var side = 0; side < 4; side++)
+                {
+                    Assert.AreEqual(sides[side], modelArms[(side - steps + 4) % 4], $"mask {mask}: side {side} after {steps} turns");
+                }
+            }
+        }
+
+        [Test]
+        public void FourNeighbours_UseTheCross()
+        {
+            Assert.AreEqual((FenceVariant.Cross, 0), Resolve(true, true, true, true));
+        }
+
+        /// <summary>
+        /// A fence with no T or crossroads model has to degrade to something that still reads as a
+        /// continuous fence rather than a hole -- the straight run laid along whichever axis is
+        /// occupied on both sides.
+        /// </summary>
+        [Test]
+        public void WithoutJunctionModels_ThreeOrFourNeighboursFallBackToTheStraightRun()
+        {
+            (FenceVariant, int) Plain(bool n, bool e, bool s, bool w)
+            {
+                FenceShape.ResolveWithoutJunctions(n, e, s, w, out var variant, out var steps);
+                return (variant, steps);
+            }
+
+            Assert.AreEqual((FenceVariant.Straight, 0), Plain(true, true, true, false), "north+south is complete, east tees in");
+            Assert.AreEqual((FenceVariant.Straight, 0), Plain(true, false, true, true), "north+south is complete, west tees in");
+            Assert.AreEqual((FenceVariant.Straight, 1), Plain(true, true, false, true), "east+west is complete, north tees in");
+            Assert.AreEqual((FenceVariant.Straight, 1), Plain(false, true, true, true), "east+west is complete, south tees in");
+            Assert.AreEqual((FenceVariant.Straight, 0), Plain(true, true, true, true), "a crossroads picks an axis and keeps it");
         }
 
         /// <summary>A corner is only ever the two-neighbour case: three sides is a junction, and picking a corner there would leave one side visibly unfinished.</summary>

@@ -249,6 +249,9 @@ namespace CityBuilder.Core
         [SerializeField] private int orcTentHealth = 220;
         [SerializeField] private int orcTotemHealth = 120;
         [SerializeField] private int orcGarrisonSize = 3;
+        [SerializeField] private int raidThrowerFromLevel = 2;
+        [SerializeField] private int raidThrowerEvery = 3;
+        [SerializeField] private int raidChiefFromLevel = 3;
         [SerializeField] private float orcGarrisonRespawnSeconds = 30f;
         [SerializeField] private float orcGarrisonGuardRadiusMeters = 8f;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
@@ -402,6 +405,12 @@ namespace CityBuilder.Core
         public int OrcTentHealth => orcTentHealth;
         public int OrcTotemHealth => orcTotemHealth;
         public int OrcGarrisonSize => orcGarrisonSize;
+        /// <summary>The orc level from which waves and garrisons include throwers -- see OrcRaidManager.KindInGroup.</summary>
+        public int RaidThrowerFromLevel => raidThrowerFromLevel;
+        /// <summary>Every this-many-th orc of a wave or a garrison is a thrower.</summary>
+        public int RaidThrowerEvery => raidThrowerEvery;
+        /// <summary>The orc level from which a chief leads each wave.</summary>
+        public int RaidChiefFromLevel => raidChiefFromLevel;
         public float OrcGarrisonRespawnSeconds => orcGarrisonRespawnSeconds;
         public float OrcGarrisonGuardRadiusMeters => orcGarrisonGuardRadiusMeters;
         public int PortalCount => portalCount;
@@ -531,6 +540,9 @@ namespace CityBuilder.Core
             orcTentHealth = (int)Read(economy, "orc_tent_health", orcTentHealth);
             orcTotemHealth = (int)Read(economy, "orc_totem_health", orcTotemHealth);
             orcGarrisonSize = (int)Read(economy, "orc_garrison_size", orcGarrisonSize);
+            raidThrowerFromLevel = (int)Read(economy, "raid_thrower_from_level", raidThrowerFromLevel);
+            raidThrowerEvery = (int)Read(economy, "raid_thrower_every", raidThrowerEvery);
+            raidChiefFromLevel = (int)Read(economy, "raid_chief_from_level", raidChiefFromLevel);
             orcGarrisonRespawnSeconds = Read(economy, "orc_garrison_respawn_seconds", orcGarrisonRespawnSeconds);
             orcGarrisonGuardRadiusMeters = Read(economy, "orc_garrison_guard_radius_meters", orcGarrisonGuardRadiusMeters);
             portalCount = (int)Read(economy, "portal_count", portalCount);

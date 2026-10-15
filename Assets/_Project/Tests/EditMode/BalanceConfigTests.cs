@@ -31,6 +31,8 @@ namespace CityBuilder.Tests.EditMode
 
         [TestCase("militia")]
         [TestCase("orc")]
+        [TestCase("orc_thrower")]
+        [TestCase("orc_chief")]
         public void UnitsTab_HasEveryUnitTheCodeAsksFor(string id)
         {
             var config = UnityEngine.Resources.Load<BalanceConfig>(BalanceConfig.ResourcePath);

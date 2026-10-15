@@ -8,6 +8,22 @@ using UnityEngine.AI;
 namespace CityBuilder.Combat
 {
     /// <summary>
+    /// What an orc is, which decides the balance-sheet row it reads (see OrcUnit.SheetIdOf) and the
+    /// model it wears. Saved by its number, so new kinds go on the end.
+    /// </summary>
+    public enum OrcKind
+    {
+        /// <summary>The ordinary raider: the grunt, drawn as the brute from OrcRaidManager.BruteFromLevel.</summary>
+        Raider = 0,
+
+        /// <summary>Throws from range. The raid's answer to an archer line that would otherwise never be touched.</summary>
+        Thrower = 1,
+
+        /// <summary>Leads a wave: one per raid from raid_chief_from_level, much tougher than the rest.</summary>
+        Chief = 2,
+    }
+
+    /// <summary>
     /// First-pass enemy combat unit for the Orc raid system (see the design backlog's "Win
     /// condition: portals + Orc faction"). Spawned by OrcRaidManager, paths to the nearest player
     /// building over the same baked NavMesh CitizenAgent uses, and deals damage to it on contact
@@ -22,8 +38,16 @@ namespace CityBuilder.Combat
         // Stats come from the balance sheet's "orc" row (see BalanceConfig); the fields below cache
         // them per orc at Awake. Level scales health and damage on top -- raids spawn level 1, and
         // higher levels currently only come from the OrcSpawn cheat.
-        /// <summary>The row this unit reads in the balance sheet's units tab.</summary>
-        private const string SheetId = "orc";
+        /// <summary>The row an orc of this kind reads in the balance sheet's units tab.</summary>
+        public static string SheetIdOf(OrcKind kind)
+        {
+            switch (kind)
+            {
+                case OrcKind.Thrower: return "orc_thrower";
+                case OrcKind.Chief: return "orc_chief";
+                default: return "orc";
+            }
+        }
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -75,6 +99,8 @@ namespace CityBuilder.Combat
         /// <summary>1 unless raised at spawn time. Scales both health and attack damage linearly.</summary>
         public int Level { get; private set; } = 1;
 
+        public OrcKind Kind { get; private set; } = OrcKind.Raider;
+
         private int _maxHealth;
         private int _attackDamage;
         private int _baseMaxHealth;
@@ -97,9 +123,15 @@ namespace CityBuilder.Combat
         {
             _controller = GetComponent<CharacterController>();
 
-            // In Awake, not Initialize: an orc left uninitialized is a valid level 1 and still
-            // needs its stats.
-            var stats = BalanceConfig.Instance.Unit(SheetId);
+            // In Awake, not Initialize: an orc left uninitialized is a valid level-1 raider and
+            // still needs its stats.
+            LoadStats(OrcKind.Raider);
+        }
+
+        private void LoadStats(OrcKind kind)
+        {
+            Kind = kind;
+            var stats = BalanceConfig.Instance.Unit(SheetIdOf(kind));
             _buildingAttackRange = stats.attackRangeStructures;
             _soldierAttackRange = stats.attackRangeUnits;
             _soldierAggroRadius = stats.engageRadius;
@@ -118,9 +150,10 @@ namespace CityBuilder.Combat
             CurrentHealth = _maxHealth;
         }
 
-        /// <summary>Optional -- an orc left uninitialized is a perfectly valid level 1. Called right after the component is added, before its first Update.</summary>
-        public void Initialize(int level)
+        /// <summary>Optional -- an orc left uninitialized is a perfectly valid level-1 raider. Called right after the component is added, before its first Update.</summary>
+        public void Initialize(int level, OrcKind kind = OrcKind.Raider)
         {
+            if (kind != Kind) LoadStats(kind);
             Level = Mathf.Max(1, level);
             _maxHealth = _baseMaxHealth * Level;
             _attackDamage = _baseAttackDamage * Level;

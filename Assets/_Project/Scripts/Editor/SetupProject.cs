@@ -1940,6 +1940,7 @@ namespace CityBuilder.EditorTools
                      {
                          ("portalActiveModel", "OrcPortal1-lvl1"), ("portalPassiveModel", "OrcPortal1-lvl1-Passive"),
                          ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("gruntModel", "OrcGrunt"), ("bruteModel", "OrcBrute"),
+                         ("throwerModel", "OrcThrower"), ("chiefModel", "OrcChief"),
                          ("watchtowerModel", "OrcWatchtower1-lvl1"), ("watchtowerRuinModel", "OrcWatchtower1-lvl1-Ruin"),
                          ("warTentModel", "OrcWarTent1-lvl1"), ("warTentRuinModel", "OrcWarTent1-lvl1-Ruin"),
                          ("totemModel", "OrcTotem1-lvl1"), ("totemRuinModel", "OrcTotem1-lvl1-Ruin"),
@@ -2475,8 +2476,8 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// A fence segment. Unlike every other building, its prefab carries TWO models -- the
-        /// straight run and the corner -- and FenceAppearance shows whichever one matches the
+        /// A fence segment. Unlike every other building, its prefab carries several models -- the
+        /// straight run, the corner, the T and the crossroads -- and FenceAppearance shows whichever one matches the
         /// neighbouring segments (see FenceShape). Nothing about which model is visible is decided
         /// here or saved: it is derived from the cells around it every time the line changes, so a
         /// destroyed segment turns its neighbours back into dead ends for free.
@@ -2496,6 +2497,10 @@ namespace CityBuilder.EditorTools
             var woodMaterial = CreateLitMaterial("Building_Fence_Wood", new Color(0.5f, 0.36f, 0.22f));
             var straight = CreateFenceModel("Straight", root.transform, trimMaterial, woodMaterial, isCorner: false, height: out var modelHeight);
             var corner = CreateFenceModel("Corner", root.transform, trimMaterial, woodMaterial, isCorner: true, height: out _);
+            // The junction pieces exist only as Blender models; without them a T or a crossroads
+            // shows the straight run (FenceShape.ResolveWithoutJunctions).
+            var tee = CreateFenceJunction("T", root.transform);
+            var cross = CreateFenceJunction("Cross", root.transform);
 
             // Each variant is baked on its own. The PAIR has to stay two objects for
             // FenceAppearance to switch and turn between them, but the ten posts, caps and rails
@@ -2503,11 +2508,15 @@ namespace CityBuilder.EditorTools
             // dozens, so ten draws per segment is one of the largest bills on the map.
             CombineParts(straight, $"{id}_Straight");
             CombineParts(corner, $"{id}_Corner");
+            if (tee != null) CombineParts(tee, $"{id}_T");
+            if (cross != null) CombineParts(cross, $"{id}_Cross");
 
-            appearance.SetModels(straight, corner);
+            appearance.SetModels(straight, corner, tee, cross);
             // The straight run is what a lone segment shows; FenceAppearance swaps them the moment
             // the piece learns about its neighbours.
             if (corner != null) corner.SetActive(false);
+            if (tee != null) tee.SetActive(false);
+            if (cross != null) cross.SetActive(false);
 
             var height = modelHeight > 0.01f ? modelHeight : 1.2f;
             var collider = root.AddComponent<BoxCollider>();
@@ -2535,6 +2544,24 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// A junction piece (`Fence1-lvl1-T.fbx`, `-Cross.fbx`) in its wrapper, or null when the model
+        /// is not there -- unlike the straight run and the corner, these have no built fallback. The T
+        /// is exported joining north, south and east (FenceShape's base orientation).
+        /// </summary>
+        private static GameObject CreateFenceJunction(string wrapperName, Transform parent)
+        {
+            var authored = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Fence1-lvl1-{wrapperName}.fbx");
+            if (authored == null) return null;
+
+            var wrapper = new GameObject(wrapperName);
+            wrapper.transform.SetParent(parent, false);
+            var piece = Object.Instantiate(authored, Vector3.zero, authored.transform.rotation, wrapper.transform);
+            piece.name = authored.name;
+            FitModelToGround(piece, $"Fence {wrapperName}");
+            return wrapper;
+        }
+
+        /// <summary>
         /// One fence segment, built rather than imported: posts and two rails, laid along Z for a
         /// straight run and turned into the south-east elbow for a corner. FenceAppearance shows
         /// whichever of the two matches the neighbours and rotates the wrapper to face them, so the
@@ -2553,8 +2580,7 @@ namespace CityBuilder.EditorTools
 
             // The Blender-made piece wins when it is there (`Fence1-lvl1-Straight.fbx`,
             // `-Corner.fbx`), exported in exactly this orientation: straight along Z, corner
-            // joining south and east. The T and Cross pieces exported next to them wait for
-            // FenceShape to learn those shapes.
+            // joining south and east. The T and Cross pieces are CreateFenceJunction's.
             var authored = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Fence1-lvl1-{wrapperName}.fbx");
             if (authored != null)
             {
