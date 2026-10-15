@@ -1028,3 +1028,35 @@ def glazed_dome(b, cx, cy, z0, r, h, dark, accent='gold', sides=8, rot_deg=22.5,
     glazed_ring(b, ring(r), ring(r * 0.82), z0, z0 + h * 0.45, dark, accent, **kw)
     glazed_ring(b, ring(r * 0.82), ring(r * 0.45), z0 + h * 0.45, z0 + h * 0.82, dark, accent,
                 **kw)
+
+
+# -- level 5: the golden roof -----------------------------------------------------------------------
+# Level 4 laid gold diamonds over the category's tiles; level 5 turns the tiles themselves to gold
+# and keeps the dark lattice over them: colour-with-gold becomes gold-with-colour.
+
+ROOF_BASES = ('roof_orange', 'roof_red', 'roof_blue', 'roof_purple', 'roof_slate', 'roof_straw')
+
+
+def gild_roofs(b, min_area=0.006, bases=ROOF_BASES):
+    """Recolours every roof slope of a finished Builder to gold: a face whose palette colour is
+    a roof base (not its dark trim), that slopes (not a wall -- slate is also the windows' glass),
+    and that is big enough to be roofing rather than a pumpkin or an apple. The model script must
+    also set detail.OVERRIDE['gold'] = detail.TILES so the gold reads as tiles. Returns how many
+    faces it gilded."""
+    import kit
+    names = kit.NAMES
+    gold_uv = b._uv('gold')
+    n = 0
+    for f in b.bm.faces:
+        u, v = f.loops[0][b.uv].uv
+        c = min(max(int(u * kit.COLS), 0), kit.COLS - 1)
+        r = min(max(int((1 - v) * kit.ROWS), 0), kit.ROWS - 1)
+        if names[r * kit.COLS + c] not in bases:
+            continue
+        f.normal_update()
+        if not (0.2 < f.normal.z < 0.995) or f.calc_area() < min_area:
+            continue
+        for loop in f.loops:
+            loop[b.uv].uv = gold_uv
+        n += 1
+    return n
