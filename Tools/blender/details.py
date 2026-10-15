@@ -46,6 +46,19 @@ def footing(b, x0, x1, y0, y1, color='stone_mid', tufts=True):
         grass_tuft(b, x, y, r, 'grass' if i % 2 else 'grass_dark')
 
 
+def quoins(b, px, py, sx, sy, z0, z1, step=0.11, color='stone_mid'):
+    """Corner stones up a stone wall's corner at (px, py), alternately long along x and long
+    along y; sx, sy (+-1) point out of the wall. The mark of a house rebuilt in stone (level 2)."""
+    z, k = z0, 0
+    while z < z1 - 0.02:
+        lx, ly = (0.13, 0.05) if k % 2 == 0 else (0.05, 0.13)
+        xa, xb = sorted((px + sx * 0.012, px - sx * lx))
+        ya, yb = sorted((py + sy * 0.012, py - sy * ly))
+        b.box(xa, xb, ya, yb, z, min(z + step - 0.014, z1), color, bevel=0.006)
+        z += step
+        k += 1
+
+
 def grass_tuft(b, x, y, r=0.04, color='grass'):
     """A small clump of grass at a wall's foot; skipped if it would poke out of the plot."""
     import kit
@@ -65,6 +78,36 @@ def roof(b, cx, cy, axis, half_len, half_span, ze, color='roof_orange', dark='ro
     params.update(override)
     b.gable_roof(cx, cy, axis, half_len, half_span, ze, zr, color, dark, **params)
     return zr
+
+
+def dormer(b, face, eave, s, ze, w=0.2, depth=0.5, h=0.44, wall='plaster', **roof_kw):
+    """A gabled dormer in a roof slope over the wall facing `face` ('-y', '+y', '-x', '+x'):
+    its front wall stands just behind the eave line `eave`, centred at s along it, rising from
+    the eaves height ze by h, with timber edging, a cross window and its own little roof
+    (roof_kw: color/dark). A level-2 house's attic made habitable."""
+    from kit import Facade
+    sgn = -1 if face[0] == '-' else 1
+    front = eave - sgn * 0.05
+    back = front - sgn * depth
+    zt = ze + h
+    a0, a1 = sorted((front, back))
+    rc = ((front + sgn * 0.1) + back) / 2
+    half = (depth + 0.1) / 2
+    if face[1] == 'y':
+        b.box(s - w, s + w, a0, a1, ze - 0.02, zt, wall)
+        b.gable_block('y', a0, a1, s - w, s + w, zt, zt + w * PITCH, wall)
+        roof(b, s, rc, 'y', half, w, zt, overhang=0.06, **roof_kw)
+    else:
+        b.box(a0, a1, s - w, s + w, ze - 0.02, zt, wall)
+        b.gable_block('x', a0, a1, s - w, s + w, zt, zt + w * PITCH, wall)
+        roof(b, rc, s, 'x', half, w, zt, overhang=0.06, **roof_kw)
+    f = Facade(b, face, front)
+    f.rect(s - w, s + w, ze - 0.02, ze + 0.02, BEAM_D, 'wood_dark')
+    f.rect(s - w, s + w, zt - 0.04, zt, BEAM_D, 'wood_dark')
+    for p in (s - w + 0.025, s + w - 0.025):
+        f.rect(p - BEAM_W / 2, p + BEAM_W / 2, ze + 0.02, zt - 0.04, BEAM_D, 'wood_dark')
+    cross_window(f, s, ze + 0.13 - WIN_SILL, w=0.16)
+    gable_frame(f, s, w, zt, zt + w * PITCH)
 
 
 def chimney(b, cx, cy, z0, z1, hw=0.09, color='stone_mid'):
@@ -396,6 +439,30 @@ def flowers(b, x, y, z0=0.0, colors=('roof_red', 'plaster_yellow', 'roof_purple'
         a = 2.1 * i
         b.blob(x + r * 0.8 * math.cos(a), y + r * 0.8 * math.sin(a), z0 + r * 0.9, r * 0.6, r * 0.8,
                c, sides=4)
+
+
+def weathervane(b, x, y, z, h=0.24):
+    """An iron pole on a ridge with a gold ball and an arrow pointing along x -- the mark of a
+    building that has prospered (level 2)."""
+    b.box(x - 0.008, x + 0.008, y - 0.008, y + 0.008, z, z + h, 'iron')
+    b.cylinder(x, y, z + h * 0.42, z + h * 0.52, 0.024, 'gold', sides=6)
+    za = z + h * 0.82
+    b.rod((x - 0.1, y, za), (x + 0.1, y, za), 0.012, 'iron')
+    b.prism([(x + 0.1, za - 0.03), (x + 0.15, za), (x + 0.1, za + 0.03)], (0, y + 0.005, 0),
+            (1, 0, 0), (0, 0, 1), 0.01, 'iron', back_cap=True)
+    b.prism([(x - 0.14, za - 0.045), (x - 0.08, za - 0.015), (x - 0.08, za + 0.015),
+             (x - 0.14, za + 0.045)], (0, y + 0.005, 0), (1, 0, 0), (0, 0, 1), 0.01, 'gold',
+            back_cap=True)
+
+
+def fountain(b, x, y, z0=0.0, r=0.3):
+    """A round stone basin of water with a spout on a column: the centre of a richer garden or
+    courtyard (level 2)."""
+    b.cylinder(x, y, z0, z0 + 0.1, r, 'stone_light', sides=8, bevel=0.01)
+    b.cylinder(x, y, z0 + 0.1, z0 + 0.105, r * 0.86, 'water', sides=8)
+    b.cylinder(x, y, z0 + 0.1, z0 + 0.29, r * 0.17, 'stone_mid', sides=6)
+    b.cylinder(x, y, z0 + 0.29, z0 + 0.32, r * 0.4, 'stone_light', sides=8)
+    b.blob(x, y, z0 + 0.31, r * 0.17, 0.12, 'water', sides=5)
 
 
 def lamp(b, x, y, h=0.62):
