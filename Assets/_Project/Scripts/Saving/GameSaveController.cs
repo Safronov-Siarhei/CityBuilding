@@ -307,7 +307,19 @@ namespace CityBuilder.Saving
                         (Combat.OrcCampBuildingKind)entry.kind, entry.cell, entry.yaw, entry.health));
                 }
             }
-            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, campBuildings, data.secondsUntilNextRaid);
+            var camps = new List<Combat.OrcRaidManager.CampRestoreState>();
+            if (data.orcCamps != null)
+            {
+                foreach (var entry in data.orcCamps)
+                {
+                    camps.Add(new Combat.OrcRaidManager.CampRestoreState(entry.portalCell, entry.level, entry.maxLevel,
+                        entry.rank, entry.quarters, entry.cleared));
+                }
+            }
+            // Old camp buildings belong to the old camps' plan; a save without camp states drops them.
+            if (camps.Count == 0) campBuildings.Clear();
+            raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, camps, campBuildings,
+                data.secondsUntilNextRaid);
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
@@ -528,11 +540,18 @@ namespace CityBuilder.Saving
                     data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth });
                 }
                 data.closedPortalCells.AddRange(raids.ClosedPortalCells);
-                // Every camp building, standing (its health) or fallen (0, its ruin).
+                // Every camp, and of its buildings only the damaged (their health) and the fallen
+                // (0, their ruin): the plan of the camp's level puts the untouched ones back.
                 foreach (var camp in Combat.OrcCamp.All)
                 {
+                    data.orcCamps.Add(new OrcCampStateEntry
+                    {
+                        portalCell = camp.PortalCell, level = camp.Level, maxLevel = camp.MaxLevel, rank = camp.Rank,
+                        quarters = camp.Quarters, cleared = camp.Cleared,
+                    });
                     foreach (var building in camp.Buildings)
                     {
+                        if (building == null || building.CurrentHealth >= building.MaxHealth) continue;
                         data.orcCampBuildings.Add(new OrcCampEntry
                         {
                             portalCell = camp.PortalCell, kind = (int)building.Kind, cell = building.Cell,

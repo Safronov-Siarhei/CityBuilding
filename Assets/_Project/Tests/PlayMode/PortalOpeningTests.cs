@@ -26,7 +26,7 @@ namespace CityBuilder.Tests.PlayMode
     public class PortalOpeningTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Loaded fresh per test: the portals open ONCE, on the first frame a Town Hall exists, so a scene shared with another test has already spent that frame.</summary>
         [UnitySetUp]

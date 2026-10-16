@@ -28,6 +28,9 @@ namespace CityBuilder.Combat
         /// <summary>Re-scanning for a target every frame is wasted work at 20 soldiers x N orcs on a phone; a few times a second is indistinguishable in play.</summary>
         private const float RetargetIntervalSeconds = 0.4f;
 
+        /// <summary>How far round itself a soldier whose way is walled off looks for the piece of orc wall to break.</summary>
+        private const float BreachReachMeters = 2.5f;
+
         private static readonly List<SoldierUnit> _all = new List<SoldierUnit>();
         public static IReadOnlyList<SoldierUnit> All => _all;
 
@@ -35,6 +38,9 @@ namespace CityBuilder.Combat
 
         private CharacterController _controller;
         private IDamageTarget _target;
+        // A piece of an orc camp's wall standing between this soldier and its target: broken
+        // first, then the walk goes on (see WalkTowards).
+        private OrcCampBuilding _breach;
         private float _attackTimer;
         private float _retargetTimer;
         private float _routeRefreshTimer;
@@ -142,6 +148,20 @@ namespace CityBuilder.Combat
                 _target = AcquireTarget();
             }
 
+            if (_breach != null && _breach.CurrentHealth <= 0) _breach = null;
+            if (_breach != null && _target != null && _target.IsAlive)
+            {
+                if (HorizontalDistance(_breach.transform.position, transform.position) <= _structureAttackRange + BreachSlack(_breach))
+                {
+                    FaceTowards(_breach.transform.position);
+                    TickAttackOn(_breach);
+                    return;
+                }
+                WalkTowards(_breach.transform.position);
+                return;
+            }
+            _breach = null;
+
             if (_target != null && _target.IsAlive)
             {
                 var targetPosition = _target.Transform.position;
@@ -225,6 +245,39 @@ namespace CityBuilder.Combat
             }
         }
 
+        /// <summary>A gate's centre is a cell further off than a palisade cell's; reach it from the wall's face.</summary>
+        private static float BreachSlack(OrcCampBuilding wall) => Mathf.Max(wall.Footprint.x, wall.Footprint.y) * 0.5f;
+
+        private void TickAttackOn(OrcCampBuilding wall)
+        {
+            _attackTimer -= Time.deltaTime;
+            if (_attackTimer > 0f) return;
+            _attackTimer = _attackIntervalSeconds;
+            wall.TakeDamage(_attackDamage);
+            if (wall.CurrentHealth <= 0)
+            {
+                _breach = null;
+                // the way may be open now: plan afresh
+                _hasRoute = false;
+            }
+        }
+
+        /// <summary>The nearest piece of orc wall within reach -- what to break when the way to the target is walled off.</summary>
+        private OrcCampBuilding NearestWallWithinReach()
+        {
+            OrcCampBuilding nearest = null;
+            var best = float.MaxValue;
+            foreach (var building in OrcCampBuilding.All)
+            {
+                if (building == null || building.CurrentHealth <= 0 || !building.IsWall) continue;
+                var distance = HorizontalDistance(building.transform.position, transform.position) - BreachSlack(building);
+                if (distance > BreachReachMeters || distance >= best) continue;
+                best = distance;
+                nearest = building;
+            }
+            return nearest;
+        }
+
         private void TickAttack()
         {
             _attackTimer -= Time.deltaTime;
@@ -250,12 +303,25 @@ namespace CityBuilder.Combat
             _routeRefreshTimer -= Time.deltaTime;
             var destinationMoved = HorizontalDistance(destination, _routeDestination) > 0.5f;
 
-            if (!_hasRoute || destinationMoved || _routeRefreshTimer <= 0f)
+            if (!_hasRoute || destinationMoved || _routeRefreshTimer <= 0f || _route.IsFinished)
             {
                 _route.SetDestination(transform.position, destination);
                 _routeDestination = destination;
                 _routeRefreshTimer = RouteRefreshSeconds;
                 _hasRoute = true;
+
+                // An orc camp's wall is in the way, and this soldier has walked up to it: break
+                // through rather than standing at the wall (or, on the straight-line fallback,
+                // walking through it).
+                if (_route.Blocked && _breach == null)
+                {
+                    var wall = NearestWallWithinReach();
+                    if (wall != null)
+                    {
+                        _breach = wall;
+                        return;
+                    }
+                }
             }
 
             if (!_route.TryGetDirection(transform.position, out var direction)) return;

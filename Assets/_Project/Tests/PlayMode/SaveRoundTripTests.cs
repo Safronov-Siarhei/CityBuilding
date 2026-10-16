@@ -78,10 +78,14 @@ namespace CityBuilder.Tests.PlayMode
             // The raid side: portals the army has already started grinding down, and one orc in the
             // field. The portals only open once a Town Hall exists for them to be anchored to.
             var townHall = PlaytestWorld.Building("Castle");
-            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
+            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeAreaNearTheMiddle(townHall.footprintSize));
             yield return WaitForPortals();
 
             var portalCount = OrcPortal.All.Count;
+            // Grown to level 2, where a camp has its wall and its totem: a level-1 camp has neither.
+            // Before the damage below, since a camp that grows is rebuilt whole, its portal too.
+            OrcRaidManager.Instance.GrowCamps(BalanceConfig.Instance.OrcCampLevel2Score);
+            var campLevels = OrcCamp.All.ToDictionary(c => c.PortalCell, c => c.Level);
             // The camps' totems shield the portals (see OrcCamp); dropped here so the hits land.
             // The save writes the totems, so the shields come back with them on load.
             foreach (var portal in OrcPortal.All) portal.IsShielded = false;
@@ -94,7 +98,7 @@ namespace CityBuilder.Tests.PlayMode
 
             // One camp loses its totem: its ruin and its portal's lost shield must survive the
             // reload, and the other camps' shields must come back up.
-            var brokenCamp = OrcCamp.All[0];
+            var brokenCamp = OrcCamp.All.First(c => c.Buildings.Any(b => b.Kind == OrcCampBuildingKind.Totem));
             var brokenTotem = brokenCamp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Totem);
             var brokenTotemCell = brokenTotem.Cell;
             var brokenPortalCell = brokenCamp.PortalCell;
@@ -148,17 +152,29 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(OrcRaidManager.Instance.SecondsUntilNextRaid, 0f, "The raid clock came back stopped.");
 
             Assert.AreEqual(portalCount, OrcCamp.All.Count, "The camps did not come back one per portal.");
+            foreach (var camp in OrcCamp.All)
+            {
+                Assert.AreEqual(camp.Layout.Pieces.Count, camp.Buildings.Count + camp.Fallen.Count,
+                    $"The camp at {camp.PortalCell} (level {camp.Level}) came back with {camp.Buildings.Count} standing and {camp.Fallen.Count} fallen of its plan's {camp.Layout.Pieces.Count}.");
+            }
             Assert.IsNotNull(GameObject.Find($"OrcCampRuin {brokenTotemCell.x},{brokenTotemCell.y}"), "The broken totem's ruin did not come back.");
             foreach (var portal in OrcPortal.All)
             {
-                Assert.AreEqual(portal.Cell != brokenPortalCell, portal.IsShielded,
-                    portal.Cell == brokenPortalCell
-                        ? "The portal whose totem the player broke came back shielded -- reloading would undo the assault."
-                        : $"The portal at {portal.Cell} came back unshielded though its totem still stands.");
+                var camp = OrcCamp.Of(portal);
+                Assert.IsNotNull(camp, $"The portal at {portal.Cell} came back without its camp.");
+                if (portal.Cell == brokenPortalCell)
+                {
+                    Assert.IsFalse(portal.IsShielded, "The portal whose totem the player broke came back shielded -- reloading would undo the assault.");
+                }
+                else
+                {
+                    Assert.AreEqual(camp.TotemStanding, portal.IsShielded, $"The portal at {portal.Cell} came back with the wrong shield.");
+                }
             }
             foreach (var camp in OrcCamp.All)
             {
-                Assert.AreEqual(BalanceConfig.Instance.OrcGarrisonSize, camp.Guards.Count, "A camp came back without its garrison.");
+                Assert.AreEqual(campLevels[camp.PortalCell], camp.Level, "A camp came back at another level.");
+                Assert.AreEqual(camp.Layout.Guards.Count, camp.Guards.Count, "A camp came back without its garrison.");
             }
         }
 
@@ -182,7 +198,7 @@ namespace CityBuilder.Tests.PlayMode
             // stands still, so the group's rally point cannot drift between the save and the assert
             // and disguise a lost order as a moved one.
             var townHall = PlaytestWorld.Building("Castle");
-            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeArea(townHall.footprintSize));
+            PlaytestWorld.Place(townHall, PlaytestWorld.FindFreeAreaNearTheMiddle(townHall.footprintSize));
             yield return WaitForPortals();
 
             var army = ArmyManager.Instance;

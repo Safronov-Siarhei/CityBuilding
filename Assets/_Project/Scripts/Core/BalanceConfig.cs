@@ -254,6 +254,29 @@ namespace CityBuilder.Core
         [SerializeField] private int raidChiefFromLevel = 3;
         [SerializeField] private float orcGarrisonRespawnSeconds = 30f;
         [SerializeField] private float orcGarrisonGuardRadiusMeters = 8f;
+        // The walled bases (the user's sketches, 2026-10-16): numbers per LEVEL of the building,
+        // index 0 = level 1. Level 1 of the tower, tent and totem keep their old keys.
+        [SerializeField] private int[] portalHealthByLevel = { 320, 480, 700 };
+        [SerializeField] private int[] orcTowerHealthByLevel = { 160, 220, 300 };
+        [SerializeField] private int[] orcTowerDamageByLevel = { 3, 4, 5 };
+        [SerializeField] private float[] orcTowerRangeByLevel = { 7f, 7.5f, 8f };
+        [SerializeField] private int orcGateTowerHealth = 260;
+        [SerializeField] private int orcGateTowerDamage = 4;
+        [SerializeField] private float orcGateTowerRangeMeters = 7f;
+        [SerializeField] private int[] orcPalisadeHealthByLevel = { 60, 100 };
+        [SerializeField] private int[] orcGateHealthByLevel = { 120, 180 };
+        [SerializeField] private int[] orcTotemHealthByLevel = { 120, 200 };
+        [SerializeField] private int[] orcStorehouseHealthByLevel = { 150, 220 };
+        [SerializeField] private int orcBrutePitHealth = 240;
+        [SerializeField] private int orcThrowerRangeHealth = 200;
+        // How a camp grows with the player (see OrcCamp.LevelFor), and what breaking one pays.
+        [SerializeField] private int orcCampLevel2Score = 200;
+        [SerializeField] private int orcCampLevel3Score = 450;
+        [SerializeField] private int orcCampLevelScorePerRank = 40;
+        [SerializeField] private int orcCampLootCoins = 40;
+        [SerializeField] private int orcCampLootWood = 60;
+        [SerializeField] private int orcCampLootStone = 40;
+        [SerializeField] private float orcCampBreatherSeconds = 240f;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
         // turns these three into the spiral of slots around the Town Hall. Kept here rather than
         // as constants because "spread the portals over the whole map" has to be a number the user
@@ -413,6 +436,32 @@ namespace CityBuilder.Core
         public int RaidChiefFromLevel => raidChiefFromLevel;
         public float OrcGarrisonRespawnSeconds => orcGarrisonRespawnSeconds;
         public float OrcGarrisonGuardRadiusMeters => orcGarrisonGuardRadiusMeters;
+        public int PortalHealthAt(int level) => AtLevel(portalHealthByLevel, level);
+        public int OrcTowerHealthAt(int level) => AtLevel(orcTowerHealthByLevel, level);
+        public int OrcTowerDamageAt(int level) => AtLevel(orcTowerDamageByLevel, level);
+        public float OrcTowerRangeAt(int level) => AtLevel(orcTowerRangeByLevel, level);
+        public int OrcGateTowerHealth => orcGateTowerHealth;
+        public int OrcGateTowerDamage => orcGateTowerDamage;
+        public float OrcGateTowerRangeMeters => orcGateTowerRangeMeters;
+        public int OrcPalisadeHealthAt(int level) => AtLevel(orcPalisadeHealthByLevel, level);
+        public int OrcGateHealthAt(int level) => AtLevel(orcGateHealthByLevel, level);
+        public int OrcTotemHealthAt(int level) => AtLevel(orcTotemHealthByLevel, level);
+        public int OrcStorehouseHealthAt(int level) => AtLevel(orcStorehouseHealthByLevel, level);
+        public int OrcBrutePitHealth => orcBrutePitHealth;
+        public int OrcThrowerRangeHealth => orcThrowerRangeHealth;
+        public int OrcCampLevel2Score => orcCampLevel2Score;
+        public int OrcCampLevel3Score => orcCampLevel3Score;
+        public int OrcCampLevelScorePerRank => orcCampLevelScorePerRank;
+        public int OrcCampLootCoins => orcCampLootCoins;
+        public int OrcCampLootWood => orcCampLootWood;
+        public int OrcCampLootStone => orcCampLootStone;
+        public float OrcCampBreatherSeconds => orcCampBreatherSeconds;
+
+        private static T AtLevel<T>(T[] byLevel, int level)
+        {
+            if (byLevel == null || byLevel.Length == 0) return default;
+            return byLevel[Mathf.Clamp(level, 1, byLevel.Length) - 1];
+        }
         public int PortalCount => portalCount;
         public float PortalDistanceFromTownHallMeters => portalDistanceFromTownHallMeters;
         public float PortalDistanceStepMeters => portalDistanceStepMeters;
@@ -545,6 +594,33 @@ namespace CityBuilder.Core
             raidChiefFromLevel = (int)Read(economy, "raid_chief_from_level", raidChiefFromLevel);
             orcGarrisonRespawnSeconds = Read(economy, "orc_garrison_respawn_seconds", orcGarrisonRespawnSeconds);
             orcGarrisonGuardRadiusMeters = Read(economy, "orc_garrison_guard_radius_meters", orcGarrisonGuardRadiusMeters);
+            portalHealthByLevel = new[] { portalMaxHealth,
+                (int)Read(economy, "portal_max_health_2", 480), (int)Read(economy, "portal_max_health_3", 700) };
+            orcTowerHealthByLevel = new[] { orcTowerHealth,
+                (int)Read(economy, "orc_tower_health_2", 220), (int)Read(economy, "orc_tower_health_3", 300) };
+            orcTowerDamageByLevel = new[] { orcTowerDamage,
+                (int)Read(economy, "orc_tower_damage_2", 4), (int)Read(economy, "orc_tower_damage_3", 5) };
+            orcTowerRangeByLevel = new[] { orcTowerRangeMeters,
+                Read(economy, "orc_tower_range_meters_2", 7.5f), Read(economy, "orc_tower_range_meters_3", 8f) };
+            orcGateTowerHealth = (int)Read(economy, "orc_gatetower_health", orcGateTowerHealth);
+            orcGateTowerDamage = (int)Read(economy, "orc_gatetower_damage", orcGateTowerDamage);
+            orcGateTowerRangeMeters = Read(economy, "orc_gatetower_range_meters", orcGateTowerRangeMeters);
+            orcPalisadeHealthByLevel = new[] { (int)Read(economy, "orc_palisade_health", 60),
+                (int)Read(economy, "orc_palisade_health_2", 100) };
+            orcGateHealthByLevel = new[] { (int)Read(economy, "orc_gate_health", 120),
+                (int)Read(economy, "orc_gate_health_2", 180) };
+            orcTotemHealthByLevel = new[] { orcTotemHealth, (int)Read(economy, "orc_totem_health_2", 200) };
+            orcStorehouseHealthByLevel = new[] { (int)Read(economy, "orc_storehouse_health", 150),
+                (int)Read(economy, "orc_storehouse_health_2", 220) };
+            orcBrutePitHealth = (int)Read(economy, "orc_brutepit_health", orcBrutePitHealth);
+            orcThrowerRangeHealth = (int)Read(economy, "orc_thrower_range_health", orcThrowerRangeHealth);
+            orcCampLevel2Score = (int)Read(economy, "orc_camp_level2_score", orcCampLevel2Score);
+            orcCampLevel3Score = (int)Read(economy, "orc_camp_level3_score", orcCampLevel3Score);
+            orcCampLevelScorePerRank = (int)Read(economy, "orc_camp_level_score_per_rank", orcCampLevelScorePerRank);
+            orcCampLootCoins = (int)Read(economy, "orc_camp_loot_coins", orcCampLootCoins);
+            orcCampLootWood = (int)Read(economy, "orc_camp_loot_wood", orcCampLootWood);
+            orcCampLootStone = (int)Read(economy, "orc_camp_loot_stone", orcCampLootStone);
+            orcCampBreatherSeconds = Read(economy, "orc_camp_breather_seconds", orcCampBreatherSeconds);
             portalCount = (int)Read(economy, "portal_count", portalCount);
             portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);

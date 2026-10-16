@@ -102,8 +102,15 @@ namespace CityBuilder.Saving
         /// <summary>Where the portals the player destroyed stood, so their ruins come back with the save. Empty in saves written before portals left ruins.</summary>
         public List<Vector2Int> closedPortalCells = new List<Vector2Int>();
 
-        /// <summary>Every orc camp building, standing or fallen (health 0 = its ruin), keyed by the cell of the portal its camp was built around. Empty in saves written before the camps existed -- those get fresh camps.</summary>
+        /// <summary>
+        /// The orc camp buildings the player has damaged or broken (health 0 = its ruin), keyed by
+        /// the cell of the portal its camp was built around. Untouched buildings are not written --
+        /// a level-3 camp has well over a hundred pieces of wall -- the camp's plan puts them back.
+        /// </summary>
         public List<OrcCampEntry> orcCampBuildings = new List<OrcCampEntry>();
+
+        /// <summary>Every walled camp (see OrcCamp): its level and the rest of what rebuilds it. Empty in saves from before the walled bases -- those get fresh level-1 camps, and their old camp buildings are dropped.</summary>
+        public List<OrcCampStateEntry> orcCamps = new List<OrcCampStateEntry>();
 
         /// <summary>
         /// Where the ONE portal stood, back when there was only one. Read on load when
@@ -184,6 +191,18 @@ namespace CityBuilder.Saving
         public Vector2Int cell;
         public float yaw;
         public int health;
+    }
+
+    /// <summary>One walled orc camp: its portal's cell, its level, how big it may grow, its rank by distance, its facing (quarter turns), and whether its portal was closed.</summary>
+    [Serializable]
+    public class OrcCampStateEntry
+    {
+        public Vector2Int portalCell;
+        public int level;
+        public int maxLevel;
+        public int rank;
+        public int quarters;
+        public bool cleared;
     }
 
     /// <summary>One portal still standing. The cell rather than the world position, because that is what the placement rule produced and what the grid has reserved.</summary>

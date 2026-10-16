@@ -77,6 +77,10 @@ namespace CityBuilder.Combat
         /// <summary>Hands the portal its two looks. Without them (no models in the build) it keeps whatever it was built with and the switch does nothing.</summary>
         public void SetLooks(GameObject activeLook, GameObject passiveLook)
         {
+            // Off the portal at once, not at the end of the frame: until then a Find by name would
+            // still turn up the old look.
+            if (_activeLook != null && _activeLook != activeLook) { _activeLook.transform.SetParent(null, false); Destroy(_activeLook); }
+            if (_passiveLook != null && _passiveLook != passiveLook) { _passiveLook.transform.SetParent(null, false); Destroy(_passiveLook); }
             _activeLook = activeLook;
             _passiveLook = passiveLook;
             ShowActive(IsShownActive);
@@ -88,6 +92,17 @@ namespace CityBuilder.Combat
             IsShownActive = active;
             if (_activeLook != null) _activeLook.SetActive(active);
             if (_passiveLook != null) _passiveLook.SetActive(!active);
+        }
+
+        /// <summary>The level of its camp (see OrcCamp): it decides the portal's health and look.</summary>
+        public int Level { get; private set; } = 1;
+
+        /// <summary>Takes its camp's level -- whole, on the new level's health: a camp that grows is rebuilt.</summary>
+        public void SetLevel(int level, int maxHealth)
+        {
+            Level = Mathf.Max(1, level);
+            MaxHealth = Mathf.Max(1, maxHealth);
+            CurrentHealth = MaxHealth;
         }
 
         /// <summary>Puts a loaded portal back on the health the player had ground it down to. Clamped to at least 1: a portal restored at zero would stand there whole and unkillable, since only TakeDamage retires one.</summary>

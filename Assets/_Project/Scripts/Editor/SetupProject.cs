@@ -1936,20 +1936,54 @@ namespace CityBuilder.EditorTools
         {
             const string folder = "Assets/_Project/Models/Orcs";
             var so = new SerializedObject(raidManager);
-            foreach (var (field, file) in new[]
-                     {
-                         ("portalActiveModel", "OrcPortal1-lvl1"), ("portalPassiveModel", "OrcPortal1-lvl1-Passive"),
-                         ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("gruntModel", "OrcGrunt"), ("bruteModel", "OrcBrute"),
-                         ("throwerModel", "OrcThrower"), ("chiefModel", "OrcChief"),
-                         ("watchtowerModel", "OrcWatchtower1-lvl1"), ("watchtowerRuinModel", "OrcWatchtower1-lvl1-Ruin"),
-                         ("warTentModel", "OrcWarTent1-lvl1"), ("warTentRuinModel", "OrcWarTent1-lvl1-Ruin"),
-                         ("totemModel", "OrcTotem1-lvl1"), ("totemRuinModel", "OrcTotem1-lvl1-Ruin"),
-                         ("palisadeModel", "OrcFence1-lvl1-Straight"),
-                     })
+
+            GameObject Load(string file)
             {
                 var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{file}.fbx");
                 if (model == null) Debug.LogWarning($"[SetupProject] {folder}/{file}.fbx is missing -- run Tools/blender/export_fbx.py. The orcs fall back to cubes there.");
-                so.FindProperty(field).objectReferenceValue = model;
+                return model;
+            }
+
+            foreach (var (field, file) in new[]
+                     {
+                         ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("throwerModel", "OrcThrower"), ("chiefModel", "OrcChief"),
+                         ("watchtowerRuinModel", "OrcWatchtower1-lvl1-Ruin"),
+                         ("warTentModel", "OrcWarTent1-lvl1"), ("warTentRuinModel", "OrcWarTent1-lvl1-Ruin"),
+                         ("totemRuinModel", "OrcTotem1-lvl1-Ruin"), ("gateRuinModel", "OrcGate1-lvl1-Ruin"),
+                         ("gateTowerModel", "OrcGateTower1-lvl1"), ("gateTowerRuinModel", "OrcGateTower1-lvl1-Ruin"),
+                         ("storehouseRuinModel", "OrcStorehouse1-lvl1-Ruin"),
+                         ("brutePitModel", "OrcBrutePit1-lvl1"), ("brutePitRuinModel", "OrcBrutePit1-lvl1-Ruin"),
+                         ("throwerRangeModel", "OrcThrowerRange1-lvl1"), ("throwerRangeRuinModel", "OrcThrowerRange1-lvl1-Ruin"),
+                     })
+            {
+                so.FindProperty(field).objectReferenceValue = Load(file);
+            }
+
+            // By level, index 0 = level 1 (see OrcRaidManager).
+            var fences = new List<string>();
+            foreach (var level in new[] { 1, 2 })
+            {
+                foreach (var shape in new[] { "Straight", "Corner", "T", "Cross" }) fences.Add($"OrcFence1-lvl{level}-{shape}");
+            }
+            foreach (var (field, files) in new[]
+                     {
+                         ("portalActiveModels", new[] { "OrcPortal1-lvl1", "OrcPortal1-lvl2", "OrcPortal1-lvl3" }),
+                         ("portalPassiveModels", new[] { "OrcPortal1-lvl1-Passive", "OrcPortal1-lvl2-Passive", "OrcPortal1-lvl3-Passive" }),
+                         ("gruntModels", new[] { "OrcGrunt", "OrcGrunt-lvl2", "OrcGrunt-lvl3" }),
+                         ("bruteModels", new[] { "OrcBrute", "OrcBrute-lvl2" }),
+                         ("watchtowerModels", new[] { "OrcWatchtower1-lvl1", "OrcWatchtower1-lvl2", "OrcWatchtower1-lvl3" }),
+                         ("totemModels", new[] { "OrcTotem1-lvl1", "OrcTotem1-lvl2" }),
+                         ("gateModels", new[] { "OrcGate1-lvl1", "OrcGate1-lvl2" }),
+                         ("storehouseModels", new[] { "OrcStorehouse1-lvl1", "OrcStorehouse1-lvl2" }),
+                         ("palisadeModels", fences.ToArray()),
+                     })
+            {
+                var property = so.FindProperty(field);
+                property.arraySize = files.Length;
+                for (var i = 0; i < files.Length; i++)
+                {
+                    property.GetArrayElementAtIndex(i).objectReferenceValue = Load(files[i]);
+                }
             }
             so.ApplyModifiedPropertiesWithoutUndo();
         }

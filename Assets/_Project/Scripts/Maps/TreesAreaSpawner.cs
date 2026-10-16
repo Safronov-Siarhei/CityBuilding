@@ -35,6 +35,31 @@ namespace CityBuilder.Maps
         private readonly HashSet<Vector2Int> _treeCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _treeCellByInstance = new Dictionary<GameObject, Vector2Int>();
 
+        /// <summary>Whether a tree stands on this cell.</summary>
+        public bool Has(Vector2Int cell) => _treeCells.Contains(cell);
+
+        /// <summary>
+        /// Takes the tree off this cell, if there is one, and frees the cell -- an orc camp is
+        /// putting up its square there (see OrcCamp.Reserve). Nothing grows back in its place:
+        /// the camp holds the cell from then on.
+        /// </summary>
+        public bool ClearCell(Vector2Int cell)
+        {
+            if (!_treeCells.Remove(cell)) return false;
+            GameObject instance = null;
+            foreach (var pair in _treeCellByInstance)
+            {
+                if (pair.Value == cell) instance = pair.Key;
+            }
+            if (instance != null)
+            {
+                _treeCellByInstance.Remove(instance);
+                Destroy(instance);
+            }
+            GridManager.Instance?.SetAreaOccupied(cell, Vector2Int.one, false);
+            return true;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

@@ -39,6 +39,9 @@ namespace CityBuilder.Combat
 
         public Vector3 Destination { get; private set; }
 
+        /// <summary>The NavMesh found a way only part of the way there -- something unwalkable (a wall) stands between.</summary>
+        public bool Blocked { get; private set; }
+
         /// <summary>True once every corner has been reached -- i.e. there is nowhere left to walk.</summary>
         public bool IsFinished => _index >= _corners.Length;
 
@@ -47,14 +50,17 @@ namespace CityBuilder.Combat
         /// the NavMesh has nothing to offer, so a unit always attempts something rather than
         /// standing still with no explanation.
         /// </summary>
-        public void SetDestination(Vector3 from, Vector3 to)
+        /// <param name="straightLineFallback">False for a unit that must never cut through a wall (an orc guard inside its camp): a blocked route then simply ends, rather than turning into a straight line at the destination.</param>
+        public void SetDestination(Vector3 from, Vector3 to, bool straightLineFallback = true)
         {
             Destination = to;
             _index = 0;
+            Blocked = false;
             _sharedPath ??= new NavMeshPath();
 
             if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
             {
+                Blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
                 var corners = _sharedPath.corners;
                 var reachesSomewhere = corners.Length > 0 &&
                                        HorizontalDistance(corners[corners.Length - 1], from) > MinProgressDistance;
@@ -62,6 +68,12 @@ namespace CityBuilder.Combat
                 {
                     _corners = corners;
                     SkipCornersAlreadyReached(from);
+                    return;
+                }
+
+                if (Blocked && !straightLineFallback)
+                {
+                    _corners = new Vector3[0];
                     return;
                 }
             }

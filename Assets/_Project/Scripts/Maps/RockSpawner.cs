@@ -106,6 +106,31 @@ namespace CityBuilder.Maps
             }
         }
 
+        /// <summary>Whether a boulder stands on this cell.</summary>
+        public bool Has(Vector2Int cell) => _rockCells.Contains(cell);
+
+        /// <summary>
+        /// Takes the boulder off this cell, if there is one, and frees the cell -- an orc camp is
+        /// putting up its square there (see OrcCamp.Reserve). Nothing grows back in its place:
+        /// the camp holds the cell from then on.
+        /// </summary>
+        public bool ClearCell(Vector2Int cell)
+        {
+            if (!_rockCells.Remove(cell)) return false;
+            GameObject instance = null;
+            foreach (var pair in _rockCellByInstance)
+            {
+                if (pair.Value == cell) instance = pair.Key;
+            }
+            if (instance != null)
+            {
+                _rockCellByInstance.Remove(instance);
+                Destroy(instance);
+            }
+            GridManager.Instance?.SetAreaOccupied(cell, Vector2Int.one, false);
+            return true;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

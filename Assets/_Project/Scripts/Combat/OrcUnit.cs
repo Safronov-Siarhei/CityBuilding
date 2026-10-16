@@ -21,6 +21,9 @@ namespace CityBuilder.Combat
 
         /// <summary>Leads a wave: one per raid from raid_chief_from_level, much tougher than the rest.</summary>
         Chief = 2,
+
+        /// <summary>The heavy of the walled bases: slow, thick, its own row and its own levels (the user's sketches, 2026-10-16).</summary>
+        Brute = 3,
     }
 
     /// <summary>
@@ -45,6 +48,7 @@ namespace CityBuilder.Combat
             {
                 case OrcKind.Thrower: return "orc_thrower";
                 case OrcKind.Chief: return "orc_chief";
+                case OrcKind.Brute: return "orc_brute";
                 default: return "orc";
             }
         }
@@ -184,22 +188,34 @@ namespace CityBuilder.Combat
         // Guard duty (see OrcCamp): a garrison orc holds its camp instead of marching on the town.
         private bool _guarding;
         private Vector3 _guardPost;
-        private float _guardRadius;
+        private OrcCamp _camp;
+        // Guards walk over the NavMesh, not in straight lines: their camp has walls now, and a
+        // straight line would carry them through the palisade.
+        private NavRoute _guardRoute;
+        private Vector3 _guardRouteDestination;
+        private float _guardRouteTimer;
+        private const float GuardRouteRefreshSeconds = 0.6f;
+        // How far outside its camp a guard keeps after a soldier who is shooting it.
+        private const float GuardLeashMeters = 3f;
 
-        /// <summary>A camp's garrison, not a raider: it is not saved (the tent musters it again on load).</summary>
+        /// <summary>A camp's garrison, not a raider: it is not saved (its spawner musters it again on load).</summary>
         public bool IsGuard => _guarding;
 
+        /// <summary>The post this guard holds.</summary>
+        public Vector3 GuardPost => _guardPost;
+
         /// <summary>
-        /// Puts the orc on guard at a camp: it fights soldiers who come within `radius` of `post`
-        /// (or who shoot it from a little further), never chases past that, and walks back to its
-        /// post when the fight is over. It never goes for the player's buildings.
+        /// Puts the orc on guard at a camp: it fights soldiers who come into the camp's square (or
+        /// who shoot it from a little further), never chases out of it, and walks back to its post
+        /// when the fight is over. It never goes for the player's buildings.
         /// </summary>
-        public void SetGuardPost(Vector3 post, float radius)
+        public void SetGuardPost(OrcCamp camp, Vector3 post)
         {
             _guarding = true;
+            _camp = camp;
             _guardPost = post;
-            _guardRadius = radius;
             _target = null;
+            _guardRoute = new NavRoute();
         }
 
         private void Update()
@@ -299,22 +315,48 @@ namespace CityBuilder.Combat
                 if (!_retaliating || !StillWorthChasing(_soldierTarget))
                 {
                     _retaliating = false;
-                    _soldierTarget = FindNearestSoldierNearPost();
+                    _soldierTarget = FindNearestSoldierInCamp();
                 }
             }
 
             if (_soldierTarget != null)
             {
-                FightSoldier();
+                var toSoldier = _soldierTarget.transform.position - transform.position;
+                toSoldier.y = 0f;
+                if (toSoldier.magnitude <= _soldierAttackRange)
+                {
+                    _attackTimer -= Time.deltaTime;
+                    if (_attackTimer > 0f) return;
+                    _attackTimer = _attackIntervalSeconds;
+                    _soldierTarget.TakeDamage(_attackDamage);
+                    if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
+                    return;
+                }
+                GuardWalk(_soldierTarget.transform.position);
                 return;
             }
 
-            // Back to the post, in a straight line: it is a few metres inside its own camp.
             var toPost = _guardPost - transform.position;
             toPost.y = 0f;
-            var distance = toPost.magnitude;
-            if (distance < 0.6f) return;
-            var step = toPost / distance * _walkSpeed * Time.deltaTime;
+            if (toPost.magnitude < 0.6f) return;
+            GuardWalk(_guardPost);
+        }
+
+        private void GuardWalk(Vector3 destination)
+        {
+            _guardRoute ??= new NavRoute();
+            _guardRouteTimer -= Time.deltaTime;
+            var moved = destination - _guardRouteDestination;
+            moved.y = 0f;
+            if (_guardRouteTimer <= 0f || moved.sqrMagnitude > 0.25f)
+            {
+                _guardRoute.SetDestination(transform.position, destination, straightLineFallback: false);
+                _guardRouteDestination = destination;
+                _guardRouteTimer = GuardRouteRefreshSeconds;
+            }
+            if (!_guardRoute.TryGetDirection(transform.position, out var direction)) return;
+
+            var step = direction * _walkSpeed * Time.deltaTime;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);
@@ -324,19 +366,17 @@ namespace CityBuilder.Combat
             {
                 transform.position += step;
             }
+            transform.rotation = Quaternion.LookRotation(direction);
         }
 
-        private SoldierUnit FindNearestSoldierNearPost()
+        private SoldierUnit FindNearestSoldierInCamp()
         {
             SoldierUnit nearest = null;
             var best = float.MaxValue;
-            var reachSq = _guardRadius * _guardRadius;
             foreach (var soldier in SoldierUnit.All)
             {
                 if (soldier == null || soldier.CurrentHealth <= 0) continue;
-                var fromPost = soldier.transform.position - _guardPost;
-                fromPost.y = 0f;
-                if (fromPost.sqrMagnitude > reachSq) continue;
+                if (!InGuardZone(soldier.transform.position, OrcCamp.ZoneMarginMeters)) continue;
                 var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
                 if (distSq >= best) continue;
                 best = distSq;
@@ -345,17 +385,21 @@ namespace CityBuilder.Combat
             return nearest;
         }
 
+        /// <summary>Inside the camp's square (give or take a margin) -- or, for a guard without a camp, near its post.</summary>
+        private bool InGuardZone(Vector3 position, float margin)
+        {
+            if (_camp != null) return _camp.IsInZone(position, margin);
+            var reach = BalanceConfig.Instance.OrcGarrisonGuardRadiusMeters + margin;
+            var fromPost = position - _guardPost;
+            fromPost.y = 0f;
+            return fromPost.sqrMagnitude <= reach * reach;
+        }
+
         /// <summary>Whether the soldier it is chasing is alive and still inside the retaliation leash -- for a guard, measured from its post.</summary>
         private bool StillWorthChasing(SoldierUnit soldier)
         {
             if (soldier == null || soldier.CurrentHealth <= 0) return false;
-            if (_guarding)
-            {
-                var leashFromPost = _guardRadius * 1.5f;
-                var fromPost = soldier.transform.position - _guardPost;
-                fromPost.y = 0f;
-                return fromPost.sqrMagnitude <= leashFromPost * leashFromPost;
-            }
+            if (_guarding) return InGuardZone(soldier.transform.position, OrcCamp.ZoneMarginMeters + GuardLeashMeters);
 
             var leash = _soldierAggroRadius * RetaliationLeashMultiplier;
             return (soldier.transform.position - transform.position).sqrMagnitude <= leash * leash;
