@@ -174,7 +174,7 @@ PALISADE_R = 0.05
 _JAG = (0.0, 0.07, -0.04, 0.1, 0.02, -0.06, 0.08, -0.02)
 
 
-def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
+def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0, h0=None):
     """Rough logs from t0 to t1 out of (ox, oy) along (dx, dy): thick, ragged in height, each
     leaning a little its own way, lashed by two rust bands and a rope of hide. Logs stand at
     0.0625, 0.1875 ... from the centre, so a run of cells keeps one rhythm."""
@@ -185,7 +185,7 @@ def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
         if t > t0:
             x, y = ox + dx * t, oy + dy * t
             j = (seed + i * 3 + int(abs(x) * 40 + abs(y) * 40)) % len(_JAG)
-            h = PALISADE_H + _JAG[j]
+            h = (h0 or PALISADE_H) + _JAG[j]
             lean = _JAG[(j + 3) % len(_JAG)] * 0.25
             stake(b, x, y, 0.01, h, PALISADE_R, TIMBER_LIGHT if i % 2 else TIMBER,
                   lean=(-dy * lean, dx * lean), point=0.12)
@@ -201,6 +201,38 @@ def palisade_arm(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
         b.box(min(xa, xb) - (hw if dx == 0 else 0), max(xa, xb) + (hw if dx == 0 else 0),
               min(ya, yb) - (hw if dy == 0 else 0), max(ya, yb) + (hw if dy == 0 else 0),
               z, z + w, col, skip=())
+
+
+PALISADE2_H = 0.98            # level 2: taller logs, iron-banded, spiked, on a bed of rocks
+
+
+def palisade_arm2(b, ox, oy, dx, dy, t0=0.0, t1=0.5, seed=0):
+    """A level-2 palisade arm: the level-1 logs grown taller, a third band of iron at the top,
+    iron spikes jutting out both faces, rocks heaped along the foot."""
+    palisade_arm(b, ox, oy, dx, dy, t0, t1, seed, h0=PALISADE2_H)
+    a0, a1 = max(t0, 0.02), t1
+    xa, ya, xb, yb = ox + dx * a0, oy + dy * a0, ox + dx * a1, oy + dy * a1
+    hw = PALISADE_R + 0.012
+    b.box(min(xa, xb) - (hw if dx == 0 else 0), max(xa, xb) + (hw if dx == 0 else 0),
+          min(ya, yb) - (hw if dy == 0 else 0), max(ya, yb) + (hw if dy == 0 else 0),
+          0.74, 0.79, METAL, skip=())
+    nx, ny = -dy, dx
+    t = PALISADE_STEP
+    i = 0
+    while t < t1 - 1e-6:
+        if t > t0:
+            x, y = ox + dx * t, oy + dy * t
+            for side in (-1, 1):
+                p = Vector((x + nx * side * (PALISADE_R + 0.01), y + ny * side * (PALISADE_R + 0.01),
+                            0.42 + 0.06 * (i % 2)))
+                tube(b, [p, p + Vector((nx * side * 0.1, ny * side * 0.1, 0.03))], [0.014, 0.0],
+                     METAL, sides=4)
+            if i % 2 == 0:
+                for side in (-1, 1):
+                    b.crag(x + nx * side * 0.1, y + ny * side * 0.1, 0.06, 0.05, 0.08,
+                           ROCK, top=ROCK_LIGHT, sides=5, seed=seed + i + side)
+        t += PALISADE_STEP * 2
+        i += 1
 
 
 # -- ruins ---------------------------------------------------------------------------------------

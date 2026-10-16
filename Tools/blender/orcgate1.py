@@ -18,12 +18,14 @@ from kit import Builder  # noqa: E402
 OBJ = "OrcGate1-lvl1"
 
 
-def build(lo, hi):
-    b = Builder()
-    o.palisade_arm(b, 0, 1.0, 0, -1, 0.0, 0.46, seed=1)
-    o.palisade_arm(b, 0, -1.0, 0, 1, 0.0, 0.46, seed=4)
+def gate(b, level=1):
+    """The gate itself; level 2 stands in the level-2 palisade: its arms, taller posts on rock
+    footings with iron caps and torches, the leaves plated in iron."""
+    arm = o.palisade_arm if level == 1 else o.palisade_arm2
+    arm(b, 0, 1.0, 0, -1, 0.0, 0.46, seed=1)
+    arm(b, 0, -1.0, 0, 1, 0.0, 0.46, seed=4)
 
-    post_h = o.PALISADE_H + 0.5
+    post_h = (o.PALISADE_H if level == 1 else o.PALISADE2_H) + 0.5
     for py in (-0.44, 0.44):
         o.tube(b, [(0, py, 0.01), (0, py, post_h)], [0.1, 0.085], o.TIMBER, sides=7, tip=False)
         for z in (0.25, 0.75):
@@ -61,7 +63,28 @@ def build(lo, hi):
               (side * 0.112, 0.05, top - drop * 0.5 + 0.05), 0.014, o.BONE)
         b.rod((side * 0.112, 0.05, top - drop * 0.5 - 0.05),
               (side * 0.112, -0.05, top - drop * 0.5 + 0.05), 0.014, o.BONE)
+    if level >= 2:
+        for py in (-0.44, 0.44):
+            b.crag(0, py, 0.17, 0.14, 0.16, o.ROCK, top=o.ROCK_LIGHT, sides=6, seed=int(py * 10) + 5)
+            b.cylinder(0, py, post_h - 0.04, post_h + 0.02, 0.1, o.METAL, sides=7)
+            o.iron_spikes(b, 0, py, 0.09, 6, post_h - 0.16, length=0.08)
+            for side in (-1, 1):
+                o.torch(b, side * 0.2, py * 1.25, h=0.62)
+        for side in (-1, 1):
+            for y in (-0.18, 0.18):
+                b.box(side * 0.06 - 0.008, side * 0.06 + 0.008, y - 0.15, y + 0.15, 0.08, 0.66,
+                      o.METAL, skip=())
+            b.box(side * 0.07 - 0.006, side * 0.07 + 0.006, -0.36, 0.36, 0.3, 0.36, o.RUST, skip=())
+        o.skull(b, -0.1, 0, beam_z + 0.12, s=0.14, facing=(-1, 0))
     return b
+
+
+def build(lo, hi):
+    return gate(Builder())
+
+
+def build2(lo, hi):
+    return gate(Builder(), 2)
 
 
 def build_ruin(lo, hi):
@@ -97,3 +120,6 @@ def build_ruin(lo, hi):
 
 
 o.run_with_ruin(OBJ, build, build_ruin, "Gate1-lvl1", (o.COLUMN_X, 0, 0))
+o.place("OrcGate1-lvl2", build2, "Gate1-lvl1", o.GRID_X[2], -66.0)
+import bpy  # noqa: E402
+bpy.ops.wm.save_mainfile()

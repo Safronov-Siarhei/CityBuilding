@@ -178,7 +178,67 @@ def build_closed(lo, hi):
     return b
 
 
+def reinforce(b):
+    """Level 2: a third band on each stone, two smaller standing stones at the back corners,
+    skulls on chains under the lintel, a second pair of torches and spikes on the step."""
+    for k in (-1, 1):
+        x = k * PILLAR_X
+        b.cylinder(x - k * 0.06 * 0.68 / LINTEL_Z, 0, 0.68, 0.74, 0.205, o.RUST, sides=6)
+        b.crag(k * 0.8, 0.72, 0.14, 0.12, 0.85, o.ROCK, top=o.ROCK_LIGHT, sides=5, taper=0.6,
+               seed=2 if k < 0 else 6)
+        b.cylinder(k * 0.8, 0.72, 0.4, 0.45, 0.15, o.RUST, sides=5)
+        o.skull_chain(b, k * 0.3, -0.16, LINTEL_Z + 0.04, links=3, s=0.06)
+        o.torch(b, k * 0.88, -0.2, h=0.5)
+    o.iron_spikes(b, 0, -0.66, 0.2, 7, 0.06, length=0.09, phase=0.25)
+
+
+def fortify(b):
+    """Level 3: a ring of rune stones glowing in the portal's colour, an iron crown of spikes
+    on the lintel, braziers on the platform and a second banner."""
+    for i, a in enumerate((0.55, 1.15, 1.99, 2.59)):
+        x, y = 0.86 * math.cos(a), 0.06 + 0.86 * math.sin(a) * 0.95
+        b.crag(x, y, 0.1, 0.09, 0.62 + 0.1 * (i % 2), o.ROCK, top=o.ROCK_LIGHT, sides=5,
+               taper=0.7, seed=i + 1)
+        nx, ny = -math.cos(a), -math.sin(a)
+        ang = math.degrees(math.atan2(ny, nx)) + 90
+        for z in (0.24, 0.42):
+            b.zbox(x + nx * 0.08, y + ny * 0.08, z, z + 0.08, 0.03, 0.012, ang, o.PORTAL)
+    # a circle of rune slabs glowing on the platform round the arch
+    for i in range(14):
+        t = 2 * math.pi * (i + 0.5) / 14
+        x, y = 0.66 * math.cos(t), 0.02 + 0.6 * math.sin(t)
+        b.zbox(x, y, 0.08, 0.115, 0.07, 0.035, math.degrees(t) + 90,
+               o.PORTAL if i % 2 else o.PORTAL_DARK)
+    for k in (-1, 1):
+        o.horn(b, (k * 0.62, 0, LINTEL_Z + 0.3), (k, -0.2, 0), 0.22, 0.05, up=1.8, segments=4)
+    ax = (math.cos(TILT), 0, math.sin(TILT))
+    for i in range(7):
+        x = -0.66 + 0.22 * i
+        z = LINTEL_Z + 0.24 + x * math.sin(TILT)
+        o.tube(b, [(x, -0.12, z), (x, -0.2, z + 0.16)], [0.022, 0.0], o.METAL, sides=4)
+    b.obox((0, -0.13, LINTEL_Z + 0.2), ax, (0, 1, 0), (0, 0, 1), 0.8, 0.02, 0.04, o.METAL)
+    for k in (-1, 1):
+        b.cylinder(k * 0.42, -0.5, 0.09, 0.2, 0.07, o.METAL, sides=6)
+        b.blob(k * 0.42, -0.5, 0.17, 0.06, 0.16, o.FIRE, sides=4)
+    o.war_banner(b, -0.78, 0.72, 2.1)
+
+
+def levelled(level, active):
+    def build(lo, hi):
+        b = (build_active if active else build_passive)(lo, hi)
+        reinforce(b)
+        if level >= 3:
+            fortify(b)
+        return b
+    return build
+
+
 o.ensure_collection()
+for level in (2, 3):
+    o.place(f"{OBJ[:-5]}-lvl{level}", levelled(level, True), "FortifiedTower1-lvl1",
+            o.GRID_X[level], -74.0)
+    o.place(f"{OBJ[:-5]}-lvl{level}-Passive", levelled(level, False), "FortifiedTower1-lvl1",
+            o.GRID_X[level], -77.0)
 for name, build, dx in ((OBJ, build_active, 0.0), (OBJ + "-Passive", build_passive, 2.5),
                         (OBJ + "-Closed", build_closed, 5.0)):
     kit.run(name, build, source_name="FortifiedTower1-lvl1",

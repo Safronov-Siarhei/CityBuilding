@@ -79,6 +79,33 @@ def build(lo, hi):
     return b
 
 
+def build2(lo, hi):
+    """Level 2: an iron crown of spikes round the great skull, skulls on chains from the wings,
+    a ring of skull-topped stakes round the cairn, two more fire bowls behind and the faces
+    painted rust."""
+    b = build(lo, hi)
+    b.cylinder(0, 0, TOP - 0.02, TOP + 0.06, POLE_R + 0.04, o.METAL, sides=8)
+    o.iron_spikes(b, 0, 0, POLE_R + 0.04, 8, TOP + 0.02, length=0.12, r=0.02)
+    for i in range(6):
+        t = math.radians(TOP * 0 + 90 + 360 * i / 6 + 30)
+        o.tube(b, [(0, 0, TOP + 0.06), (0.05 * math.cos(t), 0.05 * math.sin(t), TOP + 0.42)],
+               [0.022, 0.0], o.METAL, sides=4)
+    for k in (-1, 1):
+        o.skull_chain(b, k * 0.36, 0.05, TOP - 0.02, links=3, s=0.06)
+        x, y = k * 0.3, 0.32
+        b.cylinder(x, y, 0.0, 0.12, 0.02, o.TIMBER, sides=5)
+        b.cylinder(x, y, 0.12, 0.17, 0.06, o.METAL, sides=6)
+        b.blob(x, y, 0.15, 0.045, 0.12, o.FIRE, sides=4)
+    for i, (x, y) in enumerate(((-0.44, -0.12), (0.44, -0.12), (-0.42, 0.18), (0.42, 0.18))):
+        o.stake(b, x, y, 0.0, 0.5 + 0.06 * (i % 2), r=0.025, lean=(x * 0.1, y * 0.1))
+        o.skull(b, x + x * 0.012, y, 0.4 + 0.06 * (i % 2), s=0.06, facing=(0, -1))
+    seg = (TOP - 0.16) / 3
+    for i in range(3):
+        z = 0.16 + i * seg
+        b.box(-0.135, 0.135, -POLE_R - 0.012, -POLE_R + 0.03, z + seg * 0.82, z + seg * 0.88, o.RUST)
+    return b
+
+
 def build_ruin(lo, hi):
     """Toppled: the pole snapped above the first face, the rest lying across the cairn with
     the great skull split off beside it, the wings scattered as bones, the fire bowls over."""
@@ -114,3 +141,6 @@ def build_ruin(lo, hi):
 
 
 o.run_with_ruin(OBJ, build, build_ruin, "DecTree1-lvl1", (o.COLUMN_X, 0, 0))
+o.place("OrcTotem1-lvl2", build2, "DecTree1-lvl1", o.GRID_X[2], -59.0)
+import bpy  # noqa: E402
+bpy.ops.wm.save_mainfile()
