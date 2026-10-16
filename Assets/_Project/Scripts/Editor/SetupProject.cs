@@ -226,7 +226,22 @@ namespace CityBuilder.EditorTools
             // two. That reads as judder at a perfectly healthy frame time -- the kind of defect
             // that gets blamed on a slow phone and hunted in the wrong place for months.
             PlayerSettings.Android.optimizedFramePacing = true;
+
+            // The app's icon: a placeholder the user picked (2026-10-16) -- the village with the
+            // windmill, rendered from the game's own models. One default icon; Unity derives every
+            // size and the Android legacy/round icons from it.
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconPath);
+            if (icon != null)
+            {
+                PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+            }
+            else
+            {
+                Debug.LogWarning($"[SetupProject] {AppIconPath} is missing -- the build keeps Unity's default icon.");
+            }
         }
+
+        private const string AppIconPath = "Assets/_Project/UI/AppIcon.png";
 
         /// <summary>
         /// Puts the shaders that only runtime code asks for into every build.

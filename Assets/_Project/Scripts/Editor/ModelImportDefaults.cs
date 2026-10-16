@@ -79,6 +79,11 @@ namespace CityBuilder.EditorTools
             modelImporter.isReadable = false;
             modelImporter.importAnimation = false;
             modelImporter.animationType = ModelImporterAnimationType.None;
+            // Five levels of every building plus the orc bases made meshes 62% of the build and
+            // pushed the APK past Telegram's 50 MB (2026-10-16). Low quantises what is stored on
+            // disk only -- the mesh is unpacked at load, so the frame costs nothing -- and is
+            // fine-grained enough for the palette UVs and the fence joins.
+            modelImporter.meshCompression = ModelImporterMeshCompression.Low;
         }
 
         private void OnPreprocessTexture()
