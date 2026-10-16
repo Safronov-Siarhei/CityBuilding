@@ -1362,6 +1362,11 @@ namespace CityBuilder.EditorTools
             var research = new GameObject("Research");
             research.transform.SetParent(root.transform, false);
             research.AddComponent<ResearchCheat>();
+
+            // The one cheat a phone can reach: an on-screen panel (see DebugPanel).
+            var panel = new GameObject("DebugPanel");
+            panel.transform.SetParent(root.transform, false);
+            panel.AddComponent<DebugPanel>();
         }
 
         /// <summary>

@@ -284,6 +284,13 @@ namespace CityBuilder.Combat
                 EventSeverity.Danger, EventGlyph.Portal, null, LocalToWorld(Vector2.zero)));
         }
 
+        /// <summary>Rebuilds the camp at any level, down as well as up -- the debug panel's way to try every plan on a device.</summary>
+        public void RebuildAt(int level, OrcRaidManager builder)
+        {
+            Teardown();
+            Build(level, builder);
+        }
+
         /// <summary>The portal has been closed: the camp is plundered and stops growing.</summary>
         public void MarkCleared()
         {
