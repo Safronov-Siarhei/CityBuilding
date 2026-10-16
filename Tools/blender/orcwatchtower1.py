@@ -1,5 +1,5 @@
-"""OrcWatchtower1-lvl1 -- the orcs' watchtower. Footprint 1x1, the same cell as the settlement's
-Tower so the two compare directly.
+"""OrcWatchtower1-lvl1..3 -- the orcs' watchtower in its three levels. Footprint 2x2 (the user's
+call for the walled bases, 2026-10-16): the 1x1 tower of the first camps, grown by GROW.
 
 Not a building of walls: four raw logs splayed out at the foot and lashed with crossed braces,
 a ladder up the front, a plank platform behind a parapet of sharpened stakes leaning out, a
@@ -7,8 +7,12 @@ rust hide stretched over the front as a shield, and a ragged hide roof on crosse
 poke out above it, crowned with horns. A skull hangs under the platform, a brazier burns on it,
 a banner flies from the back.
 
-Borrows Tower1's box and stands in the orc column. Its ruin, OrcWatchtower1-lvl1-Ruin, stands
-orcs.RUIN_DX to the right.
+Level 2 is the same tower reinforced: rust iron plates on the parapet, iron spikes under the
+deck, skulls on chains, a second brazier, rocks piled round the feet. Level 3 stands it on a
+plinth of raw rock, rings the roof with iron spikes and gives it great horns and two banners.
+
+Borrows FortifiedTower1's 2x2 box and stands in the base grid (orcs.place_levels); one ruin
+serves every level.
 """
 import math
 import os
@@ -16,10 +20,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import kit  # noqa: E402
+from mathutils import Vector  # noqa: E402
 import orcs as o  # noqa: E402
 from kit import Builder  # noqa: E402
 
-OBJ = "OrcWatchtower1-lvl1"
 
 FOOT = 0.4            # where the legs stand
 HEAD = 0.29           # where they meet the platform
@@ -28,8 +32,11 @@ DECK_T = 0.07
 PARAPET = 0.3
 
 
-def build(lo, hi):
-    b = Builder()
+GROW_XY, GROW_Z = 1.75, 1.3   # the 1x1 tower's numbers below, grown onto a 2x2 plot
+BANNER_H = 2.48
+
+
+def body(b):
     top = DECK + DECK_T
 
     # a trodden mound of earth and rock the legs stand in
@@ -110,14 +117,89 @@ def build(lo, hi):
     o.horn(b, (0.0, 0.0, apex + 0.02), (-1, 0, 0), 0.12, 0.03, up=1.4)
 
     # a banner from the back corner
-    o.war_banner(b, 0.32, 0.38, hi[2] - 0.02, w=0.16, drop=0.3)
-    return b
+    o.war_banner(b, 0.32, 0.38, BANNER_H, w=0.16, drop=0.3)
 
 
-def build_ruin(lo, hi):
+def reinforce(b):
+    """Level 2: iron plates on the parapet, spikes under the deck, skulls on chains, a second
+    brazier and rocks piled round the feet."""
+    top = DECK + DECK_T
+    for (cx, cy, nx, ny) in ((0.0, -0.4, 0, -1), (0.4, 0.0, 1, 0), (-0.4, 0.0, -1, 0)):
+        for j in (-1, 1):
+            px, py = cx + (-ny) * j * 0.2, cy + nx * j * 0.2
+            ang = math.degrees(math.atan2(ny, nx)) + 90
+            b.zbox(px + nx * 0.015, py + ny * 0.015, top + 0.04, top + 0.24, 0.12, 0.012, ang,
+                   o.METAL)
+            b.zbox(px + nx * 0.028, py + ny * 0.028, top + 0.2, top + 0.22, 0.12, 0.004, ang,
+                   o.RUST)
+    for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        for k in (0, 1):
+            ax, ay = (sx, 0) if k == 0 else (0, sy)
+            base = (sx * 0.41 if k == 0 else sx * 0.3, sy * 0.3 if k == 0 else sy * 0.41, DECK)
+            o.tube(b, [base, (base[0] + ax * 0.12, base[1] + ay * 0.12, DECK - 0.04)],
+                   [0.02, 0.0], o.METAL, sides=4)
+    for x, y in ((-0.36, -0.38), (0.38, 0.36)):
+        o.skull_chain(b, x, y, DECK - 0.01, links=2, s=0.055)
+    b.cylinder(0.2, 0.18, top, top + 0.1, 0.06, o.METAL, sides=6)
+    b.blob(0.2, 0.18, top + 0.07, 0.05, 0.13, o.FIRE, sides=4)
+    roof_strips(b, o.RUST, (-0.17, 0.17))
+    for i, (sx, sy) in enumerate(((-1, -1), (1, -1), (1, 1), (-1, 1))):
+        b.crag(sx * FOOT * 1.1, sy * FOOT * 1.1, 0.1, 0.09, 0.1, o.ROCK, top=o.ROCK_LIGHT,
+               sides=5, seed=i + 3)
+
+
+def roof_strips(b, color, offsets, lift=0.008, w=0.05):
+    """Strips laid up each slope of the hide roof from the eave towards the apex: rust lashings
+    on level 2."""
+    top = DECK + DECK_T
+    roof0, apex = top + 0.5, top + 0.92
+    for nx, ny in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+        tx, ty = -ny, nx
+        for off in offsets:
+            p0 = Vector((nx * 0.45 + tx * off, ny * 0.45 + ty * off, roof0))
+            p1 = Vector((tx * off * 0.25 + nx * 0.1, ty * off * 0.25 + ny * 0.1,
+                         roof0 + (apex - roof0) * (1 - 0.1 / 0.45)))
+            d = (p1 - p0).normalized()
+            t = Vector((tx, ty, 0))
+            n = d.cross(t) if d.cross(t).z > 0 else t.cross(d)
+            b.obox((p0 + p1) / 2 + n * lift, d, t, n, (p1 - p0).length / 2, w / 2, 0.006, color,
+                   skip=())
+
+
+def fortify(b):
+    """Level 3: a plinth of raw rock, a ring of iron spikes round the eaves, great horns and a
+    second banner, fire bowls on the plinth."""
+    top = DECK + DECK_T
+    roof0, apex = top + 0.5, top + 0.92
+    b.crag(0, 0, 0.46, 0.45, 0.42, o.ROCK, top=o.STONE, sides=8, taper=0.85, seed=6)
+    b.cylinder(0, 0, 0.16, 0.2, 0.47, o.RUST, sides=8)
+    for sx, sy in ((-1, -1), (1, -1)):
+        x, y = sx * 0.34, sy * 0.34
+        b.cylinder(x, y, 0.4, 0.48, 0.06, o.METAL, sides=6)
+        b.blob(x, y, 0.45, 0.05, 0.13, o.FIRE, sides=4)
+    b.pyramid(0, 0, roof0 + 0.012, 0.455, 0.455, apex + 0.012, o.METAL)
+    roof_strips(b, o.RUST, (-0.17, 0.17), lift=0.02)
+    o.iron_spikes(b, 0, 0, 0.47, 12, roof0 - 0.02, length=0.11, phase=0.5)
+    for k in (-1, 1):
+        o.horn(b, (k * 0.05, 0.0, apex - 0.05), (k, 0, 0), 0.26, 0.05, up=1.6, segments=4)
+    o.war_banner(b, -0.32, 0.38, BANNER_H, w=0.16, drop=0.3)
+    o.skull(b, 0, -0.43, top + 0.36, s=0.11)
+
+
+def grown(*parts):
+    def build(lo, hi):
+        b = Builder()
+        since = o.mark(b)
+        for part in parts:
+            part(b)
+        o.scale_since(b, since, GROW_XY, GROW_XY, GROW_Z)
+        return b
+    return build
+
+
+def ruin(b):
     """Pulled down: two legs snapped off, two lying where they fell, the platform tipped onto
     the mound, the hide roof crumpled beside it, stakes and the ladder scattered, a scorch."""
-    b = Builder()
     b.crag(0, 0, 0.46, 0.44, 0.05, o.STONE, top='cobble', sides=7, taper=0.9, seed=2)
     o.scorch(b, 0.08, 0.05, 0.36, 0.3, seed=4)
     o.broken_log(b, -FOOT, -FOOT, 0.01, 0.52, r=0.045, lean=(0.05, 0.05))
@@ -146,7 +228,8 @@ def build_ruin(lo, hi):
               0.0, 0.02, o.TIMBER)
     o.horn(b, (0.3, -0.24, 0.03), (1, -0.3, 0), 0.1, 0.025, up=0.2)
     o.skull(b, -0.24, -0.3, 0.02, s=0.07, facing=(0.4, -1))
-    return b
 
 
-o.run_with_ruin(OBJ, build, build_ruin, "Tower1-lvl1", (o.COLUMN_X, 0, 0))
+o.place_levels("OrcWatchtower1", [grown(body), grown(body, reinforce),
+                                  grown(body, reinforce, fortify)],
+               "FortifiedTower1-lvl1", -70.0, ruin=grown(ruin))

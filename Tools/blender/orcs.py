@@ -246,6 +246,69 @@ def run_with_ruin(obj, build, build_ruin, source_name, offset, collection=None):
     bpy.ops.wm.save_mainfile()
 
 
+# -- the base set: levels laid out on a grid --------------------------------------------------
+#
+# The walled bases (the user's sketches, 2026-10-16) give every orc building and warrior levels,
+# each with its own model. They stand in a grid of their own east of the old column: a row per
+# model, a column per level, the ruin last. place() works out the offset from the borrowed box.
+
+GRID_X = {1: 30.0, 2: 34.0, 3: 38.0, 'ruin': 42.0}
+
+
+def source_location(name):
+    """Where the user's placeholder `name` stands in the source file."""
+    import os
+    import bpy
+    import kit
+    path = os.path.join(os.path.dirname(bpy.data.filepath), kit.SOURCE_FILE)
+    with bpy.data.libraries.load(path, link=False) as (_, data_to):
+        data_to.objects = [name]
+    src = data_to.objects[0]
+    loc, me = src.location.copy(), src.data
+    bpy.data.objects.remove(src)
+    if me.users == 0:
+        bpy.data.meshes.remove(me)
+    return loc
+
+
+def place(obj, build, source_name, x, y):
+    """Builds `obj` on `source_name`'s box, standing at (x, y) in the Models file. Never saves."""
+    import kit
+    ensure_collection()
+    loc = source_location(source_name)
+    kit.run(obj, build, source_name=source_name, offset=(x - loc.x, y - loc.y, 0),
+            collection=COLLECTION, save=False)
+
+
+def place_levels(name, builds, source_name, y, ruin=None):
+    """`name`-lvl1..N from `builds` (one build per level) in the level columns of row y, the
+    ruin (if any) as `name`-lvl1-Ruin in the ruin column -- one ruin serves every level. Saves."""
+    import bpy
+    for level, build in enumerate(builds, start=1):
+        place(f"{name}-lvl{level}", build, source_name, GRID_X[level], y)
+    if ruin is not None:
+        place(f"{name}-lvl1-Ruin", ruin, source_name, GRID_X['ruin'], y)
+    bpy.ops.wm.save_mainfile()
+
+
+def iron_spikes(b, cx, cy, radius, count, z, length=0.1, r=0.016, phase=0.0):
+    """A ring of iron spikes pointing outward at height z."""
+    for i in range(count):
+        a = 2 * math.pi * (i + phase) / count
+        p = Vector((cx + radius * math.cos(a), cy + radius * math.sin(a), z))
+        tube(b, [p, p + Vector((math.cos(a), math.sin(a), 0.15)) * length], [r, 0.0], METAL,
+             sides=4)
+
+
+def skull_chain(b, x, y, z_top, links=3, s=0.06, facing=(0, -1)):
+    """A chain of iron links hanging from z_top with a skull at its end."""
+    z = z_top
+    for i in range(links):
+        b.box(x - 0.01, x + 0.01, y - 0.01, y + 0.01, z - 0.04, z, METAL if i % 2 else STONE_LIGHT)
+        z -= 0.045
+    skull(b, x, y, z - s * 0.8, s=s, facing=facing)
+
+
 def mark(b):
     """Where the builder's vertex list stands now -- pass to scale_since."""
     return len(b.bm.verts)
