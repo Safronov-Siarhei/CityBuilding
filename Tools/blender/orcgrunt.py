@@ -8,6 +8,7 @@ topknot, iron bracers, and a one-handed axe held ready in the right hand.
 Not a building: it borrows the Flag's box and stands in the orc column. No animation (the
 user's decision 2026-10-14) -- the game moves it whole.
 """
+import math
 import os
 import sys
 
@@ -80,5 +81,58 @@ def build(lo, hi):
     return b
 
 
+def round_shield(b, x, y, z, r=0.1):
+    """A round wooden shield on the left forearm, facing out (-x), a rust rim and an iron boss."""
+    pts = [(y + r * math.cos(2 * math.pi * i / 10), z + r * math.sin(2 * math.pi * i / 10))
+           for i in range(10)]
+    b.prism(pts, (x, 0, 0), (0, 1, 0), (0, 0, 1), 0.022, o.TIMBER_LIGHT, back_cap=True)
+    for i in range(10):
+        a0, a1 = 2 * math.pi * i / 10, 2 * math.pi * (i + 1) / 10
+        b.rod((x - 0.002, y + r * math.cos(a0), z + r * math.sin(a0)),
+              (x - 0.002, y + r * math.cos(a1), z + r * math.sin(a1)), 0.018, o.RUST)
+    b.ball(x - 0.002, y, z - 0.03, 0.03, 0.06, o.METAL, sides=6)
+
+
+def build2(lo, hi):
+    """Level 2: an iron cap with a nasal over the topknot, a round shield on the left arm and
+    an iron plate on the chest strap."""
+    b = build(lo, hi)
+    hy = -0.06
+    b.box(-0.068, 0.068, hy - 0.066, hy + 0.06, 0.48, 0.53, o.METAL, bevel=0.015)
+    b.box(-0.012, 0.012, hy - 0.078, hy - 0.062, 0.43, 0.51, o.METAL)
+    b.box(-0.07, 0.07, hy - 0.068, hy + 0.062, 0.475, 0.49, o.RUST)
+    round_shield(b, -0.255, -0.03, 0.22)
+    b.obox((0.0, -0.11, 0.33), (0.7, 0, -0.7), (0, 1, 0), (0.7, 0, 0.7), 0.05, 0.008, 0.04,
+           o.METAL)
+    return b
+
+
+def build3(lo, hi):
+    """Level 3: a horned iron helm, an iron breastplate, a rust cape, greaves and a second
+    blade on the axe."""
+    b = build2(lo, hi)
+    hy = -0.06
+    b.box(-0.072, 0.072, hy - 0.07, hy + 0.064, 0.5, 0.56, o.METAL, bevel=0.018)
+    for k in (-1, 1):
+        o.horn(b, (k * 0.068, hy, 0.53), (k, 0.1, 0), 0.1, 0.02, up=1.4, segments=4)
+    b.obox((0, -0.085, 0.31), (1, 0, 0), (0, 0.97, 0.24), (0, -0.24, 0.97), 0.11, 0.012, 0.075,
+           o.METAL, bevel=0.01)
+    b.obox((0, -0.098, 0.31), (1, 0, 0), (0, 0.97, 0.24), (0, -0.24, 0.97), 0.02, 0.004, 0.065,
+           o.RUST)
+    b.prism([(-0.13, 0.42), (0.13, 0.42), (0.16, 0.1), (0.05, 0.13), (-0.05, 0.1), (-0.16, 0.12)],
+            (0, 0.075, 0), (1, 0, 0), (0, 0, 1), 0.012, o.RUST, back_cap=True)
+    for k in (-1, 1):
+        b.box(k * 0.065 - 0.044, k * 0.065 + 0.044, -0.065, -0.03, 0.05, 0.13, o.METAL)
+    hx = 0.205
+    b.prism([(-0.13, 0.33), (-0.15, 0.4), (-0.24, 0.44), (-0.26, 0.31), (-0.2, 0.27)],
+            (hx - 0.008, -0.34, 0), (0, -1, 0), (0, 0, 1), 0.016, o.METAL, back_cap=True)
+    return b
+
+
 o.ensure_collection()
-kit.run(OBJ, build, source_name="Flag1-lvl1", offset=(o.COLUMN_X, 0, 0), collection=o.COLLECTION)
+kit.run(OBJ, build, source_name="Flag1-lvl1", offset=(o.COLUMN_X, 0, 0), collection=o.COLLECTION,
+        save=False)
+o.place("OrcGrunt-lvl2", build2, "Flag1-lvl1", o.GRID_X[2], -55.0)
+o.place("OrcGrunt-lvl3", build3, "Flag1-lvl1", o.GRID_X[3], -55.0)
+import bpy  # noqa: E402
+bpy.ops.wm.save_mainfile()

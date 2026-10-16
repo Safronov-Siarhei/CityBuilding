@@ -18,7 +18,7 @@ OBJ = "OrcBrute"
 SCALE = 1.25          # 0.58 * 1.25 = 0.725 m
 
 
-def build(lo, hi):
+def build(lo, hi, level=1):
     b = Builder()
     since = o.mark(b)
     o.legs_and_hips(b, wide=1.15)
@@ -70,10 +70,36 @@ def build(lo, hi):
             p = (head[0] + dx, head[1] + dy * 0.065, head[2] + dz * 0.065)
             o.tube(b, [p, (p[0], p[1] + dy * 0.045, p[2] + dz * 0.045)], [0.013, 0.0], o.METAL,
                    sides=4)
+    if level >= 2:
+        armour(b)
     o.scale_since(b, since, SCALE)
     return b
 
 
+def armour(b):
+    """Level 2: a face plate on the helm, a spiked iron collar, chains wound round the belly, a
+    rust cape and an iron-shod maul head."""
+    hy = -0.07
+    b.box(-0.068, 0.068, hy - 0.08, hy - 0.06, 0.39, 0.47, o.METAL, bevel=0.008)
+    for k in (-1, 1):
+        b.box(k * 0.03 - 0.014, k * 0.03 + 0.014, hy - 0.084, hy - 0.078, 0.445, 0.46, o.FIRE)
+    b.cylinder(0, -0.01, 0.4, 0.44, 0.1, o.METAL, sides=8)
+    o.iron_spikes(b, 0, -0.01, 0.1, 8, 0.42, length=0.06, r=0.014)
+    for z in (0.22, 0.26):
+        b.cylinder(0, -0.02, z, z + 0.02, 0.14, o.STONE_LIGHT, sides=8)
+    b.prism([(-0.16, 0.42), (0.16, 0.42), (0.19, 0.06), (0.06, 0.09), (-0.06, 0.06), (-0.19, 0.08)],
+            (0, 0.09, 0), (1, 0, 0), (0, 0, 1), 0.014, o.RUST, back_cap=True)
+    head = (0.17, 0.17, 0.58)
+    b.hcylinder('x', head, 0.07, 0.075, o.METAL, sides=7)
+
+
+def build2(lo, hi):
+    return build(lo, hi, 2)
+
+
 o.ensure_collection()
 kit.run(OBJ, build, source_name="Flag1-lvl1", offset=(o.COLUMN_X + 2.4, 0, 0),
-        collection=o.COLLECTION)
+        collection=o.COLLECTION, save=False)
+o.place("OrcBrute-lvl2", build2, "Flag1-lvl1", o.GRID_X[2] + 1.2, -55.0)
+import bpy  # noqa: E402
+bpy.ops.wm.save_mainfile()
