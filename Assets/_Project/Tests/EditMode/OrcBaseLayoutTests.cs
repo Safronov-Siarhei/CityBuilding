@@ -201,6 +201,7 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(2, Count(OrcCampBuildingKind.Totem), "Two totems shield the great portal.");
             Assert.AreEqual(3, Count(OrcCampBuildingKind.GateTower), "Three stone gates under towers, one per wall.");
             Assert.AreEqual(1, Count(OrcCampBuildingKind.ChiefHouse));
+            Assert.AreEqual(1, Count(OrcCampBuildingKind.Treasury), "One treasury, the chief's.");
             Assert.AreEqual(1, new List<GuardSlot>(main.Guards).FindAll(g => g.Kind == OrcKind.Boss).Count, "The chief, the miniboss.");
             var spawned = new HashSet<OrcKind>();
             foreach (var piece in main.Pieces)

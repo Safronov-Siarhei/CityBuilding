@@ -298,6 +298,11 @@ namespace CityBuilder.Core
         [SerializeField] private int orcMainCagePrisoners = 5;
         [SerializeField] private int prisonerHealth = 20;
         [SerializeField] private float prisonerWalkSpeed = 1.2f;
+        // The chief's treasury on the main base: its health and what breaking it pays.
+        [SerializeField] private int orcMainTreasuryHealth = 500;
+        [SerializeField] private int orcTreasuryLootCoins = 400;
+        [SerializeField] private int orcTreasuryLootIronBars = 30;
+        [SerializeField] private int orcTreasuryLootCopperBars = 30;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
         // turns these three into the spiral of slots around the Town Hall. Kept here rather than
         // as constants because "spread the portals over the whole map" has to be a number the user
@@ -496,6 +501,10 @@ namespace CityBuilder.Core
         public int OrcMainCagePrisoners => orcMainCagePrisoners;
         public int PrisonerHealth => prisonerHealth;
         public float PrisonerWalkSpeed => prisonerWalkSpeed;
+        public int OrcMainTreasuryHealth => orcMainTreasuryHealth;
+        public int OrcTreasuryLootCoins => orcTreasuryLootCoins;
+        public int OrcTreasuryLootIronBars => orcTreasuryLootIronBars;
+        public int OrcTreasuryLootCopperBars => orcTreasuryLootCopperBars;
 
         private static T AtLevel<T>(T[] byLevel, int level)
         {
@@ -682,6 +691,10 @@ namespace CityBuilder.Core
             orcMainCagePrisoners = (int)Read(economy, "orc_main_cage_prisoners", orcMainCagePrisoners);
             prisonerHealth = (int)Read(economy, "prisoner_health", prisonerHealth);
             prisonerWalkSpeed = Read(economy, "prisoner_walk_speed", prisonerWalkSpeed);
+            orcMainTreasuryHealth = (int)Read(economy, "orc_main_treasury_health", orcMainTreasuryHealth);
+            orcTreasuryLootCoins = (int)Read(economy, "orc_treasury_loot_coins", orcTreasuryLootCoins);
+            orcTreasuryLootIronBars = (int)Read(economy, "orc_treasury_loot_ironbar", orcTreasuryLootIronBars);
+            orcTreasuryLootCopperBars = (int)Read(economy, "orc_treasury_loot_copperbar", orcTreasuryLootCopperBars);
             portalCount = (int)Read(economy, "portal_count", portalCount);
             portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);

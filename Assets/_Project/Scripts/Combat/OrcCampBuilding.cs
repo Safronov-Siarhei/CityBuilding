@@ -30,6 +30,8 @@ namespace CityBuilder.Combat
         ChiefHouse = 9,
         /// <summary>The prisoners' cage (the user's idea, 2026-10-19): broken, it lets townsfolk out who walk home to the Town Hall.</summary>
         Cage = 10,
+        /// <summary>The chief's treasury on the main base (2026-10-19): no part in a fight, a big payout when broken.</summary>
+        Treasury = 11,
     }
 
     /// <summary>
@@ -124,6 +126,7 @@ namespace CityBuilder.Combat
                     case OrcCampBuildingKind.Storehouse: return balance.OrcMainStorehouseHealth;
                     case OrcCampBuildingKind.ChiefHouse: return balance.OrcChiefHouseHealth;
                     case OrcCampBuildingKind.Cage: return balance.OrcMainCageHealth;
+                    case OrcCampBuildingKind.Treasury: return balance.OrcMainTreasuryHealth;
                     default: return balance.OrcMainSpawnerHealth;
                 }
             }
@@ -217,6 +220,8 @@ namespace CityBuilder.Combat
             // Only a cage the player breaks lets anyone out: one a save puts back broken was
             // emptied back then, and its prisoners came back with the save on their own.
             if (announce && Kind == OrcCampBuildingKind.Cage) ReleasePrisoners();
+            // the same for the treasury: one a save puts back broken was paid out back then
+            if (announce && Kind == OrcCampBuildingKind.Treasury) PayOutTreasury();
             var ruin = SpawnRuin(_ruinModel, Cell, transform.position, transform.rotation);
             if (Camp != null)
             {
@@ -225,6 +230,19 @@ namespace CityBuilder.Combat
             }
             OnDestroyed?.Invoke(this);
             Destroy(gameObject);
+        }
+
+        private void PayOutTreasury()
+        {
+            var balance = BalanceConfig.Instance;
+            var resources = CityBuilder.Resources.ResourceManager.Instance;
+            if (resources == null) return;
+            // what the storehouses had room for -- what the feed reports is what the player got
+            var coins = resources.Add(CityBuilder.Resources.ResourceType.Coins, balance.OrcTreasuryLootCoins);
+            var iron = resources.Add(CityBuilder.Resources.ResourceType.IronBar, balance.OrcTreasuryLootIronBars);
+            var copper = resources.Add(CityBuilder.Resources.ResourceType.CopperBar, balance.OrcTreasuryLootCopperBars);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_treasury_plundered", coins, iron, copper),
+                EventSeverity.Good, EventGlyph.Star, null, transform.position));
         }
 
         private void ReleasePrisoners()

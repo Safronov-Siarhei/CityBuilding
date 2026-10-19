@@ -1987,6 +1987,7 @@ namespace CityBuilder.EditorTools
                          ("bossModel", "OrcChief-Boss"),
                          ("cageRuinModel", "OrcCage1-lvl1-Ruin"),
                          ("mainCageModel", "OrcMainCage1"), ("mainCageRuinModel", "OrcMainCage1-Ruin"),
+                         ("mainTreasuryModel", "OrcMainTreasury1"), ("mainTreasuryRuinModel", "OrcMainTreasury1-Ruin"),
                      })
             {
                 so.FindProperty(field).objectReferenceValue = Load(file);

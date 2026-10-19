@@ -110,6 +110,8 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject cageRuinModel;
         [SerializeField] private GameObject mainCageModel;
         [SerializeField] private GameObject mainCageRuinModel;
+        [SerializeField] private GameObject mainTreasuryModel;
+        [SerializeField] private GameObject mainTreasuryRuinModel;
 
         /// <summary>The great portal's plot.</summary>
         public static readonly Vector2Int MainPortalFootprint = new Vector2Int(4, 4);
@@ -701,6 +703,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.ThrowerRange => mainThrowerRangeModel,
             OrcCampBuildingKind.ChiefHouse => chiefHouseModel,
             OrcCampBuildingKind.Cage => mainCageModel,
+            OrcCampBuildingKind.Treasury => mainTreasuryModel,
             _ => null,
         };
 
@@ -716,6 +719,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.ThrowerRange => mainThrowerRangeRuinModel,
             OrcCampBuildingKind.ChiefHouse => chiefHouseRuinModel,
             OrcCampBuildingKind.Cage => mainCageRuinModel,
+            OrcCampBuildingKind.Treasury => mainTreasuryRuinModel,
             _ => null,
         } : RuinOf(kind);
 

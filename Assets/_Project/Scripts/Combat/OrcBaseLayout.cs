@@ -250,6 +250,7 @@ namespace CityBuilder.Combat
             pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 7, -7, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -7, -4, 1, 1));
             pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 6, -4, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Treasury, L, -11, 0, 2, 2));
             // the middle zone
             pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -2, -13, 3, 3));
             pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -6, -11, 2, 2));

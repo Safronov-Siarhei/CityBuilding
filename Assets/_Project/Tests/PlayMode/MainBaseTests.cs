@@ -111,6 +111,36 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(OrcPortal.All.Count, 0, "This test meant to win with camps' portals still open.");
         }
 
+        [UnityTest]
+        public IEnumerator BreakingTheTreasuryPaysOutOnceAndNotAgainOnLoad()
+        {
+            yield return OpenPortals();
+            var camp = OrcCamp.Of(MainPortal());
+            var resources = CityBuilder.Resources.ResourceManager.Instance;
+            foreach (var type in new[] { CityBuilder.Resources.ResourceType.Coins, CityBuilder.Resources.ResourceType.IronBar,
+                         CityBuilder.Resources.ResourceType.CopperBar })
+            {
+                resources.SetAmount(type, 0);
+            }
+
+            var treasury = camp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Treasury);
+            treasury.TakeDamage(treasury.MaxHealth);
+            yield return null;
+            Assert.Greater(resources.GetAmount(CityBuilder.Resources.ResourceType.Coins), 0, "The broken treasury paid no coins.");
+            Assert.Greater(resources.GetAmount(CityBuilder.Resources.ResourceType.IronBar), 0, "The broken treasury paid no iron bars.");
+            Assert.Greater(resources.GetAmount(CityBuilder.Resources.ResourceType.CopperBar), 0, "The broken treasury paid no copper bars.");
+
+            // a save that puts the treasury back broken pays nothing
+            camp.RebuildAt(OrcBaseLayout.MainLevel, OrcRaidManager.Instance);
+            yield return null;
+            resources.SetAmount(CityBuilder.Resources.ResourceType.Coins, 0);
+            var rebuilt = camp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Treasury);
+            camp.ApplySavedHealth(OrcCampBuildingKind.Treasury, rebuilt.Cell, 0);
+            yield return null;
+            Assert.IsTrue(camp.Fallen.Any(f => f.Kind == OrcCampBuildingKind.Treasury), "The save did not put the treasury back broken.");
+            Assert.AreEqual(0, resources.GetAmount(CityBuilder.Resources.ResourceType.Coins), "A treasury broken in an old save paid out again on load.");
+        }
+
         /// <summary>Photographs the main base from the town's side (needs a run with graphics).</summary>
         [UnityTest]
         public IEnumerator PhotographTheMainBase()
