@@ -33,6 +33,9 @@ namespace CityBuilder.Cheats
         private GUIStyle _label;
         private GUIStyle _box;
         private float _scale = 1f;
+        // Rebuilt only when the reading changes (twice a second): OnGUI runs twice a frame, and
+        // formatting the label each time would be garbage on every frame of the game.
+        private string _toggleLabel = "Отладка";
 
         private static readonly (SoldierType type, string name)[] Tiers =
         {
@@ -46,6 +49,7 @@ namespace CityBuilder.Cheats
             _fpsTimer += Time.unscaledDeltaTime;
             if (_fpsTimer < 0.5f) return;
             _fps = _fpsFrames / _fpsTimer;
+            _toggleLabel = "Отладка " + Mathf.RoundToInt(_fps);
             _fpsFrames = 0;
             _fpsTimer = 0f;
         }
@@ -67,7 +71,7 @@ namespace CityBuilder.Cheats
             var w = 150f * s;
             var h = 46f * s;
             var toggle = new Rect(Screen.width - w - 12f * s, 150f * s, w, h);
-            if (GUI.Button(toggle, _open ? "Закрыть" : $"Отладка {_fps:0}", _button))
+            if (GUI.Button(toggle, _open ? "Закрыть" : _toggleLabel, _button))
             {
                 _open = !_open;
                 ModalGate.SetBlocked(_open);

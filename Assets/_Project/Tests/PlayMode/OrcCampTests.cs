@@ -102,6 +102,53 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(NavMeshPathStatus.PathComplete, path.status, "Breaking the gate did not open the way in.");
         }
 
+        /// <summary>
+        /// Soldiers ordered at the totem from outside the gate break in -- they do not walk through
+        /// the palisade. Found on a phone (2026-10-16): the totem's centre is inside its own carve,
+        /// off the NavMesh, so no path was found at all and the soldiers took the straight line in.
+        /// The camp's defenders are taken out first so the squad lives long enough to show it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator SoldiersBreakInRatherThanWalkThroughTheWall()
+        {
+            yield return OpenPortals();
+            var camp = TopCamp();
+            camp.GrowTo(2, OrcRaidManager.Instance);
+            yield return null;
+            foreach (var guard in camp.Guards) guard.TakeDamage(100000);
+            foreach (var building in camp.Buildings.Where(b => b.Kind == OrcCampBuildingKind.Watchtower
+                                                               || OrcBaseLayout.SpawnedBy(b.Kind).HasValue).ToList())
+            {
+                building.TakeDamage(building.MaxHealth);
+            }
+            var totem = camp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Totem);
+            yield return null;
+
+            var army = ArmyManager.Instance;
+            var outside = camp.LocalToWorld(new Vector2(0f, -(camp.Layout.HalfExtent + 4f)));
+            var group = army.RestoreGroup(SoldierType.ManAtArms, outside, TargetPriority.Structures);
+            for (var i = 0; i < 5; i++) army.RestoreSoldier(group, outside + new Vector3((i - 2) * 0.6f, 0f, 0f), int.MaxValue);
+            group.OrderAttack(totem);
+
+            Time.timeScale = 3f;
+            var walls = camp.Buildings.Where(b => b.IsWall).ToList();
+            var wallHit = false;
+            for (var t = 0f; t < 6f; t += Time.unscaledDeltaTime)
+            {
+                yield return null;
+                var breached = walls.Any(w => w == null || w.CurrentHealth <= 0);
+                wallHit |= walls.Any(w => w != null && w.CurrentHealth < w.MaxHealth);
+                if (breached) break;
+                foreach (var soldier in group.Members)
+                {
+                    Assert.IsFalse(camp.IsInZone(soldier.transform.position, -1.2f),
+                        $"A soldier is inside the camp at {soldier.transform.position} while its wall stands whole -- it walked through the palisade.");
+                }
+            }
+            Time.timeScale = 1f;
+            Assert.IsTrue(wallHit, "The squad never struck the wall or the gate -- it stood outside doing nothing.");
+        }
+
         [UnityTest]
         public IEnumerator EachSpawnerTopsUpOnlyItsOwnKindAndStopsWhenBroken()
         {

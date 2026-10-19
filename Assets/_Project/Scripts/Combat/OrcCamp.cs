@@ -242,6 +242,11 @@ namespace CityBuilder.Combat
             UpdateShield();
             RebuildWalls();
 
+            for (var k = 0; k < SpawnedKinds.Length; k++)
+            {
+                _kindsPosted[k] = false;
+                foreach (var slot in layout.Guards) _kindsPosted[k] |= slot.Kind == SpawnedKinds[k];
+            }
             _slotGuards = new OrcUnit[layout.Guards.Count];
             _spawnTimers.Clear();
             for (var i = 0; i < _slotGuards.Length; i++)
@@ -423,8 +428,12 @@ namespace CityBuilder.Combat
             if (_slotGuards.Length != layout.Guards.Count) return;
 
             var respawn = BalanceConfig.Instance.OrcGarrisonRespawnSeconds;
-            foreach (var kind in KindsInLayout(layout))
+            // a plain loop over a fixed array: this runs every frame for every camp, and an
+            // iterator would hand the garbage collector something each time
+            for (var k = 0; k < SpawnedKinds.Length; k++)
             {
+                var kind = SpawnedKinds[k];
+                if (!_kindsPosted[k]) continue;
                 var missing = FirstMissingSlot(layout, kind);
                 if (missing < 0 || SpawnerOf(kind) == null)
                 {
@@ -446,18 +455,8 @@ namespace CityBuilder.Combat
 
         private static readonly OrcKind[] SpawnedKinds = { OrcKind.Raider, OrcKind.Brute, OrcKind.Thrower };
 
-        private static IEnumerable<OrcKind> KindsInLayout(CampLayout layout)
-        {
-            foreach (var kind in SpawnedKinds)
-            {
-                foreach (var slot in layout.Guards)
-                {
-                    if (slot.Kind != kind) continue;
-                    yield return kind;
-                    break;
-                }
-            }
-        }
+        // Which of SpawnedKinds the current plan posts at all -- worked out once per Build.
+        private readonly bool[] _kindsPosted = new bool[3];
 
         private int FirstMissingSlot(CampLayout layout, OrcKind kind)
         {

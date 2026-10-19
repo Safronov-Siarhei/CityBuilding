@@ -28,6 +28,9 @@ namespace CityBuilder.Combat
         /// <summary>A route whose far end is no further than this from the start isn't a route at all -- see the partial-path note above.</summary>
         private const float MinProgressDistance = 0.35f;
 
+        /// <summary>How far from a destination off the NavMesh (inside a structure's carve) to look for the nearest point on it -- a 2x2 plot's centre is about 1.5 m from its edge.</summary>
+        private const float TargetSnapMeters = 3f;
+
         // Shared across every route: CalculatePath overwrites the path's contents, so one instance
         // is enough for the whole army and saves an allocation per order. Built lazily rather than
         // in a field initializer -- Unity forbids constructing a NavMeshPath during a
@@ -58,7 +61,15 @@ namespace CityBuilder.Combat
             Blocked = false;
             _sharedPath ??= new NavMeshPath();
 
-            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
+            // A structure's own carve takes its centre off the NavMesh, and CalculatePath to a
+            // point off the mesh fails outright -- which used to fall through to the straight line
+            // below and walk soldiers sent at an orc camp's totem clean through its palisade
+            // (found on a phone, 2026-10-16). Ask for the nearest point that IS on the mesh: a
+            // walled-off one then gives an honest partial path that stops at the wall.
+            var target = to;
+            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, NavMesh.AllAreas)) target = onMesh.position;
+
+            if (NavMesh.CalculatePath(from, target, NavMesh.AllAreas, _sharedPath))
             {
                 Blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
                 var corners = _sharedPath.corners;
