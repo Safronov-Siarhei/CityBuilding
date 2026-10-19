@@ -291,6 +291,13 @@ namespace CityBuilder.Core
         [SerializeField] private int orcMainSpawnerHealth = 380;
         [SerializeField] private int orcChiefHouseHealth = 600;
         [SerializeField] private float orcChiefRespawnSeconds = 120f;
+        // The prisoners' cages (the user's idea, 2026-10-19) and the townsfolk they hold.
+        [SerializeField] private int[] orcCageHealthByLevel = { 120, 180, 260 };
+        [SerializeField] private int orcMainCageHealth = 360;
+        [SerializeField] private int[] orcCagePrisonersByLevel = { 2, 3, 4 };
+        [SerializeField] private int orcMainCagePrisoners = 5;
+        [SerializeField] private int prisonerHealth = 20;
+        [SerializeField] private float prisonerWalkSpeed = 1.2f;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
         // turns these three into the spiral of slots around the Town Hall. Kept here rather than
         // as constants because "spread the portals over the whole map" has to be a number the user
@@ -483,6 +490,12 @@ namespace CityBuilder.Core
         public int OrcMainSpawnerHealth => orcMainSpawnerHealth;
         public int OrcChiefHouseHealth => orcChiefHouseHealth;
         public float OrcChiefRespawnSeconds => orcChiefRespawnSeconds;
+        public int OrcCageHealthAt(int level) => AtLevel(orcCageHealthByLevel, level);
+        public int OrcMainCageHealth => orcMainCageHealth;
+        public int OrcCagePrisonersAt(int level) => AtLevel(orcCagePrisonersByLevel, level);
+        public int OrcMainCagePrisoners => orcMainCagePrisoners;
+        public int PrisonerHealth => prisonerHealth;
+        public float PrisonerWalkSpeed => prisonerWalkSpeed;
 
         private static T AtLevel<T>(T[] byLevel, int level)
         {
@@ -661,6 +674,14 @@ namespace CityBuilder.Core
             orcMainSpawnerHealth = (int)Read(economy, "orc_main_spawner_health", orcMainSpawnerHealth);
             orcChiefHouseHealth = (int)Read(economy, "orc_chief_house_health", orcChiefHouseHealth);
             orcChiefRespawnSeconds = Read(economy, "orc_chief_respawn_seconds", orcChiefRespawnSeconds);
+            orcCageHealthByLevel = new[] { (int)Read(economy, "orc_cage_health", 120),
+                (int)Read(economy, "orc_cage_health_2", 180), (int)Read(economy, "orc_cage_health_3", 260) };
+            orcMainCageHealth = (int)Read(economy, "orc_main_cage_health", orcMainCageHealth);
+            orcCagePrisonersByLevel = new[] { (int)Read(economy, "orc_cage_prisoners", 2),
+                (int)Read(economy, "orc_cage_prisoners_2", 3), (int)Read(economy, "orc_cage_prisoners_3", 4) };
+            orcMainCagePrisoners = (int)Read(economy, "orc_main_cage_prisoners", orcMainCagePrisoners);
+            prisonerHealth = (int)Read(economy, "prisoner_health", prisonerHealth);
+            prisonerWalkSpeed = Read(economy, "prisoner_walk_speed", prisonerWalkSpeed);
             portalCount = (int)Read(economy, "portal_count", portalCount);
             portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);

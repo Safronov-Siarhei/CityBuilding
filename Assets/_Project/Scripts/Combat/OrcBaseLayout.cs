@@ -128,6 +128,7 @@ namespace CityBuilder.Combat
             var pieces = new List<CampPiece>();
             Towers(pieces, 1, 6);
             pieces.Add(Piece(OrcCampBuildingKind.WarTent, 1, -1, 3, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, 1, 3, -1, 1, 1));
             var guards = new List<GuardSlot>();
             foreach (var p in Diagonals(2.5f)) guards.Add(new GuardSlot(OrcKind.Raider, 1, p));
             return new CampLayout(1, 6, pieces, guards);
@@ -142,6 +143,7 @@ namespace CityBuilder.Combat
             pieces.Add(Piece(OrcCampBuildingKind.BrutePit, 1, 1, 4, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Storehouse, 1, -6, -1, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Totem, 1, 4, 0, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, 2, 4, -2, 1, 1));
             var guards = new List<GuardSlot>();
             foreach (var p in Diagonals(2.5f)) guards.Add(new GuardSlot(OrcKind.Brute, 1, p));
             foreach (var p in new[]
@@ -170,6 +172,8 @@ namespace CityBuilder.Combat
             pieces.Add(Piece(OrcCampBuildingKind.Storehouse, 2, -6, 0, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Storehouse, 2, -6, -3, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Totem, 2, 4, 0, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, 3, 4, -2, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, 3, -4, -1, 1, 1));
 
             var guards = new List<GuardSlot>();
             foreach (var p in Diagonals(2.5f)) guards.Add(new GuardSlot(OrcKind.Brute, 2, p));
@@ -244,6 +248,8 @@ namespace CityBuilder.Combat
             pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 11, -5, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -9, -7, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 7, -7, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -7, -4, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 6, -4, 1, 1));
             // the middle zone
             pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -2, -13, 3, 3));
             pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -6, -11, 2, 2));
@@ -252,6 +258,7 @@ namespace CityBuilder.Combat
             pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 7, -11, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -11, -16, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 9, -16, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 2, -9, 1, 1));
             // the front zone
             pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, -16, -17, 2, 2));
             pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, 14, -17, 2, 2));

@@ -116,6 +116,9 @@ namespace CityBuilder.Saving
         public bool hasMainPortal;
         public Vector2Int mainPortalCell;
 
+        /// <summary>Townsfolk let out of orc cages and not yet home: on the road, or waiting at the Town Hall for a free home.</summary>
+        public List<PrisonerEntry> freedPrisoners = new List<PrisonerEntry>();
+
         /// <summary>
         /// Where the ONE portal stood, back when there was only one. Read on load when
         /// <see cref="portals"/> is empty and a portal was placed, so a save written before the map
@@ -217,6 +220,13 @@ namespace CityBuilder.Saving
         public int health;
         /// <summary>The main base's great portal (4x4). Absent in older saves, which had none.</summary>
         public bool main;
+    }
+
+    [Serializable]
+    public class PrisonerEntry
+    {
+        public Vector3 position;
+        public int health;
     }
 
     [Serializable]

@@ -84,6 +84,10 @@ namespace CityBuilder.Combat
         private CharacterController _controller;
         private BuildingInstance _target;
         private SoldierUnit _soldierTarget;
+        // A freed prisoner on his way home (see FreedPrisoner): fair game, but only when no
+        // soldier is there to fight (the user's rule, 2026-10-19).
+        private FreedPrisoner _prisonerTarget;
+        private float _prisonerScanTimer;
         private Vector3[] _route = { Vector3.zero };
         private int _routeIndex;
         /// <summary>The route stops short of the target because something unwalkable is in between -- see BuildRoute.</summary>
@@ -252,6 +256,8 @@ namespace CityBuilder.Combat
                 return;
             }
 
+            if (HuntPrisoner()) return;
+
             _retargetTimer -= Time.deltaTime;
             if (_target == null || _retargetTimer <= 0f)
             {
@@ -340,10 +346,81 @@ namespace CityBuilder.Combat
                 return;
             }
 
+            if (HuntPrisoner()) return;
+
             var toPost = _guardPost - transform.position;
             toPost.y = 0f;
             if (toPost.magnitude < 0.6f) return;
             GuardWalk(_guardPost);
+        }
+
+        /// <summary>
+        /// With no soldier to fight, goes for a freed prisoner: a guard for one inside its camp's
+        /// zone, a raider for one within its aggro radius. True while it is busy with one.
+        /// </summary>
+        private bool HuntPrisoner()
+        {
+            if (FreedPrisoner.All.Count == 0)
+            {
+                _prisonerTarget = null;
+                return false;
+            }
+
+            _prisonerScanTimer -= Time.deltaTime;
+            if (_prisonerTarget == null || _prisonerTarget.CurrentHealth <= 0 || _prisonerScanTimer <= 0f)
+            {
+                _prisonerScanTimer = SoldierScanIntervalSeconds;
+                _prisonerTarget = FindNearestPrisoner();
+            }
+            if (_prisonerTarget == null) return false;
+
+            var toPrisoner = _prisonerTarget.transform.position - transform.position;
+            toPrisoner.y = 0f;
+            var distance = toPrisoner.magnitude;
+            if (distance <= _soldierAttackRange)
+            {
+                _attackTimer -= Time.deltaTime;
+                if (_attackTimer > 0f) return true;
+                _attackTimer = _attackIntervalSeconds;
+                _prisonerTarget.TakeDamage(_attackDamage);
+                if (_prisonerTarget == null || _prisonerTarget.CurrentHealth <= 0) _prisonerTarget = null;
+                return true;
+            }
+
+            if (_guarding)
+            {
+                GuardWalk(_prisonerTarget.transform.position);
+                return true;
+            }
+
+            var direction = toPrisoner / distance;
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += direction * _walkSpeed * Time.deltaTime;
+            }
+            _retargetTimer = 0f;
+            return true;
+        }
+
+        private FreedPrisoner FindNearestPrisoner()
+        {
+            FreedPrisoner nearest = null;
+            var best = _guarding ? float.MaxValue : _soldierAggroRadius * _soldierAggroRadius;
+            foreach (var prisoner in FreedPrisoner.All)
+            {
+                if (prisoner == null || prisoner.CurrentHealth <= 0) continue;
+                if (_guarding && !InGuardZone(prisoner.transform.position, OrcCamp.ZoneMarginMeters)) continue;
+                var distSq = (prisoner.transform.position - transform.position).sqrMagnitude;
+                if (distSq >= best) continue;
+                best = distSq;
+                nearest = prisoner;
+            }
+            return nearest;
         }
 
         private void GuardWalk(Vector3 destination)

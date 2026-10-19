@@ -232,6 +232,23 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(new Vector2Int(1, 2), turnedSize);
         }
 
+        /// <summary>The prisoners' cages (2026-10-19): one in the level-1 and level-2 camps, two in level 3, three on the main base, each at its camp's level.</summary>
+        [Test]
+        public void EveryCampHoldsItsCages()
+        {
+            var expected = new Dictionary<int, int> { { 1, 1 }, { 2, 1 }, { 3, 2 }, { OrcBaseLayout.MainLevel, 3 } };
+            foreach (var pair in expected)
+            {
+                var cages = new List<CampPiece>(OrcBaseLayout.For(pair.Key).Pieces).FindAll(p => p.Kind == OrcCampBuildingKind.Cage);
+                Assert.AreEqual(pair.Value, cages.Count, $"The level-{pair.Key} camp has the wrong number of cages.");
+                foreach (var cage in cages)
+                {
+                    Assert.AreEqual(pair.Key, cage.Level, $"A cage in the level-{pair.Key} camp is drawn at another level.");
+                    Assert.AreEqual(Vector2Int.one, cage.Size, "A cage is a 1x1 plot.");
+                }
+            }
+        }
+
         [Test]
         public void CampsGrowWithTheScoreAndFurtherOnesSooner()
         {

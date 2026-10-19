@@ -1985,6 +1985,8 @@ namespace CityBuilder.EditorTools
                          ("mainThrowerRangeModel", "OrcMainThrowerRange1"), ("mainThrowerRangeRuinModel", "OrcMainThrowerRange1-Ruin"),
                          ("chiefHouseModel", "OrcChiefHouse1"), ("chiefHouseRuinModel", "OrcChiefHouse1-Ruin"),
                          ("bossModel", "OrcChief-Boss"),
+                         ("cageRuinModel", "OrcCage1-lvl1-Ruin"),
+                         ("mainCageModel", "OrcMainCage1"), ("mainCageRuinModel", "OrcMainCage1-Ruin"),
                      })
             {
                 so.FindProperty(field).objectReferenceValue = Load(file);
@@ -2006,6 +2008,7 @@ namespace CityBuilder.EditorTools
                          ("totemModels", new[] { "OrcTotem1-lvl1", "OrcTotem1-lvl2" }),
                          ("gateModels", new[] { "OrcGate1-lvl1", "OrcGate1-lvl2" }),
                          ("storehouseModels", new[] { "OrcStorehouse1-lvl1", "OrcStorehouse1-lvl2" }),
+                         ("cageModels", new[] { "OrcCage1-lvl1", "OrcCage1-lvl2", "OrcCage1-lvl3" }),
                          ("palisadeModels", fences.ToArray()),
                          ("mainWallModels", new[] { "OrcStoneWall1-Straight", "OrcStoneWall1-Corner", "OrcStoneWall1-T", "OrcStoneWall1-Cross" }),
                          ("mountainModels", new[] { "OrcMountain1-A", "OrcMountain1-B" }),

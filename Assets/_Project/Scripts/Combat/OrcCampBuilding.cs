@@ -28,6 +28,8 @@ namespace CityBuilder.Combat
         ThrowerRange = 8,
         /// <summary>The chief's house on the main base: while it stands, a slain chief comes back.</summary>
         ChiefHouse = 9,
+        /// <summary>The prisoners' cage (the user's idea, 2026-10-19): broken, it lets townsfolk out who walk home to the Town Hall.</summary>
+        Cage = 10,
     }
 
     /// <summary>
@@ -121,6 +123,7 @@ namespace CityBuilder.Combat
                     case OrcCampBuildingKind.GateTower: return balance.OrcMainGateHealth;
                     case OrcCampBuildingKind.Storehouse: return balance.OrcMainStorehouseHealth;
                     case OrcCampBuildingKind.ChiefHouse: return balance.OrcChiefHouseHealth;
+                    case OrcCampBuildingKind.Cage: return balance.OrcMainCageHealth;
                     default: return balance.OrcMainSpawnerHealth;
                 }
             }
@@ -134,6 +137,7 @@ namespace CityBuilder.Combat
                 case OrcCampBuildingKind.GateTower: return balance.OrcGateTowerHealth;
                 case OrcCampBuildingKind.Storehouse: return balance.OrcStorehouseHealthAt(level);
                 case OrcCampBuildingKind.BrutePit: return balance.OrcBrutePitHealth;
+                case OrcCampBuildingKind.Cage: return balance.OrcCageHealthAt(level);
                 default: return balance.OrcThrowerRangeHealth;
             }
         }
@@ -203,9 +207,16 @@ namespace CityBuilder.Combat
             Fall(announce: false);
         }
 
+        /// <summary>How many townsfolk a cage of this level holds, from the sheet.</summary>
+        public static int PrisonersIn(int level, BalanceConfig balance) =>
+            level >= OrcBaseLayout.MainLevel ? balance.OrcMainCagePrisoners : balance.OrcCagePrisonersAt(level);
+
         private void Fall(bool announce)
         {
             _all.Remove(this);
+            // Only a cage the player breaks lets anyone out: one a save puts back broken was
+            // emptied back then, and its prisoners came back with the save on their own.
+            if (announce && Kind == OrcCampBuildingKind.Cage) ReleasePrisoners();
             var ruin = SpawnRuin(_ruinModel, Cell, transform.position, transform.rotation);
             if (Camp != null)
             {
@@ -214,6 +225,21 @@ namespace CityBuilder.Combat
             }
             OnDestroyed?.Invoke(this);
             Destroy(gameObject);
+        }
+
+        private void ReleasePrisoners()
+        {
+            var count = PrisonersIn(Level, BalanceConfig.Instance);
+            if (count <= 0) return;
+            // out of the door, which is the model's front (-Z), a little apart from each other
+            var door = transform.position - transform.forward * (Footprint.y * 0.5f + 0.4f);
+            for (var i = 0; i < count; i++)
+            {
+                var side = (i - (count - 1) * 0.5f) * 0.35f;
+                FreedPrisoner.Spawn(door + transform.right * side);
+            }
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_prisoners_freed", count),
+                EventSeverity.Good, EventGlyph.Happy, null, door));
         }
 
         /// <summary>

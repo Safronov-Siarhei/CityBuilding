@@ -324,6 +324,11 @@ namespace CityBuilder.Saving
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
 
+            if (data.freedPrisoners != null)
+            {
+                foreach (var prisoner in data.freedPrisoners) Combat.FreedPrisoner.Spawn(prisoner.position, prisoner.health);
+            }
+
             if (data.orcs == null) return restored;
             foreach (var orc in data.orcs)
             {
@@ -574,6 +579,12 @@ namespace CityBuilder.Saving
 
             // Written BEFORE the army below, not after: a group's attack order on an orc is stored
             // as that orc's position in this list, so the list has to exist to point into.
+            foreach (var prisoner in Combat.FreedPrisoner.All)
+            {
+                if (prisoner == null || prisoner.CurrentHealth <= 0) continue;
+                data.freedPrisoners.Add(new PrisonerEntry { position = prisoner.transform.position, health = prisoner.CurrentHealth });
+            }
+
             var orcIndices = new Dictionary<Combat.OrcUnit, int>();
             foreach (var orc in Combat.OrcUnit.All)
             {

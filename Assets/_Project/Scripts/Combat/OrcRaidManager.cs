@@ -105,6 +105,11 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject chiefHouseRuinModel;
         [SerializeField] private GameObject[] mountainModels;
         [SerializeField] private GameObject bossModel;
+        // The prisoners' cages: one model per camp level, and the main base's own.
+        [SerializeField] private GameObject[] cageModels;
+        [SerializeField] private GameObject cageRuinModel;
+        [SerializeField] private GameObject mainCageModel;
+        [SerializeField] private GameObject mainCageRuinModel;
 
         /// <summary>The great portal's plot.</summary>
         public static readonly Vector2Int MainPortalFootprint = new Vector2Int(4, 4);
@@ -680,6 +685,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.Storehouse => Pick(storehouseModels, level),
             OrcCampBuildingKind.BrutePit => brutePitModel,
             OrcCampBuildingKind.ThrowerRange => throwerRangeModel,
+            OrcCampBuildingKind.Cage => Pick(cageModels, level),
             _ => null,
         };
 
@@ -694,6 +700,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.BrutePit => mainBrutePitModel,
             OrcCampBuildingKind.ThrowerRange => mainThrowerRangeModel,
             OrcCampBuildingKind.ChiefHouse => chiefHouseModel,
+            OrcCampBuildingKind.Cage => mainCageModel,
             _ => null,
         };
 
@@ -708,6 +715,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.BrutePit => mainBrutePitRuinModel,
             OrcCampBuildingKind.ThrowerRange => mainThrowerRangeRuinModel,
             OrcCampBuildingKind.ChiefHouse => chiefHouseRuinModel,
+            OrcCampBuildingKind.Cage => mainCageRuinModel,
             _ => null,
         } : RuinOf(kind);
 
@@ -721,6 +729,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.Storehouse => storehouseRuinModel,
             OrcCampBuildingKind.BrutePit => brutePitRuinModel,
             OrcCampBuildingKind.ThrowerRange => throwerRangeRuinModel,
+            OrcCampBuildingKind.Cage => cageRuinModel,
             _ => null,
         };
 
