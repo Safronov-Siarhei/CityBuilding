@@ -319,7 +319,7 @@ namespace CityBuilder.Saving
             // Old camp buildings belong to the old camps' plan; a save without camp states drops them.
             if (camps.Count == 0) campBuildings.Clear();
             raids.RestoreFromSave(data.portalPlaced, ReadSavedPortals(data), data.closedPortalCells, camps, campBuildings,
-                data.secondsUntilNextRaid);
+                data.secondsUntilNextRaid, data.hasMainPortal ? data.mainPortalCell : (Vector2Int?)null);
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
@@ -349,7 +349,7 @@ namespace CityBuilder.Saving
             {
                 foreach (var entry in data.portals)
                 {
-                    portals.Add(new Combat.OrcRaidManager.PortalRestoreState(entry.cell, entry.health));
+                    portals.Add(new Combat.OrcRaidManager.PortalRestoreState(entry.cell, entry.health, entry.main));
                 }
 
                 return portals;
@@ -537,9 +537,11 @@ namespace CityBuilder.Saving
                 // stops a fresh set opening over the ruins on load.
                 foreach (var portal in Combat.OrcPortal.All)
                 {
-                    data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth });
+                    data.portals.Add(new PortalEntry { cell = portal.Cell, health = portal.CurrentHealth, main = portal.IsMain });
                 }
                 data.closedPortalCells.AddRange(raids.ClosedPortalCells);
+                data.hasMainPortal = raids.MainPortalCell.HasValue;
+                data.mainPortalCell = raids.MainPortalCell ?? Vector2Int.zero;
                 // Every camp, and of its buildings only the damaged (their health) and the fallen
                 // (0, their ruin): the plan of the camp's level puts the untouched ones back.
                 foreach (var camp in Combat.OrcCamp.All)

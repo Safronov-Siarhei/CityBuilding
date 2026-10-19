@@ -112,6 +112,10 @@ namespace CityBuilder.Saving
         /// <summary>Every walled camp (see OrcCamp): its level and the rest of what rebuilds it. Empty in saves from before the walled bases -- those get fresh level-1 camps, and their old camp buildings are dropped.</summary>
         public List<OrcCampStateEntry> orcCamps = new List<OrcCampStateEntry>();
 
+        /// <summary>Whether the map has a main base, and the cell of its great portal (standing or closed -- a closed one leaves the main ruin).</summary>
+        public bool hasMainPortal;
+        public Vector2Int mainPortalCell;
+
         /// <summary>
         /// Where the ONE portal stood, back when there was only one. Read on load when
         /// <see cref="portals"/> is empty and a portal was placed, so a save written before the map
@@ -211,6 +215,8 @@ namespace CityBuilder.Saving
     {
         public Vector2Int cell;
         public int health;
+        /// <summary>The main base's great portal (4x4). Absent in older saves, which had none.</summary>
+        public bool main;
     }
 
     [Serializable]

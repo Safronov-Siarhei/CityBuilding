@@ -133,7 +133,7 @@ namespace CityBuilder.Cheats
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("К лагерю", _button, GUILayout.Height(h))) Focus(camp);
-            for (var level = 1; level <= camp.MaxLevel; level++)
+            for (var level = camp.IsMain ? OrcBaseLayout.MainLevel : 1; level <= camp.MaxLevel; level++)
             {
                 if (GUILayout.Button($"Ур. {level}", _button, GUILayout.Height(h)) && raids != null)
                 {
@@ -157,7 +157,7 @@ namespace CityBuilder.Cheats
         private static void Focus(OrcCamp camp)
         {
             var rig = FindAnyObjectByType<RTSCameraController>();
-            if (rig != null && camp != null) rig.FocusOn(camp.LocalToWorld(new Vector2(0f, -camp.Layout.HalfExtent * 0.6f)));
+            if (rig != null && camp != null) rig.FocusOn(camp.LocalToWorld(new Vector2(0f, camp.Layout.Bounds.yMin * 0.6f)));
         }
 
         /// <summary>Five soldiers of `type` just outside the camp's gate, sent at its totem while it stands, then at its portal.</summary>
@@ -165,7 +165,7 @@ namespace CityBuilder.Cheats
         {
             var army = ArmyManager.Instance;
             if (army == null || camp == null) return;
-            var outside = camp.LocalToWorld(new Vector2(0f, -(camp.Layout.HalfExtent + 4f)));
+            var outside = camp.InFrontOfGate(4f);
             var group = army.RestoreGroup(type, outside, TargetPriority.Structures);
             for (var i = 0; i < 5; i++)
             {

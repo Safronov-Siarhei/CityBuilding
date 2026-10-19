@@ -41,6 +41,7 @@ namespace CityBuilder.Combat
         private readonly Dictionary<OrcKind, float> _spawnTimers = new Dictionary<OrcKind, float>();
         private OrcUnit[] _slotGuards = new OrcUnit[0];
         private GameObject _wallObstacles;
+        private GameObject _mountains;
         private readonly HashSet<Vector2Int> _wallCells = new HashSet<Vector2Int>();
 
         /// <summary>A camp building the player has broken: what it was, where, which way it faced -- all the save needs to put its ruin back.</summary>
@@ -100,7 +101,10 @@ namespace CityBuilder.Combat
         public bool TotemStanding => Find(OrcCampBuildingKind.Totem) != null;
 
         /// <summary>The portal's centre as a grid corner -- the origin of the camp's frame.</summary>
-        public Vector2Int Centre => PortalCell + Vector2Int.one;
+        public Vector2Int Centre => PortalCell + Vector2Int.one * (OrcBaseLayout.For(MaxLevel).PortalSize / 2);
+
+        /// <summary>The great portal's base (see OrcBaseLayout.Main): its own style, no growth, no raids, the chief.</summary>
+        public bool IsMain => MaxLevel == OrcBaseLayout.MainLevel;
 
         public void Initialize(Vector2Int portalCell, OrcPortal portal, int quarters, int rank, int maxLevel, bool cleared = false)
         {
@@ -108,7 +112,7 @@ namespace CityBuilder.Combat
             Portal = portal;
             Quarters = quarters;
             Rank = rank;
-            MaxLevel = Mathf.Clamp(maxLevel, 1, OrcBaseLayout.MaxLevel);
+            MaxLevel = Mathf.Clamp(maxLevel, 1, OrcBaseLayout.MainLevel);
             Cleared = cleared || portal == null;
         }
 
@@ -124,6 +128,7 @@ namespace CityBuilder.Combat
 
         private void OnDestroy()
         {
+            if (_mountains != null) Destroy(_mountains);
             if (_wallObstacles != null) Destroy(_wallObstacles);
         }
 
@@ -140,12 +145,11 @@ namespace CityBuilder.Combat
 
         // -- the camp's ground ------------------------------------------------------------------
 
-        /// <summary>The cells of the square a camp of this level covers, in world cells.</summary>
+        /// <summary>The cells of the ground a camp of this level covers, in world cells.</summary>
         public IEnumerable<Vector2Int> SquareCells(int level)
         {
-            var half = OrcBaseLayout.HalfExtentAt(level);
-            OrcBaseLayout.ToWorld(new Vector2Int(-half, -half), new Vector2Int(2 * half, 2 * half), Centre, Quarters,
-                out var min, out var size);
+            var bounds = OrcBaseLayout.BoundsAt(level);
+            OrcBaseLayout.ToWorld(bounds.min, bounds.size, Centre, Quarters, out var min, out var size);
             for (var x = 0; x < size.x; x++)
             {
                 for (var z = 0; z < size.y; z++)
@@ -206,12 +210,16 @@ namespace CityBuilder.Combat
             var origin = grid.CellToWorld(Centre);
             var offset = new Vector2((position.x - origin.x) / grid.CellSize, (position.z - origin.z) / grid.CellSize);
             var local = OrcBaseLayout.Rotate(offset, -Quarters);
-            var half = Layout.HalfExtent + margin / grid.CellSize;
-            return Mathf.Abs(local.x) <= half && Mathf.Abs(local.y) <= half;
+            var bounds = Layout.Bounds;
+            var m = margin / grid.CellSize;
+            return local.x >= bounds.xMin - m && local.x <= bounds.xMax + m && local.y >= bounds.yMin - m && local.y <= bounds.yMax + m;
         }
 
         /// <summary>Where a raid comes out: just in front of the camp's outer gate, so it never has to break its own wall.</summary>
-        public Vector3 RaidExit => LocalToWorld(new Vector2(0f, -(Layout.HalfExtent + 1.5f)));
+        public Vector3 RaidExit => LocalToWorld(new Vector2(0f, Layout.Bounds.yMin - 1.5f));
+
+        /// <summary>A point just outside the camp's front gate, `metres` out.</summary>
+        public Vector3 InFrontOfGate(float metres) => LocalToWorld(new Vector2(0f, Layout.Bounds.yMin - metres));
 
         // -- building and rebuilding ------------------------------------------------------------
 
@@ -241,6 +249,7 @@ namespace CityBuilder.Combat
             if (Portal != null) builder.ApplyPortalLevel(Portal, Level);
             UpdateShield();
             RebuildWalls();
+            if (_mountains == null && layout.Mountains.Count > 0) _mountains = builder.SpawnMountains(this, layout.Mountains);
 
             for (var k = 0; k < SpawnedKinds.Length; k++)
             {
@@ -276,13 +285,15 @@ namespace CityBuilder.Combat
             _slotGuards = new OrcUnit[0];
             if (_wallObstacles != null) Destroy(_wallObstacles);
             _wallObstacles = null;
+            if (_mountains != null) Destroy(_mountains);
+            _mountains = null;
         }
 
         /// <summary>Grows the camp to `level`, rebuilding it whole (the user's rule: what was broken comes back).</summary>
         public void GrowTo(int level, OrcRaidManager builder)
         {
             level = Mathf.Clamp(level, 1, MaxLevel);
-            if (level <= Level || Cleared) return;
+            if (level <= Level || Cleared || IsMain) return;
             Teardown();
             Build(level, builder);
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_camp_grew", Level),
@@ -427,13 +438,15 @@ namespace CityBuilder.Combat
             var layout = Layout;
             if (_slotGuards.Length != layout.Guards.Count) return;
 
-            var respawn = BalanceConfig.Instance.OrcGarrisonRespawnSeconds;
+            var balance = BalanceConfig.Instance;
             // a plain loop over a fixed array: this runs every frame for every camp, and an
             // iterator would hand the garbage collector something each time
             for (var k = 0; k < SpawnedKinds.Length; k++)
             {
                 var kind = SpawnedKinds[k];
                 if (!_kindsPosted[k]) continue;
+                // the chief comes back slowly: he is the base's miniboss, not one of the guard
+                var respawn = kind == OrcKind.Boss ? balance.OrcChiefRespawnSeconds : balance.OrcGarrisonRespawnSeconds;
                 var missing = FirstMissingSlot(layout, kind);
                 if (missing < 0 || SpawnerOf(kind) == null)
                 {
@@ -450,13 +463,18 @@ namespace CityBuilder.Combat
                 }
                 _spawnTimers[kind] = respawn;
                 SpawnFromSpawner(layout, missing, SpawnerOf(kind));
+                if (kind == OrcKind.Boss)
+                {
+                    EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_chief_returned"),
+                        EventSeverity.Danger, EventGlyph.Swords, null, SpawnerOf(kind).transform.position));
+                }
             }
         }
 
-        private static readonly OrcKind[] SpawnedKinds = { OrcKind.Raider, OrcKind.Brute, OrcKind.Thrower };
+        private static readonly OrcKind[] SpawnedKinds = { OrcKind.Raider, OrcKind.Brute, OrcKind.Thrower, OrcKind.Boss };
 
         // Which of SpawnedKinds the current plan posts at all -- worked out once per Build.
-        private readonly bool[] _kindsPosted = new bool[3];
+        private readonly bool[] _kindsPosted = new bool[4];
 
         private int FirstMissingSlot(CampLayout layout, OrcKind kind)
         {

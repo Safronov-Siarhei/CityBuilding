@@ -26,6 +26,8 @@ namespace CityBuilder.Combat
         BrutePit = 7,
         /// <summary>The throwers' spawner.</summary>
         ThrowerRange = 8,
+        /// <summary>The chief's house on the main base: while it stands, a slain chief comes back.</summary>
+        ChiefHouse = 9,
     }
 
     /// <summary>
@@ -83,7 +85,17 @@ namespace CityBuilder.Combat
             var balance = BalanceConfig.Instance;
             MaxHealth = HealthOf(kind, Level, balance);
             CurrentHealth = MaxHealth;
-            if (kind == OrcCampBuildingKind.Watchtower)
+            if (Level >= OrcBaseLayout.MainLevel && kind == OrcCampBuildingKind.Watchtower)
+            {
+                _shotDamage = balance.OrcMainTowerDamage;
+                _shotRange = balance.OrcMainTowerRangeMeters;
+            }
+            else if (Level >= OrcBaseLayout.MainLevel && kind == OrcCampBuildingKind.GateTower)
+            {
+                _shotDamage = balance.OrcMainGateDamage;
+                _shotRange = balance.OrcMainGateRangeMeters;
+            }
+            else if (kind == OrcCampBuildingKind.Watchtower)
             {
                 _shotDamage = balance.OrcTowerDamageAt(Level);
                 _shotRange = balance.OrcTowerRangeAt(Level);
@@ -98,6 +110,20 @@ namespace CityBuilder.Combat
         /// <summary>How much a building of this kind and level can take, from the sheet.</summary>
         public static int HealthOf(OrcCampBuildingKind kind, int level, BalanceConfig balance)
         {
+            if (level >= OrcBaseLayout.MainLevel)
+            {
+                switch (kind)
+                {
+                    case OrcCampBuildingKind.Watchtower: return balance.OrcMainTowerHealth;
+                    case OrcCampBuildingKind.Totem: return balance.OrcMainTotemHealth;
+                    case OrcCampBuildingKind.Palisade: return balance.OrcMainWallHealth;
+                    case OrcCampBuildingKind.Gate:
+                    case OrcCampBuildingKind.GateTower: return balance.OrcMainGateHealth;
+                    case OrcCampBuildingKind.Storehouse: return balance.OrcMainStorehouseHealth;
+                    case OrcCampBuildingKind.ChiefHouse: return balance.OrcChiefHouseHealth;
+                    default: return balance.OrcMainSpawnerHealth;
+                }
+            }
             switch (kind)
             {
                 case OrcCampBuildingKind.Watchtower: return balance.OrcTowerHealthAt(level);

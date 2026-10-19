@@ -277,6 +277,20 @@ namespace CityBuilder.Core
         [SerializeField] private int orcCampLootWood = 60;
         [SerializeField] private int orcCampLootStone = 40;
         [SerializeField] private float orcCampBreatherSeconds = 240f;
+        // The main base (the great portal's): its own stone buildings, its miniboss.
+        [SerializeField] private int mainPortalHealth = 1200;
+        [SerializeField] private int orcMainWallHealth = 160;
+        [SerializeField] private int orcMainGateHealth = 450;
+        [SerializeField] private int orcMainGateDamage = 6;
+        [SerializeField] private float orcMainGateRangeMeters = 8f;
+        [SerializeField] private int orcMainTowerHealth = 420;
+        [SerializeField] private int orcMainTowerDamage = 6;
+        [SerializeField] private float orcMainTowerRangeMeters = 8.5f;
+        [SerializeField] private int orcMainTotemHealth = 320;
+        [SerializeField] private int orcMainStorehouseHealth = 300;
+        [SerializeField] private int orcMainSpawnerHealth = 380;
+        [SerializeField] private int orcChiefHouseHealth = 600;
+        [SerializeField] private float orcChiefRespawnSeconds = 120f;
         // How many raid sources the map opens and where they stand -- see PortalPlacement, which
         // turns these three into the spiral of slots around the Town Hall. Kept here rather than
         // as constants because "spread the portals over the whole map" has to be a number the user
@@ -456,6 +470,19 @@ namespace CityBuilder.Core
         public int OrcCampLootWood => orcCampLootWood;
         public int OrcCampLootStone => orcCampLootStone;
         public float OrcCampBreatherSeconds => orcCampBreatherSeconds;
+        public int MainPortalHealth => mainPortalHealth;
+        public int OrcMainWallHealth => orcMainWallHealth;
+        public int OrcMainGateHealth => orcMainGateHealth;
+        public int OrcMainGateDamage => orcMainGateDamage;
+        public float OrcMainGateRangeMeters => orcMainGateRangeMeters;
+        public int OrcMainTowerHealth => orcMainTowerHealth;
+        public int OrcMainTowerDamage => orcMainTowerDamage;
+        public float OrcMainTowerRangeMeters => orcMainTowerRangeMeters;
+        public int OrcMainTotemHealth => orcMainTotemHealth;
+        public int OrcMainStorehouseHealth => orcMainStorehouseHealth;
+        public int OrcMainSpawnerHealth => orcMainSpawnerHealth;
+        public int OrcChiefHouseHealth => orcChiefHouseHealth;
+        public float OrcChiefRespawnSeconds => orcChiefRespawnSeconds;
 
         private static T AtLevel<T>(T[] byLevel, int level)
         {
@@ -621,6 +648,19 @@ namespace CityBuilder.Core
             orcCampLootWood = (int)Read(economy, "orc_camp_loot_wood", orcCampLootWood);
             orcCampLootStone = (int)Read(economy, "orc_camp_loot_stone", orcCampLootStone);
             orcCampBreatherSeconds = Read(economy, "orc_camp_breather_seconds", orcCampBreatherSeconds);
+            mainPortalHealth = (int)Read(economy, "main_portal_health", mainPortalHealth);
+            orcMainWallHealth = (int)Read(economy, "orc_main_wall_health", orcMainWallHealth);
+            orcMainGateHealth = (int)Read(economy, "orc_main_gate_health", orcMainGateHealth);
+            orcMainGateDamage = (int)Read(economy, "orc_main_gate_damage", orcMainGateDamage);
+            orcMainGateRangeMeters = Read(economy, "orc_main_gate_range_meters", orcMainGateRangeMeters);
+            orcMainTowerHealth = (int)Read(economy, "orc_main_tower_health", orcMainTowerHealth);
+            orcMainTowerDamage = (int)Read(economy, "orc_main_tower_damage", orcMainTowerDamage);
+            orcMainTowerRangeMeters = Read(economy, "orc_main_tower_range_meters", orcMainTowerRangeMeters);
+            orcMainTotemHealth = (int)Read(economy, "orc_main_totem_health", orcMainTotemHealth);
+            orcMainStorehouseHealth = (int)Read(economy, "orc_main_storehouse_health", orcMainStorehouseHealth);
+            orcMainSpawnerHealth = (int)Read(economy, "orc_main_spawner_health", orcMainSpawnerHealth);
+            orcChiefHouseHealth = (int)Read(economy, "orc_chief_house_health", orcChiefHouseHealth);
+            orcChiefRespawnSeconds = Read(economy, "orc_chief_respawn_seconds", orcChiefRespawnSeconds);
             portalCount = (int)Read(economy, "portal_count", portalCount);
             portalDistanceFromTownHallMeters = Read(economy, "portal_distance_from_town_hall_meters", portalDistanceFromTownHallMeters);
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);

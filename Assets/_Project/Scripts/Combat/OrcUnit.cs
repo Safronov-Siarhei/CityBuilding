@@ -24,6 +24,9 @@ namespace CityBuilder.Combat
 
         /// <summary>The heavy of the walled bases: slow, thick, its own row and its own levels (the user's sketches, 2026-10-16).</summary>
         Brute = 3,
+
+        /// <summary>The main base's chief: its miniboss, his own row, comes back from his house while it stands.</summary>
+        Boss = 4,
     }
 
     /// <summary>
@@ -49,6 +52,7 @@ namespace CityBuilder.Combat
                 case OrcKind.Thrower: return "orc_thrower";
                 case OrcKind.Chief: return "orc_chief";
                 case OrcKind.Brute: return "orc_brute";
+                case OrcKind.Boss: return "orc_chief_boss";
                 default: return "orc";
             }
         }

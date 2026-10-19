@@ -37,21 +37,42 @@ namespace CityBuilder.Combat
         public Vector2 Local { get; }
     }
 
-    /// <summary>A camp at one level: its buildings, its walls, its guards, and how big a square it covers.</summary>
+    /// <summary>A camp at one level: its buildings, its walls, its guards, and the ground it covers.</summary>
     public sealed class CampLayout
     {
         public CampLayout(int level, int halfExtent, List<CampPiece> pieces, List<GuardSlot> guards)
+            : this(level, new RectInt(-halfExtent, -halfExtent, 2 * halfExtent, 2 * halfExtent), pieces, guards,
+                new List<RectInt>(), 2)
+        {
+        }
+
+        public CampLayout(int level, RectInt bounds, List<CampPiece> pieces, List<GuardSlot> guards,
+            List<RectInt> mountains, int portalSize)
         {
             Level = level;
-            HalfExtent = halfExtent;
+            Bounds = bounds;
+            HalfExtent = Mathf.Max(Mathf.Max(-bounds.xMin, bounds.xMax), Mathf.Max(-bounds.yMin, bounds.yMax));
             Pieces = pieces;
             Guards = guards;
+            Mountains = mountains;
+            PortalSize = portalSize;
         }
 
         public int Level { get; }
 
-        /// <summary>The camp covers cells -HalfExtent .. HalfExtent-1 on both axes of its frame.</summary>
+        /// <summary>The cells the camp covers, in its frame (yMin is the front, the gate's side).</summary>
+        public RectInt Bounds { get; }
+
+        /// <summary>The largest distance from the portal's centre to an edge of Bounds -- what a square camp was described by.</summary>
         public int HalfExtent { get; }
+
+        /// <summary>Impassable rock the camp is backed into (the main base): blocks of cells, in its frame.</summary>
+        public IReadOnlyList<RectInt> Mountains { get; }
+
+        /// <summary>The portal's plot: 2 for a camp's portal, 4 for the great portal.</summary>
+        public int PortalSize { get; }
+
+        public bool IsMain => Level == OrcBaseLayout.MainLevel;
 
         public IReadOnlyList<CampPiece> Pieces { get; }
         public IReadOnlyList<GuardSlot> Guards { get; }
@@ -79,12 +100,15 @@ namespace CityBuilder.Combat
     {
         public const int MaxLevel = 3;
 
-        /// <summary>The biggest camp's half extent: the square a portal reserves from the start, so the camp can grow into it.</summary>
-        public static int HalfExtentAt(int level) => For(level).HalfExtent;
+        /// <summary>The great portal's base: its own plan and its own stone-and-green models, every building beyond the camps' top level.</summary>
+        public const int MainLevel = 4;
 
-        private static readonly CampLayout[] _layouts = { Level1(), Level2(), Level3() };
+        /// <summary>The ground a camp of this level covers in its frame -- reserved from the start, so a camp can grow into it.</summary>
+        public static RectInt BoundsAt(int level) => For(level).Bounds;
 
-        public static CampLayout For(int level) => _layouts[Mathf.Clamp(level, 1, MaxLevel) - 1];
+        private static readonly CampLayout[] _layouts = { Level1(), Level2(), Level3(), Main() };
+
+        public static CampLayout For(int level) => _layouts[Mathf.Clamp(level, 1, MainLevel) - 1];
 
         /// <summary>The orc kind a spawner keeps topped up, or null for a building that spawns nothing.</summary>
         public static OrcKind? SpawnedBy(OrcCampBuildingKind kind) => kind switch
@@ -92,6 +116,7 @@ namespace CityBuilder.Combat
             OrcCampBuildingKind.WarTent => OrcKind.Raider,
             OrcCampBuildingKind.BrutePit => OrcKind.Brute,
             OrcCampBuildingKind.ThrowerRange => OrcKind.Thrower,
+            OrcCampBuildingKind.ChiefHouse => OrcKind.Boss,
             _ => (OrcKind?)null,
         };
 
@@ -171,6 +196,95 @@ namespace CityBuilder.Combat
                 guards.Add(new GuardSlot(OrcKind.Thrower, 1, p));
             }
             return new CampLayout(3, 11, pieces, guards);
+        }
+
+        /// <summary>
+        /// The main base, after the user's sketch (2026-10-19): backed into mountains behind and on
+        /// both sides of its two inner zones, three stone walls one inside the other, each entered
+        /// through a stone gate under a tower. The great portal (4x4) at the back between two
+        /// totems; the chief's house and the chief in the middle zone; the widest zone in front.
+        /// Every building at MainLevel -- drawn from the main base's own models.
+        /// </summary>
+        private static CampLayout Main()
+        {
+            const int L = MainLevel;
+            var pieces = new List<CampPiece>();
+            void Wall(int x, int z) => pieces.Add(Piece(OrcCampBuildingKind.Palisade, L, x, z, 1, 1));
+            void HLine(int x0, int x1, int z, bool gate)
+            {
+                for (var x = x0; x <= x1; x++)
+                {
+                    if (gate && (x == -1 || x == 0)) continue;
+                    Wall(x, z);
+                }
+                if (gate) pieces.Add(Piece(OrcCampBuildingKind.GateTower, L, -1, z, 2, 1));
+            }
+            void VLine(int x, int z0, int z1)
+            {
+                for (var z = z0; z <= z1; z++) Wall(x, z);
+            }
+
+            // the back zone's front, the middle zone's front and its short sides, the front zone
+            HLine(-13, 12, -8, gate: true);
+            HLine(-14, 13, -17, gate: true);
+            VLine(-14, -16, -15);
+            VLine(13, -16, -15);
+            HLine(-19, -15, -15, gate: false);
+            HLine(14, 18, -15, gate: false);
+            HLine(-19, 18, -23, gate: true);
+            VLine(-19, -22, -16);
+            VLine(18, -22, -16);
+
+            // the back zone
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, -5, 0, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, 4, 0, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, -12, -2, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, 10, -2, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -13, -5, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 11, -5, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -9, -7, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 7, -7, 2, 2));
+            // the middle zone
+            pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -2, -13, 3, 3));
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -6, -11, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, 3, -11, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -9, -11, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 7, -11, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -11, -16, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 9, -16, 2, 2));
+            // the front zone
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, -16, -17, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, 14, -17, 2, 2));
+            foreach (var (x, z) in new[] { (-18, -17), (16, -17), (-18, -22), (-9, -22), (7, -22), (16, -22) })
+            {
+                pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, x, z, 2, 2));
+            }
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -13, -22, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 10, -22, 2, 2));
+
+            var guards = new List<GuardSlot>();
+            void Post(OrcKind kind, int level, params (float x, float z)[] at)
+            {
+                foreach (var (x, z) in at) guards.Add(new GuardSlot(kind, level, new Vector2(x, z)));
+            }
+            Post(OrcKind.Thrower, 1, (-7.5f, 1.1f), (7.4f, 1.4f), (0f, -4.7f),
+                (-11.5f, -10.3f), (11.8f, -10.4f), (-4.4f, -15.5f), (4.1f, -15.1f),
+                (-13.3f, -19.6f), (-2.2f, -20.5f), (1f, -20.5f), (11f, -19.4f));
+            Post(OrcKind.Raider, 3, (-9f, -3.1f), (-2.7f, -2.7f), (2.6f, -2.7f), (9.3f, -3.3f),
+                (-10.7f, -13.2f), (10.4f, -13.4f), (-7.5f, -15.7f), (8f, -15.7f),
+                (-17f, -18.7f), (-14.4f, -21.6f), (-10.1f, -21.1f), (-5f, -21.3f), (3.1f, -21.1f),
+                (9.5f, -19.5f), (13.5f, -21.1f), (16.5f, -18.7f));
+            Post(OrcKind.Brute, 2, (-11.4f, -6.6f), (-4.8f, -6.4f), (4.9f, -6.7f), (11.6f, -6.7f),
+                (-6.3f, -13.1f), (6.3f, -13.1f));
+            Post(OrcKind.Boss, 1, (-0.5f, -15f));
+
+            var mountains = new List<RectInt>
+            {
+                new RectInt(-19, 3, 38, 6),
+                new RectInt(-19, -14, 6, 17),
+                new RectInt(13, -14, 6, 17),
+            };
+            return new CampLayout(L, new RectInt(-19, -23, 38, 32), pieces, guards, mountains, 4);
         }
 
         private static CampPiece Piece(OrcCampBuildingKind kind, int level, int x, int z, int w, int h) =>

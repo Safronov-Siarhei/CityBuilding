@@ -46,7 +46,7 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.IsTrue(OrcCamp.All.Any(c => c.MaxLevel == OrcBaseLayout.MaxLevel),
                 "Not one portal found room for a camp that can grow to the top level -- the map has plenty.");
-            foreach (var portal in OrcPortal.All)
+            foreach (var portal in OrcPortal.All.Where(p => !p.IsMain))
             {
                 var camp = OrcCamp.Of(portal);
                 Assert.IsNotNull(camp, $"The portal at {portal.Cell} has no camp.");
@@ -88,7 +88,7 @@ namespace CityBuilder.Tests.PlayMode
             camp.GrowTo(2, OrcRaidManager.Instance);
             for (var i = 0; i < 5; i++) yield return null;
 
-            var outside = OnNavMesh(camp.LocalToWorld(new Vector2(0f, -(camp.Layout.HalfExtent + 3f))));
+            var outside = OnNavMesh(camp.InFrontOfGate(3f));
             var inside = OnNavMesh(camp.LocalToWorld(new Vector2(-3f, -3f)));
             var path = new NavMeshPath();
             NavMesh.CalculatePath(outside, inside, NavMesh.AllAreas, path);
@@ -125,7 +125,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
 
             var army = ArmyManager.Instance;
-            var outside = camp.LocalToWorld(new Vector2(0f, -(camp.Layout.HalfExtent + 4f)));
+            var outside = camp.InFrontOfGate(4f);
             var group = army.RestoreGroup(SoldierType.ManAtArms, outside, TargetPriority.Structures);
             for (var i = 0; i < 5; i++) army.RestoreSoldier(group, outside + new Vector3((i - 2) * 0.6f, 0f, 0f), int.MaxValue);
             group.OrderAttack(totem);

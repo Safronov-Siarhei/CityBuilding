@@ -26,6 +26,12 @@ namespace CityBuilder.Core
 
         public bool IsVictory { get; private set; }
 
+        /// <summary>The map was won by closing the main base's great portal (rather than every portal on a map with no room for one).</summary>
+        public bool WonByMainPortal { get; private set; }
+
+        /// <summary>The player chose to keep playing after the win (the user's free mode, 2026-10-19).</summary>
+        public bool IsFreeMode { get; private set; }
+
         /// <summary>Raised once, with true for a win and false for a loss.</summary>
         public event Action<bool> OnGameEnded;
 
@@ -93,9 +99,24 @@ namespace CityBuilder.Core
         /// </summary>
         private void HandlePortalDestroyed(OrcPortal portal)
         {
-            if (IsGameOver || OrcPortal.All.Count > 0) return;
+            if (IsGameOver) return;
+            // The main base's great portal ends the map on its own, whatever still stands.
+            if (portal != null && portal.IsMain)
+            {
+                WonByMainPortal = true;
+                EndGame(victory: true, Localization.Get("#log_victory_main"));
+                return;
+            }
+            if (OrcPortal.All.Count > 0) return;
 
             EndGame(victory: true, Localization.Get("#log_victory"));
+        }
+
+        /// <summary>After a win, the map carries on as a sandbox: nothing ends it again.</summary>
+        public void ContinueInFreeMode()
+        {
+            if (!IsVictory) return;
+            IsFreeMode = true;
         }
 
         private void EndGame(bool victory, string logMessage)

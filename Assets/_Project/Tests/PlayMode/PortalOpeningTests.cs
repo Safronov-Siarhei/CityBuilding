@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
@@ -50,7 +51,8 @@ namespace CityBuilder.Tests.PlayMode
         {
             yield return PlaceTownHallAndWait();
 
-            Assert.AreEqual(BalanceConfig.Instance.PortalCount, OrcPortal.All.Count,
+            // the camps' portals; the main base's great portal comes on top of the sheet's count
+            Assert.AreEqual(BalanceConfig.Instance.PortalCount, OrcPortal.All.Count(p => !p.IsMain),
                 "The map opened a different number of portals than the sheet asks for -- a slot with no standable ground is skipped, and this map is supposed to have room for all of them.");
         }
 
@@ -130,12 +132,13 @@ namespace CityBuilder.Tests.PlayMode
             var townHall = PlaceTownHall();
             yield return WaitForPortals();
 
-            if (OrcPortal.All.Count < 2) Assert.Ignore("One portal cannot be spread around anything.");
+            if (OrcPortal.All.Count(p => !p.IsMain) < 2) Assert.Ignore("One portal cannot be spread around anything.");
 
             var townHallPosition = townHall.transform.position;
             var bearings = new List<float>();
             var layout = new System.Text.StringBuilder();
-            foreach (var portal in OrcPortal.All)
+            // the camps' portals, which the template spreads; the main base is placed on its own
+            foreach (var portal in OrcPortal.All.Where(p => !p.IsMain))
             {
                 var offset = portal.transform.position - townHallPosition;
                 bearings.Add(Mathf.Atan2(offset.z, offset.x) * Mathf.Rad2Deg);

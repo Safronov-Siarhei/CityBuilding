@@ -57,6 +57,9 @@ namespace CityBuilder.Combat
         /// </summary>
         public bool IsShielded { get; set; }
 
+        /// <summary>The great portal of the main base: 4x4, sends no raids, and closing it wins the map (the user's rule, 2026-10-19).</summary>
+        public bool IsMain { get; set; }
+
         // The "shielded" line at most this often, so a group hammering the portal does not flood
         // the event feed with one icon per swing.
         private const float ShieldMessageIntervalSeconds = 8f;

@@ -141,6 +141,79 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsFalse(seen.Contains(Vector2Int.zero), $"Level {level}: the outside reaches the portal -- the wall has a hole.");
         }
 
+        /// <summary>
+        /// The main base (the user's sketch, 2026-10-19): every plot inside its bounds, none on
+        /// another, none on its mountains or the great portal; the walls and the mountains between
+        /// them leave no way in but the three gates; and it has what the sketch has.
+        /// </summary>
+        [Test]
+        public void TheMainBaseIsBuildableClosedAndAsDrawn()
+        {
+            var main = OrcBaseLayout.For(OrcBaseLayout.MainLevel);
+            Assert.IsTrue(main.IsMain);
+            Assert.AreEqual(4, main.PortalSize);
+
+            var taken = new HashSet<Vector2Int>();
+            for (var x = -2; x < 2; x++)
+            {
+                for (var z = -2; z < 2; z++) taken.Add(new Vector2Int(x, z));
+            }
+            var rock = new HashSet<Vector2Int>();
+            foreach (var m in main.Mountains)
+            {
+                foreach (var cell in m.allPositionsWithin) rock.Add(cell);
+            }
+            var wall = new HashSet<Vector2Int>(rock);
+            foreach (var piece in main.Pieces)
+            {
+                foreach (var cell in Cells(piece))
+                {
+                    Assert.IsTrue(main.Bounds.Contains(cell), $"The {piece.Kind} at {piece.Min} leaves the main base.");
+                    Assert.IsFalse(rock.Contains(cell), $"The {piece.Kind} at {piece.Min} stands in the mountains.");
+                    Assert.IsTrue(taken.Add(cell), $"The {piece.Kind} at {piece.Min} overlaps another plot at {cell}.");
+                    if (OrcBaseLayout.IsWall(piece.Kind)) wall.Add(cell);
+                }
+            }
+            foreach (var guard in main.Guards)
+            {
+                var cell = new Vector2Int(Mathf.FloorToInt(guard.Local.x), Mathf.FloorToInt(guard.Local.y));
+                Assert.IsFalse(taken.Contains(cell) || rock.Contains(cell), $"The {guard.Kind} posted at {guard.Local} stands on a building or in the rock.");
+            }
+
+            // flood from outside the base: the great portal must be out of reach
+            var b = main.Bounds;
+            var seen = new HashSet<Vector2Int>();
+            var open = new Queue<Vector2Int>();
+            open.Enqueue(new Vector2Int(b.xMin - 1, b.yMin - 1));
+            while (open.Count > 0)
+            {
+                var cell = open.Dequeue();
+                if (cell.x < b.xMin - 1 || cell.x > b.xMax || cell.y < b.yMin - 1 || cell.y > b.yMax) continue;
+                if (wall.Contains(cell) || !seen.Add(cell)) continue;
+                open.Enqueue(cell + Vector2Int.up);
+                open.Enqueue(cell + Vector2Int.down);
+                open.Enqueue(cell + Vector2Int.left);
+                open.Enqueue(cell + Vector2Int.right);
+            }
+            Assert.IsFalse(seen.Contains(Vector2Int.zero), "The outside reaches the great portal -- the walls and the mountains leave a hole.");
+
+            int Count(OrcCampBuildingKind kind) => new List<CampPiece>(main.Pieces).FindAll(p => p.Kind == kind).Count;
+            Assert.AreEqual(2, Count(OrcCampBuildingKind.Totem), "Two totems shield the great portal.");
+            Assert.AreEqual(3, Count(OrcCampBuildingKind.GateTower), "Three stone gates under towers, one per wall.");
+            Assert.AreEqual(1, Count(OrcCampBuildingKind.ChiefHouse));
+            Assert.AreEqual(1, new List<GuardSlot>(main.Guards).FindAll(g => g.Kind == OrcKind.Boss).Count, "The chief, the miniboss.");
+            var spawned = new HashSet<OrcKind>();
+            foreach (var piece in main.Pieces)
+            {
+                var kind = OrcBaseLayout.SpawnedBy(piece.Kind);
+                if (kind.HasValue) spawned.Add(kind.Value);
+            }
+            foreach (var guard in main.Guards)
+            {
+                Assert.IsTrue(spawned.Contains(guard.Kind), $"The main base posts a {guard.Kind} but has nothing to replace it.");
+            }
+        }
+
         [Test]
         public void TurningThePlanKeepsItOnWholeCells()
         {

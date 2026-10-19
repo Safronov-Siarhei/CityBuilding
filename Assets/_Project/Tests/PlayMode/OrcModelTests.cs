@@ -42,7 +42,7 @@ namespace CityBuilder.Tests.PlayMode
         {
             yield return OpenPortals();
 
-            foreach (var portal in OrcPortal.All)
+            foreach (var portal in OrcPortal.All.Where(p => !p.IsMain))
             {
                 Assert.IsNotNull(portal.transform.Find("PortalActive"), $"The portal at {portal.Cell} has no active-look model -- it is still the cube arch.");
                 Assert.IsNotNull(portal.transform.Find("PortalPassive"), $"The portal at {portal.Cell} has no passive-look model.");
@@ -129,7 +129,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return new WaitForSeconds(0.2f);
             yield return PlaytestCapture.Shoot("orc-portal-active", lit.transform.position, distance: 7f, pitch: 40f, yaw: 20f);
 
-            var smouldering = OrcPortal.All.FirstOrDefault(p => p != lit);
+            var smouldering = OrcPortal.All.FirstOrDefault(p => p != lit && !p.IsMain);
             if (smouldering != null)
             {
                 yield return PlaytestCapture.Shoot("orc-portal-passive", smouldering.transform.position, distance: 6f, pitch: 40f, yaw: 20f);
@@ -143,10 +143,11 @@ namespace CityBuilder.Tests.PlayMode
 
         private static void AssertExactlyTheNextSourceBurns()
         {
-            var burning = OrcPortal.All.Where(p => p.transform.Find("PortalActive").gameObject.activeSelf).ToList();
+            // the main base's great portal has one look and never sends a wave
+            var burning = OrcPortal.All.Where(p => !p.IsMain && p.transform.Find("PortalActive").gameObject.activeSelf).ToList();
             Assert.AreEqual(1, burning.Count, "Exactly one portal -- the next wave's -- should show the bright look.");
             Assert.AreSame(OrcRaidManager.Instance.NextRaidSource, burning[0], "The bright portal is not the one the next wave comes out of.");
-            foreach (var portal in OrcPortal.All)
+            foreach (var portal in OrcPortal.All.Where(p => !p.IsMain))
             {
                 Assert.AreNotEqual(portal.transform.Find("PortalActive").gameObject.activeSelf,
                     portal.transform.Find("PortalPassive").gameObject.activeSelf, $"The portal at {portal.Cell} shows both looks or neither.");

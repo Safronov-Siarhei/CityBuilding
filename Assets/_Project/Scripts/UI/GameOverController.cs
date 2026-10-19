@@ -21,6 +21,8 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Text titleLabel;
         [SerializeField] private Text reasonLabel;
+        // Shown only on a win: the user's free mode, keep playing the map after it is won.
+        [SerializeField] private GameObject continueButton;
 
         private void Start()
         {
@@ -36,12 +38,25 @@ namespace CityBuilder.UI
             }
             if (reasonLabel != null)
             {
-                reasonLabel.text = Localization.Get(victory ? "#over_victory_reason" : "#over_defeat_reason");
+                var won = victory && GameOverManager.Instance != null && GameOverManager.Instance.WonByMainPortal
+                    ? "#over_victory_reason_main"
+                    : "#over_victory_reason";
+                reasonLabel.text = Localization.Get(victory ? won : "#over_defeat_reason");
             }
+            if (continueButton != null) continueButton.SetActive(victory);
 
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             Time.timeScale = 0f;
+        }
+
+        /// <summary>Closes the victory panel and lets the map run on as a sandbox.</summary>
+        public void ContinuePlaying()
+        {
+            GameOverManager.Instance?.ContinueInFreeMode();
+            if (panelRoot != null) panelRoot.SetActive(false);
+            ModalGate.SetBlocked(false);
+            Time.timeScale = 1f;
         }
 
         public void ReturnToMenu()

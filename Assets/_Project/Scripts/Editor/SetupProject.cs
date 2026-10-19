@@ -1974,6 +1974,17 @@ namespace CityBuilder.EditorTools
                          ("storehouseRuinModel", "OrcStorehouse1-lvl1-Ruin"),
                          ("brutePitModel", "OrcBrutePit1-lvl1"), ("brutePitRuinModel", "OrcBrutePit1-lvl1-Ruin"),
                          ("throwerRangeModel", "OrcThrowerRange1-lvl1"), ("throwerRangeRuinModel", "OrcThrowerRange1-lvl1-Ruin"),
+                         // the main base's own set
+                         ("mainPortalModel", "OrcMainPortal1"), ("mainPortalRuinModel", "OrcMainPortal1-Ruin"),
+                         ("mainGateModel", "OrcStoneGate1"), ("mainGateRuinModel", "OrcStoneGate1-Ruin"),
+                         ("mainTowerModel", "OrcStoneTower1"), ("mainTowerRuinModel", "OrcStoneTower1-Ruin"),
+                         ("mainTotemModel", "OrcMainTotem1"), ("mainTotemRuinModel", "OrcMainTotem1-Ruin"),
+                         ("mainStorehouseModel", "OrcMainStorehouse1"), ("mainStorehouseRuinModel", "OrcMainStorehouse1-Ruin"),
+                         ("mainBarracksModel", "OrcMainBarracks1"), ("mainBarracksRuinModel", "OrcMainBarracks1-Ruin"),
+                         ("mainBrutePitModel", "OrcMainBrutePit1"), ("mainBrutePitRuinModel", "OrcMainBrutePit1-Ruin"),
+                         ("mainThrowerRangeModel", "OrcMainThrowerRange1"), ("mainThrowerRangeRuinModel", "OrcMainThrowerRange1-Ruin"),
+                         ("chiefHouseModel", "OrcChiefHouse1"), ("chiefHouseRuinModel", "OrcChiefHouse1-Ruin"),
+                         ("bossModel", "OrcChief-Boss"),
                      })
             {
                 so.FindProperty(field).objectReferenceValue = Load(file);
@@ -1996,6 +2007,8 @@ namespace CityBuilder.EditorTools
                          ("gateModels", new[] { "OrcGate1-lvl1", "OrcGate1-lvl2" }),
                          ("storehouseModels", new[] { "OrcStorehouse1-lvl1", "OrcStorehouse1-lvl2" }),
                          ("palisadeModels", fences.ToArray()),
+                         ("mainWallModels", new[] { "OrcStoneWall1-Straight", "OrcStoneWall1-Corner", "OrcStoneWall1-T", "OrcStoneWall1-Cross" }),
+                         ("mountainModels", new[] { "OrcMountain1-A", "OrcMountain1-B" }),
                      })
             {
                 var property = so.FindProperty(field);
@@ -2127,7 +2140,9 @@ namespace CityBuilder.EditorTools
             var title = CreateText(card.transform, "Title", string.Empty, 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
             var reason = CreateText(card.transform, "Reason", string.Empty, 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
 
-            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "#over_to_menu", new Vector2(0f, -100f), new Vector2(360f, 90f));
+            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "#over_to_menu", new Vector2(-190f, -100f), new Vector2(340f, 90f));
+            // a win offers the user's free mode: keep playing the map
+            var continueButton = CreateButton(card.transform, panelSprite, "GameOverContinueButton", "#over_continue", new Vector2(190f, -100f), new Vector2(340f, 90f));
 
             // The controller lives on its own always-active object, NOT on the panel it shows.
             // A component on a deactivated GameObject never gets Start(), so putting it on
@@ -2141,9 +2156,11 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
             controllerSO.FindProperty("reasonLabel").objectReferenceValue = reason;
+            controllerSO.FindProperty("continueButton").objectReferenceValue = continueButton.gameObject;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(menuButton.onClick, controller.ReturnToMenu);
+            UnityEventTools.AddPersistentListener(continueButton.onClick, controller.ContinuePlaying);
 
             panelRoot.SetActive(false);
         }
