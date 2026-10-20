@@ -84,26 +84,55 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(ground.GetComponent<MeshRenderer>().sharedMaterials.Length, 4, "No hatching under the cells in the water.");
         }
 
+        /// <summary>
+        /// Roads and fences go down one piece at a time on the tick, like any building (the user's
+        /// call, 2026-10-20) -- no more drawing a whole line with one drag -- and after each piece
+        /// the next is offered right after it, carrying on the way the last two went.
+        /// </summary>
         [UnityTest]
-        public IEnumerator ARoadLine_IsSketchedCellByCell()
+        public IEnumerator ARoad_IsLaidPieceByPiece_TheNextOfferedOnTheWayItRuns()
         {
             var road = PlaytestWorld.Building("Road");
             Assert.IsNotNull(road, "No Road in the build menu.");
-            _placer.SelectBuilding(road);
             var grid = GridManager.Instance;
-            var from = grid.WorldToCell(LakeShore + new Vector3(-8f, 0f, 0f));
-            var cells = Enumerable.Range(0, 12).Select(i => from + new Vector2Int(i, 0)).ToList();
-            _placer.PreviewLineForTests(cells);
-            yield return null;
+            var start = grid.WorldToCell(OpenGround + new Vector3(4f, 0f, 0f));
 
-            var line = GameObject.Find("LinePreview");
-            Assert.IsNotNull(line, "No line preview.");
-            Assert.Greater(line.GetComponent<MeshFilter>().sharedMesh.vertexCount, 12 * 8, "The road line is not sketched cell by cell.");
-            Assert.IsTrue(line.GetComponent<MeshRenderer>().sharedMaterials.Length >= 2, "A road running into the lake shows no refused cells.");
+            _placer.PinnedOriginForTests = start;
+            _placer.SelectBuilding(road);
+            Assert.AreEqual(CityBuilder.InputControl.DragOwner.Camera, CityBuilder.InputControl.TouchInputRouter.Instance.SingleDragOwner,
+                "Picking up a road still takes the one-finger drag away from the camera -- roads are drawn by dragging again.");
+            yield return null;
+            _placer.ConfirmPlacement();
+            Assert.IsFalse(grid.IsAreaFree(start, Vector2Int.one), "The tick did not lay the road piece.");
+            Assert.IsTrue(_placer.IsSelecting, "The road was put away after one piece -- the next should be offered.");
+
+            // the first piece: the next is offered to one side of it
+            _placer.PinnedOriginForTests = null;
+            yield return null;
+            var offered = _placer.GhostOriginForTests;
+            Assert.IsTrue(offered.HasValue, "No next piece offered.");
+            var step = offered.Value - start;
+            Assert.AreEqual(1, Mathf.Abs(step.x) + Mathf.Abs(step.y), $"The next piece is offered at {offered}, not beside the first at {start}.");
+
+            // a turn: lay one north of the first, and the offer carries on north
+            var north = start + Vector2Int.up;
+            _placer.PinnedOriginForTests = north;
+            yield return null;
+            _placer.ConfirmPlacement();
+            _placer.PinnedOriginForTests = null;
+            yield return null;
+            Assert.AreEqual(north + Vector2Int.up, _placer.GhostOriginForTests, "After a turn north the next piece is not offered further north.");
+
+            // and the tick on the offer lays it, offering the one after
+            _placer.ConfirmPlacement();
+            yield return null;
+            Assert.IsFalse(grid.IsAreaFree(north + Vector2Int.up, Vector2Int.one), "The tick on the offered piece did not lay it.");
+            Assert.AreEqual(north + Vector2Int.up * 2, _placer.GhostOriginForTests, "The road does not keep running on.");
 
             if (PlaytestCapture.Available)
             {
-                yield return PlaytestCapture.Shoot("placement-road-line", LakeShore + new Vector3(-2f, 0f, 0f), 12f, 50f, 15f);
+                yield return new WaitForSecondsRealtime(0.5f);
+                yield return PlaytestCapture.Shoot("placement-road-chain", grid.GetFootprintCenterWorld(north, Vector2Int.one), 9f, 50f, 15f);
             }
         }
 

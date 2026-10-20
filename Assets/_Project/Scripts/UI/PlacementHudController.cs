@@ -38,41 +38,39 @@ namespace CityBuilder.UI
 
             var selecting = buildingPlacer.IsSelecting && !ModalGate.IsBlocked;
             var touchAiming = selecting && buildingPlacer.UsesTouchAiming;
-            var drawing = selecting && buildingPlacer.IsDrawMode;
+            var chain = selecting && buildingPlacer.IsChainMode;
 
-            // Confirm belongs to every placement on a touch screen. In the aim-and-place flow it
-            // places the building; a drawn road or fence is laid by lifting the finger, so there
-            // it says "done" and hands the screen back to the build menu (see ConfirmPressed).
-            SetActive(confirmButton, touchAiming || (selecting && drawing));
-            SetActive(aimMarker != null ? aimMarker.gameObject : null, touchAiming && !drawing);
+            // Confirm belongs to every placement on a touch screen, roads and fences included:
+            // each piece is put down on its own tick (the user's call, 2026-10-20).
+            SetActive(confirmButton, touchAiming);
+            SetActive(aimMarker != null ? aimMarker.gameObject : null, touchAiming);
 
             // Rotation is meaningless for a road or a fence -- their shape comes from their
             // neighbours -- but it IS allowed while placing the mandatory Town Hall.
-            SetActive(rotateButton, selecting && !drawing);
+            SetActive(rotateButton, selecting && !chain);
 
             // Cancel is hidden for the Town Hall: the game has no state where nothing is being
             // placed and no Town Hall exists, so cancelling there would be a dead end.
             SetActive(cancelButton, selecting && !buildingPlacer.IsPlacingMandatoryBuilding);
 
-            if (aimMarker != null && touchAiming && !drawing)
+            if (aimMarker != null && touchAiming)
             {
                 aimMarker.position = buildingPlacer.AimScreenPosition;
             }
 
-            if (confirmImage != null) confirmImage.color = drawing || buildingPlacer.CanConfirm ? ConfirmReady : ConfirmBlocked;
+            if (confirmImage != null) confirmImage.color = buildingPlacer.CanConfirm ? ConfirmReady : ConfirmBlocked;
 
-            UpdateStatus(selecting, drawing);
+            UpdateStatus(selecting);
         }
 
-        /// <summary>The confirm button: places the building in hand -- or, while drawing a road or a fence, finishes drawing.</summary>
+        /// <summary>The confirm button: places the building (or the road or fence piece) in hand.</summary>
         public void ConfirmPressed()
         {
             if (buildingPlacer == null) return;
-            if (buildingPlacer.IsDrawMode) buildingPlacer.ClearSelection();
-            else buildingPlacer.ConfirmPlacement();
+            buildingPlacer.ConfirmPlacement();
         }
 
-        private void UpdateStatus(bool selecting, bool drawing)
+        private void UpdateStatus(bool selecting)
         {
             if (statusLabel == null) return;
 
@@ -82,11 +80,7 @@ namespace CityBuilder.UI
                 return;
             }
 
-            // Drawing mode is the one place in the game where a one-finger drag is NOT the camera,
-            // so it says so up front rather than letting the player discover it by failing to pan.
-            var text = drawing && !buildingPlacer.IsDrawingLine
-                ? Localization.Get("#draw_hint")
-                : buildingPlacer.StatusText;
+            var text = buildingPlacer.StatusText;
 
             statusLabel.gameObject.SetActive(!string.IsNullOrEmpty(text));
             statusLabel.text = text;

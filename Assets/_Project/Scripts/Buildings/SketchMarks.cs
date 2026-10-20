@@ -9,14 +9,10 @@ namespace CityBuilder.Buildings
     /// 2026-10-20). Under a building: each side of the plot is two wandering strokes of uneven
     /// weight that run on past the corners, the cells are faint dotted lines, a cell in the way is
     /// hatched with red ink the way old maps mark ground nobody may cross, and a soft shadow lies
-    /// under the hovering drawing. Under a drawn line of roads or fences: every cell sketched as a
-    /// small square of its own -- blue where a piece will go down, hatched red where it cannot,
-    /// outlined red where the money runs out.
+    /// under the hovering drawing.
     /// </summary>
     public static class SketchMarks
     {
-        public enum LineCell { Builds, Blocked, Unaffordable }
-
         private const float Height = 0.05f;
         private const float Step = 0.15f;           // metres between points along a stroke
         private const float Wander = 0.035f;        // how far a stroke strays from the true line
@@ -33,13 +29,11 @@ namespace CityBuilder.Buildings
         private static Material _blue, _blueLight, _red, _redLight, _dots, _hatch, _shadow;
 
         // Reused from call to call: while the pen draws the outline the mesh is rebuilt every frame
-        // for a fraction of a second, and a dragged road line is rebuilt as the finger moves; neither
-        // should leave garbage behind each time.
+        // for a fraction of a second, and that should not leave garbage behind each time.
         private static readonly List<Vector3> Vertices = new List<Vector3>();
         private static readonly List<Vector2> Uvs = new List<Vector2>();
         private static readonly List<int> Strong = new List<int>();
         private static readonly List<int> Light = new List<int>();
-        private static readonly List<int> StrongRed = new List<int>();
         private static readonly List<int> DotTris = new List<int>();
         private static readonly List<int> HatchTris = new List<int>();
         private static readonly List<int> ShadowTris = new List<int>();
@@ -107,32 +101,6 @@ namespace CityBuilder.Buildings
             Finish(mesh, renderer, valid);
         }
 
-        /// <summary>The marks under a dragged line of roads or fences: one small sketched square per piece.</summary>
-        public static void BuildLine(Mesh mesh, MeshRenderer renderer, float groundY, List<Vector2Int> cells, Vector2Int footprint, List<LineCell> states)
-        {
-            Begin(groundY);
-            var grid = GridManager.Instance;
-            var size = grid.CellSize;
-            for (var i = 0; i < cells.Count; i++)
-            {
-                var corner = grid.CellToWorld(cells[i]);
-                var min = new Vector2(corner.x + 0.08f, corner.z + 0.08f);
-                var max = new Vector2(corner.x + footprint.x * size - 0.08f, corner.z + footprint.y * size - 0.08f);
-                var into = states[i] == LineCell.Builds ? Strong : StrongRed;
-                for (var s = 0; s < 4; s++)
-                {
-                    var a = s == 0 ? min : s == 1 ? new Vector2(max.x, min.y) : s == 2 ? max : new Vector2(min.x, max.y);
-                    var b = s == 0 ? new Vector2(max.x, min.y) : s == 1 ? max : s == 2 ? new Vector2(min.x, max.y) : min;
-                    var along = (b - a).normalized;
-                    var seed = cells[i].x * 31 + cells[i].y * 17 + s * 5;
-                    var over = 0.08f + 0.08f * Ink.Hash(s, i, 71);
-                    Stroke(into, a - along * over * 0.5f, b + along * over, 0.05f, seed, 0.006f, 1f);
-                }
-                if (states[i] == LineCell.Blocked) Hatch(new Vector2(corner.x, corner.z), size, cells[i].x, cells[i].y);
-            }
-            Finish(mesh, renderer, true);
-        }
-
         // ------------------------------------------------------------------ pieces
 
         private static void Begin(float groundY)
@@ -142,7 +110,6 @@ namespace CityBuilder.Buildings
             Uvs.Clear();
             Strong.Clear();
             Light.Clear();
-            StrongRed.Clear();
             DotTris.Clear();
             HatchTris.Clear();
             ShadowTris.Clear();
@@ -229,7 +196,6 @@ namespace CityBuilder.Buildings
             Add(HatchTris, Mat(ref _hatch, HatchColour, PaintHatching()));
             Add(Light, valid ? Mat(ref _blueLight, InkBlueLight, null) : Mat(ref _redLight, InkRedLight, null));
             Add(Strong, valid ? Mat(ref _blue, InkBlue, null) : Mat(ref _red, InkRed, null));
-            Add(StrongRed, Mat(ref _red, InkRed, null));
             mesh.subMeshCount = Parts.Count;
             for (var s = 0; s < Parts.Count; s++) mesh.SetTriangles(Parts[s], s);
             mesh.RecalculateBounds();

@@ -53,6 +53,9 @@ namespace CityBuilder.Buildings
         // Asked per cell of the footprint every frame the ghost is up; made once, not per frame.
         private Func<Vector2Int, bool> _cellInTheWay;
 
+        /// <summary>Tests only: the origin cell the ghost stands on, if any.</summary>
+        public Vector2Int? GhostOriginForTests => _hasCurrentCell ? _currentCell : (Vector2Int?)null;
+
         /// <summary>Tests only: holds the ghost on this origin cell instead of following the aim point.</summary>
         public Vector2Int? PinnedOriginForTests;
         private bool _mandatoryBuildingPlaced;
@@ -64,22 +67,23 @@ namespace CityBuilder.Buildings
         private Vector2Int _currentCell;
         private bool _hasCurrentCell;
 
-        // ---- line drawing (roads and fences) ----
-        private bool _drawing;
-        private Vector2Int _lineStart;
-        private readonly List<Vector2Int> _lineCells = new List<Vector2Int>();
-        private GameObject _linePreviewRoot;
-        private Mesh _linePreviewMesh;
-        private MeshRenderer _linePreviewRenderer;
-        private readonly List<SketchMarks.LineCell> _lineStates = new List<SketchMarks.LineCell>();
+        // ---- roads and fences, one piece at a time (the user's call, 2026-10-20) ----
+        // After a piece goes down the next is offered right after it, carrying on the way the
+        // last two went. On a touch screen the camera glides one piece along so the aim point
+        // lands on it; with a mouse the offer holds until the mouse moves.
+        private bool _hasLastPiece;
+        private Vector2Int _lastPiece;
+        private Vector2Int _pieceStep;
+        private Vector2Int? _offeredOrigin;
+        private Vector2 _offeredAtMouse;
         private readonly StringBuilder _costText = new StringBuilder();
 
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
         public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
 
-        /// <summary>Roads and fences: placed by drawing a line rather than one tap at a time.</summary>
-        public bool IsDrawMode => _selectedBuilding != null && _selectedBuilding.keepSelectedAfterPlacement;
+        /// <summary>Roads and fences: placed one piece at a time like any building, but the next piece is offered straight after.</summary>
+        public bool IsChainMode => _selectedBuilding != null && _selectedBuilding.keepSelectedAfterPlacement;
 
         /// <summary>Whether the player is on a touchscreen, which decides between the aim-and-confirm flow and the mouse's hover-and-click one.</summary>
         public bool UsesTouchAiming => TouchInputRouter.Instance != null && TouchInputRouter.Instance.LastGestureWasTouch;
@@ -87,13 +91,10 @@ namespace CityBuilder.Buildings
         /// <summary>Where the ghost is being previewed, in screen pixels -- the HUD puts its crosshair here.</summary>
         public Vector2 AimScreenPosition => CurrentAimScreenPosition;
 
-        /// <summary>True while a line is actually being drawn, so the HUD can swap the drawing hint for the running total.</summary>
-        public bool IsDrawingLine => _drawing;
-
         /// <summary>Whether the confirm button should be live. Also what tints the ghost.</summary>
         public bool CanConfirm { get; private set; }
 
-        /// <summary>Why the confirm button is dark, in the player's language -- or the running total while a line is being drawn. Empty when there is nothing to say.</summary>
+        /// <summary>Why the confirm button is dark, in the player's language. Empty when there is nothing to say.</summary>
         public string StatusText { get; private set; } = string.Empty;
 
         /// <summary>The building the player has to put down before anything else (the Town Hall). Deliberately not in AvailableBuildings -- it never appears in the hotbar -- which makes this the only way to reach it from outside.</summary>
@@ -102,41 +103,10 @@ namespace CityBuilder.Buildings
 
         private void Start()
         {
-            SubscribeToRouter();
-
             if (IsPlacingMandatoryBuilding)
             {
                 SelectBuilding(mandatoryFirstBuilding);
             }
-        }
-
-        private void OnDisable()
-        {
-            UnsubscribeFromRouter();
-        }
-
-        private void SubscribeToRouter()
-        {
-            var router = TouchInputRouter.Instance;
-            if (router == null) return;
-
-            router.DragStarted -= HandleDragStarted;
-            router.DragMoved -= HandleDragMoved;
-            router.DragEnded -= HandleDragEnded;
-
-            router.DragStarted += HandleDragStarted;
-            router.DragMoved += HandleDragMoved;
-            router.DragEnded += HandleDragEnded;
-        }
-
-        private void UnsubscribeFromRouter()
-        {
-            var router = TouchInputRouter.Instance;
-            if (router == null) return;
-
-            router.DragStarted -= HandleDragStarted;
-            router.DragMoved -= HandleDragMoved;
-            router.DragEnded -= HandleDragEnded;
         }
 
         /// <summary>
@@ -156,9 +126,7 @@ namespace CityBuilder.Buildings
 
             if (_selectedBuilding == null) return;
 
-            // While drawing, the ghost tracks the finger's own cell rather than the aim point --
-            // the aim point is a placement idea, and a line has no single cell to aim at.
-            if (!_drawing) RefreshTargetCell();
+            RefreshTargetCell();
         }
 
         private void HandleKeyboard()
@@ -214,6 +182,11 @@ namespace CityBuilder.Buildings
                 _hasCurrentCell = true;
                 _currentCell = PinnedOriginForTests.Value;
             }
+            else if (OfferStillStands())
+            {
+                _hasCurrentCell = true;
+                _currentCell = _offeredOrigin.Value;
+            }
             else _hasCurrentCell = TryGetPlacementOrigin(CurrentAimScreenPosition, out _currentCell);
             if (_hasCurrentCell) UpdateGhost(_currentCell);
             else SetStatus(false, string.Empty);
@@ -222,9 +195,8 @@ namespace CityBuilder.Buildings
         // ---------------------------------------------------------------- gestures
 
         /// <summary>
-        /// A confirmed tap on the world while something is selected. On touch this AIMS (or, in
-        /// drawing mode, lays a single cell); on a mouse it places, which is the click the desktop
-        /// flow has always had.
+        /// A confirmed tap on the world while something is selected. On touch a tap on the ghost
+        /// confirms it; on a mouse it places, which is the click the desktop flow has always had.
         /// </summary>
         public void HandleWorldTap(Vector2 screenPosition)
         {
@@ -233,12 +205,6 @@ namespace CityBuilder.Buildings
             if (!UsesTouchAiming)
             {
                 if (TryGetPlacementOrigin(screenPosition, out var mouseCell)) TryPlace(mouseCell);
-                return;
-            }
-
-            if (IsDrawMode)
-            {
-                if (TryGetPlacementOrigin(screenPosition, out var drawCell)) TryPlace(drawCell);
                 return;
             }
 
@@ -263,146 +229,6 @@ namespace CityBuilder.Buildings
             TryPlace(_currentCell);
         }
 
-        private void HandleDragStarted(Vector2 screenPosition)
-        {
-            if (!IsDrawMode || !UsesTouchAiming) return;
-            if (!TryGetPlacementOrigin(screenPosition, out var cell)) return;
-
-            _drawing = true;
-            _lineStart = cell;
-            _lineCells.Clear();
-            _lineCells.Add(cell);
-            UpdateLinePreview();
-        }
-
-        /// <summary>Tests only: shows the line preview over these cells, as a drag along them would.</summary>
-        public void PreviewLineForTests(IEnumerable<Vector2Int> cells)
-        {
-            _lineCells.Clear();
-            _lineCells.AddRange(cells);
-            UpdateLinePreview();
-        }
-
-        private void HandleDragMoved(Vector2 screenPosition)
-        {
-            if (!_drawing) return;
-            if (!TryGetPlacementOrigin(screenPosition, out var cell)) return;
-
-            if (_selectedBuilding.isRoad) ExtendFreeformLine(cell);
-            else BuildStraightLine(cell);
-
-            UpdateLinePreview();
-        }
-
-        private void HandleDragEnded(bool completed)
-        {
-            if (!_drawing) return;
-
-            _drawing = false;
-
-            // A second finger means the player wants the camera, not this line. Throwing the whole
-            // line away is deliberate: committing a half-drawn road on the way into a pinch would
-            // spend resources the player never agreed to.
-            if (completed) CommitLine();
-
-            _lineCells.Clear();
-            HideLinePreview();
-            SetStatus(CanConfirm, string.Empty);
-        }
-
-        // ---------------------------------------------------------------- line geometry
-
-        /// <summary>
-        /// A road follows the finger. Cells between the last one and this one are filled in, since
-        /// a fast drag can skip several cells between frames and a road with holes in it is not
-        /// what the player drew.
-        /// </summary>
-        private void ExtendFreeformLine(Vector2Int cell)
-        {
-            if (_lineCells.Count > 0 && _lineCells[_lineCells.Count - 1] == cell) return;
-
-            var from = _lineCells.Count > 0 ? _lineCells[_lineCells.Count - 1] : cell;
-            AppendInterpolated(from, cell);
-        }
-
-        /// <summary>Bresenham-ish walk between two cells, appending everything strictly after `from`.</summary>
-        private void AppendInterpolated(Vector2Int from, Vector2Int to)
-        {
-            var delta = to - from;
-            var steps = Mathf.Max(Mathf.Abs(delta.x), Mathf.Abs(delta.y));
-            if (steps == 0) return;
-
-            for (var i = 1; i <= steps; i++)
-            {
-                var t = i / (float)steps;
-                var cell = new Vector2Int(
-                    Mathf.RoundToInt(Mathf.Lerp(from.x, to.x, t)),
-                    Mathf.RoundToInt(Mathf.Lerp(from.y, to.y, t)));
-
-                if (_lineCells.Contains(cell)) continue;
-                _lineCells.Add(cell);
-            }
-        }
-
-        /// <summary>
-        /// A fence runs straight from where the finger landed to one of three axes -- horizontal,
-        /// vertical, or the 45-degree diagonal -- whichever the drag is closest to. Rebuilt from
-        /// the anchor every frame, so the player can swing the line around before letting go.
-        /// </summary>
-        private void BuildStraightLine(Vector2Int cell)
-        {
-            var end = SnapStraightEnd(_lineStart, cell);
-
-            _lineCells.Clear();
-            _lineCells.Add(_lineStart);
-            AppendInterpolated(_lineStart, end);
-        }
-
-        /// <summary>
-        /// Where a fence line drawn from `start` toward `target` actually ends: snapped to the
-        /// nearest of three axes -- horizontal, vertical, or the 45-degree diagonal.
-        ///
-        /// The 2:1 rule is what stops the line flickering between axes while the finger travels:
-        /// an axis has to be at least twice as long as the other before it wins outright, and
-        /// anything in between is read as a diagonal rather than as a near-tie between the two.
-        ///
-        /// Pure and static so it is testable without a scene, a camera or a grid.
-        /// </summary>
-        public static Vector2Int SnapStraightEnd(Vector2Int start, Vector2Int target)
-        {
-            var delta = target - start;
-            var ax = Mathf.Abs(delta.x);
-            var az = Mathf.Abs(delta.y);
-
-            if (ax >= az * 2) return new Vector2Int(target.x, start.y);
-            if (az >= ax * 2) return new Vector2Int(start.x, target.y);
-
-            var length = Mathf.Min(ax, az);
-            return start + new Vector2Int(Math.Sign(delta.x) * length, Math.Sign(delta.y) * length);
-        }
-
-        /// <summary>
-        /// Lays the drawn line, in the order it was drawn. An invalid cell in the middle (occupied,
-        /// water, off the map) is SKIPPED rather than ending the line -- a road drawn past the
-        /// corner of a building should still come out the other side. Running out of resources
-        /// does end it: what gets built is the prefix the player could afford, which is what the
-        /// preview promised.
-        /// </summary>
-        private void CommitLine()
-        {
-            foreach (var cell in _lineCells)
-            {
-                var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
-                if (!CanPlaceSelectedBuilding(cell, footprint) || !HasRequiredBuilding()) continue;
-                if (ResourceManager.Instance != null && !ResourceManager.Instance.HasEnough(_selectedBuilding.cost)) break;
-
-                PlaceAt(cell);
-            }
-
-            // Fence shapes need no separate pass: FenceNetwork.Register already re-shapes the new
-            // cell AND its neighbours, so each segment fixes the one behind it as the line grows.
-        }
-
         // ---------------------------------------------------------------- selection
 
         public void SelectBuilding(BuildingData data)
@@ -421,9 +247,8 @@ namespace CityBuilder.Buildings
             // lifts would slide the aim point off the cell the player just lined up.
             if (cameraController != null) cameraController.InertiaEnabled = false;
 
-            // Drawing takes the one-finger drag for itself; everything else leaves it to the camera.
             var router = TouchInputRouter.Instance;
-            if (router != null) router.SingleDragOwner = IsDrawMode ? DragOwner.World : DragOwner.Camera;
+            if (router != null) router.SingleDragOwner = DragOwner.Camera;
 
             if (_selectedBuilding.prefab == null) return;
 
@@ -444,9 +269,8 @@ namespace CityBuilder.Buildings
         {
             _selectedBuilding = null;
             _hasCurrentCell = false;
-            _drawing = false;
-            _lineCells.Clear();
-            HideLinePreview();
+            _hasLastPiece = false;
+            _offeredOrigin = null;
             SetStatus(false, string.Empty);
 
             HarvestRadiusOverlay.HideIfShown();
@@ -544,10 +368,7 @@ namespace CityBuilder.Buildings
             var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             var center = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
 
-            // While drawing on a phone the ghost is in the way: the preview squares under the
-            // finger already say where the line goes, and a full building model on top of them
-            // hides it.
-            var ghostVisible = !(IsDrawMode && UsesTouchAiming);
+            const bool ghostVisible = true;
 
             if (_ghostInstance != null)
             {
@@ -702,16 +523,82 @@ namespace CityBuilder.Buildings
             var placedData = _selectedBuilding;
             if (!PlaceAt(cell)) return;
 
-            // Roads (and anything else marked keepSelectedAfterPlacement) stay selected so the
-            // player can lay several in a row without reopening the hotbar each time.
+            // Roads and fences stay in hand, and the next piece is offered right after this one.
             if (!placedData.keepSelectedAfterPlacement) ClearSelection();
-            else RefreshTargetCell();
+            else
+            {
+                OfferNextPiece(cell);
+                RefreshTargetCell();
+            }
+        }
+
+        /// <summary>
+        /// Puts the next road or fence piece right after the one just laid: on in the direction of
+        /// the last two, or -- for the first piece -- towards the right of the screen, the way a
+        /// line is read. A touch screen glides the camera one piece along so the aim point is on
+        /// it; a mouse holds the offer until it moves.
+        /// </summary>
+        private void OfferNextPiece(Vector2Int placed)
+        {
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
+            var delta = placed - _lastPiece;
+            if (_hasLastPiece && Mathf.Abs(delta.x) + Mathf.Abs(delta.y) > 0 && (delta.x == 0 || delta.y == 0)
+                && Mathf.Abs(delta.x) <= footprint.x && Mathf.Abs(delta.y) <= footprint.y)
+            {
+                _pieceStep = new Vector2Int(Math.Sign(delta.x) * footprint.x, Math.Sign(delta.y) * footprint.y);
+            }
+            else
+            {
+                _pieceStep = ScreenRightStep(footprint);
+            }
+            _hasLastPiece = true;
+            _lastPiece = placed;
+
+            var next = placed + _pieceStep;
+            _offeredOrigin = next;
+            _offeredAtMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+
+            if (UsesTouchAiming && cameraController != null)
+            {
+                var grid = GridManager.Instance;
+                var shift = grid.CellToWorld(next) - grid.CellToWorld(placed);
+                cameraController.FocusOn(cameraController.transform.position + shift);
+            }
+        }
+
+        /// <summary>The grid step that runs most nearly to the right across the screen.</summary>
+        private Vector2Int ScreenRightStep(Vector2Int footprint)
+        {
+            var right = targetCamera != null ? targetCamera.transform.right : Vector3.right;
+            return Mathf.Abs(right.x) >= Mathf.Abs(right.z)
+                ? new Vector2Int(right.x >= 0f ? footprint.x : -footprint.x, 0)
+                : new Vector2Int(0, right.z >= 0f ? footprint.y : -footprint.y);
+        }
+
+        /// <summary>
+        /// Whether the next piece is still where it was offered. On touch: while the camera glides
+        /// there, and after that for as long as the aim point rests on it -- a pan of the player's
+        /// own takes the ghost back to the aim point. With a mouse: until the mouse moves.
+        /// </summary>
+        private bool OfferStillStands()
+        {
+            if (!_offeredOrigin.HasValue) return false;
+            if (UsesTouchAiming)
+            {
+                if (cameraController != null && cameraController.IsFocusing) return true;
+                if (TryGetPlacementOrigin(CurrentAimScreenPosition, out var aim) && aim == _offeredOrigin.Value) return true;
+            }
+            else if (Mouse.current == null || (Mouse.current.position.ReadValue() - _offeredAtMouse).sqrMagnitude < 16f)
+            {
+                return true;
+            }
+            _offeredOrigin = null;
+            return false;
         }
 
         /// <summary>
         /// Spends and builds, with no opinion about what happens to the selection afterwards --
-        /// that difference is what lets a drawn line of thirty road tiles reuse the exact same
-        /// path as a single tap.
+        /// roads and fences stay in hand afterwards, everything else is put down.
         /// </summary>
         private bool PlaceAt(Vector2Int cell)
         {
@@ -760,8 +647,8 @@ namespace CityBuilder.Buildings
                 FogOfWarManager.Instance?.Activate();
             }
 
-            // A puff of dust as it lands -- not for each tile of a drawn road or fence line.
-            if (!placedData.isRoad && !IsDrawMode)
+            // A puff of dust as it lands -- not for a road, which is barely more than paint on the ground.
+            if (!placedData.isRoad)
             {
                 var size = GridManager.Instance.CellSize;
                 DustPuff.Spawn(center, new Vector2(footprint.x * size, footprint.y * size));
@@ -769,83 +656,6 @@ namespace CityBuilder.Buildings
 
             OnBuildingPlaced?.Invoke(placedData);
             return true;
-        }
-
-        // ---------------------------------------------------------------- line preview
-
-        /// <summary>
-        /// The line sketched in ink on the ground, one small square per piece: blue where it will
-        /// build, hatched red where the ground refuses it, outlined red past the point the money
-        /// runs out -- marked before the finger lifts rather than silently skipped afterwards.
-        /// </summary>
-        private void UpdateLinePreview()
-        {
-            EnsureLinePreviewRoot();
-
-            var affordable = AffordableCellCount();
-            var valid = 0;
-            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
-
-            _lineStates.Clear();
-            for (var i = 0; i < _lineCells.Count; i++)
-            {
-                var buildable = CanPlaceSelectedBuilding(_lineCells[i], footprint) && HasRequiredBuilding();
-                if (buildable) valid++;
-                _lineStates.Add(!buildable ? SketchMarks.LineCell.Blocked
-                    : valid <= affordable ? SketchMarks.LineCell.Builds : SketchMarks.LineCell.Unaffordable);
-            }
-            _linePreviewRoot.SetActive(_lineCells.Count > 0);
-            SketchMarks.BuildLine(_linePreviewMesh, _linePreviewRenderer, GridManager.Instance.GroundHeight, _lineCells, footprint, _lineStates);
-
-            var willBuild = Mathf.Min(valid, affordable);
-            SetStatus(willBuild > 0, willBuild > 0
-                ? Localization.Format("#draw_line_summary", _selectedBuilding.LocalizedName, willBuild, TotalCostText(willBuild))
-                : Localization.Format("#place_blocked_cost", MissingResourcesText()));
-        }
-
-        /// <summary>How many copies the player can actually pay for, which is what decides where the green stops.</summary>
-        private int AffordableCellCount()
-        {
-            var manager = ResourceManager.Instance;
-            if (manager == null) return _lineCells.Count;
-
-            var affordable = int.MaxValue;
-            foreach (var amount in _selectedBuilding.cost)
-            {
-                if (amount.amount <= 0) continue;
-                affordable = Mathf.Min(affordable, manager.GetAmount(amount.type) / amount.amount);
-            }
-            return affordable == int.MaxValue ? _lineCells.Count : affordable;
-        }
-
-        private string TotalCostText(int count)
-        {
-            _costText.Clear();
-            foreach (var amount in _selectedBuilding.cost)
-            {
-                if (amount.amount <= 0) continue;
-                if (_costText.Length > 0) _costText.Append(", ");
-                _costText.Append(ResourceNames.Of(amount.type)).Append(' ').Append(amount.amount * count);
-            }
-            return _costText.ToString();
-        }
-
-        private void EnsureLinePreviewRoot()
-        {
-            if (_linePreviewRoot != null) return;
-
-            _linePreviewRoot = new GameObject("LinePreview");
-            _linePreviewMesh = new Mesh { name = "LinePreview" };
-            _linePreviewMesh.MarkDynamic();
-            _linePreviewRoot.AddComponent<MeshFilter>().sharedMesh = _linePreviewMesh;
-            _linePreviewRenderer = _linePreviewRoot.AddComponent<MeshRenderer>();
-            _linePreviewRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            _linePreviewRenderer.receiveShadows = false;
-        }
-
-        private void HideLinePreview()
-        {
-            if (_linePreviewRoot != null) _linePreviewRoot.SetActive(false);
         }
     }
 }
