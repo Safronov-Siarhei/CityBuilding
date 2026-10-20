@@ -402,6 +402,12 @@ namespace CityBuilder.Core
         /// <summary>How long after the Town Hall goes up the settlement is left alone to find its feet -- migration frozen, contentment still reported honestly. Without it a first settlement is abandoned before the player has anything to be content about.</summary>
         [SerializeField] private float settlingInSeconds = 420f;
 
+        /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
+        [SerializeField] private int startWood = 80;
+        [SerializeField] private int startStone = 30;
+        [SerializeField] private int startFood = 50;
+        [SerializeField] private int startGold = 100;
+
         [Header("Research (economy.csv)")]
         // How the Laboratory's scientists shorten a research, what a cancelled one pays back, and
         // the floor a fully staffed lab can never dip below. The first `research_free_workers`
@@ -552,6 +558,10 @@ namespace CityBuilder.Core
         public float MigrationLeaveIntervalAtZeroSeconds => migrationLeaveIntervalAtZeroSeconds;
         public int MigrationMinPopulation => migrationMinPopulation;
         public float SettlingInSeconds => settlingInSeconds;
+        public int StartWood => startWood;
+        public int StartStone => startStone;
+        public int StartFood => startFood;
+        public int StartGold => startGold;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -737,6 +747,10 @@ namespace CityBuilder.Core
             migrationLeaveIntervalAtZeroSeconds = Read(economy, "migration_leave_interval_at_zero_sec", migrationLeaveIntervalAtZeroSeconds);
             migrationMinPopulation = (int)Read(economy, "migration_min_population", migrationMinPopulation);
             settlingInSeconds = Read(economy, "settling_in_seconds", settlingInSeconds);
+            startWood = (int)Read(economy, "start_wood", startWood);
+            startStone = (int)Read(economy, "start_stone", startStone);
+            startFood = (int)Read(economy, "start_food", startFood);
+            startGold = (int)Read(economy, "start_gold", startGold);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

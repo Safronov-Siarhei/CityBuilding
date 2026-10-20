@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Resources;
@@ -124,6 +124,12 @@ namespace CityBuilder.Citizens
             var exposed = citizens.HealthyPopulation;
             LastFellIll = 0;
             if (exposed <= 0) return;
+
+            // Nobody falls ill while the town is settling in (the user, 2026-10-20: an easy start).
+            // Without it the Town Hall -- housing with no well yet -- put a settler in bed on day
+            // one and buried him on day four, before the player had placed a second building.
+            var migration = MigrationManager.Instance;
+            if (migration != null && migration.SettlingInRemaining > 0f) return;
 
             var fell = Mathf.RoundToInt(exposed * CurrentRisk());
             if (fell <= 0) return;

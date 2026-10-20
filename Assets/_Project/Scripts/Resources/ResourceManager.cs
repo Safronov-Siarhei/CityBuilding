@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
@@ -22,14 +22,6 @@ namespace CityBuilder.Resources
         /// never needs a scan over the map.
         /// </summary>
         private readonly Dictionary<ResourceStorageGroup, int> _builtCapacity = new Dictionary<ResourceStorageGroup, int>();
-
-        [SerializeField] private List<ResourceAmount> startingResources = new List<ResourceAmount>
-        {
-            new ResourceAmount { type = ResourceType.Wood, amount = 50 },
-            new ResourceAmount { type = ResourceType.Stone, amount = 20 },
-            new ResourceAmount { type = ResourceType.Food, amount = 30 },
-            new ResourceAmount { type = ResourceType.Gold, amount = 100 },
-        };
 
         [Header("Debug")]
         [SerializeField] private Key infiniteResourcesToggleKey = Key.F9;
@@ -60,10 +52,13 @@ namespace CityBuilder.Resources
             }
             Instance = this;
 
-            foreach (var starting in startingResources)
-            {
-                _resources[starting.type] = starting.amount;
-            }
+            // What a new game opens with lives in the sheet (economy: start_*), so an easier or a
+            // harder opening is a cell, not a scene edit. A loaded save overwrites it right after.
+            var config = BalanceConfig.Instance;
+            _resources[ResourceType.Wood] = config.StartWood;
+            _resources[ResourceType.Stone] = config.StartStone;
+            _resources[ResourceType.Food] = config.StartFood;
+            _resources[ResourceType.Gold] = config.StartGold;
         }
 
         private void Update()

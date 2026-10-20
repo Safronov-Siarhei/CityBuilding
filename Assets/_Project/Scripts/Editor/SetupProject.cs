@@ -4673,10 +4673,24 @@ namespace CityBuilder.EditorTools
 
         private static void DeleteIfExists(string path)
         {
-            if (AssetDatabase.LoadAssetAtPath<Object>(path) != null)
-            {
-                AssetDatabase.DeleteAsset(path);
-            }
+            if (AssetDatabase.LoadAssetAtPath<Object>(path) == null) return;
+
+            AssetDatabase.DeleteAsset(path);
+            WaitUntilGone(path);
+            WaitUntilGone(path + ".meta");
+        }
+
+        /// <summary>
+        /// Windows only really removes a deleted file once every handle on it closes. While an
+        /// antivirus or the search indexer is still reading a file that was just written, a delete
+        /// leaves it "pending", and writing a new file of that name fails -- Unity reports "Cannot
+        /// open file ... for write" / "Failed to delete" and the whole run aborts on whichever
+        /// asset lost the race (2026-10-20: FisherHut, Fence, DecGarden, run after run). So wait
+        /// for the name to come free: two seconds at most, and only when the race happens.
+        /// </summary>
+        private static void WaitUntilGone(string path)
+        {
+            for (var i = 0; i < 200 && File.Exists(path); i++) System.Threading.Thread.Sleep(10);
         }
 
         private static void CleanupTemplateAssets()
