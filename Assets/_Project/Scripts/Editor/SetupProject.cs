@@ -3552,15 +3552,18 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// A designed map's orc spots from <prefix>-Spots.csv (kind,x,y in Blender's axes: Blender
-        /// (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's; other kinds
-        /// (the ruin) are for later. No file: the map has no fixed spots.
+        /// A designed map's spots from <prefix>-Spots.csv (kind,x,y[,level] in Blender's axes:
+        /// Blender (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's and
+        /// the level it grows to, "zone" a corner of the Town Hall's start zone; other kinds (the
+        /// ruin) are for later. No file: the map has no fixed spots.
         /// </summary>
         private static void ReadOrcSpots(MeshMapDefinition map, string csvPath)
         {
             if (!File.Exists(csvPath)) return;
             Vector2? main = null;
             var camps = new List<Vector2>();
+            var levels = new List<int>();
+            var zone = new List<Vector2>();
             foreach (var line in File.ReadAllLines(csvPath))
             {
                 var cells = line.Split(',');
@@ -3568,9 +3571,14 @@ namespace CityBuilder.EditorTools
                 var spot = new Vector2(float.Parse(cells[1], System.Globalization.CultureInfo.InvariantCulture),
                     float.Parse(cells[2], System.Globalization.CultureInfo.InvariantCulture));
                 if (cells[0] == "main") main = spot;
-                else if (cells[0] == "camp") camps.Add(spot);
+                else if (cells[0] == "zone") zone.Add(spot);
+                else if (cells[0] == "camp")
+                {
+                    camps.Add(spot);
+                    levels.Add(cells.Length > 3 ? int.Parse(cells[3]) : OrcBaseLayout.MaxLevel);
+                }
             }
-            map.EditorInitializeSpots(main, camps.ToArray());
+            map.EditorInitializeSpots(main, camps.ToArray(), levels.ToArray(), zone.ToArray());
         }
 
         /// <summary>

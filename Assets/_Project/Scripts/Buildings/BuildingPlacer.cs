@@ -606,6 +606,7 @@ namespace CityBuilder.Buildings
 
             if (!canPlace)
             {
+                if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 var mapApplier = MeshMapApplier.Instance;
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
@@ -616,6 +617,8 @@ namespace CityBuilder.Buildings
 
             return string.Empty;
         }
+
+        private static bool IsTownHall(BuildingData data) => data != null && data.buildingName == BuildingIds.TownHall;
 
         private static bool FootprintTouchesWater(MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
         {
@@ -659,6 +662,7 @@ namespace CityBuilder.Buildings
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint)
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !GridManager.Instance.IsAreaFree(cell, footprint)) return false;
+            if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;

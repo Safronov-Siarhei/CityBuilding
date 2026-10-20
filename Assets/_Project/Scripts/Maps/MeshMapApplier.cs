@@ -54,9 +54,11 @@ namespace CityBuilder.Maps
         // 0.5 m step -- more than agentClimb -- and a built bridge joined nothing (found on Map 4,
         // 2026-10-20). At -0.2 it is within reach of a bank anywhere from -0.45 to 0.
         private const float WalkableSurfaceDrop = 0.2f;
-        // A little longer than the tile, so the deck overlaps the bank instead of ending on the
-        // exact line where the shore mesh stops.
-        private const float WalkableSurfaceOverlap = 1.15f;
+        // Longer than the tile -- 0.3 m over each edge -- so the deck reaches the bank wherever
+        // the shore mesh happens to stop inside the next cell; at 0.075 m a bridge across a bend
+        // still met no ground (Map 4, 2026-10-20). Where it runs under higher ground it is simply
+        // buried: the ground above it is what gets walked.
+        private const float WalkableSurfaceOverlap = 1.6f;
         // Bridges are keepSelectedAfterPlacement -- players lay a run of tiles in quick
         // succession, and rebuilding the whole map's NavMesh per tile would hitch on every click.
         // Coalesces a burst of placements into a single rebuild shortly after the last one.
@@ -122,6 +124,11 @@ namespace CityBuilder.Maps
             CurrentMapId = mapId;
             CurrentMap = map;
             Apply(map);
+            // A designed map shows where the Town Hall may go until it stands (see StartZone).
+            if (map.TownHallZone.Length >= 3 && !CityBuilder.Buildings.BuildingInstance.HasAny(CityBuilder.Buildings.BuildingIds.TownHall))
+            {
+                StartZoneOverlay.Create(transform, map.TownHallZone);
+            }
         }
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);

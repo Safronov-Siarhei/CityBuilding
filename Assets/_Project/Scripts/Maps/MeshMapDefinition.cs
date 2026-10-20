@@ -36,6 +36,10 @@ namespace CityBuilder.Maps
         [SerializeField] private bool hasMainBaseSpot;
         [SerializeField] private Vector2 mainBaseSpot;
         [SerializeField] private Vector2[] campSpots = new Vector2[0];
+        // The level each camp may grow to, by index into campSpots (its ground was made for it).
+        [SerializeField] private int[] campLevels = new int[0];
+        // Where the Town Hall may stand (world x, z corners, in order); empty = anywhere.
+        [SerializeField] private Vector2[] townHallZone = new Vector2[0];
 
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
         public GameObject GroundPrefab => groundPrefab;
@@ -55,6 +59,8 @@ namespace CityBuilder.Maps
         public bool HasMainBaseSpot => hasMainBaseSpot;
         public Vector2 MainBaseSpot => mainBaseSpot;
         public Vector2[] CampSpots => campSpots ?? new Vector2[0];
+        public int[] CampLevels => campLevels ?? new int[0];
+        public Vector2[] TownHallZone => townHallZone ?? new Vector2[0];
 
 #if UNITY_EDITOR
         public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, GameObject[] rocks, Material waterMat)
@@ -79,11 +85,13 @@ namespace CityBuilder.Maps
             keepWaterRotation = keepWaterRot;
         }
 
-        public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps)
+        public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps, int[] levels, Vector2[] zone)
         {
             hasMainBaseSpot = mainBase.HasValue;
             mainBaseSpot = mainBase ?? Vector2.zero;
             campSpots = camps ?? new Vector2[0];
+            campLevels = levels ?? new int[0];
+            townHallZone = zone ?? new Vector2[0];
         }
 #endif
     }

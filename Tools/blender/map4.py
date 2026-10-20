@@ -81,40 +81,56 @@ def smoothstep(e0, e1, x):
 
 ISLAND = (88.0, 90.0)                          # the coast's half extents
 # the rivers' courses; each is made to wind (see _meander) before anything reads it
-WEST_COURSE = [(-41, 53), (-46, 38), (-48, 26), (-54, 12), (-58, 2), (-60, -12), (-65, -26),
-               (-69, -40), (-73, -52), (-79, -68), (-88, -92)]
-EAST_COURSE = [(41, 53), (45, 38), (50, 22), (55, 10), (58, 0), (60, -14), (65, -30), (69, -44),
-               (73, -56), (79, -70), (89, -93)]
+# kept well inside the island, so the strips across them are wide enough for a full camp
+WEST_COURSE = [(-41, 53), (-45, 38), (-46, 26), (-50, 12), (-52, 2), (-50, -12), (-47, -26),
+               (-46, -40), (-50, -54), (-60, -70), (-80, -93)]
+EAST_COURSE = [(41, 53), (44, 38), (46, 22), (50, 10), (52, 0), (50, -14), (47, -28), (46, -42),
+               (50, -56), (62, -72), (82, -94)]
 PONDS = [(-41.0, 55.0, 6.5, 4.5), (41.0, 55.0, 6.5, 4.5)]   # the rivers' sources
-LAKE = (-57.0, 0.0, 10.0, 7.0)                 # where the west river widens
+LAKE = (-56.0, 2.0, 9.0, 6.5)                  # where the west river widens
 # crossings, as (river, how far down it): the fords and the narrow reaches for a bridge
 FORDS_AT = [(0, 0.22), (0, 0.72), (1, 0.31)]
 FORD_R = 5.0                                   # how far a ford's gravel bar reaches from its centre
 BRIDGES_AT = [(0, 0.52), (1, 0.57)]
-BEACHES = [(0.0, -90.0), (-90.0, -14.0), (90.0, -26.0)]   # where the Vikings land
+BEACHES = [(0.0, -90.0), (-90.0, -4.0), (90.0, -8.0)]     # where the Vikings land, clear of the camps
 CIRQUE = (0.0, 60.0, 23.0, 18.0)               # the main base's hollow: centre, half extents
 RUIN = (55.0, 40.0)                            # a clearing kept for the dungeon's ruin (later)
 # Where the orcs stand (the game reads these instead of searching round the Town Hall): the main
 # base's centre in the cirque, its gate to the south, and the five camps -- one before the
 # cirque, two across each river.
 MAIN_BASE = (0.0, 67.0)
-CAMPS = [(0.0, 30.0), (-73.0, 30.0), (-76.0, -30.0), (74.0, 28.0), (77.0, -38.0)]
+# (x, y, the level the camp may grow to): every one gets flat ground for that level's square
+CAMPS = [(-66.0, 28.0, 3), (-70.0, -38.0, 3), (66.0, 26.0, 3), (68.0, -40.0, 3)]
+CAMP_HALF = {1: 6, 2: 7, 3: 11}                # a camp's square, half its side (OrcBaseLayout)
+PAD_MARGIN = 1.0                               # flat ground kept round the square
+# Where the Town Hall may go (the user's rule, 2026-10-20): the south of the valley, well away
+# from every camp; the game also keeps it a set distance from them. Corners, in order.
+START_ZONE = [(-22, -45), (-14, -55), (14, -55), (22, -45), (22, -12), (14, -5), (-14, -5), (-22, -12)]
+
+
+def camp_pad(x, y):
+    """1 on a camp's square and its margin, fading to 0 a few metres out: no relief, no wood."""
+    best = 0.0
+    for cx, cy, level in CAMPS:
+        d = max(abs(x - cx), abs(y - cy)) - (CAMP_HALF[level] + PAD_MARGIN)
+        best = max(best, smoothstep(2.0, 0.0, d))
+    return best
 HILLS = [(-30, 34, 6, 2.2), (28, 33, 5, 2.0), (-22, -62, 7, 2.4), (26, -58, 6, 2.0)]
 FORESTS = [  # (cx, cy, rx, ry): where TreesArea patches grow, shaped by noise
     (-44, -58, 18, 12),     # south-west, by the west river's mouth
     (42, -58, 17, 12),      # south-east
     (-32, 40, 11, 6),       # the foothills either side of the way to the cirque
     (32, 40, 11, 6),
-    (-74, 28, 9, 17),       # across the west river: wood worth the crossing
-    (76, 26, 9, 17),        # across the east river
+    (-72, -64, 7, 6),       # across the west river, south of its camp: wood worth the crossing
+    (72, -64, 7, 6),        # across the east river
     (-38, 18, 7, 6),        # by the west ford
     (40, -24, 6, 8),        # by the east bridge reach
 ]
 GROVES = [(-20, -34, 5.0), (22, -38, 5.0), (-34, -10, 4.5), (35, 8, 4.5), (6, -64, 5.0),
-          (-14, 12, 4.0), (-82, -36, 4.5), (84, -44, 4.5), (-48, -32, 4.5), (50, -40, 4.0),
-          (14, 18, 4.0), (-4, -46, 4.0), (-86, 4, 4.0), (86, -2, 4.0)]
+          (-14, 12, 4.0), (-40, -32, 4.5), (40, -40, 4.0),
+          (14, 18, 4.0), (-4, -46, 4.0)]
 FORESTS = FORESTS + [(x, y, r, r) for x, y, r in GROVES]
-OUTCROPS = [(-26, 15, 8), (25, -4, 8), (-4, -74, 7), (-80, -6, 6), (80, -12, 6)]
+OUTCROPS = [(-26, 15, 8), (25, -4, 8), (-4, -74, 7), (-68, -14, 5), (68, -16, 5)]
 FLOWER_SEED, DRY_SEED = 401, 433
 
 
@@ -265,8 +281,11 @@ def cliffs(x, y):
 
 
 def relief_at(x, y):
-    """Height above the plain: the mountains, the coastal rim, a few low hills."""
-    h = max(mountains(x, y), cliffs(x, y))
+    """Height above the plain: the mountains, the coastal rim, a few low hills -- none on a camp's ground."""
+    pad = camp_pad(x, y)
+    if pad >= 1.0:
+        return 0.0
+    h = max(mountains(x, y), cliffs(x, y) * (1.0 - pad))
     for hx, hy, r, height in HILLS:
         ang = math.atan2(y - hy, x - hx)
         wob = 0.75 + 0.5 * fbm(math.cos(ang) * 1.5 + hx * 0.1, math.sin(ang) * 1.5 + hy * 0.1, 89)
@@ -296,7 +315,7 @@ def forest_field(x, y):
         e = math.sqrt(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2)
         k = 0.82 + 0.4 * (fbm(x / 11, y / 11, 97) - 0.5)
         best = min(best, (e - k) * min(rx, ry))
-    if math.hypot(x - RUIN[0], y - RUIN[1]) < 8:
+    if math.hypot(x - RUIN[0], y - RUIN[1]) < 8 or camp_pad(x, y) > 0:
         best = max(best, 1.0)
     return best
 
@@ -760,7 +779,9 @@ def main():
     rocks_cells = {(i, j) for i in range(N) for j in range(N)
                    if flat[i][j] and (i, j) not in forest_cells and cell_sd[i, j] > BEACH + 1
                    and outcrop(i - HALF + 0.5, j - HALF + 0.5)}
-    shore_cells = {(i, j) for i in range(N) for j in range(N) if -3.0 < cell_sd[i, j] < 0}
+    # the water a bridge or a dock may stand on -- to the very edge of the bank, where a cell
+    # whose centre is just dry can still read as water in the game
+    shore_cells = {(i, j) for i in range(N) for j in range(N) if -3.0 < cell_sd[i, j] < 0.6}
     # where nothing may be built: any cell the relief touches (a corner above the plain)
     no_build = {(i, j) for i in range(N) for j in range(N)
                 if cell_sd[i, j] > 0 and any(verts[c][2] > 0.02 for c in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)))}
@@ -812,8 +833,10 @@ def main():
     with open(os.path.splitext(OUT)[0] + "-spots.csv", "w", encoding="utf-8") as f:
         f.write("kind,x,y\n")
         f.write(f"main,{MAIN_BASE[0]:.1f},{MAIN_BASE[1]:.1f}\n")
-        for x, y in CAMPS:
-            f.write(f"camp,{x:.1f},{y:.1f}\n")
+        for x, y, level in CAMPS:
+            f.write(f"camp,{x:.1f},{y:.1f},{level}\n")
+        for x, y in START_ZONE:
+            f.write(f"zone,{x:.1f},{y:.1f}\n")
         f.write(f"ruin,{RUIN[0]:.1f},{RUIN[1]:.1f}\n")
 
     if PREVIEW:

@@ -82,6 +82,8 @@ namespace CityBuilder.UI
 
         private void Refresh()
         {
+            // still subscribed while the scene unloads round it
+            if (this == null) return;
             if (ResourceManager.Instance == null || resourceOrder == null || amountTexts == null) return;
 
             // The row stretches across the screen, so its width is the screen's, not a constant.

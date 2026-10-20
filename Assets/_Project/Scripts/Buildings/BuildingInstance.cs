@@ -176,6 +176,10 @@ namespace CityBuilder.Buildings
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed -= HandleDayPassed;
             if (Data != null)
             {
+                // First, before anything that reaches into other objects: when a scene unloads
+                // those may already be gone, and an exception further down used to leave this
+                // building counted -- the next game then believed its Town Hall already stood.
+                ChangeCount(Data.buildingName, -1);
                 if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
@@ -185,7 +189,6 @@ namespace CityBuilder.Buildings
                     // the whole point of a fence an enemy can break through.
                     foreach (var cell in OccupiedCells()) FenceNetwork.Instance.Unregister(cell);
                 }
-                ChangeCount(Data.buildingName, -1);
             }
         }
 

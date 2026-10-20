@@ -27,9 +27,11 @@ namespace CityBuilder.Tests.PlayMode
         private const string MapId = "Map4";
 
         private static readonly Vector3 TownMeadow = new Vector3(0f, 0f, -22f);
-        private static readonly Vector3 Lake = new Vector3(-57f, 0f, 0f);
-        private static readonly Vector3 WestBridgeReach = new Vector3(-63f, 0f, -22.3f);
-        private static readonly Vector3 NorthFord = new Vector3(-49.7f, 0f, 19.6f);
+        private static readonly Vector3 Lake = new Vector3(-57f, 0f, 2f);
+        private static readonly Vector3 WestBridgeReach = new Vector3(-46.4f, 0f, -27.6f);
+        private static readonly Vector3 NorthFord = new Vector3(-46.8f, 0f, 17.6f);
+        private static readonly Vector2[] VikingBeaches = { new Vector2(0f, -90f), new Vector2(-90f, -4f), new Vector2(90f, -8f) };
+        private const int CampCount = 4;
         private static readonly Vector3 WestMountains = new Vector3(-60f, 0f, 76f);
         private static readonly Vector3 EastMountains = new Vector3(60f, 0f, 76f);
         private static readonly Vector3 OpenSea = new Vector3(0f, 0f, -98f);
@@ -139,15 +141,57 @@ namespace CityBuilder.Tests.PlayMode
             var mainCamp = OrcCamp.Of(main);
             Assert.AreEqual(mainCamp.Layout.Pieces.Count, mainCamp.Buildings.Count, "The main base does not fit the cirque whole.");
 
-            var spots = MeshMapApplier.Instance.CurrentMap.CampSpots;
-            var camps = OrcPortal.All.Where(p => !p.IsMain).ToList();
-            Assert.AreEqual(spots.Length, camps.Count, "Not every camp spot opened a camp.");
-            foreach (var spot in spots)
+            var map = MeshMapApplier.Instance.CurrentMap;
+            Assert.AreEqual(CampCount, map.CampSpots.Length, "The Two Rivers Valley has four camps (the user's call, 2026-10-20).");
+            var camps = OrcCamp.All.Where(c => !c.IsMain).ToList();
+            Assert.AreEqual(CampCount, camps.Count, "Not every camp spot opened a camp.");
+            for (var i = 0; i < map.CampSpots.Length; i++)
             {
-                var at = new Vector3(spot.x, 0f, spot.y);
-                var nearest = camps.Min(p => Vector3.Distance(Flat(p.transform.position), at));
-                Assert.Less(nearest, 12f, $"No camp opened at the map's spot {spot}.");
+                var at = new Vector3(map.CampSpots[i].x, 0f, map.CampSpots[i].y);
+                var camp = camps.OrderBy(c => Vector3.Distance(Flat(c.LocalToWorld(Vector2.zero)), at)).First();
+                var off = Vector3.Distance(Flat(camp.LocalToWorld(Vector2.zero)), at);
+                Assert.Less(off, 3f, $"The camp for the spot {map.CampSpots[i]} stands {off:0.0} m off it -- its ground was not kept for it.");
+                Assert.AreEqual(map.CampLevels[i], camp.MaxLevel, $"The camp at {map.CampSpots[i]} cannot grow to level {map.CampLevels[i]} -- something stands on its square.");
+                foreach (var beach in VikingBeaches)
+                {
+                    Assert.Greater(Vector2.Distance(map.CampSpots[i], beach), 25f, $"The camp at {map.CampSpots[i]} sits on the Vikings' beach at {beach}.");
+                }
             }
+        }
+
+        [Test]
+        public void TheTownHall_GoesInTheStartZone_FarFromTheOrcs()
+        {
+            var map = MeshMapApplier.Instance.CurrentMap;
+            Assert.GreaterOrEqual(map.TownHallZone.Length, 3, "The map has no start zone.");
+            var grid = GridManager.Instance;
+            var size = PlaytestWorld.Building("Castle").footprintSize;
+            Vector2Int CellAt(Vector3 p) => grid.WorldToCell(p) - size / 2;
+
+            Assert.IsTrue(StartZone.Allows(CellAt(TownMeadow), size), "The Town Hall may not go on the town's meadow.");
+            Assert.IsFalse(StartZone.Allows(CellAt(new Vector3(0f, 0f, 30f)), size), "The Town Hall may go outside the start zone, below the cirque.");
+            var minDistance = CityBuilder.Core.BalanceConfig.Instance.TownHallMinDistanceToOrcs;
+            foreach (var corner in map.TownHallZone)
+            {
+                foreach (var camp in map.CampSpots.Append(map.MainBaseSpot))
+                {
+                    Assert.GreaterOrEqual(Vector2.Distance(corner, camp), minDistance - 2f,
+                        $"The start zone's corner {corner} reaches within {minDistance} m of the orcs at {camp}.");
+                }
+            }
+            // the distance rule holds on its own, inside a zone or not
+            var nearCamp = new Vector3(map.CampSpots[0].x + 20f, 0f, map.CampSpots[0].y);
+            Assert.IsFalse(StartZone.Allows(CellAt(nearCamp), size), "The Town Hall may go 20 m from a camp.");
+        }
+
+        [UnityTest]
+        public IEnumerator TheStartZone_IsShown_UntilTheTownHallStands()
+        {
+            Assert.IsNotNull(GameObject.Find("StartZone"), "The start zone is not drawn before the Town Hall is placed.");
+            var townHall = PlaytestWorld.Building("Castle");
+            PlaytestWorld.Place(townHall, GridManager.Instance.WorldToCell(TownMeadow) - townHall.footprintSize / 2);
+            yield return new WaitForSeconds(1f);
+            Assert.IsNull(GameObject.Find("StartZone"), "The start zone is still drawn with the Town Hall standing.");
         }
 
         [UnityTest]
@@ -159,6 +203,7 @@ namespace CityBuilder.Tests.PlayMode
             for (var frame = 0; frame < 240 && !OrcRaidManager.Instance.PortalsPlaced; frame++) yield return null;
             yield return new WaitForSeconds(0.5f);
             yield return PlaytestCapture.Shoot("map4-overview", new Vector3(0f, 0f, 4f), 200f, 55f, 0f);
+            yield return PlaytestCapture.Shoot("map4-east-camp", new Vector3(66f, 0f, 26f), 40f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("map4-town", TownMeadow, 32f, 50f, 0f, 60f);
             yield return PlaytestCapture.Shoot("map4-cirque", new Vector3(0f, 0f, 56f), 60f, 55f, 0f, 60f);
             yield return PlaytestCapture.Shoot("map4-ford", NorthFord, 26f, 50f, 0f, 60f);

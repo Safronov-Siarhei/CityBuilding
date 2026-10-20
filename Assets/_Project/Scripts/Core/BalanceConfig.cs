@@ -300,6 +300,8 @@ namespace CityBuilder.Core
         [SerializeField] private float prisonerWalkSpeed = 1.2f;
         // The chief's treasury on the main base: its health and what breaking it pays.
         [SerializeField] private int orcMainTreasuryHealth = 500;
+        // How near a designed map's orc camps and main base the Town Hall may stand.
+        [SerializeField] private float townHallMinDistanceToOrcs = 45f;
         [SerializeField] private int orcTreasuryLootCoins = 400;
         [SerializeField] private int orcTreasuryLootIronBars = 30;
         [SerializeField] private int orcTreasuryLootCopperBars = 30;
@@ -502,6 +504,7 @@ namespace CityBuilder.Core
         public int PrisonerHealth => prisonerHealth;
         public float PrisonerWalkSpeed => prisonerWalkSpeed;
         public int OrcMainTreasuryHealth => orcMainTreasuryHealth;
+        public float TownHallMinDistanceToOrcs => townHallMinDistanceToOrcs;
         public int OrcTreasuryLootCoins => orcTreasuryLootCoins;
         public int OrcTreasuryLootIronBars => orcTreasuryLootIronBars;
         public int OrcTreasuryLootCopperBars => orcTreasuryLootCopperBars;
@@ -692,6 +695,7 @@ namespace CityBuilder.Core
             prisonerHealth = (int)Read(economy, "prisoner_health", prisonerHealth);
             prisonerWalkSpeed = Read(economy, "prisoner_walk_speed", prisonerWalkSpeed);
             orcMainTreasuryHealth = (int)Read(economy, "orc_main_treasury_health", orcMainTreasuryHealth);
+            townHallMinDistanceToOrcs = Read(economy, "town_hall_min_distance_to_orcs", townHallMinDistanceToOrcs);
             orcTreasuryLootCoins = (int)Read(economy, "orc_treasury_loot_coins", orcTreasuryLootCoins);
             orcTreasuryLootIronBars = (int)Read(economy, "orc_treasury_loot_ironbar", orcTreasuryLootIronBars);
             orcTreasuryLootCopperBars = (int)Read(economy, "orc_treasury_loot_copperbar", orcTreasuryLootCopperBars);

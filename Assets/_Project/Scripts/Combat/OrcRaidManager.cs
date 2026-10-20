@@ -474,9 +474,13 @@ namespace CityBuilder.Combat
         private int OpenAtMapSpots(GridManager grid, Vector3 townHall, MeshMapDefinition map)
         {
             var mapApplier = MeshMapApplier.Instance;
-            var camps = new List<Vector2>(map.CampSpots);
-            camps.Sort((a, b) => (new Vector3(a.x, 0f, a.y) - townHall).sqrMagnitude
-                .CompareTo((new Vector3(b.x, 0f, b.y) - townHall).sqrMagnitude));
+            var camps = new List<(Vector2 spot, int level)>();
+            for (var i = 0; i < map.CampSpots.Length; i++)
+            {
+                camps.Add((map.CampSpots[i], i < map.CampLevels.Length ? map.CampLevels[i] : OrcBaseLayout.MaxLevel));
+            }
+            camps.Sort((a, b) => (new Vector3(a.spot.x, 0f, a.spot.y) - townHall).sqrMagnitude
+                .CompareTo((new Vector3(b.spot.x, 0f, b.spot.y) - townHall).sqrMagnitude));
 
             if (map.HasMainBaseSpot)
             {
@@ -497,12 +501,13 @@ namespace CityBuilder.Combat
             }
 
             var opened = 0;
-            foreach (var camp in camps)
+            foreach (var (camp, designedLevel) in camps)
             {
                 var spot = new Vector3(camp.x, 0f, camp.y);
                 var found = false;
                 var cell = default(Vector2Int);
-                var maxLevel = OrcBaseLayout.MaxLevel;
+                // the level the map made its ground for; lower only if that ground has been spoilt
+                var maxLevel = Mathf.Clamp(designedLevel, 1, OrcBaseLayout.MaxLevel);
                 for (; maxLevel >= 1; maxLevel--)
                 {
                     var level = maxLevel;
@@ -515,6 +520,10 @@ namespace CityBuilder.Combat
                 {
                     Debug.LogWarning($"OrcRaidManager: no ground for the camp on the map's spot {camp}. That camp is skipped.");
                     continue;
+                }
+                if (maxLevel < designedLevel)
+                {
+                    Debug.LogWarning($"OrcRaidManager: the camp on the map's spot {camp} has room for level {maxLevel} only, not the {designedLevel} its map was made for.");
                 }
                 var portal = SpawnPortal(grid, cell);
                 BuildCamp(portal, opened, maxLevel);
