@@ -9,10 +9,12 @@ metadata:
 ---
 
 **2026-10-20 (latest) -- HANDOFF, the user moves to another device.** master `4a8216e4`, pushed;
-working tree clean but for untracked local tools (Tools/research/*.ps1 build/test scripts,
-send_build_to_telegram.py, Tools/balance/compare_sheets.py, make_localization.py) that are NOT in
-git -- the user was told; on a new machine they are missing unless copied. The Blender .blend files
-(D:/blender projects/Buildings3D/*.blend, incl. Map-4-TwoRivers.blend) are also outside git.
+the local tools (Tools/research build/test/Telegram scripts, Tools/balance sheet scripts) are now
+IN GIT (b2f2543a), and a copy of this memory is in the repo at .claude/memory/ with
+HANDOFF_README.txt (the repo is PUBLIC -- nothing secret in it; the Telegram token comes from
+TELEGRAM_BOT_TOKEN). On a new device: copy .claude/memory/*.md into the user-profile memory folder.
+The Blender .blend files (D:/blender projects/Buildings3D/*.blend, incl. Map-4-TwoRivers.blend)
+are still outside git.
 Tests: EditMode 446, PlayMode 210 (+4 graphics-only). Sheet == repo (verify_sheet: no differences).
 What is in the game now:
 - NEW GAMES START ON MAP 4 «Долина двух рек» ([[project_maps_roadmap]]): island, 2 rivers, fords,
