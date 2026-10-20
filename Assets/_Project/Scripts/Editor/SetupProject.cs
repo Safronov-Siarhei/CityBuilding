@@ -368,6 +368,7 @@ namespace CityBuilder.EditorTools
             menuControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildLoadPanel(canvasGO.transform, panelSprite, menuController);
+            BuildMapSelectPanel(canvasGO.transform, panelSprite, menuController);
             BuildSettingsPanel(canvasGO.transform, panelSprite, settingsButton);
             ApplyTheme(canvasGO.transform);
 
@@ -910,6 +911,9 @@ namespace CityBuilder.EditorTools
             // Map 4, the Two Rivers Valley (Tools/blender/map4.py): the first designed map -- an
             // island, rivers and mountains nobody walks through, and the orcs' spots fixed.
             CreateMeshMapDefinition("Map4", "Map-4", null);
+            // Map 5, the Caldera (Tools/blender/map5.py): the town on a volcano's floor, a ring of
+            // mountains that four gorges cut through, the orcs outside it.
+            CreateMeshMapDefinition("Map5", "Map-5", null);
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
@@ -2255,6 +2259,50 @@ namespace CityBuilder.EditorTools
 
             var menuSO = new SerializedObject(menuController);
             menuSO.FindProperty("loadGamePanel").objectReferenceValue = panelController;
+            menuSO.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>The new-game map picker: the load panel's card with map rows and a "Play" button.</summary>
+        private static void BuildMapSelectPanel(Transform canvasParent, Sprite panelSprite, MainMenuController menuController)
+        {
+            var panelRoot = new GameObject("MapSelectPanel", typeof(RectTransform));
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(1000f, 760f);
+            cardRect.anchoredPosition = Vector2.zero;
+
+            Localize(CreateText(card.transform, "Title", string.Empty, 48, new Vector2(0f, 320f), new Vector2(900f, 80f)), "#newgame_title");
+
+            BuildScrollList(card.transform, new Vector2(0f, 30f), new Vector2(900f, 480f), "#newgame_no_maps", out var content, out var emptyLabelGO);
+            emptyLabelGO.SetActive(false);
+
+            var playButton = CreateButton(card.transform, panelSprite, "PlayButton", "#newgame_play", new Vector2(-190f, -270f), new Vector2(360f, 90f));
+            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "#ui_back", new Vector2(190f, -270f), new Vector2(360f, 90f));
+
+            var panelController = panelRoot.AddComponent<MapSelectPanelController>();
+            var panelSO = new SerializedObject(panelController);
+            panelSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            panelSO.FindProperty("listContent").objectReferenceValue = content;
+            panelSO.FindProperty("playButton").objectReferenceValue = playButton;
+            panelSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
+            panelSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(playButton.onClick, panelController.ConfirmPlay);
+            UnityEventTools.AddPersistentListener(backButton.onClick, panelController.ClosePanel);
+
+            panelRoot.SetActive(false);
+
+            var menuSO = new SerializedObject(menuController);
+            menuSO.FindProperty("mapSelectPanel").objectReferenceValue = panelController;
             menuSO.ApplyModifiedPropertiesWithoutUndo();
         }
 

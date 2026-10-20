@@ -4,9 +4,10 @@ using UnityEngine;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Picks which pre-made map a new game starts on. Maps the player hasn't seen yet (per
-    /// MapHistoryStore) are always drawn first; once every available map has been seen at least
-    /// once, it falls back to a plain random pick across the whole catalog.
+    /// Which pre-made maps a new game may start on. The player picks one of PlayerMapIds in the
+    /// map panel (MapSelectPanelController); PickForNewGame is the default when there is no
+    /// choice to make. Only with none of those imported does it fall back to the old unseen-first
+    /// random pick across the whole catalog.
     ///
     /// Draws from MeshMapCatalog (hand-authored Blender maps) — the older PNG-driven
     /// MapCatalog/MapDefinition path is still fully intact in the codebase (existing saves that
@@ -16,11 +17,29 @@ namespace CityBuilder.Maps
     public static class MapSelector
     {
         /// <summary>
-        /// While a map is being tested every new game starts on it (Map 3 from 2026-10-13; Map 4,
-        /// the Two Rivers Valley, from 2026-10-20). The other maps stay in the catalog, so their
-        /// saves still load. Empty restores the unseen-first pick below.
+        /// The maps a player may pick for a new game, newest first (the first is the default).
+        /// Every designed map joins this list (the user, 2026-10-20: «каждая новая карта должна
+        /// быть доступна в выборе у игрока»). Maps 1 and 2 stay in the catalog only for old saves.
         /// </summary>
-        public const string OnlyMapId = "Map4";
+        public static readonly string[] PlayerMapIds = { "Map5", "Map4", "Map3" };
+
+        /// <summary>The pickable maps that are actually imported, in PlayerMapIds order.</summary>
+        public static List<MeshMapDefinition> Choosable()
+        {
+            var maps = new List<MeshMapDefinition>();
+            foreach (var id in PlayerMapIds)
+            {
+                var map = MeshMapCatalog.GetById(id);
+                if (map != null) maps.Add(map);
+            }
+            return maps;
+        }
+
+        /// <summary>Records the player's pick so the unseen-first fallback below knows about it.</summary>
+        public static void MarkChosen(MeshMapDefinition map)
+        {
+            if (map != null) MapHistoryStore.MarkSeen(map.MapId);
+        }
 
         /// <summary>Returns null if no maps have been imported into the catalog yet.</summary>
         public static MeshMapDefinition PickForNewGame()
@@ -28,14 +47,12 @@ namespace CityBuilder.Maps
             var all = MeshMapCatalog.All;
             if (all.Count == 0) return null;
 
-            if (!string.IsNullOrEmpty(OnlyMapId))
+            // The default pick, used when the player gets no choice: the newest designed map.
+            var choosable = Choosable();
+            if (choosable.Count > 0)
             {
-                var only = MeshMapCatalog.GetById(OnlyMapId);
-                if (only != null)
-                {
-                    MapHistoryStore.MarkSeen(only.MapId);
-                    return only;
-                }
+                MarkChosen(choosable[0]);
+                return choosable[0];
             }
 
             var unseen = new List<MeshMapDefinition>();

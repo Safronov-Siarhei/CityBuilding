@@ -50,10 +50,12 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
-        public void TheMapLoads_AndNewGamesStartOnIt()
+        public void TheMapLoads_AndIsInTheMapPicker()
         {
             Assert.AreEqual(MapId, MeshMapApplier.Instance.CurrentMapId, "Map 4 was not applied -- is it in Resources/MeshMaps?");
-            Assert.AreEqual(MapId, MapSelector.PickForNewGame().MapId, "New games must start on the Two Rivers Valley.");
+            var choosable = MapSelector.Choosable().ConvertAll(m => m.MapId);
+            CollectionAssert.Contains(choosable, MapId, "The Two Rivers Valley must be in the new-game map picker.");
+            CollectionAssert.Contains(choosable, "Map3", "Every designed map stays pickable -- the Summer Valley is missing.");
         }
 
         [Test]

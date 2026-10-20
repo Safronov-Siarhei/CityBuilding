@@ -183,6 +183,24 @@ namespace CityBuilder.Tests.EditMode
         /// been written "+ Назначить" and "- Снять". Nothing downstream can tell that from a real
         /// translation, so it has to be caught here.
         /// </summary>
+        /// <summary>The new-game picker shows every pickable map by name with a line about it; a map without its rows reads as "#map_name_map5".</summary>
+        [Test]
+        public void EveryPickableMapHasANameAndADescription()
+        {
+            var config = Config();
+            foreach (var mapId in CityBuilder.Maps.MapSelector.PlayerMapIds)
+            {
+                foreach (var key in new[] { CityBuilder.UI.MapSelectPanelController.NameKey(mapId), CityBuilder.UI.MapSelectPanelController.DescriptionKey(mapId) })
+                {
+                    for (var language = 0; language < config.Languages.Count; language++)
+                    {
+                        Assert.IsFalse(string.IsNullOrEmpty(config.Find(key, language)),
+                            $"The map picker has no '{config.Languages[language]}' text for '{key}' -- add the row to the localization tab.");
+                    }
+                }
+            }
+        }
+
         [Test]
         public void NoTextStartsWithSomethingTheSheetWouldReadAsAFormula()
         {
@@ -227,6 +245,7 @@ namespace CityBuilder.Tests.EditMode
                 "#hud_menu", "#hud_save", "#hud_workforce",
                 "#exit_title", "#exit_warning", "#exit_confirm",
                 "#save_title", "#save_confirm", "#load_title", "#load_empty", "#load_confirm",
+                "#newgame_title", "#newgame_play", "#newgame_no_maps",
                 "#building_no_decay", "#building_assign", "#building_unassign", "#building_upgrade",
                 "#building_repair", "#building_recruit",
                 "#workforce_title", "#workforce_empty", "#workforce_idle_building",
@@ -247,6 +266,13 @@ namespace CityBuilder.Tests.EditMode
             })
             {
                 yield return key;
+            }
+
+            // Every map the player may pick shows its name and a line about it in the map panel.
+            foreach (var mapId in CityBuilder.Maps.MapSelector.PlayerMapIds)
+            {
+                yield return CityBuilder.UI.MapSelectPanelController.NameKey(mapId);
+                yield return CityBuilder.UI.MapSelectPanelController.DescriptionKey(mapId);
             }
         }
 
