@@ -28,6 +28,8 @@ namespace CityBuilder.Buildings
         DrawingOnParchment,
         /// <summary>Set I (2026-10-20): the drawing with an architect's corner marks and dimension lines on the ground; only the part of the drawing over a cell in the way turns red, over a pale watercolour wash.</summary>
         DrawingWithCorners,
+        /// <summary>Set III (2026-10-20): the drawing over a pen sketch of the plot -- wandering double strokes, dotted cells -- with a cell in the way hatched in red like forbidden ground on an old map.</summary>
+        DrawingSketched,
     }
 
     /// <summary>
@@ -45,7 +47,8 @@ namespace CityBuilder.Buildings
         public static PlacementLook Look = PlacementLook.Classic;
 
         public static bool UsesPreview => Look != PlacementLook.Classic;
-        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment || Look == PlacementLook.DrawingWithCorners;
+        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment || Look == PlacementLook.DrawingWithCorners || Look == PlacementLook.DrawingSketched;
+        private static bool Sketched => Look == PlacementLook.DrawingSketched;
         private static bool WithCorners => Look == PlacementLook.DrawingWithCorners;
         private static bool OnParchment => Look == PlacementLook.DrawingOnParchment;
         private static bool MarksCells => Look == PlacementLook.OwnColoursAndCells || Look == PlacementLook.DrawingAndCells;
@@ -133,7 +136,7 @@ namespace CityBuilder.Buildings
             }
 
             _blocked.Clear();
-            if (MarksCells || OnParchment || WithCorners)
+            if (MarksCells || OnParchment || WithCorners || Sketched)
             {
                 for (var z = 0; z < footprint.y; z++)
                 {
@@ -253,6 +256,11 @@ namespace CityBuilder.Buildings
                 _groundRenderer.receiveShadows = false;
             }
 
+            if (Sketched)
+            {
+                SketchMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
+                return;
+            }
             if (WithCorners)
             {
                 CornerMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
