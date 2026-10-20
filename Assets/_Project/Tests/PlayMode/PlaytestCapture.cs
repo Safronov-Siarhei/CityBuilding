@@ -57,6 +57,14 @@ namespace CityBuilder.Tests.PlayMode
             return Shoot(shotName, focus, distance, pitch, yaw, 60f, includeUi: true, width, height, onUiReady);
         }
 
+        /// <summary>What `source` sees, interface and all, at a given size -- the main menu through its own camera.</summary>
+        public static IEnumerator ShootThrough(string shotName, Camera source, int width, int height)
+        {
+            var forward = source.transform.forward;
+            return Shoot(shotName, source.transform.position + forward * 10f, 10f, source.transform.eulerAngles.x, source.transform.eulerAngles.y, source.fieldOfView,
+                includeUi: true, width, height);
+        }
+
         /// <summary>A photograph of the world at a given size written to `path` -- how the main menu's pictures are taken from the game itself (MenuArtBake).</summary>
         public static IEnumerator ShootTo(string path, int width, int height, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView)
         {

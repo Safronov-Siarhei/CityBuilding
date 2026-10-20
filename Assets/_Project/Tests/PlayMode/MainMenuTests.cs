@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using CityBuilder.Core;
 using CityBuilder.UI;
 using NUnit.Framework;
@@ -93,9 +93,32 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// The live scene behind the menu (the user's sketch): each of the four, staged on a map,
+        /// with people at work in it -- photographed through the menu's own camera.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EveryBackgroundScene_IsStagedWithPeopleAtWork()
+        {
+            foreach (MainMenuBackground.Vignette vignette in System.Enum.GetValues(typeof(MainMenuBackground.Vignette)))
+            {
+                MainMenuBackground.ForcedVignette = vignette;
+                SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+                yield return null;
+                yield return null;
+                var background = Object.FindAnyObjectByType<MainMenuBackground>();
+                Assert.IsNotNull(background, "The menu has no background.");
+                Assert.AreEqual(vignette, background.Current);
+                Assert.Greater(Object.FindObjectsByType<MenuWorker>(FindObjectsSortMode.None).Length, 1, $"No one is at work in the {vignette} scene.");
+                yield return new WaitForSeconds(2.5f);
+                yield return Shoot($"menu-scene-{vignette}");
+            }
+        }
+
         private static IEnumerator Shoot(string name)
         {
-            return PlaytestCapture.ShootWithUiAt(name, 1920, 1080, Vector3.zero, 80f, 32f, 20f);
+            var camera = GameObject.Find("Menu Camera").GetComponent<Camera>();
+            return PlaytestCapture.ShootThrough(name, camera, 1920, 1080);
         }
 
         private static IEnumerator Settle()

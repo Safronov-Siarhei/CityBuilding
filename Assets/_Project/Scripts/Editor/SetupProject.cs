@@ -78,8 +78,10 @@ namespace CityBuilder.EditorTools
             ForceReimportModels();
             EnsureUiTextures();
 
-            BuildMainMenuScene();
+            // The city first: its building prefabs are what the main menu's background stages its
+            // scenes with, so they have to be this run's, not the last one's.
             BuildCityScene();
+            BuildMainMenuScene();
 
             EditorBuildSettings.scenes = new[]
             {
@@ -89,8 +91,7 @@ namespace CityBuilder.EditorTools
 
             CleanupTemplateAssets();
 
-            // BuildCityScene() runs last above, so CityBuilder is still the active scene here --
-            // left as-is, that becomes the scene the Editor restores on its next normal (non-
+            // Whichever scene was built last is the active one here -- left as-is, that becomes the scene the Editor restores on its next normal (non-
             // batchmode) launch, silently replacing the "opens on MainMenu" behavior every prior
             // session had. Re-opening MainMenu explicitly (matches BuildMainMenuScene's own
             // path/name) keeps that behavior intact regardless of how batchmode was invoked.
@@ -329,12 +330,35 @@ namespace CityBuilder.EditorTools
             menuCamera.orthographic = false;
             menuCamera.nearClipPlane = 0.3f;
             menuCamera.farClipPlane = 500f;
-            cameraGO.AddComponent<MenuCameraFlythrough>();
+            menuCamera.fieldOfView = 40f;
+            menuCamera.backgroundColor = new Color(0.62f, 0.78f, 0.92f);
 
-            // Terrain-only scenery (no grid/buildings/citizens) for the flythrough to fly over --
-            // a random pick each time this scene loads, see MainMenuBackground. The user's sketch
-            // wants a live scene of people at work here; that is the next step.
-            new GameObject("MenuBackground").AddComponent<MainMenuBackground>();
+            // The game's sun, as the city scene has it (the default scene's directional light), with
+            // soft shadows: the menu draws one small scene, so it can afford them.
+            var sunGO = new GameObject("Sun", typeof(Light));
+            var sun = sunGO.GetComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.color = new Color(1f, 0.957f, 0.839f);
+            sun.intensity = 1f;
+            sun.shadows = LightShadows.Soft;
+            sunGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            RenderSettings.sun = sun;
+
+            // A live scene of people at work on one of the maps, a different one each time the menu
+            // loads (the user's sketch, 2026-10-20) -- see MainMenuBackground.
+            var background = new GameObject("MenuBackground").AddComponent<MainMenuBackground>();
+            var backgroundSO = new SerializedObject(background);
+            backgroundSO.FindProperty("menuCamera").objectReferenceValue = menuCamera;
+            var props = backgroundSO.FindProperty("buildings");
+            var ids = new[] { "Sawmill", "Quarry", "Farm", "Windmill", "Hovel", "Well", "Cottage" };
+            props.arraySize = ids.Length;
+            for (var i = 0; i < ids.Length; i++)
+            {
+                props.GetArrayElementAtIndex(i).FindPropertyRelative("id").stringValue = ids[i];
+                props.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<GameObject>($"{BuildingPrefabsFolder}/{ids[i]}.prefab");
+            }
+            backgroundSO.ApplyModifiedPropertiesWithoutUndo();
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
