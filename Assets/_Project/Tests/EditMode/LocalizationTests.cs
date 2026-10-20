@@ -239,13 +239,18 @@ namespace CityBuilder.Tests.EditMode
             // The fixed captions SetupProject hangs on buttons and titles.
             foreach (var key in new[]
             {
-                "#menu_title", "#menu_subtitle", "#menu_new_game", "#menu_load_game", "#menu_settings", "#menu_quit",
+                "#menu_continue", "#mode_campaign", "#mode_sandbox", "#mode_invasion", "#mode_soon", "#mode_saves_count",
+                "#continue_day", "#when_today", "#when_yesterday", "#sandbox_tab_new", "#sandbox_tab_saves",
+                "#campaign_title", "#campaign_soon", "#invasion_daily", "#invasion_daily_soon", "#invasion_changes_in",
+                "#invasion_my_points", "#invasion_counted", "#invasion_day", "#invasion_week", "#invasion_month",
+                "#invasion_board_soon", "#invasion_fight", "#quit_question", "#quit_stay", "#quit_confirm",
+                "#shop_title", "#shop_soon",
                 "#settings_title", "#settings_language", "#settings_back",
                 "#ui_close", "#ui_cancel", "#ui_back", "#ui_free",
                 "#hud_menu", "#hud_save", "#hud_workforce",
                 "#exit_title", "#exit_warning", "#exit_confirm",
-                "#save_title", "#save_confirm", "#load_title", "#load_empty", "#load_confirm", "#load_map_removed",
-                "#newgame_title", "#newgame_play", "#newgame_no_maps",
+                "#save_title", "#save_confirm", "#load_empty", "#load_confirm", "#load_map_removed",
+                "#newgame_play", "#newgame_no_maps",
                 "#building_no_decay", "#building_assign", "#building_unassign", "#building_upgrade",
                 "#building_repair", "#building_recruit",
                 "#workforce_title", "#workforce_empty", "#workforce_idle_building",

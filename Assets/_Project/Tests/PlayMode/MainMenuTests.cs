@@ -1,0 +1,113 @@
+using System.Collections;
+using CityBuilder.Core;
+using CityBuilder.UI;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+
+namespace CityBuilder.Tests.PlayMode
+{
+    /// <summary>
+    /// The main menu after the user's sketch (2026-10-20): Play brings up the three mode cards, a
+    /// card slides left and brings in its panel, Back walks it all backwards and on the main screen
+    /// asks whether to quit -- and every look in the settings draws the whole menu in its own kit.
+    /// </summary>
+    public class MainMenuTests
+    {
+        private HudSkin _playersSkin;
+
+        [UnitySetUp]
+        public IEnumerator OpenTheMenu()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            Time.timeScale = 1f;
+            _playersSkin = GameSettings.HudSkin;
+            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+        }
+
+        [TearDown]
+        public void PutItBack()
+        {
+            GameSettings.HudSkin = _playersSkin;
+            ModalGate.SetBlocked(false);
+        }
+
+        [UnityTest]
+        public IEnumerator PlayCardsAndBack_WalkTheScreens()
+        {
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            Assert.IsNotNull(menu);
+            var exit = GameObject.Find("Canvas").transform.Find("ExitDialog").gameObject;
+
+            menu.OpenModes();
+            yield return Settle();
+            Assert.IsNull(menu.ChosenMode);
+            Assert.Greater(Group("ModesScreen").alpha, 0.95f, "Play did not bring up the cards.");
+
+            menu.ChooseMode((int)GameMode.Invasion);
+            yield return Settle();
+            Assert.AreEqual(GameMode.Invasion, menu.ChosenMode);
+            Assert.Greater(Group("ModesScreen/InvasionPanel").alpha, 0.95f, "The invasion's panel did not come in.");
+            Assert.Less(Group("ModesScreen/Card_Campaign").alpha, 0.05f, "A card not picked stayed on the screen.");
+
+            menu.Back();
+            yield return Settle();
+            Assert.IsNull(menu.ChosenMode, "Back did not return to the three cards.");
+            menu.Back();
+            yield return Settle();
+            Assert.Greater(Group("MainScreen").alpha, 0.95f, "Back did not return to the main screen.");
+            Assert.IsFalse(exit.activeSelf);
+            menu.Back();
+            Assert.IsTrue(exit.activeSelf, "Back on the main screen did not ask whether to quit.");
+            menu.Back();
+            Assert.IsFalse(exit.activeSelf, "Back did not close the question.");
+        }
+
+        [UnityTest]
+        public IEnumerator Photograph_EveryLook()
+        {
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            foreach (var skin in HudSkins.All)
+            {
+                GameSettings.HudSkin = skin;
+                menu.ShowMain();
+                yield return Settle();
+                yield return Shoot($"menu-{skin}-main");
+
+                menu.OpenModes();
+                yield return Settle();
+                yield return Shoot($"menu-{skin}-modes");
+
+                foreach (var mode in new[] { GameMode.Campaign, GameMode.Sandbox, GameMode.Invasion })
+                {
+                    menu.ChooseMode((int)mode);
+                    yield return Settle();
+                    yield return Shoot($"menu-{skin}-{mode}");
+                    menu.OpenModes();
+                    yield return Settle();
+                }
+            }
+        }
+
+        private static IEnumerator Shoot(string name)
+        {
+            return PlaytestCapture.ShootWithUiAt(name, 1920, 1080, Vector3.zero, 80f, 32f, 20f);
+        }
+
+        private static IEnumerator Settle()
+        {
+            yield return new WaitForSecondsRealtime(0.9f);
+        }
+
+        private static CanvasGroup Group(string path)
+        {
+            var found = GameObject.Find("Canvas").transform.Find(path);
+            Assert.IsNotNull(found, $"The menu has no {path}.");
+            return found.GetComponent<CanvasGroup>();
+        }
+    }
+}

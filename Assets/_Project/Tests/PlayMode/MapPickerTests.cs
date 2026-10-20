@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using CityBuilder.Core;
 using CityBuilder.Maps;
@@ -13,8 +13,8 @@ namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
     /// The new-game map picker (2026-10-20, the user's rule: every new map is the player's to
-    /// choose). "New Game" opens it with one row per designed map, the newest selected; "Play"
-    /// starts on the row picked.
+    /// choose) -- the sandbox's "New game" tab in the main menu. It opens with one row per designed
+    /// map, the newest selected; "Play" starts on the row picked.
     /// </summary>
     public class MapPickerTests
     {
@@ -46,8 +46,8 @@ namespace CityBuilder.Tests.PlayMode
                 var text = row.GetComponentInChildren<Text>().text;
                 StringAssert.DoesNotContain("#", text, $"{row.name} shows a raw localization key: \"{text}\"");
             }
-            Assert.AreEqual(UiTheme.RowSelected, rows[0].GetComponent<Image>().color, "The newest map is not selected to begin with.");
-            Assert.IsTrue(picker.transform.Find("Card/PlayButton").GetComponent<Button>().interactable, "Play is not available with a map selected.");
+            Assert.IsTrue(IsPicked(rows[0]), "The newest map is not selected to begin with.");
+            Assert.IsTrue(picker.transform.Find("PlayButton").GetComponent<Button>().interactable, "Play is not available with a map selected.");
 
             yield return PlaytestCapture.ShootWithUi("map-picker", Vector3.zero);
             yield return PlaytestCapture.ShootWithUiAt("map-picker-phone", 2400, 1080, Vector3.zero, 40f, 50f, 25f);
@@ -61,7 +61,7 @@ namespace CityBuilder.Tests.PlayMode
 
             var row = Rows(picker).First(r => r.name == "Map_Map3");
             row.GetComponent<Button>().onClick.Invoke();
-            Assert.AreEqual(UiTheme.RowSelected, row.GetComponent<Image>().color, "Tapping a row does not select it.");
+            Assert.IsTrue(IsPicked(row), "Tapping a row does not select it.");
 
             picker.ConfirmPlay();
             yield return PlayModeScene.WaitUntilMapIsPhysicsReady("Map3");
@@ -75,8 +75,15 @@ namespace CityBuilder.Tests.PlayMode
             menu.StartNewGame();
             var picker = Object.FindAnyObjectByType<MapSelectPanelController>(FindObjectsInactive.Include);
             Assert.IsNotNull(picker, "The main menu has no map picker.");
-            Assert.IsTrue(picker.gameObject.activeInHierarchy, "New Game did not open the map picker.");
+            Assert.IsTrue(picker.gameObject.activeInHierarchy, "The sandbox did not open on its map list.");
             return picker;
+        }
+
+        /// <summary>The menu's rows show the look's picked-row sprite rather than a tint.</summary>
+        private static bool IsPicked(Transform row)
+        {
+            var sprite = row.GetComponent<Image>().sprite;
+            return sprite != null && sprite.name == "row_selected";
         }
 
         private static Transform[] Rows(MapSelectPanelController picker)

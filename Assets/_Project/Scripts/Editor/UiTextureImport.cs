@@ -27,11 +27,18 @@ namespace CityBuilder.EditorTools
         /// <summary>The HUD's looks (Tools/ui/make_hud_skins.py), a folder per look with its own borders.json -- imported as the skin is.</summary>
         public const string HudSkinsFolder = "Assets/_Project/Resources/HudSkins";
 
+        /// <summary>The main menu's looks (Tools/ui/make_menu_skins.py), a folder per HUD look, each with its own borders.json -- imported as the skin is.</summary>
+        public const string MenuSkinsFolder = "Assets/_Project/Resources/MenuSkins";
+
+        /// <summary>The mode cards' pictures, photographed in the game (MenuArtBake). Big, so compressed, unlike the rest of the interface.</summary>
+        public const string MenuArtFolder = "Assets/_Project/UI/MenuArt";
+
         private void OnPreprocessTexture()
         {
-            var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/");
+            var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/");
+            var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
 
@@ -41,7 +48,7 @@ namespace CityBuilder.EditorTools
             importer.alphaIsTransparency = true;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.filterMode = FilterMode.Bilinear;
-            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.textureCompression = isArt ? TextureImporterCompression.CompressedHQ : TextureImporterCompression.Uncompressed;
             importer.spritePixelsPerUnit = isSkin ? 200f : 100f;
 
             var folder = isHudSkin ? Path.GetDirectoryName(assetPath) : SkinFolder;

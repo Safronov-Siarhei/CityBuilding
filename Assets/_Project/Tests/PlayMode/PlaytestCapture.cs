@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.IO;
 using UnityEngine;
 
@@ -57,8 +57,14 @@ namespace CityBuilder.Tests.PlayMode
             return Shoot(shotName, focus, distance, pitch, yaw, 60f, includeUi: true, width, height, onUiReady);
         }
 
+        /// <summary>A photograph of the world at a given size written to `path` -- how the main menu's pictures are taken from the game itself (MenuArtBake).</summary>
+        public static IEnumerator ShootTo(string path, int width, int height, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView)
+        {
+            return Shoot(Path.GetFileNameWithoutExtension(path), focus, distance, pitch, yaw, fieldOfView, includeUi: false, width, height, null, path);
+        }
+
         private static IEnumerator Shoot(string shotName, Vector3 focus, float distance, float pitch, float yaw, float fieldOfView, bool includeUi,
-            int width = Width, int height = Height, System.Action onUiReady = null)
+            int width = Width, int height = Height, System.Action onUiReady = null, string path = null)
         {
             if (!Available)
             {
@@ -101,7 +107,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             yield return null;
 
-            Write(shotName, texture);
+            Write(path ?? Path.Combine(OutputFolder, $"{shotName}.png"), texture);
 
             foreach (var canvas in switched)
             {
@@ -116,7 +122,7 @@ namespace CityBuilder.Tests.PlayMode
             Object.Destroy(cameraObject);
         }
 
-        private static void Write(string shotName, RenderTexture texture)
+        private static void Write(string path, RenderTexture texture)
         {
             try
             {
@@ -127,8 +133,7 @@ namespace CityBuilder.Tests.PlayMode
                 image.Apply();
                 RenderTexture.active = previous;
 
-                Directory.CreateDirectory(OutputFolder);
-                var path = Path.Combine(OutputFolder, $"{shotName}.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllBytes(path, image.EncodeToPNG());
                 Object.Destroy(image);
 
@@ -138,7 +143,7 @@ namespace CityBuilder.Tests.PlayMode
             {
                 // A missing photograph is worth a line in the log and nothing more -- these tests
                 // assert on geometry, not on pixels.
-                Debug.Log($"[Playtest] Could not take the '{shotName}' screenshot: {e.Message}");
+                Debug.Log($"[Playtest] Could not take the '{path}' screenshot: {e.Message}");
             }
         }
     }

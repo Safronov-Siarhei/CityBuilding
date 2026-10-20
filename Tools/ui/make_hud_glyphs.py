@@ -150,10 +150,71 @@ def cancel():
     return img
 
 
+def play():
+    """The main menu's big button: a triangle with softened corners, nudged right of centre so it looks centred."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.polygon([(u(0.3), u(0.16)), (u(0.86), u(0.5)), (u(0.3), u(0.84))], fill=WHITE)
+    d.line([(u(0.3), u(0.16)), (u(0.86), u(0.5)), (u(0.3), u(0.84)), (u(0.3), u(0.16))], fill=WHITE, width=int(u(0.08)), joint="curve")
+    return img
+
+
+def shop():
+    """A chest: domed lid, body, a band and the lock cut out -- the shop (Лавка)."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.pieslice(box(0.12, 0.16, 0.88, 0.62), 180, 360, fill=WHITE)
+    d.rectangle(box(0.12, 0.38, 0.88, 0.84), fill=WHITE)
+    d.rectangle(box(0.12, 0.44, 0.88, 0.5), fill=0)
+    d.rounded_rectangle(box(0.42, 0.42, 0.58, 0.62), u(0.03), fill=WHITE)
+    d.rectangle(box(0.47, 0.5, 0.53, 0.58), fill=0)
+    return img
+
+
+def back():
+    """A chevron pointing left."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.line([(u(0.62), u(0.18)), (u(0.3), u(0.5)), (u(0.62), u(0.82))], fill=WHITE, width=int(u(0.15)), joint="curve")
+    return img
+
+
+def resume():
+    """A circular arrow -- "carry on where I was"."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.arc(box(0.16, 0.16, 0.84, 0.84), 20, 300, fill=WHITE, width=int(u(0.12)))
+    a = math.radians(300)
+    c = S / 2
+    r = u(0.34) - u(0.06)
+    tip = (c + math.cos(a) * r, c + math.sin(a) * r)
+    t = (-math.sin(a), math.cos(a))
+    n = (math.cos(a), math.sin(a))
+    L, W = u(0.2), u(0.17)
+    d.polygon([(tip[0] - t[0] * L * 0.2 + t[0] * L, tip[1] - t[1] * L * 0.2 + t[1] * L),
+               (tip[0] + n[0] * W - t[0] * L * 0.2, tip[1] + n[1] * W - t[1] * L * 0.2),
+               (tip[0] - n[0] * W - t[0] * L * 0.2, tip[1] - n[1] * W - t[1] * L * 0.2)], fill=WHITE)
+    return img
+
+
+def lock():
+    """A padlock -- a level the player has not reached."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.arc(box(0.3, 0.14, 0.7, 0.6), 180, 360, fill=WHITE, width=int(u(0.09)))
+    d.line([(u(0.345), u(0.37)), (u(0.345), u(0.46))], fill=WHITE, width=int(u(0.09)))
+    d.line([(u(0.655), u(0.37)), (u(0.655), u(0.46))], fill=WHITE, width=int(u(0.09)))
+    d.rounded_rectangle(box(0.2, 0.44, 0.8, 0.86), u(0.07), fill=WHITE)
+    d.ellipse(box(0.45, 0.56, 0.55, 0.66), fill=0)
+    d.rectangle(box(0.48, 0.62, 0.52, 0.74), fill=0)
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
-                     ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel)):
+                     ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
+                     ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock)):
         save(fn(), name)
     print("HUD GLYPHS ->", OUT)
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Saving;
@@ -22,6 +22,10 @@ namespace CityBuilder.UI
         [SerializeField] private Button loadSelectedButton;
         [SerializeField] private Text selectedNameLabel;
         [SerializeField] private Sprite rowSprite;
+        /// <summary>On in the main menu: rows take the menu's look (MenuRowLook) instead of the tinted rowSprite.</summary>
+        [SerializeField] private bool menuLook;
+
+        private MenuRowLook _look;
 
         private static readonly Color NormalRowColor = UiTheme.RowNormal;
         private static readonly Color SelectedRowColor = UiTheme.RowSelected;
@@ -54,6 +58,7 @@ namespace CityBuilder.UI
                 Destroy(listContent.GetChild(i).gameObject);
             }
             _rows.Clear();
+            _look = menuLook ? MenuRowLook.Current() : null;
             _selectedName = null;
             UpdateSelectionUI();
 
@@ -88,6 +93,7 @@ namespace CityBuilder.UI
             image.sprite = rowSprite;
             image.type = Image.Type.Sliced;
             image.color = NormalRowColor;
+            if (_look != null) _look.Style(image, false);
 
             var textGO = new GameObject("Label", typeof(RectTransform), typeof(Text));
             textGO.transform.SetParent(rowGO.transform, false);
@@ -101,7 +107,7 @@ namespace CityBuilder.UI
             text.font = UiTheme.Regular;
             text.fontSize = 24;
             text.alignment = TextAnchor.MiddleLeft;
-            text.color = UiTheme.Ink;
+            text.color = _look != null ? _look.Ink : UiTheme.Ink;
             var localTime = info.LastModifiedUtc.ToLocalTime();
             var mapExists = MapStillExists(info.Name);
             text.text = mapExists
@@ -119,7 +125,8 @@ namespace CityBuilder.UI
                 // A save on a map that is no longer in the game (Maps 1 and 2 went on 2026-10-20)
                 // is shown, so the player knows where it went, but cannot be picked.
                 button.interactable = false;
-                text.color = new Color(UiTheme.Ink.r, UiTheme.Ink.g, UiTheme.Ink.b, 0.45f);
+                var ink = _look != null ? _look.Ink : UiTheme.Ink;
+                text.color = new Color(ink.r, ink.g, ink.b, 0.45f);
             }
 
             _rows.Add((info.Name, image));
@@ -140,7 +147,8 @@ namespace CityBuilder.UI
             _selectedName = name;
             foreach (var row in _rows)
             {
-                row.image.color = row.name == name ? SelectedRowColor : NormalRowColor;
+                if (_look != null) _look.Style(row.image, row.name == name);
+                else row.image.color = row.name == name ? SelectedRowColor : NormalRowColor;
             }
             UpdateSelectionUI();
         }

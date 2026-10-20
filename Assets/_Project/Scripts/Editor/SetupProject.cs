@@ -332,7 +332,8 @@ namespace CityBuilder.EditorTools
             cameraGO.AddComponent<MenuCameraFlythrough>();
 
             // Terrain-only scenery (no grid/buildings/citizens) for the flythrough to fly over --
-            // a random pick each time this scene loads, see MainMenuBackground.
+            // a random pick each time this scene loads, see MainMenuBackground. The user's sketch
+            // wants a live scene of people at work here; that is the next step.
             new GameObject("MenuBackground").AddComponent<MainMenuBackground>();
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
@@ -344,31 +345,9 @@ namespace CityBuilder.EditorTools
             // push the menu's sides off the screen (see SetupProjectLayout).
             ConfigureScaler(canvasGO.GetComponent<CanvasScaler>());
 
-            Localize(CreateText(canvasGO.transform, "Title", string.Empty, 72, new Vector2(0f, 260f), new Vector2(1200f, 140f), addShadow: true), "#menu_title");
-            Localize(CreateText(canvasGO.transform, "Subtitle", string.Empty, 26, new Vector2(0f, 175f), new Vector2(900f, 60f), new Color(1f, 1f, 1f, 0.6f), addShadow: true), "#menu_subtitle");
-
-            var menuController = canvasGO.AddComponent<MainMenuController>();
-
-            var newGameButton = CreateButton(canvasGO.transform, panelSprite, "NewGameButton", "#menu_new_game", new Vector2(0f, 60f), new Vector2(460f, 100f));
-            UnityEventTools.AddPersistentListener(newGameButton.onClick, menuController.StartNewGame);
-
-            var loadGameButton = CreateButton(canvasGO.transform, panelSprite, "LoadGameButton", "#menu_load_game", new Vector2(0f, -64f), new Vector2(460f, 100f));
-            UnityEventTools.AddPersistentListener(loadGameButton.onClick, menuController.LoadGame);
-
-            // The stack grew a fourth entry, so everything below the load button moved down one
-            // slot (124 apart, as the three above already were).
-            var settingsButton = CreateButton(canvasGO.transform, panelSprite, "SettingsButton", "#menu_settings", new Vector2(0f, -188f), new Vector2(460f, 100f));
-
-            var quitButton = CreateButton(canvasGO.transform, panelSprite, "QuitButton", "#menu_quit", new Vector2(0f, -312f), new Vector2(460f, 100f));
-            UnityEventTools.AddPersistentListener(quitButton.onClick, menuController.QuitGame);
-
-            var menuControllerSO = new SerializedObject(menuController);
-            menuControllerSO.FindProperty("loadGameButton").objectReferenceValue = loadGameButton;
-            menuControllerSO.ApplyModifiedPropertiesWithoutUndo();
-
-            BuildLoadPanel(canvasGO.transform, panelSprite, menuController);
-            BuildMapSelectPanel(canvasGO.transform, panelSprite, menuController);
-            BuildSettingsPanel(canvasGO.transform, panelSprite, settingsButton);
+            // The menu after the user's sketch (2026-10-20), in the look picked in the settings --
+            // see SetupProjectMainMenu.
+            BuildMainMenu(canvasGO.transform, panelSprite);
             ApplyTheme(canvasGO.transform);
 
             Directory.CreateDirectory(ScenesFolder);
@@ -2208,96 +2187,6 @@ namespace CityBuilder.EditorTools
 
             dialogRoot.SetActive(false);
             return (dialogController, dialogRoot);
-        }
-
-        private static void BuildLoadPanel(Transform canvasParent, Sprite panelSprite, MainMenuController menuController)
-        {
-            var panelRoot = new GameObject("LoadPanel", typeof(RectTransform));
-            panelRoot.transform.SetParent(canvasParent, false);
-            StretchFull(panelRoot.GetComponent<RectTransform>());
-
-            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
-
-            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
-            card.sprite = panelSprite;
-            card.type = Image.Type.Sliced;
-            var cardRect = card.GetComponent<RectTransform>();
-            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(1000f, 760f);
-            cardRect.anchoredPosition = Vector2.zero;
-
-            Localize(CreateText(card.transform, "Title", string.Empty, 48, new Vector2(0f, 320f), new Vector2(900f, 80f)), "#load_title");
-
-            BuildScrollList(card.transform, new Vector2(0f, 60f), new Vector2(900f, 420f), "#load_empty", out var content, out var emptyLabelGO);
-
-            var selectedLabel = CreateText(card.transform, "SelectedLabel", string.Empty, 26, new Vector2(0f, -170f), new Vector2(900f, 50f), new Color(1f, 1f, 1f, 0.8f));
-
-            var loadButton = CreateButton(card.transform, panelSprite, "LoadSelectedButton", "#load_confirm", new Vector2(-190f, -270f), new Vector2(360f, 90f));
-            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "#ui_back", new Vector2(190f, -270f), new Vector2(360f, 90f));
-
-            var panelController = panelRoot.AddComponent<LoadGamePanelController>();
-            var panelSO = new SerializedObject(panelController);
-            panelSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
-            panelSO.FindProperty("listContent").objectReferenceValue = content;
-            panelSO.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
-            panelSO.FindProperty("loadSelectedButton").objectReferenceValue = loadButton;
-            panelSO.FindProperty("selectedNameLabel").objectReferenceValue = selectedLabel;
-            panelSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
-            panelSO.ApplyModifiedPropertiesWithoutUndo();
-
-            UnityEventTools.AddPersistentListener(loadButton.onClick, panelController.ConfirmLoad);
-            UnityEventTools.AddPersistentListener(backButton.onClick, panelController.ClosePanel);
-
-            panelRoot.SetActive(false);
-
-            var menuSO = new SerializedObject(menuController);
-            menuSO.FindProperty("loadGamePanel").objectReferenceValue = panelController;
-            menuSO.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        /// <summary>The new-game map picker: the load panel's card with map rows and a "Play" button.</summary>
-        private static void BuildMapSelectPanel(Transform canvasParent, Sprite panelSprite, MainMenuController menuController)
-        {
-            var panelRoot = new GameObject("MapSelectPanel", typeof(RectTransform));
-            panelRoot.transform.SetParent(canvasParent, false);
-            StretchFull(panelRoot.GetComponent<RectTransform>());
-
-            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
-
-            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
-            card.sprite = panelSprite;
-            card.type = Image.Type.Sliced;
-            var cardRect = card.GetComponent<RectTransform>();
-            cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(1000f, 760f);
-            cardRect.anchoredPosition = Vector2.zero;
-
-            Localize(CreateText(card.transform, "Title", string.Empty, 48, new Vector2(0f, 320f), new Vector2(900f, 80f)), "#newgame_title");
-
-            BuildScrollList(card.transform, new Vector2(0f, 30f), new Vector2(900f, 480f), "#newgame_no_maps", out var content, out var emptyLabelGO);
-            emptyLabelGO.SetActive(false);
-
-            var playButton = CreateButton(card.transform, panelSprite, "PlayButton", "#newgame_play", new Vector2(-190f, -270f), new Vector2(360f, 90f));
-            var backButton = CreateButton(card.transform, panelSprite, "BackButton", "#ui_back", new Vector2(190f, -270f), new Vector2(360f, 90f));
-
-            var panelController = panelRoot.AddComponent<MapSelectPanelController>();
-            var panelSO = new SerializedObject(panelController);
-            panelSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
-            panelSO.FindProperty("listContent").objectReferenceValue = content;
-            panelSO.FindProperty("playButton").objectReferenceValue = playButton;
-            panelSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
-            panelSO.ApplyModifiedPropertiesWithoutUndo();
-
-            UnityEventTools.AddPersistentListener(playButton.onClick, panelController.ConfirmPlay);
-            UnityEventTools.AddPersistentListener(backButton.onClick, panelController.ClosePanel);
-
-            panelRoot.SetActive(false);
-
-            var menuSO = new SerializedObject(menuController);
-            menuSO.FindProperty("mapSelectPanel").objectReferenceValue = panelController;
-            menuSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>A scrollable, vertically stacked list whose rows are built at runtime -- the save browser's slots, the workforce panel's workplaces.</summary>

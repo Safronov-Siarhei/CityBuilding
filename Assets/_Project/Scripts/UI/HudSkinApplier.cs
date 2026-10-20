@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
@@ -25,6 +25,21 @@ namespace CityBuilder.UI
         OnPlaque,
         /// <summary>A building card: its name and price.</summary>
         OnCard,
+
+        // The main menu's surfaces (Resources/MenuSkins), added after the HUD's so saved values keep their meaning.
+
+        /// <summary>A menu window, a mode card's lower part, a list row.</summary>
+        OnPanel,
+        /// <summary>The plate a name sits on: a mode card's title, a section's heading.</summary>
+        OnTitle,
+        /// <summary>The call to action: Play, Load, Fight.</summary>
+        OnButton,
+        /// <summary>The menu's small label plates: "Continue", the points counter.</summary>
+        OnMenuPlaque,
+        /// <summary>A tab not picked.</summary>
+        OnTab,
+        /// <summary>The tab picked.</summary>
+        OnTabSelected,
     }
 
     /// <summary>The HUD's looks as data: where their sprites live, and the ink each writes in.</summary>
@@ -49,6 +64,7 @@ namespace CityBuilder.UI
 
         public static Color Ink(HudSkin skin, HudInk role)
         {
+            if (role >= HudInk.OnPanel) return MenuInk(skin, role);
             switch (skin)
             {
                 case HudSkin.Soft:
@@ -70,6 +86,27 @@ namespace CityBuilder.UI
                         case HudInk.OnMain: return DarkOnGold;
                         case HudInk.OnRound:
                         case HudInk.OnStep: return UiTheme.OnWood;
+                        default: return UiTheme.Ink;
+                    }
+            }
+        }
+
+        /// <summary>The menu's inks: the wood looks write light on wood and dark on parchment, Soft white on its orange and brown on cream, Glass light on its dark glass throughout.</summary>
+        private static Color MenuInk(HudSkin skin, HudInk role)
+        {
+            switch (skin)
+            {
+                case HudSkin.Soft:
+                    return role == HudInk.OnTitle || role == HudInk.OnButton || role == HudInk.OnTabSelected ? Color.white : SoftInk;
+                case HudSkin.Glass:
+                    return role == HudInk.OnTitle || role == HudInk.OnButton ? GlassGold : Cream;
+                default:
+                    switch (role)
+                    {
+                        case HudInk.OnTitle:
+                        case HudInk.OnMenuPlaque:
+                        case HudInk.OnTab: return UiTheme.OnWood;
+                        case HudInk.OnButton: return DarkOnGold;
                         default: return UiTheme.Ink;
                     }
             }
@@ -156,6 +193,8 @@ namespace CityBuilder.UI
     /// </summary>
     public class HudSkinApplier : MonoBehaviour
     {
+        /// <summary>Under Resources: HudSkins for the HUD, MenuSkins for the main menu -- a folder per look either way.</summary>
+        [SerializeField] private string resourcesFolder = HudSkins.ResourcesFolder;
         [SerializeField] private HudSkinImage[] images;
         [SerializeField] private HudSkinLabel[] labels;
         [SerializeField] private HudLayoutEntry[] layout;
@@ -192,7 +231,7 @@ namespace CityBuilder.UI
             _applied = true;
             _skin = skin;
 
-            var sprites = Load(skin);
+            var sprites = Load(resourcesFolder, skin);
             if (images != null)
             {
                 foreach (var entry in images)
@@ -238,10 +277,10 @@ namespace CityBuilder.UI
             if (switching) UnityEngine.Resources.UnloadUnusedAssets();
         }
 
-        private static Dictionary<string, Sprite> Load(HudSkin skin)
+        private static Dictionary<string, Sprite> Load(string folder, HudSkin skin)
         {
             var result = new Dictionary<string, Sprite>();
-            foreach (var sprite in UnityEngine.Resources.LoadAll<Sprite>($"{HudSkins.ResourcesFolder}/{skin}"))
+            foreach (var sprite in UnityEngine.Resources.LoadAll<Sprite>($"{folder}/{skin}"))
             {
                 result[sprite.name] = sprite;
             }
