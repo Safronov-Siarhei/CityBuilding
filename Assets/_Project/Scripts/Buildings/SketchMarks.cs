@@ -24,9 +24,28 @@ namespace CityBuilder.Buildings
         private static readonly Color Dots = new Color(0.16f, 0.27f, 0.55f, 0.35f);
         private static readonly Color Hatch = new Color(0.66f, 0.1f, 0.07f, 0.9f);
 
-        private static Material _blue, _blueLight, _red, _redLight, _dots, _hatch;
+        private static readonly Color ShadowColour = new Color(0.08f, 0.1f, 0.06f, 0.32f);
 
-        public static void Build(Mesh mesh, MeshRenderer renderer, float groundY, Vector2Int origin, Vector2Int footprint, bool valid, List<bool> blocked)
+        private static Material _blue, _blueLight, _red, _redLight, _dots, _hatch, _shadow;
+
+        // Reused from call to call: while the pen draws the outline the mesh is rebuilt every frame
+        // for a fraction of a second, and that should not leave garbage behind each time.
+        private static readonly List<Vector3> Vertices = new List<Vector3>();
+        private static readonly List<Vector2> Uvs = new List<Vector2>();
+        private static readonly List<int> Strong = new List<int>();
+        private static readonly List<int> Light = new List<int>();
+        private static readonly List<int> DotTris = new List<int>();
+        private static readonly List<int> HatchTris = new List<int>();
+        private static readonly List<int> ShadowTris = new List<int>();
+        private static readonly List<List<int>> Parts = new List<List<int>>();
+        private static readonly List<Material> Materials = new List<Material>();
+
+        /// <summary>
+        /// `reveal` runs 0..1 while the pen draws the plot (PlacementPreview animates it): the four
+        /// sides are drawn one after another, each firm stroke followed by its light second pass,
+        /// then the hatching, then the dots. 1 is the finished sketch.
+        /// </summary>
+        public static void Build(Mesh mesh, MeshRenderer renderer, float groundY, Vector2Int origin, Vector2Int footprint, bool valid, List<bool> blocked, float reveal = 1f)
         {
             var grid = GridManager.Instance;
             var size = grid.CellSize;
@@ -37,26 +56,53 @@ namespace CityBuilder.Buildings
             var z1 = z0 + footprint.y * size;
             var h = groundY + Height;
 
-            var vertices = new List<Vector3>();
-            var uvs = new List<Vector2>();
-            var strong = new List<int>();
-            var light = new List<int>();
-            var dots = new List<int>();
-            var hatch = new List<int>();
+            var vertices = Vertices;
+            var uvs = Uvs;
+            var strong = Strong;
+            var light = Light;
+            var dots = DotTris;
+            var hatch = HatchTris;
+            var shadow = ShadowTris;
+            vertices.Clear();
+            uvs.Clear();
+            strong.Clear();
+            light.Clear();
+            dots.Clear();
+            hatch.Clear();
+            shadow.Clear();
+
+            // the drawing's shadow: a soft dark patch a little inside the plot, under where it hovers
+            {
+                var v = vertices.Count;
+                const float inset = 0.1f;
+                vertices.Add(new Vector3(x0 + inset, h - 0.02f, z0 + inset));
+                vertices.Add(new Vector3(x0 + inset, h - 0.02f, z1 - inset));
+                vertices.Add(new Vector3(x1 - inset, h - 0.02f, z1 - inset));
+                vertices.Add(new Vector3(x1 - inset, h - 0.02f, z0 + inset));
+                uvs.Add(new Vector2(0f, 0f));
+                uvs.Add(new Vector2(0f, 1f));
+                uvs.Add(new Vector2(1f, 1f));
+                uvs.Add(new Vector2(1f, 0f));
+                shadow.AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
+            }
 
             // A pen stroke from a to b: wandering off the line and back, thicker in the middle
             // where the pen pressed, tapering at both ends. The seed fixes its wobble to the side
             // of the footprint, so the sketch does not crawl as the drawing moves.
-            void Stroke(List<int> into, Vector2 a, Vector2 b, float width, int seed, float lift)
+            void Stroke(List<int> into, Vector2 a, Vector2 b, float width, int seed, float lift, float drawn)
             {
+                if (drawn <= 0f) return;
                 var along = (b - a).normalized;
                 var across = new Vector2(-along.y, along.x);
                 var length = Vector2.Distance(a, b);
                 var steps = Mathf.Max(2, Mathf.CeilToInt(length / Step));
+                // as far as the pen has got: whole steps, then the last one cut where the nib is
+                var reach = drawn * steps;
+                var shown = Mathf.CeilToInt(reach);
                 var first = vertices.Count;
-                for (var i = 0; i <= steps; i++)
+                for (var i = 0; i <= shown; i++)
                 {
-                    var t = i / (float)steps;
+                    var t = Mathf.Min(i, reach) / steps;
                     var wobble = Wander * (ParchmentSheet.Smooth(t * length * 1.6f, seed) * 2f - 1f);
                     var pressure = Mathf.Sin(Mathf.PI * Mathf.Clamp01(t * 1.15f - 0.05f));
                     var w = width * (0.35f + 0.65f * pressure) * (0.85f + 0.3f * ParchmentSheet.Smooth(t * 5f, seed + 3));
@@ -66,7 +112,7 @@ namespace CityBuilder.Buildings
                     uvs.Add(Vector2.zero);
                     uvs.Add(Vector2.zero);
                 }
-                for (var i = 0; i < steps; i++)
+                for (var i = 0; i < shown; i++)
                 {
                     var v = first + i * 2;
                     into.AddRange(new[] { v, v + 2, v + 1, v + 1, v + 2, v + 3 });
@@ -87,9 +133,10 @@ namespace CityBuilder.Buildings
                 var seed = s * 13 + footprint.x * 7 + footprint.y * 3;
                 var over1 = Overshoot * (0.6f + 0.6f * ParchmentSheet.Hash(s, 1, seed));
                 var over2 = Overshoot * (0.6f + 0.6f * ParchmentSheet.Hash(s, 2, seed));
-                Stroke(strong, a - along * over1 * 0.7f, b + along * over2, 0.07f, seed, 0.006f);
+                Stroke(strong, a - along * over1 * 0.7f, b + along * over2, 0.07f, seed, 0.006f, Mathf.Clamp01((reveal - s * 0.15f) / 0.3f));
                 var shift = outward * (0.05f + 0.03f * ParchmentSheet.Hash(s, 3, seed));
-                Stroke(light, a + shift - along * over2 * 0.4f, b + shift + along * over1 * 0.5f, 0.045f, seed + 101, 0.005f);
+                Stroke(light, a + shift - along * over2 * 0.4f, b + shift + along * over1 * 0.5f, 0.045f, seed + 101, 0.005f,
+                    Mathf.Clamp01((reveal - s * 0.15f - 0.12f) / 0.3f));
             }
 
             // the cells: faint dots along the lines between them
@@ -110,8 +157,8 @@ namespace CityBuilder.Buildings
                     dots.AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
                 }
             }
-            for (var x = 1; x < footprint.x; x++) Dotted(new Vector2(x0 + x * size, z0), new Vector2(x0 + x * size, z1));
-            for (var z = 1; z < footprint.y; z++) Dotted(new Vector2(x0, z0 + z * size), new Vector2(x1, z0 + z * size));
+            if (reveal >= 0.95f) for (var x = 1; x < footprint.x; x++) Dotted(new Vector2(x0 + x * size, z0), new Vector2(x0 + x * size, z1));
+            if (reveal >= 0.95f) for (var z = 1; z < footprint.y; z++) Dotted(new Vector2(x0, z0 + z * size), new Vector2(x1, z0 + z * size));
 
             // the hatching: one patch per cell in the way, all at the same slant so neighbours read as one area
             var k = 0;
@@ -119,7 +166,7 @@ namespace CityBuilder.Buildings
             {
                 for (var x = 0; x < footprint.x; x++, k++)
                 {
-                    if (k >= blocked.Count || !blocked[k]) continue;
+                    if (reveal < 0.75f || k >= blocked.Count || !blocked[k]) continue;
                     var ax = x0 + x * size - 0.04f;
                     var az = z0 + z * size - 0.04f;
                     var bx = x0 + (x + 1) * size + 0.04f;
@@ -142,14 +189,17 @@ namespace CityBuilder.Buildings
             mesh.Clear();
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, uvs);
-            var parts = new List<List<int>>();
-            var materials = new List<Material>();
+            var parts = Parts;
+            var materials = Materials;
+            parts.Clear();
+            materials.Clear();
             void Add(List<int> part, Material material)
             {
                 if (part.Count == 0) return;
                 parts.Add(part);
                 materials.Add(material);
             }
+            Add(shadow, ShadowMaterial());
             Add(dots, Mat(ref _dots, Dots, null));
             Add(hatch, Mat(ref _hatch, Hatch, PaintHatching()));
             Add(light, valid ? Mat(ref _blueLight, InkBlueLight, null) : Mat(ref _redLight, InkRedLight, null));
@@ -164,6 +214,26 @@ namespace CityBuilder.Buildings
         {
             if (cached != null) return cached;
             return cached = ParchmentSheet.Make(texture != null ? texture : Texture2D.whiteTexture, color, true);
+        }
+
+        private static Material ShadowMaterial()
+        {
+            if (_shadow != null) return _shadow;
+            // soft on every side: opaque in the middle, nothing at the rim
+            const int n = 32;
+            var texture = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (var y = 0; y < n; y++)
+            {
+                for (var x = 0; x < n; x++)
+                {
+                    var edge = Mathf.Min(Mathf.Min(x + 0.5f, n - x - 0.5f), Mathf.Min(y + 0.5f, n - y - 0.5f)) / (n * 0.5f);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(edge / 0.55f))));
+                }
+            }
+            texture.Apply();
+            _shadow = ParchmentSheet.Make(texture, ShadowColour, true);
+            _shadow.renderQueue -= 1;
+            return _shadow;
         }
 
         private static Texture2D _hatching;

@@ -18,6 +18,7 @@ Shader "CityBuilder/PlacementGhost"
         [NoScaleOffset] _BlockMask ("Cells in the way (white), one texel per cell", 2D) = "black" {}
         _BlockRect ("Footprint: world x, z of its corner, 1 / width, 1 / depth", Vector) = (0, 0, 1, 1)
         _UseMask ("1: red only over the cells in the way", Float) = 0
+        _RevealY ("Drawn up to this world height (the pen drawing it in)", Float) = 100000
     }
 
     SubShader
@@ -35,6 +36,7 @@ Shader "CityBuilder/PlacementGhost"
             half _Valid;
             float4 _BlockRect;
             half _UseMask;
+            float _RevealY;
         CBUFFER_END
 
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
@@ -78,7 +80,11 @@ Shader "CityBuilder/PlacementGhost"
             #pragma target 2.0
             #pragma vertex Vert
             #pragma fragment FragDepth
-            half4 FragDepth(Varyings input) : SV_Target { return 0; }
+            half4 FragDepth(Varyings input) : SV_Target
+            {
+                clip(_RevealY - input.positionWS.y);
+                return 0;
+            }
             ENDHLSL
         }
 
@@ -110,6 +116,10 @@ Shader "CityBuilder/PlacementGhost"
 
             half4 Frag(Varyings input) : SV_Target
             {
+                // not drawn yet above the pen's line
+                clip(_RevealY - input.positionWS.y);
+                half penLine = saturate(1.0 - (_RevealY - input.positionWS.y) / 0.08);
+
                 float3 normal = normalize(input.normalWS);
                 float3 view = normalize(GetWorldSpaceViewDir(input.positionWS));
                 Light light = GetMainLight();
@@ -137,6 +147,7 @@ Shader "CityBuilder/PlacementGhost"
                 half3 ink = lerp(half3(0.62, 0.17, 0.1), half3(0.16, 0.27, 0.55), valid);
                 half3 paper = lerp(half3(1.0, 0.8, 0.74), half3(0.98, 0.95, 0.86), valid) * (0.78 + 0.22 * lambert);
                 half stroke = max(GridLines(input.positionWS, normal) * 0.85, saturate(rim * 2.2));
+                stroke = max(stroke, penLine);
                 half3 drawn = lerp(paper, ink, stroke);
                 half drawnAlpha = 0.5 + 0.45 * stroke;
 

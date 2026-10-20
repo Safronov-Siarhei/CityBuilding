@@ -76,6 +76,21 @@ namespace CityBuilder.Buildings
         private static readonly int BlockMaskId = Shader.PropertyToID("_BlockMask");
         private static readonly int BlockRectId = Shader.PropertyToID("_BlockRect");
         private static readonly int UseMaskId = Shader.PropertyToID("_UseMask");
+        private static readonly int RevealYId = Shader.PropertyToID("_RevealY");
+
+        // The pen at work (DrawingSketched): the plot is sketched in SketchSeconds when a building
+        // is picked up, the drawing rising out of it just behind; on every move to a new cell the
+        // plot is sketched again, quicker, and the drawing stays.
+        private const float SketchSeconds = 0.45f;
+        private const float ResketchSeconds = 0.22f;
+        private const float DrawingDelay = 0.12f;
+        private const float DrawingSeconds = 0.5f;
+        private float _sketchStart = -1f;
+        private float _sketchLength;
+        private float _drawingStart = -1f;
+        private float _modelHeight = 3f;
+        private float _groundY;
+        private bool _sketchedOnce;
         private Texture2D _mask;
         private static readonly Dictionary<Material, Material> GhostMaterials = new Dictionary<Material, Material>();
         private static Material[] _groundMaterials;
@@ -103,6 +118,27 @@ namespace CityBuilder.Buildings
             var preview = ghost.AddComponent<PlacementPreview>();
             preview._renderers.AddRange(renderers);
             preview._block = new MaterialPropertyBlock();
+            var bounds = new Bounds();
+            var first = true;
+            foreach (var r in renderers)
+            {
+                if (r == null) continue;
+                if (first) bounds = r.bounds;
+                else bounds.Encapsulate(r.bounds);
+                first = false;
+            }
+            preview._modelHeight = Mathf.Max(0.5f, bounds.max.y - ghost.transform.position.y);
+            // the pen has not started yet: nothing of the drawing is there
+            if (Sketched)
+            {
+                foreach (var r in renderers)
+                {
+                    if (r == null) continue;
+                    r.GetPropertyBlock(preview._block);
+                    preview._block.SetFloat(RevealYId, -100000f);
+                    r.SetPropertyBlock(preview._block);
+                }
+            }
             foreach (var renderer in renderers)
             {
                 var shared = renderer.sharedMaterials;
@@ -145,12 +181,21 @@ namespace CityBuilder.Buildings
             }
 
             if (_shownValid == valid && _shownCell == origin && _shownFootprint == footprint && SameBlocked()) return;
+            if (Sketched && (!_sketchedOnce || _shownCell != origin || _shownFootprint != footprint))
+            {
+                var now = Time.unscaledTime;
+                _sketchStart = now;
+                _sketchLength = _sketchedOnce ? ResketchSeconds : SketchSeconds;
+                if (!_sketchedOnce) _drawingStart = now + DrawingDelay;
+                _sketchedOnce = true;
+            }
+            _groundY = centre.y;
             _shownValid = valid;
             _shownCell = origin;
             _shownFootprint = footprint;
             _shownBlocked.Clear();
             _shownBlocked.AddRange(_blocked);
-            if (WithCorners) PaintMask(origin, footprint, valid);
+            if (WithCorners || Sketched) PaintMask(origin, footprint, valid);
             BuildGround(centre.y, origin, footprint, valid);
         }
 
@@ -223,6 +268,36 @@ namespace CityBuilder.Buildings
             _hopTime = 0f;
         }
 
+        private float SketchReveal() => _sketchStart < 0f ? 1f : Mathf.Clamp01((Time.unscaledTime - _sketchStart) / _sketchLength);
+
+        private void Update()
+        {
+            if (!Sketched) return;
+
+            // the plot, stroke by stroke
+            if (_sketchStart >= 0f && _shownValid.HasValue)
+            {
+                var reveal = SketchReveal();
+                SketchMarks.Build(_groundMesh, _groundRenderer, _groundY, _shownCell, _shownFootprint, _shownValid.Value, _shownBlocked, reveal);
+                if (reveal >= 1f) _sketchStart = -1f;
+            }
+
+            // the drawing, rising from the ground behind a line of fresh ink
+            if (_drawingStart >= 0f)
+            {
+                var t = Mathf.Clamp01((Time.unscaledTime - _drawingStart) / DrawingSeconds);
+                var y = t >= 1f ? 100000f : _groundY + Lift + Mathf.SmoothStep(-0.1f, _modelHeight + 0.3f, t);
+                foreach (var renderer in _renderers)
+                {
+                    if (renderer == null) continue;
+                    renderer.GetPropertyBlock(_block);
+                    _block.SetFloat(RevealYId, y);
+                    renderer.SetPropertyBlock(_block);
+                }
+                if (t >= 1f) _drawingStart = -1f;
+            }
+        }
+
         private void LateUpdate()
         {
             if (_hopTime < 0f) return;
@@ -258,7 +333,7 @@ namespace CityBuilder.Buildings
 
             if (Sketched)
             {
-                SketchMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
+                SketchMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked, SketchReveal());
                 return;
             }
             if (WithCorners)

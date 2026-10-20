@@ -98,6 +98,18 @@ namespace CityBuilder.Tests.PlayMode
                 yield return PlaytestCapture.Shoot($"placement-{look}-blocked", LakeShore, 11f, 45f, 25f);
             }
 
+            // the pen at work on the sketched look: a frame every ~0.12 s from the moment it is picked up
+            PlacementPreview.Look = PlacementLook.DrawingSketched;
+            placer.ClearSelection();
+            placer.PinnedOriginForTests = free;
+            var started = Time.realtimeSinceStartup;
+            placer.SelectBuilding(building);
+            for (var frame = 0; frame < 6; frame++)
+            {
+                while (Time.realtimeSinceStartup - started < 0.06f + frame * 0.12f) yield return null;
+                yield return PlaytestCapture.Shoot($"placement-pen-{frame}", OpenGround, 9f, 45f, 25f);
+            }
+
             // the dust: put one down and catch it a fifth of a second in
             PlacementPreview.Look = PlacementLook.OwnColours;
             placer.ClearSelection();
