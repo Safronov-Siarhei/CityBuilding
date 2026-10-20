@@ -172,7 +172,7 @@ namespace CityBuilder.Combat
             if (target == null) return;
 
             _shotTimer = BalanceConfig.Instance.OrcTowerIntervalSeconds;
-            target.TakeDamage(_shotDamage);
+            CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _shotDamage);
         }
 
         private SoldierUnit NearestSoldierWithin(float range)

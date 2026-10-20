@@ -234,10 +234,18 @@ namespace CityBuilder.Tests.PlayMode
             // an earlier test would still be holding wherever that test put it.
             ArcherGroup(army).OrderMoveTo(archerSpot);
 
-            yield return WaitUntil(() => orc == null || Vector3.Distance(orc.transform.position, orcStart) > 1.5f, realSecondsTimeout: 25f);
+            // Measured while it lives: a researched archer kills an orc in two arrows, and the second
+            // one -- flying at an orc already closing in (see CombatProjectiles) -- can land before
+            // it has gone far, so "where it stood on the last frame" would read as never having come.
+            var farthest = 0f;
+            yield return WaitUntil(() =>
+            {
+                if (orc == null) return true;
+                farthest = Mathf.Max(farthest, Vector3.Distance(orc.transform.position, orcStart));
+                return farthest > 1.5f;
+            }, realSecondsTimeout: 25f);
 
-            Assert.IsTrue(orc != null, "The archer killed the orc before it had moved at all, so this could not see whether it would have come.");
-            Assert.Greater(Vector3.Distance(orc.transform.position, orcStart), 1.5f,
+            Assert.Greater(farthest, 1f,
                 "The orc stood still while it was shot from eight metres. With nothing on the map for it to walk to, only retaliation could have moved it -- so archers take raids apart without ever being touched.");
         }
 

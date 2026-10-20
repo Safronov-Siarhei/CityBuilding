@@ -48,6 +48,9 @@ namespace CityBuilder.Combat
         private bool _hasRoute;
 
         public ArmyGroup Group { get; private set; }
+
+        /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
+        public bool IsRanged => Type == SoldierType.Archer;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
         public int MaxHealth { get; private set; } = 1;
         public int CurrentHealth { get; private set; } = 1;
@@ -253,7 +256,8 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
-            wall.TakeDamage(_attackDamage);
+            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), wall, _attackDamage);
+            else wall.TakeDamage(_attackDamage);
             if (wall.CurrentHealth <= 0)
             {
                 _breach = null;
@@ -283,6 +287,14 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
+
+            if (IsRanged)
+            {
+                // The arrow carries both the damage and the "who shot me" to the orc it lands in
+                // (see CombatProjectiles), so the orc turns on the archer when it is hit, not when the arrow leaves.
+                CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), _target, _attackDamage, this);
+                return;
+            }
 
             _target.TakeDamage(_attackDamage);
             if (!_target.IsAlive)

@@ -38,7 +38,9 @@ namespace CityBuilder.Combat
             _timer = _attackIntervalSeconds;
 
             var target = FindNearestOrcInRange();
-            target?.TakeDamage(_buildingInstance.Defense);
+            if (target == null) return;
+            // Seen flying from the parapet and landing (see CombatProjectiles); the damage lands with it.
+            CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _buildingInstance.Defense);
         }
 
         private OrcUnit FindNearestOrcInRange()

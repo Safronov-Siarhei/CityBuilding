@@ -338,7 +338,7 @@ namespace CityBuilder.Combat
                     _attackTimer -= Time.deltaTime;
                     if (_attackTimer > 0f) return;
                     _attackTimer = _attackIntervalSeconds;
-                    _soldierTarget.TakeDamage(_attackDamage);
+                    Strike(_soldierTarget);
                     if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
                     return;
                 }
@@ -382,7 +382,7 @@ namespace CityBuilder.Combat
                 _attackTimer -= Time.deltaTime;
                 if (_attackTimer > 0f) return true;
                 _attackTimer = _attackIntervalSeconds;
-                _prisonerTarget.TakeDamage(_attackDamage);
+                Strike(_prisonerTarget);
                 if (_prisonerTarget == null || _prisonerTarget.CurrentHealth <= 0) _prisonerTarget = null;
                 return true;
             }
@@ -503,7 +503,7 @@ namespace CityBuilder.Combat
                 if (_attackTimer > 0f) return;
                 _attackTimer = _attackIntervalSeconds;
 
-                _soldierTarget.TakeDamage(_attackDamage);
+                Strike(_soldierTarget);
                 if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
                 return;
             }
@@ -543,13 +543,34 @@ namespace CityBuilder.Combat
             return nearest;
         }
 
+        /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
+        public bool IsRanged => Kind == OrcKind.Thrower;
+
+        private void Strike(SoldierUnit soldier)
+        {
+            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
+            else soldier.TakeDamage(_attackDamage);
+        }
+
+        private void Strike(FreedPrisoner prisoner)
+        {
+            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), prisoner, _attackDamage);
+            else prisoner.TakeDamage(_attackDamage);
+        }
+
+        private void Strike(BuildingInstance building)
+        {
+            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
+            else building.TryDamage(_attackDamage);
+        }
+
         private void TickAttack()
         {
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
 
-            _target.TryDamage(_attackDamage);
+            Strike(_target);
             // TryDamage updates CurrentHealth synchronously even though the resulting Destroy()
             // is deferred to end of frame -- safe to read right away to drop a dead target instead
             // of waiting a frame to notice.
