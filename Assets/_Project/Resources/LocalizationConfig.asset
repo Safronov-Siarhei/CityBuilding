@@ -16,30 +16,125 @@ MonoBehaviour:
   - ru
   - en
   entries:
-  - key: '#menu_title'
+  - key: '#menu_continue'
     values:
-    - "\u0421\u0422\u0420\u041E\u0418\u0422\u0415\u041B\u042C \u0413\u041E\u0420\u041E\u0414\u041E\u0412"
-    - CITY BUILDER
-  - key: '#menu_subtitle'
+    - "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C"
+    - Continue
+  - key: '#mode_campaign'
     values:
-    - "\u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0433\u0440\u0430\u0434\u043E\u0441\u0442\u0440\u043E\u0438\u0442\u0435\u043B\u044C"
-    - a mobile city builder
-  - key: '#menu_new_game'
+    - "\u041A\u0430\u043C\u043F\u0430\u043D\u0438\u044F"
+    - Campaign
+  - key: '#mode_sandbox'
+    values:
+    - "\u041F\u0435\u0441\u043E\u0447\u043D\u0438\u0446\u0430"
+    - Sandbox
+  - key: '#mode_invasion'
+    values:
+    - "\u041D\u0430\u0448\u0435\u0441\u0442\u0432\u0438\u0435"
+    - Invasion
+  - key: '#mode_soon'
+    values:
+    - "\u0441\u043A\u043E\u0440\u043E"
+    - coming soon
+  - key: '#mode_saves_count'
+    values:
+    - "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0439: {0}"
+    - 'Saves: {0}'
+  - key: '#continue_day'
+    values:
+    - "\u0434\u0435\u043D\u044C {0}"
+    - day {0}
+  - key: '#when_today'
+    values:
+    - "\u0441\u0435\u0433\u043E\u0434\u043D\u044F \u0432 {0}"
+    - today at {0}
+  - key: '#when_yesterday'
+    values:
+    - "\u0432\u0447\u0435\u0440\u0430 \u0432 {0}"
+    - yesterday at {0}
+  - key: '#sandbox_tab_new'
     values:
     - "\u041D\u043E\u0432\u0430\u044F \u0438\u0433\u0440\u0430"
-    - New Game
-  - key: '#menu_load_game'
+    - New game
+  - key: '#sandbox_tab_saves'
     values:
-    - "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438\u0433\u0440\u0443"
-    - Load Game
-  - key: '#menu_settings'
+    - "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F"
+    - Saves
+  - key: '#campaign_title'
     values:
-    - "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438"
-    - Settings
-  - key: '#menu_quit'
+    - "\u041A\u0430\u0440\u0442\u0430 \u043A\u0430\u043C\u043F\u0430\u043D\u0438\u0438"
+    - Campaign map
+  - key: '#campaign_soon'
     values:
-    - "\u0412\u044B\u0445\u043E\u0434"
+    - "\u041A\u0430\u043C\u043F\u0430\u043D\u0438\u044F \u0432 \u0440\u0430\u0431\u043E\u0442\u0435:
+      \u0443\u0440\u043E\u0432\u043D\u0438 \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F
+      \u043F\u043E\u0437\u0436\u0435."
+    - 'The campaign is in the works: levels will come later.'
+  - key: '#invasion_daily'
+    values:
+    - "\u0418\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u0435 \u0434\u043D\u044F"
+    - Daily challenge
+  - key: '#invasion_daily_soon'
+    values:
+    - "\u0418\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u044F \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F
+      \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 \u0440\u0435\u0436\u0438\u043C\u043E\u043C"
+    - Challenges arrive with the mode
+  - key: '#invasion_changes_in'
+    values:
+    - "\u0421\u043C\u0435\u043D\u0438\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437
+      {0}"
+    - Changes in {0}
+  - key: '#invasion_my_points'
+    values:
+    - "\u0422\u0432\u043E\u0438 \u043E\u0447\u043A\u0438 \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
+    - Your points today
+  - key: '#invasion_counted'
+    values:
+    - "\u0417\u0430\u0441\u0447\u0438\u0442\u0430\u043D\u043E \u043B\u0443\u0447\u0448\u0438\u0445
+      \u0437\u0430\u0431\u0435\u0433\u043E\u0432: {0} \u0438\u0437 {1}"
+    - 'Best runs counted: {0} of {1}'
+  - key: '#invasion_day'
+    values:
+    - "\u0414\u0435\u043D\u044C"
+    - Day
+  - key: '#invasion_week'
+    values:
+    - "\u041D\u0435\u0434\u0435\u043B\u044F"
+    - Week
+  - key: '#invasion_month'
+    values:
+    - "\u041C\u0435\u0441\u044F\u0446"
+    - Month
+  - key: '#invasion_board_soon'
+    values:
+    - "\u0420\u0435\u0439\u0442\u0438\u043D\u0433 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F
+      \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 \u0440\u0435\u0436\u0438\u043C\u043E\u043C"
+    - The leaderboard opens with the mode
+  - key: '#invasion_fight'
+    values:
+    - "\u0412 \u0431\u043E\u0439"
+    - Fight
+  - key: '#quit_question'
+    values:
+    - "\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 \u0438\u0433\u0440\u044B?"
+    - Quit the game?
+  - key: '#quit_stay'
+    values:
+    - "\u041E\u0441\u0442\u0430\u0442\u044C\u0441\u044F"
+    - Stay
+  - key: '#quit_confirm'
+    values:
+    - "\u0412\u044B\u0439\u0442\u0438"
     - Quit
+  - key: '#shop_title'
+    values:
+    - "\u041B\u0430\u0432\u043A\u0430"
+    - Shop
+  - key: '#shop_soon'
+    values:
+    - "\u0417\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F
+      \u0442\u043E\u0432\u0430\u0440\u044B \u0434\u043B\u044F \u0438\u0433\u0440\u044B."
+    - Goods for the game will appear here.
   - key: '#settings_title'
     values:
     - "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438"
@@ -148,10 +243,6 @@ MonoBehaviour:
     values:
     - "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C"
     - Save
-  - key: '#load_title'
-    values:
-    - "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438\u0433\u0440\u0443"
-    - Load Game
   - key: '#load_empty'
     values:
     - "\u041D\u0435\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0439"
@@ -168,10 +259,6 @@ MonoBehaviour:
     values:
     - "\u043A\u0430\u0440\u0442\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0430"
     - map removed
-  - key: '#newgame_title'
-    values:
-    - "\u0412\u044B\u0431\u043E\u0440 \u043A\u0430\u0440\u0442\u044B"
-    - Choose a Map
   - key: '#newgame_play'
     values:
     - "\u0418\u0433\u0440\u0430\u0442\u044C"
