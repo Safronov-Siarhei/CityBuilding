@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using UnityEngine;
 
 namespace CityBuilder.UI
@@ -15,6 +15,17 @@ namespace CityBuilder.UI
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private GameObject showWhilePlacingMandatory;
         [SerializeField] private GameObject hideWhilePlacingMandatory;
+        /// <summary>The cancel/rotate/confirm row: it stands on the bottom edge, and is lifted above the hint while the hint is there.</summary>
+        [SerializeField] private RectTransform placementControls;
+        [SerializeField] private float liftWhilePlacingMandatory;
+
+        private float _controlsY;
+        private bool _lifted;
+
+        private void Awake()
+        {
+            if (placementControls != null) _controlsY = placementControls.anchoredPosition.y;
+        }
 
         private void Update()
         {
@@ -23,6 +34,12 @@ namespace CityBuilder.UI
             if (showWhilePlacingMandatory != null && showWhilePlacingMandatory.activeSelf != mandatory)
             {
                 showWhilePlacingMandatory.SetActive(mandatory);
+            }
+            if (placementControls != null && _lifted != mandatory)
+            {
+                _lifted = mandatory;
+                var at = placementControls.anchoredPosition;
+                placementControls.anchoredPosition = new Vector2(at.x, _controlsY + (mandatory ? liftWhilePlacingMandatory : 0f));
             }
             var showMenu = !mandatory && !buildingPlacer.IsSelecting;
             if (hideWhilePlacingMandatory != null && hideWhilePlacingMandatory.activeSelf != showMenu)

@@ -209,7 +209,13 @@ namespace CityBuilder.Citizens
                 ReportRadiusEmpty(building, claimed == null);
             }
 
-            agent.SetWorking(buildingPos, claimed);
+            var reach = 0f;
+            if (buildingInstance != null && gridManager != null)
+            {
+                var footprint = buildingInstance.RotatedFootprint();
+                reach = Mathf.Max(footprint.x, footprint.y) * gridManager.CellSize * 0.5f + 0.6f;
+            }
+            agent.SetWorking(buildingPos, claimed, reach);
             EnsureWorkVisitSubscription(agent, building);
         }
 

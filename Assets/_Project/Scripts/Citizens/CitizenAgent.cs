@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
@@ -63,6 +63,9 @@ namespace CityBuilder.Citizens
         // there?" test, see OnArrived/OnPauseElapsed.
         public const float NodeReachDistance = 1.6f;
 
+        /// <summary>Close enough to a tree or a boulder to work it on a shift -- nearer than a hand-gather's reach, so the worker is seen at the trunk.</summary>
+        private const float WorkNodeReach = 0.7f;
+
         private enum Mode { Wandering, Working, ManualMove, Gathering }
 
         private Mode _mode = Mode.Wandering;
@@ -78,6 +81,15 @@ namespace CityBuilder.Citizens
         private float _pauseDuration;
 
         private Vector3 _buildingPos;
+
+        /// <summary>
+        /// How near the building's middle counts as being home. The middle is inside the
+        /// building's own collider, so a worker walking straight at it stops against the wall; when
+        /// no NavMesh route led round to a partial end, that used to be "stuck" and a retry of the
+        /// same walk, forever -- and the wood on his back never reached the store (the user's
+        /// Caldera start, 2026-10-20). Half the footprint plus a step: the wall counts as the door.
+        /// </summary>
+        private float _buildingReach;
         private Vector3? _nodePos;
         private bool _headingToNode;
 
@@ -175,8 +187,9 @@ namespace CityBuilder.Citizens
         /// felled mid-walk, and the reference is what lets the agent fill in the progress bar over
         /// the thing it is actually chopping.
         /// </summary>
-        public void SetWorking(Vector3 buildingPos, ResourceNode node)
+        public void SetWorking(Vector3 buildingPos, ResourceNode node, float buildingReach = 0f)
         {
+            _buildingReach = buildingReach;
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
             ReleaseGatherNode();
@@ -255,6 +268,15 @@ namespace CityBuilder.Citizens
                     return;
                 }
 
+                // The same for a working shift, both ends: at the tree within arm's reach, at
+                // home anywhere against its walls (see _buildingReach).
+                if (_mode == Mode.Working && ReachedWorkLegEnd())
+                {
+                    _isWalking = false;
+                    OnArrived();
+                    return;
+                }
+
                 // Horizontal-only distance/direction: SimpleMove's own gravity governs vertical
                 // position (settling onto whatever collider is underneath), so comparing full 3D
                 // distance against _target (whose Y is just a hint) could stall just short of
@@ -298,6 +320,9 @@ namespace CityBuilder.Citizens
 
                 var direction = toTarget / distance;
                 var speed = CurrentWalkSpeed();
+                // Never a step past the point being walked to: a long frame (or the game sped up)
+                // carried a walker over a 5 cm corner and back again, round and round it for good.
+                speed = Mathf.Min(speed, distance / Mathf.Max(Time.deltaTime, 0.0001f));
                 if (_controller != null && _controller.enabled)
                 {
                     // CharacterController collides with building colliders (see BuildingPlacer's
@@ -420,6 +445,21 @@ namespace CityBuilder.Citizens
             var delta = worldPosition - transform.position;
             delta.y = 0f;
             return delta.sqrMagnitude <= NodeReachDistance * NodeReachDistance;
+        }
+
+        private bool ReachedWorkLegEnd()
+        {
+            if (_headingToNode)
+            {
+                if (!_nodePos.HasValue) return false;
+                var toNode = _nodePos.Value - transform.position;
+                toNode.y = 0f;
+                return toNode.sqrMagnitude <= WorkNodeReach * WorkNodeReach;
+            }
+            if (_buildingReach <= 0f) return false;
+            var delta = _buildingPos - transform.position;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= _buildingReach * _buildingReach;
         }
 
         private void ResetStuckTracking()

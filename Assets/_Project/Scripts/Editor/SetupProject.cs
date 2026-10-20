@@ -977,13 +977,15 @@ namespace CityBuilder.EditorTools
             BuildDockRails(uiRoot);
 
 
-            // Hint shown only while the player must place the mandatory Town Hall.
+            // Hint shown only while the player must place the mandatory Town Hall: at the bottom in
+            // the middle, with the rotate button lifted just above it (the user, 2026-10-20).
             var hintRoot = CreateImage(uiRoot, "PlacementHint", new Color(0f, 0f, 0f, 0.6f));
             hintRoot.sprite = panelSprite;
             hintRoot.type = Image.Type.Sliced;
             var hintRect = hintRoot.GetComponent<RectTransform>();
-            hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 1f);
-            hintRect.anchoredPosition = new Vector2(0f, -310f);
+            hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0f);
+            hintRect.pivot = new Vector2(0.5f, 0f);
+            hintRect.anchoredPosition = new Vector2(0f, HudMargin);
             hintRect.sizeDelta = new Vector2(780f, 84f);
             var footprint = mandatoryBuilding != null ? mandatoryBuilding.footprintSize : new Vector2Int(4, 4);
             CreateText(hintRoot.transform, "Text", Localization.Format("#hud_place_hint", footprint.x, footprint.y), 30, Vector2.zero, new Vector2(740f, 74f));
@@ -1170,6 +1172,10 @@ namespace CityBuilder.EditorTools
             // build menu stands -- it steps aside while a building is in hand (see
             // BuildingPlacerUIVisibility and PlacementHudController for which are visible when).
             var (cancelButton, rotateButton, confirmButton, placementRow) = BuildPlacementControls(uiRoot);
+            visibilitySO.Update();
+            visibilitySO.FindProperty("placementControls").objectReferenceValue = placementRow;
+            visibilitySO.FindProperty("liftWhilePlacingMandatory").floatValue = 84f + 12f;
+            visibilitySO.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(rotateButton.onClick, placer.RotateSelection);
             // Cancel. On a phone there was NO way to put a building back down: ClearSelection was
             // reachable only through Escape and the right mouse button.

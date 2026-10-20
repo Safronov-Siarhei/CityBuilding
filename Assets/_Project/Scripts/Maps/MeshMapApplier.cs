@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -128,6 +128,11 @@ namespace CityBuilder.Maps
             if (map.TownHallZone.Length >= 3 && !CityBuilder.Buildings.BuildingInstance.HasAny(CityBuilder.Buildings.BuildingIds.TownHall))
             {
                 StartZoneOverlay.Create(transform, map.TownHallZone);
+                // and the game opens looking at it, so the Town Hall in hand starts out somewhere it
+                // may stand -- "only in the start zone" is then news only to a player who scrolls
+                // away (the user, 2026-10-20)
+                var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
+                if (rig != null) rig.JumpTo(StartZone.Centre(map.TownHallZone));
             }
         }
 

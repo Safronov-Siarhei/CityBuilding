@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.InputControl;
 using UnityEngine;
@@ -103,6 +103,14 @@ namespace CityBuilder.CameraControl
         {
             _focusTarget = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
             _focusing = true;
+            _flingVelocity = Vector3.zero;
+        }
+
+        /// <summary>Puts the view on this point at once, with no glide -- where a new game opens.</summary>
+        public void JumpTo(Vector3 worldPoint)
+        {
+            transform.position = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
+            _focusing = false;
             _flingVelocity = Vector3.zero;
         }
 

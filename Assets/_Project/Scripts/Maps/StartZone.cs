@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using CityBuilder.Grid;
 using UnityEngine;
 
@@ -30,6 +30,15 @@ namespace CityBuilder.Maps
                 if (Vector2.Distance(at, camp) < minDistance) return false;
             }
             return true;
+        }
+
+        /// <summary>The middle of the zone, on the ground plane (the average of its corners -- the zones are drawn convex).</summary>
+        public static Vector3 Centre(Vector2[] zone)
+        {
+            var sum = Vector2.zero;
+            foreach (var p in zone) sum += p;
+            sum /= Mathf.Max(1, zone.Length);
+            return new Vector3(sum.x, 0f, sum.y);
         }
 
         /// <summary>Whether a point is inside a polygon (even-odd rule; any winding).</summary>
