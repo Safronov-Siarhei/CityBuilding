@@ -907,6 +907,9 @@ namespace CityBuilder.EditorTools
             // own palette, relief as its own mesh, stony clearings, and thousands of props. Its
             // water keeps its imported (palette) material -- the depth bands are in the mesh.
             CreateMeshMapDefinition("Map3", "Map-3", null);
+            // Map 4, the Two Rivers Valley (Tools/blender/map4.py): the first designed map -- an
+            // island, rivers and mountains nobody walks through, and the orcs' spots fixed.
+            CreateMeshMapDefinition("Map4", "Map-4", null);
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
@@ -3540,11 +3543,34 @@ namespace CityBuilder.EditorTools
             var decor = CreateMapDecorData(mapId, folder, prefix);
             var terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
             map.EditorInitializeExtras(relief, rocksArea, noBuildArea, decor, terrainMaterial, keepWaterRot: relief != null);
+            ReadOrcSpots(map, $"{folder}/{prefix}-Spots.csv");
 
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{mapId}.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(map, path);
+        }
+
+        /// <summary>
+        /// A designed map's orc spots from <prefix>-Spots.csv (kind,x,y in Blender's axes: Blender
+        /// (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's; other kinds
+        /// (the ruin) are for later. No file: the map has no fixed spots.
+        /// </summary>
+        private static void ReadOrcSpots(MeshMapDefinition map, string csvPath)
+        {
+            if (!File.Exists(csvPath)) return;
+            Vector2? main = null;
+            var camps = new List<Vector2>();
+            foreach (var line in File.ReadAllLines(csvPath))
+            {
+                var cells = line.Split(',');
+                if (cells.Length < 3 || cells[0] == "kind") continue;
+                var spot = new Vector2(float.Parse(cells[1], System.Globalization.CultureInfo.InvariantCulture),
+                    float.Parse(cells[2], System.Globalization.CultureInfo.InvariantCulture));
+                if (cells[0] == "main") main = spot;
+                else if (cells[0] == "camp") camps.Add(spot);
+            }
+            map.EditorInitializeSpots(main, camps.ToArray());
         }
 
         /// <summary>

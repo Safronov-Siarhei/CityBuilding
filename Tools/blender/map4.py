@@ -92,8 +92,13 @@ FORDS_AT = [(0, 0.22), (0, 0.72), (1, 0.31)]
 FORD_R = 5.0                                   # how far a ford's gravel bar reaches from its centre
 BRIDGES_AT = [(0, 0.52), (1, 0.57)]
 BEACHES = [(0.0, -90.0), (-90.0, -14.0), (90.0, -26.0)]   # where the Vikings land
-CIRQUE = (0.0, 60.0, 23.0, 15.0)               # the main base's hollow: centre, half extents
+CIRQUE = (0.0, 60.0, 23.0, 18.0)               # the main base's hollow: centre, half extents
 RUIN = (55.0, 40.0)                            # a clearing kept for the dungeon's ruin (later)
+# Where the orcs stand (the game reads these instead of searching round the Town Hall): the main
+# base's centre in the cirque, its gate to the south, and the five camps -- one before the
+# cirque, two across each river.
+MAIN_BASE = (0.0, 67.0)
+CAMPS = [(0.0, 30.0), (-73.0, 30.0), (-76.0, -30.0), (74.0, 28.0), (77.0, -38.0)]
 HILLS = [(-30, 34, 6, 2.2), (28, 33, 5, 2.0), (-22, -62, 7, 2.4), (26, -58, 6, 2.0)]
 FORESTS = [  # (cx, cy, rx, ry): where TreesArea patches grow, shaped by noise
     (-44, -58, 18, 12),     # south-west, by the west river's mouth
@@ -759,6 +764,9 @@ def main():
     # where nothing may be built: any cell the relief touches (a corner above the plain)
     no_build = {(i, j) for i in range(N) for j in range(N)
                 if cell_sd[i, j] > 0 and any(verts[c][2] > 0.02 for c in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)))}
+    # a ford is ground everyone walks: a building on it would shut the crossing
+    no_build |= {(i, j) for i in range(N) for j in range(N)
+                 if ford_at(i - HALF + 0.5, j - HALF + 0.5) > 0 and cell_sd[i, j] < BEACH + 1}
     zones = []
     for name, cells, z, col in (("TreesArea", forest_cells, -0.02, "leaf"),
                                 ("RocksArea", rocks_cells, -0.03, "rock_dark"),
@@ -801,6 +809,12 @@ def main():
             total += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
             f.write(f"{kind},{v},{x:.3f},{y:.3f},{decor_z(kind, x, y):.3f},{rot:.3f},{sc:.3f}\n")
     print(f"MAP4 decor triangles {total}")
+    with open(os.path.splitext(OUT)[0] + "-spots.csv", "w", encoding="utf-8") as f:
+        f.write("kind,x,y\n")
+        f.write(f"main,{MAIN_BASE[0]:.1f},{MAIN_BASE[1]:.1f}\n")
+        for x, y in CAMPS:
+            f.write(f"camp,{x:.1f},{y:.1f}\n")
+        f.write(f"ruin,{RUIN[0]:.1f},{RUIN[1]:.1f}\n")
 
     if PREVIEW:
         dcoll = bpy.data.collections.new("Decor")

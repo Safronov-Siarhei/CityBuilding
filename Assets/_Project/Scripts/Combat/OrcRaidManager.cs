@@ -215,11 +215,14 @@ namespace CityBuilder.Combat
             var grid = GridManager.Instance;
             if (grid == null || portals == null) return;
 
+            // a designed map's main base faces south whatever the Town Hall's place
+            var designed = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            Quaternion? mainFacing = designed != null && designed.HasMainBaseSpot ? Quaternion.identity : (Quaternion?)null;
             var restored = new List<(OrcPortal portal, int health)>();
             foreach (var state in portals)
             {
                 if (state.Health <= 0) continue;
-                restored.Add((SpawnPortal(grid, state.Cell, state.IsMain), state.Health));
+                restored.Add((SpawnPortal(grid, state.Cell, state.IsMain, state.IsMain ? mainFacing : null), state.Health));
             }
 
             if (closedPortalCells != null)
@@ -231,7 +234,7 @@ namespace CityBuilder.Combat
                     var footprint = main ? MainPortalFootprint : PortalFootprint;
                     grid.SetAreaOccupied(cell, footprint, true);
                     var position = grid.GetFootprintCenterWorld(cell, footprint);
-                    SpawnRuin(cell, position, FacingTownHall(position), main);
+                    SpawnRuin(cell, position, main && mainFacing.HasValue ? mainFacing.Value : FacingTownHall(position), main);
                 }
             }
 
@@ -386,9 +389,16 @@ namespace CityBuilder.Combat
             // means, and the template puts every other slot further out again.
             var nearestAllowed = template[0].DistanceMeters;
 
+            var designed = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            if (designed != null && (designed.HasMainBaseSpot || designed.CampSpots.Length > 0))
+            {
+                // A designed map says where the orcs stand: its rivers and mountains are laid out
+                // round those spots, and a search round the Town Hall could put a camp anywhere.
+                opened = OpenAtMapSpots(grid, townHallPosition, designed);
+            }
             // The main base first, and furthest: its ground is the biggest thing on the map, and the
             // camps fit round it far more easily than it fits round them.
-            if (TryFindMainBaseSpot(grid, townHallPosition, out var mainCell))
+            else if (TryFindMainBaseSpot(grid, townHallPosition, out var mainCell))
             {
                 var main = SpawnPortal(grid, mainCell, isMain: true);
                 MainPortalCell = mainCell;
@@ -399,7 +409,8 @@ namespace CityBuilder.Combat
                 Debug.LogWarning("OrcRaidManager: no room for the main base on this map -- closing every camp's portal wins instead.");
             }
 
-            foreach (var slot in template)
+            foreach (var slot in designed != null && (designed.HasMainBaseSpot || designed.CampSpots.Length > 0)
+                         ? new List<PortalPlacement.Slot>() : template)
             {
                 // The biggest camp that fits round the slot: the square it will grow into is
                 // reserved now, so a smaller one is only taken where the ground has no room.
@@ -449,6 +460,90 @@ namespace CityBuilder.Combat
                     ? Localization.Get("#log_portal_opened")
                     : Localization.Format("#log_portals_opened", opened),
                 EventSeverity.Danger, EventGlyph.Portal, null, NearestPortal(townHallPosition)));
+        }
+
+        /// <summary>How far round a designed spot (metres) a camp may move to find ground it fits on.</summary>
+        private const float SpotSearchMeters = 8f;
+
+        /// <summary>
+        /// Opens the portals on a designed map's own spots: the main base on its spot with its gate
+        /// to the south (the map's cirque opens that way), then the camps, nearest the Town Hall
+        /// first (that is their rank), each the biggest that fits within a few metres of its spot.
+        /// Returns how many camps opened.
+        /// </summary>
+        private int OpenAtMapSpots(GridManager grid, Vector3 townHall, MeshMapDefinition map)
+        {
+            var mapApplier = MeshMapApplier.Instance;
+            var camps = new List<Vector2>(map.CampSpots);
+            camps.Sort((a, b) => (new Vector3(a.x, 0f, a.y) - townHall).sqrMagnitude
+                .CompareTo((new Vector3(b.x, 0f, b.y) - townHall).sqrMagnitude));
+
+            if (map.HasMainBaseSpot)
+            {
+                var spot = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
+                var half = MainPortalFootprint / 2;
+                if (TryFindNear(grid, spot, half, cell => grid.IsWithinBounds(cell, MainPortalFootprint) &&
+                        grid.IsAreaFree(cell, MainPortalFootprint) &&
+                        CampSquareFits(grid, mapApplier, cell, OrcBaseLayout.MainLevel, townHall, quartersOverride: 0), out var mainCell))
+                {
+                    var main = SpawnPortal(grid, mainCell, isMain: true, rotation: Quaternion.identity);
+                    MainPortalCell = mainCell;
+                    BuildCamp(main, camps.Count, OrcBaseLayout.MainLevel);
+                }
+                else
+                {
+                    Debug.LogWarning($"OrcRaidManager: the main base does not fit on the map's spot {map.MainBaseSpot} -- closing every camp's portal wins instead.");
+                }
+            }
+
+            var opened = 0;
+            foreach (var camp in camps)
+            {
+                var spot = new Vector3(camp.x, 0f, camp.y);
+                var found = false;
+                var cell = default(Vector2Int);
+                var maxLevel = OrcBaseLayout.MaxLevel;
+                for (; maxLevel >= 1; maxLevel--)
+                {
+                    var level = maxLevel;
+                    found = TryFindNear(grid, spot, PortalFootprint / 2, c => grid.IsWithinBounds(c, PortalFootprint) &&
+                        grid.IsAreaFree(c, PortalFootprint) && IsSolidGround(grid, mapApplier, c) &&
+                        CampSquareFits(grid, mapApplier, c, level, townHall), out cell);
+                    if (found) break;
+                }
+                if (!found)
+                {
+                    Debug.LogWarning($"OrcRaidManager: no ground for the camp on the map's spot {camp}. That camp is skipped.");
+                    continue;
+                }
+                var portal = SpawnPortal(grid, cell);
+                BuildCamp(portal, opened, maxLevel);
+                opened++;
+            }
+            return opened;
+        }
+
+        /// <summary>The plot nearest a spot (its centre on the spot first, then outwards in rings a metre apart) that passes `fits`.</summary>
+        private static bool TryFindNear(GridManager grid, Vector3 spot, Vector2Int halfPlot, System.Func<Vector2Int, bool> fits, out Vector2Int cell)
+        {
+            var centre = grid.WorldToCell(spot) - halfPlot;
+            var reach = Mathf.CeilToInt(SpotSearchMeters / grid.CellSize);
+            for (var ring = 0; ring <= reach; ring++)
+            {
+                for (var dx = -ring; dx <= ring; dx++)
+                {
+                    for (var dz = -ring; dz <= ring; dz++)
+                    {
+                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != ring) continue;
+                        var candidate = centre + new Vector2Int(dx, dz);
+                        if (!fits(candidate)) continue;
+                        cell = candidate;
+                        return true;
+                    }
+                }
+            }
+            cell = default;
+            return false;
         }
 
         private static Vector3 NearestPortal(Vector3 from)
@@ -519,12 +614,13 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Whether the whole square a camp of `level` covers round a portal on `cell` is on the map, free and standable.</summary>
-        private static bool CampSquareFits(GridManager grid, MeshMapApplier mapApplier, Vector2Int cell, int level, Vector3 townHall)
+        private static bool CampSquareFits(GridManager grid, MeshMapApplier mapApplier, Vector2Int cell, int level, Vector3 townHall,
+            int? quartersOverride = null)
         {
             var layout = OrcBaseLayout.For(level);
             var plot = Vector2Int.one * layout.PortalSize;
             var position = grid.GetFootprintCenterWorld(cell, plot);
-            var quarters = OrcBaseLayout.QuarterTurns(FacingFrom(position, townHall).eulerAngles.y);
+            var quarters = quartersOverride ?? OrcBaseLayout.QuarterTurns(FacingFrom(position, townHall).eulerAngles.y);
             var bounds = layout.Bounds;
             OrcBaseLayout.ToWorld(bounds.min, bounds.size, cell + plot / 2, quarters, out var min, out var size);
             if (!grid.IsWithinBounds(min, size)) return false;
@@ -619,7 +715,8 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Builds one portal on a cell already known to be standable, and hands it back so the caller can set the health a save left it on.</summary>
-        private OrcPortal SpawnPortal(GridManager grid, Vector2Int cell, bool isMain = false)
+        /// <param name="rotation">A fixed facing (a designed map's main base faces south); otherwise the portal faces the Town Hall.</param>
+        private OrcPortal SpawnPortal(GridManager grid, Vector2Int cell, bool isMain = false, Quaternion? rotation = null)
         {
             var footprint = isMain ? MainPortalFootprint : PortalFootprint;
             var position = grid.GetFootprintCenterWorld(cell, footprint);
@@ -627,7 +724,7 @@ namespace CityBuilder.Combat
             EnsureMaterials();
 
             var root = new GameObject(isMain ? "OrcMainPortal" : "OrcPortal");
-            root.transform.SetPositionAndRotation(position, FacingTownHall(position));
+            root.transform.SetPositionAndRotation(position, rotation ?? FacingTownHall(position));
             var portal = root.AddComponent<OrcPortal>();
             portal.SetCell(cell);
             portal.IsMain = isMain;

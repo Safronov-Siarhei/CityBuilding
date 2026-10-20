@@ -49,6 +49,14 @@ namespace CityBuilder.Maps
         // NavMesh. Thin, and centred on the building's own origin, so its walkable top face lands
         // within agentClimb of the surrounding ground and the two connect into one region.
         private const float WalkableSurfaceThickness = 0.2f;
+        // How far below the building's origin the walkable top face sits. A shore on the faceted
+        // maps dips 0.4 m to meet the water, so a deck level with the plain met the bank in a
+        // 0.5 m step -- more than agentClimb -- and a built bridge joined nothing (found on Map 4,
+        // 2026-10-20). At -0.2 it is within reach of a bank anywhere from -0.45 to 0.
+        private const float WalkableSurfaceDrop = 0.2f;
+        // A little longer than the tile, so the deck overlaps the bank instead of ending on the
+        // exact line where the shore mesh stops.
+        private const float WalkableSurfaceOverlap = 1.15f;
         // Bridges are keepSelectedAfterPlacement -- players lay a run of tiles in quick
         // succession, and rebuilding the whole map's NavMesh per tile would hitch on every click.
         // Coalesces a burst of placements into a single rebuild shortly after the last one.
@@ -86,6 +94,9 @@ namespace CityBuilder.Maps
 
         public string CurrentMapId { get; private set; } = string.Empty;
 
+        /// <summary>The mesh map in play, or null on a legacy map.</summary>
+        public MeshMapDefinition CurrentMap { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -109,6 +120,7 @@ namespace CityBuilder.Maps
             if (map == null) return; // not a mesh map id -- leave it for MapTerrainGenerator (legacy PNG saves)
 
             CurrentMapId = mapId;
+            CurrentMap = map;
             Apply(map);
         }
 
@@ -490,8 +502,10 @@ namespace CityBuilder.Maps
             _walkableSurfaces[instance] = new NavMeshBuildSource
             {
                 shape = NavMeshBuildSourceShape.Box,
-                size = new Vector3(footprint.x * cellSize, WalkableSurfaceThickness, footprint.y * cellSize),
-                transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
+                size = new Vector3(footprint.x * cellSize * WalkableSurfaceOverlap, WalkableSurfaceThickness,
+                    footprint.y * cellSize * WalkableSurfaceOverlap),
+                transform = Matrix4x4.TRS(instance.transform.position + Vector3.down * (WalkableSurfaceDrop + WalkableSurfaceThickness * 0.5f),
+                    instance.transform.rotation, Vector3.one),
                 area = 0
             };
 

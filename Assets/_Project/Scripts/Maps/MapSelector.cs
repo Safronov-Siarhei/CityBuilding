@@ -16,11 +16,11 @@ namespace CityBuilder.Maps
     public static class MapSelector
     {
         /// <summary>
-        /// While a map is being tested every new game starts on it (the user asked for Map 3 only,
-        /// 2026-10-13). The other maps stay in the catalog, so their saves still load. Empty
-        /// restores the unseen-first pick below.
+        /// While a map is being tested every new game starts on it (Map 3 from 2026-10-13; Map 4,
+        /// the Two Rivers Valley, from 2026-10-20). The other maps stay in the catalog, so their
+        /// saves still load. Empty restores the unseen-first pick below.
         /// </summary>
-        public const string OnlyMapId = "Map3";
+        public const string OnlyMapId = "Map4";
 
         /// <summary>Returns null if no maps have been imported into the catalog yet.</summary>
         public static MeshMapDefinition PickForNewGame()

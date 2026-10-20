@@ -31,6 +31,11 @@ namespace CityBuilder.Maps
         [SerializeField] private Material decorMaterial;
         [Tooltip("Keep the water mesh's own rotation. Map 1's water needs a -90 degree turn the others must not get.")]
         [SerializeField] private bool keepWaterRotation;
+        // Where a designed map puts the orcs (world x, z): the main base's centre and the camps'.
+        // A map without them leaves OrcRaidManager to search round the Town Hall.
+        [SerializeField] private bool hasMainBaseSpot;
+        [SerializeField] private Vector2 mainBaseSpot;
+        [SerializeField] private Vector2[] campSpots = new Vector2[0];
 
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
         public GameObject GroundPrefab => groundPrefab;
@@ -47,6 +52,9 @@ namespace CityBuilder.Maps
         public MapDecorData DecorData => decorData;
         public Material DecorMaterial => decorMaterial;
         public bool KeepWaterRotation => keepWaterRotation;
+        public bool HasMainBaseSpot => hasMainBaseSpot;
+        public Vector2 MainBaseSpot => mainBaseSpot;
+        public Vector2[] CampSpots => campSpots ?? new Vector2[0];
 
 #if UNITY_EDITOR
         public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, GameObject[] rocks, Material waterMat)
@@ -69,6 +77,13 @@ namespace CityBuilder.Maps
             decorData = decor;
             decorMaterial = decorMat;
             keepWaterRotation = keepWaterRot;
+        }
+
+        public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps)
+        {
+            hasMainBaseSpot = mainBase.HasValue;
+            mainBaseSpot = mainBase ?? Vector2.zero;
+            campSpots = camps ?? new Vector2[0];
         }
 #endif
     }

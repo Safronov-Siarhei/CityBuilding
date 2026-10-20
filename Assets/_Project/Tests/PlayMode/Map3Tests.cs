@@ -57,11 +57,9 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
-        public void ANewGame_StartsOnMap3()
+        public void Map3_StaysInTheCatalog_ForItsSaves()
         {
-            var picked = MapSelector.PickForNewGame();
-            Assert.IsNotNull(picked, "No map in the catalog.");
-            Assert.AreEqual(MapId, picked.MapId, "While Map 3 is being tested every new game must start on it.");
+            Assert.IsNotNull(MeshMapCatalog.GetById(MapId), "Map 3 left the catalog -- its saves would no longer load.");
         }
 
         [Test]

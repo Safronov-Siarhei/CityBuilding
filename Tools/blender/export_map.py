@@ -80,6 +80,11 @@ def main():
         dst = os.path.join(project, "Assets", "_Project", "Models", "Palette", "TerrainPalette.png")
         shutil.copyfile(palette, dst)
         print("COPIED", dst)
+    spots = os.path.splitext(bpy.data.filepath)[0] + "-spots.csv"
+    if os.path.isfile(spots):
+        dst = os.path.join(folder, f"{prefix}-Spots.csv")
+        shutil.copyfile(spots, dst)
+        print("COPIED", dst)
     decor = os.path.splitext(bpy.data.filepath)[0] + "-decor.csv"
     if os.path.isfile(decor):
         dst = os.path.join(folder, f"{prefix}-Decor.csv")
