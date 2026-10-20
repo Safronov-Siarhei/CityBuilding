@@ -41,8 +41,6 @@ namespace CityBuilder.Buildings
         [SerializeField] private LayerMask groundLayerMask = ~0;
         [SerializeField] private List<BuildingData> availableBuildings = new List<BuildingData>();
         [SerializeField] private BuildingData mandatoryFirstBuilding;
-        [SerializeField] private Color validColor = new Color(0.2f, 1f, 0.2f, 0.6f);
-        [SerializeField] private Color invalidColor = new Color(1f, 0.2f, 0.2f, 0.6f);
 
         /// <summary>Height of the aim point as a fraction of the screen, measured from the bottom. Above the hotbar and the confirm row, and high enough that the hand holding the phone is not over it.</summary>
         [SerializeField] private float aimScreenHeightFraction = 0.58f;
@@ -50,14 +48,10 @@ namespace CityBuilder.Buildings
         private BuildingData _selectedBuilding;
         private GameObject _ghostInstance;
         private readonly List<Renderer> _ghostRenderers = new List<Renderer>();
-        // Cached once per renderer in SelectBuilding instead of reading Renderer.materials (which
-        // allocates a fresh array, instantiating unique Material copies on top of that the first
-        // time) on every single Update() while the ghost is following the aim point -- placement
-        // can sit open for several seconds, so that was a steady per-frame GC allocation.
-        private readonly List<Material[]> _ghostMaterials = new List<Material[]>();
-        private Color? _lastGhostColor;
-        // The ghost's ground plate, cell marks and hop, for every look but Classic (see PlacementPreview).
+        // The ghost's look: an ink drawing over a pen sketch of its plot (see PlacementPreview).
         private PlacementPreview _preview;
+        // Asked per cell of the footprint every frame the ghost is up; made once, not per frame.
+        private Func<Vector2Int, bool> _cellInTheWay;
 
         /// <summary>Tests only: holds the ghost on this origin cell instead of following the aim point.</summary>
         public Vector2Int? PinnedOriginForTests;
@@ -75,9 +69,9 @@ namespace CityBuilder.Buildings
         private Vector2Int _lineStart;
         private readonly List<Vector2Int> _lineCells = new List<Vector2Int>();
         private GameObject _linePreviewRoot;
-        private readonly List<GameObject> _linePreviewQuads = new List<GameObject>();
-        private Material _linePreviewValid;
-        private Material _linePreviewInvalid;
+        private Mesh _linePreviewMesh;
+        private MeshRenderer _linePreviewRenderer;
+        private readonly List<SketchMarks.LineCell> _lineStates = new List<SketchMarks.LineCell>();
         private readonly StringBuilder _costText = new StringBuilder();
 
         public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
@@ -281,6 +275,14 @@ namespace CityBuilder.Buildings
             UpdateLinePreview();
         }
 
+        /// <summary>Tests only: shows the line preview over these cells, as a drag along them would.</summary>
+        public void PreviewLineForTests(IEnumerable<Vector2Int> cells)
+        {
+            _lineCells.Clear();
+            _lineCells.AddRange(cells);
+            UpdateLinePreview();
+        }
+
         private void HandleDragMoved(Vector2 screenPosition)
         {
             if (!_drawing) return;
@@ -433,15 +435,7 @@ namespace CityBuilder.Buildings
                 col.enabled = false;
             }
 
-            _ghostMaterials.Clear();
-            _preview = PlacementPreview.UsesPreview ? PlacementPreview.Attach(_ghostInstance, _ghostRenderers) : null;
-            if (_preview == null) foreach (var rend in _ghostRenderers)
-            {
-                // One-time instantiation of this renderer's material copies -- every later
-                // UpdateGhost call reuses this same array instead of re-fetching/re-instantiating.
-                _ghostMaterials.Add(rend.materials);
-            }
-            _lastGhostColor = null;
+            _preview = PlacementPreview.Attach(_ghostInstance, _ghostRenderers);
 
             RefreshTargetCell();
         }
@@ -460,8 +454,6 @@ namespace CityBuilder.Buildings
             _ghostInstance = null;
             _preview = null;
             _ghostRenderers.Clear();
-            _ghostMaterials.Clear();
-            _lastGhostColor = null;
 
             if (cameraController != null) cameraController.InertiaEnabled = true;
             var router = TouchInputRouter.Instance;
@@ -583,29 +575,10 @@ namespace CityBuilder.Buildings
 
             if (_ghostInstance == null) return;
 
-            if (_preview != null)
-            {
-                _preview.Show(GridManager.Instance.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, _rotationSteps * 90f, 0f),
-                    cell, footprint, ok, c => !CanPlaceSelectedBuilding(c, Vector2Int.one, wholeFootprintRules: false));
-                return;
-            }
-
-            var color = ok ? validColor : invalidColor;
-
-            // The color only actually changes when validity flips (moving between two invalid
-            // cells re-applies the same red every frame otherwise) -- skips the Material.color
-            // write (and the shader property-block dirtying that comes with it) on every one of
-            // the many frames where nothing about the ghost's tint needs to change.
-            if (_lastGhostColor.HasValue && _lastGhostColor.Value == color) return;
-            _lastGhostColor = color;
-
-            foreach (var materials in _ghostMaterials)
-            {
-                foreach (var mat in materials)
-                {
-                    if (mat != null) mat.color = color;
-                }
-            }
+            if (_preview == null) return;
+            _cellInTheWay ??= c => !CanPlaceSelectedBuilding(c, Vector2Int.one, wholeFootprintRules: false);
+            _preview.Show(GridManager.Instance.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, _rotationSteps * 90f, 0f),
+                cell, footprint, ok, _cellInTheWay);
         }
 
         private void SetStatus(bool canConfirm, string status)
@@ -788,7 +761,7 @@ namespace CityBuilder.Buildings
             }
 
             // A puff of dust as it lands -- not for each tile of a drawn road or fence line.
-            if (PlacementPreview.UsesPreview && !placedData.isRoad && !IsDrawMode)
+            if (!placedData.isRoad && !IsDrawMode)
             {
                 var size = GridManager.Instance.CellSize;
                 DustPuff.Spawn(center, new Vector2(footprint.x * size, footprint.y * size));
@@ -801,9 +774,9 @@ namespace CityBuilder.Buildings
         // ---------------------------------------------------------------- line preview
 
         /// <summary>
-        /// Flat squares over the cells the line would occupy, green where it will build and red
-        /// where it will not -- including cells the player cannot afford, which are marked before
-        /// the finger lifts rather than silently skipped afterwards.
+        /// The line sketched in ink on the ground, one small square per piece: blue where it will
+        /// build, hatched red where the ground refuses it, outlined red past the point the money
+        /// runs out -- marked before the finger lifts rather than silently skipped afterwards.
         /// </summary>
         private void UpdateLinePreview()
         {
@@ -811,26 +784,18 @@ namespace CityBuilder.Buildings
 
             var affordable = AffordableCellCount();
             var valid = 0;
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
 
+            _lineStates.Clear();
             for (var i = 0; i < _lineCells.Count; i++)
             {
-                var quad = GetPreviewQuad(i);
-                var grid = GridManager.Instance;
-                var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
-                var center = grid.GetFootprintCenterWorld(_lineCells[i], footprint);
-
-                quad.transform.position = new Vector3(center.x, grid.GroundHeight + 0.05f, center.z);
-                quad.transform.localScale = Vector3.one * (grid.CellSize * 0.92f);
-
                 var buildable = CanPlaceSelectedBuilding(_lineCells[i], footprint) && HasRequiredBuilding();
                 if (buildable) valid++;
-
-                quad.GetComponent<Renderer>().sharedMaterial =
-                    buildable && valid <= affordable ? _linePreviewValid : _linePreviewInvalid;
-                quad.SetActive(true);
+                _lineStates.Add(!buildable ? SketchMarks.LineCell.Blocked
+                    : valid <= affordable ? SketchMarks.LineCell.Builds : SketchMarks.LineCell.Unaffordable);
             }
-
-            for (var i = _lineCells.Count; i < _linePreviewQuads.Count; i++) _linePreviewQuads[i].SetActive(false);
+            _linePreviewRoot.SetActive(_lineCells.Count > 0);
+            SketchMarks.BuildLine(_linePreviewMesh, _linePreviewRenderer, GridManager.Instance.GroundHeight, _lineCells, footprint, _lineStates);
 
             var willBuild = Mathf.Min(valid, affordable);
             SetStatus(willBuild > 0, willBuild > 0
@@ -870,33 +835,17 @@ namespace CityBuilder.Buildings
             if (_linePreviewRoot != null) return;
 
             _linePreviewRoot = new GameObject("LinePreview");
-            _linePreviewValid = new Material(RuntimeShaders.Unlit) { color = new Color(0.3f, 0.95f, 0.35f, 0.55f) };
-            _linePreviewInvalid = new Material(RuntimeShaders.Unlit) { color = new Color(0.95f, 0.3f, 0.25f, 0.55f) };
-        }
-
-        /// <summary>Pooled: a long road drag would otherwise allocate a quad per cell per frame.</summary>
-        private GameObject GetPreviewQuad(int index)
-        {
-            while (_linePreviewQuads.Count <= index)
-            {
-                var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                quad.name = "LineCell";
-                Destroy(quad.GetComponent<Collider>());
-                quad.transform.SetParent(_linePreviewRoot.transform, false);
-                // Flat on the ground rather than standing upright like a default Quad.
-                quad.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-                _linePreviewQuads.Add(quad);
-            }
-
-            return _linePreviewQuads[index];
+            _linePreviewMesh = new Mesh { name = "LinePreview" };
+            _linePreviewMesh.MarkDynamic();
+            _linePreviewRoot.AddComponent<MeshFilter>().sharedMesh = _linePreviewMesh;
+            _linePreviewRenderer = _linePreviewRoot.AddComponent<MeshRenderer>();
+            _linePreviewRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _linePreviewRenderer.receiveShadows = false;
         }
 
         private void HideLinePreview()
         {
-            foreach (var quad in _linePreviewQuads)
-            {
-                if (quad != null) quad.SetActive(false);
-            }
+            if (_linePreviewRoot != null) _linePreviewRoot.SetActive(false);
         }
     }
 }

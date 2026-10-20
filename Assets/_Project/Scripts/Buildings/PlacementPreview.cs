@@ -8,103 +8,55 @@ using UnityEngine.Rendering;
 namespace CityBuilder.Buildings
 {
     /// <summary>
-    /// How the building being placed is shown. Classic is the original look -- the whole model
-    /// tinted flat green or red, which the user found cheap (2026-10-20); the others were built
-    /// for them to choose between from photographs.
-    /// </summary>
-    public enum PlacementLook
-    {
-        /// <summary>The whole model tinted green or red.</summary>
-        Classic,
-        /// <summary>Variant 1: the building in its own colours, hovering, with a gold glow; a gold (or wine) plate on the ground under it.</summary>
-        OwnColours,
-        /// <summary>Variant 2: the building drawn in ink on parchment; an inked outline on the ground.</summary>
-        Drawing,
-        /// <summary>Variants 1 + 3: own colours, the plate, and every cell marked -- the ones in the way hatched.</summary>
-        OwnColoursAndCells,
-        /// <summary>Variants 2 + 3: the drawing, an inked outline, and every cell marked.</summary>
-        DrawingAndCells,
-        /// <summary>Set II (2026-10-20): the drawing standing on a sheet of parchment with torn edges; red ink blots where a cell is in the way.</summary>
-        DrawingOnParchment,
-        /// <summary>Set I (2026-10-20): the drawing with an architect's corner marks and dimension lines on the ground; only the part of the drawing over a cell in the way turns red, over a pale watercolour wash.</summary>
-        DrawingWithCorners,
-        /// <summary>Set III (2026-10-20): the drawing over a pen sketch of the plot -- wandering double strokes, dotted cells -- with a cell in the way hatched in red like forbidden ground on an old map.</summary>
-        DrawingSketched,
-    }
-
-    /// <summary>
-    /// Everything the placement ghost shows besides the model itself, for the looks other than
-    /// Classic: the ghost's own material (CityBuilder/PlacementGhost), what is drawn on the ground
-    /// under it, and the little hop it makes from cell to cell. Lives on the ghost; BuildingPlacer
-    /// tells it where the building would go and whether it can.
+    /// How the building being placed is shown (the user's pick, 2026-10-20, after the flat
+    /// green/red tint was found cheap and six looks were photographed): an ink drawing of the
+    /// building (CityBuilder/PlacementGhost) hovering over a pen sketch of its plot (SketchMarks).
+    /// When it is picked up the pen sketches the plot side by side and the drawing rises out of the
+    /// ground behind a line of fresh ink; on every move to a new cell the drawing hops there and
+    /// the plot is sketched again, quicker. Where it cannot stand the ink turns red -- only over
+    /// the cells in the way, which are hatched, or all of it when the reason is elsewhere (money,
+    /// the start zone). Lives on the ghost; BuildingPlacer says where the building would go and
+    /// whether it can.
     ///
-    /// Cheap by construction: the ground mesh is rebuilt only when the cell, the footprint or the
-    /// verdict changes, never per frame, and it is a few dozen quads.
+    /// Cheap by construction: the ground mesh is rebuilt when the cell, the footprint or the
+    /// verdict changes and every frame only for the fraction of a second the pen is drawing; it is
+    /// a few dozen strips.
     /// </summary>
     public class PlacementPreview : MonoBehaviour
     {
-        /// <summary>The look in use. Classic until the user picks one.</summary>
-        public static PlacementLook Look = PlacementLook.Classic;
-
-        public static bool UsesPreview => Look != PlacementLook.Classic;
-        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment || Look == PlacementLook.DrawingWithCorners || Look == PlacementLook.DrawingSketched;
-        private static bool Sketched => Look == PlacementLook.DrawingSketched;
-        private static bool WithCorners => Look == PlacementLook.DrawingWithCorners;
-        private static bool OnParchment => Look == PlacementLook.DrawingOnParchment;
-        private static bool MarksCells => Look == PlacementLook.OwnColoursAndCells || Look == PlacementLook.DrawingAndCells;
-
-        private const float Lift = 0.25f;           // the ghost hovers this far above its cell
+        private const float Lift = 0.25f;           // the drawing hovers this far above its cell
         private const float HopSeconds = 0.14f;
         private const float HopHeight = 0.3f;
-        private const float GroundHeight = 0.05f;
-        private const float RimWidth = 0.18f;
-        private const float CellInset = 0.1f;
-        private const float CellLine = 0.05f;
-
-        private static readonly Color GoldFill = new Color(1f, 0.84f, 0.36f, 0.28f);
-        private static readonly Color GoldRim = new Color(1f, 0.8f, 0.28f, 0.95f);
-        private static readonly Color WineFill = new Color(0.55f, 0.1f, 0.1f, 0.3f);
-        private static readonly Color WineRim = new Color(0.62f, 0.12f, 0.1f, 0.95f);
-        private static readonly Color InkRim = new Color(0.16f, 0.27f, 0.55f, 0.9f);
-        private static readonly Color InkWrong = new Color(0.62f, 0.17f, 0.1f, 0.9f);
-        private static readonly Color CellFree = new Color(1f, 0.97f, 0.86f, 0.55f);
-        private static readonly Color CellBlocked = new Color(0.5f, 0.07f, 0.07f, 0.42f);
-        private static readonly Color CellCross = new Color(0.45f, 0.05f, 0.05f, 0.95f);
-
-        private static readonly int ValidId = Shader.PropertyToID("_Valid");
-        private static readonly int LookId = Shader.PropertyToID("_Look");
-        private static readonly int BlockMaskId = Shader.PropertyToID("_BlockMask");
-        private static readonly int BlockRectId = Shader.PropertyToID("_BlockRect");
-        private static readonly int UseMaskId = Shader.PropertyToID("_UseMask");
-        private static readonly int RevealYId = Shader.PropertyToID("_RevealY");
-
-        // The pen at work (DrawingSketched): the plot is sketched in SketchSeconds when a building
-        // is picked up, the drawing rising out of it just behind; on every move to a new cell the
-        // plot is sketched again, quicker, and the drawing stays.
-        private const float SketchSeconds = 0.45f;
-        private const float ResketchSeconds = 0.22f;
+        private const float SketchSeconds = 0.45f;  // the plot, when the building is picked up
+        private const float ResketchSeconds = 0.22f; // the plot again, on each new cell
         private const float DrawingDelay = 0.12f;
         private const float DrawingSeconds = 0.5f;
-        private float _sketchStart = -1f;
-        private float _sketchLength;
-        private float _drawingStart = -1f;
-        private float _modelHeight = 3f;
-        private float _groundY;
-        private bool _sketchedOnce;
-        private Texture2D _mask;
+
+        private static readonly int UseMaskId = Shader.PropertyToID("_UseMask");
+        private static readonly int ValidId = Shader.PropertyToID("_Valid");
+        private static readonly int BlockMaskId = Shader.PropertyToID("_BlockMask");
+        private static readonly int BlockRectId = Shader.PropertyToID("_BlockRect");
+        private static readonly int RevealYId = Shader.PropertyToID("_RevealY");
         private static readonly Dictionary<Material, Material> GhostMaterials = new Dictionary<Material, Material>();
-        private static Material[] _groundMaterials;
 
         private readonly List<Renderer> _renderers = new List<Renderer>();
         private MaterialPropertyBlock _block;
         private GameObject _ground;
         private Mesh _groundMesh;
         private MeshRenderer _groundRenderer;
+        private Texture2D _mask;
 
         private Vector3 _target;
         private Vector3 _hopFrom;
         private float _hopTime = -1f;
         private bool _placedOnce;
+
+        private float _sketchStart = -1f;
+        private float _sketchLength;
+        private float _drawingStart = -1f;
+        private float _modelHeight = 3f;
+        private float _groundY;
+        private bool _sketchedOnce;
 
         private Vector2Int _shownCell;
         private Vector2Int _shownFootprint;
@@ -112,12 +64,13 @@ namespace CityBuilder.Buildings
         private readonly List<bool> _shownBlocked = new List<bool>();
         private readonly List<bool> _blocked = new List<bool>();
 
-        /// <summary>Puts a preview on a freshly made ghost: its renderers switch to the ghost material.</summary>
+        /// <summary>Puts a preview on a freshly made ghost: its renderers switch to the ghost material, drawn in by the pen.</summary>
         public static PlacementPreview Attach(GameObject ghost, List<Renderer> renderers)
         {
             var preview = ghost.AddComponent<PlacementPreview>();
             preview._renderers.AddRange(renderers);
             preview._block = new MaterialPropertyBlock();
+
             var bounds = new Bounds();
             var first = true;
             foreach (var r in renderers)
@@ -128,60 +81,39 @@ namespace CityBuilder.Buildings
                 first = false;
             }
             preview._modelHeight = Mathf.Max(0.5f, bounds.max.y - ghost.transform.position.y);
-            // the pen has not started yet: nothing of the drawing is there
-            if (Sketched)
-            {
-                foreach (var r in renderers)
-                {
-                    if (r == null) continue;
-                    r.GetPropertyBlock(preview._block);
-                    preview._block.SetFloat(RevealYId, -100000f);
-                    r.SetPropertyBlock(preview._block);
-                }
-            }
+
             foreach (var renderer in renderers)
             {
+                if (renderer == null) continue;
                 var shared = renderer.sharedMaterials;
                 var swapped = new Material[shared.Length];
                 for (var i = 0; i < shared.Length; i++) swapped[i] = GhostMaterialFor(shared[i]);
                 renderer.sharedMaterials = swapped;
                 renderer.shadowCastingMode = ShadowCastingMode.Off;
+                // the pen has not started yet: nothing of the drawing is there
+                renderer.GetPropertyBlock(preview._block);
+                preview._block.SetFloat(RevealYId, -100000f);
+                renderer.SetPropertyBlock(preview._block);
             }
             return preview;
         }
 
         /// <summary>
         /// Where the building would stand and whether it can. `blockedCell` says, per cell of the
-        /// footprint, whether that cell itself is in the way -- the reason a whole building cannot
-        /// stand may be elsewhere (money, the start zone), and then no cell is hatched.
+        /// footprint, whether that cell itself is in the way.
         /// </summary>
         public void Show(Vector3 centre, Quaternion rotation, Vector2Int origin, Vector2Int footprint, bool valid, Func<Vector2Int, bool> blockedCell)
         {
             MoveTo(centre, rotation);
 
-            if (_shownValid != valid)
-            {
-                foreach (var renderer in _renderers)
-                {
-                    if (renderer == null) continue;
-                    renderer.GetPropertyBlock(_block);
-                    _block.SetFloat(ValidId, valid ? 1f : 0f);
-                    _block.SetFloat(LookId, IsDrawing ? 1f : 0f);
-                    renderer.SetPropertyBlock(_block);
-                }
-            }
-
             _blocked.Clear();
-            if (MarksCells || OnParchment || WithCorners || Sketched)
+            for (var z = 0; z < footprint.y; z++)
             {
-                for (var z = 0; z < footprint.y; z++)
-                {
-                    for (var x = 0; x < footprint.x; x++) _blocked.Add(blockedCell(origin + new Vector2Int(x, z)));
-                }
+                for (var x = 0; x < footprint.x; x++) _blocked.Add(blockedCell(origin + new Vector2Int(x, z)));
             }
 
             if (_shownValid == valid && _shownCell == origin && _shownFootprint == footprint && SameBlocked()) return;
-            if (Sketched && (!_sketchedOnce || _shownCell != origin || _shownFootprint != footprint))
+            if (!_sketchedOnce || _shownCell != origin || _shownFootprint != footprint)
             {
                 var now = Time.unscaledTime;
                 _sketchStart = now;
@@ -195,14 +127,30 @@ namespace CityBuilder.Buildings
             _shownFootprint = footprint;
             _shownBlocked.Clear();
             _shownBlocked.AddRange(_blocked);
-            if (WithCorners || Sketched) PaintMask(origin, footprint, valid);
-            BuildGround(centre.y, origin, footprint, valid);
+            PaintMask(origin, footprint, valid);
+            EnsureGround();
+            SketchMarks.Build(_groundMesh, _groundRenderer, _groundY, origin, footprint, valid, _shownBlocked, SketchReveal());
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_ground != null && _ground.activeSelf != visible) _ground.SetActive(visible);
+        }
+
+        private bool SameBlocked()
+        {
+            if (_blocked.Count != _shownBlocked.Count) return false;
+            for (var i = 0; i < _blocked.Count; i++)
+            {
+                if (_blocked[i] != _shownBlocked[i]) return false;
+            }
+            return true;
         }
 
         /// <summary>
-        /// Tells the drawing which of its cells are in the way, so only the part of it standing on
-        /// them turns red. With nothing in the way but the building still refused (money, the start
-        /// zone), the whole drawing turns red as before.
+        /// Tells the drawing whether it can stand and which of its cells are in the way, so only the
+        /// part standing on them turns red. With nothing in the way but the building still refused,
+        /// the whole drawing turns red.
         /// </summary>
         private void PaintMask(Vector2Int origin, Vector2Int footprint, bool valid)
         {
@@ -228,6 +176,7 @@ namespace CityBuilder.Buildings
             {
                 if (renderer == null) continue;
                 renderer.GetPropertyBlock(_block);
+                _block.SetFloat(ValidId, valid ? 1f : 0f);
                 _block.SetTexture(BlockMaskId, _mask);
                 _block.SetVector(BlockRectId, rect);
                 _block.SetFloat(UseMaskId, !valid && any ? 1f : 0f);
@@ -235,22 +184,19 @@ namespace CityBuilder.Buildings
             }
         }
 
-        private bool SameBlocked()
+        private void EnsureGround()
         {
-            if (_blocked.Count != _shownBlocked.Count) return false;
-            for (var i = 0; i < _blocked.Count; i++)
-            {
-                if (_blocked[i] != _shownBlocked[i]) return false;
-            }
-            return true;
+            if (_ground != null) return;
+            _ground = new GameObject("PlacementGround");
+            _groundMesh = new Mesh { name = "PlacementGround" };
+            _groundMesh.MarkDynamic();
+            _ground.AddComponent<MeshFilter>().sharedMesh = _groundMesh;
+            _groundRenderer = _ground.AddComponent<MeshRenderer>();
+            _groundRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            _groundRenderer.receiveShadows = false;
         }
 
-        public void SetVisible(bool visible)
-        {
-            if (_ground != null && _ground.activeSelf != visible) _ground.SetActive(visible);
-        }
-
-        // ------------------------------------------------------------------ the hop
+        // ------------------------------------------------------------------ motion
 
         private void MoveTo(Vector3 centre, Quaternion rotation)
         {
@@ -272,10 +218,8 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
-            if (!Sketched) return;
-
             // the plot, stroke by stroke
-            if (_sketchStart >= 0f && _shownValid.HasValue)
+            if (_sketchStart >= 0f && _shownValid.HasValue && _groundMesh != null)
             {
                 var reveal = SketchReveal();
                 SketchMarks.Build(_groundMesh, _groundRenderer, _groundY, _shownCell, _shownFootprint, _shownValid.Value, _shownBlocked, reveal);
@@ -311,161 +255,8 @@ namespace CityBuilder.Buildings
         private void OnDestroy()
         {
             if (_ground != null) Destroy(_ground);
-            if (_mask != null) Destroy(_mask);
             if (_groundMesh != null) Destroy(_groundMesh);
-        }
-
-        // ------------------------------------------------------------------ the ground
-
-        private enum Part { Fill, Rim, Free, Blocked, Cross }
-
-        private void BuildGround(float y, Vector2Int origin, Vector2Int footprint, bool valid)
-        {
-            if (_ground == null)
-            {
-                _ground = new GameObject("PlacementGround");
-                _groundMesh = new Mesh { name = "PlacementGround" };
-                _ground.AddComponent<MeshFilter>().sharedMesh = _groundMesh;
-                _groundRenderer = _ground.AddComponent<MeshRenderer>();
-                _groundRenderer.shadowCastingMode = ShadowCastingMode.Off;
-                _groundRenderer.receiveShadows = false;
-            }
-
-            if (Sketched)
-            {
-                SketchMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked, SketchReveal());
-                return;
-            }
-            if (WithCorners)
-            {
-                CornerMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
-                return;
-            }
-            if (OnParchment)
-            {
-                ParchmentSheet.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
-                return;
-            }
-
-            var grid = GridManager.Instance;
-            var size = grid.CellSize;
-            var corner = grid.CellToWorld(origin);
-            var x0 = corner.x;
-            var z0 = corner.z;
-            var x1 = x0 + footprint.x * size;
-            var z1 = z0 + footprint.y * size;
-            var h = y + GroundHeight;
-
-            var vertices = new List<Vector3>();
-            var parts = new Dictionary<Part, List<int>>();
-            void Quad(Part part, float ax, float az, float bx, float bz, float lift = 0f)
-            {
-                if (!parts.TryGetValue(part, out var list)) parts[part] = list = new List<int>();
-                var i = vertices.Count;
-                vertices.Add(new Vector3(ax, h + lift, az));
-                vertices.Add(new Vector3(ax, h + lift, bz));
-                vertices.Add(new Vector3(bx, h + lift, bz));
-                vertices.Add(new Vector3(bx, h + lift, az));
-                list.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
-            }
-            void Frame(Part part, float ax, float az, float bx, float bz, float w, float lift)
-            {
-                Quad(part, ax, az, bx, az + w, lift);
-                Quad(part, ax, bz - w, bx, bz, lift);
-                Quad(part, ax, az + w, ax + w, bz - w, lift);
-                Quad(part, bx - w, az + w, bx, bz - w, lift);
-            }
-            void Bar(Part part, Vector3 a, Vector3 b, float w, float lift)
-            {
-                if (!parts.TryGetValue(part, out var list)) parts[part] = list = new List<int>();
-                var side = Vector3.Cross(Vector3.up, (b - a).normalized) * (w * 0.5f);
-                var i = vertices.Count;
-                vertices.Add(new Vector3(a.x - side.x, h + lift, a.z - side.z));
-                vertices.Add(new Vector3(b.x - side.x, h + lift, b.z - side.z));
-                vertices.Add(new Vector3(b.x + side.x, h + lift, b.z + side.z));
-                vertices.Add(new Vector3(a.x + side.x, h + lift, a.z + side.z));
-                list.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
-            }
-
-            if (!IsDrawing) Quad(Part.Fill, x0, z0, x1, z1);
-            Frame(Part.Rim, x0 - RimWidth * 0.5f, z0 - RimWidth * 0.5f, x1 + RimWidth * 0.5f, z1 + RimWidth * 0.5f, RimWidth, 0.004f);
-
-            if (MarksCells)
-            {
-                var k = 0;
-                for (var z = 0; z < footprint.y; z++)
-                {
-                    for (var x = 0; x < footprint.x; x++, k++)
-                    {
-                        var ax = x0 + x * size + CellInset;
-                        var az = z0 + z * size + CellInset;
-                        var bx = x0 + (x + 1) * size - CellInset;
-                        var bz = z0 + (z + 1) * size - CellInset;
-                        if (_blocked[k])
-                        {
-                            Quad(Part.Blocked, ax, az, bx, bz, 0.002f);
-                            Bar(Part.Cross, new Vector3(ax + 0.12f, 0f, az + 0.12f), new Vector3(bx - 0.12f, 0f, bz - 0.12f), 0.09f, 0.006f);
-                            Bar(Part.Cross, new Vector3(ax + 0.12f, 0f, bz - 0.12f), new Vector3(bx - 0.12f, 0f, az + 0.12f), 0.09f, 0.006f);
-                        }
-                        else
-                        {
-                            Frame(Part.Free, ax, az, bx, bz, CellLine, 0.002f);
-                        }
-                    }
-                }
-            }
-
-            var materials = GroundMaterials();
-            var used = new List<Material>();
-            _groundMesh.Clear();
-            _groundMesh.SetVertices(vertices);
-            _groundMesh.subMeshCount = parts.Count;
-            var sub = 0;
-            foreach (var part in new[] { Part.Fill, Part.Rim, Part.Free, Part.Blocked, Part.Cross })
-            {
-                if (!parts.TryGetValue(part, out var list)) continue;
-                _groundMesh.SetTriangles(list, sub++);
-                used.Add(MaterialFor(part, valid, materials));
-            }
-            _groundMesh.RecalculateBounds();
-            _groundRenderer.sharedMaterials = used.ToArray();
-        }
-
-        private static Material MaterialFor(Part part, bool valid, Material[] m)
-        {
-            switch (part)
-            {
-                case Part.Fill: return valid ? m[0] : m[2];
-                case Part.Rim: return IsDrawing ? (valid ? m[4] : m[5]) : (valid ? m[1] : m[3]);
-                case Part.Free: return m[6];
-                case Part.Blocked: return m[7];
-                default: return m[8];
-            }
-        }
-
-        private static Material[] GroundMaterials()
-        {
-            if (_groundMaterials != null && _groundMaterials[0] != null) return _groundMaterials;
-            _groundMaterials = new[]
-            {
-                Transparent(GoldFill), Transparent(GoldRim), Transparent(WineFill), Transparent(WineRim),
-                Transparent(InkRim), Transparent(InkWrong), Transparent(CellFree), Transparent(CellBlocked), Transparent(CellCross),
-            };
-            return _groundMaterials;
-        }
-
-        private static Material Transparent(Color color)
-        {
-            var material = new Material(RuntimeShaders.Unlit) { color = color };
-            material.SetFloat("_Surface", 1f);
-            material.SetFloat("_Blend", 0f);
-            material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
-            material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
-            material.SetFloat("_ZWrite", 0f);
-            material.SetFloat("_Cull", (float)CullMode.Off);
-            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            material.renderQueue = (int)RenderQueue.Transparent;
-            return material;
+            if (_mask != null) Destroy(_mask);
         }
 
         private static Material GhostMaterialFor(Material original)
@@ -473,8 +264,6 @@ namespace CityBuilder.Buildings
             if (original == null) return null;
             if (GhostMaterials.TryGetValue(original, out var ghost) && ghost != null) return ghost;
             ghost = new Material(RuntimeShaders.PlacementGhost) { name = original.name + " (ghost)" };
-            if (original.HasProperty("_BaseMap")) ghost.SetTexture("_BaseMap", original.GetTexture("_BaseMap"));
-            if (original.HasProperty("_BaseColor")) ghost.SetColor("_BaseColor", original.GetColor("_BaseColor"));
             GhostMaterials[original] = ghost;
             return ghost;
         }
