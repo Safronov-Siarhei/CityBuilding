@@ -28,7 +28,7 @@ namespace CityBuilder.Tests.PlayMode
     public class RotatedFootprintTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Half a cell of slack: the visible geometry is inset from its cell edges (BuildingInset) and carries whatever porch or chimney the model has, but its middle cannot wander off the footprint.</summary>
         private const float AllowedCentreError = 0.35f;

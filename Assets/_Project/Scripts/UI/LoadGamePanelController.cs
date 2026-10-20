@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Core;
+using CityBuilder.Maps;
 using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -102,13 +103,33 @@ namespace CityBuilder.UI
             text.alignment = TextAnchor.MiddleLeft;
             text.color = UiTheme.Ink;
             var localTime = info.LastModifiedUtc.ToLocalTime();
-            text.text = $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm}";
+            var mapExists = MapStillExists(info.Name);
+            text.text = mapExists
+                ? $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm}"
+                : $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm} \u00b7 {Localization.Get("#load_map_removed")}";
 
             var button = rowGO.GetComponent<Button>();
-            var capturedName = info.Name;
-            button.onClick.AddListener(() => Select(capturedName));
+            if (mapExists)
+            {
+                var capturedName = info.Name;
+                button.onClick.AddListener(() => Select(capturedName));
+            }
+            else
+            {
+                // A save on a map that is no longer in the game (Maps 1 and 2 went on 2026-10-20)
+                // is shown, so the player knows where it went, but cannot be picked.
+                button.interactable = false;
+                text.color = new Color(UiTheme.Ink.r, UiTheme.Ink.g, UiTheme.Ink.b, 0.45f);
+            }
 
             _rows.Add((info.Name, image));
+        }
+
+        /// <summary>Whether the map this save was made on is still in the game. A save that names no map, or one of the old PNG maps, counts as loadable.</summary>
+        private static bool MapStillExists(string saveName)
+        {
+            var mapId = SaveSystem.Load(saveName)?.mapId;
+            return string.IsNullOrEmpty(mapId) || MeshMapCatalog.GetById(mapId) != null || MapCatalog.GetById(mapId) != null;
         }
 
         private static string DisplayName(string saveName) =>

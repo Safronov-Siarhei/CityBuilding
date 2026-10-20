@@ -26,7 +26,7 @@ namespace CityBuilder.Tests.PlayMode
     public class ArmyCombatTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Fights are seconds long in game time; running them faster keeps the suite quick without changing any of the logic under test.</summary>
         private const float TestTimeScale = 8f;

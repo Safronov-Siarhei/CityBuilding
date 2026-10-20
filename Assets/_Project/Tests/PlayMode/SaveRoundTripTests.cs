@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
@@ -27,7 +27,7 @@ namespace CityBuilder.Tests.PlayMode
     public class SaveRoundTripTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
         private const string SaveName = "PlayModeRoundTrip";
 
         [UnityTearDown]
@@ -98,7 +98,9 @@ namespace CityBuilder.Tests.PlayMode
 
             // One camp loses its totem: its ruin and its portal's lost shield must survive the
             // reload, and the other camps' shields must come back up.
-            var brokenCamp = OrcCamp.All.First(c => c.Buildings.Any(b => b.Kind == OrcCampBuildingKind.Totem));
+            // An ordinary camp, not the main base: the main base has two totems, and breaking one
+            // of them rightly leaves its portal shielded by the other.
+            var brokenCamp = OrcCamp.All.First(c => !c.IsMain && c.Buildings.Count(b => b.Kind == OrcCampBuildingKind.Totem) == 1);
             var brokenTotem = brokenCamp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Totem);
             var brokenTotemCell = brokenTotem.Cell;
             var brokenPortalCell = brokenCamp.PortalCell;

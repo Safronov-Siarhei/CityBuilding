@@ -35,7 +35,7 @@ namespace CityBuilder.Tests.PlayMode
     public class WalkCostTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Roughly the population a developed town reaches, so the totals read as "a frame of that town".</summary>
         private const int Movers = 150;

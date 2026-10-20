@@ -25,7 +25,7 @@ namespace CityBuilder.Tests.PlayMode
     public class StorageAndUpgradeTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Production is measured in six-second ticks; a test that waits for one in real time is a test nobody runs twice.</summary>
         private const float TestTimeScale = 8f;

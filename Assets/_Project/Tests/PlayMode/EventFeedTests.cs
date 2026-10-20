@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -24,7 +24,7 @@ namespace CityBuilder.Tests.PlayMode
     public class EventFeedTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map2";
+        private const string MapId = "Map3";
 
         private static bool _sceneLoaded;
         private static Vector3 _townHall;
@@ -228,7 +228,10 @@ namespace CityBuilder.Tests.PlayMode
         {
             var data = PlaytestWorld.Building(buildingId);
             Assert.IsNotNull(data, $"No '{buildingId}' in the catalogue.");
-            var instance = PlaytestWorld.Place(data, PlaytestWorld.FindFreeArea(data.footprintSize));
+            // near the town rather than in the map's first free corner: a corner can sit at the edge
+            // the camera is not allowed to reach, and the tests follow the camera to the building
+            var origin = PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize + new Vector2Int(2, 2));
+            var instance = PlaytestWorld.Place(data, origin + Vector2Int.one);
             _placed.Add(instance);
             return instance;
         }

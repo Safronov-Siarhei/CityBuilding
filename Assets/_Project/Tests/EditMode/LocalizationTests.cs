@@ -244,7 +244,7 @@ namespace CityBuilder.Tests.EditMode
                 "#ui_close", "#ui_cancel", "#ui_back", "#ui_free",
                 "#hud_menu", "#hud_save", "#hud_workforce",
                 "#exit_title", "#exit_warning", "#exit_confirm",
-                "#save_title", "#save_confirm", "#load_title", "#load_empty", "#load_confirm",
+                "#save_title", "#save_confirm", "#load_title", "#load_empty", "#load_confirm", "#load_map_removed",
                 "#newgame_title", "#newgame_play", "#newgame_no_maps",
                 "#building_no_decay", "#building_assign", "#building_unassign", "#building_upgrade",
                 "#building_repair", "#building_recruit",

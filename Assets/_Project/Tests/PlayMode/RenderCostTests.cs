@@ -45,7 +45,7 @@ namespace CityBuilder.Tests.PlayMode
     public class RenderCostTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         private const int TownBuildings = 30;
         private const int TownPopulation = 60;

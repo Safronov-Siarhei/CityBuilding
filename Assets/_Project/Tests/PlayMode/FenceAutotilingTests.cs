@@ -29,7 +29,7 @@ namespace CityBuilder.Tests.PlayMode
     public class FenceAutotilingTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>A rectangle big enough to contain all four corner orientations plus straight runs on both axes.</summary>
         private static readonly Vector2Int RingSize = new Vector2Int(6, 5);

@@ -25,7 +25,7 @@ namespace CityBuilder.Tests.PlayMode
     public class ResearchGateTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>A research is a minute long; a test that waits one out in real time is a test nobody runs twice.</summary>
         private const float TestTimeScale = 20f;

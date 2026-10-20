@@ -29,7 +29,7 @@ namespace CityBuilder.Tests.PlayMode
     public class ForestClickTargetingTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
         // SetupProject pitches the camera pivot 50 degrees. Any invisible obstacle standing h
         // metres above the ground displaces a click by h/tan(50) ~= 0.84h horizontally, which is
         // what these tests measure.
@@ -215,7 +215,7 @@ namespace CityBuilder.Tests.PlayMode
             }
 
             var mapApplier = MeshMapApplier.Instance;
-            var groundObject = GameObject.Find("Map-1-Ground(Clone)");
+            var groundObject = GameObject.Find("Map-3-Ground(Clone)");
             var groundColliders = groundObject != null ? groundObject.GetComponentsInChildren<Collider>().Length : -1;
 
             return $"[ray from {ray.origin} dir {ray.direction}; straight down finds {verticalHit}; " +

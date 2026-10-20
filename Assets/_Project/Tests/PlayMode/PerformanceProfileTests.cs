@@ -45,7 +45,7 @@ namespace CityBuilder.Tests.PlayMode
     public class PerformanceProfileTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>Frames thrown away before each stage's samples: the frames right after a change carry its one-off cost (spawning, NavMesh carving, a Recompute), which is not what a per-frame budget is about.</summary>
         private const int WarmupFrames = 40;

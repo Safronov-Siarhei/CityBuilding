@@ -22,7 +22,7 @@ namespace CityBuilder.Tests.PlayMode
     public class PrisonerCageTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         private BuildingInstance _hall;
 

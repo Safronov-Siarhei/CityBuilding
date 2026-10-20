@@ -31,7 +31,7 @@ namespace CityBuilder.Tests.PlayMode
     public class MintingTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         private const int StockedBars = 200;
         private const int StockedCoal = 200;

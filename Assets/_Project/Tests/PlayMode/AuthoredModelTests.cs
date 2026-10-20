@@ -27,7 +27,7 @@ namespace CityBuilder.Tests.PlayMode
     public class AuthoredModelTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map1";
+        private const string MapId = "Map3";
 
         /// <summary>The building whose model is authored today. Anything else is still a placeholder built to a declared height.</summary>
         private const string AuthoredBuildingId = BuildingIds.TownHall;
@@ -115,7 +115,7 @@ namespace CityBuilder.Tests.PlayMode
         /// boxes. Not an assertion: it shoots what fits and says so when the map has nowhere to line
         /// anything up.
         ///
-        /// A dozen at a time rather than all at once because Map1 is a narrow strip of dry land: the
+        /// A dozen at a time rather than all at once because a map has only so much open land: the
         /// single grid a full catalogue would need has not fitted on it since the twenty-eighth
         /// building.
         /// </summary>

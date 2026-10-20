@@ -34,7 +34,6 @@ namespace CityBuilder.EditorTools
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
         private const string ResourceScriptableObjectsFolder = "Assets/_Project/ScriptableObjects/Resources";
         private const string MeshMapsFolder = "Assets/_Project/Resources/MeshMaps";
-        private const string ModelsMap1Folder = "Assets/_Project/Models/Map1";
         private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
         private const string ModelsBuildingsFolder = "Assets/_Project/Models/Buildings";
 
@@ -897,13 +896,8 @@ namespace CityBuilder.EditorTools
             }
             saveControllerSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // One water material for every map: CreateWaterMaterial replaces the asset at its
-            // path, so a second call would destroy the one the first map already holds.
-            var waterMaterial = CreateWaterMaterial();
-            CreateMeshMapDefinition("Map1", "Map-1", waterMaterial);
-            // Claude's map, made in Blender (Tools/blender/map1_claude.py, exported by
-            // export_map.py): one mainland between mountains and the sea, on the buildings' palette.
-            CreateMeshMapDefinition("Map2", "Map-2", waterMaterial);
+            // Maps 1 and 2 (the flat first maps) were deleted on 2026-10-20 at the user's word; a
+            // save made on one is listed as unloadable (see LoadGamePanelController).
             // Map 3, the summer valley (Tools/blender/map3.py): faceted land and water on the map's
             // own palette, relief as its own mesh, stony clearings, and thousands of props. Its
             // water keeps its imported (palette) material -- the depth bands are in the mesh.
@@ -3737,31 +3731,6 @@ namespace CityBuilder.EditorTools
             var path = $"{MaterialsFolder}/Ground.mat";
             DeleteIfExists(path);
             var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.42f, 0.62f, 0.32f) };
-            AssetDatabase.CreateAsset(material, path);
-            return material;
-        }
-
-        /// <summary>
-        /// User-supplied Water.png (hand-authored alongside the Map1 FBX assets) applied as the
-        /// main texture on a URP Lit material, assigned to the Water mesh's renderer at runtime
-        /// by MeshMapApplier -- same "materials controlled explicitly through code" pattern as
-        /// every other material in this file, just texture-backed instead of flat-color.
-        /// </summary>
-        private static Material CreateWaterMaterial()
-        {
-            var texturePath = $"{ModelsMap1Folder}/Water.png";
-            AssetDatabase.ImportAsset(texturePath);
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-            if (texture == null)
-            {
-                Debug.LogWarning($"CreateWaterMaterial: Water.png not found at {texturePath} -- water will keep its FBX-imported default material.");
-                return null;
-            }
-
-            var path = $"{MaterialsFolder}/Water.mat";
-            Directory.CreateDirectory(MaterialsFolder);
-            DeleteIfExists(path);
-            var material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { mainTexture = texture };
             AssetDatabase.CreateAsset(material, path);
             return material;
         }

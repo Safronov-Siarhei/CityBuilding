@@ -22,7 +22,7 @@ namespace CityBuilder.Tests.PlayMode
     public class HudPhotoTests
     {
         private const string GameSceneName = "CityBuilder";
-        private const string MapId = "Map2";
+        private const string MapId = "Map3";
 
         private static bool _sceneLoaded;
         private static Vector3 _townHall;
