@@ -142,13 +142,13 @@ namespace CityBuilder.Citizens
             }
         }
 
-        /// <summary>How far through the dig at the tree or boulder, 0..1 -- meaningful while Harvesting.</summary>
         /// <summary>Which name this citizen goes by -- his place in the town's arrival order (see CitizenNames).</summary>
         public int NameIndex { get; set; }
 
         /// <summary>His own name, in the current language.</summary>
         public string CitizenName => CitizenNames.Of(NameIndex);
 
+        /// <summary>How far through the dig at the tree or boulder, 0..1 -- meaningful while Harvesting.</summary>
         public float HarvestProgress => _pauseDuration > 0f ? 1f - Mathf.Clamp01(_pauseTimer / _pauseDuration) : 0f;
 
         /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>

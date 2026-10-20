@@ -1338,6 +1338,12 @@ namespace CityBuilder.EditorTools
 
             var label = CreateText(frame.transform, "MigrationLabel", string.Empty, 24, Vector2.zero, new Vector2(336f, 52f), UiTheme.Ink);
             label.font = UiTheme.Bold;
+            // "Поселение обживается: 6:12" is wider than the plaque at 24: shrink to fit rather
+            // than lose the clock off the end (the user's screenshot, 2026-10-20).
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.resizeTextForBestFit = true;
+            label.resizeTextMinSize = 14;
+            label.resizeTextMaxSize = 24;
 
             var go = new GameObject("MigrationController");
             go.transform.SetParent(canvasParent, false);

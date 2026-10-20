@@ -104,7 +104,12 @@ namespace CityBuilder.Citizens
 
                 foreach (var agent in pair.Value)
                 {
-                    if (!_claimedNodes.ContainsKey(agent))
+                    // Not one on his way home with a load: a tree is felled in one visit, so its
+                    // claim is gone the moment he picks up the wood, and re-assigning him here
+                    // turned him round to the next tree (or kept restarting his rest at the
+                    // sawmill) before he could hand it in. Every sawmill on every map earned
+                    // nothing (the user, 2026-10-20). He gets his next tree when he delivers.
+                    if (!_claimedNodes.ContainsKey(agent) && CarriedBy(agent) == 0)
                     {
                         AssignAgentToBuilding(agent, building);
                     }
@@ -292,7 +297,8 @@ namespace CityBuilder.Citizens
         {
             if (!_claimedNodes.TryGetValue(agent, out var node) || node == null) return;
 
-            _carriedByAgent[agent] = node.TakeYield();
+            // Added, not set: whatever he already carries is not thrown away.
+            _carriedByAgent[agent] = CarriedBy(agent) + node.TakeYield();
             if (!node.IsDepleted) return;
 
             _claimedNodes.Remove(agent);
