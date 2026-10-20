@@ -108,6 +108,19 @@ namespace CityBuilder.Citizens
             }
         }
 
+        /// <summary>Where a citizen works, or null for one who has no job -- for the citizens' list.</summary>
+        public ProductionBuilding WorkplaceOf(CitizenAgent agent)
+        {
+            foreach (var pair in _workingAgents)
+            {
+                if (pair.Value.Contains(agent)) return pair.Key;
+            }
+            return null;
+        }
+
+        /// <summary>What a worker has on his back from the last dig, on the way home.</summary>
+        public int CarriedBy(CitizenAgent agent) => _carriedByAgent.TryGetValue(agent, out var carried) ? carried : 0;
+
         public void RegisterProductionBuilding(ProductionBuilding building)
         {
             if (_workingAgents.ContainsKey(building)) return;

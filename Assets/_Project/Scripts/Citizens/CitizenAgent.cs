@@ -124,6 +124,27 @@ namespace CityBuilder.Citizens
         /// <summary>Fired once the worker has walked back and rested at its building (Working mode only) -- what banks the load it was carrying. Separate from the visit above because the resource is earned at the tree but delivered at the yard, and a worker killed on the way home should arrive with nothing.</summary>
         public event Action OnReturnedToBuilding;
 
+        /// <summary>What a citizen is doing right now, for the citizens' list (WorkforcePanelController).</summary>
+        public enum Activity { Idle, ToWork, Harvesting, GoingHome, AtWork, Order, Gathering }
+
+        public Activity CurrentActivity
+        {
+            get
+            {
+                switch (_mode)
+                {
+                    case Mode.Wandering: return Activity.Idle;
+                    case Mode.ManualMove: return Activity.Order;
+                    case Mode.Gathering: return Activity.Gathering;
+                }
+                if (_headingToNode) return _isWalking ? Activity.ToWork : Activity.Harvesting;
+                return _isWalking ? (_nodePos.HasValue ? Activity.GoingHome : Activity.ToWork) : Activity.AtWork;
+            }
+        }
+
+        /// <summary>How far through the dig at the tree or boulder, 0..1 -- meaningful while Harvesting.</summary>
+        public float HarvestProgress => _pauseDuration > 0f ? 1f - Mathf.Clamp01(_pauseTimer / _pauseDuration) : 0f;
+
         /// <summary>True only while idle-wandering -- see CitizenSelector, which restricts manual move orders to this so redirecting a citizen never desyncs a ProductionBuilding's worker count or a claimed ResourceNode.</summary>
         public bool IsIdle => _mode == Mode.Wandering;
 

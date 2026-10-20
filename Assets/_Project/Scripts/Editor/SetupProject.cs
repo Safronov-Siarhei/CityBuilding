@@ -1406,13 +1406,28 @@ namespace CityBuilder.EditorTools
             cardRect.sizeDelta = new Vector2(960f, 780f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 320f), new Vector2(880f, 60f)), "#workforce_title");
-            var summaryLabel = CreateText(card.transform, "Summary", string.Empty, 22, new Vector2(0f, 272f), new Vector2(880f, 40f), new Color(1f, 1f, 1f, 0.8f));
+            Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 336f), new Vector2(880f, 56f)), "#workforce_title");
 
-            BuildScrollList(card.transform, new Vector2(0f, -20f), new Vector2(900f, 520f),
+            // Two tabs: the workplaces (move hands between jobs) and the citizens (what each one is
+            // doing -- the user, 2026-10-20).
+            var workTab = CreateButton(card.transform, panelSprite, "WorkplacesTab", "#citizens_tab_work", new Vector2(-150f, 274f), new Vector2(280f, 62f));
+            var peopleTab = CreateButton(card.transform, panelSprite, "CitizensTab", "#citizens_tab_people", new Vector2(150f, 274f), new Vector2(280f, 62f));
+            var summaryLabel = CreateText(card.transform, "Summary", string.Empty, 22, new Vector2(0f, 220f), new Vector2(880f, 36f), new Color(1f, 1f, 1f, 0.8f));
+
+            var workView = new GameObject("WorkplacesView", typeof(RectTransform));
+            workView.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)workView.transform);
+            BuildScrollList(workView.transform, new Vector2(0f, -45f), new Vector2(900f, 470f),
                 "#workforce_empty", out var content, out var emptyLabelGO);
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -320f), new Vector2(300f, 70f));
+            var peopleView = new GameObject("CitizensView", typeof(RectTransform));
+            peopleView.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)peopleView.transform);
+            BuildScrollList(peopleView.transform, new Vector2(0f, -45f), new Vector2(900f, 470f),
+                "#citizens_empty", out var peopleContent, out var peopleEmpty);
+            peopleView.SetActive(false);
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -330f), new Vector2(300f, 64f));
 
             var controller = panelRoot.AddComponent<WorkforcePanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -1422,9 +1437,17 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
             controllerSO.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
             controllerSO.FindProperty("hud").objectReferenceValue = hud;
+            controllerSO.FindProperty("workplacesView").objectReferenceValue = workView;
+            controllerSO.FindProperty("citizensView").objectReferenceValue = peopleView;
+            controllerSO.FindProperty("citizenContent").objectReferenceValue = peopleContent;
+            controllerSO.FindProperty("citizensEmptyLabel").objectReferenceValue = peopleEmpty;
+            controllerSO.FindProperty("workplacesTab").objectReferenceValue = workTab.GetComponent<Image>();
+            controllerSO.FindProperty("citizensTab").objectReferenceValue = peopleTab.GetComponent<Image>();
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
+            UnityEventTools.AddPersistentListener(workTab.onClick, controller.ShowWorkplaces);
+            UnityEventTools.AddPersistentListener(peopleTab.onClick, controller.ShowCitizens);
 
             // On the left edge under the menu button (the user moved it there, 2026-10-14): two figures, no word.
             var openButton = CreateGlyphButton(canvasParent, "WorkforceButton", "round", HudInk.OnRound, "People", CreatePopulationIcon(), WorkforceButtonSize, 0.62f);

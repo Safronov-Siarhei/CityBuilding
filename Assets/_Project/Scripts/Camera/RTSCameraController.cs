@@ -1,6 +1,7 @@
 ﻿using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.InputControl;
+using CityBuilder.Maps;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -93,6 +94,23 @@ namespace CityBuilder.CameraControl
         private Vector3 _focusTarget;
         private bool _focusing;
 
+        [Header("Over the hills")]
+        /// <summary>
+        /// The camera keeps this far above the land under it and along its line of sight. The rig
+        /// stands on the flat ground plane the grid uses, so over the Caldera's mountains the view
+        /// used to pass straight through the rock (the user, 2026-10-20: "камера пролетает сквозь
+        /// горы, надо чтобы она их обтекала"). Now the whole rig rises over the relief and settles
+        /// back past it, like a camera flown along the hillside rather than through it.
+        /// </summary>
+        [SerializeField] private float terrainClearance = 2.2f;
+        /// <summary>How quickly the rise follows the land: up quickly, so the rock never shows; down gently, so it does not bob.</summary>
+        [SerializeField] private float riseSeconds = 0.12f;
+        [SerializeField] private float settleSeconds = 0.45f;
+
+        private const int LineOfSightSamples = 6;
+        private float _lift;
+        private float _liftVelocity;
+
         /// <summary>
         /// Glides the view to centre on this world point -- an event icon's tap (see
         /// UI.EventFeedController). Any gesture of the player's takes the camera back at once.
@@ -167,6 +185,52 @@ namespace CityBuilder.CameraControl
 
             var mouse = Mouse.current;
             if (mouse != null) HandleScrollZoom(mouse, dt);
+
+            KeepAboveTheLand(dt);
+        }
+
+        // ---------------------------------------------------------------- over the hills
+
+        /// <summary>
+        /// How high the rig must stand for the camera, and every point of its line of sight down to
+        /// the rig, to clear the land by terrainClearance -- the most any one of them needs. The
+        /// points are on the segment from the camera to the rig, taken as if the rig stood on the
+        /// ground plane; each needs (land height + clearance) minus its own height.
+        /// </summary>
+        private float LiftNeeded()
+        {
+            if (cameraTransform == null) return 0f;
+
+            var groundY = GridManager.Instance != null ? GridManager.Instance.GroundHeight : 0f;
+            var rig = new Vector3(transform.position.x, groundY, transform.position.z);
+            var offset = cameraTransform.position - transform.position;
+            var cam = rig + offset;
+            var mask = 1 << TerrainPhysicsLayer.Layer;
+
+            var need = 0f;
+            for (var i = 0; i <= LineOfSightSamples; i++)
+            {
+                var t = (float)i / LineOfSightSamples;
+                var p = Vector3.Lerp(cam, rig, t);
+                if (!Physics.Raycast(new Vector3(p.x, p.y + 300f, p.z), Vector3.down, out var hit, 600f, mask, QueryTriggerInteraction.Ignore)) continue;
+                // the clearance tapers toward the rig: the camera needs room, the point it looks at only to be above the rock
+                var clearance = Mathf.Lerp(terrainClearance, 0f, t);
+                need = Mathf.Max(need, hit.point.y + clearance - p.y);
+            }
+            return need;
+        }
+
+        private void KeepAboveTheLand(float dt)
+        {
+            var target = Mathf.Max(0f, LiftNeeded());
+            _lift = Mathf.SmoothDamp(_lift, target, ref _liftVelocity, target > _lift ? riseSeconds : settleSeconds, Mathf.Infinity, dt);
+            // never inside the rock, even for the frame the smoothing lags
+            if (_lift < target - terrainClearance * 0.5f) _lift = target - terrainClearance * 0.5f;
+
+            var groundY = GridManager.Instance != null ? GridManager.Instance.GroundHeight : 0f;
+            var pos = transform.position;
+            pos.y = groundY + _lift;
+            transform.position = pos;
         }
 
         // ---------------------------------------------------------------- gestures

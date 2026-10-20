@@ -44,6 +44,32 @@ namespace CityBuilder.UI
 
         private readonly List<Row> _rows = new List<Row>();
 
+        [Header("Citizens tab")]
+        // The second tab (the user, 2026-10-20: "игрок должен иметь возможность посмотреть статус
+        // каждого жителя"): a row per citizen -- the colour of his clothes, so he can be told apart
+        // on the map, what he is doing this moment, and a button that takes the camera to him.
+        [SerializeField] private GameObject workplacesView;
+        [SerializeField] private GameObject citizensView;
+        [SerializeField] private RectTransform citizenContent;
+        [SerializeField] private GameObject citizensEmptyLabel;
+        [SerializeField] private Image workplacesTab;
+        [SerializeField] private Image citizensTab;
+
+        private class CitizenRow
+        {
+            public CitizenAgent Agent;
+            public Text Status;
+        }
+
+        private readonly List<CitizenRow> _citizenRows = new List<CitizenRow>();
+        private float _refreshIn;
+
+        /// <summary>How many citizens the citizens' tab lists -- for the PlayMode test, as RowCount is for the workplaces.</summary>
+        public int CitizenRowCount => _citizenRows.Count;
+
+        /// <summary>A citizen's line, as the tab shows it -- for the PlayMode test.</summary>
+        public string CitizenStatus(int index) => index >= 0 && index < _citizenRows.Count ? _citizenRows[index].Status.text : null;
+
         /// <summary>
         /// How many workplaces the list currently holds. Exposed for the PlayMode test, which
         /// cannot count the rows in the hierarchy instead: Destroy is deferred to the end of the
@@ -54,6 +80,7 @@ namespace CityBuilder.UI
         public void OpenPanel()
         {
             Populate();
+            ShowWorkplaces();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             // The buttons behind the panel go while it is open (the user's rule, 2026-10-14).
@@ -68,6 +95,145 @@ namespace CityBuilder.UI
         }
 
         [SerializeField] private HudHider hud;
+
+        public void ShowWorkplaces() => SelectTab(false);
+
+        public void ShowCitizens()
+        {
+            PopulateCitizens();
+            SelectTab(true);
+        }
+
+        private void SelectTab(bool citizens)
+        {
+            if (workplacesView != null) workplacesView.SetActive(!citizens);
+            if (citizensView != null) citizensView.SetActive(citizens);
+            if (workplacesTab != null) workplacesTab.color = citizens ? UiTheme.TabIdle : UiTheme.TabSelected;
+            if (citizensTab != null) citizensTab.color = citizens ? UiTheme.TabSelected : UiTheme.TabIdle;
+        }
+
+        /// <summary>The citizens' lines move with what they do, so they are re-read a couple of times a second while the tab is open -- the rows themselves are kept.</summary>
+        private void Update()
+        {
+            if (citizensView == null || !citizensView.activeInHierarchy) return;
+            _refreshIn -= Time.unscaledDeltaTime;
+            if (_refreshIn > 0f) return;
+            _refreshIn = 0.4f;
+            RefreshCitizens();
+        }
+
+        private void PopulateCitizens()
+        {
+            if (citizenContent == null) return;
+            for (var i = citizenContent.childCount - 1; i >= 0; i--) Destroy(citizenContent.GetChild(i).gameObject);
+            _citizenRows.Clear();
+
+            var visuals = CitizenVisualsManager.Instance;
+            if (visuals == null) return;
+            for (var i = 0; i < visuals.AllAgents.Count; i++) CreateCitizenRow(visuals.AllAgents[i], i + 1);
+            if (citizensEmptyLabel != null) citizensEmptyLabel.SetActive(_citizenRows.Count == 0);
+            RefreshCitizens();
+            _refreshIn = 0.4f;
+        }
+
+        private void RefreshCitizens()
+        {
+            var visuals = CitizenVisualsManager.Instance;
+            var citizens = CitizenManager.Instance;
+            if (visuals == null) return;
+            if (_citizenRows.Count != visuals.AllAgents.Count)
+            {
+                PopulateCitizens();
+                return;
+            }
+
+            // The sick are a count, not people (CitizenManager): the first of the jobless are the ones laid up.
+            var sickLeft = citizens != null ? citizens.SickPopulation : 0;
+            foreach (var row in _citizenRows)
+            {
+                if (row.Agent == null) continue;
+                var workplace = visuals.WorkplaceOf(row.Agent);
+                if (workplace == null && row.Agent.CurrentActivity == CitizenAgent.Activity.Idle && sickLeft > 0)
+                {
+                    sickLeft--;
+                    row.Status.text = Localization.Get("#citizen_sick");
+                    row.Status.color = UiTheme.Danger;
+                    continue;
+                }
+                row.Status.text = Describe(row.Agent, workplace, visuals.CarriedBy(row.Agent));
+                row.Status.color = workplace != null ? UiTheme.InkSoft : UiTheme.Good;
+            }
+        }
+
+        /// <summary>One citizen's moment in words: free, or which job and which part of it.</summary>
+        public static string Describe(CitizenAgent agent, ProductionBuilding workplace, int carried)
+        {
+            var place = workplace != null ? workplace.DisplayName : string.Empty;
+            switch (agent.CurrentActivity)
+            {
+                case CitizenAgent.Activity.Order: return Localization.Get("#citizen_order");
+                case CitizenAgent.Activity.Gathering: return Localization.Get("#citizen_gathering");
+                case CitizenAgent.Activity.Idle: return workplace == null ? Localization.Get("#citizen_idle") : Localization.Format("#citizen_at_work", place);
+                case CitizenAgent.Activity.ToWork: return Localization.Format("#citizen_to_work", place);
+                case CitizenAgent.Activity.Harvesting:
+                    return Localization.Format("#citizen_harvesting", place,
+                        ResourceNames.Of(workplace != null ? workplace.ProducesResource : ResourceType.Wood), Mathf.RoundToInt(agent.HarvestProgress * 100f));
+                case CitizenAgent.Activity.GoingHome:
+                    return carried > 0 && workplace != null
+                        ? Localization.Format("#citizen_carrying", place, ResourceNames.Of(workplace.ProducesResource), carried)
+                        : Localization.Format("#citizen_to_work", place);
+                default: return Localization.Format("#citizen_at_work", place);
+            }
+        }
+
+        private void CreateCitizenRow(CitizenAgent agent, int number)
+        {
+            var rowGO = new GameObject($"Citizen_{number}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            rowGO.transform.SetParent(citizenContent, false);
+            var layout = rowGO.GetComponent<LayoutElement>();
+            layout.preferredHeight = layout.minHeight = 76f;
+            var background = rowGO.GetComponent<Image>();
+            background.sprite = rowSprite;
+            background.type = Image.Type.Sliced;
+            background.color = RowColor;
+
+            // his clothes as a little figure, a body and a head, so he can be found on the map
+            var swatch = new GameObject("Swatch", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            swatch.transform.SetParent(rowGO.transform, false);
+            var swatchRect = swatch.rectTransform;
+            swatchRect.anchorMin = swatchRect.anchorMax = new Vector2(0.5f, 0.5f);
+            swatchRect.anchoredPosition = new Vector2(-395f, -8f);
+            swatchRect.sizeDelta = new Vector2(30f, 38f);
+            var body = agent.transform.Find("Body");
+            var bodyRenderer = body != null ? body.GetComponent<Renderer>() : null;
+            swatch.color = bodyRenderer != null ? bodyRenderer.sharedMaterial.color : UiTheme.InkSoft;
+            var head = new GameObject("Head", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            head.transform.SetParent(swatch.transform, false);
+            head.rectTransform.anchoredPosition = new Vector2(0f, 30f);
+            head.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            head.color = new Color(0.85f, 0.68f, 0.55f);
+
+            CreateRowText(rowGO.transform, "Title", Localization.Format("#citizen_name", number), 22, TextAnchor.MiddleLeft,
+                new Vector2(-235f, 0f), new Vector2(240f, 40f), UiTheme.Ink);
+            var status = CreateRowText(rowGO.transform, "Status", string.Empty, 22, TextAnchor.MiddleLeft,
+                new Vector2(110f, 0f), new Vector2(440f, 60f), UiTheme.InkSoft);
+
+            // "where is he": the camera goes to him
+            var show = CreateRowButton(rowGO.transform, "Show", Localization.Get("#citizen_show"), new Vector2(390f, 0f));
+            var captured = agent;
+            show.onClick.AddListener(() => ShowCitizen(captured));
+
+            _citizenRows.Add(new CitizenRow { Agent = agent, Status = status });
+        }
+
+        /// <summary>Takes the camera to a citizen and closes the panel, so he can be seen.</summary>
+        public void ShowCitizen(CitizenAgent agent)
+        {
+            if (agent == null) return;
+            var rig = FindAnyObjectByType<CameraControl.RTSCameraController>();
+            ClosePanel();
+            if (rig != null) rig.FocusOn(agent.transform.position);
+        }
 
         public void AssignTo(ProductionBuilding building)
         {

@@ -253,7 +253,7 @@ namespace CityBuilder.Tests.EditMode
                 "#newgame_play", "#newgame_no_maps",
                 "#building_no_decay", "#building_assign", "#building_unassign", "#building_upgrade",
                 "#building_repair", "#building_recruit",
-                "#workforce_title", "#workforce_empty", "#workforce_idle_building",
+                "#workforce_title", "#citizens_tab_work", "#citizens_tab_people", "#citizens_empty", "#citizen_name", "#citizen_show", "#citizen_idle", "#citizen_sick", "#citizen_order", "#citizen_gathering", "#citizen_to_work", "#citizen_harvesting", "#citizen_carrying", "#citizen_at_work", "#workforce_empty", "#workforce_idle_building",
                 "#army_target_units", "#army_target_buildings", "#army_no_citizens", "#army_no_coins",
                 "#unit_militia", "#over_victory", "#over_defeat", "#over_victory_reason",
                 "#over_defeat_reason", "#over_to_menu",
