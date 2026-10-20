@@ -151,7 +151,7 @@ namespace CityBuilder.Buildings
         private static Material ShadowMaterial() => _shadow != null ? _shadow : _shadow = Make(PaintFade(), Shadow, true);
         private static Material BlotMaterial() => _blot != null ? _blot : _blot = Make(PaintBlot(), Ink, true);
 
-        private static Material Make(Texture2D texture, Color color, bool transparent)
+        internal static Material Make(Texture2D texture, Color color, bool transparent)
         {
             var material = new Material(RuntimeShaders.Unlit) { color = color, mainTexture = texture };
             material.SetFloat("_Cull", (float)CullMode.Off);
@@ -262,7 +262,7 @@ namespace CityBuilder.Buildings
 
         // ------------------------------------------------------------------ noise
 
-        private static float Hash(int a, int b, int seed)
+        internal static float Hash(int a, int b, int seed)
         {
             unchecked
             {
@@ -272,7 +272,7 @@ namespace CityBuilder.Buildings
             }
         }
 
-        private static float Smooth(float x, int seed)
+        internal static float Smooth(float x, int seed)
         {
             var i = Mathf.FloorToInt(x);
             var f = x - i;
@@ -293,7 +293,7 @@ namespace CityBuilder.Buildings
             return Mathf.Lerp(a, b, fy);
         }
 
-        private static float Fbm(float x, float y, int seed)
+        internal static float Fbm(float x, float y, int seed)
         {
             var sum = 0f;
             var amplitude = 0.5f;

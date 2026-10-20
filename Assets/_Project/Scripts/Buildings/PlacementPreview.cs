@@ -26,6 +26,8 @@ namespace CityBuilder.Buildings
         DrawingAndCells,
         /// <summary>Set II (2026-10-20): the drawing standing on a sheet of parchment with torn edges; red ink blots where a cell is in the way.</summary>
         DrawingOnParchment,
+        /// <summary>Set I (2026-10-20): the drawing with an architect's corner marks and dimension lines on the ground; only the part of the drawing over a cell in the way turns red, over a pale watercolour wash.</summary>
+        DrawingWithCorners,
     }
 
     /// <summary>
@@ -43,7 +45,8 @@ namespace CityBuilder.Buildings
         public static PlacementLook Look = PlacementLook.Classic;
 
         public static bool UsesPreview => Look != PlacementLook.Classic;
-        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment;
+        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment || Look == PlacementLook.DrawingWithCorners;
+        private static bool WithCorners => Look == PlacementLook.DrawingWithCorners;
         private static bool OnParchment => Look == PlacementLook.DrawingOnParchment;
         private static bool MarksCells => Look == PlacementLook.OwnColoursAndCells || Look == PlacementLook.DrawingAndCells;
 
@@ -67,6 +70,10 @@ namespace CityBuilder.Buildings
 
         private static readonly int ValidId = Shader.PropertyToID("_Valid");
         private static readonly int LookId = Shader.PropertyToID("_Look");
+        private static readonly int BlockMaskId = Shader.PropertyToID("_BlockMask");
+        private static readonly int BlockRectId = Shader.PropertyToID("_BlockRect");
+        private static readonly int UseMaskId = Shader.PropertyToID("_UseMask");
+        private Texture2D _mask;
         private static readonly Dictionary<Material, Material> GhostMaterials = new Dictionary<Material, Material>();
         private static Material[] _groundMaterials;
 
@@ -126,7 +133,7 @@ namespace CityBuilder.Buildings
             }
 
             _blocked.Clear();
-            if (MarksCells || OnParchment)
+            if (MarksCells || OnParchment || WithCorners)
             {
                 for (var z = 0; z < footprint.y; z++)
                 {
@@ -140,7 +147,44 @@ namespace CityBuilder.Buildings
             _shownFootprint = footprint;
             _shownBlocked.Clear();
             _shownBlocked.AddRange(_blocked);
+            if (WithCorners) PaintMask(origin, footprint, valid);
             BuildGround(centre.y, origin, footprint, valid);
+        }
+
+        /// <summary>
+        /// Tells the drawing which of its cells are in the way, so only the part of it standing on
+        /// them turns red. With nothing in the way but the building still refused (money, the start
+        /// zone), the whole drawing turns red as before.
+        /// </summary>
+        private void PaintMask(Vector2Int origin, Vector2Int footprint, bool valid)
+        {
+            var any = false;
+            foreach (var b in _blocked) any |= b;
+            if (_mask == null || _mask.width != footprint.x || _mask.height != footprint.y)
+            {
+                if (_mask != null) Destroy(_mask);
+                _mask = new Texture2D(footprint.x, footprint.y, TextureFormat.R8, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            }
+            var k = 0;
+            for (var z = 0; z < footprint.y; z++)
+            {
+                for (var x = 0; x < footprint.x; x++, k++) _mask.SetPixel(x, z, _blocked[k] ? Color.white : Color.black);
+            }
+            _mask.Apply(false);
+
+            var grid = GridManager.Instance;
+            var corner = grid.CellToWorld(origin);
+            var size = grid.CellSize;
+            var rect = new Vector4(corner.x, corner.z, 1f / (footprint.x * size), 1f / (footprint.y * size));
+            foreach (var renderer in _renderers)
+            {
+                if (renderer == null) continue;
+                renderer.GetPropertyBlock(_block);
+                _block.SetTexture(BlockMaskId, _mask);
+                _block.SetVector(BlockRectId, rect);
+                _block.SetFloat(UseMaskId, !valid && any ? 1f : 0f);
+                renderer.SetPropertyBlock(_block);
+            }
         }
 
         private bool SameBlocked()
@@ -189,6 +233,7 @@ namespace CityBuilder.Buildings
         private void OnDestroy()
         {
             if (_ground != null) Destroy(_ground);
+            if (_mask != null) Destroy(_mask);
             if (_groundMesh != null) Destroy(_groundMesh);
         }
 
@@ -208,6 +253,11 @@ namespace CityBuilder.Buildings
                 _groundRenderer.receiveShadows = false;
             }
 
+            if (WithCorners)
+            {
+                CornerMarks.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
+                return;
+            }
             if (OnParchment)
             {
                 ParchmentSheet.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);

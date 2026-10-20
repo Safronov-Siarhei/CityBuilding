@@ -15,6 +15,9 @@ Shader "CityBuilder/PlacementGhost"
         [MainColor] _BaseColor ("Tint", Color) = (1, 1, 1, 1)
         _Look ("Look: 0 own colours, 1 drawing", Float) = 0
         _Valid ("1 can stand here, 0 cannot", Float) = 1
+        [NoScaleOffset] _BlockMask ("Cells in the way (white), one texel per cell", 2D) = "black" {}
+        _BlockRect ("Footprint: world x, z of its corner, 1 / width, 1 / depth", Vector) = (0, 0, 1, 1)
+        _UseMask ("1: red only over the cells in the way", Float) = 0
     }
 
     SubShader
@@ -30,9 +33,12 @@ Shader "CityBuilder/PlacementGhost"
             half4 _BaseColor;
             half _Look;
             half _Valid;
+            float4 _BlockRect;
+            half _UseMask;
         CBUFFER_END
 
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_BlockMask); SAMPLER(sampler_point_clamp_BlockMask);
 
         struct Attributes
         {
@@ -110,17 +116,26 @@ Shader "CityBuilder/PlacementGhost"
                 half lambert = saturate(dot(normal, light.direction));
                 half rim = pow(1.0 - saturate(dot(normal, view)), 3.0);
 
+                // where it can stand: everywhere or nowhere -- or, with the mask, cell by cell (a
+                // roof hanging past the footprint takes the state of the cell it hangs from)
+                half valid = _Valid;
+                if (_UseMask > 0.5)
+                {
+                    float2 cell = saturate((input.positionWS.xz - _BlockRect.xy) * _BlockRect.zw);
+                    valid = 1.0 - SAMPLE_TEXTURE2D(_BlockMask, sampler_point_clamp_BlockMask, cell).r;
+                }
+
                 // own colours
                 half3 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb * _BaseColor.rgb;
                 half grey = dot(albedo, half3(0.3, 0.59, 0.11));
-                albedo = lerp(lerp(albedo, grey.xxx, 0.7) * 0.7, albedo, _Valid);
-                half3 glow = lerp(half3(0.75, 0.16, 0.12), half3(1.0, 0.78, 0.3), _Valid);
+                albedo = lerp(lerp(albedo, grey.xxx, 0.7) * 0.7, albedo, valid);
+                half3 glow = lerp(half3(0.75, 0.16, 0.12), half3(1.0, 0.78, 0.3), valid);
                 half3 own = albedo * (0.6 + 0.6 * lambert * light.color) + glow * rim * 1.8;
-                half ownAlpha = lerp(0.7, 0.9, _Valid) + rim * 0.1;
+                half ownAlpha = lerp(0.7, 0.9, valid) + rim * 0.1;
 
                 // a drawing
-                half3 ink = lerp(half3(0.62, 0.17, 0.1), half3(0.16, 0.27, 0.55), _Valid);
-                half3 paper = half3(0.98, 0.95, 0.86) * (0.78 + 0.22 * lambert);
+                half3 ink = lerp(half3(0.62, 0.17, 0.1), half3(0.16, 0.27, 0.55), valid);
+                half3 paper = lerp(half3(1.0, 0.8, 0.74), half3(0.98, 0.95, 0.86), valid) * (0.78 + 0.22 * lambert);
                 half stroke = max(GridLines(input.positionWS, normal) * 0.85, saturate(rim * 2.2));
                 half3 drawn = lerp(paper, ink, stroke);
                 half drawnAlpha = 0.5 + 0.45 * stroke;
