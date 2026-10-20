@@ -64,6 +64,11 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsFalse(empty.gameObject.activeSelf, "\"No citizens yet\" shows over a list of four.");
             var lines = Enumerable.Range(0, 4).Select(panel.CitizenStatus).ToList();
             foreach (var line in lines) StringAssert.DoesNotContain("#", line, $"A raw key in a citizen's line: {line}");
+            // every one is somebody: a name of his own, not a number (the user, 2026-10-20)
+            var titles = Enumerable.Range(0, 4).Select(panel.CitizenTitle).ToList();
+            Assert.AreEqual(4, titles.Distinct().Count(), $"Two citizens share a name: {string.Join(" | ", titles)}");
+            for (var i = 0; i < 4; i++)
+                Assert.AreEqual(Localization.Format("#citizen_name", CitizenVisualsManager.Instance.AllAgents[i].CitizenName), titles[i], "A row is not titled with its citizen's name.");
             Assert.AreEqual(2, lines.Count(l => l.StartsWith(sawmill.DisplayName)), $"The two on the sawmill do not say so: {string.Join(" | ", lines)}");
             Assert.AreEqual(2, lines.Count(l => l == Localization.Get("#citizen_idle")), $"The two without a job do not say they are free: {string.Join(" | ", lines)}");
 

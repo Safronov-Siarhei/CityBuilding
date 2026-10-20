@@ -45,6 +45,10 @@ namespace CityBuilder.Citizens
 
         private readonly List<CitizenAgent> _allAgents = new List<CitizenAgent>();
 
+        // How many citizens this town has had: the next one is named after it. Counted, not taken
+        // from _allAgents.Count, so a newcomer never inherits the name of one who left.
+        private int _namesGiven;
+
         /// <summary>Every spawned citizen (idle or working) -- e.g. FogOfWarManager scans this instead of a FindObjectsByType scene scan.</summary>
         public IReadOnlyList<CitizenAgent> AllAgents => _allAgents;
         private readonly List<CitizenAgent> _idleAgents = new List<CitizenAgent>();
@@ -445,6 +449,8 @@ namespace CityBuilder.Citizens
 
             var agent = root.AddComponent<CitizenAgent>();
             agent.Initialize(spawnPosition, center.Value);
+            agent.NameIndex = _namesGiven++;
+            root.name = "Citizen " + agent.CitizenName;
 
             return agent;
         }

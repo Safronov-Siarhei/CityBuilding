@@ -59,6 +59,7 @@ namespace CityBuilder.UI
         {
             public CitizenAgent Agent;
             public Text Status;
+            public Text Name;
         }
 
         private readonly List<CitizenRow> _citizenRows = new List<CitizenRow>();
@@ -66,6 +67,9 @@ namespace CityBuilder.UI
 
         /// <summary>How many citizens the citizens' tab lists -- for the PlayMode test, as RowCount is for the workplaces.</summary>
         public int CitizenRowCount => _citizenRows.Count;
+
+        /// <summary>A citizen's line, as the tab shows it -- for the PlayMode test.</summary>
+        public string CitizenTitle(int index) => index >= 0 && index < _citizenRows.Count ? _citizenRows[index].Name.text : null;
 
         /// <summary>A citizen's line, as the tab shows it -- for the PlayMode test.</summary>
         public string CitizenStatus(int index) => index >= 0 && index < _citizenRows.Count ? _citizenRows[index].Status.text : null;
@@ -213,7 +217,7 @@ namespace CityBuilder.UI
             head.rectTransform.sizeDelta = new Vector2(22f, 22f);
             head.color = new Color(0.85f, 0.68f, 0.55f);
 
-            CreateRowText(rowGO.transform, "Title", Localization.Format("#citizen_name", number), 22, TextAnchor.MiddleLeft,
+            var name = CreateRowText(rowGO.transform, "Title", Localization.Format("#citizen_name", agent.CitizenName), 22, TextAnchor.MiddleLeft,
                 new Vector2(-235f, 0f), new Vector2(240f, 40f), UiTheme.Ink);
             var status = CreateRowText(rowGO.transform, "Status", string.Empty, 22, TextAnchor.MiddleLeft,
                 new Vector2(110f, 0f), new Vector2(440f, 60f), UiTheme.InkSoft);
@@ -223,7 +227,7 @@ namespace CityBuilder.UI
             var captured = agent;
             show.onClick.AddListener(() => ShowCitizen(captured));
 
-            _citizenRows.Add(new CitizenRow { Agent = agent, Status = status });
+            _citizenRows.Add(new CitizenRow { Agent = agent, Status = status, Name = name });
         }
 
         /// <summary>Takes the camera to a citizen and closes the panel, so he can be seen.</summary>
