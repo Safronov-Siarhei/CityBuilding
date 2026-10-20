@@ -24,6 +24,8 @@ namespace CityBuilder.Buildings
         OwnColoursAndCells,
         /// <summary>Variants 2 + 3: the drawing, an inked outline, and every cell marked.</summary>
         DrawingAndCells,
+        /// <summary>Set II (2026-10-20): the drawing standing on a sheet of parchment with torn edges; red ink blots where a cell is in the way.</summary>
+        DrawingOnParchment,
     }
 
     /// <summary>
@@ -41,7 +43,8 @@ namespace CityBuilder.Buildings
         public static PlacementLook Look = PlacementLook.Classic;
 
         public static bool UsesPreview => Look != PlacementLook.Classic;
-        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells;
+        private static bool IsDrawing => Look == PlacementLook.Drawing || Look == PlacementLook.DrawingAndCells || Look == PlacementLook.DrawingOnParchment;
+        private static bool OnParchment => Look == PlacementLook.DrawingOnParchment;
         private static bool MarksCells => Look == PlacementLook.OwnColoursAndCells || Look == PlacementLook.DrawingAndCells;
 
         private const float Lift = 0.25f;           // the ghost hovers this far above its cell
@@ -123,7 +126,7 @@ namespace CityBuilder.Buildings
             }
 
             _blocked.Clear();
-            if (MarksCells)
+            if (MarksCells || OnParchment)
             {
                 for (var z = 0; z < footprint.y; z++)
                 {
@@ -203,6 +206,12 @@ namespace CityBuilder.Buildings
                 _groundRenderer = _ground.AddComponent<MeshRenderer>();
                 _groundRenderer.shadowCastingMode = ShadowCastingMode.Off;
                 _groundRenderer.receiveShadows = false;
+            }
+
+            if (OnParchment)
+            {
+                ParchmentSheet.Build(_groundMesh, _groundRenderer, y, origin, footprint, valid, _blocked);
+                return;
             }
 
             var grid = GridManager.Instance;

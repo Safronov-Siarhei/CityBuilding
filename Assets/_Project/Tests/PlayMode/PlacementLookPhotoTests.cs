@@ -83,7 +83,7 @@ namespace CityBuilder.Tests.PlayMode
             var free = BuildingPlacer.OriginForCentredFootprint(grid.WorldToCell(OpenGround), size);
             var onTheShore = BuildingPlacer.OriginForCentredFootprint(grid.WorldToCell(LakeShore), size);
 
-            foreach (var look in new[] { PlacementLook.Classic, PlacementLook.OwnColours, PlacementLook.Drawing, PlacementLook.OwnColoursAndCells, PlacementLook.DrawingAndCells })
+            foreach (var look in new[] { PlacementLook.Classic, PlacementLook.OwnColours, PlacementLook.Drawing, PlacementLook.OwnColoursAndCells, PlacementLook.DrawingAndCells, PlacementLook.DrawingOnParchment })
             {
                 PlacementPreview.Look = look;
                 placer.ClearSelection();
