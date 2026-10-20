@@ -56,6 +56,11 @@ namespace CityBuilder.Buildings
         // can sit open for several seconds, so that was a steady per-frame GC allocation.
         private readonly List<Material[]> _ghostMaterials = new List<Material[]>();
         private Color? _lastGhostColor;
+        // The ghost's ground plate, cell marks and hop, for every look but Classic (see PlacementPreview).
+        private PlacementPreview _preview;
+
+        /// <summary>Tests only: holds the ghost on this origin cell instead of following the aim point.</summary>
+        public Vector2Int? PinnedOriginForTests;
         private bool _mandatoryBuildingPlaced;
 
         // 0-3, each a 90-degree step around Y. Reset to 0 on every new SelectBuilding so rotation
@@ -210,7 +215,12 @@ namespace CityBuilder.Buildings
 
         private void RefreshTargetCell()
         {
-            _hasCurrentCell = TryGetPlacementOrigin(CurrentAimScreenPosition, out _currentCell);
+            if (PinnedOriginForTests.HasValue)
+            {
+                _hasCurrentCell = true;
+                _currentCell = PinnedOriginForTests.Value;
+            }
+            else _hasCurrentCell = TryGetPlacementOrigin(CurrentAimScreenPosition, out _currentCell);
             if (_hasCurrentCell) UpdateGhost(_currentCell);
             else SetStatus(false, string.Empty);
         }
@@ -424,7 +434,8 @@ namespace CityBuilder.Buildings
             }
 
             _ghostMaterials.Clear();
-            foreach (var rend in _ghostRenderers)
+            _preview = PlacementPreview.UsesPreview ? PlacementPreview.Attach(_ghostInstance, _ghostRenderers) : null;
+            if (_preview == null) foreach (var rend in _ghostRenderers)
             {
                 // One-time instantiation of this renderer's material copies -- every later
                 // UpdateGhost call reuses this same array instead of re-fetching/re-instantiating.
@@ -447,6 +458,7 @@ namespace CityBuilder.Buildings
             HarvestRadiusOverlay.HideIfShown();
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
+            _preview = null;
             _ghostRenderers.Clear();
             _ghostMaterials.Clear();
             _lastGhostColor = null;
@@ -548,8 +560,12 @@ namespace CityBuilder.Buildings
             if (_ghostInstance != null)
             {
                 if (_ghostInstance.activeSelf != ghostVisible) _ghostInstance.SetActive(ghostVisible);
-                _ghostInstance.transform.position = center;
-                _ghostInstance.transform.rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);
+                if (_preview != null) _preview.SetVisible(ghostVisible);
+                else
+                {
+                    _ghostInstance.transform.position = center;
+                    _ghostInstance.transform.rotation = Quaternion.Euler(0f, _rotationSteps * 90f, 0f);
+                }
             }
 
             // What a gatherer will be able to reach from here, laid out in cells under the ghost.
@@ -566,6 +582,13 @@ namespace CityBuilder.Buildings
             SetStatus(ok, ok ? string.Empty : DescribeBlock(canPlace, canAfford, hasRequirement, cell, footprint));
 
             if (_ghostInstance == null) return;
+
+            if (_preview != null)
+            {
+                _preview.Show(GridManager.Instance.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, _rotationSteps * 90f, 0f),
+                    cell, footprint, ok, c => !CanPlaceSelectedBuilding(c, Vector2Int.one, wholeFootprintRules: false));
+                return;
+            }
 
             var color = ok ? validColor : invalidColor;
 
@@ -659,10 +682,11 @@ namespace CityBuilder.Buildings
         /// every footprint cell must be dry land. Water itself isn't tracked in GridManager's
         /// occupancy set (see MeshMapApplier), specifically so this exception is possible.
         /// </summary>
-        private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint)
+        private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint, bool wholeFootprintRules = true)
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !GridManager.Instance.IsAreaFree(cell, footprint)) return false;
-            if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
+            // the start zone is a rule about the whole building, not about any one cell of it
+            if (wholeFootprintRules && IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
@@ -761,6 +785,13 @@ namespace CityBuilder.Buildings
                 // The mandatory Town Hall's own reveal already ran above (Initialize runs before
                 // this point) -- fog only starts covering the rest of the map from here.
                 FogOfWarManager.Instance?.Activate();
+            }
+
+            // A puff of dust as it lands -- not for each tile of a drawn road or fence line.
+            if (PlacementPreview.UsesPreview && !placedData.isRoad && !IsDrawMode)
+            {
+                var size = GridManager.Instance.CellSize;
+                DustPuff.Spawn(center, new Vector2(footprint.x * size, footprint.y * size));
             }
 
             OnBuildingPlaced?.Invoke(placedData);

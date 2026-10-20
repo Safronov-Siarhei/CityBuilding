@@ -266,7 +266,7 @@ namespace CityBuilder.EditorTools
             var included = settings.FindProperty("m_AlwaysIncludedShaders");
             if (included == null) return;
 
-            var wanted = new[] { RuntimeShaders.LitName, RuntimeShaders.UnlitName };
+            var wanted = new[] { RuntimeShaders.LitName, RuntimeShaders.UnlitName, RuntimeShaders.PlacementGhostName };
             var changed = false;
 
             foreach (var shaderName in wanted)

@@ -26,17 +26,23 @@ namespace CityBuilder.Core
     {
         public const string LitName = "Universal Render Pipeline/Lit";
         public const string UnlitName = "Universal Render Pipeline/Unlit";
+        public const string PlacementGhostName = "CityBuilder/PlacementGhost";
 
         private static Shader _lit;
         private static Shader _unlit;
+        private static Shader _placementGhost;
         private static bool _litReported;
         private static bool _unlitReported;
+        private static bool _placementGhostReported;
 
         /// <summary>The standard lit shader, for anything meant to catch the scene's light -- citizens, rocks, orcs, markers with volume.</summary>
         public static Shader Lit => Resolve(LitName, ref _lit, ref _litReported);
 
         /// <summary>The unlit shader, for flat indicators that must read the same from every angle -- progress bars, the radius carpet, cell highlights.</summary>
         public static Shader Unlit => Resolve(UnlitName, ref _unlit, ref _unlitReported);
+
+        /// <summary>The building being placed, in the looks of PlacementPreview -- only ever made at runtime, so it rides the same Always Included list.</summary>
+        public static Shader PlacementGhost => Resolve(PlacementGhostName, ref _placementGhost, ref _placementGhostReported);
 
         private static Shader Resolve(string shaderName, ref Shader cached, ref bool reported)
         {
