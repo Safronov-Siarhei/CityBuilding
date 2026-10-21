@@ -1,6 +1,6 @@
 """FortifiedGate1-lvl4 -- the Fortified Gate (Укреплённые ворота) at level 4.
 
-Footprint 2x2 (level 1's). Level 3 (fortifiedgate1_lvl3.build) with the four turrets' caps and
+Footprint 1x3 (level 1's). Level 3 (fortifiedgate1_lvl3.build) with the four turrets' caps and
 the watch room's roof re-laid in glazed tiles; the wall joins are untouched. Level 4's mark
 across the set is the glazed roof: a lattice of the category's dark shade and gold diamonds over
 the tiles. Models only -- the game stops at level 3 for now.
@@ -22,7 +22,8 @@ def build(lo, hi):
     b = L3['build'](lo, hi)
     for sx in (-1, 1):
         for sy in (-1, 1):
-            d.glazed_pyramid(b, sx * 0.32, sy * 0.52, 1.38, 0.2, 0.2, 1.68, 'roof_blue_dark',
+            L2 = L3['L2']
+            d.glazed_pyramid(b, sx * (L2['GX'] - 0.1), sy * (L2['GY'] - 0.1), 1.38, 0.2, 0.2, 1.68, 'roof_blue_dark',
                              w=0.04, step=0.13, row=0.1, crest=False)
     z1 = WALL_H + 0.36 + 0.42
     d.glazed_pyramid(b, 0, 0, z1, 0.22, 0.31, z1 + 0.42, 'roof_blue_dark', w=0.045, step=0.14,

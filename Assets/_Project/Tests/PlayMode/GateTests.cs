@@ -75,5 +75,47 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             Assert.IsFalse(GridManager.Instance.IsAreaFree(cell, Vector2Int.one), "Knocking the gate down freed the road's cell.");
         }
+
+        [UnityTest]
+        public IEnumerator TheFortifiedGate_IsWallPassageWall()
+        {
+            var gate = PlaytestWorld.Building("FortifiedGate");
+            var road = PlaytestWorld.Building("Road");
+            Assert.AreEqual(new Vector2Int(1, 3), gate.footprintSize, "The fortified gate is not 1x3.");
+
+            // a road running east-west through the middle cell; the gate stands across it
+            var origin = PlaytestWorld.FindFreeAreaNearTheMiddle(new Vector2Int(3, 3));
+            var gateway = origin + new Vector2Int(1, 1);
+            foreach (var dx in new[] { 0, 1, 2 })
+            {
+                var r = origin + new Vector2Int(dx, 1);
+                PlaytestWorld.Place(road, r);
+                RoadNetwork.Instance.RegisterRoad(r);
+            }
+            var at = origin + new Vector2Int(1, 0);
+            Assert.AreEqual(gateway, BuildingData.GatewayCell(at, gate.footprintSize), "The middle cell is not the way through.");
+            Assert.IsTrue(BuildingPlacer.IsFreeFor(gate, at, gate.footprintSize), "The fortified gate cannot stand across a road.");
+            Assert.IsFalse(BuildingPlacer.IsFreeFor(gate, at + new Vector2Int(0, -1), gate.footprintSize),
+                "The fortified gate stands with a wall cell on the road.");
+
+            PlaytestWorld.Place(gate, at);
+            yield return new WaitForSeconds(2f);
+            var grid = GridManager.Instance;
+            var middle = grid.GetFootprintCenterWorld(gateway, Vector2Int.one);
+            Assert.IsTrue(NavMesh.SamplePosition(middle, out var open, 0.3f, NavMesh.AllAreas) && open.mask == 1 << NavAreas.Gate,
+                "The middle cell is not a passage for citizens.");
+            Assert.IsFalse(NavMesh.SamplePosition(middle, out _, 0.3f, NavAreas.WithoutGates), "Orcs can walk through the passage.");
+            foreach (var side in new[] { at, at + new Vector2Int(0, 2) })
+            {
+                Assert.IsFalse(NavMesh.SamplePosition(grid.GetFootprintCenterWorld(side, Vector2Int.one), out _, 0.3f, NavMesh.AllAreas),
+                    $"The wall cell {side} can be walked.");
+            }
+
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.MarkMandatoryBuildingAlreadyPlaced();
+            placer.ClearSelection();
+            foreach (var ghost in GameObject.FindObjectsByType<PlacementPreview>(FindObjectsSortMode.None)) ghost.gameObject.SetActive(false);
+            yield return PlaytestCapture.Shoot("fortified-gate-on-road", middle, 6f, 32f, 120f);
+        }
     }
 }

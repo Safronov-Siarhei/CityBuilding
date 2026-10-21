@@ -1,7 +1,9 @@
-"""FortifiedGate1-lvl1 -- the Fortified Gate (Укреплённые ворота), stone tier. Footprint 2x2:
-the stone wall runs along Y through it, people pass across it along X.
+"""FortifiedGate1-lvl1 -- the Fortified Gate (Укреплённые ворота), stone tier. Footprint 1x3
+(the user, 2026-10-21): the stone wall runs along Y through it, people pass across it along X,
+and only the middle cell is the way through.
 
-The curtain wall comes in from both ends on the shared merlon grid and meets a gatehouse: a
+The curtain wall fills the two outer cells on the shared merlon grid and meets, in the middle
+cell, a gatehouse: a
 taller crenellated block with an arched passage, a raised portcullis, a blue-roofed turret on
 each front corner and blue banners.
 """
@@ -15,13 +17,16 @@ from details import FOOTING, WALL_H  # noqa: E402
 from kit import Builder, Facade  # noqa: E402
 
 OBJ = "FortifiedGate1-lvl1"
+GX, GY = 0.38, 0.5   # the gatehouse's half-width and half-length: exactly the middle cell along Y
+END = 1.5            # the plot's ends, where the curtain wall meets the fence beyond
+BANNER_S = 0.37      # the banners' place along a gatehouse face
 
 
 def build(lo, hi):
     b = Builder()
-    gx, gy = 0.42, 0.62
-    d.stone_wall_arm(b, 0, 1.0, 0, -1, 0.0, 1.0 - gy)
-    d.stone_wall_arm(b, 0, -1.0, 0, 1, 0.0, 1.0 - gy)
+    gx, gy = GX, GY
+    d.stone_wall_arm(b, 0, END, 0, -1, 0.0, END - gy)
+    d.stone_wall_arm(b, 0, -END, 0, 1, 0.0, END - gy)
 
     g_top = WALL_H + 0.36
     d.footing(b, -gx, gx, -gy, gy)
@@ -36,8 +41,8 @@ def build(lo, hi):
         f.rect(-0.21, 0.21, 0.5, 0.56, 0.05, 'iron')  # the raised portcullis
         for s in (-0.12, 0.0, 0.12):
             f.rect(s - 0.01, s + 0.01, 0.42, 0.56, 0.055, 'iron')
-        d.banner(f, -0.42, g_top - 0.1, 0.36, color='banner_blue')
-        d.banner(f, 0.42, g_top - 0.1, 0.36, color='banner_blue')
+        d.banner(f, -BANNER_S, g_top - 0.1, 0.36, color='banner_blue')
+        d.banner(f, BANNER_S, g_top - 0.1, 0.36, color='banner_blue')
 
     # turrets on the four corners of the gatehouse
     t_top = g_top + 0.22

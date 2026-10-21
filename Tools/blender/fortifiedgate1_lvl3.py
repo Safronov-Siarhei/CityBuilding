@@ -1,5 +1,5 @@
 """FortifiedGate1-lvl3 -- the Fortified Gate (Укреплённые ворота), stone tier, at its last
-upgrade. Footprint 2x2 (level 1's); the curtain wall comes in exactly as at level 1.
+upgrade. Footprint 1x3 (level 1's); the curtain wall comes in exactly as at level 1.
 
 Level 2 (fortifiedgate1_lvl2.build) with a stone watch room risen between the four turrets under
 a tall blue roof and a gold finial, and gold finials on the turrets' pennant poles.
@@ -20,7 +20,7 @@ LVL3_DX = 2 * L2['LVL2_DX']
 
 def build(lo, hi):
     b = L2['build'](lo, hi)
-    gx, gy = 0.42, 0.62
+    gx, gy = L2['GX'], L2['GY']
     g_top = WALL_H + 0.36
     t_top = g_top + 0.4
     z0, z1 = g_top + 0.04, g_top + 0.42

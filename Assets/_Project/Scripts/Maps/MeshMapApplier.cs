@@ -534,12 +534,12 @@ namespace CityBuilder.Maps
         {
             if (instance == null || instance.Data == null) return;
 
+            // Only the passage: the middle cell, which is where an odd footprint's centre lies.
             var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-            var footprint = instance.Data.footprintSize;
             _walkableSurfaces[instance] = new NavMeshBuildSource
             {
                 shape = NavMeshBuildSourceShape.ModifierBox,
-                size = new Vector3(footprint.x * cellSize, 4f, footprint.y * cellSize),
+                size = new Vector3(cellSize, 4f, cellSize),
                 transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
                 area = NavAreas.Gate
             };

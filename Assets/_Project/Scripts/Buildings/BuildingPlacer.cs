@@ -404,15 +404,19 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>
-        /// A gate held over a road turns itself across it: the gate's wall runs along its own Z at
-        /// no rotation, so a road running east-west wants none and one running north-south wants a
-        /// quarter turn. Off the road the player's own rotation stands.
+        /// A gate held with its passage over a road turns itself across it: a gate's wall runs along
+        /// its own Z at no rotation, so a road running east-west wants none and one running
+        /// north-south wants a quarter turn. Off the road the player's own rotation stands. The
+        /// passage is the cell under the cursor (the cursor aims a footprint's centre), so turning
+        /// keeps it on the road.
         /// </summary>
         private void TurnAGateAcrossTheRoad(Vector2Int cell)
         {
-            if (_selectedBuilding == null || !_selectedBuilding.isGate || _selectedBuilding.footprintSize != Vector2Int.one) return;
+            if (_selectedBuilding == null || !_selectedBuilding.isGate) return;
             var roads = RoadNetwork.Instance;
-            if (roads == null || !roads.IsRoad(cell)) return;
+            if (roads == null) return;
+            cell = BuildingData.GatewayCell(cell, RotatedFootprint(_selectedBuilding.footprintSize));
+            if (!roads.IsRoad(cell)) return;
 
             var alongX = roads.IsRoad(cell + Vector2Int.left) || roads.IsRoad(cell + Vector2Int.right);
             var alongZ = roads.IsRoad(cell + Vector2Int.down) || roads.IsRoad(cell + Vector2Int.up);
@@ -501,14 +505,16 @@ namespace CityBuilder.Buildings
             var grid = GridManager.Instance;
             if (data == null || !data.isGate) return grid.IsAreaFree(cell, footprint);
 
+            // Only the way through may sit on the road; the walls either side need clear ground.
             var roads = RoadNetwork.Instance;
+            var gateway = BuildingData.GatewayCell(cell, footprint);
             for (var x = 0; x < footprint.x; x++)
             {
                 for (var z = 0; z < footprint.y; z++)
                 {
                     var c = cell + new Vector2Int(x, z);
                     if (grid.IsAreaFree(c, Vector2Int.one)) continue;
-                    if (roads != null && roads.IsRoad(c) && !BuildingInstance.GateStandsOn(c)) continue;
+                    if (c == gateway && roads != null && roads.IsRoad(c) && !BuildingInstance.GateStandsOn(c)) continue;
                     return false;
                 }
             }

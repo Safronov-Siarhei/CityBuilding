@@ -561,6 +561,7 @@ namespace CityBuilder.Buildings
                 // clicks still find it, since a trigger answers raycasts.
                 foreach (var box in GetComponents<BoxCollider>()) box.isTrigger = true;
                 MeshMapApplier.Instance?.RegisterGate(this);
+                CarveTheGateWalls(data);
                 return;
             }
 
@@ -580,6 +581,35 @@ namespace CityBuilder.Buildings
             catch (Exception e)
             {
                 Debug.LogError($"BuildingInstance.SetupNavMeshObstacle failed for '{data.buildingName}' -- citizens may walk through it instead of around it. {e}");
+            }
+        }
+
+        /// <summary>
+        /// A gate longer than its passage (the 1x3 fortified gate) is wall on either side of the
+        /// middle cell: those cells carve themselves out like any building, one small obstacle
+        /// each, while the middle one is left as the Gate area.
+        /// </summary>
+        private void CarveTheGateWalls(BuildingData data)
+        {
+            var size = data.footprintSize;
+            if (size.x * size.y <= 1) return;
+
+            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            var middle = new Vector2(size.x * 0.5f - 0.5f, size.y * 0.5f - 0.5f);
+            for (var x = 0; x < size.x; x++)
+            {
+                for (var z = 0; z < size.y; z++)
+                {
+                    if (x == size.x / 2 && z == size.y / 2) continue;
+                    var wall = new GameObject("GateWall");
+                    wall.transform.SetParent(transform, false);
+                    wall.transform.localPosition = new Vector3((x - middle.x) * cellSize, 0f, (z - middle.y) * cellSize);
+                    var obstacle = wall.AddComponent<NavMeshObstacle>();
+                    obstacle.shape = NavMeshObstacleShape.Box;
+                    obstacle.size = new Vector3(cellSize, 2f, cellSize);
+                    obstacle.center = new Vector3(0f, 1f, 0f);
+                    obstacle.carving = true;
+                }
             }
         }
 

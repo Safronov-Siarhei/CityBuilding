@@ -114,6 +114,14 @@ namespace CityBuilder.Buildings
         // NavMesh area instead of carving them out (see NavAreas, MeshMapApplier.RegisterGate).
         public bool isGate = false;
 
+        /// <summary>
+        /// The one cell of a gate that is the way through: the middle of its footprint (a 1x3
+        /// fortified gate is wall, passage, wall -- the user, 2026-10-21). The rest of a gate is
+        /// wall for everyone. Takes the footprint as it lies on the grid.
+        /// </summary>
+        public static Vector2Int GatewayCell(Vector2Int origin, Vector2Int rotatedFootprint) =>
+            origin + new Vector2Int(rotatedFootprint.x / 2, rotatedFootprint.y / 2);
+
         // Keeps this building selected (ghost stays active) after a successful placement instead
         // of clearing the selection -- lets the player lay several tiles in a row (e.g. a road)
         // without re-opening the hotbar each time.

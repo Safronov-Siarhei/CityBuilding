@@ -587,7 +587,7 @@ namespace CityBuilder.EditorTools
                 connectsToFences: true, motif: BuildingMotif.Banner);
 
             var fortifiedGateData = CreateBuildingData(
-                "FortifiedGate", new Vector2Int(2, 2), height: 2.8f,
+                "FortifiedGate", new Vector2Int(1, 3), height: 2.8f,
                 wallColor: new Color(0.44f, 0.42f, 0.4f), roofColor: new Color(0.34f, 0.32f, 0.3f),
                 style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 connectsToFences: true, motif: BuildingMotif.Archway);
