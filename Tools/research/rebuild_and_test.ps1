@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Continue'
 $unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
 $project = 'D:/Fork/CityBuilding'
+New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 
 function Invoke-Unity {
     param([string[]]$UnityArgs, [string]$Label)
@@ -13,18 +14,18 @@ function Invoke-Unity {
 Invoke-Unity -Label 'setup' -UnityArgs @(
     '-batchmode', '-nographics', '-quit', '-projectPath', $project,
     '-executeMethod', 'CityBuilder.EditorTools.SetupProject.Run',
-    '-logFile', "$project/setup_run.log")
+    '-logFile', "$project/RunLogs/setup_run.log")
 
 Invoke-Unity -Label 'editmode' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-runTests', '-testPlatform', 'EditMode',
-    '-testResults', "$project/test_results.xml",
-    '-logFile', "$project/test_run.log")
+    '-testResults', "$project/RunLogs/test_results.xml",
+    '-logFile', "$project/RunLogs/test_run.log")
 
 Invoke-Unity -Label 'playmode' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-runTests', '-testPlatform', 'PlayMode',
-    '-testResults', "$project/test_results_playmode.xml",
-    '-logFile', "$project/test_run_playmode.log")
+    '-testResults', "$project/RunLogs/test_results_playmode.xml",
+    '-logFile', "$project/RunLogs/test_run_playmode.log")
 
 Write-Output 'REBUILD+RETEST FINISHED'

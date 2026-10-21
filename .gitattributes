@@ -1,0 +1,14 @@
+# Everything under Assets/_Project that SetupProject regenerates: every run reshuffles fileIDs, so
+# a text diff is tens of thousands of lines of churn. Shown as "Bin" in git diff (git diff --text
+# still reads one if it is really needed). Content and line endings are untouched.
+Assets/_Project/**/*.prefab -diff linguist-generated
+Assets/_Project/**/*.unity -diff linguist-generated
+Assets/_Project/**/*.mat -diff linguist-generated
+Assets/_Project/**/*.asset -diff linguist-generated
+Assets/_Project/**/*.renderTexture -diff linguist-generated
+
+# Binary files
+*.fbx binary
+*.png binary
+*.ttf binary
+*.xlsx binary

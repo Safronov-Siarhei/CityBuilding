@@ -28,7 +28,7 @@ Vulkan first/GLES3, IL2CPP ARM64, minSdk 26, Linear; `androidUseSwappy` = 1 (90/
 mesh compression Low on Buildings/Terrain/Orcs (APK size).
 
 ## Tools
-PlayMode `PerformanceProfileTests` (stages), `WalkCostTests`, `RenderCostTests` (table in the log),
+PlayMode `PerformanceProfileTests` (stages), `WalkCostTests`, `RenderCostTests` (table in `RunLogs/test_run_playmode.log`),
 `BuildingDrawCountTests` (rule), `SceneryShadowTests`, `TerrainPhysicsTests`. Profiling traps: the 60 fps
 cap makes wall-clock timing measure SLEEP (set `targetFrameRate = -1`, `vSyncCount = 0`); only stage
 deltas mean anything; ±10 % run noise. On device: Pixel 6 Pro over adb (FPS via SurfaceFlinger

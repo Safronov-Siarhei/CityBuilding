@@ -12,6 +12,7 @@ param(
 $ErrorActionPreference = 'Continue'
 $unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
 $project = 'D:/Fork/CityBuilding'
+New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 $buildsRoot = 'D:\Builds CB'
 $playerFolder = Join-Path $buildsRoot 'CityBuilding-Windows'
 
@@ -27,7 +28,7 @@ $unityArgs = @(
     '-buildTarget', 'Win64',
     '-executeMethod', 'CityBuilder.EditorTools.BuildWindows.Run',
     '-buildOutput', "`"$playerFolder`"",
-    '-logFile', "$project/windows_build.log"
+    '-logFile', "$project/RunLogs/windows_build.log"
 )
 
 if ($Development) { $unityArgs += '-development' }
@@ -38,7 +39,7 @@ Write-Output "=== done, exit $($p.ExitCode) : $(Get-Date -Format o) ==="
 
 if ($p.ExitCode -ne 0) {
     Write-Output 'FAILED -- last errors from the log:'
-    Select-String -Path "$project/windows_build.log" -Pattern 'error|Error|BuildFailedException|Unable to find' | Select-Object -Last 20
+    Select-String -Path "$project/RunLogs/windows_build.log" -Pattern 'error|Error|BuildFailedException|Unable to find' | Select-Object -Last 20
 } else {
     $zipName = if ($Development) { 'CityBuilding-Windows-dev.zip' } else { 'CityBuilding-Windows.zip' }
     $zipPath = Join-Path $buildsRoot $zipName

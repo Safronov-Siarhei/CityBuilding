@@ -14,6 +14,7 @@ param(
 $ErrorActionPreference = 'Continue'
 $unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
 $project = 'D:/Fork/CityBuilding'
+New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 
 # No -quit: BuildAndroid.Run exits the editor itself, with 0 or 1 depending on the build. Passing
 # both makes Unity return -1 even on a perfectly good build, which had the wrapper reporting FAILED
@@ -23,7 +24,7 @@ $unityArgs = @(
     '-projectPath', $project,
     '-buildTarget', 'Android',
     '-executeMethod', 'CityBuilder.EditorTools.BuildAndroid.Run',
-    '-logFile', "$project/android_build.log"
+    '-logFile', "$project/RunLogs/android_build.log"
 )
 
 if ($Development) { $unityArgs += '-development' }
@@ -37,7 +38,7 @@ Write-Output "=== done, exit $($p.ExitCode) : $(Get-Date -Format o) ==="
 
 if ($p.ExitCode -ne 0) {
     Write-Output 'FAILED -- last errors from the log:'
-    Select-String -Path "$project/android_build.log" -Pattern 'error|Error|BuildFailedException|Unable to find' | Select-Object -Last 20
+    Select-String -Path "$project/RunLogs/android_build.log" -Pattern 'error|Error|BuildFailedException|Unable to find' | Select-Object -Last 20
 } else {
     $apkName = if ($Development) { 'CityBuilding-dev.apk' } else { 'CityBuilding.apk' }
     $apkPath = Join-Path "$project/Builds/Android" $apkName

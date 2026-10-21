@@ -17,10 +17,27 @@ Fog/Layout/Motifs.cs`) run in batchmode. No hand edits in the Inspector survive.
 ## The loop
 1. Make sure the user's Editor isn't open on THIS project (their Editor on `D:\Fork\AC` doesn't block).
    Find the real Editor by command line (`-useHub -hubIPC`), never kill Unity blindly.
-2. Edit .cs / CSV. 3. Run `Tools/research/run.ps1 -Steps setup,setup,editmode,playmode [-Filter X] [-Graphics]`
-   (or `rebuild_twice_and_test.ps1`, `retest_fresh.ps1`, `playmode_only.ps1`).
-4. Grep logs for `error CS|Exception`; check the results XML `start-time` is FRESH.
+2. Edit .cs / CSV.
+3. Run `Tools/research/run.ps1 -Steps setup,setup,editmode,playmode [-Filter X] [-Graphics]` in the
+   background. Iterate with `-Filter` on the feature's tests; full run before committing. (The older
+   `rebuild_twice_and_test.ps1`, `retest_fresh.ps1`, `playmode_only.ps1` still work but print no report.)
+4. **Read the script's REPORT, not the logs:** per step exit code + time, compile errors and exceptions
+   (distinct, capped), test counts, and each failed test with 4 lines of message and its first
+   `Assets/_Project/...cs:N`; a results file older than the step is called stale. Logs and XML live in
+   `RunLogs/` (gitignored; setup log ~760 KB) — open one only for what the report can't say, with Grep.
 5. Commit source + balance first, then the regenerated assets as their own commit; push right away.
+   `git diff` shows generated Unity YAML under `Assets/_Project` as "Bin" (`.gitattributes` `-diff`);
+   `git diff --text` if one really must be read.
+
+Timings (warm): SetupProject ~70–100 s, a test pass 30–120 s; COLD (fresh Library, first graphics run)
+15–20 min. Assemblies: `CityBuilder.Runtime`, `CityBuilder.Editor`, `CityBuilder.Tests.EditMode`,
+`CityBuilder.Tests.PlayMode` (.asmdef). Pure formulas are public statics so EditMode can test them
+without a scene. To prove a refactor of generated assets changed nothing, diff the YAML field by field
+ignoring fileIDs, not by reading churn.
+
+**Per-device git setting:** `git config core.safecrlf false` — silences the per-file "LF will be
+replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Set on 2026-10-21 on the
+`D:\Fork` machine; run it once on any other device.
 
 ## Traps
 - The FIRST run after a .cs edit compiles new code but runs the OLD — run twice. An Editor-assembly edit

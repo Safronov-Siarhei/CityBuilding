@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Continue'
 $unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
 $project = 'D:/Fork/CityBuilding'
+New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 
 function Wait-ForCityBuilding {
     # Only OUR project's Unity: the user's Editor is open on D:\Fork\AC and would never exit.
@@ -24,23 +25,23 @@ Wait-ForCityBuilding
 Invoke-Unity -Label 'build 1' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-executeMethod', 'CityBuilder.EditorTools.SetupProject.Run', '-quit',
-    '-logFile', "$project/unity_build.log")
+    '-logFile', "$project/RunLogs/unity_build.log")
 
 Invoke-Unity -Label 'build 2' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-executeMethod', 'CityBuilder.EditorTools.SetupProject.Run', '-quit',
-    '-logFile', "$project/unity_build2.log")
+    '-logFile', "$project/RunLogs/unity_build2.log")
 
 Invoke-Unity -Label 'editmode' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-runTests', '-testPlatform', 'EditMode',
-    '-testResults', "$project/test_results.xml",
-    '-logFile', "$project/test_run.log")
+    '-testResults', "$project/RunLogs/test_results.xml",
+    '-logFile', "$project/RunLogs/test_run.log")
 
 Invoke-Unity -Label 'playmode' -UnityArgs @(
     '-batchmode', '-nographics', '-projectPath', $project,
     '-runTests', '-testPlatform', 'PlayMode',
-    '-testResults', "$project/test_results_playmode.xml",
-    '-logFile', "$project/test_run_playmode.log")
+    '-testResults', "$project/RunLogs/test_results_playmode.xml",
+    '-logFile', "$project/RunLogs/test_run_playmode.log")
 
 Write-Output 'ALL RUNS FINISHED'
