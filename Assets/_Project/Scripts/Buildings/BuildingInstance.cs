@@ -124,6 +124,7 @@ namespace CityBuilder.Buildings
                 // MeshMapApplier.RegisterWalkableSurface).
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 if (data.connectsToFences) RegisterFenceCells();
+                if (data.isGate && !GatesStanding.Contains(this)) GatesStanding.Add(this);
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
@@ -180,7 +181,8 @@ namespace CityBuilder.Buildings
                 // those may already be gone, and an exception further down used to leave this
                 // building counted -- the next game then believed its Town Hall already stood.
                 ChangeCount(Data.buildingName, -1);
-                if (Data.providesWalkableSurface) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                if (Data.isGate) GatesStanding.Remove(this);
+                if (Data.providesWalkableSurface || Data.isGate) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
@@ -276,9 +278,43 @@ namespace CityBuilder.Buildings
 
         private void FreeCellsAndDestroy()
         {
-            if (GridManager.Instance != null) GridManager.Instance.SetAreaOccupied(OriginCell, RotatedFootprint(), false);
+            var grid = GridManager.Instance;
+            if (grid != null)
+            {
+                // A gate and the road under it share their cells: whichever goes first leaves the
+                // cell taken by the other.
+                foreach (var cell in OccupiedCells())
+                {
+                    if (SharesCellWithAnother(cell)) continue;
+                    grid.SetAreaOccupied(cell, Vector2Int.one, false);
+                }
+            }
             Destroy(gameObject);
         }
+
+        private bool SharesCellWithAnother(Vector2Int cell)
+        {
+            if (Data == null) return false;
+            if (Data.isGate) return RoadNetwork.Instance != null && RoadNetwork.Instance.IsRoad(cell);
+            return Data.isRoad && GateStandsOn(cell);
+        }
+
+        /// <summary>Whether a gate stands on this cell -- a road under one is not free for another.</summary>
+        public static bool GateStandsOn(Vector2Int cell)
+        {
+            foreach (var gate in GatesStanding)
+            {
+                if (gate == null) continue;
+                foreach (var gateCell in gate.OccupiedCells())
+                {
+                    if (gateCell == cell) return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>The gates standing -- few enough to look through when a road is knocked out from under one.</summary>
+        private static readonly List<BuildingInstance> GatesStanding = new List<BuildingInstance>();
 
         /// <summary>
         /// This building's footprint as it actually lies on the grid, with X and Z swapped when it
@@ -518,6 +554,15 @@ namespace CityBuilder.Buildings
         private void SetupNavMeshObstacle(BuildingData data)
         {
             if (data.isRoad) return;
+            if (data.isGate)
+            {
+                // Not carved: marked as the Gate area, which citizens walk through and orcs treat
+                // as a wall (NavAreas). Its collider stops blocking bodies for the same reason --
+                // clicks still find it, since a trigger answers raycasts.
+                foreach (var box in GetComponents<BoxCollider>()) box.isTrigger = true;
+                MeshMapApplier.Instance?.RegisterGate(this);
+                return;
+            }
 
             try
             {

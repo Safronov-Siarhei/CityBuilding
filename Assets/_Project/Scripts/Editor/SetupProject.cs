@@ -573,7 +573,7 @@ namespace CityBuilder.EditorTools
             // as if the line ran straight through. A gate is built on the flat shell rather than the
             // fortified one on purpose -- it has to read as something you can walk through.
             var gateData = CreateBuildingData(
-                "Gate", new Vector2Int(1, 2), height: 2.2f,
+                "Gate", new Vector2Int(1, 1), height: 2.2f,
                 wallColor: new Color(0.4f, 0.38f, 0.34f), roofColor: new Color(0.34f, 0.32f, 0.3f),
                 style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 connectsToFences: true, motif: BuildingMotif.Archway);
@@ -2375,6 +2375,7 @@ namespace CityBuilder.EditorTools
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
             data.connectsToFences = connectsToFences;
+            data.isGate = id == "Gate" || id == "FortifiedGate";
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";

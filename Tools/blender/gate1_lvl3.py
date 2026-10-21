@@ -1,4 +1,4 @@
-"""Gate1-lvl3 -- the Gate (Ворота), wooden tier, at its last upgrade. Footprint 1x2 (level 1's);
+"""Gate1-lvl3 -- the Gate (Ворота), wooden tier, at its last upgrade. Footprint 1x1 (level 1's);
 the palisade comes in from both ends exactly as at level 1.
 
 Level 2 (gate1_lvl2.build) with blue pennants on gold-tipped poles over both piers and a gilded
@@ -20,7 +20,7 @@ LVL3_DX = 2 * L2['LVL2_DX']
 def build(lo, hi):
     b = L2['build'](lo, hi)
     post_h = d.PALISADE_H + 0.42
-    for py in (-0.44, 0.44):
+    for py in (-L2['POST_Y'], L2['POST_Y']):
         d.pennant(b, 0, py, post_h + 0.17, h=0.28, color='banner_blue', length=0.16)
         for sx in (-1, 1):
             f = Facade(b, '-x' if sx < 0 else '+x', sx * 0.13)

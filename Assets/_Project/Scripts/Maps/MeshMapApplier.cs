@@ -524,6 +524,29 @@ namespace CityBuilder.Maps
             ScheduleNavMeshRebuild();
         }
 
+        /// <summary>
+        /// Marks a gate's footprint as the Gate area (NavAreas) -- a modifier over the ground, not a
+        /// hole in it: open to whoever paths over every area, closed to orcs. Kept with the bridges'
+        /// surfaces, since both are extra sources on the same rebuild, and dropped by the same
+        /// UnregisterWalkableSurface.
+        /// </summary>
+        public void RegisterGate(BuildingInstance instance)
+        {
+            if (instance == null || instance.Data == null) return;
+
+            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            var footprint = instance.Data.footprintSize;
+            _walkableSurfaces[instance] = new NavMeshBuildSource
+            {
+                shape = NavMeshBuildSourceShape.ModifierBox,
+                size = new Vector3(footprint.x * cellSize, 4f, footprint.y * cellSize),
+                transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
+                area = NavAreas.Gate
+            };
+
+            ScheduleNavMeshRebuild();
+        }
+
         /// <summary>Drops a destroyed bridge's contribution (decay, combat damage) so the water underneath goes back to being uncrossable.</summary>
         public void UnregisterWalkableSurface(BuildingInstance instance)
         {

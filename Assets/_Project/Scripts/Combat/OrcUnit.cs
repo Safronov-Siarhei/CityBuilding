@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -692,7 +692,8 @@ namespace CityBuilder.Combat
         private static Vector3[] BuildRoute(Vector3 from, Vector3 to, out bool blocked)
         {
             _sharedPath ??= new NavMeshPath();
-            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath) && _sharedPath.corners.Length > 0)
+            // Never through a gate: for an orc it is a wall to break, not a door (NavAreas).
+            if (NavMesh.CalculatePath(from, to, CityBuilder.Maps.NavAreas.WithoutGates, _sharedPath) && _sharedPath.corners.Length > 0)
             {
                 blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
                 return _sharedPath.corners;

@@ -109,6 +109,11 @@ namespace CityBuilder.Buildings
         // only this, joining the line while keeping its own look.
         public bool connectsToFences = false;
 
+        // A gate (the user, 2026-10-21): it may stand on a road, with the road kept under it, and it
+        // is open to citizens and soldiers but a wall to orcs -- it marks its cells as the Gate
+        // NavMesh area instead of carving them out (see NavAreas, MeshMapApplier.RegisterGate).
+        public bool isGate = false;
+
         // Keeps this building selected (ghost stays active) after a successful placement instead
         // of clearing the selection -- lets the player lay several tiles in a row (e.g. a road)
         // without re-opening the hotbar each time.
