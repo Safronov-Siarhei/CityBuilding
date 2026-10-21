@@ -39,6 +39,9 @@ namespace CityBuilder.Combat
         private static readonly Color SkinColor = new Color(0.85f, 0.68f, 0.52f);
         private static readonly Color WoodColor = new Color(0.45f, 0.33f, 0.2f);
         private static readonly Color SteelColor = new Color(0.55f, 0.55f, 0.58f);
+        private static readonly Color RoyalColor = new Color(0.36f, 0.18f, 0.52f);
+        private static readonly Color CapeColor = new Color(0.66f, 0.12f, 0.14f);
+        private static readonly Color GoldColor = new Color(0.95f, 0.76f, 0.2f);
 
         private readonly List<ArmyGroup> _groups = new List<ArmyGroup>();
 
@@ -83,6 +86,7 @@ namespace CityBuilder.Combat
                 var total = 0;
                 foreach (var group in _groups)
                 {
+                    if (group.Type == SoldierType.King) continue;   // the hero is no soldier the army cap counts
                     total += group.Count;
                 }
                 return total;
@@ -191,6 +195,14 @@ namespace CityBuilder.Combat
         {
             if (unit == null) return;
 
+            // The King does not die: he falls, and gets up again at the castle (KingHero).
+            var hero = unit.GetComponent<KingHero>();
+            if (hero != null)
+            {
+                hero.Fall();
+                return;
+            }
+
             RemoveFromGroup(unit);
             Destroy(unit.gameObject);
             // Where they fell, which is the fight the player may want to look at.
@@ -282,7 +294,7 @@ namespace CityBuilder.Combat
             for (var i = _groups.Count - 1; i >= 0; i--)
             {
                 var group = _groups[i];
-                if (group.Count == 0) continue;
+                if (group.Count == 0 || group.Type == SoldierType.King) continue;
 
                 Disband(group.Members[group.Count - 1]);
                 return true;
@@ -321,6 +333,22 @@ namespace CityBuilder.Combat
             }
         }
 
+        /// <summary>
+        /// The Invasion mode's King: one soldier in a group of his own, which is what lets the army
+        /// panel, the orders and the orcs treat him like any other fighter, plus the KingHero that
+        /// gives him levels and his coming back. Costs nothing and takes no citizen.
+        /// </summary>
+        public KingHero SpawnKing(Vector3 position)
+        {
+            var group = GetOrCreateGroup(SoldierType.King, position);
+            var unit = SpawnSoldier(SoldierType.King, position, group, scatter: false);
+            group.Add(unit);
+            var hero = unit.gameObject.AddComponent<KingHero>();
+            hero.Initialize(position);
+            OnArmyChanged?.Invoke();
+            return hero;
+        }
+
         /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
         private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true)
         {
@@ -356,6 +384,17 @@ namespace CityBuilder.Combat
         {
             switch (type)
             {
+                case SoldierType.King:
+                    // A head taller and broader than any soldier, in royal purple with a red cape,
+                    // a gold crown and a long sword: the one figure on the map the player looks for.
+                    AddCubePart(root, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.38f, 0.6f, 0.38f), MaterialFor(RoyalColor));
+                    AddCubePart(root, "Cape", new Vector3(0f, 0.32f, -0.2f), new Vector3(0.36f, 0.56f, 0.04f), MaterialFor(CapeColor));
+                    AddCubePart(root, "Head", new Vector3(0f, 0.73f, 0f), new Vector3(0.26f, 0.26f, 0.26f), MaterialFor(SkinColor));
+                    AddCubePart(root, "Crown", new Vector3(0f, 0.9f, 0f), new Vector3(0.28f, 0.1f, 0.28f), MaterialFor(GoldColor));
+                    AddCubePart(root, "SwordBlade", new Vector3(0.27f, 0.62f, 0f), new Vector3(0.06f, 0.78f, 0.03f), MaterialFor(SteelColor));
+                    AddCubePart(root, "SwordGuard", new Vector3(0.27f, 0.25f, 0f), new Vector3(0.22f, 0.05f, 0.05f), MaterialFor(GoldColor));
+                    break;
+
                 case SoldierType.Spearman:
                     AddBodyAndHead(root, SpearmanClothingColor);
                     // Held upright and taller than he is: the two-metre reach in the sheet is this

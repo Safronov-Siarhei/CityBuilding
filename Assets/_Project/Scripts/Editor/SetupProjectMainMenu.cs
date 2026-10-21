@@ -178,7 +178,7 @@ namespace CityBuilder.EditorTools
 
             var campaign = BuildCampaignPanel(modes);
             var sandbox = BuildSandboxPanel(modes, controller, out var mapSelect, out var loadPanel, out var newTabSelected, out var savesTabSelected);
-            var invasion = BuildInvasionPanel(modes, out var timer);
+            var invasion = BuildInvasionPanel(modes, controller, out var timer);
 
             // ---- dialogs over everything
             var settingsPanel = BuildSettingsPanel(canvas, panelSprite, settings);
@@ -410,7 +410,7 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- the invasion: its hub
 
-        private static CanvasGroup BuildInvasionPanel(Transform parent, out Text timer)
+        private static CanvasGroup BuildInvasionPanel(Transform parent, MainMenuController controller, out Text timer)
         {
             var rect = ModePanel(parent, "InvasionPanel", "#mode_invasion", out var body);
 
@@ -453,7 +453,7 @@ namespace CityBuilder.EditorTools
             MenuLabel(board.transform, "Soon", "#invasion_board_soon", 26, new Vector2(0f, -150f), new Vector2(500f, 50f), HudInk.OnPanel);
 
             var fight = MenuTextButton(body, "FightButton", "button", "#invasion_fight", HudInk.OnButton, new Vector2(370f, -310f), new Vector2(400f, 130f), 44);
-            fight.interactable = false;
+            UnityEventTools.AddPersistentListener(fight.onClick, controller.StartInvasion);
             return Group(rect.gameObject);
         }
 

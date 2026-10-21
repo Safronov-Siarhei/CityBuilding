@@ -408,6 +408,20 @@ namespace CityBuilder.Core
         /// <summary>How long after the Town Hall goes up the settlement is left alone to find its feet -- migration frozen, contentment still reported honestly. Without it a first settlement is abandoned before the player has anything to be content about.</summary>
         [SerializeField] private float settlingInSeconds = 420f;
 
+        // The King, the hero of the Invasion mode: his numbers at level 1 and what each level adds.
+        [SerializeField] private int kingMaxHealth = 120;
+        [SerializeField] private int kingAttackDamage = 10;
+        [SerializeField] private float kingAttackIntervalSeconds = 1f;
+        [SerializeField] private float kingAttackRange = 1.6f;
+        [SerializeField] private float kingWalkSpeed = 2.2f;
+        [SerializeField] private float kingEngageRadius = 8f;
+        [SerializeField] private int kingHealthPerLevel = 20;
+        [SerializeField] private int kingDamagePerLevel = 2;
+        [SerializeField] private int kingXpPerLevel = 60;
+        [SerializeField] private int kingMaxLevel = 25;
+        [SerializeField] private float kingRespawnBaseSeconds = 8f;
+        [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
+
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
         [SerializeField] private int startStone = 30;
@@ -568,6 +582,34 @@ namespace CityBuilder.Core
         public float MigrationLeaveIntervalAtZeroSeconds => migrationLeaveIntervalAtZeroSeconds;
         public int MigrationMinPopulation => migrationMinPopulation;
         public float SettlingInSeconds => settlingInSeconds;
+        public int KingHealthPerLevel => kingHealthPerLevel;
+        public int KingDamagePerLevel => kingDamagePerLevel;
+        public int KingXpPerLevel => kingXpPerLevel;
+        public int KingMaxLevel => kingMaxLevel;
+        public float KingRespawnBaseSeconds => kingRespawnBaseSeconds;
+        public float KingRespawnPerLevelSeconds => kingRespawnPerLevelSeconds;
+
+        /// <summary>
+        /// The King as a unit row, built from the economy tab's king_* keys rather than read from
+        /// the units tab: he is never recruited, researched or paid, so the units tab's columns
+        /// would be blanks around six numbers. His LEVELS are the hero's own (see KingHero), not
+        /// the Laboratory's, so the row has the one level.
+        /// </summary>
+        public UnitBalance KingUnit => _kingUnit ??= new UnitBalance
+        {
+            id = "king",
+            displayName = "King",
+            attackRangeUnits = kingAttackRange,
+            attackRangeStructures = kingAttackRange + 1.2f,
+            engageRadius = kingEngageRadius,
+            startsUnlocked = false,
+            levels = new List<UnitLevelStats>
+            {
+                new UnitLevelStats { maxHealth = kingMaxHealth, attackDamage = kingAttackDamage, attackIntervalSeconds = kingAttackIntervalSeconds, walkSpeed = kingWalkSpeed },
+            },
+        };
+
+        [NonSerialized] private UnitBalance _kingUnit;
         public int StartWood => startWood;
         public int StartStone => startStone;
         public int StartFood => startFood;
@@ -761,6 +803,19 @@ namespace CityBuilder.Core
             migrationLeaveIntervalAtZeroSeconds = Read(economy, "migration_leave_interval_at_zero_sec", migrationLeaveIntervalAtZeroSeconds);
             migrationMinPopulation = (int)Read(economy, "migration_min_population", migrationMinPopulation);
             settlingInSeconds = Read(economy, "settling_in_seconds", settlingInSeconds);
+            kingMaxHealth = (int)Read(economy, "king_max_health", kingMaxHealth);
+            kingAttackDamage = (int)Read(economy, "king_attack_damage", kingAttackDamage);
+            kingAttackIntervalSeconds = Read(economy, "king_attack_interval_sec", kingAttackIntervalSeconds);
+            kingAttackRange = Read(economy, "king_attack_range", kingAttackRange);
+            kingWalkSpeed = Read(economy, "king_walk_speed", kingWalkSpeed);
+            kingEngageRadius = Read(economy, "king_engage_radius", kingEngageRadius);
+            kingHealthPerLevel = (int)Read(economy, "king_health_per_level", kingHealthPerLevel);
+            kingDamagePerLevel = (int)Read(economy, "king_damage_per_level", kingDamagePerLevel);
+            kingXpPerLevel = (int)Read(economy, "king_xp_per_level", kingXpPerLevel);
+            kingMaxLevel = (int)Read(economy, "king_max_level", kingMaxLevel);
+            kingRespawnBaseSeconds = Read(economy, "king_respawn_base_sec", kingRespawnBaseSeconds);
+            kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
+            _kingUnit = null;
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

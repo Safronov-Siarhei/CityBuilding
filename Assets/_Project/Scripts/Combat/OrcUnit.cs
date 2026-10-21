@@ -101,6 +101,9 @@ namespace CityBuilder.Combat
 
         public int CurrentHealth { get; private set; }
 
+        /// <summary>Its full health at its level -- also what striking it down is worth to the King (KingHero).</summary>
+        public int MaxHealth => _maxHealth;
+
         // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
         // a unit, not a structure, so a group set to prioritise structures walks past it.
         Transform IDamageTarget.Transform => this != null ? transform : null;

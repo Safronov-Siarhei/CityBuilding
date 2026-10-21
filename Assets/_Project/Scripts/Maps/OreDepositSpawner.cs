@@ -72,6 +72,8 @@ namespace CityBuilder.Maps
             var grid = GridManager.Instance;
             var applier = MeshMapApplier.Instance;
             if (grid == null || applier == null || map == null) return;
+            // An Invasion run gathers wood and stone only (the user, 2026-10-21): no veins.
+            if (Invasion.InvasionMode.IsActive) return;
 
             var start = map.TownHallZone.Length > 0
                 ? StartZone.Centre(map.TownHallZone)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -48,6 +49,9 @@ namespace CityBuilder.Combat
         private bool _hasRoute;
 
         public ArmyGroup Group { get; private set; }
+
+        /// <summary>Raised when one of this soldier's own blows kills its target -- what the King's experience is counted from (see KingHero).</summary>
+        public event Action<IDamageTarget> KilledTarget;
 
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
         public bool IsRanged => Type == SoldierType.Archer;
@@ -111,6 +115,28 @@ namespace CityBuilder.Combat
             var wasMissing = MaxHealth - CurrentHealth;
             ReadStats();
             CurrentHealth = Mathf.Clamp(MaxHealth - wasMissing, 1, MaxHealth);
+        }
+
+        /// <summary>
+        /// Numbers set from outside rather than read from the sheet's level: the King's, which
+        /// grow with the hero's own level (KingHero). Damage taken carries across, as in RefreshStats.
+        /// </summary>
+        public void SetHeroStats(int maxHealth, int attackDamage)
+        {
+            var wasMissing = MaxHealth - CurrentHealth;
+            MaxHealth = Mathf.Max(1, maxHealth);
+            _attackDamage = attackDamage;
+            CurrentHealth = Mathf.Clamp(MaxHealth - wasMissing, 1, MaxHealth);
+        }
+
+        /// <summary>Back on his feet at full health, with nothing in hand -- the King coming back after a fall.</summary>
+        public void Revive()
+        {
+            CurrentHealth = MaxHealth;
+            _target = null;
+            _breach = null;
+            _hasRoute = false;
+            _attackTimer = 0f;
         }
 
         /// <summary>Every living soldier brought up to date after a level is researched (see CityBuilder.Research.ResearchManager) or a save is loaded.</summary>
@@ -296,10 +322,12 @@ namespace CityBuilder.Combat
                 return;
             }
 
-            _target.TakeDamage(_attackDamage);
-            if (!_target.IsAlive)
+            var struck = _target;
+            struck.TakeDamage(_attackDamage);
+            if (!struck.IsAlive)
             {
                 _target = null;
+                KilledTarget?.Invoke(struck);
                 return;
             }
 

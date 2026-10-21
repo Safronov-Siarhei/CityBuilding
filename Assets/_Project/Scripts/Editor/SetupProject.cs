@@ -838,7 +838,7 @@ namespace CityBuilder.EditorTools
 
             // Fires. No wiring: it finds what is standing, what is burning and who can reach it by
             // scanning, once a game day, and every number it needs is in the sheet.
-            managers.AddComponent<FireManager>();
+            var fireManager = managers.AddComponent<FireManager>();
 
             managers.AddComponent<HappinessManager>();
 
@@ -865,6 +865,14 @@ namespace CityBuilder.EditorTools
             var armyManagerSO = new SerializedObject(armyManager);
             armyManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // The Invasion mode: idle in a sandbox game; in a run started from the menu's «В бой»
+            // it switches off the sandbox's raids, illness and fires and sets the run up.
+            var invasionMode = managers.AddComponent<CityBuilder.Invasion.InvasionMode>();
+            var invasionModeSO = new SerializedObject(invasionMode);
+            invasionModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager });
+            invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Laboratory's brain. No wiring of its own: it finds the Laboratory through
             // BuildingInstance's registry, because the building comes and goes while it does not.
@@ -912,6 +920,10 @@ namespace CityBuilder.EditorTools
             // Map 5, the Caldera (Tools/blender/map5.py): the town on a volcano's floor, a ring of
             // mountains that four gorges cut through, the orcs outside it.
             CreateMeshMapDefinition("Map5", "Map-5", null);
+            // The Invasion mode's first map (Tools/blender/invasion1.py): the base island in the
+            // middle, three lanes over three bridges to three orc camps, jungles between them. Not
+            // in the sandbox's map picker -- only «В бой» plays it.
+            CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.MapId, "Inv-1", null);
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
@@ -3548,8 +3560,9 @@ namespace CityBuilder.EditorTools
         /// <summary>
         /// A designed map's spots from <prefix>-Spots.csv (kind,x,y[,level] in Blender's axes:
         /// Blender (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's and
-        /// the level it grows to, "zone" a corner of the Town Hall's start zone; other kinds (the
-        /// ruin) are for later. No file: the map has no fixed spots.
+        /// the level it grows to, "zone" a corner of the Town Hall's start zone; every other kind
+        /// (the ruin, the Invasion map's bridges, monsters, shrines, boss) is kept by kind for the
+        /// mode that reads it (MeshMapDefinition.SpotsOf). No file: the map has no fixed spots.
         /// </summary>
         private static void ReadOrcSpots(MeshMapDefinition map, string csvPath)
         {
@@ -3558,6 +3571,7 @@ namespace CityBuilder.EditorTools
             var camps = new List<Vector2>();
             var levels = new List<int>();
             var zone = new List<Vector2>();
+            var others = new List<MapSpot>();
             foreach (var line in File.ReadAllLines(csvPath))
             {
                 var cells = line.Split(',');
@@ -3571,8 +3585,9 @@ namespace CityBuilder.EditorTools
                     camps.Add(spot);
                     levels.Add(cells.Length > 3 ? int.Parse(cells[3]) : OrcBaseLayout.MaxLevel);
                 }
+                else others.Add(new MapSpot { kind = cells[0], position = spot, level = cells.Length > 3 ? int.Parse(cells[3]) : 0 });
             }
-            map.EditorInitializeSpots(main, camps.ToArray(), levels.ToArray(), zone.ToArray());
+            map.EditorInitializeSpots(main, camps.ToArray(), levels.ToArray(), zone.ToArray(), others.ToArray());
         }
 
         /// <summary>

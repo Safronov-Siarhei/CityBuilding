@@ -30,10 +30,11 @@ OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit")
 def objects_of(part):
     found = []
     for o in bpy.data.objects:
-        if o.type != 'MESH' or not o.name.startswith("Map-"):
+        if o.type != 'MESH' or not o.name.startswith(("Map-", "Inv-")):
             continue
         head = o.name.split("-" + part)
-        # Map-N-<part> exactly, or Map-N-<part>-<anything> (a chunk, a kit piece)
+        # Map-N-<part> exactly, or Map-N-<part>-<anything> (a chunk, a kit piece); Inv-N- for
+        # the Invasion mode's maps
         if len(head) == 2 and head[0].count("-") == 1 and (head[1] == "" or head[1].startswith("-")):
             found.append(o)
     return found
@@ -67,7 +68,7 @@ def main():
     for part in PARTS:
         objs = objects_of(part)
         if not objs:
-            raise RuntimeError(f"no Map-*-{part} object in {bpy.data.filepath}")
+            raise RuntimeError(f"no Map-*-{part} / Inv-*-{part} object in {bpy.data.filepath}")
         export(part, objs)
     for part in OPTIONAL:
         objs = objects_of(part)

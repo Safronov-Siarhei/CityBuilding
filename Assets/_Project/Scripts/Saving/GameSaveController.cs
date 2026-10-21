@@ -106,8 +106,12 @@ namespace CityBuilder.Saving
 
         private void OnApplicationQuit() => Autosave();
 
-        /// <summary>Nothing worth keeping before the Town Hall stands -- a new game starts there anyway.</summary>
-        private bool CanAutosave => buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding;
+        /// <summary>
+        /// Nothing worth keeping before the Town Hall stands -- a new game starts there anyway. And
+        /// never an Invasion run: it is ranked, and a run that could be reloaded could be replayed
+        /// (the user, 2026-10-20: a dropped run is not resumed).
+        /// </summary>
+        private bool CanAutosave => (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) && !Invasion.InvasionMode.IsActive;
 
         /// <summary>Writes the autosave slot now and starts the interval over. Does not touch CurrentSaveName.</summary>
         public void Autosave()

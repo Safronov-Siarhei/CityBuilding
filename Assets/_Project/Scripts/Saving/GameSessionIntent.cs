@@ -12,5 +12,8 @@ namespace CityBuilder.Saving
 
         /// <summary>Map picked by MapSelector for a fresh game; ignored when loading a save (which carries its own map).</summary>
         public static string NewGameMapId;
+
+        /// <summary>The new game is an Invasion run (the menu's «В бой»), not a sandbox game; consumed by InvasionMode.</summary>
+        public static bool NewGameIsInvasion;
     }
 }

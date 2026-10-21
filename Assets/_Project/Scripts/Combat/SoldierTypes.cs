@@ -34,6 +34,14 @@ namespace CityBuilder.Combat
 
         /// <summary>Armour: four times a militiaman's health, and slower than everything it fights beside. The tier a settlement builds an industry for.</summary>
         ManAtArms = 3,
+
+        /// <summary>
+        /// The hero of the Invasion mode: one of him, never recruited, researched or paid. He
+        /// fights as a soldier of a group of his own, so every order, target rule and orc reaction
+        /// the army has applies to him unchanged; KingHero adds his levels and his coming back.
+        /// Not in All: the Barracks never offers him.
+        /// </summary>
+        King = 4,
     }
 
     /// <summary>
@@ -68,6 +76,7 @@ namespace CityBuilder.Combat
                 case SoldierType.Spearman: return "spearman";
                 case SoldierType.Archer: return "archer";
                 case SoldierType.ManAtArms: return "manatarms";
+                case SoldierType.King: return "king";
                 case SoldierType.Militia:
                 default:
                     return "militia";
@@ -117,7 +126,8 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>The whole sheet row, for callers (SoldierUnit) that want several of its numbers at once and cache them.</summary>
-        public static UnitBalance Row(SoldierType type) => BalanceConfig.Instance.Unit(SheetIdOf(type));
+        public static UnitBalance Row(SoldierType type) =>
+            type == SoldierType.King ? BalanceConfig.Instance.KingUnit : BalanceConfig.Instance.Unit(SheetIdOf(type));
 
         /// <summary>
         /// The level this type currently fights at -- the highest one researched in the Laboratory,
@@ -126,6 +136,7 @@ namespace CityBuilder.Combat
         /// </summary>
         public static int CurrentLevel(SoldierType type)
         {
+            if (type == SoldierType.King) return 1;   // his levels are the hero's own (KingHero)
             var research = Research.ResearchManager.Instance;
             return research != null ? research.UnitLevel(type) : 1;
         }

@@ -156,6 +156,15 @@ namespace CityBuilder.UI
             Snap();
         }
 
+        /// <summary>«В бой»: a new Invasion run on the mode's own map (see CityBuilder.Invasion.InvasionMode).</summary>
+        public void StartInvasion()
+        {
+            GameSessionIntent.SaveNameToLoad = null;
+            GameSessionIntent.NewGameMapId = Invasion.InvasionMode.MapId;
+            GameSessionIntent.NewGameIsInvasion = true;
+            SceneManager.LoadScene(gameplaySceneName);
+        }
+
         public void OpenShop() { if (shopDialog != null) shopDialog.SetActive(true); }
         public void CloseShop() { if (shopDialog != null) shopDialog.SetActive(false); }
         public void CloseExitDialog() { if (exitDialog != null) exitDialog.SetActive(false); }

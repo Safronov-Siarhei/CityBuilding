@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CityBuilder.Maps
@@ -40,6 +41,9 @@ namespace CityBuilder.Maps
         [SerializeField] private int[] campLevels = new int[0];
         // Where the Town Hall may stand (world x, z corners, in order); empty = anywhere.
         [SerializeField] private Vector2[] townHallZone = new Vector2[0];
+        // Every other spot the generator marked (the Invasion map's bridges, monster camps,
+        // shrines, boss lair...), by kind; read by whatever mode needs it.
+        [SerializeField] private MapSpot[] otherSpots = new MapSpot[0];
 
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
         public GameObject GroundPrefab => groundPrefab;
@@ -61,6 +65,18 @@ namespace CityBuilder.Maps
         public Vector2[] CampSpots => campSpots ?? new Vector2[0];
         public int[] CampLevels => campLevels ?? new int[0];
         public Vector2[] TownHallZone => townHallZone ?? new Vector2[0];
+
+        /// <summary>The spots of one kind ("bridge", "monsters", "shrine", "boss"), in the generator's order.</summary>
+        public List<MapSpot> SpotsOf(string kind)
+        {
+            var found = new List<MapSpot>();
+            if (otherSpots == null) return found;
+            foreach (var spot in otherSpots)
+            {
+                if (spot.kind == kind) found.Add(spot);
+            }
+            return found;
+        }
 
 #if UNITY_EDITOR
         public void EditorInitialize(string id, GameObject ground, GameObject water, GameObject waterPlacementZone, GameObject treesArea, GameObject[] trees, GameObject[] rocks, Material waterMat)
@@ -85,8 +101,9 @@ namespace CityBuilder.Maps
             keepWaterRotation = keepWaterRot;
         }
 
-        public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps, int[] levels, Vector2[] zone)
+        public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps, int[] levels, Vector2[] zone, MapSpot[] others = null)
         {
+            otherSpots = others ?? new MapSpot[0];
             hasMainBaseSpot = mainBase.HasValue;
             mainBaseSpot = mainBase ?? Vector2.zero;
             campSpots = camps ?? new Vector2[0];
@@ -94,5 +111,14 @@ namespace CityBuilder.Maps
             townHallZone = zone ?? new Vector2[0];
         }
 #endif
+    }
+
+    /// <summary>A marked place on a designed map: its kind, where (world x, z) and a level where the kind has one.</summary>
+    [System.Serializable]
+    public struct MapSpot
+    {
+        public string kind;
+        public Vector2 position;
+        public int level;
     }
 }
