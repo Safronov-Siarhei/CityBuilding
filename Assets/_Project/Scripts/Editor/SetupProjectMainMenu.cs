@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.UI;
 using UnityEditor;
@@ -153,6 +153,9 @@ namespace CityBuilder.EditorTools
             Anchor((RectTransform)contIcon.transform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(70f, 6f), new Vector2(150f, 150f));
             MenuLabel(cont.transform, "Title", "#menu_continue", 42, new Vector2(70f, 42f), new Vector2(400f, 56f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleLeft);
             var continueDetail = MenuLabel(cont.transform, "Detail", null, 26, new Vector2(70f, -26f), new Vector2(400f, 76f), HudInk.OnMenuPlaque, align: TextAnchor.MiddleLeft);
+            // Half the size it was laid out at (the user, 2026-10-21): scaled whole, so the plaque,
+            // the medallion and the words keep their proportions; the pivot keeps it in the corner.
+            cont.rectTransform.localScale = Vector3.one * 0.5f;
 
             // ---- the modes
             var modes = StretchedChild(canvas, "ModesScreen");
