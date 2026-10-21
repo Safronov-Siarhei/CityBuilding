@@ -125,6 +125,8 @@ namespace CityBuilder.Buildings
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 if (data.connectsToFences) RegisterFenceCells();
                 if (data.isGate && !GatesStanding.Contains(this)) GatesStanding.Add(this);
+                // A mine stands on its vein, which gives way to it (and comes back when it goes).
+                if (OreDeposit.KindForBuilding(data.buildingName).HasValue) OreDeposit.At(originCell)?.Attach(this);
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
@@ -182,6 +184,7 @@ namespace CityBuilder.Buildings
                 // building counted -- the next game then believed its Town Hall already stood.
                 ChangeCount(Data.buildingName, -1);
                 if (Data.isGate) GatesStanding.Remove(this);
+                if (OreDeposit.KindForBuilding(Data.buildingName).HasValue) OreDeposit.At(OriginCell)?.Detach(this);
                 if (Data.providesWalkableSurface || Data.isGate) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
@@ -296,6 +299,8 @@ namespace CityBuilder.Buildings
         {
             if (Data == null) return false;
             if (Data.isGate) return RoadNetwork.Instance != null && RoadNetwork.Instance.IsRoad(cell);
+            // a mine goes, its vein stays
+            if (OreDeposit.KindForBuilding(Data.buildingName).HasValue && OreDeposit.At(cell) != null) return true;
             return Data.isRoad && GateStandsOn(cell);
         }
 

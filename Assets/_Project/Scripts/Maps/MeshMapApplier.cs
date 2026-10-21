@@ -390,6 +390,11 @@ namespace CityBuilder.Maps
                 Destroy(treesAreaInstance);
             }
 
+            // The ore veins first of all: they are dealt from the map's id alone, so they have to
+            // take their ground before the forest and the boulders (dealt by unseeded Random)
+            // take theirs -- or the same map would deal different veins on every load.
+            OreDepositSpawner.Instance?.Initialize(map, new HashSet<Vector2Int>(_treesZoneCells));
+
             // Called even when the zone resolved to nothing, so TreesAreaSpawner gets to report a
             // forest that silently failed to materialise rather than staying quiet about it.
             if (map.TreesAreaPrefab != null && TreesAreaSpawner.Instance != null)

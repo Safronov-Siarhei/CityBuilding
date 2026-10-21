@@ -925,6 +925,7 @@ namespace CityBuilder.EditorTools
 
             managers.AddComponent<TreesAreaSpawner>();
             managers.AddComponent<RockSpawner>();
+            ConfigureOreDeposits(managers.AddComponent<OreDepositSpawner>());
 
             BuildCheats();
 
@@ -4676,6 +4677,41 @@ namespace CityBuilder.EditorTools
 
             label = CreateText(go.transform, "Label", string.Empty, 24, Vector2.zero, sizeDelta - new Vector2(20f, 20f));
             return go.GetComponent<Button>();
+        }
+
+        /// <summary>
+        /// The ore veins' four patch models (Tools/blender/orevein1.py, by OreKind) and the glow
+        /// under them (Shaders/OreGlow). A missing model leaves that vein a glow alone.
+        /// </summary>
+        private static void ConfigureOreDeposits(OreDepositSpawner spawner)
+        {
+            var models = new GameObject[4];
+            var names = new[] { "OreVeinIron", "OreVeinCoal", "OreVeinCopper", "OreVeinGold" };
+            for (var i = 0; i < names.Length; i++)
+            {
+                models[i] = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Buildings/{names[i]}.fbx");
+                if (models[i] == null) Debug.LogWarning($"[SetupProject] No {names[i]}.fbx -- that vein shows only its glow.");
+            }
+
+            const string glowPath = "Assets/_Project/Materials/OreGlow.mat";
+            var glow = AssetDatabase.LoadAssetAtPath<Material>(glowPath);
+            if (glow == null)
+            {
+                var shader = Shader.Find("CityBuilder/OreGlow");
+                if (shader != null)
+                {
+                    glow = new Material(shader) { name = "OreGlow" };
+                    AssetDatabase.CreateAsset(glow, glowPath);
+                }
+                else Debug.LogWarning("[SetupProject] Shader CityBuilder/OreGlow not found -- the veins will not glow.");
+            }
+
+            var so = new SerializedObject(spawner);
+            var array = so.FindProperty("veinModels");
+            array.arraySize = models.Length;
+            for (var i = 0; i < models.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = models[i];
+            so.FindProperty("glowMaterial").objectReferenceValue = glow;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void DeleteIfExists(string path)

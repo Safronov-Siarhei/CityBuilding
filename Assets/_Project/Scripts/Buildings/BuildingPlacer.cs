@@ -339,7 +339,7 @@ namespace CityBuilder.Buildings
             origin = default;
             if (!TryGetGroundCell(screenPosition, out var aimCell)) return false;
 
-            origin = OriginForCentredFootprint(aimCell, RotatedFootprint(_selectedBuilding.footprintSize));
+            origin = SnapMineToVein(OriginForCentredFootprint(aimCell, RotatedFootprint(_selectedBuilding.footprintSize)));
             return true;
         }
 
@@ -447,6 +447,7 @@ namespace CityBuilder.Buildings
             if (!canPlace)
             {
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
+                if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
@@ -503,6 +504,8 @@ namespace CityBuilder.Buildings
         public static bool IsFreeFor(BuildingData data, Vector2Int cell, Vector2Int footprint)
         {
             var grid = GridManager.Instance;
+            var ore = data != null ? OreDeposit.KindForBuilding(data.buildingName) : null;
+            if (ore.HasValue) return IsFreeVein(ore.Value, cell, footprint);
             if (data == null || !data.isGate) return grid.IsAreaFree(cell, footprint);
 
             // Only the way through may sit on the road; the walls either side need clear ground.
@@ -519,6 +522,37 @@ namespace CityBuilder.Buildings
                 }
             }
             return true;
+        }
+
+        /// <summary>A mine fits only exactly over a vein of its own ore that no mine stands on yet (the user, 2026-10-21).</summary>
+        private static bool IsFreeVein(OreKind kind, Vector2Int cell, Vector2Int footprint)
+        {
+            var vein = OreDeposit.At(cell);
+            return vein != null && vein.Kind == kind && vein.Origin == cell && vein.Mine == null && footprint == OreDeposit.Size;
+        }
+
+        /// <summary>
+        /// A mine in hand is drawn to the nearest free vein of its ore within a few cells of where
+        /// the player aims -- landing a 2x2 exactly on a 2x2 patch by finger would be a chore.
+        /// </summary>
+        private Vector2Int SnapMineToVein(Vector2Int origin)
+        {
+            var ore = _selectedBuilding != null ? OreDeposit.KindForBuilding(_selectedBuilding.buildingName) : null;
+            if (!ore.HasValue) return origin;
+
+            const int snapCells = 4;
+            OreDeposit best = null;
+            var bestDistance = int.MaxValue;
+            foreach (var vein in OreDeposit.All)
+            {
+                if (vein.Kind != ore.Value || vein.Mine != null) continue;
+                var d = vein.Origin - origin;
+                var distance = Mathf.Max(Mathf.Abs(d.x), Mathf.Abs(d.y));
+                if (distance > snapCells || distance >= bestDistance) continue;
+                best = vein;
+                bestDistance = distance;
+            }
+            return best != null ? best.Origin : origin;
         }
 
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint, bool wholeFootprintRules = true)
