@@ -53,6 +53,9 @@ namespace CityBuilder.Combat
         /// <summary>Raised when one of this soldier's own blows kills its target -- what the King's experience is counted from (see KingHero).</summary>
         public event Action<IDamageTarget> KilledTarget;
 
+        /// <summary>Raised on every blow or shot, as it is dealt -- what a figure's strike is drawn from (FigureAnimator).</summary>
+        public event Action Struck;
+
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
         public bool IsRanged => Type == SoldierType.Archer;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
@@ -282,6 +285,7 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
+            Struck?.Invoke();
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), wall, _attackDamage);
             else wall.TakeDamage(_attackDamage);
             if (wall.CurrentHealth <= 0)
@@ -313,6 +317,7 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
+            Struck?.Invoke();
 
             if (IsRanged)
             {

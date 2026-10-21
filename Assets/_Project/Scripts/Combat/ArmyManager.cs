@@ -395,6 +395,8 @@ namespace CityBuilder.Combat
                     figure.name = "King";
                     figure.transform.localScale = Vector3.one / UnitSize.Scale;
                     SceneryShadows.DisableCasting(figure);
+                    // jointed (legs, arms, head): stands, runs and strikes
+                    root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
                     break;
                 }
 

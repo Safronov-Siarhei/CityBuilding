@@ -9,7 +9,8 @@ shield with a gold rim and a gold cross on the left arm -- so he reads as the Ki
 camera's height and in a melee.
 
 Built like the orc figures (orcs.py: the same helpers, the same scale step) in a collection of
-its own; exported to Models/Heroes. Borrows the Flag's box. No animation.
+its own; exported to Models/Heroes. Borrows the Flag's box. Jointed for the game's animation
+(legs, arms, head on the body -- see PARTS); no armature.
 """
 import math
 import os
@@ -21,6 +22,7 @@ import detail  # noqa: E402
 import kit  # noqa: E402
 import orcs as o  # noqa: E402
 from kit import Builder  # noqa: E402
+from mathutils import Vector  # noqa: E402
 
 OBJ = "HeroKing"
 SCALE = 1.15          # 0.62 * 1.15 = 0.71 m to the top of the crown
@@ -51,14 +53,13 @@ def ensure_collection():
     return COLLECTION
 
 
-def legs(b):
-    """Riding boots with turned-down cuffs, purple hose above them."""
-    for k in (-1, 1):
-        x = k * 0.05
-        b.box(x - 0.036, x + 0.036, -0.06, 0.035, 0.0, 0.03, LEATHER, bevel=0.01)       # foot
-        b.box(x - 0.033, x + 0.033, -0.035, 0.033, 0.03, 0.105, LEATHER, bevel=0.01)    # shaft
-        b.box(x - 0.037, x + 0.037, -0.039, 0.037, 0.1, 0.12, 'wood_mid', bevel=0.006)  # cuff
-        b.box(x - 0.028, x + 0.028, -0.028, 0.028, 0.12, 0.2, ROYAL_DARK, bevel=0.01)   # hose
+def leg(b, k):
+    """A riding boot with a turned-down cuff, purple hose above it. k = -1 left, +1 right."""
+    x = k * 0.05
+    b.box(x - 0.036, x + 0.036, -0.06, 0.035, 0.0, 0.03, LEATHER, bevel=0.01)       # foot
+    b.box(x - 0.033, x + 0.033, -0.035, 0.033, 0.03, 0.105, LEATHER, bevel=0.01)    # shaft
+    b.box(x - 0.037, x + 0.037, -0.039, 0.037, 0.1, 0.12, 'wood_mid', bevel=0.006)  # cuff
+    b.box(x - 0.028, x + 0.028, -0.028, 0.028, 0.12, 0.2, ROYAL_DARK, bevel=0.01)   # hose
 
 
 def body(b):
@@ -121,9 +122,9 @@ def head(b):
     b.ball(0, -0.002, 0.61, 0.01, 0.025, GOLD, sides=6)
 
 
-def arms(b):
-    """Right arm raising the longsword, left arm bearing the shield."""
-    # right: sleeve from the shoulder down and forward, hand at chest height
+def sword_arm(b):
+    """The right arm raising the longsword."""
+    # sleeve from the shoulder down and forward, hand at chest height
     b.rod((0.105, 0.0, 0.405), (0.14, -0.04, 0.31), 0.05, ROYAL)
     b.rod((0.14, -0.04, 0.31), (0.15, -0.09, 0.3), 0.045, ROYAL)
     b.box(0.13, 0.17, -0.12, -0.09, 0.28, 0.32, GOLD, bevel=0.006)                         # cuff
@@ -136,7 +137,10 @@ def arms(b):
     b.rod((0.115, -0.12, 0.31), (0.185, -0.12, 0.31), 0.016, GOLD)                         # guard
     b.rod((0.151, -0.118, 0.32), tip, 0.022, STEEL)
     b.rod((0.151, -0.116, 0.32), (0.169, -0.196, 0.66), 0.006, STEEL_DARK)                 # fuller
-    # left: sleeve down to the forearm held across the body, the shield strapped to it
+
+
+def shield_arm(b):
+    """The left arm, its forearm across the body, the shield strapped to it."""
     b.rod((-0.105, 0.0, 0.405), (-0.13, -0.03, 0.3), 0.05, ROYAL)
     b.rod((-0.13, -0.03, 0.3), (-0.1, -0.08, 0.27), 0.045, ROYAL)
     b.ball(-0.09, -0.09, 0.25, 0.024, 0.045, SKIN, sides=6)
@@ -158,17 +162,72 @@ def shield(b, cx, cy, cz):
     b.box(cx - 0.02, cx + 0.02, cy - 0.024, cy - 0.012, cz - 0.02, cz + 0.02, GOLD, bevel=0.006)
 
 
-def build(lo, hi):
+# The figure is jointed so the game can move it (see Combat/FigureAnimator): one mesh per part,
+# each with its origin at its joint, the parts children of the body. (x, y, z) before SCALE.
+PARTS = [
+    ("LegL", lambda b: leg(b, -1), (-0.05, 0.0, 0.2)),
+    ("LegR", lambda b: leg(b, 1), (0.05, 0.0, 0.2)),
+    ("Head", lambda b: head(b), (0.0, 0.0, 0.44)),
+    ("ArmSword", lambda b: sword_arm(b), (0.105, 0.0, 0.405)),
+    ("ArmShield", lambda b: shield_arm(b), (-0.105, 0.0, 0.405)),
+]
+
+
+def part_mesh(name, build_fn, pivot, material):
     b = Builder()
-    since = o.mark(b)
-    legs(b)
-    body(b)
-    mantle_and_cape(b)
-    head(b)
-    arms(b)
-    o.scale_since(b, since, SCALE)
-    return b
+    build_fn(b)
+    o.scale_since(b, 0, SCALE)
+    shift = Vector(pivot) * SCALE
+    for v in b.bm.verts:
+        v.co -= shift
+    me = b.to_mesh(name)
+    me.materials.append(material)
+    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+    return me
 
 
-ensure_collection()
-kit.run(OBJ, build, source_name="Flag1-lvl1", offset=(o.COLUMN_X + 6.0, 0, 0), collection=COLLECTION)
+def install(name, mesh, parent, location, collection):
+    obj = bpy.data.objects.get(name)
+    if obj is None:
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.data.collections[collection].objects.link(obj)
+    else:
+        old = obj.data
+        obj.data = mesh
+        if old.users == 0:
+            bpy.data.meshes.remove(old)
+    obj.parent = parent
+    obj.matrix_parent_inverse.identity()
+    obj.location = location
+    return obj
+
+
+def main():
+    coll = ensure_collection()
+    folder = os.path.dirname(bpy.data.filepath)
+    img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
+    mat = kit.ensure_material(img)
+    atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
+    detail.build_material_nodes(mat, img, atlas)
+    location, _, _ = kit.refresh_placeholder(OBJ, "Flag1-lvl1")
+    location = location + Vector((o.COLUMN_X + 6.0, 0, 0))
+    ref = bpy.data.objects.get(OBJ + "-size")
+    if ref is not None:
+        ref.location = location
+
+    def torso(b):
+        body(b)
+        mantle_and_cape(b)
+
+    root = install(OBJ, part_mesh(OBJ, torso, (0, 0, 0), mat), None, location, coll)
+    tris = sum(len(p.vertices) - 2 for p in root.data.polygons)
+    for name, fn, pivot in PARTS:
+        part = install(f"{OBJ}-{name}", part_mesh(f"{OBJ}-{name}", fn, pivot, mat), root,
+                       Vector(pivot) * SCALE, coll)
+        tris += sum(len(p.vertices) - 2 for p in part.data.polygons)
+    print(f"MODEL {OBJ}: {len(PARTS) + 1} parts, tris={tris}")
+    kit.file_display_settings()
+    bpy.ops.wm.save_mainfile()
+
+
+main()

@@ -20,7 +20,7 @@ for a in argv[2:]:
 sc = bpy.context.scene
 target = bpy.data.objects[target_name]
 for o in sc.objects:
-    o.hide_render = o.name not in [target_name] + extra
+    o.hide_render = o.name not in [target_name] + extra + [c.name for c in target.children_recursive]
 
 # ground, light, sky
 bpy.ops.mesh.primitive_plane_add(size=60, location=(target.location.x, target.location.y, -0.001))
@@ -61,6 +61,8 @@ sc.collection.objects.link(cam)
 sc.camera = cam
 
 dims = target.dimensions
+if target.children:   # a jointed figure: the parts stand above the body's own mesh
+    dims = Vector((dims.x, dims.y, max(dims.z, 0.8)))
 centre = target.location + Vector((0, 0, dims.z * 0.4))
 span = max(dims.x, dims.y, dims.z)
 

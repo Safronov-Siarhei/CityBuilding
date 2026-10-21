@@ -124,6 +124,42 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(SoldierUnit.All.Contains(king.Unit), "Back on his feet, he is still out of the fight.");
         }
 
+        /// <summary>The King's figure stands, runs when he walks and swings when he strikes -- and the photographs show it.</summary>
+        [UnityTest]
+        public IEnumerator TheKing_RunsAndStrikes()
+        {
+            var king = InvasionMode.Instance.King;
+            var animator = king.GetComponent<FigureAnimator>();
+            Assert.IsNotNull(animator, "The King's figure is not animated.");
+            var leg = king.GetComponentsInChildren<Transform>().First(t => t.name.EndsWith("LegL"));
+            yield return new WaitForSeconds(0.5f);
+            Assert.Less(animator.Run, 0.2f, "Standing still, the King is drawn running.");
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-stand", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 200f, 35f);
+
+            var target = king.transform.position + new Vector3(-8f, 0f, 0f);
+            king.Unit.Group.OrderMoveTo(target);
+            yield return new WaitForSeconds(0.8f);
+            Assert.Greater(animator.Run, 0.6f, "Walking, the King is not drawn running.");
+            var swing = 0f;
+            for (var t = 0f; t < 0.6f; t += Time.deltaTime)
+            {
+                swing = Mathf.Max(swing, Quaternion.Angle(leg.localRotation, Quaternion.identity));
+                yield return null;
+            }
+            Assert.Greater(swing, 15f, "Running, his legs do not stride.");
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-run", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 160f, 35f);
+
+            king.Unit.Group.OrderMoveTo(king.transform.position);
+            yield return new WaitForSeconds(1f);
+            animator.OnStruck();
+            Assert.IsTrue(animator.IsStriking, "A blow is not drawn.");
+            yield return new WaitForSeconds(FigureAnimator.StrikeSeconds * 0.3f);
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-strike-back", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 250f, 35f);
+            animator.OnStruck();
+            yield return new WaitForSeconds(FigureAnimator.StrikeSeconds * 0.55f);
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-strike-cut", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 250f, 35f);
+        }
+
         [UnityTest]
         public IEnumerator Photograph_TheRun()
         {

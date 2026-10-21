@@ -37,6 +37,9 @@ PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
+    # a jointed figure's parts go out inside their figure's file, not as models of their own
+    if o.parent is not None and o.parent.name.startswith("Hero"):
+        return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
     return len(o.data.polygons) > 6 and o.data.materials and o.data.materials[0] \
@@ -59,6 +62,9 @@ def export(o):
     o.location = (0, 0, 0)
     bpy.ops.object.select_all(action='DESELECT')
     o.select_set(True)
+    for child in o.children_recursive:      # a jointed figure's parts (heroking.py)
+        child.hide_set(False)
+        child.select_set(True)
     bpy.context.view_layer.objects.active = o
     path = target(o)
     bpy.ops.export_scene.fbx(

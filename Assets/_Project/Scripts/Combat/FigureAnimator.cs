@@ -1,0 +1,161 @@
+using UnityEngine;
+
+namespace CityBuilder.Combat
+{
+    /// <summary>
+    /// Brings a jointed figure to life without an Animator: the King's model (Tools/blender/
+    /// heroking.py) is a body with its legs, arms and head as child parts, each with its origin at
+    /// its joint, and this turns them every frame (the user, 2026-10-21: «бег, удар, стояние»).
+    ///
+    /// - Standing: a slow breath -- the body rises a little, the arms sway, the head nods.
+    /// - Running: legs stride in opposition, the arms swing against them, the body bobs on each
+    ///   step and leans into the run. Blended in by how fast the figure is actually moving, so a
+    ///   unit pushed sideways or slowing down does not snap between the two.
+    /// - Striking: on each blow (SoldierUnit.Struck) the sword arm draws back and cuts forward.
+    ///
+    /// The parts swing about the body's own side-to-side axis. One figure on the map, a handful of
+    /// rotations a frame: nothing a phone notices, and no animation clips to import or keep in step
+    /// with the model.
+    /// </summary>
+    public class FigureAnimator : MonoBehaviour
+    {
+        /// <summary>How long one blow takes, draw-back to recovery.</summary>
+        public const float StrikeSeconds = 0.45f;
+
+        /// <summary>Speed (m/s) at which the stride is full.</summary>
+        private const float FullRunSpeed = 1.4f;
+        private const float StrideRadiansPerSecond = 10f;
+        private const float BreathRadiansPerSecond = 1.8f;
+        private const float LegSwing = 38f;
+        private const float ArmSwing = 22f;
+        private const float StepBob = 0.025f;        // metres, on each footfall
+        private const float BreathBob = 0.004f;
+        private const float RunLean = 8f;
+
+        // +1 when a positive turn about the body's X carries a part forward; the export's axis
+        // conversion decides which, and this is the one place that knows.
+        private const float Forward = -1f;
+
+        private Transform _figure, _legL, _legR, _armSword, _armShield, _head;
+        private Quaternion _figureRot, _legLRot, _legRRot, _swordRot, _shieldRot, _headRot;
+        private Vector3 _figurePos;
+        private float _unitScale = 1f;
+
+        private SoldierUnit _unit;
+        private Vector3 _lastPosition;
+        private float _speed;
+        private float _stride;
+        private float _breath;
+        private float _strike = -1f;
+
+        /// <summary>0 standing .. 1 running, as shown this frame -- for the tests.</summary>
+        public float Run { get; private set; }
+
+        /// <summary>A blow is being shown.</summary>
+        public bool IsStriking => _strike >= 0f;
+
+        /// <summary>Called right after the figure is put under its unit's root.</summary>
+        public void Bind(Transform figure)
+        {
+            _figure = figure;
+            _legL = Part("LegL");
+            _legR = Part("LegR");
+            _armSword = Part("ArmSword");
+            _armShield = Part("ArmShield");
+            _head = Part("Head");
+            _figureRot = figure.localRotation;
+            _figurePos = figure.localPosition;
+            _legLRot = Rest(_legL);
+            _legRRot = Rest(_legR);
+            _swordRot = Rest(_armSword);
+            _shieldRot = Rest(_armShield);
+            _headRot = Rest(_head);
+            _unitScale = Mathf.Max(0.0001f, transform.lossyScale.y);
+            _lastPosition = transform.position;
+        }
+
+        private Transform Part(string suffix)
+        {
+            foreach (var child in _figure.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name.EndsWith(suffix)) return child;
+            }
+            return null;
+        }
+
+        private static Quaternion Rest(Transform part) => part != null ? part.localRotation : Quaternion.identity;
+
+        private void Start()
+        {
+            _unit = GetComponent<SoldierUnit>();
+            if (_unit != null) _unit.Struck += OnStruck;
+        }
+
+        private void OnDestroy()
+        {
+            if (_unit != null) _unit.Struck -= OnStruck;
+        }
+
+        /// <summary>Starts a blow. Public for the tests and for anything that strikes without a SoldierUnit.</summary>
+        public void OnStruck() => _strike = 0f;
+
+        private void LateUpdate()
+        {
+            if (_figure == null) return;
+            var dt = Time.deltaTime;
+            if (dt <= 0f) return;
+
+            var position = transform.position;
+            var moved = new Vector2(position.x - _lastPosition.x, position.z - _lastPosition.z).magnitude / dt;
+            _lastPosition = position;
+            // a teleport (the King coming back at the castle) is not a sprint
+            if (moved > 20f) moved = 0f;
+            _speed = Mathf.Lerp(_speed, moved, 1f - Mathf.Exp(-dt * 10f));
+            Run = Mathf.Clamp01(_speed / FullRunSpeed);
+
+            _stride += dt * StrideRadiansPerSecond * Mathf.Lerp(0.6f, 1f, Run);
+            _breath += dt * BreathRadiansPerSecond;
+            var step = Mathf.Sin(_stride);
+            var breath = Mathf.Sin(_breath);
+            var stand = 1f - Run;
+
+            Turn(_legL, _legLRot, Run * LegSwing * step);
+            Turn(_legR, _legRRot, -Run * LegSwing * step);
+            Turn(_armShield, _shieldRot, -Run * ArmSwing * 0.6f * step + stand * 2.5f * breath);
+            Turn(_head, _headRot, stand * 2f * Mathf.Sin(_breath * 0.5f) + Run * 4f);
+
+            var sword = Run * ArmSwing * step - stand * 2.5f * breath;
+            if (_strike >= 0f)
+            {
+                _strike += dt;
+                var t = _strike / StrikeSeconds;
+                if (t >= 1f) _strike = -1f;
+                else sword = StrikeAngle(t);
+            }
+            Turn(_armSword, _swordRot, sword);
+
+            // the whole figure: a bob on each footfall or on the breath, a lean into the run
+            var bob = Run * StepBob * Mathf.Abs(step) + stand * BreathBob * (breath + 1f) * 0.5f;
+            _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale);
+            // about the figure's OWN side axis: the model may stand turned on its root
+            _figure.localRotation = _figureRot * Quaternion.AngleAxis(Forward * Run * RunLean, Vector3.right);
+        }
+
+        /// <summary>
+        /// The sword arm through one blow, in degrees forward of rest: drawn back over the shoulder
+        /// for the first third, a fast cut forward and down through the middle, eased back to guard.
+        /// </summary>
+        public static float StrikeAngle(float t)
+        {
+            if (t < 0.35f) return -55f * Mathf.SmoothStep(0f, 1f, t / 0.35f);
+            if (t < 0.6f) return Mathf.Lerp(-55f, 75f, Mathf.SmoothStep(0f, 1f, (t - 0.35f) / 0.25f));
+            return Mathf.Lerp(75f, 0f, Mathf.SmoothStep(0f, 1f, (t - 0.6f) / 0.4f));
+        }
+
+        private static void Turn(Transform part, Quaternion rest, float degreesForward)
+        {
+            if (part == null) return;
+            part.localRotation = Quaternion.AngleAxis(Forward * degreesForward, Vector3.right) * rest;
+        }
+    }
+}
