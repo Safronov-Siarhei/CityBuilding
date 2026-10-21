@@ -260,6 +260,8 @@ namespace CityBuilder.Combat
         /// </summary>
         public void ChargeDailyUpkeep()
         {
+            // a run's soldiers are hired once and never paid by the day (the user, 2026-10-21)
+            if (Invasion.InvasionMode.IsActive) return;
             var resources = ResourceManager.Instance;
             if (resources == null) return;
 

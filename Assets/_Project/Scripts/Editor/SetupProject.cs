@@ -840,7 +840,7 @@ namespace CityBuilder.EditorTools
             // scanning, once a game day, and every number it needs is in the sheet.
             var fireManager = managers.AddComponent<FireManager>();
 
-            managers.AddComponent<HappinessManager>();
+            var happinessManager = managers.AddComponent<HappinessManager>();
 
             // What contentment is finally FOR: it sets how fast people find their way here, or
             // away. Needs the placer as well as the citizens, because the settling-in grace period
@@ -870,11 +870,13 @@ namespace CityBuilder.EditorTools
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Invasion mode: idle in a sandbox game; in a run started from the menu's «В бой»
-            // it switches off the sandbox's raids, illness and fires and sets the run up.
+            // it switches off what a run does not have -- the sandbox's raids, illness, fires,
+            // food, taxes, contentment and migration (its people come from its houses) -- and sets
+            // the run up.
             var invasionMode = managers.AddComponent<CityBuilder.Invasion.InvasionMode>();
             var invasionModeSO = new SerializedObject(invasionMode);
             invasionModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
-            WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager });
+            WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Laboratory's brain. No wiring of its own: it finds the Laboratory through

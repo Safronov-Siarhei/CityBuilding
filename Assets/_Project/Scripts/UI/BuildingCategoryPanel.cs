@@ -82,7 +82,40 @@ namespace CityBuilder.UI
         }
 
         // Again in Start: the touch router may wake after this does.
-        private void Start() => SubscribeToTaps();
+        private void Start()
+        {
+            SubscribeToTaps();
+            ShowRunTabsOnly();
+        }
+
+        /// <summary>
+        /// In an Invasion run only the tabs that hold one of the run's nine buildings show (see
+        /// InvasionRules); the sandbox keeps every tab.
+        /// </summary>
+        private void ShowRunTabsOnly()
+        {
+            if (!Invasion.InvasionRules.Active) return;
+            var buildings = new System.Collections.Generic.List<BuildingData>();
+            foreach (var button in _buildingButtons)
+            {
+                if (button.Building != null) buildings.Add(button.Building);
+            }
+            foreach (var tab in _categoryButtons)
+            {
+                tab.gameObject.SetActive(Invasion.InvasionRules.HasAny(tab.Category, buildings));
+            }
+            // the cards' price chips: a run pays in wood and stone only, so the rest come off
+            foreach (var button in _buildingButtons)
+            {
+                foreach (var chip in button.GetComponentsInChildren<Transform>(true))
+                {
+                    var name = chip.name;
+                    if (!name.StartsWith("Icon_") && !name.StartsWith("Amount_")) continue;
+                    if (name.EndsWith("_Wood") || name.EndsWith("_Stone")) continue;
+                    chip.gameObject.SetActive(false);
+                }
+            }
+        }
 
         private void OnDisable()
         {
@@ -183,7 +216,9 @@ namespace CityBuilder.UI
                 // player is told what is still locked and what it costs.
                 var show = building != null
                            && building.category == category
-                           && Research.ResearchManager.BuildingUnlocked(building.buildingName);
+                           && (Invasion.InvasionRules.Active
+                               ? Invasion.InvasionRules.Allows(building)   // a run's nine, nothing to research
+                               : Research.ResearchManager.BuildingUnlocked(building.buildingName));
                 buildingButton.gameObject.SetActive(show);
             }
 

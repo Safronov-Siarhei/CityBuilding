@@ -31,6 +31,9 @@ namespace CityBuilder.Resources
         /// <summary>Debug/testing cheat — toggled with <see cref="infiniteResourcesToggleKey"/>, not exposed to the player.</summary>
         public bool InfiniteResources { get; private set; }
 
+        /// <summary>No storehouse limits at all -- an Invasion run has no warehouses (the user, 2026-10-21).</summary>
+        public bool UnlimitedStorage { get; set; }
+
         /// <summary>
         /// Everything the settlement has ever made or gathered, in units, and never decreased --
         /// the "total output over time" term of the player's progression score (see
@@ -91,6 +94,7 @@ namespace CityBuilder.Resources
         /// </summary>
         public int GetCapacity(ResourceType type)
         {
+            if (UnlimitedStorage) return int.MaxValue;
             var group = ResourceStorage.GroupOf(type);
             if (group == ResourceStorageGroup.None) return int.MaxValue;
 

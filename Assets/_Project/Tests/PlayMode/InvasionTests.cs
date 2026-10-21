@@ -6,7 +6,9 @@ using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Invasion;
 using CityBuilder.Maps;
+using CityBuilder.Resources;
 using CityBuilder.Saving;
+using CityBuilder.Citizens;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.AI;
@@ -126,6 +128,95 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(SoldierUnit.All.Contains(king.Unit), "Back on his feet, he is still out of the fight.");
         }
 
+        [Test]
+        public void TheRun_OpensWithSixHousesEighteenPeopleAndItsOwnStock()
+        {
+            var mode = InvasionMode.Instance;
+            var config = BalanceConfig.Instance;
+            Assert.AreEqual(config.InvasionHouses, mode.Houses.Count, "Not every house found its place on the island.");
+            Assert.AreEqual(config.InvasionHouses * config.InvasionPeoplePerHouse, mode.People.Places);
+            Assert.AreEqual(mode.People.Places, InvasionPeople.People, "The island does not open with a full house.");
+            Assert.AreEqual(mode.People.Places, CitizenManager.Instance.Capacity, "The town's room is not just the houses' places.");
+
+            var resources = ResourceManager.Instance;
+            Assert.AreEqual(config.InvasionStartWood, resources.GetAmount(ResourceType.Wood));
+            Assert.AreEqual(config.InvasionStartStone, resources.GetAmount(ResourceType.Stone));
+            Assert.AreEqual(config.InvasionStartCoins, resources.GetAmount(InvasionRules.Money));
+            Assert.AreEqual(0, resources.GetAmount(ResourceType.Food), "A run has no food.");
+            resources.Add(ResourceType.Wood, 100000);
+            Assert.AreEqual(config.InvasionStartWood + 100000, resources.GetAmount(ResourceType.Wood), "A run's stock is capped by storehouses it cannot build.");
+        }
+
+        [Test]
+        public void TheRun_BuildsItsNineBuildings_ForWoodAndStone()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            Assert.IsFalse(InvasionRules.Allows(PlaytestWorld.Building(InvasionRules.House)), "Houses can be built in a run.");
+            foreach (var id in InvasionRules.Buildings)
+            {
+                var data = PlaytestWorld.Building(id);
+                Assert.IsNotNull(data, $"{id} is not among the game's buildings.");
+                foreach (var cost in BuildingPlacer.CostOf(data))
+                    Assert.IsTrue(cost.type == ResourceType.Wood || cost.type == ResourceType.Stone, $"{id} costs {cost.type} in a run.");
+            }
+
+            // an upgrade's iron is paid in gold
+            var tower = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).First(b => b.Data != null && b.Data.buildingName == "Tower");
+            var upgrade = tower.GetUpgradeCost();
+            Assert.IsTrue(upgrade.All(c => c.type == ResourceType.Wood || c.type == ResourceType.Stone || c.type == InvasionRules.Money), "A run's upgrade asks for something besides wood, stone and gold.");
+            Assert.IsTrue(upgrade.Any(c => c.type == InvasionRules.Money), "The tower's upgrade lost its iron instead of paying it in gold.");
+            Assert.IsTrue(tower.NextLevelResearched, "A run's upgrade waits on a Laboratory it does not have.");
+        }
+
+        [Test]
+        public void ADamagedBuilding_IsMendedForWoodAndStone()
+        {
+            var tower = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).First(b => b.Data != null && b.Data.buildingName == "Tower");
+            Assert.IsNull(tower.GetRepairCost(), "An unhurt building offers a repair.");
+            tower.TryDamage(tower.MaxHealth / 2);
+            var cost = tower.GetRepairCost();
+            Assert.IsNotNull(cost, "A damaged building cannot be repaired.");
+            Assert.IsTrue(cost.All(c => c.type == ResourceType.Wood || c.type == ResourceType.Stone));
+            Assert.IsTrue(tower.TryRepair(), "The repair was refused with the stock to pay for it.");
+            Assert.AreEqual(tower.MaxHealth, tower.CurrentHealth, "The repair did not mend the damage.");
+        }
+
+        [UnityTest]
+        public IEnumerator AFallenPerson_IsReplacedByTheHouses_AfterTheWait()
+        {
+            var people = InvasionMode.Instance.People;
+            var full = InvasionPeople.People;
+            CitizenManager.Instance.KillCitizens(2);
+            yield return null;
+            Assert.AreEqual(2, people.Owed, "The houses do not owe the island the two it lost.");
+            Assert.IsFalse(GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver, "Losing people ended the run.");
+
+            Time.timeScale = 4f;
+            var wait = BalanceConfig.Instance.InvasionPersonRespawnSeconds;
+            for (var t = 0f; t < wait * 1.6f && InvasionPeople.People < full; t += Time.deltaTime) yield return null;
+            Time.timeScale = 1f;
+            Assert.AreEqual(full, InvasionPeople.People, "The houses did not replace the people the island lost.");
+        }
+
+        [UnityTest]
+        public IEnumerator ABurntHouse_TakesItsPlacesForGood()
+        {
+            var mode = InvasionMode.Instance;
+            var places = mode.People.Places;
+            var house = mode.Houses[0];
+            house.TryDamage(house.MaxHealth);
+            yield return null;
+            yield return null;
+            var perHouse = BalanceConfig.Instance.InvasionPeoplePerHouse;
+            Assert.AreEqual(places - perHouse, mode.People.Places, "A burnt house kept its places.");
+            Assert.AreEqual(places, InvasionPeople.People, "The house's people died with it -- they should only stop being replaced.");
+
+            // more people than places: a death is not made good
+            CitizenManager.Instance.KillCitizens(perHouse - 1);
+            yield return null;
+            Assert.AreEqual(0, mode.People.Owed, "The houses make people the island has no room for.");
+        }
+
         /// <summary>The King's figure stands, runs when he walks and swings when he strikes -- and the photographs show it.</summary>
         [UnityTest]
         public IEnumerator TheKing_RunsAndStrikes()
@@ -171,6 +262,16 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("invasion-base", Vector3.zero, 44f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-king", InvasionMode.Instance.King.transform.position, 9f, 40f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-causeway", Causeways[1], 22f, 50f, 0f, 60f);
+
+            // a house making a new person, and the run's build menu
+            CitizenManager.Instance.KillCitizens(1);
+            yield return new WaitForSeconds(6f);
+            var house = InvasionMode.Instance.Houses.First(h => InvasionMode.Instance.People.ProgressOf(h) > 0f);
+            yield return PlaytestCapture.Shoot("invasion-house", house.transform.position + Vector3.up * 0.5f, 6f, 35f, 0f, 45f);
+            var menu = Object.FindAnyObjectByType<CityBuilder.UI.BuildingCategoryPanel>();
+            menu.Open(BuildingCategory.Defence, instant: true);
+            yield return null;
+            yield return PlaytestCapture.ShootWithUi("invasion-menu", Vector3.zero, 44f, 52f, 0f);
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

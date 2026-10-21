@@ -11,9 +11,16 @@ namespace CityBuilder.UI
         private const int StepPercent = 5;
 
         [SerializeField] private Text rateLabel;
+        /// <summary>The whole control (signs and plaque), hidden in an Invasion run, which has no taxes.</summary>
+        [SerializeField] private GameObject widget;
 
         private void Start()
         {
+            if (Invasion.InvasionMode.IsActive && widget != null)
+            {
+                widget.SetActive(false);
+                return;
+            }
             if (TaxManager.Instance != null) TaxManager.Instance.OnTaxRateChanged += Refresh;
             Refresh();
         }

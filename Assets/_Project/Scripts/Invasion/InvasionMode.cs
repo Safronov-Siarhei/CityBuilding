@@ -1,4 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
+using CityBuilder.Core;
+using CityBuilder.Resources;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Grid;
@@ -26,6 +29,17 @@ namespace CityBuilder.Invasion
         /// <summary>How far in from a causeway's middle its tower stands, on the island.</summary>
         private const float TowerInsetMeters = 11f;
 
+        /// <summary>
+        /// Where the six houses stand, scattered over the island (the user, 2026-10-21): three on an
+        /// inner ring between the castle and the groves, three further out between the causeways
+        /// -- (bearing in degrees, metres from the middle). Each is nudged to the nearest open ground.
+        /// </summary>
+        private static readonly Vector2[] HouseSpots =
+        {
+            new Vector2(45f, 12f), new Vector2(165f, 12f), new Vector2(285f, 12f),
+            new Vector2(60f, 22f), new Vector2(180f, 22f), new Vector2(300f, 22f),
+        };
+
         /// <summary>Where the King stands at the start and comes back to: in front of the castle, towards the south causeways.</summary>
         private static readonly Vector3 KingHomeOffset = new Vector3(0f, 0f, -7f);
 
@@ -43,6 +57,8 @@ namespace CityBuilder.Invasion
         public bool RunStarted { get; private set; }
 
         public KingHero King { get; private set; }
+        public InvasionPeople People { get; private set; }
+        public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
 
         private void Awake()
@@ -116,6 +132,34 @@ namespace CityBuilder.Invasion
                 }
             }
 
+            // the opening stock, with no storehouse limits; nothing else in the treasury
+            var config = BalanceConfig.Instance;
+            var resources = ResourceManager.Instance;
+            if (resources != null)
+            {
+                resources.UnlimitedStorage = true;
+                resources.SetAmount(ResourceType.Wood, config.InvasionStartWood);
+                resources.SetAmount(ResourceType.Stone, config.InvasionStartStone);
+                resources.SetAmount(InvasionRules.Money, config.InvasionStartCoins);
+                resources.SetAmount(ResourceType.Food, 0);
+                resources.SetAmount(ResourceType.Gold, 0);
+            }
+
+            // the houses and their people
+            var house = Find(InvasionRules.House);
+            if (house != null)
+            {
+                for (var i = 0; i < HouseSpots.Length && i < config.InvasionHouses; i++)
+                {
+                    var spot = HouseSpots[i];
+                    var at = new Vector3(Mathf.Cos(spot.x * Mathf.Deg2Rad), 0f, Mathf.Sin(spot.x * Mathf.Deg2Rad)) * spot.y;
+                    var placed = PlaceNear(house, at);
+                    if (placed != null) Houses.Add(placed);
+                }
+            }
+            People = gameObject.AddComponent<InvasionPeople>();
+            People.Settle(Houses);
+
             var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
             home.y = grid.GroundHeight;
             if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
@@ -132,6 +176,45 @@ namespace CityBuilder.Invasion
             }
             Debug.LogError($"InvasionMode: no '{buildingName}' among the buildings -- the run starts without it.");
             return null;
+        }
+
+        /// <summary>The building finished on the nearest open ground to `world` -- dry, not on a slope, nothing in the way.</summary>
+        private static BuildingInstance PlaceNear(BuildingData data, Vector3 world)
+        {
+            var grid = GridManager.Instance;
+            var applier = MeshMapApplier.Instance;
+            var footprint = data.footprintSize;
+            var origin = grid.WorldToCell(world) - footprint / 2;
+            for (var ring = 0; ring <= 8; ring++)
+            {
+                for (var dx = -ring; dx <= ring; dx++)
+                {
+                    for (var dz = -ring; dz <= ring; dz++)
+                    {
+                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != ring) continue;
+                        var cell = origin + new Vector2Int(dx, dz);
+                        if (!grid.IsWithinBounds(cell, footprint) || !grid.IsAreaFree(cell, footprint)) continue;
+                        if (!OpenGround(applier, cell, footprint)) continue;
+                        return PlaceFinished(data, cell);
+                    }
+                }
+            }
+            Debug.LogError($"InvasionMode: no open ground for a {data.buildingName} near {world}.");
+            return null;
+        }
+
+        private static bool OpenGround(MeshMapApplier applier, Vector2Int cell, Vector2Int footprint)
+        {
+            if (applier == null) return true;
+            for (var x = 0; x < footprint.x; x++)
+            {
+                for (var z = 0; z < footprint.y; z++)
+                {
+                    var c = cell + new Vector2Int(x, z);
+                    if (applier.IsWaterCell(c) || applier.IsNoBuildCell(c)) return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>A building standing finished from the start, the way a save puts one back.</summary>

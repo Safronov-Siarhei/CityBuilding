@@ -422,6 +422,14 @@ namespace CityBuilder.Core
         [SerializeField] private float kingRespawnBaseSeconds = 8f;
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
 
+        // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
+        [SerializeField] private int invasionHouses = 6;
+        [SerializeField] private int invasionPeoplePerHouse = 3;
+        [SerializeField] private float invasionPersonRespawnSeconds = 15f;
+        [SerializeField] private int invasionStartWood = 60;
+        [SerializeField] private int invasionStartStone = 40;
+        [SerializeField] private int invasionStartCoins = 50;
+
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
         [SerializeField] private int startStone = 30;
@@ -588,6 +596,12 @@ namespace CityBuilder.Core
         public int KingMaxLevel => kingMaxLevel;
         public float KingRespawnBaseSeconds => kingRespawnBaseSeconds;
         public float KingRespawnPerLevelSeconds => kingRespawnPerLevelSeconds;
+        public int InvasionHouses => invasionHouses;
+        public int InvasionPeoplePerHouse => invasionPeoplePerHouse;
+        public float InvasionPersonRespawnSeconds => invasionPersonRespawnSeconds;
+        public int InvasionStartWood => invasionStartWood;
+        public int InvasionStartStone => invasionStartStone;
+        public int InvasionStartCoins => invasionStartCoins;
 
         /// <summary>
         /// The King as a unit row, built from the economy tab's king_* keys rather than read from
@@ -816,6 +830,12 @@ namespace CityBuilder.Core
             kingRespawnBaseSeconds = Read(economy, "king_respawn_base_sec", kingRespawnBaseSeconds);
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
             _kingUnit = null;
+            invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
+            invasionPeoplePerHouse = (int)Read(economy, "inv_people_per_house", invasionPeoplePerHouse);
+            invasionPersonRespawnSeconds = Read(economy, "inv_person_respawn_sec", invasionPersonRespawnSeconds);
+            invasionStartWood = (int)Read(economy, "inv_start_wood", invasionStartWood);
+            invasionStartStone = (int)Read(economy, "inv_start_stone", invasionStartStone);
+            invasionStartCoins = (int)Read(economy, "inv_start_coins", invasionStartCoins);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

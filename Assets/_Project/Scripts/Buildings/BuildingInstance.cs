@@ -231,7 +231,7 @@ namespace CityBuilder.Buildings
 
         private void HandleDayPassed()
         {
-            if (!DecaysOverTime) return;
+            if (!DecaysOverTime || Invasion.InvasionRules.Active) return;
 
             Decay = ComputeNextDecay(Decay, Level);
             UpdateDecayWarningMarker();
@@ -337,6 +337,10 @@ namespace CityBuilder.Buildings
         /// <summary>Null once there's nothing to repair (Decay already 0).</summary>
         public List<ResourceAmount> GetRepairCost()
         {
+            // In an Invasion run nothing decays, and mending is for what the orcs broke: any
+            // damage at all, for a share of the building's wood and stone.
+            if (Invasion.InvasionRules.Active)
+                return Data == null || CurrentHealth >= MaxHealth ? null : Invasion.InvasionRules.RepairCost(Data);
             if (Data == null || Decay <= 0f) return null;
 
             var scaled = new List<ResourceAmount>();
@@ -354,6 +358,11 @@ namespace CityBuilder.Buildings
 
             Decay = 0f;
             UpdateDecayWarningMarker();
+            if (Invasion.InvasionRules.Active)
+            {
+                CurrentHealth = MaxHealth;
+                if (_healthBar != null) _healthBar.Report(1f);
+            }
             return true;
         }
 
@@ -361,7 +370,9 @@ namespace CityBuilder.Buildings
         /// Everything the Town Hall is not. Demolishing it would end the game (its loss is the
         /// defeat condition), so the card simply does not offer the button.
         /// </summary>
-        public bool CanDemolish => Data != null && Data.buildingName != BuildingIds.TownHall;
+        public bool CanDemolish => Data != null && Data.buildingName != BuildingIds.TownHall
+                                   // a run's houses are where its people come from, and none are ever built again
+                                   && !(Invasion.InvasionRules.Active && Data.buildingName == Invasion.InvasionRules.House);
 
         /// <summary>
         /// What comes back: a share of everything ever sunk into this building -- its build cost
@@ -651,7 +662,8 @@ namespace CityBuilder.Buildings
         public List<ResourceAmount> GetUpgradeCost()
         {
             if (Data == null || Level >= MaxLevel) return null;
-            return Data.UpgradeCostTo(Level + 1);
+            var cost = Data.UpgradeCostTo(Level + 1);
+            return Invasion.InvasionRules.Active ? Invasion.InvasionRules.UpgradeCost(cost) : cost;
         }
 
         /// <summary>
@@ -665,6 +677,7 @@ namespace CityBuilder.Buildings
             get
             {
                 if (Data == null || Level >= MaxLevel) return true;
+                if (Invasion.InvasionRules.Active) return true;   // a run has no Laboratory
 
                 var research = Research.ResearchManager.Instance;
                 return research == null || research.IsBuildingLevelResearched(Data.buildingName, Level + 1);

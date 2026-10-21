@@ -197,6 +197,7 @@ namespace CityBuilder.EditorTools
             var controller = go.AddComponent<TaxRateController>();
             var so = new SerializedObject(controller);
             so.FindProperty("rateLabel").objectReferenceValue = rateLabel;
+            so.FindProperty("widget").objectReferenceValue = root;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(minus.onClick, controller.Decrease);

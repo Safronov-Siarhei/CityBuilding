@@ -99,6 +99,10 @@ namespace CityBuilder.Buildings
 
         /// <summary>The building the player has to put down before anything else (the Town Hall). Deliberately not in AvailableBuildings -- it never appears in the hotbar -- which makes this the only way to reach it from outside.</summary>
         public BuildingData MandatoryFirstBuilding => mandatoryFirstBuilding;
+
+        /// <summary>What putting a building down costs: the sheet's price, or an Invasion run's (wood and stone only).</summary>
+        public static List<ResourceAmount> CostOf(BuildingData data) =>
+            Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
         public event Action<BuildingData> OnBuildingPlaced;
 
         private void Start()
@@ -389,7 +393,7 @@ namespace CityBuilder.Buildings
             if (ghostVisible) HarvestRadiusOverlay.ShowFor(center, _selectedBuilding.LevelStats(1).harvestRadius);
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
-            var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_selectedBuilding.cost);
+            var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(CostOf(_selectedBuilding));
             var hasRequirement = HasRequiredBuilding();
             var ok = canPlace && canAfford && hasRequirement;
 
@@ -479,7 +483,7 @@ namespace CityBuilder.Buildings
             _costText.Clear();
             var manager = ResourceManager.Instance;
 
-            foreach (var amount in _selectedBuilding.cost)
+            foreach (var amount in CostOf(_selectedBuilding))
             {
                 var have = manager != null ? manager.GetAmount(amount.type) : 0;
                 var missing = amount.amount - have;
@@ -589,6 +593,8 @@ namespace CityBuilder.Buildings
         /// <summary>True if _selectedBuilding.requiredBuilding is unset, or at least one instance of it already exists (see BuildingInstance.HasAny) -- e.g. a Cottage needs a House placed first.</summary>
         private bool HasRequiredBuilding()
         {
+            // a run's nine buildings wait on nothing but wood and stone
+            if (Invasion.InvasionRules.Active) return true;
             var required = _selectedBuilding.requiredBuilding;
             return required == null || BuildingInstance.HasAny(required.buildingName);
         }
@@ -683,7 +689,7 @@ namespace CityBuilder.Buildings
         {
             var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
 
-            if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(_selectedBuilding.cost))
+            if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(CostOf(_selectedBuilding)))
             {
                 // The status line above the confirm button already says what is missing; the log
                 // line is what a player who tapped without looking at it will find afterwards.
