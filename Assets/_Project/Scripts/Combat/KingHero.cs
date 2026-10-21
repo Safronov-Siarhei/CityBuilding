@@ -6,7 +6,7 @@ namespace CityBuilder.Combat
 {
     /// <summary>
     /// The King of the Invasion mode as a hero (the user, 2026-10-21): he gains experience from
-    /// what he kills, levels up -- more health and damage each level, skills later -- and when he
+    /// every enemy that falls near him, levels up -- more health and damage each level, skills later -- and when he
     /// falls he is not lost but gets up again at the castle after a wait that grows with his level,
     /// as in Dota.
     ///
@@ -62,19 +62,31 @@ namespace CityBuilder.Combat
             _unit = GetComponent<SoldierUnit>();
             _controller = GetComponent<CharacterController>();
             _renderers = GetComponentsInChildren<Renderer>(true);
-            _unit.KilledTarget += OnKilled;
+            OrcUnit.Died += OnOrcDied;
             ApplyLevel();
         }
 
         private void OnDestroy()
         {
-            if (_unit != null) _unit.KilledTarget -= OnKilled;
+            OrcUnit.Died -= OnOrcDied;
         }
 
         /// <summary>Experience for one enemy he struck down: its health.</summary>
         public static int ExperienceFor(IDamageTarget target) => target is OrcUnit orc ? Mathf.Max(1, orc.MaxHealth) : 0;
 
-        private void OnKilled(IDamageTarget target) => AddExperience(ExperienceFor(target));
+        /// <summary>
+        /// As in Dota, the hero learns from every enemy that falls near him, not only from his own
+        /// blows: a tower's or a soldier's kill beside him counts (the small base island's towers
+        /// would otherwise take most of his kills).
+        /// </summary>
+        private void OnOrcDied(OrcUnit orc)
+        {
+            if (IsFallen || orc == null) return;
+            var offset = orc.transform.position - transform.position;
+            offset.y = 0f;
+            var radius = BalanceConfig.Instance.KingXpRadius;
+            if (offset.sqrMagnitude <= radius * radius) AddExperience(ExperienceFor(orc));
+        }
 
         /// <summary>Adds experience and takes every level it pays for. Public for the tests and for experience that does not come from a blow of his own.</summary>
         public void AddExperience(int amount)

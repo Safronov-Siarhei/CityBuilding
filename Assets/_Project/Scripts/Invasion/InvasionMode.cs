@@ -26,22 +26,22 @@ namespace CityBuilder.Invasion
     {
         public const string MapId = "Inv1";
 
-        /// <summary>How far in from a causeway's middle its tower stands, on the island.</summary>
-        private const float TowerInsetMeters = 11f;
+        /// <summary>How far in from a causeway's middle its tower stands: just onto the island, at the causeway's foot.</summary>
+        private const float TowerInsetMeters = 7f;
 
         /// <summary>
-        /// Where the six houses stand, scattered over the island (the user, 2026-10-21): three on an
-        /// inner ring between the castle and the groves, three further out between the causeways
-        /// -- (bearing in degrees, metres from the middle). Each is nudged to the nearest open ground.
+        /// Where the six houses stand round the castle on the small island (the user, 2026-10-21):
+        /// two in each stretch between the causeways, either side of its grove -- (bearing in
+        /// degrees, metres from the middle). Each is nudged to the nearest open ground.
         /// </summary>
         private static readonly Vector2[] HouseSpots =
         {
-            new Vector2(45f, 12f), new Vector2(165f, 12f), new Vector2(285f, 12f),
-            new Vector2(60f, 22f), new Vector2(180f, 22f), new Vector2(300f, 22f),
+            new Vector2(15f, 7f), new Vector2(45f, 7f), new Vector2(135f, 7f),
+            new Vector2(165f, 7f), new Vector2(255f, 7f), new Vector2(285f, 7f),
         };
 
         /// <summary>Where the King stands at the start and comes back to: in front of the castle, towards the south causeways.</summary>
-        private static readonly Vector3 KingHomeOffset = new Vector3(0f, 0f, -7f);
+        private static readonly Vector3 KingHomeOffset = new Vector3(0f, 0f, -4.5f);
 
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInARun = new MonoBehaviour[0];

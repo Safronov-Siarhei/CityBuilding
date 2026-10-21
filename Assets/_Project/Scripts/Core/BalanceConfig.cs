@@ -421,6 +421,7 @@ namespace CityBuilder.Core
         [SerializeField] private int kingMaxLevel = 25;
         [SerializeField] private float kingRespawnBaseSeconds = 8f;
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
+        [SerializeField] private float kingXpRadius = 12f;
 
         // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
         [SerializeField] private int invasionHouses = 6;
@@ -596,6 +597,7 @@ namespace CityBuilder.Core
         public int KingMaxLevel => kingMaxLevel;
         public float KingRespawnBaseSeconds => kingRespawnBaseSeconds;
         public float KingRespawnPerLevelSeconds => kingRespawnPerLevelSeconds;
+        public float KingXpRadius => kingXpRadius;
         public int InvasionHouses => invasionHouses;
         public int InvasionPeoplePerHouse => invasionPeoplePerHouse;
         public float InvasionPersonRespawnSeconds => invasionPersonRespawnSeconds;
@@ -829,6 +831,7 @@ namespace CityBuilder.Core
             kingMaxLevel = (int)Read(economy, "king_max_level", kingMaxLevel);
             kingRespawnBaseSeconds = Read(economy, "king_respawn_base_sec", kingRespawnBaseSeconds);
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
+            kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             _kingUnit = null;
             invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
             invasionPeoplePerHouse = (int)Read(economy, "inv_people_per_house", invasionPeoplePerHouse);

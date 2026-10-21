@@ -26,7 +26,7 @@ namespace CityBuilder.Tests.PlayMode
     public class InvasionTests
     {
         private const string GameSceneName = "CityBuilder";
-        private static readonly Vector3[] Causeways = { new Vector3(0f, 0f, 34f), new Vector3(-29.4f, 0f, -17f), new Vector3(29.4f, 0f, -17f) };
+        private static readonly Vector3[] Causeways = { new Vector3(0f, 0f, 20f), new Vector3(-17.3f, 0f, -10f), new Vector3(17.3f, 0f, -10f) };
 
         /// <summary>Fresh per test: a run sets itself up once, on the frames after the scene loads.</summary>
         [UnitySetUp]
@@ -90,8 +90,9 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(KingHero.DamageAt(3), KingHero.DamageAt(1) + 2 * BalanceConfig.Instance.KingDamagePerLevel);
         }
 
+        /// <summary>As in Dota: an orc that falls near the King is his experience, whoever struck it; one far off is not.</summary>
         [UnityTest]
-        public IEnumerator TheKing_GainsExperience_FromAnOrcHeKills()
+        public IEnumerator TheKing_GainsExperience_FromOrcsFallingNearHim()
         {
             var king = InvasionMode.Instance.King;
             var near = king.transform.position + new Vector3(3f, 0f, 0f);
@@ -100,8 +101,14 @@ namespace CityBuilder.Tests.PlayMode
             var worth = orc.MaxHealth;
 
             for (var t = 0f; t < 30f && orc != null && orc.CurrentHealth > 0; t += Time.deltaTime) yield return null;
-            Assert.IsTrue(orc == null || orc.CurrentHealth <= 0, "The King never killed the orc beside him.");
-            Assert.AreEqual(worth, king.Experience + (king.Level - 1) * KingHero.XpForLevel(1), "The kill was not worth the orc's health in experience.");
+            Assert.IsTrue(orc == null || orc.CurrentHealth <= 0, "The orc beside the King never fell.");
+            Assert.AreEqual(worth, king.Experience + (king.Level - 1) * KingHero.XpForLevel(1), "The orc that fell beside him was not worth its health in experience.");
+
+            var before = king.Experience;
+            var far = OrcRaidManager.Instance.SpawnOrcs(new Vector3(0f, 0f, 60f), count: 1, level: 1);
+            far.TakeDamage(far.MaxHealth);
+            yield return null;
+            Assert.AreEqual(before, king.Experience, "An orc that fell across the map taught the King something.");
         }
 
         [UnityTest]

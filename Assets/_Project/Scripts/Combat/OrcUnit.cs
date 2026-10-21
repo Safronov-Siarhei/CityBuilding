@@ -294,8 +294,13 @@ namespace CityBuilder.Combat
             if (amount <= 0 || CurrentHealth <= 0) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            if (CurrentHealth <= 0) Destroy(gameObject);
+            if (CurrentHealth > 0) return;
+            Died?.Invoke(this);
+            Destroy(gameObject);
         }
+
+        /// <summary>Raised as an orc falls, whoever struck it -- the King's experience and a run's gold are counted from it.</summary>
+        public static event System.Action<OrcUnit> Died;
 
         /// <summary>
         /// Told that a soldier just hit it, and turns on that soldier even when the soldier stands

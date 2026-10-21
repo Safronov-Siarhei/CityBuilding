@@ -87,7 +87,10 @@ def _polar(ang, r):
 
 RAD = math.radians
 COAST_R = 94.0                                 # the island's radius
-RING_R, RING_HALF = 34.0, 4.0                  # the river round the base: centre line, half width
+# The base island is small on purpose (the user, 2026-10-21: «уменьшить круг в два раза»): a run has
+# few buildings, so the island holds the castle, the six houses, three towers and a little wood and
+# stone, and the rest of the map is jungle.
+RING_R, RING_HALF = 20.0, 4.0                  # the river round the base: centre line, half width
 BASE_R = RING_R - RING_HALF                    # the base island's radius
 LANE_ANGLES = (90.0, 210.0, 330.0)             # bearings of the three lanes (and causeways)
 JUNGLE_ANGLES = (30.0, 150.0, 270.0)           # bearings of the three jungles between them
@@ -130,9 +133,9 @@ FORD_R = 4.0
 LAKE = (900.0, 900.0, 1.0, 1.0)                # (Map 4's lake; none here -- the ponds are the still water)
 RUIN = BOSS
 BEACHES = []
-HILLS = [(*_polar(RAD(a + 50), 14), 3.5, 1.4) for a in JUNGLE_ANGLES]
-GROVES = [(*_polar(RAD(a), 20), 6.0) for a in JUNGLE_ANGLES]
-OUTCROPS = [(*_polar(RAD(a), 18), 4) for a in (0.0, 120.0, 240.0)] + \
+HILLS = []                                     # (no room for hills on the small base island)
+GROVES = [(*_polar(RAD(a), 11.0), 2.6) for a in JUNGLE_ANGLES]   # the island's three small woods
+OUTCROPS = [(*_polar(RAD(a), 10.5), 2.3) for a in (0.0, 120.0, 240.0)] + \
            [(*_polar(RAD(a + 20), 53), 3) for a in JUNGLE_ANGLES] + \
            [(*_polar(RAD(a - 18), 82), 4) for a in JUNGLE_ANGLES]
 
