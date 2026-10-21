@@ -5,10 +5,10 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: fa46be31-b22f-47d3-8959-b7b091dbe342
-  modified: 2026-10-15T18:39:17.733Z
+  modified: 2026-10-21T16:17:57.833Z
 ---
 
-At the end of every completed piece of work — a commit+push, a finished batch, a reported result — update the memory files right away, as if the user will close this chat and open a new one next: current state (what exists, what is committed, what is NOT done/exported/verified), what waits on the user, the traps found, how to pick up. Update existing notes ([[project-current-state]], the topic note) and the MEMORY.md index lines; prune what went stale.
+At the end of every completed piece of work — a commit+push, a finished batch, a reported result — update the memory files right away, as if the user will close this chat and open a new one next: current state (what exists, what is committed, what is NOT done/exported/verified), what waits on the user, the traps found, how to pick up. Since 2026-10-21 the "topic note" is the FEATURE CARD in `Design/features/` ([[feedback-feature-cards]]): update the touched cards and commit them with the work; keep [[project-current-state]] to "latest + waiting on the user"; prune what went stale.
 
 **Why:** the user switches to a new chat for each new task on purpose — a long chat re-sends its whole context on every request, so it costs more tokens per task (they corrected me when I said chat length did not matter; compaction only prevents overflow, it does not save tokens). Until 2026-10-15 they ended every chat with «сохрани контекст»; they asked for this to happen without being asked.
 

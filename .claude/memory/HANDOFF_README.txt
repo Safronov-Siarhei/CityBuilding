@@ -1,6 +1,6 @@
 Перенос контекста CityBuilding на другое устройство (2026-10-20)
 
-1. memory/  ->  скопировать содержимое в
+1. memory/  ->  скопировать содержимое в (знания по фичам теперь в Design/features/, они уже в git)
    C:\Users\<имя>\.claude\projects\<папка проекта>\memory\
    Имя папки проекта строится из пути к проекту: для D:\Fork\CityBuilding это D--Fork-CityBuilding.
    Проще всего склонировать проект тоже в D:\Fork\CityBuilding.
