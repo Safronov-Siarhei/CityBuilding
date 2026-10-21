@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
@@ -320,6 +320,88 @@ namespace CityBuilder.Tests.PlayMode
             animator.OnStruck();
             yield return new WaitForSeconds(FigureAnimator.StrikeSeconds * 0.55f);
             if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-strike-cut", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 250f, 35f);
+        }
+
+        /// <summary>The first wave is a countdown away, comes down one lane, and the line under the resource bar follows it.</summary>
+        [UnityTest]
+        public IEnumerator TheFirstWave_IsACountdownAway_AndComesDownOneLane()
+        {
+            var waves = InvasionMode.Instance.Waves;
+            var config = BalanceConfig.Instance;
+            Assert.AreEqual(InvasionWaves.Phase.Breather, waves.Current, "The run did not start with a countdown to the first wave.");
+            Assert.AreEqual(0, waves.Wave);
+            Assert.AreEqual(config.InvasionFirstWaveSeconds, waves.SecondsUntilNextWave, 3f, "The first wave is not the sheet's wait away.");
+            Assert.AreEqual(3, waves.LaneStarts.Count, "Not one lane per orc camp.");
+            var status = GameObject.Find("SettlementStatus").GetComponent<UnityEngine.UI.Text>();
+            yield return new WaitForSecondsRealtime(0.4f);
+            StringAssert.Contains(Localization.Format("#hud_inv_wave_in", 1, ""), status.text, "The line under the resource bar does not count down to wave 1.");
+
+            waves.SendNextWave();
+            Assert.AreEqual(InvasionWaves.Phase.Underway, waves.Current);
+            Assert.AreEqual(1, waves.LastLanes.Count, "The first wave came down more than one lane.");
+            Assert.AreEqual(InvasionWaves.OrcsPerLane(1, config.InvasionWaveBaseOrcs, config.InvasionWaveExtraOrcEvery, config.InvasionWaveMaxOrcs), waves.OrcsLeft);
+            var start = waves.LaneStarts[waves.LastLanes[0]];
+            foreach (var orc in OrcUnit.All) Assert.Less(Vector3.Distance(Flat(orc.transform.position), Flat(start)), 4f, "An orc of the wave stepped out away from its camp.");
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(Localization.Format("#hud_inv_wave", 1, waves.OrcsLeft), status.text, "The line under the resource bar does not show the wave underway.");
+        }
+
+        /// <summary>Every lane carries a wave all the way: from where its orcs step out to the castle.</summary>
+        [Test]
+        public void EveryLane_LeadsFromItsCamp_ToTheCastle()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            Assert.AreEqual(3, InvasionMode.Instance.Waves.LaneStarts.Count, "Not one lane per orc camp.");
+            foreach (var start in InvasionMode.Instance.Waves.LaneStarts)
+            {
+                var near = castle + Flat(start - castle).normalized * 6f;
+                var length = PathLength(start, near, out var complete);
+                Assert.IsTrue(complete, $"No way from the lane at {start} to the castle.");
+                Assert.Less(length, 90f, $"The way from the lane at {start} to the castle is {length:0} m -- it wanders off the lane.");
+            }
+        }
+
+        /// <summary>The user's rule: run orcs go straight for the castle and turn only on a building they pass close by.</summary>
+        [UnityTest]
+        public IEnumerator RunOrcs_GoForTheCastle_AndTurnOnlyOnABuildingCloseBy()
+        {
+            var mode = InvasionMode.Instance;
+            var far = OrcRaidManager.Instance.SpawnOrcs(mode.Waves.LaneStarts[0], count: 1, level: 1);
+            var house = mode.Houses[0];
+            var beside = house.transform.position + Flat(house.transform.position - mode.Castle.transform.position).normalized * 3f;
+            Assert.IsTrue(NavMesh.SamplePosition(beside, out var hit, 2f, NavMesh.AllAreas), "Nowhere beside the house to stand an orc.");
+            var close = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(mode.Castle, far.Target, "An orc far out on the lane is not marching on the castle.");
+            Assert.AreEqual(house, close.Target, "An orc right beside a house walked past it.");
+        }
+
+        /// <summary>A wave beaten off pays its orcs' gold and 10 × its number, and the breather begins.</summary>
+        [UnityTest]
+        public IEnumerator AWaveBeatenOff_PaysItsGold_AndTheBreatherBegins()
+        {
+            var waves = InvasionMode.Instance.Waves;
+            var coins = ResourceManager.Instance.GetAmount(InvasionRules.Money);
+            waves.SendNextWave();
+            var orcs = OrcUnit.All.ToList();
+            Assert.Greater(orcs.Count, 0, "The wave sent no orcs.");
+            var expected = InvasionWaves.GoldForWave(1, BalanceConfig.Instance.InvasionGoldPerWave);
+            foreach (var orc in orcs)
+            {
+                expected += InvasionWaves.GoldFor(orc.Kind);
+                orc.TakeDamage(orc.MaxHealth);
+            }
+            yield return null;
+            yield return null;
+            Assert.AreEqual(InvasionWaves.Phase.Breather, waves.Current, "The wave's last orc fell and the wave went on.");
+            Assert.AreEqual(1, waves.WavesSurvived);
+            Assert.AreEqual(BalanceConfig.Instance.InvasionBreatherSeconds, waves.SecondsUntilNextWave, 0.5f, "The breather is not the sheet's.");
+            Assert.AreEqual(coins + expected, ResourceManager.Instance.GetAmount(InvasionRules.Money), "The gold for the orcs and the wave did not add up.");
+
+            // the next wave is the next number, and once its time comes the lanes open up
+            waves.SendNextWave();
+            Assert.AreEqual(2, waves.Wave);
         }
 
         [UnityTest]

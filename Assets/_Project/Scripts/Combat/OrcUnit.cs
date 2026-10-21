@@ -116,6 +116,9 @@ namespace CityBuilder.Combat
 
         public OrcKind Kind { get; private set; } = OrcKind.Raider;
 
+        /// <summary>The building it is marching on or breaking, if any.</summary>
+        public BuildingInstance Target => _target;
+
         private int _maxHealth;
         private int _attackDamage;
         private int _baseMaxHealth;
@@ -629,11 +632,22 @@ namespace CityBuilder.Combat
             transform.position = pos;
         }
 
-        /// <summary>Nearest surviving BuildingInstance in the whole scene -- no "aggro range" concept yet, an orc always knows where the closest building is.</summary>
+        /// <summary>
+        /// Nearest surviving BuildingInstance in the whole scene -- an orc always knows where the
+        /// closest building is. In an Invasion run (the user's rule, 2026-10-21) it goes straight
+        /// for the castle instead and only turns on a building it passes within
+        /// inv_orc_building_radius.
+        /// </summary>
         private void AcquireTarget()
         {
             BuildingInstance nearest = null;
             var nearestDistSq = float.MaxValue;
+            var castle = Invasion.InvasionMode.IsActive ? Invasion.InvasionMode.Instance.Castle : null;
+            if (castle != null)
+            {
+                var radius = BalanceConfig.Instance.InvasionOrcBuildingRadius;
+                nearestDistSq = radius * radius;
+            }
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
@@ -649,7 +663,7 @@ namespace CityBuilder.Combat
                 }
             }
 
-            _target = nearest;
+            _target = nearest != null ? nearest : castle;
             _routeIndex = 0;
             _routeBlocked = false;
             _route = _target != null

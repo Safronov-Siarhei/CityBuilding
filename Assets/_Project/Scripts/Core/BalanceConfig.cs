@@ -432,6 +432,29 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionStartStone = 40;
         [SerializeField] private int invasionStartCoins = 50;
 
+        // The Invasion run's waves (InvasionWaves): when they come, how many lanes, what is in them, the gold.
+        [SerializeField] private float invasionFirstWaveSeconds = 60f;
+        [SerializeField] private float invasionBreatherSeconds = 25f;
+        [SerializeField] private float invasionWaveOvertimeSeconds = 240f;
+        [SerializeField] private int invasionTwoLanesFromWave = 4;
+        [SerializeField] private int invasionThreeLanesFromWave = 8;
+        [SerializeField] private int invasionWaveBaseOrcs = 3;
+        [SerializeField] private int invasionWaveExtraOrcEvery = 2;
+        [SerializeField] private int invasionWaveMaxOrcs = 10;
+        [SerializeField] private int invasionWaveLevelEvery = 5;
+        [SerializeField] private int invasionWaveMaxOrcLevel = 12;
+        [SerializeField] private int invasionThrowerFromWave = 3;
+        [SerializeField] private int invasionThrowerEvery = 3;
+        [SerializeField] private int invasionBruteFromWave = 6;
+        [SerializeField] private int invasionBruteEvery = 4;
+        [SerializeField] private int invasionBossWaveEvery = 5;
+        [SerializeField] private int invasionGoldOrc = 2;
+        [SerializeField] private int invasionGoldThrower = 3;
+        [SerializeField] private int invasionGoldBrute = 6;
+        [SerializeField] private int invasionGoldChief = 20;
+        [SerializeField] private int invasionGoldPerWave = 10;
+        [SerializeField] private float invasionOrcBuildingRadius = 6f;
+
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
         [SerializeField] private int startStone = 30;
@@ -606,6 +629,27 @@ namespace CityBuilder.Core
         public int InvasionStartWood => invasionStartWood;
         public int InvasionStartStone => invasionStartStone;
         public int InvasionStartCoins => invasionStartCoins;
+        public float InvasionFirstWaveSeconds => invasionFirstWaveSeconds;
+        public float InvasionBreatherSeconds => invasionBreatherSeconds;
+        public float InvasionWaveOvertimeSeconds => invasionWaveOvertimeSeconds;
+        public int InvasionTwoLanesFromWave => invasionTwoLanesFromWave;
+        public int InvasionThreeLanesFromWave => invasionThreeLanesFromWave;
+        public int InvasionWaveBaseOrcs => invasionWaveBaseOrcs;
+        public int InvasionWaveExtraOrcEvery => invasionWaveExtraOrcEvery;
+        public int InvasionWaveMaxOrcs => invasionWaveMaxOrcs;
+        public int InvasionWaveLevelEvery => invasionWaveLevelEvery;
+        public int InvasionWaveMaxOrcLevel => invasionWaveMaxOrcLevel;
+        public int InvasionThrowerFromWave => invasionThrowerFromWave;
+        public int InvasionThrowerEvery => invasionThrowerEvery;
+        public int InvasionBruteFromWave => invasionBruteFromWave;
+        public int InvasionBruteEvery => invasionBruteEvery;
+        public int InvasionBossWaveEvery => invasionBossWaveEvery;
+        public int InvasionGoldOrc => invasionGoldOrc;
+        public int InvasionGoldThrower => invasionGoldThrower;
+        public int InvasionGoldBrute => invasionGoldBrute;
+        public int InvasionGoldChief => invasionGoldChief;
+        public int InvasionGoldPerWave => invasionGoldPerWave;
+        public float InvasionOrcBuildingRadius => invasionOrcBuildingRadius;
 
         /// <summary>
         /// The King as a unit row, built from the economy tab's king_* keys rather than read from
@@ -842,6 +886,27 @@ namespace CityBuilder.Core
             invasionStartWood = (int)Read(economy, "inv_start_wood", invasionStartWood);
             invasionStartStone = (int)Read(economy, "inv_start_stone", invasionStartStone);
             invasionStartCoins = (int)Read(economy, "inv_start_coins", invasionStartCoins);
+            invasionFirstWaveSeconds = Read(economy, "inv_first_wave_sec", invasionFirstWaveSeconds);
+            invasionBreatherSeconds = Read(economy, "inv_breather_sec", invasionBreatherSeconds);
+            invasionWaveOvertimeSeconds = Read(economy, "inv_wave_overtime_sec", invasionWaveOvertimeSeconds);
+            invasionTwoLanesFromWave = (int)Read(economy, "inv_two_lanes_from_wave", invasionTwoLanesFromWave);
+            invasionThreeLanesFromWave = (int)Read(economy, "inv_three_lanes_from_wave", invasionThreeLanesFromWave);
+            invasionWaveBaseOrcs = (int)Read(economy, "inv_wave_base_orcs", invasionWaveBaseOrcs);
+            invasionWaveExtraOrcEvery = (int)Read(economy, "inv_wave_extra_orc_every", invasionWaveExtraOrcEvery);
+            invasionWaveMaxOrcs = (int)Read(economy, "inv_wave_max_orcs", invasionWaveMaxOrcs);
+            invasionWaveLevelEvery = (int)Read(economy, "inv_wave_level_every", invasionWaveLevelEvery);
+            invasionWaveMaxOrcLevel = (int)Read(economy, "inv_wave_max_orc_level", invasionWaveMaxOrcLevel);
+            invasionThrowerFromWave = (int)Read(economy, "inv_thrower_from_wave", invasionThrowerFromWave);
+            invasionThrowerEvery = (int)Read(economy, "inv_thrower_every", invasionThrowerEvery);
+            invasionBruteFromWave = (int)Read(economy, "inv_brute_from_wave", invasionBruteFromWave);
+            invasionBruteEvery = (int)Read(economy, "inv_brute_every", invasionBruteEvery);
+            invasionBossWaveEvery = (int)Read(economy, "inv_boss_wave_every", invasionBossWaveEvery);
+            invasionGoldOrc = (int)Read(economy, "inv_gold_orc", invasionGoldOrc);
+            invasionGoldThrower = (int)Read(economy, "inv_gold_thrower", invasionGoldThrower);
+            invasionGoldBrute = (int)Read(economy, "inv_gold_brute", invasionGoldBrute);
+            invasionGoldChief = (int)Read(economy, "inv_gold_chief", invasionGoldChief);
+            invasionGoldPerWave = (int)Read(economy, "inv_gold_per_wave", invasionGoldPerWave);
+            invasionOrcBuildingRadius = Read(economy, "inv_orc_building_radius", invasionOrcBuildingRadius);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

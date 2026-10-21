@@ -20,7 +20,7 @@ namespace CityBuilder.Invasion
     /// game (GameSessionIntent.NewGameIsInvasion). Then it switches off what a run does not have
     /// -- the sandbox's raids and camps, illness, fires -- and, once the map is down, sets the
     /// run up: the castle in the middle, a tower at the island's end of each causeway, the King.
-    /// The waves and the jungle's monsters come in later steps.
+    /// The waves are InvasionWaves'; the jungle's monsters come in a later step.
     /// </summary>
     public class InvasionMode : MonoBehaviour
     {
@@ -58,6 +58,7 @@ namespace CityBuilder.Invasion
 
         public KingHero King { get; private set; }
         public InvasionPeople People { get; private set; }
+        public InvasionWaves Waves { get; private set; }
         public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
 
@@ -164,6 +165,11 @@ namespace CityBuilder.Invasion
             home.y = grid.GroundHeight;
             if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
             if (King != null && Castle != null) King.GuardCentre = Castle.transform.position;
+
+            // the waves, out of the three orc camps at the lanes' far ends
+            Waves = gameObject.AddComponent<InvasionWaves>();
+            // (the camps are the map's CampSpots, not among SpotsOf: the sandbox's camps read them too)
+            Waves.Begin(applier.CurrentMap.CampSpots);
 
             RunStarted = true;
         }

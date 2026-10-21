@@ -298,6 +298,13 @@ namespace CityBuilder.Combat
             return first;
         }
 
+        /// <summary>One orc of a given kind and level -- the Invasion run's waves make up their own mixes (InvasionWaves). Works with the raids switched off, as they are in a run.</summary>
+        public OrcUnit SpawnOrcOfKind(Vector3 origin, int level, OrcKind kind)
+        {
+            EnsureMaterials();
+            return SpawnOrc(origin, level, kind);
+        }
+
         /// <summary>A raid's wave: raiders, with throwers among them and a chief at its head once the raids have grown enough (KindInGroup). The first orc is the one handed back -- the chief when there is one.</summary>
         private OrcUnit SpawnWave(Vector3 origin, int count, int level)
         {
