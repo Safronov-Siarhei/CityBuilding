@@ -35,6 +35,9 @@ set. Models go to the user for approval as renders BEFORE they enter the game; p
   Material `Buildings` remapped at import (`Editor/ModelImportDefaults.cs`) onto
   `Models/Palette/BuildingsPalette.mat` (shader `Shaders/BuildingDetail.shader`) — updated IN PLACE,
   never deleted (remaps are by GUID).
+- The Invasion jungle: `wild.py` builds WildWolf/WildBear (four legs LegFL/FR/BL/BR), WildTroll/WildGiant
+  (LegL/R, ArmStrike, ArmOff), WildShrine; `export_fbx` sends `Wild*` to `Models/Wild`; `render_lineup.py`
+  now shows a jointed figure's parts too.
 - Figures: `heroking.py` builds the King JOINTED (legs, arms, head as child parts with origins at the
   joints); `export_fbx` sends `Hero*` with its parts to `Models/Heroes`; animation is code
   (`Combat/FigureAnimator.cs`), no rigs. `orevein1.py` (4 vein models); gates remodelled 1×1 / 1×3 in

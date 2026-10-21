@@ -72,6 +72,9 @@ namespace CityBuilder.Combat
         private float _attackIntervalSeconds = 1.1f;
         private int _attackDamage = 1;
 
+        /// <summary>What one of its blows does now.</summary>
+        public int AttackDamage => _attackDamage;
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();

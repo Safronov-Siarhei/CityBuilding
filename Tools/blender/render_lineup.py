@@ -42,6 +42,8 @@ for n in names:
     x += w / 2
     o.location = (x, 0, 0)
     o.hide_render = False
+    for part in o.children_recursive:      # a jointed figure's legs, arms and head
+        part.hide_render = False
     citizen(x - 0.25, -o.dimensions.y / 2 - 0.35)
     x += w / 2 + 0.8
 total = x - 0.8

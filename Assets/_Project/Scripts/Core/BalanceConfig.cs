@@ -43,6 +43,22 @@ namespace CityBuilder.Core
         public int upkeepCoinsPerDay;
     }
 
+    /// <summary>
+    /// One of the Invasion jungle's monsters at level 1, from the economy tab's mon_ID_* keys --
+    /// four short rows of numbers, kept beside the King's rather than as blank-ridden rows of the
+    /// units tab. Its level (InvasionJungle) multiplies health and damage, as an orc's does.
+    /// </summary>
+    [Serializable]
+    public class MonsterStats
+    {
+        public string id = string.Empty;
+        public int maxHealth = 30;
+        public int attackDamage = 4;
+        public float attackIntervalSeconds = 1f;
+        public float attackRange = 1.2f;
+        public float walkSpeed = 1.6f;
+    }
+
     /// <summary>One row of the balance sheet's "units" tab -- everything that makes a fighting unit what it is.</summary>
     [Serializable]
     public class UnitBalance
@@ -455,6 +471,34 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionGoldPerWave = 10;
         [SerializeField] private float invasionOrcBuildingRadius = 6f;
 
+        // The Invasion run's jungle (InvasionJungle): its monsters, camps, shrines and boss.
+        [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
+        {
+            new MonsterStats { id = "wolf", maxHealth = 30, attackDamage = 3, attackIntervalSeconds = 1f, attackRange = 1.1f, walkSpeed = 2f },
+            new MonsterStats { id = "bear", maxHealth = 90, attackDamage = 8, attackIntervalSeconds = 1.4f, attackRange = 1.3f, walkSpeed = 1.5f },
+            new MonsterStats { id = "troll", maxHealth = 200, attackDamage = 14, attackIntervalSeconds = 1.5f, attackRange = 1.5f, walkSpeed = 1.3f },
+            new MonsterStats { id = "giant", maxHealth = 900, attackDamage = 30, attackIntervalSeconds = 2f, attackRange = 2f, walkSpeed = 1.2f },
+        };
+        [SerializeField] private int invasionCamp1Monsters = 3;
+        [SerializeField] private int invasionCamp2Monsters = 2;
+        [SerializeField] private int invasionCamp3Monsters = 2;
+        [SerializeField] private float invasionCampRespawnSeconds = 90f;
+        [SerializeField] private float invasionBossRespawnSeconds = 300f;
+        [SerializeField] private float invasionMonsterGuardRadius = 6f;
+        [SerializeField] private float invasionBossGuardRadius = 9f;
+        [SerializeField] private int invasionMonsterLevelEveryWaves = 5;
+        [SerializeField] private int invasionGoldWolf = 3;
+        [SerializeField] private int invasionGoldBear = 8;
+        [SerializeField] private int invasionGoldTroll = 15;
+        [SerializeField] private float invasionShrineRadius = 5f;
+        [SerializeField] private float invasionShrineHealPerSecond = 0.15f;
+        [SerializeField] private int invasionBossCoins = 150;
+        [SerializeField] private int invasionBossWood = 80;
+        [SerializeField] private int invasionBossStone = 60;
+        [SerializeField] private float invasionBossBuffSeconds = 120f;
+        [SerializeField] private float invasionBossBuffDamage = 0.5f;
+        [SerializeField] private float invasionBossBuffHealth = 0.3f;
+
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
         [SerializeField] private int startStone = 30;
@@ -650,6 +694,60 @@ namespace CityBuilder.Core
         public int InvasionGoldChief => invasionGoldChief;
         public int InvasionGoldPerWave => invasionGoldPerWave;
         public float InvasionOrcBuildingRadius => invasionOrcBuildingRadius;
+        public int InvasionCamp1Monsters => invasionCamp1Monsters;
+        public int InvasionCamp2Monsters => invasionCamp2Monsters;
+        public int InvasionCamp3Monsters => invasionCamp3Monsters;
+        public float InvasionCampRespawnSeconds => invasionCampRespawnSeconds;
+        public float InvasionBossRespawnSeconds => invasionBossRespawnSeconds;
+        public float InvasionMonsterGuardRadius => invasionMonsterGuardRadius;
+        public float InvasionBossGuardRadius => invasionBossGuardRadius;
+        public int InvasionMonsterLevelEveryWaves => invasionMonsterLevelEveryWaves;
+        public int InvasionGoldWolf => invasionGoldWolf;
+        public int InvasionGoldBear => invasionGoldBear;
+        public int InvasionGoldTroll => invasionGoldTroll;
+        public float InvasionShrineRadius => invasionShrineRadius;
+        public float InvasionShrineHealPerSecond => invasionShrineHealPerSecond;
+        public int InvasionBossCoins => invasionBossCoins;
+        public int InvasionBossWood => invasionBossWood;
+        public int InvasionBossStone => invasionBossStone;
+        public float InvasionBossBuffSeconds => invasionBossBuffSeconds;
+        public float InvasionBossBuffDamage => invasionBossBuffDamage;
+        public float InvasionBossBuffHealth => invasionBossBuffHealth;
+
+        /// <summary>A jungle monster (wolf, bear, troll, giant) as a unit row, built from its mon_ID_* keys like the King's.</summary>
+        public UnitBalance MonsterUnit(string id)
+        {
+            _monsterUnits ??= new Dictionary<string, UnitBalance>();
+            if (_monsterUnits.TryGetValue(id, out var unit)) return unit;
+
+            MonsterStats stats = null;
+            foreach (var m in monsters)
+            {
+                if (m.id == id) stats = m;
+            }
+            if (stats == null)
+            {
+                Debug.LogError($"BalanceConfig: no monster '{id}' (economy keys mon_{id}_*). Using fallback stats.");
+                stats = new MonsterStats { id = id };
+            }
+            unit = new UnitBalance
+            {
+                id = id,
+                displayName = id,
+                attackRangeUnits = stats.attackRange,
+                attackRangeStructures = stats.attackRange + 1.2f,
+                engageRadius = invasionMonsterGuardRadius,
+                startsUnlocked = false,
+                levels = new List<UnitLevelStats>
+                {
+                    new UnitLevelStats { maxHealth = stats.maxHealth, attackDamage = stats.attackDamage, attackIntervalSeconds = stats.attackIntervalSeconds, walkSpeed = stats.walkSpeed },
+                },
+            };
+            _monsterUnits[id] = unit;
+            return unit;
+        }
+
+        [NonSerialized] private Dictionary<string, UnitBalance> _monsterUnits;
 
         /// <summary>
         /// The King as a unit row, built from the economy tab's king_* keys rather than read from
@@ -907,6 +1005,34 @@ namespace CityBuilder.Core
             invasionGoldChief = (int)Read(economy, "inv_gold_chief", invasionGoldChief);
             invasionGoldPerWave = (int)Read(economy, "inv_gold_per_wave", invasionGoldPerWave);
             invasionOrcBuildingRadius = Read(economy, "inv_orc_building_radius", invasionOrcBuildingRadius);
+            foreach (var m in monsters)
+            {
+                m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);
+                m.attackDamage = (int)Read(economy, $"mon_{m.id}_damage", m.attackDamage);
+                m.attackIntervalSeconds = Read(economy, $"mon_{m.id}_attack_interval_sec", m.attackIntervalSeconds);
+                m.attackRange = Read(economy, $"mon_{m.id}_attack_range", m.attackRange);
+                m.walkSpeed = Read(economy, $"mon_{m.id}_walk_speed", m.walkSpeed);
+            }
+            _monsterUnits = null;
+            invasionCamp1Monsters = (int)Read(economy, "inv_camp1_monsters", invasionCamp1Monsters);
+            invasionCamp2Monsters = (int)Read(economy, "inv_camp2_monsters", invasionCamp2Monsters);
+            invasionCamp3Monsters = (int)Read(economy, "inv_camp3_monsters", invasionCamp3Monsters);
+            invasionCampRespawnSeconds = Read(economy, "inv_camp_respawn_sec", invasionCampRespawnSeconds);
+            invasionBossRespawnSeconds = Read(economy, "inv_boss_respawn_sec", invasionBossRespawnSeconds);
+            invasionMonsterGuardRadius = Read(economy, "inv_monster_guard_radius", invasionMonsterGuardRadius);
+            invasionBossGuardRadius = Read(economy, "inv_boss_guard_radius", invasionBossGuardRadius);
+            invasionMonsterLevelEveryWaves = (int)Read(economy, "inv_monster_level_every_waves", invasionMonsterLevelEveryWaves);
+            invasionGoldWolf = (int)Read(economy, "inv_gold_wolf", invasionGoldWolf);
+            invasionGoldBear = (int)Read(economy, "inv_gold_bear", invasionGoldBear);
+            invasionGoldTroll = (int)Read(economy, "inv_gold_troll", invasionGoldTroll);
+            invasionShrineRadius = Read(economy, "inv_shrine_radius", invasionShrineRadius);
+            invasionShrineHealPerSecond = Read(economy, "inv_shrine_heal_per_sec", invasionShrineHealPerSecond);
+            invasionBossCoins = (int)Read(economy, "inv_boss_coins", invasionBossCoins);
+            invasionBossWood = (int)Read(economy, "inv_boss_wood", invasionBossWood);
+            invasionBossStone = (int)Read(economy, "inv_boss_stone", invasionBossStone);
+            invasionBossBuffSeconds = Read(economy, "inv_boss_buff_sec", invasionBossBuffSeconds);
+            invasionBossBuffDamage = Read(economy, "inv_boss_buff_damage", invasionBossBuffDamage);
+            invasionBossBuffHealth = Read(economy, "inv_boss_buff_health", invasionBossBuffHealth);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

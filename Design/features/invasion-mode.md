@@ -4,8 +4,10 @@
 > «В бой» starts a run, the King hero (model, jointed animation, XP/levels/respawn), the run's economy
 > (6 houses × 3 people, 9 buildings, wood/stone prices, no food/tax/happiness), the King's portrait
 > (top-right) + tap select + guard-the-base with no order, orc WAVES down the three lanes (countdown,
-> breather, lanes open one by one, gold for kills and waves; pace NOT yet checked by playing). Next
-> (plan in the log): forest monsters + boss; round orc camps; score and leaderboards.
+> breather, lanes open one by one, gold for kills and waves), the JUNGLE (wolf/bear/troll camps at the
+> "monsters" spots, the giant boss, respawn stronger with the waves, healing shrines, the boss's
+> resources + blessing). Numbers of both NOT yet checked by playing. Next (plan in the log): round orc
+> camps; score and leaderboards.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -29,6 +31,12 @@ every `OrcUnit.Died` in a run and per wave; spawns through `OrcRaidManager.Spawn
 with the raid manager disabled), run orcs target the castle (`OrcUnit.AcquireTarget`: a building only
 within `inv_orc_building_radius`; `OrcUnit.Target` exposed for tests), the wave line under the resource
 bar (`UI/SettlementStatusController` shows it instead of the day in a run);
+`InvasionJungle.cs` (camps at `SpotsOf("monsters")` by spot level, the lair at `boss`, shrines at
+`shrine`; monsters are `OrcUnit` kinds `Wolf/Bear/Troll/Giant` (`OrcUnit.IsMonster`) put on guard with
+`SetGuardPost(null, post, radius)`, stats from `BalanceConfig.MonsterUnit` (economy `mon_<id>_*`);
+respawn + level from `InvasionWaves.WavesSurvived`; boss reward + `KingHero.Empower`; `Tick(dt)` public
+for tests), monster models wired into `OrcRaidManager` (`wolfModel`… by `SetupProjectOrcs`), the shrine
+model into `InvasionMode.shrineModel`;
 `Combat/KingHero.cs` (XP = health of any enemy falling within `king_xp_radius`, levels, respawn at the
 castle, `Guarding`: attacks orcs within `king_guard_radius` of the castle until a player's order —
 `ArmyGroup.PlayerOrdered`), `UI/KingPortraitController.cs` (portrait, tap-select, guard button; built
@@ -39,15 +47,23 @@ group, outside the army cap); entry `MainMenuController.StartInvasion` →
 
 ## Data
 economy `king_*`, `inv_*` (waves: `inv_first_wave_sec` … `inv_orc_building_radius`); localization
-`#unit_king`, `#hud_inv_wave`, `#hud_inv_wave_in`, `#log_inv_wave`, `#log_inv_wave_survived`. Blender: `Tools/blender/invasion1.py`,
+`#unit_king`, `#hud_inv_wave`, `#hud_inv_wave_in`, `#log_inv_wave`, `#log_inv_wave_survived`,
+`#log_inv_boss_slain`, `#log_inv_boss_back`; economy `mon_*` and the jungle's `inv_*` (camps, respawn,
+guard radii, monster gold, shrine, boss reward and blessing). Blender `wild.py` → `Models/Wild`. Blender: `Tools/blender/invasion1.py`,
 `render_invasion1.py`, `heroking.py` (jointed; export routes `Hero*` to `Models/Heroes`).
 
 ## Tests
 PlayMode `InvasionTests` (waves: countdown + one lane + HUD line, every lane reaches the castle,
 run orcs go for the castle, a wave beaten off pays and starts the breather); EditMode
-`InvasionWavesTests` (the ramp).
+`InvasionWavesTests` (the ramp), `InvasionJungleTests` (camp kinds, growth, the bite); PlayMode jungle:
+a camp per spot with its beasts, monsters hold their ground, a wiped camp returns stronger, the
+shrine heals, the boss pays and blesses.
 
 ## Traps
+- Jungle monsters are `OrcUnit`s, so they are in `OrcUnit.All` and fire `OrcUnit.Died`: a test or
+  system meaning "the wave's orcs" must use `InvasionWaves.WaveOrcs`, not `OrcUnit.All`.
+- `FigureAnimator` skips a monster figure that no camera sees (`Renderer.isVisible`), but never the
+  King and never without a graphics device (batchmode tests would see nothing move).
 - The wave clock runs in every PlayMode test of a run: a test that lets more than
   `inv_first_wave_sec` of game time pass gets a wave's orcs in its scene.
 - A PNG for the HUD must sit in `UI/Icons` (UiTextureImport makes it a single sprite); elsewhere it

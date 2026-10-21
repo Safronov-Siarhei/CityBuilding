@@ -4,7 +4,7 @@
 
 One FBX per object, holding one mesh, named after the object -- the contract SetupProject reads
 by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) and
-boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes. Each is written with its origin at the centre of its
+boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes, the Invasion jungle (`Wild*`, wild.py) to Models/Wild. Each is written with its origin at the centre of its
 footprint on the ground (the object's placement in the scene is dropped), so the game can trust
 the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
 every model's one material is named `Buildings` and the game swaps in its own palette material
@@ -31,6 +31,7 @@ BUILDINGS = os.path.join(project, "Assets", "_Project", "Models", "Buildings")
 TERRAIN = os.path.join(project, "Assets", "_Project", "Models", "Terrain")
 ORCS = os.path.join(project, "Assets", "_Project", "Models", "Orcs")
 HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
+WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
 PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 
 
@@ -38,7 +39,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith("Hero"):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Wild")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -53,6 +54,9 @@ def target(o):
     if o.name.startswith("Hero"):
         os.makedirs(HEROES, exist_ok=True)
         return os.path.join(HEROES, o.name + ".fbx")
+    if o.name.startswith("Wild"):
+        os.makedirs(WILD, exist_ok=True)
+        return os.path.join(WILD, o.name + ".fbx")
     folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS
     return os.path.join(folder, o.name + ".fbx")
 

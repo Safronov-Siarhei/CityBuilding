@@ -27,6 +27,21 @@ namespace CityBuilder.Combat
 
         /// <summary>The main base's chief: its miniboss, his own row, comes back from his house while it stands.</summary>
         Boss = 4,
+
+        // The Invasion jungle's monsters (InvasionJungle): not orcs, but they fight the same way --
+        // a guard holding its camp -- so they are kinds of this unit. Stats: economy mon_<id>_*.
+
+        /// <summary>A camp of level 1: a pack of wolves.</summary>
+        Wolf = 5,
+
+        /// <summary>A camp of level 2: bears.</summary>
+        Bear = 6,
+
+        /// <summary>A camp of level 3: rock trolls.</summary>
+        Troll = 7,
+
+        /// <summary>The jungle's boss in its southern lair.</summary>
+        Giant = 8,
     }
 
     /// <summary>
@@ -49,6 +64,10 @@ namespace CityBuilder.Combat
         {
             switch (kind)
             {
+                case OrcKind.Wolf: return "wolf";
+                case OrcKind.Bear: return "bear";
+                case OrcKind.Troll: return "troll";
+                case OrcKind.Giant: return "giant";
                 case OrcKind.Thrower: return "orc_thrower";
                 case OrcKind.Chief: return "orc_chief";
                 case OrcKind.Brute: return "orc_brute";
@@ -56,6 +75,9 @@ namespace CityBuilder.Combat
                 default: return "orc";
             }
         }
+
+        /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
+        public static bool IsMonster(OrcKind kind) => kind >= OrcKind.Wolf;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -149,7 +171,7 @@ namespace CityBuilder.Combat
         private void LoadStats(OrcKind kind)
         {
             Kind = kind;
-            var stats = BalanceConfig.Instance.Unit(SheetIdOf(kind));
+            var stats = IsMonster(kind) ? BalanceConfig.Instance.MonsterUnit(SheetIdOf(kind)) : BalanceConfig.Instance.Unit(SheetIdOf(kind));
             _buildingAttackRange = stats.attackRangeStructures;
             _soldierAttackRange = stats.attackRangeUnits;
             _soldierAggroRadius = stats.engageRadius;
@@ -196,7 +218,8 @@ namespace CityBuilder.Combat
 
         private void Start()
         {
-            AcquireTarget();
+            // a guard put on its post as it was made has no building to march on
+            if (!_guarding) AcquireTarget();
         }
 
         // Guard duty (see OrcCamp): a garrison orc holds its camp instead of marching on the town.
@@ -211,6 +234,8 @@ namespace CityBuilder.Combat
         private const float GuardRouteRefreshSeconds = 0.6f;
         // How far outside its camp a guard keeps after a soldier who is shooting it.
         private const float GuardLeashMeters = 3f;
+        // How far round its post a guard without a camp holds; 0 = the sheet's garrison radius.
+        private float _guardRadius;
 
         /// <summary>A camp's garrison, not a raider: it is not saved (its spawner musters it again on load).</summary>
         public bool IsGuard => _guarding;
@@ -223,9 +248,10 @@ namespace CityBuilder.Combat
         /// who shoot it from a little further), never chases out of it, and walks back to its post
         /// when the fight is over. It never goes for the player's buildings.
         /// </summary>
-        public void SetGuardPost(OrcCamp camp, Vector3 post)
+        public void SetGuardPost(OrcCamp camp, Vector3 post, float radius = 0f)
         {
             _guarding = true;
+            _guardRadius = radius;
             _camp = camp;
             _guardPost = post;
             _target = null;
@@ -301,6 +327,9 @@ namespace CityBuilder.Combat
             Died?.Invoke(this);
             Destroy(gameObject);
         }
+
+        /// <summary>Raised on each blow it lands -- a jointed figure (FigureAnimator) swings with it.</summary>
+        public event System.Action Struck;
 
         /// <summary>Raised as an orc falls, whoever struck it -- the King's experience and a run's gold are counted from it.</summary>
         public static event System.Action<OrcUnit> Died;
@@ -481,7 +510,7 @@ namespace CityBuilder.Combat
         private bool InGuardZone(Vector3 position, float margin)
         {
             if (_camp != null) return _camp.IsInZone(position, margin);
-            var reach = BalanceConfig.Instance.OrcGarrisonGuardRadiusMeters + margin;
+            var reach = (_guardRadius > 0f ? _guardRadius : BalanceConfig.Instance.OrcGarrisonGuardRadiusMeters) + margin;
             var fromPost = position - _guardPost;
             fromPost.y = 0f;
             return fromPost.sqrMagnitude <= reach * reach;
@@ -559,18 +588,21 @@ namespace CityBuilder.Combat
 
         private void Strike(SoldierUnit soldier)
         {
+            Struck?.Invoke();
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
             else soldier.TakeDamage(_attackDamage);
         }
 
         private void Strike(FreedPrisoner prisoner)
         {
+            Struck?.Invoke();
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), prisoner, _attackDamage);
             else prisoner.TakeDamage(_attackDamage);
         }
 
         private void Strike(BuildingInstance building)
         {
+            Struck?.Invoke();
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
             else building.TryDamage(_attackDamage);
         }

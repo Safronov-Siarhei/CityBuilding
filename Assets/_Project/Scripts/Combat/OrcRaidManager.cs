@@ -105,6 +105,11 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject chiefHouseRuinModel;
         [SerializeField] private GameObject[] mountainModels;
         [SerializeField] private GameObject bossModel;
+        // The Invasion jungle's monsters (Tools/blender/wild.py, Models/Wild), jointed.
+        [SerializeField] private GameObject wolfModel;
+        [SerializeField] private GameObject bearModel;
+        [SerializeField] private GameObject trollModel;
+        [SerializeField] private GameObject giantModel;
         // The prisoners' cages: one model per camp level, and the main base's own.
         [SerializeField] private GameObject[] cageModels;
         [SerializeField] private GameObject cageRuinModel;
@@ -403,7 +408,7 @@ namespace CityBuilder.Combat
             var jitter = scatter ? Random.insideUnitCircle * 1.5f : Vector2.zero;
             var spawnPos = origin + new Vector3(jitter.x, 0f, jitter.y);
 
-            var label = kind == OrcKind.Raider ? "Orc" : $"Orc {kind}";
+            var label = OrcUnit.IsMonster(kind) ? kind.ToString() : kind == OrcKind.Raider ? "Orc" : $"Orc {kind}";
             var root = new GameObject(level > 1 ? $"{label} (lvl {level})" : label);
             root.transform.position = spawnPos;
             // Visibly bigger with level, so a cheat-spawned elite is tellable from a raider at a
@@ -422,6 +427,11 @@ namespace CityBuilder.Combat
             else if (kind == OrcKind.Boss && bossModel != null) { model = bossModel; figureName = "Boss"; }
             else if (kind == OrcKind.Brute && Pick(bruteModels, level) != null) { model = Pick(bruteModels, level); figureName = "Brute"; }
             else if (brute) { model = Pick(bruteModels, 1); figureName = "Brute"; }
+            if (OrcUnit.IsMonster(kind))
+            {
+                model = MonsterModel(kind);
+                figureName = kind.ToString();
+            }
             if (model != null)
             {
                 // The models are authored at their real size (a grunt 0.58 m, a brute 0.73), so
@@ -433,6 +443,8 @@ namespace CityBuilder.Combat
                 figure.transform.localScale = Vector3.one / undo;
                 // Units stay out of the shadow pass, like the citizens.
                 SceneryShadows.DisableCasting(figure);
+                // the jungle's beasts are jointed: they stand, run and strike
+                if (OrcUnit.IsMonster(kind)) root.AddComponent<FigureAnimator>().Bind(figure.transform);
             }
             else
             {
@@ -451,6 +463,18 @@ namespace CityBuilder.Combat
             var unit = root.AddComponent<OrcUnit>();
             unit.Initialize(level, kind);
             return unit;
+        }
+
+        private GameObject MonsterModel(OrcKind kind)
+        {
+            switch (kind)
+            {
+                case OrcKind.Wolf: return wolfModel;
+                case OrcKind.Bear: return bearModel;
+                case OrcKind.Troll: return trollModel;
+                case OrcKind.Giant: return giantModel;
+                default: return null;
+            }
         }
 
         /// <summary>How much bigger a raider of this level is drawn than a level-1 one. Deliberately sublinear: a level-5 orc has five times the health, not five times the width.</summary>

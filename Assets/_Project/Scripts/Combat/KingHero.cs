@@ -52,6 +52,11 @@ namespace CityBuilder.Combat
 
         public SoldierUnit Unit => _unit;
 
+        /// <summary>Seconds left of the boss's blessing (InvasionJungle): more damage and health while it lasts; 0 without one.</summary>
+        public float BuffRemaining { get; private set; }
+
+        private float _buffDamage, _buffHealth;
+
         /// <summary>Raised on a level gained, a fall and a return -- for the hero's portrait on the HUD.</summary>
         public event Action Changed;
 
@@ -128,10 +133,26 @@ namespace CityBuilder.Combat
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// The boss's blessing: for that many seconds his damage and health are raised by the given fractions
+        /// (0.5 = half as much again). A second one while the first lasts starts it afresh.
+        /// </summary>
+        public void Empower(float seconds, float damageBonus, float healthBonus)
+        {
+            BuffRemaining = Mathf.Max(0f, seconds);
+            _buffDamage = Mathf.Max(0f, damageBonus);
+            _buffHealth = Mathf.Max(0f, healthBonus);
+            ApplyLevel();
+            Changed?.Invoke();
+        }
+
         private void ApplyLevel()
         {
             var before = _unit.MaxHealth;
-            _unit.SetHeroStats(MaxHealthAt(Level), DamageAt(Level));
+            var buffed = BuffRemaining > 0f;
+            var health = MaxHealthAt(Level) * (buffed ? 1f + _buffHealth : 1f);
+            var damage = DamageAt(Level) * (buffed ? 1f + _buffDamage : 1f);
+            _unit.SetHeroStats(Mathf.RoundToInt(health), Mathf.RoundToInt(damage));
             if (_unit.MaxHealth > before) _unit.SetCurrentHealth(_unit.CurrentHealth + (_unit.MaxHealth - before));
         }
 
@@ -171,6 +192,17 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
+            if (BuffRemaining > 0f)
+            {
+                BuffRemaining -= Time.deltaTime;
+                if (BuffRemaining <= 0f)
+                {
+                    BuffRemaining = 0f;
+                    ApplyLevel();
+                    Changed?.Invoke();
+                }
+            }
+
             if (IsFallen)
             {
                 RespawnRemaining -= Time.deltaTime;

@@ -20,7 +20,7 @@ namespace CityBuilder.Invasion
     /// game (GameSessionIntent.NewGameIsInvasion). Then it switches off what a run does not have
     /// -- the sandbox's raids and camps, illness, fires -- and, once the map is down, sets the
     /// run up: the castle in the middle, a tower at the island's end of each causeway, the King.
-    /// The waves are InvasionWaves'; the jungle's monsters come in a later step.
+    /// The waves are InvasionWaves', the jungle's monsters, boss and shrines InvasionJungle's.
     /// </summary>
     public class InvasionMode : MonoBehaviour
     {
@@ -45,6 +45,7 @@ namespace CityBuilder.Invasion
 
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInARun = new MonoBehaviour[0];
+        [SerializeField] private GameObject shrineModel;
 
         public static InvasionMode Instance { get; private set; }
 
@@ -59,6 +60,7 @@ namespace CityBuilder.Invasion
         public KingHero King { get; private set; }
         public InvasionPeople People { get; private set; }
         public InvasionWaves Waves { get; private set; }
+        public InvasionJungle Jungle { get; private set; }
         public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
 
@@ -170,6 +172,11 @@ namespace CityBuilder.Invasion
             Waves = gameObject.AddComponent<InvasionWaves>();
             // (the camps are the map's CampSpots, not among SpotsOf: the sandbox's camps read them too)
             Waves.Begin(applier.CurrentMap.CampSpots);
+
+            // the jungle between the lanes: monster camps, the boss's lair, the healing shrines
+            Jungle = gameObject.AddComponent<InvasionJungle>();
+            var map = applier.CurrentMap;
+            Jungle.Begin(map.SpotsOf("monsters"), map.SpotsOf("boss"), map.SpotsOf("shrine"), shrineModel);
 
             RunStarted = true;
         }

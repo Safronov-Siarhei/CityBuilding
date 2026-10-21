@@ -465,6 +465,7 @@ namespace CityBuilder.EditorTools
             var invasionMode = managers.AddComponent<CityBuilder.Invasion.InvasionMode>();
             var invasionModeSO = new SerializedObject(invasionMode);
             invasionModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            invasionModeSO.FindProperty("shrineModel").objectReferenceValue = LoadWild("WildShrine");
             WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 

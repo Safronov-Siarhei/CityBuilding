@@ -300,7 +300,8 @@ namespace CityBuilder.Tests.PlayMode
 
             var target = king.transform.position + new Vector3(-8f, 0f, 0f);
             king.Unit.Group.OrderMoveTo(target);
-            yield return new WaitForSeconds(0.8f);
+            // up to speed within two seconds -- a fixed 0.8 s wait failed now and then on a slow frame
+            for (var t = 0f; t < 2f && animator.Run <= 0.6f; t += Time.deltaTime) yield return null;
             Assert.Greater(animator.Run, 0.6f, "Walking, the King is not drawn running.");
             var swing = 0f;
             for (var t = 0f; t < 0.6f; t += Time.deltaTime)
@@ -341,7 +342,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(1, waves.LastLanes.Count, "The first wave came down more than one lane.");
             Assert.AreEqual(InvasionWaves.OrcsPerLane(1, config.InvasionWaveBaseOrcs, config.InvasionWaveExtraOrcEvery, config.InvasionWaveMaxOrcs), waves.OrcsLeft);
             var start = waves.LaneStarts[waves.LastLanes[0]];
-            foreach (var orc in OrcUnit.All) Assert.Less(Vector3.Distance(Flat(orc.transform.position), Flat(start)), 4f, "An orc of the wave stepped out away from its camp.");
+            foreach (var orc in waves.WaveOrcs) Assert.Less(Vector3.Distance(Flat(orc.transform.position), Flat(start)), 4f, "An orc of the wave stepped out away from its camp.");
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.AreEqual(Localization.Format("#hud_inv_wave", 1, waves.OrcsLeft), status.text, "The line under the resource bar does not show the wave underway.");
         }
@@ -384,7 +385,7 @@ namespace CityBuilder.Tests.PlayMode
             var waves = InvasionMode.Instance.Waves;
             var coins = ResourceManager.Instance.GetAmount(InvasionRules.Money);
             waves.SendNextWave();
-            var orcs = OrcUnit.All.ToList();
+            var orcs = waves.WaveOrcs.ToList();
             Assert.Greater(orcs.Count, 0, "The wave sent no orcs.");
             var expected = InvasionWaves.GoldForWave(1, BalanceConfig.Instance.InvasionGoldPerWave);
             foreach (var orc in orcs)
@@ -404,6 +405,135 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(2, waves.Wave);
         }
 
+        /// <summary>A camp at every "monsters" spot with the beasts its level says, the giant in his lair, jointed figures all.</summary>
+        [Test]
+        public void TheJungle_HasACampAtEverySpot_WithItsBeasts()
+        {
+            var jungle = InvasionMode.Instance.Jungle;
+            var spots = MeshMapApplier.Instance.CurrentMap.SpotsOf("monsters");
+            Assert.Greater(spots.Count, 0, "The map has no monster spots.");
+            Assert.AreEqual(spots.Count + 1, jungle.Camps.Count, "Not one camp per monster spot plus the boss's lair.");
+            foreach (var camp in jungle.Camps)
+            {
+                var kind = camp.IsBoss ? OrcKind.Giant : InvasionJungle.KindOfCamp(camp.Tier);
+                Assert.AreEqual(camp.IsBoss ? 1 : InvasionJungle.CampSize(camp.Tier), camp.Monsters.Count, $"The camp at {camp.Post} is not full.");
+                foreach (var monster in camp.Monsters)
+                {
+                    Assert.AreEqual(kind, monster.Kind, $"The camp of level {camp.Tier} at {camp.Post} holds the wrong beast.");
+                    Assert.IsTrue(monster.IsGuard, "A monster is not holding its camp.");
+                    Assert.IsNotNull(monster.transform.Find(kind.ToString()), $"The {kind} is drawn in cubes -- its model (Models/Wild) is not wired.");
+                    Assert.IsNotNull(monster.GetComponent<FigureAnimator>(), $"The {kind} is not jointed.");
+                }
+            }
+            Assert.IsNotNull(jungle.BossLair, "No boss.");
+            Assert.AreEqual(OrcKind.Giant, jungle.BossLair.Monsters[0].Kind);
+            Assert.AreEqual(3, jungle.Shrines.Count, "Not a shrine at each shrine spot.");
+            Assert.AreEqual(3, GameObject.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.name == "Shrine"), "The shrines are not drawn.");
+        }
+
+        /// <summary>Left alone, the monsters stay at their camps: they do not march on the castle.</summary>
+        [UnityTest]
+        public IEnumerator TheMonsters_HoldTheirGround()
+        {
+            var monsters = InvasionMode.Instance.Jungle.Camps.SelectMany(c => c.Monsters).ToList();
+            var posts = monsters.Select(m => m.GuardPost).ToList();
+            yield return new WaitForSeconds(3f);
+            for (var i = 0; i < monsters.Count; i++)
+            {
+                Assert.IsNotNull(monsters[i], "A monster fell with nobody near it.");
+                Assert.Less(Vector3.Distance(Flat(monsters[i].transform.position), Flat(posts[i])), 1.5f, $"A {monsters[i].Kind} left its camp.");
+                Assert.IsNull(monsters[i].Target, $"A {monsters[i].Kind} is going for a building.");
+            }
+        }
+
+        /// <summary>A camp wiped out pays its gold and comes back after the wait -- a level higher once the base has stood enough waves.</summary>
+        [UnityTest]
+        public IEnumerator AWipedCamp_ComesBack_AfterTheWait_StrongerWithTheWaves()
+        {
+            var jungle = InvasionMode.Instance.Jungle;
+            var waves = InvasionMode.Instance.Waves;
+            var config = BalanceConfig.Instance;
+            var camp = jungle.Camps.First(c => c.Tier == 1 && !c.IsBoss);
+            Assert.AreEqual(1, camp.Level);
+
+            var coins = ResourceManager.Instance.GetAmount(InvasionRules.Money);
+            var beasts = camp.Monsters.ToList();
+            foreach (var beast in beasts) beast.TakeDamage(beast.MaxHealth);
+            yield return null;
+            Assert.AreEqual(0, camp.Monsters.Count);
+            Assert.AreEqual(coins + beasts.Count * InvasionWaves.GoldForKill(OrcKind.Wolf, 1), ResourceManager.Instance.GetAmount(InvasionRules.Money), "The wolves did not pay their gold.");
+            Assert.AreEqual(config.InvasionCampRespawnSeconds, camp.RespawnIn, 0.5f, "The camp's wait is not the sheet's.");
+
+            // the base stands through enough waves for the jungle to grow a level
+            for (var w = 0; w < config.InvasionMonsterLevelEveryWaves; w++)
+            {
+                waves.SendNextWave();
+                foreach (var orc in waves.WaveOrcs.ToList()) orc.TakeDamage(orc.MaxHealth);
+                yield return null;
+                yield return null;
+            }
+            Assert.AreEqual(config.InvasionMonsterLevelEveryWaves, waves.WavesSurvived);
+
+            jungle.Tick(config.InvasionCampRespawnSeconds - 1f);
+            Assert.AreEqual(0, camp.Monsters.Count, "The camp came back before its time.");
+            jungle.Tick(1.5f);
+            Assert.AreEqual(InvasionJungle.CampSize(1), camp.Monsters.Count, "The camp did not come back.");
+            Assert.AreEqual(2, camp.Level, "The camp came back no stronger after the waves.");
+            Assert.AreEqual(2, camp.Monsters[0].Level);
+        }
+
+        /// <summary>A shrine heals the King standing at it; away from it, nothing.</summary>
+        [Test]
+        public void AShrine_HealsTheKing_StandingAtIt()
+        {
+            var jungle = InvasionMode.Instance.Jungle;
+            var king = InvasionMode.Instance.King;
+            var hurt = king.Unit.MaxHealth / 2;
+            king.Unit.SetCurrentHealth(hurt);
+            jungle.Tick(1f);
+            Assert.AreEqual(hurt, king.Unit.CurrentHealth, "The King was healed at home, nowhere near a shrine.");
+
+            var controller = king.GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = false;
+            king.transform.position = jungle.Shrines[0] + new Vector3(1.5f, 0f, 0f);
+            jungle.Tick(1f);
+            if (controller != null) controller.enabled = true;
+            var expected = Mathf.CeilToInt(king.Unit.MaxHealth * BalanceConfig.Instance.InvasionShrineHealPerSecond);
+            Assert.AreEqual(hurt + expected, king.Unit.CurrentHealth, 1, "A second at the shrine did not give back the sheet's share of his health.");
+        }
+
+        /// <summary>The giant down: gold, wood and stone by his level, the King blessed for a while, the lair empty until it comes back.</summary>
+        [UnityTest]
+        public IEnumerator TheBoss_PaysAndBlessesTheKing()
+        {
+            var jungle = InvasionMode.Instance.Jungle;
+            var king = InvasionMode.Instance.King;
+            var config = BalanceConfig.Instance;
+            var resources = ResourceManager.Instance;
+            var coins = resources.GetAmount(InvasionRules.Money);
+            var wood = resources.GetAmount(ResourceType.Wood);
+            var stone = resources.GetAmount(ResourceType.Stone);
+            var giant = jungle.BossLair.Monsters[0];
+            var level = giant.Level;
+
+            giant.TakeDamage(giant.MaxHealth);
+            yield return null;
+            Assert.AreEqual(coins + config.InvasionBossCoins * level, resources.GetAmount(InvasionRules.Money), "The giant's gold is wrong.");
+            Assert.AreEqual(wood + config.InvasionBossWood * level, resources.GetAmount(ResourceType.Wood));
+            Assert.AreEqual(stone + config.InvasionBossStone * level, resources.GetAmount(ResourceType.Stone));
+            Assert.AreEqual(config.InvasionBossRespawnSeconds, jungle.BossLair.RespawnIn, 0.5f);
+            Assert.Greater(king.BuffRemaining, config.InvasionBossBuffSeconds - 1f, "The King was not blessed.");
+            Assert.AreEqual(Mathf.RoundToInt(KingHero.DamageAt(king.Level) * (1f + config.InvasionBossBuffDamage)), king.Unit.AttackDamage, "The blessing did not raise his damage.");
+            Assert.AreEqual(Mathf.RoundToInt(KingHero.MaxHealthAt(king.Level) * (1f + config.InvasionBossBuffHealth)), king.Unit.MaxHealth, "The blessing did not raise his health.");
+
+            // a blessing runs out
+            king.Empower(0.1f, config.InvasionBossBuffDamage, config.InvasionBossBuffHealth);
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(0f, king.BuffRemaining);
+            Assert.AreEqual(KingHero.DamageAt(king.Level), king.Unit.AttackDamage, "The blessing never wore off.");
+            Assert.AreEqual(KingHero.MaxHealthAt(king.Level), king.Unit.MaxHealth);
+        }
+
         [UnityTest]
         public IEnumerator Photograph_TheRun()
         {
@@ -413,6 +543,11 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("invasion-base", Vector3.zero, 44f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-king", InvasionMode.Instance.King.transform.position, 9f, 40f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-causeway", Causeways[1], 22f, 50f, 0f, 60f);
+            foreach (var camp in InvasionMode.Instance.Jungle.Camps.Where(c => c.Tier == 1 || c.IsBoss).Take(2))
+            {
+                yield return PlaytestCapture.Shoot(camp.IsBoss ? "invasion-boss" : "invasion-wolves", camp.Post, camp.IsBoss ? 8f : 6f, 40f, 0f, 45f);
+            }
+            yield return PlaytestCapture.Shoot("invasion-shrine", InvasionMode.Instance.Jungle.Shrines[0], 5f, 40f, 0f, 45f);
 
             // a house making a new person, and the run's build menu
             CitizenManager.Instance.KillCitizens(1);

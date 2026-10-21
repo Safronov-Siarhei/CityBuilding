@@ -41,6 +41,9 @@ namespace CityBuilder.Invasion
 
         public int OrcsLeft => _waveOrcs.Count;
 
+        /// <summary>The orcs of the wave underway still standing.</summary>
+        public IReadOnlyList<OrcUnit> WaveOrcs => _waveOrcs;
+
         /// <summary>Where each lane's wave steps out, one per orc camp.</summary>
         public IReadOnlyList<Vector3> LaneStarts => _laneStarts;
 
@@ -138,12 +141,12 @@ namespace CityBuilder.Invasion
             Current = Phase.Breather;
         }
 
-        /// <summary>Every orc that falls in a run pays by its kind, a wave's or a camp's.</summary>
+        /// <summary>Every enemy that falls in a run pays by its kind: a wave's orc, a camp's, a jungle monster.</summary>
         private void OnOrcDied(OrcUnit orc)
         {
             if (orc == null) return;
             _waveOrcs.Remove(orc);
-            ResourceManager.Instance?.Add(InvasionRules.Money, GoldFor(orc.Kind));
+            ResourceManager.Instance?.Add(InvasionRules.Money, GoldForKill(orc.Kind, orc.Level));
         }
 
         /// <summary>`count` different lanes at random -- which side the next wave comes from is not something to settle once.</summary>
@@ -209,9 +212,19 @@ namespace CityBuilder.Invasion
                 case OrcKind.Brute: return config.InvasionGoldBrute;
                 case OrcKind.Chief:
                 case OrcKind.Boss: return config.InvasionGoldChief;
+                case OrcKind.Wolf: return config.InvasionGoldWolf;
+                case OrcKind.Bear: return config.InvasionGoldBear;
+                case OrcKind.Troll: return config.InvasionGoldTroll;
+                case OrcKind.Giant: return 0;      // the boss pays through InvasionJungle
                 default: return config.InvasionGoldOrc;
             }
         }
+
+        /// <summary>
+        /// What a kill pays: an orc its kind's gold (the user's fixed numbers), a jungle monster its
+        /// kind's gold × its level -- the monsters grow with the run and so does what they are worth.
+        /// </summary>
+        public static int GoldForKill(OrcKind kind, int level) => OrcUnit.IsMonster(kind) ? GoldFor(kind) * Mathf.Max(1, level) : GoldFor(kind);
 
         public static int GoldForWave(int wave, int perWave) => Mathf.Max(0, perWave) * Mathf.Max(0, wave);
     }

@@ -36,6 +36,15 @@ namespace CityBuilder.EditorTools
         /// camp's buildings with their ruins and the palisade piece. A missing
         /// file only warns -- the manager falls back to the cube figure it replaced.
         /// </summary>
+        /// <summary>A model of the Invasion jungle (Models/Wild: the monsters and the shrine).</summary>
+        private static GameObject LoadWild(string file)
+        {
+            var path = $"Assets/_Project/Models/Wild/{file}.fbx";
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/wild.py and export_fbx.py. The jungle falls back to cubes there.");
+            return model;
+        }
+
         private static void WireOrcModels(OrcRaidManager raidManager)
         {
             const string folder = "Assets/_Project/Models/Orcs";
@@ -75,6 +84,12 @@ namespace CityBuilder.EditorTools
                      })
             {
                 so.FindProperty(field).objectReferenceValue = Load(file);
+            }
+
+            // the Invasion jungle's monsters (Tools/blender/wild.py)
+            foreach (var (field, file) in new[] { ("wolfModel", "WildWolf"), ("bearModel", "WildBear"), ("trollModel", "WildTroll"), ("giantModel", "WildGiant") })
+            {
+                so.FindProperty(field).objectReferenceValue = LoadWild(file);
             }
 
             // By level, index 0 = level 1 (see OrcRaidManager).
