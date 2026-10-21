@@ -901,9 +901,10 @@ namespace CityBuilder.EditorTools
 
             // Maps 1 and 2 (the flat first maps) were deleted on 2026-10-20 at the user's word; a
             // save made on one is listed as unloadable (see LoadGamePanelController).
-            // Map 3, the summer valley (Tools/blender/map3.py): faceted land and water on the map's
-            // own palette, relief as its own mesh, stony clearings, and thousands of props. Its
-            // water keeps its imported (palette) material -- the depth bands are in the mesh.
+            // Map 3, the summer valley (Tools/blender/map3.py), redrawn on 2026-10-21 to the designed
+            // maps' rules: an island, a lake under the northern hills, a river cutting it in two, the
+            // town's start meadow and the orcs' spots fixed. Its water keeps its imported (palette)
+            // material -- the depth bands are in the mesh.
             CreateMeshMapDefinition("Map3", "Map-3", null);
             // Map 4, the Two Rivers Valley (Tools/blender/map4.py): the first designed map -- an
             // island, rivers and mountains nobody walks through, and the orcs' spots fixed.

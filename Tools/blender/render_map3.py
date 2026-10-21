@@ -1,6 +1,6 @@
-"""Review pictures of Map 3. Opens the .blend, adds sun, sky and cameras, renders, never saves.
+"""Review pictures of Map 3, the Summer Valley. Opens the .blend, adds sun, sky and cameras, renders, never saves.
 
-    blender --background Map-3-Claude.blend --python render_map3.py -- <out_dir> [only=name,name]
+    blender --background Map-3-Summer.blend --python render_map3.py -- <out_dir> [only=name,name]
 """
 import math
 import os
@@ -61,13 +61,14 @@ def aim(target, pitch, yaw, dist):
 # name: (kind, target, pitch, yaw, distance, resolution)
 SHOTS = {
     "overview_top": ("ortho", (0, 0, 0), 90, 0, 300, (1800, 1800)),
-    "overview_south": ("persp", (0, 6, 0), 42, 0, 205, (1920, 1080)),
-    "town": ("game", (-4, -20, 0), 50, 0, 30, (1920, 1080)),
-    "river_island": ("game", (20, 0, 0), 50, 0, 32, (1920, 1080)),
-    "marsh_forest": ("game", (-66, 12, 0), 50, 0, 34, (1920, 1080)),
-    "east_hills": ("game", (66, 10, 0), 48, 0, 52, (1920, 1080)),
-    "mountain_source": ("game", (28, 66, 0), 45, 0, 48, (1920, 1080)),
-    "lake_shore": ("game", (-26, -54, 0), 50, 0, 32, (1920, 1080)),
+    "overview_south": ("persp", (0, 0, 0), 42, 0, 205, (1920, 1080)),
+    "town": ("game", (-40, -46, 0), 50, 0, 34, (1920, 1080)),
+    "lake": ("game", (-30, 30, 0), 50, 0, 40, (1920, 1080)),
+    "main_base": ("game", (44, 56, 0), 55, 0, 64, (1920, 1080)),
+    "river_ford": ("game", (6, 6, 0), 50, 0, 32, (1920, 1080)),
+    "bridge_reach": ("game", (18, -30, 0), 50, 0, 30, (1920, 1080)),
+    "east_bank": ("game", (52, -20, 0), 50, 0, 44, (1920, 1080)),
+    "west_woods": ("game", (-66, -20, 0), 50, 0, 36, (1920, 1080)),
 }
 
 os.makedirs(out_dir, exist_ok=True)

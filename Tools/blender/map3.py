@@ -1,25 +1,11 @@
-"""Map 3 -- a summer valley, Claude's own design (not a take on the user's Map 1).
+"""Map 3 -- the Summer Valley, redrawn to the designed maps' rules (the user, 2026-10-21).
 
     blender --background --factory-startup --python map3.py -- <out.blend> [preview]
 
-What makes it different from Maps 1 and 2:
-
-- The land is a faceted surface, not cubes: a 1 m grid of triangles whose corners are nudged off
-  the grid, each triangle coloured on its own from five greens, sands and earths. Shores and
-  slopes follow smooth contours instead of one-metre stairs, so the ground reads in the same
-  low-poly language as the buildings and trees.
-- Relief is decoration, as the game requires: everything a citizen walks or builds on is flat at
-  0, a beach dips at most 0.4 m towards the water, and the hills and mountains are a separate
-  mesh (Map-3-Relief) the game keeps out of the NavMesh.
-- Water is faceted too, and coloured by depth: turquoise in the shallows, blue, deep blue.
-- Several forests instead of one zone (TreesArea is many patches), stone gathered in outcrops
-  (Map-3-RocksArea), and thousands of small props (tufts, flowers, bushes, reeds, lilies,
-  mushrooms, ferns, logs, crags) in Map-3-Decor.
-
-The layout, with north (+y) away from the camera: a mountain range across the north with the
-river's source pond at its foot; the river winding south past an island into a large lake in the
-south-west; a marsh pond in the big western forest; rolling grassy hills in the east; dry
-meadows in the south-east; the open meadow the town starts on in the middle.
+The first Map 3 (2026-10-13) was an open green valley with no plan for play. This one keeps its
+character -- a lake, a winding river, rolling hills and a lot of forest -- on Map 4's machinery:
+an island with the sea all round, a start zone for the Town Hall, flat pads for the orc camps and
+a valley in the hills for their main base. See the layout section.
 
 `preview` also stands the real trees, boulders and a small town on it (a separate collection the
 game never reads) for the review pictures.
@@ -51,7 +37,7 @@ CLIP_Z = -0.47          # the ground stops here; below it a cell has no ground a
 BEACH = 2.6             # metres of beach slope above the waterline
 BEACH_DROP = 0.40       # how far the beach falls to meet the water
 RELIEF_MIN = 0.06       # relief lower than this is flattened into the plain
-START = (-4.0, -16.0)   # the meadow the town grows from: kept flat, open and dry
+START = (-40.0, -46.0)  # the meadow the town grows from: kept flat, open and dry
 
 # -- noise -------------------------------------------------------------------------------------
 
@@ -86,36 +72,118 @@ def smoothstep(e0, e1, x):
 
 
 # -- the layout --------------------------------------------------------------------------------
+#
+# North (+y) away from the camera. An island: the sea all round, low cliffs along most of the
+# coast and three wide beaches where ships can land (the Vikings of free mode). Green hills across
+# the north, a valley cut into them in the north-east for the orcs' main base. Under the hills
+# lies the big summer lake; the river leaves it and winds south-east to the sea, so the island is
+# two banks: the town's wide west bank with the start meadow in its south, and the east bank the
+# orcs hold. Every crossing is a ford (shallow, everyone walks it) or a narrow reach where the
+# player can put a bridge.
 
-RIVER = [(30, 76), (33, 62), (25, 46), (31, 30), (19, 12), (23, -6), (14, -24), (2, -38),
-         (-14, -52), (-30, -66)]
-ISLAND = (22.0, 2.0, 3.2)                     # where the river widens round an island
-SOURCE_POND = (31.0, 79.0, 7.0, 4.5)
-LAKE = (-56.0, -78.0, 36.0, 26.0)             # the big south-western lake, running off the map's south edge
-MARSH = (-70.0, 14.0, 9.0, 6.5)               # a reedy pond in the western forest
-HILLS = [(76, 34, 16, 7.0), (62, 8, 10, 4.0), (86, -8, 13, 8.5), (70, -40, 13, 5.5),
-         (52, 50, 9, 3.2), (-30, 44, 8, 2.6), (-84, -22, 10, 4.5), (40, -68, 8, 3.0)]
+ISLAND = (90.0, 90.0)                          # the coast's half extents
+HILLS_EDGE = 52.0                              # where the northern hills start to climb (lower in the east)
+LAKE = (-30.0, 36.0, 15.0, 8.5)                # the summer lake under the hills
+# the river's course, from the lake's east end to the sea; made to wind (see _meander)
+RIVER_COURSE = [(-16, 33), (-6, 24), (2, 12), (6, -2), (10, -16), (18, -30), (28, -44),
+                (40, -58), (52, -72), (62, -94)]
+PONDS = []                                     # (Map 4's river sources; the lake feeds this one)
+# crossings, as (river, how far down it): the fords and the narrow reach for a bridge
+FORDS_AT = [(0, 0.2), (0, 0.74)]
+FORD_R = 5.0                                   # how far a ford's gravel bar reaches from its centre
+BRIDGES_AT = [(0, 0.47)]
+BEACHES = [(-20.0, -90.0), (-90.0, 0.0), (90.0, -4.0)]     # where the Vikings land, clear of the camps
+VALLEY = (44.0, 52.0, 22.0, 22.0)              # the main base's valley in the hills: centre, half extents
+RUIN = (-74.0, 56.0)                           # a clearing kept for the dungeon's ruin (later)
+# Where the orcs stand (the game reads these instead of searching round the Town Hall): the main
+# base in its valley, its gate to the south, and four camps -- one by the lake on the town's bank,
+# one at the river's head, two across the river.
+MAIN_BASE = (44.0, 66.0)
+# (x, y, the level the camp may grow to): every one gets flat ground for that level's square
+CAMPS = [(-72.0, 20.0, 2), (4.0, 44.0, 2), (40.0, 8.0, 3), (64.0, -34.0, 3)]
+CAMP_HALF = {1: 6, 2: 7, 3: 11}                # a camp's square, half its side (OrcBaseLayout)
+PAD_MARGIN = 1.0                               # flat ground kept round the square
+# Where the Town Hall may go: the meadow in the south-west, well away from every camp; the game
+# also keeps it a set distance from them. Corners, in order.
+START_ZONE = [(-58, -56), (-50, -64), (-30, -64), (-22, -56), (-22, -34), (-30, -26), (-50, -26), (-58, -34)]
+
+
+def camp_pad(x, y):
+    """1 on a camp's square and its margin, fading to 0 a few metres out: no relief, no wood."""
+    best = 0.0
+    for cx, cy, level in CAMPS:
+        d = max(abs(x - cx), abs(y - cy)) - (CAMP_HALF[level] + PAD_MARGIN)
+        best = max(best, smoothstep(2.0, 0.0, d))
+    return best
+
+
+# rolling hills dotted over both banks: the summer valley's character
+HILLS = [(-44, -10, 7, 2.2), (-14, -36, 5, 1.6), (22, -12, 6, 2.0), (-62, -74, 6, 2.0),
+         (30, -66, 5, 1.8), (-52, 50, 5, 1.8), (66, 22, 6, 2.2), (-26, 10, 5, 1.6)]
 FORESTS = [  # (cx, cy, rx, ry): where TreesArea patches grow, shaped by noise
-    (-68, 20, 24, 26),      # the big western forest round the marsh
-    (-18, 58, 34, 8),       # the pine belt at the mountains' feet
-    (50, 24, 9, 16),        # a grove on the river's east bank
-    (60, -24, 10, 9),       # a copse among the eastern hills
-    (24, -52, 11, 8),       # south of the meadow, by the lake road
-    (-40, -20, 9, 8),       # a small wood west of the start
+    (-72, -34, 13, 22),     # the west woods, along the coast
+    (-30, -80, 22, 9),      # the south coast, behind the start meadow
+    (-60, 46, 16, 9),       # the lake's west shore, under the hills
+    (-14, 50, 9, 6),        # the foothills between the lake and the river's head camp
+    (54, 24, 12, 6),        # before the main base's valley
+    (34, -34, 11, 14),      # the east bank, by the bridge reach
+    (74, 0, 9, 16),         # the east coast
+    (44, -80, 13, 8),       # by the river's mouth
+    (-6, 0, 8, 13),         # the river's west bank, a gallery of trees along it
+    (-46, 20, 12, 7),       # south of the lake
+    (24, 52, 6, 10),        # the valley's west wall
+    (-4, -40, 9, 7),        # between the start meadow and the river
 ]
-# small groves dotted over the meadows: a few trees each, so wood is never far from anywhere
-GROVES = [(-22, 18, 4.5), (8, 30, 4.0), (-52, -48, 4.5), (46, -12, 4.0), (-6, -54, 3.5),
-          (68, -62, 4.5), (-36, 32, 3.5), (12, 52, 4.0), (84, 52, 4.5), (-88, 56, 4.0),
-          (56, 70, 3.5), (-20, -40, 3.5)]
+GROVES = [(-36, -18, 5.0), (-14, -54, 4.5), (-62, -50, 4.5), (-30, -2, 4.0), (-56, 2, 4.5),
+          (-12, 20, 4.0), (16, 22, 4.5), (24, 40, 4.0), (52, -12, 4.5), (20, -52, 4.0),
+          (-4, -20, 4.0), (-70, 34, 4.0), (78, -54, 4.0), (6, -76, 4.0)]
 FORESTS = FORESTS + [(x, y, r, r) for x, y, r in GROVES]
-# where the shore is sand rather than grass running down to the water: the marsh and the
-# source pond are grassy and reedy, the lake and the river's lower reach sandy
-OUTCROPS = [(36, 64, 9), (-50, 62, 10), (78, 16, 8), (88, -30, 7), (-86, -44, 7), (38, -30, 5)]
+OUTCROPS = [(-22, -18, 7), (-66, -60, 6), (-40, 2, 6), (22, 26, 6), (56, -6, 5), (-2, -64, 6),
+            (-80, 26, 5), (76, -20, 5)]
 FLOWER_SEED, DRY_SEED = 401, 433
 
-_RIVER_LEN = [0.0]
-for _i in range(1, len(RIVER)):
-    _RIVER_LEN.append(_RIVER_LEN[-1] + math.dist(RIVER[_i - 1], RIVER[_i]))
+
+def _lengths(pts):
+    out = [0.0]
+    for i in range(1, len(pts)):
+        out.append(out[-1] + math.dist(pts[i - 1], pts[i]))
+    return out
+
+
+def _point_at(pts, lens, s):
+    """The point and the unit direction at arc length s along a polyline."""
+    for i in range(len(pts) - 1):
+        if s <= lens[i + 1] or i == len(pts) - 2:
+            seg = lens[i + 1] - lens[i]
+            t = 0.0 if seg == 0 else max(0.0, min(1.0, (s - lens[i]) / seg))
+            (ax, ay), (bx, by) = pts[i], pts[i + 1]
+            return (ax + (bx - ax) * t, ay + (by - ay) * t), ((bx - ax) / seg, (by - ay) / seg)
+
+
+def _meander(pts, amp, wave, seed):
+    """The course resampled every 2 m and pushed side to side in two mixed waves, calm at the
+    source and at the mouth, so a river winds instead of running in straight cuts."""
+    lens = _lengths(pts)
+    total = lens[-1]
+    out = []
+    s = 0.0
+    while s < total + 1.0:
+        s = min(s, total)
+        (x, y), (dx, dy) = _point_at(pts, lens, s)
+        taper = smoothstep(0.0, 14.0, s) * smoothstep(total, total - 16.0, s)
+        off = amp * taper * (math.sin(2 * math.pi * s / wave + seed) +
+                             0.45 * math.sin(2 * math.pi * s / (wave * 0.41) + seed * 2.3))
+        out.append((x - dy * off, y + dx * off))
+        if s >= total:
+            break
+        s += 2.0
+    return out
+
+
+RIVERS = (_meander(RIVER_COURSE, 3.4, 30.0, 1.1),)
+_RIVER_LENS = [_lengths(r) for r in RIVERS]
+FORDS = [_point_at(RIVERS[r], _RIVER_LENS[r], f * _RIVER_LENS[r][-1])[0] for r, f in FORDS_AT]
+BRIDGES = [_point_at(RIVERS[r], _RIVER_LENS[r], f * _RIVER_LENS[r][-1])[0] for r, f in BRIDGES_AT]
 
 
 def _seg(px, py, ax, ay, bx, by):
@@ -125,11 +193,13 @@ def _seg(px, py, ax, ay, bx, by):
 
 
 def river(px, py):
+    """(distance to the nearer river's line, how far down that river: 0 at the pond, 1 at the sea)."""
     best = (1e9, 0.0)
-    for i in range(len(RIVER) - 1):
-        d, t = _seg(px, py, *RIVER[i], *RIVER[i + 1])
-        if d < best[0]:
-            best = (d, (_RIVER_LEN[i] + t * (_RIVER_LEN[i + 1] - _RIVER_LEN[i])) / _RIVER_LEN[-1])
+    for pts, lens in zip(RIVERS, _RIVER_LENS):
+        for i in range(len(pts) - 1):
+            d, t = _seg(px, py, *pts[i], *pts[i + 1])
+            if d < best[0]:
+                best = (d, (lens[i] + t * (lens[i + 1] - lens[i])) / lens[-1])
     return best
 
 
@@ -141,51 +211,95 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
     return (r - k) * min(rx, ry)
 
 
+def coast_sd(x, y):
+    """Signed distance from the sea, positive on the island: a rounded square, its line wobbling."""
+    ax, ay = ISLAND
+    p = 3.4
+    r = (abs(x / ax) ** p + abs(y / ay) ** p) ** (1 / p)
+    ang = math.atan2(y, x)
+    wob = 5.0 * (fbm(math.cos(ang) * 2.2 + 3, math.sin(ang) * 2.2 + 5, 61) - 0.5) + \
+        2.0 * (fbm(x / 9, y / 9, 63) - 0.5)
+    return (1.0 - r) * min(ax, ay) + wob
+
+
+def beach_gate(x, y):
+    """1 on a landing beach, 0 away from them."""
+    return max(smoothstep(24.0, 14.0, math.hypot(x - bx, y - by)) for bx, by in BEACHES)
+
+
+def river_width(x, y, t):
+    w = 2.4 + 1.6 * t + 0.7 * (fbm(x / 9, y / 9, 11) - 0.5)
+    for bx, by in BRIDGES:                     # a narrow reach a bridge can span
+        w = min(w, 1.9 + 3.0 * smoothstep(3.0, 9.0, math.hypot(x - bx, y - by)))
+    return w
+
+
+def ford_at(x, y):
+    """1 on a ford's gravel bar, fading to 0 at its edge."""
+    return max(smoothstep(FORD_R, FORD_R - 1.2, math.hypot(x - fx, y - fy)) for fx, fy in FORDS)
+
+
 def land_sd(x, y):
-    """Signed distance from the nearest water, positive on land."""
+    """Signed distance from the nearest water, positive on land. A ford lifts the river's bed to a
+    hand under the bank: ground, so everyone walks it, low and wet, so it reads as a crossing."""
+    sd = coast_sd(x, y)
     d, t = river(x, y)
-    width = 1.7 + 3.4 * t + 0.9 * (fbm(x / 9, y / 9, 11) - 0.5)
-    ix, iy, ir = ISLAND
-    di = math.hypot(x - ix, y - iy)
-    if di < ir + 6:                       # the river opens up round the island
-        width += 3.5 * smoothstep(ir + 6, ir, di)
-    sd = d - width
-    sd = min(sd, _ellipse_sd(x, y, *SOURCE_POND, 0.35, 5))
+    rsd = d - river_width(x, y, t)
+    f = ford_at(x, y)
+    if f > 0:
+        rsd = rsd + (0.4 - rsd) * f if rsd < 0.4 else rsd
+    sd = min(sd, rsd)
+    for pond in PONDS:
+        sd = min(sd, _ellipse_sd(x, y, *pond, 0.35, 5))
     sd = min(sd, _ellipse_sd(x, y, *LAKE, 0.45, 7))
-    sd = min(sd, _ellipse_sd(x, y, *MARSH, 0.5, 9))
-    if di < ir:                           # the island itself
-        sd = max(sd, (ir - di) + 0.5 * (fbm(x / 3, y / 3, 13) - 0.5))
     return sd
 
 
+def mountains(x, y):
+    """The northern hills: a green climb out of the valley into rounded ridges -- lower than Map 4's
+    range but still too steep to walk; the valley cut into them for the main base."""
+    edge = HILLS_EDGE - 18 * smoothstep(8, 24, x) + 5 * (fbm(x / 20, 3, 73) - 0.5) + 3 * (fbm(x / 7, 7, 75) - 0.5)
+    rise = y - edge
+    if rise <= 0:
+        return 0.0
+    peak = 7.0 + 8.0 * fbm(x / 22, y / 22, 77)
+    ridge = 1.0 - abs(2.0 * fbm(x / 12, y / 12, 79) - 1.0)
+    crag = 1.0 - abs(2.0 * fbm(x / 4.5, y / 4.5, 80) - 1.0)
+    climb = peak * (1.0 - math.exp(-rise * 0.2))
+    m = climb * (0.5 + 0.5 * ridge) + 1.0 * crag * smoothstep(0.0, 6.0, rise)
+    # the main base's valley: flat inside, the hills rising round it
+    cx, cy, hx, hy = VALLEY
+    cd = max(abs(x - cx) - hx, abs(y - cy) - hy) + 2.5 * (fbm(x / 8, y / 8, 83) - 0.5)
+    m *= smoothstep(0.0, 7.0, cd)
+    # the lake's north shore stays a meadow
+    m *= smoothstep(-2.0, 8.0, _ellipse_sd(x, y, *LAKE, 0.45, 7))
+    return max(0.0, m)
+
+
+def cliffs(x, y):
+    """A low rocky rim along the coast, broken only at the landing beaches and the rivers' mouths."""
+    c = coast_sd(x, y)
+    if c < BEACH or c > BEACH + 9:
+        return 0.0
+    rim = smoothstep(BEACH, BEACH + 2.5, c) * smoothstep(BEACH + 9.0, BEACH + 5.0, c)
+    h = (2.4 + 1.8 * fbm(x / 7, y / 7, 87)) * rim
+    h *= 1.0 - beach_gate(x, y)
+    h *= smoothstep(7.0, 15.0, river(x, y)[0])
+    return h
+
+
 def relief_at(x, y):
-    """Decorative height above the plain: mountains in the north, hills in the east."""
-    # the northern range, higher in the west, cut by the river's valley
-    edge = 70 + 16 * (fbm(x / 22, 3, 73) - 0.5) + 7 * (fbm(x / 8, 7, 75) - 0.5)
-    m = 0.0
-    if y > edge - 6:
-        rise = (y - edge)
-        peak = 6.0 + 9.0 * fbm(x / 30, 11, 77) + (4.0 if x < 0 else 0.0)
-        ridge = 1.0 - abs(2.0 * fbm(x / 13, y / 13, 79) - 1.0)
-        # concave: foothills first, then the climb steepens into the range
-        rise = max(0.0, rise)
-        foot = 5.0 + 10.0 * fbm(x / 17, 5, 85)        # how long the foothills run before the climb
-        rise = rise * smoothstep(0.0, foot, rise) * 1.25
-        m = rise * (0.35 + 0.35 * ridge)
-        m = min(m, peak * (0.7 + 0.5 * ridge))
-        m += max(0.0, rise) * 0.05 * (fbm(x / 4, y / 4, 81) - 0.3)
-        # the river's notch through the range, and its pond's hollow
-        d, t = river(x, y)
-        if t < 0.02 or math.hypot(x - SOURCE_POND[0], y - SOURCE_POND[1]) < 14:
-            m *= smoothstep(4.0, 16.0, min(d, math.hypot(x - SOURCE_POND[0], y - SOURCE_POND[1])))
-    h = m
+    """Height above the plain: the mountains, the coastal rim, a few low hills -- none on a camp's ground."""
+    pad = camp_pad(x, y)
+    if pad >= 1.0:
+        return 0.0
+    h = max(mountains(x, y), cliffs(x, y) * (1.0 - pad))
     for hx, hy, r, height in HILLS:
         ang = math.atan2(y - hy, x - hx)
         wob = 0.75 + 0.5 * fbm(math.cos(ang) * 1.5 + hx * 0.1, math.sin(ang) * 1.5 + hy * 0.1, 89)
         dd = math.hypot(x - hx, y - hy) / (r * wob)
         if dd < 1.0:
-            bump = 0.5 + 0.5 * math.cos(math.pi * dd)
-            bump = bump ** 0.9
+            bump = (0.5 + 0.5 * math.cos(math.pi * dd)) ** 0.9
             h = max(h, height * bump * (0.85 + 0.3 * fbm(x / 5, y / 5, 91)))
     return max(0.0, h - RELIEF_MIN)
 
@@ -203,13 +317,14 @@ def height_at(x, y):
 
 
 def forest_field(x, y):
-    """Negative inside a forest, positive outside, roughly in metres -- a continuous field, so the
-    forest's edge can be cut along a smooth contour rather than along triangle edges."""
+    """Negative inside a forest, positive outside, roughly in metres."""
     best = 1e9
     for cx, cy, rx, ry in FORESTS:
         e = math.sqrt(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2)
         k = 0.82 + 0.4 * (fbm(x / 11, y / 11, 97) - 0.5)
         best = min(best, (e - k) * min(rx, ry))
+    if math.hypot(x - RUIN[0], y - RUIN[1]) < 8 or camp_pad(x, y) > 0:
+        best = max(best, 1.0)
     return best
 
 
@@ -236,18 +351,18 @@ FIELD_NAMES = ("wet", "sand", "forest", "forest_core", "stony", "lush", "dry", "
 
 
 def sand_width(x, y):
-    """How far up the bank the sand reaches: wide on the lake and the lower river, a strip or
-    nothing where grass runs down to the water (the marsh, the source pond, the upper river)."""
-    if _ellipse_sd(x, y, *MARSH, 0.5, 9) < 6 or _ellipse_sd(x, y, *SOURCE_POND, 0.35, 5) < 6:
-        return 0.0
-    d, t = river(x, y)
-    lake = _ellipse_sd(x, y, *LAKE, 0.45, 7) < 8
-    base = 0.6 + 2.6 * smoothstep(0.4, 0.7, fbm(x / 16, y / 16, 117))
-    if lake:
-        base += 1.2
-    elif t < 0.45:
-        base *= 0.45
-    return base
+    """How far up the bank the sand reaches: a wide strand on a landing beach, a strip under the
+    cliffs, a little on the rivers and the lake, none round the ponds. A ford is gravel."""
+    for pond in PONDS:
+        if _ellipse_sd(x, y, *pond, 0.35, 5) < 6:
+            return 0.0
+    if ford_at(x, y) > 0:
+        return 2.2
+    if coast_sd(x, y) < 12:
+        return 0.6 + 7.0 * beach_gate(x, y)
+    if _ellipse_sd(x, y, *LAKE, 0.45, 7) < 8:
+        return 2.0
+    return 0.4 + 1.4 * smoothstep(0.4, 0.7, fbm(x / 16, y / 16, 117))
 
 
 def outcrop_field(x, y):
@@ -487,12 +602,17 @@ def scatter_decor(flat, forest_cells, rnd):
                 z, sd = height_at(x, y)
                 r = rnd.random()
                 if sd < -0.9:                         # open water: lilies on the still ones
-                    still = (_ellipse_sd(x, y, *MARSH, 0.5, 9) < 0 or _ellipse_sd(x, y, *LAKE, 0.45, 7) < -3)
+                    still = (_ellipse_sd(x, y, *LAKE, 0.45, 7) < 0 or
+                             any(_ellipse_sd(x, y, *p, 0.35, 5) < 0 for p in PONDS))
                     if still and fbm(x / 7, y / 7, 131) > 0.6 and r < 0.18 and sd > -9:
                         add("lily", x, y, rnd.uniform(0.8, 1.2))
                     continue
+                if ford_at(x, y) > 0.5 and sd < BEACH:  # a ford's gravel bar
+                    if r < 0.12:
+                        add("pebbles", x, y, rnd.uniform(0.9, 1.5))
+                    continue
                 if -0.9 <= sd < 0.6:                  # the waterline: reeds where the water is calm
-                    calm = river(x, y)[1] > 0.55 or _ellipse_sd(x, y, *MARSH, 0.5, 9) < 1.5 or \
+                    calm = (river(x, y)[1] > 0.5 and coast_sd(x, y) > 10 and ford_at(x, y) == 0) or \
                         _ellipse_sd(x, y, *LAKE, 0.45, 7) < 1.5
                     if calm and fbm(x / 9, y / 9, 137) > 0.45 and r < 0.35 and \
                             math.hypot(x - START[0], y - START[1]) > 20:
@@ -667,10 +787,15 @@ def main():
     rocks_cells = {(i, j) for i in range(N) for j in range(N)
                    if flat[i][j] and (i, j) not in forest_cells and cell_sd[i, j] > BEACH + 1
                    and outcrop(i - HALF + 0.5, j - HALF + 0.5)}
-    shore_cells = {(i, j) for i in range(N) for j in range(N) if -3.0 < cell_sd[i, j] < 0}
+    # the water a bridge or a dock may stand on -- to the very edge of the bank, where a cell
+    # whose centre is just dry can still read as water in the game
+    shore_cells = {(i, j) for i in range(N) for j in range(N) if -3.0 < cell_sd[i, j] < 0.6}
     # where nothing may be built: any cell the relief touches (a corner above the plain)
     no_build = {(i, j) for i in range(N) for j in range(N)
                 if cell_sd[i, j] > 0 and any(verts[c][2] > 0.02 for c in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)))}
+    # a ford is ground everyone walks: a building on it would shut the crossing
+    no_build |= {(i, j) for i in range(N) for j in range(N)
+                 if ford_at(i - HALF + 0.5, j - HALF + 0.5) > 0 and cell_sd[i, j] < BEACH + 1}
     zones = []
     for name, cells, z, col in (("TreesArea", forest_cells, -0.02, "leaf"),
                                 ("RocksArea", rocks_cells, -0.03, "rock_dark"),
@@ -684,8 +809,10 @@ def main():
 
     land = sum(1 for i in range(N) for j in range(N) if flat[i][j] and cell_sd[i, j] > 0)
     water_cells = sum(1 for v in cell_sd.values() if v < 0)
-    print(f"MAP3 ground tris={g_tris} (from {raw_ground}), relief tris={r_tris}, water tris={w_tris}")
-    print(f"MAP3 buildable flat cells={land} ({100 * land / N / N:.0f}%), water cells={water_cells} "
+    print("MAP4 fords", [(round(x, 1), round(y, 1)) for x, y in FORDS],
+          "bridges", [(round(x, 1), round(y, 1)) for x, y in BRIDGES])
+    print(f"MAP4 ground tris={g_tris} (from {raw_ground}), relief tris={r_tris}, water tris={w_tris}")
+    print(f"MAP4 buildable flat cells={land} ({100 * land / N / N:.0f}%), water cells={water_cells} "
           f"({100 * water_cells / N / N:.0f}%), forest cells={len(forest_cells)}, rock cells={len(rocks_cells)}, "
           f"shore cells={len(shore_cells)}, no-build cells={len(no_build)}")
 
@@ -694,7 +821,7 @@ def main():
     counts = {}
     for it in items:
         counts[it[0]] = counts.get(it[0], 0) + 1
-    print("MAP3 decor", len(items), counts)
+    print("MAP4 decor", len(items), counts)
     kcoll = bpy.data.collections.new("DecorKit")
     bpy.context.scene.collection.children.link(kcoll)
     protos = terrain.build_prototypes(mat, kcoll)
@@ -710,7 +837,15 @@ def main():
             v = decor_variant(kind, x, y, len(protos[kind]))
             total += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
             f.write(f"{kind},{v},{x:.3f},{y:.3f},{decor_z(kind, x, y):.3f},{rot:.3f},{sc:.3f}\n")
-    print(f"MAP3 decor triangles {total}")
+    print(f"MAP4 decor triangles {total}")
+    with open(os.path.splitext(OUT)[0] + "-spots.csv", "w", encoding="utf-8") as f:
+        f.write("kind,x,y\n")
+        f.write(f"main,{MAIN_BASE[0]:.1f},{MAIN_BASE[1]:.1f}\n")
+        for x, y, level in CAMPS:
+            f.write(f"camp,{x:.1f},{y:.1f},{level}\n")
+        for x, y in START_ZONE:
+            f.write(f"zone,{x:.1f},{y:.1f}\n")
+        f.write(f"ruin,{RUIN[0]:.1f},{RUIN[1]:.1f}\n")
 
     if PREVIEW:
         dcoll = bpy.data.collections.new("Decor")

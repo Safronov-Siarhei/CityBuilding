@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -12,21 +13,23 @@ using UnityEngine.TestTools;
 namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
-    /// Map 3, the summer valley (Tools/blender/map3.py): faceted land, relief as its own mesh,
-    /// several forests, stony clearings and thousands of props. The world positions below are the
-    /// generator's own landmarks -- Blender (x, y) is Unity (x, z).
+    /// Map 3, the summer valley (Tools/blender/map3.py), redrawn on 2026-10-21 to the designed
+    /// maps' rules: an island, a lake under the northern hills, a river from it to the sea, forests,
+    /// stony clearings and thousands of props, the start zone and the orcs' spots fixed. The world
+    /// positions below are the generator's own landmarks -- Blender (x, y) is Unity (x, z).
     /// </summary>
     public class Map3Tests
     {
         private const string GameSceneName = "CityBuilder";
         private const string MapId = "Map3";
 
-        private static readonly Vector3 StartMeadow = new Vector3(-4f, 0f, -16f);
-        private static readonly Vector3 RiverBed = new Vector3(31f, 0f, 30f);
-        private static readonly Vector3 LakeMiddle = new Vector3(-52f, 0f, -76f);
-        private static readonly Vector3 MarshPond = new Vector3(-70f, 0f, 14f);
-        private static readonly Vector3 NorthMountains = new Vector3(-40f, 0f, 93f);
-        private static readonly Vector3 EastHillTop = new Vector3(86f, 0f, -8f);
+        private static readonly Vector3 StartMeadow = new Vector3(-40f, 0f, -46f);
+        private static readonly Vector3 RiverBed = new Vector3(24f, 0f, -38f);
+        private static readonly Vector3 LakeMiddle = new Vector3(-30f, 0f, 36f);
+        private static readonly Vector3 OpenSea = new Vector3(0f, 0f, -97f);
+        private static readonly Vector3 NorthHills = new Vector3(-40f, 0f, 80f);
+        private static readonly Vector3 EastHillTop = new Vector3(66f, 0f, 22f);
+        private static readonly Vector3 MainValley = new Vector3(44f, 0f, 56f);
 
         private static bool _sceneLoaded;
 
@@ -72,14 +75,14 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(map.IsGroundAt(StartMeadow), "The start meadow is not walkable ground at the game's height.");
             Assert.IsTrue(map.IsWaterCell(grid.WorldToCell(RiverBed)), "The river reads as land -- the map is turned or mirrored.");
             Assert.IsTrue(map.IsWaterCell(grid.WorldToCell(LakeMiddle)), "The lake reads as land -- the map is turned or mirrored.");
-            Assert.IsTrue(map.IsWaterCell(grid.WorldToCell(MarshPond)), "The forest pond reads as land.");
+            Assert.IsTrue(map.IsWaterCell(grid.WorldToCell(OpenSea)), "The sea round the island reads as land.");
 
             var water = 0;
             for (var x = 0; x < grid.GridSize.x; x++)
                 for (var z = 0; z < grid.GridSize.y; z++)
                     if (map.IsWaterCell(new Vector2Int(x, z))) water++;
             var share = water / (float)(grid.GridSize.x * grid.GridSize.y);
-            Assert.That(share, Is.InRange(0.07f, 0.16f), $"{share:P0} of the map is water; the generator makes about 11%.");
+            Assert.That(share, Is.InRange(0.24f, 0.36f), $"{share:P0} of the map is water; the generator makes about 30%.");
         }
 
         [Test]
@@ -88,7 +91,7 @@ namespace CityBuilder.Tests.PlayMode
             var grid = GridManager.Instance;
             var map = MeshMapApplier.Instance;
 
-            foreach (var (name, point) in new[] { ("mountains", NorthMountains), ("hill top", EastHillTop) })
+            foreach (var (name, point) in new[] { ("northern hills", NorthHills), ("hill top", EastHillTop) })
             {
                 var cell = grid.WorldToCell(point);
                 Assert.IsFalse(map.IsWaterCell(cell), $"The {name} read as water -- the relief mesh is not part of the land test.");
@@ -158,15 +161,35 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
         }
 
+        [Test]
+        public void TheOrcs_AndTheTownHall_HaveTheirPlaces()
+        {
+            var map = MeshMapApplier.Instance.CurrentMap;
+            Assert.IsTrue(map.HasMainBaseSpot, "Map 3 has no spot for the orcs' main base.");
+            Assert.AreEqual(4, map.CampSpots.Length, "Map 3 plans four camps.");
+            Assert.GreaterOrEqual(map.TownHallZone.Length, 3, "Map 3 has no start zone.");
+
+            var grid = GridManager.Instance;
+            var size = PlaytestWorld.Building("Castle").footprintSize;
+            Vector2Int CellAt(Vector3 p) => grid.WorldToCell(p) - size / 2;
+            Assert.IsTrue(StartZone.Allows(CellAt(StartMeadow), size), "The Town Hall may not go on the start meadow.");
+            Assert.IsFalse(StartZone.Allows(CellAt(MainValley), size), "The Town Hall may go in the orcs' valley.");
+
+            var minDistance = CityBuilder.Core.BalanceConfig.Instance.TownHallMinDistanceToOrcs;
+            foreach (var corner in map.TownHallZone)
+                foreach (var orcs in map.CampSpots.Append(map.MainBaseSpot))
+                    Assert.GreaterOrEqual(Vector2.Distance(corner, orcs), minDistance - 2f,
+                        $"The start zone's corner {corner} reaches within {minDistance} m of the orcs at {orcs}.");
+        }
+
         [UnityTest]
         public IEnumerator Photograph_Map3()
         {
             yield return PlaytestCapture.Shoot("map3-overview", new Vector3(0f, 0f, 6f), 190f, 52f, 0f);
             yield return PlaytestCapture.Shoot("map3-meadow", StartMeadow, 30f, 50f, 0f, 60f);
-            yield return PlaytestCapture.Shoot("map3-river", new Vector3(20f, 0f, 2f), 30f, 50f, 0f, 60f);
-            yield return PlaytestCapture.Shoot("map3-marsh", MarshPond, 30f, 50f, 0f, 60f);
-            yield return PlaytestCapture.Shoot("map3-hills", new Vector3(68f, 0f, 8f), 45f, 48f, 0f, 60f);
-            yield return PlaytestCapture.Shoot("map3-mountains", new Vector3(28f, 0f, 66f), 45f, 45f, 0f, 60f);
+            yield return PlaytestCapture.Shoot("map3-river", RiverBed, 30f, 50f, 0f, 60f);
+            yield return PlaytestCapture.Shoot("map3-lake", LakeMiddle, 40f, 50f, 0f, 60f);
+            yield return PlaytestCapture.Shoot("map3-main-valley", MainValley, 55f, 52f, 0f, 60f);
         }
     }
 }

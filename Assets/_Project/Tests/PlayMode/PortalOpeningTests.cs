@@ -51,9 +51,12 @@ namespace CityBuilder.Tests.PlayMode
         {
             yield return PlaceTownHallAndWait();
 
-            // the camps' portals; the main base's great portal comes on top of the sheet's count
-            Assert.AreEqual(BalanceConfig.Instance.PortalCount, OrcPortal.All.Count(p => !p.IsMain),
-                "The map opened a different number of portals than the sheet asks for -- a slot with no standable ground is skipped, and this map is supposed to have room for all of them.");
+            // the camps' portals; the main base's great portal comes on top. A designed map plans its
+            // own camps (the user's rule, 2026-10-20); a map without spots opens the sheet's count.
+            var spots = MeshMapApplier.Instance.CurrentMap.CampSpots.Length;
+            var expected = spots > 0 ? spots : BalanceConfig.Instance.PortalCount;
+            Assert.AreEqual(expected, OrcPortal.All.Count(p => !p.IsMain),
+                "The map opened a different number of portals than it plans -- a slot with no standable ground is skipped, and this map is supposed to have room for all of them.");
         }
 
         /// <summary>
