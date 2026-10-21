@@ -864,6 +864,9 @@ namespace CityBuilder.EditorTools
             var armyManager = managers.AddComponent<ArmyManager>();
             var armyManagerSO = new SerializedObject(armyManager);
             armyManagerSO.FindProperty("gameCalendar").objectReferenceValue = gameCalendar;
+            var kingModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroKing.fbx");
+            if (kingModel == null) Debug.LogWarning("[SetupProject] Models/Heroes/HeroKing.fbx is missing -- run Tools/blender/export_fbx.py. The King falls back to cubes.");
+            armyManagerSO.FindProperty("kingModel").objectReferenceValue = kingModel;
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Invasion mode: idle in a sandbox game; in a run started from the menu's «В бой»

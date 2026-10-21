@@ -4,7 +4,7 @@
 
 One FBX per object, holding one mesh, named after the object -- the contract SetupProject reads
 by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) and
-boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs. Each is written with its origin at the centre of its
+boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes. Each is written with its origin at the centre of its
 footprint on the ground (the object's placement in the scene is dropped), so the game can trust
 the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
 every model's one material is named `Buildings` and the game swaps in its own palette material
@@ -30,6 +30,7 @@ only = set(argv[1:])
 BUILDINGS = os.path.join(project, "Assets", "_Project", "Models", "Buildings")
 TERRAIN = os.path.join(project, "Assets", "_Project", "Models", "Terrain")
 ORCS = os.path.join(project, "Assets", "_Project", "Models", "Orcs")
+HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
 PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 
 
@@ -46,6 +47,9 @@ def target(o):
     # "Orchard" starts with "Orc" too -- it is a building, not part of the orc faction
     if o.name.startswith("Orc") and not o.name.startswith("Orchard"):
         return os.path.join(ORCS, o.name + ".fbx")
+    if o.name.startswith("Hero"):
+        os.makedirs(HEROES, exist_ok=True)
+        return os.path.join(HEROES, o.name + ".fbx")
     folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS
     return os.path.join(folder, o.name + ".fbx")
 

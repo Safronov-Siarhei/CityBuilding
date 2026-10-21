@@ -57,6 +57,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(new Vector2(castleAt.x, castleAt.z).magnitude, 3f, "The castle is not in the middle of the island.");
             Assert.AreEqual(3, Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).Count(b => b.Data != null && b.Data.buildingName == "Tower"), "Not one tower per bridge.");
             Assert.IsNotNull(mode.King, "No King.");
+            Assert.IsNotNull(mode.King.transform.Find("King"), "The King is drawn in cubes -- his model (Models/Heroes/HeroKing) is not wired.");
             Assert.IsFalse(OrcRaidManager.Instance.enabled, "The sandbox's raids are still running in a run.");
 
             // every bridge carries the way off the island: from the tower to the lane beyond

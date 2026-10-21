@@ -26,6 +26,9 @@ namespace CityBuilder.Combat
 
         [SerializeField] private GameCalendar gameCalendar;
 
+        /// <summary>The King's figure (Tools/blender/heroking.py, Models/Heroes); without it he is drawn in cubes like the soldiers.</summary>
+        [SerializeField] private GameObject kingModel;
+
         // Cube-primitive silhouettes, in the same style as every other prop in the game. Each tier
         // has to be tellable from the others at the camera's height and at a glance, so what
         // separates them is COLOUR and SHAPE rather than detail: a militiaman is brown with a
@@ -384,6 +387,17 @@ namespace CityBuilder.Combat
         {
             switch (type)
             {
+                case SoldierType.King when kingModel != null:
+                {
+                    // Authored at its real size (0.79 m to the crown's tip), so the root's unit
+                    // scale is divided back out, as the orc figures do.
+                    var figure = Instantiate(kingModel, root, false);
+                    figure.name = "King";
+                    figure.transform.localScale = Vector3.one / UnitSize.Scale;
+                    SceneryShadows.DisableCasting(figure);
+                    break;
+                }
+
                 case SoldierType.King:
                     // A head taller and broader than any soldier, in royal purple with a red cape,
                     // a gold crown and a long sword: the one figure on the map the player looks for.
