@@ -609,6 +609,13 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("invasion-base", Vector3.zero, 44f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-king", InvasionMode.Instance.King.transform.position, 9f, 40f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-causeway", Causeways[1], 22f, 50f, 0f, 60f);
+            // the jungle and the camps lie in the fog until scouted: lift it where the shots look
+            var jungle = InvasionMode.Instance.Jungle;
+            Reveal(jungle.Camps.First(c => c.Tier == 1).Post, 8);
+            Reveal(jungle.Shrines[0], 8);
+            Reveal(jungle.BossLair.Post, 10);
+            foreach (var c in InvasionMode.Instance.OrcCamps) Reveal(c.Centre, 22);
+            yield return new WaitForSeconds(FogOfWarManager.RevealSeconds + 0.5f);
             yield return PlaytestCapture.Shoot("invasion-wolves", InvasionMode.Instance.Jungle.Camps.First(c => c.Tier == 1).Post, 6f, 40f, 0f, 45f);
             yield return PlaytestCapture.Shoot("invasion-shrine", InvasionMode.Instance.Jungle.Shrines[0], 5f, 40f, 0f, 45f);
             yield return PlaytestCapture.Shoot("invasion-boss", InvasionMode.Instance.Jungle.BossLair.Post, 8f, 40f, 0f, 45f);
@@ -629,6 +636,9 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
+
+        private static void Reveal(Vector3 at, int radiusCells) =>
+            FogOfWarManager.Instance?.RevealPermanent(GridManager.Instance.WorldToCell(at), radiusCells);
 
         private static NavMeshPath _path;
 
