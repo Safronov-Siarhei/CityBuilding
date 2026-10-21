@@ -224,6 +224,68 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0, mode.People.Owed, "The houses make people the island has no room for.");
         }
 
+        /// <summary>With no order from the player the King defends the base: he goes for an orc that comes near the castle and walks home when it is gone.</summary>
+        [UnityTest]
+        public IEnumerator TheKing_WithNoOrder_DefendsTheBase()
+        {
+            var king = InvasionMode.Instance.King;
+            Assert.IsTrue(king.Guarding, "The King does not start out guarding the base.");
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var spot = castle + new Vector3(9f, 0f, 9f);
+            Assert.IsTrue(NavMesh.SamplePosition(spot, out var hit, 4f, NavMesh.AllAreas), "Nowhere on the island to stand an orc.");
+            var orc = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
+
+            for (var t = 0f; t < 3f && king.Unit.Group.AttackTarget == null; t += Time.deltaTime) yield return null;
+            Assert.AreEqual((IDamageTarget)orc, king.Unit.Group.AttackTarget, "An orc came to the castle and the King did not go for it.");
+
+            for (var t = 0f; t < 30f && orc != null && orc.CurrentHealth > 0; t += Time.deltaTime) yield return null;
+            for (var t = 0f; t < 15f && Vector3.Distance(Flat(king.transform.position), Flat(king.Home)) > 1.2f; t += Time.deltaTime) yield return null;
+            Assert.Less(Vector3.Distance(Flat(king.transform.position), Flat(king.Home)), 1.2f, "With the base clear, the King did not walk home.");
+        }
+
+        [Test]
+        public void APlayersOrder_EndsTheGuard_AndTheCastleButtonResumesIt()
+        {
+            var king = InvasionMode.Instance.King;
+            king.Unit.Group.OrderMoveTo(king.Home + new Vector3(5f, 0f, 0f));
+            king.Unit.Group.NotifyPlayerOrder();
+            Assert.IsFalse(king.Guarding, "The King kept guarding after the player told him to go somewhere.");
+            Object.FindAnyObjectByType<CityBuilder.UI.KingPortraitController>().GuardBase();
+            Assert.IsTrue(king.Guarding, "The castle button did not send him back to guard the base.");
+        }
+
+        [UnityTest]
+        public IEnumerator ThePortrait_Shows_AndSelectsTheKing()
+        {
+            var portrait = Object.FindAnyObjectByType<CityBuilder.UI.KingPortraitController>();
+            Assert.IsNotNull(portrait, "No King's portrait in the game.");
+            yield return null;
+            Assert.IsNotNull(GameObject.Find("KingPortrait"), "The King's portrait is not shown in a run.");
+            var face = GameObject.Find("KingPortrait").transform.Find("Portrait/Mask/Face").GetComponent<UnityEngine.UI.Image>();
+            Assert.IsNotNull(face.sprite, "The portrait has no face.");
+
+            var king = InvasionMode.Instance.King;
+            portrait.SelectKing();
+            Assert.AreEqual(king.Unit.Group, ArmyManager.Instance.SelectedGroup, "Tapping the portrait did not select the King.");
+            ArmyManager.Instance.SelectGroup(null);
+
+            // a tap on the King where he stands picks him up too
+            var camera = Camera.main;
+            yield return null;
+            var onScreen = camera.WorldToScreenPoint(king.transform.position + Vector3.up * 0.4f);
+            Assert.IsTrue(CityBuilder.UI.KingPortraitController.TrySelectAt(onScreen, camera), "A tap on the King did not select him.");
+            Assert.AreEqual(king.Unit.Group, ArmyManager.Instance.SelectedGroup);
+            if (PlaytestCapture.Available)
+            {
+                yield return new WaitForSeconds(0.3f);
+                yield return PlaytestCapture.ShootWithUiAt("invasion-portrait", 1600, 900, king.transform.position, 18f, 52f, 0f);
+                king.Unit.TakeDamage(king.Unit.MaxHealth);
+                yield return new WaitForSeconds(0.3f);
+                yield return PlaytestCapture.ShootWithUiAt("invasion-portrait-fallen", 1600, 900, king.Home, 18f, 52f, 0f);
+            }
+            ArmyManager.Instance.SelectGroup(null);
+        }
+
         /// <summary>The King's figure stands, runs when he walks and swings when he strikes -- and the photographs show it.</summary>
         [UnityTest]
         public IEnumerator TheKing_RunsAndStrikes()

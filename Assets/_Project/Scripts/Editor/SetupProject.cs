@@ -1247,6 +1247,7 @@ namespace CityBuilder.EditorTools
             BuildTaxControl(uiRoot);
             BuildDayLabel(uiRoot, gameCalendar);
             BuildHappiness(uiRoot);
+            BuildKingPortrait(uiRoot);
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildArmyPanel(uiRoot, panelSprite);

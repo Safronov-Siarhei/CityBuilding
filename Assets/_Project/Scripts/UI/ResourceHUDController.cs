@@ -97,9 +97,12 @@ namespace CityBuilder.UI
             // Which chips belong on screen, and how many -- the slot width depends on the count,
             // so this has to be known before anything is positioned.
             var visible = 0;
+            var run = Invasion.InvasionMode.IsActive;
             for (var i = 0; i < count; i++)
             {
                 if (resources.GetAmount(resourceOrder[i]) > 0) _seen[i] = true;
+                // a run has wood, stone and gold (and people) and nothing else to show
+                if (run && !Invasion.InvasionRules.IsRunResource(resourceOrder[i])) _seen[i] = false;
                 if (_seen[i]) visible++;
             }
 

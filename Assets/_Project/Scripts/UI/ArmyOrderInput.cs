@@ -81,6 +81,7 @@ namespace CityBuilder.UI
             if (enemy != null)
             {
                 army.SelectedGroup.OrderAttack(enemy);
+                army.SelectedGroup.NotifyPlayerOrder();
                 ShowMarker(enemy.Transform.position, AttackMarkerColor);
                 return true;
             }
@@ -100,6 +101,7 @@ namespace CityBuilder.UI
             }
 
             army.SelectedGroup.OrderMoveTo(destination);
+            army.SelectedGroup.NotifyPlayerOrder();
             ShowMarker(destination, MoveMarkerColor);
             return true;
         }

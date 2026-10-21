@@ -15,6 +15,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text happinessLabel;
         [SerializeField] private Text breakdownLabel;
         [SerializeField] private GameObject breakdownPanel;
+        /// <summary>The round button itself, hidden in an Invasion run: a run has no contentment, and the King's portrait takes the corner.</summary>
+        [SerializeField] private GameObject widget;
 
         public bool BreakdownShown => breakdownPanel != null && breakdownPanel.activeSelf;
 
@@ -28,6 +30,11 @@ namespace CityBuilder.UI
 
         private void Start()
         {
+            if (Invasion.InvasionMode.IsActive && widget != null)
+            {
+                widget.SetActive(false);
+                return;
+            }
             if (HappinessManager.Instance != null) HappinessManager.Instance.OnHappinessChanged += Refresh;
             // The HUD's look decides the ink (HudSkins.Status).
             GameSettings.OnChanged += Refresh;

@@ -163,6 +163,7 @@ namespace CityBuilder.Invasion
             var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
             home.y = grid.GroundHeight;
             if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
+            if (King != null && Castle != null) King.GuardCentre = Castle.transform.position;
 
             RunStarted = true;
         }

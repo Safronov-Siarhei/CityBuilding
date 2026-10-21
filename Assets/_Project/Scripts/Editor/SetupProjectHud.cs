@@ -228,8 +228,123 @@ namespace CityBuilder.EditorTools
             so.FindProperty("happinessLabel").objectReferenceValue = label;
             so.FindProperty("breakdownLabel").objectReferenceValue = breakdown;
             so.FindProperty("breakdownPanel").objectReferenceValue = details.gameObject;
+            so.FindProperty("widget").objectReferenceValue = button.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(button.onClick, controller.ToggleBreakdown);
+        }
+
+        // ---------------------------------------------------------------- top-right in a run: the King
+
+        private const string KingPortraitPath = UiTextureImport.IconsFolder + "/PortraitKing.png";
+
+        /// <summary>
+        /// The King's portrait for an Invasion run, in the corner the sandbox gives contentment
+        /// (KingPortraitController shows it only in a run): his face in a round frame with his level
+        /// on a badge, a plaque to its left with his health and experience bars, a gold ring round
+        /// the frame while he is selected, a dark cover with a countdown while he is down, and a
+        /// castle button under it that sends him back to guard the base.
+        /// </summary>
+        private static void BuildKingPortrait(Transform uiRoot)
+        {
+            var portraitSprite = LoadSprite(KingPortraitPath);
+            var castleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Textures/Icon_Bld_Castle.asset");
+            var circle = SkinSprite("circle_mask");
+
+            var root = new GameObject("KingPortrait", typeof(RectTransform));
+            root.transform.SetParent(uiRoot, false);
+            // stays up while the King is selected and the rest of the HUD steps aside (HudHider)
+            root.AddComponent<HudOverlay>();
+            Anchor((RectTransform)root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f), new Vector2(380f, 190f));
+
+            // behind the frame: the selection ring
+            var selected = CreateImage(root.transform, "Selected", UiTheme.Gold);
+            selected.sprite = circle;
+            Anchor(selected.rectTransform, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-RoundButton * 0.5f, -RoundButton * 0.5f), new Vector2(RoundButton + 18f, RoundButton + 18f));
+            selected.raycastTarget = false;
+
+            var frame = HudImage(root.transform, "Portrait", "round_value", new Vector2(RoundButton, RoundButton), sliced: false);
+            Anchor(frame.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), Vector2.zero, new Vector2(RoundButton, RoundButton));
+            var portraitButton = frame.gameObject.AddComponent<Button>();
+            var mask = CreateImage(frame.transform, "Mask", UiTheme.Parchment);
+            mask.sprite = circle;
+            mask.raycastTarget = false;
+            Anchor(mask.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(RoundButton - 16f, RoundButton - 16f));
+            mask.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            var face = CreateImage(mask.transform, "Face", Color.white);
+            face.sprite = portraitSprite;
+            face.preserveAspect = true;
+            face.raycastTarget = false;
+            StretchFull(face.rectTransform);
+
+            var fallen = CreateImage(frame.transform, "Fallen", new Color(0.05f, 0.03f, 0.02f, 0.7f));
+            fallen.sprite = circle;
+            fallen.raycastTarget = false;
+            Anchor(fallen.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(RoundButton - 16f, RoundButton - 16f));
+            var fallenText = CreateText(fallen.transform, "Countdown", "8", 44, Vector2.zero, new Vector2(RoundButton, 60f), Color.white, addShadow: true);
+            fallenText.font = UiTheme.Heavy;
+            fallen.gameObject.SetActive(false);
+
+            var badge = CreateImage(frame.transform, "LevelBadge", UiTheme.Wood);
+            badge.sprite = circle;
+            badge.raycastTarget = false;
+            Anchor(badge.rectTransform, new Vector2(0f, 0f), new Vector2(0.5f, 0.5f), new Vector2(10f, 10f), new Vector2(42f, 42f));
+            var level = CreateText(badge.transform, "Level", "1", 24, new Vector2(0f, 1f), new Vector2(42f, 36f), UiTheme.OnWood);
+            level.font = UiTheme.Heavy;
+
+            // left of the frame: the bars on a plaque
+            var plaque = HudImage(root.transform, "Bars", "plaque", new Vector2(220f, 62f));
+            Anchor(plaque.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(-RoundButton - 8f, -RoundButton * 0.5f), new Vector2(220f, 62f));
+            var health = Bar(plaque.transform, "Health", new Vector2(0f, 9f), 18f, new Color(0.2f, 0.62f, 0.22f));
+            var xp = Bar(plaque.transform, "Experience", new Vector2(0f, -13f), 10f, UiTheme.Gold);
+
+            // under the frame: back to guarding the base, marked while he guards
+            var guardMark = CreateImage(root.transform, "Guarding", UiTheme.Gold);
+            guardMark.sprite = circle;
+            guardMark.raycastTarget = false;
+            Anchor(guardMark.rectTransform, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-RoundButton * 0.5f, -RoundButton - 44f), new Vector2(76f, 76f));
+            var guard = CreateGlyphButton(root.transform, "GuardButton", "round_value", HudInk.Keep, null, castleSprite, 66f, 0.7f);
+            Anchor(guard.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-RoundButton * 0.5f, -RoundButton - 44f), new Vector2(66f, 66f));
+
+            var go = new GameObject("KingPortraitController");
+            go.transform.SetParent(uiRoot, false);
+            var controller = go.AddComponent<KingPortraitController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("widget").objectReferenceValue = root;
+            so.FindProperty("levelText").objectReferenceValue = level;
+            so.FindProperty("healthFill").objectReferenceValue = health;
+            so.FindProperty("xpFill").objectReferenceValue = xp;
+            so.FindProperty("fallenOverlay").objectReferenceValue = fallen.gameObject;
+            so.FindProperty("fallenText").objectReferenceValue = fallenText;
+            so.FindProperty("selectedFrame").objectReferenceValue = selected.gameObject;
+            so.FindProperty("guardMark").objectReferenceValue = guardMark.gameObject;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(portraitButton.onClick, controller.SelectKing);
+            UnityEventTools.AddPersistentListener(guard.onClick, controller.GuardBase);
+            root.SetActive(false);   // KingPortraitController turns it on in a run
+        }
+
+        /// <summary>A dark track with a coloured fill whose right edge the controller moves.</summary>
+        private static RectTransform Bar(Transform parent, string name, Vector2 position, float height, Color colour)
+        {
+            var track = CreateImage(parent, name, new Color(0.17f, 0.11f, 0.07f, 0.9f));
+            track.raycastTarget = false;
+            Anchor(track.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(190f, height));
+            var fill = CreateImage(track.transform, "Fill", colour);
+            fill.raycastTarget = false;
+            var rect = fill.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(2f, 2f);
+            rect.offsetMax = new Vector2(-2f, -2f);
+            return rect;
+        }
+
+        /// <summary>A sprite from UI/Icons (UiTextureImport makes every PNG there a single UI sprite).</summary>
+        private static Sprite LoadSprite(string path)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/render_portrait.py.");
+            return sprite;
         }
 
         // ---------------------------------------------------------------- top-centre: day and citizens

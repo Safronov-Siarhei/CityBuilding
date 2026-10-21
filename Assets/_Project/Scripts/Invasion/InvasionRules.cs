@@ -36,6 +36,9 @@ namespace CityBuilder.Invasion
 
         public static bool Active => InvasionMode.IsActive;
 
+        /// <summary>The resources a run has (people are counted apart): what its resource bar shows.</summary>
+        public static bool IsRunResource(ResourceType type) => type == ResourceType.Wood || type == ResourceType.Stone || type == Money;
+
         public static bool Allows(BuildingData data) => data != null && Array.IndexOf(Buildings, data.buildingName) >= 0;
 
         /// <summary>Whether a build-menu category has anything in a run.</summary>

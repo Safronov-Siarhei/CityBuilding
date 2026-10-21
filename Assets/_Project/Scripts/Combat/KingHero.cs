@@ -36,6 +36,20 @@ namespace CityBuilder.Combat
         /// <summary>Where he comes back: the castle.</summary>
         public Vector3 Home { get; set; }
 
+        /// <summary>
+        /// With no order from the player he defends the base (the user, 2026-10-21): goes for any
+        /// enemy that comes within king_guard_radius of the castle and walks back home when it is
+        /// clear. A player's order ends it -- he then does what he was told and stays there -- and
+        /// the guard button on his portrait, or coming back from a fall, starts it again.
+        /// </summary>
+        public bool Guarding { get; private set; } = true;
+
+        /// <summary>The middle of what he guards; the castle's spot. Defaults to Home.</summary>
+        public Vector3 GuardCentre { get; set; }
+
+        private const float GuardScanSeconds = 0.5f;
+        private float _guardScan;
+
         public SoldierUnit Unit => _unit;
 
         /// <summary>Raised on a level gained, a fall and a return -- for the hero's portrait on the HUD.</summary>
@@ -59,16 +73,19 @@ namespace CityBuilder.Combat
         public void Initialize(Vector3 home)
         {
             Home = home;
+            GuardCentre = home;
             _unit = GetComponent<SoldierUnit>();
             _controller = GetComponent<CharacterController>();
             _renderers = GetComponentsInChildren<Renderer>(true);
             OrcUnit.Died += OnOrcDied;
+            if (_unit.Group != null) _unit.Group.PlayerOrdered += OnPlayerOrdered;
             ApplyLevel();
         }
 
         private void OnDestroy()
         {
             OrcUnit.Died -= OnOrcDied;
+            if (_unit != null && _unit.Group != null) _unit.Group.PlayerOrdered -= OnPlayerOrdered;
         }
 
         /// <summary>Experience for one enemy he struck down: its health.</summary>
@@ -128,18 +145,72 @@ namespace CityBuilder.Combat
             if (IsFallen) return;
             IsFallen = true;
             RespawnRemaining = RespawnSecondsAt(Level);
+            // a fallen King takes no orders: let go of him if he was in hand
+            var army = ArmyManager.Instance;
+            if (army != null && _unit.Group != null && army.SelectedGroup == _unit.Group) army.SelectGroup(null);
             _unit.enabled = false;
             if (_controller != null) _controller.enabled = false;
             SetVisible(false);
             Changed?.Invoke();
         }
 
+        private void OnPlayerOrdered()
+        {
+            if (!Guarding) return;
+            Guarding = false;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Back to defending the base (the portrait's guard button).</summary>
+        public void Guard()
+        {
+            Guarding = true;
+            _guardScan = 0f;
+            Changed?.Invoke();
+        }
+
         private void Update()
         {
-            if (!IsFallen) return;
-            RespawnRemaining -= Time.deltaTime;
-            if (RespawnRemaining <= 0f) Rise();
+            if (IsFallen)
+            {
+                RespawnRemaining -= Time.deltaTime;
+                if (RespawnRemaining <= 0f) Rise();
+                return;
+            }
+            if (!Guarding || _unit.Group == null) return;
+
+            _guardScan -= Time.deltaTime;
+            if (_guardScan > 0f) return;
+            _guardScan = GuardScanSeconds;
+
+            var threat = NearestThreat();
+            var group = _unit.Group;
+            if (threat != null)
+            {
+                if (group.AttackTarget != (IDamageTarget)threat) group.OrderAttack(threat);
+                return;
+            }
+            if (group.AttackTarget == null && Flat(group.HoldPosition - Home).sqrMagnitude > 1f) group.OrderMoveTo(Home);
         }
+
+        /// <summary>The enemy nearest the castle among those inside the guard radius, or null.</summary>
+        private OrcUnit NearestThreat()
+        {
+            var radius = BalanceConfig.Instance.KingGuardRadius;
+            OrcUnit nearest = null;
+            var best = radius * radius;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var d = Flat(orc.transform.position - GuardCentre).sqrMagnitude;
+                if (d > best) continue;
+                best = d;
+                nearest = orc;
+            }
+            return nearest;
+        }
+
+        private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         /// <summary>Back at the castle, at full health, holding there.</summary>
         public void Rise()
@@ -149,6 +220,7 @@ namespace CityBuilder.Combat
             RespawnRemaining = 0f;
             transform.position = Home;
             _unit.Group?.OrderMoveTo(Home);
+            Guarding = true;
             _unit.Revive();
             if (_controller != null) _controller.enabled = true;
             _unit.enabled = true;

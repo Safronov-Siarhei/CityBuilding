@@ -49,6 +49,11 @@ namespace CityBuilder.Combat
         /// <summary>Raised on membership, order and priority changes so the army panel can refresh without polling every frame.</summary>
         public event Action OnChanged;
 
+        /// <summary>Raised when the PLAYER gives this group an order (ArmyOrderInput) -- not when something orders it on its own, as the King does when guarding the base (KingHero).</summary>
+        public event Action PlayerOrdered;
+
+        public void NotifyPlayerOrder() => PlayerOrdered?.Invoke();
+
         public void Add(SoldierUnit unit)
         {
             if (unit == null || _members.Contains(unit)) return;
