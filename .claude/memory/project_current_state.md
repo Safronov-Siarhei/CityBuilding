@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 00ec56af-41af-4e20-aa76-c5f36bc84d70
-  modified: 2026-10-21T17:00:49.810Z
+  modified: 2026-10-21T17:02:59.003Z
 ---
 
 **Since 2026-10-21 the project's knowledge lives in feature cards: `Design/features/README.md`
@@ -21,6 +21,10 @@ read new commit messages; the cards were brought up to `c6627577`.
 own log `Design/Invasion.md`; pen-sketch placement look is the only one; roads/fences piece by piece;
 1×1 gate on roads; ore veins; node stocks; citizen names + citizens tab; Maps 1–2 deleted, Map 3
 redrawn; new main menu with mode cards and a live scene; easy start.
+
+**NEXT SESSION (user, 2026-10-21): work on the Invasion mode.** Start from the invasion-mode card and
+`Design/Invasion.md` («Дальше по плану»); next planned step is orc WAVES on the three lanes (breather
+with a timer, wave number, gold for kills and waves). `git fetch` first — the other device works on it too.
 
 **Waiting on the user (each also sits in its card):** what closing a portal should buy and the raid
 roster per portal level (orc-raids-and-portals); GPU instancing (performance-mobile); zoom floor
