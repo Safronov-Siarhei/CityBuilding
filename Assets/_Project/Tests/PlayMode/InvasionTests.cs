@@ -17,14 +17,14 @@ namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
     /// The Invasion mode's first step: «В бой» starts a run on the mode's own map with the castle,
-    /// the bridge towers, the bridges and the King in place, and the King is a hero -- he levels on
+    /// a tower at each causeway and the King in place, and the King is a hero -- he levels on
     /// what he kills and comes back after he falls. The landmarks are invasion1.py's: Blender
     /// (x, y) is Unity (x, z).
     /// </summary>
     public class InvasionTests
     {
         private const string GameSceneName = "CityBuilder";
-        private static readonly Vector3[] Bridges = { new Vector3(0f, 0f, 34f), new Vector3(-29.4f, 0f, -17f), new Vector3(29.4f, 0f, -17f) };
+        private static readonly Vector3[] Causeways = { new Vector3(0f, 0f, 34f), new Vector3(-29.4f, 0f, -17f), new Vector3(29.4f, 0f, -17f) };
 
         /// <summary>Fresh per test: a run sets itself up once, on the frames after the scene loads.</summary>
         [UnitySetUp]
@@ -49,25 +49,27 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheRun_StartsWithTheCastleTheTowersTheBridgesAndTheKing()
+        public IEnumerator TheRun_StartsWithTheCastleTheTowersAndTheKing_AndTheCausewaysCross()
         {
             var mode = InvasionMode.Instance;
             Assert.IsNotNull(mode.Castle, "No castle.");
             var castleAt = mode.Castle.transform.position;
             Assert.Less(new Vector2(castleAt.x, castleAt.z).magnitude, 3f, "The castle is not in the middle of the island.");
-            Assert.AreEqual(3, Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).Count(b => b.Data != null && b.Data.buildingName == "Tower"), "Not one tower per bridge.");
+            Assert.AreEqual(3, Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).Count(b => b.Data != null && b.Data.buildingName == "Tower"), "Not one tower per causeway.");
+            Assert.AreEqual(0, Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).Count(b => b.Data != null && b.Data.buildingName == "Bridge"), "Plank bridges were laid -- the crossings are earth now.");
             Assert.IsNotNull(mode.King, "No King.");
             Assert.IsNotNull(mode.King.transform.Find("King"), "The King is drawn in cubes -- his model (Models/Heroes/HeroKing) is not wired.");
             Assert.IsFalse(OrcRaidManager.Instance.enabled, "The sandbox's raids are still running in a run.");
 
-            // every bridge carries the way off the island: from the tower to the lane beyond
-            yield return new WaitForSeconds(2.5f);
-            foreach (var bridge in Bridges)
+            // every causeway carries the way off the island: from the tower to the lane beyond, on the ground
+            yield return null;
+            foreach (var bridge in Causeways)
             {
                 var direction = bridge.normalized;
                 var length = PathLength(bridge - direction * 9f, bridge + direction * 9f, out var complete);
-                Assert.IsTrue(complete, $"No way across the bridge at {bridge}.");
-                Assert.Less(length, 30f, $"The way across the bridge at {bridge} is {length:0} m -- the bridge does not carry it.");
+                Assert.IsTrue(complete, $"No way across the causeway at {bridge}.");
+                Assert.IsFalse(MeshMapApplier.Instance.IsWaterCell(GridManager.Instance.WorldToCell(bridge)), $"The causeway at {bridge} is water.");
+                Assert.Less(length, 30f, $"The way across the causeway at {bridge} is {length:0} m -- it does not carry the lane.");
             }
         }
 
@@ -168,7 +170,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("invasion-overview", Vector3.zero, 200f, 55f, 0f);
             yield return PlaytestCapture.Shoot("invasion-base", Vector3.zero, 44f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-king", InvasionMode.Instance.King.transform.position, 9f, 40f, 0f, 60f);
-            yield return PlaytestCapture.Shoot("invasion-bridge", Bridges[1], 22f, 50f, 0f, 60f);
+            yield return PlaytestCapture.Shoot("invasion-causeway", Causeways[1], 22f, 50f, 0f, 60f);
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

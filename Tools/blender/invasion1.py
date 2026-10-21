@@ -4,7 +4,7 @@
 
 Built on Map 3's machinery (the faceted surface, the colour zones, the water bands, the decor) with
 a layout like a Dota map: the player's base on an island in the middle, three lanes over three
-bridges to three round orc camps, and between the lanes three jungles for the hero -- paths, monster
+causeways to three round orc camps, and between the lanes three jungles for the hero -- paths, monster
 camps, a ridge with a gorge, a stream with a ford. See the layout section.
 
 `preview` also stands the real trees, boulders and a small town on it (a separate collection the
@@ -73,7 +73,7 @@ def smoothstep(e0, e1, x):
 # -- the layout --------------------------------------------------------------------------------
 #
 # North (+y) away from the camera. A round island with the sea all round. The player's base is a
-# small island in the middle behind a ring of river; three bridges lead off it, and from each a
+# small island in the middle behind a ring of river; three earth causeways lead off it, and from each a
 # lane runs out to a round orc camp near the coast (north, south-west, south-east) -- the waves
 # come down the lanes. Between the lanes lie three jungles of thick forest with paths through them
 # for the hero, monster camps on the paths, a healing shrine in each. A mountain ridge crosses
@@ -89,7 +89,7 @@ RAD = math.radians
 COAST_R = 94.0                                 # the island's radius
 RING_R, RING_HALF = 34.0, 4.0                  # the river round the base: centre line, half width
 BASE_R = RING_R - RING_HALF                    # the base island's radius
-LANE_ANGLES = (90.0, 210.0, 330.0)             # bearings of the three lanes (and bridges)
+LANE_ANGLES = (90.0, 210.0, 330.0)             # bearings of the three lanes (and causeways)
 JUNGLE_ANGLES = (30.0, 150.0, 270.0)           # bearings of the three jungles between them
 CAMP_R = 70.0                                  # how far out the orc camps stand
 CAMP_PAD = 17.0                                # a camp's round flat ground (the palisade is at ~15)
@@ -101,7 +101,7 @@ START = (0.0, 0.0)                             # the player's base: kept flat, o
 CAMPS = [(*_polar(RAD(a), CAMP_R), 3) for a in LANE_ANGLES]
 CAMP_HALF = {1: 6, 2: 7, 3: 11}
 START_ZONE = [(-8, -8), (8, -8), (8, 8), (-8, 8)]
-BRIDGES = [_polar(RAD(a), RING_R) for a in LANE_ANGLES]
+BRIDGES = [_polar(RAD(a), RING_R) for a in LANE_ANGLES]   # where each lane crosses the river (a causeway; spots kind "bridge")
 
 # the hero's paths through each jungle: the near loop, the gorge, the far loop
 PATHS = []
@@ -253,13 +253,24 @@ def ford_at(x, y):
     return max(smoothstep(FORD_R, FORD_R - 1.2, math.hypot(x - fx, y - fy)) for fx, fy in FORDS)
 
 
+CAUSEWAY_HALF = 3.5                            # half width of the earth causeway across the river
+
+
 def ring_sd(x, y):
-    """Signed distance from the river round the base, positive on land. Narrow at the bridges."""
+    """Signed distance from the river round the base, positive on land. Where each lane meets the
+    river an earth causeway runs across it (the user, 2026-10-21: «просто проход из земли»
+    rather than the plank bridges): ground, so everyone walks it and the waves come over it."""
     r = math.hypot(x, y)
     half = RING_HALF + 0.8 * (fbm(x / 8, y / 8, 13) - 0.5)
-    for bx, by in BRIDGES:                     # a narrow reach the bridge spans
-        half = min(half, 2.2 + 3.0 * smoothstep(3.0, 9.0, math.hypot(x - bx, y - by)))
-    return abs(r - RING_R) - half
+    sd = abs(r - RING_R) - half
+    for bx, by in BRIDGES:
+        ux, uy = bx / RING_R, by / RING_R
+        across = abs(-x * uy + y * ux)              # off the lane's line
+        along = abs(x * ux + y * uy - RING_R)        # off the river's middle
+        width = CAUSEWAY_HALF + 0.6 * (fbm(x / 5, y / 5, 17) - 0.5)
+        if along < RING_HALF + 3.0:
+            sd = max(sd, width - across)
+    return sd
 
 
 def land_sd(x, y):

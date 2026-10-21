@@ -11,26 +11,22 @@ namespace CityBuilder.Invasion
     /// <summary>
     /// The Invasion mode (the user's design, 2026-10-20/21): an endless defence of a base on the
     /// island in the middle of its own map (Tools/blender/invasion1.py), orc waves coming down three
-    /// lanes over three bridges, and the King as a hero who levels up in the jungle between them.
+    /// lanes over three earth causeways, and the King as a hero who levels up in the jungle between them.
     ///
     /// Sits on GameManagers in every game and does nothing unless the menu's «В бой» started the
     /// game (GameSessionIntent.NewGameIsInvasion). Then it switches off what a run does not have
     /// -- the sandbox's raids and camps, illness, fires -- and, once the map is down, sets the
-    /// run up: the castle in the middle, a tower at the head of each bridge, the bridges, the King.
+    /// run up: the castle in the middle, a tower at the island's end of each causeway, the King.
     /// The waves and the jungle's monsters come in later steps.
     /// </summary>
     public class InvasionMode : MonoBehaviour
     {
         public const string MapId = "Inv1";
 
-        /// <summary>How far in from a bridge's middle its tower stands, on the island.</summary>
+        /// <summary>How far in from a causeway's middle its tower stands, on the island.</summary>
         private const float TowerInsetMeters = 11f;
 
-        /// <summary>A bridge's half width and how far along the lane its planks may reach either side of the bridge spot.</summary>
-        private const float BridgeHalfWidth = 1.2f;
-        private const float BridgeReach = 8f;
-
-        /// <summary>Where the King stands at the start and comes back to: in front of the castle, towards the south bridges.</summary>
+        /// <summary>Where the King stands at the start and comes back to: in front of the castle, towards the south causeways.</summary>
         private static readonly Vector3 KingHomeOffset = new Vector3(0f, 0f, -7f);
 
         [SerializeField] private BuildingPlacer buildingPlacer;
@@ -43,7 +39,7 @@ namespace CityBuilder.Invasion
 
         private bool _active;
 
-        /// <summary>The castle, the towers, the bridges and the King are in place.</summary>
+        /// <summary>The castle, the towers and the King are in place.</summary>
         public bool RunStarted { get; private set; }
 
         public KingHero King { get; private set; }
@@ -71,7 +67,7 @@ namespace CityBuilder.Invasion
         {
             if (!_active) yield break;
 
-            // The map is put down in MeshMapApplier's Start; the colliders a bridge and the NavMesh
+            // The map is put down in MeshMapApplier's Start; the colliders the NavMesh
             // need come a physics step later.
             for (var frame = 0; frame < 600; frame++)
             {
@@ -107,18 +103,17 @@ namespace CityBuilder.Invasion
             }
             else Debug.LogError("InvasionMode: no Town Hall to stand in the middle -- the run starts without it.");
 
+            // a tower at the island's end of each causeway (the map's "bridge" spots: where each
+            // lane crosses the river -- earth, not planks, since 2026-10-21)
             var tower = Find("Tower");
-            var bridge = Find("Bridge");
             foreach (var spot in applier.CurrentMap.SpotsOf("bridge"))
             {
-                var across = new Vector3(spot.position.x, 0f, spot.position.y);
-                var direction = across.normalized;
+                var crossing = new Vector3(spot.position.x, 0f, spot.position.y);
                 if (tower != null)
                 {
-                    var at = across - direction * TowerInsetMeters;
+                    var at = crossing - crossing.normalized * TowerInsetMeters;
                     PlaceFinished(tower, grid.WorldToCell(at) - tower.footprintSize / 2);
                 }
-                if (bridge != null) LayBridge(bridge, across, direction);
             }
 
             var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
@@ -126,34 +121,6 @@ namespace CityBuilder.Invasion
             if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
 
             RunStarted = true;
-        }
-
-        /// <summary>
-        /// Planks over every shallow water cell of the reach, along the lane and a couple of metres
-        /// wide -- wide enough that a lane at an angle still joins up corner to corner.
-        /// </summary>
-        private void LayBridge(BuildingData bridge, Vector3 middle, Vector3 direction)
-        {
-            var applier = MeshMapApplier.Instance;
-            var grid = GridManager.Instance;
-            var centre = grid.WorldToCell(middle);
-            var reach = Mathf.CeilToInt(BridgeReach / grid.CellSize) + 1;
-            var side = new Vector3(-direction.z, 0f, direction.x);
-            var radius = middle.magnitude;
-            for (var dx = -reach; dx <= reach; dx++)
-            {
-                for (var dz = -reach; dz <= reach; dz++)
-                {
-                    var cell = centre + new Vector2Int(dx, dz);
-                    var world = grid.CellToWorld(cell);
-                    world.y = 0f;
-                    if (Mathf.Abs(Vector3.Dot(world, direction) - radius) > BridgeReach) continue;
-                    if (Mathf.Abs(Vector3.Dot(world, side)) > BridgeHalfWidth) continue;
-                    if (!applier.IsWaterCell(cell) || !applier.IsWaterPlacementZone(cell)) continue;
-                    if (!grid.IsAreaFree(cell, Vector2Int.one)) continue;
-                    PlaceFinished(bridge, cell);
-                }
-            }
         }
 
         private BuildingData Find(string buildingName)
