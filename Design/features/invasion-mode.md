@@ -6,8 +6,9 @@
 > (top-right) + tap select + guard-the-base with no order, orc WAVES down the three lanes (countdown,
 > breather, lanes open one by one, gold for kills and waves), the JUNGLE (wolf/bear/troll camps at the
 > "monsters" spots, the giant boss, respawn stronger with the waves, healing shrines, the boss's
-> resources + blessing). Numbers of both NOT yet checked by playing. Next (plan in the log): round orc
-> camps; score and leaderboards.
+> resources + blessing), the ROUND ORC CAMPS (two rings of wall with open gates, towers, totems,
+> spawners, storehouses, an unclosable portal, a refilled garrison; waves march out of the portal).
+> Numbers NOT yet checked by playing. Next (plan in the log): score and leaderboards.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -31,6 +32,11 @@ every `OrcUnit.Died` in a run and per wave; spawns through `OrcRaidManager.Spawn
 with the raid manager disabled), run orcs target the castle (`OrcUnit.AcquireTarget`: a building only
 within `inv_orc_building_radius`; `OrcUnit.Target` exposed for tests), the wave line under the resource
 bar (`UI/SettlementStatusController` shows it instead of the day in a run);
+`InvasionCampLayout.cs` (the round camp's plan, pure: rings, gates at angle 0, buildings by angle
+and radius, `ToWorld`), `InvasionOrcCamp.cs` (builds a camp at a `CampSpots` point facing the castle
+through `OrcRaidManager.SpawnLooseCampBuilding`/`SpawnRingGate`/`SpawnPortalLook`/`SpawnRingGuard`
+(in `OrcRaidManagerCamps.cs`); garrison refill by surviving spawners; `WaveExit`; `Tick(dt)` public),
+`InvasionWaves.Begin(exits)` takes the camps' exits;
 `InvasionJungle.cs` (camps at `SpotsOf("monsters")` by spot level, the lair at `boss`, shrines at
 `shrine`; monsters are `OrcUnit` kinds `Wolf/Bear/Troll/Giant` (`OrcUnit.IsMonster`) put on guard with
 `SetGuardPost(null, post, radius)`, stats from `BalanceConfig.MonsterUnit` (economy `mon_<id>_*`);
@@ -49,7 +55,8 @@ group, outside the army cap); entry `MainMenuController.StartInvasion` →
 economy `king_*`, `inv_*` (waves: `inv_first_wave_sec` … `inv_orc_building_radius`); localization
 `#unit_king`, `#hud_inv_wave`, `#hud_inv_wave_in`, `#log_inv_wave`, `#log_inv_wave_survived`,
 `#log_inv_boss_slain`, `#log_inv_boss_back`; economy `mon_*` and the jungle's `inv_*` (camps, respawn,
-guard radii, monster gold, shrine, boss reward and blessing). Blender `wild.py` → `Models/Wild`. Blender: `Tools/blender/invasion1.py`,
+guard radii, monster gold, shrine, boss reward and blessing), `inv_camp_*` of the round orc camps.
+Blender `wild.py` → `Models/Wild`; `orcringcamp1.py` → `Models/Orcs` (OrcRingWall, -Ruin, OrcRingGate). Blender: `Tools/blender/invasion1.py`,
 `render_invasion1.py`, `heroking.py` (jointed; export routes `Hero*` to `Models/Heroes`).
 
 ## Tests
@@ -57,9 +64,14 @@ PlayMode `InvasionTests` (waves: countdown + one lane + HUD line, every lane rea
 run orcs go for the castle, a wave beaten off pays and starts the breather); EditMode
 `InvasionWavesTests` (the ramp), `InvasionJungleTests` (camp kinds, growth, the bite); PlayMode jungle:
 a camp per spot with its beasts, monsters hold their ground, a wiped camp returns stronger, the
-shrine heals, the boss pays and blesses.
+shrine heals, the boss pays and blesses; round camps: buildings + garrison + no portal, walls block
+and the waves get out, a fallen spawner sends no more of its kind; EditMode `InvasionCampLayoutTests`.
 
 ## Traps
+- The round camps' walls carve the NavMesh a frame or more after the run starts: a path test that
+  runs at once sees no walls and passes for nothing (wait first, as `TheWalls_Block…` does).
+- A ring wall section is 401 triangles and there are 108 of them on the map -- mind the budget
+  before making it richer.
 - Jungle monsters are `OrcUnit`s, so they are in `OrcUnit.All` and fire `OrcUnit.Died`: a test or
   system meaning "the wave's orcs" must use `InvasionWaves.WaveOrcs`, not `OrcUnit.All`.
 - `FigureAnimator` skips a monster figure that no camera sees (`Renderer.isVisible`), but never the

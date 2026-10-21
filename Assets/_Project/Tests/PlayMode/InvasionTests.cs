@@ -534,6 +534,72 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(KingHero.MaxHealthAt(king.Level), king.Unit.MaxHealth);
         }
 
+        /// <summary>A round camp at each lane's end: its buildings at their level with their models, both gates, the garrison, and no portal to close.</summary>
+        [Test]
+        public void TheRoundCamps_Stand_WithTheirBuildingsAndGarrison()
+        {
+            var camps = InvasionMode.Instance.OrcCamps;
+            var config = BalanceConfig.Instance;
+            var plan = InvasionCampLayout.Pieces().Count(p => p.Kind != InvasionCampLayout.PieceKind.Gate);
+            Assert.AreEqual(3, camps.Count, "Not a round camp at each lane's end.");
+            foreach (var camp in camps)
+            {
+                Assert.AreEqual(plan, camp.Buildings.Count, $"The camp at {camp.Centre} is missing buildings.");
+                foreach (var building in camp.Buildings)
+                {
+                    Assert.AreEqual(config.InvasionCampBuildingLevel, building.Level);
+                    Assert.IsNotNull(building.transform.Find("Model"), $"A {building.Kind} of the round camp is drawn in a box -- its model is not wired.");
+                }
+                Assert.AreEqual(2, camp.GetComponentsInChildren<Transform>().Count(t => t.name == "OrcRingGate" && t.GetComponentInChildren<Renderer>() != null), "The gates are not drawn.");
+                Assert.AreEqual(config.InvasionCampRaiders, camp.GuardsOf(OrcKind.Raider));
+                Assert.AreEqual(config.InvasionCampThrowers, camp.GuardsOf(OrcKind.Thrower));
+                Assert.IsTrue(camp.GuardUnits.All(g => g.Level == config.InvasionCampGuardLevel && g.IsGuard), "A guard is not of the top level or not on guard.");
+            }
+            Assert.AreEqual(0, OrcPortal.All.Count, "A run has a portal the player can close -- the camps' portals cannot be.");
+        }
+
+        /// <summary>The rings are walls -- going round them is the long way -- and the waves still find their way out of the portal through both gates.</summary>
+        [UnityTest]
+        public IEnumerator TheWalls_Block_AndTheGatesLetTheWaveOut()
+        {
+            yield return new WaitForSeconds(0.5f);       // the walls carve the NavMesh on a later frame
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            foreach (var camp in InvasionMode.Instance.OrcCamps)
+            {
+                var near = castle + Flat(camp.Centre - castle).normalized * 6f;
+                var length = PathLength(camp.WaveExit, near, out var complete);
+                Assert.IsTrue(complete, $"The wave cannot get out of the camp at {camp.Centre}.");
+                Assert.Less(length, 90f, $"The way out of the camp at {camp.Centre} is {length:0} m.");
+
+                // from beside the camp, just outside its wall, in to the portal: round to the gates
+                var front = Flat(castle - camp.Centre).normalized;
+                var side = new Vector3(front.z, 0f, -front.x);
+                var outside = camp.Centre + side * (InvasionCampLayout.OuterRadius + 1.5f);
+                var straight = Vector3.Distance(Flat(outside), Flat(camp.WaveExit));
+                var around = PathLength(outside, camp.WaveExit, out var reached);
+                Assert.IsTrue(reached, $"No way into the camp at {camp.Centre} at all.");
+                Assert.Greater(around, straight + 12f, $"The way in from beside the camp at {camp.Centre} is {around:0} m for {straight:0} m straight -- the walls do not block.");
+            }
+        }
+
+        /// <summary>The garrison comes back one by one while its spawners stand; with the war tents down, the orcs do not.</summary>
+        [UnityTest]
+        public IEnumerator AFallenSpawner_SendsNoMoreOfItsKind()
+        {
+            var camp = InvasionMode.Instance.OrcCamps[0];
+            var config = BalanceConfig.Instance;
+            foreach (var tent in camp.Buildings.Where(b => b.Kind == OrcCampBuildingKind.WarTent).ToList()) tent.TakeDamage(tent.MaxHealth);
+            foreach (var guard in camp.GuardUnits.ToList()) guard.TakeDamage(guard.MaxHealth);
+            yield return null;
+            Assert.AreEqual(0, camp.GuardsStanding);
+
+            camp.Tick(config.InvasionCampGuardRespawnSeconds + 0.1f);
+            Assert.AreEqual(1, camp.GuardsStanding, "Not one guard back for one wait.");
+            for (var i = 0; i < config.InvasionCampRaiders + config.InvasionCampThrowers; i++) camp.Tick(config.InvasionCampGuardRespawnSeconds + 0.1f);
+            Assert.AreEqual(config.InvasionCampThrowers, camp.GuardsOf(OrcKind.Thrower), "The throwers' ranges stand, and not all the throwers came back.");
+            Assert.AreEqual(0, camp.GuardsOf(OrcKind.Raider), "The war tents are down, and the orcs came back anyway.");
+        }
+
         [UnityTest]
         public IEnumerator Photograph_TheRun()
         {
@@ -543,11 +609,13 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("invasion-base", Vector3.zero, 44f, 52f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-king", InvasionMode.Instance.King.transform.position, 9f, 40f, 0f, 60f);
             yield return PlaytestCapture.Shoot("invasion-causeway", Causeways[1], 22f, 50f, 0f, 60f);
-            foreach (var camp in InvasionMode.Instance.Jungle.Camps.Where(c => c.Tier == 1 || c.IsBoss).Take(2))
-            {
-                yield return PlaytestCapture.Shoot(camp.IsBoss ? "invasion-boss" : "invasion-wolves", camp.Post, camp.IsBoss ? 8f : 6f, 40f, 0f, 45f);
-            }
+            yield return PlaytestCapture.Shoot("invasion-wolves", InvasionMode.Instance.Jungle.Camps.First(c => c.Tier == 1).Post, 6f, 40f, 0f, 45f);
             yield return PlaytestCapture.Shoot("invasion-shrine", InvasionMode.Instance.Jungle.Shrines[0], 5f, 40f, 0f, 45f);
+            yield return PlaytestCapture.Shoot("invasion-boss", InvasionMode.Instance.Jungle.BossLair.Post, 8f, 40f, 0f, 45f);
+            var orcCamp = InvasionMode.Instance.OrcCamps[0];
+            var gateBearing = Mathf.Atan2(-orcCamp.Centre.x, -orcCamp.Centre.z) * Mathf.Rad2Deg;
+            yield return PlaytestCapture.Shoot("invasion-orc-camp", orcCamp.Centre, 40f, 55f, gateBearing, 45f);
+            yield return PlaytestCapture.Shoot("invasion-orc-camp-gate", orcCamp.Centre + Flat(-orcCamp.Centre).normalized * 12f, 14f, 40f, gateBearing, 45f);
 
             // a house making a new person, and the run's build menu
             CitizenManager.Instance.KillCitizens(1);

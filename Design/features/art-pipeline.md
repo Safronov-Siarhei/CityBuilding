@@ -35,6 +35,8 @@ set. Models go to the user for approval as renders BEFORE they enter the game; p
   Material `Buildings` remapped at import (`Editor/ModelImportDefaults.cs`) onto
   `Models/Palette/BuildingsPalette.mat` (shader `Shaders/BuildingDetail.shader`) — updated IN PLACE,
   never deleted (remaps are by GUID).
+- The Invasion round orc camps: `orcringcamp1.py` builds OrcRingWall (one 3.9 m ring section, lean:
+  401 tris), OrcRingWall-Ruin, OrcRingGate (open arch); everything else is the camps' existing models.
 - The Invasion jungle: `wild.py` builds WildWolf/WildBear (four legs LegFL/FR/BL/BR), WildTroll/WildGiant
   (LegL/R, ArmStrike, ArmOff), WildShrine; `export_fbx` sends `Wild*` to `Models/Wild`; `render_lineup.py`
   now shows a jointed figure's parts too.

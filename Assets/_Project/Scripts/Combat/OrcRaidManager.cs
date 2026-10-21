@@ -110,6 +110,10 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject bearModel;
         [SerializeField] private GameObject trollModel;
         [SerializeField] private GameObject giantModel;
+        // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
+        [SerializeField] private GameObject ringWallModel;
+        [SerializeField] private GameObject ringWallRuinModel;
+        [SerializeField] private GameObject ringGateModel;
         // The prisoners' cages: one model per camp level, and the main base's own.
         [SerializeField] private GameObject[] cageModels;
         [SerializeField] private GameObject cageRuinModel;

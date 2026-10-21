@@ -61,6 +61,7 @@ namespace CityBuilder.Invasion
         public InvasionPeople People { get; private set; }
         public InvasionWaves Waves { get; private set; }
         public InvasionJungle Jungle { get; private set; }
+        public List<InvasionOrcCamp> OrcCamps { get; } = new List<InvasionOrcCamp>();
         public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
 
@@ -168,10 +169,21 @@ namespace CityBuilder.Invasion
             if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
             if (King != null && Castle != null) King.GuardCentre = Castle.transform.position;
 
-            // the waves, out of the three orc camps at the lanes' far ends
+            // the three round orc camps at the lanes' far ends (the map's CampSpots, not among
+            // SpotsOf: the sandbox's camps read them too), their gates facing the castle
+            var castleAt = Castle != null ? Castle.transform.position : Vector3.zero;
+            var exits = new List<Vector3>();
+            foreach (var spot in applier.CurrentMap.CampSpots)
+            {
+                var camp = new GameObject("InvasionOrcCamp").AddComponent<InvasionOrcCamp>();
+                camp.Build(new Vector3(spot.x, grid.GroundHeight, spot.y), castleAt);
+                OrcCamps.Add(camp);
+                exits.Add(camp.WaveExit);
+            }
+
+            // the waves, out of the camps' portals
             Waves = gameObject.AddComponent<InvasionWaves>();
-            // (the camps are the map's CampSpots, not among SpotsOf: the sandbox's camps read them too)
-            Waves.Begin(applier.CurrentMap.CampSpots);
+            Waves.Begin(exits);
 
             // the jungle between the lanes: monster camps, the boss's lair, the healing shrines
             Jungle = gameObject.AddComponent<InvasionJungle>();

@@ -81,6 +81,8 @@ namespace CityBuilder.EditorTools
                          ("cageRuinModel", "OrcCage1-lvl1-Ruin"),
                          ("mainCageModel", "OrcMainCage1"), ("mainCageRuinModel", "OrcMainCage1-Ruin"),
                          ("mainTreasuryModel", "OrcMainTreasury1"), ("mainTreasuryRuinModel", "OrcMainTreasury1-Ruin"),
+                         // the Invasion mode's round camps
+                         ("ringWallModel", "OrcRingWall"), ("ringWallRuinModel", "OrcRingWall-Ruin"), ("ringGateModel", "OrcRingGate"),
                      })
             {
                 so.FindProperty(field).objectReferenceValue = Load(file);

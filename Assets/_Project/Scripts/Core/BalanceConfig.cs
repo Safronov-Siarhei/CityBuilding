@@ -498,6 +498,13 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionBossBuffSeconds = 120f;
         [SerializeField] private float invasionBossBuffDamage = 0.5f;
         [SerializeField] private float invasionBossBuffHealth = 0.3f;
+        // The Invasion run's round orc camps (InvasionOrcCamp): their buildings' level and their garrison.
+        [SerializeField] private int invasionCampBuildingLevel = 3;
+        [SerializeField] private int invasionCampGuardLevel = 5;
+        [SerializeField] private int invasionCampRaiders = 8;
+        [SerializeField] private int invasionCampThrowers = 4;
+        [SerializeField] private float invasionCampGuardRadius = 8f;
+        [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
 
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
@@ -713,6 +720,12 @@ namespace CityBuilder.Core
         public float InvasionBossBuffSeconds => invasionBossBuffSeconds;
         public float InvasionBossBuffDamage => invasionBossBuffDamage;
         public float InvasionBossBuffHealth => invasionBossBuffHealth;
+        public int InvasionCampBuildingLevel => invasionCampBuildingLevel;
+        public int InvasionCampGuardLevel => invasionCampGuardLevel;
+        public int InvasionCampRaiders => invasionCampRaiders;
+        public int InvasionCampThrowers => invasionCampThrowers;
+        public float InvasionCampGuardRadius => invasionCampGuardRadius;
+        public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
 
         /// <summary>A jungle monster (wolf, bear, troll, giant) as a unit row, built from its mon_ID_* keys like the King's.</summary>
         public UnitBalance MonsterUnit(string id)
@@ -1033,6 +1046,12 @@ namespace CityBuilder.Core
             invasionBossBuffSeconds = Read(economy, "inv_boss_buff_sec", invasionBossBuffSeconds);
             invasionBossBuffDamage = Read(economy, "inv_boss_buff_damage", invasionBossBuffDamage);
             invasionBossBuffHealth = Read(economy, "inv_boss_buff_health", invasionBossBuffHealth);
+            invasionCampBuildingLevel = (int)Read(economy, "inv_camp_building_level", invasionCampBuildingLevel);
+            invasionCampGuardLevel = (int)Read(economy, "inv_camp_guard_level", invasionCampGuardLevel);
+            invasionCampRaiders = (int)Read(economy, "inv_camp_raiders", invasionCampRaiders);
+            invasionCampThrowers = (int)Read(economy, "inv_camp_throwers", invasionCampThrowers);
+            invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
+            invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

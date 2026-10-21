@@ -23,9 +23,6 @@ namespace CityBuilder.Invasion
     /// </summary>
     public class InvasionWaves : MonoBehaviour
     {
-        /// <summary>How far in from a camp's middle, towards the base, its wave steps out: past the round camp's wall (InvasionMode's map, camps of radius ~8 m).</summary>
-        private const float CampExitMeters = 11f;
-
         public enum Phase { NotStarted, Breather, Underway }
 
         public Phase Current { get; private set; } = Phase.NotStarted;
@@ -59,16 +56,15 @@ namespace CityBuilder.Invasion
 
         private void OnDisable() => OrcUnit.Died -= OnOrcDied;
 
-        /// <summary>Starts the clock: the camps are the map's CampSpots, each wave steps out of a camp on the side facing the base.</summary>
-        public void Begin(IEnumerable<Vector2> camps)
+        /// <summary>Starts the clock: each lane's wave steps out at its round camp's portal (InvasionOrcCamp.WaveExit) and marches out through the gates.</summary>
+        public void Begin(IEnumerable<Vector3> exits)
         {
             _laneStarts.Clear();
-            foreach (var camp in camps)
+            foreach (var exit in exits)
             {
-                var middle = new Vector3(camp.x, 0f, camp.y);
-                var start = middle - middle.normalized * CampExitMeters;
+                var start = exit;
                 if (NavMesh.SamplePosition(start, out var hit, 6f, NavMesh.AllAreas)) start = hit.position;
-                else Debug.LogError($"InvasionWaves: no ground to walk on at the camp at {camp} -- its lane's orcs may not move.");
+                else Debug.LogError($"InvasionWaves: no ground to walk on at the camp exit {exit} -- its lane's orcs may not move.");
                 _laneStarts.Add(start);
             }
             if (_laneStarts.Count == 0) Debug.LogError("InvasionWaves: the map has no camps -- no waves will come.");

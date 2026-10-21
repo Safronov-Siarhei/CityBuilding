@@ -273,6 +273,73 @@ namespace CityBuilder.Combat
             return building;
         }
 
+        // ---------------------------------------------------------------------------------------
+        // The Invasion mode's round camps (InvasionOrcCamp): the same buildings, laid round two
+        // circles rather than on a grid plan, belonging to no OrcCamp.
+
+        /// <summary>
+        /// One building of a round camp, standing at `at` turned `yaw` degrees, `size` metres across
+        /// (x along its own X, y along its Z). A Palisade is one section of the ring wall. Breakable
+        /// like any camp building, leaving its ruin; carved out of the NavMesh so it is a real wall.
+        /// </summary>
+        public OrcCampBuilding SpawnLooseCampBuilding(OrcCampBuildingKind kind, int level, Vector3 at, float yaw, Vector2 size)
+        {
+            EnsureMaterials();
+            var wall = kind == OrcCampBuildingKind.Palisade;
+            var model = wall ? ringWallModel : ModelOf(kind, level);
+            var ruin = wall ? ringWallRuinModel : RuinOf(kind, level);
+            var grid = GridManager.Instance;
+            var cell = grid != null ? grid.WorldToCell(at) : Vector2Int.zero;
+            var footprint = new Vector2Int(Mathf.Max(1, Mathf.RoundToInt(size.x)), Mathf.Max(1, Mathf.RoundToInt(size.y)));
+
+            var root = new GameObject($"OrcRingCamp{kind}");
+            root.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            var building = root.AddComponent<OrcCampBuilding>();
+            building.Initialize(kind, level, null, cell, footprint, ruin);
+            if (model != null) Instantiate(model, root.transform, false).name = "Model";
+            else AddPortalPart(root.transform, new Vector3(0f, 0.6f, 0f), new Vector3(size.x * 0.8f, 1.2f, size.y * 0.8f));
+
+            var height = ClickHeight(kind);
+            var click = root.AddComponent<BoxCollider>();
+            click.isTrigger = true;
+            click.center = new Vector3(0f, height / 2f, 0f);
+            click.size = new Vector3(size.x * 0.95f, height, size.y * 0.95f);
+            var obstacle = root.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = new Vector3(size.x * (wall ? 1f : 0.9f), 2f, size.y * 0.9f);
+            obstacle.center = new Vector3(0f, 1f, 0f);
+            obstacle.carving = true;
+            return building;
+        }
+
+        /// <summary>A round camp's open gateway: scenery, nothing to break, nothing in the way.</summary>
+        public GameObject SpawnRingGate(Vector3 at, float yaw)
+        {
+            var gate = ringGateModel != null ? Instantiate(ringGateModel, at, Quaternion.Euler(0f, yaw, 0f)) : new GameObject();
+            gate.name = "OrcRingGate";
+            gate.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            return gate;
+        }
+
+        /// <summary>A round camp's portal: the level-3 portal's burning look and nothing else -- it cannot be closed (the user's rule).</summary>
+        public GameObject SpawnPortalLook(Vector3 at, float yaw)
+        {
+            var model = Pick(portalActiveModels, 3);
+            var portal = model != null ? Instantiate(model, at, Quaternion.Euler(0f, yaw, 0f)) : new GameObject();
+            portal.name = "OrcRingPortal";
+            portal.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            return portal;
+        }
+
+        /// <summary>A round camp's guard: holds `post`, fights soldiers within `radius` of it.</summary>
+        public OrcUnit SpawnRingGuard(Vector3 post, int level, OrcKind kind, float radius)
+        {
+            EnsureMaterials();
+            var unit = SpawnOrc(post, level, kind, scatter: false);
+            unit.SetGuardPost(null, post, radius);
+            return unit;
+        }
+
         /// <summary>One guard of a camp: a `slot.Kind` orc of `slot.Level`, standing at `spawnAt` and holding `post`.</summary>
         public OrcUnit SpawnGuard(OrcCamp camp, GuardSlot slot, Vector3 post, Vector3? spawnAt = null)
         {
