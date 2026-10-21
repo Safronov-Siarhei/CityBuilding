@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Maps
@@ -21,9 +21,10 @@ namespace CityBuilder.Maps
         // Bigger than the building health bar (1.5 x 0.18), which is a bar you glance at: this is
         // one the player watches for fifteen seconds, and at the game's camera height the first
         // version came out about twenty pixels wide and three tall -- drawn, and invisible.
-        private const float BarWidth = 2f;
-        private const float BarHeight = 0.26f;
-        private const float BackdropPadding = 0.07f;
+        // One quad: a medallion with the resource's icon and a pill to its right, all drawn by
+        // Shaders/HarvestBar (the user, 2026-10-21: the plain bar "выглядит очень просто").
+        private const float BarWidth = 2.8f;
+        private const float BarHeight = 0.7f;
 
         /// <summary>Clearance above whatever the node actually is -- measured, not guessed, because a fir and a knee-high boulder are nothing alike.</summary>
         private const float ClearanceAboveNode = 0.6f;
@@ -31,10 +32,22 @@ namespace CityBuilder.Maps
         /// <summary>Fallback height for a node with no renderers at all (a bare test node, or a model that failed to load).</summary>
         private const float FallbackNodeHeight = 1.5f;
 
-        private static readonly Color BackdropColor = new Color(0.08f, 0.08f, 0.09f, 1f);
-        private static readonly Color FillColor = new Color(0.95f, 0.82f, 0.35f);
+        private static readonly int FillId = Shader.PropertyToID("_Fill");
+        private static readonly int AspectId = Shader.PropertyToID("_Aspect");
+        private static readonly int IconTexId = Shader.PropertyToID("_IconTex");
+        private static readonly int IconRectId = Shader.PropertyToID("_IconRect");
+        private static readonly int HasIconId = Shader.PropertyToID("_HasIcon");
 
-        private Transform _fill;
+        /// <summary>The bar's material and the icons, handed over by HarvestBarSkin on the scene.</summary>
+        public static Material SharedMaterial;
+        public static System.Func<CityBuilder.Resources.ResourceType, Sprite> IconFor;
+
+        private Renderer _renderer;
+        private MaterialPropertyBlock _block;
+
+        /// <summary>How far through the current dig the bar shows, 0..1.</summary>
+        public float Progress { get; private set; }
+
         private Camera _camera;
 
         /// <summary>
@@ -50,13 +63,13 @@ namespace CityBuilder.Maps
         ///
         /// The owning node destroys it (see ResourceNode.OnDestroy), since nothing else would.
         /// </summary>
-        public static HarvestProgressBar CreateFor(Transform node)
+        public static HarvestProgressBar CreateFor(Transform node, CityBuilder.Resources.ResourceType resource = CityBuilder.Resources.ResourceType.Wood)
         {
             var root = new GameObject("HarvestProgress");
             root.transform.position = node.position + Vector3.up * (MeasuredHeightOf(node) + ClearanceAboveNode);
 
             var bar = root.AddComponent<HarvestProgressBar>();
-            bar.Build();
+            bar.Build(resource);
             root.SetActive(false);
             return bar;
         }
@@ -89,10 +102,10 @@ namespace CityBuilder.Maps
 
             if (!gameObject.activeSelf) gameObject.SetActive(true);
 
-            // Grown from the left edge so it reads as filling up rather than expanding outwards.
-            var width = BarWidth * progress;
-            _fill.localScale = new Vector3(width, BarHeight, 1f);
-            _fill.localPosition = new Vector3(-BarWidth * 0.5f + width * 0.5f, 0f, -0.01f);
+            Progress = progress;
+            if (_renderer == null) return;
+            _block.SetFloat(FillId, progress);
+            _renderer.SetPropertyBlock(_block);
         }
 
         /// <summary>Nobody is working this node. Deactivating the object stops Update entirely rather than leaving hundreds of bars billboarding themselves every frame.</summary>
@@ -117,31 +130,36 @@ namespace CityBuilder.Maps
             transform.rotation = _camera.transform.rotation;
         }
 
-        private void Build()
-        {
-            var backdrop = CreateQuad("Backdrop", BackdropColor);
-            backdrop.localScale = new Vector3(BarWidth + BackdropPadding, BarHeight + BackdropPadding, 1f);
-            backdrop.localPosition = Vector3.zero;
-
-            var fill = CreateQuad("Fill", FillColor);
-            fill.localScale = new Vector3(BarWidth, BarHeight, 1f);
-            // Slightly in front of the backdrop so the two never z-fight.
-            fill.localPosition = new Vector3(0f, 0f, -0.01f);
-            _fill = fill;
-        }
-
-        private Transform CreateQuad(string quadName, Color color)
+        private void Build(CityBuilder.Resources.ResourceType resource)
         {
             var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            quad.name = quadName;
+            quad.name = "Bar";
             // Must go: a stray collider here would be picked up by the click and ground raycasts
             // the rest of the game fires, and this one sits right where the player taps a tree.
             Destroy(quad.GetComponent<Collider>());
             quad.transform.SetParent(transform, false);
+            quad.transform.localScale = new Vector3(BarWidth, BarHeight, 1f);
 
-            var material = new Material(RuntimeShaders.Unlit) { color = color };
-            quad.GetComponent<Renderer>().sharedMaterial = material;
-            return quad.transform;
+            _renderer = quad.GetComponent<Renderer>();
+            _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _renderer.receiveShadows = false;
+            // The skin's one material for every bar; without a skin (a bare test scene) a plain
+            // unlit gold quad still shows that something is happening.
+            _renderer.sharedMaterial = SharedMaterial != null ? SharedMaterial : new Material(RuntimeShaders.Unlit) { color = new Color(0.95f, 0.82f, 0.35f) };
+
+            _block = new MaterialPropertyBlock();
+            _block.SetFloat(AspectId, BarWidth / BarHeight);
+            var icon = IconFor?.Invoke(resource);
+            if (icon != null)
+            {
+                var texture = icon.texture;
+                var rect = icon.textureRect;
+                _block.SetTexture(IconTexId, texture);
+                _block.SetVector(IconRectId, new Vector4(rect.x / texture.width, rect.y / texture.height, rect.width / texture.width, rect.height / texture.height));
+                _block.SetFloat(HasIconId, 1f);
+            }
+            _block.SetFloat(FillId, 0f);
+            _renderer.SetPropertyBlock(_block);
         }
     }
 }

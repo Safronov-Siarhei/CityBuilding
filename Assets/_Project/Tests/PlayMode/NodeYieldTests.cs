@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using CityBuilder.Core;
 using CityBuilder.Maps;
@@ -67,6 +67,19 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var ghost in Object.FindObjectsByType<CityBuilder.Buildings.PlacementPreview>(FindObjectsSortMode.None)) ghost.gameObject.SetActive(false);
             NodeYieldBubble.Show(tree, camera);
             yield return PlaytestCapture.ShootWithUiAt("node-yield-badge", 1600, 900, tree.transform.position, 6f, 40f, 20f);
+
+            // and the bar over a tree being worked, and over a boulder
+            tree.ReportHarvestProgress(0.6f);
+            var rock = ResourceNode.All.OrderBy(r => (r.transform.position - tree.transform.position).sqrMagnitude)
+                .First(r => r.ResourceType == ResourceType.Stone);
+            rock.ReportHarvestProgress(0.3f);
+            // through the game's own camera: the bars turn to face that one
+            rig.JumpTo(tree.transform.position);
+            yield return null;
+            yield return PlaytestCapture.ShootThrough("harvest-bar", camera, 1600, 900);
+            rig.JumpTo(rock.transform.position);
+            yield return null;
+            yield return PlaytestCapture.ShootThrough("harvest-bar-stone", camera, 1600, 900);
         }
     }
 }

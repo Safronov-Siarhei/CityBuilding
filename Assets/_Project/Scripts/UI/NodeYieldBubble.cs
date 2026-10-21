@@ -17,7 +17,7 @@ namespace CityBuilder.UI
     {
         private const float ShowSeconds = 4f;
         private const float Diameter = 64f;
-        private const float ClearanceAboveNode = 0.35f;
+        private const float ClearanceAboveNode = 1.5f; // above the harvest bar, which hangs at +0.6
 
         private static NodeYieldBubble _instance;
 

@@ -1219,6 +1219,7 @@ namespace CityBuilder.EditorTools
             BuildMinimap(uiRoot, panelSprite, minimapTexture, cameraRig);
 
             var iconLibrary = CreateResourceIconLibrary();
+            BuildHarvestBarSkin(iconLibrary);
 
             var infoPanel = BuildBuildingInfoPanel(uiRoot, panelSprite, iconLibrary);
             var researchPanel = BuildResearchPanel(uiRoot, panelSprite, iconLibrary);
@@ -4711,6 +4712,30 @@ namespace CityBuilder.EditorTools
             array.arraySize = models.Length;
             for (var i = 0; i < models.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = models[i];
             so.FindProperty("glowMaterial").objectReferenceValue = glow;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>The harvest bars' shared material (Shaders/HarvestBar) and their icons, handed to them by a HarvestBarSkin on the scene.</summary>
+        private static void BuildHarvestBarSkin(ResourceIconLibrary icons)
+        {
+            const string path = "Assets/_Project/Materials/HarvestBar.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                var shader = Shader.Find("CityBuilder/HarvestBar");
+                if (shader == null) Debug.LogWarning("[SetupProject] Shader CityBuilder/HarvestBar not found -- harvest bars fall back to a plain quad.");
+                else
+                {
+                    material = new Material(shader) { name = "HarvestBar" };
+                    AssetDatabase.CreateAsset(material, path);
+                }
+            }
+
+            var go = new GameObject("HarvestBarSkin");
+            var skin = go.AddComponent<HarvestBarSkin>();
+            var so = new SerializedObject(skin);
+            so.FindProperty("material").objectReferenceValue = material;
+            so.FindProperty("icons").objectReferenceValue = icons;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

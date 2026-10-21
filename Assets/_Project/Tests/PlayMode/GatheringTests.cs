@@ -454,9 +454,7 @@ namespace CityBuilder.Tests.PlayMode
 
             // Well short of the whole dig: what is being pinned is that it MOVES with the work,
             // not the exact fraction, which would just be re-deriving harvest_seconds here.
-            var filled = bar.transform.Find("Fill");
-            Assert.IsNotNull(filled);
-            Assert.Greater(filled.localScale.x, 0f, "The bar is showing but has not filled at all -- it is not tracking the dig.");
+            Assert.Greater(bar.GetComponent<HarvestProgressBar>().Progress, 0f, "The bar is showing but has not filled at all -- it is not tracking the dig.");
         }
 
         [UnityTest]

@@ -122,7 +122,7 @@ namespace CityBuilder.Maps
         /// </summary>
         public void ReportHarvestProgress(float progress)
         {
-            if (_progressBar == null) _progressBar = HarvestProgressBar.CreateFor(transform);
+            if (_progressBar == null) _progressBar = HarvestProgressBar.CreateFor(transform, ResourceType);
             _progressBar.Report(progress);
         }
 
