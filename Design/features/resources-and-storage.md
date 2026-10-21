@@ -22,6 +22,9 @@ seen, even at 0). Storage ceilings per family; storehouses raise them. A tax con
 - `ResourceManager.AddProduced` (vs `Add`) also counts toward `LifetimeProduced` — the raid
   progression term. Only real production calls it (workshop output, gatherer home, manual tap);
   refunds, taxes and cheats do not. Saved.
+- **Easy start (2026-10-20):** opening stock from the sheet `start_*` (80 wood, 30 stone, 50 food,
+  `start_gold`); first levels of the basic buildings cost 30–50 % less (road 1 stone), upgrades keep
+  their prices; no raid and no sickness while the town settles in (`settling_in_seconds`, ~7 min).
 - Tax: 0–100 %, `coins_per_citizen_per_day_at_max_tax` × population × rate, per day. Lower tax =
   happier (`TaxScore = 100 − rate`).
 
@@ -34,12 +37,12 @@ seen, even at 0). Storage ceilings per family; storehouses raise them. A tax con
 - Day clock: `Core/GameCalendar.cs` (`day_length_seconds` = 120 s real).
 
 ## Data
-economy: `base_capacity_{materials,food,valuables,grain}`, `coins_per_citizen_per_day_at_max_tax`,
+economy: `start_*`, `base_capacity_{materials,food,valuables,grain}`, `coins_per_citizen_per_day_at_max_tax`,
 `day_length_seconds`. buildings: `storage_group`, `storage_capacity(_2.._5)`.
 
 ## Tests
 EditMode `ResourceManagerTests`, `ResourceStorageTests`, `TaxManagerTests`, `TaxManagerRateTests`,
-`ResourceHUDFormatTests`, `GameCalendarTests`; PlayMode `StorageAndUpgradeTests`.
+`ResourceHUDFormatTests`, `GameCalendarTests`; PlayMode `StorageAndUpgradeTests`, `EasyStartTests`.
 
 ## Traps
 - `ResourceIconLibrary` arrays must be sized off the enum — a fixed `new Sprite[8]` once silently

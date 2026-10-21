@@ -17,7 +17,10 @@
 - Restore order matters: `RestoreArmy` and `RestoreRaids` return what they built; `RestoreArmyOrders`
   pairs them afterwards. Orc camps rebuild from plan, then apply saved health (0 = ruin, `FallQuietly`);
   guards are NOT saved (spawners re-muster). A cage/treasury restored broken pays nothing.
-- Not saved on purpose: which portal is ACTIVE (re-picked), shots in flight.
+- Not saved on purpose: which portal is ACTIVE (re-picked), shots in flight, ore veins (dealt from
+  the map id), citizen names (spawn order).
+- A save made on a deleted map (Maps 1–2) is listed greyed out «map removed» (`#load_map_removed`).
+- No autosave in an Invasion run (an interrupted run simply ends).
 
 ## Code
 `Saving/GameSaveController.cs` (capture + `Restore*`), `Saving/SaveData.cs` (`GameSaveData`,

@@ -22,7 +22,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Economy** | | |
 | [resources-and-storage](resources-and-storage.md) | resource types, storage families, capacity, coins, taxes, lifetime produced | ресурсы, склад, вместимость, налог, монеты |
 | [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, minting, recipe picker | производство, рецепт, плавильня, пекарня, чеканка |
-| [gathering](gathering.md) | trees/rocks, harvest radius, gatherer walk, manual tap-to-gather, regrowth | лес, камень, сбор, радиус, лесопилка |
+| [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
 | **Population** | | |
 | [citizens-and-workforce](citizens-and-workforce.md) | headcount, workers, workforce panel, citizen agents, tiers | жители, рабочие, назначить |
@@ -30,7 +30,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hazards-fire-sickness](hazards-fire-sickness.md) | fire from decay, brigade, illness, well, healer | пожар, болезнь, колодец, лекарь |
 | **Buildings** | | |
 | [buildings-catalog](buildings-catalog.md) | the 49-building roster, categories, ids, BuildingData, model contract | здания, ростер, категории |
-| [building-placement](building-placement.md) | placing, ghost looks, rotation, fences autotile, roads, demolition, no-build, start zone | установка, призрак, забор, дорога, снос |
+| [building-placement](building-placement.md) | placing, pen-sketch ghost, rotation, roads/fences piece by piece, gates on roads, demolition, no-build, start zone | установка, призрак, забор, дорога, ворота, снос |
 | [building-levels-and-decay](building-levels-and-decay.md) | levels 1–5, upgrade rules, level models, decay, repair | уровни, улучшение, ветхость, ремонт |
 | [research-laboratory](research-laboratory.md) | tech tree, scientists, lab levels gate, research window | лаборатория, исследования |
 | **War** | | |
@@ -39,11 +39,13 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [orc-raids-and-portals](orc-raids-and-portals.md) | raids, progression score, portals, orc kinds, win/lose | орки, набег, портал, победа, поражение |
 | [orc-camps-and-main-base](orc-camps-and-main-base.md) | walled camps L1–3, spawners, totems, cages, treasury, main base, boss | лагерь, база орков, вождь, клетки, сокровищница |
 | **World** | | |
-| [maps-and-terrain](maps-and-terrain.md) | map pipeline, Maps 1–5, picker, decor, fords/bridges, orc spots, Vikings/dungeons plans | карта, рельеф, мост, брод, выбор карты |
+| [maps-and-terrain](maps-and-terrain.md) | map pipeline, Maps 3–5 + Inv1, picker, decor, fords/bridges, map spots, Vikings/dungeons plans | карта, рельеф, мост, брод, выбор карты |
 | [fog-of-war](fog-of-war.md) | exploration, parchment/cloud looks | туман, разведка |
 | [camera-and-input](camera-and-input.md) | RTS camera, touch gestures, input routing | камера, тач, жесты, управление |
+| **Modes** | | |
+| [invasion-mode](invasion-mode.md) | «Нашествие»: endless waves, the King hero, run economy, Dota-like map (log: `Design/Invasion.md`) | нашествие, король, герой, волны, забег, рейтинг |
 | **Interface & meta** | | |
-| [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, menus, settings | интерфейс, HUD, лента событий, меню |
+| [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | ideas only: rewarded ads, paid HUD looks, promo codes | монетизация, реклама, покупки |
 | **Pipelines** | | |

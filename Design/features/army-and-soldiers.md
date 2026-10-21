@@ -24,6 +24,9 @@ gather = ring; refused = red ripple.
 - Target priority (enemies / structures) is a PERSISTENT per-group mode.
 - Idle group holds ground, engages within ~7 m of its slot; no chasing, no auto-intercept.
 - Auto-targeting skips shielded portals.
+- `SoldierType.King` (=4) is the Invasion hero: a soldier in his own group, outside the army cap,
+  stats from economy `king_*` ([invasion-mode](invasion-mode.md)). His jointed model is animated by
+  `FigureAnimator` (`SoldierUnit.Struck` drives the cut).
 
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,

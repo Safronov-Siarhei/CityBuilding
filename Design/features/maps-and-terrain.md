@@ -1,8 +1,9 @@
 # Maps and terrain
 
 > **Status (2026-10-21):** New Game opens a MAP PICKER (`MapSelector.PlayerMapIds` = Map5, Map4, Map3,
-> newest first = default). Map 5 «Кальдера» and Map 4 «Долина двух рек» are designed island maps with
-> planned orc spots. Maps 1–2 stay only for old saves. None of Maps 4–5 seen on a phone.
+> newest first = default). Maps 3, 4, 5 are designed island maps with planned orc spots (Map 3 redrawn
+> 2026-10-21). **Maps 1–2 are DELETED** (user, 2026-10-20); a save on one shows greyed «map removed».
+> `Inv1` is the Invasion map (not in the picker). None of these seen on a phone.
 > **Next the user named:** more designed maps one at a time (Перешеек, Фьорды, Великое ущелье);
 > Vikings from the sea in free mode; dungeons in ruins (later).
 > **Read with:** [gathering](gathering.md), [orc-raids-and-portals](orc-raids-and-portals.md),
@@ -18,12 +19,15 @@
 - Look: «сочное лето», smooth shores, calm colour zones (per-triangle shades read as broken glass).
 
 ## Maps
-- **Map 3 «Летняя долина»** — Claude's first own map: 6 forests + groves, 6 stony clearings, relief.
+- **Map 3 «Летняя долина»** — redrawn 2026-10-21 to the designed-map rules: an island with a lake under
+  the northern hills and a river to the sea; start zone in the south-west meadow; four camps + the main
+  base's valley fixed in `Map-3-Spots.csv`.
 - **Map 4 «Долина двух рек»** — two rivers from northern mountains split the island; fords; main base
   in a cirque (0,67); 4 camps all L3; beaches (0,−90), (−90,−4), (90,−8).
 - **Map 5 «Кальдера»** — town on an old volcano floor round a crater lake; mountain ring cut by four
   gorges; a creek out the east gorge with two fords and a bridge; main base in a valley between two
   spurs; four camps (L3, L3, L2, L2) outside the ring; three Viking beaches.
+- **Inv1** — the Invasion map (`Tools/blender/invasion1.py`): see [invasion-mode](invasion-mode.md).
 - Variants kept for later: Перешеек, Фьорды, Великое ущелье.
 
 ## Pipeline
@@ -41,12 +45,13 @@ The .blend files live OUTSIDE git: `D:/blender projects/Buildings3D/Map-*.blend`
 `CurrentMap`; terrain onto layer 6), `Maps/MeshMapDefinition.cs` (`HasMainBaseSpot`, `CampSpots`,
 `CampLevels`, `TownHallZone`, decor), `Maps/MeshMapCatalog.cs`, `Maps/MapSelector.cs`,
 `Maps/MapDecorRenderer.cs` (25 m chunks of combined meshes, rebuilt on occupancy change),
-`Maps/MapDecorData.cs`, `Maps/TerrainPhysicsLayer.cs`, `Maps/StartZone*.cs`, `Maps/MapHistoryStore.cs`;
-legacy PNG maps `MapCatalog/MapDefinition/MapTerrainGenerator/TerrainType` (+ `Editor/MapImporter.cs`). UI `UI/MapSelectPanelController.cs`
+`Maps/MapDecorData.cs`, `Maps/TerrainPhysicsLayer.cs`, `Maps/StartZone*.cs`, `Maps/MapHistoryStore.cs`,
+`Maps/NavAreas.cs` (Gate area), `Maps/OreDepositSpawner.cs`; spots of any kind via
+`MeshMapDefinition.SpotsOf(kind)` (`MapSpot`); legacy PNG maps `MapCatalog/MapDefinition/MapTerrainGenerator/TerrainType` (+ `Editor/MapImporter.cs`). UI `UI/MapSelectPanelController.cs`
 (`#map_name_<id>`, `#map_desc_<id>`).
 
 ## Tests
-PlayMode `Map2Tests`, `Map3Tests`, `Map4Tests`, `Map5Tests`, `MapPickerTests`, `TerrainPhysicsTests`.
+PlayMode `Map3Tests`, `Map4Tests`, `Map5Tests`, `MapPickerTests`, `TerrainPhysicsTests`, `CameraTerrainTests`.
 
 ## Traps
 - Water = NO ground mesh under the cell → no NavMesh → everyone paths round. Fords are ground + no-build.
@@ -54,7 +59,6 @@ PlayMode `Map2Tests`, `Map3Tests`, `Map4Tests`, `Map5Tests`, `MapPickerTests`, `
   edge) — before the fix no bridge on Maps 3/4 ever opened a path (0.5 m step > agentClimb).
 - Decor first came out 2× too big: trees are 1–2 m, a citizen 0.45 m. Decor crags only on relief
   > 0.8 m (nothing walkable may look like gatherable stone).
-- `CreateWaterMaterial` deletes+recreates — make it ONCE per run.
 
 ## Open / ideas
 Vikings by sea (free mode); dungeons in ruins (squad walks a labyrinth for treasure); islands of

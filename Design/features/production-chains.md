@@ -17,6 +17,7 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
 - **Minting (user picked, 2026-08-31):** Smelter recipe `coins`: 1 GoldBar + 1 Coal → 4 Coins.
   ~120 coins/day from one level-1 gold chain.
 - **Пристань and Водяная мельница produce NOTHING** («это бред») until the Water category is designed.
+- Mines stand only on a free ORE VEIN of their ore; veins never run dry ([gathering](gathering.md)).
 - Sleeping buildings (no resource yet): Коптильня, Свиноферма, Фруктовый сад.
 - Upgrade rule (user, 2026-08-21): **sprawl cheaper in RESOURCES, upgrading cheaper in PEOPLE.**
   Workshops: batches ×1.5 at L2, ×2 at L3. Can't express ×1.5 of 1 batch → mines/Smelter tick

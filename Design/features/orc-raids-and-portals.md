@@ -44,5 +44,5 @@ EditMode `OrcRaidManagerTests`, `PortalPlacementTests`, `PlayerProgressionTests`
 ## Traps
 - `PlaytestWorld.FindFreeArea` scans from cell (1,1) = the map CORNER; tests about surroundings use
   `FindFreeAreaNearTheMiddle`.
-- The first raid lands ~88 s after the Town Hall, while migration is frozen and coins are 0 —
-  a grace period + opening hints were proposed (audit), not built.
+- Since 2026-10-20 (easy start) no raid comes while the town settles in (`settling_in_seconds`).
+  Opening hints for a new player are still not built.

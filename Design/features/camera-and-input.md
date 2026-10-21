@@ -15,6 +15,9 @@
 - Camera: pitch 50°, FOV 60°, zoom min/opening/max = 5 / 15 / 25 m (opening lives in SetupProject as
   the camera's local z; must stay within min/max). Ground strip ≈ 1.97 × distance. World-anchored pan,
   centroid zoom. `RTSCameraController.FocusOn` glides to a point (event feed taps).
+- The rig rides over the land (2026-10-20): each frame it samples the ground under the camera and
+  along its line of sight and lifts itself (quickly up, gently down) — it used to fly through the
+  Caldera's mountains. Guarded by PlayMode `CameraTerrainTests`.
 - Modals block input via `ModalGate`, not time.
 
 ## Code

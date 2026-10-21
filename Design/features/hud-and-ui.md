@@ -14,6 +14,18 @@ minimap bottom-left (round); build menu bottom-centre — CLOSED at rest (tabs o
 card row up, re-tap/map tap closes; replaced by ✕ ⟳ ✓ while placing; tax bottom-right «Налог: 10%».
 **No text on buttons — pictures only** (the tax plaque is the one allowed word). Settlement tiers hidden.
 
+## Main menu (user's sketch, 2026-10-20)
+Play brings up three MODE cards — campaign, sandbox, invasion; a card slides left and brings in its
+panel (campaign level map, sandbox new game + saves + map picker, invasion hub with «В бой»).
+Continue bottom-right, shop and settings beside Play; Back walks the screens and asks before quitting.
+Each HUD look has its own menu kit (`Tools/ui/make_menu_kit.py`); cards/map list show pictures baked
+from the game (`MenuArtBake`). Behind the menu a LIVE scene: a random map meadow with one of four
+staged scenes (woodcutters, quarry, ploughmen, a house in scaffolding), the game's sun, a breathing
+camera. Code: `UI/MainMenuController.cs`, `MainMenuBackground`, `MenuWorker`,
+`MenuFallingTree`, `MenuRisingBuilding`, `MenuVignetteCamera`, `MenuRowLook`; built by
+`Editor/SetupProjectMainMenu.cs`. Tests PlayMode `MainMenuTests`, `MapPickerTests`. The campaign is a
+placeholder (its design is not decided).
+
 ## Event feed
 Round temporary icons at the left edge whose rim drains; tap = camera glides to the source; hold =
 one-line caption. Player's own actions (built, demolished, research started, recruited) are LogOnly
@@ -29,7 +41,7 @@ Old round-2 look kept as git tag `hud-sketch-v1`.
 `UI/` — `HudSkinApplier`, `UiTheme`, `ResourceHUDController`, `HappinessController`,
 `EventFeedController/Model`, `EventIconView`, `EventIconLibrary`, `SettlementStatusController` (tiers, hidden), `GameMenuController`, `BuildingCategoryPanel`,
 `BuildingInfoPanelController`, `PlacementHudController`, `SettingsPanelController`, `MainMenuController`,
-`MainMenuBackground`, `MenuCameraFlythrough`, `MapSelectPanelController`, `LoadGamePanelController`,
+`MainMenuBackground`, `MapSelectPanelController`, `LoadGamePanelController`,
 `GameOverController`, `SafeAreaFitter`, `HudHider`, `HudOverlay`, `LocalizedText`.
 Core: `Core/GameEvent.cs` (`EventSeverity`, `EventGlyph`), `Core/EventLogManager.cs`, `Core/GameSettings.cs`.
 Built by: `SetupProject.BuildGameplayUI/BuildMainMenuScene/...`, `SetupProjectHud.cs` (layout consts),

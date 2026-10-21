@@ -14,6 +14,7 @@
   Sick people leave their jobs. The untreated streak counts days the BEDS WERE NOT CLEARED
   (one healer must not immunise a town of forty). Дом лекаря heals `heal_per_healer_per_day`.
 - Well, Healer, Brigade share one per-level `service_radius` column (Well 14/18/24, Healer 16/20/26, Brigade 18/24/30).
+- No sickness while the town settles in (easy start, 2026-10-20). Fires and illness are off in Invasion.
 - Saved: sick count, untreated streak, every fire with ELAPSED time (remaining depends on the crew after load).
 
 ## Code

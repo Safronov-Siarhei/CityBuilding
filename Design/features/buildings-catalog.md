@@ -27,6 +27,9 @@
   ALSO has levels. Every level changes stats AND model; a missing level model shows the nearest lower one.
 - Categories are exactly these seven (`BuildingCategory` City/Storage/Entertainment/Defence/Production/Food/Water).
 - Стена and Хижина охотника were removed. Saves may break on id renames — accepted.
+- Gates (2026-10-21): Ворота `Gate1` is 1×1 and stands on roads; Укреплённые ворота is 1×3 (wall,
+  passage, wall). Remodelled for all five levels. See [building-placement](building-placement.md).
+- Mines are placed only on ore veins ([gathering](gathering.md)).
 - Footprints were measured from the user's boxes and are written in `CreateBuildingData` calls —
   **do not "tidy" them** («сейчас здание 2х2, таким и должно остаться»).
 

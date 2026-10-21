@@ -1,11 +1,11 @@
 ---
 name: project-current-state
-description: "Where CityBuilding stands NOW (2026-10-21): the project is split into feature cards in Design/features/; latest work, what waits on the user. Short on purpose — per-feature state lives in the cards."
+description: "Where CityBuilding stands NOW (2026-10-21): project split into feature cards in Design/features/; work happens on TWO devices; Invasion mode in progress; what waits on the user. Short on purpose — per-feature state lives in the cards."
 metadata:
   node_type: memory
   type: project
   originSessionId: 00ec56af-41af-4e20-aa76-c5f36bc84d70
-  modified: 2026-10-21T16:17:54.556Z
+  modified: 2026-10-21T16:22:29.120Z
 ---
 
 **Since 2026-10-21 the project's knowledge lives in feature cards: `Design/features/README.md`
@@ -13,17 +13,17 @@ metadata:
 See [[feedback-feature-cards]]. The long chronological notes that used to be here are frozen in
 `Design/features/archive/` (in git).
 
-master after the split: see `git log` (the split commit is "Split the project into feature cards").
-Tests: EditMode 446, PlayMode 212 (+4 graphics-only). Sheet == repo (2026-10-20).
+**Two devices.** The user also works from another machine (paths like `G:/Fork/CityBuilding`); on
+2026-10-21 origin had 55 commits this machine had never seen. `git fetch` at the start of a task and
+read new commit messages; the cards were brought up to `c6627577`.
 
-**Latest shipped (2026-10-20):** ranged shots drawn (arrows/javelins, damage on impact); map picker +
-Map 5 «Кальдера»; four placement looks built behind Classic.
+**Latest (2026-10-20/21, mostly from the other device):** Invasion mode («Нашествие») started — its
+own log `Design/Invasion.md`; pen-sketch placement look is the only one; roads/fences piece by piece;
+1×1 gate on roads; ore veins; node stocks; citizen names + citizens tab; Maps 1–2 deleted, Map 3
+redrawn; new main menu with mode cards and a live scene; easy start.
 
-**Waiting on the user (each also sits in its card's Open/Status):**
-- pick a placement look (building-placement);
-- what closing a portal should buy; raid roster per portal level (orc-raids-and-portals);
-- GPU instancing for trees/rocks (performance-mobile); zoom floor 5 → 8 m (camera-and-input);
-- meat/fruit chain design (production-chains); next designed map (maps-and-terrain).
+**Waiting on the user (each also sits in its card):** what closing a portal should buy and the raid
+roster per portal level (orc-raids-and-portals); GPU instancing (performance-mobile); zoom floor
+5 → 8 m (camera-and-input); meat/fruit chains (production-chains); Invasion next steps (invasion-mode).
 
-Nothing since the main orc base has been on a phone; last APK 49.7 MB vs Telegram's 50 MB cap.
-Blender `.blend` files are outside git (`D:/blender projects/Buildings3D/`).
+Nothing since the main orc base has been on a phone. Blender `.blend` files are outside git.

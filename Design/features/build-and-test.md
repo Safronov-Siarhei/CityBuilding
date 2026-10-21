@@ -1,6 +1,8 @@
 # Build, test and tooling
 
-> **Status (2026-10-21):** Unity **6000.5.4f1**. Tests EditMode 446, PlayMode 212 (+4 graphics-only).
+> **Status (2026-10-21):** Unity **6000.5.4f1**. Last counted on this machine 2026-10-20: EditMode 446,
+> PlayMode 212 (+4 graphics-only) — many tests were added since on the other device; recount.
+> The project is worked on from TWO devices: `git fetch` before starting, pull before pushing.
 > Builds only when the user asks; they go to `D:\Builds CB` and to Telegram automatically.
 > **Read with:** nothing — this is the plumbing card.
 
