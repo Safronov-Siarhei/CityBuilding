@@ -176,8 +176,8 @@ namespace CityBuilder.UI
             var node = NearestNode(hitCount);
             if (node != null)
             {
+                // An order, not a question: the citizen goes, no badge (the user, 2026-10-21).
                 CommandGather(node);
-                NodeYieldBubble.Show(node, targetCamera);
                 return true;
             }
 
