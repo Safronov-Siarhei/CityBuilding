@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 00ec56af-41af-4e20-aa76-c5f36bc84d70
-  modified: 2026-10-21T16:22:29.120Z
+  modified: 2026-10-21T17:00:49.810Z
 ---
 
 **Since 2026-10-21 the project's knowledge lives in feature cards: `Design/features/README.md`
@@ -25,5 +25,9 @@ redrawn; new main menu with mode cards and a live scene; easy start.
 **Waiting on the user (each also sits in its card):** what closing a portal should buy and the raid
 roster per portal level (orc-raids-and-portals); GPU instancing (performance-mobile); zoom floor
 5 → 8 m (camera-and-input); meat/fruit chains (production-chains); Invasion next steps (invasion-mode).
+
+**2026-10-21 (`0e2ae107`):** SetupProject.cs and OrcRaidManager.cs were split into partial files by
+feature (map in the build-and-test card). If the other device had uncommitted edits in those two
+files, its next pull conflicts: re-apply the edit to the method in its new file.
 
 Nothing since the main orc base has been on a phone. Blender `.blend` files are outside git.
