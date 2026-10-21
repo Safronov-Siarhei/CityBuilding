@@ -25,7 +25,7 @@
 ## Code
 `Research/ResearchManager.cs`, `Research/ResearchCatalog.cs` (category order, skips orc rows),
 `Research/ResearchTopic.cs` (`RequiredLabLevel`, `ResearchKind`), `UI/ResearchPanelController.cs`,
-`Cheats/ResearchCheat.cs`. SetupProject: `BuildResearchPanel`.
+`Cheats/ResearchCheat.cs`. Built in `Editor/SetupProjectPanels.cs` (`BuildResearchPanel`).
 
 ## Data
 buildings/units: `research_coins(_N)`, `research_sec(_N)`, `starts_unlocked`; economy

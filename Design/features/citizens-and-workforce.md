@@ -30,7 +30,7 @@ citizen selects it; a tap on the world orders it to walk/gather.
 own copy of route logic, `Route/RouteVersion`), `Citizens/CitizenVisualsManager.cs` (pool, who walks
 where), `Citizens/SettlementTierManager.cs`, `Citizens/CitizenNames.cs`, `UI/WorkforcePanelController.cs` (both tabs), `UI/CitizenSelector.cs`
 (`MarkerHeight` 0.75), `UI/SelectionBadgeController.cs`, `Core/UnitSize.cs`.
-SetupProject: `BuildWorkforcePanel`, `BuildCitizenSelector`.
+Built in `Editor/SetupProjectPanels.cs` (`BuildWorkforcePanel`) and `SetupProjectGameplayUI.cs` (`BuildCitizenSelector`).
 
 ## Tests
 EditMode `CitizenManagerTests`, `SettlementTierManagerTests`, `CitizenNamesTests`; PlayMode

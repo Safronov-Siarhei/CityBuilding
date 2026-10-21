@@ -32,7 +32,9 @@ function Invoke-Unity([string]$Label, [string[]]$UnityArgs) {
     return $p.ExitCode
 }
 
-# Compile errors and exceptions out of a Unity log, each distinct line once.
+# Compile errors and exceptions out of a Unity log, each distinct line once. Sets $script:CompileFailed
+# so the run stops there: every later step would only repeat the same errors.
+$script:CompileFailed = $false
 function Write-LogProblems([string]$Log) {
     if (-not (Test-Path $Log)) { Write-Output "  log missing: $Log"; return }
     $lines = Select-String -Path $Log -Pattern 'error CS\d+|Exception:|Aborting batchmode|Scripts have compiler errors' |
@@ -40,7 +42,8 @@ function Write-LogProblems([string]$Log) {
     $cs = @($lines | Where-Object { $_ -match 'error CS' })
     $other = @($lines | Where-Object { $_ -notmatch 'error CS' })
     if ($cs.Count) {
-        Write-Output "  COMPILE ERRORS ($($cs.Count)):"
+        $script:CompileFailed = $true
+        Write-Output "  COMPILE ERRORS ($($cs.Count) distinct):"
         $cs | Select-Object -First 10 | ForEach-Object { Write-Output "    $_" }
     }
     if ($other.Count) {
@@ -101,5 +104,6 @@ foreach ($step in $Steps) {
             if (-not (Test-Path $xml) -or (Get-Item $xml).LastWriteTime -lt $started) { Write-LogProblems $log }
         }
     }
+    if ($script:CompileFailed) { Write-Output "STOPPED after $step -- fix the compile errors first"; break }
 }
 Write-Output "RUN FINISHED -- full logs in RunLogs/"

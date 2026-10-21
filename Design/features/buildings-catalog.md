@@ -37,7 +37,7 @@
 `Buildings/BuildingData.cs` (ScriptableObject: category, footprint, per-level stats, costs,
 `requires`, `connectsToFences`), `Buildings/BuildingIds.cs`, `Buildings/BuildingInstance.cs`
 (runtime: level, health, decay, `TryDamage`, `TryUpgrade`, `Demolish`, static counts).
-SetupProject: `CreateBuildingData` (all 49 call sites), `CreateAuthoredModelPrefab`,
+`Editor/SetupProjectBuildings.cs`: `CreateBuildingData` (all 49 call sites), `CreateAuthoredModelPrefab`,
 `AddLevelModels`, `ResolveBuildingRequirements`; procedural fallbacks in `SetupProjectMotifs.cs`
 (30 motifs) + `CreateHutPrefab/FortificationPrefab/PlotPrefab/RoadPrefab/WaterBuildingPrefab`.
 

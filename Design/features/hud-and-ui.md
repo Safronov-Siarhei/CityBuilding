@@ -44,7 +44,7 @@ Old round-2 look kept as git tag `hud-sketch-v1`.
 `MainMenuBackground`, `MapSelectPanelController`, `LoadGamePanelController`,
 `GameOverController`, `SafeAreaFitter`, `HudHider`, `HudOverlay`, `LocalizedText`.
 Core: `Core/GameEvent.cs` (`EventSeverity`, `EventGlyph`), `Core/EventLogManager.cs`, `Core/GameSettings.cs`.
-Built by: `SetupProject.BuildGameplayUI/BuildMainMenuScene/...`, `SetupProjectHud.cs` (layout consts),
+Built by: `SetupProjectGameplayUI.cs` (`BuildGameplayUI`), `SetupProjectPanels.cs` (windows), `SetupProjectMainMenuScene.cs`, `SetupProjectUiKit.cs` (text/buttons), `SetupProjectIcons.cs`, `SetupProjectHud.cs` (layout consts),
 `SetupProjectHudSkins.cs`, `SetupProjectTheme.cs` (`ApplyTheme`), `SetupProjectEventFeed.cs`,
 `SetupProjectLayout.cs`. Sprites: `Tools/ui/make_skin.py`, `make_hud_glyphs.py`, `make_hud_skins.py`,
 `make_event_glyphs.py`; imported by `Editor/UiTextureImport.cs` (Skin PPU 200, Icons PPU 100).

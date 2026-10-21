@@ -26,8 +26,12 @@
   (`ContinuePlaying`, `IsFreeMode`). Maps without a main base: last portal wins.
 
 ## Code
-`Combat/OrcRaidManager.cs` (1.4k lines: raids, kinds, portal opening incl. `OpenAtMapSpots` and
-`TryFindMainBaseSpot`, camp growth, models `WireOrcModels`), `Combat/OrcUnit.cs` (`OrcKind`
+`OrcRaidManager` is a partial class in four files (split 2026-10-21; fields stay in the main one):
+`Combat/OrcRaidManager.cs` (fields, lifecycle, the raid clock, waves, kinds `KindInGroup`, raid
+size/level/interval formulas, `SpawnOrc`), `OrcRaidManagerPlacement.cs` (portal search round the Town
+Hall, `OpenAtMapSpots`, `TryFindMainBaseSpot`, ground tests, `SpawnPortal`), `OrcRaidManagerCamps.cs`
+(models by kind/level, camps build/grow, guards, `PlunderCamp`, ruins), `OrcRaidManagerSave.cs`
+(restore states, `RestoreFromSave`, `RestoreCamps`); models wired by `SetupProjectOrcs.WireOrcModels`; `Combat/OrcUnit.cs` (`OrcKind`
 Raider/Thrower/Chief/Brute/Boss, `HuntPrisoner`, guards), `Combat/OrcPortal.cs` (`IsShielded`, `IsMain`),
 `Combat/PortalPlacement.cs` (spiral of (distance, bearing) slots; bearing is the outer loop),
 `Combat/PlayerProgression.cs`, `Core/GameOverManager.cs`, `UI/GameOverController.cs`,

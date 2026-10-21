@@ -32,7 +32,7 @@ gather = ring; refused = red ripple.
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,
 `TargetPriority`, `SheetIdOf`), `Combat/ArmyGroup.cs` (`RestoreAttackOrder`), `Combat/ArmyManager.cs`,
 `UI/ArmyPanelController.cs`, `UI/ArmyOrderInput.cs`, `UI/MoveOrderMarker.cs`.
-SetupProject: `BuildArmyPanel`, `BuildArmyOrderInput`.
+Built in `Editor/SetupProjectPanels.cs` (`BuildArmyPanel`, `BuildArmyOrderInput`).
 
 ## Data
 units tab rows `militia`, `spearman`, `archer`, `manatarms` (hp, damage, interval, range, speed,
