@@ -59,6 +59,9 @@ namespace CityBuilder.UI
         /// the closest collider: a tree's click box is a box around its whole canopy, so one
         /// standing between the camera and a building would otherwise swallow the tap entirely.
         /// </summary>
+        /// <summary>Whether a tap here would open a building's card.</summary>
+        public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && FindBuilding(screenPosition) != null;
+
         private BuildingInstance FindBuilding(Vector2 screenPosition)
         {
             var ray = targetCamera.ScreenPointToRay(screenPosition);

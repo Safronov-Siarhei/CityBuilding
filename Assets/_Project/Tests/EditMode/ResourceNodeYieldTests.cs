@@ -17,13 +17,12 @@ namespace CityBuilder.Tests.EditMode
     public class ResourceNodeYieldTests
     {
         [Test]
-        public void ATree_ComesDownInOneVisit()
+        public void ATree_GivesOneWoodPerVisit()
         {
-            // The two being equal IS the mechanic: a tree has no half-felled state, so its whole
-            // stock has to leave with the first worker who finishes chopping it.
-            Assert.AreEqual(ResourceNode.TotalYieldFor(ResourceType.Wood),
-                ResourceNode.YieldPerHarvestFor(ResourceType.Wood),
-                "A tree should be felled by a single visit -- a per-trip yield below its stock would leave half a tree standing forever.");
+            // The user, 2026-10-21: a tree holds five and a worker takes one per visit, coming back
+            // to the same tree until it is gone (CitizenVisualsManager keeps the claim meanwhile).
+            Assert.AreEqual(1, ResourceNode.YieldPerHarvestFor(ResourceType.Wood), "A visit to a tree should give one wood.");
+            Assert.Greater(ResourceNode.TotalYieldFor(ResourceType.Wood), 1, "A tree should take more than one visit.");
         }
 
         [Test]

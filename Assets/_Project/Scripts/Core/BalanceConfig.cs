@@ -345,7 +345,13 @@ namespace CityBuilder.Core
         [SerializeField] private int woodPerTree = 5;
         [SerializeField] private int stonePerRock = 20;
         [SerializeField] private int woodPerHarvest = 5;
-        [SerializeField] private int stonePerHarvest = 2;
+        [SerializeField] private int stonePerHarvest = 1;
+
+        /// <summary>
+        /// A boulder's stock by its size, smallest first -- the ten Stone models RockSpawner deals
+        /// (the user, 2026-10-21: every stone gets its own stock). stone_rock_size_1..10.
+        /// </summary>
+        [SerializeField] private int[] stoneRockSizes = { 12, 12, 12, 15, 18, 22, 27, 33, 40, 50 };
         [SerializeField] private float harvestSeconds = 15f;
 
         [Header("Food (economy.csv)")]
@@ -536,6 +542,10 @@ namespace CityBuilder.Core
         public int StonePerRock => stonePerRock;
         public int WoodPerHarvest => woodPerHarvest;
         public int StonePerHarvest => stonePerHarvest;
+
+        /// <summary>The stock of a boulder of this size (0 = the smallest model); stone_per_rock past the table.</summary>
+        public int StoneForRockSize(int sizeIndex) =>
+            stoneRockSizes != null && sizeIndex >= 0 && sizeIndex < stoneRockSizes.Length ? stoneRockSizes[sizeIndex] : stonePerRock;
         public float HarvestSeconds => harvestSeconds;
         public int BaseCapacityMaterials => baseCapacityMaterials;
         public int BaseCapacityFood => baseCapacityFood;
@@ -725,6 +735,10 @@ namespace CityBuilder.Core
             stonePerRock = (int)Read(economy, "stone_per_rock", stonePerRock);
             woodPerHarvest = (int)Read(economy, "wood_per_harvest", woodPerHarvest);
             stonePerHarvest = (int)Read(economy, "stone_per_harvest", stonePerHarvest);
+            for (var i = 0; i < stoneRockSizes.Length; i++)
+            {
+                stoneRockSizes[i] = (int)Read(economy, $"stone_rock_size_{i + 1}", stoneRockSizes[i]);
+            }
             harvestSeconds = Read(economy, "harvest_seconds", harvestSeconds);
             baseCapacityMaterials = (int)Read(economy, "base_capacity_materials", baseCapacityMaterials);
             baseCapacityFood = (int)Read(economy, "base_capacity_food", baseCapacityFood);

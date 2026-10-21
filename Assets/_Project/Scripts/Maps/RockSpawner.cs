@@ -23,9 +23,9 @@ namespace CityBuilder.Maps
     /// the same spot without the save having to say which one it was. Without models the old
     /// cluster of cubes stands in.
     ///
-    /// Every boulder holds the same stock for now (StonePerRock). Making the stock follow the
-    /// size is planned and deliberately not done yet; when it is, the per-size numbers belong in
-    /// the balance sheet next to these weights.
+    /// A boulder's stock follows its size (BalanceConfig.StoneForRockSize, stone_rock_size_1..10
+    /// in the sheet): a pebble gives a dozen, the biggest rock fifty. A cube cluster, with no model
+    /// to measure, holds stone_per_rock.
     ///
     /// Unlike trees these carry no NavMeshObstacle: they're knee-high, 100+ more carving obstacles
     /// on top of the forest's ~600 would cost real frame time, and citizens visually stepping over
@@ -222,7 +222,8 @@ namespace CityBuilder.Maps
             root.transform.position = position;
 
             var hash = CellHash(cell);
-            var model = ModelFor(hash);
+            var sizeIndex = ModelIndexFor(hash);
+            var model = sizeIndex >= 0 ? _rockPrefabs[sizeIndex] : null;
             var height = 0.6f;
             if (model != null)
             {
@@ -259,7 +260,9 @@ namespace CityBuilder.Maps
             clickCollider.center = new Vector3(0f, height * 0.5f, 0f);
             clickCollider.size = new Vector3(1f, height, 1f);
 
-            root.AddComponent<ResourceNode>().Initialize(ResourceType.Stone);
+            var node = root.AddComponent<ResourceNode>();
+            if (model != null) node.Initialize(ResourceType.Stone, BalanceConfig.Instance.StoneForRockSize(sizeIndex));
+            else node.Initialize(ResourceType.Stone);
 
             GridManager.Instance?.SetAreaOccupied(cell, Vector2Int.one, true);
             _rockCells.Add(cell);
@@ -273,19 +276,20 @@ namespace CityBuilder.Maps
         /// of n weighs n - i, so pebbles are the commonest find and the great outcrop the rarest
         /// (with ten: 18% down to under 2%).
         /// </summary>
-        private GameObject ModelFor(uint hash)
+        /// <summary>Which of the size-ordered models stands on a cell with this hash (-1 with none): small ones common, the weight falling linearly with size.</summary>
+        private int ModelIndexFor(uint hash)
         {
             var n = _rockPrefabs.Length;
-            if (n == 0) return null;
+            if (n == 0) return -1;
 
             var total = n * (n + 1) / 2;
             var pick = (int)(hash % (uint)total);
             for (var i = 0; i < n; i++)
             {
                 pick -= n - i;
-                if (pick < 0) return _rockPrefabs[i];
+                if (pick < 0) return i;
             }
-            return _rockPrefabs[n - 1];
+            return n - 1;
         }
 
         /// <summary>A well-mixed integer from a cell's coordinates (stable across runs and saves).</summary>

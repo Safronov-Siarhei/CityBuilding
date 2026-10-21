@@ -36,6 +36,14 @@ namespace CityBuilder.Maps
 
         private HarvestProgressBar _progressBar;
 
+        /// <summary>A node with its own stock rather than its kind's -- a boulder's follows its size.</summary>
+        public void Initialize(ResourceType resourceType, int totalYield)
+        {
+            ResourceType = resourceType;
+            TotalYield = Mathf.Max(1, totalYield);
+            RemainingYield = TotalYield;
+        }
+
         public void Initialize(ResourceType resourceType)
         {
             ResourceType = resourceType;

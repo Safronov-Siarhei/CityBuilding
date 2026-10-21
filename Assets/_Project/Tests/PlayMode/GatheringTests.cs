@@ -460,12 +460,17 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ATreeComesDownWhole()
+        public IEnumerator ATreeComesDownAfterItsLastWood()
         {
             var tree = PlaceNode(ResourceType.Wood, Vector3.zero, 0f);
 
-            Assert.AreEqual(tree.TotalYield, tree.TakeYield(), "A tree should hand over everything it has in one felling.");
-            Assert.IsTrue(tree.IsDepleted);
+            for (var visit = 1; visit < tree.TotalYield; visit++)
+            {
+                Assert.AreEqual(1, tree.TakeYield(), "A visit to a tree should give one wood.");
+                Assert.IsFalse(tree.IsDepleted, $"The tree came down after {visit} of its {tree.TotalYield}.");
+            }
+            Assert.AreEqual(1, tree.TakeYield());
+            Assert.IsTrue(tree.IsDepleted, "The tree still stands with nothing left in it.");
             yield break;
         }
     }

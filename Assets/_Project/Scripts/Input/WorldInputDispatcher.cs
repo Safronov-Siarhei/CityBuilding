@@ -81,8 +81,19 @@ namespace CityBuilder.InputControl
                 if (citizenSelector.HandleWorldTap(screenPosition)) return;
             }
 
-            // 4. Otherwise the tap is plain selection: a citizen, a building card, or nothing.
+            // 4. Otherwise the tap is plain selection: a citizen, a building card, a tree or a
+            //    boulder (how much is left in it), or nothing. A building behind a tree's wide
+            //    click box still wins -- the card is what the player was reaching for.
             if (citizenSelector != null && citizenSelector.TrySelectCitizen(screenPosition)) return;
+            if (citizenSelector != null && (buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)))
+            {
+                var node = citizenSelector.FindNodeAt(screenPosition);
+                if (node != null)
+                {
+                    NodeYieldBubble.Show(node, citizenSelector.TapCamera);
+                    return;
+                }
+            }
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
         }
 

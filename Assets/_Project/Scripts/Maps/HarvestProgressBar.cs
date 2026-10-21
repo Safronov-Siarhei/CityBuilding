@@ -67,7 +67,7 @@ namespace CityBuilder.Maps
         /// what is wanted is a world-space height to clear, whatever rotation and scale the model
         /// arrived with.
         /// </summary>
-        private static float MeasuredHeightOf(Transform node)
+        public static float MeasuredHeightOf(Transform node)
         {
             var measured = false;
             var top = node.position.y;

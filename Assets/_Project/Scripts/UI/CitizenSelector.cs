@@ -100,6 +100,34 @@ namespace CityBuilder.UI
         /// redirecting a working citizen is refused on purpose (it would desync the job
         /// bookkeeping CitizenVisualsManager keeps), but the refusal has to be visible.
         /// </summary>
+        /// <summary>
+        /// The tree or boulder under a tap, if any -- a plain tap on one shows how much is left in
+        /// it (NodeYieldBubble). Null when the tap met no node.
+        /// </summary>
+        public ResourceNode FindNodeAt(Vector2 screenPosition)
+        {
+            if (targetCamera == null) return null;
+            return NearestNode(RaycastWorld(screenPosition));
+        }
+
+        /// <summary>The camera taps are read through.</summary>
+        public Camera TapCamera => targetCamera;
+
+        private ResourceNode NearestNode(int hitCount)
+        {
+            ResourceNode node = null;
+            var nodeDistance = float.MaxValue;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].distance >= nodeDistance) continue;
+                var candidate = _hits[i].collider.GetComponentInParent<ResourceNode>();
+                if (candidate == null) continue;
+                node = candidate;
+                nodeDistance = _hits[i].distance;
+            }
+            return node;
+        }
+
         public bool TrySelectCitizen(Vector2 screenPosition)
         {
             if (targetCamera == null) return false;
@@ -145,19 +173,11 @@ namespace CityBuilder.UI
             // GetComponentInParent, not GetComponent: a tree's click collider sits on its prefab
             // root but a boulder's cluster parts are children, and either could be what the
             // raycast reports depending on the model.
-            ResourceNode node = null;
-            var nodeDistance = float.MaxValue;
-            for (var i = 0; i < hitCount; i++)
-            {
-                if (_hits[i].distance >= nodeDistance) continue;
-                var candidate = _hits[i].collider.GetComponentInParent<ResourceNode>();
-                if (candidate == null) continue;
-                node = candidate;
-                nodeDistance = _hits[i].distance;
-            }
+            var node = NearestNode(hitCount);
             if (node != null)
             {
                 CommandGather(node);
+                NodeYieldBubble.Show(node, targetCamera);
                 return true;
             }
 
