@@ -344,6 +344,7 @@ namespace CityBuilder.Core
         [Header("Defensive buildings (economy.csv)")]
         [SerializeField] private float defenceAttackIntervalSeconds = 1f;
         [SerializeField] private float defenceAttackRangeMeters = 6f;
+        [SerializeField] private float castleAttackRangeMultiplier = 1.5f;
 
         [Header("Economy (economy.csv)")]
         [SerializeField] private float dayLengthSeconds = 120f;
@@ -643,6 +644,7 @@ namespace CityBuilder.Core
         public float PortalDistanceStepMeters => portalDistanceStepMeters;
         public float DefenceAttackIntervalSeconds => defenceAttackIntervalSeconds;
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
+        public float CastleAttackRangeMultiplier => castleAttackRangeMultiplier;
         public float DayLengthSeconds => dayLengthSeconds;
         public float CoinsPerCitizenPerDayAtMaxTax => coinsPerCitizenPerDayAtMaxTax;
         public float DecayPerDayAtLevel1 => decayPerDayAtLevel1;
@@ -966,6 +968,7 @@ namespace CityBuilder.Core
             portalDistanceStepMeters = Read(economy, "portal_distance_step_meters", portalDistanceStepMeters);
             defenceAttackIntervalSeconds = Read(economy, "defence_attack_interval_seconds", defenceAttackIntervalSeconds);
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);
+            castleAttackRangeMultiplier = Read(economy, "castle_attack_range_mult", castleAttackRangeMultiplier);
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);
             coinsPerCitizenPerDayAtMaxTax = Read(economy, "coins_per_citizen_per_day_at_max_tax", coinsPerCitizenPerDayAtMaxTax);
             decayPerDayAtLevel1 = Read(economy, "decay_per_day_at_level1", decayPerDayAtLevel1);

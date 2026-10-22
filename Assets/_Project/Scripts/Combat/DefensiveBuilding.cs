@@ -39,10 +39,22 @@ namespace CityBuilder.Combat
             if (_timer > 0f) return;
             _timer = _attackIntervalSeconds;
 
+            // the Data is set after Awake, so the range is asked here
+            _attackRangeMeters = RangeOf(_buildingInstance);
+
             var target = FindNearestOrcInRange();
             if (target == null) return;
             // Seen flying from the parapet and landing (see CombatProjectiles); the damage lands with it.
             CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _buildingInstance.Defense);
+        }
+
+        /// <summary>How far a building shoots: the sheet's defence radius, castle_attack_range_mult further for the main building (the castle, the Town Hall -- the user, 2026-10-22: +50%).</summary>
+        public static float RangeOf(BuildingInstance building)
+        {
+            var range = BalanceConfig.Instance.DefenceAttackRangeMeters;
+            if (building != null && building.Data != null && building.Data.buildingName == BuildingIds.TownHall)
+                range *= BalanceConfig.Instance.CastleAttackRangeMultiplier;
+            return range;
         }
 
         private OrcUnit FindNearestOrcInRange()

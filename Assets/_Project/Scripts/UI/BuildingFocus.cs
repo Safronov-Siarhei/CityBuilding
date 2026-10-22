@@ -77,7 +77,7 @@ namespace CityBuilder.UI
             else HarvestRadiusOverlay.HideIfShown();
             if (building.Defense > 0)
             {
-                Circle(_reach, at, BalanceConfig.Instance.DefenceAttackRangeMeters);
+                Circle(_reach, at, DefensiveBuilding.RangeOf(building));
                 _reach.gameObject.SetActive(true);
             }
             else _reach.gameObject.SetActive(false);
