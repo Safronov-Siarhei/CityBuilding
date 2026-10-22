@@ -55,6 +55,9 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
 `D:\Fork` machine; run it once on any other device.
 
 ## Traps
+- Call `run.ps1` from PowerShell itself (`& ./Tools/research/run.ps1 -Steps setup,setup,...`). Through
+  `powershell -File` the comma list arrives as ONE step name, nothing runs, and it still prints
+  `RUN FINISHED` with exit 0.
 - The FIRST run after a .cs edit compiles new code but runs the OLD — run twice. An Editor-assembly edit
   (SetupProject, BalanceImporter) needs the SetupProject pass itself twice.
 - A failed compile takes ~10 min to exit. Shell returns before Unity exits. `Start-Process -Wait` can
