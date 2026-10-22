@@ -73,6 +73,13 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
 - Known flakes: `ForestClickTargetingTests` (unseeded forest), `Photograph_TheBuildingLevels`.
 
 ## Builds
+**APK size vs Telegram's 50 MB** (2026-10-22: 60,3 MB → 46,4 MB): `BuildAndroid` builds with LZ4HC,
+IL2CPP OptimizeSize, `stripUnusedMeshComponents`, Medium managed stripping (the game uses no
+reflection -- keep it that way, or Medium strips what it reaches); `UiTextureImport` overrides the
+interface pictures to ASTC 4x4 on Android only; `ModelImportDefaults` compresses maps at Low and set
+pieces at Medium. Both importers carry `GetVersion()` -- bump it when their rules change, or nothing
+already imported is redone. If the APK grows past 50 again, read the build log's "Uncompressed usage by
+category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.so`) before guessing.
 `Tools/research/build_android.ps1 [-Development]` (`Editor/BuildAndroid.cs`) and `build_windows.ps1`
 (`Editor/BuildWindows.cs`) → `D:\Builds CB` (previous build deleted first) → Telegram via
 `send_build_to_telegram.py` (token from `TELEGRAM_BOT_TOKEN`; 50 MB cap). Identifier

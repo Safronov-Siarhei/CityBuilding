@@ -18,6 +18,9 @@ namespace CityBuilder.EditorTools
     /// </summary>
     public class UiTextureImport : AssetPostprocessor
     {
+        /// <summary>Raised when these rules change, so Unity reimports the pictures they cover (2: the Android ASTC override).</summary>
+        public override uint GetVersion() => 2;
+
         public const string SkinFolder = "Assets/_Project/UI/Skin";
         public const string IconsFolder = "Assets/_Project/UI/Icons";
 
@@ -50,6 +53,17 @@ namespace CityBuilder.EditorTools
             importer.filterMode = FilterMode.Bilinear;
             importer.textureCompression = isArt ? TextureImporterCompression.CompressedHQ : TextureImporterCompression.Uncompressed;
             importer.spritePixelsPerUnit = isSkin ? 200f : 100f;
+            // On Android the interface would be some 40 MB of raw RGBA and pushed the APK past
+            // Telegram's 50 MB (60,3 MB on 2026-10-22). ASTC 4x4 is a quarter of that and keeps
+            // the 9-slice edges and the icons' outlines clean; the editor and Windows keep the raw pictures.
+            importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
+            {
+                name = "Android",
+                overridden = true,
+                format = TextureImporterFormat.ASTC_4x4,
+                maxTextureSize = 2048,
+                compressionQuality = 100,
+            });
 
             var folder = isHudSkin ? Path.GetDirectoryName(assetPath) : SkinFolder;
             if (isSkin && Borders(folder).TryGetValue(Path.GetFileNameWithoutExtension(assetPath), out var b))

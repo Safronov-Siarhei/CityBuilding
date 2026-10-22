@@ -53,7 +53,18 @@ namespace CityBuilder.EditorTools
             Directory.CreateDirectory(OutputFolder);
             var apkPath = Path.Combine(OutputFolder, development ? "CityBuilding-dev.apk" : "CityBuilding.apk");
 
-            var options = BuildOptions.None;
+            // Telegram takes no file over 50 MB and the APK had grown past it (52,2 MB on 2026-10-16).
+            // Unity stores its data in the APK uncompressed (so it can be read in place), which makes
+            // how the data is packed decide most of the size: LZ4HC packs it much tighter than the
+            // default LZ4 for the same load speed. IL2CPP generating for size shrinks the native
+            // library at a cost in speed too small to see in this game.
+            var options = BuildOptions.CompressWithLz4HC;
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSize);
+            // vertex channels no shader in the build reads (tangents: there are no normal maps) stay out
+            PlayerSettings.stripUnusedMeshComponents = true;
+            // code nothing calls stays out of the native library; the game reaches nothing by
+            // reflection (checked 2026-10-22), which is what Medium could break
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Medium);
             if (development)
             {
                 // ConnectWithProfiler on its own is not enough: without Development the player has

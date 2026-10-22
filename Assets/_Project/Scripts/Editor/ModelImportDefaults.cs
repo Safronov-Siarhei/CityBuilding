@@ -20,6 +20,9 @@ namespace CityBuilder.EditorTools
     /// </summary>
     public class ModelImportDefaults : AssetPostprocessor
     {
+        /// <summary>Raised when these rules change, so Unity reimports the models they cover (2: the maps' meshes compressed; 3: set pieces at Medium).</summary>
+        public override uint GetVersion() => 3;
+
         private const string ModelsFolder = "Assets/_Project/Models/";
         private const string BuildingsFolder = "Assets/_Project/Models/Buildings/";
         private const string TerrainFolder = "Assets/_Project/Models/Terrain/";
@@ -74,6 +77,10 @@ namespace CityBuilder.EditorTools
                 // a mesh like that at runtime, which was aborting MeshMapApplier.Apply() partway
                 // through and taking the rest of map setup down with it.
                 modelImporter.isReadable = true;
+                // The maps' ground, relief and water were the build's biggest meshes left raw
+                // (4 MB a map ground). Low quantises the stored copy only, as for the buildings
+                // below: far finer than a cell, so the map's chunks still meet.
+                modelImporter.meshCompression = ModelImporterMeshCompression.Low;
                 return;
             }
 
@@ -85,8 +92,11 @@ namespace CityBuilder.EditorTools
             // Five levels of every building plus the orc bases made meshes 62% of the build and
             // pushed the APK past Telegram's 50 MB (2026-10-16). Low quantises what is stored on
             // disk only -- the mesh is unpacked at load, so the frame costs nothing -- and is
-            // fine-grained enough for the palette UVs and the fence joins.
-            modelImporter.meshCompression = ModelImporterMeshCompression.Low;
+            // fine-grained enough for the palette UVs and the fence joins. Medium since 2026-10-22
+            // (the APK past 50 MB again): 16 bits across a model a few metres wide is still a
+            // hundredth of a millimetre. The maps stay at Low -- across 200 m, Medium would open
+            // seams between their chunks.
+            modelImporter.meshCompression = ModelImporterMeshCompression.Medium;
         }
 
         private void OnPreprocessTexture()
