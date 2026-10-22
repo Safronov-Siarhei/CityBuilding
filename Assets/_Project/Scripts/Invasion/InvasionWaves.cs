@@ -135,7 +135,7 @@ namespace CityBuilder.Invasion
                     var kind = KindAt(i, Wave, boss && l == 0, config.InvasionThrowerFromWave, config.InvasionThrowerEvery, config.InvasionBruteFromWave, config.InvasionBruteEvery);
                     var orc = raids.SpawnOrcOfKind(start, level, kind);
                     if (orc == null) continue;
-                    orc.Toughen(config.InvasionOrcHealthMultiplier);
+                    orc.Toughen(config.InvasionOrcHealthMultiplier, config.InvasionOrcDamageMultiplier);
                     _waveOrcs.Add(orc);
                     _laneOf[orc] = _lastLanes[l];
                     if (leader == null) leader = orc;

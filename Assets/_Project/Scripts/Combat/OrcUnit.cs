@@ -125,6 +125,7 @@ namespace CityBuilder.Combat
 
         /// <summary>Its full health at its level -- also what striking it down is worth to the King (KingHero).</summary>
         public int MaxHealth => _maxHealth;
+        public int AttackDamage => _attackDamage;
 
         // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
         // a unit, not a structure, so a group set to prioritise structures walks past it.
@@ -324,11 +325,13 @@ namespace CityBuilder.Combat
 
         /// <summary>
         /// Health times `factor`, full again: an Invasion wave's orcs are this much tougher than a
-        /// sandbox raid's (inv_orc_health_mult), or a tower's arrow drops each with one shot.
+        /// sandbox raid's (inv_orc_health_mult), or a tower's arrow drops each with one shot; its
+        /// blows times `damage` (inv_orc_damage_mult).
         /// </summary>
-        public void Toughen(float factor)
+        public void Toughen(float factor, float damage = 1f)
         {
             _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * factor));
+            _attackDamage = Mathf.Max(1, Mathf.RoundToInt(_attackDamage * damage));
             CurrentHealth = _maxHealth;
         }
 
@@ -470,16 +473,7 @@ namespace CityBuilder.Combat
                 return true;
             }
 
-            var direction = toPrisoner / distance;
-            if (_controller != null && _controller.enabled)
-            {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
-                PinToGroundHeight();
-            }
-            else
-            {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
-            }
+            Chase(_prisonerTarget.transform.position, toPrisoner / distance);
             _retargetTimer = 0f;
             return true;
         }
@@ -500,7 +494,7 @@ namespace CityBuilder.Combat
             return nearest;
         }
 
-        private void GuardWalk(Vector3 destination)
+        private void GuardWalk(Vector3 destination, bool straightLineFallback = false)
         {
             _guardRoute ??= new NavRoute();
             _guardRouteTimer -= Time.deltaTime;
@@ -508,7 +502,7 @@ namespace CityBuilder.Combat
             moved.y = 0f;
             if (_guardRouteTimer <= 0f || moved.sqrMagnitude > 0.25f)
             {
-                _guardRoute.SetDestination(transform.position, destination, straightLineFallback: false);
+                _guardRoute.SetDestination(transform.position, destination, straightLineFallback);
                 _guardRouteDestination = destination;
                 _guardRouteTimer = GuardRouteRefreshSeconds;
             }
@@ -525,6 +519,33 @@ namespace CityBuilder.Combat
                 transform.position += step;
             }
             transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+        private const float ChaseLookAheadMeters = 1.5f;
+
+        /// <summary>
+        /// Closes on someone it is fighting: straight at them while the NavMesh ahead is clear (the
+        /// cheap case, nearly always), round by a NavMesh route when water, a wall or a building is in
+        /// the way -- a straight line used to walk an orc lured by the King across a lake (playtest 4,
+        /// 2026-10-22).
+        /// </summary>
+        private void Chase(Vector3 destination, Vector3 direction)
+        {
+            var from = transform.position;
+            if (NavMesh.Raycast(from, from + direction * ChaseLookAheadMeters, out _, NavMesh.AllAreas))
+            {
+                GuardWalk(destination, straightLineFallback: true);
+                return;
+            }
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += direction * _walkSpeed * Time.deltaTime;
+            }
         }
 
         private SoldierUnit FindNearestSoldierInCamp()
@@ -585,16 +606,7 @@ namespace CityBuilder.Combat
                 return;
             }
 
-            var direction = toSoldier / distance;
-            if (_controller != null && _controller.enabled)
-            {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
-                PinToGroundHeight();
-            }
-            else
-            {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
-            }
+            Chase(_soldierTarget.transform.position, toSoldier / distance);
 
             // The building route was planned from where this orc used to stand; force a replan
             // once the fight is over instead of resuming a route that no longer starts here.
@@ -650,16 +662,7 @@ namespace CityBuilder.Combat
                 return true;
             }
 
-            var direction = to / Mathf.Max(0.001f, distance);
-            if (_controller != null && _controller.enabled)
-            {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
-                PinToGroundHeight();
-            }
-            else
-            {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
-            }
+            Chase(_citizenTarget.transform.position, to / Mathf.Max(0.001f, distance));
             _retargetTimer = 0f;
             return true;
         }

@@ -188,16 +188,20 @@ namespace CityBuilder.Buildings
             _barTexture = Draw(64, 16, RoundedBar);
             _heartTexture = Draw(48, 48, Heart);
             _shieldTexture = Draw(48, 48, Shield);
-            _frameMaterial = Textured(_barTexture, FrameColor);
-            _trackMaterial = Textured(_barTexture, TrackColor);
-            _fillMaterial = Textured(_barTexture, Color.white);
-            _heartMaterial = Textured(_heartTexture, Color.white);
-            _shieldMaterial = Textured(_shieldTexture, Color.white);
+            // Drawn in a fixed order, not sorted by distance: the layers are transparent quads a hair
+            // apart, and sorted by their centres the track came out in front of a drained fill and
+            // hid it -- a beast's bar looked full or empty at random when hit (playtest 4, 2026-10-22).
+            _frameMaterial = Textured(_barTexture, FrameColor, 0);
+            _trackMaterial = Textured(_barTexture, TrackColor, 1);
+            _fillMaterial = Textured(_barTexture, Color.white, 2);
+            _heartMaterial = Textured(_heartTexture, Color.white, 3);
+            _shieldMaterial = Textured(_shieldTexture, Color.white, 3);
         }
 
-        private static Material Textured(Texture2D texture, Color color)
+        private static Material Textured(Texture2D texture, Color color, int layer)
         {
             var material = UI.MoveOrderMarker.CreateTransparentMaterial(color);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent + 50 + layer;
             material.SetTexture("_BaseMap", texture);
             material.mainTexture = texture;
             return material;

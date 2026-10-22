@@ -317,6 +317,8 @@ namespace CityBuilder.Tests.PlayMode
             var orc = waves.WaveOrcs[0];
             var sandbox = config.Unit("orc").LevelStats(1).maxHealth * orc.Level;
             Assert.AreEqual(Mathf.RoundToInt(sandbox * config.InvasionOrcHealthMultiplier), orc.MaxHealth, "A wave's orc is no tougher than a raid's.");
+            var blow = config.Unit("orc").LevelStats(1).attackDamage * orc.Level;
+            Assert.AreEqual(Mathf.Max(1, Mathf.RoundToInt(blow * config.InvasionOrcDamageMultiplier)), orc.AttackDamage, "A wave's orc does not hit as inv_orc_damage_mult says.");
             var arrow = PlaytestWorld.Building("Tower").LevelStats(1).defense;
             Assert.Greater(orc.MaxHealth, arrow * 2, "One or two of a tower's arrows still drop a wave's orc.");
 
@@ -614,6 +616,11 @@ namespace CityBuilder.Tests.PlayMode
             focus.OpenDetails();
             var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
             Assert.IsTrue(panel != null && GameObject.Find("BuildingInfoPanel") != null, "The «!» did not open the building's card.");
+            yield return null;
+            Assert.IsNull(GameObject.Find("BuildingDetailsButton"), "The «!» stayed over the card it opened (playtest 4).");
+            panel.Close();
+            yield return null;
+            Assert.IsNotNull(GameObject.Find("BuildingDetailsButton"), "The «!» did not come back when the card closed.");
             focus.Clear();
             yield return null;
             Assert.IsNull(focus.Current);

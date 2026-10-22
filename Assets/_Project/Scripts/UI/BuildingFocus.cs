@@ -134,6 +134,12 @@ namespace CityBuilder.UI
                 Clear();
                 return;
             }
+            // the «!» steps aside while the card it opened is up, and comes back when it closes
+            if (detailsButton != null)
+            {
+                var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen);
+                if (detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
+            }
             TickRipples();
         }
 

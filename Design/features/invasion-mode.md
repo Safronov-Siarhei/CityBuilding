@@ -21,7 +21,10 @@
 > citizens, harder waves. Playtest 3: TIMED BUILD + UPGRADE (ConstructionSite; nothing works meanwhile;
 > hammer labels), limited cards greyed «1/1», flat harvest distance + gatherable-node rings, «Где» selects,
 > heart/shield health bars, coin popups, more island wood / less stone; building selection (BuildingFocus)
-> is a shared feature now. Next: online leaderboard (service not chosen), more playtests.
+> is a shared feature now. Playtest 4: «!» hides under the card, orc chases (soldier/citizen/prisoner)
+> keep to the NavMesh (`OrcUnit.Chase`: straight while NavMesh.Raycast is clear, else a route), health
+> bar layers in a fixed render queue, Inv1 stone where the user drew it, wave orcs ×0.7 damage
+> (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),

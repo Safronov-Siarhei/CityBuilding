@@ -509,6 +509,7 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
         // The Invasion run's score (InvasionScore) and the local records (InvasionRecords).
         [SerializeField] private float invasionOrcHealthMultiplier = 4f;
+        [SerializeField] private float invasionOrcDamageMultiplier = 1f;
         [SerializeField] private int invasionMaxEachYard = 1;
         [SerializeField] private float invasionMinimapRadius = 40f;
         [SerializeField] private float invasionWallHealthMultiplier = 4f;
@@ -744,6 +745,7 @@ namespace CityBuilder.Core
         public float InvasionCampGuardRadius => invasionCampGuardRadius;
         public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
         public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
+        public float InvasionOrcDamageMultiplier => invasionOrcDamageMultiplier;
         public int InvasionMaxEachYard => invasionMaxEachYard;
         public float InvasionMinimapRadius => invasionMinimapRadius;
         public float InvasionWallHealthMultiplier => invasionWallHealthMultiplier;
@@ -1084,6 +1086,7 @@ namespace CityBuilder.Core
             invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
             invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
             invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
+            invasionOrcDamageMultiplier = Read(economy, "inv_orc_damage_mult", invasionOrcDamageMultiplier);
             invasionMaxEachYard = (int)Read(economy, "inv_max_each_yard", invasionMaxEachYard);
             invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
             invasionWallHealthMultiplier = Read(economy, "inv_wall_health_mult", invasionWallHealthMultiplier);

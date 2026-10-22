@@ -45,6 +45,9 @@ namespace CityBuilder.UI
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
 
+        /// <summary>The card is up.</summary>
+        public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
+
         public void Show(BuildingInstance instance)
         {
             _currentInstance = instance;

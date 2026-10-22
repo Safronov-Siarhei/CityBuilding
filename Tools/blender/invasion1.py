@@ -139,9 +139,10 @@ HILLS = []                                     # (no room for hills on the small
 GROVES = [(*_polar(RAD(a), 12.5), 4.4) for a in JUNGLE_ANGLES] +          [(*_polar(RAD(a), 14.5), 3.0) for a in (60.0, 180.0, 300.0)]
 # the island's stone (2026-10-22: too much of it, too few trees -- the start is about wood):
 # one small stony patch; once it and the groves are worked out the yards move off the island
-OUTCROPS = [(*_polar(RAD(0.0), 10.5), 1.6)] + \
-           [(*_polar(RAD(a + 20), 53), 3) for a in JUNGLE_ANGLES] + \
-           [(*_polar(RAD(a - 18), 82), 4) for a in JUNGLE_ANGLES]
+# Where the user drew them on the map (playtest 4, 2026-10-22; bearing and distance read off
+# their picture): a second small patch on the island, and four in the jungles.
+OUTCROPS = [(*_polar(RAD(0.0), 10.5), 1.6), (*_polar(RAD(124.0), 12.0), 1.6)] + \
+           [(*_polar(RAD(a), r), 3) for a, r in ((29.0, 80.0), (141.0, 80.0), (252.0, 37.0), (306.0, 84.0))]
 
 
 def _lengths(pts):

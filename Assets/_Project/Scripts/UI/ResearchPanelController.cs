@@ -89,6 +89,9 @@ namespace CityBuilder.UI
         public string EmptyMessage => emptyLabel != null && emptyLabel.activeSelf && _emptyText != null ? _emptyText.text : string.Empty;
 
         /// <summary>Opens the window on a particular Laboratory (the one that was tapped).</summary>
+        /// <summary>The card is up.</summary>
+        public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
+
         public void Show(BuildingInstance laboratory)
         {
             _lab = laboratory;
