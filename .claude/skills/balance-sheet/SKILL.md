@@ -1,6 +1,6 @@
 ---
 name: balance-sheet
-description: Edit the CityBuilding balance Google Sheet (CityBuilding_Balance) directly through the Claude in Chrome extension, then verify the edit landed. Use this whenever a change touches the game's numbers or text — a new recipe, building, unit, economy key or localization string; retuning a cost, a rate or a research price; renaming a label; or reconciling the repo CSVs with the sheet. Reach for it as soon as you are about to edit anything under Assets/_Project/Balance/, and also when the user says the sheet and the repo have drifted, asks what differs between them, or asks you to add/paste/update rows. The user has said explicitly not to hand them paste blocks — add the rows yourself.
+description: Edit the CityBuilding balance Google Sheet (CityBuilding_Balance) directly through the Google Sheets connector (API; the Claude in Chrome extension is the fallback), then verify the edit landed. Use this whenever a change touches the game's numbers or text — a new recipe, building, unit, economy key or localization string; retuning a cost, a rate or a research price; renaming a label; or reconciling the repo CSVs with the sheet. Reach for it as soon as you are about to edit anything under Assets/_Project/Balance/, and also when the user says the sheet and the repo have drifted, asks what differs between them, or asks you to add/paste/update rows. The user has said explicitly not to hand them paste blocks — add the rows yourself.
 ---
 
 # Editing the CityBuilding balance sheet
@@ -22,7 +22,7 @@ surface that nothing has run yet.
 1. Edit `Assets/_Project/Balance/<tab>.csv`.
 2. Rebuild and test (`Tools/research/rebuild_twice_and_test.ps1` — twice, because a CSV change is
    read by the importer in the Editor assembly).
-3. Put the same rows into the sheet with the browser (below).
+3. Put the same rows into the sheet through the Sheets connector (API, below; the browser is the fallback).
 4. Verify with `scripts/verify_sheet.py` (below). Not by asking.
 5. Commit the CSV and the regenerated assets.
 
@@ -48,7 +48,31 @@ Tab gids — the same ones in `Assets/_Project/Balance/BalanceSheetSettings.asse
 The `2PACX-…` string in the published CSV links is a publication id, not a document id, and no
 amount of rearranging turns one into the other.
 
-## Driving the sheet
+## Driving the sheet through the API (the default since 2026-10-22)
+
+The user connected the **Google Sheets** connector (claude.ai connector; its tools are
+`mcp__<id>__get_values`, `update_values`, `insert_dimension`, `append_values`, `get_spreadsheet`,
+loaded with ToolSearch "select:..."). Use it instead of the browser: no screenshots, no Name Box,
+no clipboard. If its tools are missing, check `mcp__ccd_connectors__session_connectors_status`;
+fall back to the browser section below only when the connector is unavailable.
+
+- **Read** a range: `get_values(spreadsheetId, "economy!A160:C170")` -- find a row's number by
+  reading column A of the tab, never by guessing from the repo CSV (the orders differ).
+- **Insert rows**: `insert_dimension(sheetId=<tab gid>, dimension="ROWS", startIndex=<row-1>,
+  endIndex=<row-1+n>, inheritFromBefore=true)`; the gid is the tab's `sheetId` (table below).
+  An insert renumbers everything below it: do the lower edits first, or re-read.
+- **Write**: `update_values(spreadsheetId, "economy!A184:C185", [[...], [...]])`. Values are
+  entered AS IF TYPED (USER_ENTERED): a text starting with `+`, `-` or `=` becomes a formula and
+  reads back `0` -- write it with a leading apostrophe (`"'+{0}"`), which is not stored. Write
+  decimals the way the sheet shows them, as text with a comma (`"0,5"`), like the CSV.
+- **Read back** what was written (`get_values`) before moving on -- it is one cheap call, and it
+  is what caught the `+{0}` formula.
+- Then run `verify_sheet.py` as before. The published CSV it downloads can lag the sheet by a
+  minute or more: a difference in a cell just written usually means "not published yet" -- re-read
+  the cell through the API, and re-run the script after a wait (in the background) rather than
+  re-editing.
+
+## Driving the sheet through the browser (fallback)
 
 Select the browser first — `switch_browser` broadcasts a Connect prompt to every connected Chrome,
 or `select_browser` with a known deviceId. Without it every other call fails.
