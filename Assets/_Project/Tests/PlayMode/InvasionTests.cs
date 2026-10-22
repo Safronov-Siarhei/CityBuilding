@@ -330,11 +330,11 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var o in waves.WaveOrcs.ToList()) o.TakeDamage(o.MaxHealth);
         }
 
-        /// <summary>A run has one sawmill and two quarries at most (the user, 2026-10-22): past that the card greys and the placer refuses.</summary>
+        /// <summary>A run has one sawmill and one quarry at most (the user, 2026-10-22; two quarries were tried and taken back): past that the card greys and the placer refuses.</summary>
         [Test]
-        public void ARun_HasOneSawmillAndTwoQuarries()
+        public void ARun_HasOneSawmillAndOneQuarry()
         {
-            foreach (var (id, max) in new[] { ("Sawmill", 1), ("Quarry", 2) })
+            foreach (var (id, max) in new[] { ("Sawmill", 1), ("Quarry", 1) })
             {
                 var data = PlaytestWorld.Building(id);
                 Assert.AreEqual(max, InvasionRules.LimitOf(data), $"A run's limit of {id} is not the sheet's.");
@@ -535,7 +535,8 @@ namespace CityBuilder.Tests.PlayMode
                 .OrderBy(n => (n.transform.position - castle).sqrMagnitude).FirstOrDefault();
             Assert.IsNotNull(rock, "No stone on the run's map.");
             Assert.GreaterOrEqual(rock.TotalYield, Mathf.RoundToInt(config.StoneForRockSize(1) * config.InvasionStoneReserveMultiplier), "A run's boulder holds no more than a sandbox one.");
-            Assert.AreEqual(config.InvasionStonePerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Stone));
+            Assert.AreEqual(config.InvasionPerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Stone));
+            Assert.AreEqual(config.InvasionPerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Wood), "The sawmill and the quarry bring different loads.");
 
             var data = PlaytestWorld.Building("Quarry");
             var quarry = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(rock.transform.position), data.footprintSize));

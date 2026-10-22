@@ -84,9 +84,9 @@ namespace CityBuilder.Maps
         {
             switch (resourceType)
             {
-                case ResourceType.Wood: return BalanceConfig.Instance.WoodPerHarvest;
-                // a run's quarry men break off more each trip (inv_stone_per_harvest)
-                case ResourceType.Stone: return Invasion.InvasionRules.Active ? BalanceConfig.Instance.InvasionStonePerHarvest : BalanceConfig.Instance.StonePerHarvest;
+                // a run's yards bring more each trip, the sawmill and the quarry alike (inv_per_harvest)
+                case ResourceType.Wood: return Invasion.InvasionRules.Active ? BalanceConfig.Instance.InvasionPerHarvest : BalanceConfig.Instance.WoodPerHarvest;
+                case ResourceType.Stone: return Invasion.InvasionRules.Active ? BalanceConfig.Instance.InvasionPerHarvest : BalanceConfig.Instance.StonePerHarvest;
                 default: return 0;
             }
         }
