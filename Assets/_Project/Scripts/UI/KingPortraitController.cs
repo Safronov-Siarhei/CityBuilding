@@ -11,8 +11,8 @@ namespace CityBuilder.UI
     /// The King's portrait in an Invasion run (top-right, where the sandbox shows contentment):
     /// his face, his level, a health bar and an experience bar; greyed with a countdown while he is
     /// down; a gold ring while he is selected. A tap on it selects him -- the next tap on the map
-    /// is his order -- and brings the camera to him; the castle button under it sends him back to
-    /// guarding the base. Hidden outside a run.
+    /// is his order -- and brings the camera to him; let go of, he goes back to guarding the base
+    /// by himself (KingHero). Hidden outside a run.
     ///
     /// Also answers the world tap that lands on the King himself (WorldInputDispatcher), so he can
     /// be picked up where he stands, and draws the ring on the ground under him while selected.
@@ -62,7 +62,7 @@ namespace CityBuilder.UI
             if (rig != null) rig.JumpTo(king.IsFallen ? king.Home : king.transform.position);
         }
 
-        /// <summary>The castle button: back to guarding the base.</summary>
+        /// <summary>Back to guarding the base, and let go of.</summary>
         public void GuardBase()
         {
             var king = King;

@@ -23,6 +23,22 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject badgeRoot;
         [SerializeField] private Text label;
 
+        /// <summary>From the bottom-right corner's edges, in an Invasion run.</summary>
+        private static readonly Vector2 RunCornerOffset = new Vector2(-24f, 24f);
+
+        /// <summary>
+        /// In an Invasion run the badge sits in the bottom-right corner (the user, 2026-10-22),
+        /// which the sandbox gives the tax and a run leaves empty -- not under the resource bar,
+        /// where the wave line and the King's portrait are.
+        /// </summary>
+        private void Start()
+        {
+            if (!Invasion.InvasionMode.IsActive || badgeRoot == null) return;
+            var rect = (RectTransform)badgeRoot.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0f);
+            rect.anchoredPosition = RunCornerOffset;
+        }
+
         private void Update()
         {
             var army = ArmyManager.Instance;
@@ -34,9 +50,11 @@ namespace CityBuilder.UI
             if (!visible || label == null) return;
 
             label.text = hasGroup
-                ? Localization.Get("#selection_army")
+                ? Localization.Get(IsTheKing(army.SelectedGroup) ? "#selection_king" : "#selection_army")
                 : Localization.Get("#selection_citizen");
         }
+
+        private static bool IsTheKing(ArmyGroup group) => group.Type == SoldierType.King;
 
         /// <summary>The badge's own X. Clears whichever selection is showing -- the army group wins, matching the order the dispatcher resolves taps in.</summary>
         public void ClearSelection()

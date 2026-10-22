@@ -162,5 +162,8 @@ Keys are derived from ids: a recipe's label is `#recipe_<recipe_id>`, a building
 column when the key is missing, so a forgotten localization row shows plausible text and hides
 itself — add the key.
 
+A cell starting with `+`, `-` or `=` (e.g. `+{0}`) is pasted as a FORMULA and shows `0`: type it
+with a leading apostrophe (`'+{0}`) instead of pasting it.
+
 Both `ru` and `en` are required. Watch for `\n` and `{0}`-style placeholders surviving the paste
 intact, and for leading or trailing spaces being significant — see `#recipe_batches` above.

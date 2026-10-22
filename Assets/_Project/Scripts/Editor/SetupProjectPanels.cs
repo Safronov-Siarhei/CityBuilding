@@ -85,6 +85,8 @@ namespace CityBuilder.EditorTools
             var input = go.AddComponent<ArmyOrderInput>();
             var so = new SerializedObject(input);
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
+            // the same flag a citizen's move order plants
+            so.FindProperty("orderFlagPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/OrderFlag.fbx");
             so.ApplyModifiedPropertiesWithoutUndo();
             return input;
         }

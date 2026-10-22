@@ -89,9 +89,11 @@ namespace CityBuilder.Buildings
         // check without a FindObjectsByType scan on every placement/ghost update.
         private static readonly Dictionary<string, int> _countByName = new Dictionary<string, int>();
 
-        public static bool HasAny(string buildingName)
+        public static bool HasAny(string buildingName) => CountOf(buildingName) > 0;
+
+        public static int CountOf(string buildingName)
         {
-            return !string.IsNullOrEmpty(buildingName) && _countByName.TryGetValue(buildingName, out var count) && count > 0;
+            return !string.IsNullOrEmpty(buildingName) && _countByName.TryGetValue(buildingName, out var count) ? count : 0;
         }
 
         /// <summary>Fired for every building lost to combat damage (see TryDamage), including the Town Hall -- CityBuilder.Core.GameOverManager listens for that specific case to trigger defeat. Not fired for decay destruction (HandleFullyDecayed), which the Town Hall is exempt from anyway.</summary>

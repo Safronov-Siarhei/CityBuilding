@@ -439,6 +439,7 @@ namespace CityBuilder.Core
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
         [SerializeField] private float kingXpRadius = 12f;
         [SerializeField] private float kingGuardRadius = 30f;
+        [SerializeField] private int kingRevealRadius = 9;
 
         // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
         [SerializeField] private int invasionHouses = 6;
@@ -506,6 +507,9 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionCampGuardRadius = 8f;
         [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
         // The Invasion run's score (InvasionScore) and the local records (InvasionRecords).
+        [SerializeField] private float invasionOrcHealthMultiplier = 4f;
+        [SerializeField] private int invasionMaxEachYard = 1;
+        [SerializeField] private float invasionMinimapRadius = 40f;
         [SerializeField] private int invasionScorePerWaveSquared = 1;
         [SerializeField] private int invasionScoreBoss = 50;
         [SerializeField] private int invasionScoreCampBuilding = 10;
@@ -679,6 +683,7 @@ namespace CityBuilder.Core
         public float KingRespawnPerLevelSeconds => kingRespawnPerLevelSeconds;
         public float KingXpRadius => kingXpRadius;
         public float KingGuardRadius => kingGuardRadius;
+        public int KingRevealRadius => kingRevealRadius;
         public int InvasionHouses => invasionHouses;
         public int InvasionPeoplePerHouse => invasionPeoplePerHouse;
         public float InvasionPersonRespawnSeconds => invasionPersonRespawnSeconds;
@@ -731,6 +736,9 @@ namespace CityBuilder.Core
         public int InvasionCampThrowers => invasionCampThrowers;
         public float InvasionCampGuardRadius => invasionCampGuardRadius;
         public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
+        public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
+        public int InvasionMaxEachYard => invasionMaxEachYard;
+        public float InvasionMinimapRadius => invasionMinimapRadius;
         public int InvasionScorePerWaveSquared => invasionScorePerWaveSquared;
         public int InvasionScoreBoss => invasionScoreBoss;
         public int InvasionScoreCampBuilding => invasionScoreCampBuilding;
@@ -999,6 +1007,7 @@ namespace CityBuilder.Core
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
             kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
+            kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);
             _kingUnit = null;
             invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
             invasionPeoplePerHouse = (int)Read(economy, "inv_people_per_house", invasionPeoplePerHouse);
@@ -1061,6 +1070,9 @@ namespace CityBuilder.Core
             invasionCampThrowers = (int)Read(economy, "inv_camp_throwers", invasionCampThrowers);
             invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
             invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
+            invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
+            invasionMaxEachYard = (int)Read(economy, "inv_max_each_yard", invasionMaxEachYard);
+            invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
             invasionScorePerWaveSquared = (int)Read(economy, "inv_score_wave_sq", invasionScorePerWaveSquared);
             invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);
             invasionScoreCampBuilding = (int)Read(economy, "inv_score_camp_building", invasionScoreCampBuilding);

@@ -50,6 +50,7 @@ namespace CityBuilder.Invasion
         private readonly List<Vector3> _laneStarts = new List<Vector3>();
         private readonly List<int> _lastLanes = new List<int>();
         private readonly List<OrcUnit> _waveOrcs = new List<OrcUnit>();
+        private readonly Dictionary<OrcUnit, int> _laneOf = new Dictionary<OrcUnit, int>();
         private float _waveSeconds;
 
         private void OnEnable() => OrcUnit.Died += OnOrcDied;
@@ -90,6 +91,25 @@ namespace CityBuilder.Invasion
             if (_waveOrcs.Count == 0 || _waveSeconds >= BalanceConfig.Instance.InvasionWaveOvertimeSeconds) EndWave();
         }
 
+        /// <summary>
+        /// Where the wave underway is on `lane`: its orc nearest the castle (the head of the column),
+        /// or false when none of the wave is on that lane any more. What the minimap's alerts mark.
+        /// </summary>
+        public bool TryLaneFront(int lane, Vector3 castle, out Vector3 front)
+        {
+            front = default;
+            var best = float.MaxValue;
+            foreach (var orc in _waveOrcs)
+            {
+                if (orc == null || !_laneOf.TryGetValue(orc, out var of) || of != lane) continue;
+                var d = (orc.transform.position - castle).sqrMagnitude;
+                if (d >= best) continue;
+                best = d;
+                front = orc.transform.position;
+            }
+            return best < float.MaxValue;
+        }
+
         /// <summary>Sends the next wave now. Public for the tests, which do not wait out the clock.</summary>
         public void SendNextWave()
         {
@@ -105,6 +125,7 @@ namespace CityBuilder.Invasion
 
             PickLanes(lanes);
             _waveOrcs.Clear();
+            _laneOf.Clear();
             OrcUnit leader = null;
             for (var l = 0; l < _lastLanes.Count; l++)
             {
@@ -114,7 +135,9 @@ namespace CityBuilder.Invasion
                     var kind = KindAt(i, Wave, boss && l == 0, config.InvasionThrowerFromWave, config.InvasionThrowerEvery, config.InvasionBruteFromWave, config.InvasionBruteEvery);
                     var orc = raids.SpawnOrcOfKind(start, level, kind);
                     if (orc == null) continue;
+                    orc.Toughen(config.InvasionOrcHealthMultiplier);
                     _waveOrcs.Add(orc);
+                    _laneOf[orc] = _lastLanes[l];
                     if (leader == null) leader = orc;
                 }
             }
@@ -128,6 +151,7 @@ namespace CityBuilder.Invasion
         private void EndWave()
         {
             _waveOrcs.Clear();
+            _laneOf.Clear();
             WavesSurvived = Wave;
             var gold = GoldForWave(Wave, BalanceConfig.Instance.InvasionGoldPerWave);
             ResourceManager.Instance?.Add(InvasionRules.Money, gold);

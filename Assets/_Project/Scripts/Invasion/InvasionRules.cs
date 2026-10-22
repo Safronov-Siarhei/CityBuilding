@@ -41,6 +41,14 @@ namespace CityBuilder.Invasion
 
         public static bool Allows(BuildingData data) => data != null && Array.IndexOf(Buildings, data.buildingName) >= 0;
 
+        /// <summary>The gatherers' yards a run may have of each (the user, 2026-10-22: one sawmill, one quarry).</summary>
+        private static readonly string[] Limited = { "Sawmill", "Quarry" };
+
+        /// <summary>A run already has as many of this as it may: its card comes off the menu and it cannot be placed.</summary>
+        public static bool AtLimit(BuildingData data) =>
+            data != null && Array.IndexOf(Limited, data.buildingName) >= 0
+            && BuildingInstance.CountOf(data.buildingName) >= BalanceConfig.Instance.InvasionMaxEachYard;
+
         /// <summary>Whether a build-menu category has anything in a run.</summary>
         public static bool HasAny(BuildingCategory category, IEnumerable<BuildingData> buildings)
         {

@@ -48,6 +48,20 @@ namespace CityBuilder.Buildings
             return bar;
         }
 
+        /// <summary>
+        /// The same bar over a unit (an orc, a beast): `height` metres over its feet and `width`
+        /// metres across, whatever scale the unit's root carries.
+        /// </summary>
+        public static BuildingHealthBar CreateFor(Transform unit, float height, float width)
+        {
+            var bar = CreateFor(unit);
+            var scale = unit.lossyScale;
+            var t = bar.transform;
+            t.localPosition = new Vector3(0f, height / Mathf.Max(0.0001f, scale.y), 0f);
+            t.localScale = new Vector3(width / BarWidth / Mathf.Max(0.0001f, scale.x), width / BarWidth / Mathf.Max(0.0001f, scale.y), 1f / Mathf.Max(0.0001f, scale.z));
+            return bar;
+        }
+
         /// <summary>Shows the bar at this health fraction (0..1) and restarts the auto-hide countdown. Called on every hit, so repeated damage keeps it on screen.</summary>
         public void Report(float healthFraction)
         {

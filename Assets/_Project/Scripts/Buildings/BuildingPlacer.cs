@@ -593,8 +593,8 @@ namespace CityBuilder.Buildings
         /// <summary>True if _selectedBuilding.requiredBuilding is unset, or at least one instance of it already exists (see BuildingInstance.HasAny) -- e.g. a Cottage needs a House placed first.</summary>
         private bool HasRequiredBuilding()
         {
-            // a run's nine buildings wait on nothing but wood and stone
-            if (Invasion.InvasionRules.Active) return true;
+            // a run's nine buildings wait on nothing but wood and stone -- and one sawmill, one quarry
+            if (Invasion.InvasionRules.Active) return !Invasion.InvasionRules.AtLimit(_selectedBuilding);
             var required = _selectedBuilding.requiredBuilding;
             return required == null || BuildingInstance.HasAny(required.buildingName);
         }

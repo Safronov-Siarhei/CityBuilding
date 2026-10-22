@@ -291,15 +291,55 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(Vector3.Distance(Flat(king.transform.position), Flat(king.Home)), 1.2f, "With the base clear, the King did not walk home.");
         }
 
+        /// <summary>He takes the player's orders only while the player holds him: let go, he walks back to the castle and guards the base by himself.</summary>
         [Test]
-        public void APlayersOrder_EndsTheGuard_AndTheCastleButtonResumesIt()
+        public void TheKing_LetGo_GoesBackToGuardTheBase()
         {
             var king = InvasionMode.Instance.King;
-            king.Unit.Group.OrderMoveTo(king.Home + new Vector3(5f, 0f, 0f));
+            var army = ArmyManager.Instance;
+            army.SelectGroup(king.Unit.Group);
+            king.Unit.Group.OrderMoveTo(king.Home + new Vector3(25f, 0f, 0f));
             king.Unit.Group.NotifyPlayerOrder();
             Assert.IsFalse(king.Guarding, "The King kept guarding after the player told him to go somewhere.");
-            Object.FindAnyObjectByType<CityBuilder.UI.KingPortraitController>().GuardBase();
-            Assert.IsTrue(king.Guarding, "The castle button did not send him back to guard the base.");
+
+            army.SelectGroup(null);
+            Assert.IsTrue(king.Guarding, "Let go of, the King did not go back to guarding the base.");
+            Assert.Less(Vector3.Distance(Flat(king.Unit.Group.HoldPosition), Flat(king.Home)), 0.5f, "Let go of, the King stays where he was sent.");
+        }
+
+        /// <summary>A wave's orcs take several of a tower's arrows (the user, 2026-10-22: they fell to one), and a hurt one shows its health over its head.</summary>
+        [UnityTest]
+        public IEnumerator WaveOrcs_AreTougher_AndShowTheirHealth()
+        {
+            var config = BalanceConfig.Instance;
+            var waves = InvasionMode.Instance.Waves;
+            waves.SendNextWave();
+            var orc = waves.WaveOrcs[0];
+            var sandbox = config.Unit("orc").LevelStats(1).maxHealth * orc.Level;
+            Assert.AreEqual(Mathf.RoundToInt(sandbox * config.InvasionOrcHealthMultiplier), orc.MaxHealth, "A wave's orc is no tougher than a raid's.");
+            var arrow = PlaytestWorld.Building("Tower").LevelStats(1).defense;
+            Assert.Greater(orc.MaxHealth, arrow * 2, "One or two of a tower's arrows still drop a wave's orc.");
+
+            orc.TakeDamage(1);
+            yield return null;
+            var bar = orc.transform.Find("HealthBar");
+            Assert.IsNotNull(bar, "A hurt orc shows no health over its head.");
+            Assert.IsTrue(bar.gameObject.activeSelf);
+            foreach (var o in waves.WaveOrcs.ToList()) o.TakeDamage(o.MaxHealth);
+        }
+
+        /// <summary>A run has one sawmill and one quarry at most: with one up, the card goes and the placer refuses another.</summary>
+        [Test]
+        public void ARun_HasOneSawmillAndOneQuarry()
+        {
+            foreach (var id in new[] { "Sawmill", "Quarry" })
+            {
+                var data = PlaytestWorld.Building(id);
+                Assert.IsFalse(InvasionRules.AtLimit(data), $"A run starts with its {id} already used up.");
+                PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize));
+                Assert.IsTrue(InvasionRules.AtLimit(data), $"A run can have a second {id}.");
+            }
+            Assert.IsFalse(InvasionRules.AtLimit(PlaytestWorld.Building("Tower")), "Towers are limited too.");
         }
 
         [UnityTest]

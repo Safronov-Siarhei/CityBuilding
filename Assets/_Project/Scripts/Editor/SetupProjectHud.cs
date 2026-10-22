@@ -241,13 +241,12 @@ namespace CityBuilder.EditorTools
         /// The King's portrait for an Invasion run, in the corner the sandbox gives contentment
         /// (KingPortraitController shows it only in a run): his face in a round frame with his level
         /// on a badge, a plaque to its left with his health and experience bars, a gold ring round
-        /// the frame while he is selected, a dark cover with a countdown while he is down, and a
-        /// castle button under it that sends him back to guard the base.
+        /// the frame while he is selected, and a dark cover with a countdown while he is down. No
+        /// guard button: let go of, he guards the base by himself (KingHero.OnSelectionChanged).
         /// </summary>
         private static void BuildKingPortrait(Transform uiRoot)
         {
             var portraitSprite = LoadSprite(KingPortraitPath);
-            var castleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Textures/Icon_Bld_Castle.asset");
             var circle = SkinSprite("circle_mask");
 
             var root = new GameObject("KingPortrait", typeof(RectTransform));
@@ -297,14 +296,6 @@ namespace CityBuilder.EditorTools
             var health = Bar(plaque.transform, "Health", new Vector2(0f, 9f), 18f, new Color(0.2f, 0.62f, 0.22f));
             var xp = Bar(plaque.transform, "Experience", new Vector2(0f, -13f), 10f, UiTheme.Gold);
 
-            // under the frame: back to guarding the base, marked while he guards
-            var guardMark = CreateImage(root.transform, "Guarding", UiTheme.Gold);
-            guardMark.sprite = circle;
-            guardMark.raycastTarget = false;
-            Anchor(guardMark.rectTransform, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-RoundButton * 0.5f, -RoundButton - 44f), new Vector2(76f, 76f));
-            var guard = CreateGlyphButton(root.transform, "GuardButton", "round_value", HudInk.Keep, null, castleSprite, 66f, 0.7f);
-            Anchor(guard.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-RoundButton * 0.5f, -RoundButton - 44f), new Vector2(66f, 66f));
-
             var go = new GameObject("KingPortraitController");
             go.transform.SetParent(uiRoot, false);
             var controller = go.AddComponent<KingPortraitController>();
@@ -316,10 +307,8 @@ namespace CityBuilder.EditorTools
             so.FindProperty("fallenOverlay").objectReferenceValue = fallen.gameObject;
             so.FindProperty("fallenText").objectReferenceValue = fallenText;
             so.FindProperty("selectedFrame").objectReferenceValue = selected.gameObject;
-            so.FindProperty("guardMark").objectReferenceValue = guardMark.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(portraitButton.onClick, controller.SelectKing);
-            UnityEventTools.AddPersistentListener(guard.onClick, controller.GuardBase);
             root.SetActive(false);   // KingPortraitController turns it on in a run
         }
 

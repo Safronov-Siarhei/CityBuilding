@@ -1,4 +1,3 @@
-using System.Collections;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
@@ -27,22 +26,14 @@ namespace CityBuilder.UI
         /// <summary>How far an order point may be pulled onto walkable NavMesh -- same precision budget as a citizen move order.</summary>
         private const float DestinationSampleRadius = 2f;
 
-        private const float MarkerSeconds = 1f;
-        private const float MarkerHeightOffset = 0.04f;
-
-        private static readonly Color MoveMarkerColor = new Color(0.95f, 0.82f, 0.2f);
-        private static readonly Color AttackMarkerColor = new Color(0.9f, 0.3f, 0.25f);
-        private static readonly Color RefusedMarkerColor = new Color(0.9f, 0.3f, 0.25f);
-
         [SerializeField] private Camera targetCamera;
+        [SerializeField] private GameObject orderFlagPrefab;
 
         // Same sizing rationale as CitizenSelector: a shallow camera ray crosses a lot of forest,
         // and RaycastNonAlloc drops hits arbitrarily once the buffer is full.
         private readonly RaycastHit[] _hits = new RaycastHit[64];
 
-        private GameObject _marker;
-        private Material _markerMaterial;
-        private Coroutine _markerRoutine;
+        private MoveOrderMarker _orderMarker;
 
         private void Update()
         {
@@ -82,7 +73,8 @@ namespace CityBuilder.UI
             {
                 army.SelectedGroup.OrderAttack(enemy);
                 army.SelectedGroup.NotifyPlayerOrder();
-                ShowMarker(enemy.Transform.position, AttackMarkerColor);
+                OrderMarker.HideOrder();
+                OrderMarker.ShowRefused(enemy.Transform.position);
                 return true;
             }
 
@@ -96,13 +88,14 @@ namespace CityBuilder.UI
             if (!TryResolveDestination(ray, hitCount, out var destination))
             {
                 // A refused order used to look exactly like an order that landed off-screen.
-                if (hitCount > 0) ShowMarker(_hits[0].point, RefusedMarkerColor);
+                if (hitCount > 0) OrderMarker.ShowRefused(_hits[0].point);
                 return true;
             }
 
-            army.SelectedGroup.OrderMoveTo(destination);
-            army.SelectedGroup.NotifyPlayerOrder();
-            ShowMarker(destination, MoveMarkerColor);
+            var group = army.SelectedGroup;
+            group.OrderMoveTo(destination);
+            group.NotifyPlayerOrder();
+            if (group.Count > 0) OrderMarker.ShowFlagFor(group.Members[0].transform, destination);
             return true;
         }
 
@@ -165,42 +158,22 @@ namespace CityBuilder.UI
             return mapApplier == null || mapApplier.IsGroundAt(point);
         }
 
-        /// <summary>Brief flat ring at the ordered spot -- on a phone the group can be off-screen or slow to start, and without it an order that landed looks identical to one that didn't.</summary>
-        private void ShowMarker(Vector3 worldPosition, Color color)
+        /// <summary>
+        /// The order on the ground, as a citizen's looks (MoveOrderMarker): a march plants the flag,
+        /// which comes down when the group's first soldier -- or the King -- gets there; an attack or
+        /// a refused tap is a red ripple. On a phone the group can be off-screen or slow to start, and
+        /// without it an order that landed looks identical to one that didn't.
+        /// </summary>
+        private MoveOrderMarker OrderMarker
         {
-            EnsureMarker();
-
-            var grid = GridManager.Instance;
-            var y = (grid != null ? grid.GroundHeight : worldPosition.y) + MarkerHeightOffset;
-            _marker.transform.position = new Vector3(worldPosition.x, y, worldPosition.z);
-            _markerMaterial.color = color;
-            _marker.SetActive(true);
-
-            if (_markerRoutine != null) StopCoroutine(_markerRoutine);
-            _markerRoutine = StartCoroutine(HideMarkerAfterDelay());
-        }
-
-        private IEnumerator HideMarkerAfterDelay()
-        {
-            yield return new WaitForSeconds(MarkerSeconds);
-            if (_marker != null) _marker.SetActive(false);
-            _markerRoutine = null;
-        }
-
-        private void EnsureMarker()
-        {
-            if (_marker != null) return;
-
-            _marker = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            _marker.name = "ArmyOrderMarker";
-            Destroy(_marker.GetComponent<Collider>());
-            // Flat on the ground (local -Z up) rather than standing upright like a default Quad.
-            _marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            _marker.transform.localScale = new Vector3(1.1f, 1.1f, 1f);
-
-            _markerMaterial = new Material(RuntimeShaders.Unlit);
-            _marker.GetComponent<Renderer>().sharedMaterial = _markerMaterial;
-            _marker.SetActive(false);
+            get
+            {
+                if (_orderMarker != null) return _orderMarker;
+                // its own object: this input lives under the UI canvas
+                _orderMarker = new GameObject("ArmyOrderMarker").AddComponent<MoveOrderMarker>();
+                _orderMarker.Configure(orderFlagPrefab);
+                return _orderMarker;
+            }
         }
     }
 }

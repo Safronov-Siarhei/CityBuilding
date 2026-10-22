@@ -396,6 +396,9 @@ namespace CityBuilder.Combat
                     var figure = Instantiate(kingModel, root, false);
                     figure.name = "King";
                     figure.transform.localScale = Vector3.one / UnitSize.Scale;
+                    // modelled facing Blender's -y, which lands facing back along the root's
+                    // forward: turned round, or he walks backwards
+                    figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
                     SceneryShadows.DisableCasting(figure);
                     // jointed (legs, arms, head): stands, runs and strikes
                     root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);

@@ -104,6 +104,7 @@ namespace CityBuilder.UI
             {
                 tab.gameObject.SetActive(Invasion.InvasionRules.HasAny(tab.Category, buildings));
             }
+            CloseUpTabs();
             // the cards' price chips: a run pays in wood and stone only, so the rest come off
             foreach (var button in _buildingButtons)
             {
@@ -115,6 +116,28 @@ namespace CityBuilder.UI
                     chip.gameObject.SetActive(false);
                 }
             }
+        }
+
+        /// <summary>
+        /// The tabs left showing, side by side in the middle as the sandbox's are, and the bar
+        /// (with its tray) shrunk round them -- hidden ones would otherwise leave gaps between them.
+        /// </summary>
+        private void CloseUpTabs()
+        {
+            if (categoryBar == null || _categoryButtons.Length < 2) return;
+            var first = (RectTransform)_categoryButtons[0].transform;
+            var step = ((RectTransform)_categoryButtons[1].transform).anchoredPosition.x - first.anchoredPosition.x;
+            var size = first.sizeDelta.x;
+            var shown = new System.Collections.Generic.List<RectTransform>();
+            foreach (var tab in _categoryButtons)
+            {
+                if (tab.gameObject.activeSelf) shown.Add((RectTransform)tab.transform);
+            }
+            for (var i = 0; i < shown.Count; i++)
+            {
+                shown[i].anchoredPosition = new Vector2((i - (shown.Count - 1) * 0.5f) * step, shown[i].anchoredPosition.y);
+            }
+            categoryBar.sizeDelta = new Vector2(shown.Count * size + Mathf.Max(0, shown.Count - 1) * (step - size), categoryBar.sizeDelta.y);
         }
 
         private void OnDisable()
@@ -217,7 +240,7 @@ namespace CityBuilder.UI
                 var show = building != null
                            && building.category == category
                            && (Invasion.InvasionRules.Active
-                               ? Invasion.InvasionRules.Allows(building)   // a run's nine, nothing to research
+                               ? Invasion.InvasionRules.Allows(building) && !Invasion.InvasionRules.AtLimit(building)   // a run's nine, nothing to research
                                : Research.ResearchManager.BuildingUnlocked(building.buildingName));
                 buildingButton.gameObject.SetActive(show);
             }

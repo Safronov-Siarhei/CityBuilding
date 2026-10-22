@@ -318,14 +318,45 @@ namespace CityBuilder.Combat
             AdvanceAlongRoute();
         }
 
+        /// <summary>
+        /// Health times `factor`, full again: an Invasion wave's orcs are this much tougher than a
+        /// sandbox raid's (inv_orc_health_mult), or a tower's arrow drops each with one shot.
+        /// </summary>
+        public void Toughen(float factor)
+        {
+            _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * factor));
+            CurrentHealth = _maxHealth;
+        }
+
         public void TakeDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            if (CurrentHealth > 0) return;
+            if (CurrentHealth > 0)
+            {
+                ShowHealth();
+                return;
+            }
             Died?.Invoke(this);
             Destroy(gameObject);
+        }
+
+        // Made on the first hit only: most orcs on a map are never touched by the player.
+        private BuildingHealthBar _healthBar;
+
+        /// <summary>A bar over its head once it has been hurt, how much is left (the user, 2026-10-22).</summary>
+        private void ShowHealth()
+        {
+            if (_healthBar == null)
+            {
+                // over the tallest part of its figure: a wolf's back, a giant's head
+                var feet = transform.position.y;
+                var top = feet + 0.6f;
+                foreach (var r in GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
+                _healthBar = BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, Kind == OrcKind.Giant ? 1.2f : 0.7f);
+            }
+            _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, _maxHealth));
         }
 
         /// <summary>Raised on each blow it lands -- a jointed figure (FigureAnimator) swings with it.</summary>

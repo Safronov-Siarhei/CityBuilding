@@ -314,11 +314,15 @@ namespace CityBuilder.Citizens
         /// Then straight back out: a re-search here is what finds the next tree once this one has
         /// been felled, and what keeps a worker on the same half-worked boulder otherwise.
         /// </summary>
+        /// <summary>A worker brought a load into his yard: the building and how much (the «+1» over it, ResourceGainPopups).</summary>
+        public static event System.Action<ProductionBuilding, int> Delivered;
+
         private void HandleReturnedToBuilding(CitizenAgent agent, ProductionBuilding building)
         {
             if (_carriedByAgent.TryGetValue(agent, out var carried) && carried > 0)
             {
                 ResourceManager.Instance?.AddProduced(building.ProducesResource, carried);
+                Delivered?.Invoke(building, carried);
             }
             _carriedByAgent[agent] = 0;
 

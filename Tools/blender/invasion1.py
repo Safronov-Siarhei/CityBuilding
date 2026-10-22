@@ -134,7 +134,9 @@ LAKE = (900.0, 900.0, 1.0, 1.0)                # (Map 4's lake; none here -- the
 RUIN = BOSS
 BEACHES = []
 HILLS = []                                     # (no room for hills on the small base island)
-GROVES = [(*_polar(RAD(a), 11.0), 2.6) for a in JUNGLE_ANGLES]   # the island's three small woods
+# the island's woods (the user, 2026-10-22: "almost no trees on the island"): a wood between each
+# pair of houses, and a smaller one on the shore between each causeway and the next stony patch
+GROVES = [(*_polar(RAD(a), 12.5), 3.6) for a in JUNGLE_ANGLES] +          [(*_polar(RAD(a), 14.5), 2.4) for a in (60.0, 180.0, 300.0)]
 OUTCROPS = [(*_polar(RAD(a), 10.5), 2.3) for a in (0.0, 120.0, 240.0)] + \
            [(*_polar(RAD(a + 20), 53), 3) for a in JUNGLE_ANGLES] + \
            [(*_polar(RAD(a - 18), 82), 4) for a in JUNGLE_ANGLES]

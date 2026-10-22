@@ -69,6 +69,10 @@ namespace CityBuilder.UI
         private Material _dotMaterial;
 
         private CitizenAgent _citizen;
+        // A soldier's or the King's order (ArmyOrderInput): the flag and its ring, no trail; down
+        // once the walker reaches it.
+        private Transform _walker;
+        private const float WalkerArrivedMeters = 0.9f;
         private bool _plantFlag;
         private Vector3 _target;
         private float _flagClock;
@@ -92,7 +96,26 @@ namespace CityBuilder.UI
         }
 
         /// <summary>True while an order is on show: the flag (or the gather ring) and the trail.</summary>
-        public bool IsShowingOrder => _citizen != null;
+        public bool IsShowingOrder => _citizen != null || _walker != null;
+
+        /// <summary>An army order to march (the King's, a squad's): a ripple, the flag planted at `target`; it comes down when `walker` gets there, is gone, or another order replaces it.</summary>
+        public void ShowFlagFor(Transform walker, Vector3 target)
+        {
+            EnsureBuilt();
+            HideOrder();
+            _walker = walker;
+            _plantFlag = true;
+            _target = OnGround(target);
+            _leaveClock = -1f;
+            PlayRipple(_target, OkColor, RippleSeconds);
+            if (_flag != null)
+            {
+                _flagClock = 0f;
+                _flag.gameObject.SetActive(true);
+                PoseFlag();
+            }
+            _targetRing.Show(_target, FlagRingRadius, OkColor, RingAlpha);
+        }
 
         /// <summary>
         /// An accepted order: the citizen is already walking (MoveTo/GatherFrom has run), so its
@@ -135,8 +158,9 @@ namespace CityBuilder.UI
         /// <summary>Takes the order's flag and trail down (the citizen arrived, gave up, or was put down). Ripples already playing finish.</summary>
         public void HideOrder()
         {
-            if (_citizen == null) return;
+            if (_citizen == null && ReferenceEquals(_walker, null)) return;
             _citizen = null;
+            _walker = null;
             HideTrail();
             if (_targetRing != null) _targetRing.Hide();
 
@@ -156,6 +180,12 @@ namespace CityBuilder.UI
 
             if (_leaveClock >= 0f) TickLeaving(dt);
 
+            // a walker destroyed under its flag (a fallen King) still takes the flag down
+            if (!ReferenceEquals(_walker, null))
+            {
+                TickWalker(dt);
+                return;
+            }
             if (_citizen == null) return;
             if (!_citizen.IsExecutingOrder)
             {
@@ -192,6 +222,18 @@ namespace CityBuilder.UI
             }
         }
 
+        private void TickWalker(float dt)
+        {
+            if (_walker == null || !_walker.gameObject.activeInHierarchy || HorizontalDistance(_walker.position, _target) <= WalkerArrivedMeters)
+            {
+                HideOrder();
+                return;
+            }
+            if (_flag == null) return;
+            _flagClock += dt;
+            PoseFlag();
+        }
+
         // --- the flag ---------------------------------------------------------------------------
 
         private void PoseFlag()
@@ -217,7 +259,7 @@ namespace CityBuilder.UI
             if (t < 1f) return;
             _leaveClock = -1f;
             // A new order may have planted the flag again meanwhile: that one is not leaving.
-            if (_flag != null && _citizen == null) _flag.gameObject.SetActive(false);
+            if (_flag != null && _citizen == null && ReferenceEquals(_walker, null)) _flag.gameObject.SetActive(false);
         }
 
         private static float EaseOutBack(float t)

@@ -48,6 +48,8 @@ namespace CityBuilder.Combat
         public Vector3 GuardCentre { get; set; }
 
         private const float GuardScanSeconds = 0.5f;
+        private const float RevealSeconds = 0.3f;
+        private float _revealIn;
         private float _guardScan;
 
         public SoldierUnit Unit => _unit;
@@ -84,6 +86,7 @@ namespace CityBuilder.Combat
             _renderers = GetComponentsInChildren<Renderer>(true);
             OrcUnit.Died += OnOrcDied;
             if (_unit.Group != null) _unit.Group.PlayerOrdered += OnPlayerOrdered;
+            if (ArmyManager.Instance != null) ArmyManager.Instance.OnSelectionChanged += OnSelectionChanged;
             ApplyLevel();
         }
 
@@ -91,6 +94,18 @@ namespace CityBuilder.Combat
         {
             OrcUnit.Died -= OnOrcDied;
             if (_unit != null && _unit.Group != null) _unit.Group.PlayerOrdered -= OnPlayerOrdered;
+            if (ArmyManager.Instance != null) ArmyManager.Instance.OnSelectionChanged -= OnSelectionChanged;
+        }
+
+        /// <summary>
+        /// He follows the player's orders only while the player holds him (the user, 2026-10-22):
+        /// let go of him and he walks back to the castle and guards the base on his own.
+        /// </summary>
+        private void OnSelectionChanged()
+        {
+            var army = ArmyManager.Instance;
+            if (IsFallen || Guarding || army == null || _unit.Group == null || army.SelectedGroup == _unit.Group) return;
+            Guard();
         }
 
         /// <summary>Experience for one enemy he struck down: its health.</summary>
@@ -182,11 +197,12 @@ namespace CityBuilder.Combat
             Changed?.Invoke();
         }
 
-        /// <summary>Back to defending the base (the portrait's guard button).</summary>
+        /// <summary>Back to defending the base, from wherever he was sent: home first, the guard's scan turns him on any orc near the castle.</summary>
         public void Guard()
         {
             Guarding = true;
             _guardScan = 0f;
+            if (!IsFallen) _unit.Group?.OrderMoveTo(Home);
             Changed?.Invoke();
         }
 
@@ -209,6 +225,7 @@ namespace CityBuilder.Combat
                 if (RespawnRemaining <= 0f) Rise();
                 return;
             }
+            RevealAround();
             if (!Guarding || _unit.Group == null) return;
 
             _guardScan -= Time.deltaTime;
@@ -223,6 +240,18 @@ namespace CityBuilder.Combat
                 return;
             }
             if (group.AttackTarget == null && Flat(group.HoldPosition - Home).sqrMagnitude > 1f) group.OrderMoveTo(Home);
+        }
+
+        /// <summary>Where he walks the fog lifts for good (king_reveal_radius cells round him), so the player can look round the jungle with him.</summary>
+        private void RevealAround()
+        {
+            _revealIn -= Time.deltaTime;
+            if (_revealIn > 0f) return;
+            _revealIn = RevealSeconds;
+            var fog = CityBuilder.Maps.FogOfWarManager.Instance;
+            var grid = CityBuilder.Grid.GridManager.Instance;
+            if (fog == null || grid == null) return;
+            fog.RevealPermanent(grid.WorldToCell(transform.position), BalanceConfig.Instance.KingRevealRadius);
         }
 
         /// <summary>The enemy nearest the castle among those inside the guard radius, or null.</summary>

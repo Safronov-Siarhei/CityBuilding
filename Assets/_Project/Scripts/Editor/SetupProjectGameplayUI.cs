@@ -328,6 +328,8 @@ namespace CityBuilder.EditorTools
             dispatcherSO.ApplyModifiedPropertiesWithoutUndo();
 
             BuildSelectionBadge(uiRoot, panelSprite, citizenSelector);
+            // «+1» over a sawmill or quarry as its worker brings a load in
+            uiRoot.gameObject.AddComponent<ResourceGainPopups>();
 
             PinHudToEdges(uiRoot);
             ApplyTheme(canvasGO.transform);
@@ -568,7 +570,39 @@ namespace CityBuilder.EditorTools
             // framed to, expressed as UI units per world unit -- see MinimapCameraIndicator.
             indicatorSO.FindProperty("worldToMapScale").floatValue = size / (GridCellsX * CellSize);
             indicatorSO.FindProperty("mapHalfExtent").floatValue = size * 0.5f;
+            // the minimap's camera: an Invasion run's follows the camera rig (MinimapCameraUpdater)
+            var updater = Object.FindAnyObjectByType<MinimapCameraUpdater>();
+            if (updater != null)
+            {
+                indicatorSO.FindProperty("minimapCamera").objectReferenceValue = updater.MinimapCamera;
+                var updaterSO = new SerializedObject(updater);
+                updaterSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;
+                updaterSO.ApplyModifiedPropertiesWithoutUndo();
+            }
             indicatorSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // An Invasion run's attack alerts: a blinking «!» per lane a wave is coming down
+            // (MinimapAttackAlerts places and shows them; hidden otherwise).
+            var marks = new Object[3];
+            for (var i = 0; i < marks.Length; i++)
+            {
+                var badge = CreateImage(viewGO.transform, $"AttackAlert{i}", UiTheme.Danger);
+                badge.sprite = SkinSprite("circle_mask");
+                badge.raycastTarget = false;
+                badge.rectTransform.sizeDelta = new Vector2(34f, 34f);
+                var bang = CreateText(badge.transform, "Mark", "!", 28, Vector2.zero, new Vector2(34f, 34f), Color.white);
+                bang.fontStyle = FontStyle.Bold;
+                bang.raycastTarget = false;
+                marks[i] = badge.gameObject.AddComponent<CanvasGroup>();
+                badge.gameObject.SetActive(false);
+            }
+            var alerts = viewGO.AddComponent<MinimapAttackAlerts>();
+            var alertsSO = new SerializedObject(alerts);
+            alertsSO.FindProperty("map").objectReferenceValue = indicator;
+            var list = alertsSO.FindProperty("marks");
+            list.arraySize = marks.Length;
+            for (var i = 0; i < marks.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = marks[i];
+            alertsSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>

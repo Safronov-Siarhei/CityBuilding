@@ -10,7 +10,10 @@
 > spawners, storehouses, an unclosable portal, a refilled garrison; waves march out of the portal),
 > the SCORE + LOCAL records (waves² + giant + camp buildings; day = best 5 runs, week/month = sums
 > of days; written only when the castle falls; end panel + the menu hub show them).
-> Numbers NOT yet checked by playing. Next: online leaderboard (service not chosen), playtest.
+> The user's first playtest (2026-10-22) fixed: tougher wave orcs (×inv_orc_health_mult) with health
+> bars, flag order marker, more island trees, a 40 m minimap following the view with blinking «!» at
+> the attack, «+N» over yards, one sawmill + one quarry, the King reveals fog and guards whenever he
+> is not selected (no guard button). Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -52,9 +55,13 @@ model into `InvasionMode.shrineModel`;
 `DayPoints`/`WeekPoints`/`MonthPoints`; tests set `FilePathOverride`), `UI/GameOverController.ShowRunEnd`
 («Замок пал» + waves/points/today), `UI/InvasionHubController.cs` (menu hub numbers + day/week/month tabs,
 built in `SetupProjectMainMenu.BuildInvasionPanel`);
+`UI/MinimapAttackAlerts.cs` (the blinking «!», from `InvasionWaves.TryLaneFront`),
+`UI/ResourceGainPopups.cs` («+N», on `CitizenVisualsManager.Delivered`; every mode),
+`UI/MoveOrderMarker.ShowFlagFor` (army orders plant the citizens' flag), `OrcUnit.Toughen`/health bar
+(`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit` (one sawmill, one quarry);
 `Combat/KingHero.cs` (XP = health of any enemy falling within `king_xp_radius`, levels, respawn at the
 castle, `Guarding`: attacks orcs within `king_guard_radius` of the castle until a player's order —
-`ArmyGroup.PlayerOrdered`), `UI/KingPortraitController.cs` (portrait, tap-select, guard button; built
+`ArmyGroup.PlayerOrdered`), `UI/KingPortraitController.cs` (portrait, tap-select; built
 in `SetupProjectHud.BuildKingPortrait`, face `UI/Icons/PortraitKing.png` from `render_portrait.py`), `Combat/FigureAnimator.cs` (stand/run/strike without an Animator), `SoldierType.King` (own
 group, outside the army cap); entry `MainMenuController.StartInvasion` →
 `GameSessionIntent.NewGameIsInvasion`. Map spots by kind: `MeshMapDefinition.SpotsOf(kind)`
@@ -76,10 +83,17 @@ run orcs go for the castle, a wave beaten off pays and starts the breather); Edi
 a camp per spot with its beasts, monsters hold their ground, a wiped camp returns stronger, the
 shrine heals, the boss pays and blesses; round camps: buildings + garrison + no portal, walls block
 and the waves get out, a fallen spawner sends no more of its kind; EditMode `InvasionCampLayoutTests`.
-Score: PlayMode `TheCastleFalling_EndsTheRun_AndWritesItsPoints`; EditMode `InvasionRecordsTests`
+Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_AndShowTheirHealth`,
+`ARun_HasOneSawmillAndOneQuarry`. Score: PlayMode `TheCastleFalling_EndsTheRun_AndWritesItsPoints`; EditMode `InvasionRecordsTests`
 (waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- The King obeys orders ONLY while selected (user, 2026-10-22): `KingHero.OnSelectionChanged` calls
+  `Guard()` on deselect, which walks him home. A test that orders him must select him first.
+- Wave orcs are `Toughen`ed AFTER `SpawnOrcOfKind`; anything comparing an orc's health to the
+  units sheet must multiply by `inv_orc_health_mult`.
+- The minimap in a run follows the camera rig (`MinimapCameraUpdater`, `inv_minimap_radius`);
+  `MinimapCameraIndicator.ToMap` places things relative to the minimap camera, in both modes.
 - A run that is left or crashes is never written down (the user's rule): there is no warning on
   leaving yet -- an open item.
 - PlayMode tests of a run must keep `InvasionRecords.FilePathOverride` set (InvasionTests does), or a

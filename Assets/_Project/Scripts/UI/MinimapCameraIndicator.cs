@@ -19,15 +19,36 @@ namespace CityBuilder.UI
         // derived from the same GridCellsX/CellSize span the minimap camera is framed to.
         [SerializeField] private float worldToMapScale = 0.5f;
         [SerializeField] private float mapHalfExtent = 100f;
+        // The minimap's camera, when it moves (an Invasion run's follows the rig): the marker is
+        // placed relative to where that camera is and how much it frames.
+        [SerializeField] private Camera minimapCamera;
 
         private void LateUpdate()
         {
             if (cameraRig == null || marker == null) return;
-
-            var pos = cameraRig.transform.position;
-            var x = Mathf.Clamp(pos.x * worldToMapScale, -mapHalfExtent, mapHalfExtent);
-            var y = Mathf.Clamp(pos.z * worldToMapScale, -mapHalfExtent, mapHalfExtent);
-            marker.anchoredPosition = new Vector2(x, y);
+            marker.anchoredPosition = ToMap(cameraRig.transform.position);
         }
+
+        /// <summary>A world point on the minimap (UI units from its middle), clamped into its square.</summary>
+        public Vector2 ToMap(Vector3 world)
+        {
+            var at = ToMapUnclamped(world);
+            return new Vector2(Mathf.Clamp(at.x, -mapHalfExtent, mapHalfExtent), Mathf.Clamp(at.y, -mapHalfExtent, mapHalfExtent));
+        }
+
+        /// <summary>A world point on the minimap's plane, however far outside what it frames.</summary>
+        public Vector2 ToMapUnclamped(Vector3 world)
+        {
+            var scale = worldToMapScale;
+            var centre = Vector3.zero;
+            if (minimapCamera != null)
+            {
+                scale = mapHalfExtent / Mathf.Max(1f, minimapCamera.orthographicSize);
+                centre = minimapCamera.transform.position;
+            }
+            return new Vector2((world.x - centre.x) * scale, (world.z - centre.z) * scale);
+        }
+
+        public float MapHalfExtent => mapHalfExtent;
     }
 }
