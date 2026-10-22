@@ -52,7 +52,17 @@ namespace CityBuilder.Buildings
         public int CurrentHealth { get; private set; }
 
         /// <summary>Hit points at full repair, for the level this building currently stands at.</summary>
-        public int MaxHealth => Data != null ? Data.LevelStats(Level).maxHealth : 0;
+        public int MaxHealth => HealthAt(Level);
+
+        /// <summary>The sheet's health for that level -- times inv_wall_health_mult for a run's walls and gates (InvasionRules.IsBarrier).</summary>
+        private int HealthAt(int level)
+        {
+            if (Data == null) return 0;
+            var health = Data.LevelStats(level).maxHealth;
+            return Invasion.InvasionRules.Active && Invasion.InvasionRules.IsBarrier(Data)
+                ? Mathf.RoundToInt(health * BalanceConfig.Instance.InvasionWallHealthMultiplier)
+                : health;
+        }
 
         /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
         public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
@@ -105,7 +115,7 @@ namespace CityBuilder.Buildings
             OriginCell = originCell;
             _levelAppearance = GetComponent<BuildingLevelAppearance>();
             RotationSteps = ((rotationSteps % 4) + 4) % 4;
-            CurrentHealth = data != null ? data.LevelStats(Level).maxHealth : 0;
+            CurrentHealth = HealthAt(Level);
             Decay = 0f;
 
             // The single hook point for every building instantiation (fresh placement AND
@@ -695,13 +705,15 @@ namespace CityBuilder.Buildings
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
 
             var before = Data.LevelStats(Level);
+            var healthBefore = HealthAt(Level);
             Level++;
             var after = Data.LevelStats(Level);
+            var healthAfter = HealthAt(Level);
 
             // Carry damage across rather than healing the building for free: a wall upgraded while
             // a raid chews on it gains the extra hit points, it doesn't forget the fight.
-            CurrentHealth = Mathf.Clamp(CurrentHealth + (after.maxHealth - before.maxHealth), 1, after.maxHealth);
-            if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)after.maxHealth);
+            CurrentHealth = Mathf.Clamp(CurrentHealth + (healthAfter - healthBefore), 1, healthAfter);
+            if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)healthAfter);
 
             // A roomier house is room, not people: the settlement can now hold more, and whether
             // anyone comes to fill it is migration's business (see MigrationManager).

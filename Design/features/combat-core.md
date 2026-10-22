@@ -30,6 +30,8 @@ PlayMode `CombatProjectileTests` (+ photos `projectile-*.png`), `ArmyCombatTests
 `SoldiersBreakInRatherThanWalkThroughTheWall`; archer test measures max distance an orc walked alive).
 
 ## Traps
+- A plain Gate has `defense` 0 on every level since 2026-10-22 (the user: a gate is a way through
+  for allies and a wall for orcs, not a turret); the Fortified Gate still shoots.
 CitizenAgent and OrcUnit still carry older hand-rolled route copies — port to `NavRoute` if they bug out.
 
 ## Open (audit 2026-08-23)

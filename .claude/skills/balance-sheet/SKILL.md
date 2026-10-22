@@ -162,6 +162,9 @@ Keys are derived from ids: a recipe's label is `#recipe_<recipe_id>`, a building
 column when the key is missing, so a forgotten localization row shows plausible text and hides
 itself — add the key.
 
+Typing `0	0` into a cell does NOT move to the next column -- the Tab lands in the cell's text.
+Set each non-adjacent or adjacent cell through the Name Box one at a time (or paste).
+
 A cell starting with `+`, `-` or `=` (e.g. `+{0}`) is pasted as a FORMULA and shows `0`: type it
 with a leading apostrophe (`'+{0}`) instead of pasting it.
 

@@ -218,6 +218,7 @@ namespace CityBuilder.Combat
 
         private void Start()
         {
+            _lastPosition = transform.position;
             // a guard put on its post as it was made has no building to march on
             if (!_guarding) AcquireTarget();
         }
@@ -288,6 +289,9 @@ namespace CityBuilder.Combat
                 return;
             }
 
+            // In a run the orcs go for the island's people as they do for its buildings (the user, 2026-10-22).
+            if (HuntCitizen()) return;
+
             if (HuntPrisoner()) return;
 
             _retargetTimer -= Time.deltaTime;
@@ -338,6 +342,8 @@ namespace CityBuilder.Combat
                 ShowHealth();
                 return;
             }
+            // the figure falls and sinks on its own, after the unit is gone
+            OrcCorpse.Leave(transform, _healthBar != null ? _healthBar.transform : null);
             Died?.Invoke(this);
             Destroy(gameObject);
         }
@@ -595,6 +601,69 @@ namespace CityBuilder.Combat
             _retargetTimer = 0f;
         }
 
+        private CityBuilder.Citizens.CitizenAgent _citizenTarget;
+        private float _citizenScanTimer;
+
+        /// <summary>
+        /// An Invasion run's orc turns on the nearest citizen within its aggro radius, walks up and
+        /// strikes; inv_citizen_health of damage kills him. False when there is nobody to go for
+        /// (or this is not a run), and the orc carries on to the buildings.
+        /// </summary>
+        private bool HuntCitizen()
+        {
+            if (!Invasion.InvasionMode.IsActive) return false;
+            var visuals = CityBuilder.Citizens.CitizenVisualsManager.Instance;
+            if (visuals == null) return false;
+
+            _citizenScanTimer -= Time.deltaTime;
+            if (_citizenTarget == null || !_citizenTarget.gameObject.activeInHierarchy || _citizenScanTimer <= 0f)
+            {
+                _citizenScanTimer = SoldierScanIntervalSeconds;
+                _citizenTarget = null;
+                var best = _soldierAggroRadius * _soldierAggroRadius;
+                foreach (var agent in visuals.AllAgents)
+                {
+                    if (agent == null || !agent.gameObject.activeInHierarchy) continue;
+                    var d = (agent.transform.position - transform.position).sqrMagnitude;
+                    if (d > best) continue;
+                    best = d;
+                    _citizenTarget = agent;
+                }
+            }
+            if (_citizenTarget == null) return false;
+
+            var to = _citizenTarget.transform.position - transform.position;
+            to.y = 0f;
+            var distance = to.magnitude;
+            if (distance <= _soldierAttackRange)
+            {
+                _attackTimer -= Time.deltaTime;
+                if (_attackTimer > 0f) return true;
+                _attackTimer = _attackIntervalSeconds;
+                StrikeAt(_citizenTarget.transform.position);
+                _citizenTarget.Wounds += _attackDamage;
+                if (_citizenTarget.Wounds >= BalanceConfig.Instance.InvasionCitizenHealth)
+                {
+                    visuals.KillAgent(_citizenTarget);
+                    _citizenTarget = null;
+                }
+                return true;
+            }
+
+            var direction = to / Mathf.Max(0.001f, distance);
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(direction * _walkSpeed * Time.deltaTime);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += direction * _walkSpeed * Time.deltaTime;
+            }
+            _retargetTimer = 0f;
+            return true;
+        }
+
         private SoldierUnit FindNearestSoldierInAggroRange()
         {
             SoldierUnit nearest = null;
@@ -617,23 +686,47 @@ namespace CityBuilder.Combat
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
         public bool IsRanged => Kind == OrcKind.Thrower;
 
+        /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
+        private void StrikeAt(Vector3 target)
+        {
+            var to = target - transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(to);
+            Struck?.Invoke();
+        }
+
+        private const float TurnDegreesPerSecond = 540f;
+        private Vector3 _lastPosition;
+
+        /// <summary>Faces the way it walks: a raider used to slide along its route facing wherever it was made.</summary>
+        private void LateUpdate()
+        {
+            var moved = transform.position - _lastPosition;
+            _lastPosition = transform.position;
+            moved.y = 0f;
+            var dt = Time.deltaTime;
+            // standing, or nudged by a neighbour: no turn
+            if (dt <= 0f || moved.magnitude < 0.2f * dt) return;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moved), TurnDegreesPerSecond * Time.deltaTime);
+        }
+
         private void Strike(SoldierUnit soldier)
         {
-            Struck?.Invoke();
+            StrikeAt(soldier.transform.position);
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
             else soldier.TakeDamage(_attackDamage);
         }
 
         private void Strike(FreedPrisoner prisoner)
         {
-            Struck?.Invoke();
+            StrikeAt(prisoner.transform.position);
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), prisoner, _attackDamage);
             else prisoner.TakeDamage(_attackDamage);
         }
 
         private void Strike(BuildingInstance building)
         {
-            Struck?.Invoke();
+            StrikeAt(building.transform.position);
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
             else building.TryDamage(_attackDamage);
         }
@@ -718,6 +811,10 @@ namespace CityBuilder.Combat
                 // raid beelining for the nearest stray road tile instead of an actual building
                 // would make combat feel broken rather than threatening.
                 if (instance.Data == null || instance.Data.isRoad) continue;
+                // A run's walls and gates are obstacles (the user, 2026-10-22): broken only where
+                // they stand in the way (AttackWhateverIsBlockingTheWay), never gone after; once
+                // one is down the orc walks on through the gap.
+                if (castle != null && Invasion.InvasionRules.IsBarrier(instance.Data)) continue;
                 var distSq = (instance.transform.position - transform.position).sqrMagnitude;
                 if (distSq < nearestDistSq)
                 {

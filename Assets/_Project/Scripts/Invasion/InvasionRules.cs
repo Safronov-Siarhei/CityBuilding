@@ -41,6 +41,11 @@ namespace CityBuilder.Invasion
 
         public static bool Allows(BuildingData data) => data != null && Array.IndexOf(Buildings, data.buildingName) >= 0;
 
+        /// <summary>A run's walls and gates (the user, 2026-10-22): obstacles for the orcs, sturdier than the sandbox's (inv_wall_health_mult); an orc breaks one only when it stands in its way.</summary>
+        private static readonly string[] Barriers = { "Fence", "Gate", "FortifiedGate" };
+
+        public static bool IsBarrier(BuildingData data) => data != null && Array.IndexOf(Barriers, data.buildingName) >= 0;
+
         /// <summary>The gatherers' yards a run may have of each (the user, 2026-10-22: one sawmill, one quarry).</summary>
         private static readonly string[] Limited = { "Sawmill", "Quarry" };
 

@@ -510,6 +510,8 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionOrcHealthMultiplier = 4f;
         [SerializeField] private int invasionMaxEachYard = 1;
         [SerializeField] private float invasionMinimapRadius = 40f;
+        [SerializeField] private float invasionWallHealthMultiplier = 4f;
+        [SerializeField] private int invasionCitizenHealth = 12;
         [SerializeField] private int invasionScorePerWaveSquared = 1;
         [SerializeField] private int invasionScoreBoss = 50;
         [SerializeField] private int invasionScoreCampBuilding = 10;
@@ -739,6 +741,8 @@ namespace CityBuilder.Core
         public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
         public int InvasionMaxEachYard => invasionMaxEachYard;
         public float InvasionMinimapRadius => invasionMinimapRadius;
+        public float InvasionWallHealthMultiplier => invasionWallHealthMultiplier;
+        public int InvasionCitizenHealth => invasionCitizenHealth;
         public int InvasionScorePerWaveSquared => invasionScorePerWaveSquared;
         public int InvasionScoreBoss => invasionScoreBoss;
         public int InvasionScoreCampBuilding => invasionScoreCampBuilding;
@@ -1073,6 +1077,8 @@ namespace CityBuilder.Core
             invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
             invasionMaxEachYard = (int)Read(economy, "inv_max_each_yard", invasionMaxEachYard);
             invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
+            invasionWallHealthMultiplier = Read(economy, "inv_wall_health_mult", invasionWallHealthMultiplier);
+            invasionCitizenHealth = (int)Read(economy, "inv_citizen_health", invasionCitizenHealth);
             invasionScorePerWaveSquared = (int)Read(economy, "inv_score_wave_sq", invasionScorePerWaveSquared);
             invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);
             invasionScoreCampBuilding = (int)Read(economy, "inv_score_camp_building", invasionScoreCampBuilding);

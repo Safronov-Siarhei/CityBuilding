@@ -14,6 +14,9 @@ namespace CityBuilder.Citizens
     /// </summary>
     public class CitizenAgent : MonoBehaviour
     {
+        /// <summary>Damage taken from orcs (an Invasion run, where they go for people too); at inv_citizen_health the citizen dies (CitizenVisualsManager.KillAgent).</summary>
+        public int Wounds { get; set; }
+
         private const float WalkSpeed = 1.5f;
         private const float RoadSpeedMultiplier = 1.6f;
         private const float WanderRadiusCells = 8f;

@@ -466,6 +466,90 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(house, close.Target, "An orc right beside a house walked past it.");
         }
 
+        /// <summary>A run's walls and gates are obstacles (the user, 2026-10-22): an orc beside one walks past it to the castle, a plain gate does not shoot, and they are sturdier than the sandbox's.</summary>
+        [UnityTest]
+        public IEnumerator Walls_AreObstacles_NotTargets()
+        {
+            var mode = InvasionMode.Instance;
+            var config = BalanceConfig.Instance;
+            var fenceData = PlaytestWorld.Building("Fence");
+            var gateData = PlaytestWorld.Building("Gate");
+            for (var level = 1; level <= 5; level++)
+                Assert.AreEqual(0, gateData.LevelStats(level).defense, $"A plain gate shoots at level {level}.");
+
+            var fence = PlaytestWorld.Place(fenceData, PlaytestWorld.FindFreeAreaNearTheMiddle(Vector2Int.one));
+            Assert.AreEqual(Mathf.RoundToInt(fenceData.LevelStats(1).maxHealth * config.InvasionWallHealthMultiplier), fence.MaxHealth, "A run's fence is no sturdier than the sandbox's.");
+
+            // an orc right beside the fence (and nothing else close) does not turn on it
+            var at = fence.transform.position + Vector3.right * 1.2f;
+            Assert.IsTrue(NavMesh.SamplePosition(at, out var hit, 2f, NavMesh.AllAreas));
+            var orc = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
+            yield return null;
+            yield return null;
+            Assert.AreNotEqual(fence, orc.Target, "An orc went for a fence that was not in its way.");
+            orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>The orcs go for the island's people too: a citizen beside an orc is struck down, and the town has one fewer.</summary>
+        [UnityTest]
+        public IEnumerator Orcs_StrikeDownCitizens()
+        {
+            var visuals = CitizenVisualsManager.Instance;
+            CitizenAgent citizen = null;
+            for (var t = 0f; t < 5f && citizen == null; t += Time.deltaTime)
+            {
+                citizen = visuals.AllAgents.FirstOrDefault(a => a != null && a.gameObject.activeInHierarchy);
+                yield return null;
+            }
+            Assert.IsNotNull(citizen, "No citizen out on the island.");
+            // the King, guarding the base, would be the orc's first target
+            InvasionMode.Instance.King.Fall();
+            var people = CitizenManager.Instance.TotalPopulation;
+            var orc = OrcRaidManager.Instance.SpawnOrcs(citizen.transform.position + Vector3.right * 0.5f, count: 1, level: 3);
+            orc.Toughen(20f);   // a tower in reach must not end the test first
+            // whoever stands nearest the orc falls first -- the one it was put beside may walk off
+            for (var t = 0f; t < 15f && CitizenManager.Instance.TotalPopulation >= people; t += Time.deltaTime) yield return null;
+            Assert.Less(CitizenManager.Instance.TotalPopulation, people, "The orc struck down nobody standing beside it.");
+            yield return null;
+            Assert.AreEqual(CitizenManager.Instance.TotalPopulation, visuals.AllAgents.Count(a => a != null), "The dead and the town's count disagree: somebody else vanished in a dead man's place.");
+            if (orc != null) orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>The fog lifts round the King and closes again behind him (the user, 2026-10-22).</summary>
+        [UnityTest]
+        public IEnumerator TheKing_LiftsTheFog_OnlyWhileHeIsThere()
+        {
+            var king = InvasionMode.Instance.King;
+            var fog = CityBuilder.Maps.FogOfWarManager.Instance;
+            var far = InvasionMode.Instance.Waves.LaneStarts[0] + (InvasionMode.Instance.Castle.transform.position - InvasionMode.Instance.Waves.LaneStarts[0]).normalized * 20f;
+            Assert.IsTrue(NavMesh.SamplePosition(far, out var hit, 4f, NavMesh.AllAreas), "Nowhere out on the lane for the King to stand.");
+            var cell = GridManager.Instance.WorldToCell(hit.position);
+            Assert.IsFalse(fog.IsCellRevealed(cell), "The lane is clear of fog before the King went there.");
+
+            king.GetComponent<CharacterController>().enabled = false;
+            king.transform.position = hit.position;
+            for (var t = 0f; t < 1f && !fog.IsCellRevealed(cell); t += Time.deltaTime) yield return null;
+            Assert.IsTrue(fog.IsCellRevealed(cell), "The fog did not lift round the King.");
+
+            king.transform.position = king.Home;
+            king.GetComponent<CharacterController>().enabled = true;
+            for (var t = 0f; t < 1f && fog.IsCellRevealed(cell); t += Time.deltaTime) yield return null;
+            Assert.IsFalse(fog.IsCellRevealed(cell), "The fog stayed lifted after the King left.");
+        }
+
+        /// <summary>A run has no Laboratory: every one of its buildings can be taken in hand (towers, gates, the healer's were refused).</summary>
+        [Test]
+        public void EveryRunBuilding_CanBePickedUp()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            foreach (var id in InvasionRules.Buildings)
+            {
+                placer.SelectBuilding(PlaytestWorld.Building(id));
+                Assert.IsTrue(placer.IsSelecting, $"The {id} cannot be picked up in a run.");
+                placer.ClearSelection();
+            }
+        }
+
         /// <summary>A wave beaten off pays its orcs' gold and 10 × its number, and the breather begins.</summary>
         [UnityTest]
         public IEnumerator AWaveBeatenOff_PaysItsGold_AndTheBreatherBegins()

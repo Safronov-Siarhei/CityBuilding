@@ -208,7 +208,11 @@ namespace CityBuilder.Buildings
 
             if (!UsesTouchAiming)
             {
-                if (TryGetPlacementOrigin(screenPosition, out var mouseCell)) TryPlace(mouseCell);
+                // Where the ghost stands: the next road or fence piece offered after the last one
+                // (OfferNextPiece) while the mouse rests, else the cell under the cursor. Placing
+                // at the cursor put a fence's second piece on its first, so nothing happened.
+                if (OfferStillStands()) TryPlace(_offeredOrigin.Value);
+                else if (TryGetPlacementOrigin(screenPosition, out var mouseCell)) TryPlace(mouseCell);
                 return;
             }
 
@@ -240,8 +244,10 @@ namespace CityBuilder.Buildings
             // A building still locked in the Laboratory cannot be picked up at all -- the hotbar
             // already hides it (see BuildingCategoryPanel), so this catches the number keys and
             // anything else reaching in from outside.
+            // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
             if (data != null && data != mandatoryFirstBuilding
-                && !Research.ResearchManager.BuildingUnlocked(data.buildingName)) return;
+                && !(Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
+                                                   : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
 
             ClearSelection();
             _selectedBuilding = data;

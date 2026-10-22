@@ -445,10 +445,15 @@ namespace CityBuilder.Combat
                 figure.name = figureName;
                 var undo = UnitSize.Scale * (brute ? LevelScale(BruteFromLevel) : 1f);
                 figure.transform.localScale = Vector3.one / undo;
+                // modelled facing Blender's -y, which lands facing back along the root's forward:
+                // turned round, or they walk backwards (the user, 2026-10-22)
+                figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
                 // Units stay out of the shadow pass, like the citizens.
                 SceneryShadows.DisableCasting(figure);
-                // the jungle's beasts are jointed: they stand, run and strike
+                // the jungle's beasts are jointed: they stand, run and strike; an orc is one mesh,
+                // and waddles and lunges as a whole
                 if (OrcUnit.IsMonster(kind)) root.AddComponent<FigureAnimator>().Bind(figure.transform);
+                else root.AddComponent<OrcBodyAnimator>().Bind(figure.transform);
             }
             else
             {

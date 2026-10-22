@@ -51,6 +51,9 @@ EditMode `PlacementAimTests`, `FenceShapeTests`, `GridManagerTests`, `RoadNetwor
 `FenceAutotilingTests`, `RotatedFootprintTests`, `GateTests`, `CostRowTests`, `StartPlacementTests`.
 
 ## Traps
+- With a mouse, a click while the next road/fence piece is still on offer places THAT piece
+  (`OfferStillStands`), not the cell under the cursor -- which is the piece just laid (2026-10-22).
+- In an Invasion run `SelectBuilding` asks `InvasionRules.Allows`, not the Laboratory.
 - Gesture recognition has no automated coverage; the checklist in `Tools/research/build_notes.txt` is
   the phone verification.
 - `BuildingInstance.OnDestroy` must decrement its count FIRST (an exception on scene unload once left

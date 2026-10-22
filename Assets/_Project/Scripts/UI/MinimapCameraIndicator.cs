@@ -22,6 +22,8 @@ namespace CityBuilder.UI
         // The minimap's camera, when it moves (an Invasion run's follows the rig): the marker is
         // placed relative to where that camera is and how much it frames.
         [SerializeField] private Camera minimapCamera;
+        // In a run the shown square follows the rig and slides over a bigger picture.
+        [SerializeField] private MinimapCameraUpdater follow;
 
         private void LateUpdate()
         {
@@ -41,7 +43,12 @@ namespace CityBuilder.UI
         {
             var scale = worldToMapScale;
             var centre = Vector3.zero;
-            if (minimapCamera != null)
+            if (follow != null && follow.Follows)
+            {
+                scale = mapHalfExtent / Mathf.Max(1f, follow.ViewRadius);
+                centre = follow.ViewCentre;
+            }
+            else if (minimapCamera != null)
             {
                 scale = mapHalfExtent / Mathf.Max(1f, minimapCamera.orthographicSize);
                 centre = minimapCamera.transform.position;

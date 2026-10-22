@@ -370,6 +370,21 @@ namespace CityBuilder.Maps
             }
         }
 
+        /// <summary>
+        /// Something else that clears the fog round itself while it is there and lets it close
+        /// again behind it, as a citizen does -- the Invasion's King (the user, 2026-10-22).
+        /// </summary>
+        public void AddWalker(Transform walker, int radiusCells)
+        {
+            if (walker == null) return;
+            _walkers.RemoveAll(w => w.Transform == walker);
+            _walkers.Add((walker, radiusCells));
+        }
+
+        public void RemoveWalker(Transform walker) => _walkers.RemoveAll(w => w.Transform == walker);
+
+        private readonly System.Collections.Generic.List<(Transform Transform, int Radius)> _walkers = new System.Collections.Generic.List<(Transform, int)>();
+
         private void UpdateCitizenReveal()
         {
             var grid = GridManager.Instance;
@@ -387,6 +402,11 @@ namespace CityBuilder.Maps
                     var cell = grid.WorldToCell(agent.transform.position);
                     RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, _width, _depth);
                 }
+            }
+            foreach (var walker in _walkers)
+            {
+                if (walker.Transform == null || !walker.Transform.gameObject.activeInHierarchy) continue;
+                RevealCircleInto(fresh, grid.WorldToCell(walker.Transform.position), walker.Radius, _width, _depth);
             }
 
             for (var x = 0; x < _width; x++)

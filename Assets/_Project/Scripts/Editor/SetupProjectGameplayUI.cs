@@ -575,8 +575,10 @@ namespace CityBuilder.EditorTools
             if (updater != null)
             {
                 indicatorSO.FindProperty("minimapCamera").objectReferenceValue = updater.MinimapCamera;
+                indicatorSO.FindProperty("follow").objectReferenceValue = updater;
                 var updaterSO = new SerializedObject(updater);
                 updaterSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;
+                updaterSO.FindProperty("view").objectReferenceValue = viewGO.GetComponent<RawImage>();
                 updaterSO.ApplyModifiedPropertiesWithoutUndo();
             }
             indicatorSO.ApplyModifiedPropertiesWithoutUndo();

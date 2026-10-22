@@ -424,7 +424,7 @@ namespace CityBuilder.UI
         }
 
         /// <summary>Same incantation as HarvestRadiusOverlay's: a URP Unlit made in code is opaque until told otherwise. Double-sided, so winding never hides it.</summary>
-        private static Material CreateTransparentMaterial(Color color)
+        internal static Material CreateTransparentMaterial(Color color)
         {
             var material = new Material(RuntimeShaders.Unlit) { color = color };
             material.SetFloat("_Surface", 1f);

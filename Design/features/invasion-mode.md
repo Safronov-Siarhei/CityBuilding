@@ -13,7 +13,12 @@
 > The user's first playtest (2026-10-22) fixed: tougher wave orcs (×inv_orc_health_mult) with health
 > bars, flag order marker, more island trees, a 40 m minimap following the view with blinking «!» at
 > the attack, «+N» over yards, one sawmill + one quarry, the King reveals fog and guards whenever he
-> is not selected (no guard button). Next: online leaderboard (service not chosen), more playtests.
+> is not selected (no guard button). Playtest 2: fog round the King closes behind him, every orc /
+> beast figure turned 180° and orcs face where they walk, smooth sliding minimap, King's return
+> (camera + light + log), orc body animation (OrcBodyAnimator) and fall-and-sink death (OrcCorpse),
+> no Laboratory gate on picking a run building, mouse places the offered fence piece, plain gates
+> don't shoot (sheet), run walls ×inv_wall_health_mult and only broken when in the way, orcs kill
+> citizens, harder waves. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -88,6 +93,12 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
 (waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- Every unit model (King, orcs, beasts) is modelled facing Blender -y and must be turned 180° about Y
+  when put under its root, or it walks backwards.
+- In a run `OrcUnit.AcquireTarget` skips `InvasionRules.IsBarrier`; walls are only hit through
+  `AttackWhateverIsBlockingTheWay`. A test expecting an orc to target a fence will fail by design.
+- A killed citizen goes through `CitizenVisualsManager.KillAgent` (that agent + one population), not
+  `KillCitizens`, which would remove some other agent.
 - The King obeys orders ONLY while selected (user, 2026-10-22): `KingHero.OnSelectionChanged` calls
   `Guard()` on deselect, which walks him home. A test that orders him must select him first.
 - Wave orcs are `Toughen`ed AFTER `SpawnOrcOfKind`; anything comparing an orc's health to the

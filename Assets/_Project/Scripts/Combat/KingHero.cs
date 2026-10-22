@@ -48,8 +48,7 @@ namespace CityBuilder.Combat
         public Vector3 GuardCentre { get; set; }
 
         private const float GuardScanSeconds = 0.5f;
-        private const float RevealSeconds = 0.3f;
-        private float _revealIn;
+        private bool _revealing;
         private float _guardScan;
 
         public SoldierUnit Unit => _unit;
@@ -187,6 +186,7 @@ namespace CityBuilder.Combat
             _unit.enabled = false;
             if (_controller != null) _controller.enabled = false;
             SetVisible(false);
+            StopRevealing();
             Changed?.Invoke();
         }
 
@@ -242,16 +242,24 @@ namespace CityBuilder.Combat
             if (group.AttackTarget == null && Flat(group.HoldPosition - Home).sqrMagnitude > 1f) group.OrderMoveTo(Home);
         }
 
-        /// <summary>Where he walks the fog lifts for good (king_reveal_radius cells round him), so the player can look round the jungle with him.</summary>
+        /// <summary>
+        /// The fog lifts round him while he is there and closes again behind him, as round a
+        /// citizen (the user, 2026-10-22) -- king_reveal_radius cells; none while he is down.
+        /// </summary>
         private void RevealAround()
         {
-            _revealIn -= Time.deltaTime;
-            if (_revealIn > 0f) return;
-            _revealIn = RevealSeconds;
+            if (_revealing) return;
             var fog = CityBuilder.Maps.FogOfWarManager.Instance;
-            var grid = CityBuilder.Grid.GridManager.Instance;
-            if (fog == null || grid == null) return;
-            fog.RevealPermanent(grid.WorldToCell(transform.position), BalanceConfig.Instance.KingRevealRadius);
+            if (fog == null) return;
+            fog.AddWalker(transform, BalanceConfig.Instance.KingRevealRadius);
+            _revealing = true;
+        }
+
+        private void StopRevealing()
+        {
+            if (!_revealing) return;
+            CityBuilder.Maps.FogOfWarManager.Instance?.RemoveWalker(transform);
+            _revealing = false;
         }
 
         /// <summary>The enemy nearest the castle among those inside the guard radius, or null.</summary>

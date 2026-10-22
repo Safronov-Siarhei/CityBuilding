@@ -398,6 +398,19 @@ namespace CityBuilder.Citizens
             _idleAgents.Add(agent);
         }
 
+        /// <summary>
+        /// This citizen, struck down (an orc in an Invasion run): the very one goes, and the town
+        /// counts one fewer. Taken out of the lists first, so the population's sync does not take
+        /// somebody else as well.
+        /// </summary>
+        public void KillAgent(CitizenAgent agent)
+        {
+            if (agent == null || !_allAgents.Contains(agent)) return;
+            foreach (var pair in _workingAgents) pair.Value.Remove(agent);
+            RemoveAgent(agent);
+            citizenManager?.KillCitizens(1);
+        }
+
         private void RemoveAgent(CitizenAgent agent)
         {
             UnsubscribeWorkVisit(agent);

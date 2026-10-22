@@ -33,6 +33,7 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject guardMark;
 
         private static KingPortraitController _instance;
+        private bool _wasFallen;
         private float _refreshIn;
         private LineRenderer _ring;
 
@@ -97,6 +98,9 @@ namespace CityBuilder.UI
             var king = King;
             if (king == null || king.Unit == null) return;
 
+            if (_wasFallen && !king.IsFallen) ShowReturn(king);
+            _wasFallen = king.IsFallen;
+
             var selected = ArmyManager.Instance != null && king.Unit.Group != null && ArmyManager.Instance.SelectedGroup == king.Unit.Group;
             if (levelText != null) levelText.text = king.Level.ToString();
             SetFill(healthFill, king.IsFallen ? 0f : king.Unit.CurrentHealth / (float)Mathf.Max(1, king.Unit.MaxHealth));
@@ -107,6 +111,16 @@ namespace CityBuilder.UI
             if (selectedFrame != null) selectedFrame.SetActive(selected && !king.IsFallen);
             if (guardMark != null) guardMark.SetActive(king.Guarding && !king.IsFallen);
             ShowRing(king, selected && !king.IsFallen);
+        }
+
+        /// <summary>He is back (the user, 2026-10-22: the player must see it): the camera goes to him, a column of light, a line in the log.</summary>
+        private static void ShowReturn(KingHero king)
+        {
+            var rig = FindAnyObjectByType<RTSCameraController>();
+            if (rig != null) rig.JumpTo(king.transform.position);
+            RespawnFlash.Play(king.transform.position);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_inv_king_back"), EventSeverity.Good,
+                EventGlyph.Check, null, king.transform.position, king.transform));
         }
 
         private static void SetFill(RectTransform fill, float fraction)
