@@ -217,6 +217,9 @@ namespace CityBuilder.Citizens
         /// felled mid-walk, and the reference is what lets the agent fill in the progress bar over
         /// the thing it is actually chopping.
         /// </summary>
+        /// <summary>The tree or rock it is sent to work, or null (resting at its yard, or not a gatherer).</summary>
+        public ResourceNode WorkNode => _workNode;
+
         public void SetWorking(Vector3 buildingPos, ResourceNode node, float buildingReach = 0f)
         {
             _buildingReach = buildingReach;

@@ -113,6 +113,10 @@ namespace CityBuilder.Invasion
                 return;
             }
 
+            // A run is built of stone (the user, 2026-10-22: too little to dig, everything costs it):
+            // the map's boulders hold inv_stone_reserve_mult times what they do in the sandbox.
+            ResourceNode.ScaleStock(ResourceType.Stone, BalanceConfig.Instance.InvasionStoneReserveMultiplier);
+
             // The castle stands from the start: the placer is told, so it stops asking for a Town
             // Hall, and the fog closes in round it as it does when a player puts one down.
             var castle = buildingPlacer != null ? buildingPlacer.MandatoryFirstBuilding : null;

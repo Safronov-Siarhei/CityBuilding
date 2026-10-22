@@ -156,13 +156,16 @@ namespace CityBuilder.Citizens
 
             var target = citizenManager.TotalPopulation;
 
+            var grew = false;
             while (_allAgents.Count < target)
             {
                 var agent = SpawnAgent();
                 if (agent == null) break; // town center not resolvable yet (Town Hall not placed)
                 _allAgents.Add(agent);
                 _idleAgents.Add(agent);
+                grew = true;
             }
+            if (grew) RefillShortBuildings();
 
             while (_allAgents.Count > target)
             {
@@ -213,6 +216,14 @@ namespace CityBuilder.Citizens
             // a yard being built or upgraded (ConstructionSite): its workers wait at it; the node
             // retry in Update sends them out once it works again
             var resting = buildingInstance != null && !buildingInstance.IsOperational;
+            // ...and lets go of its rock: a claim kept through the rest also kept the retry from ever
+            // sending it out again, and after an upgrade the quarry's men stood idle at it until
+            // taken off and put back (playtest 5, 2026-10-22)
+            if (resting && _claimedNodes.TryGetValue(agent, out var dropped))
+            {
+                if (dropped != null) dropped.Release();
+                _claimedNodes.Remove(agent);
+            }
             if (building.GathersFromNodes && !resting)
             {
                 // Already holding one (a boulder with stone left in it) -- keep going back to the
@@ -424,7 +435,27 @@ namespace CityBuilder.Citizens
             foreach (var pair in _workingAgents) pair.Value.Remove(agent);
             RemoveAgent(agent);
             citizenManager?.KillCitizens(1);
+            RefillShortBuildings();
         }
+
+        /// <summary>
+        /// A building still counts the worker who was killed (the town lost an idle man in his place,
+        /// CitizenManager.RemoveCitizens), so it is short a figure: an idle one steps in now, or the
+        /// next one born does. Before this a yard said «4 workers» with two at work until they were
+        /// all taken off and put back (playtest 5, 2026-10-22).
+        /// </summary>
+        private void RefillShortBuildings()
+        {
+            if (_idleAgents.Count == 0) return;
+            _shortBuildings.Clear();
+            foreach (var pair in _workingAgents)
+            {
+                if (pair.Value.Count < pair.Key.AssignedWorkers) _shortBuildings.Add(pair.Key);
+            }
+            foreach (var building in _shortBuildings) SyncBuildingWorkers(building);
+        }
+
+        private readonly List<ProductionBuilding> _shortBuildings = new List<ProductionBuilding>();
 
         private void RemoveAgent(CitizenAgent agent)
         {

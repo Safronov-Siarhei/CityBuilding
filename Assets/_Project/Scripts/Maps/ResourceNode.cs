@@ -51,6 +51,17 @@ namespace CityBuilder.Maps
             RemainingYield = TotalYield;
         }
 
+        /// <summary>Every node of this kind on the map holds `factor` times its stock -- an Invasion run's boulders (inv_stone_reserve_mult).</summary>
+        public static void ScaleStock(ResourceType resourceType, float factor)
+        {
+            foreach (var node in _all)
+            {
+                if (node == null || node.ResourceType != resourceType) continue;
+                node.TotalYield = Mathf.Max(1, Mathf.RoundToInt(node.TotalYield * factor));
+                node.RemainingYield = Mathf.Max(0, Mathf.RoundToInt(node.RemainingYield * factor));
+            }
+        }
+
         /// <summary>Used by save/load to put a part-worked boulder back exactly as picked-over as it was.</summary>
         public void SetRemainingYield(int remaining)
         {
@@ -74,7 +85,8 @@ namespace CityBuilder.Maps
             switch (resourceType)
             {
                 case ResourceType.Wood: return BalanceConfig.Instance.WoodPerHarvest;
-                case ResourceType.Stone: return BalanceConfig.Instance.StonePerHarvest;
+                // a run's quarry men break off more each trip (inv_stone_per_harvest)
+                case ResourceType.Stone: return Invasion.InvasionRules.Active ? BalanceConfig.Instance.InvasionStonePerHarvest : BalanceConfig.Instance.StonePerHarvest;
                 default: return 0;
             }
         }

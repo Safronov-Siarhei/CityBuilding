@@ -330,16 +330,20 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var o in waves.WaveOrcs.ToList()) o.TakeDamage(o.MaxHealth);
         }
 
-        /// <summary>A run has one sawmill and one quarry at most: with one up, the card goes and the placer refuses another.</summary>
+        /// <summary>A run has one sawmill and two quarries at most (the user, 2026-10-22): past that the card greys and the placer refuses.</summary>
         [Test]
-        public void ARun_HasOneSawmillAndOneQuarry()
+        public void ARun_HasOneSawmillAndTwoQuarries()
         {
-            foreach (var id in new[] { "Sawmill", "Quarry" })
+            foreach (var (id, max) in new[] { ("Sawmill", 1), ("Quarry", 2) })
             {
                 var data = PlaytestWorld.Building(id);
-                Assert.IsFalse(InvasionRules.AtLimit(data), $"A run starts with its {id} already used up.");
-                PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize));
-                Assert.IsTrue(InvasionRules.AtLimit(data), $"A run can have a second {id}.");
+                Assert.AreEqual(max, InvasionRules.LimitOf(data), $"A run's limit of {id} is not the sheet's.");
+                for (var i = 0; i < max; i++)
+                {
+                    Assert.IsFalse(InvasionRules.AtLimit(data), $"A run's {id} no. {i + 1} is refused.");
+                    PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize));
+                }
+                Assert.IsTrue(InvasionRules.AtLimit(data), $"A run can have more than {max} {id}.");
             }
             Assert.IsFalse(InvasionRules.AtLimit(PlaytestWorld.Building("Tower")), "Towers are limited too.");
         }
@@ -515,6 +519,74 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             Assert.AreEqual(CitizenManager.Instance.TotalPopulation, visuals.AllAgents.Count(a => a != null), "The dead and the town's count disagree: somebody else vanished in a dead man's place.");
             if (orc != null) orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>
+        /// A quarry's men go back to the rocks once its upgrade is done (playtest 5, 2026-10-22: they
+        /// stood idle at it, still holding their rock, until taken off and put back), and a run's
+        /// boulders hold inv_stone_reserve_mult times the sandbox's stone.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator QuarryMen_GoBackToTheRocks_AfterAnUpgrade()
+        {
+            var config = BalanceConfig.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var rock = ResourceNode.All.Where(n => n != null && n.ResourceType == ResourceType.Stone && !n.IsDepleted)
+                .OrderBy(n => (n.transform.position - castle).sqrMagnitude).FirstOrDefault();
+            Assert.IsNotNull(rock, "No stone on the run's map.");
+            Assert.GreaterOrEqual(rock.TotalYield, Mathf.RoundToInt(config.StoneForRockSize(1) * config.InvasionStoneReserveMultiplier), "A run's boulder holds no more than a sandbox one.");
+            Assert.AreEqual(config.InvasionStonePerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Stone));
+
+            var data = PlaytestWorld.Building("Quarry");
+            var quarry = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(rock.transform.position), data.footprintSize));
+            var yard = quarry.GetComponent<ProductionBuilding>();
+            yard.SetAssignedWorkers(1);
+            var visuals = CitizenVisualsManager.Instance;
+            System.Func<CitizenAgent[]> men = () => visuals.AllAgents.Where(a => a != null && visuals.WorkplaceOf(a) == yard).ToArray();
+            var loads = 0;
+            System.Action<ProductionBuilding, int> count = (b, n) => { if (b == yard) loads++; };
+            CitizenVisualsManager.Delivered += count;
+            try
+            {
+                for (var t = 0f; t < 40f && loads == 0; t += Time.deltaTime) yield return null;
+                Assert.Greater(loads, 0, "The quarry's man brought no stone to begin with.");
+                Assert.IsNotNull(men().Single().WorkNode, "The quarry's man has no rock to go back to.");
+
+                // an upgrade long enough to outlast the wait; he comes home and rests
+                ConstructionSite.Begin(quarry, 600f, upgrade: true);
+                var before = loads;
+                for (var t = 0f; t < 40f && loads == before; t += Time.deltaTime) yield return null;
+                Assert.Greater(loads, before, "He did not come home during the upgrade.");
+                Assert.IsNull(men().Single().WorkNode, "He went back out to the rocks while the quarry was being upgraded.");
+
+                quarry.Site.Finish();
+                for (var t = 0f; t < 8f && men().Any(a => a.WorkNode == null); t += Time.deltaTime) yield return null;
+                Assert.IsTrue(men().All(a => a.WorkNode != null), "The quarry's man stood idle after its upgrade.");
+            }
+            finally
+            {
+                CitizenVisualsManager.Delivered -= count;
+            }
+        }
+
+        /// <summary>
+        /// A yard's killed worker is replaced by an idle man (playtest 5,
+        /// 2026-10-22: «4 workers» on the card, two at work, until all were taken off and put back).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AKilledWorker_IsReplaced()
+        {
+            var data = PlaytestWorld.Building("Sawmill");
+            var yard = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize)).GetComponent<ProductionBuilding>();
+            yard.SetAssignedWorkers(2);
+            yield return null;
+            var visuals = CitizenVisualsManager.Instance;
+            System.Func<int> working = () => visuals.AllAgents.Count(a => a != null && visuals.WorkplaceOf(a) == yard);
+            Assert.AreEqual(2, working());
+
+            visuals.KillAgent(visuals.AllAgents.First(a => a != null && visuals.WorkplaceOf(a) == yard));
+            yield return null;
+            Assert.AreEqual(yard.AssignedWorkers, working(), "The killed worker's place stayed empty with idle men about.");
         }
 
         /// <summary>The fog lifts round the King and closes again behind him (the user, 2026-10-22).</summary>

@@ -70,7 +70,13 @@ namespace CityBuilder.Tests.PlayMode
         public static Vector2Int FindFreeAreaNearTheMiddle(Vector2Int size)
         {
             var grid = GridManager.Instance;
-            var centre = new Vector2Int((grid.GridSize.x - size.x) / 2, (grid.GridSize.y - size.y) / 2);
+            return FindFreeAreaNear(new Vector2Int((grid.GridSize.x - size.x) / 2, (grid.GridSize.y - size.y) / 2), size);
+        }
+
+        /// <summary>The free block nearest this origin cell, searched ring by ring.</summary>
+        public static Vector2Int FindFreeAreaNear(Vector2Int centre, Vector2Int size)
+        {
+            var grid = GridManager.Instance;
             var reach = Mathf.Max(grid.GridSize.x, grid.GridSize.y) / 2;
 
             for (var ring = 0; ring < reach; ring++)

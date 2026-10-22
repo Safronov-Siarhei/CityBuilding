@@ -511,6 +511,9 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionOrcHealthMultiplier = 4f;
         [SerializeField] private float invasionOrcDamageMultiplier = 1f;
         [SerializeField] private int invasionMaxEachYard = 1;
+        [SerializeField] private int invasionMaxQuarries = 2;
+        [SerializeField] private float invasionStoneReserveMultiplier = 3f;
+        [SerializeField] private int invasionStonePerHarvest = 2;
         [SerializeField] private float invasionMinimapRadius = 40f;
         [SerializeField] private float invasionWallHealthMultiplier = 4f;
         [SerializeField] private int invasionCitizenHealth = 12;
@@ -747,6 +750,9 @@ namespace CityBuilder.Core
         public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
         public float InvasionOrcDamageMultiplier => invasionOrcDamageMultiplier;
         public int InvasionMaxEachYard => invasionMaxEachYard;
+        public int InvasionMaxQuarries => invasionMaxQuarries;
+        public float InvasionStoneReserveMultiplier => invasionStoneReserveMultiplier;
+        public int InvasionStonePerHarvest => invasionStonePerHarvest;
         public float InvasionMinimapRadius => invasionMinimapRadius;
         public float InvasionWallHealthMultiplier => invasionWallHealthMultiplier;
         public int InvasionCitizenHealth => invasionCitizenHealth;
@@ -1088,6 +1094,9 @@ namespace CityBuilder.Core
             invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
             invasionOrcDamageMultiplier = Read(economy, "inv_orc_damage_mult", invasionOrcDamageMultiplier);
             invasionMaxEachYard = (int)Read(economy, "inv_max_each_yard", invasionMaxEachYard);
+            invasionMaxQuarries = (int)Read(economy, "inv_max_quarries", invasionMaxQuarries);
+            invasionStoneReserveMultiplier = Read(economy, "inv_stone_reserve_mult", invasionStoneReserveMultiplier);
+            invasionStonePerHarvest = (int)Read(economy, "inv_stone_per_harvest", invasionStonePerHarvest);
             invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
             invasionWallHealthMultiplier = Read(economy, "inv_wall_health_mult", invasionWallHealthMultiplier);
             invasionCitizenHealth = (int)Read(economy, "inv_citizen_health", invasionCitizenHealth);

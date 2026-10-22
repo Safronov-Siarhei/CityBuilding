@@ -70,9 +70,12 @@ namespace CityBuilder.Invasion
             return max > 0 && BuildingInstance.CountOf(data.buildingName) >= max;
         }
 
-        /// <summary>How many of this a run may have, or 0 for no limit.</summary>
-        public static int LimitOf(BuildingData data) =>
-            data != null && Array.IndexOf(Limited, data.buildingName) >= 0 ? BalanceConfig.Instance.InvasionMaxEachYard : 0;
+        /// <summary>How many of this a run may have, or 0 for no limit: sawmills inv_max_each_yard, quarries inv_max_quarries (two, the user 2026-10-22).</summary>
+        public static int LimitOf(BuildingData data)
+        {
+            if (data == null || Array.IndexOf(Limited, data.buildingName) < 0) return 0;
+            return data.buildingName == "Quarry" ? BalanceConfig.Instance.InvasionMaxQuarries : BalanceConfig.Instance.InvasionMaxEachYard;
+        }
 
         /// <summary>Whether a build-menu category has anything in a run.</summary>
         public static bool HasAny(BuildingCategory category, IEnumerable<BuildingData> buildings)

@@ -24,7 +24,10 @@
 > is a shared feature now. Playtest 4: «!» hides under the card, orc chases (soldier/citizen/prisoner)
 > keep to the NavMesh (`OrcUnit.Chase`: straight while NavMesh.Raycast is clear, else a route), health
 > bar layers in a fixed render queue, Inv1 stone where the user drew it, wave orcs ×0.7 damage
-> (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`. Next: online leaderboard (service not chosen), more playtests.
+> (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`.
+> Playtest 5: yard workers drop their node claim while the yard rests (they stood idle after an
+> upgrade), killed workers are replaced (`RefillShortBuildings`), two quarries (`inv_max_quarries`),
+> run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_stone_per_harvest`. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
