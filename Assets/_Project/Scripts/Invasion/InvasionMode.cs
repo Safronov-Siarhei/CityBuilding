@@ -20,7 +20,8 @@ namespace CityBuilder.Invasion
     /// game (GameSessionIntent.NewGameIsInvasion). Then it switches off what a run does not have
     /// -- the sandbox's raids and camps, illness, fires -- and, once the map is down, sets the
     /// run up: the castle in the middle, a tower at the island's end of each causeway, the King.
-    /// The waves are InvasionWaves', the jungle's monsters, boss and shrines InvasionJungle's.
+    /// The waves are InvasionWaves', the jungle's monsters, boss and shrines InvasionJungle's, the
+    /// run's points InvasionScore's.
     /// </summary>
     public class InvasionMode : MonoBehaviour
     {
@@ -61,6 +62,7 @@ namespace CityBuilder.Invasion
         public InvasionPeople People { get; private set; }
         public InvasionWaves Waves { get; private set; }
         public InvasionJungle Jungle { get; private set; }
+        public InvasionScore Score { get; private set; }
         public List<InvasionOrcCamp> OrcCamps { get; } = new List<InvasionOrcCamp>();
         public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
@@ -184,6 +186,8 @@ namespace CityBuilder.Invasion
             // the waves, out of the camps' portals
             Waves = gameObject.AddComponent<InvasionWaves>();
             Waves.Begin(exits);
+            Score = gameObject.AddComponent<InvasionScore>();
+            Score.Begin(Waves);
 
             // the jungle between the lanes: monster camps, the boss's lair, the healing shrines
             Jungle = gameObject.AddComponent<InvasionJungle>();

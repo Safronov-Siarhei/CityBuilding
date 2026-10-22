@@ -421,13 +421,16 @@ namespace CityBuilder.EditorTools
             timer = MenuLabel(challenge.transform, "Timer", null, 30, new Vector2(0f, -66f), new Vector2(480f, 50f), HudInk.OnMenuPlaque, bold: true);
 
             MenuLabel(body, "PointsHeading", "#invasion_my_points", 30, new Vector2(-300f, -40f), new Vector2(540f, 50f), HudInk.OnPanel);
-            MenuLabel(body, "Points", null, 84, new Vector2(-300f, -120f), new Vector2(540f, 100f), HudInk.OnPanel, bold: true).text = "0";
+            var points = MenuLabel(body, "Points", null, 84, new Vector2(-300f, -120f), new Vector2(540f, 100f), HudInk.OnPanel, bold: true);
+            points.text = "0";
             var counted = MenuLabel(body, "Counted", null, 26, new Vector2(-300f, -200f), new Vector2(540f, 44f), HudInk.OnPanel);
             counted.text = Localization.Format("#invasion_counted", 0, 5);
             var dot = SkinSprite("circle_mask");
+            var pips = new Object[5];
             for (var i = 0; i < 5; i++)
             {
                 var pip = CreateImage(body, $"Run{i + 1}", Color.white);
+                pips[i] = pip;
                 pip.sprite = dot;
                 Anchor(pip.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-300f + (i - 2) * 64f, -256f), new Vector2(40f, 40f));
                 SkinInk(pip, HudInk.OnPanel);
@@ -435,22 +438,45 @@ namespace CityBuilder.EditorTools
             }
 
             // right: the leaderboards
+            // the numbers are InvasionHubController's, from the records on the device
+            var hub = rect.gameObject.AddComponent<InvasionHubController>();
             var periods = new[] { "#invasion_day", "#invasion_week", "#invasion_month" };
+            var selected = new Object[periods.Length];
             for (var i = 0; i < periods.Length; i++)
             {
                 var tab = MenuTab(body, $"Tab_{i}", periods[i], new Vector2(130f + i * 180f, 250f), new Vector2(170f, 86f));
                 tab.selected.SetActive(i == 0);
+                selected[i] = tab.selected;
+                UnityEventTools.AddIntPersistentListener(tab.button.onClick, hub.SelectPeriod, i);
             }
             var board = MenuImage(body, "Board", "card_footer", new Vector2(310f, -20f), new Vector2(540f, 400f));
             board.raycastTarget = false;
+            Text playerName = null, playerPoints = null;
             for (var r = 0; r < 4; r++)
             {
                 var row = MenuImage(board.transform, $"Place{r + 1}", "row", new Vector2(0f, 150f - r * 74f), new Vector2(500f, 66f));
                 row.color = new Color(1f, 1f, 1f, 0.55f);
                 MenuLabel(row.transform, "Place", null, 26, new Vector2(-210f, 2f), new Vector2(60f, 40f), HudInk.OnPanel, bold: true).text = $"{r + 1}";
-                MenuLabel(row.transform, "Name", null, 26, new Vector2(10f, 2f), new Vector2(360f, 40f), HudInk.OnPanel, align: TextAnchor.MiddleLeft).text = "—";
+                var name = MenuLabel(row.transform, "Name", null, 26, new Vector2(-40f, 2f), new Vector2(260f, 40f), HudInk.OnPanel, align: TextAnchor.MiddleLeft);
+                name.text = "—";
+                var score = MenuLabel(row.transform, "Points", null, 26, new Vector2(170f, 2f), new Vector2(140f, 40f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleRight);
+                if (r == 0)
+                {
+                    playerName = name;
+                    playerPoints = score;
+                }
             }
+            // until the online leaderboard: the player's own row only
             MenuLabel(board.transform, "Soon", "#invasion_board_soon", 26, new Vector2(0f, -150f), new Vector2(500f, 50f), HudInk.OnPanel);
+
+            var so = new SerializedObject(hub);
+            so.FindProperty("pointsText").objectReferenceValue = points;
+            so.FindProperty("countedText").objectReferenceValue = counted;
+            WriteArray(so.FindProperty("runPips"), pips);
+            WriteArray(so.FindProperty("tabSelected"), selected);
+            so.FindProperty("playerRowName").objectReferenceValue = playerName;
+            so.FindProperty("playerRowPoints").objectReferenceValue = playerPoints;
+            so.ApplyModifiedPropertiesWithoutUndo();
 
             var fight = MenuTextButton(body, "FightButton", "button", "#invasion_fight", HudInk.OnButton, new Vector2(370f, -310f), new Vector2(400f, 130f), 44);
             UnityEventTools.AddPersistentListener(fight.onClick, controller.StartInvasion);

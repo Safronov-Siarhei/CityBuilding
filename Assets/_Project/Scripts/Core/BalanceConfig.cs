@@ -505,6 +505,11 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionCampThrowers = 4;
         [SerializeField] private float invasionCampGuardRadius = 8f;
         [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
+        // The Invasion run's score (InvasionScore) and the local records (InvasionRecords).
+        [SerializeField] private int invasionScorePerWaveSquared = 1;
+        [SerializeField] private int invasionScoreBoss = 50;
+        [SerializeField] private int invasionScoreCampBuilding = 10;
+        [SerializeField] private int invasionRunsCountedPerDay = 5;
 
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
@@ -726,6 +731,10 @@ namespace CityBuilder.Core
         public int InvasionCampThrowers => invasionCampThrowers;
         public float InvasionCampGuardRadius => invasionCampGuardRadius;
         public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
+        public int InvasionScorePerWaveSquared => invasionScorePerWaveSquared;
+        public int InvasionScoreBoss => invasionScoreBoss;
+        public int InvasionScoreCampBuilding => invasionScoreCampBuilding;
+        public int InvasionRunsCountedPerDay => invasionRunsCountedPerDay;
 
         /// <summary>A jungle monster (wolf, bear, troll, giant) as a unit row, built from its mon_ID_* keys like the King's.</summary>
         public UnitBalance MonsterUnit(string id)
@@ -1052,6 +1061,10 @@ namespace CityBuilder.Core
             invasionCampThrowers = (int)Read(economy, "inv_camp_throwers", invasionCampThrowers);
             invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
             invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
+            invasionScorePerWaveSquared = (int)Read(economy, "inv_score_wave_sq", invasionScorePerWaveSquared);
+            invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);
+            invasionScoreCampBuilding = (int)Read(economy, "inv_score_camp_building", invasionScoreCampBuilding);
+            invasionRunsCountedPerDay = (int)Read(economy, "inv_runs_per_day", invasionRunsCountedPerDay);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);

@@ -34,6 +34,9 @@ namespace CityBuilder.Tests.PlayMode
         {
             LogAssert.ignoreFailingMessages = true;
             Time.timeScale = 1f;
+            // a run that ends writes its points: never into the player's own records
+            InvasionRecords.FilePathOverride = System.IO.Path.Combine(Application.temporaryCachePath, "invasion_records_test.json");
+            System.IO.File.Delete(InvasionRecords.FilePathOverride);
             GameSessionIntent.NewGameMapId = InvasionMode.MapId;
             GameSessionIntent.NewGameIsInvasion = true;
             SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
@@ -47,7 +50,52 @@ namespace CityBuilder.Tests.PlayMode
         {
             Time.timeScale = 1f;
             GameSessionIntent.NewGameIsInvasion = false;
+            System.IO.File.Delete(InvasionRecords.FilePathOverride);
+            InvasionRecords.FilePathOverride = null;
             yield return null;
+        }
+
+        /// <summary>
+        /// The castle falls and the run is over: its points are the waves survived squared plus the
+        /// giant and the camp buildings razed (a wall piece is not one), the end panel says so, and
+        /// the run is written into today's records.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheCastleFalling_EndsTheRun_AndWritesItsPoints()
+        {
+            var mode = InvasionMode.Instance;
+            var config = BalanceConfig.Instance;
+
+            mode.Waves.SendNextWave();
+            foreach (var orc in mode.Waves.WaveOrcs.ToList()) orc.TakeDamage(orc.MaxHealth);
+            for (var frame = 0; frame < 10 && mode.Waves.WavesSurvived == 0; frame++) yield return null;
+            Assert.AreEqual(1, mode.Waves.WavesSurvived, "The wave was not beaten off.");
+
+            var giant = mode.Jungle.BossLair.Monsters[0];
+            giant.TakeDamage(giant.MaxHealth);
+            var camp = mode.OrcCamps[0];
+            var tower = camp.Buildings.First(b => b.Kind == OrcCampBuildingKind.Watchtower);
+            var wall = OrcCampBuilding.All.First(b => b.Kind == OrcCampBuildingKind.Palisade);
+            tower.TakeDamage(tower.MaxHealth);
+            wall.TakeDamage(wall.MaxHealth);
+            yield return null;
+
+            var score = mode.Score;
+            Assert.AreEqual(1, score.BossesSlain, "The giant did not count.");
+            Assert.AreEqual(1, score.CampBuildingsRazed, "The camp tower did not count, or the wall piece did.");
+            var expected = 1 * config.InvasionScorePerWaveSquared + config.InvasionScoreBoss + config.InvasionScoreCampBuilding;
+            Assert.AreEqual(expected, score.Total);
+            Assert.IsFalse(System.IO.File.Exists(InvasionRecords.FilePathOverride), "The run was written down before it ended.");
+
+            mode.Castle.TryDamage(mode.Castle.MaxHealth);
+            yield return null;
+            Assert.IsTrue(GameOverManager.Instance.IsGameOver, "The castle fell and the run went on.");
+            Assert.IsTrue(score.Finished);
+            var days = InvasionRecords.LoadDays();
+            Assert.AreEqual(expected, InvasionRecords.DayPoints(days, System.DateTime.Now, config.InvasionRunsCountedPerDay), "The run's points are not in today's records.");
+            var reason = GameObject.Find("GameOverPanel/Card/Reason").GetComponent<UnityEngine.UI.Text>().text;
+            StringAssert.Contains(expected.ToString(), reason, "The end panel does not show the run's points.");
+            Time.timeScale = 1f;
         }
 
         [UnityTest]

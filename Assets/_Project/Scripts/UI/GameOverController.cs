@@ -31,6 +31,11 @@ namespace CityBuilder.UI
 
         private void Show(bool victory)
         {
+            if (Invasion.InvasionMode.IsActive)
+            {
+                ShowRunEnd();
+                return;
+            }
             if (titleLabel != null)
             {
                 titleLabel.text = Localization.Get(victory ? "#over_victory" : "#over_defeat");
@@ -45,6 +50,35 @@ namespace CityBuilder.UI
             }
             if (continueButton != null) continueButton.SetActive(victory);
 
+            if (panelRoot != null) panelRoot.SetActive(true);
+            ModalGate.SetBlocked(true);
+            Time.timeScale = 0f;
+        }
+
+        /// <summary>
+        /// The end of an Invasion run (it only ends with the castle): the waves held, the run's
+        /// points and what they come from, and where today's points stand now that it is written down.
+        /// </summary>
+        private void ShowRunEnd()
+        {
+            var score = Invasion.InvasionMode.Instance.Score;
+            if (titleLabel != null)
+            {
+                titleLabel.text = Localization.Get("#over_inv_defeat");
+                titleLabel.color = DefeatColor;
+            }
+            if (reasonLabel != null && score != null)
+            {
+                score.Finish();
+                var counted = BalanceConfig.Instance.InvasionRunsCountedPerDay;
+                var days = Invasion.InvasionRecords.LoadDays();
+                var today = System.DateTime.Now;
+                reasonLabel.text = Localization.Format("#over_inv_waves", score.WavesSurvived) + "\n"
+                    + Localization.Format("#over_inv_points", score.Total, score.WavePoints, score.BossPoints, score.CampPoints) + "\n"
+                    + Localization.Format("#over_inv_today", Invasion.InvasionRecords.DayPoints(days, today, counted),
+                        Invasion.InvasionRecords.RunsCounted(days, today, counted), counted);
+            }
+            if (continueButton != null) continueButton.SetActive(false);
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             Time.timeScale = 0f;

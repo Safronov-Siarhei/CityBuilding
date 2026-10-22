@@ -1,14 +1,16 @@
 # Invasion mode («Нашествие»)
 
-> **Status (2026-10-21):** in progress. Done: the Invasion map `Inv1` (base island halved to ~16 m),
+> **Status (2026-10-22):** in progress. Done: the Invasion map `Inv1` (base island halved to ~16 m),
 > «В бой» starts a run, the King hero (model, jointed animation, XP/levels/respawn), the run's economy
 > (6 houses × 3 people, 9 buildings, wood/stone prices, no food/tax/happiness), the King's portrait
 > (top-right) + tap select + guard-the-base with no order, orc WAVES down the three lanes (countdown,
 > breather, lanes open one by one, gold for kills and waves), the JUNGLE (wolf/bear/troll camps at the
 > "monsters" spots, the giant boss, respawn stronger with the waves, healing shrines, the boss's
 > resources + blessing), the ROUND ORC CAMPS (two rings of wall with open gates, towers, totems,
-> spawners, storehouses, an unclosable portal, a refilled garrison; waves march out of the portal).
-> Numbers NOT yet checked by playing. Next (plan in the log): score and leaderboards.
+> spawners, storehouses, an unclosable portal, a refilled garrison; waves march out of the portal),
+> the SCORE + LOCAL records (waves² + giant + camp buildings; day = best 5 runs, week/month = sums
+> of days; written only when the castle falls; end panel + the menu hub show them).
+> Numbers NOT yet checked by playing. Next: online leaderboard (service not chosen), playtest.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -43,6 +45,13 @@ through `OrcRaidManager.SpawnLooseCampBuilding`/`SpawnRingGate`/`SpawnPortalLook
 respawn + level from `InvasionWaves.WavesSurvived`; boss reward + `KingHero.Empower`; `Tick(dt)` public
 for tests), monster models wired into `OrcRaidManager` (`wolfModel`… by `SetupProjectOrcs`), the shrine
 model into `InvasionMode.shrineModel`;
+`InvasionScore.cs` (the run's points, listens to `OrcUnit.Died` for the Giant and
+`OrcCampBuilding.OnDestroyed` except Palisade/Gate; `Finish()` idempotent, called on
+`GameOverManager.OnGameEnded` and by the end panel), `InvasionRecords.cs` (device file
+`invasion_records.json` in persistentDataPath, each day's best runs, pruned after 62 days; pure statics
+`DayPoints`/`WeekPoints`/`MonthPoints`; tests set `FilePathOverride`), `UI/GameOverController.ShowRunEnd`
+(«Замок пал» + waves/points/today), `UI/InvasionHubController.cs` (menu hub numbers + day/week/month tabs,
+built in `SetupProjectMainMenu.BuildInvasionPanel`);
 `Combat/KingHero.cs` (XP = health of any enemy falling within `king_xp_radius`, levels, respawn at the
 castle, `Guarding`: attacks orcs within `king_guard_radius` of the castle until a player's order —
 `ArmyGroup.PlayerOrdered`), `UI/KingPortraitController.cs` (portrait, tap-select, guard button; built
@@ -52,7 +61,8 @@ group, outside the army cap); entry `MainMenuController.StartInvasion` →
 (`monsters`, `boss`, `shrine`, `bridge`); the orc camps are NOT among them — they are `CampSpots`.
 
 ## Data
-economy `king_*`, `inv_*` (waves: `inv_first_wave_sec` … `inv_orc_building_radius`); localization
+economy `inv_score_wave_sq`, `inv_score_boss`, `inv_score_camp_building`, `inv_runs_per_day`;
+localization `#invasion_you`, `#over_inv_*`; economy `king_*`, `inv_*` (waves: `inv_first_wave_sec` … `inv_orc_building_radius`); localization
 `#unit_king`, `#hud_inv_wave`, `#hud_inv_wave_in`, `#log_inv_wave`, `#log_inv_wave_survived`,
 `#log_inv_boss_slain`, `#log_inv_boss_back`; economy `mon_*` and the jungle's `inv_*` (camps, respawn,
 guard radii, monster gold, shrine, boss reward and blessing), `inv_camp_*` of the round orc camps.
@@ -66,8 +76,14 @@ run orcs go for the castle, a wave beaten off pays and starts the breather); Edi
 a camp per spot with its beasts, monsters hold their ground, a wiped camp returns stronger, the
 shrine heals, the boss pays and blesses; round camps: buildings + garrison + no portal, walls block
 and the waves get out, a fallen spawner sends no more of its kind; EditMode `InvasionCampLayoutTests`.
+Score: PlayMode `TheCastleFalling_EndsTheRun_AndWritesItsPoints`; EditMode `InvasionRecordsTests`
+(waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- A run that is left or crashes is never written down (the user's rule): there is no warning on
+  leaving yet -- an open item.
+- PlayMode tests of a run must keep `InvasionRecords.FilePathOverride` set (InvasionTests does), or a
+  test castle falling writes into the editor's real records.
 - The round camps' walls carve the NavMesh a frame or more after the run starts: a path test that
   runs at once sees no walls and passes for nothing (wait first, as `TheWalls_Block…` does).
 - A ring wall section is 401 triangles and there are 108 of them on the map -- mind the budget

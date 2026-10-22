@@ -688,17 +688,18 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(760f, 380f);
+            cardRect.sizeDelta = new Vector2(760f, 440f);
             cardRect.anchoredPosition = Vector2.zero;
 
             // Text and colour are set per outcome by GameOverController -- one panel serves both
             // the defeat and the "all portals closed" victory.
-            var title = CreateText(card.transform, "Title", string.Empty, 44, new Vector2(0f, 100f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
-            var reason = CreateText(card.transform, "Reason", string.Empty, 26, new Vector2(0f, 30f), new Vector2(680f, 60f), new Color(1f, 1f, 1f, 0.8f));
+            var title = CreateText(card.transform, "Title", string.Empty, 44, new Vector2(0f, 135f), new Vector2(680f, 70f), new Color(0.9f, 0.35f, 0.3f));
+            // three lines in an Invasion run: waves, points, today's points
+            var reason = CreateText(card.transform, "Reason", string.Empty, 26, new Vector2(0f, 25f), new Vector2(680f, 130f), new Color(1f, 1f, 1f, 0.8f));
 
-            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "#over_to_menu", new Vector2(-190f, -100f), new Vector2(340f, 90f));
+            var menuButton = CreateButton(card.transform, panelSprite, "GameOverMenuButton", "#over_to_menu", new Vector2(-190f, -135f), new Vector2(340f, 90f));
             // a win offers the user's free mode: keep playing the map
-            var continueButton = CreateButton(card.transform, panelSprite, "GameOverContinueButton", "#over_continue", new Vector2(190f, -100f), new Vector2(340f, 90f));
+            var continueButton = CreateButton(card.transform, panelSprite, "GameOverContinueButton", "#over_continue", new Vector2(190f, -135f), new Vector2(340f, 90f));
 
             // The controller lives on its own always-active object, NOT on the panel it shows.
             // A component on a deactivated GameObject never gets Start(), so putting it on
