@@ -396,7 +396,7 @@ namespace CityBuilder.Buildings
             // Level 1's radius, because that is what is about to be built -- see
             // HarvestRadiusOverlay for why this is worth showing before the decision rather than
             // after it. Costs nothing for the other 47 buildings: a zero radius hides it.
-            if (ghostVisible) HarvestRadiusOverlay.ShowFor(center, _selectedBuilding.LevelStats(1).harvestRadius);
+            if (ghostVisible) HarvestRadiusOverlay.ShowFor(center, _selectedBuilding.LevelStats(1).harvestRadius, _selectedBuilding);
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(CostOf(_selectedBuilding));
@@ -710,6 +710,11 @@ namespace CityBuilder.Buildings
             var buildingInstance = instance.GetComponent<BuildingInstance>();
             if (buildingInstance == null) buildingInstance = instance.AddComponent<BuildingInstance>();
             buildingInstance.Initialize(_selectedBuilding, cell, _rotationSteps);
+            // In an Invasion run a building takes time to put up and does nothing meanwhile (the user, 2026-10-22).
+            if (Invasion.InvasionRules.Active && _selectedBuilding != mandatoryFirstBuilding)
+            {
+                ConstructionSite.Begin(buildingInstance, Invasion.InvasionRules.BuildSeconds(CostOf(_selectedBuilding)), upgrade: false);
+            }
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 

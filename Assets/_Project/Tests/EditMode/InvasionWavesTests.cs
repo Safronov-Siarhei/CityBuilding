@@ -11,6 +11,15 @@ namespace CityBuilder.Tests.EditMode
     /// </summary>
     public class InvasionWavesTests
     {
+        /// <summary>A run's build time is its price × seconds per unit, held between a floor and a ceiling.</summary>
+        [Test]
+        public void BuildTime_FollowsThePrice_WithinItsBounds()
+        {
+            Assert.AreEqual(10f, InvasionRules.BuildSecondsFor(20, 0.5f, 3f, 45f));
+            Assert.AreEqual(3f, InvasionRules.BuildSecondsFor(2, 0.5f, 3f, 45f), "A fence piece took less than the floor.");
+            Assert.AreEqual(45f, InvasionRules.BuildSecondsFor(500, 0.5f, 3f, 45f), "A dear upgrade took past the ceiling.");
+        }
+
         [Test]
         public void TheLanes_OpenOneByOne_AndNeverPastTheMap()
         {

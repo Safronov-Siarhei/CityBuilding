@@ -230,13 +230,15 @@ namespace CityBuilder.UI
             _citizenRows.Add(new CitizenRow { Agent = agent, Status = status, Name = name });
         }
 
-        /// <summary>Takes the camera to a citizen and closes the panel, so he can be seen.</summary>
+        /// <summary>Takes the camera to a citizen, closes the panel, and picks him up if he is free, so the next tap is his order.</summary>
         public void ShowCitizen(CitizenAgent agent)
         {
             if (agent == null) return;
             var rig = FindAnyObjectByType<CameraControl.RTSCameraController>();
             ClosePanel();
             if (rig != null) rig.FocusOn(agent.transform.position);
+            var selector = FindAnyObjectByType<CitizenSelector>();
+            if (selector != null) selector.SelectAgent(agent);
         }
 
         public void AssignTo(ProductionBuilding building)

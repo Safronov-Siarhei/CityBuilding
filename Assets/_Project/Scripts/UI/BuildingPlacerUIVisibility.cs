@@ -41,7 +41,9 @@ namespace CityBuilder.UI
                 var at = placementControls.anchoredPosition;
                 placementControls.anchoredPosition = new Vector2(at.x, _controlsY + (mandatory ? liftWhilePlacingMandatory : 0f));
             }
-            var showMenu = !mandatory && !buildingPlacer.IsSelecting;
+            // a held building (BuildingFocus) puts its «!» where the build menu stands
+            var held = BuildingFocus.Instance != null && BuildingFocus.Instance.Current != null;
+            var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held;
             if (hideWhilePlacingMandatory != null && hideWhilePlacingMandatory.activeSelf != showMenu)
             {
                 hideWhilePlacingMandatory.SetActive(showMenu);

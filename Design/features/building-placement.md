@@ -50,6 +50,14 @@ EditMode `PlacementAimTests`, `FenceShapeTests`, `GridManagerTests`, `RoadNetwor
 `PlacementPreviewTests` (road with a turn, each offer; Caldera meadow/lake shore; photo with graphics),
 `FenceAutotilingTests`, `RotatedFootprintTests`, `GateTests`, `CostRowTests`, `StartPlacementTests`.
 
+## Selecting a placed building (2026-10-22, every mode)
+`UI/BuildingFocus.cs`: a tap (BuildingSelector) holds the building -- camera `FocusOn`, gold rings
+(LineRenderers), its reach (HarvestRadiusOverlay with gatherable-node rings / the defence circle),
+`BuildingInstance.PinHealthBar`, and the «!» button (`BuildingDetailsButton`, built in
+`SetupProjectHud.BuildBuildingFocus`) where the build menu stands (BuildingPlacerUIVisibility hides the
+menu). «!» or a second tap opens BuildingInfoPanelController / the Laboratory's panel. Ground tap,
+another selection or picking up a building to place lets go.
+
 ## Traps
 - With a mouse, a click while the next road/fence piece is still on offer places THAT piece
   (`OfferStillStands`), not the cell under the cursor -- which is the piece just laid (2026-10-22).

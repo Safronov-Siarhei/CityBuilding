@@ -41,6 +41,20 @@ namespace CityBuilder.Invasion
 
         public static bool Allows(BuildingData data) => data != null && Array.IndexOf(Buildings, data.buildingName) >= 0;
 
+        /// <summary>
+        /// How long building or upgrading takes in a run (the user, 2026-10-22): its price in
+        /// resources × inv_build_sec_per_unit, held between inv_build_sec_min and _max -- the
+        /// sheet's costs decide it, a fence is quick and a fortified tower is not.
+        /// </summary>
+        public static float BuildSeconds(List<ResourceAmount> cost)
+        {
+            var units = 0;
+            if (cost != null) foreach (var c in cost) units += Mathf.Max(0, c.amount);
+            return BuildSecondsFor(units, BalanceConfig.Instance.InvasionBuildSecondsPerUnit, BalanceConfig.Instance.InvasionBuildSecondsMin, BalanceConfig.Instance.InvasionBuildSecondsMax);
+        }
+
+        public static float BuildSecondsFor(int units, float perUnit, float min, float max) => Mathf.Clamp(units * perUnit, min, max);
+
         /// <summary>A run's walls and gates (the user, 2026-10-22): obstacles for the orcs, sturdier than the sandbox's (inv_wall_health_mult); an orc breaks one only when it stands in its way.</summary>
         private static readonly string[] Barriers = { "Fence", "Gate", "FortifiedGate" };
 
@@ -50,9 +64,15 @@ namespace CityBuilder.Invasion
         private static readonly string[] Limited = { "Sawmill", "Quarry" };
 
         /// <summary>A run already has as many of this as it may: its card comes off the menu and it cannot be placed.</summary>
-        public static bool AtLimit(BuildingData data) =>
-            data != null && Array.IndexOf(Limited, data.buildingName) >= 0
-            && BuildingInstance.CountOf(data.buildingName) >= BalanceConfig.Instance.InvasionMaxEachYard;
+        public static bool AtLimit(BuildingData data)
+        {
+            var max = LimitOf(data);
+            return max > 0 && BuildingInstance.CountOf(data.buildingName) >= max;
+        }
+
+        /// <summary>How many of this a run may have, or 0 for no limit.</summary>
+        public static int LimitOf(BuildingData data) =>
+            data != null && Array.IndexOf(Limited, data.buildingName) >= 0 ? BalanceConfig.Instance.InvasionMaxEachYard : 0;
 
         /// <summary>Whether a build-menu category has anything in a run.</summary>
         public static bool HasAny(BuildingCategory category, IEnumerable<BuildingData> buildings)

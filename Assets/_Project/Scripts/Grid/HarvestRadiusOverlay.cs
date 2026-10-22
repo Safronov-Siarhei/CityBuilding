@@ -73,10 +73,31 @@ namespace CityBuilder.Grid
             Instance.Show(center, radiusMetres);
         }
 
+        /// <summary>
+        /// The carpet, and a gold ring at the foot of every tree or boulder of the yard's kind
+        /// inside it that its workers could take now (the user, 2026-10-22: a tree inside the
+        /// circle looked gatherable and was not -- a sapling, or measured through a slope).
+        /// </summary>
+        public static void ShowFor(Vector3 center, int radiusMetres, Buildings.BuildingData yard)
+        {
+            ShowFor(center, radiusMetres);
+            if (radiusMetres > 0 && _instance != null) _instance.MarkNodes(center, radiusMetres, GatheredBy(yard));
+        }
+
+        /// <summary>What a yard gathers from the map's nodes (wood, stone), or null for anything else.</summary>
+        public static Resources.ResourceType? GatheredBy(Buildings.BuildingData data)
+        {
+            if (data == null || data.recipes == null || data.recipes.Count == 0) return null;
+            var output = data.recipes[0].output;
+            return output == Resources.ResourceType.Wood || output == Resources.ResourceType.Stone ? output : (Resources.ResourceType?)null;
+        }
+
         /// <summary>Hides the overlay, without creating one just to hide it -- the common case is a building that never had a radius.</summary>
         public static void HideIfShown()
         {
-            if (_instance != null) _instance.gameObject.SetActive(false);
+            if (_instance == null) return;
+            _instance.gameObject.SetActive(false);
+            _instance.HideMarks();
         }
 
         private void Show(Vector3 center, int radiusMetres)
@@ -91,6 +112,104 @@ namespace CityBuilder.Grid
 
             transform.position = new Vector3(center.x, grid.GroundHeight + HeightAboveGround, center.z);
             gameObject.SetActive(true);
+        }
+
+        // ---------------------------------------------------------------- the gatherable nodes
+
+        private const int MaxMarks = 96;
+        private const float MarkRefreshSeconds = 0.4f;
+        private static readonly Color MarkColor = new Color(1f, 0.85f, 0.3f, 0.9f);
+        private readonly List<Transform> _marks = new List<Transform>();
+        private Material _markMaterial;
+        private Mesh _markMesh;
+        private Vector3 _markedAt = new Vector3(float.MaxValue, 0f, 0f);
+        private float _markedTime = -10f;
+        private int _shownMarks;
+
+        private void MarkNodes(Vector3 center, int radiusMetres, Resources.ResourceType? type)
+        {
+            if (type == null)
+            {
+                HideMarks();
+                return;
+            }
+            // a ghost following the cursor asks every frame: refresh when it has moved or a while has passed
+            var flat = new Vector3(center.x, 0f, center.z);
+            if ((flat - _markedAt).sqrMagnitude < 0.25f && Time.unscaledTime - _markedTime < MarkRefreshSeconds) return;
+            _markedAt = flat;
+            _markedTime = Time.unscaledTime;
+
+            var radiusSq = (float)radiusMetres * radiusMetres;
+            var shown = 0;
+            foreach (var node in Maps.ResourceNode.All)
+            {
+                if (shown >= MaxMarks) break;
+                if (node.ResourceType != type.Value || !Citizens.CitizenVisualsManager.IsGatherable(node)) continue;
+                var p = node.transform.position;
+                var dx = p.x - center.x;
+                var dz = p.z - center.z;
+                if (dx * dx + dz * dz > radiusSq) continue;
+                var mark = Mark(shown++);
+                mark.position = new Vector3(p.x, p.y + HeightAboveGround * 2f, p.z);
+                mark.gameObject.SetActive(true);
+            }
+            for (var i = shown; i < _shownMarks; i++) _marks[i].gameObject.SetActive(false);
+            _shownMarks = shown;
+        }
+
+        private void HideMarks()
+        {
+            for (var i = 0; i < _shownMarks && i < _marks.Count; i++) _marks[i].gameObject.SetActive(false);
+            _shownMarks = 0;
+            _markedTime = -10f;
+        }
+
+        private Transform Mark(int index)
+        {
+            while (_marks.Count <= index)
+            {
+                if (_markMesh == null)
+                {
+                    _markMesh = RingMesh(0.42f, 0.56f, 24);
+                    _markMaterial = CreateTransparentMaterial();
+                    _markMaterial.color = MarkColor;
+                }
+                var go = new GameObject("GatherableMark", typeof(MeshFilter), typeof(MeshRenderer));
+                go.GetComponent<MeshFilter>().sharedMesh = _markMesh;
+                var renderer = go.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = _markMaterial;
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                go.SetActive(false);
+                _marks.Add(go.transform);
+            }
+            return _marks[index];
+        }
+
+        /// <summary>A flat ring between two radii, facing up.</summary>
+        private static Mesh RingMesh(float inner, float outer, int sides)
+        {
+            var vertices = new Vector3[sides * 2];
+            var triangles = new int[sides * 6];
+            for (var i = 0; i < sides; i++)
+            {
+                var a = i / (float)sides * Mathf.PI * 2f;
+                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                vertices[i * 2] = dir * inner;
+                vertices[i * 2 + 1] = dir * outer;
+                var n = (i + 1) % sides;
+                var t = i * 6;
+                triangles[t + 0] = i * 2; triangles[t + 1] = n * 2; triangles[t + 2] = i * 2 + 1;
+                triangles[t + 3] = i * 2 + 1; triangles[t + 4] = n * 2; triangles[t + 5] = n * 2 + 1;
+            }
+            var mesh = new Mesh { name = "GatherableMark", vertices = vertices, triangles = triangles };
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private void OnDestroy()
+        {
+            foreach (var mark in _marks) if (mark != null) Destroy(mark.gameObject);
         }
 
         private void Build()

@@ -32,6 +32,8 @@ namespace CityBuilder.Combat
         private void Update()
         {
             if (_buildingInstance == null || _buildingInstance.Data == null || _buildingInstance.Defense <= 0) return;
+            // not while it is being built or upgraded (ConstructionSite)
+            if (!_buildingInstance.IsOperational) return;
 
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;

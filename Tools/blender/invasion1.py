@@ -136,8 +136,10 @@ BEACHES = []
 HILLS = []                                     # (no room for hills on the small base island)
 # the island's woods (the user, 2026-10-22: "almost no trees on the island"): a wood between each
 # pair of houses, and a smaller one on the shore between each causeway and the next stony patch
-GROVES = [(*_polar(RAD(a), 12.5), 3.6) for a in JUNGLE_ANGLES] +          [(*_polar(RAD(a), 14.5), 2.4) for a in (60.0, 180.0, 300.0)]
-OUTCROPS = [(*_polar(RAD(a), 10.5), 2.3) for a in (0.0, 120.0, 240.0)] + \
+GROVES = [(*_polar(RAD(a), 12.5), 4.4) for a in JUNGLE_ANGLES] +          [(*_polar(RAD(a), 14.5), 3.0) for a in (60.0, 180.0, 300.0)]
+# the island's stone (2026-10-22: too much of it, too few trees -- the start is about wood):
+# one small stony patch; once it and the groves are worked out the yards move off the island
+OUTCROPS = [(*_polar(RAD(0.0), 10.5), 1.6)] + \
            [(*_polar(RAD(a + 20), 53), 3) for a in JUNGLE_ANGLES] + \
            [(*_polar(RAD(a - 18), 82), 4) for a in JUNGLE_ANGLES]
 

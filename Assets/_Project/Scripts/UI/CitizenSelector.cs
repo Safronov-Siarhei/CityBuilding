@@ -128,6 +128,23 @@ namespace CityBuilder.UI
             return node;
         }
 
+        /// <summary>
+        /// Picks this citizen up (the workforce panel's «Где», the user 2026-10-22: so orders can
+        /// be given at once). Only a free one can take orders; for one at work it says he is busy
+        /// and returns false.
+        /// </summary>
+        public bool SelectAgent(CitizenAgent citizen)
+        {
+            if (citizen == null) return false;
+            if (!citizen.IsIdle)
+            {
+                ShowMessage(Localization.Get("#citizen_busy"), false);
+                return false;
+            }
+            Select(citizen);
+            return true;
+        }
+
         public bool TrySelectCitizen(Vector2 screenPosition)
         {
             if (targetCamera == null) return false;

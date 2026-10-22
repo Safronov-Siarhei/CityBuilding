@@ -54,6 +54,12 @@ namespace CityBuilder.Buildings
         /// <summary>Hit points at full repair, for the level this building currently stands at.</summary>
         public int MaxHealth => HealthAt(Level);
 
+        /// <summary>Its construction or upgrade under way (an Invasion run), or null.</summary>
+        public ConstructionSite Site { get; internal set; }
+
+        /// <summary>Works: not being built or upgraded (ConstructionSite). A tower shoots, a yard gathers, a barracks hires only then.</summary>
+        public bool IsOperational => Site == null;
+
         /// <summary>The sheet's health for that level -- times inv_wall_health_mult for a run's walls and gates (InvasionRules.IsBarrier).</summary>
         private int HealthAt(int level)
         {
@@ -289,6 +295,18 @@ namespace CityBuilder.Buildings
 
             if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform);
             _healthBar.Report(CurrentHealth / (float)MaxHealth);
+        }
+
+        /// <summary>Keeps the health bar up while the building is selected (BuildingFocus), and lets it go after.</summary>
+        public void PinHealthBar(bool pinned)
+        {
+            if (Data == null || MaxHealth <= 0) return;
+            if (_healthBar == null)
+            {
+                if (!pinned) return;
+                _healthBar = BuildingHealthBar.CreateFor(transform);
+            }
+            _healthBar.Pin(pinned, CurrentHealth / (float)MaxHealth);
         }
 
         private void FreeCellsAndDestroy()
@@ -699,11 +717,24 @@ namespace CityBuilder.Buildings
         public bool TryUpgrade()
         {
             // Before the cost, so a player who cannot upgrade yet is never charged for finding out.
-            if (!NextLevelResearched) return false;
+            if (!NextLevelResearched || !IsOperational) return false;
 
             var cost = GetUpgradeCost();
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
 
+            // An Invasion run's upgrade takes time, and the building rests meanwhile (the user, 2026-10-22).
+            if (Invasion.InvasionRules.Active)
+            {
+                ConstructionSite.Begin(this, Invasion.InvasionRules.BuildSeconds(cost), upgrade: true, ApplyNextLevel);
+                return true;
+            }
+            ApplyNextLevel();
+            return true;
+        }
+
+        private void ApplyNextLevel()
+        {
+            if (Data == null) return;
             var before = Data.LevelStats(Level);
             var healthBefore = HealthAt(Level);
             Level++;
@@ -724,7 +755,6 @@ namespace CityBuilder.Buildings
             _levelAppearance?.Apply(Level);
             UpdateLevelMarker();
             EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_upgraded", Data.LocalizedName, Level), EventSeverity.Good, EventGlyph.Upgrade));
-            return true;
         }
     }
 }

@@ -4,7 +4,8 @@ using UnityEngine;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// Opens an already-placed building's card -- worker assignment, upgrade, repair, demolition.
+    /// Picks up an already-placed building with a tap (BuildingFocus: the camera, the rings, its
+    /// reach, the «!» that opens its card -- worker assignment, upgrade, repair, demolition).
     ///
     /// Driven by WorldInputDispatcher rather than by its own pointer polling. The tap that gets
     /// here has already been confirmed as a tap (finger released without travelling) and has
@@ -20,6 +21,9 @@ namespace CityBuilder.UI
         [SerializeField] private ResearchPanelController researchPanel;
 
         [SerializeField] private LayerMask raycastMask = ~0;
+
+        /// <summary>Holds the tapped building; its «!» opens the card. Without one, the tap opens the card at once, as it used to.</summary>
+        [SerializeField] private BuildingFocus focus;
 
         // Reused across clicks rather than using Physics.RaycastAll, which allocates every call.
         // Sized for a shallow camera ray crossing tens of metres of forest: RaycastNonAlloc
@@ -39,8 +43,22 @@ namespace CityBuilder.UI
             var nearest = FindBuilding(screenPosition);
             if (nearest == null)
             {
+                if (focus != null) focus.Clear();
                 if (infoPanel != null) infoPanel.Close();
                 if (researchPanel != null) researchPanel.Close();
+                return;
+            }
+
+            if (focus != null)
+            {
+                // a second tap on the held building opens its card, like its «!»
+                if (focus.Current == nearest) focus.OpenDetails();
+                else
+                {
+                    if (infoPanel != null) infoPanel.Close();
+                    if (researchPanel != null) researchPanel.Close();
+                    focus.Select(nearest);
+                }
                 return;
             }
 

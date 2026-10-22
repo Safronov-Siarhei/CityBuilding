@@ -55,6 +55,29 @@ namespace CityBuilder.UI
             ShowHarvestRadius();
         }
 
+        /// <summary>m:ss.</summary>
+        private static string Clock(float seconds)
+        {
+            var s = Mathf.CeilToInt(Mathf.Max(0f, seconds));
+            return $"{s / 60}:{s % 60:00}";
+        }
+
+        private float _siteRefreshIn;
+
+        /// <summary>A card on a building under construction counts down, and opens up when it is done.</summary>
+        private void Update()
+        {
+            if (_currentInstance == null) return;
+            if (_currentInstance.Site == null && !_wasSite) return;
+            _siteRefreshIn -= Time.unscaledDeltaTime;
+            if (_siteRefreshIn > 0f) return;
+            _siteRefreshIn = 0.25f;
+            _wasSite = _currentInstance.Site != null;
+            Refresh();
+        }
+
+        private bool _wasSite;
+
         public void Close()
         {
             CancelDemolish();
@@ -208,15 +231,19 @@ namespace CityBuilder.UI
             // upgrade the player can actually pay for.
             var upgradeCost = _currentInstance.GetUpgradeCost();
             var researched = _currentInstance.NextLevelResearched;
-            if (upgradeControls != null) upgradeControls.SetActive(upgradeCost != null);
-            if (upgradeButton != null) upgradeButton.gameObject.SetActive(researched);
-            if (upgradeCostRow != null) upgradeCostRow.gameObject.SetActive(researched);
+            // being built or upgraded (an Invasion run): the time left stands where the price would
+            var site = _currentInstance.Site;
+            var open = researched && site == null;
+            if (upgradeControls != null) upgradeControls.SetActive(upgradeCost != null || site != null);
+            if (upgradeButton != null) upgradeButton.gameObject.SetActive(open);
+            if (upgradeCostRow != null) upgradeCostRow.gameObject.SetActive(open);
             if (upgradeLockLabel != null)
             {
-                upgradeLockLabel.gameObject.SetActive(!researched);
-                if (!researched) upgradeLockLabel.text = Localization.Format("#building_upgrade_locked", _currentInstance.Level + 1);
+                upgradeLockLabel.gameObject.SetActive(!open);
+                if (site != null) upgradeLockLabel.text = Localization.Format(site.IsUpgrade ? "#building_upgrading" : "#building_constructing", Clock(site.Remaining));
+                else if (!researched) upgradeLockLabel.text = Localization.Format("#building_upgrade_locked", _currentInstance.Level + 1);
             }
-            BuildCostRow(upgradeCostRow, researched ? upgradeCost : null);
+            BuildCostRow(upgradeCostRow, open ? upgradeCost : null);
 
             var repairCost = _currentInstance.GetRepairCost();
             if (repairControls != null) repairControls.SetActive(repairCost != null);
@@ -393,7 +420,7 @@ namespace CityBuilder.UI
             var army = ArmyManager.Instance;
             var isBarracks = data.buildingName == RecruitBuildingName;
 
-            if (recruitControls != null) recruitControls.SetActive(isBarracks && army != null);
+            if (recruitControls != null) recruitControls.SetActive(isBarracks && army != null && _currentInstance.IsOperational);
             if (!isBarracks || army == null) return;
 
             RefreshRecruitTypeButtons();
@@ -502,7 +529,7 @@ namespace CityBuilder.UI
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            Grid.HarvestRadiusOverlay.ShowFor(FootprintCenter(), _currentInstance.HarvestRadius);
+            Grid.HarvestRadiusOverlay.ShowFor(FootprintCenter(), _currentInstance.HarvestRadius, _currentInstance.Data);
         }
 
         private void HideHarvestRadius()

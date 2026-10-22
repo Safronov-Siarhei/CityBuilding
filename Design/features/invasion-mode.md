@@ -18,7 +18,10 @@
 > (camera + light + log), orc body animation (OrcBodyAnimator) and fall-and-sink death (OrcCorpse),
 > no Laboratory gate on picking a run building, mouse places the offered fence piece, plain gates
 > don't shoot (sheet), run walls ×inv_wall_health_mult and only broken when in the way, orcs kill
-> citizens, harder waves. Next: online leaderboard (service not chosen), more playtests.
+> citizens, harder waves. Playtest 3: TIMED BUILD + UPGRADE (ConstructionSite; nothing works meanwhile;
+> hammer labels), limited cards greyed «1/1», flat harvest distance + gatherable-node rings, «Где» selects,
+> heart/shield health bars, coin popups, more island wood / less stone; building selection (BuildingFocus)
+> is a shared feature now. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -63,7 +66,8 @@ built in `SetupProjectMainMenu.BuildInvasionPanel`);
 `UI/MinimapAttackAlerts.cs` (the blinking «!», from `InvasionWaves.TryLaneFront`),
 `UI/ResourceGainPopups.cs` («+N», on `CitizenVisualsManager.Delivered`; every mode),
 `UI/MoveOrderMarker.ShowFlagFor` (army orders plant the citizens' flag), `OrcUnit.Toughen`/health bar
-(`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit` (one sawmill, one quarry);
+(`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit`/`LimitOf` (one sawmill, one quarry; the card greys with «1/1»),
+`Buildings/ConstructionSite.cs` + `UI/ConstructionLabels.cs` (timed build/upgrade, `InvasionRules.BuildSeconds`);
 `Combat/KingHero.cs` (XP = health of any enemy falling within `king_xp_radius`, levels, respawn at the
 castle, `Guarding`: attacks orcs within `king_guard_radius` of the castle until a player's order —
 `ArmyGroup.PlayerOrdered`), `UI/KingPortraitController.cs` (portrait, tap-select; built
@@ -93,6 +97,10 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
 (waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- A run building placed through `BuildingPlacer.PlaceAt` gets a `ConstructionSite`; one put down by
+  `InvasionMode.PlaceFinished` or `PlaytestWorld.Place` does not. `IsOperational` gates DefensiveBuilding,
+  ProductionBuilding.Update, the yard's node claims (CitizenVisualsManager) and the Barracks' recruiting.
+  An upgrade in a run pays at once and raises the level only at `ConstructionSite.Finish`.
 - Every unit model (King, orcs, beasts) is modelled facing Blender -y and must be turned 180° about Y
   when put under its root, or it walks backwards.
 - In a run `OrcUnit.AcquireTarget` skips `InvasionRules.IsBarrier`; walls are only hit through

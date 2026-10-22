@@ -210,7 +210,10 @@ namespace CityBuilder.Citizens
                 : building.transform.position;
 
             ResourceNode claimed = null;
-            if (building.GathersFromNodes)
+            // a yard being built or upgraded (ConstructionSite): its workers wait at it; the node
+            // retry in Update sends them out once it works again
+            var resting = buildingInstance != null && !buildingInstance.IsOperational;
+            if (building.GathersFromNodes && !resting)
             {
                 // Already holding one (a boulder with stone left in it) -- keep going back to the
                 // same rock rather than re-searching every trip and hopping between two of them.
@@ -358,6 +361,14 @@ namespace CityBuilder.Citizens
         /// every building that is not a Sawmill or Quarry has and what the hand-gathering path
         /// wants.
         /// </summary>
+        /// <summary>Whether a gatherer could take this node now: not claimed, not worked out, a tree full grown. What HarvestRadiusOverlay marks.</summary>
+        public static bool IsGatherable(ResourceNode node)
+        {
+            if (node == null || node.IsClaimed || node.IsDepleted) return false;
+            var growth = node.GetComponent<TreeGrowth>();
+            return growth == null || growth.IsFullyGrown;
+        }
+
         private static ResourceNode FindNearestFreeNode(Vector3 fromPosition, ResourceType resourceType, int radiusMetres)
         {
             ResourceNode nearest = null;
@@ -371,7 +382,11 @@ namespace CityBuilder.Citizens
                 var growth = node.GetComponent<TreeGrowth>();
                 if (growth != null && !growth.IsFullyGrown) continue;
 
-                var distanceSq = (node.transform.position - fromPosition).sqrMagnitude;
+                // across the ground, not through it: on a slope a tree inside the drawn radius
+                // measured farther than it (the user, 2026-10-22: trees in the circle left alone)
+                var offset = node.transform.position - fromPosition;
+                offset.y = 0f;
+                var distanceSq = offset.sqrMagnitude;
                 if (distanceSq > radiusSq) continue;
                 if (distanceSq < nearestDistanceSq)
                 {

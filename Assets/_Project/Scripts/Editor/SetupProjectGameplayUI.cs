@@ -305,6 +305,7 @@ namespace CityBuilder.EditorTools
             var researchPanel = BuildResearchPanel(uiRoot, panelSprite, iconLibrary);
             var buildingSelector = BuildBuildingSelector(uiRoot, targetCamera, infoPanel, researchPanel);
             var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
+            BuildBuildingFocus(uiRoot, buildingSelector, infoPanel, researchPanel, citizenSelector, placer);
             BuildEventFeed(uiRoot, cameraRig);
             BuildTaxControl(uiRoot);
             BuildDayLabel(uiRoot, gameCalendar);
@@ -329,7 +330,16 @@ namespace CityBuilder.EditorTools
 
             BuildSelectionBadge(uiRoot, panelSprite, citizenSelector);
             // «+1» over a sawmill or quarry as its worker brings a load in
-            uiRoot.gameObject.AddComponent<ResourceGainPopups>();
+            var popups = uiRoot.gameObject.AddComponent<ResourceGainPopups>();
+            var popupsSO = new SerializedObject(popups);
+            popupsSO.FindProperty("icons").objectReferenceValue = iconLibrary;
+            popupsSO.ApplyModifiedPropertiesWithoutUndo();
+            // a hammer and the time left over each building under construction (an Invasion run)
+            var construction = uiRoot.gameObject.AddComponent<ConstructionLabels>();
+            var constructionSO = new SerializedObject(construction);
+            constructionSO.FindProperty("hammer").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/UI/Glyphs/Hammer.png");
+            constructionSO.FindProperty("plaque").objectReferenceValue = HudSprite("plaque");
+            constructionSO.ApplyModifiedPropertiesWithoutUndo();
 
             PinHudToEdges(uiRoot);
             ApplyTheme(canvasGO.transform);

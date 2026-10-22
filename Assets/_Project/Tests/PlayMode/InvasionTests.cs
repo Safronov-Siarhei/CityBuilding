@@ -550,6 +550,76 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// A run's building takes time to put up and does nothing meanwhile (the user, 2026-10-22):
+        /// a tower placed is a construction site that does not shoot, a hammer label stands over it,
+        /// and when the time is up it works; an upgrade likewise rests the building and raises its
+        /// level only at the end.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Building_AndUpgrading_TakeTime_AndTheBuildingRests()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            var tower = PlaytestWorld.Building("Tower");
+            ResourceManager.Instance.Add(ResourceType.Wood, 2000);
+            ResourceManager.Instance.Add(ResourceType.Stone, 2000);
+            ResourceManager.Instance.Add(InvasionRules.Money, 2000);
+            var cell = PlaytestWorld.FindFreeAreaNearTheMiddle(tower.footprintSize);
+            placer.PinnedOriginForTests = cell;
+            placer.SelectBuilding(tower);
+            yield return null;
+            placer.ConfirmPlacement();
+            placer.PinnedOriginForTests = null;
+            placer.ClearSelection();
+            var built = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).FirstOrDefault(b => b.Data == tower && b.OriginCell == cell);
+            Assert.IsNotNull(built, "The tower was not placed.");
+            Assert.IsFalse(built.IsOperational, "A run's tower stood finished the moment it was placed.");
+            var expected = InvasionRules.BuildSeconds(BuildingPlacer.CostOf(tower));
+            Assert.AreEqual(expected, built.Site.Total, 0.01f, "The build time is not the price's.");
+            yield return null;
+            Assert.IsTrue(GameObject.Find("ConstructionLabel") != null, "No hammer over the construction site.");
+            Assert.IsFalse(built.TryUpgrade(), "A building under construction could be upgraded.");
+
+            built.Site.Finish();
+            yield return null;
+            Assert.IsTrue(built.IsOperational, "The tower did not work once built.");
+
+            var level = built.Level;
+            Assert.IsTrue(built.TryUpgrade(), "The finished tower could not be upgraded.");
+            Assert.IsFalse(built.IsOperational, "An upgrade did not rest the building.");
+            Assert.AreEqual(level, built.Level, "The level rose before the upgrade's time was up.");
+            built.Site.Finish();
+            Assert.AreEqual(level + 1, built.Level, "The upgrade's level was not applied at the end.");
+            Assert.IsTrue(built.IsOperational);
+        }
+
+        /// <summary>
+        /// A tap on a building holds it (the user, 2026-10-22): the «!» comes up in place of the
+        /// build menu, the health bar stays up, and the «!» opens the card; a tap on open ground lets go.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ATappedBuilding_IsHeld_AndItsBangOpensTheCard()
+        {
+            var focus = CityBuilder.UI.BuildingFocus.Instance;
+            Assert.IsNotNull(focus, "No BuildingFocus in the game.");
+            var tower = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).First(b => b.Data != null && b.Data.buildingName == "Tower");
+            focus.Select(tower);
+            yield return null;
+            Assert.AreEqual(tower, focus.Current);
+            Assert.IsNotNull(GameObject.Find("BuildingDetailsButton"), "No «!» button while a building is held.");
+            var bar = tower.transform.Find("HealthBar");
+            Assert.IsTrue(bar != null && bar.gameObject.activeSelf, "The held building's health is not shown.");
+            Assert.IsTrue(GameObject.Find("BuildingFocusRing") != null, "No ring round the held building.");
+
+            focus.OpenDetails();
+            var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && GameObject.Find("BuildingInfoPanel") != null, "The «!» did not open the building's card.");
+            focus.Clear();
+            yield return null;
+            Assert.IsNull(focus.Current);
+            Assert.IsNull(GameObject.Find("BuildingDetailsButton"), "The «!» stayed after letting the building go.");
+        }
+
         /// <summary>A wave beaten off pays its orcs' gold and 10 × its number, and the breather begins.</summary>
         [UnityTest]
         public IEnumerator AWaveBeatenOff_PaysItsGold_AndTheBreatherBegins()

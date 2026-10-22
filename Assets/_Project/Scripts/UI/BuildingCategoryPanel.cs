@@ -1,4 +1,5 @@
 ﻿using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.InputControl;
 using UnityEngine;
 using UnityEngine.UI;
@@ -240,12 +241,59 @@ namespace CityBuilder.UI
                 var show = building != null
                            && building.category == category
                            && (Invasion.InvasionRules.Active
-                               ? Invasion.InvasionRules.Allows(building) && !Invasion.InvasionRules.AtLimit(building)   // a run's nine, nothing to research
+                               ? Invasion.InvasionRules.Allows(building)   // a run's nine, nothing to research
                                : Research.ResearchManager.BuildingUnlocked(building.buildingName));
                 buildingButton.gameObject.SetActive(show);
+                if (show && Invasion.InvasionRules.Active) ShowLimit(buildingButton);
             }
 
             FitCardsRow();
+        }
+
+        /// <summary>
+        /// A run's sawmill and quarry, one of each (InvasionRules.AtLimit): with it built the card
+        /// stays, greyed over and saying «1/1», and takes no taps (the user, 2026-10-22 -- a
+        /// hidden card left the row empty and looked broken).
+        /// </summary>
+        private static void ShowLimit(HotbarButtonHandler card)
+        {
+            var max = Invasion.InvasionRules.LimitOf(card.Building);
+            var shade = card.transform.Find("LimitShade");
+            if (max <= 0)
+            {
+                if (shade != null) shade.gameObject.SetActive(false);
+                return;
+            }
+            if (shade == null) shade = BuildShade(card.transform);
+            var built = BuildingInstance.CountOf(card.Building.buildingName);
+            shade.gameObject.SetActive(built >= max);
+            shade.GetComponentInChildren<Text>().text = Localization.Format("#card_limit", built, max);
+        }
+
+        private static Transform BuildShade(Transform card)
+        {
+            var shade = new GameObject("LimitShade", typeof(RectTransform), typeof(Image));
+            shade.transform.SetParent(card, false);
+            var rect = (RectTransform)shade.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var image = shade.GetComponent<Image>();
+            image.color = new Color(0.3f, 0.3f, 0.3f, 0.65f);   // takes the taps too
+            var label = new GameObject("Count", typeof(RectTransform), typeof(Text));
+            label.transform.SetParent(shade.transform, false);
+            var labelRect = (RectTransform)label.transform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+            var text = label.GetComponent<Text>();
+            text.font = UiTheme.Heavy;
+            text.fontSize = 40;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.raycastTarget = false;
+            label.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
+            return shade.transform;
         }
 
         /// <summary>Sizes the row to the cards now showing, capped; the scroll view takes over beyond the cap.</summary>

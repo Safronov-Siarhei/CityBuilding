@@ -166,7 +166,10 @@ namespace CityBuilder.Invasion
         {
             if (orc == null) return;
             _waveOrcs.Remove(orc);
-            ResourceManager.Instance?.Add(InvasionRules.Money, GoldForKill(orc.Kind, orc.Level));
+            var gold = GoldForKill(orc.Kind, orc.Level);
+            ResourceManager.Instance?.Add(InvasionRules.Money, gold);
+            // the gold rises over where it fell (the user, 2026-10-22)
+            UI.ResourceGainPopups.Instance?.ShowCoins(orc.transform.position, gold);
         }
 
         /// <summary>`count` different lanes at random -- which side the next wave comes from is not something to settle once.</summary>

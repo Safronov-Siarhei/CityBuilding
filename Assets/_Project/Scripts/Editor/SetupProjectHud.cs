@@ -133,6 +133,42 @@ namespace CityBuilder.EditorTools
             root.SetActive(false);
         }
 
+        // ---------------------------------------------------------------- bottom-centre: a held building
+
+        /// <summary>
+        /// The «!» that a tapped building puts at the bottom centre, where the build menu stands
+        /// (BuildingPlacerUIVisibility hides the menu meanwhile): it opens the building's card.
+        /// BuildingFocus holds the building and shows the button.
+        /// </summary>
+        private static void BuildBuildingFocus(Transform uiRoot, BuildingSelector selector, BuildingInfoPanelController infoPanel,
+            ResearchPanelController researchPanel, CitizenSelector citizenSelector, BuildingPlacer placer)
+        {
+            var button = CreateGlyphButton(uiRoot, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
+            Anchor(button.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin + 64f), new Vector2(128f, 128f));
+            var icon = button.transform.Find("Icon");
+            if (icon != null) Object.DestroyImmediate(icon.gameObject);
+            var mark = CreateText(button.transform, "Mark", "!", 76, new Vector2(0f, 4f), new Vector2(110f, 110f));
+            mark.font = UiTheme.Heavy;
+            SkinInk(mark, HudInk.OnRound);
+
+            var go = new GameObject("BuildingFocus");
+            go.transform.SetParent(uiRoot, false);
+            var focus = go.AddComponent<BuildingFocus>();
+            var so = new SerializedObject(focus);
+            so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
+            so.FindProperty("researchPanel").objectReferenceValue = researchPanel;
+            so.FindProperty("citizenSelector").objectReferenceValue = citizenSelector;
+            so.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            so.FindProperty("detailsButton").objectReferenceValue = button.gameObject;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, focus.OpenDetails);
+
+            var selectorSO = new SerializedObject(selector);
+            selectorSO.FindProperty("focus").objectReferenceValue = focus;
+            selectorSO.ApplyModifiedPropertiesWithoutUndo();
+            button.gameObject.SetActive(false);
+        }
+
         // ---------------------------------------------------------------- bottom-centre: placing
 
         /// <summary>

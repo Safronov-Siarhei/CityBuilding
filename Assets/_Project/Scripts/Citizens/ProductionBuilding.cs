@@ -196,6 +196,8 @@ namespace CityBuilder.Citizens
         {
             var data = Data;
             if (data == null || AssignedWorkers <= 0 || data.productionIntervalSeconds <= 0f) return;
+            // not while it is being built or upgraded (ConstructionSite)
+            if (_buildingInstance != null && !_buildingInstance.IsOperational) return;
 
             // A gatherer earns nothing here. Its wood and stone arrive on a worker's back, and
             // ticking as well would pay it twice -- and would keep paying after the last boulder
