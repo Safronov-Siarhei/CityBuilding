@@ -112,12 +112,35 @@ namespace CityBuilder.Buildings
         /// </summary>
         public void ReplaceCatalog(Func<BuildingData, BuildingData> replace)
         {
+            _replaced = new Dictionary<BuildingData, BuildingData>();
             for (var i = 0; i < availableBuildings.Count; i++)
             {
-                if (availableBuildings[i] != null) availableBuildings[i] = replace(availableBuildings[i]);
+                var original = availableBuildings[i];
+                if (original == null) continue;
+                availableBuildings[i] = replace(original);
+                _replaced[original] = availableBuildings[i];
             }
-            if (mandatoryFirstBuilding != null) mandatoryFirstBuilding = replace(mandatoryFirstBuilding);
+            if (mandatoryFirstBuilding != null)
+            {
+                var original = mandatoryFirstBuilding;
+                mandatoryFirstBuilding = replace(original);
+                _replaced[original] = mandatoryFirstBuilding;
+            }
         }
+
+        private Dictionary<BuildingData, BuildingData> _replaced;
+
+        /// <summary>The building in hand, or null.</summary>
+        public BuildingData SelectedBuilding => _selectedBuilding;
+
+        /// <summary>
+        /// What the game uses for this building now -- its replacement after ReplaceCatalog, else
+        /// itself. Anything wired to a BuildingData ASSET (the build menu's cards) asks here: a card
+        /// that handed the placer its asset placed the sandbox's building in a run, with no limit
+        /// and at the sandbox's price (the user, 2026-10-23: a third sawmill went down).
+        /// </summary>
+        public BuildingData Resolve(BuildingData data) =>
+            data != null && _replaced != null && _replaced.TryGetValue(data, out var replacement) ? replacement : data;
 
         private void Start()
         {
@@ -255,6 +278,7 @@ namespace CityBuilder.Buildings
 
         public void SelectBuilding(BuildingData data)
         {
+            data = Resolve(data);
             // A building still locked in the Laboratory cannot be picked up at all -- the hotbar
             // already hides it (see BuildingCategoryPanel), so this catches the number keys and
             // anything else reaching in from outside.

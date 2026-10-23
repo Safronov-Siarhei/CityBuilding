@@ -141,8 +141,12 @@ GROVES = [(*_polar(RAD(a), 12.5), 4.4) for a in JUNGLE_ANGLES] +          [(*_po
 # one small stony patch; once it and the groves are worked out the yards move off the island
 # Where the user drew them on the map (playtest 4, 2026-10-22; bearing and distance read off
 # their picture): a second small patch on the island, and four in the jungles.
-OUTCROPS = [(*_polar(RAD(0.0), 10.5), 1.6), (*_polar(RAD(124.0), 12.0), 1.6)] + \
-           [(*_polar(RAD(a), r), 3) for a, r in ((29.0, 80.0), (141.0, 80.0), (252.0, 37.0), (306.0, 84.0))]
+# Playtest 6 (2026-10-23, "too little stone -- scatter it over the map"): a third patch on the
+# island, and eight more out in the jungles, 30 m clear of the lanes and off the monster camps.
+OUTCROPS = [(*_polar(RAD(0.0), 10.5), 2.4), (*_polar(RAD(124.0), 12.0), 2.4), (*_polar(RAD(240.0), 11.0), 2.4)] + \
+           [(*_polar(RAD(a), r), 3) for a, r in ((29.0, 80.0), (141.0, 80.0), (252.0, 37.0), (306.0, 84.0),
+                                                 (30.0, 32.0), (150.0, 32.0), (290.0, 30.0),
+                                                 (0.0, 60.0), (60.0, 60.0), (120.0, 60.0), (180.0, 60.0), (240.0, 60.0))]
 
 
 def _lengths(pts):
@@ -365,6 +369,9 @@ def forest_field(x, y):
     pad = camp_pad(x, y)
     if pad > 0.3:
         clear = max(clear, 6.0 * pad - 1.5)
+    # a stony patch is a clearing in the woods: inside the jungle it used to be all forest, and
+    # forest cells take no boulders, so the jungles' patches held no stone at all (playtest 6)
+    clear = max(clear, 1.0 - outcrop_field(x, y))
     jungle = clear + 1.2 * (fbm(x / 6, y / 6, 97) - 0.5)
     grove = min(math.hypot(x - gx, y - gy) - gr * (0.75 + 0.5 * fbm(x / 5, y / 5, 98)) for gx, gy, gr in GROVES)
     return min(jungle, grove)

@@ -389,11 +389,49 @@ namespace CityBuilder.Combat
             Destroy(unit.gameObject);
         }
 
+        /// <summary>
+        /// The nearest point to `origin` a soldier can walk away from: on the NavMesh (not inside
+        /// the barracks' own carve), and in a run with a way to the castle -- a recruit put into the
+        /// gap between the barracks and the house beside it stood there for good (the user,
+        /// 2026-10-23). Rings of 12 points a metre apart, out to 6 m; `origin` itself if none works.
+        /// </summary>
+        private static Vector3 OpenGroundNear(Vector3 origin)
+        {
+            var castle = Invasion.InvasionMode.IsActive && Invasion.InvasionMode.Instance.Castle != null
+                ? Invasion.InvasionMode.Instance.Castle.transform.position
+                : (Vector3?)null;
+            var goal = Vector3.zero;
+            if (castle.HasValue)
+            {
+                if (UnityEngine.AI.NavMesh.SamplePosition(castle.Value, out var castleHit, 5f, UnityEngine.AI.NavMesh.AllAreas)) goal = castleHit.position;
+                else castle = null;
+            }
+
+            _spawnPath ??= new UnityEngine.AI.NavMeshPath();
+            for (var ring = 0; ring <= 6; ring++)
+            {
+                var points = ring == 0 ? 1 : 12;
+                for (var i = 0; i < points; i++)
+                {
+                    var angle = i * Mathf.PI * 2f / points;
+                    var candidate = origin + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * ring;
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(candidate, out var hit, 0.6f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                    if (!castle.HasValue) return hit.position;
+                    if (UnityEngine.AI.NavMesh.CalculatePath(hit.position, goal, UnityEngine.AI.NavMesh.AllAreas, _spawnPath)
+                        && _spawnPath.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) return hit.position;
+                }
+            }
+            return origin;
+        }
+
+        private static UnityEngine.AI.NavMeshPath _spawnPath;
+
         /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
         private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true)
         {
             var jitter = scatter ? UnityEngine.Random.insideUnitCircle * SpawnJitterRadius : Vector2.zero;
             var spawnPosition = origin + new Vector3(jitter.x, 0f, jitter.y);
+            if (scatter) spawnPosition = OpenGroundNear(spawnPosition);
 
             var root = new GameObject($"Soldier ({SoldierStats.DisplayName(type)})");
             root.transform.SetParent(transform, false);

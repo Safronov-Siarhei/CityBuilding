@@ -28,6 +28,10 @@
   gorges; a creek out the east gorge with two fords and a bridge; main base in a valley between two
   spurs; four camps (L3, L3, L2, L2) outside the ring; three Viking beaches.
 - **Inv1** — the Invasion map (`Tools/blender/invasion1.py`): see [invasion-mode](invasion-mode.md).
+  `OUTCROPS` = stony patches (3 on the island, 12 beyond the river since 2026-10-23); each is a
+  clearing in the forest (`forest_field`), since forest cells take no boulders. Regenerate:
+  `blender --background --factory-startup --python invasion1.py -- "D:/blender projects/Buildings3D/Inv-1.blend"`,
+  then `export_map.py -- D:/Fork/CityBuilding Inv1 Inv-1`. Blender is `D:/SteamLibrary/steamapps/common/Blender/blender.exe`.
 - Variants kept for later: Перешеек, Фьорды, Великое ущелье.
 
 ## Pipeline

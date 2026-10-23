@@ -20,7 +20,11 @@
   inside its carve). Guards use `straightLineFallback:false`. `NavRoute.AreaMask`: an orc's route
   never crosses a gate (`NavAreas.WithoutGates`) -- chasing too, since 2026-10-23 (orcs walked in at a
   run's gate after citizens/soldiers); walled off at the end of a chase, `OrcUnit.BreakThrough`
-  strikes the fence/gate there. A soldier whose route is Blocked attacks
+  strikes the fence/gate there. Orc's own route (`OrcUnit.BuildRoute`) snaps its target onto the
+  NavMesh first (5 m): a building's middle is inside its carve, the path failed and the straight-line
+  fallback walked through gates (2026-10-23). A melee orc hits a building only within
+  `orc_melee_reach_meters` of its collider (`CanStrike`/`DistanceToWall`); throwers still from range of
+  the middle. The blocker it breaks is the building whose WALL is nearest (fence before tower). A soldier whose route is Blocked attacks
   the nearest orc wall within 2.5 m.
 
 ## Code

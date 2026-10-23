@@ -748,6 +748,108 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
+        /// The build menu's cards hand the placer the RUN's buildings (the user, 2026-10-23: a third
+        /// sawmill went down -- the cards are wired to the assets, which have no run limit and the
+        /// sandbox's price).
+        /// </summary>
+        [Test]
+        public void TheBuildMenu_PicksUpTheRunsBuildings()
+        {
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            foreach (var id in new[] { "Sawmill", "Quarry", "Tower" })
+            {
+                var card = Object.FindObjectsByType<UI.HotbarButtonHandler>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    .FirstOrDefault(c => c.Building != null && c.Building.buildingName == id);
+                Assert.IsNotNull(card, $"No {id} card in the build menu.");
+                Assert.AreSame(PlaytestWorld.Building(id), card.Building, $"The {id} card shows the sandbox's building, not the run's.");
+                card.SelectThisBuilding();
+                Assert.AreSame(PlaytestWorld.Building(id), placer.SelectedBuilding, $"The {id} card puts the sandbox's building in hand.");
+                placer.ClearSelection();
+            }
+            Assert.AreEqual(2, PlaytestWorld.Building("Sawmill").maxCount);
+        }
+
+        /// <summary>
+        /// An orc fighting hand to hand hits a building only standing at its wall (the user,
+        /// 2026-10-23: one hit a tower over the fence round it) and never walks in at a gate on
+        /// its way: it breaks the fence or the gate first. Only a thrower hits over a wall.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AnOrc_BreaksTheWallBeforeTheTowerBehindIt()
+        {
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            InvasionMode.Instance.King.gameObject.SetActive(false);
+            // nobody about for it to go for instead: the King away, the islanders indoors
+            foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
+            // and no other building near enough for it to turn on first
+            foreach (var house in InvasionMode.Instance.Houses) if (house != null) Object.Destroy(house.gameObject);
+            var centre = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-11f, 0f, 3f)) - Vector2Int.one, new Vector2Int(3, 3)) + Vector2Int.one;
+            var tower = PlaytestWorld.Place(PlaytestWorld.Building("Tower"), centre);
+            var ring = new System.Collections.Generic.List<BuildingInstance>();
+            for (var dx = -1; dx <= 1; dx++)
+            for (var dz = -1; dz <= 1; dz++)
+            {
+                if (dx == 0 && dz == 0) continue;
+                var id = dx == 1 && dz == 0 ? "Gate" : "Fence";
+                ring.Add(PlaytestWorld.Place(PlaytestWorld.Building(id), centre + new Vector2Int(dx, dz), id == "Gate" ? 1 : 0));
+            }
+            yield return new WaitForSeconds(2f);   // the gate's area and the carves land a moment later
+
+            var gateAt = Flat(ring.First(b => b.Data.isGate).transform.position);
+            Assert.IsTrue(NavMesh.SamplePosition(tower.transform.position + Vector3.right * 4.5f, out var start, 2f, NavAreas.WithoutGates));
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(start.position, 1, OrcKind.Raider);
+            orc.Toughen(1000f);
+            var towerHealth = tower.CurrentHealth;
+            var wallHealth = ring.Sum(b => b.CurrentHealth);
+            var onTheGate = false;
+            for (var t = 0f; t < 25f && ring.Sum(b => b != null ? b.CurrentHealth : 0) == wallHealth; t += Time.deltaTime)
+            {
+                Assert.AreEqual(towerHealth, tower.CurrentHealth, "The orc hit the tower over its fence.");
+                if (Vector3.Distance(Flat(orc.transform.position), gateAt) < 0.3f) onTheGate = true;
+                yield return null;
+            }
+            Assert.IsFalse(onTheGate, "The orc walked onto the gate.");
+            Assert.Less(ring.Sum(b => b != null ? b.CurrentHealth : 0), wallHealth, "The orc did not break the wall in its way -- it stood there.");
+            orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>A hired soldier steps out where he can walk to the castle, not into the gap between the barracks and a house (the user, 2026-10-23).</summary>
+        [UnityTest]
+        public IEnumerator AHiredSoldier_StepsOutOnOpenGround()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            ResourceManager.Instance.SetAmount(InvasionRules.Money, 1000);
+            var data = PlaytestWorld.Building("Barracks");
+            var cell = PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(castle + new Vector3(-9f, 0f, 3f)), new Vector2Int(5, 3));
+            var barracks = PlaytestWorld.Place(data, cell);
+            // a house hard against its east wall
+            PlaytestWorld.Place(PlaytestWorld.Building("Hovel"), cell + new Vector2Int(3, 0));
+            yield return new WaitForSeconds(1f);
+            for (var i = 0; i < 3; i++) Assert.IsTrue(ArmyManager.Instance.TryRecruit(SoldierType.Militia, barracks.transform.position), "A militiaman was not hired.");
+            Assert.IsTrue(NavMesh.SamplePosition(castle, out var goal, 5f, NavMesh.AllAreas));
+            foreach (var soldier in SoldierUnit.All.Where(u => u != null && u.Type == SoldierType.Militia))
+            {
+                Assert.IsTrue(NavMesh.SamplePosition(soldier.transform.position, out var at, 0.7f, NavMesh.AllAreas), "A recruit stands off the walkable ground.");
+                var path = new NavMeshPath();
+                NavMesh.CalculatePath(at.position, goal.position, NavMesh.AllAreas, path);
+                Assert.AreEqual(NavMeshPathStatus.PathComplete, path.status, "A recruit was put where he cannot walk to the castle.");
+            }
+        }
+
+        /// <summary>More stone on the run's map (the user, 2026-10-23: "too little -- scatter it over the map"): three patches on the island (11 boulders on 2026-10-23), a dozen out beyond the river (42).</summary>
+        [Test]
+        public void TheRunsMap_HasStoneAllOver()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var rocks = ResourceNode.All.Where(n => n != null && n.ResourceType == ResourceType.Stone).ToList();
+            var island = rocks.Count(n => Vector3.Distance(Flat(n.transform.position), Flat(castle)) < 16f);
+            var beyond = rocks.Count - island;
+            Assert.GreaterOrEqual(island, 6, "The island has too little stone.");
+            Assert.GreaterOrEqual(beyond, 30, "The map beyond the river has too little stone.");
+        }
+
+        /// <summary>
         /// A yard's killed worker is replaced by an idle man (playtest 5,
         /// 2026-10-22: «4 workers» on the card, two at work, until all were taken off and put back).
         /// </summary>

@@ -32,6 +32,9 @@ gather = ring; refused = red ripple.
   `Invasion/InvasionGarrison.cs` stands each type's group round the castle and sends it at the orc
   nearest the castle within `inv_soldier_guard_radius`. A hurt soldier shows a health bar (every mode);
   a killed one falls as a figure (`OrcCorpse.Leave`), a hero too (`LeaveCopy`, he rises later).
+- A recruit (any scattered spawn) steps out at `ArmyManager.OpenGroundNear`: the nearest NavMesh point
+  in rings round the barracks, in a run one with a complete path to the castle (2026-10-23: recruits
+  stood stuck in the gap between the barracks and a house).
 
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,

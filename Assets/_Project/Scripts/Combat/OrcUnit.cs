@@ -84,10 +84,13 @@ namespace CityBuilder.Combat
         // Much shorter than RetargetIntervalSeconds: buildings don't move, soldiers do, and a
         // five-second reaction to being attacked reads as the orc simply not noticing.
         private const float SoldierScanIntervalSeconds = 0.4f;
-        // How far around itself a stuck orc looks for the thing blocking its way. Roughly one
-        // building away: wide enough to catch the wall it just walked up to, narrow enough that it
-        // can't reach past that wall for something behind it.
-        private const float BlockerReachRadius = 2.5f;
+        // How far from a building's WALL a stuck orc looks for the thing blocking its way: wide
+        // enough to catch the wall it just walked up to, narrow enough that it can't reach past
+        // that wall for something behind it.
+        private const float BlockerReachRadius = 1.5f;
+        // How far from a target off the NavMesh (a building's middle, inside its carve) its route
+        // looks for the nearest point on it: half the castle's breadth and some.
+        private const float RouteTargetSnapMeters = 5f;
 
         /// <summary>
         /// How far past its own aggro radius an orc will chase whoever is SHOOTING it, as a
@@ -303,18 +306,17 @@ namespace CityBuilder.Combat
             }
             if (_target == null) return;
 
-            var toTarget = _target.transform.position - transform.position;
-            toTarget.y = 0f;
-
-            if (toTarget.magnitude <= _buildingAttackRange)
+            if (CanStrike(_target))
             {
                 TickAttack();
                 return;
             }
 
             // Walked the whole route and the target is still out of reach: something the orc can't
-            // path around is between them. Take it out on that instead of standing there.
-            if (_routeBlocked && _routeIndex >= _route.Length - 1 && ReachedLastWaypoint())
+            // path around is between them -- a wall, a gate. Take it out on that instead of standing
+            // there (the route may even read complete: it ends at the nearest point the NavMesh has
+            // to the target, and that can be the far side of a fence).
+            if (_routeIndex >= _route.Length - 1 && ReachedLastWaypoint())
             {
                 AttackWhateverIsBlockingTheWay();
                 return;
@@ -561,10 +563,7 @@ namespace CityBuilder.Combat
         private void BreakThrough()
         {
             if (_blocker == null || _blocker.CurrentHealth <= 0) _blocker = NearestBuildingWithin(BlockerReachRadius);
-            if (_blocker == null) return;
-            var to = _blocker.transform.position - transform.position;
-            to.y = 0f;
-            if (to.magnitude > Mathf.Max(_buildingAttackRange, BlockerReachRadius)) return;
+            if (_blocker == null || !CanStrike(_blocker)) return;
 
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
@@ -573,20 +572,49 @@ namespace CityBuilder.Combat
             if (_blocker.CurrentHealth <= 0) _blocker = null;
         }
 
-        /// <summary>The nearest building (not a road) within `radius` of this orc, or null.</summary>
+        /// <summary>The building (not a road) whose WALL is nearest this orc, within `radius` of it, or null -- the fence before a tower, not the tower behind it.</summary>
         private BuildingInstance NearestBuildingWithin(float radius)
         {
             BuildingInstance nearest = null;
-            var nearestDistSq = radius * radius;
+            var nearestDistance = radius;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
                 if (instance.Data == null || instance.Data.isRoad) continue;
-                var distSq = (instance.transform.position - transform.position).sqrMagnitude;
-                if (distSq > nearestDistSq) continue;
-                nearestDistSq = distSq;
+                var distance = DistanceToWall(instance);
+                if (distance > nearestDistance) continue;
+                nearestDistance = distance;
                 nearest = instance;
             }
             return nearest;
+        }
+
+        /// <summary>
+        /// Close enough to hit this building: a thrower from its range of the building's middle,
+        /// anyone fighting hand to hand only standing at its wall (orc_melee_reach_meters) -- from
+        /// its middle, three metres reached over a fence into the tower behind it (the user,
+        /// 2026-10-23: only a ranged orc hits a building over another one).
+        /// </summary>
+        private bool CanStrike(BuildingInstance building)
+        {
+            if (building == null) return false;
+            if (IsRanged)
+            {
+                var to = building.transform.position - transform.position;
+                to.y = 0f;
+                return to.magnitude <= _buildingAttackRange;
+            }
+            return DistanceToWall(building) <= BalanceConfig.Instance.OrcMeleeReachMeters;
+        }
+
+        /// <summary>Horizontal metres from this orc to the nearest point of the building's body (its collider), or to its middle when it has none.</summary>
+        private float DistanceToWall(BuildingInstance building)
+        {
+            var at = transform.position;
+            var body = building.GetComponent<Collider>();
+            var point = body != null ? body.ClosestPoint(new Vector3(at.x, body.bounds.center.y, at.z)) : building.transform.position;
+            var to = point - at;
+            to.y = 0f;
+            return to.magnitude;
         }
 
         private SoldierUnit FindNearestSoldierInCamp()
@@ -906,6 +934,12 @@ namespace CityBuilder.Combat
         private static Vector3[] BuildRoute(Vector3 from, Vector3 to, out bool blocked)
         {
             _sharedPath ??= new NavMeshPath();
+            // A building's middle is inside its own carve, and a path to a point off the NavMesh
+            // fails outright -- which fell through to the straight line below and walked the
+            // waves through a run's gates, whose bodies are triggers (the user, 2026-10-23). Aim at
+            // the nearest point the NavMesh has, as NavRoute does: a walled-off target then gives an
+            // honest partial path that stops at the wall.
+            if (NavMesh.SamplePosition(to, out var onMesh, RouteTargetSnapMeters, CityBuilder.Maps.NavAreas.WithoutGates)) to = onMesh.position;
             // Never through a gate: for an orc it is a wall to break, not a door (NavAreas).
             if (NavMesh.CalculatePath(from, to, CityBuilder.Maps.NavAreas.WithoutGates, _sharedPath) && _sharedPath.corners.Length > 0)
             {

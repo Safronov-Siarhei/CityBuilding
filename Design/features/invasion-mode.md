@@ -47,7 +47,11 @@
 > towers ×1.5 range (run `defence_attack_range_meters` 9), orcs never path through a gate when chasing
 > and break the blocker (`OrcUnit.Chase`/`BreakThrough`, `NavRoute.AreaMask`), gates turn into a fence
 > line (`BuildingPlacer.GateTurnInAFence`), fence level 2+ is stone, no army panel in a run, the quarry
-> man no longer sticks on a house corner. Next: online leaderboard (service not chosen), more playtests.
+> man no longer sticks on a house corner. Playtest 7: melee orcs hit a building only at its wall
+(`OrcUnit.CanStrike`, economy `orc_melee_reach_meters`) and break the nearest WALL first; orc routes aim
+at the nearest NavMesh point (no straight line through a gate); the build-menu cards hand over the
+run's copies (`BuildingPlacer.Resolve` -- the 2+2 limit and the tab's prices really apply now); recruits
+step out where they can walk to the castle (`ArmyManager.OpenGroundNear`); stone all over Inv1. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -138,7 +142,9 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
 
 ## Traps
 - A run's BuildingData are runtime COPIES (`InvasionMode.ForRun`), not the assets: compare by
-  `buildingName`, never by reference to an asset. A component attached at generation (DefensiveBuilding
+  `buildingName`, never by reference to an asset. Anything wired to an ASSET (the build menu's
+  `HotbarButtonHandler`) must go through `BuildingPlacer.Resolve` -- the cards did not, and the run's
+  limit and prices were skipped in play while every test (which takes `PlaytestWorld.Building`) passed. A component attached at generation (DefensiveBuilding
   only where a sandbox level has `defense > 0`, ProductionBuilding only with workers) is not added by a
   run row -- giving defence in the invasion tab to a building that has none in the sandbox does nothing.
 - `BalanceConfig.Instance` is the run's config from the menu's «В бой» on: a PlayMode test that sets

@@ -573,6 +573,8 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
         // A run's Barracks soldiers guard the base on their own (InvasionGarrison).
         [SerializeField] private float invasionSoldierGuardRadius = 30f;
+        // How close to a building's wall an orc that fights hand to hand must stand to hit it (OrcUnit.CanStrike).
+        [SerializeField] private float orcMeleeReachMeters = 0.8f;
         // The Invasion run's score (InvasionScore) and the local records (InvasionRecords).
         [SerializeField] private float invasionOrcHealthMultiplier = 4f;
         [SerializeField] private float invasionOrcDamageMultiplier = 1f;
@@ -854,6 +856,7 @@ namespace CityBuilder.Core
         public float InvasionCampGuardRadius => invasionCampGuardRadius;
         public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
         public float InvasionSoldierGuardRadius => invasionSoldierGuardRadius;
+        public float OrcMeleeReachMeters => orcMeleeReachMeters;
         public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
         public float InvasionOrcDamageMultiplier => invasionOrcDamageMultiplier;
         public float InvasionStoneReserveMultiplier => invasionStoneReserveMultiplier;
@@ -1229,6 +1232,7 @@ namespace CityBuilder.Core
             invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
             invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
             invasionSoldierGuardRadius = Read(economy, "inv_soldier_guard_radius", invasionSoldierGuardRadius);
+            orcMeleeReachMeters = Read(economy, "orc_melee_reach_meters", orcMeleeReachMeters);
             invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
             invasionOrcDamageMultiplier = Read(economy, "inv_orc_damage_mult", invasionOrcDamageMultiplier);
             invasionStoneReserveMultiplier = Read(economy, "inv_stone_reserve_mult", invasionStoneReserveMultiplier);
