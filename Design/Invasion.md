@@ -239,7 +239,7 @@
   - `building` — здания забега: `max_count` (лимит за забег, пусто = без лимита), `cost_wood`/`cost_stone`, прочность/урон/рабочие по уровням 1–5, улучшения `upN_wood/stone/gold`. Строка заменяет в забеге только свои колонки; пустая клетка = пусто, как во вкладке buildings (уровень повторяет предыдущий, цена 0). Цена из листа — вся цена (железо песочницы к ней не добавляется).
   - `unit` — солдаты казармы и орки (здоровье, урон, скорость атаки, дальность, скорость, найм золотом). Орки волн ещё умножаются на `inv_orc_health_mult`/`inv_orc_damage_mult`.
   - `key` — ключи как в economy: все ключи режима (перенесены из economy) и переопределения песочницы только для забега (радиус башен, лагеря орков…).
-  - Залить в игру: в Unity **CityBuilder → Balance → Pull From Google Sheets** (лист должен быть опубликован как CSV, ссылка — `invasionCsvUrl` в BalanceSheetSettings), или попросить Claude. Цены и цифры зданий забега применяются при старте забега, без пересборки проекта.
+  - Залить в игру: в Unity **CityBuilder → Balance → Pull From Google Sheets** (лист опубликован как CSV 2026-10-23, ссылка — `invasionCsvUrl` в BalanceSheetSettings), или попросить Claude. Цены и цифры зданий забега применяются при старте забега, без пересборки проекта.
   - Код: `BalanceImporter.InvasionTab` → `Resources/BalanceConfigInvasion.asset`; `BalanceConfig.Instance` в забеге отдаёт его (`BalanceConfig.Run`/`Sandbox`); `InvasionMode.ForRun` — копии зданий с цифрами забега.
 - **Карта.**
   - Генератор `Tools/blender/invasion1.py` (`Inv-1.blend` на Google Диске), экспорт `export_map.py -- G:/Fork/CityBuilding Inv1 Inv-1`.

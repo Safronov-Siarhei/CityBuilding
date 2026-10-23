@@ -73,7 +73,7 @@ tests read them), the overrides of sandbox keys stay the run's.
 is it while `GameSessionIntent.NewGameIsInvasion || InvasionMode.IsActive` (`BalanceConfig.Run`/`.Sandbox`
 for both). `InvasionMode.Awake` swaps the placer's catalogue for COPIES (`ForRun`: Instantiate +
 `BuildingData.ApplyBalance(run row)`), so building numbers need no SetupProject run. Sheet gid 1941808734;
-`BalanceSheetSettings.invasionCsvUrl` (empty until the tab is published as CSV).
+`BalanceSheetSettings.invasionCsvUrl` (published as CSV 2026-10-23, same publication id as the other tabs; Pull checked: 11 buildings, 9 units, 228 keys).
 
 ## Code
 `Scripts/Invasion/InvasionMode.cs` (turns sandbox systems off, places castle, towers at the
