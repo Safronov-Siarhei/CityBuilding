@@ -48,8 +48,19 @@ namespace CityBuilder.Combat
         public Vector3 GuardCentre { get; set; }
 
         private const float GuardScanSeconds = 0.5f;
+        /// <summary>Slower than this (m/s) and not fighting, he has done what he was told.</summary>
+        private const float StillSpeed = 0.2f;
         private bool _revealing;
         private float _guardScan;
+
+        /// <summary>
+        /// Let go of after an order (the user, 2026-10-23): he finishes it, then stands
+        /// hero_return_wait_sec -- fighting whatever comes close -- and only then goes home to guard.
+        /// Negative while not counting.
+        /// </summary>
+        public float ReturnIn { get; private set; } = -1f;
+
+        private Vector3 _lastPosition;
 
         public SoldierUnit Unit => _unit;
 
@@ -97,13 +108,39 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// He follows the player's orders only while the player holds him (the user, 2026-10-22):
-        /// let go of him and he walks back to the castle and guards the base on his own.
+        /// Let go of while on an order, he carries it out, waits a while and then goes home to guard
+        /// the base (the user, 2026-10-23; he used to turn for home at once). Taken in hand again, the
+        /// wait is off.
         /// </summary>
         private void OnSelectionChanged()
         {
             var army = ArmyManager.Instance;
-            if (IsFallen || Guarding || army == null || _unit.Group == null || army.SelectedGroup == _unit.Group) return;
+            if (army == null || _unit.Group == null) return;
+            if (army.SelectedGroup == _unit.Group)
+            {
+                ReturnIn = -1f;
+                return;
+            }
+            if (IsFallen || Guarding || ReturnIn >= 0f) return;
+            ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
+        }
+
+        /// <summary>The wait after an order: it runs only while he stands with nobody to fight.</summary>
+        private void TickReturn()
+        {
+            var moved = Flat(transform.position - _lastPosition).magnitude;
+            _lastPosition = transform.position;
+            if (ReturnIn < 0f) return;
+            var dt = Time.deltaTime;
+            var still = dt > 0f && moved < StillSpeed * dt;
+            if (_unit.IsFighting || !still)
+            {
+                ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
+                return;
+            }
+            ReturnIn -= dt;
+            if (ReturnIn > 0f) return;
+            ReturnIn = -1f;
             Guard();
         }
 
@@ -179,6 +216,7 @@ namespace CityBuilder.Combat
         {
             if (IsFallen) return;
             IsFallen = true;
+            ReturnIn = -1f;
             RespawnRemaining = RespawnSecondsAt(Level);
             // a fallen King takes no orders: let go of him if he was in hand
             var army = ArmyManager.Instance;
@@ -200,6 +238,7 @@ namespace CityBuilder.Combat
         /// <summary>Back to defending the base, from wherever he was sent: home first, the guard's scan turns him on any orc near the castle.</summary>
         public void Guard()
         {
+            ReturnIn = -1f;
             Guarding = true;
             _guardScan = 0f;
             if (!IsFallen) _unit.Group?.OrderMoveTo(Home);
@@ -226,6 +265,7 @@ namespace CityBuilder.Combat
                 return;
             }
             RevealAround();
+            TickReturn();
             if (!Guarding || _unit.Group == null) return;
 
             _guardScan -= Time.deltaTime;

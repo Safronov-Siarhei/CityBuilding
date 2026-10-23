@@ -75,6 +75,9 @@ namespace CityBuilder.Combat
         /// <summary>What one of its blows does now.</summary>
         public int AttackDamage => _attackDamage;
 
+        /// <summary>Has an enemy in hand: one it was sent at, or one that came within its engage radius.</summary>
+        public bool IsFighting => _target != null && _target.IsAlive;
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();

@@ -291,20 +291,32 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(Vector3.Distance(Flat(king.transform.position), Flat(king.Home)), 1.2f, "With the base clear, the King did not walk home.");
         }
 
-        /// <summary>He takes the player's orders only while the player holds him: let go, he walks back to the castle and guards the base by himself.</summary>
-        [Test]
-        public void TheKing_LetGo_GoesBackToGuardTheBase()
+        /// <summary>Let go of after an order, the King carries it out, stands hero_return_wait_sec and only then goes home to guard the base (the user, 2026-10-23).</summary>
+        [UnityTest]
+        public IEnumerator TheKing_LetGo_FinishesHisOrder_WaitsAndGoesHome()
         {
             var king = InvasionMode.Instance.King;
             var army = ArmyManager.Instance;
             army.SelectGroup(king.Unit.Group);
-            king.Unit.Group.OrderMoveTo(king.Home + new Vector3(25f, 0f, 0f));
+            var spot = king.Home + new Vector3(4f, 0f, 0f);
+            king.Unit.Group.OrderMoveTo(spot);
             king.Unit.Group.NotifyPlayerOrder();
             Assert.IsFalse(king.Guarding, "The King kept guarding after the player told him to go somewhere.");
 
+            // let go of on the way (the user, 2026-10-23): he goes on, stands a while, then goes home
             army.SelectGroup(null);
-            Assert.IsTrue(king.Guarding, "Let go of, the King did not go back to guarding the base.");
-            Assert.Less(Vector3.Distance(Flat(king.Unit.Group.HoldPosition), Flat(king.Home)), 0.5f, "Let go of, the King stays where he was sent.");
+            Assert.IsFalse(king.Guarding, "Let go of, the King dropped his order at once.");
+            Assert.Less(Vector3.Distance(Flat(king.Unit.Group.HoldPosition), Flat(spot)), 0.5f, "Let go of, the King's order was changed.");
+            var wait = BalanceConfig.Instance.HeroReturnWaitSeconds;
+            var stood = 0f;
+            for (var t = 0f; t < wait + 15f && !king.Guarding; t += Time.deltaTime)
+            {
+                if (king.ReturnIn >= 0f && king.ReturnIn < wait) stood += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(king.Guarding, "Let go of, the King never went back to guarding the base.");
+            Assert.GreaterOrEqual(stood, wait * 0.9f, "The King went home without standing his while.");
+            Assert.Less(Vector3.Distance(Flat(king.Unit.Group.HoldPosition), Flat(king.Home)), 0.5f, "Guarding, the King does not head home.");
         }
 
         /// <summary>A wave's orcs take several of a tower's arrows (the user, 2026-10-22: they fell to one), and a hurt one shows its health over its head.</summary>
