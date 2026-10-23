@@ -278,6 +278,8 @@ namespace CityBuilder.Buildings
         public void TryDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
+            // the King's Blessing: nothing of the player's takes damage while it lasts
+            if (Combat.HeroBlessing.Active) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             ShowHealthBar();

@@ -348,6 +348,100 @@ namespace CityBuilder.EditorTools
             root.SetActive(false);   // KingPortraitController turns it on in a run
         }
 
+        /// <summary>The skill pictures, in the order the hero's skills open (HeroSkills sorts them so).</summary>
+        private static readonly string[] SkillIcons = { "Skill_Heal", "Skill_Shield", "Skill_Rage", "Skill_Blessing" };
+
+        /// <summary>
+        /// The selected hero's four skills where the build menu stands (HeroSkillBar shows it only
+        /// while a hero is in hand): round buttons with a picture, a dark radial sweep for the
+        /// cooldown, a lock with the opening level; above them a plaque for the held-press hint.
+        /// </summary>
+        private static void BuildHeroSkillBar(Transform uiRoot)
+        {
+            const float size = 124f;
+            var row = new GameObject("HeroSkillBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(uiRoot, false);
+            row.AddComponent<HudOverlay>();
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(4 * size + 3 * 28f, size + 16f));
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 28f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = layout.childControlHeight = false;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+
+            var circle = SkinSprite("circle_mask");
+            var lockGlyph = HudGlyph("Lock");
+            var buttons = new HoldTooltip[SkillIcons.Length];
+            var icons = new Image[SkillIcons.Length];
+            var cooldowns = new Image[SkillIcons.Length];
+            var locks = new GameObject[SkillIcons.Length];
+            var lockLevels = new Text[SkillIcons.Length];
+            for (var i = 0; i < SkillIcons.Length; i++)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/{SkillIcons[i]}.png");
+                var button = CreateGlyphButton(row.transform, $"Skill{i + 1}", "round", HudInk.Keep, null, sprite, size, 0.7f);
+                var face = button.gameObject;
+                Object.DestroyImmediate(button);   // HoldTooltip takes the taps: a held press is a hint, not a use
+                buttons[i] = face.AddComponent<HoldTooltip>();
+                icons[i] = face.transform.Find("Icon").GetComponent<Image>();
+
+                var sweep = CreateImage(face.transform, "Cooldown", new Color(0.05f, 0.03f, 0.02f, 0.68f));
+                sweep.sprite = circle;
+                sweep.type = Image.Type.Filled;
+                sweep.fillMethod = Image.FillMethod.Radial360;
+                sweep.fillOrigin = (int)Image.Origin360.Top;
+                sweep.fillClockwise = false;
+                sweep.fillAmount = 0f;
+                sweep.raycastTarget = false;
+                Anchor(sweep.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size - 14f, size - 14f));
+                cooldowns[i] = sweep;
+
+                var shade = CreateImage(face.transform, "Locked", new Color(0.05f, 0.03f, 0.02f, 0.72f));
+                shade.sprite = circle;
+                shade.raycastTarget = false;
+                Anchor(shade.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size - 14f, size - 14f));
+                var padlock = CreateImage(shade.transform, "Lock", Color.white);
+                padlock.sprite = lockGlyph;
+                padlock.preserveAspect = true;
+                padlock.raycastTarget = false;
+                Anchor(padlock.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), new Vector2(54f, 54f));
+                var level = CreateText(shade.transform, "Level", "5", 30, new Vector2(0f, -30f), new Vector2(size, 40f), Color.white, addShadow: true);
+                level.font = UiTheme.Heavy;
+                locks[i] = shade.gameObject;
+                lockLevels[i] = level;
+            }
+
+            // the hint over a held button
+            var tip = HudImage(uiRoot, "SkillHint", "plaque", new Vector2(520f, 150f));
+            tip.raycastTarget = false;
+            Anchor(tip.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin + size + 30f), new Vector2(520f, 150f));
+            tip.gameObject.AddComponent<HudOverlay>();
+            var tipText = CreateText(tip.transform, "Text", string.Empty, 26, Vector2.zero, new Vector2(480f, 130f), UiTheme.Ink);
+            tipText.alignment = TextAnchor.MiddleCenter;
+            tipText.raycastTarget = false;
+
+            var go = new GameObject("HeroSkillBarController");
+            go.transform.SetParent(uiRoot, false);
+            var controller = go.AddComponent<HeroSkillBar>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("bar").objectReferenceValue = row;
+            SetArray(so.FindProperty("buttons"), buttons);
+            SetArray(so.FindProperty("icons"), icons);
+            SetArray(so.FindProperty("cooldowns"), cooldowns);
+            SetArray(so.FindProperty("locks"), locks);
+            SetArray(so.FindProperty("lockLevels"), lockLevels);
+            so.FindProperty("tooltip").objectReferenceValue = tip.gameObject;
+            so.FindProperty("tooltipText").objectReferenceValue = tipText;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            row.SetActive(false);
+        }
+
+        private static void SetArray(SerializedProperty property, Object[] values)
+        {
+            property.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        }
+
         /// <summary>A dark track with a coloured fill whose right edge the controller moves.</summary>
         private static RectTransform Bar(Transform parent, string name, Vector2 position, float height, Color colour)
         {

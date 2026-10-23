@@ -653,6 +653,7 @@ namespace CityBuilder.Combat
                 if (_attackTimer > 0f) return true;
                 _attackTimer = _attackIntervalSeconds;
                 StrikeAt(_citizenTarget.transform.position);
+                if (HeroBlessing.Active) return true;   // the King's Blessing covers the people too
                 _citizenTarget.Wounds += _attackDamage;
                 if (_citizenTarget.Wounds >= BalanceConfig.Instance.InvasionCitizenHealth)
                 {

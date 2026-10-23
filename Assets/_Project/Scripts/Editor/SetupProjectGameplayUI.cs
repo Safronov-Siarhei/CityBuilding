@@ -311,6 +311,7 @@ namespace CityBuilder.EditorTools
             BuildDayLabel(uiRoot, gameCalendar);
             BuildHappiness(uiRoot);
             BuildKingPortrait(uiRoot);
+            BuildHeroSkillBar(uiRoot);
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildArmyPanel(uiRoot, panelSprite);

@@ -71,6 +71,7 @@ namespace CityBuilder.Invasion
         {
             Instance = this;
             _active = GameSessionIntent.NewGameIsInvasion;
+            HeroBlessing.End();
             GameSessionIntent.NewGameIsInvasion = false;
             if (!_active) return;
 

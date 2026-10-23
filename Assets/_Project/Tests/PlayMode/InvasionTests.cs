@@ -602,6 +602,80 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(yard.AssignedWorkers, working(), "The killed worker's place stayed empty with idle men about.");
         }
 
+        /// <summary>
+        /// The King's four skills (the user, 2026-10-23): they open at their hero levels, work only
+        /// when used, then recharge; Лечение gives back a share of his health, Неуязвимость stops
+        /// damage, Ярость makes him strike harder, Благословение makes the castle unhurtable.
+        /// </summary>
+        [Test]
+        public void TheKingsSkills_OpenWithLevels_WorkAndRecharge()
+        {
+            var king = InvasionMode.Instance.King;
+            var skills = king.GetComponent<HeroSkills>();
+            Assert.IsNotNull(skills, "The King has no skills.");
+            CollectionAssert.AreEqual(new[] { HeroSkills.KingHeal, HeroSkills.KingShield, HeroSkills.KingRage, HeroSkills.KingBlessing },
+                skills.Slots.Select(slot => slot.Balance.id).ToArray(), "The King's skills are not the four agreed, in the order they open.");
+            Assert.AreEqual(1, king.Level);
+            Assert.IsTrue(skills.IsOpen(0), "Лечение is not open at level 1.");
+            Assert.IsFalse(skills.Use(1), "Неуязвимость worked before its level.");
+
+            var unit = king.Unit;
+            unit.SetCurrentHealth(unit.MaxHealth / 4);
+            var before = unit.CurrentHealth;
+            Assert.IsTrue(skills.Use(0), "Лечение could not be used.");
+            var heal = Mathf.RoundToInt(unit.MaxHealth * skills.Slots[0].Balance.PowerAt(king.Level));
+            Assert.AreEqual(Mathf.Min(unit.MaxHealth, before + heal), unit.CurrentHealth, "Лечение did not give back its share of health.");
+            Assert.IsFalse(skills.Use(0), "Лечение worked again without recharging.");
+
+            while (king.Level < 15) king.AddExperience(KingHero.XpForLevel(king.Level));
+            for (var i = 1; i < 4; i++) Assert.IsTrue(skills.IsReady(i), $"Skill {i + 1} is not ready at level 15.");
+
+            Assert.IsTrue(skills.Use(1));
+            var health = unit.CurrentHealth;
+            unit.TakeDamage(10);
+            Assert.AreEqual(health, unit.CurrentHealth, "Неуязвимость let damage through.");
+
+            Assert.IsTrue(skills.Use(2));
+            Assert.Greater(unit.RageLeft, 0f, "Ярость did not take hold.");
+
+            try
+            {
+                Assert.IsTrue(skills.Use(3));
+                Assert.IsTrue(HeroBlessing.Active, "Благословение did not begin.");
+                var castle = InvasionMode.Instance.Castle;
+                var walls = castle.CurrentHealth;
+                castle.TryDamage(50);
+                Assert.AreEqual(walls, castle.CurrentHealth, "The castle was hurt under the Blessing.");
+            }
+            finally
+            {
+                HeroBlessing.End();
+            }
+        }
+
+        /// <summary>The King in hand puts his skills where the build menu stands; let go, the menu is back (the user, 2026-10-23).</summary>
+        [UnityTest]
+        public IEnumerator TheKingInHand_ShowsHisSkills_InPlaceOfTheBuildMenu()
+        {
+            var king = InvasionMode.Instance.King;
+            var bar = Object.FindAnyObjectByType<CityBuilder.UI.HeroSkillBar>();
+            Assert.IsNotNull(bar, "No skill bar in the game.");
+            ArmyManager.Instance.SelectGroup(king.Unit.Group);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(CityBuilder.UI.HeroSkillBar.Showing, "The King's skills did not come up.");
+            Assert.IsNotNull(GameObject.Find("HeroSkillBar"), "The skill bar is not on screen.");
+            Assert.IsNull(GameObject.Find("BuildingMenu"), "The build menu stayed beside the skills.");
+            king.Unit.SetCurrentHealth(1);
+            Assert.IsTrue(bar.Use(0), "A tap on Лечение did nothing.");
+            Assert.Greater(king.Unit.CurrentHealth, 1);
+            Assert.That(CityBuilder.UI.HeroSkillBar.Describe(bar.Current, 1), Does.Contain("5"), "The locked skill does not say its level.");
+
+            ArmyManager.Instance.SelectGroup(null);
+            yield return null;
+            Assert.IsFalse(CityBuilder.UI.HeroSkillBar.Showing, "The skills stayed after the King was let go.");
+        }
+
         /// <summary>The fog lifts round the King and closes again behind him (the user, 2026-10-22).</summary>
         [UnityTest]
         public IEnumerator TheKing_LiftsTheFog_OnlyWhileHeIsThere()
@@ -967,6 +1041,27 @@ namespace CityBuilder.Tests.PlayMode
             menu.Open(BuildingCategory.Defence, instant: true);
             yield return null;
             yield return PlaytestCapture.ShootWithUi("invasion-menu", Vector3.zero, 44f, 52f, 0f);
+        }
+
+        /// <summary>The King in hand at level 12: three skills open (one recharging), the fourth locked; then a held press's hint.</summary>
+        [UnityTest]
+        public IEnumerator Photograph_TheKingsSkills()
+        {
+            if (!PlaytestCapture.Available) Assert.Ignore("No graphics device: run without -nographics to photograph.");
+            var king = InvasionMode.Instance.King;
+            while (king.Level < 12) king.AddExperience(KingHero.XpForLevel(king.Level));
+            ArmyManager.Instance.SelectGroup(king.Unit.Group);
+            king.Unit.SetCurrentHealth(king.Unit.MaxHealth / 2);
+            var bar = Object.FindAnyObjectByType<CityBuilder.UI.HeroSkillBar>();
+            yield return null;
+            bar.Use(0);
+            yield return new WaitForSeconds(6f);
+            yield return PlaytestCapture.ShootWithUi("invasion-skills", king.transform.position, 14f, 50f, 0f);
+            bar.ShowHint(3, true);
+            yield return null;
+            yield return PlaytestCapture.ShootWithUi("invasion-skill-hint", king.transform.position, 14f, 50f, 0f);
+            bar.ShowHint(3, false);
+            ArmyManager.Instance.SelectGroup(null);
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

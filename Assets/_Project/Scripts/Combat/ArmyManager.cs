@@ -350,6 +350,7 @@ namespace CityBuilder.Combat
             group.Add(unit);
             var hero = unit.gameObject.AddComponent<KingHero>();
             hero.Initialize(position);
+            unit.gameObject.AddComponent<HeroSkills>().Bind(hero, "king");
             OnArmyChanged?.Invoke();
             return hero;
         }

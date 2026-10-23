@@ -75,6 +75,28 @@ namespace CityBuilder.Combat
         /// <summary>What one of its blows does now.</summary>
         public int AttackDamage => _attackDamage;
 
+        private float _shieldLeft, _rageLeft, _rageFactor = 1f;
+
+        /// <summary>Takes no damage: a hero's own shield (Неуязвимость) or the King's Blessing over everything of the player's.</summary>
+        public bool IsShielded => _shieldLeft > 0f || HeroBlessing.Active;
+
+        public float ShieldLeft => _shieldLeft;
+        public float RageLeft => _rageLeft;
+
+        /// <summary>No damage gets through for this long (a hero's skill).</summary>
+        public void Shield(float seconds) => _shieldLeft = Mathf.Max(_shieldLeft, seconds);
+
+        /// <summary>Strikes `factor` times as often and as hard for this long (the King's Ярость).</summary>
+        public void Enrage(float factor, float seconds)
+        {
+            _rageFactor = Mathf.Max(1f, factor);
+            _rageLeft = Mathf.Max(_rageLeft, seconds);
+        }
+
+        private float RageFactor => _rageLeft > 0f ? _rageFactor : 1f;
+        private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor);
+        private float AttackInterval => _attackIntervalSeconds / RageFactor;
+
         /// <summary>Has an enemy in hand: one it was sent at, or one that came within its engage radius.</summary>
         public bool IsFighting => _target != null && _target.IsAlive;
 
@@ -176,6 +198,8 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
+            if (_shieldLeft > 0f) _shieldLeft -= Time.deltaTime;
+            if (_rageLeft > 0f) _rageLeft -= Time.deltaTime;
             if (Group == null) return;
 
             _retargetTimer -= Time.deltaTime;
@@ -290,10 +314,10 @@ namespace CityBuilder.Combat
         {
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
-            _attackTimer = _attackIntervalSeconds;
+            _attackTimer = AttackInterval;
             Struck?.Invoke();
-            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), wall, _attackDamage);
-            else wall.TakeDamage(_attackDamage);
+            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), wall, StrikeDamage);
+            else wall.TakeDamage(StrikeDamage);
             if (wall.CurrentHealth <= 0)
             {
                 _breach = null;
@@ -322,19 +346,19 @@ namespace CityBuilder.Combat
         {
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
-            _attackTimer = _attackIntervalSeconds;
+            _attackTimer = AttackInterval;
             Struck?.Invoke();
 
             if (IsRanged)
             {
                 // The arrow carries both the damage and the "who shot me" to the orc it lands in
                 // (see CombatProjectiles), so the orc turns on the archer when it is hit, not when the arrow leaves.
-                CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), _target, _attackDamage, this);
+                CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), _target, StrikeDamage, this);
                 return;
             }
 
             var struck = _target;
-            struck.TakeDamage(_attackDamage);
+            struck.TakeDamage(StrikeDamage);
             if (!struck.IsAlive)
             {
                 _target = null;
@@ -411,7 +435,7 @@ namespace CityBuilder.Combat
 
         public void TakeDamage(int amount)
         {
-            if (amount <= 0 || CurrentHealth <= 0) return;
+            if (amount <= 0 || CurrentHealth <= 0 || IsShielded) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth > 0) return;

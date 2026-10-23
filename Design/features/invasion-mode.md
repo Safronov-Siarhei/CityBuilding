@@ -27,7 +27,13 @@
 > (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`.
 > Playtest 5: yard workers drop their node claim while the yard rests (they stood idle after an
 > upgrade), killed workers are replaced (`RefillShortBuildings`), one quarry again (`inv_max_quarries` 1),
-> run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_per_harvest` (both yards, 2). Next: online leaderboard (service not chosen), more playtests.
+> run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_per_harvest` (both yards, 2).
+> Heroes (2026-10-23): the King, let go of after an order, stands `hero_return_wait_sec` then guards
+> (`KingHero.ReturnIn`); his 4 SKILLS (`Combat/HeroSkills.cs`, rows `skill_<hero>_<skill>_*` read by
+> `BalanceConfig.HeroSkills`; `SoldierUnit.Shield/Enrage`, `HeroBlessing` checked in BuildingInstance.TryDamage,
+> SoldierUnit.TakeDamage, OrcUnit.HuntCitizen) and the bottom-centre `UI/HeroSkillBar.cs` + `UI/HoldTooltip.cs`
+> (built by `SetupProjectHud.BuildHeroSkillBar`; icons `UI/Glyphs/Skill_*.png`). Next: hero type for
+> Queen/Captain, portraits list, buying heroes in the castle. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),

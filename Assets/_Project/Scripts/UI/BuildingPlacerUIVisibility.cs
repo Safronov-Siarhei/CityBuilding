@@ -43,7 +43,8 @@ namespace CityBuilder.UI
             }
             // a held building (BuildingFocus) puts its «!» where the build menu stands
             var held = BuildingFocus.Instance != null && BuildingFocus.Instance.Current != null;
-            var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held;
+            // ...and a hero in hand puts his skills there (HeroSkillBar)
+            var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held && !HeroSkillBar.Showing;
             if (hideWhilePlacingMandatory != null && hideWhilePlacingMandatory.activeSelf != showMenu)
             {
                 hideWhilePlacingMandatory.SetActive(showMenu);
