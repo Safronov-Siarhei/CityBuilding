@@ -28,6 +28,8 @@ namespace CityBuilder.Combat
 
         /// <summary>The King's figure (Tools/blender/heroking.py, Models/Heroes); without it he is drawn in cubes like the soldiers.</summary>
         [SerializeField] private GameObject kingModel;
+        [SerializeField] private GameObject queenModel;
+        [SerializeField] private GameObject captainModel;
 
         // Cube-primitive silhouettes, in the same style as every other prop in the game. Each tier
         // has to be tellable from the others at the camera's height and at a glance, so what
@@ -89,7 +91,7 @@ namespace CityBuilder.Combat
                 var total = 0;
                 foreach (var group in _groups)
                 {
-                    if (group.Type == SoldierType.King) continue;   // the hero is no soldier the army cap counts
+                    if (SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;   // heroes and the Queen's summons are no soldiers the army cap counts
                     total += group.Count;
                 }
                 return total;
@@ -198,8 +200,8 @@ namespace CityBuilder.Combat
         {
             if (unit == null) return;
 
-            // The King does not die: he falls, and gets up again at the castle (KingHero).
-            var hero = unit.GetComponent<KingHero>();
+            // A hero does not die: he falls, and gets up again at the castle (Hero).
+            var hero = unit.GetComponent<Hero>();
             if (hero != null)
             {
                 hero.Fall();
@@ -299,7 +301,7 @@ namespace CityBuilder.Combat
             for (var i = _groups.Count - 1; i >= 0; i--)
             {
                 var group = _groups[i];
-                if (group.Count == 0 || group.Type == SoldierType.King) continue;
+                if (group.Count == 0 || SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;
 
                 Disband(group.Members[group.Count - 1]);
                 return true;
@@ -339,20 +341,50 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// The Invasion mode's King: one soldier in a group of his own, which is what lets the army
-        /// panel, the orders and the orcs treat him like any other fighter, plus the KingHero that
-        /// gives him levels and his coming back. Costs nothing and takes no citizen.
+        /// An Invasion hero (the King, the Queen, the Captain): one soldier in a group of his own,
+        /// which is what lets the orders and the orcs treat him like any other fighter, plus the Hero
+        /// that gives him levels and his coming back, and his skills. Takes no citizen.
         /// </summary>
-        public KingHero SpawnKing(Vector3 position)
+        public Hero SpawnHero(SoldierType type, Vector3 position)
         {
-            var group = GetOrCreateGroup(SoldierType.King, position);
-            var unit = SpawnSoldier(SoldierType.King, position, group, scatter: false);
+            var group = GetOrCreateGroup(type, position);
+            var unit = SpawnSoldier(type, position, group, scatter: false);
             group.Add(unit);
-            var hero = unit.gameObject.AddComponent<KingHero>();
-            hero.Initialize(position);
-            unit.gameObject.AddComponent<HeroSkills>().Bind(hero, "king");
+            var hero = unit.gameObject.AddComponent<Hero>();
+            hero.Initialize(position, type);
+            unit.gameObject.AddComponent<HeroSkills>().Bind(hero, SoldierStats.SheetIdOf(type));
             OnArmyChanged?.Invoke();
             return hero;
+        }
+
+        public Hero SpawnKing(Vector3 position) => SpawnHero(SoldierType.King, position);
+
+        /// <summary>
+        /// The Queen's Призыв (the user, 2026-10-23): `count` soldiers of `type` at `level` --
+        /// whatever the Laboratory says -- in a group of their own holding where she stands; they
+        /// fight there for `seconds` and are gone. No citizen, no upkeep, not in the army's count.
+        /// </summary>
+        public void SpawnSummons(SoldierType type, Vector3 position, int count, int level, float seconds)
+        {
+            var group = new ArmyGroup(type, position) { IsSummoned = true };
+            var stats = SoldierStats.StatsAt(type, level);
+            for (var i = 0; i < count; i++)
+            {
+                var unit = SpawnSoldier(type, position, group);
+                group.Add(unit);
+                unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
+                unit.SetCurrentHealth(stats.maxHealth);
+                unit.gameObject.AddComponent<SummonedLifetime>().Begin(seconds);
+            }
+            group.OrderMoveTo(position);
+        }
+
+        /// <summary>A summoned soldier's time is up: gone, as a soldier killed is, without the log line.</summary>
+        public void Dismiss(SoldierUnit unit)
+        {
+            if (unit == null) return;
+            RemoveFromGroup(unit);
+            Destroy(unit.gameObject);
         }
 
         /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
@@ -391,11 +423,14 @@ namespace CityBuilder.Combat
             switch (type)
             {
                 case SoldierType.King when kingModel != null:
+                case SoldierType.Queen when queenModel != null:
+                case SoldierType.Captain when captainModel != null:
                 {
-                    // Authored at its real size (0.79 m to the crown's tip), so the root's unit
-                    // scale is divided back out, as the orc figures do.
-                    var figure = Instantiate(kingModel, root, false);
-                    figure.name = "King";
+                    // Authored at its real size (0.79 m to the King's crown's tip), so the root's
+                    // unit scale is divided back out, as the orc figures do.
+                    var model = type == SoldierType.Queen ? queenModel : type == SoldierType.Captain ? captainModel : kingModel;
+                    var figure = Instantiate(model, root, false);
+                    figure.name = type.ToString();
                     figure.transform.localScale = Vector3.one / UnitSize.Scale;
                     // modelled facing Blender's -y, which lands facing back along the root's
                     // forward: turned round, or he walks backwards
@@ -406,8 +441,10 @@ namespace CityBuilder.Combat
                     break;
                 }
 
+                case SoldierType.Queen:
+                case SoldierType.Captain:
                 case SoldierType.King:
-                    // A head taller and broader than any soldier, in royal purple with a red cape,
+                    // (no model in the project: cubes) A head taller and broader than any soldier, in royal purple with a red cape,
                     // a gold crown and a long sword: the one figure on the map the player looks for.
                     AddCubePart(root, "Body", new Vector3(0f, 0.3f, 0f), new Vector3(0.38f, 0.6f, 0.38f), MaterialFor(RoyalColor));
                     AddCubePart(root, "Cape", new Vector3(0f, 0.32f, -0.2f), new Vector3(0.36f, 0.56f, 0.04f), MaterialFor(CapeColor));

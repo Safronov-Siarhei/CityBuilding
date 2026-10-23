@@ -456,6 +456,9 @@ namespace CityBuilder.EditorTools
             var kingModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroKing.fbx");
             if (kingModel == null) Debug.LogWarning("[SetupProject] Models/Heroes/HeroKing.fbx is missing -- run Tools/blender/export_fbx.py. The King falls back to cubes.");
             armyManagerSO.FindProperty("kingModel").objectReferenceValue = kingModel;
+            // the heroes bought in an Invasion run's castle (Tools/blender/heroes2.py)
+            armyManagerSO.FindProperty("queenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroQueen.fbx");
+            armyManagerSO.FindProperty("captainModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroCaptain.fbx");
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Invasion mode: idle in a sandbox game; in a run started from the menu's «В бой»

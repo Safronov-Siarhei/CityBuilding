@@ -25,6 +25,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text[] lockLevels;
         [SerializeField] private GameObject tooltip;
         [SerializeField] private Text tooltipText;
+        /// <summary>Every skill's picture, named Skill_&lt;skill id&gt; (Tools/ui/make_skill_icons.py).</summary>
+        [SerializeField] private Sprite[] skillSprites;
 
         private Image _blessingGlow;
 
@@ -34,6 +36,7 @@ namespace CityBuilder.UI
         public HeroSkills Current { get; private set; }
 
         private float _refreshIn;
+        private HeroSkills _pictured;
 
         private void Awake()
         {
@@ -60,6 +63,7 @@ namespace CityBuilder.UI
             if (bar != null && bar.activeSelf != show) bar.SetActive(show);
             ShowBlessing();
             if (!show) return;
+            if (_pictured != Current) Picture();
 
             _refreshIn -= Time.unscaledDeltaTime;
             if (_refreshIn > 0f) return;
@@ -78,12 +82,28 @@ namespace CityBuilder.UI
             }
         }
 
+        /// <summary>The held hero's skill pictures on the buttons, by skill id.</summary>
+        private void Picture()
+        {
+            _pictured = Current;
+            for (var i = 0; i < icons.Length && i < Current.Slots.Count; i++)
+            {
+                var wanted = "Skill_" + Current.Slots[i].Balance.id;
+                foreach (var sprite in skillSprites)
+                {
+                    if (sprite == null || sprite.name != wanted) continue;
+                    icons[i].sprite = sprite;
+                    break;
+                }
+            }
+        }
+
         /// <summary>The hero the player holds, or null: the selected group's hero, while he stands.</summary>
         private static HeroSkills SelectedHero()
         {
             var army = ArmyManager.Instance;
             var group = army != null ? army.SelectedGroup : null;
-            if (group == null || group.Type != SoldierType.King || group.Count == 0) return null;
+            if (group == null || !SoldierStats.IsHero(group.Type) || group.Count == 0) return null;
             var member = group.Members[0];
             return member != null ? member.GetComponent<HeroSkills>() : null;
         }
@@ -110,16 +130,21 @@ namespace CityBuilder.UI
             tooltip.SetActive(true);
         }
 
-        /// <summary>«Name» over what it does, in this hero level's numbers; a locked one says when it opens.</summary>
+        /// <summary>
+        /// «Name» over what it does, in this hero level's numbers; a locked one says when it opens.
+        /// The text picks what it needs: {0} power as a percent (a share), {1} seconds, {2} the
+        /// cooldown, {3} power as a percent more (a multiplier), {4} power as a count, {5} the tier,
+        /// {6} the reach in metres.
+        /// </summary>
         public static string Describe(HeroSkills skills, int index)
         {
             var skill = skills.Slots[index].Balance;
             var level = skills.Level;
             var power = skill.PowerAt(level);
-            // a share of health and a multiplier both read as whole percent
-            var percent = Mathf.RoundToInt((skill.id == HeroSkills.KingHeal ? power : power - 1f) * 100f);
             var text = Localization.Get($"#skill_{skill.id}") + "\n" +
-                       Localization.Format($"#skill_{skill.id}_desc", percent, Mathf.RoundToInt(skill.DurationAt(level)), Mathf.RoundToInt(skill.cooldownSeconds));
+                       Localization.Format($"#skill_{skill.id}_desc", Mathf.RoundToInt(power * 100f), Mathf.RoundToInt(skill.DurationAt(level)),
+                           Mathf.RoundToInt(skill.cooldownSeconds), Mathf.RoundToInt((power - 1f) * 100f), Mathf.RoundToInt(power), skill.tier,
+                           Mathf.RoundToInt(skill.radius));
             if (!skills.IsOpen(index)) text += "\n" + Localization.Format("#skill_locked", skill.unlockLevel);
             return text;
         }

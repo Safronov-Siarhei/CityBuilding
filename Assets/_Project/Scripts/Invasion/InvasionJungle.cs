@@ -23,7 +23,7 @@ namespace CityBuilder.Invasion
     ///   damage, so the King's experience (an enemy's health) and the gold (InvasionWaves.GoldForKill)
     ///   grow with it.
     /// - The boss pays gold, wood and stone (× his level) and blesses the King for a while: more
-    ///   damage and health (KingHero.Empower).
+    ///   damage and health (Hero.Empower).
     /// - A shrine heals the King and soldiers standing within inv_shrine_radius, a share of their
     ///   health a second, for as long as they stay.
     /// </summary>

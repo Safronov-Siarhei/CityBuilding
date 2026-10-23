@@ -1,25 +1,39 @@
 using System;
 using CityBuilder.Core;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// The King of the Invasion mode as a hero (the user, 2026-10-21): he gains experience from
-    /// every enemy that falls near him, levels up -- more health and damage each level, skills later -- and when he
-    /// falls he is not lost but gets up again at the castle after a wait that grows with his level,
-    /// as in Dota.
+    /// A hero of the Invasion mode: the King (the user, 2026-10-21), and the Queen and the Captain
+    /// of the guard bought in the castle (2026-10-23). He gains experience from every enemy that
+    /// falls near him, levels up -- more health and damage each level, his skills open and grow
+    /// (HeroSkills) -- and when he falls he is not lost but gets up again at the castle after a wait
+    /// that grows with his level, as in Dota.
     ///
     /// Sits beside the SoldierUnit that does his fighting: everything about walking, targeting and
     /// orders is the army's, so the orcs fight him and the player commands him exactly as they do
     /// any soldier. Experience for a kill is the enemy's health -- a brute is worth more than an
-    /// orc without a table to keep -- and the curve is the economy tab's king_* keys.
+    /// orc without a table to keep. His numbers are the economy tab's &lt;id&gt;_* keys (HeroBalance);
+    /// the experience curve, the waits and the guard are the king_* keys, the same for all three.
+    ///
+    /// The Queen fights from range and backs off from a melee enemy that comes too close (the
+    /// user, 2026-10-23): a few metres towards her own, then she shoots again -- unless the player
+    /// has her walking somewhere, which comes first.
     /// </summary>
-    public class KingHero : MonoBehaviour
+    public class Hero : MonoBehaviour
     {
         private SoldierUnit _unit;
         private CharacterController _controller;
         private Renderer[] _renderers;
+
+        /// <summary>"king", "queen" or "captain": his rows in the sheet and his skills' prefix.</summary>
+        public string Id { get; private set; } = "king";
+
+        public SoldierType Type { get; private set; } = SoldierType.King;
+
+        public HeroBalance Balance => BalanceConfig.Instance.Hero(Id);
 
         public int Level { get; private set; } = 1;
         public int Experience { get; private set; }
@@ -39,8 +53,8 @@ namespace CityBuilder.Combat
         /// <summary>
         /// With no order from the player he defends the base (the user, 2026-10-21): goes for any
         /// enemy that comes within king_guard_radius of the castle and walks back home when it is
-        /// clear. A player's order ends it -- he then does what he was told and stays there -- and
-        /// the guard button on his portrait, or coming back from a fall, starts it again.
+        /// clear. A player's order ends it -- he then does what he was told -- and being let go of
+        /// starts it again after a wait (ReturnIn).
         /// </summary>
         public bool Guarding { get; private set; } = true;
 
@@ -61,6 +75,8 @@ namespace CityBuilder.Combat
         public float ReturnIn { get; private set; } = -1f;
 
         private Vector3 _lastPosition;
+        /// <summary>Walking to a point the player gave him: the Queen does not run from that.</summary>
+        private bool _onMoveOrder;
 
         public SoldierUnit Unit => _unit;
 
@@ -79,16 +95,16 @@ namespace CityBuilder.Combat
         public static float RespawnSecondsAt(int level) =>
             BalanceConfig.Instance.KingRespawnBaseSeconds + BalanceConfig.Instance.KingRespawnPerLevelSeconds * (Mathf.Max(1, level) - 1);
 
-        /// <summary>His health and damage at a level: level 1 is the economy tab's king_max_health and king_attack_damage.</summary>
-        public static int MaxHealthAt(int level) =>
-            BalanceConfig.Instance.KingUnit.LevelStats(1).maxHealth + BalanceConfig.Instance.KingHealthPerLevel * (Mathf.Max(1, level) - 1);
+        /// <summary>His health and damage at a level: level 1 is the sheet's &lt;id&gt;_max_health and &lt;id&gt;_attack_damage.</summary>
+        public int MaxHealthAt(int level) => Balance.maxHealth + Balance.healthPerLevel * (Mathf.Max(1, level) - 1);
 
-        public static int DamageAt(int level) =>
-            BalanceConfig.Instance.KingUnit.LevelStats(1).attackDamage + BalanceConfig.Instance.KingDamagePerLevel * (Mathf.Max(1, level) - 1);
+        public int DamageAt(int level) => Balance.attackDamage + Balance.damagePerLevel * (Mathf.Max(1, level) - 1);
 
-        /// <summary>Called by ArmyManager.SpawnKing right after the unit is built.</summary>
-        public void Initialize(Vector3 home)
+        /// <summary>Called by ArmyManager.SpawnHero right after the unit is built.</summary>
+        public void Initialize(Vector3 home, SoldierType type)
         {
+            Type = type;
+            Id = SoldierStats.SheetIdOf(type);
             Home = home;
             GuardCentre = home;
             _unit = GetComponent<SoldierUnit>();
@@ -130,9 +146,11 @@ namespace CityBuilder.Combat
         {
             var moved = Flat(transform.position - _lastPosition).magnitude;
             _lastPosition = transform.position;
-            if (ReturnIn < 0f) return;
             var dt = Time.deltaTime;
             var still = dt > 0f && moved < StillSpeed * dt;
+            // got where the player sent him
+            if (_onMoveOrder && _unit.Group != null && Flat(transform.position - _unit.Group.HoldPosition).sqrMagnitude < 2.25f) _onMoveOrder = false;
+            if (ReturnIn < 0f) return;
             if (_unit.IsFighting || !still)
             {
                 ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
@@ -210,15 +228,19 @@ namespace CityBuilder.Combat
         /// <summary>
         /// Struck down: out of the fight (no orc sees him, the army panel's orders do nothing) until
         /// the wait for his level runs out. The body is hidden, not destroyed, so his level and
-        /// experience stay where they are.
+        /// experience stay where they are. The Captain's Бессмертие, when it is ready, has him back
+        /// on his feet where he fell instead (HeroSkills.TryCheatDeath).
         /// </summary>
         public void Fall()
         {
             if (IsFallen) return;
+            var skills = GetComponent<HeroSkills>();
+            if (skills != null && skills.TryCheatDeath()) return;
             IsFallen = true;
             ReturnIn = -1f;
+            _onMoveOrder = false;
             RespawnRemaining = RespawnSecondsAt(Level);
-            // a fallen King takes no orders: let go of him if he was in hand
+            // a fallen hero takes no orders: let go of him if he was in hand
             var army = ArmyManager.Instance;
             if (army != null && _unit.Group != null && army.SelectedGroup == _unit.Group) army.SelectGroup(null);
             _unit.enabled = false;
@@ -230,6 +252,7 @@ namespace CityBuilder.Combat
 
         private void OnPlayerOrdered()
         {
+            _onMoveOrder = _unit.Group != null && _unit.Group.AttackTarget == null;
             if (!Guarding) return;
             Guarding = false;
             Changed?.Invoke();
@@ -240,6 +263,7 @@ namespace CityBuilder.Combat
         {
             ReturnIn = -1f;
             Guarding = true;
+            _onMoveOrder = false;
             _guardScan = 0f;
             if (!IsFallen) _unit.Group?.OrderMoveTo(Home);
             Changed?.Invoke();
@@ -266,6 +290,7 @@ namespace CityBuilder.Combat
             }
             RevealAround();
             TickReturn();
+            TickFlee();
             if (!Guarding || _unit.Group == null) return;
 
             _guardScan -= Time.deltaTime;
@@ -280,6 +305,64 @@ namespace CityBuilder.Combat
                 return;
             }
             if (group.AttackTarget == null && Flat(group.HoldPosition - Home).sqrMagnitude > 1f) group.OrderMoveTo(Home);
+        }
+
+        private float _fleeScan;
+        private const float FleeScanSeconds = 0.25f;
+
+        /// <summary>
+        /// The Queen backs off from a melee enemy closer than her flee radius: flee distance metres
+        /// away from it and towards her own (the nearest soldier, or the castle), on the NavMesh --
+        /// then she shoots again. Not while she walks where the player sent her.
+        /// </summary>
+        private void TickFlee()
+        {
+            var balance = Balance;
+            if (balance == null || balance.fleeRadius <= 0f || _unit.IsRetreating || _onMoveOrder) return;
+            _fleeScan -= Time.deltaTime;
+            if (_fleeScan > 0f) return;
+            _fleeScan = FleeScanSeconds;
+
+            var at = transform.position;
+            OrcUnit threat = null;
+            var best = balance.fleeRadius * balance.fleeRadius;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0 || orc.IsRanged) continue;
+                var d = Flat(orc.transform.position - at).sqrMagnitude;
+                if (d > best) continue;
+                best = d;
+                threat = orc;
+            }
+            if (threat == null) return;
+
+            var away = Flat(at - threat.transform.position).normalized;
+            var friends = Flat(NearestFriend(at) - at).normalized;
+            var way = (away + friends).sqrMagnitude > 0.01f ? (away + friends).normalized : away;
+            var goal = at + way * balance.fleeDistance;
+            if (!NavMesh.SamplePosition(goal, out var hit, 3f, NavMesh.AllAreas))
+            {
+                // nowhere to go that way: towards the castle
+                goal = at + Flat(Home - at).normalized * balance.fleeDistance;
+                if (!NavMesh.SamplePosition(goal, out hit, 3f, NavMesh.AllAreas)) return;
+            }
+            _unit.Retreat(hit.position, balance.fleeDistance / Mathf.Max(0.5f, balance.walkSpeed) + 1f);
+        }
+
+        /// <summary>The nearest of her own -- another soldier or hero standing -- or the castle.</summary>
+        private Vector3 NearestFriend(Vector3 at)
+        {
+            var best = float.MaxValue;
+            var friend = Home;
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier == _unit || soldier.CurrentHealth <= 0 || !soldier.isActiveAndEnabled) continue;
+                var d = Flat(soldier.transform.position - at).sqrMagnitude;
+                if (d >= best) continue;
+                best = d;
+                friend = soldier.transform.position;
+            }
+            return friend;
         }
 
         /// <summary>

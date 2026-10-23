@@ -32,8 +32,15 @@
 > (`KingHero.ReturnIn`); his 4 SKILLS (`Combat/HeroSkills.cs`, rows `skill_<hero>_<skill>_*` read by
 > `BalanceConfig.HeroSkills`; `SoldierUnit.Shield/Enrage`, `HeroBlessing` checked in BuildingInstance.TryDamage,
 > SoldierUnit.TakeDamage, OrcUnit.HuntCitizen) and the bottom-centre `UI/HeroSkillBar.cs` + `UI/HoldTooltip.cs`
-> (built by `SetupProjectHud.BuildHeroSkillBar`; icons `UI/Glyphs/Skill_*.png`). Next: hero type for
-> Queen/Captain, portraits list, buying heroes in the castle. Next: online leaderboard (service not chosen), more playtests.
+> (built by `SetupProjectHud.BuildHeroSkillBar`; icons `UI/Glyphs/Skill_<skill id>.png`, drawn by
+> `Tools/ui/make_skill_icons.py`). QUEEN + CAPTAIN: `Combat/Hero.cs` (was KingHero; any hero, `HeroBalance`
+> rows `<id>_*`, Queen's flee via `SoldierUnit.Retreat`), `SoldierType.Queen/Captain` (`SoldierStats.IsHero`),
+> `ArmyManager.SpawnHero/SpawnSummons/Dismiss` + `SummonedLifetime`, `HeroAuras` (Сила), `CitizenMilitia`
+> (Боевой дух), `BuildingInstance.Shield` (Спасение), `HeroSkills.TryCheatDeath` (Бессмертие);
+> `InvasionMode.Heroes/HeroOf/CanBuy/BuyHero`; `UI/CastleHeroCards.cs` (built by
+> `SetupProjectPanels.BuildCastleHeroCards`), `UI/HeroPortraitController.cs` (was KingPortraitController,
+> one per hero, stacked). Models `Tools/blender/heroes2.py` -> Models/Heroes; portraits
+> `render_portrait.py ... [size] [head_z]`. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -109,6 +116,8 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
 (waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- Photos with UI (`PlaytestCapture.ShootWithUi*`) turn the HUD canvas camera-space: the parchment fog draws
+  OVER the HUD in them (top-right King portrait hidden). Not so in the game (overlay canvas).
 - A run building placed through `BuildingPlacer.PlaceAt` gets a `ConstructionSite`; one put down by
   `InvasionMode.PlaceFinished` or `PlaytestWorld.Place` does not. `IsOperational` gates DefensiveBuilding,
   ProductionBuilding.Update, the yard's node claims (CitizenVisualsManager) and the Barracks' recruiting.

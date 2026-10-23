@@ -275,11 +275,20 @@ namespace CityBuilder.Buildings
         /// every building including the Town Hall, since its loss is the game's defeat condition
         /// (see CityBuilder.Core.GameOverManager, which listens for OnDestroyedInCombat).
         /// </summary>
+        private float _shieldedUntil = -1f;
+
+        /// <summary>Takes no damage for now (the Captain's Спасение over the castle).</summary>
+        public bool IsShielded => Time.time < _shieldedUntil;
+
+        public float ShieldLeft => Mathf.Max(0f, _shieldedUntil - Time.time);
+
+        public void Shield(float seconds) => _shieldedUntil = Mathf.Max(_shieldedUntil, Time.time + Mathf.Max(0f, seconds));
+
         public void TryDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
-            // the King's Blessing: nothing of the player's takes damage while it lasts
-            if (Combat.HeroBlessing.Active) return;
+            // the King's Blessing: nothing of the player's takes damage while it lasts; the Captain's Спасение: this one
+            if (Combat.HeroBlessing.Active || IsShielded) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             ShowHealthBar();

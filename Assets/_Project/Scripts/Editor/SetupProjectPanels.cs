@@ -349,8 +349,114 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(recruitButton.onClick, controller.Recruit);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
+            BuildCastleHeroCards(card.transform, panelSprite, controller, iconLibrary);
+
             panelRoot.SetActive(false);
             return controller;
+        }
+
+        /// <summary>
+        /// The Invasion heroes on the castle's card (CastleHeroCards shows them only there, only in
+        /// a run): three cards in the band the Barracks' recruiting uses -- a face, a tick or a
+        /// price, and «Замок ур. N» over a face the castle is too low for.
+        /// </summary>
+        private static void BuildCastleHeroCards(Transform card, Sprite panelSprite, BuildingInfoPanelController panel, ResourceIconLibrary iconLibrary)
+        {
+            var types = new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain };
+            var paths = new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" };
+            const float width = 190f, height = 210f, gap = 24f;
+
+            var row = new GameObject("CastleHeroCards", typeof(RectTransform));
+            row.transform.SetParent(card, false);
+            var rowRect = (RectTransform)row.transform;
+            rowRect.anchorMin = rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rowRect.anchoredPosition = new Vector2(0f, 85f);
+            rowRect.sizeDelta = new Vector2(3 * width + 2 * gap, height);
+
+            var go = new GameObject("CastleHeroCardsController");
+            go.transform.SetParent(card, false);
+            var cards = go.AddComponent<CastleHeroCards>();
+
+            var faces = new Image[3];
+            var ticks = new GameObject[3];
+            var prices = new GameObject[3];
+            var priceTexts = new Text[3];
+            var priceIcons = new Image[3];
+            var lockTexts = new Text[3];
+            var tick = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hud_Check.png");
+            for (var i = 0; i < 3; i++)
+            {
+                var x = (i - 1) * (width + gap);
+                var button = CreateDynamicButton(row.transform, SkinSprite("card") ?? panelSprite, $"HeroCard{types[i]}", new Vector2(x, 0f), new Vector2(width, height), out var caption);
+                Object.DestroyImmediate(caption.gameObject);
+                button.GetComponent<Image>().color = Color.white;
+                UnityEventTools.AddIntPersistentListener(button.onClick, cards.BuyCard, i);
+
+                var face = CreateImage(button.transform, "Face", Color.white);
+                face.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{paths[i]}.png");
+                face.preserveAspect = true;
+                face.raycastTarget = false;
+                SetRect(face.rectTransform, new Vector2(0f, 14f), new Vector2(128f, 128f));
+                faces[i] = face;
+
+                var mark = CreateImage(button.transform, "Owned", new Color(0.35f, 0.8f, 0.35f, 1f));
+                mark.sprite = tick;
+                mark.preserveAspect = true;
+                mark.raycastTarget = false;
+                SetRect(mark.rectTransform, new Vector2(0f, -78f), new Vector2(46f, 46f));
+                ticks[i] = mark.gameObject;
+
+                var price = new GameObject("Price", typeof(RectTransform));
+                price.transform.SetParent(button.transform, false);
+                SetRect((RectTransform)price.transform, new Vector2(0f, -78f), new Vector2(width, 46f));
+                var coin = CreateImage(price.transform, "Coin", Color.white);
+                coin.preserveAspect = true;
+                coin.raycastTarget = false;
+                SetRect(coin.rectTransform, new Vector2(-34f, 0f), new Vector2(38f, 38f));
+                var amount = CreateText(price.transform, "Amount", "0", 30, new Vector2(20f, 0f), new Vector2(100f, 44f), UiTheme.Ink);
+                amount.font = UiTheme.Heavy;
+                amount.alignment = TextAnchor.MiddleLeft;
+                prices[i] = price;
+                priceTexts[i] = amount;
+                priceIcons[i] = coin;
+
+                // over the face's top edge, on a dark band of its own
+                var band = CreateImage(button.transform, "LockedBand", new Color(0.55f, 0.16f, 0.12f, 0.92f));
+                band.raycastTarget = false;
+                SetRect(band.rectTransform, new Vector2(0f, 82f), new Vector2(width - 16f, 34f));
+                var locked = CreateText(band.transform, "Locked", string.Empty, 22, Vector2.zero, new Vector2(width - 20f, 32f), Color.white);
+                locked.font = UiTheme.Heavy;
+                lockTexts[i] = locked;
+            }
+
+            var so = new SerializedObject(cards);
+            so.FindProperty("panel").objectReferenceValue = panel;
+            so.FindProperty("row").objectReferenceValue = row;
+            var heroes = so.FindProperty("heroes");
+            heroes.arraySize = 3;
+            for (var i = 0; i < 3; i++) heroes.GetArrayElementAtIndex(i).enumValueIndex = System.Array.IndexOf(System.Enum.GetValues(typeof(SoldierType)), types[i]);
+            WriteObjects(so.FindProperty("faces"), faces);
+            WriteObjects(so.FindProperty("ticks"), ticks);
+            WriteObjects(so.FindProperty("prices"), prices);
+            WriteObjects(so.FindProperty("priceTexts"), priceTexts);
+            WriteObjects(so.FindProperty("priceIcons"), priceIcons);
+            WriteObjects(so.FindProperty("lockTexts"), lockTexts);
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            row.SetActive(false);
+        }
+
+        private static void SetRect(RectTransform rect, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        private static void WriteObjects(SerializedProperty property, Object[] values)
+        {
+            property.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
         }
 
         private static BuildingSelector BuildBuildingSelector(Transform canvasParent, Camera targetCamera,

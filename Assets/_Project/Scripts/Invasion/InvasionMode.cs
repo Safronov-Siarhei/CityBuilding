@@ -58,7 +58,69 @@ namespace CityBuilder.Invasion
         /// <summary>The castle, the towers and the King are in place.</summary>
         public bool RunStarted { get; private set; }
 
-        public KingHero King { get; private set; }
+        public Hero King { get; private set; }
+
+        private readonly List<Hero> _heroes = new List<Hero>();
+
+        /// <summary>The run's heroes: the King from the start, the Queen and the Captain once bought.</summary>
+        public IReadOnlyList<Hero> Heroes => _heroes;
+
+        /// <summary>The hero of this kind if the run has him, else null.</summary>
+        public Hero HeroOf(SoldierType type)
+        {
+            foreach (var hero in _heroes)
+            {
+                if (hero != null && hero.Type == type) return hero;
+            }
+            return null;
+        }
+
+        public enum HeroOffer { Bought, Owned, CastleTooLow, NotEnoughMoney, NoSuchHero }
+
+        /// <summary>
+        /// Whether this hero can be bought now (the user, 2026-10-23): one of each, the Queen from
+        /// the castle's level 2, the Captain from 3 (&lt;id&gt;_castle_level), for &lt;id&gt;_price gold.
+        /// </summary>
+        public HeroOffer CanBuy(SoldierType type)
+        {
+            var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(type));
+            if (balance == null || !SoldierStats.IsHero(type)) return HeroOffer.NoSuchHero;
+            if (HeroOf(type) != null) return HeroOffer.Owned;
+            if (Castle == null || Castle.Level < balance.castleLevel) return HeroOffer.CastleTooLow;
+            var money = ResourceManager.Instance;
+            if (money == null || money.GetAmount(InvasionRules.Money) < balance.price) return HeroOffer.NotEnoughMoney;
+            return HeroOffer.Bought;
+        }
+
+        /// <summary>Buys the hero if it can be bought: pays, and he steps out before the castle. The answer says why not.</summary>
+        public HeroOffer BuyHero(SoldierType type)
+        {
+            var offer = CanBuy(type);
+            if (offer != HeroOffer.Bought) return offer;
+            var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(type));
+            if (balance.price > 0 && !ResourceManager.Instance.TrySpend(new[] { new ResourceAmount { type = InvasionRules.Money, amount = balance.price } })) return HeroOffer.NotEnoughMoney;
+            SpawnHero(type);
+            return HeroOffer.Bought;
+        }
+
+        private Hero SpawnHero(SoldierType type)
+        {
+            if (ArmyManager.Instance == null) return null;
+            var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
+            home.y = GridManager.Instance != null ? GridManager.Instance.GroundHeight : home.y;
+            // the bought ones stand beside the King, not on him
+            var index = _heroes.Count;
+            if (index > 0) home += new Vector3(index % 2 == 1 ? -1.4f : 1.4f, 0f, 0f) * ((index + 1) / 2);
+            var hero = ArmyManager.Instance.SpawnHero(type, home);
+            if (hero == null) return null;
+            if (Castle != null) hero.GuardCentre = Castle.transform.position;
+            _heroes.Add(hero);
+            HeroesChanged?.Invoke();
+            return hero;
+        }
+
+        /// <summary>A hero joined the run (the portraits listen).</summary>
+        public event System.Action HeroesChanged;
         public InvasionPeople People { get; private set; }
         public InvasionWaves Waves { get; private set; }
         public InvasionJungle Jungle { get; private set; }
@@ -72,6 +134,7 @@ namespace CityBuilder.Invasion
             Instance = this;
             _active = GameSessionIntent.NewGameIsInvasion;
             HeroBlessing.End();
+            HeroAuras.Clear();
             GameSessionIntent.NewGameIsInvasion = false;
             if (!_active) return;
 
@@ -171,10 +234,7 @@ namespace CityBuilder.Invasion
             People = gameObject.AddComponent<InvasionPeople>();
             People.Settle(Houses);
 
-            var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
-            home.y = grid.GroundHeight;
-            if (ArmyManager.Instance != null) King = ArmyManager.Instance.SpawnKing(home);
-            if (King != null && Castle != null) King.GuardCentre = Castle.transform.position;
+            King = SpawnHero(SoldierType.King);
 
             // the three round orc camps at the lanes' far ends (the map's CampSpots, not among
             // SpotsOf: the sandbox's camps read them too), their gates facing the castle

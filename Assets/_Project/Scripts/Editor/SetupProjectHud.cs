@@ -1,4 +1,5 @@
 ﻿using CityBuilder.Buildings;
+using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
@@ -278,18 +279,30 @@ namespace CityBuilder.EditorTools
         /// (KingPortraitController shows it only in a run): his face in a round frame with his level
         /// on a badge, a plaque to its left with his health and experience bars, a gold ring round
         /// the frame while he is selected, and a dark cover with a countdown while he is down. No
-        /// guard button: let go of, he guards the base by himself (KingHero.OnSelectionChanged).
+        /// guard button: let go of, he guards the base by himself (Hero.OnSelectionChanged).
         /// </summary>
+        /// <summary>The three heroes' portraits down the right edge (HeroPortraitController stacks the shown ones).</summary>
         private static void BuildKingPortrait(Transform uiRoot)
         {
-            var portraitSprite = LoadSprite(KingPortraitPath);
+            BuildHeroPortrait(uiRoot, SoldierType.King, KingPortraitPath);
+            BuildHeroPortrait(uiRoot, SoldierType.Queen, UiTextureImport.IconsFolder + "/PortraitQueen.png");
+            BuildHeroPortrait(uiRoot, SoldierType.Captain, UiTextureImport.IconsFolder + "/PortraitCaptain.png");
+        }
+
+        /// <summary>How far down the right edge each next hero's portrait stands.</summary>
+        private const float HeroPortraitStep = RoundButton + 30f;
+
+        private static void BuildHeroPortrait(Transform uiRoot, SoldierType type, string portraitPath)
+        {
+            var portraitSprite = LoadSprite(portraitPath);
             var circle = SkinSprite("circle_mask");
 
-            var root = new GameObject("KingPortrait", typeof(RectTransform));
+            var root = new GameObject($"{type}Portrait", typeof(RectTransform));
             root.transform.SetParent(uiRoot, false);
-            // stays up while the King is selected and the rest of the HUD steps aside (HudHider)
+            // stays up while a hero is selected and the rest of the HUD steps aside (HudHider)
             root.AddComponent<HudOverlay>();
-            Anchor((RectTransform)root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f), new Vector2(380f, 190f));
+            var top = -HudMargin * 0.7f;
+            Anchor((RectTransform)root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, top), new Vector2(380f, RoundButton + 20f));
 
             // behind the frame: the selection ring
             var selected = CreateImage(root.transform, "Selected", UiTheme.Gold);
@@ -332,10 +345,13 @@ namespace CityBuilder.EditorTools
             var health = Bar(plaque.transform, "Health", new Vector2(0f, 9f), 18f, new Color(0.2f, 0.62f, 0.22f));
             var xp = Bar(plaque.transform, "Experience", new Vector2(0f, -13f), 10f, UiTheme.Gold);
 
-            var go = new GameObject("KingPortraitController");
+            var go = new GameObject($"{type}PortraitController");
             go.transform.SetParent(uiRoot, false);
-            var controller = go.AddComponent<KingPortraitController>();
+            var controller = go.AddComponent<HeroPortraitController>();
             var so = new SerializedObject(controller);
+            so.FindProperty("heroType").enumValueIndex = System.Array.IndexOf(System.Enum.GetValues(typeof(SoldierType)), type);
+            so.FindProperty("top").floatValue = top;
+            so.FindProperty("step").floatValue = HeroPortraitStep;
             so.FindProperty("widget").objectReferenceValue = root;
             so.FindProperty("levelText").objectReferenceValue = level;
             so.FindProperty("healthFill").objectReferenceValue = health;
@@ -344,12 +360,12 @@ namespace CityBuilder.EditorTools
             so.FindProperty("fallenText").objectReferenceValue = fallenText;
             so.FindProperty("selectedFrame").objectReferenceValue = selected.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
-            UnityEventTools.AddPersistentListener(portraitButton.onClick, controller.SelectKing);
-            root.SetActive(false);   // KingPortraitController turns it on in a run
+            UnityEventTools.AddPersistentListener(portraitButton.onClick, controller.SelectHero);
+            root.SetActive(false);   // HeroPortraitController turns it on once the run has this hero
         }
 
-        /// <summary>The skill pictures, in the order the hero's skills open (HeroSkills sorts them so).</summary>
-        private static readonly string[] SkillIcons = { "Skill_Heal", "Skill_Shield", "Skill_Rage", "Skill_Blessing" };
+        /// <summary>The King's skill pictures, on the buttons until a hero is held (HeroSkillBar then puts his own).</summary>
+        private static readonly string[] SkillIcons = { "Skill_king_heal", "Skill_king_invuln", "Skill_king_rage", "Skill_king_bless" };
 
         /// <summary>
         /// The selected hero's four skills where the build menu stands (HeroSkillBar shows it only
@@ -432,6 +448,13 @@ namespace CityBuilder.EditorTools
             SetArray(so.FindProperty("lockLevels"), lockLevels);
             so.FindProperty("tooltip").objectReferenceValue = tip.gameObject;
             so.FindProperty("tooltipText").objectReferenceValue = tipText;
+            var pictures = new System.Collections.Generic.List<Object>();
+            foreach (var guid in AssetDatabase.FindAssets("Skill_ t:Sprite", new[] { UiTextureImport.GlyphsFolder }))
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid));
+                if (sprite != null && sprite.name.StartsWith("Skill_")) pictures.Add(sprite);
+            }
+            SetArray(so.FindProperty("skillSprites"), pictures.ToArray());
             so.ApplyModifiedPropertiesWithoutUndo();
             row.SetActive(false);
         }

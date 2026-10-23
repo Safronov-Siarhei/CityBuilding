@@ -13,6 +13,11 @@ namespace CityBuilder.Combat
     ///
     /// The King's: Лечение (a share of his health back), Неуязвимость (no damage for a while),
     /// Ярость (strikes faster and harder), Благословение (nothing of the player's takes damage).
+    /// The Queen's: Выстрел (the strongest enemy in reach dies; a boss loses a share), Залп (a wave
+    /// of bolts over every enemy in a cone), Призыв (soldiers of a fixed level for a while), Жертва
+    /// (unhurtable and fierce, then she falls). The Captain's: Сила (allies round him strike
+    /// harder), Спасение (the castle unhurtable), Боевой дух (the jobless people fight), Бессмертие
+    /// (the one skill that works by itself: ready, it has him up again where he fell).
     /// </summary>
     public class HeroSkills : MonoBehaviour
     {
@@ -20,6 +25,20 @@ namespace CityBuilder.Combat
         public const string KingShield = "king_invuln";
         public const string KingRage = "king_rage";
         public const string KingBlessing = "king_bless";
+        public const string QueenShot = "queen_shot";
+        public const string QueenVolley = "queen_volley";
+        public const string QueenSummon = "queen_summon";
+        public const string QueenSacrifice = "queen_sacrifice";
+        public const string CaptainMight = "captain_might";
+        public const string CaptainRescue = "captain_rescue";
+        public const string CaptainSpirit = "captain_spirit";
+        public const string CaptainImmortal = "captain_immortal";
+
+        /// <summary>The Queen's Призыв calls this kind of soldier (the sheet says how many, what level and how long).</summary>
+        public const SoldierType SummonedType = SoldierType.ManAtArms;
+
+        /// <summary>The volley's cone: this many degrees either side of the line to the nearest enemy.</summary>
+        private const float VolleyHalfAngle = 35f;
 
         public class Slot
         {
@@ -28,7 +47,8 @@ namespace CityBuilder.Combat
         }
 
         private readonly List<Slot> _slots = new List<Slot>();
-        private KingHero _hero;
+        private Hero _hero;
+        private float _sacrificeLeft = -1f;
         private LineRenderer _aura;
 
         public IReadOnlyList<Slot> Slots => _slots;
@@ -37,7 +57,7 @@ namespace CityBuilder.Combat
         public event Action<int> Used;
 
         /// <summary>Takes this hero's skills from the sheet: every skill whose id starts with `heroId`_.</summary>
-        public void Bind(KingHero hero, string heroId)
+        public void Bind(Hero hero, string heroId)
         {
             _hero = hero;
             _slots.Clear();
@@ -55,18 +75,44 @@ namespace CityBuilder.Combat
 
         public bool IsReady(int index) => IsOpen(index) && _slots[index].Cooldown <= 0f && _hero != null && !_hero.IsFallen;
 
-        /// <summary>Uses the skill if it is open, off cooldown and the hero stands. False otherwise.</summary>
+        /// <summary>Works by itself and has no button to press (the Captain's Бессмертие).</summary>
+        public static bool IsPassive(HeroSkillBalance skill) => skill.id == CaptainImmortal;
+
+        /// <summary>Uses the skill if it is open, off cooldown, not a passive one, and the hero stands. False otherwise -- also when there is nothing for it to act on (no enemy in reach of a shot).</summary>
         public bool Use(int index)
         {
-            if (!IsReady(index)) return false;
+            if (!IsReady(index) || IsPassive(_slots[index].Balance)) return false;
             var slot = _slots[index];
-            Apply(slot.Balance);
+            if (!Apply(slot.Balance)) return false;
             slot.Cooldown = slot.Balance.cooldownSeconds;
             Used?.Invoke(index);
             return true;
         }
 
-        private void Apply(HeroSkillBalance skill)
+        /// <summary>
+        /// The Captain's Бессмертие, asked by Hero.Fall: when it is open and recharged he stays on
+        /// his feet where he fell -- on its share of his health, unhurtable for its few seconds --
+        /// and it starts recharging. False when there is no such skill ready: he falls as usual.
+        /// </summary>
+        public bool TryCheatDeath()
+        {
+            for (var i = 0; i < _slots.Count; i++)
+            {
+                var skill = _slots[i].Balance;
+                if (skill.id != CaptainImmortal || !IsOpen(i) || _slots[i].Cooldown > 0f) continue;
+                var unit = _hero.Unit;
+                unit.Revive();
+                unit.SetCurrentHealth(Mathf.Max(1, Mathf.RoundToInt(unit.MaxHealth * skill.PowerAt(Level))));
+                unit.Shield(skill.DurationAt(Level));
+                _slots[i].Cooldown = skill.cooldownSeconds;
+                UI.RespawnFlash.Play(transform.position);
+                Used?.Invoke(i);
+                return true;
+            }
+            return false;
+        }
+
+        private bool Apply(HeroSkillBalance skill)
         {
             var unit = _hero.Unit;
             var power = skill.PowerAt(Level);
@@ -84,15 +130,108 @@ namespace CityBuilder.Combat
                     unit.Enrage(power, seconds);
                     break;
                 case KingBlessing:
+                {
                     HeroBlessing.Begin(seconds);
-                    var castle = Invasion.InvasionMode.Instance != null ? Invasion.InvasionMode.Instance.Castle : null;
+                    var castle = Castle;
                     UI.RespawnFlash.Play(castle != null ? castle.transform.position : transform.position);
+                    break;
+                }
+                case QueenShot:
+                {
+                    var target = StrongestEnemyWithin(Reach(skill));
+                    if (target == null) return false;
+                    // a boss loses a share of its health; anything else dies
+                    var damage = IsBoss(target) ? Mathf.RoundToInt(target.MaxHealth * power) : target.CurrentHealth;
+                    CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), target, Mathf.Max(1, damage), unit);
+                    break;
+                }
+                case QueenVolley:
+                {
+                    var reach = Reach(skill);
+                    var nearest = NearestEnemyWithin(reach);
+                    if (nearest == null) return false;
+                    var along = Flat(nearest.transform.position - transform.position).normalized;
+                    var damage = Mathf.Max(1, Mathf.RoundToInt(unit.AttackDamage * power));
+                    var muzzle = CombatProjectiles.MuzzleOfUnit(transform);
+                    foreach (var orc in OrcUnit.All)
+                    {
+                        if (orc == null || orc.CurrentHealth <= 0) continue;
+                        var to = Flat(orc.transform.position - transform.position);
+                        if (to.sqrMagnitude > reach * reach) continue;
+                        if (to.sqrMagnitude > 0.01f && Vector3.Angle(along, to) > VolleyHalfAngle) continue;
+                        CombatProjectiles.Fire(ProjectileKind.Arrow, muzzle, orc, damage, unit);
+                    }
+                    break;
+                }
+                case QueenSummon:
+                    if (ArmyManager.Instance == null) return false;
+                    ArmyManager.Instance.SpawnSummons(SummonedType, transform.position, Mathf.Max(1, Mathf.RoundToInt(power)),
+                        Mathf.Max(1, skill.tier), seconds);
+                    UI.RespawnFlash.Play(transform.position);
+                    break;
+                case QueenSacrifice:
+                    unit.Shield(seconds);
+                    unit.Enrage(power, seconds);
+                    _sacrificeLeft = seconds;
+                    break;
+                case CaptainMight:
+                    HeroAuras.Might(transform, Reach(skill), power, seconds);
+                    break;
+                case CaptainRescue:
+                {
+                    var castle = Castle;
+                    if (castle == null) return false;
+                    castle.Shield(seconds);
+                    UI.RespawnFlash.Play(castle.transform.position);
+                    break;
+                }
+                case CaptainSpirit:
+                    CitizenMilitia.Raise(seconds, Mathf.RoundToInt(power), Reach(skill));
                     break;
                 default:
                     Debug.LogWarning($"HeroSkills: no effect is written for the skill '{skill.id}'.");
-                    break;
+                    return false;
             }
+            return true;
         }
+
+        private static Buildings.BuildingInstance Castle => Invasion.InvasionMode.Instance != null ? Invasion.InvasionMode.Instance.Castle : null;
+
+        /// <summary>A skill's reach: its own radius, else the hero's engage radius.</summary>
+        private float Reach(HeroSkillBalance skill) =>
+            skill.radius > 0f ? skill.radius : (_hero != null && _hero.Balance != null ? _hero.Balance.engageRadius : 8f);
+
+        /// <summary>The giant, a chief, the boss: the Queen's shot takes only a share of them.</summary>
+        public static bool IsBoss(OrcUnit orc) => orc.Kind == OrcKind.Giant || orc.Kind == OrcKind.Chief || orc.Kind == OrcKind.Boss;
+
+        private OrcUnit StrongestEnemyWithin(float reach)
+        {
+            OrcUnit strongest = null;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                if (Flat(orc.transform.position - transform.position).sqrMagnitude > reach * reach) continue;
+                if (strongest == null || orc.MaxHealth > strongest.MaxHealth) strongest = orc;
+            }
+            return strongest;
+        }
+
+        private OrcUnit NearestEnemyWithin(float reach)
+        {
+            OrcUnit nearest = null;
+            var best = reach * reach;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var d = Flat(orc.transform.position - transform.position).sqrMagnitude;
+                if (d > best) continue;
+                best = d;
+                nearest = orc;
+            }
+            return nearest;
+        }
+
+        private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         private void Update()
         {
@@ -100,6 +239,12 @@ namespace CityBuilder.Combat
             for (var i = 0; i < _slots.Count; i++)
             {
                 if (_slots[i].Cooldown > 0f) _slots[i].Cooldown = Mathf.Max(0f, _slots[i].Cooldown - dt);
+            }
+            // the Queen's Жертва: when it is over she falls
+            if (_sacrificeLeft >= 0f)
+            {
+                _sacrificeLeft -= dt;
+                if (_sacrificeLeft < 0f && _hero != null && !_hero.IsFallen) _hero.Fall();
             }
             ShowAura();
         }

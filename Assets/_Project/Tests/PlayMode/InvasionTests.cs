@@ -130,12 +130,12 @@ namespace CityBuilder.Tests.PlayMode
             var health = king.Unit.MaxHealth;
             Assert.AreEqual(1, king.Level);
 
-            king.AddExperience(KingHero.XpForLevel(1) - 1);
+            king.AddExperience(Hero.XpForLevel(1) - 1);
             Assert.AreEqual(1, king.Level, "A level came before its experience was full.");
-            king.AddExperience(1 + KingHero.XpForLevel(2));
+            king.AddExperience(1 + Hero.XpForLevel(2));
             Assert.AreEqual(3, king.Level, "Experience enough for two levels gave a different number.");
             Assert.AreEqual(health + 2 * BalanceConfig.Instance.KingHealthPerLevel, king.Unit.MaxHealth, "A level did not add the sheet's health.");
-            Assert.AreEqual(KingHero.DamageAt(3), KingHero.DamageAt(1) + 2 * BalanceConfig.Instance.KingDamagePerLevel);
+            Assert.AreEqual(king.DamageAt(3), king.DamageAt(1) + 2 * BalanceConfig.Instance.KingDamagePerLevel);
         }
 
         /// <summary>As in Dota: an orc that falls near the King is his experience, whoever struck it; one far off is not.</summary>
@@ -150,7 +150,7 @@ namespace CityBuilder.Tests.PlayMode
 
             for (var t = 0f; t < 30f && orc != null && orc.CurrentHealth > 0; t += Time.deltaTime) yield return null;
             Assert.IsTrue(orc == null || orc.CurrentHealth <= 0, "The orc beside the King never fell.");
-            Assert.AreEqual(worth, king.Experience + (king.Level - 1) * KingHero.XpForLevel(1), "The orc that fell beside him was not worth its health in experience.");
+            Assert.AreEqual(worth, king.Experience + (king.Level - 1) * Hero.XpForLevel(1), "The orc that fell beside him was not worth its health in experience.");
 
             var before = king.Experience;
             var far = OrcRaidManager.Instance.SpawnOrcs(new Vector3(0f, 0f, 60f), count: 1, level: 1);
@@ -163,7 +163,7 @@ namespace CityBuilder.Tests.PlayMode
         public IEnumerator TheKing_Falls_AndComesBackAtTheCastle_KeepingHisLevel()
         {
             var king = InvasionMode.Instance.King;
-            king.AddExperience(KingHero.XpForLevel(1));
+            king.AddExperience(Hero.XpForLevel(1));
             var level = king.Level;
             king.transform.position += new Vector3(4f, 0f, 4f);
 
@@ -171,7 +171,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(king.IsFallen, "Struck to zero, the King did not fall.");
             Assert.IsNotNull(king, "The King was destroyed instead of falling.");
             Assert.IsFalse(SoldierUnit.All.Contains(king.Unit), "A fallen King is still there for the orcs to fight.");
-            Assert.AreEqual(KingHero.RespawnSecondsAt(level), king.RespawnRemaining, 0.01f);
+            Assert.AreEqual(Hero.RespawnSecondsAt(level), king.RespawnRemaining, 0.01f);
 
             Time.timeScale = 4f;
             for (var t = 0f; t < 20f && king.IsFallen; t += Time.unscaledDeltaTime) yield return null;
@@ -363,7 +363,7 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator ThePortrait_Shows_AndSelectsTheKing()
         {
-            var portrait = Object.FindAnyObjectByType<CityBuilder.UI.KingPortraitController>();
+            var portrait = Object.FindObjectsByType<CityBuilder.UI.HeroPortraitController>(FindObjectsSortMode.None).First(p => p.HeroType == SoldierType.King);
             Assert.IsNotNull(portrait, "No King's portrait in the game.");
             yield return null;
             Assert.IsNotNull(GameObject.Find("KingPortrait"), "The King's portrait is not shown in a run.");
@@ -371,7 +371,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(face.sprite, "The portrait has no face.");
 
             var king = InvasionMode.Instance.King;
-            portrait.SelectKing();
+            portrait.SelectHero();
             Assert.AreEqual(king.Unit.Group, ArmyManager.Instance.SelectedGroup, "Tapping the portrait did not select the King.");
             ArmyManager.Instance.SelectGroup(null);
 
@@ -379,7 +379,7 @@ namespace CityBuilder.Tests.PlayMode
             var camera = Camera.main;
             yield return null;
             var onScreen = camera.WorldToScreenPoint(king.transform.position + Vector3.up * 0.4f);
-            Assert.IsTrue(CityBuilder.UI.KingPortraitController.TrySelectAt(onScreen, camera), "A tap on the King did not select him.");
+            Assert.IsTrue(CityBuilder.UI.HeroPortraitController.TrySelectAt(onScreen, camera), "A tap on the King did not select him.");
             Assert.AreEqual(king.Unit.Group, ArmyManager.Instance.SelectedGroup);
             if (PlaytestCapture.Available)
             {
@@ -627,7 +627,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(Mathf.Min(unit.MaxHealth, before + heal), unit.CurrentHealth, "Лечение did not give back its share of health.");
             Assert.IsFalse(skills.Use(0), "Лечение worked again without recharging.");
 
-            while (king.Level < 15) king.AddExperience(KingHero.XpForLevel(king.Level));
+            while (king.Level < 15) king.AddExperience(Hero.XpForLevel(king.Level));
             for (var i = 1; i < 4; i++) Assert.IsTrue(skills.IsReady(i), $"Skill {i + 1} is not ready at level 15.");
 
             Assert.IsTrue(skills.Use(1));
@@ -674,6 +674,233 @@ namespace CityBuilder.Tests.PlayMode
             ArmyManager.Instance.SelectGroup(null);
             yield return null;
             Assert.IsFalse(CityBuilder.UI.HeroSkillBar.Showing, "The skills stayed after the King was let go.");
+        }
+
+        /// <summary>Raises the castle to `level` at once (paid, its construction finished on the spot).</summary>
+        private static void RaiseCastle(int level)
+        {
+            var castle = InvasionMode.Instance.Castle;
+            while (castle.Level < level)
+            {
+                ResourceManager.Instance.Add(ResourceType.Wood, 5000);
+                ResourceManager.Instance.Add(ResourceType.Stone, 5000);
+                ResourceManager.Instance.Add(InvasionRules.Money, 5000);
+                Assert.IsTrue(castle.TryUpgrade(), "The castle could not be upgraded.");
+                if (castle.Site != null) castle.Site.Finish();
+            }
+        }
+
+        private static Hero BuyHero(SoldierType type, int castleLevel)
+        {
+            RaiseCastle(castleLevel);
+            ResourceManager.Instance.Add(InvasionRules.Money, 1000);
+            Assert.AreEqual(InvasionMode.HeroOffer.Bought, InvasionMode.Instance.BuyHero(type), $"The {type} could not be bought.");
+            return InvasionMode.Instance.HeroOf(type);
+        }
+
+        /// <summary>
+        /// The Queen and the Captain are bought in the castle (the user, 2026-10-23): the Queen from
+        /// its level 2, the Captain from 3, one of each, for their price in gold.
+        /// </summary>
+        [Test]
+        public void Heroes_AreBoughtInTheCastle_ByItsLevel()
+        {
+            var mode = InvasionMode.Instance;
+            var queen = BalanceConfig.Instance.Hero("queen");
+            var captain = BalanceConfig.Instance.Hero("captain");
+            Assert.AreEqual(InvasionMode.HeroOffer.Owned, mode.CanBuy(SoldierType.King), "The King is for sale.");
+            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, mode.CanBuy(SoldierType.Queen), "The Queen is for sale at a level-1 castle.");
+
+            RaiseCastle(queen.castleLevel);
+            ResourceManager.Instance.Add(InvasionRules.Money, 1000);
+            var gold = ResourceManager.Instance.GetAmount(InvasionRules.Money);
+            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, mode.CanBuy(SoldierType.Captain), "The Captain came with the Queen's castle level.");
+            Assert.AreEqual(InvasionMode.HeroOffer.Bought, mode.BuyHero(SoldierType.Queen));
+            Assert.AreEqual(gold - queen.price, ResourceManager.Instance.GetAmount(InvasionRules.Money), "The Queen did not cost her price.");
+            var hero = mode.HeroOf(SoldierType.Queen);
+            Assert.IsNotNull(hero, "The bought Queen is not in the run.");
+            Assert.IsTrue(hero.Unit.IsRanged, "The Queen does not shoot.");
+            Assert.AreEqual(hero.MaxHealthAt(1), hero.Unit.MaxHealth, "The Queen's health is not the sheet's.");
+            Assert.AreEqual(InvasionMode.HeroOffer.Owned, mode.BuyHero(SoldierType.Queen), "A second Queen could be bought.");
+
+            RaiseCastle(captain.castleLevel);
+            var spend = ResourceManager.Instance.GetAmount(InvasionRules.Money);
+            ResourceManager.Instance.TrySpend(new[] { new ResourceAmount { type = InvasionRules.Money, amount = spend } });
+            Assert.AreEqual(InvasionMode.HeroOffer.NotEnoughMoney, mode.BuyHero(SoldierType.Captain), "The Captain came for nothing.");
+            ResourceManager.Instance.Add(InvasionRules.Money, captain.price);
+            Assert.AreEqual(InvasionMode.HeroOffer.Bought, mode.BuyHero(SoldierType.Captain));
+            Assert.AreEqual(3, mode.Heroes.Count);
+        }
+
+        /// <summary>The castle's card shows the three heroes; a tap on one the castle is too low for buys nothing (the user, 2026-10-23).</summary>
+        [UnityTest]
+        public IEnumerator TheCastleCard_ShowsTheHeroes_AndSellsThem()
+        {
+            var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            var cards = Object.FindFirstObjectByType<CityBuilder.UI.CastleHeroCards>(FindObjectsInactive.Include);
+            Assert.IsNotNull(cards, "No hero cards on the castle's card.");
+            panel.Show(InvasionMode.Instance.Castle);
+            yield return null;
+            Assert.IsNotNull(GameObject.Find("CastleHeroCards"), "The castle's card shows no heroes.");
+            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, cards.Buy(1), "The Queen's card sold her at a level-1 castle.");
+            Assert.IsNull(InvasionMode.Instance.HeroOf(SoldierType.Queen));
+            RaiseCastle(2);
+            ResourceManager.Instance.Add(InvasionRules.Money, 1000);
+            Assert.AreEqual(InvasionMode.HeroOffer.Bought, cards.Buy(1), "The Queen's card did not sell her.");
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsNotNull(GameObject.Find("QueenPortrait"), "The bought Queen has no portrait.");
+            if (PlaytestCapture.Available)
+            {
+                yield return PlaytestCapture.ShootWithUiAt("invasion-castle-heroes", 1600, 900, InvasionMode.Instance.Castle.transform.position, 18f, 52f, 0f);
+            }
+            panel.Close();
+            yield return null;
+            Assert.IsNull(GameObject.Find("CastleHeroCards"), "The hero cards stayed after the castle's card closed.");
+        }
+
+        /// <summary>Three heroes' portraits stand one under another down the right edge, none over another.</summary>
+        [UnityTest]
+        public IEnumerator TheHeroesPortraits_StackWithoutOverlapping()
+        {
+            BuyHero(SoldierType.Queen, 2);
+            BuyHero(SoldierType.Captain, 3);
+            yield return new WaitForSeconds(0.3f);
+            var rects = new[] { "KingPortrait", "QueenPortrait", "CaptainPortrait" }.Select(n =>
+            {
+                var go = GameObject.Find(n);
+                Assert.IsNotNull(go, $"{n} is not shown.");
+                var corners = new Vector3[4];
+                ((RectTransform)go.transform.Find("Portrait")).GetWorldCorners(corners);
+                return new Rect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[2].y - corners[0].y);
+            }).ToArray();
+            for (var i = 0; i < rects.Length; i++)
+            for (var j = i + 1; j < rects.Length; j++)
+                Assert.IsFalse(rects[i].Overlaps(rects[j]), $"Portrait {i + 1} lies over portrait {j + 1}.");
+            Assert.Greater(rects[0].y, rects[1].y, "The King's portrait is not on top.");
+            if (PlaytestCapture.Available)
+            {
+                ArmyManager.Instance.SelectGroup(InvasionMode.Instance.HeroOf(SoldierType.Queen).Unit.Group);
+                yield return null;
+                yield return PlaytestCapture.ShootWithUiAt("invasion-three-heroes", 1600, 900, InvasionMode.Instance.King.transform.position, 14f, 50f, 0f);
+                ArmyManager.Instance.SelectGroup(null);
+            }
+        }
+
+        /// <summary>The Queen backs off from a melee enemy that comes too close, and then shoots again (the user, 2026-10-23).</summary>
+        [UnityTest]
+        public IEnumerator TheQueen_BacksOffFromMelee()
+        {
+            InvasionMode.Instance.King.Fall();
+            var queen = BuyHero(SoldierType.Queen, 2);
+            yield return new WaitForSeconds(0.5f);
+            var at = queen.transform.position;
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(at + Vector3.right * 0.8f, 1, OrcKind.Raider);
+            orc.Toughen(30f);
+            var backedOff = false;
+            for (var t = 0f; t < 4f && !backedOff; t += Time.deltaTime)
+            {
+                backedOff = queen.Unit.IsRetreating;
+                yield return null;
+            }
+            Assert.IsTrue(backedOff, "The Queen stood still with an orc at her side.");
+            for (var t = 0f; t < 4f && queen.Unit.IsRetreating; t += Time.deltaTime) yield return null;
+            var d = Vector3.Distance(Flat(queen.transform.position), Flat(at));
+            Assert.Greater(d, 1.5f, "The Queen did not get away.");
+            if (orc != null) orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>The Queen's four skills (the user, 2026-10-23): a shot that kills, a volley over a cone, five soldiers for a while, and a sacrifice that ends in her fall.</summary>
+        [UnityTest]
+        public IEnumerator TheQueensSkills_Work()
+        {
+            InvasionMode.Instance.King.Fall();
+            var queen = BuyHero(SoldierType.Queen, 2);
+            while (queen.Level < 15) queen.AddExperience(Hero.XpForLevel(queen.Level));
+            var skills = queen.GetComponent<HeroSkills>();
+            CollectionAssert.AreEqual(new[] { HeroSkills.QueenShot, HeroSkills.QueenVolley, HeroSkills.QueenSummon, HeroSkills.QueenSacrifice },
+                skills.Slots.Select(slot => slot.Balance.id).ToArray());
+            Assert.IsFalse(skills.Use(0), "Выстрел went off with nobody to shoot.");
+
+            var front = queen.transform.position + Vector3.forward * 4f;
+            var target = OrcRaidManager.Instance.SpawnOrcOfKind(front, 3, OrcKind.Raider);
+            target.Toughen(10f);
+            Assert.IsTrue(skills.Use(0), "Выстрел did nothing with an orc in reach.");
+            for (var t = 0f; t < 3f && target != null && target.CurrentHealth > 0; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(target == null || target.CurrentHealth <= 0, "Выстрел did not kill the orc.");
+
+            // a line across her front, put exactly there (an orc spawns with a scatter)
+            var line = new[] { -1f, 0f, 1f }.Select(x =>
+            {
+                var orc = OrcRaidManager.Instance.SpawnOrcOfKind(front, 1, OrcKind.Raider);
+                var body = orc.GetComponent<CharacterController>();
+                body.enabled = false;
+                orc.transform.position = front + Vector3.right * x;
+                body.enabled = true;
+                orc.Toughen(50f);
+                return orc;
+            }).ToArray();
+            Physics.SyncTransforms();
+            var before = line.Select(o => o.CurrentHealth).ToArray();
+            Assert.IsTrue(skills.Use(1), "Залп did nothing.");
+            yield return new WaitForSeconds(1.5f);
+            for (var i = 0; i < line.Length; i++) Assert.Less(line[i].CurrentHealth, before[i], $"Orc {i + 1} in the cone was not hit by Залп.");
+            foreach (var orc in line) orc.TakeDamage(orc.MaxHealth);
+
+            Assert.IsTrue(skills.Use(2), "Призыв did nothing.");
+            var called = Object.FindObjectsByType<SummonedLifetime>(FindObjectsSortMode.None);
+            Assert.AreEqual(Mathf.RoundToInt(skills.Slots[2].Balance.PowerAt(queen.Level)), called.Length, "Призыв called the wrong number of soldiers.");
+            var level = SoldierStats.StatsAt(HeroSkills.SummonedType, skills.Slots[2].Balance.tier);
+            Assert.AreEqual(level.maxHealth, called[0].GetComponent<SoldierUnit>().MaxHealth, "The summoned soldiers are not of the sheet's level.");
+
+            Assert.IsTrue(skills.Use(3), "Жертва did nothing.");
+            var health = queen.Unit.CurrentHealth;
+            queen.Unit.TakeDamage(100);
+            Assert.AreEqual(health, queen.Unit.CurrentHealth, "Жертва let damage through.");
+            var seconds = skills.Slots[3].Balance.DurationAt(queen.Level);
+            for (var t = 0f; t < seconds + 2f && !queen.IsFallen; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(queen.IsFallen, "The Queen did not fall when her Жертва was over.");
+        }
+
+        /// <summary>The Captain's four skills (the user, 2026-10-23): allies near him strike harder, the castle cannot be hurt, the jobless people fight, and he gets up where he fell.</summary>
+        [UnityTest]
+        public IEnumerator TheCaptainsSkills_Work()
+        {
+            var captain = BuyHero(SoldierType.Captain, 3);
+            while (captain.Level < 15) captain.AddExperience(Hero.XpForLevel(captain.Level));
+            var skills = captain.GetComponent<HeroSkills>();
+            CollectionAssert.AreEqual(new[] { HeroSkills.CaptainMight, HeroSkills.CaptainRescue, HeroSkills.CaptainSpirit, HeroSkills.CaptainImmortal },
+                skills.Slots.Select(slot => slot.Balance.id).ToArray());
+            try
+            {
+                Assert.IsTrue(skills.Use(0), "Сила did nothing.");
+                Assert.Greater(HeroAuras.MightAt(captain.transform.position), 1f, "Сила does not strengthen those beside him.");
+                Assert.AreEqual(1f, HeroAuras.MightAt(captain.transform.position + Vector3.right * 60f), "Сила reaches across the map.");
+
+                Assert.IsTrue(skills.Use(1), "Спасение did nothing.");
+                var castle = InvasionMode.Instance.Castle;
+                var walls = castle.CurrentHealth;
+                castle.TryDamage(100);
+                Assert.AreEqual(walls, castle.CurrentHealth, "The castle was hurt under Спасение.");
+
+                Assert.IsTrue(skills.Use(2), "Боевой дух did nothing.");
+                yield return null;
+                var jobless = CitizenVisualsManager.Instance.AllAgents.Count(a => a != null && a.gameObject.activeInHierarchy && CitizenVisualsManager.Instance.WorkplaceOf(a) == null);
+                Assert.AreEqual(jobless, CitizenMilitia.Fighting, "Not every jobless citizen took up arms.");
+
+                Assert.IsFalse(skills.Use(3), "Бессмертие could be pressed -- it works by itself.");
+                captain.Unit.TakeDamage(captain.Unit.MaxHealth * 10);
+                Assert.IsFalse(captain.IsFallen, "Бессмертие did not keep the Captain on his feet.");
+                Assert.AreEqual(Mathf.RoundToInt(captain.Unit.MaxHealth * skills.Slots[3].Balance.PowerAt(captain.Level)), captain.Unit.CurrentHealth, 1,
+                    "The Captain did not get up on Бессмертие's share of his health.");
+                yield return new WaitForSeconds(skills.Slots[3].Balance.DurationAt(captain.Level) + 0.2f);
+                captain.Unit.TakeDamage(captain.Unit.MaxHealth * 10);
+                Assert.IsTrue(captain.IsFallen, "Бессмертие worked twice without recharging.");
+            }
+            finally
+            {
+                HeroAuras.Clear();
+                CitizenMilitia.Disband();
+            }
         }
 
         /// <summary>The fog lifts round the King and closes again behind him (the user, 2026-10-22).</summary>
@@ -931,15 +1158,15 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(stone + config.InvasionBossStone * level, resources.GetAmount(ResourceType.Stone));
             Assert.AreEqual(config.InvasionBossRespawnSeconds, jungle.BossLair.RespawnIn, 0.5f);
             Assert.Greater(king.BuffRemaining, config.InvasionBossBuffSeconds - 1f, "The King was not blessed.");
-            Assert.AreEqual(Mathf.RoundToInt(KingHero.DamageAt(king.Level) * (1f + config.InvasionBossBuffDamage)), king.Unit.AttackDamage, "The blessing did not raise his damage.");
-            Assert.AreEqual(Mathf.RoundToInt(KingHero.MaxHealthAt(king.Level) * (1f + config.InvasionBossBuffHealth)), king.Unit.MaxHealth, "The blessing did not raise his health.");
+            Assert.AreEqual(Mathf.RoundToInt(king.DamageAt(king.Level) * (1f + config.InvasionBossBuffDamage)), king.Unit.AttackDamage, "The blessing did not raise his damage.");
+            Assert.AreEqual(Mathf.RoundToInt(king.MaxHealthAt(king.Level) * (1f + config.InvasionBossBuffHealth)), king.Unit.MaxHealth, "The blessing did not raise his health.");
 
             // a blessing runs out
             king.Empower(0.1f, config.InvasionBossBuffDamage, config.InvasionBossBuffHealth);
             yield return new WaitForSeconds(0.3f);
             Assert.AreEqual(0f, king.BuffRemaining);
-            Assert.AreEqual(KingHero.DamageAt(king.Level), king.Unit.AttackDamage, "The blessing never wore off.");
-            Assert.AreEqual(KingHero.MaxHealthAt(king.Level), king.Unit.MaxHealth);
+            Assert.AreEqual(king.DamageAt(king.Level), king.Unit.AttackDamage, "The blessing never wore off.");
+            Assert.AreEqual(king.MaxHealthAt(king.Level), king.Unit.MaxHealth);
         }
 
         /// <summary>A round camp at each lane's end: its buildings at their level with their models, both gates, the garrison, and no portal to close.</summary>
@@ -1049,7 +1276,7 @@ namespace CityBuilder.Tests.PlayMode
         {
             if (!PlaytestCapture.Available) Assert.Ignore("No graphics device: run without -nographics to photograph.");
             var king = InvasionMode.Instance.King;
-            while (king.Level < 12) king.AddExperience(KingHero.XpForLevel(king.Level));
+            while (king.Level < 12) king.AddExperience(Hero.XpForLevel(king.Level));
             ArmyManager.Instance.SelectGroup(king.Unit.Group);
             king.Unit.SetCurrentHealth(king.Unit.MaxHealth / 2);
             var bar = Object.FindAnyObjectByType<CityBuilder.UI.HeroSkillBar>();

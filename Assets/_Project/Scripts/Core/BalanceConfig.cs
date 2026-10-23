@@ -12,6 +12,30 @@ namespace CityBuilder.Core
     /// multiplier) and `duration` -- each growing by its *_per_level with every hero level past the
     /// one that opened it. Which of the two a skill uses is the skill's own (HeroSkills).
     /// </summary>
+    /// <summary>
+    /// One hero of the Invasion mode (the user, 2026-10-23: the King, the Queen, the Captain of the
+    /// guard), from the economy tab's &lt;id&gt;_* keys: the level-1 fighter, what each hero level adds,
+    /// and, for the two bought in the castle, the price and the castle level that allows it. The
+    /// Queen's flee_* keys say when she backs off from a melee enemy and how far.
+    /// </summary>
+    [Serializable]
+    public class HeroBalance
+    {
+        public string id;
+        public int maxHealth;
+        public int attackDamage;
+        public float attackIntervalSeconds;
+        public float attackRange;
+        public float walkSpeed;
+        public float engageRadius;
+        public int healthPerLevel;
+        public int damagePerLevel;
+        public int price;
+        public int castleLevel = 1;
+        public float fleeRadius;
+        public float fleeDistance;
+    }
+
     [Serializable]
     public class HeroSkillBalance
     {
@@ -22,6 +46,12 @@ namespace CityBuilder.Core
         public float durationPerLevel;
         public float power;
         public float powerPerLevel;
+
+        /// <summary>Optional: the reach of a skill that has one (skill_&lt;id&gt;_radius), metres.</summary>
+        public float radius;
+
+        /// <summary>Optional: a level the skill works at (skill_&lt;id&gt;_tier) -- the Queen's summoned soldiers'.</summary>
+        public int tier;
 
         public float PowerAt(int heroLevel) => power + powerPerLevel * Mathf.Max(0, heroLevel - unlockLevel);
         public float DurationAt(int heroLevel) => durationSeconds + durationPerLevel * Mathf.Max(0, heroLevel - unlockLevel);
@@ -464,6 +494,10 @@ namespace CityBuilder.Core
         [SerializeField] private int kingRevealRadius = 9;
         [SerializeField] private float heroReturnWaitSeconds = 10f;
         [SerializeField] private List<HeroSkillBalance> heroSkills = new List<HeroSkillBalance>();
+        [SerializeField] private List<HeroBalance> heroes = new List<HeroBalance>();
+
+        /// <summary>The heroes, in the order their portraits stand: the King first, then those bought in the castle.</summary>
+        public static readonly string[] HeroIds = { "king", "queen", "captain" };
 
         // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
         [SerializeField] private int invasionHouses = 6;
@@ -720,6 +754,45 @@ namespace CityBuilder.Core
         public int KingRevealRadius => kingRevealRadius;
         public float HeroReturnWaitSeconds => heroReturnWaitSeconds;
 
+        /// <summary>A hero's row by id ("king", "queen", "captain"), or null.</summary>
+        public HeroBalance Hero(string id)
+        {
+            foreach (var hero in heroes)
+            {
+                if (hero.id == id) return hero;
+            }
+            return null;
+        }
+
+        [NonSerialized] private Dictionary<string, UnitBalance> _heroUnits;
+
+        /// <summary>
+        /// A hero as a unit row, for the SoldierUnit that does his fighting: one level only -- a
+        /// hero's levels are his own (Hero), not the Laboratory's.
+        /// </summary>
+        public UnitBalance HeroUnit(string id)
+        {
+            _heroUnits ??= new Dictionary<string, UnitBalance>();
+            if (_heroUnits.TryGetValue(id, out var unit)) return unit;
+            var hero = Hero(id);
+            if (hero == null) return KingUnit;
+            unit = new UnitBalance
+            {
+                id = id,
+                displayName = id,
+                attackRangeUnits = hero.attackRange,
+                attackRangeStructures = hero.attackRange + 1.2f,
+                engageRadius = hero.engageRadius,
+                startsUnlocked = false,
+                levels = new List<UnitLevelStats>
+                {
+                    new UnitLevelStats { maxHealth = hero.maxHealth, attackDamage = hero.attackDamage, attackIntervalSeconds = hero.attackIntervalSeconds, walkSpeed = hero.walkSpeed },
+                },
+            };
+            _heroUnits[id] = unit;
+            return unit;
+        }
+
         /// <summary>Every hero skill in the sheet, by id order.</summary>
         public IReadOnlyList<HeroSkillBalance> HeroSkills => heroSkills;
         public int InvasionHouses => invasionHouses;
@@ -829,7 +902,7 @@ namespace CityBuilder.Core
         /// <summary>
         /// The King as a unit row, built from the economy tab's king_* keys rather than read from
         /// the units tab: he is never recruited, researched or paid, so the units tab's columns
-        /// would be blanks around six numbers. His LEVELS are the hero's own (see KingHero), not
+        /// would be blanks around six numbers. His LEVELS are the hero's own (see Hero), not
         /// the Laboratory's, so the row has the one level.
         /// </summary>
         public UnitBalance KingUnit => _kingUnit ??= new UnitBalance
@@ -1058,6 +1131,9 @@ namespace CityBuilder.Core
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);
             heroReturnWaitSeconds = Read(economy, "hero_return_wait_sec", heroReturnWaitSeconds);
             heroSkills = ReadHeroSkills(economy);
+            heroes = new List<HeroBalance>();
+            foreach (var id in HeroIds) heroes.Add(ReadHero(economy, id));
+            _heroUnits = null;
             _kingUnit = null;
             invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
             invasionPeoplePerHouse = (int)Read(economy, "inv_people_per_house", invasionPeoplePerHouse);
@@ -1143,6 +1219,32 @@ namespace CityBuilder.Core
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>
+        private static HeroBalance ReadHero(Dictionary<string, float> economy, string id)
+        {
+            var k = id + "_";
+            return new HeroBalance
+            {
+                id = id,
+                maxHealth = (int)Read(economy, k + "max_health", 100f),
+                attackDamage = (int)Read(economy, k + "attack_damage", 8f),
+                attackIntervalSeconds = Read(economy, k + "attack_interval_sec", 1f),
+                attackRange = Read(economy, k + "attack_range", 1.6f),
+                walkSpeed = Read(economy, k + "walk_speed", 2.2f),
+                engageRadius = Read(economy, k + "engage_radius", 8f),
+                healthPerLevel = (int)Read(economy, k + "health_per_level", 20f),
+                damagePerLevel = (int)Read(economy, k + "damage_per_level", 2f),
+                // the King is no purchase: he has neither
+                price = (int)ReadOptional(economy, k + "price", 0f),
+                castleLevel = Mathf.Max(1, (int)ReadOptional(economy, k + "castle_level", 1f)),
+                fleeRadius = ReadOptional(economy, k + "flee_radius", 0f),
+                fleeDistance = ReadOptional(economy, k + "flee_distance", 0f),
+            };
+        }
+
+        /// <summary>A key only some rows have (a skill's radius, a hero's price): silent when absent.</summary>
+        private static float ReadOptional(Dictionary<string, float> economy, string key, float fallback) =>
+            economy.TryGetValue(key, out var value) ? value : fallback;
+
         /// <summary>The skills are found, not listed: every skill_&lt;id&gt;_level row starts one.</summary>
         private static List<HeroSkillBalance> ReadHeroSkills(Dictionary<string, float> economy)
         {
@@ -1169,6 +1271,8 @@ namespace CityBuilder.Core
                     durationPerLevel = Read(economy, k + "duration_per_level", 0f),
                     power = Read(economy, k + "power", 0f),
                     powerPerLevel = Read(economy, k + "power_per_level", 0f),
+                    radius = ReadOptional(economy, k + "radius", 0f),
+                    tier = (int)ReadOptional(economy, k + "tier", 0f),
                 });
             }
             return skills;

@@ -1,7 +1,9 @@
 """A hero's portrait for the HUD: the figure's head and shoulders, front three-quarter, on a
 transparent background. Opens the models file, renders, never saves.
 
-    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size]
+    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size] [head_z]
+
+head_z is the height (m) the camera looks at: 0.58 for the King's crown, less for a shorter hero.
 
 The HUD reads it from Assets/_Project/UI/Icons (e.g. PortraitKing.png), where every PNG is a UI sprite.
 """
@@ -15,6 +17,7 @@ from mathutils import Vector
 argv = sys.argv[sys.argv.index("--") + 1:]
 target_name, out_path = argv[0], argv[1]
 size = int(argv[2]) if len(argv) > 2 else 256
+head_z = float(argv[3]) if len(argv) > 3 else 0.58
 
 sc = bpy.context.scene
 target = bpy.data.objects[target_name]
@@ -55,7 +58,7 @@ sc.collection.objects.link(cam)
 sc.camera = cam
 # the head and the crown: about the top third of the figure, seen from the front (-y), a little
 # to the side and from a little above
-head = target.matrix_world.translation + Vector((0, 0, 0.58))
+head = target.matrix_world.translation + Vector((0, 0, head_z))
 d = Vector((math.sin(math.radians(-20)), -math.cos(math.radians(-20)), 0.25)).normalized()
 cam.location = head + d * 3.0
 cam.rotation_euler = (head - cam.location).to_track_quat('-Z', 'Y').to_euler()

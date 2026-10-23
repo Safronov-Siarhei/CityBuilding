@@ -50,11 +50,13 @@ namespace CityBuilder.UI
             if (!visible || label == null) return;
 
             label.text = hasGroup
-                ? Localization.Get(IsTheKing(army.SelectedGroup) ? "#selection_king" : "#selection_army")
+                ? Localization.Get(HeroKey(army.SelectedGroup) ?? "#selection_army")
                 : Localization.Get("#selection_citizen");
         }
 
-        private static bool IsTheKing(ArmyGroup group) => group.Type == SoldierType.King;
+        /// <summary>«Выбран король» / «Выбрана королева» / «Выбран капитан» for a hero; null for an army group.</summary>
+        private static string HeroKey(ArmyGroup group) =>
+            SoldierStats.IsHero(group.Type) ? "#selection_" + SoldierStats.SheetIdOf(group.Type) : null;
 
         /// <summary>The badge's own X. Clears whichever selection is showing -- the army group wins, matching the order the dispatcher resolves taps in.</summary>
         public void ClearSelection()

@@ -123,7 +123,7 @@ namespace CityBuilder.Combat
 
         public int CurrentHealth { get; private set; }
 
-        /// <summary>Its full health at its level -- also what striking it down is worth to the King (KingHero).</summary>
+        /// <summary>Its full health at its level -- also what striking it down is worth to the King (Hero).</summary>
         public int MaxHealth => _maxHealth;
         public int AttackDamage => _attackDamage;
 

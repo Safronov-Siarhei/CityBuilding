@@ -84,7 +84,7 @@ namespace CityBuilder.InputControl
             // 4. Otherwise the tap is plain selection: a citizen, a building card, a tree or a
             //    boulder (how much is left in it), or nothing. A building behind a tree's wide
             //    click box still wins -- the card is what the player was reaching for.
-            if (citizenSelector != null && KingPortraitController.TrySelectAt(screenPosition, citizenSelector.TapCamera)) return;
+            if (citizenSelector != null && HeroPortraitController.TrySelectAt(screenPosition, citizenSelector.TapCamera)) return;
             if (citizenSelector != null && citizenSelector.TrySelectCitizen(screenPosition)) return;
             if (citizenSelector != null && (buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)))
             {

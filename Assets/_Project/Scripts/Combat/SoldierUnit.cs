@@ -50,14 +50,14 @@ namespace CityBuilder.Combat
 
         public ArmyGroup Group { get; private set; }
 
-        /// <summary>Raised when one of this soldier's own blows kills its target -- what the King's experience is counted from (see KingHero).</summary>
+        /// <summary>Raised when one of this soldier's own blows kills its target -- what the King's experience is counted from (see Hero).</summary>
         public event Action<IDamageTarget> KilledTarget;
 
         /// <summary>Raised on every blow or shot, as it is dealt -- what a figure's strike is drawn from (FigureAnimator).</summary>
         public event Action Struck;
 
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
-        public bool IsRanged => Type == SoldierType.Archer;
+        public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Queen;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
         public int MaxHealth { get; private set; } = 1;
         public int CurrentHealth { get; private set; } = 1;
@@ -94,7 +94,20 @@ namespace CityBuilder.Combat
         }
 
         private float RageFactor => _rageLeft > 0f ? _rageFactor : 1f;
-        private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor);
+        // the Captain's Сила round him adds to every blow struck near him (HeroAuras)
+        private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor * HeroAuras.MightAt(transform.position));
+
+        private Vector3 _retreatTo;
+        private float _retreatLeft;
+
+        /// <summary>Backing off (the Queen from a melee enemy): walks there and strikes nobody until arrived or the time is up.</summary>
+        public bool IsRetreating => _retreatLeft > 0f;
+
+        public void Retreat(Vector3 to, float seconds)
+        {
+            _retreatTo = to;
+            _retreatLeft = Mathf.Max(0.1f, seconds);
+        }
         private float AttackInterval => _attackIntervalSeconds / RageFactor;
 
         /// <summary>Has an enemy in hand: one it was sent at, or one that came within its engage radius.</summary>
@@ -150,7 +163,7 @@ namespace CityBuilder.Combat
 
         /// <summary>
         /// Numbers set from outside rather than read from the sheet's level: the King's, which
-        /// grow with the hero's own level (KingHero). Damage taken carries across, as in RefreshStats.
+        /// grow with the hero's own level (Hero). Damage taken carries across, as in RefreshStats.
         /// </summary>
         public void SetHeroStats(int maxHealth, int attackDamage)
         {
@@ -201,6 +214,17 @@ namespace CityBuilder.Combat
             if (_shieldLeft > 0f) _shieldLeft -= Time.deltaTime;
             if (_rageLeft > 0f) _rageLeft -= Time.deltaTime;
             if (Group == null) return;
+
+            if (_retreatLeft > 0f)
+            {
+                _retreatLeft -= Time.deltaTime;
+                if (HorizontalDistance(_retreatTo, transform.position) <= SlotArrivalDistance) _retreatLeft = 0f;
+                else
+                {
+                    WalkTowards(_retreatTo);
+                    return;
+                }
+            }
 
             _retargetTimer -= Time.deltaTime;
             if (_target == null || !_target.IsAlive || _retargetTimer <= 0f)

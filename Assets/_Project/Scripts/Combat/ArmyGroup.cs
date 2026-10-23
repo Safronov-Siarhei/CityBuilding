@@ -34,6 +34,9 @@ namespace CityBuilder.Combat
 
         public int Id { get; }
         public SoldierType Type { get; }
+
+        /// <summary>The Queen's Призыв: soldiers for a while, in no list of the army's (ArmyManager.SpawnSummons).</summary>
+        public bool IsSummoned { get; set; }
         public IReadOnlyList<SoldierUnit> Members => _members;
         public int Count => _members.Count;
 
@@ -49,7 +52,7 @@ namespace CityBuilder.Combat
         /// <summary>Raised on membership, order and priority changes so the army panel can refresh without polling every frame.</summary>
         public event Action OnChanged;
 
-        /// <summary>Raised when the PLAYER gives this group an order (ArmyOrderInput) -- not when something orders it on its own, as the King does when guarding the base (KingHero).</summary>
+        /// <summary>Raised when the PLAYER gives this group an order (ArmyOrderInput) -- not when something orders it on its own, as the King does when guarding the base (Hero).</summary>
         public event Action PlayerOrdered;
 
         public void NotifyPlayerOrder() => PlayerOrdered?.Invoke();
