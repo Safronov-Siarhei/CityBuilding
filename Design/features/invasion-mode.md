@@ -17,7 +17,7 @@
 > beast figure turned 180° and orcs face where they walk, smooth sliding minimap, King's return
 > (camera + light + log), orc body animation (OrcBodyAnimator) and fall-and-sink death (OrcCorpse),
 > no Laboratory gate on picking a run building, mouse places the offered fence piece, plain gates
-> don't shoot (sheet), run walls ×inv_wall_health_mult and only broken when in the way, orcs kill
+> don't shoot (sheet), run walls sturdier (×4, now written straight into the invasion tab) and only broken when in the way, orcs kill
 > citizens, harder waves. Playtest 3: TIMED BUILD + UPGRADE (ConstructionSite; nothing works meanwhile;
 > hammer labels), limited cards greyed «1/1», flat harvest distance + gatherable-node rings, «Где» selects,
 > heart/shield health bars, coin popups, more island wood / less stone; building selection (BuildingFocus)
@@ -26,7 +26,7 @@
 > bar layers in a fixed render queue, Inv1 stone where the user drew it, wave orcs ×0.7 damage
 > (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`.
 > Playtest 5: yard workers drop their node claim while the yard rests (they stood idle after an
-> upgrade), killed workers are replaced (`RefillShortBuildings`), one quarry again (`inv_max_quarries` 1),
+> upgrade), killed workers are replaced (`RefillShortBuildings`), one quarry again (since 2026-10-23: two of each, `max_count`),
 > run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_per_harvest` (both yards, 2).
 > Heroes (2026-10-23): the King, let go of after an order, stands `hero_return_wait_sec` then guards
 > (`KingHero.ReturnIn`); his 4 SKILLS (`Combat/HeroSkills.cs`, rows `skill_<hero>_<skill>_*` read by
@@ -40,7 +40,14 @@
 > `InvasionMode.Heroes/HeroOf/CanBuy/BuyHero`; `UI/CastleHeroCards.cs` (built by
 > `SetupProjectPanels.BuildCastleHeroCards`), `UI/HeroPortraitController.cs` (was KingPortraitController,
 > one per hero, stacked). Models `Tools/blender/heroes2.py` -> Models/Heroes; portraits
-> `render_portrait.py ... [size] [head_z]`. Next: online leaderboard (service not chosen), more playtests.
+> `render_portrait.py ... [size] [head_z]`. Playtest 6 (2026-10-23): the WHOLE MODE'S BALANCE on the
+> sheet's `invasion` tab (see «Balance» below), 2 sawmills + 2 quarries (`max_count`), Barracks soldiers
+> hired for gold with no Laboratory and guarding the base on their own (`Invasion/InvasionGarrison.cs`,
+> `inv_soldier_guard_radius`), soldier health bars, heroes and soldiers fall as figures (`OrcCorpse.LeaveCopy`),
+> towers ×1.5 range (run `defence_attack_range_meters` 9), orcs never path through a gate when chasing
+> and break the blocker (`OrcUnit.Chase`/`BreakThrough`, `NavRoute.AreaMask`), gates turn into a fence
+> line (`BuildingPlacer.GateTurnInAFence`), fence level 2+ is stone, no army panel in a run, the quarry
+> man no longer sticks on a house corner. Next: online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),
@@ -53,6 +60,20 @@ round orc camps, jungles with monster camps between them, a boss lair. Simplifie
 (kills, waves), wood, stone, people. Score grows faster than the wave number (10→100, 20→400, 30→900);
 daily/weekly/monthly ladders; an interrupted run ends and costs points. Lose = the castle falls.
 No pause, no speed-up, no autosave, no ore veins, no sandbox raids/illness/fires in a run.
+
+## Balance (the sheet's `invasion` tab, 2026-10-23)
+Three stacked tables, each opened by a header row: `building` (buildings-tab columns + `max_count`),
+`unit` (units-tab columns), `key` (key/value/comment). A building/unit row REPLACES, for a run, the
+cells of the columns its table has (empty = empty: a level repeats the one below, a price is 0); a price
+prefix the table has (`cost_`, `upN_`, `recruit_`) makes the table the whole price. Keys replace
+economy's for the run or add run-only ones; ALL run-only keys (`inv_*`, `king_*`, `queen_*`, `captain_*`,
+`hero_*`, `mon_*`, `skill_*`) live here, not in economy -- the sandbox config gets them too (so EditMode
+tests read them), the overrides of sandbox keys stay the run's.
+`Editor/BalanceImporter.InvasionTab` → `Resources/BalanceConfigInvasion.asset`; `BalanceConfig.Instance`
+is it while `GameSessionIntent.NewGameIsInvasion || InvasionMode.IsActive` (`BalanceConfig.Run`/`.Sandbox`
+for both). `InvasionMode.Awake` swaps the placer's catalogue for COPIES (`ForRun`: Instantiate +
+`BuildingData.ApplyBalance(run row)`), so building numbers need no SetupProject run. Sheet gid 1941808734;
+`BalanceSheetSettings.invasionCsvUrl` (empty until the tab is published as CSV).
 
 ## Code
 `Scripts/Invasion/InvasionMode.cs` (turns sandbox systems off, places castle, towers at the
@@ -85,7 +106,7 @@ built in `SetupProjectMainMenu.BuildInvasionPanel`);
 `UI/MinimapAttackAlerts.cs` (the blinking «!», from `InvasionWaves.TryLaneFront`),
 `UI/ResourceGainPopups.cs` («+N», on `CitizenVisualsManager.Delivered`; every mode),
 `UI/MoveOrderMarker.ShowFlagFor` (army orders plant the citizens' flag), `OrcUnit.Toughen`/health bar
-(`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit`/`LimitOf` (one sawmill, one quarry; the card greys with «1/1»),
+(`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit`/`LimitOf` (`BuildingData.maxCount` from the invasion tab: two sawmills, two quarries; the card greys with «2/2»),
 `Buildings/ConstructionSite.cs` + `UI/ConstructionLabels.cs` (timed build/upgrade, `InvasionRules.BuildSeconds`);
 `Combat/KingHero.cs` (XP = health of any enemy falling within `king_xp_radius`, levels, respawn at the
 castle, `Guarding`: attacks orcs within `king_guard_radius` of the castle until a player's order —
@@ -112,10 +133,16 @@ a camp per spot with its beasts, monsters hold their ground, a wiped camp return
 shrine heals, the boss pays and blesses; round camps: buildings + garrison + no portal, walls block
 and the waves get out, a fallen spawner sends no more of its kind; EditMode `InvasionCampLayoutTests`.
 Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_AndShowTheirHealth`,
-`ARun_HasOneSawmillAndOneQuarry`. Score: PlayMode `TheCastleFalling_EndsTheRun_AndWritesItsPoints`; EditMode `InvasionRecordsTests`
+`ARun_HasTwoSawmillsAndTwoQuarries`, `QuarryMen_GetToTheirRocks_PastTheHouses`, `TheRun_PlaysOnTheInvasionTab`, `BarracksSoldiers_AreForGold_AndGuardTheBaseOnTheirOwn`, `AFallenHero_GoesDown_AsAFigure`, `AnUpgradedFence_IsStone`, `AnOrc_DoesNotWalkInAtAGate_ItBreaksIn`; EditMode `GateTurnTests`. Score: PlayMode `TheCastleFalling_EndsTheRun_AndWritesItsPoints`; EditMode `InvasionRecordsTests`
 (waves², best 5 a day, week from Monday, month).
 
 ## Traps
+- A run's BuildingData are runtime COPIES (`InvasionMode.ForRun`), not the assets: compare by
+  `buildingName`, never by reference to an asset. A component attached at generation (DefensiveBuilding
+  only where a sandbox level has `defense > 0`, ProductionBuilding only with workers) is not added by a
+  run row -- giving defence in the invasion tab to a building that has none in the sandbox does nothing.
+- `BalanceConfig.Instance` is the run's config from the menu's «В бой» on: a PlayMode test that sets
+  `NewGameIsInvasion` and never loads the scene leaves every later Instance read on the run's numbers.
 - Photos with UI (`PlaytestCapture.ShootWithUi*`) turn the HUD canvas camera-space: the parchment fog draws
   OVER the HUD in them (top-right King portrait hidden). Not so in the game (overlay canvas).
 - A run building placed through `BuildingPlacer.PlaceAt` gets a `ConstructionSite`; one put down by
@@ -125,7 +152,10 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
 - Every unit model (King, orcs, beasts) is modelled facing Blender -y and must be turned 180° about Y
   when put under its root, or it walks backwards.
 - In a run `OrcUnit.AcquireTarget` skips `InvasionRules.IsBarrier`; walls are only hit through
-  `AttackWhateverIsBlockingTheWay`. A test expecting an orc to target a fence will fail by design.
+  `AttackWhateverIsBlockingTheWay` / `BreakThrough`. A test expecting an orc to target a fence will fail by design.
+- An orc fights a soldier or a hero before any building: a test of orcs vs buildings or walls must
+  put the King away (`King.gameObject.SetActive(false)`), or he comes out and the orc fights him
+  (checked 2026-10-23: with him away, orcs hit every run building within inv_orc_building_radius).
 - A killed citizen goes through `CitizenVisualsManager.KillAgent` (that agent + one population), not
   `KillCitizens`, which would remove some other agent.
 - The King obeys orders ONLY while selected (user, 2026-10-22): `KingHero.OnSelectionChanged` calls

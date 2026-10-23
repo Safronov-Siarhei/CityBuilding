@@ -105,6 +105,20 @@ namespace CityBuilder.Buildings
             Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
         public event Action<BuildingData> OnBuildingPlaced;
 
+        /// <summary>
+        /// Swaps every building the placer offers -- and the Town Hall -- for `replace`'s answer.
+        /// An Invasion run does it in its Awake, before anything reads the list, so the run's own
+        /// numbers (the sheet's invasion tab) are what gets built and shown.
+        /// </summary>
+        public void ReplaceCatalog(Func<BuildingData, BuildingData> replace)
+        {
+            for (var i = 0; i < availableBuildings.Count; i++)
+            {
+                if (availableBuildings[i] != null) availableBuildings[i] = replace(availableBuildings[i]);
+            }
+            if (mandatoryFirstBuilding != null) mandatoryFirstBuilding = replace(mandatoryFirstBuilding);
+        }
+
         private void Start()
         {
             if (IsPlacingMandatoryBuilding)
@@ -426,13 +440,42 @@ namespace CityBuilder.Buildings
             var roads = RoadNetwork.Instance;
             if (roads == null) return;
             cell = BuildingData.GatewayCell(cell, RotatedFootprint(_selectedBuilding.footprintSize));
-            if (!roads.IsRoad(cell)) return;
+            if (!roads.IsRoad(cell))
+            {
+                TurnAGateIntoTheFence(cell);
+                return;
+            }
 
             var alongX = roads.IsRoad(cell + Vector2Int.left) || roads.IsRoad(cell + Vector2Int.right);
             var alongZ = roads.IsRoad(cell + Vector2Int.down) || roads.IsRoad(cell + Vector2Int.up);
             if (alongX == alongZ) return; // a lone cell or a crossing: no one answer
             var steps = alongX ? 0 : 1;
             if (_rotationSteps % 2 != steps) _rotationSteps = steps;
+        }
+
+        /// <summary>
+        /// Off the road, a gate held in a fence's line takes the line's way, as a fence piece joins
+        /// its neighbours (the user, 2026-10-23): a fence beside it east or west wants the wall
+        /// along X (a quarter turn), north or south none. A fortified gate's ends are a cell
+        /// further out, so it looks one cell past them.
+        /// </summary>
+        private void TurnAGateIntoTheFence(Vector2Int gateway)
+        {
+            var fences = FenceNetwork.Instance;
+            if (fences == null) return;
+            var steps = GateTurnInAFence(gateway, _selectedBuilding.footprintSize, fences.Connects);
+            if (steps.HasValue && _rotationSteps % 2 != steps.Value) _rotationSteps = steps.Value;
+        }
+
+        /// <summary>The quarter turns (0 or 1) a gate of this footprint wants with its passage at `gateway`, or null with no fence line to follow (a lone cell, a corner).</summary>
+        public static int? GateTurnInAFence(Vector2Int gateway, Vector2Int footprint, Func<Vector2Int, bool> isFence)
+        {
+            var reach = Mathf.Max(footprint.x, footprint.y) / 2 + 1;
+            bool Fence(Vector2Int direction) => isFence(gateway + direction * reach) || (reach > 1 && isFence(gateway + direction));
+            var alongX = Fence(Vector2Int.left) || Fence(Vector2Int.right);
+            var alongZ = Fence(Vector2Int.down) || Fence(Vector2Int.up);
+            if (alongX == alongZ) return null;
+            return alongX ? 1 : 0;
         }
 
         private void SetStatus(bool canConfirm, string status)

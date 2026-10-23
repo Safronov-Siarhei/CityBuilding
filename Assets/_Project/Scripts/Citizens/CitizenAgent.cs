@@ -39,6 +39,10 @@ namespace CityBuilder.Citizens
         // leaving the agent stuck indefinitely.
         private const float StuckTimeoutSeconds = 1.5f;
         private const float StuckRetryPauseSeconds = 1f;
+        /// <summary>How far from a destination off the NavMesh (inside a building's carve) the route looks for the nearest point on it.</summary>
+        private const float TargetSnapMeters = 3f;
+        /// <summary>Stuck this close to a route corner that is not the last, the corner counts as reached (see Update).</summary>
+        private const float CornerGiveUpMeters = 0.6f;
         private const float ProgressEpsilon = 0.02f;
         // A route whose far end is closer than this to where the agent already stands isn't a
         // route -- see BuildRoute. Comfortably above ArrivalThreshold (0.05), so anything accepted
@@ -346,6 +350,18 @@ namespace CityBuilder.Citizens
                     _stuckTimer += Time.deltaTime;
                     if (_stuckTimer >= StuckTimeoutSeconds)
                     {
+                        // Pinned against a building's corner a hand's breadth short of a route
+                        // corner (its collider reaches past its NavMesh carve): that corner is
+                        // reached, walk on to the next. Retrying the same leg from here met the
+                        // same corner for ever -- a quarry man stood at a house all run long
+                        // while the bar over his rock filled and emptied (the user, 2026-10-23).
+                        if (_routeIndex < _route.Length - 1 && distance < CornerGiveUpMeters)
+                        {
+                            _routeIndex++;
+                            _target = _route[_routeIndex];
+                            ResetStuckTracking();
+                            return;
+                        }
                         OnStuck();
                         return;
                     }
@@ -659,6 +675,8 @@ namespace CityBuilder.Citizens
         {
             var node = _mode == Mode.Gathering ? _gatherNode : (_headingToNode ? _workNode : null);
             if (node == null || _mode == Mode.Wandering || _mode == Mode.ManualMove) return;
+            // a breather after getting stuck on the way is not work at the rock
+            if (_resumingAfterStuck) return;
 
             node.ReportHarvestProgress(1f - Mathf.Clamp01(_pauseTimer / _pauseDuration));
         }
@@ -729,6 +747,12 @@ namespace CityBuilder.Citizens
         {
             _sharedPath ??= new NavMeshPath();
             RouteVersion++;
+
+            // A building's middle is inside its own carve, and a path to a point off the NavMesh
+            // fails outright -- which fell through to the straight line below, and a quarry woman
+            // walking home that way stood against a house in between for the rest of the run
+            // (Invasion, 2026-10-23). Aim at the nearest point that IS on the mesh, as NavRoute does.
+            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, NavMesh.AllAreas)) to = onMesh.position;
 
             if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
             {

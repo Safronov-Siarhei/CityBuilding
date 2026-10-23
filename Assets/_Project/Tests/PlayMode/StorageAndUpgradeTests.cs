@@ -315,7 +315,7 @@ namespace CityBuilder.Tests.PlayMode
 
         /// <summary>
         /// An upgrade the player can SEE on a building with no level models of its own (the
-        /// fence): upgraded, it is pixel-for-pixel the fence that was not, and the only trace of
+        /// Dock; the fence has been stone above level 1 since 2026-10-23): upgraded, it is pixel-for-pixel the fence that was not, and the only trace of
         /// the resources is a number on a card. The disc is its whole feedback loop, so it is worth
         /// a test that it appears at all, that it appears nowhere at level 1, and that it never
         /// becomes something the player can tap by accident.
@@ -325,10 +325,10 @@ namespace CityBuilder.Tests.PlayMode
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var house = Place(PlaytestWorld.Building("Fence"));
+            var house = Place(PlaytestWorld.Building("Dock"));
             Assert.IsNull(LevelMarker(house), "A freshly placed building is already wearing a level marker -- level 1 is not an achievement.");
 
-            Assert.IsTrue(house.TryUpgrade(), "The Fence refused to upgrade with infinite resources.");
+            Assert.IsTrue(house.TryUpgrade(), "The Dock refused to upgrade with infinite resources.");
             var marker = LevelMarker(house);
             Assert.IsNotNull(marker, "An upgraded building shows nothing at all: the player has no way to tell it apart from one they never paid for.");
             Assert.IsTrue(marker.activeInHierarchy, "The level marker exists but is switched off.");
@@ -350,8 +350,8 @@ namespace CityBuilder.Tests.PlayMode
         {
             ResourceManager.Instance.SetInfiniteResources(true);
 
-            var house = Place(PlaytestWorld.Building("Fence"));
-            Assert.IsTrue(house.TryUpgrade(), "The Fence refused to upgrade with infinite resources.");
+            var house = Place(PlaytestWorld.Building("Dock"));
+            Assert.IsTrue(house.TryUpgrade(), "The Dock refused to upgrade with infinite resources.");
 
             var marker = LevelMarker(house);
             var atLevelTwo = marker.transform.localScale.x;
@@ -359,7 +359,7 @@ namespace CityBuilder.Tests.PlayMode
 
             while (house.Level < BuildingInstance.MaxLevel)
             {
-                Assert.IsTrue(house.TryUpgrade(), $"The Fence refused to upgrade past level {house.Level} with infinite resources.");
+                Assert.IsTrue(house.TryUpgrade(), $"The Dock refused to upgrade past level {house.Level} with infinite resources.");
             }
 
             Assert.AreEqual(BuildingInstance.MaxLevel, house.Level);

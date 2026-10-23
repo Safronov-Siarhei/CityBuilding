@@ -115,6 +115,8 @@ namespace CityBuilder.Combat
         /// </remarks>
         public static bool IsUnlocked(SoldierType type)
         {
+            // nothing in a run waits on the Laboratory (InvasionRules)
+            if (Invasion.InvasionRules.Active) return true;
             var research = Research.ResearchManager.Instance;
             return research == null || research.IsUnitUnlocked(type);
         }

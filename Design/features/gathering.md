@@ -51,6 +51,14 @@ EditMode `ResourceNodeYieldTests`, `HarvestRadiusOverlayTests`.
 - Walking home aimed at the building's middle (inside its walls) → partial path → retried forever; a
   long step (sped-up game) overshot 5 cm route corners. Home now counts from anywhere against the walls,
   a tree from arm's reach, and no step passes the point walked to.
+- A worker pinned against a building's corner a hand short of a route corner (a house's collider
+  reaches past its NavMesh carve) retried the same leg for ever while the bar over his rock filled
+  and emptied (Invasion, 2026-10-23). Now stuck within `CornerGiveUpMeters` of a corner that is not the
+  last he walks on to the next; the bar is not drawn during a stuck breather. Second cause, same day:
+  the way HOME aimed at the yard's middle, inside its carve -- `CalculatePath` failed and the worker
+  walked a straight line into a house for good. `CitizenAgent.BuildRoute` now snaps the target onto
+  the NavMesh (3 m) first, as NavRoute does. PlayMode `QuarryMen_GetToTheirRocks_PastTheHouses`
+  (counts only trips after the first 50 s: the stuck man had made one or two before).
 - EditMode never calls `OnEnable` — `ResourceNode.All` is empty there; reach tests live in PlayMode.
 
 ## Open

@@ -125,6 +125,7 @@ namespace CityBuilder.Invasion
         public InvasionWaves Waves { get; private set; }
         public InvasionJungle Jungle { get; private set; }
         public InvasionScore Score { get; private set; }
+        public InvasionGarrison Garrison { get; private set; }
         public List<InvasionOrcCamp> OrcCamps { get; } = new List<InvasionOrcCamp>();
         public List<BuildingInstance> Houses { get; } = new List<BuildingInstance>();
         public BuildingInstance Castle { get; private set; }
@@ -137,6 +138,10 @@ namespace CityBuilder.Invasion
             HeroAuras.Clear();
             GameSessionIntent.NewGameIsInvasion = false;
             if (!_active) return;
+
+            // the run's own numbers (the sheet's invasion tab): what is built and shown is a copy
+            // of each building with them laid over it -- before anything reads the menu
+            if (buildingPlacer != null) buildingPlacer.ReplaceCatalog(ForRun);
 
             foreach (var behaviour in notInARun)
             {
@@ -235,6 +240,9 @@ namespace CityBuilder.Invasion
             People.Settle(Houses);
 
             King = SpawnHero(SoldierType.King);
+            // the Barracks' soldiers take no orders in a run: they guard the base (the user, 2026-10-23)
+            Garrison = gameObject.AddComponent<InvasionGarrison>();
+            Garrison.Begin(Castle != null ? Castle.transform.position : Vector3.zero);
 
             // the three round orc camps at the lanes' far ends (the map's CampSpots, not among
             // SpotsOf: the sandbox's camps read them too), their gates facing the castle
@@ -260,6 +268,22 @@ namespace CityBuilder.Invasion
             Jungle.Begin(map.SpotsOf("monsters"), map.SpotsOf("boss"), map.SpotsOf("shrine"), shrineModel);
 
             RunStarted = true;
+        }
+
+        private readonly Dictionary<BuildingData, BuildingData> _runCopies = new Dictionary<BuildingData, BuildingData>();
+
+        /// <summary>A building as a run has it: a copy with the run config's row for it (BalanceConfig.Run), or itself when the run has none.</summary>
+        private BuildingData ForRun(BuildingData data)
+        {
+            if (data == null) return null;
+            if (_runCopies.TryGetValue(data, out var copy)) return copy;
+            var row = BalanceConfig.Run.Building(data.buildingName);
+            if (row == null) return data;
+            copy = Instantiate(data);
+            copy.name = data.name;
+            copy.ApplyBalance(row);
+            _runCopies[data] = copy;
+            return copy;
         }
 
         private BuildingData Find(string buildingName)

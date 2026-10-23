@@ -46,6 +46,8 @@ TABS = {
     "buildings": {"gid": "766628053", "key": ["id"]},
     "recipes": {"gid": "208452028", "key": ["building", "recipe_id"]},
     "localization": {"gid": "304072291", "key": ["key"]},
+    # three tables one under another (building / unit / key headers): compared by first cell, cell by cell
+    "invasion": {"gid": "1941808734", "stacked": True},
 }
 
 # Differences that are correct and permanent. Reported as a note, not as a failure.
@@ -120,7 +122,44 @@ def index(table, header, key_columns):
     return out
 
 
+def compare_stacked(name, spec):
+    """The invasion tab: every row by its first cell (an id, a key or a table's header), its cells in order."""
+    sheet, repo = rows(fetch(spec["gid"])), read_repo(name)
+    if not sheet or not repo:
+        print("%-13s COULD NOT READ" % name)
+        return 1
+
+    def by_first(table):
+        out = {}
+        for row in table:
+            if not row or not row[0].strip() or is_note_row(row):
+                continue
+            out[row[0].strip()] = row
+        return out
+
+    s_rows, r_rows = by_first(sheet), by_first(repo)
+    problems = []
+    for k in sorted(set(s_rows) | set(r_rows)):
+        if k not in s_rows:
+            problems.append("  MISSING IN SHEET: %s" % k)
+            continue
+        if k not in r_rows:
+            problems.append("  MISSING IN REPO:  %s" % k)
+            continue
+        a, b = s_rows[k], r_rows[k]
+        for i in range(max(len(a), len(b))):
+            x, y = (a[i] if i < len(a) else ""), (b[i] if i < len(b) else "")
+            if not same(x, y):
+                problems.append("  DIFF %s [col %d]: sheet=%r repo=%r" % (k, i + 1, x, y))
+    print("%-13s %d rows compared, %d differences" % (name, len(set(s_rows) | set(r_rows)), len(problems)))
+    for line in problems:
+        print(line)
+    return len(problems)
+
+
 def compare(name, spec):
+    if spec.get("stacked"):
+        return compare_stacked(name, spec)
     sheet = rows(fetch(spec["gid"]))
     repo = read_repo(name)
     if not sheet or not repo:

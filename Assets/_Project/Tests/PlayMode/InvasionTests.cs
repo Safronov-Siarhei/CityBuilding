@@ -342,11 +342,11 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var o in waves.WaveOrcs.ToList()) o.TakeDamage(o.MaxHealth);
         }
 
-        /// <summary>A run has one sawmill and one quarry at most (the user, 2026-10-22; two quarries were tried and taken back): past that the card greys and the placer refuses.</summary>
+        /// <summary>A run has two sawmills and two quarries at most (the user, 2026-10-23; the invasion tab's max_count): past that the card greys and the placer refuses.</summary>
         [Test]
-        public void ARun_HasOneSawmillAndOneQuarry()
+        public void ARun_HasTwoSawmillsAndTwoQuarries()
         {
-            foreach (var (id, max) in new[] { ("Sawmill", 1), ("Quarry", 1) })
+            foreach (var (id, max) in new[] { ("Sawmill", 2), ("Quarry", 2) })
             {
                 var data = PlaytestWorld.Building(id);
                 Assert.AreEqual(max, InvasionRules.LimitOf(data), $"A run's limit of {id} is not the sheet's.");
@@ -496,7 +496,8 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.AreEqual(0, gateData.LevelStats(level).defense, $"A plain gate shoots at level {level}.");
 
             var fence = PlaytestWorld.Place(fenceData, PlaytestWorld.FindFreeAreaNearTheMiddle(Vector2Int.one));
-            Assert.AreEqual(Mathf.RoundToInt(fenceData.LevelStats(1).maxHealth * config.InvasionWallHealthMultiplier), fence.MaxHealth, "A run's fence is no sturdier than the sandbox's.");
+            Assert.AreEqual(BalanceConfig.Run.Building("Fence").levels[0].maxHealth, fence.MaxHealth, "A run's fence does not have the invasion tab's health.");
+            Assert.Greater(fence.MaxHealth, BalanceConfig.Sandbox.Building("Fence").levels[0].maxHealth, "A run's fence is no sturdier than the sandbox's.");
 
             // an orc right beside the fence (and nothing else close) does not turn on it
             var at = fence.transform.position + Vector3.right * 1.2f;
@@ -580,6 +581,170 @@ namespace CityBuilder.Tests.PlayMode
             {
                 CitizenVisualsManager.Delivered -= count;
             }
+        }
+
+        /// <summary>
+        /// Every man of a quarry by the island's east rocks gets to his rock (the user, 2026-10-23:
+        /// the bar over a rock filled and emptied and no stone came -- its man was pinned against a
+        /// house's corner on the way and retried the same leg for ever).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator QuarryMen_GetToTheirRocks_PastTheHouses()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var rock = ResourceNode.All.Where(n => n != null && n.ResourceType == ResourceType.Stone && (n.transform.position - castle).magnitude < 40f)
+                .OrderByDescending(n => n.transform.position.x).First();
+            var spot = rock.transform.position + (castle - rock.transform.position).normalized * 7f;
+            var data = PlaytestWorld.Building("Quarry");
+            var quarry = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(spot), data.footprintSize));
+            var yard = quarry.GetComponent<ProductionBuilding>();
+            yard.SetAssignedWorkers(yard.MaxWorkers);
+            var visuals = CitizenVisualsManager.Instance;
+            var reached = new System.Collections.Generic.HashSet<CitizenAgent>();
+            Time.timeScale = 3f;
+            // the stuck man got to his rock a time or two before the house's corner caught him: it
+            // is the later trips that tell
+            for (var t = 0f; t < 100f; t += Time.deltaTime)
+            {
+                foreach (var man in visuals.AllAgents)
+                {
+                    if (t < 50f || man == null || visuals.WorkplaceOf(man) != yard || man.WorkNode == null) continue;
+                    if (Vector3.Distance(Flat(man.transform.position), Flat(man.WorkNode.transform.position)) < 1f) reached.Add(man);
+                }
+                yield return null;
+            }
+            Time.timeScale = 1f;
+            Assert.AreEqual(yard.MaxWorkers, reached.Count, "A quarry man never got to his rock.");
+        }
+
+        /// <summary>
+        /// A run plays on the sheet's invasion tab (the user, 2026-10-23): its own config, its own
+        /// copies of the buildings, and the numbers the user asked for -- towers shoot 1.5 times
+        /// further than the sandbox's, two sawmills and two quarries.
+        /// </summary>
+        [Test]
+        public void TheRun_PlaysOnTheInvasionTab()
+        {
+            Assert.AreSame(BalanceConfig.Run, BalanceConfig.Instance, "A run reads the sandbox's numbers.");
+            Assert.AreNotSame(BalanceConfig.Sandbox, BalanceConfig.Run, "There is no run config apart from the sandbox's.");
+            Assert.AreEqual(BalanceConfig.Sandbox.DefenceAttackRangeMeters * 1.5f, BalanceConfig.Run.DefenceAttackRangeMeters, 0.01f, "A run's towers do not shoot 1.5 times further.");
+
+            var tower = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).First(b => b != null && b.Data != null && b.Data.buildingName == "Tower");
+            Assert.AreEqual(BalanceConfig.Run.DefenceAttackRangeMeters, DefensiveBuilding.RangeOf(tower), 0.01f, "A run's tower does not shoot as far as the invasion tab says.");
+            Assert.AreEqual(BalanceConfig.Run.Building("Tower").levels[0].maxHealth, tower.MaxHealth, "A run's tower does not have the invasion tab's health.");
+            var quarry = PlaytestWorld.Building("Quarry");
+            Assert.AreEqual(2, quarry.maxCount);
+            Assert.AreEqual(BalanceConfig.Run.Building("Quarry").cost.Sum(c => c.amount), quarry.cost.Sum(c => c.amount), "The menu's quarry does not cost what the invasion tab says.");
+        }
+
+        /// <summary>
+        /// The Barracks in a run (the user, 2026-10-23): every soldier is hired for gold alone with no
+        /// Laboratory; nobody commands them -- they stand before the castle and go for orcs near it --
+        /// and a hurt one shows his health.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator BarracksSoldiers_AreForGold_AndGuardTheBaseOnTheirOwn()
+        {
+            var mode = InvasionMode.Instance;
+            var castle = mode.Castle.transform.position;
+            var resources = ResourceManager.Instance;
+            resources.SetAmount(InvasionRules.Money, 1000);
+            var barracks = PlaytestWorld.Place(PlaytestWorld.Building("Barracks"), PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(castle + new Vector3(-8f, 0f, 4f)), new Vector2Int(3, 3)));
+            var army = ArmyManager.Instance;
+            foreach (var type in new[] { SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms })
+            {
+                Assert.IsNull(army.DescribeRecruitBlocker(type), $"A run's Barracks will not hire a {type}: {army.DescribeRecruitBlocker(type)}");
+                CollectionAssert.AreEqual(new[] { ResourceType.Coins }, SoldierStats.RecruitCost(type).Where(c => c.amount > 0).Select(c => c.type).ToArray(), $"A run's {type} costs more than gold.");
+            }
+            Assert.IsTrue(army.TryRecruit(SoldierType.Spearman, barracks.transform.position), "The spearman was not hired.");
+            var spearman = SoldierUnit.All.First(u => u != null && u.Type == SoldierType.Spearman);
+            var post = mode.Garrison.PostOf(SoldierType.Spearman);
+            for (var t = 0f; t < 15f && Vector3.Distance(Flat(spearman.transform.position), Flat(post)) > 2f; t += Time.deltaTime) yield return null;
+            Assert.Less(Vector3.Distance(Flat(spearman.Group.HoldPosition), Flat(post)), 0.1f, "The hired spearman's group was not sent to stand before the castle.");
+            Assert.Less(Vector3.Distance(Flat(spearman.transform.position), Flat(post)), 5f, "The hired spearman did not go to stand before the castle.");
+
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(castle + new Vector3(12f, 0f, 0f), 1, OrcKind.Raider);
+            orc.Toughen(100f);
+            for (var t = 0f; t < 2f && spearman.Group.AttackTarget != (IDamageTarget)orc; t += Time.deltaTime) yield return null;
+            Assert.AreSame(orc, spearman.Group.AttackTarget, "The soldiers did not go for an orc near the castle.");
+
+            spearman.TakeDamage(1);
+            Assert.IsNotNull(spearman.HealthBar, "A hurt soldier shows no health over his head.");
+            Assert.IsTrue(spearman.HealthBar.gameObject.activeSelf);
+            orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>A hero who falls goes down as a figure, as an orc does, and is gone until he rises (the user, 2026-10-23: the Queen stood and vanished).</summary>
+        [UnityTest]
+        public IEnumerator AFallenHero_GoesDown_AsAFigure()
+        {
+            var king = InvasionMode.Instance.King;
+            var corpses = Object.FindObjectsByType<OrcCorpse>(FindObjectsSortMode.None).Length;
+            king.Unit.TakeDamage(king.Unit.MaxHealth);
+            yield return null;
+            Assert.IsTrue(king.IsFallen);
+            var fallen = Object.FindObjectsByType<OrcCorpse>(FindObjectsSortMode.None);
+            Assert.Greater(fallen.Length, corpses, "The King fell with no figure going down.");
+            Assert.IsTrue(fallen.Any(c => c.GetComponentsInChildren<Renderer>().Any(r => r.enabled)), "The King's falling figure is not drawn.");
+            Assert.IsFalse(king.GetComponentsInChildren<Renderer>().Any(r => r.enabled), "The fallen King himself still stands there.");
+        }
+
+        /// <summary>A fence upgraded past level 1 is a stone fence, not the wooden one with a disc over it (the user, 2026-10-23).</summary>
+        [Test]
+        public void AnUpgradedFence_IsStone()
+        {
+            var fence = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), PlaytestWorld.FindFreeAreaNearTheMiddle(Vector2Int.one));
+            fence.SetLevel(2);
+            var shown = fence.GetComponentsInChildren<Renderer>().Where(r => r.enabled && r.gameObject.activeInHierarchy).ToList();
+            Assert.IsTrue(shown.Any(r => r.transform.parent != null && r.transform.parent.name.StartsWith("Stone")), "A level 2 fence does not show the stone pieces.");
+            Assert.IsFalse(shown.Any(r => r.transform.parent != null && r.transform.parent.name == "Straight"), "A level 2 fence still shows the wooden one.");
+            Assert.IsFalse(fence.transform.Cast<Transform>().Any(c => c.name == "LevelMarker" && c.gameObject.activeSelf), "A stone fence still has the level disc over it.");
+        }
+
+        /// <summary>
+        /// An orc after someone inside a fence does not walk in at its gate (the user, 2026-10-23):
+        /// for an orc a gate is a wall here as on the way to the castle, and it breaks in instead.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AnOrc_DoesNotWalkInAtAGate_ItBreaksIn()
+        {
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            // a ring two cells out, so an orc at it cannot reach over to whoever stands in the middle
+            var centre = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-10f, 0f, -4f)) - 2 * Vector2Int.one, new Vector2Int(5, 5)) + 2 * Vector2Int.one;
+            var ring = new System.Collections.Generic.List<BuildingInstance>();
+            for (var dx = -2; dx <= 2; dx++)
+            for (var dz = -2; dz <= 2; dz++)
+            {
+                if (Mathf.Abs(dx) < 2 && Mathf.Abs(dz) < 2) continue;
+                var id = dx == 2 && dz == 0 ? "Gate" : "Fence";
+                ring.Add(PlaytestWorld.Place(PlaytestWorld.Building(id), centre + new Vector2Int(dx, dz), id == "Gate" ? 1 : 0));
+            }
+            yield return new WaitForSeconds(2f);   // the gate's area and the carves land a moment later
+            var inside = grid.GetFootprintCenterWorld(centre, Vector2Int.one);
+            var outside = inside + Vector3.right * 5f;
+            Assert.IsTrue(NavMesh.SamplePosition(outside, out var start, 2f, NavAreas.WithoutGates));
+            var route = new NavRoute { AreaMask = NavAreas.WithoutGates };
+            route.SetDestination(start.position, inside, straightLineFallback: false);
+            Assert.IsTrue(route.Blocked, "An orc's route walks in at the gate.");
+
+            // an archer inside shoots it; it comes for him (the King, who would come out to it, is away)
+            InvasionMode.Instance.King.gameObject.SetActive(false);
+            ArmyManager.Instance.SpawnSummons(SoldierType.Archer, inside, 1, 1, 60f);
+            var archer = SoldierUnit.All.Where(u => u != null && u.Type == SoldierType.Archer).OrderBy(u => (u.transform.position - inside).sqrMagnitude).First();
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(start.position, 1, OrcKind.Raider);
+            orc.Toughen(1000f);
+            var health = ring.Sum(b => b.CurrentHealth);
+            var walkedIn = false;
+            for (var t = 0f; t < 20f && ring.Sum(b => b != null ? b.CurrentHealth : 0) == health; t += Time.deltaTime)
+            {
+                if (Vector3.Distance(Flat(orc.transform.position), Flat(inside)) < 1.5f) walkedIn = true;
+                yield return null;
+            }
+            Assert.IsFalse(walkedIn, "The orc walked in at the gate.");
+            Assert.Less(ring.Sum(b => b != null ? b.CurrentHealth : 0), health, "The orc did not break in -- it stood outside.");
+            orc.TakeDamage(orc.MaxHealth);
+            if (archer != null) archer.TakeDamage(archer.MaxHealth);
         }
 
         /// <summary>

@@ -55,13 +55,10 @@ namespace CityBuilder.Invasion
 
         public static float BuildSecondsFor(int units, float perUnit, float min, float max) => Mathf.Clamp(units * perUnit, min, max);
 
-        /// <summary>A run's walls and gates (the user, 2026-10-22): obstacles for the orcs, sturdier than the sandbox's (inv_wall_health_mult); an orc breaks one only when it stands in its way.</summary>
+        /// <summary>A run's walls and gates (the user, 2026-10-22): obstacles for the orcs, sturdier than the sandbox's (their health in the invasion tab); an orc breaks one only when it stands in its way.</summary>
         private static readonly string[] Barriers = { "Fence", "Gate", "FortifiedGate" };
 
         public static bool IsBarrier(BuildingData data) => data != null && Array.IndexOf(Barriers, data.buildingName) >= 0;
-
-        /// <summary>The gatherers' yards a run may have of each (the user, 2026-10-22: one sawmill, one quarry).</summary>
-        private static readonly string[] Limited = { "Sawmill", "Quarry" };
 
         /// <summary>A run already has as many of this as it may: its card comes off the menu and it cannot be placed.</summary>
         public static bool AtLimit(BuildingData data)
@@ -70,12 +67,8 @@ namespace CityBuilder.Invasion
             return max > 0 && BuildingInstance.CountOf(data.buildingName) >= max;
         }
 
-        /// <summary>How many of this a run may have, or 0 for no limit: sawmills inv_max_each_yard, quarries inv_max_quarries (two, the user 2026-10-22).</summary>
-        public static int LimitOf(BuildingData data)
-        {
-            if (data == null || Array.IndexOf(Limited, data.buildingName) < 0) return 0;
-            return data.buildingName == "Quarry" ? BalanceConfig.Instance.InvasionMaxQuarries : BalanceConfig.Instance.InvasionMaxEachYard;
-        }
+        /// <summary>How many of this a run may have, or 0 for no limit: the invasion tab's max_count (the user, 2026-10-23: two sawmills, two quarries).</summary>
+        public static int LimitOf(BuildingData data) => data != null ? data.maxCount : 0;
 
         /// <summary>Whether a build-menu category has anything in a run.</summary>
         public static bool HasAny(BuildingCategory category, IEnumerable<BuildingData> buildings)

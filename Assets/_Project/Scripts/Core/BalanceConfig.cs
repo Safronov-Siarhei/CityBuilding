@@ -213,6 +213,9 @@ namespace CityBuilder.Core
         /// <summary>Which family of resources this building stores, if any. How much it holds is per level.</summary>
         public ResourceStorageGroup storageGroup = ResourceStorageGroup.None;
 
+        /// <summary>How many of this an Invasion run may have (the invasion tab's max_count), 0 for no limit.</summary>
+        public int maxCount;
+
         /// <summary>
         /// One entry per upgrade level, always BuildingInstance.MaxLevel of them. The sheet authors level 1 in the
         /// plain columns (max_health, defense, ...) and the higher levels in suffixed ones
@@ -282,7 +285,11 @@ namespace CityBuilder.Core
         /// <summary>Resources path (no extension) the runtime loads this from.</summary>
         public const string ResourcePath = "BalanceConfig";
 
+        /// <summary>The Invasion run's config (the sheet's invasion tab laid over the others, BalanceImporter), loaded from here.</summary>
+        public const string RunResourcePath = "BalanceConfigInvasion";
+
         private static BalanceConfig _instance;
+        private static BalanceConfig _runInstance;
 
         [Header("Units (units.csv)")]
         [SerializeField] private List<UnitBalance> units = new List<UnitBalance>();
@@ -564,15 +571,14 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionCampThrowers = 4;
         [SerializeField] private float invasionCampGuardRadius = 8f;
         [SerializeField] private float invasionCampGuardRespawnSeconds = 20f;
+        // A run's Barracks soldiers guard the base on their own (InvasionGarrison).
+        [SerializeField] private float invasionSoldierGuardRadius = 30f;
         // The Invasion run's score (InvasionScore) and the local records (InvasionRecords).
         [SerializeField] private float invasionOrcHealthMultiplier = 4f;
         [SerializeField] private float invasionOrcDamageMultiplier = 1f;
-        [SerializeField] private int invasionMaxEachYard = 1;
-        [SerializeField] private int invasionMaxQuarries = 1;
         [SerializeField] private float invasionStoneReserveMultiplier = 3f;
         [SerializeField] private int invasionPerHarvest = 2;
         [SerializeField] private float invasionMinimapRadius = 40f;
-        [SerializeField] private float invasionWallHealthMultiplier = 4f;
         [SerializeField] private int invasionCitizenHealth = 12;
         [SerializeField] private float invasionBuildSecondsPerUnit = 0.5f;
         [SerializeField] private float invasionBuildSecondsMin = 3f;
@@ -847,14 +853,12 @@ namespace CityBuilder.Core
         public int InvasionCampThrowers => invasionCampThrowers;
         public float InvasionCampGuardRadius => invasionCampGuardRadius;
         public float InvasionCampGuardRespawnSeconds => invasionCampGuardRespawnSeconds;
+        public float InvasionSoldierGuardRadius => invasionSoldierGuardRadius;
         public float InvasionOrcHealthMultiplier => invasionOrcHealthMultiplier;
         public float InvasionOrcDamageMultiplier => invasionOrcDamageMultiplier;
-        public int InvasionMaxEachYard => invasionMaxEachYard;
-        public int InvasionMaxQuarries => invasionMaxQuarries;
         public float InvasionStoneReserveMultiplier => invasionStoneReserveMultiplier;
         public int InvasionPerHarvest => invasionPerHarvest;
         public float InvasionMinimapRadius => invasionMinimapRadius;
-        public float InvasionWallHealthMultiplier => invasionWallHealthMultiplier;
         public int InvasionCitizenHealth => invasionCitizenHealth;
         public float InvasionBuildSecondsPerUnit => invasionBuildSecondsPerUnit;
         public float InvasionBuildSecondsMin => invasionBuildSecondsMin;
@@ -931,6 +935,34 @@ namespace CityBuilder.Core
         /// stays playable and says so, instead of silently running on zeroes.
         /// </summary>
         public static BalanceConfig Instance
+        {
+            get
+            {
+                // A run plays on its own numbers (the user, 2026-10-23): from the menu's «В бой»
+                // (the intent, before the scene's Awakes) to the run's end (InvasionMode is gone).
+                if (Saving.GameSessionIntent.NewGameIsInvasion || Invasion.InvasionMode.IsActive) return Run;
+                return Sandbox;
+            }
+        }
+
+        /// <summary>The Invasion run's numbers, whether or not a run is on (tests compare the two); the sandbox's if the run asset is missing.</summary>
+        public static BalanceConfig Run
+        {
+            get
+            {
+                if (_runInstance != null) return _runInstance;
+                _runInstance = UnityEngine.Resources.Load<BalanceConfig>(RunResourcePath);
+                if (_runInstance == null)
+                {
+                    Debug.LogError($"BalanceConfig: no asset at Resources/{RunResourcePath} -- an Invasion run plays on the sandbox's numbers. Rebuild the config from the CSVs.");
+                    _runInstance = Sandbox;
+                }
+                return _runInstance;
+            }
+        }
+
+        /// <summary>The sandbox's numbers, whatever mode is on.</summary>
+        public static BalanceConfig Sandbox
         {
             get
             {
@@ -1196,14 +1228,12 @@ namespace CityBuilder.Core
             invasionCampThrowers = (int)Read(economy, "inv_camp_throwers", invasionCampThrowers);
             invasionCampGuardRadius = Read(economy, "inv_camp_guard_radius", invasionCampGuardRadius);
             invasionCampGuardRespawnSeconds = Read(economy, "inv_camp_guard_respawn_sec", invasionCampGuardRespawnSeconds);
+            invasionSoldierGuardRadius = Read(economy, "inv_soldier_guard_radius", invasionSoldierGuardRadius);
             invasionOrcHealthMultiplier = Read(economy, "inv_orc_health_mult", invasionOrcHealthMultiplier);
             invasionOrcDamageMultiplier = Read(economy, "inv_orc_damage_mult", invasionOrcDamageMultiplier);
-            invasionMaxEachYard = (int)Read(economy, "inv_max_each_yard", invasionMaxEachYard);
-            invasionMaxQuarries = (int)Read(economy, "inv_max_quarries", invasionMaxQuarries);
             invasionStoneReserveMultiplier = Read(economy, "inv_stone_reserve_mult", invasionStoneReserveMultiplier);
             invasionPerHarvest = (int)Read(economy, "inv_per_harvest", invasionPerHarvest);
             invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
-            invasionWallHealthMultiplier = Read(economy, "inv_wall_health_mult", invasionWallHealthMultiplier);
             invasionCitizenHealth = (int)Read(economy, "inv_citizen_health", invasionCitizenHealth);
             invasionBuildSecondsPerUnit = Read(economy, "inv_build_sec_per_unit", invasionBuildSecondsPerUnit);
             invasionBuildSecondsMin = Read(economy, "inv_build_sec_min", invasionBuildSecondsMin);

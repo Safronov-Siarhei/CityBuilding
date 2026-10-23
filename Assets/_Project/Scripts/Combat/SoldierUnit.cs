@@ -462,12 +462,35 @@ namespace CityBuilder.Combat
             if (amount <= 0 || CurrentHealth <= 0 || IsShielded) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            if (CurrentHealth > 0) return;
+            if (CurrentHealth > 0)
+            {
+                ShowHealth();
+                return;
+            }
 
             // Killed, not disbanded: ArmyManager decides what that costs the settlement (a
             // recruited citizen is gone for good, unlike a disbanded one who walks home).
             ArmyManager.Instance?.NotifySoldierKilled(this);
         }
+
+        private Buildings.BuildingHealthBar _healthBar;
+
+        /// <summary>The bar over a soldier's head once he is hurt, as over an orc (the user, 2026-10-23). A hero's health is on his portrait.</summary>
+        private void ShowHealth()
+        {
+            if (SoldierStats.IsHero(Type)) return;
+            if (_healthBar == null)
+            {
+                var feet = transform.position.y;
+                var top = feet + 0.6f;
+                foreach (var r in GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
+                _healthBar = Buildings.BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, 0.7f);
+            }
+            _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
+        }
+
+        /// <summary>The health bar over him, or null while he has not been hurt (the death's figure leaves it behind).</summary>
+        public Transform HealthBar => _healthBar != null ? _healthBar.transform : null;
 
         private static float HorizontalDistance(Vector3 a, Vector3 b)
         {

@@ -25,7 +25,8 @@ or all of it when the reason is elsewhere (money, start zone). Cost chips go red
 - **Gate (user, 2026-10-21) is 1×1**, may stand over a road (road stays under it) and turns across it.
   It does NOT carve the NavMesh: it marks its cell as the Gate NavMesh area — citizens and soldiers
   path through, orcs path round (`NavAreas.WithoutGates`), so raiders stop and break it; its collider
-  is a trigger. **Fortified gate is 1×3** (wall, passage, wall): only the middle cell is the Gate area
+  is a trigger. Off a road, a gate held in a fence's line turns into it (user, 2026-10-23;
+  `BuildingPlacer.GateTurnInAFence`, EditMode `GateTurnTests`). **Fortified gate is 1×3** (wall, passage, wall): only the middle cell is the Gate area
   and may sit on a road.
 - **A mine fits only exactly over a free ore vein of its ore** (ghost snaps to the nearest within 4
   cells; `BuildingPlacer.IsFreeFor`).
@@ -69,4 +70,6 @@ another selection or picking up a building to place lets go.
 - The sketch reuses its buffers — keep the per-frame rebuild garbage-free.
 
 ## Open
-Fence's three levels (upgrade vs separate buildings) undecided; the Bridge stays research-locked.
+Fence levels: from level 2 the fence shows the stone `FortifiedFence1` pieces (user, 2026-10-23:
+the silver disc read as "a stone pancake"; `FenceAppearance.SetLevel/HasOwnModel`); levels 3–5 look the
+same as 2. The Bridge stays research-locked.

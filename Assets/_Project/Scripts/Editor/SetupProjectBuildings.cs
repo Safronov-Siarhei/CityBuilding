@@ -295,22 +295,7 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>Copies every balanced number from a sheet row onto a building's data asset. Shape (footprint, prefab, road/water flags) is the caller's business.</summary>
-        private static void ApplyBalance(BuildingData data, BuildingBalance balance)
-        {
-            data.displayName = balance.displayName;
-            data.category = balance.category;
-            data.cost = CopyCost(balance.cost);
-            data.recipes = CopyRecipes(balance.recipes);
-            data.productionIntervalSeconds = balance.productionIntervalSeconds;
-            data.fogRevealRadius = balance.fogRevealRadius;
-            data.citizensOnBuild = balance.citizensOnBuild;
-            data.storageGroup = balance.storageGroup;
-            data.levels = CopyLevels(balance.levels);
-            data.upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
-            data.upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);
-            data.upgradeToLevel4Cost = CopyCost(balance.upgradeToLevel4Cost);
-            data.upgradeToLevel5Cost = CopyCost(balance.upgradeToLevel5Cost);
-        }
+        private static void ApplyBalance(BuildingData data, BuildingBalance balance) => data.ApplyBalance(balance);
 
         /// <summary>The level-1 stats of a sheet row, or defaults if the row is missing its levels entirely (already reported by Balance).</summary>
         private static BuildingLevelStats LevelOne(BuildingBalance balance)
@@ -340,59 +325,6 @@ namespace CityBuilder.EditorTools
                 if (level != null && level.maxWorkers > 0) return true;
             }
             return false;
-        }
-
-        /// <summary>A fresh set of level stats, for the same reason CopyCost exists: the config asset's own objects must never be shared with a building asset.</summary>
-        private static List<BuildingLevelStats> CopyLevels(List<BuildingLevelStats> source)
-        {
-            var copy = new List<BuildingLevelStats>(source.Count);
-            foreach (var level in source)
-            {
-                copy.Add(new BuildingLevelStats
-                {
-                    maxHealth = level.maxHealth,
-                    defense = level.defense,
-                    housingCapacity = level.housingCapacity,
-                    maxWorkers = level.maxWorkers,
-                    batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
-                    storageCapacity = level.storageCapacity,
-                    happiness = level.happiness,
-                    harvestRadius = level.harvestRadius,
-                    serviceRadius = level.serviceRadius,
-                });
-            }
-            return copy;
-        }
-
-        /// <summary>A fresh recipe list, for the same reason as CopyCost: the config asset's own objects must never be shared with a building asset.</summary>
-        private static List<BuildingRecipe> CopyRecipes(List<BuildingRecipe> source)
-        {
-            var copy = new List<BuildingRecipe>();
-            if (source == null) return copy;
-
-            foreach (var recipe in source)
-            {
-                copy.Add(new BuildingRecipe
-                {
-                    id = recipe.id,
-                    displayName = recipe.displayName,
-                    inputs = CopyCost(recipe.inputs),
-                    output = recipe.output,
-                    outputAmount = recipe.outputAmount,
-                });
-            }
-            return copy;
-        }
-
-        /// <summary>A fresh cost list -- the config asset's own ResourceAmount objects must never end up referenced by a building asset.</summary>
-        private static List<ResourceAmount> CopyCost(List<ResourceAmount> source)
-        {
-            var copy = new List<ResourceAmount>(source.Count);
-            foreach (var amount in source)
-            {
-                copy.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
-            }
-            return copy;
         }
 
         /// <summary>

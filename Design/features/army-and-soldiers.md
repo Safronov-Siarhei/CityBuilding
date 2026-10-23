@@ -27,6 +27,11 @@ gather = ring; refused = red ripple.
 - `SoldierType.King` (=4) is the Invasion hero: a soldier in his own group, outside the army cap,
   stats from economy `king_*` ([invasion-mode](invasion-mode.md)). His jointed model is animated by
   `FigureAnimator` (`SoldierUnit.Struck` drives the cut).
+- **In an Invasion run (user, 2026-10-23)** the Barracks hires every tier with no Laboratory, for gold
+  only (the invasion tab's `recruit_coins`); nobody commands the soldiers -- no army panel --
+  `Invasion/InvasionGarrison.cs` stands each type's group round the castle and sends it at the orc
+  nearest the castle within `inv_soldier_guard_radius`. A hurt soldier shows a health bar (every mode);
+  a killed one falls as a figure (`OrcCorpse.Leave`), a hero too (`LeaveCopy`, he rises later).
 
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,

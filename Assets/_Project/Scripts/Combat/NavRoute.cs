@@ -42,6 +42,9 @@ namespace CityBuilder.Combat
 
         public Vector3 Destination { get; private set; }
 
+        /// <summary>The NavMesh areas this route may cross: all of them, or an orc's -- never a gate (NavAreas.WithoutGates).</summary>
+        public int AreaMask { get; set; } = NavMesh.AllAreas;
+
         /// <summary>The NavMesh found a way only part of the way there -- something unwalkable (a wall) stands between.</summary>
         public bool Blocked { get; private set; }
 
@@ -67,9 +70,9 @@ namespace CityBuilder.Combat
             // (found on a phone, 2026-10-16). Ask for the nearest point that IS on the mesh: a
             // walled-off one then gives an honest partial path that stops at the wall.
             var target = to;
-            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, NavMesh.AllAreas)) target = onMesh.position;
+            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, AreaMask)) target = onMesh.position;
 
-            if (NavMesh.CalculatePath(from, target, NavMesh.AllAreas, _sharedPath))
+            if (NavMesh.CalculatePath(from, target, AreaMask, _sharedPath))
             {
                 Blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
                 var corners = _sharedPath.corners;

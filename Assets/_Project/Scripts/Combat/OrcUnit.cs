@@ -257,7 +257,7 @@ namespace CityBuilder.Combat
             _camp = camp;
             _guardPost = post;
             _target = null;
-            _guardRoute = new NavRoute();
+            _guardRoute = NewRoute();
         }
 
         private void Update()
@@ -496,7 +496,7 @@ namespace CityBuilder.Combat
 
         private void GuardWalk(Vector3 destination, bool straightLineFallback = false)
         {
-            _guardRoute ??= new NavRoute();
+            _guardRoute ??= NewRoute();
             _guardRouteTimer -= Time.deltaTime;
             var moved = destination - _guardRouteDestination;
             moved.y = 0f;
@@ -532,9 +532,13 @@ namespace CityBuilder.Combat
         private void Chase(Vector3 destination, Vector3 direction)
         {
             var from = transform.position;
-            if (NavMesh.Raycast(from, from + direction * ChaseLookAheadMeters, out _, NavMesh.AllAreas))
+            // Never through a gate, here as on the way to the castle (NavAreas): an orc after
+            // someone behind a run's fence walked in at its gate (the user, 2026-10-23). Walled
+            // off from them, it breaks whatever stands in its way.
+            if (NavMesh.Raycast(from, from + direction * ChaseLookAheadMeters, out _, CityBuilder.Maps.NavAreas.WithoutGates))
             {
-                GuardWalk(destination, straightLineFallback: true);
+                GuardWalk(destination, straightLineFallback: false);
+                if (_guardRoute.Blocked && _guardRoute.IsFinished) BreakThrough();
                 return;
             }
             if (_controller != null && _controller.enabled)
@@ -546,6 +550,43 @@ namespace CityBuilder.Combat
             {
                 transform.position += direction * _walkSpeed * Time.deltaTime;
             }
+        }
+
+        /// <summary>An orc's route: never across a gate's cell -- a gate is a wall to it (NavAreas).</summary>
+        private static NavRoute NewRoute() => new NavRoute { AreaMask = CityBuilder.Maps.NavAreas.WithoutGates };
+
+        private BuildingInstance _blocker;
+
+        /// <summary>At the end of a chase the NavMesh cannot finish: strikes the fence, gate or building there (BlockerReachRadius) until it is down.</summary>
+        private void BreakThrough()
+        {
+            if (_blocker == null || _blocker.CurrentHealth <= 0) _blocker = NearestBuildingWithin(BlockerReachRadius);
+            if (_blocker == null) return;
+            var to = _blocker.transform.position - transform.position;
+            to.y = 0f;
+            if (to.magnitude > Mathf.Max(_buildingAttackRange, BlockerReachRadius)) return;
+
+            _attackTimer -= Time.deltaTime;
+            if (_attackTimer > 0f) return;
+            _attackTimer = _attackIntervalSeconds;
+            Strike(_blocker);
+            if (_blocker.CurrentHealth <= 0) _blocker = null;
+        }
+
+        /// <summary>The nearest building (not a road) within `radius` of this orc, or null.</summary>
+        private BuildingInstance NearestBuildingWithin(float radius)
+        {
+            BuildingInstance nearest = null;
+            var nearestDistSq = radius * radius;
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.Data == null || instance.Data.isRoad) continue;
+                var distSq = (instance.transform.position - transform.position).sqrMagnitude;
+                if (distSq > nearestDistSq) continue;
+                nearestDistSq = distSq;
+                nearest = instance;
+            }
+            return nearest;
         }
 
         private SoldierUnit FindNearestSoldierInCamp()
@@ -843,20 +884,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private void AttackWhateverIsBlockingTheWay()
         {
-            BuildingInstance blocker = null;
-            var nearestDistSq = BlockerReachRadius * BlockerReachRadius;
-
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
-            {
-                if (instance.Data == null || instance.Data.isRoad) continue;
-
-                var distSq = (instance.transform.position - transform.position).sqrMagnitude;
-                if (distSq > nearestDistSq) continue;
-
-                nearestDistSq = distSq;
-                blocker = instance;
-            }
-
+            var blocker = NearestBuildingWithin(BlockerReachRadius);
             if (blocker == null) return;
 
             _target = blocker;

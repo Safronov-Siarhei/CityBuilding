@@ -27,5 +27,8 @@ namespace CityBuilder.EditorTools
 
         [Tooltip("Опубликованная как CSV вкладка localization")]
         public string localizationCsvUrl = string.Empty;
+
+        [Tooltip("Опубликованная как CSV вкладка invasion (все цифры режима Нашествие)")]
+        public string invasionCsvUrl = string.Empty;
     }
 }

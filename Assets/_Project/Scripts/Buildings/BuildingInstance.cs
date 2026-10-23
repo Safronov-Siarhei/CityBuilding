@@ -60,15 +60,8 @@ namespace CityBuilder.Buildings
         /// <summary>Works: not being built or upgraded (ConstructionSite). A tower shoots, a yard gathers, a barracks hires only then.</summary>
         public bool IsOperational => Site == null;
 
-        /// <summary>The sheet's health for that level -- times inv_wall_health_mult for a run's walls and gates (InvasionRules.IsBarrier).</summary>
-        private int HealthAt(int level)
-        {
-            if (Data == null) return 0;
-            var health = Data.LevelStats(level).maxHealth;
-            return Invasion.InvasionRules.Active && Invasion.InvasionRules.IsBarrier(Data)
-                ? Mathf.RoundToInt(health * BalanceConfig.Instance.InvasionWallHealthMultiplier)
-                : health;
-        }
+        /// <summary>The sheet's health for that level (a run's sturdier walls are in the invasion tab).</summary>
+        private int HealthAt(int level) => Data != null ? Data.LevelStats(level).maxHealth : 0;
 
         /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
         public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
@@ -98,6 +91,7 @@ namespace CityBuilder.Buildings
         private GameObject _decayWarningMarker;
         private BuildingHealthBar _healthBar;
         private BuildingLevelAppearance _levelAppearance;
+        private FenceAppearance _fenceAppearance;
         private GameObject _levelMarker;
 
         // Self-registering count-by-name registry (same pattern as ResourceNode.All) so
@@ -120,6 +114,7 @@ namespace CityBuilder.Buildings
             Data = data;
             OriginCell = originCell;
             _levelAppearance = GetComponent<BuildingLevelAppearance>();
+            _fenceAppearance = GetComponent<FenceAppearance>();
             RotationSteps = ((rotationSteps % 4) + 4) % 4;
             CurrentHealth = HealthAt(Level);
             Decay = 0f;
@@ -153,6 +148,7 @@ namespace CityBuilder.Buildings
                 // on a fresh placement -- it is here for the click box, which Apply sizes to
                 // whatever model is on screen, and for the load path, where SetLevel follows.
                 _levelAppearance?.Apply(Level);
+                _fenceAppearance?.SetLevel(Level);
                 UpdateLevelMarker();
             }
         }
@@ -524,7 +520,8 @@ namespace CityBuilder.Buildings
             // Roads are laid by the dozen; a disc floating over every tile of a road network would
             // bury the town it is supposed to describe.
             var shouldShow = Level > 1 && Data != null && !Data.isRoad
-                             && (_levelAppearance == null || !_levelAppearance.HasOwnModel(Level));
+                             && (_levelAppearance == null || !_levelAppearance.HasOwnModel(Level))
+                             && (_fenceAppearance == null || !_fenceAppearance.HasOwnModel(Level));
 
             if (shouldShow && _levelMarker == null) _levelMarker = CreateLevelMarker();
             if (_levelMarker == null) return;
@@ -688,6 +685,7 @@ namespace CityBuilder.Buildings
             // A loaded building has to look its level straight away -- nothing else will tell it to,
             // since it was never upgraded during this session.
             _levelAppearance?.Apply(Level);
+            _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();
         }
 
@@ -764,6 +762,7 @@ namespace CityBuilder.Buildings
             ChangeStoredCapacity(after.storageCapacity - before.storageCapacity);
 
             _levelAppearance?.Apply(Level);
+            _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();
             EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_upgraded", Data.LocalizedName, Level), EventSeverity.Good, EventGlyph.Upgrade));
         }

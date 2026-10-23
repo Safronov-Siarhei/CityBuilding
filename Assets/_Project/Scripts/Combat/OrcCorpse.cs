@@ -19,24 +19,34 @@ namespace CityBuilder.Combat
         private Quaternion _upright;
         private Vector3 _ground;
 
-        /// <summary>Takes the unit's figure (its first child with something drawn, `skip` aside) and lets it fall where it stood.</summary>
-        public static void Leave(Transform unit, Transform skip)
-        {
-            Transform figure = null;
-            foreach (Transform child in unit)
-            {
-                if (child == skip || child.GetComponentInChildren<Renderer>() == null) continue;
-                figure = child;
-                break;
-            }
-            if (figure == null) return;
+        /// <summary>Takes the unit's figure (every child with something drawn, `skip` aside -- an orc's one model, a soldier's cubes) and lets it fall where it stood.</summary>
+        public static void Leave(Transform unit, Transform skip) => Fall(unit, skip, copy: false);
 
-            var corpse = new GameObject("Corpse").AddComponent<OrcCorpse>();
-            corpse.transform.SetPositionAndRotation(unit.position, unit.rotation);
-            corpse.transform.localScale = unit.lossyScale;
-            figure.SetParent(corpse.transform, true);
-            corpse._upright = unit.rotation;
-            corpse._ground = unit.position;
+        /// <summary>
+        /// The same fall for a unit that stays (a hero: he gets up again at the castle, the user
+        /// 2026-10-23 -- the Queen used to stand and vanish): a copy of his figure falls, in the
+        /// pose he had, and the caller hides his own.
+        /// </summary>
+        public static void LeaveCopy(Transform unit, Transform skip) => Fall(unit, skip, copy: true);
+
+        private static void Fall(Transform unit, Transform skip, bool copy)
+        {
+            OrcCorpse corpse = null;
+            for (var i = unit.childCount - 1; i >= 0; i--)
+            {
+                var child = unit.GetChild(i);
+                if (child == skip || child.GetComponentInChildren<Renderer>() == null) continue;
+                if (corpse == null)
+                {
+                    corpse = new GameObject("Corpse").AddComponent<OrcCorpse>();
+                    corpse.transform.SetPositionAndRotation(unit.position, unit.rotation);
+                    corpse.transform.localScale = unit.lossyScale;
+                    corpse._upright = unit.rotation;
+                    corpse._ground = unit.position;
+                }
+                if (copy) Instantiate(child.gameObject, child.position, child.rotation, corpse.transform).transform.localScale = child.localScale;
+                else child.SetParent(corpse.transform, true);
+            }
         }
 
         private void Update()

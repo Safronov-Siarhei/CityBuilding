@@ -3,11 +3,17 @@
 > **Status (2026-10-21):** sheet == repo (verify_sheet: no differences, 2026-10-20). Claude edits the
 > Google Sheet DIRECTLY via the `balance-sheet` project skill (`.claude/skills/balance-sheet/`) —
 > the user said to stop handing over paste blocks.
+> **2026-10-23:** new tab `invasion` (gid 1941808734) -- the Invasion mode's own balance, laid over the
+> other tabs for a run (rules in [invasion-mode](invasion-mode.md) «Balance»); its run-only keys moved
+> out of economy. The Sheets connector was not in that session; the browser fallback did it.
 > **Read with:** whichever feature's numbers/text you are changing.
 
 ## Rules
 - **No gameplay number and no user-visible string is a literal in C#.** Numbers live in the sheet;
   `BalanceConfig.cs` field initialisers are a fallback only (never tune there).
+- **Uploading (the user's question, 2026-10-23):** Unity → CityBuilder → Balance → Pull From Google
+  Sheets downloads every published tab into the CSVs and rebuilds both configs; the generated assets
+  (BuildingData) need a SetupProject run for the SANDBOX's building numbers, the run's are applied live.
 - Chain: Google Sheet `CityBuilding_Balance` (doc `1eroe1LMQCrpFtP4se7Oae4pGv-aOrHiqYAMdWKxxook`) →
   committed `Assets/_Project/Balance/{units,economy,buildings,recipes,localization}.csv` →
   `Editor/BalanceImporter.cs` (run first thing by `SetupProject.Run`) → `Resources/BalanceConfig.asset`

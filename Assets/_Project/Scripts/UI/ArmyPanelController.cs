@@ -61,7 +61,9 @@ namespace CityBuilder.UI
         private void Rebuild()
         {
             var army = ArmyManager.Instance;
-            var hasArmy = army != null && army.SoldierCount > 0;
+            // In a run the player commands only the heroes, from their portraits; the soldiers
+            // guard the base on their own (InvasionGarrison) -- no army panel (the user, 2026-10-23).
+            var hasArmy = !Invasion.InvasionMode.IsActive && army != null && army.SoldierCount > 0;
 
             if (panelRoot != null) panelRoot.SetActive(hasArmy);
             ClearRows();

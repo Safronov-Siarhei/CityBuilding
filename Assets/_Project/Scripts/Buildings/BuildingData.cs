@@ -168,6 +168,9 @@ namespace CityBuilder.Buildings
         /// </summary>
         public int citizensOnBuild;
 
+        /// <summary>How many of this an Invasion run may have, 0 for no limit -- the invasion tab's max_count (InvasionRules.LimitOf).</summary>
+        public int maxCount;
+
         [Header("Requirements")]
         // Null = no prerequisite. Otherwise at least one already-placed instance of this building
         // (by buildingName -- see BuildingInstance.HasAny) must exist before this one can be
@@ -205,6 +208,83 @@ namespace CityBuilder.Buildings
                 case 5: return upgradeToLevel5Cost;
                 default: return null;
             }
+        }
+
+        /// <summary>
+        /// Copies every balanced number from a sheet row onto this building. SetupProject bakes the
+        /// sandbox's rows into the assets; an Invasion run lays its own rows over copies of them at
+        /// runtime (InvasionBalance.RunCatalog). Shape (footprint, prefab, road/water flags) is not
+        /// balance and stays as it was.
+        /// </summary>
+        public void ApplyBalance(Core.BuildingBalance balance)
+        {
+            displayName = balance.displayName;
+            category = balance.category;
+            cost = CopyCost(balance.cost);
+            recipes = CopyRecipes(balance.recipes);
+            productionIntervalSeconds = balance.productionIntervalSeconds;
+            fogRevealRadius = balance.fogRevealRadius;
+            citizensOnBuild = balance.citizensOnBuild;
+            storageGroup = balance.storageGroup;
+            maxCount = balance.maxCount;
+            levels = CopyLevels(balance.levels);
+            upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
+            upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);
+            upgradeToLevel4Cost = CopyCost(balance.upgradeToLevel4Cost);
+            upgradeToLevel5Cost = CopyCost(balance.upgradeToLevel5Cost);
+        }
+
+        /// <summary>A fresh set of level stats: the config asset's own objects must never be shared with a building.</summary>
+        private static List<BuildingLevelStats> CopyLevels(List<BuildingLevelStats> source)
+        {
+            var copy = new List<BuildingLevelStats>(source.Count);
+            foreach (var level in source)
+            {
+                copy.Add(new BuildingLevelStats
+                {
+                    maxHealth = level.maxHealth,
+                    defense = level.defense,
+                    housingCapacity = level.housingCapacity,
+                    maxWorkers = level.maxWorkers,
+                    batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
+                    storageCapacity = level.storageCapacity,
+                    happiness = level.happiness,
+                    harvestRadius = level.harvestRadius,
+                    serviceRadius = level.serviceRadius,
+                });
+            }
+            return copy;
+        }
+
+        /// <summary>A fresh recipe list, for the same reason as CopyCost.</summary>
+        private static List<BuildingRecipe> CopyRecipes(List<BuildingRecipe> source)
+        {
+            var copy = new List<BuildingRecipe>();
+            if (source == null) return copy;
+
+            foreach (var recipe in source)
+            {
+                copy.Add(new BuildingRecipe
+                {
+                    id = recipe.id,
+                    displayName = recipe.displayName,
+                    inputs = CopyCost(recipe.inputs),
+                    output = recipe.output,
+                    outputAmount = recipe.outputAmount,
+                });
+            }
+            return copy;
+        }
+
+        /// <summary>A fresh cost list -- the config asset's own ResourceAmount objects must never end up referenced by a building.</summary>
+        private static List<ResourceAmount> CopyCost(List<ResourceAmount> source)
+        {
+            var copy = new List<ResourceAmount>(source.Count);
+            foreach (var amount in source)
+            {
+                copy.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
+            }
+            return copy;
         }
     }
 }

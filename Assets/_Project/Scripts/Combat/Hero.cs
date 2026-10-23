@@ -245,6 +245,9 @@ namespace CityBuilder.Combat
             if (army != null && _unit.Group != null && army.SelectedGroup == _unit.Group) army.SelectGroup(null);
             _unit.enabled = false;
             if (_controller != null) _controller.enabled = false;
+            // he falls where he stood, as an orc does, and is gone until he rises at the castle
+            // (the user, 2026-10-23: the Queen gave her life and just vanished on her feet)
+            OrcCorpse.LeaveCopy(transform, null);
             SetVisible(false);
             StopRevealing();
             Changed?.Invoke();

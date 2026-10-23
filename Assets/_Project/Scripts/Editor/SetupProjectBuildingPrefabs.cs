@@ -68,6 +68,19 @@ namespace CityBuilder.EditorTools
             if (cross != null) CombineParts(cross, $"{id}_Cross");
 
             appearance.SetModels(straight, corner, tee, cross);
+
+            // From level 2 the fence is stone (FortifiedFence1, the user 2026-10-23), each shape
+            // baked on its own like the wood and hidden until an upgrade asks for it.
+            var stone = new GameObject[4];
+            var shapes = new[] { "Straight", "Corner", "T", "Cross" };
+            for (var i = 0; i < shapes.Length; i++)
+            {
+                stone[i] = CreateFenceJunction(shapes[i], root.transform, "FortifiedFence1", "Stone" + shapes[i]);
+                if (stone[i] == null) continue;
+                CombineParts(stone[i], $"{id}_Stone{shapes[i]}");
+                stone[i].SetActive(false);
+            }
+            if (stone[0] != null) appearance.SetStoneModels(stone[0], stone[1], stone[2], stone[3]);
             // The straight run is what a lone segment shows; FenceAppearance swaps them the moment
             // the piece learns about its neighbours.
             if (corner != null) corner.SetActive(false);
@@ -104,12 +117,12 @@ namespace CityBuilder.EditorTools
         /// is not there -- unlike the straight run and the corner, these have no built fallback. The T
         /// is exported joining north, south and east (FenceShape's base orientation).
         /// </summary>
-        private static GameObject CreateFenceJunction(string wrapperName, Transform parent)
+        private static GameObject CreateFenceJunction(string wrapperName, Transform parent, string model = "Fence1", string childName = null)
         {
-            var authored = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Fence1-lvl1-{wrapperName}.fbx");
+            var authored = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{model}-lvl1-{wrapperName}.fbx");
             if (authored == null) return null;
 
-            var wrapper = new GameObject(wrapperName);
+            var wrapper = new GameObject(childName ?? wrapperName);
             wrapper.transform.SetParent(parent, false);
             var piece = Object.Instantiate(authored, Vector3.zero, authored.transform.rotation, wrapper.transform);
             piece.name = authored.name;

@@ -34,6 +34,9 @@ namespace CityBuilder.EditorTools
         public const string LocalizationAssetPath = "Assets/_Project/Resources/LocalizationConfig.asset";
         public const string SettingsAssetPath = BalanceFolder + "/BalanceSheetSettings.asset";
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
+        /// <summary>The sheet's invasion tab: the Invasion mode's own numbers, laid over the other tabs for a run.</summary>
+        public const string InvasionCsvPath = BalanceFolder + "/invasion.csv";
+        public const string RunConfigAssetPath = "Assets/_Project/Resources/" + BalanceConfig.RunResourcePath + ".asset";
 
         [MenuItem("CityBuilder/Balance/Rebuild Config From CSV")]
         public static void RebuildConfigMenuItem()
@@ -48,28 +51,187 @@ namespace CityBuilder.EditorTools
         /// </summary>
         public static BalanceConfig RebuildConfig()
         {
-            var units = ReadUnits(UnitsCsvPath);
-            var buildings = ReadBuildings(BuildingsCsvPath);
-            AttachRecipes(buildings, ReadRecipes(RecipesCsvPath));
-            var economy = ReadEconomy(EconomyCsvPath);
+            var unitRows = ReadCsv(UnitsCsvPath);
+            var buildingRows = ReadCsv(BuildingsCsvPath);
+            var recipes = ReadRecipes(RecipesCsvPath);
+            var units = ReadUnits(unitRows, UnitsCsvPath);
+            var buildings = ReadBuildings(buildingRows, BuildingsCsvPath);
+            AttachRecipes(buildings, recipes);
+            var economy = ReadEconomy(ReadCsv(EconomyCsvPath), EconomyCsvPath);
+            var invasion = InvasionTab.Read(InvasionCsvPath);
 
-            var config = AssetDatabase.LoadAssetAtPath<BalanceConfig>(ConfigAssetPath);
-            if (config == null)
+            // The sandbox has the run's own keys too (the heroes', the waves'...), so anything that
+            // asks for one outside a run -- an EditMode test of the wave ramp -- reads the sheet's
+            // value; the invasion tab's overrides of sandbox keys stay the run's alone.
+            var sandboxEconomy = new Dictionary<string, float>(economy);
+            foreach (var pair in invasion.Keys)
             {
-                config = ScriptableObject.CreateInstance<BalanceConfig>();
-                Directory.CreateDirectory(Path.GetDirectoryName(ConfigAssetPath) ?? string.Empty);
-                AssetDatabase.CreateAsset(config, ConfigAssetPath);
+                if (!sandboxEconomy.ContainsKey(pair.Key)) sandboxEconomy[pair.Key] = pair.Value;
             }
+            var config = WriteConfig(ConfigAssetPath, units, buildings, sandboxEconomy);
 
-            config.OverwriteFrom(units, buildings, economy);
-            EditorUtility.SetDirty(config);
+            // The run's config: the same tabs with the invasion tab's cells laid over them.
+            var runUnits = ReadUnits(invasion.LayOver(unitRows, invasion.Units, InvasionCsvPath), InvasionCsvPath);
+            var runBuildings = ReadBuildings(invasion.LayOver(buildingRows, invasion.Buildings, InvasionCsvPath), InvasionCsvPath);
+            AttachRecipes(runBuildings, recipes);
+            var runEconomy = new Dictionary<string, float>(economy);
+            foreach (var pair in invasion.Keys) runEconomy[pair.Key] = pair.Value;
+            WriteConfig(RunConfigAssetPath, runUnits, runBuildings, runEconomy);
 
             var localizationKeys = RebuildLocalization();
             AssetDatabase.SaveAssets();
 
             Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings, {economy.Count} economy keys " +
-                      $"and {localizationKeys} localization keys -> {ConfigAssetPath}");
+                      $"and {localizationKeys} localization keys -> {ConfigAssetPath}; the invasion tab's " +
+                      $"{Math.Max(0, invasion.Buildings.Count - 1)} buildings, {Math.Max(0, invasion.Units.Count - 1)} units " +
+                      $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}");
             return config;
+        }
+
+        private static BalanceConfig WriteConfig(string assetPath, List<UnitBalance> units, List<BuildingBalance> buildings, Dictionary<string, float> economy)
+        {
+            var config = AssetDatabase.LoadAssetAtPath<BalanceConfig>(assetPath);
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<BalanceConfig>();
+                Directory.CreateDirectory(Path.GetDirectoryName(assetPath) ?? string.Empty);
+                AssetDatabase.CreateAsset(config, assetPath);
+            }
+
+            config.OverwriteFrom(units, buildings, economy);
+            EditorUtility.SetDirty(config);
+            return config;
+        }
+
+        /// <summary>
+        /// The sheet's invasion tab (the user, 2026-10-23: the whole mode on a sheet of its own).
+        /// Three tables one under another, each opened by a header row whose first cell names it:
+        /// `building` (columns of the buildings tab, plus max_count), `unit` (columns of the units
+        /// tab) and `key` (key, value, comment -- like economy). A building's or a unit's row
+        /// REPLACES, for a run, the cells of the columns its table has -- an empty cell is an empty
+        /// cell, as in the buildings tab (a higher level repeats the one below, a price is nothing);
+        /// a column the table does not have keeps the sandbox's value. A price the table sets is the
+        /// whole price: the run's upgrade into level 2 is up2_wood/up2_stone/up2_gold as written,
+        /// not those plus the sandbox's iron. A key replaces the economy tab's, or adds a run-only one.
+        /// </summary>
+        private class InvasionTab
+        {
+            /// <summary>Each table header first, as the tab has it; empty when the tab has no such table.</summary>
+            public readonly List<List<string>> Buildings = new List<List<string>>();
+            public readonly List<List<string>> Units = new List<List<string>>();
+            public readonly Dictionary<string, float> Keys = new Dictionary<string, float>();
+
+            /// <summary>The price columns' prefixes: one in a table makes the table the whole price for it.</summary>
+            private static readonly string[] Prices = { "cost_", "up2_", "up3_", "up4_", "up5_", "recruit_" };
+
+            public static InvasionTab Read(string path)
+            {
+                var tab = new InvasionTab();
+                if (!File.Exists(path))
+                {
+                    Debug.LogWarning($"BalanceImporter: no {path} -- an Invasion run plays on the sandbox's numbers.");
+                    return tab;
+                }
+
+                List<List<string>> table = null;
+                List<List<string>> keys = null;
+                foreach (var row in ReadCsv(path))
+                {
+                    var first = row.Count > 0 ? row[0].Trim().TrimStart('\uFEFF') : string.Empty;
+                    switch (first)
+                    {
+                        case "building": table = tab.Buildings; table.Clear(); table.Add(Trimmed(row)); continue;
+                        case "unit": table = tab.Units; table.Clear(); table.Add(Trimmed(row)); continue;
+                        case "key": keys = new List<List<string>> { Trimmed(row) }; table = keys; continue;
+                    }
+                    if (table == null || first.Length == 0 || IsNoteRow(row)) continue;
+                    table.Add(row);
+                }
+                if (keys != null)
+                {
+                    foreach (var pair in ReadEconomy(keys, path)) tab.Keys[pair.Key] = pair.Value;
+                }
+                return tab;
+            }
+
+            private static List<string> Trimmed(List<string> row)
+            {
+                var copy = new List<string>(row.Count);
+                foreach (var cell in row) copy.Add(cell.Trim().TrimStart('\uFEFF'));
+                return copy;
+            }
+
+            /// <summary>The sandbox's tab (header first) with this table's rows laid over the rows of the same id.</summary>
+            public List<List<string>> LayOver(List<List<string>> sandbox, List<List<string>> table, string path)
+            {
+                if (sandbox.Count == 0 || table.Count == 0) return sandbox;
+
+                var header = Trimmed(sandbox[0]);
+                var tableHeader = table[0];
+                var into = new int[tableHeader.Count];
+                for (var c = 0; c < tableHeader.Count; c++)
+                {
+                    var name = tableHeader[c];
+                    into[c] = -1;
+                    if (c == 0 || name.Length == 0 || name == "comment") continue;
+                    var index = header.IndexOf(name);
+                    if (index < 0)
+                    {
+                        header.Add(name);
+                        index = header.Count - 1;
+                    }
+                    into[c] = index;
+                }
+
+                var priced = new List<string>();
+                foreach (var prefix in Prices)
+                {
+                    foreach (var name in tableHeader)
+                    {
+                        if (!name.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                        priced.Add(prefix);
+                        break;
+                    }
+                }
+
+                var rows = new List<List<string>> { header };
+                for (var i = 1; i < sandbox.Count; i++)
+                {
+                    var copy = new List<string>(sandbox[i]);
+                    while (copy.Count < header.Count) copy.Add(string.Empty);
+                    rows.Add(copy);
+                }
+
+                var idColumn = header.IndexOf("id");
+                for (var r = 1; r < table.Count; r++)
+                {
+                    var row = table[r];
+                    var id = row[0].Trim();
+                    List<string> target = null;
+                    for (var i = 1; i < rows.Count && idColumn >= 0; i++)
+                    {
+                        if (rows[i][idColumn].Trim() == id) target = rows[i];
+                    }
+                    if (target == null)
+                    {
+                        Debug.LogError($"BalanceImporter: {path} has '{id}', which the sandbox's tab does not -- the invasion tab only changes what exists. Skipped.");
+                        continue;
+                    }
+
+                    for (var c = 0; c < header.Count; c++)
+                    {
+                        foreach (var prefix in priced)
+                        {
+                            if (header[c].StartsWith(prefix, StringComparison.Ordinal) && tableHeader.IndexOf(header[c]) < 0) target[c] = string.Empty;
+                        }
+                    }
+                    for (var c = 0; c < into.Length; c++)
+                    {
+                        if (into[c] >= 0) target[into[c]] = c < row.Count ? row[c] : string.Empty;
+                    }
+                }
+                return rows;
+            }
         }
 
         /// <summary>
@@ -98,6 +260,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.buildingsCsvUrl, BuildingsCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.recipesCsvUrl, RecipesCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.localizationCsvUrl, LocalizationCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.invasionCsvUrl, InvasionCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -152,13 +315,16 @@ namespace CityBuilder.EditorTools
             return settings;
         }
 
-        private static List<UnitBalance> ReadUnits(string path)
+        private static List<UnitBalance> ReadUnits(List<List<string>> rows, string path)
         {
             var units = new List<UnitBalance>();
-            var rows = ReadCsv(path);
             if (rows.Count == 0) return units;
 
             var header = rows[0];
+            for (var i = 0; i < header.Count; i++)
+            {
+                header[i] = header[i].Trim();
+            }
             for (var i = 1; i < rows.Count; i++)
             {
                 var row = rows[i];
@@ -258,10 +424,9 @@ namespace CityBuilder.EditorTools
         /// sheet can total and compare them -- "what does the defence line cost in stone" is a column
         /// sum, and the upgrade columns are formulas over the base cost.
         /// </summary>
-        private static List<BuildingBalance> ReadBuildings(string path)
+        private static List<BuildingBalance> ReadBuildings(List<List<string>> rows, string path)
         {
             var buildings = new List<BuildingBalance>();
-            var rows = ReadCsv(path);
             if (rows.Count == 0) return buildings;
 
             var header = rows[0];
@@ -286,6 +451,7 @@ namespace CityBuilder.EditorTools
                     fogRevealRadius = (int)Number(header, row, "fog_reveal_radius", path),
                     citizensOnBuild = (int)OptionalNumber(header, row, "citizens_on_build", 0f, path),
                     storageGroup = ParseEnum(header, row, "storage_group", ResourceStorageGroup.None, path),
+                    maxCount = (int)OptionalNumber(header, row, "max_count", 0f, path),
                     levels = ReadLevels(header, row, path),
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),
@@ -615,10 +781,9 @@ namespace CityBuilder.EditorTools
         /// CSV exports every column of the tab, including formula results, and those must be able
         /// to sit anywhere without breaking the import.
         /// </summary>
-        private static Dictionary<string, float> ReadEconomy(string path)
+        private static Dictionary<string, float> ReadEconomy(List<List<string>> rows, string path)
         {
             var values = new Dictionary<string, float>();
-            var rows = ReadCsv(path);
             if (rows.Count == 0) return values;
 
             var header = rows[0];

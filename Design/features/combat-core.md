@@ -17,7 +17,10 @@
   archers are a free win.
 - `NavRoute`: the one correct route walker (horizontal distances, skip corners underfoot, reject
   partial paths ending where they start). Target is SamplePosition'd 3 m (a structure's centre is
-  inside its carve). Guards use `straightLineFallback:false`. A soldier whose route is Blocked attacks
+  inside its carve). Guards use `straightLineFallback:false`. `NavRoute.AreaMask`: an orc's route
+  never crosses a gate (`NavAreas.WithoutGates`) -- chasing too, since 2026-10-23 (orcs walked in at a
+  run's gate after citizens/soldiers); walled off at the end of a chase, `OrcUnit.BreakThrough`
+  strikes the fence/gate there. A soldier whose route is Blocked attacks
   the nearest orc wall within 2.5 m.
 
 ## Code
