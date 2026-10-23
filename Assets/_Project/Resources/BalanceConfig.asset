@@ -5100,6 +5100,42 @@ MonoBehaviour:
   kingRevealRadius: 9
   heroReturnWaitSeconds: 10
   heroSkills:
+  - id: captain_immortal
+    unlockLevel: 15
+    cooldownSeconds: 120
+    durationSeconds: 1.5
+    durationPerLevel: 0
+    power: 0.5
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: captain_might
+    unlockLevel: 1
+    cooldownSeconds: 30
+    durationSeconds: 10
+    durationPerLevel: 0.2
+    power: 1.5
+    powerPerLevel: 0.02
+    radius: 10
+    tier: 0
+  - id: captain_rescue
+    unlockLevel: 5
+    cooldownSeconds: 120
+    durationSeconds: 15
+    durationPerLevel: 0.2
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: captain_spirit
+    unlockLevel: 10
+    cooldownSeconds: 90
+    durationSeconds: 20
+    durationPerLevel: 0.5
+    power: 6
+    powerPerLevel: 0.3
+    radius: 12
+    tier: 0
   - id: king_bless
     unlockLevel: 15
     cooldownSeconds: 240
@@ -5107,6 +5143,8 @@ MonoBehaviour:
     durationPerLevel: 0.2
     power: 0
     powerPerLevel: 0
+    radius: 0
+    tier: 0
   - id: king_heal
     unlockLevel: 1
     cooldownSeconds: 25
@@ -5114,6 +5152,8 @@ MonoBehaviour:
     durationPerLevel: 0
     power: 0.35
     powerPerLevel: 0.01
+    radius: 0
+    tier: 0
   - id: king_invuln
     unlockLevel: 5
     cooldownSeconds: 45
@@ -5121,6 +5161,8 @@ MonoBehaviour:
     durationPerLevel: 0.1
     power: 0
     powerPerLevel: 0
+    radius: 0
+    tier: 0
   - id: king_rage
     unlockLevel: 10
     cooldownSeconds: 60
@@ -5128,6 +5170,84 @@ MonoBehaviour:
     durationPerLevel: 0.2
     power: 1.5
     powerPerLevel: 0.02
+    radius: 0
+    tier: 0
+  - id: queen_sacrifice
+    unlockLevel: 15
+    cooldownSeconds: 180
+    durationSeconds: 10
+    durationPerLevel: 0.2
+    power: 2
+    powerPerLevel: 0.02
+    radius: 0
+    tier: 0
+  - id: queen_shot
+    unlockLevel: 1
+    cooldownSeconds: 20
+    durationSeconds: 0
+    durationPerLevel: 0
+    power: 0.3
+    powerPerLevel: 0.01
+    radius: 10
+    tier: 0
+  - id: queen_summon
+    unlockLevel: 10
+    cooldownSeconds: 90
+    durationSeconds: 30
+    durationPerLevel: 0.5
+    power: 5
+    powerPerLevel: 0
+    radius: 0
+    tier: 3
+  - id: queen_volley
+    unlockLevel: 5
+    cooldownSeconds: 30
+    durationSeconds: 0
+    durationPerLevel: 0
+    power: 3
+    powerPerLevel: 0.1
+    radius: 9
+    tier: 0
+  heroes:
+  - id: king
+    maxHealth: 120
+    attackDamage: 10
+    attackIntervalSeconds: 1
+    attackRange: 1.6
+    walkSpeed: 2.2
+    engageRadius: 8
+    healthPerLevel: 20
+    damagePerLevel: 2
+    price: 0
+    castleLevel: 1
+    fleeRadius: 0
+    fleeDistance: 0
+  - id: queen
+    maxHealth: 80
+    attackDamage: 9
+    attackIntervalSeconds: 1.3
+    attackRange: 7
+    walkSpeed: 2.4
+    engageRadius: 9
+    healthPerLevel: 12
+    damagePerLevel: 2
+    price: 150
+    castleLevel: 2
+    fleeRadius: 2.5
+    fleeDistance: 5
+  - id: captain
+    maxHealth: 200
+    attackDamage: 7
+    attackIntervalSeconds: 1.1
+    attackRange: 1.6
+    walkSpeed: 2
+    engageRadius: 8
+    healthPerLevel: 35
+    damagePerLevel: 1
+    price: 250
+    castleLevel: 3
+    fleeRadius: 0
+    fleeDistance: 0
   invasionHouses: 6
   invasionPeoplePerHouse: 3
   invasionPersonRespawnSeconds: 15
