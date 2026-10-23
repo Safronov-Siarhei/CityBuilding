@@ -1,0 +1,5392 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3bf000469e3e8c469ba80762bc24f82, type: 3}
+  m_Name: BalanceConfigInvasion
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Core.BalanceConfig
+  units:
+  - id: militia
+    displayName: "\u041E\u043F\u043E\u043B\u0447\u0435\u043D\u0438\u0435"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 2.6
+    engageRadius: 7
+    levels:
+    - maxHealth: 12
+      attackDamage: 5
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.5
+      recruitCoins: 25
+      upkeepCoinsPerDay: 1
+    - maxHealth: 18
+      attackDamage: 7
+      attackIntervalSeconds: 1
+      walkSpeed: 1.5
+      recruitCoins: 25
+      upkeepCoinsPerDay: 2
+    - maxHealth: 26
+      attackDamage: 10
+      attackIntervalSeconds: 0.9
+      walkSpeed: 1.5
+      recruitCoins: 25
+      upkeepCoinsPerDay: 3
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 80
+      seconds: 90
+    - coins: 150
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc
+    displayName: "\u041E\u0440\u043A"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 3
+    engageRadius: 6
+    levels:
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 20
+      attackDamage: 4
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: spearman
+    displayName: "\u041A\u043E\u043F\u0435\u0439\u0449\u0438\u043A"
+    attackRangeUnits: 2
+    attackRangeStructures: 2.8
+    engageRadius: 7
+    levels:
+    - maxHealth: 20
+      attackDamage: 7
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.5
+      recruitCoins: 45
+      upkeepCoinsPerDay: 2
+    - maxHealth: 30
+      attackDamage: 10
+      attackIntervalSeconds: 1
+      walkSpeed: 1.5
+      recruitCoins: 45
+      upkeepCoinsPerDay: 3
+    - maxHealth: 44
+      attackDamage: 14
+      attackIntervalSeconds: 0.9
+      walkSpeed: 1.5
+      recruitCoins: 45
+      upkeepCoinsPerDay: 4
+    startsUnlocked: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 120
+      seconds: 90
+    - coins: 220
+      seconds: 120
+    unlockResearch:
+      coins: 60
+      seconds: 60
+  - id: archer
+    displayName: "\u041B\u0443\u0447\u043D\u0438\u043A"
+    attackRangeUnits: 8
+    attackRangeStructures: 8
+    engageRadius: 10
+    levels:
+    - maxHealth: 14
+      attackDamage: 6
+      attackIntervalSeconds: 1.4
+      walkSpeed: 1.4
+      recruitCoins: 60
+      upkeepCoinsPerDay: 3
+    - maxHealth: 20
+      attackDamage: 9
+      attackIntervalSeconds: 1.3
+      walkSpeed: 1.4
+      recruitCoins: 60
+      upkeepCoinsPerDay: 4
+    - maxHealth: 29
+      attackDamage: 13
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.4
+      recruitCoins: 60
+      upkeepCoinsPerDay: 6
+    startsUnlocked: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 200
+      seconds: 110
+    - coins: 320
+      seconds: 140
+    unlockResearch:
+      coins: 140
+      seconds: 90
+  - id: manatarms
+    displayName: "\u041B\u0430\u0442\u043D\u0438\u043A"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 2.6
+    engageRadius: 7
+    levels:
+    - maxHealth: 45
+      attackDamage: 9
+      attackIntervalSeconds: 1.2
+      walkSpeed: 1.2
+      recruitCoins: 90
+      upkeepCoinsPerDay: 4
+    - maxHealth: 65
+      attackDamage: 13
+      attackIntervalSeconds: 1.1
+      walkSpeed: 1.2
+      recruitCoins: 90
+      upkeepCoinsPerDay: 6
+    - maxHealth: 95
+      attackDamage: 18
+      attackIntervalSeconds: 1
+      walkSpeed: 1.2
+      recruitCoins: 90
+      upkeepCoinsPerDay: 9
+    startsUnlocked: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 380
+      seconds: 150
+    - coins: 600
+      seconds: 180
+    unlockResearch:
+      coins: 260
+      seconds: 120
+  - id: orc_thrower
+    displayName: "\u041E\u0440\u043A-\u043C\u0435\u0442\u0430\u0442\u0435\u043B\u044C"
+    attackRangeUnits: 6
+    attackRangeStructures: 6
+    engageRadius: 7
+    levels:
+    - maxHealth: 14
+      attackDamage: 4
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 14
+      attackDamage: 4
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 14
+      attackDamage: 4
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1.3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc_chief
+    displayName: "\u0412\u043E\u0436\u0434\u044C \u043E\u0440\u043A\u043E\u0432"
+    attackRangeUnits: 1.6
+    attackRangeStructures: 3
+    engageRadius: 7
+    levels:
+    - maxHealth: 60
+      attackDamage: 8
+      attackIntervalSeconds: 1.3
+      walkSpeed: 1.2
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 60
+      attackDamage: 8
+      attackIntervalSeconds: 1.3
+      walkSpeed: 1.2
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 60
+      attackDamage: 8
+      attackIntervalSeconds: 1.3
+      walkSpeed: 1.2
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc_brute
+    displayName: "\u041E\u0440\u043A-\u0437\u0434\u043E\u0440\u043E\u0432\u044F\u043A"
+    attackRangeUnits: 1.6
+    attackRangeStructures: 3
+    engageRadius: 6
+    levels:
+    - maxHealth: 45
+      attackDamage: 7
+      attackIntervalSeconds: 1.8
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 45
+      attackDamage: 7
+      attackIntervalSeconds: 1.8
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 45
+      attackDamage: 7
+      attackIntervalSeconds: 1.8
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc_chief_boss
+    displayName: "\u0412\u043E\u0436\u0434\u044C \u043E\u0440\u043A\u043E\u0432 (\u043C\u0438\u043D\u0438\u0431\u043E\u0441\u0441)"
+    attackRangeUnits: 1.8
+    attackRangeStructures: 3
+    engageRadius: 8
+    levels:
+    - maxHealth: 400
+      attackDamage: 25
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 400
+      attackDamage: 25
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 400
+      attackDamage: 25
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  buildings:
+  - id: Hovel
+    displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
+    category: 0
+    cost:
+    - type: 0
+      amount: 7
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 80
+      defense: 0
+      housingCapacity: 5
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 128
+      defense: 0
+      housingCapacity: 8
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 10
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 288
+      defense: 0
+      housingCapacity: 12
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 14
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 86
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Cottage
+    displayName: "\u041A\u043E\u0442\u0442\u0435\u0434\u0436"
+    category: 0
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 8
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 120
+      defense: 0
+      housingCapacity: 8
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 192
+      defense: 0
+      housingCapacity: 12
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 16
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 432
+      defense: 0
+      housingCapacity: 20
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 600
+      defense: 0
+      housingCapacity: 24
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Hovel
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
+    - coins: 85
+      seconds: 180
+    - coins: 145
+      seconds: 240
+  - id: Manor
+    displayName: "\u041E\u0441\u043E\u0431\u043D\u044F\u043A"
+    category: 0
+    cost:
+    - type: 0
+      amount: 55
+    - type: 1
+      amount: 25
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 14
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 320
+      defense: 0
+      housingCapacity: 20
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 28
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 720
+      defense: 0
+      housingCapacity: 36
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1000
+      defense: 0
+      housingCapacity: 44
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Cottage
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 88
+    - type: 1
+      amount: 40
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 154
+    - type: 1
+      amount: 70
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 270
+    - type: 1
+      amount: 122
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 472
+    - type: 1
+      amount: 214
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 50
+      seconds: 60
+    levelResearch:
+    - coins: 70
+      seconds: 60
+    - coins: 120
+      seconds: 120
+    - coins: 205
+      seconds: 180
+    - coins: 345
+      seconds: 240
+  - id: Castle
+    displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
+    category: 0
+    cost: []
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 20
+    citizensOnBuild: 5
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 400
+      defense: 20
+      housingCapacity: 7
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 640
+      defense: 32
+      housingCapacity: 7
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1000
+      defense: 50
+      housingCapacity: 7
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1440
+      defense: 72
+      housingCapacity: 7
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 2000
+      defense: 100
+      housingCapacity: 7
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 100
+    - type: 1
+      amount: 60
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 220
+    - type: 1
+      amount: 150
+    - type: 3
+      amount: 60
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 385
+    - type: 1
+      amount: 262
+    - type: 3
+      amount: 105
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 674
+    - type: 1
+      amount: 459
+    - type: 3
+      amount: 183
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: FisherHut
+    displayName: "\u0420\u044B\u0431\u0430\u0446\u043A\u0430\u044F \u0445\u0438\u0436\u0438\u043D\u0430"
+    category: 5
+    cost:
+    - type: 0
+      amount: 10
+    recipes:
+    - id: fish
+      displayName: "\u0415\u0434\u0430"
+      inputs: []
+      output: 2
+      outputAmount: 1
+    productionIntervalSeconds: 24
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 90
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 1
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 225
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 324
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 450
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 24
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 42
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 74
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 129
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Farm
+    displayName: "\u0424\u0435\u0440\u043C\u0430"
+    category: 5
+    cost:
+    - type: 0
+      amount: 10
+    - type: 1
+      amount: 2
+    recipes:
+    - id: grain
+      displayName: "\u041F\u0448\u0435\u043D\u0438\u0446\u0430"
+      inputs: []
+      output: 8
+      outputAmount: 1
+    productionIntervalSeconds: 24
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 70
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 112
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 175
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 8
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 252
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 10
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 350
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 12
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 42
+    - type: 1
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 74
+    - type: 1
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 129
+    - type: 1
+      amount: 43
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
+    - coins: 50
+      seconds: 180
+    - coins: 85
+      seconds: 240
+  - id: Sawmill
+    displayName: "\u041B\u0435\u0441\u043E\u043F\u0438\u043B\u043A\u0430"
+    category: 4
+    cost:
+    - type: 0
+      amount: 12
+    recipes:
+    - id: wood
+      displayName: "\u0414\u0435\u0440\u0435\u0432\u043E"
+      inputs: []
+      output: 0
+      outputAmount: 1
+    productionIntervalSeconds: 6
+    fogRevealRadius: 15
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 2
+    levels:
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 12
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 17
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 250
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 24
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 360
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 29
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 35
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 32
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 43
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 40
+      seconds: 120
+    - coins: 70
+      seconds: 180
+    - coins: 115
+      seconds: 240
+  - id: Quarry
+    displayName: "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
+    category: 4
+    cost:
+    - type: 0
+      amount: 12
+    recipes:
+    - id: stone
+      displayName: "\u041A\u0430\u043C\u0435\u043D\u044C"
+      inputs: []
+      output: 1
+      outputAmount: 1
+    productionIntervalSeconds: 6
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 2
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 20
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 28
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 38
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 46
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 55
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 32
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 56
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 98
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 172
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
+    - coins: 50
+      seconds: 180
+    - coins: 85
+      seconds: 240
+  - id: IronMine
+    displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    category: 4
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 15
+    recipes:
+    - id: iron_ore
+      displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 5
+      outputAmount: 1
+    productionIntervalSeconds: 12
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 24
+    - type: 6
+      amount: 10
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 42
+    - type: 6
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 74
+    - type: 6
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 129
+    - type: 6
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
+    - coins: 100
+      seconds: 180
+    - coins: 175
+      seconds: 240
+  - id: CoalMine
+    displayName: "\u0423\u0433\u043E\u043B\u044C\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    category: 4
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 10
+    recipes:
+    - id: coal
+      displayName: "\u0423\u0433\u043E\u043B\u044C"
+      inputs: []
+      output: 6
+      outputAmount: 1
+    productionIntervalSeconds: 6
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 250
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 360
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 16
+    - type: 5
+      amount: 6
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 28
+    - type: 5
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 49
+    - type: 5
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 86
+    - type: 5
+      amount: 43
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
+    - coins: 85
+      seconds: 180
+    - coins: 145
+      seconds: 240
+  - id: Warehouse
+    displayName: "\u0421\u043A\u043B\u0430\u0434"
+    category: 1
+    cost:
+    - type: 0
+      amount: 18
+    - type: 1
+      amount: 5
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 1
+    maxCount: 0
+    levels:
+    - maxHealth: 120
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 300
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 192
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1000
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 432
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1450
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2000
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 86
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
+    - coins: 100
+      seconds: 180
+    - coins: 175
+      seconds: 240
+  - id: Barn
+    displayName: "\u0410\u043C\u0431\u0430\u0440"
+    category: 1
+    cost:
+    - type: 0
+      amount: 15
+    - type: 1
+      amount: 3
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 4
+    maxCount: 0
+    levels:
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 200
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 400
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 250
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 700
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 360
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1000
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1400
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 43
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 45
+      seconds: 120
+    - coins: 75
+      seconds: 180
+    - coins: 130
+      seconds: 240
+  - id: Treasury
+    displayName: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
+    category: 1
+    cost:
+    - type: 0
+      amount: 10
+    - type: 1
+      amount: 40
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 3
+    maxCount: 0
+    levels:
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 500
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 320
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1000
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1800
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 720
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1000
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 3600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 16
+    - type: 1
+      amount: 64
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 28
+    - type: 1
+      amount: 112
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 49
+    - type: 1
+      amount: 196
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 86
+    - type: 1
+      amount: 343
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
+    - coins: 130
+      seconds: 180
+    - coins: 215
+      seconds: 240
+  - id: BigWarehouse
+    displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0441\u043A\u043B\u0430\u0434"
+    category: 1
+    cost:
+    - type: 0
+      amount: 80
+    - type: 1
+      amount: 40
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 1
+    maxCount: 0
+    levels:
+    - maxHealth: 260
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 800
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 416
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 650
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 936
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 3750
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 5200
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Warehouse
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 128
+    - type: 1
+      amount: 64
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 224
+    - type: 1
+      amount: 112
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 392
+    - type: 1
+      amount: 196
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 686
+    - type: 1
+      amount: 343
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 70
+      seconds: 60
+    levelResearch:
+    - coins: 110
+      seconds: 60
+    - coins: 180
+      seconds: 120
+    - coins: 305
+      seconds: 180
+    - coins: 520
+      seconds: 240
+  - id: BigBarn
+    displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0430\u043C\u0431\u0430\u0440"
+    category: 1
+    cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 4
+    maxCount: 0
+    levels:
+    - maxHealth: 220
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 550
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 352
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1100
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1900
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 792
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2750
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 3800
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Barn
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 112
+    - type: 1
+      amount: 48
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 196
+    - type: 1
+      amount: 84
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 343
+    - type: 1
+      amount: 147
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 600
+    - type: 1
+      amount: 257
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 60
+      seconds: 60
+    levelResearch:
+    - coins: 90
+      seconds: 60
+    - coins: 150
+      seconds: 120
+    - coins: 255
+      seconds: 180
+    - coins: 435
+      seconds: 240
+  - id: BigTreasury
+    displayName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u0441\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
+    category: 1
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 110
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 3
+    maxCount: 0
+    levels:
+    - maxHealth: 420
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1300
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 672
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1050
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 4600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1512
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 6600
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 2100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 9150
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Treasury
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 176
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 308
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 539
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 943
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 85
+      seconds: 60
+    levelResearch:
+    - coins: 125
+      seconds: 60
+    - coins: 210
+      seconds: 120
+    - coins: 355
+      seconds: 180
+    - coins: 605
+      seconds: 240
+  - id: Tower
+    displayName: "\u0411\u0430\u0448\u043D\u044F"
+    category: 3
+    cost:
+    - type: 0
+      amount: 5
+    - type: 1
+      amount: 15
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 18
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 220
+      defense: 25
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 352
+      defense: 40
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 63
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 792
+      defense: 91
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1100
+      defense: 126
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Fence
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 8
+    - type: 1
+      amount: 24
+    - type: 3
+      amount: 12
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 14
+    - type: 1
+      amount: 42
+    - type: 3
+      amount: 26
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 74
+    - type: 3
+      amount: 46
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 43
+    - type: 1
+      amount: 129
+    - type: 3
+      amount: 80
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
+    - coins: 50
+      seconds: 180
+    - coins: 85
+      seconds: 240
+  - id: Barracks
+    displayName: "\u041A\u0430\u0437\u0430\u0440\u043C\u0430"
+    category: 3
+    cost:
+    - type: 0
+      amount: 15
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 180
+      defense: 10
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 288
+      defense: 16
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 450
+      defense: 25
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 648
+      defense: 36
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 900
+      defense: 50
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 48
+    - type: 3
+      amount: 15
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 42
+    - type: 1
+      amount: 84
+    - type: 3
+      amount: 32
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 74
+    - type: 1
+      amount: 147
+    - type: 3
+      amount: 56
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 129
+    - type: 1
+      amount: 257
+    - type: 3
+      amount: 98
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: Gate
+    displayName: "\u0412\u043E\u0440\u043E\u0442\u0430"
+    category: 3
+    cost:
+    - type: 0
+      amount: 5
+    - type: 1
+      amount: 12
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 640
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1024
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 2304
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 3200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 8
+    - type: 1
+      amount: 19
+    - type: 3
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 14
+    - type: 1
+      amount: 34
+    - type: 3
+      amount: 18
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 60
+    - type: 3
+      amount: 32
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 43
+    - type: 1
+      amount: 104
+    - type: 3
+      amount: 55
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: FortifiedTower
+    displayName: "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u0430\u044F
+      \u0431\u0430\u0448\u043D\u044F"
+    category: 3
+    cost:
+    - type: 0
+      amount: 10
+    - type: 1
+      amount: 40
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 20
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 480
+      defense: 55
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 768
+      defense: 88
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1200
+      defense: 138
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1728
+      defense: 199
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 2400
+      defense: 276
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Tower
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 16
+    - type: 1
+      amount: 64
+    - type: 3
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 28
+    - type: 1
+      amount: 112
+    - type: 3
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 49
+    - type: 1
+      amount: 196
+    - type: 3
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 86
+    - type: 1
+      amount: 343
+    - type: 3
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 35
+      seconds: 60
+    levelResearch:
+    - coins: 50
+      seconds: 60
+    - coins: 85
+      seconds: 120
+    - coins: 145
+      seconds: 180
+    - coins: 245
+      seconds: 240
+  - id: FortifiedGate
+    displayName: "\u0423\u043A\u0440\u0435\u043F\u043B\u0451\u043D\u043D\u044B\u0435
+      \u0432\u043E\u0440\u043E\u0442\u0430"
+    category: 3
+    cost:
+    - type: 0
+      amount: 10
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 1360
+      defense: 26
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 2176
+      defense: 42
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 3400
+      defense: 65
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 4896
+      defense: 94
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 6800
+      defense: 131
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Gate
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 16
+    - type: 1
+      amount: 48
+    - type: 3
+      amount: 10
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 28
+    - type: 1
+      amount: 84
+    - type: 3
+      amount: 17
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 49
+    - type: 1
+      amount: 147
+    - type: 3
+      amount: 30
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 86
+    - type: 1
+      amount: 257
+    - type: 3
+      amount: 52
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: Fence
+    displayName: "\u0417\u0430\u0431\u043E\u0440"
+    category: 3
+    cost:
+    - type: 0
+      amount: 2
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 4
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 320
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 720
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1000
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 1
+      amount: 20
+    upgradeToLevel4Cost:
+    - type: 1
+      amount: 35
+    upgradeToLevel5Cost:
+    - type: 1
+      amount: 61
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Road
+    displayName: "\u0414\u043E\u0440\u043E\u0433\u0430"
+    category: 0
+    cost:
+    - type: 1
+      amount: 1
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 4
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 40
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 64
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 1
+      amount: 5
+    upgradeToLevel3Cost:
+    - type: 1
+      amount: 8
+    upgradeToLevel4Cost:
+    - type: 1
+      amount: 14
+    upgradeToLevel5Cost:
+    - type: 1
+      amount: 24
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Bridge
+    displayName: "\u041C\u043E\u0441\u0442"
+    category: 6
+    cost:
+    - type: 0
+      amount: 8
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 4
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 40
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 64
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: WaterMill
+    displayName: "\u0412\u043E\u0434\u044F\u043D\u0430\u044F \u043C\u0435\u043B\u044C\u043D\u0438\u0446\u0430"
+    category: 6
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 10
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 90
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 225
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 324
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 450
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 86
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
+    - coins: 85
+      seconds: 180
+    - coins: 145
+      seconds: 240
+  - id: Dock
+    displayName: "\u041F\u0440\u0438\u0441\u0442\u0430\u043D\u044C"
+    category: 6
+    cost:
+    - type: 0
+      amount: 20
+    - type: 1
+      amount: 8
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 80
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 128
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 288
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 32
+    - type: 1
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 15
+      seconds: 60
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 40
+      seconds: 120
+    - coins: 70
+      seconds: 180
+    - coins: 115
+      seconds: 240
+  - id: TownSquare
+    displayName: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C"
+    category: 2
+    cost:
+    - type: 0
+      amount: 5
+    - type: 1
+      amount: 20
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 6
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 90
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 5
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 8
+    - maxHealth: 225
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 13
+    - maxHealth: 324
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 19
+    - maxHealth: 450
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 26
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 8
+    - type: 1
+      amount: 32
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 14
+    - type: 1
+      amount: 56
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 98
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 43
+    - type: 1
+      amount: 172
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 40
+      seconds: 120
+    - coins: 70
+      seconds: 180
+    - coins: 115
+      seconds: 240
+  - id: Flag
+    displayName: "\u0424\u043B\u0430\u0433"
+    category: 2
+    cost:
+    - type: 0
+      amount: 4
+    - type: 1
+      amount: 1
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 6
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 40
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 1
+    - maxHealth: 64
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 2
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 3
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 4
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 6
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 6
+    - type: 1
+      amount: 2
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 11
+    - type: 1
+      amount: 3
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 19
+    - type: 1
+      amount: 5
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 34
+    - type: 1
+      amount: 9
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: DecTree
+    displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0435
+      \u0434\u0435\u0440\u0435\u0432\u043E"
+    category: 2
+    cost:
+    - type: 0
+      amount: 3
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 3
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 40
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 1
+    - maxHealth: 64
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 2
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 3
+    - maxHealth: 144
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 4
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 6
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 5
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 8
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 14
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 24
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: DecBush
+    displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
+      \u043A\u0443\u0441\u0442"
+    category: 2
+    cost:
+    - type: 0
+      amount: 2
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 3
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 30
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 1
+    - maxHealth: 48
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 2
+    - maxHealth: 75
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 3
+    - maxHealth: 108
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 4
+    - maxHealth: 150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 6
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 3
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 6
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 10
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 18
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: DecGarden
+    displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
+      \u0441\u0430\u0434"
+    category: 2
+    cost:
+    - type: 0
+      amount: 5
+    - type: 1
+      amount: 2
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 4
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 60
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 2
+    - maxHealth: 96
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 3
+    - maxHealth: 150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 5
+    - maxHealth: 216
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 7
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 10
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 8
+    - type: 1
+      amount: 3
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 14
+    - type: 1
+      amount: 6
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 10
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 43
+    - type: 1
+      amount: 18
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 10
+      seconds: 60
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Granary
+    displayName: "\u041A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
+    category: 1
+    cost:
+    - type: 0
+      amount: 15
+    - type: 1
+      amount: 3
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 2
+    maxCount: 0
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 200
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 400
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 700
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1000
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1400
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 43
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 45
+      seconds: 120
+    - coins: 75
+      seconds: 180
+    - coins: 130
+      seconds: 240
+  - id: BigGranary
+    displayName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
+    category: 1
+    cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 2
+    maxCount: 0
+    levels:
+    - maxHealth: 230
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 550
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 368
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1100
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 575
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 1900
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 828
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 2750
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 1150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 3800
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Granary
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 112
+    - type: 1
+      amount: 48
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 196
+    - type: 1
+      amount: 84
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 343
+    - type: 1
+      amount: 147
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 600
+    - type: 1
+      amount: 257
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 60
+      seconds: 60
+    levelResearch:
+    - coins: 90
+      seconds: 60
+    - coins: 150
+      seconds: 120
+    - coins: 255
+      seconds: 180
+    - coins: 435
+      seconds: 240
+  - id: Baker
+    displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
+    category: 5
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 10
+    recipes:
+    - id: bread
+      displayName: "\u0425\u043B\u0435\u0431"
+      inputs:
+      - type: 9
+        amount: 1
+      output: 10
+      outputAmount: 2
+    productionIntervalSeconds: 24
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Windmill
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 86
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
+    - coins: 100
+      seconds: 180
+    - coins: 175
+      seconds: 240
+  - id: Windmill
+    displayName: "\u0412\u0435\u0442\u0440\u044F\u043A"
+    category: 5
+    cost:
+    - type: 0
+      amount: 35
+    - type: 1
+      amount: 10
+    recipes:
+    - id: flour
+      displayName: "\u041C\u0443\u043A\u0430"
+      inputs:
+      - type: 8
+        amount: 2
+      output: 9
+      outputAmount: 1
+    productionIntervalSeconds: 24
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 120
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 192
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 432
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: Farm
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 300
+    - type: 1
+      amount: 86
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: Smokehouse
+    displayName: "\u041A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u044F"
+    category: 5
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 8
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
+    - coins: 85
+      seconds: 180
+    - coins: 145
+      seconds: 240
+  - id: PigFarm
+    displayName: "\u0421\u0432\u0438\u043D\u043E\u0444\u0435\u0440\u043C\u0430"
+    category: 5
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 5
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 120
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 192
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 432
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 8
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 14
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 24
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 43
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 20
+      seconds: 60
+    levelResearch:
+    - coins: 30
+      seconds: 60
+    - coins: 50
+      seconds: 120
+    - coins: 85
+      seconds: 180
+    - coins: 145
+      seconds: 240
+  - id: Orchard
+    displayName: "\u0424\u0440\u0443\u043A\u0442\u043E\u0432\u044B\u0439 \u0441\u0430\u0434"
+    category: 5
+    cost:
+    - type: 0
+      amount: 12
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 80
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 128
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 288
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 32
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 56
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 98
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 172
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 20
+      seconds: 60
+    - coins: 30
+      seconds: 120
+    - coins: 50
+      seconds: 180
+    - coins: 85
+      seconds: 240
+  - id: Smelter
+    displayName: "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
+    category: 4
+    cost:
+    - type: 0
+      amount: 35
+    - type: 1
+      amount: 25
+    recipes:
+    - id: iron_bar
+      displayName: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 5
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 12
+      outputAmount: 1
+    - id: copper_bar
+      displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 11
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 13
+      outputAmount: 1
+    - id: gold_bar
+      displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+      inputs:
+      - type: 3
+        amount: 2
+      - type: 6
+        amount: 1
+      output: 14
+      outputAmount: 1
+    - id: coins
+      displayName: "\u041C\u043E\u043D\u0435\u0442\u044B"
+      inputs:
+      - type: 14
+        amount: 1
+      - type: 6
+        amount: 1
+      output: 7
+      outputAmount: 4
+    productionIntervalSeconds: 12
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 240
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 375
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 540
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 750
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 40
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 70
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 122
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 300
+    - type: 1
+      amount: 214
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 35
+      seconds: 60
+    levelResearch:
+    - coins: 55
+      seconds: 60
+    - coins: 90
+      seconds: 120
+    - coins: 155
+      seconds: 180
+    - coins: 260
+      seconds: 240
+  - id: CopperMine
+    displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    category: 4
+    cost:
+    - type: 0
+      amount: 25
+    - type: 1
+      amount: 15
+    recipes:
+    - id: copper_ore
+      displayName: "\u041C\u0435\u0434\u043D\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 11
+      outputAmount: 1
+    productionIntervalSeconds: 12
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 110
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 176
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 275
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 396
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 550
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 24
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 70
+    - type: 1
+      amount: 42
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 122
+    - type: 1
+      amount: 74
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 214
+    - type: 1
+      amount: 129
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 35
+      seconds: 60
+    - coins: 60
+      seconds: 120
+    - coins: 100
+      seconds: 180
+    - coins: 175
+      seconds: 240
+  - id: GoldMine
+    displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
+    category: 4
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 20
+    recipes:
+    - id: gold_ore
+      displayName: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F \u0440\u0443\u0434\u0430"
+      inputs: []
+      output: 3
+      outputAmount: 1
+    productionIntervalSeconds: 12
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 120
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 192
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 432
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 7
+      batchesPerWorkerPerTick: 6
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 32
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 56
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 98
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 172
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
+    - coins: 130
+      seconds: 180
+    - coins: 215
+      seconds: 240
+  - id: Laboratory
+    displayName: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F"
+    category: 0
+    cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 10
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 256
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 10
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 10
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 576
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 10
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    - maxHealth: 800
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 10
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 64
+    - type: 1
+      amount: 48
+    - type: 5
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 112
+    - type: 1
+      amount: 84
+    - type: 5
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 196
+    - type: 1
+      amount: 147
+    - type: 5
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 343
+    - type: 1
+      amount: 257
+    - type: 5
+      amount: 86
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+  - id: HealerHouse
+    displayName: "\u0414\u043E\u043C \u043B\u0435\u043A\u0430\u0440\u044F"
+    category: 0
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 15
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 130
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 16
+      happiness: 0
+    - maxHealth: 208
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 20
+      happiness: 0
+    - maxHealth: 325
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 26
+      happiness: 0
+    - maxHealth: 468
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 31
+      happiness: 0
+    - maxHealth: 650
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 37
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 24
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 42
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 74
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 129
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: FireBrigade
+    displayName: "\u041F\u043E\u0436\u0430\u0440\u043D\u0430\u044F \u0431\u0440\u0438\u0433\u0430\u0434\u0430"
+    category: 0
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 15
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 130
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 18
+      happiness: 0
+    - maxHealth: 208
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 24
+      happiness: 0
+    - maxHealth: 325
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 30
+      happiness: 0
+    - maxHealth: 468
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 36
+      happiness: 0
+    - maxHealth: 650
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 43
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 48
+    - type: 1
+      amount: 24
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 84
+    - type: 1
+      amount: 42
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 147
+    - type: 1
+      amount: 74
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 257
+    - type: 1
+      amount: 129
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 25
+      seconds: 60
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: Well
+    displayName: "\u041A\u043E\u043B\u043E\u0434\u0435\u0446"
+    category: 0
+    cost:
+    - type: 0
+      amount: 5
+    - type: 1
+      amount: 2
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 6
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 60
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 14
+      happiness: 0
+    - maxHealth: 96
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 18
+      happiness: 0
+    - maxHealth: 150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 24
+      happiness: 0
+    - maxHealth: 216
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 29
+      happiness: 0
+    - maxHealth: 300
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 35
+      happiness: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 8
+    - type: 1
+      amount: 16
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 14
+    - type: 1
+      amount: 28
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 24
+    - type: 1
+      amount: 49
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 43
+    - type: 1
+      amount: 86
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
+  - id: Church
+    displayName: "\u0426\u0435\u0440\u043A\u043E\u0432\u044C"
+    category: 2
+    cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 30
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 180
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 8
+    - maxHealth: 288
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 13
+    - maxHealth: 450
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 20
+    - maxHealth: 648
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 29
+    - maxHealth: 900
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 40
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 64
+    - type: 1
+      amount: 48
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 112
+    - type: 1
+      amount: 84
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 196
+    - type: 1
+      amount: 147
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 343
+    - type: 1
+      amount: 257
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 40
+      seconds: 60
+    levelResearch:
+    - coins: 65
+      seconds: 60
+    - coins: 105
+      seconds: 120
+    - coins: 180
+      seconds: 180
+    - coins: 305
+      seconds: 240
+  - id: Tavern
+    displayName: "\u0422\u0430\u0432\u0435\u0440\u043D\u0430"
+    category: 2
+    cost:
+    - type: 0
+      amount: 35
+    - type: 1
+      amount: 15
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 150
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 10
+    - maxHealth: 240
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 16
+    - maxHealth: 375
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 25
+    - maxHealth: 540
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 36
+    - maxHealth: 750
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 50
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 24
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 42
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 74
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 300
+    - type: 1
+      amount: 129
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 45
+      seconds: 60
+    - coins: 75
+      seconds: 120
+    - coins: 130
+      seconds: 180
+    - coins: 215
+      seconds: 240
+  - id: Theater
+    displayName: "\u0422\u0435\u0430\u0442\u0440"
+    category: 2
+    cost:
+    - type: 0
+      amount: 50
+    - type: 1
+      amount: 35
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 180
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 15
+    - maxHealth: 288
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 24
+    - maxHealth: 450
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 38
+    - maxHealth: 648
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 55
+    - maxHealth: 900
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 76
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 80
+    - type: 1
+      amount: 56
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 140
+    - type: 1
+      amount: 98
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 245
+    - type: 1
+      amount: 172
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 429
+    - type: 1
+      amount: 300
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 50
+      seconds: 60
+    levelResearch:
+    - coins: 75
+      seconds: 60
+    - coins: 130
+      seconds: 120
+    - coins: 220
+      seconds: 180
+    - coins: 375
+      seconds: 240
+  - id: Colosseum
+    displayName: "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
+    category: 2
+    cost:
+    - type: 0
+      amount: 90
+    - type: 1
+      amount: 80
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 14
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 320
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 25
+    - maxHealth: 512
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 40
+    - maxHealth: 800
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 63
+    - maxHealth: 1152
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 91
+    - maxHealth: 1600
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 126
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 144
+    - type: 1
+      amount: 128
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 252
+    - type: 1
+      amount: 224
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 441
+    - type: 1
+      amount: 392
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 772
+    - type: 1
+      amount: 686
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 100
+      seconds: 60
+    levelResearch:
+    - coins: 150
+      seconds: 60
+    - coins: 250
+      seconds: 120
+    - coins: 425
+      seconds: 180
+    - coins: 720
+      seconds: 240
+  armyMaxSize: 20
+  raidIntervalSeconds: 90
+  raidBaseSize: 2
+  raidProgressPerExtraRaider: 40
+  raidMaxSize: 8
+  raidProgressPerOrcLevel: 150
+  raidMaxOrcLevel: 5
+  raidMinIntervalSeconds: 45
+  raidProgressAtMinInterval: 400
+  portalMaxHealth: 320
+  orcTowerHealth: 160
+  orcTowerDamage: 3
+  orcTowerIntervalSeconds: 1.5
+  orcTowerRangeMeters: 7
+  orcTentHealth: 220
+  orcTotemHealth: 120
+  orcGarrisonSize: 3
+  raidThrowerFromLevel: 2
+  raidThrowerEvery: 3
+  raidChiefFromLevel: 3
+  orcGarrisonRespawnSeconds: 30
+  orcGarrisonGuardRadiusMeters: 8
+  portalHealthByLevel: 40010000e0010000bc020000
+  orcTowerHealthByLevel: a0000000dc0000002c010000
+  orcTowerDamageByLevel: 030000000400000005000000
+  orcTowerRangeByLevel:
+  - 7
+  - 7.5
+  - 8
+  orcGateTowerHealth: 260
+  orcGateTowerDamage: 4
+  orcGateTowerRangeMeters: 7
+  orcPalisadeHealthByLevel: 3c00000064000000
+  orcGateHealthByLevel: 78000000b4000000
+  orcTotemHealthByLevel: 78000000c8000000
+  orcStorehouseHealthByLevel: 96000000dc000000
+  orcBrutePitHealth: 240
+  orcThrowerRangeHealth: 200
+  orcCampLevel2Score: 200
+  orcCampLevel3Score: 450
+  orcCampLevelScorePerRank: 40
+  orcCampLootCoins: 40
+  orcCampLootWood: 60
+  orcCampLootStone: 40
+  orcCampBreatherSeconds: 240
+  mainPortalHealth: 1200
+  orcMainWallHealth: 160
+  orcMainGateHealth: 450
+  orcMainGateDamage: 6
+  orcMainGateRangeMeters: 8
+  orcMainTowerHealth: 420
+  orcMainTowerDamage: 6
+  orcMainTowerRangeMeters: 8.5
+  orcMainTotemHealth: 320
+  orcMainStorehouseHealth: 300
+  orcMainSpawnerHealth: 380
+  orcChiefHouseHealth: 600
+  orcChiefRespawnSeconds: 120
+  orcCageHealthByLevel: 78000000b400000004010000
+  orcMainCageHealth: 360
+  orcCagePrisonersByLevel: 020000000300000004000000
+  orcMainCagePrisoners: 5
+  prisonerHealth: 20
+  prisonerWalkSpeed: 1.2
+  orcMainTreasuryHealth: 500
+  townHallMinDistanceToOrcs: 45
+  orcTreasuryLootCoins: 400
+  orcTreasuryLootIronBars: 30
+  orcTreasuryLootCopperBars: 30
+  portalCount: 5
+  portalDistanceFromTownHallMeters: 36
+  portalDistanceStepMeters: 8
+  progressPerBuildingLevel: 1
+  progressPerCitizen: 1
+  progressPerSoldierLevel: 2
+  progressPerDefencePoint: 0.2
+  progressPerProducedUnit: 0.02
+  defenceAttackIntervalSeconds: 1
+  defenceAttackRangeMeters: 9
+  castleAttackRangeMultiplier: 1.5
+  dayLengthSeconds: 120
+  coinsPerCitizenPerDayAtMaxTax: 0.5
+  decayPerDayAtLevel1: 0.02
+  decayPenaltyThreshold: 0.7
+  minDecayProductionMultiplier: 0.5
+  repairCostFraction: 0.4
+  demolishRefundFraction: 0.5
+  woodPerTree: 5
+  stonePerRock: 20
+  woodPerHarvest: 1
+  stonePerHarvest: 1
+  stoneRockSizes: 0c0000000c0000000c0000000f00000012000000160000001b000000210000002800000032000000
+  harvestSeconds: 15
+  foodPerMouthPerDay: 1
+  hungryDaysBeforeDeaths: 2
+  foodVarietyTarget: 2
+  deathsMemoryDays: 3
+  happinessPenaltyPerDeath: 10
+  happinessPerCitizenTarget: 0.8
+  fireChancePerDayAtFullDecay: 0.3
+  fireSpreadChancePerDay: 0.4
+  fireSpreadRadiusMeters: 6
+  fireDamagePerSecond: 3
+  fireBurnSeconds: 60
+  fireSecondsSavedPerFirefighter: 12
+  fireMinBurnSeconds: 5
+  sicknessBaseChancePerDay: 0.01
+  sicknessHungerChancePerDay: 0.15
+  sicknessThirstChancePerDay: 0.12
+  sicknessDaysBeforeDeath: 3
+  healPerHealerPerDay: 2
+  migrationHappinessThreshold: 30
+  migrationArriveIntervalAtThresholdSeconds: 90
+  migrationArriveIntervalAtFullSeconds: 30
+  migrationLeaveIntervalAtThresholdSeconds: 90
+  migrationLeaveIntervalAtZeroSeconds: 30
+  migrationMinPopulation: 1
+  settlingInSeconds: 420
+  kingMaxHealth: 120
+  kingAttackDamage: 10
+  kingAttackIntervalSeconds: 1
+  kingAttackRange: 1.6
+  kingWalkSpeed: 2.2
+  kingEngageRadius: 8
+  kingHealthPerLevel: 20
+  kingDamagePerLevel: 2
+  kingXpPerLevel: 60
+  kingMaxLevel: 25
+  kingRespawnBaseSeconds: 8
+  kingRespawnPerLevelSeconds: 2
+  kingXpRadius: 12
+  kingGuardRadius: 30
+  kingRevealRadius: 9
+  heroReturnWaitSeconds: 10
+  heroSkills:
+  - id: captain_immortal
+    unlockLevel: 15
+    cooldownSeconds: 120
+    durationSeconds: 1.5
+    durationPerLevel: 0
+    power: 0.5
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: captain_might
+    unlockLevel: 1
+    cooldownSeconds: 30
+    durationSeconds: 10
+    durationPerLevel: 0.2
+    power: 1.5
+    powerPerLevel: 0.02
+    radius: 10
+    tier: 0
+  - id: captain_rescue
+    unlockLevel: 5
+    cooldownSeconds: 120
+    durationSeconds: 15
+    durationPerLevel: 0.2
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: captain_spirit
+    unlockLevel: 10
+    cooldownSeconds: 90
+    durationSeconds: 20
+    durationPerLevel: 0.5
+    power: 6
+    powerPerLevel: 0.3
+    radius: 12
+    tier: 0
+  - id: king_bless
+    unlockLevel: 15
+    cooldownSeconds: 240
+    durationSeconds: 8
+    durationPerLevel: 0.2
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: king_heal
+    unlockLevel: 1
+    cooldownSeconds: 25
+    durationSeconds: 0
+    durationPerLevel: 0
+    power: 0.35
+    powerPerLevel: 0.01
+    radius: 0
+    tier: 0
+  - id: king_invuln
+    unlockLevel: 5
+    cooldownSeconds: 45
+    durationSeconds: 4
+    durationPerLevel: 0.1
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    tier: 0
+  - id: king_rage
+    unlockLevel: 10
+    cooldownSeconds: 60
+    durationSeconds: 8
+    durationPerLevel: 0.2
+    power: 1.5
+    powerPerLevel: 0.02
+    radius: 0
+    tier: 0
+  - id: queen_sacrifice
+    unlockLevel: 15
+    cooldownSeconds: 180
+    durationSeconds: 10
+    durationPerLevel: 0.2
+    power: 2
+    powerPerLevel: 0.02
+    radius: 0
+    tier: 0
+  - id: queen_shot
+    unlockLevel: 1
+    cooldownSeconds: 20
+    durationSeconds: 0
+    durationPerLevel: 0
+    power: 0.3
+    powerPerLevel: 0.01
+    radius: 10
+    tier: 0
+  - id: queen_summon
+    unlockLevel: 10
+    cooldownSeconds: 90
+    durationSeconds: 30
+    durationPerLevel: 0.5
+    power: 5
+    powerPerLevel: 0
+    radius: 0
+    tier: 3
+  - id: queen_volley
+    unlockLevel: 5
+    cooldownSeconds: 30
+    durationSeconds: 0
+    durationPerLevel: 0
+    power: 3
+    powerPerLevel: 0.1
+    radius: 9
+    tier: 0
+  heroes:
+  - id: king
+    maxHealth: 120
+    attackDamage: 10
+    attackIntervalSeconds: 1
+    attackRange: 1.6
+    walkSpeed: 2.2
+    engageRadius: 8
+    healthPerLevel: 20
+    damagePerLevel: 2
+    price: 0
+    castleLevel: 1
+    fleeRadius: 0
+    fleeDistance: 0
+  - id: queen
+    maxHealth: 80
+    attackDamage: 9
+    attackIntervalSeconds: 1.3
+    attackRange: 7
+    walkSpeed: 2.4
+    engageRadius: 9
+    healthPerLevel: 12
+    damagePerLevel: 2
+    price: 150
+    castleLevel: 2
+    fleeRadius: 2.5
+    fleeDistance: 5
+  - id: captain
+    maxHealth: 200
+    attackDamage: 7
+    attackIntervalSeconds: 1.1
+    attackRange: 1.6
+    walkSpeed: 2
+    engageRadius: 8
+    healthPerLevel: 35
+    damagePerLevel: 1
+    price: 250
+    castleLevel: 3
+    fleeRadius: 0
+    fleeDistance: 0
+  invasionHouses: 6
+  invasionPeoplePerHouse: 3
+  invasionPersonRespawnSeconds: 15
+  invasionStartWood: 60
+  invasionStartStone: 40
+  invasionStartCoins: 50
+  invasionFirstWaveSeconds: 60
+  invasionBreatherSeconds: 25
+  invasionWaveOvertimeSeconds: 240
+  invasionTwoLanesFromWave: 3
+  invasionThreeLanesFromWave: 6
+  invasionWaveBaseOrcs: 4
+  invasionWaveExtraOrcEvery: 2
+  invasionWaveMaxOrcs: 10
+  invasionWaveLevelEvery: 3
+  invasionWaveMaxOrcLevel: 12
+  invasionThrowerFromWave: 3
+  invasionThrowerEvery: 3
+  invasionBruteFromWave: 6
+  invasionBruteEvery: 4
+  invasionBossWaveEvery: 5
+  invasionGoldOrc: 2
+  invasionGoldThrower: 3
+  invasionGoldBrute: 6
+  invasionGoldChief: 20
+  invasionGoldPerWave: 10
+  invasionOrcBuildingRadius: 6
+  monsters:
+  - id: wolf
+    maxHealth: 30
+    attackDamage: 3
+    attackIntervalSeconds: 1
+    attackRange: 1.1
+    walkSpeed: 2
+  - id: bear
+    maxHealth: 90
+    attackDamage: 8
+    attackIntervalSeconds: 1.4
+    attackRange: 1.3
+    walkSpeed: 1.5
+  - id: troll
+    maxHealth: 200
+    attackDamage: 14
+    attackIntervalSeconds: 1.5
+    attackRange: 1.5
+    walkSpeed: 1.3
+  - id: giant
+    maxHealth: 900
+    attackDamage: 30
+    attackIntervalSeconds: 2
+    attackRange: 2
+    walkSpeed: 1.2
+  invasionCamp1Monsters: 3
+  invasionCamp2Monsters: 2
+  invasionCamp3Monsters: 2
+  invasionCampRespawnSeconds: 90
+  invasionBossRespawnSeconds: 300
+  invasionMonsterGuardRadius: 6
+  invasionBossGuardRadius: 9
+  invasionMonsterLevelEveryWaves: 5
+  invasionGoldWolf: 3
+  invasionGoldBear: 8
+  invasionGoldTroll: 15
+  invasionShrineRadius: 5
+  invasionShrineHealPerSecond: 0.15
+  invasionBossCoins: 150
+  invasionBossWood: 80
+  invasionBossStone: 60
+  invasionBossBuffSeconds: 120
+  invasionBossBuffDamage: 0.5
+  invasionBossBuffHealth: 0.3
+  invasionCampBuildingLevel: 3
+  invasionCampGuardLevel: 5
+  invasionCampRaiders: 8
+  invasionCampThrowers: 4
+  invasionCampGuardRadius: 8
+  invasionCampGuardRespawnSeconds: 20
+  invasionSoldierGuardRadius: 30
+  invasionOrcHealthMultiplier: 4.2
+  invasionOrcDamageMultiplier: 0.7
+  invasionStoneReserveMultiplier: 3
+  invasionPerHarvest: 2
+  invasionMinimapRadius: 40
+  invasionCitizenHealth: 12
+  invasionBuildSecondsPerUnit: 0.5
+  invasionBuildSecondsMin: 3
+  invasionBuildSecondsMax: 45
+  invasionScorePerWaveSquared: 1
+  invasionScoreBoss: 50
+  invasionScoreCampBuilding: 10
+  invasionRunsCountedPerDay: 5
+  startWood: 80
+  startStone: 30
+  startFood: 50
+  startGold: 100
+  researchSecondsPerWorker: 5
+  researchFreeWorkers: 1
+  researchCancelRefundPercent: 70
+  researchMinSeconds: 5
+  baseCapacityMaterials: 200
+  baseCapacityFood: 100
+  baseCapacityValuables: 300
+  baseCapacityGrain: 150
