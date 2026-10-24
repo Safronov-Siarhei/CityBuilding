@@ -72,7 +72,7 @@ namespace CityBuilder.EditorTools
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
             var runUnits = ReadUnits(invasion.LayOver(unitRows, invasion.Units, InvasionCsvPath), InvasionCsvPath);
-            var runBuildings = ReadBuildings(invasion.LayOver(buildingRows, invasion.Buildings, InvasionCsvPath), InvasionCsvPath);
+            var runBuildings = ReadBuildings(invasion.LayOver(buildingRows, invasion.Buildings, InvasionCsvPath, wholeRow: true), InvasionCsvPath);
             AttachRecipes(runBuildings, recipes);
             var runEconomy = new Dictionary<string, float>(economy);
             foreach (var pair in invasion.Keys) runEconomy[pair.Key] = pair.Value;
@@ -110,7 +110,9 @@ namespace CityBuilder.EditorTools
         /// tab) and `key` (key, value, comment -- like economy). A building's or a unit's row
         /// REPLACES, for a run, the cells of the columns its table has -- an empty cell is an empty
         /// cell, as in the buildings tab (a higher level repeats the one below, a price is nothing);
-        /// a column the table does not have keeps the sandbox's value. A price the table sets is the
+        /// a column the units table does not have keeps the sandbox's value; a BUILDING of the run is
+        /// the buildings table's row and nothing else (the user, 2026-10-24: the two modes must not
+        /// touch -- a column the table lacks is empty for it). A price the table sets is the
         /// whole price: the run's upgrade into level 2 is up2_wood/up2_stone/up2_gold as written,
         /// not those plus the sandbox's iron. A key replaces the economy tab's, or adds a run-only one.
         /// </summary>
@@ -162,7 +164,8 @@ namespace CityBuilder.EditorTools
             }
 
             /// <summary>The sandbox's tab (header first) with this table's rows laid over the rows of the same id.</summary>
-            public List<List<string>> LayOver(List<List<string>> sandbox, List<List<string>> table, string path)
+            /// <param name="wholeRow">True for the buildings: a column the table lacks is emptied, never the sandbox's.</param>
+            public List<List<string>> LayOver(List<List<string>> sandbox, List<List<string>> table, string path, bool wholeRow = false)
             {
                 if (sandbox.Count == 0 || table.Count == 0) return sandbox;
 
@@ -223,6 +226,13 @@ namespace CityBuilder.EditorTools
                         foreach (var prefix in priced)
                         {
                             if (header[c].StartsWith(prefix, StringComparison.Ordinal) && tableHeader.IndexOf(header[c]) < 0) target[c] = string.Empty;
+                        }
+                    }
+                    if (wholeRow)
+                    {
+                        for (var c = 0; c < header.Count; c++)
+                        {
+                            if (c != idColumn && tableHeader.IndexOf(header[c]) < 0) target[c] = string.Empty;
                         }
                     }
                     for (var c = 0; c < into.Length; c++)
