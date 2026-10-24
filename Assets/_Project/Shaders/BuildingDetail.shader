@@ -11,6 +11,10 @@
 // A model exported before the detail existed has no uv1/uv2/colour: Unity hands those in as
 // zeros, so _NoDetailFallback keeps such a model looking as it did (see the fragment).
 //
+// Winter (Maps.SeasonStyle): the global _SeasonSnow lays snow on every face that looks up --
+// roofs, crowns, yards -- times the material's _SnowMask (0 on the figures' copy, so a soldier's
+// helmet stays steel).
+//
 // [MainColor] _BaseColor is what BuildingPlacer's ghost tints (Material.color).
 Shader "CityBuilder/BuildingDetail"
 {
@@ -22,6 +26,7 @@ Shader "CityBuilder/BuildingDetail"
         _DetailStrength ("Detail strength", Range(0, 1)) = 1
         _ShadeStrength ("Ground darkening strength", Range(0, 1)) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.15
+        _SnowMask ("Takes snow in winter", Range(0, 1)) = 1
     }
 
     SubShader
@@ -39,7 +44,11 @@ Shader "CityBuilder/BuildingDetail"
             half _DetailStrength;
             half _ShadeStrength;
             half _Smoothness;
+            half _SnowMask;
         CBUFFER_END
+
+        // set by SeasonStyle for the whole scene: 0 outside winter
+        half _SeasonSnow;
 
         TEXTURE2D(_BaseMap);      SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DetailAtlas);  SAMPLER(sampler_DetailAtlas);
@@ -130,6 +139,10 @@ Shader "CityBuilder/BuildingDetail"
                     albedo *= lerp(half3(1, 1, 1), detail, _DetailStrength);
                 }
                 albedo *= input.shade;
+
+                // snow on what faces the sky, the steeper the less; a roof at 45 degrees is white
+                half up = saturate((normalize(input.normalWS).y - 0.35h) / 0.3h);
+                albedo = lerp(albedo, half3(0.93h, 0.96h, 1.0h), up * _SeasonSnow * _SnowMask);
 
                 InputData inputData = (InputData)0;
                 inputData.positionWS = input.positionWS;

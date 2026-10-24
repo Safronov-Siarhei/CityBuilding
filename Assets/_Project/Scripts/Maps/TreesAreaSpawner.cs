@@ -145,6 +145,7 @@ namespace CityBuilder.Maps
                 // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
                 // than forcing identity, which would render the tree tipped over.
                 var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
+                SeasonStyle.DressTree(instance, prefab.name, cell.x * 73856093 ^ cell.y * 19349663);
                 // Before TreeGrowth, so the collider is measured at the tree's full size and then
                 // scales down/up along with the transform as the sapling grows, instead of being
                 // permanently sized to a 10% sapling.

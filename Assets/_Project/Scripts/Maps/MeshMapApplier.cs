@@ -274,6 +274,10 @@ namespace CityBuilder.Maps
             // it was ever holding an agent up. See TerrainPhysicsLayer for the measurement.
             TerrainPhysicsLayer.ExcludeFromCollisions();
 
+            // the season the player picked (SeasonStyle): its snow and sun now, its palettes on
+            // the ground, trees and decor as each is laid out below
+            SeasonStyle.ApplyToScene();
+
             // These FBX assets carry a corrective root rotation from Blender's Z-up authoring
             // (visible in the Inspector, e.g. ~90 degrees on X) that must NOT be overridden with
             // Quaternion.identity -- doing so would leave the mesh (and its collider, used below
@@ -283,6 +287,7 @@ namespace CityBuilder.Maps
             {
                 var groundInstance = Instantiate(map.GroundPrefab, Vector3.zero, map.GroundPrefab.transform.rotation, transform);
                 _groundInstance = groundInstance;
+                SeasonStyle.DressTerrain(groundInstance);
                 // Every sub-mesh gets its own collider, not just the first -- Map-1-Ground.fbx is
                 // authored as several separate mesh pieces, and a single collider derived from
                 // only the first one found left the rest of the terrain with nothing to raycast
@@ -300,6 +305,7 @@ namespace CityBuilder.Maps
             {
                 var reliefInstance = Instantiate(map.ReliefPrefab, Vector3.zero, map.ReliefPrefab.transform.rotation, transform);
                 _reliefInstance = reliefInstance;
+                SeasonStyle.DressTerrain(reliefInstance);
                 AddMeshCollidersToAll(reliefInstance);
                 TerrainPhysicsLayer.Assign(reliefInstance);
                 SceneryShadows.DisableCasting(reliefInstance);
@@ -412,7 +418,7 @@ namespace CityBuilder.Maps
             {
                 var decor = GetComponent<MapDecorRenderer>();
                 if (decor == null) decor = gameObject.AddComponent<MapDecorRenderer>();
-                decor.Initialize(map.DecorData, map.DecorMaterial);
+                decor.Initialize(map.DecorData, SeasonStyle.TerrainMaterial(map.DecorMaterial));
             }
         }
 

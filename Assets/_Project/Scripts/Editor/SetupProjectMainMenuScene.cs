@@ -115,21 +115,25 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            // Taller for the second and third settings: the fog's look, the HUD's look.
-            cardRect.sizeDelta = new Vector2(800f, 760f);
+            // Taller for the second, third and fourth settings: the fog's look, the HUD's look, the season.
+            cardRect.sizeDelta = new Vector2(800f, 906f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 310f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 236f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
-            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 170f);
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 383f), new Vector2(680f, 70f)), "#settings_title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 309f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 243f);
 
-            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 90f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
-            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 24f);
+            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 163f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 97f);
 
-            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, -56f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
-            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -122f);
+            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, 17f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
+            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -49f);
 
-            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -290f), new Vector2(300f, 80f));
+            // the maps' season (Maps.SeasonStyle) -- a plain choice until the user decides how a player earns one
+            Localize(CreateText(card.transform, "SeasonLabel", string.Empty, 26, new Vector2(0f, -129f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_season");
+            var seasonRowRect = CreateSettingsRow(card.transform, "SeasonRow", -195f);
+
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -363f), new Vector2(300f, 80f));
 
             var controller = panelRoot.AddComponent<SettingsPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -137,6 +141,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
             controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
             controllerSO.FindProperty("hudRow").objectReferenceValue = hudRowRect;
+            controllerSO.FindProperty("seasonRow").objectReferenceValue = seasonRowRect;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 

@@ -450,6 +450,7 @@ namespace CityBuilder.Combat
                 figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
                 // Units stay out of the shadow pass, like the citizens.
                 SceneryShadows.DisableCasting(figure);
+                Maps.SeasonStyle.NoSnow(figure);
                 // the jungle's beasts are jointed: they stand, run and strike; an orc is one mesh,
                 // and waddles and lunges as a whole
                 if (OrcUnit.IsMonster(kind)) root.AddComponent<FigureAnimator>().Bind(figure.transform);

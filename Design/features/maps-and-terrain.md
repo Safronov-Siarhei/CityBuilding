@@ -1,6 +1,6 @@
 # Maps and terrain
 
-> **Status (2026-10-21):** New Game opens a MAP PICKER (`MapSelector.PlayerMapIds` = Map5, Map4, Map3,
+> **Status (2026-10-24):** every map has four SEASON looks (see «Seasons»). New Game opens a MAP PICKER (`MapSelector.PlayerMapIds` = Map5, Map4, Map3,
 > newest first = default). Maps 3, 4, 5 are designed island maps with planned orc spots (Map 3 redrawn
 > 2026-10-21). **Maps 1–2 are DELETED** (user, 2026-10-20); a save on one shows greyed «map removed».
 > `Inv1` is the Invasion map (not in the picker). None of these seen on a phone.
@@ -63,6 +63,30 @@ PlayMode `Map3Tests`, `Map4Tests`, `Map5Tests`, `MapPickerTests`, `TerrainPhysic
   edge) — before the fix no bridge on Maps 3/4 ever opened a path (0.5 m step > agentClimb).
 - Decor first came out 2× too big: trees are 1–2 m, a citizen 0.45 m. Decor crags only on relief
   > 0.8 m (nothing walkable may look like gatherable stone).
+
+## Seasons (2026-10-24)
+The user: «сделай стиль на каждый сезон, потом разберёмся как давать игроку их» (delivery undecided:
+NOT by the real calendar -- the user rejected that; random per run doubted; my proposal = a collection
+unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn, Winter, Spring.
+- No new models: `Tools/blender/seasons.py -- G:/Fork/CityBuilding` writes `Models/Palette/Seasons/`
+  `Terrain-<S>.png` (the terrain palette recoloured: grasses, decor leaves, flowers, water; winter
+  also light rock) and `Trees-<S>-Conifer.png` / `Trees-<S>-<n>.png` (the buildings' palette with the
+  4 crown cells leaf/grass_dark/roof_green/grass recoloured; autumn gold/orange/red, winter frosted,
+  spring pink/white blossom + fresh green). Edit the dicts there, rerun, rebuild.
+- `SetupProjectSeasons.BuildSeasonLooks` makes a material copy per palette (`Seasons/*.mat`, GUIDs
+  kept) and `Resources/SeasonLooks.asset` (`Maps/SeasonLooks.cs`: per season terrain, conifer,
+  broadleaf[], snow, sunTint; conifers = Tree2/5/6/9).
+- `Maps/SeasonStyle.cs` at map load (`MeshMapApplier.Apply`): `ApplyToScene` (global `_SeasonSnow`,
+  sun tint via `SeasonSunTint`), `DressTerrain` on ground/relief, `TerrainMaterial` for decor,
+  `DressTree` in `TreesAreaSpawner` (broadleaf palette picked by cell hash). Winter snow =
+  `BuildingDetail.shader`: faces with normal.y > 0.35 go white × `_SnowMask`; figures (soldiers,
+  heroes, orcs: `ArmyManager.AddFigure`, `OrcRaidManager`) wear `Seasons/Figures.mat` (_SnowMask 0).
+- For now a plain choice: settings card row «Время года» (`GameSettings.MapSeason`, PlayerPrefs
+  `settings.map_season`, sheet keys `#settings_season*`); taken at the next map load. Tests can pin
+  `SeasonStyle.Override`.
+- Test `SeasonTests.EverySeason_DressesTheMap` (+ photos season-<s>-base/-wide).
+- Not done: building greens (castle lawn, gardens) stay summer-green in autumn; water is its own
+  material (unchanged); the main menu's live background is always summer; not seen on a phone.
 
 ## Open / ideas
 Vikings by sea (free mode); dungeons in ruins (squad walks a labyrinth for treasure); islands of

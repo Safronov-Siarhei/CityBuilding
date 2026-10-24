@@ -577,6 +577,7 @@ namespace CityBuilder.Combat
             // forward: turned round, or he walks backwards
             figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
             SceneryShadows.DisableCasting(figure);
+            Maps.SeasonStyle.NoSnow(figure);
             if (animate) root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
             return figure;
         }

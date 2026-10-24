@@ -7,7 +7,8 @@ namespace CityBuilder.UI
 {
     /// <summary>
     /// The settings card: the language, how the fog of war looks (see GameSettings.FogStyle), and
-    /// how the HUD looks (GameSettings.HudSkin -- four looks, see HudSkinApplier).
+    /// how the HUD looks (GameSettings.HudSkin -- four looks, see HudSkinApplier), and the maps'
+    /// season (GameSettings.MapSeason, Maps.SeasonStyle; taken at the next map's load).
     /// The language buttons are built at play time from whatever columns the localization sheet
     /// has, so adding a third language is a column in the spreadsheet and nothing here.
     ///
@@ -21,6 +22,7 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform languageRow;
         [SerializeField] private RectTransform fogRow;
         [SerializeField] private RectTransform hudRow;
+        [SerializeField] private RectTransform seasonRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -36,6 +38,16 @@ namespace CityBuilder.UI
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
         private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
+        private readonly List<(MapSeason season, Image background)> _seasonButtons = new List<(MapSeason, Image)>();
+
+        /// <summary>The seasons in the order their buttons stand, each with its caption's sheet key.</summary>
+        private static readonly (MapSeason season, string key)[] Seasons =
+        {
+            (MapSeason.Spring, "#settings_season_spring"),
+            (MapSeason.Summer, "#settings_season_summer"),
+            (MapSeason.Autumn, "#settings_season_autumn"),
+            (MapSeason.Winter, "#settings_season_winter"),
+        };
 
         /// <summary>The HUD's looks in the order their buttons stand -- А, В, Г, Д of the mockups -- each with its caption's sheet key.</summary>
         private static readonly (HudSkin skin, string key)[] HudSkinChoices =
@@ -58,6 +70,7 @@ namespace CityBuilder.UI
             if (_buttons.Count == 0) BuildLanguageButtons();
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
+            if (_seasonButtons.Count == 0) BuildSeasonButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -85,6 +98,30 @@ namespace CityBuilder.UI
         {
             GameSettings.HudSkin = skin;
             HighlightSelected();
+        }
+
+        public void SelectSeason(MapSeason season)
+        {
+            GameSettings.MapSeason = season;
+            HighlightSelected();
+        }
+
+        private void BuildSeasonButtons()
+        {
+            if (seasonRow == null) return;
+
+            const float width = 170f;
+            const float spacing = 12f;
+            for (var i = 0; i < Seasons.Length; i++)
+            {
+                var (season, key) = Seasons[i];
+                var x = (i - (Seasons.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(seasonRow, $"Season_{season}", x, width, out var label);
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                var captured = season;
+                image.GetComponent<Button>().onClick.AddListener(() => SelectSeason(captured));
+                _seasonButtons.Add((season, image));
+            }
         }
 
         private void BuildHudButtons()
@@ -187,6 +224,10 @@ namespace CityBuilder.UI
             foreach (var (code, background) in _buttons)
             {
                 background.color = code == Localization.Language ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (season, background) in _seasonButtons)
+            {
+                background.color = season == GameSettings.MapSeason ? SelectedColor : UnselectedColor;
             }
             foreach (var (style, background) in _fogButtons)
             {

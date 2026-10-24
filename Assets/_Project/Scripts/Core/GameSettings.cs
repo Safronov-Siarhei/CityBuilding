@@ -34,6 +34,19 @@ namespace CityBuilder.Core
     }
 
     /// <summary>
+    /// The season the maps are dressed in (Maps.SeasonStyle; Tools/blender/seasons.py). The user,
+    /// 2026-10-24: a style per season now, how the player comes by them is decided later -- until
+    /// then it is a plain choice in the settings.
+    /// </summary>
+    public enum MapSeason
+    {
+        Summer = 0,
+        Autumn = 1,
+        Winter = 2,
+        Spring = 3,
+    }
+
+    /// <summary>
     /// The player's own preferences that are not the language (Localization keeps that one), kept
     /// across sessions in PlayerPrefs. A change is announced, so whatever draws by a setting can
     /// follow it at once.
@@ -53,8 +66,12 @@ namespace CityBuilder.Core
         /// <summary>The HUD's look until the player picks another.</summary>
         public const HudSkin DefaultHudSkin = HudSkin.Classic;
 
+        private const string MapSeasonKey = "settings.map_season";
+
         private static bool _loaded;
         private static FogStyle _fogStyle;
+        private static bool _seasonLoaded;
+        private static MapSeason _season;
         private static bool _hudSkinLoaded;
         private static HudSkin _hudSkin;
 
@@ -106,11 +123,36 @@ namespace CityBuilder.Core
             }
         }
 
+        /// <summary>The season the next map is dressed in; summer, today's look, until the player picks another.</summary>
+        public static MapSeason MapSeason
+        {
+            get
+            {
+                if (!_seasonLoaded)
+                {
+                    _seasonLoaded = true;
+                    var saved = PlayerPrefs.GetInt(MapSeasonKey, (int)MapSeason.Summer);
+                    _season = Enum.IsDefined(typeof(MapSeason), saved) ? (MapSeason)saved : MapSeason.Summer;
+                }
+                return _season;
+            }
+            set
+            {
+                if (_seasonLoaded && _season == value) return;
+                _seasonLoaded = true;
+                _season = value;
+                PlayerPrefs.SetInt(MapSeasonKey, (int)value);
+                PlayerPrefs.Save();
+                OnChanged?.Invoke();
+            }
+        }
+
         /// <summary>Forgets the cached values so the next read comes from PlayerPrefs again -- for tests.</summary>
         public static void ReloadForTests()
         {
             _loaded = false;
             _hudSkinLoaded = false;
+            _seasonLoaded = false;
         }
     }
 }

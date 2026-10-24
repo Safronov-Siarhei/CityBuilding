@@ -75,6 +75,7 @@ namespace CityBuilder.EditorTools
             // one at import (ModelImportDefaults), so it has to exist by then.
             EnsurePaletteMaterial();
             EnsureTerrainPaletteMaterial();
+            BuildSeasonLooks();
             ForceReimportModels();
             EnsureUiTextures();
 

@@ -44,6 +44,9 @@ namespace CityBuilder.EditorTools
         // (Tools/blender/terrain.py): the buildings' one is full, and the land needs many greens.
         public const string TerrainPaletteTexturePath = "Assets/_Project/Models/Palette/TerrainPalette.png";
         public const string TerrainPaletteMaterialPath = "Assets/_Project/Models/Palette/TerrainPalette.mat";
+
+        /// <summary>The seasons' palettes (Tools/blender/seasons.py): imported exactly as the two above.</summary>
+        public const string SeasonPalettesFolder = "Assets/_Project/Models/Palette/Seasons/";
         public const string ExportedTerrainMaterialName = "Terrain";
 
         private void OnPreprocessModel()
@@ -119,7 +122,7 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would
