@@ -42,7 +42,9 @@ set. Models go to the user for approval as renders BEFORE they enter the game; p
   now shows a jointed figure's parts too.
 - Figures: `heroking.py` builds the King JOINTED (legs, arms, head as child parts with origins at the
   joints); `export_fbx` sends `Hero*` with its parts to `Models/Heroes`; animation is code
-  (`Combat/FigureAnimator.cs`), no rigs. `orevein1.py` (4 vein models); gates remodelled 1×1 / 1×3 in
+  (`Combat/FigureAnimator.cs`), no rigs. `soldiers.py` builds the army the same way (`Soldier*` →
+  `Models/Soldiers`, parts excluded like Hero's); `render_figures.py -- <out> Name...` renders jointed
+  figures side by side at one scale. `orevein1.py` (4 vein models); gates remodelled 1×1 / 1×3 in
   all levels (`gate1*.py`, `fortifiedgate1*.py`).
 - Icons: `render_icons.py -- <out> 192` → `Assets/_Project/UI/Icons` (re-render after model changes).
 - App icon: placeholder village-with-windmill `UI/AppIcon.png`; a final icon is open.

@@ -28,6 +28,7 @@ namespace CityBuilder.EditorTools
         private const string TerrainFolder = "Assets/_Project/Models/Terrain/";
         private const string OrcsFolder = "Assets/_Project/Models/Orcs/";
         private const string HeroesFolder = "Assets/_Project/Models/Heroes/";
+        private const string SoldiersFolder = "Assets/_Project/Models/Soldiers/";
         private const string WildFolder = "Assets/_Project/Models/Wild/";
 
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
@@ -67,7 +68,7 @@ namespace CityBuilder.EditorTools
             }
 
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder)
-                             || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder)
+                             || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder) || assetPath.StartsWith(SoldiersFolder)
                              || assetPath.StartsWith(WildFolder);
             if (!isSetPiece)
             {

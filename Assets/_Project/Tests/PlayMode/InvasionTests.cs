@@ -429,6 +429,52 @@ namespace CityBuilder.Tests.PlayMode
             if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("king-strike-cut", king.transform.position + Vector3.up * 0.35f, 2.2f, 20f, 250f, 35f);
         }
 
+        /// <summary>
+        /// Every soldier is a jointed figure like the heroes (Tools/blender/soldiers.py), animated by
+        /// FigureAnimator; one struck down falls with its limbs flying loose -- and the photographs show it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheSoldiers_AreJointedFigures_AndFallLimp()
+        {
+            var king = InvasionMode.Instance.King;
+            var types = new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms };
+            var at = king.transform.position + new Vector3(0f, 0f, -1.5f);
+            for (var i = 0; i < types.Length; i++)
+                ArmyManager.Instance.SpawnSummons(types[i], at + new Vector3((i - 1.5f) * 0.7f, 0f, 0f), 1, 1, 60f);
+            yield return new WaitForSeconds(0.6f);
+            var soldiers = new System.Collections.Generic.List<SoldierUnit>();
+            foreach (var type in types)
+            {
+                var unit = Object.FindObjectsByType<SoldierUnit>(FindObjectsInactive.Exclude).FirstOrDefault(u => u.Type == type);
+                Assert.IsNotNull(unit, $"No {type} came out.");
+                Assert.IsNotNull(unit.GetComponent<FigureAnimator>(), $"The {type} is not a jointed figure.");
+                var parts = unit.GetComponentsInChildren<Transform>().Select(t => t.name).ToList();
+                foreach (var joint in new[] { "LegL", "LegR", "Head" })
+                    Assert.IsTrue(parts.Any(n => n.EndsWith(joint)), $"The {type} has no {joint}.");
+                soldiers.Add(unit);
+            }
+            if (PlaytestCapture.Available)
+            {
+                foreach (var unit in soldiers) unit.transform.rotation = Quaternion.LookRotation(Vector3.forward);
+                // the King stands between them and the camera
+                foreach (var r in king.GetComponentsInChildren<Renderer>()) r.enabled = false;
+                yield return PlaytestCapture.Shoot("soldiers-stand", at + Vector3.up * 0.3f, 3.2f, 15f, 180f, 35f);
+                soldiers[2].GetComponent<FigureAnimator>().OnStruck();
+                soldiers[1].GetComponent<FigureAnimator>().OnStruck();
+                yield return new WaitForSeconds(FigureAnimator.StrikeSeconds * 0.6f);
+                yield return PlaytestCapture.Shoot("soldiers-strike", at + Vector3.up * 0.3f, 3.2f, 15f, 180f, 35f);
+            }
+
+            foreach (var r in king.GetComponentsInChildren<Renderer>()) r.enabled = true;
+            var dying = soldiers[3];
+            dying.TakeDamage(dying.MaxHealth * 10);
+            yield return new WaitForSeconds(0.4f);
+            var corpse = Object.FindObjectsByType<OrcCorpse>(FindObjectsInactive.Exclude).FirstOrDefault();
+            Assert.IsNotNull(corpse, "The man-at-arms did not fall.");
+            Assert.Greater(corpse.Limp, 0.9f, "He fell stiff: his limbs did not fly loose.");
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("soldiers-death", at + Vector3.up * 0.2f, 3.2f, 15f, 180f, 35f);
+        }
+
         /// <summary>The first wave is a countdown away, comes down one lane, and the line under the resource bar follows it.</summary>
         [UnityTest]
         public IEnumerator TheFirstWave_IsACountdownAway_AndComesDownOneLane()

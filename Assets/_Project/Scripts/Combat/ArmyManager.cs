@@ -31,6 +31,9 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject queenModel;
         [SerializeField] private GameObject captainModel;
 
+        /// <summary>The soldiers' figures (Tools/blender/soldiers.py, Models/Soldiers), by SoldierType 0..3; a missing one is drawn in cubes.</summary>
+        [SerializeField] private GameObject[] soldierModels = new GameObject[4];
+
         // Cube-primitive silhouettes, in the same style as every other prop in the game. Each tier
         // has to be tellable from the others at the camera's height and at a glance, so what
         // separates them is COLOUR and SHAPE rather than detail: a militiaman is brown with a
@@ -460,6 +463,12 @@ namespace CityBuilder.Combat
         /// </summary>
         private void BuildAppearance(Transform root, SoldierType type)
         {
+            var soldierModel = (int)type < soldierModels.Length ? soldierModels[(int)type] : null;
+            if (soldierModel != null)
+            {
+                AddFigure(root, soldierModel, type);
+                return;
+            }
             switch (type)
             {
                 case SoldierType.King when kingModel != null:
@@ -468,16 +477,7 @@ namespace CityBuilder.Combat
                 {
                     // Authored at its real size (0.79 m to the King's crown's tip), so the root's
                     // unit scale is divided back out, as the orc figures do.
-                    var model = type == SoldierType.Queen ? queenModel : type == SoldierType.Captain ? captainModel : kingModel;
-                    var figure = Instantiate(model, root, false);
-                    figure.name = type.ToString();
-                    figure.transform.localScale = Vector3.one / UnitSize.Scale;
-                    // modelled facing Blender's -y, which lands facing back along the root's
-                    // forward: turned round, or he walks backwards
-                    figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
-                    SceneryShadows.DisableCasting(figure);
-                    // jointed (legs, arms, head): stands, runs and strikes
-                    root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
+                    AddFigure(root, type == SoldierType.Queen ? queenModel : type == SoldierType.Captain ? captainModel : kingModel, type);
                     break;
                 }
 
@@ -528,6 +528,19 @@ namespace CityBuilder.Combat
                     AddCubePart(root, "PitchforkHead", new Vector3(0.19f, 0.92f, 0f), new Vector3(0.18f, 0.06f, 0.05f), MaterialFor(SteelColor));
                     break;
             }
+        }
+
+        /// <summary>A jointed figure (a hero's or a soldier's) under the unit's root: it stands, runs, strikes and, on death, falls (OrcCorpse).</summary>
+        private static void AddFigure(Transform root, GameObject model, SoldierType type)
+        {
+            var figure = Instantiate(model, root, false);
+            figure.name = type.ToString();
+            figure.transform.localScale = Vector3.one / UnitSize.Scale;
+            // modelled facing Blender's -y, which lands facing back along the root's
+            // forward: turned round, or he walks backwards
+            figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
+            SceneryShadows.DisableCasting(figure);
+            root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
         }
 
         private void AddBodyAndHead(Transform root, Color clothing)

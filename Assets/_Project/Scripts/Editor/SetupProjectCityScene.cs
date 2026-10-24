@@ -459,6 +459,12 @@ namespace CityBuilder.EditorTools
             // the heroes bought in an Invasion run's castle (Tools/blender/heroes2.py)
             armyManagerSO.FindProperty("queenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroQueen.fbx");
             armyManagerSO.FindProperty("captainModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroCaptain.fbx");
+            // the army (Tools/blender/soldiers.py), in SoldierType order
+            var soldierModels = armyManagerSO.FindProperty("soldierModels");
+            var soldierNames = new[] { "SoldierMilitia", "SoldierSpearman", "SoldierArcher", "SoldierManAtArms" };
+            soldierModels.arraySize = soldierNames.Length;
+            for (var i = 0; i < soldierNames.Length; i++)
+                soldierModels.GetArrayElementAtIndex(i).objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Soldiers/{soldierNames[i]}.fbx");
             armyManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The Invasion mode: idle in a sandbox game; in a run started from the menu's «В бой»

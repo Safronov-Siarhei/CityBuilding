@@ -11,7 +11,10 @@ namespace CityBuilder.Combat
     /// - Running: legs stride in opposition, the arms swing against them, the body bobs on each
     ///   step and leans into the run. Blended in by how fast the figure is actually moving, so a
     ///   unit pushed sideways or slowing down does not snap between the two.
-    /// - Striking: on each blow (SoldierUnit.Struck) the sword arm draws back and cuts forward.
+    /// - Striking: on each blow (SoldierUnit.Struck) the sword arm draws back and cuts forward;
+    ///   an archer's drawing arm (ArmDraw, Tools/blender/soldiers.py) pulls the string back to the
+    ///   ear, holds, and looses. Its bow arm is ArmBow.
+    /// - Dying is OrcCorpse's: the figure topples and its arms and legs fly loose.
     ///
     /// The Invasion jungle's beasts (Tools/blender/wild.py) are jointed the same way and moved by
     /// the same code, their blows coming from OrcUnit.Struck: a biped's striking arm is ArmStrike
@@ -58,6 +61,7 @@ namespace CityBuilder.Combat
         private float _stride;
         private float _breath;
         private float _strike = -1f;
+        private bool _draws;
 
         /// <summary>0 standing .. 1 running, as shown this frame -- for the tests.</summary>
         public float Run { get; private set; }
@@ -71,8 +75,9 @@ namespace CityBuilder.Combat
             _figure = figure;
             _legL = Part("LegL");
             _legR = Part("LegR");
-            _armSword = Part("ArmSword") ?? Part("ArmStrike");
-            _armShield = Part("ArmShield") ?? Part("ArmOff");
+            _armSword = Part("ArmSword") ?? Part("ArmStrike") ?? Part("ArmDraw");
+            _draws = _armSword != null && _armSword.name.EndsWith("ArmDraw");
+            _armShield = Part("ArmShield") ?? Part("ArmOff") ?? Part("ArmBow");
             _head = Part("Head");
             _legFL = Part("LegFL");
             _legFR = Part("LegFR");
@@ -166,7 +171,7 @@ namespace CityBuilder.Combat
                 _strike += dt;
                 var t = _strike / StrikeSeconds;
                 if (t >= 1f) _strike = -1f;
-                else if (_armSword != null) sword = StrikeAngle(t);
+                else if (_armSword != null) sword = _draws ? DrawAngle(t) : StrikeAngle(t);
                 else head = BiteAngle(t);      // a beast with no arm to swing bites
             }
             Turn(_armSword, _swordRot, sword);
@@ -188,6 +193,18 @@ namespace CityBuilder.Combat
             if (t < 0.35f) return -55f * Mathf.SmoothStep(0f, 1f, t / 0.35f);
             if (t < 0.6f) return Mathf.Lerp(-55f, 75f, Mathf.SmoothStep(0f, 1f, (t - 0.35f) / 0.25f));
             return Mathf.Lerp(75f, 0f, Mathf.SmoothStep(0f, 1f, (t - 0.6f) / 0.4f));
+        }
+
+        /// <summary>
+        /// An archer's drawing arm through one shot, in degrees forward of rest: pulled back to the
+        /// ear for most of it, held a breath, then let go -- a small kick forward and back to rest.
+        /// </summary>
+        public static float DrawAngle(float t)
+        {
+            if (t < 0.55f) return -40f * Mathf.SmoothStep(0f, 1f, t / 0.55f);
+            if (t < 0.7f) return -40f;
+            if (t < 0.78f) return Mathf.Lerp(-40f, 12f, (t - 0.7f) / 0.08f);
+            return Mathf.Lerp(12f, 0f, Mathf.SmoothStep(0f, 1f, (t - 0.78f) / 0.22f));
         }
 
         /// <summary>A beast's head through one bite, in degrees forward (down) of rest: drawn up and back, then snapped down, then eased back.</summary>

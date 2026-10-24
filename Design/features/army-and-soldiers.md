@@ -1,6 +1,7 @@
 # Army and soldiers
 
-> **Status (2026-10-21):** four tiers, groups, orders, saving — shipped. Army upkeep vs tax is
+> **Status (2026-10-24):** four tiers, groups, orders, saving — shipped. Every tier is now a jointed
+> Blender figure in the heroes' style (stand / run / strike / limp death). Army upkeep vs tax is
 > unbalanced (20 soldiers cost more coins/day than 20 citizens pay).
 > **Read with:** [combat-core](combat-core.md), [orc-camps-and-main-base](orc-camps-and-main-base.md),
 > [research-laboratory](research-laboratory.md).
@@ -32,6 +33,17 @@ gather = ring; refused = red ripple.
   `Invasion/InvasionGarrison.cs` stands each type's group round the castle and sends it at the orc
   nearest the castle within `inv_soldier_guard_radius`. A hurt soldier shows a health bar (every mode);
   a killed one falls as a figure (`OrcCorpse.Leave`), a hero too (`LeaveCopy`, he rises later).
+- **Looks (user, 2026-10-24: «в стиле короля, королевы и капитана», анимации «бег, стойка, удар,
+  смерть»):** `Tools/blender/soldiers.py` builds SoldierMilitia (brown tunic, cap, blue sash,
+  pitchfork), SoldierSpearman (blue gambeson with a gold stripe, plain kettle helmet, spear, round
+  shield), SoldierArcher (green hood with a red feather, jerkin, quiver; right arm `ArmDraw`, left
+  `ArmBow`), SoldierManAtArms (great helm with a blue crest, the Captain's tabard, mace, heater shield)
+  → `Models/Soldiers`, wired by `SetupProjectCityScene` into `ArmyManager.soldierModels` (SoldierType
+  order); a missing model falls back to the old cubes. ~0.6 m, a head under the heroes, 730–930 tris.
+  `FigureAnimator`: an archer's `ArmDraw` draws and looses (`DrawAngle`) instead of the cut. Death:
+  `OrcCorpse` flings any jointed figure's arms up, kicks a leg, drops the head as it topples (orcs and
+  beasts with joints too). One model per tier; per-level trims (proposed: metal at 2, gold at 3) are
+  NOT done. Test: `InvasionTests.TheSoldiers_AreJointedFigures_AndFallLimp` (+ photos soldiers-*).
 - A recruit (any scattered spawn) steps out at `ArmyManager.OpenGroundNear`: the nearest NavMesh point
   in rings round the barracks, in a run one with a complete path to the castle (2026-10-23: recruits
   stood stuck in the gap between the barracks and a house).
