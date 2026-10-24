@@ -680,9 +680,11 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 100
+      amount: 40
     - type: 1
-      amount: 60
+      amount: 40
+    - type: 3
+      amount: 70
     upgradeToLevel3Cost:
     - type: 0
       amount: 220
@@ -921,6 +923,8 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 12
+    - type: 3
+      amount: 10
     recipes:
     - id: wood
       displayName: "\u0414\u0435\u0440\u0435\u0432\u043E"
@@ -986,24 +990,32 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 20
+      amount: 15
     - type: 1
-      amount: 8
+      amount: 4
+    - type: 3
+      amount: 13
     upgradeToLevel3Cost:
     - type: 0
-      amount: 56
+      amount: 18
     - type: 1
-      amount: 14
+      amount: 7
+    - type: 3
+      amount: 16
     upgradeToLevel4Cost:
     - type: 0
-      amount: 98
+      amount: 21
     - type: 1
-      amount: 24
+      amount: 10
+    - type: 3
+      amount: 19
     upgradeToLevel5Cost:
     - type: 0
-      amount: 172
+      amount: 24
     - type: 1
-      amount: 43
+      amount: 13
+    - type: 3
+      amount: 22
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -1023,6 +1035,8 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 12
+    - type: 3
+      amount: 10
     recipes:
     - id: stone
       displayName: "\u041A\u0430\u043C\u0435\u043D\u044C"
@@ -1088,16 +1102,32 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 20
+      amount: 15
+    - type: 1
+      amount: 4
+    - type: 3
+      amount: 13
     upgradeToLevel3Cost:
     - type: 0
-      amount: 56
+      amount: 18
+    - type: 1
+      amount: 7
+    - type: 3
+      amount: 16
     upgradeToLevel4Cost:
     - type: 0
-      amount: 98
+      amount: 21
+    - type: 1
+      amount: 10
+    - type: 3
+      amount: 19
     upgradeToLevel5Cost:
     - type: 0
-      amount: 172
+      amount: 24
+    - type: 1
+      amount: 13
+    - type: 3
+      amount: 22
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -1938,7 +1968,7 @@ MonoBehaviour:
     - type: 1
       amount: 15
     - type: 3
-      amount: 23
+      amount: 15
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 18
@@ -2001,30 +2031,30 @@ MonoBehaviour:
     - type: 0
       amount: 8
     - type: 1
-      amount: 19
+      amount: 18
     - type: 3
-      amount: 37
+      amount: 18
     upgradeToLevel3Cost:
     - type: 0
-      amount: 12
+      amount: 11
     - type: 1
-      amount: 24
+      amount: 21
     - type: 3
-      amount: 49
+      amount: 21
     upgradeToLevel4Cost:
     - type: 0
-      amount: 16
+      amount: 14
     - type: 1
-      amount: 30
+      amount: 24
     - type: 3
-      amount: 60
+      amount: 24
     upgradeToLevel5Cost:
     - type: 0
-      amount: 24
+      amount: 17
     - type: 1
-      amount: 38
+      amount: 27
     - type: 3
-      amount: 80
+      amount: 27
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2045,6 +2075,8 @@ MonoBehaviour:
     - type: 0
       amount: 10
     - type: 1
+      amount: 15
+    - type: 3
       amount: 20
     recipes: []
     productionIntervalSeconds: 6
@@ -2106,32 +2138,32 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 24
+      amount: 13
     - type: 1
-      amount: 48
+      amount: 18
     - type: 3
-      amount: 15
+      amount: 23
     upgradeToLevel3Cost:
     - type: 0
-      amount: 42
+      amount: 16
     - type: 1
-      amount: 84
+      amount: 21
     - type: 3
-      amount: 32
+      amount: 26
     upgradeToLevel4Cost:
     - type: 0
-      amount: 74
+      amount: 19
     - type: 1
-      amount: 147
+      amount: 23
     - type: 3
-      amount: 56
+      amount: 29
     upgradeToLevel5Cost:
     - type: 0
-      amount: 129
+      amount: 22
     - type: 1
-      amount: 257
+      amount: 26
     - type: 3
-      amount: 98
+      amount: 32
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2150,9 +2182,9 @@ MonoBehaviour:
     category: 3
     cost:
     - type: 0
-      amount: 5
-    - type: 1
-      amount: 12
+      amount: 10
+    - type: 3
+      amount: 15
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
@@ -2212,33 +2244,25 @@ MonoBehaviour:
       buildSeconds: 45
     requiredBuildingId: 
     upgradeToLevel2Cost:
-    - type: 0
-      amount: 8
     - type: 1
-      amount: 19
-    - type: 3
       amount: 8
-    upgradeToLevel3Cost:
-    - type: 0
-      amount: 14
-    - type: 1
-      amount: 34
     - type: 3
       amount: 18
+    upgradeToLevel3Cost:
+    - type: 1
+      amount: 11
+    - type: 3
+      amount: 21
     upgradeToLevel4Cost:
-    - type: 0
+    - type: 1
+      amount: 14
+    - type: 3
       amount: 24
-    - type: 1
-      amount: 60
-    - type: 3
-      amount: 32
     upgradeToLevel5Cost:
-    - type: 0
-      amount: 43
     - type: 1
-      amount: 104
+      amount: 17
     - type: 3
-      amount: 55
+      amount: 27
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2261,6 +2285,8 @@ MonoBehaviour:
       amount: 10
     - type: 1
       amount: 30
+    - type: 3
+      amount: 40
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 20
@@ -2321,32 +2347,32 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 16
-    - type: 1
-      amount: 64
-    - type: 3
       amount: 13
+    - type: 1
+      amount: 33
+    - type: 3
+      amount: 43
     upgradeToLevel3Cost:
     - type: 0
-      amount: 28
+      amount: 16
     - type: 1
-      amount: 112
+      amount: 36
     - type: 3
-      amount: 22
+      amount: 46
     upgradeToLevel4Cost:
     - type: 0
-      amount: 49
+      amount: 19
     - type: 1
-      amount: 196
+      amount: 39
     - type: 3
-      amount: 38
+      amount: 49
     upgradeToLevel5Cost:
     - type: 0
-      amount: 86
+      amount: 22
     - type: 1
-      amount: 343
+      amount: 42
     - type: 3
-      amount: 67
+      amount: 52
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2365,10 +2391,10 @@ MonoBehaviour:
       \u0432\u043E\u0440\u043E\u0442\u0430"
     category: 3
     cost:
-    - type: 0
-      amount: 10
     - type: 1
-      amount: 15
+      amount: 20
+    - type: 3
+      amount: 30
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 8
@@ -2428,33 +2454,25 @@ MonoBehaviour:
       buildSeconds: 45
     requiredBuildingId: 
     upgradeToLevel2Cost:
-    - type: 0
-      amount: 16
     - type: 1
-      amount: 48
+      amount: 23
     - type: 3
-      amount: 10
+      amount: 33
     upgradeToLevel3Cost:
-    - type: 0
-      amount: 28
     - type: 1
-      amount: 84
+      amount: 26
     - type: 3
-      amount: 17
+      amount: 36
     upgradeToLevel4Cost:
-    - type: 0
-      amount: 49
     - type: 1
-      amount: 147
+      amount: 29
     - type: 3
-      amount: 30
+      amount: 39
     upgradeToLevel5Cost:
-    - type: 0
-      amount: 86
     - type: 1
-      amount: 257
+      amount: 32
     - type: 3
-      amount: 52
+      amount: 42
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2474,6 +2492,8 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 1
+    - type: 3
+      amount: 5
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
@@ -2534,18 +2554,24 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 1
-      amount: 8
+      amount: 3
     - type: 3
-      amount: 20
+      amount: 8
     upgradeToLevel3Cost:
     - type: 1
-      amount: 20
+      amount: 6
+    - type: 3
+      amount: 11
     upgradeToLevel4Cost:
     - type: 1
-      amount: 35
+      amount: 9
+    - type: 3
+      amount: 14
     upgradeToLevel5Cost:
     - type: 1
-      amount: 61
+      amount: 12
+    - type: 3
+      amount: 17
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -2563,8 +2589,10 @@ MonoBehaviour:
     displayName: "\u0414\u043E\u0440\u043E\u0433\u0430"
     category: 0
     cost:
-    - type: 1
+    - type: 0
       amount: 1
+    - type: 3
+      amount: 5
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 4
@@ -2625,16 +2653,24 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 1
-      amount: 5
+      amount: 2
+    - type: 3
+      amount: 8
     upgradeToLevel3Cost:
     - type: 1
-      amount: 8
+      amount: 5
+    - type: 3
+      amount: 11
     upgradeToLevel4Cost:
     - type: 1
+      amount: 8
+    - type: 3
       amount: 14
     upgradeToLevel5Cost:
     - type: 1
-      amount: 24
+      amount: 11
+    - type: 3
+      amount: 17
     startsUnlocked: 1
     unlockResearch:
       coins: 0
@@ -4568,6 +4604,8 @@ MonoBehaviour:
       amount: 15
     - type: 1
       amount: 15
+    - type: 3
+      amount: 30
     recipes: []
     productionIntervalSeconds: 6
     fogRevealRadius: 10
@@ -4628,24 +4666,32 @@ MonoBehaviour:
     requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
-      amount: 48
+      amount: 18
     - type: 1
-      amount: 24
+      amount: 18
+    - type: 3
+      amount: 33
     upgradeToLevel3Cost:
     - type: 0
-      amount: 84
+      amount: 21
     - type: 1
-      amount: 42
+      amount: 21
+    - type: 3
+      amount: 36
     upgradeToLevel4Cost:
     - type: 0
-      amount: 147
+      amount: 24
     - type: 1
-      amount: 74
+      amount: 24
+    - type: 3
+      amount: 39
     upgradeToLevel5Cost:
     - type: 0
-      amount: 257
+      amount: 27
     - type: 1
-      amount: 129
+      amount: 27
+    - type: 3
+      amount: 42
     startsUnlocked: 1
     unlockResearch:
       coins: 0
