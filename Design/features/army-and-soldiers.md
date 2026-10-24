@@ -42,8 +42,12 @@ gather = ring; refused = red ripple.
   order); a missing model falls back to the old cubes. ~0.6 m, a head under the heroes, 730–930 tris.
   `FigureAnimator`: an archer's `ArmDraw` draws and looses (`DrawAngle`) instead of the cut. Death:
   `OrcCorpse` flings any jointed figure's arms up, kicks a leg, drops the head as it topples (orcs and
-  beasts with joints too). One model per tier; per-level trims (proposed: metal at 2, gold at 3) are
-  NOT done. Test: `InvasionTests.TheSoldiers_AreJointedFigures_AndFallLimp` (+ photos soldiers-*).
+  beasts with joints too). **A look per researched level** (user «продолжай» on the proposal):
+  `<Name>-lvl2` adds metal (iron cap / pauldrons / mail cape / cloak and tassets), `-lvl3` a gold edge
+  and a plume (`TRIMS` in soldiers.py); `soldierModels` = type*3 + level-1, a missing level wears the
+  one below. A summon wears its own level; a living soldier is redressed when research raises its
+  type (`SoldierUnit.RefreshStats` → `ArmyManager.Redress`, figure swapped, animator re-bound).
+  Archer's bow canted 30° and thicker so it shows from the front. 730–1100 tris. Test: `InvasionTests.TheSoldiers_AreJointedFigures_AndFallLimp` (+ photos soldiers-*).
 - A recruit (any scattered spawn) steps out at `ArmyManager.OpenGroundNear`: the nearest NavMesh point
   in rings round the barracks, in a run one with a complete path to the castle (2026-10-23: recruits
   stood stuck in the gap between the barracks and a house).

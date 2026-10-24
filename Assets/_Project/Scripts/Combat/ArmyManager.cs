@@ -31,8 +31,14 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject queenModel;
         [SerializeField] private GameObject captainModel;
 
-        /// <summary>The soldiers' figures (Tools/blender/soldiers.py, Models/Soldiers), by SoldierType 0..3; a missing one is drawn in cubes.</summary>
-        [SerializeField] private GameObject[] soldierModels = new GameObject[4];
+        /// <summary>
+        /// The soldiers' figures (Tools/blender/soldiers.py, Models/Soldiers), one per type and
+        /// researched level: index type * SoldierLooks + level - 1 (metal at level 2, gold at 3).
+        /// A missing level wears the one below; a type with none is drawn in cubes.
+        /// </summary>
+        [SerializeField] private GameObject[] soldierModels = new GameObject[4 * SoldierLooks];
+
+        public const int SoldierLooks = 3;
 
         // Cube-primitive silhouettes, in the same style as every other prop in the game. Each tier
         // has to be tellable from the others at the camera's height and at a glance, so what
@@ -375,7 +381,7 @@ namespace CityBuilder.Combat
             var stats = SoldierStats.StatsAt(type, level);
             for (var i = 0; i < count; i++)
             {
-                var unit = SpawnSoldier(type, position, group);
+                var unit = SpawnSoldier(type, position, group, lookLevel: level);
                 group.Add(unit);
                 unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
                 unit.SetCurrentHealth(stats.maxHealth);
@@ -430,7 +436,7 @@ namespace CityBuilder.Combat
         private static UnityEngine.AI.NavMeshPath _spawnPath;
 
         /// <summary>Builds the unit. `scatter` is what separates a fresh recruit walking out of the barracks from a loaded one, who has to land exactly where the save says.</summary>
-        private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true)
+        private SoldierUnit SpawnSoldier(SoldierType type, Vector3 origin, ArmyGroup group, bool scatter = true, int lookLevel = 0)
         {
             var jitter = scatter ? UnityEngine.Random.insideUnitCircle * SpawnJitterRadius : Vector2.zero;
             var spawnPosition = origin + new Vector3(jitter.x, 0f, jitter.y);
@@ -441,7 +447,8 @@ namespace CityBuilder.Combat
             root.transform.position = spawnPosition;
             root.transform.localScale = Vector3.one * UnitSize.Scale;
 
-            BuildAppearance(root.transform, type);
+            if (lookLevel <= 0) lookLevel = SoldierStats.CurrentLevel(type);
+            BuildAppearance(root.transform, type, lookLevel);
 
             var controller = root.AddComponent<CharacterController>();
             controller.height = 0.72f;
@@ -451,6 +458,7 @@ namespace CityBuilder.Combat
             controller.minMoveDistance = 0f;
 
             var unit = root.AddComponent<SoldierUnit>();
+            unit.LookLevel = lookLevel;
             unit.Initialize(type, group);
             return unit;
         }
@@ -461,9 +469,9 @@ namespace CityBuilder.Combat
         /// something up, not a separate species -- and then differs in colour and in what it is
         /// holding.
         /// </summary>
-        private void BuildAppearance(Transform root, SoldierType type)
+        private void BuildAppearance(Transform root, SoldierType type, int level)
         {
-            var soldierModel = (int)type < soldierModels.Length ? soldierModels[(int)type] : null;
+            var soldierModel = SoldierModel(type, level);
             if (soldierModel != null)
             {
                 AddFigure(root, soldierModel, type);
@@ -530,8 +538,37 @@ namespace CityBuilder.Combat
             }
         }
 
+        /// <summary>The figure a soldier of `type` wears at `level`, or the nearest level below that has one; null for cubes.</summary>
+        private GameObject SoldierModel(SoldierType type, int level)
+        {
+            if (SoldierStats.IsHero(type) || soldierModels == null) return null;
+            for (var l = Mathf.Clamp(level, 1, SoldierLooks); l >= 1; l--)
+            {
+                var index = (int)type * SoldierLooks + l - 1;
+                if (index < soldierModels.Length && soldierModels[index] != null) return soldierModels[index];
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Puts a living soldier in its type's look for `level` (a level researched while it stands
+        /// on the map: SoldierUnit.RefreshStats). The figure is swapped, the animator kept.
+        /// </summary>
+        public void Redress(SoldierUnit unit, int level)
+        {
+            if (unit == null || unit.LookLevel == level) return;
+            var model = SoldierModel(unit.Type, level);
+            var animator = unit.GetComponent<FigureAnimator>();
+            var old = unit.transform.Find(unit.Type.ToString());
+            unit.LookLevel = level;
+            if (model == null || animator == null || old == null) return;
+            Destroy(old.gameObject);
+            old.name = "Undressed";
+            animator.Bind(AddFigure(unit.transform, model, unit.Type, animate: false).transform);
+        }
+
         /// <summary>A jointed figure (a hero's or a soldier's) under the unit's root: it stands, runs, strikes and, on death, falls (OrcCorpse).</summary>
-        private static void AddFigure(Transform root, GameObject model, SoldierType type)
+        private static GameObject AddFigure(Transform root, GameObject model, SoldierType type, bool animate = true)
         {
             var figure = Instantiate(model, root, false);
             figure.name = type.ToString();
@@ -540,7 +577,8 @@ namespace CityBuilder.Combat
             // forward: turned round, or he walks backwards
             figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
             SceneryShadows.DisableCasting(figure);
-            root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
+            if (animate) root.gameObject.AddComponent<FigureAnimator>().Bind(figure.transform);
+            return figure;
         }
 
         private void AddBodyAndHead(Transform root, Color clothing)

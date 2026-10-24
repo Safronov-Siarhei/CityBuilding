@@ -59,6 +59,9 @@ namespace CityBuilder.Combat
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
         public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Queen;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
+
+        /// <summary>The level whose look the figure wears (ArmyManager: metal at 2, gold at 3).</summary>
+        public int LookLevel { get; set; }
         public int MaxHealth { get; private set; } = 1;
         public int CurrentHealth { get; private set; } = 1;
 
@@ -159,6 +162,7 @@ namespace CityBuilder.Combat
             var wasMissing = MaxHealth - CurrentHealth;
             ReadStats();
             CurrentHealth = Mathf.Clamp(MaxHealth - wasMissing, 1, MaxHealth);
+            if (!SoldierStats.IsHero(Type)) ArmyManager.Instance?.Redress(this, SoldierStats.CurrentLevel(Type));
         }
 
         /// <summary>

@@ -15,6 +15,9 @@ so the army reads as one household and never as orcs:
 - Archer: a green hood with a red feather, a leather jerkin over a green tunic, a blue belt, a
   quiver on the back; the bow held out in the left hand, the right hand drawing an arrow
   (the right arm is ArmDraw: FigureAnimator draws and looses instead of cutting).
+
+Each comes in three looks, one per researched level (`<Name>`, `<Name>-lvl2`, `<Name>-lvl3`, each a
+metre behind the last): level 2 adds metal, level 3 a gold edge and a plume (TRIMS below).
 - Man-at-arms: steel from head to foot -- a great helm with a blue crest, a blue tabard with the
   Captain's gold cross, broad pauldrons; a flanged mace and a blue heater shield with a gold
   chevron. The widest of the four.
@@ -211,16 +214,22 @@ def archer_bow_arm(b):
     b.rod((sx, 0.0, 0.385), (-0.085, -0.1, 0.375), 0.04, GREEN)
     b.rod((-0.085, -0.1, 0.375), fist + Vector((0, 0.02, 0)), 0.036, LEATHER)                # bracer
     b.ball(fist.x, fist.y, fist.z - 0.02, 0.022, 0.04, SKIN, sides=6)
-    # the bow: a shallow arc bending away from him, in the fist's plane, and its string
-    pts = [(-0.24, 0.0), (-0.13, -0.03), (0.0, -0.04), (0.13, -0.03), (0.24, 0.0)]
+    # the bow: a deep arc bending away from him, canted out at the top (so it shows from the
+    # front, where an upright one is a line), and its string
+    cant = math.radians(30)
+
+    def at(dz, dy):
+        return fist + Vector((-math.sin(cant) * dz, dy, math.cos(cant) * dz))
+
+    pts = [(-0.25, 0.0), (-0.17, -0.04), (-0.06, -0.06), (0.06, -0.06), (0.17, -0.04), (0.25, 0.0)]
     prev = None
     for dz, dy in pts:
-        p = fist + Vector((0, dy, dz))
+        p = at(dz, dy)
         if prev is not None:
-            b.rod(prev, p, 0.016, WOOD)
+            b.rod(prev, p, 0.022, WOOD_LIGHT)
         prev = p
-    b.box(fist.x - 0.012, fist.x + 0.012, fist.y - 0.052, fist.y - 0.03, fist.z - 0.03, fist.z + 0.03, LEATHER)
-    b.rod(fist + Vector((0, 0.0, -0.235)), fist + Vector((0, 0.0, 0.235)), 0.004, 'white')
+    b.box(fist.x - 0.014, fist.x + 0.014, fist.y - 0.072, fist.y - 0.05, fist.z - 0.03, fist.z + 0.03, LEATHER)
+    b.rod(at(-0.245, 0.0), at(0.245, 0.0), 0.005, 'white')
 
 
 def archer_draw_arm(b):
@@ -306,6 +315,135 @@ def manatarms_shield_arm(b):
                 (0, cy - 0.011, 0), (1, 0, 0), (0, 0, 1), 0.005, GOLD, back_cap=True)
 
 
+# ---------------------------------------------------------------------------------- the levels
+
+# What a soldier gains with its type's researched level (the user, 2026-10-24, from the proposal):
+# level 2 adds metal, level 3 a gold edge and a plume. Each piece is added to the part it moves
+# with; level 3 keeps level 2's. Same pre-scale coordinates as the parts above.
+
+def militia2_head(b):
+    b.dome(0, 0.0, 0.488, 0.057, 0.054, [STEEL_DARK, STEEL_DARK], sides=8)                  # iron skullcap
+    b.cylinder(0, 0.0, 0.483, 0.497, 0.06, STEEL, sides=8)
+
+
+def militia2_off_arm(b):
+    b.ball(-0.1, 0.0, 0.365, 0.045, 0.045, STEEL, sides=7)                                  # a shoulder plate
+
+
+def militia2_body(b):
+    b.box(-0.03, 0.03, -0.09, -0.08, 0.266, 0.294, STEEL)                                   # belt plate
+
+
+def militia3_head(b):
+    b.cylinder(0, 0.0, 0.494, 0.503, 0.062, GOLD, sides=8)
+    b.rod((0.045, 0.01, 0.51), (0.07, 0.05, 0.6), 0.012, FEATHER)
+
+
+def militia3_body(b):
+    b.frustum(0, 0, 0.13, 0.145, 0.093, 0.091, GOLD, sides=8, cap=False)
+
+
+def militia3_fork(b):
+    b.box(0.105, 0.125, -0.08, -0.06, 0.57, 0.6, GOLD)
+
+
+def spearman2_body(b):
+    for k in (-1, 1):
+        b.ball(k * 0.1, 0.0, 0.365, 0.048, 0.05, STEEL, sides=7)
+    b.cylinder(0, 0, 0.405, 0.42, 0.056, STEEL_DARK, sides=8)
+
+
+def spearman2_head(b):
+    b.box(-0.05, 0.05, -0.008, 0.05, 0.425, 0.49, MAIL, bevel=0.01)                         # mail aventail
+
+
+def spearman3_head(b):
+    b.cylinder(0, 0.0, 0.485, 0.492, 0.081, GOLD, sides=10)
+    b.prism([(0.0, 0.0), (0.05, 0.02), (0.085, 0.06), (0.07, 0.095), (0.02, 0.06)], (-0.01, 0.0, 0.535),
+            (0, 1, 0), (0, 0, 1), 0.02, FEATHER, back_cap=True)
+
+
+def spearman3_shield(b):
+    b.hcylinder('y', (-0.11, -0.099, 0.29), 0.0085, 0.093, GOLD, sides=12)
+
+
+def spearman3_spear(b):
+    b.box(0.103, 0.127, -0.082, -0.058, 0.76, 0.78, GOLD)
+
+
+def archer2_body(b):
+    b.frustum(0, 0, 0.365, 0.415, 0.1, 0.068, MAIL, sides=8)                                # mail cape
+
+
+def archer2_bow_arm(b):
+    b.rod((-0.085, -0.1, 0.375), (-0.06, -0.18, 0.36), 0.042, STEEL)                        # steel bracer
+
+
+def archer3_head(b):
+    b.frustum(0, 0.0, 0.41, 0.418, 0.078, 0.076, GOLD, sides=8, cap=False)
+    b.rod((0.04, 0.02, 0.51), (0.05, 0.07, 0.59), 0.01, 'white')
+
+
+def archer3_body(b):
+    b.frustum(0, 0, 0.14, 0.152, 0.091, 0.09, GOLD, sides=8, cap=False)
+    b.rod(Vector((0.04, 0.084, 0.405)), Vector((0.045, 0.085, 0.42)), 0.05, GOLD)            # quiver mouth
+
+
+def manatarms2_body(b):
+    b.prism([(-0.1, 0.42), (0.1, 0.42), (0.125, 0.12), (-0.125, 0.12)], (0, 0.14, 0), (1, 0, 0), (0, -0.06, 1),
+            0.014, KINGDOM, back_cap=True)                                                   # a short cape
+    for k in (-1, 1):
+        b.box(k * 0.06 - 0.035, k * 0.06 + 0.035, -0.112, -0.1, 0.15, 0.2, STEEL, bevel=0.006)  # tassets
+
+
+def manatarms3_head(b):
+    b.box(-0.058, 0.058, -0.059, 0.056, 0.538, 0.552, GOLD)
+
+
+def manatarms3_shield(b):
+    cx, cy, cz = -0.12, -0.118, 0.27
+    outline = [(-0.085, 0.11), (-0.085, 0.0), (0.0, -0.13), (0.085, 0.0), (0.085, 0.11)]
+    b.prism([(cx + x * 1.08, cz + z * 1.08 - 0.002) for x, z in outline], (0, cy + 0.008, 0), (1, 0, 0), (0, 0, 1),
+            0.012, GOLD, back_cap=True)
+
+
+def manatarms3_mace(b):
+    b.pyramid(0.167, -0.156, 0.574, 0.014, 0.014, 0.605, GOLD, sides=4)
+    b.rod((0.167, -0.156, 0.478), (0.167, -0.156, 0.49), 0.046, GOLD)
+
+
+TRIMS = {
+    ("SoldierMilitia", "Head"): {2: militia2_head, 3: militia3_head},
+    ("SoldierMilitia", "ArmShield"): {2: militia2_off_arm},
+    ("SoldierMilitia", "Torso"): {2: militia2_body, 3: militia3_body},
+    ("SoldierMilitia", "ArmSword"): {3: militia3_fork},
+    ("SoldierSpearman", "Torso"): {2: spearman2_body},
+    ("SoldierSpearman", "Head"): {2: spearman2_head, 3: spearman3_head},
+    ("SoldierSpearman", "ArmShield"): {3: spearman3_shield},
+    ("SoldierSpearman", "ArmSword"): {3: spearman3_spear},
+    ("SoldierArcher", "Torso"): {2: archer2_body, 3: archer3_body},
+    ("SoldierArcher", "ArmBow"): {2: archer2_bow_arm},
+    ("SoldierArcher", "Head"): {3: archer3_head},
+    ("SoldierManAtArms", "Torso"): {2: manatarms2_body},
+    ("SoldierManAtArms", "Head"): {3: manatarms3_head},
+    ("SoldierManAtArms", "ArmShield"): {3: manatarms3_shield},
+    ("SoldierManAtArms", "ArmSword"): {3: manatarms3_mace},
+}
+LEVELS = 3
+LEVEL_DY = 1.0      # each level stands a metre behind the one before it
+
+
+def at_level(soldier, part, fn, level):
+    trims = TRIMS.get((soldier, part), {})
+
+    def build(b):
+        fn(b)
+        for lvl in range(2, level + 1):
+            if lvl in trims:
+                trims[lvl](b)
+    return build
+
+
 # ---------------------------------------------------------------------------------- the four
 
 def legs(hose, wide=1.0, hip=0.19):
@@ -383,23 +521,23 @@ def main():
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
     only = set(sys.argv[sys.argv.index("--") + 1:]) if "--" in sys.argv else set()
-    for obj_name, spec in SOLDIERS.items():
-        if only and obj_name not in only:
+    for (soldier, spec), level in [(item, lvl) for item in SOLDIERS.items() for lvl in range(1, LEVELS + 1)]:
+        obj_name = soldier if level == 1 else f"{soldier}-lvl{level}"
+        if only and obj_name not in only and soldier not in only:
             continue
         location, _, _ = kit.refresh_placeholder(obj_name, "Flag1-lvl1")
-        location = location + Vector((o.COLUMN_X + spec["offset"], 0, 0))
+        location = location + Vector((o.COLUMN_X + spec["offset"], (level - 1) * LEVEL_DY, 0))
         ref = bpy.data.objects.get(obj_name + "-size")
         if ref is not None:
             ref.location = location
         scale = spec["scale"]
-        root = install(obj_name, part_mesh(obj_name, spec["torso"], (0, 0, 0), mat, scale), None, location, coll)
+        root = install(obj_name, part_mesh(obj_name, at_level(soldier, "Torso", spec["torso"], level), (0, 0, 0), mat, scale), None, location, coll)
         tris = sum(len(p.vertices) - 2 for p in root.data.polygons)
         for name, fn, pivot in spec["parts"]:
-            part = install(f"{obj_name}-{name}", part_mesh(f"{obj_name}-{name}", fn, pivot, mat, scale), root,
+            part = install(f"{obj_name}-{name}", part_mesh(f"{obj_name}-{name}", at_level(soldier, name, fn, level), pivot, mat, scale), root,
                            Vector(pivot) * scale, coll)
             tris += sum(len(p.vertices) - 2 for p in part.data.polygons)
-        top = max((p.matrix_world @ v.co).z for p in [root] + list(root.children) for v in p.data.vertices) - location.z
-        print(f"MODEL {obj_name}: {len(spec['parts']) + 1} parts, tris={tris}, top={top:.2f} m")
+        print(f"MODEL {obj_name}: {len(spec['parts']) + 1} parts, tris={tris}")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
 

@@ -466,6 +466,23 @@ namespace CityBuilder.Tests.PlayMode
             }
 
             foreach (var r in king.GetComponentsInChildren<Renderer>()) r.enabled = true;
+
+            // a level's look: metal at 2, gold at 3 -- worn from the start, and changed on a living soldier
+            var spearman = soldiers[1];
+            Assert.AreEqual(1, spearman.LookLevel);
+            Assert.IsFalse(spearman.GetComponentsInChildren<Transform>().Any(t => t.name.Contains("-lvl")), "A level-1 spearman wears a higher level's look.");
+            ArmyManager.Instance.Redress(spearman, 3);
+            yield return null;
+            Assert.IsTrue(spearman.GetComponentsInChildren<Transform>().Any(t => t.name.EndsWith("-lvl3-Head")), "The spearman was not redressed for level 3.");
+            Assert.AreEqual(1, spearman.GetComponentsInChildren<FigureAnimator>().Length);
+            spearman.GetComponent<FigureAnimator>().OnStruck();
+            Assert.IsTrue(spearman.GetComponent<FigureAnimator>().IsStriking, "The redressed spearman's figure is not animated.");
+            ArmyManager.Instance.SpawnSummons(SoldierType.Archer, at, 1, 2, 60f);
+            yield return null;
+            var veteran = Object.FindObjectsByType<SoldierUnit>(FindObjectsInactive.Exclude).First(u => u.Type == SoldierType.Archer && u != soldiers[2]);
+            Assert.AreEqual(2, veteran.LookLevel, "A level-2 summon does not wear level 2's look.");
+            Assert.IsTrue(veteran.GetComponentsInChildren<Transform>().Any(t => t.name.EndsWith("-lvl2-ArmBow")));
+
             var dying = soldiers[3];
             dying.TakeDamage(dying.MaxHealth * 10);
             yield return new WaitForSeconds(0.4f);
