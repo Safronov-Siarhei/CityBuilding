@@ -184,6 +184,14 @@ dropped once. It moved into `BuildingInfoPanelController.ProductionSummary`, whe
 code, and the cell now says `x{0}`, which is what it means. When a string's spacing matters, the
 spacing belongs to the code and the words belong to the sheet.
 
+## Header notes
+
+Every header cell on every tab carries a NOTE (hover tooltip) saying in Russian what the column
+means — the user asked for it (2026-10-24) so they know what they are changing. A new column gets
+its note in the same edit: `update_spreadsheet` with `updateCells` and `fields: "note"` on the
+header cell. Notes are not data — the CSV export ignores them. Per-level columns say which level
+and that an empty cell repeats the level below; formula columns say not to type in them.
+
 ## Localization rows
 
 Keys are derived from ids: a recipe's label is `#recipe_<recipe_id>`, a building's
