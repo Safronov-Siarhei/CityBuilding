@@ -609,9 +609,21 @@ namespace CityBuilder.EditorTools
                 marks[i] = badge.gameObject.AddComponent<CanvasGroup>();
                 badge.gameObject.SetActive(false);
             }
+            // the raiding party's own «!», in another colour than the waves' (the user, 2026-10-24)
+            var partyBadge = CreateImage(viewGO.transform, "RaidPartyAlert", UiTheme.Magic);
+            partyBadge.sprite = SkinSprite("circle_mask");
+            partyBadge.raycastTarget = false;
+            partyBadge.rectTransform.sizeDelta = new Vector2(34f, 34f);
+            var partyBang = CreateText(partyBadge.transform, "Mark", "!", 28, Vector2.zero, new Vector2(34f, 34f), Color.white);
+            partyBang.fontStyle = FontStyle.Bold;
+            partyBang.raycastTarget = false;
+            var partyMark = partyBadge.gameObject.AddComponent<CanvasGroup>();
+            partyBadge.gameObject.SetActive(false);
+
             var alerts = viewGO.AddComponent<MinimapAttackAlerts>();
             var alertsSO = new SerializedObject(alerts);
             alertsSO.FindProperty("map").objectReferenceValue = indicator;
+            alertsSO.FindProperty("partyMark").objectReferenceValue = partyMark;
             var list = alertsSO.FindProperty("marks");
             list.arraySize = marks.Length;
             for (var i = 0; i < marks.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = marks[i];

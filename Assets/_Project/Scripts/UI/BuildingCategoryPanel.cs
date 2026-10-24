@@ -106,16 +106,35 @@ namespace CityBuilder.UI
                 tab.gameObject.SetActive(Invasion.InvasionRules.HasAny(tab.Category, buildings));
             }
             CloseUpTabs();
-            // the cards' price chips: a run pays in wood and stone only, so the rest come off
-            foreach (var button in _buildingButtons)
+            foreach (var button in _buildingButtons) ShowRunPrice(button);
+        }
+
+        /// <summary>
+        /// A card's price chips in a run: the RUN's price (wood, stone, gold -- the invasion tab), not
+        /// the sandbox's numbers the card was built with. SetupProject gives every card a chip for
+        /// each of the three, hidden where the sandbox's price has none; the rest come off.
+        /// </summary>
+        private static void ShowRunPrice(HotbarButtonHandler button)
+        {
+            if (button == null || button.Building == null) return;
+            var cost = CityBuilder.Buildings.BuildingPlacer.CostOf(button.Building);
+            foreach (var chip in button.GetComponentsInChildren<Transform>(true))
             {
-                foreach (var chip in button.GetComponentsInChildren<Transform>(true))
+                var name = chip.name;
+                var isIcon = name.StartsWith("Icon_");
+                if (!isIcon && !name.StartsWith("Amount_")) continue;
+                var amount = 0;
+                foreach (var c in cost)
                 {
-                    var name = chip.name;
-                    if (!name.StartsWith("Icon_") && !name.StartsWith("Amount_")) continue;
-                    if (name.EndsWith("_Wood") || name.EndsWith("_Stone")) continue;
-                    chip.gameObject.SetActive(false);
+                    if (name.EndsWith("_" + c.type)) amount = c.amount;
                 }
+                chip.gameObject.SetActive(amount > 0);
+                if (isIcon || amount <= 0) continue;
+                var text = chip.GetComponent<Text>();
+                if (text == null) continue;
+                text.text = amount.ToString();
+                var rect = (RectTransform)chip;
+                rect.sizeDelta = new Vector2(amount >= 100 ? 36f : 26f, rect.sizeDelta.y);
             }
         }
 

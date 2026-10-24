@@ -100,7 +100,7 @@ namespace CityBuilder.Buildings
         /// <summary>The building the player has to put down before anything else (the Town Hall). Deliberately not in AvailableBuildings -- it never appears in the hotbar -- which makes this the only way to reach it from outside.</summary>
         public BuildingData MandatoryFirstBuilding => mandatoryFirstBuilding;
 
-        /// <summary>What putting a building down costs: the sheet's price, or an Invasion run's (wood and stone only).</summary>
+        /// <summary>What putting a building down costs: the sheet's price, or an Invasion run's (wood, stone and gold).</summary>
         public static List<ResourceAmount> CostOf(BuildingData data) =>
             Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
         public event Action<BuildingData> OnBuildingPlaced;

@@ -212,16 +212,31 @@ namespace CityBuilder.EditorTools
             {
                 if (cost.amount <= 0 || shown >= 3) continue;
                 shown++;
-                var costIcon = CreateImage(row.transform, $"Icon_{cost.type}", Color.white);
-                costIcon.sprite = CreateResourceIcon(cost.type);
-                costIcon.preserveAspect = true;
-                costIcon.rectTransform.sizeDelta = new Vector2(24f, 24f);
-                var amount = CreateText(row.transform, $"Amount_{cost.type}", cost.amount.ToString(), 18, Vector2.zero, new Vector2(cost.amount >= 100 ? 36f : 26f, 26f), UiTheme.Ink);
-                amount.font = UiTheme.Heavy;
-                amount.alignment = TextAnchor.MiddleLeft;
-                SkinInk(amount, HudInk.OnCard);
+                CreateCardPriceChip(row.transform, cost.type, cost.amount);
+            }
+            // An Invasion run sets the card to the run's price (BuildingCategoryPanel.ShowRunPrice),
+            // which may name wood, stone or gold where the sandbox's has none: their chips wait hidden.
+            foreach (var type in new[] { ResourceType.Wood, ResourceType.Stone, ResourceType.Coins })
+            {
+                if (row.transform.Find($"Icon_{type}") != null) continue;
+                var (chipIcon, chipAmount) = CreateCardPriceChip(row.transform, type, 0);
+                chipIcon.gameObject.SetActive(false);
+                chipAmount.gameObject.SetActive(false);
             }
             return button;
+        }
+
+        private static (Image icon, Text amount) CreateCardPriceChip(Transform row, ResourceType type, int value)
+        {
+            var costIcon = CreateImage(row, $"Icon_{type}", Color.white);
+            costIcon.sprite = CreateResourceIcon(type);
+            costIcon.preserveAspect = true;
+            costIcon.rectTransform.sizeDelta = new Vector2(24f, 24f);
+            var amount = CreateText(row, $"Amount_{type}", value.ToString(), 18, Vector2.zero, new Vector2(value >= 100 ? 36f : 26f, 26f), UiTheme.Ink);
+            amount.font = UiTheme.Heavy;
+            amount.alignment = TextAnchor.MiddleLeft;
+            SkinInk(amount, HudInk.OnCard);
+            return (costIcon, amount);
         }
 
         /// <summary>The building whose rendered icon stands for a whole category on its tab.</summary>

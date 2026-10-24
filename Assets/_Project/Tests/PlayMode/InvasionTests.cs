@@ -212,7 +212,7 @@ namespace CityBuilder.Tests.PlayMode
                 var data = PlaytestWorld.Building(id);
                 Assert.IsNotNull(data, $"{id} is not among the game's buildings.");
                 foreach (var cost in BuildingPlacer.CostOf(data))
-                    Assert.IsTrue(cost.type == ResourceType.Wood || cost.type == ResourceType.Stone, $"{id} costs {cost.type} in a run.");
+                    Assert.IsTrue(cost.type == ResourceType.Wood || cost.type == ResourceType.Stone || cost.type == InvasionRules.Money, $"{id} costs {cost.type} in a run.");
             }
 
             // an upgrade's iron is paid in gold
@@ -836,6 +836,10 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(config.InvasionRaidPartyThrowers, waves.RaidParty.Count(o => o.Kind == OrcKind.Thrower));
             Assert.IsTrue(waves.RaidParty.All(o => o.IsRaiding && o.Lane == null));
             foreach (var orc in waves.RaidParty) orc.Toughen(1000f);   // the towers on the way must not end the test first
+            var alerts = Object.FindAnyObjectByType<UI.MinimapAttackAlerts>();
+            Assert.IsNotNull(alerts, "No minimap alerts in a run.");
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsTrue(alerts.PartyMarkShown, "The minimap shows no mark for the raiding party.");
 
             var hitInside = false;
             Time.timeScale = 4f;
@@ -850,6 +854,8 @@ namespace CityBuilder.Tests.PlayMode
             Time.timeScale = 1f;
             Assert.IsFalse(hitInside, "The party went for a building inside the base.");
             Assert.IsFalse(waves.RaidParty.Any(o => o != null), "The party did not go home once nothing beyond the base was left.");
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsFalse(alerts.PartyMarkShown, "The raiding party's mark stayed on the minimap after it went home.");
         }
 
         /// <summary>The Дом лекаря in a run (the user, 2026-10-24): manned by one, it slowly heals the player's wounded in its radius; empty, it heals nobody.</summary>
@@ -881,6 +887,24 @@ namespace CityBuilder.Tests.PlayMode
         /// sawmill went down -- the cards are wired to the assets, which have no run limit and the
         /// sandbox's price).
         /// </summary>
+        /// <summary>A run's price may ask for gold (the invasion tab's cost_gold, the user 2026-10-24) -- paid in the run's coins, as an upgrade's is; its repair never does.</summary>
+        [Test]
+        public void ARunsPrice_TakesGold_ButItsRepairDoesNot()
+        {
+            var data = ScriptableObject.CreateInstance<BuildingData>();
+            data.cost = new System.Collections.Generic.List<ResourceAmount>
+            {
+                new ResourceAmount { type = ResourceType.Wood, amount = 10 },
+                new ResourceAmount { type = ResourceType.Gold, amount = 7 },   // what the sheet's cost_gold reads as
+                new ResourceAmount { type = ResourceType.Iron, amount = 4 },
+            };
+            var build = InvasionRules.BuildCost(data);
+            Assert.AreEqual(2, build.Count, "A run's price kept something besides wood, stone and the run's money.");
+            Assert.AreEqual(11, build.First(c => c.type == InvasionRules.Money).amount, "A run's price did not ask its gold (and the rest) in the run's money.");
+            Assert.IsFalse(InvasionRules.RepairCost(data).Any(c => c.type == InvasionRules.Money), "Mending asks for gold.");
+            Object.DestroyImmediate(data);
+        }
+
         [Test]
         public void TheBuildMenu_PicksUpTheRunsBuildings()
         {
@@ -896,6 +920,21 @@ namespace CityBuilder.Tests.PlayMode
                 placer.ClearSelection();
             }
             Assert.AreEqual(2, PlaytestWorld.Building("Sawmill").maxCount);
+
+            // and their price chips say the RUN's price (the invasion tab), gold included, not the sandbox's
+            foreach (var card in Object.FindObjectsByType<UI.HotbarButtonHandler>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (card.Building == null || !InvasionRules.Allows(card.Building)) continue;
+                var cost = BuildingPlacer.CostOf(card.Building);
+                var chips = card.GetComponentsInChildren<UnityEngine.UI.Text>(true).Where(t => t.name.StartsWith("Amount_") && t.gameObject.activeSelf).ToList();
+                Assert.AreEqual(cost.Count, chips.Count, $"The {card.Building.buildingName} card shows {chips.Count} prices for a run price of {cost.Count}.");
+                foreach (var c in cost)
+                {
+                    var chip = chips.FirstOrDefault(t => t.name == $"Amount_{c.type}");
+                    Assert.IsNotNull(chip, $"The {card.Building.buildingName} card has no {c.type} price.");
+                    Assert.AreEqual(c.amount.ToString(), chip.text, $"The {card.Building.buildingName} card's {c.type} is not the run's price.");
+                }
+            }
         }
 
         /// <summary>

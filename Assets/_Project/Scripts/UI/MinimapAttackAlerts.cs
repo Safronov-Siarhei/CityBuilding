@@ -7,7 +7,8 @@ namespace CityBuilder.UI
     /// Blinking «!» marks on the minimap where an Invasion wave is coming from (the user,
     /// 2026-10-22): one per lane the wave underway still has orcs on, at the head of that lane's
     /// column -- or, when the column is beyond what the minimap frames, on its rim in that
-    /// direction. Nothing shows between waves or outside a run.
+    /// direction. Nothing shows between waves or outside a run. The raiding party has a «!» of its
+    /// own, in another colour (the user, 2026-10-24), on it for as long as any of it is out.
     /// </summary>
     public class MinimapAttackAlerts : MonoBehaviour
     {
@@ -18,6 +19,7 @@ namespace CityBuilder.UI
 
         [SerializeField] private MinimapCameraIndicator map;
         [SerializeField] private CanvasGroup[] marks;
+        [SerializeField] private CanvasGroup partyMark;
 
         private float _refreshIn;
 
@@ -35,6 +37,7 @@ namespace CityBuilder.UI
             {
                 if (mark != null && mark.gameObject.activeSelf) mark.alpha = alpha;
             }
+            if (partyMark != null && partyMark.gameObject.activeSelf) partyMark.alpha = alpha;
 
             _refreshIn -= Time.unscaledDeltaTime;
             if (_refreshIn > 0f) return;
@@ -46,6 +49,7 @@ namespace CityBuilder.UI
         {
             var mode = InvasionMode.Instance;
             var waves = mode != null ? mode.Waves : null;
+            PlaceParty(waves);
             if (waves == null || map == null || waves.Current != InvasionWaves.Phase.Underway)
             {
                 Hide(0);
@@ -67,6 +71,35 @@ namespace CityBuilder.UI
             }
             Hide(shown);
         }
+
+        /// <summary>The raiding party's mark, on the first of it still standing -- it outlives the wave it came with.</summary>
+        private void PlaceParty(InvasionWaves waves)
+        {
+            if (partyMark == null) return;
+            Combat.OrcUnit head = null;
+            if (waves != null && map != null)
+            {
+                foreach (var orc in waves.RaidParty)
+                {
+                    if (orc == null || orc.CurrentHealth <= 0) continue;
+                    head = orc;
+                    break;
+                }
+            }
+            if (head == null)
+            {
+                if (partyMark.gameObject.activeSelf) partyMark.gameObject.SetActive(false);
+                return;
+            }
+            var rim = map.MapHalfExtent * RimShare;
+            var at = map.ToMapUnclamped(head.transform.position);
+            if (at.magnitude > rim) at = at.normalized * rim;
+            partyMark.gameObject.SetActive(true);
+            ((RectTransform)partyMark.transform).anchoredPosition = at;
+        }
+
+        /// <summary>Whether the raiding party's mark is up. For the tests.</summary>
+        public bool PartyMarkShown => partyMark != null && partyMark.gameObject.activeSelf;
 
         private void Hide(int from)
         {

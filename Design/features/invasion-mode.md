@@ -61,7 +61,7 @@ worker (`Invasion/InvasionHealing.cs`, `inv_healer_heal_share(_per_level)`). The
 `inv_raid_party_every`-th wave, out of a random portal, 5 raiders + 2 throwers of the wave's strength break
 the player's buildings beyond `inv_raid_party_base_radius` of the castle, nearest first, then walk home and
 vanish (`OrcUnit.RaidOutsideTheBase`/`Raid`, `InvasionWaves.SendRaidParty`/`RaidParty`); not part of the
-wave, pays like any orc, not sent when nothing stands out there. Next: online leaderboard (service not
+wave, pays like any orc, not sent when nothing stands out there. Its own purple «!» on the minimap (`MinimapAttackAlerts.partyMark`). The ROAD is in the run's menu (2026-10-24, sandbox price). Building may cost GOLD (invasion tab `cost_gold` -> ResourceType.Gold -> paid in Coins by `InvasionRules.BuildCost`, as upgrades are); repair never takes gold. The build cards show the RUN's price (`BuildingCategoryPanel.ShowRunPrice`; SetupProject bakes hidden Wood/Stone/Coins chips on every card). Open: three prices overflow a 124 px card -- layout options offered to the user. Next: online leaderboard (service not
 chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.

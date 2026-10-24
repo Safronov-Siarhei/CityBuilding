@@ -9,8 +9,9 @@ namespace CityBuilder.Invasion
 {
     /// <summary>
     /// What an Invasion run changes about building (the user's answers, 2026-10-21): the menu holds
-    /// nine buildings and no houses (the six on the island are all there will ever be); building and
-    /// repairing cost wood and stone only; an upgrade costs wood, stone and gold -- whatever else the
+    /// nine buildings and no houses (the six on the island are all there will ever be); building
+    /// costs wood, stone and gold (the invasion tab's cost_gold, the user 2026-10-24), repairing wood
+    /// and stone only; an upgrade costs wood, stone and gold -- whatever else the
     /// sandbox's upgrade asks for (iron) is paid in gold instead; nothing waits on the Laboratory or
     /// on another building; and nothing decays.
     ///
@@ -26,6 +27,7 @@ namespace CityBuilder.Invasion
             "Sawmill", "Quarry",
             "Barracks",
             "HealerHouse",
+            "Road",   // the user, 2026-10-24: at the sandbox's price (the invasion tab has no row for it)
         };
 
         /// <summary>The house standing on the island from the start; the run's people live in these.</summary>
@@ -80,20 +82,12 @@ namespace CityBuilder.Invasion
             return false;
         }
 
-        /// <summary>A building's price in a run: its wood and its stone, nothing else.</summary>
-        public static List<ResourceAmount> BuildCost(BuildingData data)
-        {
-            var cost = new List<ResourceAmount>(2);
-            if (data == null) return cost;
-            foreach (var amount in data.cost)
-            {
-                if ((amount.type == ResourceType.Wood || amount.type == ResourceType.Stone) && amount.amount > 0)
-                {
-                    cost.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
-                }
-            }
-            return cost;
-        }
+        /// <summary>
+        /// A building's price in a run: its wood, its stone, and the rest in the run's money -- the
+        /// invasion tab's cost_gold reads as ResourceType.Gold and is paid in coins, as an upgrade's is.
+        /// </summary>
+        public static List<ResourceAmount> BuildCost(BuildingData data) =>
+            data == null ? new List<ResourceAmount>() : UpgradeCost(data.cost);
 
         /// <summary>An upgrade's price in a run: its wood and stone, and everything else it asks for in gold.</summary>
         public static List<ResourceAmount> UpgradeCost(List<ResourceAmount> sandbox)
@@ -111,12 +105,13 @@ namespace CityBuilder.Invasion
             return cost;
         }
 
-        /// <summary>Mending a damaged building in a run: the sheet's repair share of its wood and stone.</summary>
+        /// <summary>Mending a damaged building in a run: the sheet's repair share of its wood and stone -- never its gold.</summary>
         public static List<ResourceAmount> RepairCost(BuildingData data)
         {
             var cost = new List<ResourceAmount>(2);
             foreach (var amount in BuildCost(data))
             {
+                if (amount.type == Money) continue;
                 cost.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * BalanceConfig.Instance.RepairCostFraction)) });
             }
             return cost;
