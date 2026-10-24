@@ -134,8 +134,16 @@ namespace CityBuilder.UI
                 if (text == null) continue;
                 text.text = amount.ToString();
                 var rect = (RectTransform)chip;
-                rect.sizeDelta = new Vector2(amount >= 100 ? 36f : 26f, rect.sizeDelta.y);
+                rect.sizeDelta = new Vector2(amount >= 100 ? 34f : 24f, rect.sizeDelta.y);
             }
+            var rows = button.GetComponentInChildren<CardPriceRows>(true);
+            if (rows != null) rows.Arrange();
+        }
+
+        /// <summary>Sets every card to the run's price again -- after the run's numbers changed. For the tests.</summary>
+        public void RefreshRunPrices()
+        {
+            foreach (var button in _buildingButtons) ShowRunPrice(button);
         }
 
         /// <summary>

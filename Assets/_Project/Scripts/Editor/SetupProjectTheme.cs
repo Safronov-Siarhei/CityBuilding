@@ -180,32 +180,37 @@ namespace CityBuilder.EditorTools
             var iconRect = icon.rectTransform;
             iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 1f);
             iconRect.pivot = new Vector2(0.5f, 1f);
+            // the picture a little smaller than the card is wide: room under the name for two rows of price
+            var iconSide = size.y - 6f - CardPriceZone - CardNameHeight;
             iconRect.anchoredPosition = new Vector2(0f, -6f);
-            iconRect.sizeDelta = new Vector2(size.x - 18f, size.x - 18f);
+            iconRect.sizeDelta = new Vector2(iconSide, iconSide);
 
-            var name = Localize(CreateText(card.transform, "Name", data.displayName, 19, new Vector2(0f, -size.y * 0.5f + 46f), new Vector2(size.x - 8f, 26f), UiTheme.Ink),
+            var name = Localize(CreateText(card.transform, "Name", data.displayName, 18, new Vector2(0f, -size.y * 0.5f + CardPriceZone + CardNameHeight * 0.5f), new Vector2(size.x - 8f, CardNameHeight), UiTheme.Ink),
                 "#building_" + data.buildingName.ToLowerInvariant());
             name.font = UiTheme.Bold;
             SkinInk(name, HudInk.OnCard);
             name.resizeTextForBestFit = true;
             name.resizeTextMinSize = 13;
-            name.resizeTextMaxSize = 19;
+            name.resizeTextMaxSize = 18;
 
-            // The price, icon and number per resource, centred under the name.
-            var row = new GameObject("Cost", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-            row.transform.SetParent(card.transform, false);
-            var rowRect = row.GetComponent<RectTransform>();
-            rowRect.anchorMin = rowRect.anchorMax = new Vector2(0.5f, 0f);
-            rowRect.pivot = new Vector2(0.5f, 0f);
-            rowRect.anchoredPosition = new Vector2(0f, 6f);
-            rowRect.sizeDelta = new Vector2(size.x - 6f, 26f);
-            var layout = row.GetComponent<HorizontalLayoutGroup>();
-            layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.spacing = 2f;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
+            // The price under the name: two per row, a third on a second row (the user, 2026-10-24);
+            // one row stands centred in the space, two fill it (CardPriceRows).
+            var zone = new GameObject("Cost", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            zone.transform.SetParent(card.transform, false);
+            var zoneRect = zone.GetComponent<RectTransform>();
+            zoneRect.anchorMin = zoneRect.anchorMax = new Vector2(0.5f, 0f);
+            zoneRect.pivot = new Vector2(0.5f, 0f);
+            zoneRect.anchoredPosition = new Vector2(0f, 2f);
+            zoneRect.sizeDelta = new Vector2(size.x - 4f, CardPriceZone - 2f);
+            var zoneLayout = zone.GetComponent<VerticalLayoutGroup>();
+            zoneLayout.childAlignment = TextAnchor.MiddleCenter;
+            zoneLayout.spacing = 2f;
+            zoneLayout.childControlWidth = false;
+            zoneLayout.childControlHeight = false;
+            zoneLayout.childForceExpandWidth = false;
+            zoneLayout.childForceExpandHeight = false;
+            var row = CreateCardPriceRow(zone.transform, "Top", size.x - 4f);
+            var second = CreateCardPriceRow(zone.transform, "Bottom", size.x - 4f);
 
             var shown = 0;
             foreach (var cost in data.cost)
@@ -223,16 +228,42 @@ namespace CityBuilder.EditorTools
                 chipIcon.gameObject.SetActive(false);
                 chipAmount.gameObject.SetActive(false);
             }
+            var rows = zone.AddComponent<CardPriceRows>();
+            rows.Wire((RectTransform)row.transform, (RectTransform)second.transform);
+            rows.Arrange();
             return button;
         }
+
+        // A build card's lower part: the price zone at its foot (two rows of chips) and the name above it.
+        private const float CardPriceZone = 50f;
+        private const float CardNameHeight = 22f;
+        private const float CardPriceRowHeight = 22f;
+
+        private static GameObject CreateCardPriceRow(Transform zone, string name, float width)
+        {
+            var row = new GameObject(name, typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(zone, false);
+            ((RectTransform)row.transform).sizeDelta = new Vector2(width, CardPriceRowHeight);
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.spacing = 2f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            return row;
+        }
+
+        /// <summary>A price chip's number width: two prices of three digits side by side still fit a card.</summary>
+        public static float CardAmountWidth(int value) => value >= 100 ? 34f : 24f;
 
         private static (Image icon, Text amount) CreateCardPriceChip(Transform row, ResourceType type, int value)
         {
             var costIcon = CreateImage(row, $"Icon_{type}", Color.white);
             costIcon.sprite = CreateResourceIcon(type);
             costIcon.preserveAspect = true;
-            costIcon.rectTransform.sizeDelta = new Vector2(24f, 24f);
-            var amount = CreateText(row, $"Amount_{type}", value.ToString(), 18, Vector2.zero, new Vector2(value >= 100 ? 36f : 26f, 26f), UiTheme.Ink);
+            costIcon.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            var amount = CreateText(row, $"Amount_{type}", value.ToString(), 17, Vector2.zero, new Vector2(CardAmountWidth(value), CardPriceRowHeight), UiTheme.Ink);
             amount.font = UiTheme.Heavy;
             amount.alignment = TextAnchor.MiddleLeft;
             SkinInk(amount, HudInk.OnCard);

@@ -1726,6 +1726,29 @@ namespace CityBuilder.Tests.PlayMode
             ArmyManager.Instance.SelectGroup(null);
         }
 
+        /// <summary>The build cards with two prices and with three (the user, 2026-10-24: a third price on a second row, one row centred) -- a photo for the user.</summary>
+        [UnityTest]
+        public IEnumerator Photograph_TheBuildCards_WithTwoAndThreePrices()
+        {
+            if (!PlaytestCapture.Available) Assert.Ignore("No graphics device: run without -nographics to photograph.");
+            var barracks = PlaytestWorld.Building("Barracks");
+            var tower = PlaytestWorld.Building("Tower");
+            barracks.cost.Add(new ResourceAmount { type = ResourceType.Gold, amount = 150 });
+            tower.cost.Add(new ResourceAmount { type = ResourceType.Gold, amount = 25 });
+            var menu = Object.FindAnyObjectByType<CityBuilder.UI.BuildingCategoryPanel>();
+            menu.RefreshRunPrices();
+            menu.Open(BuildingCategory.Defence, instant: true);
+            yield return new WaitForSeconds(0.5f);
+            yield return PlaytestCapture.ShootWithUi("invasion-build-cards-3", InvasionMode.Instance.Castle.transform.position, 18f, 55f, 0f);
+            menu.Open(BuildingCategory.Production, instant: true);
+            yield return new WaitForSeconds(0.5f);
+            yield return PlaytestCapture.ShootWithUi("invasion-build-cards-2", InvasionMode.Instance.Castle.transform.position, 18f, 55f, 0f);
+            barracks.cost.RemoveAll(c => c.type == ResourceType.Gold);
+            tower.cost.RemoveAll(c => c.type == ResourceType.Gold);
+            menu.RefreshRunPrices();
+            menu.Close(instant: true);
+        }
+
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         private static void Reveal(Vector3 at, int radiusCells) =>
