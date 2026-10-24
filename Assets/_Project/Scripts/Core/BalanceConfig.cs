@@ -537,6 +537,10 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionGoldPerWave = 10;
         [SerializeField] private float invasionOrcBuildingRadius = 6f;
         [SerializeField] private float invasionLaneDetourMeters = 6f;
+        [SerializeField] private int invasionRaidPartyEvery = 3;
+        [SerializeField] private int invasionRaidPartyRaiders = 5;
+        [SerializeField] private int invasionRaidPartyThrowers = 2;
+        [SerializeField] private float invasionRaidPartyBaseRadius = 22f;
         [SerializeField] private float invasionHealerHealShare = 0.01f;
         [SerializeField] private float invasionHealerHealSharePerLevel = 0.005f;
 
@@ -835,6 +839,11 @@ namespace CityBuilder.Core
         public float InvasionOrcBuildingRadius => invasionOrcBuildingRadius;
         /// <summary>How much longer than the straight line a wave orc's way round something on its portal's way may be before it breaks through instead (OrcUnit.WalkTheLane).</summary>
         public float InvasionLaneDetourMeters => invasionLaneDetourMeters;
+        /// <summary>The raiding party (InvasionWaves.SendRaidParty): with every how-many-th wave it goes out, its raiders and throwers, and how far from the castle the base ends -- it breaks only what stands further out.</summary>
+        public int InvasionRaidPartyEvery => invasionRaidPartyEvery;
+        public int InvasionRaidPartyRaiders => invasionRaidPartyRaiders;
+        public int InvasionRaidPartyThrowers => invasionRaidPartyThrowers;
+        public float InvasionRaidPartyBaseRadius => invasionRaidPartyBaseRadius;
         /// <summary>The share of their health a manned Дом лекаря heals the wounded in its radius each second, at `level` (InvasionHealing).</summary>
         public float InvasionHealerHealShareAt(int level) => invasionHealerHealShare + invasionHealerHealSharePerLevel * (Mathf.Max(1, level) - 1);
         public int InvasionCamp1Monsters => invasionCamp1Monsters;
@@ -1205,6 +1214,10 @@ namespace CityBuilder.Core
             invasionGoldPerWave = (int)Read(economy, "inv_gold_per_wave", invasionGoldPerWave);
             invasionOrcBuildingRadius = Read(economy, "inv_orc_building_radius", invasionOrcBuildingRadius);
             invasionLaneDetourMeters = Read(economy, "inv_lane_detour_meters", invasionLaneDetourMeters);
+            invasionRaidPartyEvery = (int)Read(economy, "inv_raid_party_every", invasionRaidPartyEvery);
+            invasionRaidPartyRaiders = (int)Read(economy, "inv_raid_party_raiders", invasionRaidPartyRaiders);
+            invasionRaidPartyThrowers = (int)Read(economy, "inv_raid_party_throwers", invasionRaidPartyThrowers);
+            invasionRaidPartyBaseRadius = Read(economy, "inv_raid_party_base_radius", invasionRaidPartyBaseRadius);
             invasionHealerHealShare = Read(economy, "inv_healer_heal_share", invasionHealerHealShare);
             invasionHealerHealSharePerLevel = Read(economy, "inv_healer_heal_share_per_level", invasionHealerHealSharePerLevel);
             foreach (var m in monsters)

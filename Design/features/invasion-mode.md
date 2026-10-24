@@ -57,8 +57,12 @@ a second into the run, over the bare map): wave orcs keep to it (`OrcUnit.Follow
 what is built ACROSS it (`BuildingOnTheLine`), take a way round only when it is at most
 `inv_lane_detour_meters` longer, walk through the gap they made (`_laneBreach`), may chase anyone anywhere
 and come back to it; the Дом лекаря heals the run's wounded in its service_radius when manned by its one
-worker (`Invasion/InvasionHealing.cs`, `inv_healer_heal_share(_per_level)`). Next: the raiding party
-(being discussed), online leaderboard (service not chosen), more playtests.
+worker (`Invasion/InvasionHealing.cs`, `inv_healer_heal_share(_per_level)`). The RAIDING PARTY: with every
+`inv_raid_party_every`-th wave, out of a random portal, 5 raiders + 2 throwers of the wave's strength break
+the player's buildings beyond `inv_raid_party_base_radius` of the castle, nearest first, then walk home and
+vanish (`OrcUnit.RaidOutsideTheBase`/`Raid`, `InvasionWaves.SendRaidParty`/`RaidParty`); not part of the
+wave, pays like any orc, not sent when nothing stands out there. Next: online leaderboard (service not
+chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),

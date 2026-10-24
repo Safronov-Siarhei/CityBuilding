@@ -804,6 +804,54 @@ namespace CityBuilder.Tests.PlayMode
             if (orc != null) orc.TakeDamage(orc.MaxHealth);
         }
 
+        /// <summary>
+        /// The raiding party (the user, 2026-10-24): with every third wave 5 raiders and 2 throwers
+        /// go for the player's buildings beyond the base, never for what stands in it, and walk back
+        /// to their camp once nothing out there is left. None goes out while nothing is out there.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheRaidingParty_BreaksWhatIsBeyondTheBase_AndGoesHome()
+        {
+            var config = BalanceConfig.Instance;
+            var mode = InvasionMode.Instance;
+            var waves = mode.Waves;
+            var castle = mode.Castle.transform.position;
+            var radius = config.InvasionRaidPartyBaseRadius;
+            Assert.IsTrue(InvasionWaves.IsRaidPartyWave(config.InvasionRaidPartyEvery, config.InvasionRaidPartyEvery));
+            Assert.IsFalse(InvasionWaves.IsRaidPartyWave(config.InvasionRaidPartyEvery - 1, config.InvasionRaidPartyEvery));
+
+            waves.SendRaidParty(1);
+            Assert.AreEqual(0, waves.RaidParty.Count, "A party went out with nothing beyond the base to break.");
+
+            mode.King.gameObject.SetActive(false);
+            foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
+            var grid = GridManager.Instance;
+            var data = PlaytestWorld.Building("Sawmill");
+            var outside = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(radius + 10f, 0f, 0f)), data.footprintSize));
+            Assert.Greater(Flat(outside.transform.position - castle).magnitude, radius, "The test's sawmill stands inside the base.");
+            outside.TryDamage(outside.CurrentHealth - 1);
+
+            waves.SendRaidParty(1);
+            Assert.AreEqual(config.InvasionRaidPartyRaiders + config.InvasionRaidPartyThrowers, waves.RaidParty.Count);
+            Assert.AreEqual(config.InvasionRaidPartyThrowers, waves.RaidParty.Count(o => o.Kind == OrcKind.Thrower));
+            Assert.IsTrue(waves.RaidParty.All(o => o.IsRaiding && o.Lane == null));
+            foreach (var orc in waves.RaidParty) orc.Toughen(1000f);   // the towers on the way must not end the test first
+
+            var hitInside = false;
+            Time.timeScale = 4f;
+            for (var t = 0f; t < 40f && outside != null && outside.CurrentHealth > 0; t += Time.unscaledDeltaTime)
+            {
+                foreach (var orc in waves.RaidParty)
+                    if (orc != null && orc.Target != null && !orc.Target.Data.isGate && Flat(orc.Target.transform.position - castle).magnitude <= radius) hitInside = true;
+                yield return null;
+            }
+            Assert.IsTrue(outside == null || outside.CurrentHealth <= 0, "The party did not break the sawmill beyond the base.");
+            for (var t = 0f; t < 40f && waves.RaidParty.Any(o => o != null); t += Time.unscaledDeltaTime) yield return null;
+            Time.timeScale = 1f;
+            Assert.IsFalse(hitInside, "The party went for a building inside the base.");
+            Assert.IsFalse(waves.RaidParty.Any(o => o != null), "The party did not go home once nothing beyond the base was left.");
+        }
+
         /// <summary>The Дом лекаря in a run (the user, 2026-10-24): manned by one, it slowly heals the player's wounded in its radius; empty, it heals nobody.</summary>
         [UnityTest]
         public IEnumerator TheHealersHouse_HealsTheWoundedAround_OnceManned()

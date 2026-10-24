@@ -302,6 +302,10 @@ namespace CityBuilder.Combat
             {
                 if (WalkTheLane()) return;
             }
+            else if (_raiding)
+            {
+                if (Raid()) return;
+            }
             else
             {
                 _retargetTimer -= Time.deltaTime;
@@ -923,6 +927,82 @@ namespace CityBuilder.Combat
             _route = _target != null
                 ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked)
                 : new[] { transform.position };
+        }
+
+        // ------------------------------------------------------------ a raiding party (Invasion)
+
+        // This close to its camp, a party with nothing left to break is home and gone.
+        private const float RaidHomeMeters = 2f;
+
+        private bool _raiding;
+        private Vector3 _raidHome;
+        private Vector3 _raidCastle;
+        private float _raidBaseRadius;
+
+        /// <summary>One of a raiding party: goes for the player's buildings outside the base, not for the castle.</summary>
+        public bool IsRaiding => _raiding;
+
+        /// <summary>
+        /// Sends this orc out with a raiding party (the user, 2026-10-24): it breaks the player's
+        /// buildings further than `baseRadius` from the castle, nearest first, fights whoever it
+        /// meets on the way, and once none is left walks back to its camp at `home` and is gone.
+        /// </summary>
+        public void RaidOutsideTheBase(Vector3 home, Vector3 castle, float baseRadius)
+        {
+            _raiding = true;
+            _lane = null;
+            _raidHome = home;
+            _raidCastle = castle;
+            _raidBaseRadius = baseRadius;
+            _target = null;
+            _retargetTimer = 0f;
+        }
+
+        /// <summary>One frame of the raid. False when a building is the target: the ordinary target code walks to it and breaks it.</summary>
+        private bool Raid()
+        {
+            _retargetTimer -= Time.deltaTime;
+            if (_target == null || _retargetTimer <= 0f)
+            {
+                _target = NearestBuildingOutsideTheBase(transform.position, _raidCastle, _raidBaseRadius);
+                _routeIndex = 0;
+                _routeBlocked = false;
+                _route = _target != null ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked) : new[] { transform.position };
+                _retargetTimer = RetargetIntervalSeconds;
+            }
+            if (_target != null) return false;
+
+            // nothing left out there: back to the camp, and gone
+            var toHome = _raidHome - transform.position;
+            toHome.y = 0f;
+            if (toHome.magnitude <= RaidHomeMeters)
+            {
+                Destroy(gameObject);
+                return true;
+            }
+            GuardWalk(_raidHome, straightLineFallback: false);
+            if (_guardRoute.Blocked && _guardRoute.IsFinished) BreakThrough();
+            return true;
+        }
+
+        /// <summary>The player's building (not a road, not a wall or gate) further than `baseRadius` from the castle and nearest `from`, or null.</summary>
+        public static BuildingInstance NearestBuildingOutsideTheBase(Vector3 from, Vector3 castle, float baseRadius)
+        {
+            BuildingInstance nearest = null;
+            var best = float.MaxValue;
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                if (Invasion.InvasionRules.IsBarrier(instance.Data)) continue;
+                var fromCastle = instance.transform.position - castle;
+                fromCastle.y = 0f;
+                if (fromCastle.magnitude <= baseRadius) continue;
+                var distSq = (instance.transform.position - from).sqrMagnitude;
+                if (distSq >= best) continue;
+                best = distSq;
+                nearest = instance;
+            }
+            return nearest;
         }
 
         // ------------------------------------------------------------ a portal's way (Invasion)

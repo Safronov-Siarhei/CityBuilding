@@ -178,6 +178,8 @@ namespace CityBuilder.Invasion
                 }
             }
 
+            if (IsRaidPartyWave(Wave, config.InvasionRaidPartyEvery)) SendRaidParty(level);
+
             _waveSeconds = 0f;
             Current = Phase.Underway;
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_inv_wave", Wave, _waveOrcs.Count),
@@ -207,6 +209,47 @@ namespace CityBuilder.Invasion
             // the gold rises over where it fell (the user, 2026-10-22)
             UI.ResourceGainPopups.Instance?.ShowCoins(orc.transform.position, gold);
         }
+
+        /// <summary>The raiding party out now, those of it still standing. It is no part of the wave: the wave ends without it.</summary>
+        public IReadOnlyList<OrcUnit> RaidParty => _raidParty;
+        private readonly List<OrcUnit> _raidParty = new List<OrcUnit>();
+
+        /// <summary>
+        /// The raiding party (the user, 2026-10-24): with every inv_raid_party_every-th wave, out of
+        /// a portal at random, inv_raid_party_raiders raiders and inv_raid_party_throwers throwers of
+        /// the wave's strength go for the player's buildings beyond the base -- so the player chooses
+        /// between holding the town and holding them. It lives on its own (the wave ends without it),
+        /// pays as any orc, and goes home once nothing is left out there. Not sent when nothing is. Public for the tests.
+        /// </summary>
+        public void SendRaidParty(int level)
+        {
+            var raids = OrcRaidManager.Instance;
+            var mode = InvasionMode.Instance;
+            if (raids == null || mode == null || mode.Castle == null || _laneStarts.Count == 0) return;
+            var config = BalanceConfig.Instance;
+            var castle = mode.Castle.transform.position;
+            var home = _laneStarts[Random.Range(0, _laneStarts.Count)];
+            if (OrcUnit.NearestBuildingOutsideTheBase(home, castle, config.InvasionRaidPartyBaseRadius) == null) return;
+
+            _raidParty.RemoveAll(orc => orc == null);
+            var count = config.InvasionRaidPartyRaiders + config.InvasionRaidPartyThrowers;
+            OrcUnit leader = null;
+            for (var i = 0; i < count; i++)
+            {
+                var kind = i < config.InvasionRaidPartyRaiders ? OrcKind.Raider : OrcKind.Thrower;
+                var orc = raids.SpawnOrcOfKind(home, level, kind);
+                if (orc == null) continue;
+                orc.Toughen(config.InvasionOrcHealthMultiplier, config.InvasionOrcDamageMultiplier);
+                orc.RaidOutsideTheBase(home, castle, config.InvasionRaidPartyBaseRadius);
+                _raidParty.Add(orc);
+                if (leader == null) leader = orc;
+            }
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_inv_raid_party", count),
+                EventSeverity.Danger, EventGlyph.Swords, null, home, leader != null ? leader.transform : null));
+        }
+
+        /// <summary>Whether wave `wave` brings a raiding party with it.</summary>
+        public static bool IsRaidPartyWave(int wave, int every) => every > 0 && wave > 0 && wave % every == 0;
 
         /// <summary>`count` different lanes at random -- which side the next wave comes from is not something to settle once.</summary>
         private void PickLanes(int count)
