@@ -1397,7 +1397,9 @@ namespace CityBuilder.Tests.PlayMode
             var built = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).FirstOrDefault(b => b.Data == tower && b.OriginCell == cell);
             Assert.IsNotNull(built, "The tower was not placed.");
             Assert.IsFalse(built.IsOperational, "A run's tower stood finished the moment it was placed.");
-            var expected = InvasionRules.BuildSeconds(BuildingPlacer.CostOf(tower));
+            var expected = InvasionRules.BuildSeconds(tower, 1);
+            Assert.AreEqual(BalanceConfig.Run.Building("Tower").levels[0].buildSeconds, expected, "A run builds a tower in other than the invasion tab's build_sec.");
+            Assert.Greater(expected, 0f, "The tower builds at once: no build_sec on the invasion tab.");
             Assert.AreEqual(expected, built.Site.Total, 0.01f, "The build time is not the price's.");
             yield return null;
             Assert.IsTrue(GameObject.Find("ConstructionLabel") != null, "No hammer over the construction site.");

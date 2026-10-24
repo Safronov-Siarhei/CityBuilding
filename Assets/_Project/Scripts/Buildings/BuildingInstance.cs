@@ -734,7 +734,7 @@ namespace CityBuilder.Buildings
             // An Invasion run's upgrade takes time, and the building rests meanwhile (the user, 2026-10-22).
             if (Invasion.InvasionRules.Active)
             {
-                ConstructionSite.Begin(this, Invasion.InvasionRules.BuildSeconds(cost), upgrade: true, ApplyNextLevel);
+                ConstructionSite.Begin(this, Invasion.InvasionRules.BuildSeconds(Data, Level + 1), upgrade: true, ApplyNextLevel);
                 return true;
             }
             ApplyNextLevel();

@@ -73,6 +73,13 @@ namespace CityBuilder.Buildings
         /// outside the Развлечения category, which is most of the roster.
         /// </summary>
         public int happiness;
+
+        /// <summary>
+        /// An Invasion run's time, in seconds, to put this level up: level 1 is the building's own
+        /// construction, level N the upgrade into it (the invasion tab's build_sec, build_sec_2..5;
+        /// the user sets them by hand, 2026-10-24). The sandbox has no such column and builds at once.
+        /// </summary>
+        public int buildSeconds;
     }
 
     [CreateAssetMenu(fileName = "NewBuilding", menuName = "CityBuilder/Building Data")]
@@ -251,6 +258,7 @@ namespace CityBuilder.Buildings
                     happiness = level.happiness,
                     harvestRadius = level.harvestRadius,
                     serviceRadius = level.serviceRadius,
+                    buildSeconds = level.buildSeconds,
                 });
             }
             return copy;

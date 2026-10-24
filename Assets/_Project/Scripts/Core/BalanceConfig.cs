@@ -590,9 +590,6 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionStonePerHarvest = 1;
         [SerializeField] private float invasionMinimapRadius = 40f;
         [SerializeField] private int invasionCitizenHealth = 12;
-        [SerializeField] private float invasionBuildSecondsPerUnit = 0.5f;
-        [SerializeField] private float invasionBuildSecondsMin = 3f;
-        [SerializeField] private float invasionBuildSecondsMax = 45f;
         [SerializeField] private int invasionScorePerWaveSquared = 1;
         [SerializeField] private int invasionScoreBoss = 50;
         [SerializeField] private int invasionScoreCampBuilding = 10;
@@ -882,9 +879,6 @@ namespace CityBuilder.Core
         public int InvasionStonePerHarvest => invasionStonePerHarvest;
         public float InvasionMinimapRadius => invasionMinimapRadius;
         public int InvasionCitizenHealth => invasionCitizenHealth;
-        public float InvasionBuildSecondsPerUnit => invasionBuildSecondsPerUnit;
-        public float InvasionBuildSecondsMin => invasionBuildSecondsMin;
-        public float InvasionBuildSecondsMax => invasionBuildSecondsMax;
         public int InvasionScorePerWaveSquared => invasionScorePerWaveSquared;
         public int InvasionScoreBoss => invasionScoreBoss;
         public int InvasionScoreCampBuilding => invasionScoreCampBuilding;
@@ -1266,9 +1260,6 @@ namespace CityBuilder.Core
             invasionStonePerHarvest = (int)Read(economy, "inv_stone_per_harvest", invasionStonePerHarvest);
             invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
             invasionCitizenHealth = (int)Read(economy, "inv_citizen_health", invasionCitizenHealth);
-            invasionBuildSecondsPerUnit = Read(economy, "inv_build_sec_per_unit", invasionBuildSecondsPerUnit);
-            invasionBuildSecondsMin = Read(economy, "inv_build_sec_min", invasionBuildSecondsMin);
-            invasionBuildSecondsMax = Read(economy, "inv_build_sec_max", invasionBuildSecondsMax);
             invasionScorePerWaveSquared = (int)Read(economy, "inv_score_wave_sq", invasionScorePerWaveSquared);
             invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);
             invasionScoreCampBuilding = (int)Read(economy, "inv_score_camp_building", invasionScoreCampBuilding);

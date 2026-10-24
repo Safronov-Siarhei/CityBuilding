@@ -680,6 +680,7 @@ namespace CityBuilder.EditorTools
                     happiness = LevelNumber(header, row, "happiness", level, previous?.happiness, path),
                     harvestRadius = LevelNumber(header, row, "harvest_radius", level, previous?.harvestRadius, path),
                     serviceRadius = LevelNumber(header, row, "service_radius", level, previous?.serviceRadius, path),
+                    buildSeconds = LevelNumber(header, row, "build_sec", level, previous?.buildSeconds, path),
                 });
             }
 

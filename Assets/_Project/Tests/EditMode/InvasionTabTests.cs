@@ -21,6 +21,7 @@ namespace CityBuilder.Tests.EditMode
             "production_interval_sec", "fog_reveal_radius", "citizens_on_build",
             "housing_capacity", "batches_per_tick", "harvest_radius", "service_radius",
             "up2_wood", "up2_stone", "up2_gold", "up5_wood", "up5_stone", "up5_gold",
+            "build_sec", "build_sec_2", "build_sec_5",
         };
 
         private static (List<string> header, Dictionary<string, List<string>> rows) BuildingsTable()

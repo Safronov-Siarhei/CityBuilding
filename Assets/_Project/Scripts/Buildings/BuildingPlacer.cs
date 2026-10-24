@@ -780,7 +780,7 @@ namespace CityBuilder.Buildings
             // In an Invasion run a building takes time to put up and does nothing meanwhile (the user, 2026-10-22).
             if (Invasion.InvasionRules.Active && _selectedBuilding != mandatoryFirstBuilding)
             {
-                ConstructionSite.Begin(buildingInstance, Invasion.InvasionRules.BuildSeconds(CostOf(_selectedBuilding)), upgrade: false);
+                ConstructionSite.Begin(buildingInstance, Invasion.InvasionRules.BuildSeconds(_selectedBuilding, 1), upgrade: false);
             }
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
