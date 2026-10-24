@@ -27,7 +27,7 @@
 > (`inv_orc_damage_mult`) and health 4.2, castle reach ×`castle_attack_range_mult`.
 > Playtest 5: yard workers drop their node claim while the yard rests (they stood idle after an
 > upgrade), killed workers are replaced (`RefillShortBuildings`), one quarry again (since 2026-10-23: two of each, `max_count`),
-> run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_per_harvest` (both yards, 2).
+> run boulders ×`inv_stone_reserve_mult` (`ResourceNode.ScaleStock` in BeginRun), `inv_wood_per_harvest` / `inv_stone_per_harvest` (1 each; one shared key until the user split it, 2026-10-24).
 > Heroes (2026-10-23): the King, let go of after an order, stands `hero_return_wait_sec` then guards
 > (`KingHero.ReturnIn`); his 4 SKILLS (`Combat/HeroSkills.cs`, rows `skill_<hero>_<skill>_*` read by
 > `BalanceConfig.HeroSkills`; `SoldierUnit.Shield/Enrage`, `HeroBlessing` checked in BuildingInstance.TryDamage,

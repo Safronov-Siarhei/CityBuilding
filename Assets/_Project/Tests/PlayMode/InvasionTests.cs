@@ -549,8 +549,8 @@ namespace CityBuilder.Tests.PlayMode
                 .OrderBy(n => (n.transform.position - castle).sqrMagnitude).FirstOrDefault();
             Assert.IsNotNull(rock, "No stone on the run's map.");
             Assert.GreaterOrEqual(rock.TotalYield, Mathf.RoundToInt(config.StoneForRockSize(1) * config.InvasionStoneReserveMultiplier), "A run's boulder holds no more than a sandbox one.");
-            Assert.AreEqual(config.InvasionPerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Stone));
-            Assert.AreEqual(config.InvasionPerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Wood), "The sawmill and the quarry bring different loads.");
+            Assert.AreEqual(config.InvasionStonePerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Stone));
+            Assert.AreEqual(config.InvasionWoodPerHarvest, ResourceNode.YieldPerHarvestFor(ResourceType.Wood));
 
             var data = PlaytestWorld.Building("Quarry");
             var quarry = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(rock.transform.position), data.footprintSize));
