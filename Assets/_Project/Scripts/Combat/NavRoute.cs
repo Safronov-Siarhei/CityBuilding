@@ -122,6 +122,19 @@ namespace CityBuilder.Combat
             return true;
         }
 
+        /// <summary>Horizontal metres left to walk from `from` through the corners not yet reached.</summary>
+        public float RemainingLength(Vector3 from)
+        {
+            var total = 0f;
+            var at = from;
+            for (var i = _index; i < _corners.Length; i++)
+            {
+                total += HorizontalDistance(at, _corners[i]);
+                at = _corners[i];
+            }
+            return total;
+        }
+
         private void SkipCornersAlreadyReached(Vector3 currentPosition)
         {
             while (_index < _corners.Length && HorizontalDistance(_corners[_index], currentPosition) < ArrivalThreshold)

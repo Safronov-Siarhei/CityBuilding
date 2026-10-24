@@ -52,7 +52,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return Settle();
             Assert.AreEqual(GameMode.Invasion, menu.ChosenMode);
             Assert.Greater(Group("ModesScreen/InvasionPanel").alpha, 0.95f, "The invasion's panel did not come in.");
-            Assert.Less(Group("ModesScreen/Card_Campaign").alpha, 0.05f, "A card not picked stayed on the screen.");
+            Assert.Less(Group("ModesScreen/Card_Sandbox").alpha, 0.05f, "A card not picked stayed on the screen.");
 
             menu.Back();
             yield return Settle();
@@ -82,7 +82,7 @@ namespace CityBuilder.Tests.PlayMode
                 yield return Settle();
                 yield return Shoot($"menu-{skin}-modes");
 
-                foreach (var mode in new[] { GameMode.Campaign, GameMode.Sandbox, GameMode.Invasion })
+                foreach (var mode in new[] { GameMode.Sandbox, GameMode.Invasion })
                 {
                     menu.ChooseMode((int)mode);
                     yield return Settle();

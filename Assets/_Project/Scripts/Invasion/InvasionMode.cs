@@ -243,6 +243,8 @@ namespace CityBuilder.Invasion
             // the Barracks' soldiers take no orders in a run: they guard the base (the user, 2026-10-23)
             Garrison = gameObject.AddComponent<InvasionGarrison>();
             Garrison.Begin(Castle != null ? Castle.transform.position : Vector3.zero);
+            // the Дом лекаря tends the wounded: a run has no illness (the user, 2026-10-24)
+            gameObject.AddComponent<InvasionHealing>();
 
             // the three round orc camps at the lanes' far ends (the map's CampSpots, not among
             // SpotsOf: the sandbox's camps read them too), their gates facing the castle

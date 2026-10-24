@@ -61,6 +61,7 @@ namespace CityBuilder.Invasion
         public void Begin(IEnumerable<Vector3> exits)
         {
             _laneStarts.Clear();
+            _lanes.Clear();
             foreach (var exit in exits)
             {
                 var start = exit;
@@ -72,6 +73,38 @@ namespace CityBuilder.Invasion
 
             SecondsUntilNextWave = BalanceConfig.Instance.InvasionFirstWaveSeconds;
             Current = Phase.Breather;
+            StartCoroutine(LayLanesSoon());
+        }
+
+        /// <summary>Each portal's way to the castle (the user, 2026-10-24), laid once over the bare map; null where none could be laid.</summary>
+        public IReadOnlyList<OrcLane> Lanes => _lanes;
+        private readonly List<OrcLane> _lanes = new List<OrcLane>();
+
+        // How far from the castle's middle its way may end: the castle carves the NavMesh round it.
+        private const float LaneCastleSnapMeters = 6f;
+
+        /// <summary>
+        /// The ways are laid a moment after the run starts, not at once: the round camps' walls carve
+        /// the NavMesh a frame or more later, and a way laid before would run through them. The
+        /// player has built nothing yet by then. A wave sent sooner (the tests) lays them itself.
+        /// </summary>
+        private System.Collections.IEnumerator LayLanesSoon()
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+            LayLanes();
+        }
+
+        private void LayLanes()
+        {
+            if (_lanes.Count == _laneStarts.Count) return;
+            var castle = InvasionMode.Instance != null && InvasionMode.Instance.Castle != null ? InvasionMode.Instance.Castle.transform.position : Vector3.zero;
+            _lanes.Clear();
+            foreach (var start in _laneStarts)
+            {
+                var lane = OrcLane.Lay(start, castle, LaneCastleSnapMeters);
+                if (lane == null) Debug.LogError($"InvasionWaves: no way from the portal at {start} to the castle -- its orcs will find their own.");
+                _lanes.Add(lane);
+            }
         }
 
         private void Update()
@@ -124,6 +157,7 @@ namespace CityBuilder.Invasion
             var boss = IsBossWave(Wave, config.InvasionBossWaveEvery);
 
             PickLanes(lanes);
+            LayLanes();
             _waveOrcs.Clear();
             _laneOf.Clear();
             OrcUnit leader = null;
@@ -136,6 +170,8 @@ namespace CityBuilder.Invasion
                     var orc = raids.SpawnOrcOfKind(start, level, kind);
                     if (orc == null) continue;
                     orc.Toughen(config.InvasionOrcHealthMultiplier, config.InvasionOrcDamageMultiplier);
+                    var way = _lanes[_lastLanes[l]];
+                    if (way != null) orc.FollowLane(way);
                     _waveOrcs.Add(orc);
                     _laneOf[orc] = _lastLanes[l];
                     if (leader == null) leader = orc;

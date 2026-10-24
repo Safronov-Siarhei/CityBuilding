@@ -21,6 +21,8 @@ namespace CityBuilder.EditorTools
     {
         private static readonly string[] ModeIds = { "Campaign", "Sandbox", "Invasion" };
         private static readonly string[] ModeKeys = { "#mode_campaign", "#mode_sandbox", "#mode_invasion" };
+        /// <summary>Which mode cards stand in the menu. The campaign is shelved (the user, 2026-10-24: not made for now, and nobody is to know of it) -- its card and panel are built but switched off, and the shown cards stand evenly about the middle.</summary>
+        private static readonly bool[] ModeShown = { false, true, true };
 
         private static readonly Vector2 CardSize = new Vector2(440f, 680f);
         private const float CardSpacing = 500f;
@@ -174,9 +176,11 @@ namespace CityBuilder.EditorTools
             {
                 cards[i] = BuildModeCard(modes, i, out status[i]);
                 UnityEventTools.AddIntPersistentListener(cards[i].GetComponent<Button>().onClick, controller.ChooseMode, i);
+                cards[i].gameObject.SetActive(ModeShown[i]);
             }
 
             var campaign = BuildCampaignPanel(modes);
+            campaign.gameObject.SetActive(ModeShown[(int)GameMode.Campaign]);
             var sandbox = BuildSandboxPanel(modes, controller, out var mapSelect, out var loadPanel, out var newTabSelected, out var savesTabSelected);
             var invasion = BuildInvasionPanel(modes, controller, out var timer);
 
@@ -242,7 +246,7 @@ namespace CityBuilder.EditorTools
             var root = new GameObject($"Card_{ModeIds[index]}", typeof(RectTransform), typeof(CanvasGroup));
             root.transform.SetParent(parent, false);
             var rect = (RectTransform)root.transform;
-            Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2((index - 1) * CardSpacing, CardY), CardSize);
+            Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(CardX(index), CardY), CardSize);
 
             const float inset = 30f;
             const float artHeight = 430f;
@@ -272,6 +276,19 @@ namespace CityBuilder.EditorTools
             divider.raycastTarget = false;
             status = MenuLabel(root.transform, "Status", null, 30, new Vector2(0f, -CardSize.y * 0.5f + 92f), new Vector2(360f, 50f), HudInk.OnPanel, bold: true);
             return rect;
+        }
+
+        /// <summary>Where a shown card stands: the shown cards spaced CardSpacing apart, evenly about the middle.</summary>
+        private static float CardX(int index)
+        {
+            int shown = 0, place = 0;
+            for (var i = 0; i < ModeShown.Length; i++)
+            {
+                if (!ModeShown[i]) continue;
+                if (i < index) place++;
+                shown++;
+            }
+            return (place - (shown - 1) * 0.5f) * CardSpacing;
         }
 
         private static RectTransform ModePanel(Transform parent, string name, string titleKey, out Transform body)

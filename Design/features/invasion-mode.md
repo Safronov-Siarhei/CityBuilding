@@ -51,7 +51,14 @@
 (`OrcUnit.CanStrike`, economy `orc_melee_reach_meters`) and break the nearest WALL first; orc routes aim
 at the nearest NavMesh point (no straight line through a gate); the build-menu cards hand over the
 run's copies (`BuildingPlacer.Resolve` -- the 2+2 limit and the tab's prices really apply now); recruits
-step out where they can walk to the castle (`ArmyManager.OpenGroundNear`); stone all over Inv1. Next: online leaderboard (service not chosen), more playtests.
+step out where they can walk to the castle (`ArmyManager.OpenGroundNear`); stone all over Inv1. Playtest 8
+(2026-10-24): EACH PORTAL HAS ITS OWN WAY (`Combat/OrcLane.cs`, laid once by `InvasionWaves.LayLanes` half
+a second into the run, over the bare map): wave orcs keep to it (`OrcUnit.FollowLane`/`WalkTheLane`), break
+what is built ACROSS it (`BuildingOnTheLine`), take a way round only when it is at most
+`inv_lane_detour_meters` longer, walk through the gap they made (`_laneBreach`), may chase anyone anywhere
+and come back to it; the Дом лекаря heals the run's wounded in its service_radius when manned by its one
+worker (`Invasion/InvasionHealing.cs`, `inv_healer_heal_share(_per_level)`). Next: the raiding party
+(being discussed), online leaderboard (service not chosen), more playtests.
 > **The authoritative record is `Design/Invasion.md`** (Russian): the user's answers in four rounds,
 > how it works now, the plan and a changelog. Read it before touching the mode and append to its log.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [maps-and-terrain](maps-and-terrain.md),

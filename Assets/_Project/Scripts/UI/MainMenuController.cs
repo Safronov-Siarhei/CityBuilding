@@ -243,11 +243,12 @@ namespace CityBuilder.UI
             }
         }
 
-        /// <summary>Where a card that was not picked goes: the left one off to the left, the right one off to the right, the middle one down.</summary>
+        /// <summary>Where a card that was not picked goes: one left of the middle off to the left, one right of it off to the right, the middle one down.</summary>
         private Vector2 AwayFrom(int i)
         {
-            if (i == 0) return new Vector2(-1500f, 0f);
-            if (i == cards.Length - 1) return new Vector2(1500f, 0f);
+            var x = _cardHome[i].x;
+            if (x < -1f) return new Vector2(-1500f, 0f);
+            if (x > 1f) return new Vector2(1500f, 0f);
             return new Vector2(0f, -1300f);
         }
 

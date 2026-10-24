@@ -15,7 +15,9 @@ card row up, re-tap/map tap closes; replaced by ✕ ⟳ ✓ while placing; tax b
 **No text on buttons — pictures only** (the tax plaque is the one allowed word). Settlement tiers hidden.
 
 ## Main menu (user's sketch, 2026-10-20)
-Play brings up three MODE cards — campaign, sandbox, invasion; a card slides left and brings in its
+Play brings up the MODE cards — sandbox and invasion, standing evenly about the middle (the CAMPAIGN card
+and panel are built but switched off: `ModeShown` in SetupProjectMainMenu; the user, 2026-10-24: shelved,
+nobody is to know of it); a card slides left and brings in its
 panel (campaign level map, sandbox new game + saves + map picker, invasion hub with «В бой»).
 Continue bottom-right, shop and settings beside Play; Back walks the screens and asks before quitting.
 Each HUD look has its own menu kit (`Tools/ui/make_menu_kit.py`); cards/map list show pictures baked

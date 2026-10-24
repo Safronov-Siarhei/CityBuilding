@@ -298,11 +298,18 @@ namespace CityBuilder.Combat
 
             if (HuntPrisoner()) return;
 
-            _retargetTimer -= Time.deltaTime;
-            if (_target == null || _retargetTimer <= 0f)
+            if (_lane != null)
             {
-                AcquireTarget();
-                _retargetTimer = RetargetIntervalSeconds;
+                if (WalkTheLane()) return;
+            }
+            else
+            {
+                _retargetTimer -= Time.deltaTime;
+                if (_target == null || _retargetTimer <= 0f)
+                {
+                    AcquireTarget();
+                    _retargetTimer = RetargetIntervalSeconds;
+                }
             }
             if (_target == null) return;
 
@@ -867,7 +874,7 @@ namespace CityBuilder.Combat
         /// for the castle instead and only turns on a building it passes within
         /// inv_orc_building_radius.
         /// </summary>
-        private void AcquireTarget()
+        private void AcquireTarget(bool besideTheLane = false)
         {
             BuildingInstance nearest = null;
             var nearestDistSq = float.MaxValue;
@@ -896,6 +903,20 @@ namespace CityBuilder.Combat
                 }
             }
 
+            // On a portal's way only what stands beside it is gone for, and only when it is a short
+            // walk off the way; the castle once the way is walked out.
+            if (besideTheLane)
+            {
+                var atTheEnd = _lane.Length - _lane.Project(transform.position, out _) <= LaneEndMeters;
+                if (nearest == null && atTheEnd) nearest = castle;
+                if (nearest != null && !atTheEnd && !WithinADetour(nearest)) nearest = null;
+                _target = nearest;
+                _routeIndex = 0;
+                _routeBlocked = false;
+                _route = _target != null ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked) : new[] { transform.position };
+                return;
+            }
+
             _target = nearest != null ? nearest : castle;
             _routeIndex = 0;
             _routeBlocked = false;
@@ -903,6 +924,234 @@ namespace CityBuilder.Combat
                 ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked)
                 : new[] { transform.position };
         }
+
+        // ------------------------------------------------------------ a portal's way (Invasion)
+
+        // How far ahead down its way an orc walks at: far enough to round the way's corners smoothly.
+        private const float LaneLookAheadMeters = 3f;
+        // Off the way by more than this (it chased someone), an orc first walks back to it.
+        private const float LaneRejoinMeters = 2.5f;
+        // How far down the way a way round something in it must come back to.
+        private const float LaneDetourLookMeters = 6f;
+        // This close to the way's end the castle is what it goes for.
+        private const float LaneEndMeters = 4f;
+        // How often an orc on its way looks again at what is ahead: walking, and going round or breaking something.
+        private const float LaneThinkSeconds = 0.3f;
+        private const float LaneThinkBusySeconds = 1f;
+        // A building closer than this to the line ahead is in the way; further off, the orc's body slips past it.
+        private const float LaneBodyMeters = 0.2f;
+
+        private enum LaneStep { Walk, Detour, Break }
+
+        private OrcLane _lane;
+        private LaneStep _laneStep;
+        private float _laneThink;
+        private Vector3 _laneGoal;
+        private NavRoute _laneDetour;
+        private BuildingInstance _laneBlocker;
+        // Where the last thing it broke stood: walked through first, before the NavMesh has caught
+        // up with the gap -- or the wall pieces either side of it are what the way looks blocked by.
+        private Vector3? _laneBreach;
+
+        /// <summary>The portal's way this orc keeps to, or null (a sandbox raid, a camp's guard).</summary>
+        public OrcLane Lane => _lane;
+
+        /// <summary>
+        /// Sends this orc down a portal's way (the user, 2026-10-24): it keeps to it, breaks what is
+        /// built across it, turns aside only for a building beside it or someone to fight, and comes
+        /// back to it after.
+        /// </summary>
+        public void FollowLane(OrcLane lane)
+        {
+            _lane = lane;
+            _laneThink = 0f;
+            _laneBreach = null;
+            _target = null;
+            _retargetTimer = 0f;
+        }
+
+        /// <summary>One frame on the way. False when a building beside it (or the castle at its end) is the target: the ordinary target code then walks to it and hits it.</summary>
+        private bool WalkTheLane()
+        {
+            _retargetTimer -= Time.deltaTime;
+            if (_target == null || _retargetTimer <= 0f)
+            {
+                AcquireTarget(besideTheLane: true);
+                _retargetTimer = RetargetIntervalSeconds;
+            }
+            if (_target != null) return false;
+
+            _laneThink -= Time.deltaTime;
+            if (_laneThink <= 0f) ThinkAboutTheLane();
+
+            switch (_laneStep)
+            {
+                case LaneStep.Walk:
+                    StepToward(_laneGoal);
+                    break;
+                case LaneStep.Detour:
+                    if (_laneDetour.TryGetDirection(transform.position, out var direction)) Step(direction);
+                    else _laneThink = 0f;
+                    break;
+                case LaneStep.Break:
+                    if (_laneBlocker == null || _laneBlocker.CurrentHealth <= 0) { _laneThink = 0f; break; }
+                    if (!CanStrike(_laneBlocker))
+                    {
+                        StepToward(ClosestPointOf(_laneBlocker));
+                        break;
+                    }
+                    _attackTimer -= Time.deltaTime;
+                    if (_attackTimer > 0f) break;
+                    _attackTimer = _attackIntervalSeconds;
+                    Strike(_laneBlocker);
+                    if (_laneBlocker.CurrentHealth <= 0)
+                    {
+                        _laneBreach = MiddleOf(_laneBlocker);
+                        _laneBlocker = null;
+                        _laneThink = 0f;
+                    }
+                    break;
+            }
+            return true;
+        }
+
+        /// <summary>Decides how to go on down the way: straight on, a short way round, or through whatever is built across it.</summary>
+        private void ThinkAboutTheLane()
+        {
+            _laneThink = LaneThinkSeconds;
+            var at = transform.position;
+
+            if (_laneBreach.HasValue)
+            {
+                var toBreach = _laneBreach.Value - at;
+                toBreach.y = 0f;
+                if (toBreach.magnitude > ArrivalThreshold * 4f)
+                {
+                    _laneStep = LaneStep.Walk;
+                    _laneGoal = _laneBreach.Value;
+                    return;
+                }
+                _laneBreach = null;
+            }
+
+            var along = _lane.Project(at, out var offLane);
+            var goal = offLane > LaneRejoinMeters ? _lane.PointAt(along) : _lane.PointAt(along + LaneLookAheadMeters);
+            if (!NavMesh.Raycast(at, goal, out _, CityBuilder.Maps.NavAreas.WithoutGates))
+            {
+                _laneStep = LaneStep.Walk;
+                _laneGoal = goal;
+                return;
+            }
+
+            // Something stands in the way. Round it, when the way round is short (a gap already broken beside the line)...
+            _laneThink = LaneThinkBusySeconds;
+            var further = _lane.PointAt(along + (offLane > LaneRejoinMeters ? LaneLookAheadMeters : LaneDetourLookMeters));
+            _laneDetour ??= NewRoute();
+            _laneDetour.SetDestination(at, further, straightLineFallback: false);
+            var straight = new Vector3(further.x - at.x, 0f, further.z - at.z).magnitude;
+            if (!_laneDetour.Blocked && !_laneDetour.IsFinished &&
+                _laneDetour.RemainingLength(at) <= straight + BalanceConfig.Instance.InvasionLaneDetourMeters)
+            {
+                _laneStep = LaneStep.Detour;
+                return;
+            }
+
+            // ...else through it: the building on the line ahead is broken.
+            // Nothing on the line itself (only the NavMesh's margin round the pieces either side of
+            // a gap): walk on -- reaching for the nearest piece here broke the wall beside a gap.
+            _laneBlocker = BuildingOnTheLine(at, goal);
+            if (_laneBlocker != null)
+            {
+                _laneStep = LaneStep.Break;
+                return;
+            }
+            _laneStep = LaneStep.Walk;
+            _laneGoal = goal;
+        }
+
+        /// <summary>A target beside the way is worth turning to only when the walk there is not much longer than the straight line (no going round by another causeway).</summary>
+        private bool WithinADetour(BuildingInstance building)
+        {
+            _laneDetour ??= NewRoute();
+            var at = transform.position;
+            _laneDetour.SetDestination(at, building.transform.position, straightLineFallback: false);
+            var to = building.transform.position - at;
+            to.y = 0f;
+            return _laneDetour.RemainingLength(at) <= to.magnitude + BalanceConfig.Instance.InvasionLaneDetourMeters;
+        }
+
+        /// <summary>The building (not a road) whose body the line from `from` to `to` passes through or by within LaneBodyMeters, nearest `from` first.</summary>
+        private static BuildingInstance BuildingOnTheLine(Vector3 from, Vector3 to)
+        {
+            var line = to - from;
+            line.y = 0f;
+            var length = line.magnitude;
+            if (length < 0.01f) return null;
+            var direction = line / length;
+
+            BuildingInstance first = null;
+            var firstAt = float.MaxValue;
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                var body = instance.GetComponent<Collider>();
+                if (body == null) continue;
+                for (var d = 0f; d <= length + 0.5f && d < firstAt; d += 0.25f)
+                {
+                    var point = from + direction * d;
+                    var on = body.ClosestPoint(new Vector3(point.x, body.bounds.center.y, point.z));
+                    if (new Vector3(on.x - point.x, 0f, on.z - point.z).magnitude > LaneBodyMeters) continue;
+                    first = instance;
+                    firstAt = d;
+                    break;
+                }
+            }
+            return first;
+        }
+
+        /// <summary>The point of the building's body nearest this orc, at the orc's height.</summary>
+        private Vector3 ClosestPointOf(BuildingInstance building)
+        {
+            var at = transform.position;
+            var body = building.GetComponent<Collider>();
+            if (body == null) return building.transform.position;
+            var point = body.ClosestPoint(new Vector3(at.x, body.bounds.center.y, at.z));
+            point.y = at.y;
+            return point;
+        }
+
+        /// <summary>The middle of the building's body, at this orc's height: where the gap is once it is down.</summary>
+        private Vector3 MiddleOf(BuildingInstance building)
+        {
+            var body = building.GetComponent<Collider>();
+            var point = body != null ? body.bounds.center : building.transform.position;
+            point.y = transform.position.y;
+            return point;
+        }
+
+        private void StepToward(Vector3 goal)
+        {
+            var to = goal - transform.position;
+            to.y = 0f;
+            var distance = to.magnitude;
+            if (distance < ArrivalThreshold) return;
+            Step(to / distance);
+        }
+
+        private void Step(Vector3 direction)
+        {
+            var step = direction * _walkSpeed * Time.deltaTime;
+            if (_controller != null && _controller.enabled)
+            {
+                _controller.Move(step);
+                PinToGroundHeight();
+            }
+            else
+            {
+                transform.position += step;
+            }
+        }
+
 
         /// <summary>
         /// The nearest building close enough to be what's standing in the way -- called once the

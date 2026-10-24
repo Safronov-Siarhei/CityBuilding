@@ -536,6 +536,9 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionGoldChief = 20;
         [SerializeField] private int invasionGoldPerWave = 10;
         [SerializeField] private float invasionOrcBuildingRadius = 6f;
+        [SerializeField] private float invasionLaneDetourMeters = 6f;
+        [SerializeField] private float invasionHealerHealShare = 0.01f;
+        [SerializeField] private float invasionHealerHealSharePerLevel = 0.005f;
 
         // The Invasion run's jungle (InvasionJungle): its monsters, camps, shrines and boss.
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -830,6 +833,10 @@ namespace CityBuilder.Core
         public int InvasionGoldChief => invasionGoldChief;
         public int InvasionGoldPerWave => invasionGoldPerWave;
         public float InvasionOrcBuildingRadius => invasionOrcBuildingRadius;
+        /// <summary>How much longer than the straight line a wave orc's way round something on its portal's way may be before it breaks through instead (OrcUnit.WalkTheLane).</summary>
+        public float InvasionLaneDetourMeters => invasionLaneDetourMeters;
+        /// <summary>The share of their health a manned Дом лекаря heals the wounded in its radius each second, at `level` (InvasionHealing).</summary>
+        public float InvasionHealerHealShareAt(int level) => invasionHealerHealShare + invasionHealerHealSharePerLevel * (Mathf.Max(1, level) - 1);
         public int InvasionCamp1Monsters => invasionCamp1Monsters;
         public int InvasionCamp2Monsters => invasionCamp2Monsters;
         public int InvasionCamp3Monsters => invasionCamp3Monsters;
@@ -1197,6 +1204,9 @@ namespace CityBuilder.Core
             invasionGoldChief = (int)Read(economy, "inv_gold_chief", invasionGoldChief);
             invasionGoldPerWave = (int)Read(economy, "inv_gold_per_wave", invasionGoldPerWave);
             invasionOrcBuildingRadius = Read(economy, "inv_orc_building_radius", invasionOrcBuildingRadius);
+            invasionLaneDetourMeters = Read(economy, "inv_lane_detour_meters", invasionLaneDetourMeters);
+            invasionHealerHealShare = Read(economy, "inv_healer_heal_share", invasionHealerHealShare);
+            invasionHealerHealSharePerLevel = Read(economy, "inv_healer_heal_share_per_level", invasionHealerHealSharePerLevel);
             foreach (var m in monsters)
             {
                 m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);

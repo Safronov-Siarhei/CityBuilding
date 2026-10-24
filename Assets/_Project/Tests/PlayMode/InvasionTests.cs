@@ -449,6 +449,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(InvasionWaves.OrcsPerLane(1, config.InvasionWaveBaseOrcs, config.InvasionWaveExtraOrcEvery, config.InvasionWaveMaxOrcs), waves.OrcsLeft);
             var start = waves.LaneStarts[waves.LastLanes[0]];
             foreach (var orc in waves.WaveOrcs) Assert.Less(Vector3.Distance(Flat(orc.transform.position), Flat(start)), 4f, "An orc of the wave stepped out away from its camp.");
+            foreach (var orc in waves.WaveOrcs) Assert.AreSame(waves.Lanes[waves.LastLanes[0]], orc.Lane, "An orc of the wave was not sent down its portal's way.");
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.AreEqual(Localization.Format("#hud_inv_wave", 1, waves.OrcsLeft), status.text, "The line under the resource bar does not show the wave underway.");
         }
@@ -745,6 +746,86 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(ring.Sum(b => b != null ? b.CurrentHealth : 0), health, "The orc did not break in -- it stood outside.");
             orc.TakeDamage(orc.MaxHealth);
             if (archer != null) archer.TakeDamage(archer.MaxHealth);
+        }
+
+        /// <summary>
+        /// A wave orc keeps to its portal's way (the user, 2026-10-24: walled off, the waves went
+        /// round to another causeway): a long wall across the way is broken where the way crosses
+        /// it, not walked round, and the orc then walks on through the gap it made (the user saw
+        /// orcs ignore a gap and break the pieces beside it).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AWaveOrc_KeepsToItsWay_BreaksTheWallAcrossIt_AndGoesThroughTheGap()
+        {
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            InvasionMode.Instance.King.gameObject.SetActive(false);
+            foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
+            foreach (var house in InvasionMode.Instance.Houses) if (house != null) Object.Destroy(house.gameObject);
+
+            // a wall of 17 pieces: going round it is ten metres longer than through it
+            const int pieces = 17;
+            // open ground for it and six cells either side (the island is too small: out beyond the river)
+            var block = PlaytestWorld.FindFreeAreaNearTheMiddle(new Vector2Int(pieces, 13));
+            Assert.GreaterOrEqual(block.x, 0, "No open ground on the map for the wall.");
+            var origin = block + new Vector2Int(0, 6);
+            var middle = grid.GetFootprintCenterWorld(origin + new Vector2Int(pieces / 2, 0), Vector2Int.one);
+            Assert.IsTrue(NavMesh.SamplePosition(middle - Vector3.forward * 6f, out var south, 2f, NavAreas.WithoutGates), "No ground south of the wall.");
+            Assert.IsTrue(NavMesh.SamplePosition(middle + Vector3.forward * 6f, out var north, 2f, NavAreas.WithoutGates), "No ground north of the wall.");
+            var lane = OrcLane.Lay(south.position, north.position, 2f);
+            Assert.IsNotNull(lane);
+            Assert.Less(lane.Length, 14f, "The test's way does not run straight across where the wall goes.");
+
+            var wall = new System.Collections.Generic.List<BuildingInstance>();
+            for (var i = 0; i < pieces; i++) wall.Add(PlaytestWorld.Place(PlaytestWorld.Building("Fence"), origin + new Vector2Int(i, 0)));
+            yield return new WaitForSeconds(2f);   // the carves land a moment later
+            // a run's fence is sturdy: every piece left one blow from falling, so which one goes is the test, not how long
+            foreach (var piece in wall) piece.TryDamage(piece.CurrentHealth - 1);
+
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(south.position, 1, OrcKind.Raider);
+            orc.Toughen(1000f);   // the castle's shots must not end the test first
+            orc.FollowLane(lane);
+            var strayed = 0f;
+            var strayedAt = "";
+            var through = false;
+            for (var t = 0f; t < 30f && !through; t += Time.deltaTime)
+            {
+                if (orc == null) break;
+                var alongNow = lane.Project(orc.transform.position, out var off);
+                if (off > strayed) strayedAt = $"{alongNow:0.0} m down the way of {lane.Length:0.0}, t {t:0.0} s, target {(orc.Target != null ? orc.Target.name : "none")}";
+                strayed = Mathf.Max(strayed, off);
+                through = alongNow >= lane.Length / 2f + 2f;   // past the wall (at the way's end it turns on the castle)
+                yield return null;
+            }
+            var broken = wall.Where(w => w == null || w.CurrentHealth <= 0).Count();
+            Assert.IsTrue(through, $"The orc did not get through the wall along its way ({broken} pieces broken, {strayed:0.0} m off the way at most).");
+            Assert.Less(strayed, 3f, $"The orc left its way to go round the wall (at {strayedAt}).");
+            Assert.LessOrEqual(broken, 2, "The orc broke more of the wall than the way through it.");
+            if (orc != null) orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>The Дом лекаря in a run (the user, 2026-10-24): manned by one, it slowly heals the player's wounded in its radius; empty, it heals nobody.</summary>
+        [UnityTest]
+        public IEnumerator TheHealersHouse_HealsTheWoundedAround_OnceManned()
+        {
+            var data = PlaytestWorld.Building("HealerHouse");
+            Assert.AreEqual(1, data.LevelStats(1).maxWorkers, "A run's healer takes more than one worker.");
+            Assert.Greater(BalanceConfig.Instance.InvasionHealerHealShareAt(3), BalanceConfig.Instance.InvasionHealerHealShareAt(1), "A higher healer heals no better.");
+            var healer = PlaytestWorld.Place(data, PlaytestWorld.FindFreeAreaNearTheMiddle(data.footprintSize));
+            var near = healer.transform.position + Vector3.right * 4f;
+            Assert.IsTrue(NavMesh.SamplePosition(near, out var hit, 3f, NavMesh.AllAreas));
+            ArmyManager.Instance.SpawnSummons(SoldierType.Archer, hit.position, 1, 1, 60f);
+            var archer = SoldierUnit.All.Where(u => u != null && u.Type == SoldierType.Archer).OrderBy(u => (u.transform.position - hit.position).sqrMagnitude).First();
+            archer.SetCurrentHealth(archer.MaxHealth / 3);
+            var wounded = archer.CurrentHealth;
+
+            yield return new WaitForSeconds(2.5f);
+            Assert.AreEqual(wounded, archer.CurrentHealth, "An empty healer's house healed.");
+
+            healer.GetComponent<ProductionBuilding>().SetAssignedWorkers(1);
+            yield return new WaitForSeconds(2.5f);
+            Assert.Greater(archer.CurrentHealth, wounded, "A manned healer's house did not heal a wounded archer beside it.");
+            archer.TakeDamage(archer.MaxHealth);
         }
 
         /// <summary>
