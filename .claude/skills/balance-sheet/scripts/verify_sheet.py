@@ -48,6 +48,7 @@ TABS = {
     "localization": {"gid": "304072291", "key": ["key"]},
     # three tables one under another (building / unit / key headers): compared by first cell, cell by cell
     "invasion": {"gid": "1941808734", "stacked": True},
+    "sandbox": {"gid": "291742027", "stacked": True},
 }
 
 # Differences that are correct and permanent. Reported as a note, not as a failure.

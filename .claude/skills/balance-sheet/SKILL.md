@@ -44,7 +44,10 @@ Tab gids — the same ones in `Assets/_Project/Balance/BalanceSheetSettings.asse
 | recipes | 208452028 |
 | localization | 304072291 |
 | invasion | 1941808734 |
+| sandbox | 291742027 |
 
+`sandbox` (2026-10-25) has the same stacked shape (`building`, `key`): the SANDBOX's building prices,
+build times, housing and its hero/people/repair/minimap keys, laid over the other tabs for the sandbox.
 `invasion` (2026-10-23) is three tables stacked in one tab (`building`, `unit`, `key` header rows): the
 Invasion mode's numbers laid over the other tabs for a run. Row order matters only within a table;
 `verify_sheet.py` compares it by first cell. A key added for the mode goes HERE, not into economy.

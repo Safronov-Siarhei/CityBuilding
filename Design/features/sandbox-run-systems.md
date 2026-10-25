@@ -1,8 +1,10 @@
 # The sandbox on the run's systems (people, heroes, timed building, repair, UI)
 
-> **Status (2026-10-25):** in code, tests written (`PlayMode/SandboxRulesTests`); the sheet's `sandbox`
-> tab NOT created yet -- no Google Sheets connector in that session, and the user said: sheet work only
-> through the API / a Google MCP, never the browser. `Balance/sandbox.csv` is the source until then.
+> **Status (2026-10-25):** in code, tests green (`PlayMode/SandboxRulesTests`). The sheet's `sandbox` tab
+> (gid 291742027) was created and filled THROUGH THE SHEETS API (Google Sheets connector; the user:
+> sheet work only via API/MCP, never the browser), with header notes; `repair_cost_fraction` deleted
+> from the sheet's economy tab. The tab is NOT PUBLISHED yet (the API cannot publish): until the user
+> adds it under File -> Share -> Publish to web, Pull skips it and `verify_sheet.py sandbox` gets HTML.
 > Not played on a phone.
 > **Read with:** [invasion-mode](invasion-mode.md) (where every system came from),
 > [balance-and-localization](balance-and-localization.md), [hud-and-ui](hud-and-ui.md),
@@ -72,6 +74,5 @@ Hall, the card's band, heroes and half-built buildings through a save. Existing 
   three switches -- the code behind them is kept, not deleted.
 
 ## Open
-Create the `sandbox` tab in the sheet (API/MCP) + header notes + its CSV URL in
-`BalanceSheetSettings.sandboxCsvUrl`, then delete `repair_cost_fraction` from the sheet's economy tab;
-playtest the build times and hero prices; the migration/decay/happiness keys in economy are unused.
+The user publishes the `sandbox` tab; then `verify_sheet.py sandbox` and a Pull (the committed CSV
+becomes Google's export format); playtest the build times and hero prices; the migration/decay/happiness keys in economy are unused.
