@@ -9,12 +9,13 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// A hero's portrait in an Invasion run (top-right, where the sandbox shows contentment): his
+    /// A hero's portrait (top-right, where contentment used to be; an Invasion run first, the
+    /// sandbox too since 2026-10-25): his
     /// face, his level, a health bar and an experience bar; greyed with a countdown while he is
     /// down; a gold ring while he is selected. A tap on it selects him -- the next tap on the map
     /// is his order -- and brings the camera to him. One per hero (the King, the Queen, the
     /// Captain, the user 2026-10-23), stacked down the right edge in that order; a hero not yet
-    /// bought has none shown, and those below move up into the gap. Hidden outside a run.
+    /// bought has none shown, and those below move up into the gap.
     ///
     /// Also answers the world tap that lands on a hero himself (WorldInputDispatcher), so he can
     /// be picked up where he stands, and draws the ring on the ground under him while selected.
@@ -46,16 +47,19 @@ namespace CityBuilder.UI
 
         public SoldierType HeroType => heroType;
 
-        private Hero CurrentHero => InvasionMode.Instance != null ? InvasionMode.Instance.HeroOf(heroType) : null;
+        private Hero CurrentHero => HeroRoster.Instance != null ? HeroRoster.Instance.HeroOf(heroType) : null;
 
         private void Awake() => Instances.Add(this);
 
-        private void OnDestroy() => Instances.Remove(this);
+        private void OnDestroy()
+        {
+            Instances.Remove(this);
+            if (Instances.Count == 0) ShownRows = 0;
+        }
 
         private void Start()
         {
             if (widget != null) widget.SetActive(false);
-            if (!InvasionMode.IsActive) enabled = false;
         }
 
         /// <summary>The portrait tapped: select him and look at him.</summary>
@@ -72,13 +76,13 @@ namespace CityBuilder.UI
         /// <summary>A world tap on a hero himself selects him -- the nearest on screen. False when the tap was on none.</summary>
         public static bool TrySelectAt(Vector2 screenPosition, Camera camera)
         {
-            var mode = InvasionMode.Instance;
+            var roster = HeroRoster.Instance;
             var army = ArmyManager.Instance;
-            if (mode == null || camera == null || army == null || Instances.Count == 0) return false;
+            if (roster == null || camera == null || army == null || Instances.Count == 0) return false;
             var reach = PickPixels * Screen.height / 1080f;
             var best = reach * reach;
             Hero picked = null;
-            foreach (var hero in mode.Heroes)
+            foreach (var hero in roster.Heroes)
             {
                 if (hero == null || hero.IsFallen) continue;
                 var onScreen = camera.WorldToScreenPoint(hero.transform.position + Vector3.up * 0.4f);
@@ -133,6 +137,12 @@ namespace CityBuilder.UI
             ShowRing(hero, selected && !hero.IsFallen);
         }
 
+        /// <summary>How many portraits stand down the right edge now (the army panel goes under them).</summary>
+        public static int ShownRows { get; private set; }
+
+        /// <summary>The lowest shown portrait's foot, in its anchored space (top-right).</summary>
+        public static float StackBottom { get; private set; }
+
         /// <summary>The shown portraits down the right edge in hero order, with no gap for one not bought.</summary>
         private static void Stack()
         {
@@ -143,8 +153,10 @@ namespace CityBuilder.UI
                 if (portrait.widget == null || !portrait.widget.activeSelf) continue;
                 var rect = (RectTransform)portrait.widget.transform;
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, portrait.top - portrait.step * row);
+                StackBottom = rect.anchoredPosition.y - rect.sizeDelta.y;
                 row++;
             }
+            ShownRows = row;
         }
 
         /// <summary>He is back (the user, 2026-10-22: the player must see it): the camera goes to him, a column of light, a line in the log.</summary>

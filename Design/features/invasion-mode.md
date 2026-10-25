@@ -1,5 +1,7 @@
 # Invasion mode («Нашествие»)
 
+> **2026-10-25:** people (`Citizens/HousePeople`, was InvasionPeople), heroes (`Combat/HeroRoster`), timed build/upgrade, repair, the card, hire bar, portraits and minimap are SHARED with the sandbox now -- [sandbox-run-systems](sandbox-run-systems.md).
+
 > **Status (2026-10-22):** in progress. Done: the Invasion map `Inv1` (base island halved to ~16 m),
 > «В бой» starts a run, the King hero (model, jointed animation, XP/levels/respawn), the run's economy
 > (6 houses × 3 people, 9 buildings, wood/stone prices, no food/tax/happiness), the King's portrait

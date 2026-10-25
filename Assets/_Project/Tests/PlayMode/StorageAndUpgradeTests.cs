@@ -174,7 +174,7 @@ namespace CityBuilder.Tests.PlayMode
 
             for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
             {
-                Assert.IsTrue(warehouse.TryUpgrade(), $"The Warehouse refused to upgrade to level {level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(warehouse), $"The Warehouse refused to upgrade to level {level} with infinite resources.");
                 Assert.AreEqual(level, warehouse.Level);
                 Assert.AreEqual(baseCapacity + warehouseData.LevelStats(level).storageCapacity, resources.GetCapacity(ResourceType.Wood),
                     $"A level-{level} Warehouse is not holding what its balance row says it should.");
@@ -239,7 +239,7 @@ namespace CityBuilder.Tests.PlayMode
                 var capacityBefore = CitizenManager.Instance.Capacity;
                 var healthBefore = house.CurrentHealth;
 
-                Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(house), $"The House refused to upgrade to level {level} with infinite resources.");
 
                 Assert.AreEqual(level, house.Level);
                 Assert.AreEqual(after.maxHealth, house.MaxHealth, $"A level-{level} House is not as tough as its balance row says.");
@@ -267,7 +267,7 @@ namespace CityBuilder.Tests.PlayMode
 
             for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
             {
-                Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(house), $"The House refused to upgrade to level {level} with infinite resources.");
 
                 var shown = ActiveLevelModels(house);
                 Assert.AreEqual(1, shown.Count, $"A level-{level} House shows {shown.Count} models at once.");
@@ -291,10 +291,10 @@ namespace CityBuilder.Tests.PlayMode
             ResourceManager.Instance.SetInfiniteResources(true);
 
             var road = Place(PlaytestWorld.Building("Road"));
-            Assert.IsTrue(road.TryUpgrade(), "The Road refused to upgrade with infinite resources.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(road), "The Road refused to upgrade with infinite resources.");
             var atLevelTwo = VisibleBounds(road);
 
-            Assert.IsTrue(road.TryUpgrade(), "The Road refused its second upgrade with infinite resources.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(road), "The Road refused its second upgrade with infinite resources.");
             var atLevelThree = VisibleBounds(road);
 
             Assert.Greater(atLevelThree.size.sqrMagnitude, 0f, "The Road stopped drawing anything at all after being upgraded.");
@@ -328,7 +328,7 @@ namespace CityBuilder.Tests.PlayMode
             var house = Place(PlaytestWorld.Building("Dock"));
             Assert.IsNull(LevelMarker(house), "A freshly placed building is already wearing a level marker -- level 1 is not an achievement.");
 
-            Assert.IsTrue(house.TryUpgrade(), "The Dock refused to upgrade with infinite resources.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(house), "The Dock refused to upgrade with infinite resources.");
             var marker = LevelMarker(house);
             Assert.IsNotNull(marker, "An upgraded building shows nothing at all: the player has no way to tell it apart from one they never paid for.");
             Assert.IsTrue(marker.activeInHierarchy, "The level marker exists but is switched off.");
@@ -351,7 +351,7 @@ namespace CityBuilder.Tests.PlayMode
             ResourceManager.Instance.SetInfiniteResources(true);
 
             var house = Place(PlaytestWorld.Building("Dock"));
-            Assert.IsTrue(house.TryUpgrade(), "The Dock refused to upgrade with infinite resources.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(house), "The Dock refused to upgrade with infinite resources.");
 
             var marker = LevelMarker(house);
             var atLevelTwo = marker.transform.localScale.x;
@@ -359,7 +359,7 @@ namespace CityBuilder.Tests.PlayMode
 
             while (house.Level < BuildingInstance.MaxLevel)
             {
-                Assert.IsTrue(house.TryUpgrade(), $"The Dock refused to upgrade past level {house.Level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(house), $"The Dock refused to upgrade past level {house.Level} with infinite resources.");
             }
 
             Assert.AreEqual(BuildingInstance.MaxLevel, house.Level);
@@ -377,7 +377,7 @@ namespace CityBuilder.Tests.PlayMode
             var house = Place(PlaytestWorld.Building("Hovel"));
             for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
             {
-                Assert.IsTrue(house.TryUpgrade(), $"The House refused to upgrade to level {level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(house), $"The House refused to upgrade to level {level} with infinite resources.");
                 var marker = LevelMarker(house);
                 Assert.IsTrue(marker == null || !marker.activeSelf, $"A level-{level} House wears a level disc over its own level model.");
             }
@@ -393,7 +393,7 @@ namespace CityBuilder.Tests.PlayMode
             ResourceManager.Instance.SetInfiniteResources(true);
 
             var road = Place(PlaytestWorld.Building("Road"));
-            Assert.IsTrue(road.TryUpgrade(), "The Road refused to upgrade with infinite resources.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(road), "The Road refused to upgrade with infinite resources.");
 
             Assert.AreEqual(2, road.Level);
             Assert.IsNull(LevelMarker(road), "An upgraded road tile is wearing a level marker.");
@@ -452,7 +452,7 @@ namespace CityBuilder.Tests.PlayMode
                 {
                     var building = PlaytestWorld.Place(data, origin + new Vector2Int((level - 1) * 3, row * 3));
                     _placed.Add(building);
-                    for (var step = 1; step < level; step++) building.TryUpgrade();
+                    for (var step = 1; step < level; step++) PlaytestWorld.UpgradeNow(building);
                 }
             }
             yield return null;

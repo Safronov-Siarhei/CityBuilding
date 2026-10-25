@@ -59,6 +59,9 @@ namespace CityBuilder.Citizens
 
         public MigrationState State { get; private set; } = MigrationState.Dormant;
 
+        /// <summary>Whether settlers arrive and leave by contentment: not since 2026-10-25 -- the houses make the people (HousePeople). The opening grace still runs.</summary>
+        public static readonly bool MovesPeople = false;
+
         /// <summary>Seconds until the next person arrives or leaves. Zero whenever the state is not Arriving or Leaving.</summary>
         public float SecondsUntilNextMove { get; private set; }
 
@@ -137,6 +140,15 @@ namespace CityBuilder.Citizens
                 SettlingInRemaining = Mathf.Max(0f, SettlingInRemaining - deltaTime);
                 _timer = 0f;
                 SetState(MigrationState.SettlingIn, SettlingInRemaining);
+                return;
+            }
+
+            // The houses make the people now (HousePeople; the user, 2026-10-25: no arrivals on a
+            // timer): nobody comes or goes. The settling-in grace above stays -- sickness waits on it.
+            if (!MovesPeople)
+            {
+                _timer = 0f;
+                SetState(MigrationState.Balanced, 0f);
                 return;
             }
 

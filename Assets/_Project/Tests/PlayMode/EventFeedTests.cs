@@ -87,7 +87,7 @@ namespace CityBuilder.Tests.PlayMode
             rig.FocusOn(_townHall);
             yield return WaitForCamera(rig);
 
-            Assert.IsTrue(well.TryUpgrade(), "The Well could not be upgraded -- the test needs a building that can.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(well), "The Well could not be upgraded -- the test needs a building that can.");
             yield return null;
 
             var view = VisibleIconShowing("Well");

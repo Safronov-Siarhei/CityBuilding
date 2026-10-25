@@ -20,9 +20,9 @@ namespace CityBuilder.UI
     /// and the "where am I looking" marker is a separate UI element updated every frame in
     /// MinimapCameraIndicator.LateUpdate, so it stays live no matter how slow this is.
     ///
-    /// **In an Invasion run** the minimap does not show the whole map (the user, 2026-10-22): it
-    /// frames inv_minimap_radius metres round where the player is looking and follows the camera
-    /// rig. A small frame culls most of the map, so it can refresh more often. To move smoothly
+    /// **It does not show the whole map** (the user, 2026-10-22 for an Invasion run, 2026-10-25 for
+    /// the sandbox: «слишком отдалённая»): it frames minimap_radius metres (a run's
+    /// inv_minimap_radius) round where the player is looking and follows the camera rig. A small frame culls most of the map, so it can refresh more often. To move smoothly
     /// with the camera between refreshes (the user, 2026-10-22: it jumped), the camera frames a
     /// margin round the shown square and the picture's window (RawImage.uvRect) slides over it
     /// every frame; a refresh re-centres the camera.
@@ -45,7 +45,7 @@ namespace CityBuilder.UI
 
         public Camera MinimapCamera => minimapCamera;
 
-        /// <summary>Following the camera rig (a run): the minimap's middle is the rig, ViewRadius metres to its edge.</summary>
+        /// <summary>Following the camera rig: the minimap's middle is the rig, ViewRadius metres to its edge.</summary>
         public bool Follows => _follow;
         public Vector3 ViewCentre => cameraRig != null ? cameraRig.transform.position : Vector3.zero;
         public float ViewRadius => _radius;
@@ -58,9 +58,9 @@ namespace CityBuilder.UI
             // batchmode tests run without a graphics device: nothing to draw, and rendering into
             // the texture there has crashed the editor (2026-10-22)
             if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) minimapCamera = null;
-            _follow = Invasion.InvasionMode.IsActive && cameraRig != null && minimapCamera != null;
+            _follow = cameraRig != null && minimapCamera != null;
             if (!_follow) return;
-            _radius = BalanceConfig.Instance.InvasionMinimapRadius;
+            _radius = BalanceConfig.Instance.MinimapRadius;
             minimapCamera.orthographicSize = _radius * Margin;
         }
 

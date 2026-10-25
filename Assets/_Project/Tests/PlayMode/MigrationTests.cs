@@ -133,6 +133,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
+        [Ignore("Migration moves nobody since 2026-10-25 (MigrationManager.MovesPeople): the houses make the people -- see SandboxRulesTests.")]
         public IEnumerator AContentSettlement_FillsItsHousingAndThenStops()
         {
             var hall = Place("Castle");
@@ -153,6 +154,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
+        [Ignore("Migration moves nobody since 2026-10-25 (MigrationManager.MovesPeople): the houses make the people -- see SandboxRulesTests.")]
         public IEnumerator AMiserableSettlement_LosesPeopleButNeverEmpties()
         {
             Place("Castle");
@@ -177,6 +179,7 @@ namespace CityBuilder.Tests.PlayMode
         /// along -- a spiral with no way back up, from a town that was merely a bit glum.
         /// </summary>
         [UnityTest]
+        [Ignore("Migration moves nobody since 2026-10-25 (MigrationManager.MovesPeople): the houses make the people -- see SandboxRulesTests.")]
         public IEnumerator PeopleWhoLeave_AreNotCountedAsDead()
         {
             Place("Castle");

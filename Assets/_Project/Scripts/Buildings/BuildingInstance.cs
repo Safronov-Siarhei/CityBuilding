@@ -54,8 +54,11 @@ namespace CityBuilder.Buildings
         /// <summary>Hit points at full repair, for the level this building currently stands at.</summary>
         public int MaxHealth => HealthAt(Level);
 
-        /// <summary>Its construction or upgrade under way (an Invasion run), or null.</summary>
+        /// <summary>Its construction or upgrade under way (both modes since 2026-10-25), or null.</summary>
         public ConstructionSite Site { get; internal set; }
+
+        /// <summary>A building going up for the first time keeps its storage room back until it stands (BuildOnTimer).</summary>
+        private bool _storageHeld;
 
         /// <summary>Works: not being built or upgraded (ConstructionSite). A tower shoots, a yard gathers, a barracks hires only then.</summary>
         public bool IsOperational => Site == null;
@@ -66,11 +69,11 @@ namespace CityBuilder.Buildings
         /// <summary>Attack damage against nearby raiders (DefensiveBuilding) and the settlement's defence score (HappinessManager), at the current level.</summary>
         public int Defense => Data != null ? Data.LevelStats(Level).defense : 0;
 
-        /// <summary>How far this building serves, at the level it stands at -- see BuildingLevelStats.serviceRadius. Zero for everything that serves nothing.</summary>
-        public int ServiceRadius => Data != null ? Data.LevelStats(Level).serviceRadius : 0;
+        /// <summary>How far this building serves, at the level it stands at -- see BuildingLevelStats.serviceRadius. Zero for everything that serves nothing, and while it is being built or upgraded.</summary>
+        public int ServiceRadius => Data != null && IsOperational ? Data.LevelStats(Level).serviceRadius : 0;
 
-        /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment.</summary>
-        public int Happiness => Data != null ? Data.LevelStats(Level).happiness : 0;
+        /// <summary>What this building adds to the settlement's mood, at the level it stands at. Zero for everything that is not entertainment, and while it is being built or upgraded.</summary>
+        public int Happiness => Data != null && IsOperational ? Data.LevelStats(Level).happiness : 0;
 
         /// <summary>How far this building's workers may roam for a tree or a boulder at the level it currently stands at. Zero for anything that does not gather.</summary>
         public int HarvestRadius => Data != null ? Data.LevelStats(Level).harvestRadius : 0;
@@ -100,6 +103,19 @@ namespace CityBuilder.Buildings
         private static readonly Dictionary<string, int> _countByName = new Dictionary<string, int>();
 
         public static bool HasAny(string buildingName) => CountOf(buildingName) > 0;
+
+        /// <summary>The Town Hall standing (a run's castle), or null -- where heroes are bought and come back to.</summary>
+        public static BuildingInstance TownHall { get; private set; }
+
+        private static readonly List<BuildingInstance> _houses = new List<BuildingInstance>();
+
+        /// <summary>Every standing house -- whatever holds people, the Town Hall aside (Citizens.HousePeople's houses).</summary>
+        public static IReadOnlyList<BuildingInstance> Houses => _houses;
+
+        /// <summary>A building whose people come from it (the user, 2026-10-25: the houses, not the Town Hall).</summary>
+        public static bool IsHouse(BuildingData data) =>
+            data != null && data.buildingName != BuildingIds.TownHall
+                         && (data.LevelStats(1).housingCapacity > 0 || data.LevelStats(MaxLevel).housingCapacity > 0);
 
         public static int CountOf(string buildingName)
         {
@@ -143,6 +159,8 @@ namespace CityBuilder.Buildings
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
+                if (IsHouse(data) && !_houses.Contains(this)) _houses.Add(this);
+                if (data.buildingName == BuildingIds.TownHall) TownHall = this;
 
                 // Level 1's model is the one already active in the prefab, so this changes nothing
                 // on a fresh placement -- it is here for the click box, which Apply sizes to
@@ -203,10 +221,12 @@ namespace CityBuilder.Buildings
                 // those may already be gone, and an exception further down used to leave this
                 // building counted -- the next game then believed its Town Hall already stood.
                 ChangeCount(Data.buildingName, -1);
+                _houses.Remove(this);
+                if (TownHall == this) TownHall = null;
                 if (Data.isGate) GatesStanding.Remove(this);
                 if (OreDeposit.KindForBuilding(Data.buildingName).HasValue) OreDeposit.At(OriginCell)?.Detach(this);
                 if (Data.providesWalkableSurface || Data.isGate) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
-                ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
+                if (!_storageHeld) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
                 {
@@ -249,9 +269,12 @@ namespace CityBuilder.Buildings
         /// <summary>Also read by HappinessManager to decide which instances count toward the settlement's decay-based happiness score -- roads/Town Hall never decay, so including them would just dilute the average with artificial zeros.</summary>
         public bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != BuildingIds.TownHall;
 
+        /// <summary>Whether buildings age at all: not since 2026-10-25 (the user: no decay in the sandbox either; mending is for damage).</summary>
+        public static readonly bool DecayEnabled = false;
+
         private void HandleDayPassed()
         {
-            if (!DecaysOverTime || Invasion.InvasionRules.Active) return;
+            if (!DecayEnabled || !DecaysOverTime || Invasion.InvasionRules.Active) return;
 
             Decay = ComputeNextDecay(Decay, Level);
             UpdateDecayWarningMarker();
@@ -377,22 +400,41 @@ namespace CityBuilder.Buildings
             return RotationSteps % 2 == 0 ? footprint : new Vector2Int(footprint.y, footprint.x);
         }
 
-        /// <summary>Null once there's nothing to repair (Decay already 0).</summary>
-        public List<ResourceAmount> GetRepairCost()
-        {
-            // In an Invasion run nothing decays, and mending is for what the orcs broke: any
-            // damage at all, priced by how much of it there is.
-            if (Invasion.InvasionRules.Active)
-                return Data == null || CurrentHealth >= MaxHealth ? null
-                    : Invasion.InvasionRules.RepairCost(Data, Level, 1f - CurrentHealth / (float)Mathf.Max(1, MaxHealth));
-            if (Data == null || Decay <= 0f) return null;
+        /// <summary>
+        /// Mending what the orcs (or a fire) broke, in both modes (the user, 2026-10-25: as in a run;
+        /// nothing decays any more): null while the building is whole. Priced by RepairCostOf.
+        /// </summary>
+        public List<ResourceAmount> GetRepairCost() =>
+            Data == null || CurrentHealth >= MaxHealth ? null
+                : RepairCostOf(Data, Level, 1f - CurrentHealth / (float)Mathf.Max(1, MaxHealth));
 
-            var scaled = new List<ResourceAmount>();
-            foreach (var amount in Data.cost)
+        /// <summary>
+        /// What mending costs (the user, 2026-10-25): what the building is worth at `level` -- its
+        /// price and every upgrade to that level, as the mode prices them (BuildingPlacer.CostOf,
+        /// UpgradePriceOf), every material but money -- times repair_cost_fraction (a repair from
+        /// nothing: the sandbox tab's, a run's own) times `missing`, the share of its health it has
+        /// lost. Rounded up, so a scratch costs 1. In a run that is wood and stone, never gold.
+        /// </summary>
+        public static List<ResourceAmount> RepairCostOf(BuildingData data, int level, float missing)
+        {
+            var cost = new List<ResourceAmount>(2);
+            if (data == null || missing <= 0f) return cost;
+            void Add(List<ResourceAmount> amounts)
             {
-                scaled.Add(new ResourceAmount { type = amount.type, amount = Mathf.Max(1, Mathf.RoundToInt(amount.amount * BalanceConfig.Instance.RepairCostFraction)) });
+                if (amounts == null) return;
+                foreach (var amount in amounts)
+                {
+                    if (amount.amount <= 0 || amount.type == ResourceType.Coins) continue;
+                    var known = cost.Find(c => c.type == amount.type);
+                    if (known != null) known.amount += amount.amount;
+                    else cost.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
+                }
             }
-            return scaled;
+            Add(BuildingPlacer.CostOf(data));
+            for (var l = 2; l <= level; l++) Add(UpgradePriceOf(data.UpgradeCostTo(l)));
+            var share = BalanceConfig.Instance.RepairCostFraction * Mathf.Clamp01(missing);
+            foreach (var amount in cost) amount.amount = Mathf.Max(1, Mathf.CeilToInt(amount.amount * share));
+            return cost;
         }
 
         public bool TryRepair()
@@ -402,11 +444,8 @@ namespace CityBuilder.Buildings
 
             Decay = 0f;
             UpdateDecayWarningMarker();
-            if (Invasion.InvasionRules.Active)
-            {
-                CurrentHealth = MaxHealth;
-                if (_healthBar != null) _healthBar.Report(1f);
-            }
+            CurrentHealth = MaxHealth;
+            if (_healthBar != null) _healthBar.Report(1f);
             return true;
         }
 
@@ -696,20 +735,48 @@ namespace CityBuilder.Buildings
             UpdateLevelMarker();
         }
 
-        /// <summary>Used by save/load to restore already-valid runtime condition directly.</summary>
+        /// <summary>Used by save/load to restore already-valid runtime condition directly. A save's decay is left behind: nothing ages any more (DecayEnabled).</summary>
         public void SetCondition(int health, float decay)
         {
             CurrentHealth = Data != null ? Mathf.Clamp(health, 0, MaxHealth) : health;
-            Decay = Mathf.Clamp01(decay);
+            Decay = DecayEnabled ? Mathf.Clamp01(decay) : 0f;
             UpdateDecayWarningMarker();
         }
+
+        /// <summary>
+        /// Put up on a timer (the user, 2026-10-25: both modes, as a run had it): it does nothing
+        /// until the time is up -- its storehouse room comes only then -- and a hammer counts it
+        /// down. `total` is the whole time, for a building a save puts back half built.
+        /// </summary>
+        public void BuildOnTimer(float seconds, float total = 0f)
+        {
+            if (Data == null || seconds <= 0f || Site != null) return;
+            var room = Data.LevelStats(Level).storageCapacity;
+            _storageHeld = true;
+            ChangeStoredCapacity(-room);
+            ConstructionSite.Begin(this, seconds, upgrade: false, () =>
+            {
+                _storageHeld = false;
+                ChangeStoredCapacity(room);
+            }, total);
+        }
+
+        /// <summary>An upgrade under way again from a save: paid already, its level comes when the time is up.</summary>
+        public void ResumeUpgrade(float seconds, float total)
+        {
+            if (Data == null || Level >= MaxLevel || Site != null) return;
+            ConstructionSite.Begin(this, Mathf.Max(0.01f, seconds), upgrade: true, ApplyNextLevel, total);
+        }
+
+        /// <summary>An upgrade's price as the mode asks it: the sheet's, or a run's (wood, stone and the rest in gold).</summary>
+        public static List<ResourceAmount> UpgradePriceOf(List<ResourceAmount> cost) =>
+            Invasion.InvasionRules.Active ? Invasion.InvasionRules.UpgradeCost(cost) : cost;
 
         /// <summary>Null once already at MaxLevel.</summary>
         public List<ResourceAmount> GetUpgradeCost()
         {
             if (Data == null || Level >= MaxLevel) return null;
-            var cost = Data.UpgradeCostTo(Level + 1);
-            return Invasion.InvasionRules.Active ? Invasion.InvasionRules.UpgradeCost(cost) : cost;
+            return UpgradePriceOf(Data.UpgradeCostTo(Level + 1));
         }
 
         /// <summary>
@@ -738,13 +805,9 @@ namespace CityBuilder.Buildings
             var cost = GetUpgradeCost();
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
 
-            // An Invasion run's upgrade takes time, and the building rests meanwhile (the user, 2026-10-22).
-            if (Invasion.InvasionRules.Active)
-            {
-                ConstructionSite.Begin(this, Invasion.InvasionRules.BuildSeconds(Data, Level + 1), upgrade: true, ApplyNextLevel);
-                return true;
-            }
-            ApplyNextLevel();
+            // An upgrade takes time, and the building rests meanwhile (the user, 2026-10-22 for a
+            // run, 2026-10-25 for the sandbox too); 0 seconds is at once.
+            ConstructionSite.Begin(this, Data.BuildSeconds(Level + 1), upgrade: true, ApplyNextLevel);
             return true;
         }
 

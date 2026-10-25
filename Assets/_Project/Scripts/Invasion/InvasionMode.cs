@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Resources;
 using CityBuilder.Buildings;
+using CityBuilder.Citizens;
 using CityBuilder.Combat;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -53,9 +54,6 @@ namespace CityBuilder.Invasion
             new Vector2(165f, 7f), new Vector2(255f, 7f), new Vector2(285f, 7f),
         };
 
-        /// <summary>Where the King stands at the start and comes back to: in front of the castle, towards the south causeways.</summary>
-        private static readonly Vector3 KingHomeOffset = new Vector3(0f, 0f, -4.5f);
-
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInARun = new MonoBehaviour[0];
         [SerializeField] private GameObject shrineModel;
@@ -80,68 +78,20 @@ namespace CityBuilder.Invasion
 
         public Hero King { get; private set; }
 
-        private readonly List<Hero> _heroes = new List<Hero>();
-
-        /// <summary>The run's heroes: the King from the start, the Queen and the Captain once bought.</summary>
-        public IReadOnlyList<Hero> Heroes => _heroes;
+        /// <summary>The run's heroes: the King from the start, the Queen and the Captain once bought (HeroRoster, shared with the sandbox).</summary>
+        public IReadOnlyList<Hero> Heroes => HeroRoster.Instance != null ? HeroRoster.Instance.Heroes : (IReadOnlyList<Hero>)new Hero[0];
 
         /// <summary>The hero of this kind if the run has him, else null.</summary>
-        public Hero HeroOf(SoldierType type)
-        {
-            foreach (var hero in _heroes)
-            {
-                if (hero != null && hero.Type == type) return hero;
-            }
-            return null;
-        }
+        public Hero HeroOf(SoldierType type) => HeroRoster.Instance != null ? HeroRoster.Instance.HeroOf(type) : null;
 
-        public enum HeroOffer { Bought, Owned, CastleTooLow, NotEnoughMoney, NoSuchHero }
-
-        /// <summary>
-        /// Whether this hero can be bought now (the user, 2026-10-23): one of each, the Queen from
-        /// the castle's level 2, the Captain from 3 (&lt;id&gt;_castle_level), for &lt;id&gt;_price gold.
-        /// </summary>
-        public HeroOffer CanBuy(SoldierType type)
-        {
-            var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(type));
-            if (balance == null || !SoldierStats.IsHero(type)) return HeroOffer.NoSuchHero;
-            if (HeroOf(type) != null) return HeroOffer.Owned;
-            if (Castle == null || Castle.Level < balance.castleLevel) return HeroOffer.CastleTooLow;
-            var money = ResourceManager.Instance;
-            if (money == null || money.GetAmount(InvasionRules.Money) < balance.price) return HeroOffer.NotEnoughMoney;
-            return HeroOffer.Bought;
-        }
+        /// <summary>Whether this hero can be bought now (the user, 2026-10-23): one of each, the Queen from the castle's level 2, the Captain from 3, for gold.</summary>
+        public HeroRoster.Offer CanBuy(SoldierType type) => HeroRoster.Instance != null ? HeroRoster.Instance.CanBuy(type) : HeroRoster.Offer.NoSuchHero;
 
         /// <summary>Buys the hero if it can be bought: pays, and he steps out before the castle. The answer says why not.</summary>
-        public HeroOffer BuyHero(SoldierType type)
-        {
-            var offer = CanBuy(type);
-            if (offer != HeroOffer.Bought) return offer;
-            var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(type));
-            if (balance.price > 0 && !ResourceManager.Instance.TrySpend(new[] { new ResourceAmount { type = InvasionRules.Money, amount = balance.price } })) return HeroOffer.NotEnoughMoney;
-            SpawnHero(type);
-            return HeroOffer.Bought;
-        }
+        public HeroRoster.Offer BuyHero(SoldierType type) => HeroRoster.Instance != null ? HeroRoster.Instance.Buy(type) : HeroRoster.Offer.NoSuchHero;
 
-        private Hero SpawnHero(SoldierType type)
-        {
-            if (ArmyManager.Instance == null) return null;
-            var home = (Castle != null ? Castle.transform.position : Vector3.zero) + KingHomeOffset;
-            home.y = GridManager.Instance != null ? GridManager.Instance.GroundHeight : home.y;
-            // the bought ones stand beside the King, not on him
-            var index = _heroes.Count;
-            if (index > 0) home += new Vector3(index % 2 == 1 ? -1.4f : 1.4f, 0f, 0f) * ((index + 1) / 2);
-            var hero = ArmyManager.Instance.SpawnHero(type, home);
-            if (hero == null) return null;
-            if (Castle != null) hero.GuardCentre = Castle.transform.position;
-            _heroes.Add(hero);
-            HeroesChanged?.Invoke();
-            return hero;
-        }
-
-        /// <summary>A hero joined the run (the portraits listen).</summary>
-        public event System.Action HeroesChanged;
-        public InvasionPeople People { get; private set; }
+        /// <summary>The island's people, made by its houses (HousePeople, shared with the sandbox).</summary>
+        public HousePeople People { get; private set; }
         public InvasionWaves Waves { get; private set; }
         public InvasionJungle Jungle { get; private set; }
         public InvasionScore Score { get; private set; }
@@ -256,10 +206,12 @@ namespace CityBuilder.Invasion
                     if (placed != null) Houses.Add(placed);
                 }
             }
-            People = gameObject.AddComponent<InvasionPeople>();
-            People.Settle(Houses);
+            People = HousePeople.Instance != null ? HousePeople.Instance : gameObject.AddComponent<HousePeople>();
+            People.FillNow();
 
-            King = SpawnHero(SoldierType.King);
+            // the King for nothing, as the run begins (in the sandbox he is bought like the others)
+            var roster = HeroRoster.Instance != null ? HeroRoster.Instance : gameObject.AddComponent<HeroRoster>();
+            King = roster.Spawn(SoldierType.King);
             // the Barracks' soldiers take no orders in a run: they guard the base (the user, 2026-10-23)
             Garrison = gameObject.AddComponent<InvasionGarrison>();
             Garrison.Begin(Castle != null ? Castle.transform.position : Vector3.zero);

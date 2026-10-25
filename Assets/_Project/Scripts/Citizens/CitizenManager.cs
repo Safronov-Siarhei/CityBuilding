@@ -114,14 +114,14 @@ namespace CityBuilder.Citizens
         }
 
         /// <summary>
-        /// In an Invasion run, idle people go back to the places that lost a worker the player did
-        /// not take off (ProductionBuilding.WantedWorkers) -- every building alike, the healer's
-        /// house as the sawmill (the user, 2026-10-25). The sandbox keeps its rule: jobs lost to
-        /// an epidemic are handed back by the player.
+        /// Idle people go back to the places that lost a worker the player did not take off
+        /// (ProductionBuilding.WantedWorkers) -- every building alike, the healer's house as the
+        /// sawmill (the user, 2026-10-25, for a run; the sandbox has the run's people since the
+        /// same day, so it has this too).
         /// </summary>
         public void RefillWantedJobs()
         {
-            if (!Invasion.InvasionRules.Active || IdlePopulation <= 0) return;
+            if (IdlePopulation <= 0) return;
             foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
             {
                 while (building.AssignedWorkers < building.WantedWorkers && IdlePopulation > 0)

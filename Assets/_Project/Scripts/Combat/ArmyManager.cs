@@ -115,6 +115,8 @@ namespace CityBuilder.Combat
                 var total = 0;
                 foreach (var group in _groups)
                 {
+                    // a hero is bought once and never paid by the day; nor are the Queen's summons
+                    if (SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;
                     total += group.Count * SoldierStats.UpkeepCoinsPerDay(group.Type);
                 }
                 return total;
@@ -400,14 +402,14 @@ namespace CityBuilder.Combat
 
         /// <summary>
         /// The nearest point to `origin` a soldier can walk away from: on the NavMesh (not inside
-        /// the barracks' own carve), and in a run with a way to the castle -- a recruit put into the
+        /// the barracks' own carve), and with a way to the castle (the Town Hall) when there is one -- a recruit put into the
         /// gap between the barracks and the house beside it stood there for good (the user,
         /// 2026-10-23). Rings of 12 points a metre apart, out to 6 m; `origin` itself if none works.
         /// </summary>
         private static Vector3 OpenGroundNear(Vector3 origin)
         {
-            var castle = Invasion.InvasionMode.IsActive && Invasion.InvasionMode.Instance.Castle != null
-                ? Invasion.InvasionMode.Instance.Castle.transform.position
+            var castle = Buildings.BuildingInstance.TownHall != null
+                ? Buildings.BuildingInstance.TownHall.transform.position
                 : (Vector3?)null;
             var goal = Vector3.zero;
             if (castle.HasValue)

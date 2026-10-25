@@ -116,7 +116,7 @@ namespace CityBuilder.Tests.PlayMode
             var woodBefore = resources.GetAmount(ResourceType.Wood);
 
             Assert.IsFalse(warehouse.NextLevelResearched, "The Warehouse's level 2 is supposed to need research.");
-            Assert.IsFalse(warehouse.TryUpgrade(), "An unresearched level was upgraded anyway.");
+            Assert.IsFalse(PlaytestWorld.UpgradeNow(warehouse), "An unresearched level was upgraded anyway.");
             Assert.AreEqual(1, warehouse.Level);
             Assert.AreEqual(woodBefore, resources.GetAmount(ResourceType.Wood),
                 "The refused upgrade still took the player's timber -- a gate must never charge for saying no.");
@@ -124,7 +124,7 @@ namespace CityBuilder.Tests.PlayMode
             Research().CompleteInstantly(ResearchTopic.BuildingLevelId("Warehouse", 2));
 
             Assert.IsTrue(warehouse.NextLevelResearched);
-            Assert.IsTrue(warehouse.TryUpgrade(), "The level is researched and the upgrade was still refused.");
+            Assert.IsTrue(PlaytestWorld.UpgradeNow(warehouse), "The level is researched and the upgrade was still refused.");
             Assert.AreEqual(2, warehouse.Level);
         }
 

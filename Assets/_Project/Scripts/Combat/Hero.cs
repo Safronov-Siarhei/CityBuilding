@@ -6,8 +6,9 @@ using UnityEngine.AI;
 namespace CityBuilder.Combat
 {
     /// <summary>
-    /// A hero of the Invasion mode: the King (the user, 2026-10-21), and the Queen and the Captain
-    /// of the guard bought in the castle (2026-10-23). He gains experience from every enemy that
+    /// A hero: the King (the user, 2026-10-21), and the Queen and the Captain of the guard bought
+    /// in the castle (2026-10-23) -- an Invasion run's, and since 2026-10-25 the sandbox's too, all
+    /// three bought in the Town Hall there (HeroRoster). He gains experience from every enemy that
     /// falls near him, levels up -- more health and damage each level, his skills open and grow
     /// (HeroSkills) -- and when he falls he is not lost but gets up again at the castle after a wait
     /// that grows with his level, as in Dota.
@@ -199,6 +200,25 @@ namespace CityBuilder.Combat
 
             ApplyLevel();
             // A level is a fresh breath, as in Dota: what he gains is added to what he has.
+            Changed?.Invoke();
+        }
+
+        /// <summary>A hero a save puts back (the sandbox keeps its heroes): his level, experience and health, and, if he was down, the wait still left.</summary>
+        public void Restore(int level, int experience, int health, bool fallen, float respawnRemaining)
+        {
+            Level = Mathf.Clamp(level, 1, Mathf.Max(1, BalanceConfig.Instance.KingMaxLevel));
+            Experience = Level >= BalanceConfig.Instance.KingMaxLevel ? 0 : Mathf.Max(0, experience);
+            ApplyLevel();
+            if (health > 0) _unit.SetCurrentHealth(Mathf.Min(health, _unit.MaxHealth));
+            if (fallen)
+            {
+                IsFallen = true;
+                RespawnRemaining = Mathf.Max(0.1f, respawnRemaining);
+                _unit.enabled = false;
+                if (_controller != null) _controller.enabled = false;
+                SetVisible(false);
+                StopRevealing();
+            }
             Changed?.Invoke();
         }
 

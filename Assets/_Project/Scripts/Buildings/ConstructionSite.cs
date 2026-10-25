@@ -5,14 +5,14 @@ using UnityEngine;
 namespace CityBuilder.Buildings
 {
     /// <summary>
-    /// A building going up, or going up a level, on a timer (the user, 2026-10-22, an Invasion run
-    /// only, no speeding up): while the site stands the building does not work at all -- a tower
-    /// does not shoot, a yard's workers wait at it, a barracks hires nobody, nothing is upgraded
-    /// again -- and a hammer with the time left stands over it (UI.ConstructionLabels). When the
-    /// time is up the site finishes (an upgrade's level is applied only then) and removes itself.
+    /// A building going up, or going up a level, on a timer (the user, 2026-10-22 for an Invasion
+    /// run, 2026-10-25 for the sandbox too; no speeding up): while the site stands the building
+    /// does not work at all -- a tower does not shoot, a yard's workers wait at it, a barracks hires
+    /// nobody, a house makes no one, nothing is upgraded again -- and a hammer with the time left
+    /// stands over it (UI.ConstructionLabels). When the time is up the site finishes (an upgrade's
+    /// level is applied only then) and removes itself.
     ///
-    /// The seconds come from the price (InvasionRules.BuildSeconds), so the sheet's costs decide
-    /// them and no per-building table is needed.
+    /// The seconds are the sheet's build_sec columns, per building and level (BuildingData.BuildSeconds).
     /// </summary>
     public class ConstructionSite : MonoBehaviour
     {
@@ -35,8 +35,12 @@ namespace CityBuilder.Buildings
 
         private Action _onDone;
 
-        /// <summary>Puts the building under construction for `seconds`; `onDone` runs as it finishes (an upgrade's level-up).</summary>
-        public static ConstructionSite Begin(BuildingInstance building, float seconds, bool upgrade, Action onDone = null)
+        /// <summary>
+        /// Puts the building under construction for `seconds`; `onDone` runs as it finishes (an
+        /// upgrade's level-up). `total`, when larger, is the whole time -- a save putting a half-built
+        /// one back.
+        /// </summary>
+        public static ConstructionSite Begin(BuildingInstance building, float seconds, bool upgrade, Action onDone = null, float total = 0f)
         {
             if (building == null) return null;
             if (seconds <= 0f)
@@ -46,7 +50,8 @@ namespace CityBuilder.Buildings
             }
             var site = building.gameObject.AddComponent<ConstructionSite>();
             site.Building = building;
-            site.Total = site.Remaining = seconds;
+            site.Remaining = seconds;
+            site.Total = Mathf.Max(seconds, total);
             site.IsUpgrade = upgrade;
             site._onDone = onDone;
             building.Site = site;

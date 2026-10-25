@@ -190,9 +190,9 @@ namespace CityBuilder.Tests.PlayMode
             var mode = InvasionMode.Instance;
             var config = BalanceConfig.Instance;
             Assert.AreEqual(config.InvasionHouses, mode.Houses.Count, "Not every house found its place on the island.");
-            Assert.AreEqual(mode.Houses.Sum(InvasionPeople.PlacesOf), mode.People.Places);
+            Assert.AreEqual(mode.Houses.Sum(HousePeople.PlacesOf), mode.People.Places);
             Assert.AreEqual(config.InvasionHouses * config.Building("Hovel").levels[0].housingCapacity, mode.People.Places, "A level-1 house does not hold the invasion tab's housing_capacity.");
-            Assert.AreEqual(mode.People.Places, InvasionPeople.People, "The island does not open with a full house.");
+            Assert.AreEqual(mode.People.Places, HousePeople.People, "The island does not open with a full house.");
             Assert.AreEqual(mode.People.Places, CitizenManager.Instance.Capacity, "The town's room is not just the houses' places.");
 
             var resources = ResourceManager.Instance;
@@ -251,17 +251,17 @@ namespace CityBuilder.Tests.PlayMode
         public IEnumerator AFallenPerson_IsReplacedByTheHouses_AfterTheWait()
         {
             var people = InvasionMode.Instance.People;
-            var full = InvasionPeople.People;
+            var full = HousePeople.People;
             CitizenManager.Instance.KillCitizens(2);
             yield return null;
             Assert.AreEqual(2, people.Owed, "The houses do not owe the island the two it lost.");
             Assert.IsFalse(GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver, "Losing people ended the run.");
 
             Time.timeScale = 4f;
-            var wait = BalanceConfig.Instance.InvasionPersonRespawnSeconds;
-            for (var t = 0f; t < wait * 1.6f && InvasionPeople.People < full; t += Time.deltaTime) yield return null;
+            var wait = BalanceConfig.Instance.PersonRespawnSeconds;
+            for (var t = 0f; t < wait * 1.6f && HousePeople.People < full; t += Time.deltaTime) yield return null;
             Time.timeScale = 1f;
-            Assert.AreEqual(full, InvasionPeople.People, "The houses did not replace the people the island lost.");
+            Assert.AreEqual(full, HousePeople.People, "The houses did not replace the people the island lost.");
         }
 
         [UnityTest]
@@ -270,12 +270,12 @@ namespace CityBuilder.Tests.PlayMode
             var mode = InvasionMode.Instance;
             var places = mode.People.Places;
             var house = mode.Houses[0];
-            var perHouse = InvasionPeople.PlacesOf(house);
+            var perHouse = HousePeople.PlacesOf(house);
             house.TryDamage(house.MaxHealth);
             yield return null;
             yield return null;
             Assert.AreEqual(places - perHouse, mode.People.Places, "A burnt house kept its places.");
-            Assert.AreEqual(places, InvasionPeople.People, "The house's people died with it -- they should only stop being replaced.");
+            Assert.AreEqual(places, HousePeople.People, "The house's people died with it -- they should only stop being replaced.");
 
             // more people than places: a death is not made good
             CitizenManager.Instance.KillCitizens(perHouse - 1);
@@ -1512,7 +1512,7 @@ namespace CityBuilder.Tests.PlayMode
         {
             RaiseCastle(castleLevel);
             ResourceManager.Instance.Add(InvasionRules.Money, 1000);
-            Assert.AreEqual(InvasionMode.HeroOffer.Bought, InvasionMode.Instance.BuyHero(type), $"The {type} could not be bought.");
+            Assert.AreEqual(HeroRoster.Offer.Bought, InvasionMode.Instance.BuyHero(type), $"The {type} could not be bought.");
             return InvasionMode.Instance.HeroOf(type);
         }
 
@@ -1526,27 +1526,27 @@ namespace CityBuilder.Tests.PlayMode
             var mode = InvasionMode.Instance;
             var queen = BalanceConfig.Instance.Hero("queen");
             var captain = BalanceConfig.Instance.Hero("captain");
-            Assert.AreEqual(InvasionMode.HeroOffer.Owned, mode.CanBuy(SoldierType.King), "The King is for sale.");
-            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, mode.CanBuy(SoldierType.Queen), "The Queen is for sale at a level-1 castle.");
+            Assert.AreEqual(HeroRoster.Offer.Owned, mode.CanBuy(SoldierType.King), "The King is for sale.");
+            Assert.AreEqual(HeroRoster.Offer.CastleTooLow, mode.CanBuy(SoldierType.Queen), "The Queen is for sale at a level-1 castle.");
 
             RaiseCastle(queen.castleLevel);
             ResourceManager.Instance.Add(InvasionRules.Money, 1000);
             var gold = ResourceManager.Instance.GetAmount(InvasionRules.Money);
-            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, mode.CanBuy(SoldierType.Captain), "The Captain came with the Queen's castle level.");
-            Assert.AreEqual(InvasionMode.HeroOffer.Bought, mode.BuyHero(SoldierType.Queen));
+            Assert.AreEqual(HeroRoster.Offer.CastleTooLow, mode.CanBuy(SoldierType.Captain), "The Captain came with the Queen's castle level.");
+            Assert.AreEqual(HeroRoster.Offer.Bought, mode.BuyHero(SoldierType.Queen));
             Assert.AreEqual(gold - queen.price, ResourceManager.Instance.GetAmount(InvasionRules.Money), "The Queen did not cost her price.");
             var hero = mode.HeroOf(SoldierType.Queen);
             Assert.IsNotNull(hero, "The bought Queen is not in the run.");
             Assert.IsTrue(hero.Unit.IsRanged, "The Queen does not shoot.");
             Assert.AreEqual(hero.MaxHealthAt(1), hero.Unit.MaxHealth, "The Queen's health is not the sheet's.");
-            Assert.AreEqual(InvasionMode.HeroOffer.Owned, mode.BuyHero(SoldierType.Queen), "A second Queen could be bought.");
+            Assert.AreEqual(HeroRoster.Offer.Owned, mode.BuyHero(SoldierType.Queen), "A second Queen could be bought.");
 
             RaiseCastle(captain.castleLevel);
             var spend = ResourceManager.Instance.GetAmount(InvasionRules.Money);
             ResourceManager.Instance.TrySpend(new[] { new ResourceAmount { type = InvasionRules.Money, amount = spend } });
-            Assert.AreEqual(InvasionMode.HeroOffer.NotEnoughMoney, mode.BuyHero(SoldierType.Captain), "The Captain came for nothing.");
+            Assert.AreEqual(HeroRoster.Offer.NotEnoughMoney, mode.BuyHero(SoldierType.Captain), "The Captain came for nothing.");
             ResourceManager.Instance.Add(InvasionRules.Money, captain.price);
-            Assert.AreEqual(InvasionMode.HeroOffer.Bought, mode.BuyHero(SoldierType.Captain));
+            Assert.AreEqual(HeroRoster.Offer.Bought, mode.BuyHero(SoldierType.Captain));
             Assert.AreEqual(3, mode.Heroes.Count);
         }
 
@@ -1572,10 +1572,10 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             Assert.IsTrue(bar.Shown, "Holding the castle shows no heroes beside the «!».");
             Assert.IsNotNull(GameObject.Find("HireQueen"), "The Queen has no button.");
-            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, bar.Buy(1), "The Queen sold at a level-1 castle.");
+            Assert.AreEqual(HeroRoster.Offer.CastleTooLow, bar.Buy(1), "The Queen sold at a level-1 castle.");
             RaiseCastle(2);
             ResourceManager.Instance.Add(InvasionRules.Money, 1000);
-            Assert.AreEqual(InvasionMode.HeroOffer.Bought, bar.Buy(1), "The Queen's button did not sell her.");
+            Assert.AreEqual(HeroRoster.Offer.Bought, bar.Buy(1), "The Queen's button did not sell her.");
             yield return new WaitForSeconds(0.3f);
             Assert.IsNotNull(GameObject.Find("QueenPortrait"), "The bought Queen has no portrait.");
             if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-castle-heroes", 1600, 900, castle.transform.position, 18f, 52f, 0f);
@@ -1630,9 +1630,9 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(card, "No run card.");
             Assert.IsTrue(card.gameObject.activeInHierarchy, "The run shows the sandbox's card.");
             Assert.IsFalse(panel.transform.Find("Card").gameObject.activeSelf, "The sandbox's card stayed under the run's.");
-            Assert.IsTrue(card.Find("NextLevel").gameObject.activeSelf, "No next level on a level-1 house.");
-            Assert.IsNotNull(card.Find("NextLevel/Picture").GetComponent<UnityEngine.UI.Image>().sprite, "The next level has no picture.");
-            var gains = card.Find("NextLevel/Gains");
+            Assert.IsTrue(card.Find("Bottom/NextLevel").gameObject.activeSelf, "No next level on a level-1 house.");
+            Assert.IsNotNull(card.Find("Bottom/NextLevel/Picture").GetComponent<UnityEngine.UI.Image>().sprite, "The next level has no picture.");
+            var gains = card.Find("Bottom/NextLevel/Gains");
             Assert.Greater(gains.childCount, 0, "The next level adds nothing, says the card.");
             Assert.IsTrue(gains.GetComponentsInChildren<UnityEngine.UI.Text>().Any(t => t.text == "+1"), "The house's next level does not say +1 place.");
             if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-run-card", 1600, 900, house.transform.position, 18f, 52f, 0f);
@@ -1641,8 +1641,8 @@ namespace CityBuilder.Tests.PlayMode
             house.SetLevel(BuildingInstance.MaxLevel);
             panel.Show(house);
             yield return null;
-            Assert.IsFalse(card.Find("NextLevel").gameObject.activeSelf, "A top-level house still offers a next level.");
-            Assert.IsFalse(card.Find("UpgradeBlock").gameObject.activeSelf, "A top-level house still offers an upgrade.");
+            Assert.IsFalse(card.Find("Bottom/NextLevel").gameObject.activeSelf, "A top-level house still offers a next level.");
+            Assert.IsFalse(card.Find("Bottom/UpgradeBlock").gameObject.activeSelf, "A top-level house still offers an upgrade.");
             panel.Close();
         }
 

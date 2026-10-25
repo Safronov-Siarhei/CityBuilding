@@ -75,9 +75,9 @@ namespace CityBuilder.Buildings
         public int happiness;
 
         /// <summary>
-        /// An Invasion run's time, in seconds, to put this level up: level 1 is the building's own
-        /// construction, level N the upgrade into it (the invasion tab's build_sec, build_sec_2..5;
-        /// the user sets them by hand, 2026-10-24). The sandbox has no such column and builds at once.
+        /// The time, in seconds, to put this level up: level 1 is the building's own construction,
+        /// level N the upgrade into it (build_sec, build_sec_2..5 -- the invasion tab's for a run,
+        /// the sandbox tab's for the sandbox; the user sets them by hand). 0 is at once.
         /// </summary>
         public int buildSeconds;
     }
@@ -203,6 +203,9 @@ namespace CityBuilder.Buildings
         }
 
         private static readonly BuildingLevelStats Fallback = new BuildingLevelStats();
+
+        /// <summary>How long putting `level` up takes: building it (1) or the upgrade into it -- see BuildingLevelStats.buildSeconds.</summary>
+        public float BuildSeconds(int level) => Mathf.Max(0, LevelStats(level).buildSeconds);
 
         /// <summary>What upgrading INTO the given level costs (2..MaxLevel), or null for a level that has no upgrade into it.</summary>
         public List<ResourceAmount> UpgradeCostTo(int level)

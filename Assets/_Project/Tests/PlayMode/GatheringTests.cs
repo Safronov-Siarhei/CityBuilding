@@ -243,7 +243,7 @@ namespace CityBuilder.Tests.PlayMode
             for (var level = 2; level <= BuildingInstance.MaxLevel; level++)
             {
                 var before = sawmill.HarvestRadius;
-                Assert.IsTrue(sawmill.TryUpgrade(), $"The Sawmill refused to upgrade to level {level} with infinite resources.");
+                Assert.IsTrue(PlaytestWorld.UpgradeNow(sawmill), $"The Sawmill refused to upgrade to level {level} with infinite resources.");
                 Assert.Greater(sawmill.HarvestRadius, before,
                     $"Level {level} of the Sawmill reaches no further than level {level - 1} -- upgrading it buys nothing for where it already stands.");
             }
@@ -302,7 +302,8 @@ namespace CityBuilder.Tests.PlayMode
 
             panel.Show(quarry);
             yield return null;
-            Assert.IsTrue(warning.gameObject.activeInHierarchy,
+            var bare = Localization.Format("#building_nothing_in_reach", ResourceNames.Of(ResourceType.Stone));
+            Assert.IsTrue(warning.gameObject.activeInHierarchy && warning.text == bare,
                 "A quarry standing on bare ground looks exactly like a working one, and its card said nothing.");
             StringAssert.Contains(ResourceNames.Of(ResourceType.Stone), warning.text,
                 "The warning does not say WHICH resource is missing, which is the half that tells the player where to move it.");
@@ -312,28 +313,34 @@ namespace CityBuilder.Tests.PlayMode
             PlaceNode(ResourceType.Stone, quarry.transform.position, quarry.HarvestRadius - 2f);
             panel.Show(quarry);
             yield return null;
-            Assert.IsFalse(warning.gameObject.activeInHierarchy,
+            Assert.IsFalse(warning.gameObject.activeInHierarchy && warning.text == bare,
                 "The warning stayed up over a quarry with stone in reach.");
             panel.Close();
 
             // And it is a GATHERER's line: a farm grows its own food and never reads a radius.
-            panel.Show(Place("Farm"));
+            var farm = Place("Farm");
+            panel.Show(farm);
             yield return null;
-            Assert.IsFalse(warning.gameObject.activeInHierarchy, "A farm was told there was nothing to gather.");
+            var farmBare = Localization.Format("#building_nothing_in_reach", ResourceNames.Of(farm.GetComponent<ProductionBuilding>().ProducesResource));
+            Assert.IsFalse(warning.gameObject.activeInHierarchy && warning.text == farmBare, "A farm was told there was nothing to gather.");
 
             panel.Close();
             ModalGate.SetBlocked(false);
         }
 
-        /// <summary>The card's own warning line, by name -- the field itself is private, and what this test is really checking is that SetupProject wired one up at all.</summary>
+        /// <summary>
+        /// The card's band line, by name (since 2026-10-25 the sandbox shows the run's card, whose band
+        /// says what a building makes -- or, in amber, that its reach is bare): what this test is
+        /// really checking is that SetupProject wired one up at all.
+        /// </summary>
         private static UnityEngine.UI.Text FindWarningLabel(UI.BuildingInfoPanelController panel)
         {
             foreach (var text in panel.GetComponentsInChildren<UnityEngine.UI.Text>(true))
             {
-                if (text.name == "Warning") return text;
+                if (text.name == "Makes" && text.transform.parent != null && text.transform.parent.name == "Band") return text;
             }
 
-            Assert.Fail("The building card has no Warning label -- SetupProject never built one.");
+            Assert.Fail("The building card has no band line -- SetupProject never built one.");
             return null;
         }
 

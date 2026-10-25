@@ -36,6 +36,8 @@ namespace CityBuilder.EditorTools
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
         /// <summary>The sheet's invasion tab: the Invasion mode's own numbers, laid over the other tabs for a run.</summary>
         public const string InvasionCsvPath = BalanceFolder + "/invasion.csv";
+        /// <summary>The sheet's sandbox tab (the user, 2026-10-25): the sandbox's building, people and hero numbers, laid over the other tabs for the sandbox.</summary>
+        public const string SandboxCsvPath = BalanceFolder + "/sandbox.csv";
         public const string RunConfigAssetPath = "Assets/_Project/Resources/" + BalanceConfig.RunResourcePath + ".asset";
 
         [MenuItem("CityBuilder/Balance/Rebuild Config From CSV")]
@@ -58,17 +60,27 @@ namespace CityBuilder.EditorTools
             var buildings = ReadBuildings(buildingRows, BuildingsCsvPath);
             AttachRecipes(buildings, recipes);
             var economy = ReadEconomy(ReadCsv(EconomyCsvPath), EconomyCsvPath);
-            var invasion = InvasionTab.Read(InvasionCsvPath);
+            var invasion = OverlayTab.Read(InvasionCsvPath, "an Invasion run plays on the sandbox's numbers");
+            var sandbox = OverlayTab.Read(SandboxCsvPath, "the sandbox plays on the buildings, units and economy tabs alone");
 
-            // The sandbox has the run's own keys too (the heroes', the waves'...), so anything that
+            // The sandbox has the run's own keys too (the waves', the jungle's...), so anything that
             // asks for one outside a run -- an EditMode test of the wave ramp -- reads the sheet's
-            // value; the invasion tab's overrides of sandbox keys stay the run's alone.
+            // value; the invasion tab's overrides of sandbox keys stay the run's alone. The sandbox
+            // tab's own cells and keys come last and win (its heroes, its people, its build times).
             var sandboxEconomy = new Dictionary<string, float>(economy);
             foreach (var pair in invasion.Keys)
             {
                 if (!sandboxEconomy.ContainsKey(pair.Key)) sandboxEconomy[pair.Key] = pair.Value;
             }
-            var config = WriteConfig(ConfigAssetPath, units, buildings, sandboxEconomy);
+            foreach (var pair in sandbox.Keys) sandboxEconomy[pair.Key] = pair.Value;
+            var sandboxUnits = sandbox.Units.Count > 0 ? ReadUnits(sandbox.LayOver(unitRows, sandbox.Units, SandboxCsvPath), SandboxCsvPath) : units;
+            var sandboxBuildings = buildings;
+            if (sandbox.Buildings.Count > 0)
+            {
+                sandboxBuildings = ReadBuildings(sandbox.LayOver(buildingRows, sandbox.Buildings, SandboxCsvPath), SandboxCsvPath);
+                AttachRecipes(sandboxBuildings, recipes);
+            }
+            var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
             var runUnits = ReadUnits(invasion.LayOver(unitRows, invasion.Units, InvasionCsvPath), InvasionCsvPath);
@@ -84,7 +96,8 @@ namespace CityBuilder.EditorTools
             Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings, {economy.Count} economy keys " +
                       $"and {localizationKeys} localization keys -> {ConfigAssetPath}; the invasion tab's " +
                       $"{Math.Max(0, invasion.Buildings.Count - 1)} buildings, {Math.Max(0, invasion.Units.Count - 1)} units " +
-                      $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}");
+                      $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}; the sandbox tab's " +
+                      $"{Math.Max(0, sandbox.Buildings.Count - 1)} buildings and {sandbox.Keys.Count} keys over {ConfigAssetPath}");
             return config;
         }
 
@@ -104,8 +117,9 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The sheet's invasion tab (the user, 2026-10-23: the whole mode on a sheet of its own).
-        /// Three tables one under another, each opened by a header row whose first cell names it:
+        /// The sheet's invasion tab (the user, 2026-10-23: the whole mode on a sheet of its own) and,
+        /// in the same shape, its sandbox tab (2026-10-25; laid over without wholeRow: a column the
+        /// sandbox table lacks keeps the buildings tab's cell). Three tables one under another, each opened by a header row whose first cell names it:
         /// `building` (columns of the buildings tab, plus max_count), `unit` (columns of the units
         /// tab) and `key` (key, value, comment -- like economy). A building's or a unit's row
         /// REPLACES, for a run, the cells of the columns its table has -- an empty cell is an empty
@@ -116,7 +130,7 @@ namespace CityBuilder.EditorTools
         /// whole price: the run's upgrade into level 2 is up2_wood/up2_stone/up2_gold as written,
         /// not those plus the sandbox's iron. A key replaces the economy tab's, or adds a run-only one.
         /// </summary>
-        private class InvasionTab
+        private class OverlayTab
         {
             /// <summary>Each table header first, as the tab has it; empty when the tab has no such table.</summary>
             public readonly List<List<string>> Buildings = new List<List<string>>();
@@ -126,12 +140,12 @@ namespace CityBuilder.EditorTools
             /// <summary>The price columns' prefixes: one in a table makes the table the whole price for it.</summary>
             private static readonly string[] Prices = { "cost_", "up2_", "up3_", "up4_", "up5_", "recruit_" };
 
-            public static InvasionTab Read(string path)
+            public static OverlayTab Read(string path, string withoutIt)
             {
-                var tab = new InvasionTab();
+                var tab = new OverlayTab();
                 if (!File.Exists(path))
                 {
-                    Debug.LogWarning($"BalanceImporter: no {path} -- an Invasion run plays on the sandbox's numbers.");
+                    Debug.LogWarning($"BalanceImporter: no {path} -- {withoutIt}.");
                     return tab;
                 }
 
@@ -274,6 +288,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.recipesCsvUrl, RecipesCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.localizationCsvUrl, LocalizationCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.invasionCsvUrl, InvasionCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.sandboxCsvUrl, SandboxCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)

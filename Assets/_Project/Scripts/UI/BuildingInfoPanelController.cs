@@ -194,8 +194,8 @@ namespace CityBuilder.UI
             Refresh();
         }
 
-        /// <summary>A run's card stands in for the sandbox's (RunBuildingCard).</summary>
-        private bool RunCard => runCard != null && Invasion.InvasionMode.IsActive;
+        /// <summary>The user's card (RunBuildingCard) stands in for the old one -- in a run, and in the sandbox since 2026-10-25.</summary>
+        private bool RunCard => runCard != null;
 
         private void Refresh()
         {
@@ -204,6 +204,16 @@ namespace CityBuilder.UI
             if (RunCard)
             {
                 runCard.Refresh(_currentInstance, _currentProduction, BuildCostRow, Clock);
+                // the sandbox's band: what it makes, a bare reach, a Плавильня's metals (a run's card has none)
+                if (Invasion.InvasionMode.IsActive)
+                {
+                    runCard.ShowBand(null, false, false);
+                    return;
+                }
+                var empty = _currentProduction != null && _currentProduction.NothingLeftInReach;
+                var choice = _currentProduction != null && _currentProduction.HasRecipeChoice;
+                runCard.ShowBand(empty ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource)) : ProductionLine(data), empty, choice);
+                if (choice) RefreshRecipeControls(null, runCard.RecipeRow);
                 return;
             }
 
@@ -277,6 +287,15 @@ namespace CityBuilder.UI
             RefreshRecruitControls(data);
         }
 
+        /// <summary>What a building makes, per worker and tick -- or null for one that makes nothing.</summary>
+        private string ProductionLine(BuildingData data)
+        {
+            var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
+            if (!hasProduction) return null;
+            var line = ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds);
+            return string.IsNullOrEmpty(line) ? null : line;
+        }
+
         /// <summary>
         /// Says, for as long as it is true, that this gatherer has nothing left inside its radius.
         ///
@@ -340,26 +359,29 @@ namespace CityBuilder.UI
         /// real choice -- a sawmill with one recipe would otherwise get a row holding a single
         /// button that does nothing, which reads as broken rather than as "no choice here".
         /// </summary>
-        private void RefreshRecipeControls()
+        private void RefreshRecipeControls() => RefreshRecipeControls(recipeControls, recipeRow);
+
+        private void RefreshRecipeControls(GameObject controls, RectTransform row)
         {
             var hasChoice = _currentProduction != null && _currentProduction.HasRecipeChoice;
-            if (recipeControls != null) recipeControls.SetActive(hasChoice);
-            if (!hasChoice || recipeRow == null) return;
+            if (controls != null) controls.SetActive(hasChoice);
+            if (!hasChoice || row == null) return;
 
             // Rebuilt only when a different building is selected: unlike the workforce list this is
             // a handful of buttons that never change while one card is open.
-            if (_recipeButtonsOwner != _currentProduction)
+            if (_recipeButtonsOwner != _currentProduction || _recipeButtonsRow != row)
             {
-                for (var i = recipeRow.childCount - 1; i >= 0; i--)
+                for (var i = row.childCount - 1; i >= 0; i--)
                 {
-                    Destroy(recipeRow.GetChild(i).gameObject);
+                    Destroy(row.GetChild(i).gameObject);
                 }
                 _recipeButtons.Clear();
                 _recipeButtonsOwner = _currentProduction;
+                _recipeButtonsRow = row;
 
                 for (var i = 0; i < _currentProduction.Recipes.Count; i++)
                 {
-                    _recipeButtons.Add(CreateRecipeButton(i, _currentProduction.Recipes[i]));
+                    _recipeButtons.Add(CreateRecipeButton(row, i, _currentProduction.Recipes[i]));
                 }
             }
 
@@ -369,14 +391,14 @@ namespace CityBuilder.UI
             }
         }
 
-        private Image CreateRecipeButton(int index, BuildingRecipe recipe)
+        private Image CreateRecipeButton(RectTransform row, int index, BuildingRecipe recipe)
         {
             const float width = 210f;
             const float spacing = 12f;
             var count = _currentProduction.Recipes.Count;
 
             var go = new GameObject($"Recipe_{recipe.id}", typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(recipeRow, false);
+            go.transform.SetParent(row, false);
 
             var rect = go.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -424,6 +446,7 @@ namespace CityBuilder.UI
 
         private readonly List<Image> _recipeButtons = new List<Image>();
         private ProductionBuilding _recipeButtonsOwner;
+        private RectTransform _recipeButtonsRow;
 
         private readonly List<Image> _recruitButtons = new List<Image>();
 

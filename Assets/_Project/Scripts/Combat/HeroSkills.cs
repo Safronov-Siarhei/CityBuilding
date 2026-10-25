@@ -195,7 +195,7 @@ namespace CityBuilder.Combat
             return true;
         }
 
-        private static Buildings.BuildingInstance Castle => Invasion.InvasionMode.Instance != null ? Invasion.InvasionMode.Instance.Castle : null;
+        private static Buildings.BuildingInstance Castle => HeroRoster.Castle;
 
         /// <summary>A skill's reach: its own radius, else the hero's engage radius.</summary>
         private float Reach(HeroSkillBalance skill) =>

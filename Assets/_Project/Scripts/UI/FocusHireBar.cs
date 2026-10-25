@@ -1,7 +1,6 @@
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
-using CityBuilder.Invasion;
 using CityBuilder.Resources;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,13 +9,14 @@ namespace CityBuilder.UI
 {
     /// <summary>
     /// The hiring buttons beside the «!» at the bottom of the screen while a building is in focus
-    /// in an Invasion run (the user's sketch, 2026-10-25: hiring moved off the cards, «не забудь
-    /// отцентровать иконки» -- the buttons and the «!» share one centred row):
+    /// (the user's sketch, 2026-10-25: hiring moved off the cards, «не забудь отцентровать иконки»
+    /// -- the buttons and the «!» share one centred row; an Invasion run first, the sandbox too
+    /// since the same day):
     ///
     /// - the Barracks: a face per soldier tier open in the run, its price in coins; a tap hires one;
-    /// - the castle: the King, the Queen, the Captain (was CastleHeroCards on the castle's card):
-    ///   the hero the run has wears a tick, the others their price, «Замок ур. N» while the castle is
-    ///   too low; a tap buys, or says why not.
+    /// - the castle (the Town Hall): the King, the Queen, the Captain (HeroRoster): the hero there
+    ///   is wears a tick, the others their price, «Замок ур. N» while the castle is too low; a tap
+    ///   buys, or says why not.
     /// </summary>
     public class FocusHireBar : MonoBehaviour
     {
@@ -40,16 +40,15 @@ namespace CityBuilder.UI
         private float _refreshIn;
         private bool _shown;
 
-        /// <summary>The building whose buttons these are, while it is in focus in a run.</summary>
+        /// <summary>The building whose buttons these are, while it is in focus.</summary>
         private BuildingInstance Target
         {
             get
             {
-                if (!InvasionMode.IsActive) return null;
                 // beside the «!», and away with it while the building's card is up
                 var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.DetailsShown ? BuildingFocus.Instance.Current : null;
                 if (focus == null || focus.Data == null) return null;
-                if (kind == Kind.Castle) return focus == InvasionMode.Instance.Castle ? focus : null;
+                if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
                 return focus.Data.buildingName == BuildingIds.Barracks && focus.IsOperational ? focus : null;
             }
         }
@@ -78,21 +77,21 @@ namespace CityBuilder.UI
         }
 
         /// <summary>The hero of this button: bought if the castle and the purse allow; why not otherwise.</summary>
-        public InvasionMode.HeroOffer Buy(int index)
+        public HeroRoster.Offer Buy(int index)
         {
-            var mode = InvasionMode.Instance;
-            if (mode == null || index < 0 || index >= types.Length) return InvasionMode.HeroOffer.NoSuchHero;
+            var roster = HeroRoster.Instance;
+            if (roster == null || index < 0 || index >= types.Length) return HeroRoster.Offer.NoSuchHero;
             var type = types[index];
-            var offer = mode.BuyHero(type);
+            var offer = roster.Buy(type);
             var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(type));
             var name = Localization.Get("#hero_" + SoldierStats.SheetIdOf(type));
             switch (offer)
             {
-                case InvasionMode.HeroOffer.CastleTooLow:
+                case HeroRoster.Offer.CastleTooLow:
                     EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#hero_need_castle", name, balance.castleLevel),
                         EventSeverity.Warning, EventGlyph.Alert, null));
                     break;
-                case InvasionMode.HeroOffer.NotEnoughMoney:
+                case HeroRoster.Offer.NotEnoughMoney:
                     EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#hero_no_coins", name, balance.price),
                         EventSeverity.Warning, EventGlyph.Alert, null));
                     break;
@@ -144,19 +143,19 @@ namespace CityBuilder.UI
 
         private void ShowHeroes(BuildingInstance castle)
         {
-            var mode = InvasionMode.Instance;
+            var roster = HeroRoster.Instance;
             for (var i = 0; i < types.Length; i++)
             {
                 buttons[i].SetActive(true);
                 var balance = BalanceConfig.Instance.Hero(SoldierStats.SheetIdOf(types[i]));
-                var owned = mode.HeroOf(types[i]) != null;
+                var owned = roster.HeroOf(types[i]) != null;
                 var tooLow = !owned && balance != null && castle.Level < balance.castleLevel;
                 if (i < ticks.Length && ticks[i] != null) ticks[i].SetActive(owned);
                 prices[i].SetActive(!owned && balance != null);
                 if (!owned && balance != null)
                 {
                     priceTexts[i].text = balance.price.ToString();
-                    if (iconLibrary != null && priceIcons[i].sprite == null) priceIcons[i].sprite = iconLibrary.GetIcon(InvasionRules.Money);
+                    if (iconLibrary != null && priceIcons[i].sprite == null) priceIcons[i].sprite = iconLibrary.GetIcon(HeroRoster.Money);
                 }
                 if (i < locks.Length && locks[i] != null) locks[i].SetActive(tooLow);
                 if (tooLow && i < lockTexts.Length) lockTexts[i].text = Localization.Format("#hero_card_castle", balance.castleLevel);

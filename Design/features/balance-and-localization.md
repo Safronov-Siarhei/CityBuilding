@@ -1,5 +1,7 @@
 # Balance and localization pipeline
 
+> **2026-10-25:** new tab `sandbox` (`Balance/sandbox.csv`, `BalanceSheetSettings.sandboxCsvUrl`) laid over buildings/units/economy for the SANDBOX config, same shape as `invasion`; NOT yet in the Google sheet -- [sandbox-run-systems](sandbox-run-systems.md).
+
 > **Status (2026-10-21):** sheet == repo (verify_sheet: no differences, 2026-10-20). Claude edits the
 > Google Sheet DIRECTLY via the `balance-sheet` project skill (`.claude/skills/balance-sheet/`) —
 > the user said to stop handing over paste blocks.

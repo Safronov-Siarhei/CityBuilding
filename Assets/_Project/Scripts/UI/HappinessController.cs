@@ -30,7 +30,9 @@ namespace CityBuilder.UI
 
         private void Start()
         {
-            if (Invasion.InvasionMode.IsActive && widget != null)
+            // the heroes' portraits stand here instead: in a run, and in the sandbox since
+            // contentment is off (HappinessManager.InUse, the user 2026-10-25)
+            if ((Invasion.InvasionMode.IsActive || !HappinessManager.InUse) && widget != null)
             {
                 widget.SetActive(false);
                 return;

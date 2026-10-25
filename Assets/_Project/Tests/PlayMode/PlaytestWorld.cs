@@ -32,6 +32,14 @@ namespace CityBuilder.Tests.PlayMode
             return mandatory != null && mandatory.buildingName == buildingName ? mandatory : null;
         }
 
+        /// <summary>An upgrade done at once: paid as the game pays it, its timer (ConstructionSite, both modes since 2026-10-25) finished on the spot.</summary>
+        public static bool UpgradeNow(BuildingInstance building)
+        {
+            if (!building.TryUpgrade()) return false;
+            if (building.Site != null) building.Site.Finish();
+            return true;
+        }
+
         public static BuildingInstance Place(BuildingData data, Vector2Int cell, int rotationSteps = 0)
         {
             var grid = GridManager.Instance;

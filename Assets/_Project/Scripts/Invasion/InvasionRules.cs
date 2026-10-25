@@ -48,8 +48,7 @@ namespace CityBuilder.Invasion
         /// higher one the upgrade into it -- the invasion tab's build_sec / build_sec_N, set by hand
         /// (the user, 2026-10-24; it used to follow the price). 0 is at once.
         /// </summary>
-        public static float BuildSeconds(BuildingData data, int level) =>
-            data == null ? 0f : Mathf.Max(0, data.LevelStats(level).buildSeconds);
+        public static float BuildSeconds(BuildingData data, int level) => data == null ? 0f : data.BuildSeconds(level);
 
         /// <summary>A run's walls and gates (the user, 2026-10-22): obstacles for the orcs, sturdier than the sandbox's (their health in the invasion tab); an orc breaks one only when it stands in its way.</summary>
         private static readonly string[] Barriers = { "Fence", "Gate", "FortifiedGate" };
@@ -100,31 +99,11 @@ namespace CityBuilder.Invasion
         }
 
         /// <summary>
-        /// Mending a damaged building in a run, by how badly it is hurt (the user, 2026-10-25): what
-        /// the building is worth at `level` -- its price and every upgrade to that level, wood and
-        /// stone only, never gold -- times the sheet's repair_cost_fraction (a repair from nothing)
-        /// times `missing`, the share of its health it has lost. Rounded up, so a scratch costs 1.
+        /// Mending a damaged building in a run, by how badly it is hurt (the user, 2026-10-25): see
+        /// BuildingInstance.RepairCostOf -- a run's price is wood, stone and gold, and mending leaves
+        /// the gold out, so it is wood and stone.
         /// </summary>
-        public static List<ResourceAmount> RepairCost(BuildingData data, int level, float missing)
-        {
-            var cost = new List<ResourceAmount>(2);
-            if (data == null || missing <= 0f) return cost;
-            int wood = 0, stone = 0;
-            void Add(List<ResourceAmount> amounts)
-            {
-                if (amounts == null) return;
-                foreach (var amount in amounts)
-                {
-                    if (amount.type == ResourceType.Wood) wood += amount.amount;
-                    else if (amount.type == ResourceType.Stone) stone += amount.amount;
-                }
-            }
-            Add(BuildCost(data));
-            for (var l = 2; l <= level; l++) Add(UpgradeCost(data.UpgradeCostTo(l)));
-            var share = BalanceConfig.Instance.RepairCostFraction * Mathf.Clamp01(missing);
-            if (wood > 0) cost.Add(new ResourceAmount { type = ResourceType.Wood, amount = Mathf.Max(1, Mathf.CeilToInt(wood * share)) });
-            if (stone > 0) cost.Add(new ResourceAmount { type = ResourceType.Stone, amount = Mathf.Max(1, Mathf.CeilToInt(stone * share)) });
-            return cost;
-        }
+        public static List<ResourceAmount> RepairCost(BuildingData data, int level, float missing) =>
+            BuildingInstance.RepairCostOf(data, level, missing);
     }
 }

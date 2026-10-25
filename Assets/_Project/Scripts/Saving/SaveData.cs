@@ -59,6 +59,9 @@ namespace CityBuilder.Saving
         /// </summary>
         public int selectedGroupIndex = -1;
 
+        /// <summary>The heroes (the sandbox has them since 2026-10-25): kept apart from armyGroups, which leave them out -- a hero is more than a soldier in a group.</summary>
+        public List<HeroEntry> heroes = new List<HeroEntry>();
+
         /// <summary>
         /// How the settlement was eating. Without these two a reload forgave a starving town: the
         /// hunger streak restarted at zero, so a settlement one day away from its first deaths got
@@ -304,6 +307,18 @@ namespace CityBuilder.Saving
     }
 
     [Serializable]
+    public class HeroEntry
+    {
+        public SoldierType type;
+        public Vector3 position;
+        public int level = 1;
+        public int experience;
+        public int currentHealth;
+        public bool fallen;
+        public float respawnRemaining;
+    }
+
+    [Serializable]
     public class BuildingEntry
     {
         public string buildingName;
@@ -321,5 +336,10 @@ namespace CityBuilder.Saving
         public int currentHealth;
         public float decay;
         public int rotationSteps;
+
+        /// <summary>Seconds left of its building or upgrade (ConstructionSite), 0 when it stands done; siteTotal is the whole time.</summary>
+        public float siteRemaining;
+        public float siteTotal;
+        public bool siteUpgrade;
     }
 }

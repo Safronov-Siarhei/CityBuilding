@@ -433,6 +433,11 @@ namespace CityBuilder.EditorTools
 
             var happinessManager = managers.AddComponent<HappinessManager>();
 
+            // Where the people come from in both modes since 2026-10-25: the houses make them
+            // (migration no longer moves anyone); and the heroes, bought in the Town Hall.
+            managers.AddComponent<HousePeople>();
+            managers.AddComponent<CityBuilder.Combat.HeroRoster>();
+
             // What contentment is finally FOR: it sets how fast people find their way here, or
             // away. Needs the placer as well as the citizens, because the settling-in grace period
             // starts when the Town Hall is placed rather than when the scene loads.

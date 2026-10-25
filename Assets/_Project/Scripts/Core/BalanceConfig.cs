@@ -508,7 +508,7 @@ namespace CityBuilder.Core
 
         // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
         [SerializeField] private int invasionHouses = 6;
-        [SerializeField] private float invasionPersonRespawnSeconds = 15f;
+        [SerializeField] private float personRespawnSeconds = 15f;
         [SerializeField] private int invasionStartWood = 60;
         [SerializeField] private int invasionStartStone = 40;
         [SerializeField] private int invasionStartCoins = 50;
@@ -612,7 +612,7 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionStoneReserveMultiplier = 3f;
         [SerializeField] private int invasionWoodPerHarvest = 1;
         [SerializeField] private int invasionStonePerHarvest = 1;
-        [SerializeField] private float invasionMinimapRadius = 40f;
+        [SerializeField] private float minimapRadius = 40f;
         [SerializeField] private int invasionCitizenHealth = 12;
         [SerializeField] private int invasionScorePerWaveSquared = 1;
         [SerializeField] private int invasionScoreBoss = 50;
@@ -833,7 +833,8 @@ namespace CityBuilder.Core
         /// <summary>Every hero skill in the sheet, by id order.</summary>
         public IReadOnlyList<HeroSkillBalance> HeroSkills => heroSkills;
         public int InvasionHouses => invasionHouses;
-        public float InvasionPersonRespawnSeconds => invasionPersonRespawnSeconds;
+        /// <summary>How long a house takes to make its next person (HousePeople): the sandbox tab's person_respawn_sec, a run's inv_person_respawn_sec.</summary>
+        public float PersonRespawnSeconds => personRespawnSeconds;
         public int InvasionStartWood => invasionStartWood;
         public int InvasionStartStone => invasionStartStone;
         public int InvasionStartCoins => invasionStartCoins;
@@ -948,7 +949,8 @@ namespace CityBuilder.Core
         /// <summary>What a run's sawmill man brings each trip (inv_wood_per_harvest) and a quarry man (inv_stone_per_harvest).</summary>
         public int InvasionWoodPerHarvest => invasionWoodPerHarvest;
         public int InvasionStonePerHarvest => invasionStonePerHarvest;
-        public float InvasionMinimapRadius => invasionMinimapRadius;
+        /// <summary>Metres round the camera's look the minimap shows: the sandbox tab's minimap_radius, a run's inv_minimap_radius.</summary>
+        public float MinimapRadius => minimapRadius;
         public int InvasionCitizenHealth => invasionCitizenHealth;
         public int InvasionScorePerWaveSquared => invasionScorePerWaveSquared;
         public int InvasionScoreBoss => invasionScoreBoss;
@@ -1255,7 +1257,8 @@ namespace CityBuilder.Core
             _heroUnits = null;
             _kingUnit = null;
             invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
-            invasionPersonRespawnSeconds = Read(economy, "inv_person_respawn_sec", invasionPersonRespawnSeconds);
+            // the sandbox's own key first (its tab), else the run's
+            personRespawnSeconds = ReadOptional(economy, "person_respawn_sec", Read(economy, "inv_person_respawn_sec", personRespawnSeconds));
             invasionStartWood = (int)Read(economy, "inv_start_wood", invasionStartWood);
             invasionStartStone = (int)Read(economy, "inv_start_stone", invasionStartStone);
             invasionStartCoins = (int)Read(economy, "inv_start_coins", invasionStartCoins);
@@ -1352,7 +1355,7 @@ namespace CityBuilder.Core
             invasionStoneReserveMultiplier = Read(economy, "inv_stone_reserve_mult", invasionStoneReserveMultiplier);
             invasionWoodPerHarvest = (int)Read(economy, "inv_wood_per_harvest", invasionWoodPerHarvest);
             invasionStonePerHarvest = (int)Read(economy, "inv_stone_per_harvest", invasionStonePerHarvest);
-            invasionMinimapRadius = Read(economy, "inv_minimap_radius", invasionMinimapRadius);
+            minimapRadius = ReadOptional(economy, "minimap_radius", Read(economy, "inv_minimap_radius", minimapRadius));
             invasionCitizenHealth = (int)Read(economy, "inv_citizen_health", invasionCitizenHealth);
             invasionScorePerWaveSquared = (int)Read(economy, "inv_score_wave_sq", invasionScorePerWaveSquared);
             invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);

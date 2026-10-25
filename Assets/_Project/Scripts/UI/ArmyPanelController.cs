@@ -58,6 +58,18 @@ namespace CityBuilder.UI
             UnsubscribeGroups();
         }
 
+        private float _baseY = float.NaN;
+
+        /// <summary>Under the heroes' portraits when there are any (the sandbox has both since 2026-10-25), else where it always stood.</summary>
+        private void LateUpdate()
+        {
+            if (panelRoot == null || !panelRoot.activeSelf) return;
+            var rect = (RectTransform)panelRoot.transform;
+            if (float.IsNaN(_baseY)) _baseY = rect.anchoredPosition.y;
+            var y = HeroPortraitController.ShownRows > 0 ? Mathf.Min(_baseY, HeroPortraitController.StackBottom - 12f) : _baseY;
+            if (!Mathf.Approximately(rect.anchoredPosition.y, y)) rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
+        }
+
         private void Rebuild()
         {
             var army = ArmyManager.Instance;
@@ -78,7 +90,8 @@ namespace CityBuilder.UI
             var index = 0;
             foreach (var group in army.Groups)
             {
-                if (group.Count == 0) continue;
+                // the heroes are commanded from their portraits; the Queen's summons are not the player's to order about
+                if (group.Count == 0 || SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;
 
                 // Re-render on the group's own changes too (a member dying, an order landing),
                 // not just on army-wide ones -- the row shows a live count.

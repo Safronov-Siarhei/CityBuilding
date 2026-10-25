@@ -357,8 +357,10 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// A building's card in an Invasion run, after the user's sketch (2026-10-25) -- see
-        /// RunBuildingCard. Its own card beside the sandbox's: the panel shows one or the other.
+        /// A building's card after the user's sketch (2026-10-25; a run's first, the sandbox's too
+        /// since the same day) -- see RunBuildingCard. Its upper and lower halves stand in two
+        /// holders, so the sandbox's band (what it makes, a Плавильня's recipes) can open between
+        /// them; the old card beside it is no longer shown.
         /// </summary>
         private static void BuildRunBuildingCard(Transform panelRoot, Sprite panelSprite, BuildingInfoPanelController controller)
         {
@@ -371,26 +373,34 @@ namespace CityBuilder.EditorTools
             card.transform.SetSiblingIndex(1);
             var runCard = card.gameObject.AddComponent<RunBuildingCard>();
 
-            var title = CreateText(card.transform, "Title", string.Empty, 38, new Vector2(0f, 352f), new Vector2(640f, 60f));
-            var level = CreateText(card.transform, "Level", string.Empty, 28, new Vector2(0f, 310f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.85f));
+            // the halves the band pushes apart
+            var upper = new GameObject("Top", typeof(RectTransform));
+            upper.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)upper.transform);
+            var lower = new GameObject("Bottom", typeof(RectTransform));
+            lower.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)lower.transform);
+
+            var title = CreateText(upper.transform, "Title", string.Empty, 38, new Vector2(0f, 352f), new Vector2(640f, 60f));
+            var level = CreateText(upper.transform, "Level", string.Empty, 28, new Vector2(0f, 310f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.85f));
 
             // a heart and a shield with their numbers
-            var heart = CreateImage(card.transform, "HealthIcon", new Color(0.85f, 0.25f, 0.22f));
+            var heart = CreateImage(upper.transform, "HealthIcon", new Color(0.85f, 0.25f, 0.22f));
             heart.sprite = HudGlyph("Heart");
             heart.preserveAspect = true;
             SetRect(heart.rectTransform, new Vector2(-150f, 266f), new Vector2(44f, 44f));
-            var health = CreateText(card.transform, "Health", string.Empty, 28, new Vector2(-50f, 266f), new Vector2(150f, 44f));
+            var health = CreateText(upper.transform, "Health", string.Empty, 28, new Vector2(-50f, 266f), new Vector2(150f, 44f));
             health.alignment = TextAnchor.MiddleLeft;
-            var shield = CreateImage(card.transform, "DefenseIcon", new Color(0.3f, 0.45f, 0.75f));
+            var shield = CreateImage(upper.transform, "DefenseIcon", new Color(0.3f, 0.45f, 0.75f));
             shield.sprite = HudGlyph("Shield");
             shield.preserveAspect = true;
             SetRect(shield.rectTransform, new Vector2(70f, 266f), new Vector2(44f, 44f));
-            var defense = CreateText(card.transform, "Defense", string.Empty, 28, new Vector2(150f, 266f), new Vector2(110f, 44f));
+            var defense = CreateText(upper.transform, "Defense", string.Empty, 28, new Vector2(150f, 266f), new Vector2(110f, 44f));
             defense.alignment = TextAnchor.MiddleLeft;
 
             // − workers / free +  (minus on the left, the user: «поменяй местами»)
             var workerRow = new GameObject("WorkerRow", typeof(RectTransform));
-            workerRow.transform.SetParent(card.transform, false);
+            workerRow.transform.SetParent(upper.transform, false);
             StretchFull((RectTransform)workerRow.transform);
             var minus = CreateDynamicButton(workerRow.transform, panelSprite, "MinusWorker", new Vector2(-230f, 208f), new Vector2(76f, 76f), out var minusLabel);
             minusLabel.text = "\u2212";
@@ -403,9 +413,24 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(minus.onClick, controller.UnassignWorker);
             UnityEventTools.AddPersistentListener(plus.onClick, controller.AssignWorker);
 
+            // the sandbox's band between the halves (hidden in a run): one line, and the recipe row
+            const float bandHeight = 110f;
+            var band = new GameObject("Band", typeof(RectTransform));
+            band.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)band.transform);
+            var bandText = CreateText(band.transform, "Makes", string.Empty, 24, new Vector2(0f, 206f), new Vector2(640f, 34f), new Color(1f, 1f, 1f, 0.85f));
+            bandText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            bandText.resizeTextForBestFit = true;
+            bandText.resizeTextMinSize = 16;
+            bandText.resizeTextMaxSize = 24;
+            var recipeRow = new GameObject("RecipeRow", typeof(RectTransform));
+            recipeRow.transform.SetParent(band.transform, false);
+            SetRect((RectTransform)recipeRow.transform, new Vector2(0f, 152f), new Vector2(660f, 58f));
+            band.SetActive(false);
+
             // the next level: its picture and what it adds, over the picture's foot
             var next = new GameObject("NextLevel", typeof(RectTransform));
-            next.transform.SetParent(card.transform, false);
+            next.transform.SetParent(lower.transform, false);
             StretchFull((RectTransform)next.transform);
             var picture = CreateImage(next.transform, "Picture", Color.white);
             picture.preserveAspect = true;
@@ -421,7 +446,7 @@ namespace CityBuilder.EditorTools
             gainsLayout.childForceExpandWidth = gainsLayout.childForceExpandHeight = false;
 
             var upgradeBlock = new GameObject("UpgradeBlock", typeof(RectTransform));
-            upgradeBlock.transform.SetParent(card.transform, false);
+            upgradeBlock.transform.SetParent(lower.transform, false);
             StretchFull((RectTransform)upgradeBlock.transform);
             Localize(CreateText(upgradeBlock.transform, "Heading", string.Empty, 28, new Vector2(0f, -50f), new Vector2(640f, 40f)), "#building_upgrade_cost");
             var upgradeCostRow = CreateCostRow(upgradeBlock.transform, "UpgradeCostRow", new Vector2(0f, -90f));
@@ -430,16 +455,16 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
 
             var repairBlock = new GameObject("RepairBlock", typeof(RectTransform));
-            repairBlock.transform.SetParent(card.transform, false);
+            repairBlock.transform.SetParent(lower.transform, false);
             StretchFull((RectTransform)repairBlock.transform);
             Localize(CreateText(repairBlock.transform, "Heading", string.Empty, 28, new Vector2(0f, -198f), new Vector2(640f, 40f)), "#building_repair_cost");
             var repairCostRow = CreateCostRow(repairBlock.transform, "RepairCostRow", new Vector2(0f, -236f));
             var repairButton = CreateButton(repairBlock.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(0f, -288f), new Vector2(360f, 70f));
             UnityEventTools.AddPersistentListener(repairButton.onClick, controller.Repair);
 
-            var demolish = CreateButton(card.transform, panelSprite, "DemolishButton", "#building_demolish", new Vector2(-170f, -355f), new Vector2(300f, 74f));
+            var demolish = CreateButton(lower.transform, panelSprite, "DemolishButton", "#building_demolish", new Vector2(-170f, -355f), new Vector2(300f, 74f));
             demolish.GetComponent<Image>().color = new Color(0.45f, 0.2f, 0.18f, 0.95f);
-            var close = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(170f, -355f), new Vector2(300f, 74f));
+            var close = CreateButton(lower.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(170f, -355f), new Vector2(300f, 74f));
             UnityEventTools.AddPersistentListener(demolish.onClick, controller.OpenDemolishConfirm);
             UnityEventTools.AddPersistentListener(close.onClick, controller.Close);
 
@@ -472,6 +497,13 @@ namespace CityBuilder.EditorTools
             so.FindProperty("repairBlock").objectReferenceValue = repairBlock;
             so.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
             so.FindProperty("demolishButton").objectReferenceValue = demolish.gameObject;
+            so.FindProperty("card").objectReferenceValue = card.rectTransform;
+            so.FindProperty("top").objectReferenceValue = upper.transform;
+            so.FindProperty("bottom").objectReferenceValue = lower.transform;
+            so.FindProperty("band").objectReferenceValue = band;
+            so.FindProperty("bandText").objectReferenceValue = bandText;
+            so.FindProperty("recipeRow").objectReferenceValue = recipeRow.transform;
+            so.FindProperty("bandHeight").floatValue = bandHeight;
             var keyProp = so.FindProperty("levelIconKeys");
             keyProp.arraySize = keys.Count;
             for (var i = 0; i < keys.Count; i++) keyProp.GetArrayElementAtIndex(i).stringValue = keys[i];

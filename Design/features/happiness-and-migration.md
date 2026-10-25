@@ -1,5 +1,7 @@
 # Happiness (довольство) and migration
 
+> **2026-10-25: BOTH OFF** (`HappinessManager.InUse`, `MigrationManager.MovesPeople` = false; code kept, the settling-in grace still runs) -- the houses make the people now: [sandbox-run-systems](sandbox-run-systems.md).
+
 > **Status (2026-10-21):** six factors wired, migration reads them. Weights are a flat average and
 > the audit says two factors barely move — the fix is FACTOR WEIGHTS, not the migration curve.
 > **Read with:** [citizens-and-workforce](citizens-and-workforce.md), [food-and-hunger](food-and-hunger.md).

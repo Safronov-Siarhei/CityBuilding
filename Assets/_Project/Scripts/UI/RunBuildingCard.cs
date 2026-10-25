@@ -10,8 +10,8 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// A building's card in an Invasion run, after the user's sketch (2026-10-25; the sandbox keeps
-    /// its own card for now -- «давай пока что протестим как будет выглядеть в забеге»):
+    /// A building's card, after the user's sketch (2026-10-25: an Invasion run's first, then the
+    /// sandbox's too -- «перенеси так же интерфейс»):
     ///
     ///   the name, «Уровень N», a heart and a shield with their numbers;
     ///   −  Рабочие / Свободно  +   (a workplace only);
@@ -21,9 +21,11 @@ namespace CityBuilder.UI
     ///   «Стоимость починки», its price, «Починить» -- only while damaged;
     ///   «Снести здание», «Закрыть».
     ///
-    /// No «Производит» line and no recruiting: the Barracks hires and the castle buys heroes from
-    /// the buttons by the «!» at the bottom of the screen (FocusHireBar).
-    /// BuildingInfoPanelController shows this card instead of its own in a run and owns the buttons.
+    /// No recruiting: the Barracks hires and the castle buys heroes from the buttons by the «!» at
+    /// the bottom of the screen (FocusHireBar). In the sandbox a band opens under the workers --
+    /// what the building makes (or that its reach is bare), and a Плавильня's metal buttons -- and
+    /// the card grows to fit it (ShowBand); a run's card has no band, as the user drew it.
+    /// BuildingInfoPanelController shows this card and owns the buttons.
     /// </summary>
     public class RunBuildingCard : MonoBehaviour
     {
@@ -45,6 +47,15 @@ namespace CityBuilder.UI
         [SerializeField] private Transform repairCostRow;
         [SerializeField] private GameObject demolishButton;
 
+        [Header("The sandbox's band: what it makes, a Плавильня's recipes")]
+        [SerializeField] private RectTransform card;
+        [SerializeField] private RectTransform top;
+        [SerializeField] private RectTransform bottom;
+        [SerializeField] private GameObject band;
+        [SerializeField] private Text bandText;
+        [SerializeField] private RectTransform recipeRow;
+        [SerializeField] private float bandHeight = 100f;
+
         [Header("The next levels' pictures: <building id>_L<level> (Tools/blender/render_icons.py)")]
         [SerializeField] private string[] levelIconKeys = new string[0];
         [SerializeField] private Sprite[] levelIcons = new Sprite[0];
@@ -58,6 +69,36 @@ namespace CityBuilder.UI
         [SerializeField] private Sprite radiusGlyph;
 
         private string _gainsFor;
+        private float _cardHeight = -1f;
+
+        /// <summary>Where a Плавильня's metal buttons go (BuildingInfoPanelController builds them).</summary>
+        public RectTransform RecipeRow => recipeRow;
+
+        /// <summary>
+        /// The band under the workers: `text` (null for none) -- amber when it is a warning -- and
+        /// the recipe row when the building has a choice. The card grows by the band's height, its
+        /// upper half moving up and its lower half down, so nothing else on it moves against
+        /// anything else; with no band it is the run's card exactly.
+        /// </summary>
+        public void ShowBand(string text, bool warning, bool recipes)
+        {
+            var shown = !string.IsNullOrEmpty(text) || recipes;
+            if (band != null) band.SetActive(shown);
+            if (bandText != null)
+            {
+                bandText.gameObject.SetActive(!string.IsNullOrEmpty(text));
+                bandText.text = text ?? string.Empty;
+                bandText.color = warning ? new Color(1f, 0.72f, 0.35f) : new Color(1f, 1f, 1f, 0.85f);
+            }
+            if (recipeRow != null) recipeRow.gameObject.SetActive(recipes);
+
+            if (card == null) return;
+            if (_cardHeight < 0f) _cardHeight = card.sizeDelta.y;
+            var half = shown ? bandHeight * 0.5f : 0f;
+            card.sizeDelta = new Vector2(card.sizeDelta.x, _cardHeight + half * 2f);
+            if (top != null) top.anchoredPosition = new Vector2(0f, half);
+            if (bottom != null) bottom.anchoredPosition = new Vector2(0f, -half);
+        }
 
         /// <summary>Fills the card for `building`; `fillCostRow` lays a price out (BuildingInfoPanelController's chips).</summary>
         public void Refresh(BuildingInstance building, ProductionBuilding production, Action<Transform, List<ResourceAmount>> fillCostRow, Func<float, string> clock)

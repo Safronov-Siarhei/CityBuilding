@@ -1,28 +1,29 @@
 using System.Collections.Generic;
 using CityBuilder.Buildings;
-using CityBuilder.Citizens;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
 
-namespace CityBuilder.Invasion
+namespace CityBuilder.Citizens
 {
     /// <summary>
-    /// The people of an Invasion run (the user, 2026-10-21): they live in the six houses that stand
-    /// on the island from the start -- as many to a house as the invasion tab's Hovel row gives its
-    /// level (housing_capacity, _2.._5; the user, 2026-10-25: one more with each upgrade) -- and nowhere else -- no house is ever built
-    /// again. People are workers or, hired at the Barracks, soldiers; a soldier who falls is replaced
-    /// by his house after a wait (a bar over the house shows it filling), but only while the island
-    /// has fewer people than its standing houses have places. A burnt house takes its places with it
-    /// for good, so the houses are worth defending.
+    /// Where the people come from (the user: 2026-10-21 for an Invasion run, 2026-10-25 for the
+    /// sandbox too, in place of migration): the houses make them. Each standing house -- every
+    /// building that holds people but the Town Hall (BuildingInstance.Houses: in a run the six
+    /// Hovels on the island, in the sandbox every Лачуга, Коттедж and Усадьба) -- has as many
+    /// places as its level's housing_capacity, and while the town has fewer people than its houses
+    /// have places, the houses make the shortfall, each one at a time, one every person_respawn_sec
+    /// (a bar over the house shows it filling). A house being built or upgraded makes no one and
+    /// counts only what it held before; a burnt house takes its places with it.
     ///
-    /// People are counted as the town's population plus its soldiers (the King is no one's
+    /// People are counted as the town's population plus its soldiers (a hero is no one's
     /// householder). Which house makes the next person does not matter to the count; the houses
-    /// share the shortfall, each making one at a time.
+    /// share the shortfall. The town's room (CitizenManager.Capacity) is the houses' places and
+    /// nothing else -- not the Town Hall's, whose founding party simply lives there.
     /// </summary>
-    public class InvasionPeople : MonoBehaviour
+    public class HousePeople : MonoBehaviour
     {
         private class House
         {
@@ -32,7 +33,16 @@ namespace CityBuilder.Invasion
             public HarvestProgressBar Bar;
         }
 
+        public static HousePeople Instance { get; private set; }
+
         private readonly List<House> _houses = new List<House>();
+
+        private void Awake() => Instance = this;
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
 
         /// <summary>Places in the standing houses, each at its own level.</summary>
         public int Places
@@ -40,14 +50,19 @@ namespace CityBuilder.Invasion
             get
             {
                 var places = 0;
-                foreach (var house in _houses) places += PlacesOf(house.Building);
+                var houses = BuildingInstance.Houses;
+                for (var i = 0; i < houses.Count; i++) places += PlacesOf(houses[i]);
                 return places;
             }
         }
 
-        /// <summary>How many live in this house at its level: the run's Hovel row, housing_capacity at that level.</summary>
-        public static int PlacesOf(BuildingInstance house) =>
-            house == null || house.Data == null ? 0 : Mathf.Max(0, house.Data.LevelStats(house.Level).housingCapacity);
+        /// <summary>How many live in this house at its level (its housing_capacity) -- none while it is first going up, and none once it has burnt.</summary>
+        public static int PlacesOf(BuildingInstance house)
+        {
+            if (house == null || house.Data == null || house.CurrentHealth <= 0) return 0;
+            if (house.Site != null && !house.Site.IsUpgrade) return 0;
+            return Mathf.Max(0, house.Data.LevelStats(house.Level).housingCapacity);
+        }
 
         /// <summary>Everyone alive: the town's people and its soldiers.</summary>
         public static int People
@@ -60,7 +75,7 @@ namespace CityBuilder.Invasion
             }
         }
 
-        public int StandingHouses => _houses.Count;
+        public int StandingHouses => BuildingInstance.Houses.Count;
 
         /// <summary>People the houses are making right now (one at a time each).</summary>
         public int Owed
@@ -78,34 +93,29 @@ namespace CityBuilder.Invasion
         {
             foreach (var house in _houses)
             {
-                if (house.Building == building) return house.Owed > 0 ? house.Timer / BalanceConfig.Instance.InvasionPersonRespawnSeconds : 0f;
+                if (house.Building == building) return house.Owed > 0 ? house.Timer / Seconds : 0f;
             }
             return 0f;
         }
 
-        /// <summary>The run's houses, as InvasionMode stood them; the people move in at once.</summary>
-        public void Settle(IEnumerable<BuildingInstance> houses)
+        private static float Seconds => Mathf.Max(0.1f, BalanceConfig.Instance.PersonRespawnSeconds);
+
+        /// <summary>Every house full at once -- a run's island, whose people are there from the start.</summary>
+        public void FillNow()
         {
-            foreach (var building in houses)
-            {
-                if (building != null) _houses.Add(new House { Building = building });
-            }
-            var citizens = CitizenManager.Instance;
-            if (citizens == null) return;
             SyncCapacity();
-            citizens.AddCitizens(Mathf.Max(0, Places - People));
+            CitizenManager.Instance?.AddCitizens(Mathf.Max(0, Places - People));
         }
 
         private void Update()
         {
-            var removed = _houses.RemoveAll(h => h.Building == null || h.Building.CurrentHealth <= 0);
-            if (removed > 0) SyncCapacity();
+            SyncHouses();
 
-            // what the standing houses still owe the island, shared out one per house at a time
+            // what the standing houses still owe the town, shared out one per house at a time
             var shortfall = Mathf.Max(0, Places - People);
             Balance(shortfall);
 
-            var seconds = BalanceConfig.Instance.InvasionPersonRespawnSeconds;
+            var seconds = Seconds;
             foreach (var house in _houses)
             {
                 if (house.Owed <= 0)
@@ -124,6 +134,29 @@ namespace CityBuilder.Invasion
                 house.Owed--;
                 CitizenManager.Instance?.AddCitizens(1);
             }
+        }
+
+        /// <summary>Follows BuildingInstance.Houses: a new house joins, a gone one leaves. No allocation unless one did.</summary>
+        private void SyncHouses()
+        {
+            var removed = _houses.RemoveAll(h => h.Building == null || h.Building.CurrentHealth <= 0);
+            var standing = BuildingInstance.Houses;
+            if (removed == 0 && _houses.Count == standing.Count) return;
+            for (var i = 0; i < standing.Count; i++)
+            {
+                var building = standing[i];
+                if (building == null || building.CurrentHealth <= 0 || Tracks(building)) continue;
+                _houses.Add(new House { Building = building });
+            }
+        }
+
+        private bool Tracks(BuildingInstance building)
+        {
+            foreach (var house in _houses)
+            {
+                if (house.Building == building) return true;
+            }
+            return false;
         }
 
         /// <summary>Spreads the shortfall over the houses so that the total owed matches it: new debts to the least-owing house, cleared debts from the most-owing.</summary>
@@ -156,7 +189,7 @@ namespace CityBuilder.Invasion
             }
         }
 
-        /// <summary>The town's room is the houses' places and nothing else: not the castle's, not a Hovel's sandbox capacity.</summary>
+        /// <summary>The town's room is the houses' places and nothing else: not the Town Hall's.</summary>
         private void SyncCapacity()
         {
             var citizens = CitizenManager.Instance;
@@ -166,7 +199,7 @@ namespace CityBuilder.Invasion
 
         private void LateUpdate()
         {
-            // a house going down or up a level elsewhere changes the sandbox's capacity; put it back
+            // a building's own Initialize/upgrade/teardown hands the town its sheet capacity; put it back
             var citizens = CitizenManager.Instance;
             if (citizens != null && citizens.Capacity != Places) SyncCapacity();
         }

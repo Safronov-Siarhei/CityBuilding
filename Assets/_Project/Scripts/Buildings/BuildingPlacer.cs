@@ -777,11 +777,9 @@ namespace CityBuilder.Buildings
             var buildingInstance = instance.GetComponent<BuildingInstance>();
             if (buildingInstance == null) buildingInstance = instance.AddComponent<BuildingInstance>();
             buildingInstance.Initialize(_selectedBuilding, cell, _rotationSteps);
-            // In an Invasion run a building takes time to put up and does nothing meanwhile (the user, 2026-10-22).
-            if (Invasion.InvasionRules.Active && _selectedBuilding != mandatoryFirstBuilding)
-            {
-                ConstructionSite.Begin(buildingInstance, Invasion.InvasionRules.BuildSeconds(_selectedBuilding, 1), upgrade: false);
-            }
+            // A building takes time to put up and does nothing meanwhile (the user, 2026-10-22 for a
+            // run, 2026-10-25 for the sandbox too) -- all but the Town Hall the game starts with.
+            if (_selectedBuilding != mandatoryFirstBuilding) buildingInstance.BuildOnTimer(_selectedBuilding.BuildSeconds(1));
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 

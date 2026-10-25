@@ -212,6 +212,13 @@ namespace CityBuilder.Saving
                     }
                 }
 
+                // half built, or halfway up a level: the hammer goes on where it stopped
+                if (entry.siteRemaining > 0f)
+                {
+                    if (entry.siteUpgrade) buildingInstance.ResumeUpgrade(entry.siteRemaining, entry.siteTotal);
+                    else buildingInstance.BuildOnTimer(entry.siteRemaining, entry.siteTotal);
+                }
+
                 var production = instance.GetComponent<ProductionBuilding>();
                 if (production != null)
                 {
@@ -223,6 +230,7 @@ namespace CityBuilder.Saving
             }
 
             var restoredGroups = RestoreArmy(data);
+            RestoreHeroes(data);
             var restoredOrcs = RestoreRaids(data);
             // Last of the three: an attack order points at the portal or at an orc, and neither of
             // them exists until RestoreRaids above has put them back.
@@ -404,6 +412,17 @@ namespace CityBuilder.Saving
             }
 
             return restored;
+        }
+
+        /// <summary>The heroes, as they were: where they stood, their levels, down or not (HeroRoster).</summary>
+        private static void RestoreHeroes(GameSaveData data)
+        {
+            var roster = Combat.HeroRoster.Instance;
+            if (roster == null || data.heroes == null) return;
+            foreach (var entry in data.heroes)
+            {
+                roster.Restore(entry.type, entry.position, entry.level, entry.experience, entry.currentHealth, entry.fallen, entry.respawnRemaining);
+            }
         }
 
         /// <summary>
@@ -609,6 +628,8 @@ namespace CityBuilder.Saving
                 for (var i = 0; i < army.Groups.Count; i++)
                 {
                     var group = army.Groups[i];
+                    // a hero is written down as a hero (data.heroes below); the Queen's summons are gone in a minute anyway
+                    if (Combat.SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;
                     // An empty group is still worth writing down: it carries the rally point and
                     // priority the player set, which ArmyManager deliberately keeps when the last
                     // member dies.
@@ -621,7 +642,26 @@ namespace CityBuilder.Saving
                     }
                     data.armyGroups.Add(entry);
 
-                    if (group == army.SelectedGroup) data.selectedGroupIndex = i;
+                    if (group == army.SelectedGroup) data.selectedGroupIndex = data.armyGroups.Count - 1;
+                }
+            }
+
+            var roster = Combat.HeroRoster.Instance;
+            if (roster != null)
+            {
+                foreach (var hero in roster.Heroes)
+                {
+                    if (hero == null || hero.Unit == null) continue;
+                    data.heroes.Add(new HeroEntry
+                    {
+                        type = hero.Type,
+                        position = hero.IsFallen ? hero.Home : hero.transform.position,
+                        level = hero.Level,
+                        experience = hero.Experience,
+                        currentHealth = hero.Unit.CurrentHealth,
+                        fallen = hero.IsFallen,
+                        respawnRemaining = hero.RespawnRemaining,
+                    });
                 }
             }
 
@@ -663,7 +703,10 @@ namespace CityBuilder.Saving
                     level = instance.Level,
                     currentHealth = instance.CurrentHealth,
                     decay = instance.Decay,
-                    rotationSteps = instance.RotationSteps
+                    rotationSteps = instance.RotationSteps,
+                    siteRemaining = instance.Site != null ? instance.Site.Remaining : 0f,
+                    siteTotal = instance.Site != null ? instance.Site.Total : 0f,
+                    siteUpgrade = instance.Site != null && instance.Site.IsUpgrade,
                 });
             }
 

@@ -60,8 +60,16 @@ namespace CityBuilder.Core
             Instance = this;
         }
 
+        /// <summary>
+        /// Whether contentment counts at all: not since 2026-10-25 (the user: «пока что не нужна»;
+        /// it fed only migration, and the houses make the people now). Off, the score is never
+        /// computed and stays 100, and its number is off the HUD (HappinessController).
+        /// </summary>
+        public static readonly bool InUse = false;
+
         private void Start()
         {
+            if (!InUse) return;
             if (GameCalendar.Instance != null) GameCalendar.Instance.OnDayPassed += Recompute;
             if (TaxManager.Instance != null) TaxManager.Instance.OnTaxRateChanged += Recompute;
             // Both this and the meal hang off OnDayPassed, and which of the two runs first depends

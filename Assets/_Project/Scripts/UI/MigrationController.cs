@@ -41,7 +41,9 @@ namespace CityBuilder.UI
             var migration = MigrationManager.Instance;
             if (migration == null) return;
 
-            var visible = migration.State != MigrationManager.MigrationState.Dormant;
+            // nobody migrates any more (MigrationManager.MovesPeople): the plaque is off the HUD,
+            // where the heroes' portraits now stack
+            var visible = MigrationManager.MovesPeople && migration.State != MigrationManager.MigrationState.Dormant;
             if (panel != null && panel.activeSelf != visible) panel.SetActive(visible);
             if (!visible || label == null) return;
 

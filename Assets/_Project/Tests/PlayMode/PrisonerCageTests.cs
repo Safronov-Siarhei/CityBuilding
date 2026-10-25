@@ -48,6 +48,8 @@ namespace CityBuilder.Tests.PlayMode
             var citizens = CitizenManager.Instance;
             // settlers arriving on their own would muddle the count
             MigrationManager.Instance.enabled = false;
+            // nor may the houses make people, or force the town's room back to their places (HousePeople)
+            HousePeople.Instance.enabled = false;
             citizens.ChangeCapacity(expected + 20);
             var before = citizens.TotalPopulation;
 
@@ -72,6 +74,8 @@ namespace CityBuilder.Tests.PlayMode
             var citizens = CitizenManager.Instance;
             // a settler arriving on his own would take the home this test frees for the prisoner
             MigrationManager.Instance.enabled = false;
+            // nor may the houses make people, or force the town's room back to their places (HousePeople)
+            HousePeople.Instance.enabled = false;
             citizens.ChangeCapacity(-citizens.FreeSpace);
             var before = citizens.TotalPopulation;
 

@@ -1,5 +1,7 @@
 # Building levels (1–5), upgrades, decay and repair
 
+> **2026-10-25:** decay OFF (`BuildingInstance.DecayEnabled` = false); upgrades and new buildings take `build_sec(_N)` time in the sandbox too; repair = damage-priced `RepairCostOf`; sandbox prices now on the `sandbox` tab -- see [sandbox-run-systems](sandbox-run-systems.md). The decay rules below are history.
+
 > **Status (2026-10-21):** levels 1–5 in the game with models for all 44 buildings (`f80abe62`).
 > Numbers for levels 4–5 are EXTRAPOLATED and nobody has played them.
 > **Read with:** [research-laboratory](research-laboratory.md), [art-pipeline](art-pipeline.md),
