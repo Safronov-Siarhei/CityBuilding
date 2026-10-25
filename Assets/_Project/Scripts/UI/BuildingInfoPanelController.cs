@@ -42,6 +42,10 @@ namespace CityBuilder.UI
         [SerializeField] private Text demolishConfirmLabel;
         [SerializeField] private ResourceIconLibrary iconLibrary;
 
+        [Header("An Invasion run's card (the user's sketch, 2026-10-25) in place of the one above")]
+        [SerializeField] private GameObject sandboxCard;
+        [SerializeField] private RunBuildingCard runCard;
+
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
 
@@ -56,6 +60,9 @@ namespace CityBuilder.UI
             _currentInstance = instance;
             _currentProduction = instance != null ? instance.GetComponent<ProductionBuilding>() : null;
             if (panelRoot != null) panelRoot.SetActive(true);
+            var run = RunCard;
+            if (sandboxCard != null) sandboxCard.SetActive(!run);
+            if (runCard != null) runCard.gameObject.SetActive(run);
             ModalGate.SetBlocked(true);
             Refresh();
             ShowHarvestRadius();
@@ -187,10 +194,18 @@ namespace CityBuilder.UI
             Refresh();
         }
 
+        /// <summary>A run's card stands in for the sandbox's (RunBuildingCard).</summary>
+        private bool RunCard => runCard != null && Invasion.InvasionMode.IsActive;
+
         private void Refresh()
         {
             if (_currentInstance == null || _currentInstance.Data == null) return;
             var data = _currentInstance.Data;
+            if (RunCard)
+            {
+                runCard.Refresh(_currentInstance, _currentProduction, BuildCostRow, Clock);
+                return;
+            }
 
             if (titleLabel != null) titleLabel.text = data.LocalizedName;
             if (levelLabel != null) levelLabel.text = Localization.Format("#building_level", _currentInstance.Level, BuildingInstance.MaxLevel);

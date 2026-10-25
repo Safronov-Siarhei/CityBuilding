@@ -337,6 +337,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("recruitCostRow").objectReferenceValue = recruitCostRow;
             controllerSO.FindProperty("recruitTypeRow").objectReferenceValue = recruitTypeRowRect;
             controllerSO.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            controllerSO.FindProperty("sandboxCard").objectReferenceValue = card.gameObject;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(assignButton.onClick, controller.AssignWorker);
@@ -349,101 +350,144 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(recruitButton.onClick, controller.Recruit);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
-            BuildCastleHeroCards(card.transform, panelSprite, controller, iconLibrary);
+            BuildRunBuildingCard(panelRoot.transform, panelSprite, controller);
 
             panelRoot.SetActive(false);
             return controller;
         }
 
         /// <summary>
-        /// The Invasion heroes on the castle's card (CastleHeroCards shows them only there, only in
-        /// a run): three cards in the band the Barracks' recruiting uses -- a face, a tick or a
-        /// price, and «Замок ур. N» over a face the castle is too low for.
+        /// A building's card in an Invasion run, after the user's sketch (2026-10-25) -- see
+        /// RunBuildingCard. Its own card beside the sandbox's: the panel shows one or the other.
         /// </summary>
-        private static void BuildCastleHeroCards(Transform card, Sprite panelSprite, BuildingInfoPanelController panel, ResourceIconLibrary iconLibrary)
+        private static void BuildRunBuildingCard(Transform panelRoot, Sprite panelSprite, BuildingInfoPanelController controller)
         {
-            var types = new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain };
-            var paths = new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" };
-            const float width = 190f, height = 210f, gap = 24f;
+            var card = CreateImage(panelRoot, "RunCard", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            // under the wave line at the top of the screen
+            SetRect(card.rectTransform, new Vector2(0f, -20f), new Vector2(700f, 800f));
+            // drawn before the demolition question, which must stay on top
+            card.transform.SetSiblingIndex(1);
+            var runCard = card.gameObject.AddComponent<RunBuildingCard>();
 
-            var row = new GameObject("CastleHeroCards", typeof(RectTransform));
-            row.transform.SetParent(card, false);
-            var rowRect = (RectTransform)row.transform;
-            rowRect.anchorMin = rowRect.anchorMax = new Vector2(0.5f, 0.5f);
-            rowRect.anchoredPosition = new Vector2(0f, 85f);
-            rowRect.sizeDelta = new Vector2(3 * width + 2 * gap, height);
+            var title = CreateText(card.transform, "Title", string.Empty, 38, new Vector2(0f, 352f), new Vector2(640f, 60f));
+            var level = CreateText(card.transform, "Level", string.Empty, 28, new Vector2(0f, 310f), new Vector2(640f, 44f), new Color(1f, 1f, 1f, 0.85f));
 
-            var go = new GameObject("CastleHeroCardsController");
-            go.transform.SetParent(card, false);
-            var cards = go.AddComponent<CastleHeroCards>();
+            // a heart and a shield with their numbers
+            var heart = CreateImage(card.transform, "HealthIcon", new Color(0.85f, 0.25f, 0.22f));
+            heart.sprite = HudGlyph("Heart");
+            heart.preserveAspect = true;
+            SetRect(heart.rectTransform, new Vector2(-150f, 266f), new Vector2(44f, 44f));
+            var health = CreateText(card.transform, "Health", string.Empty, 28, new Vector2(-50f, 266f), new Vector2(150f, 44f));
+            health.alignment = TextAnchor.MiddleLeft;
+            var shield = CreateImage(card.transform, "DefenseIcon", new Color(0.3f, 0.45f, 0.75f));
+            shield.sprite = HudGlyph("Shield");
+            shield.preserveAspect = true;
+            SetRect(shield.rectTransform, new Vector2(70f, 266f), new Vector2(44f, 44f));
+            var defense = CreateText(card.transform, "Defense", string.Empty, 28, new Vector2(150f, 266f), new Vector2(110f, 44f));
+            defense.alignment = TextAnchor.MiddleLeft;
 
-            var faces = new Image[3];
-            var ticks = new GameObject[3];
-            var prices = new GameObject[3];
-            var priceTexts = new Text[3];
-            var priceIcons = new Image[3];
-            var lockTexts = new Text[3];
-            var tick = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hud_Check.png");
-            for (var i = 0; i < 3; i++)
+            // − workers / free +  (minus on the left, the user: «поменяй местами»)
+            var workerRow = new GameObject("WorkerRow", typeof(RectTransform));
+            workerRow.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)workerRow.transform);
+            var minus = CreateDynamicButton(workerRow.transform, panelSprite, "MinusWorker", new Vector2(-230f, 208f), new Vector2(76f, 76f), out var minusLabel);
+            minusLabel.text = "\u2212";
+            minusLabel.fontSize = 44;
+            var plus = CreateDynamicButton(workerRow.transform, panelSprite, "PlusWorker", new Vector2(230f, 208f), new Vector2(76f, 76f), out var plusLabel);
+            plusLabel.text = "+";
+            plusLabel.fontSize = 44;
+            var workers = CreateText(workerRow.transform, "Workers", string.Empty, 26, new Vector2(0f, 224f), new Vector2(360f, 36f));
+            var free = CreateText(workerRow.transform, "Free", string.Empty, 22, new Vector2(0f, 192f), new Vector2(360f, 32f), new Color(1f, 1f, 1f, 0.7f));
+            UnityEventTools.AddPersistentListener(minus.onClick, controller.UnassignWorker);
+            UnityEventTools.AddPersistentListener(plus.onClick, controller.AssignWorker);
+
+            // the next level: its picture and what it adds, over the picture's foot
+            var next = new GameObject("NextLevel", typeof(RectTransform));
+            next.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)next.transform);
+            var picture = CreateImage(next.transform, "Picture", Color.white);
+            picture.preserveAspect = true;
+            picture.raycastTarget = false;
+            SetRect(picture.rectTransform, new Vector2(0f, 82f), new Vector2(180f, 180f));
+            var gains = new GameObject("Gains", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            gains.transform.SetParent(next.transform, false);
+            SetRect((RectTransform)gains.transform, new Vector2(0f, 2f), new Vector2(640f, 50f));
+            var gainsLayout = gains.GetComponent<HorizontalLayoutGroup>();
+            gainsLayout.spacing = 8f;
+            gainsLayout.childAlignment = TextAnchor.MiddleCenter;
+            gainsLayout.childControlWidth = gainsLayout.childControlHeight = true;
+            gainsLayout.childForceExpandWidth = gainsLayout.childForceExpandHeight = false;
+
+            var upgradeBlock = new GameObject("UpgradeBlock", typeof(RectTransform));
+            upgradeBlock.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)upgradeBlock.transform);
+            Localize(CreateText(upgradeBlock.transform, "Heading", string.Empty, 28, new Vector2(0f, -50f), new Vector2(640f, 40f)), "#building_upgrade_cost");
+            var upgradeCostRow = CreateCostRow(upgradeBlock.transform, "UpgradeCostRow", new Vector2(0f, -90f));
+            var upgradeButton = CreateButton(upgradeBlock.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(0f, -142f), new Vector2(360f, 70f));
+            var upgradeLock = CreateText(upgradeBlock.transform, "UpgradeLock", string.Empty, 22, new Vector2(0f, -110f), new Vector2(640f, 60f), new Color(1f, 0.78f, 0.5f));
+            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.Upgrade);
+
+            var repairBlock = new GameObject("RepairBlock", typeof(RectTransform));
+            repairBlock.transform.SetParent(card.transform, false);
+            StretchFull((RectTransform)repairBlock.transform);
+            Localize(CreateText(repairBlock.transform, "Heading", string.Empty, 28, new Vector2(0f, -198f), new Vector2(640f, 40f)), "#building_repair_cost");
+            var repairCostRow = CreateCostRow(repairBlock.transform, "RepairCostRow", new Vector2(0f, -236f));
+            var repairButton = CreateButton(repairBlock.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(0f, -288f), new Vector2(360f, 70f));
+            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.Repair);
+
+            var demolish = CreateButton(card.transform, panelSprite, "DemolishButton", "#building_demolish", new Vector2(-170f, -355f), new Vector2(300f, 74f));
+            demolish.GetComponent<Image>().color = new Color(0.45f, 0.2f, 0.18f, 0.95f);
+            var close = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(170f, -355f), new Vector2(300f, 74f));
+            UnityEventTools.AddPersistentListener(demolish.onClick, controller.OpenDemolishConfirm);
+            UnityEventTools.AddPersistentListener(close.onClick, controller.Close);
+
+            var keys = new List<string>();
+            var sprites = new List<Object>();
+            foreach (var path in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
             {
-                var x = (i - 1) * (width + gap);
-                var button = CreateDynamicButton(row.transform, SkinSprite("card") ?? panelSprite, $"HeroCard{types[i]}", new Vector2(x, 0f), new Vector2(width, height), out var caption);
-                Object.DestroyImmediate(caption.gameObject);
-                button.GetComponent<Image>().color = Color.white;
-                UnityEventTools.AddIntPersistentListener(button.onClick, cards.BuyCard, i);
-
-                var face = CreateImage(button.transform, "Face", Color.white);
-                face.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{paths[i]}.png");
-                face.preserveAspect = true;
-                face.raycastTarget = false;
-                SetRect(face.rectTransform, new Vector2(0f, 14f), new Vector2(128f, 128f));
-                faces[i] = face;
-
-                var mark = CreateImage(button.transform, "Owned", new Color(0.35f, 0.8f, 0.35f, 1f));
-                mark.sprite = tick;
-                mark.preserveAspect = true;
-                mark.raycastTarget = false;
-                SetRect(mark.rectTransform, new Vector2(0f, -78f), new Vector2(46f, 46f));
-                ticks[i] = mark.gameObject;
-
-                var price = new GameObject("Price", typeof(RectTransform));
-                price.transform.SetParent(button.transform, false);
-                SetRect((RectTransform)price.transform, new Vector2(0f, -78f), new Vector2(width, 46f));
-                var coin = CreateImage(price.transform, "Coin", Color.white);
-                coin.preserveAspect = true;
-                coin.raycastTarget = false;
-                SetRect(coin.rectTransform, new Vector2(-34f, 0f), new Vector2(38f, 38f));
-                var amount = CreateText(price.transform, "Amount", "0", 30, new Vector2(20f, 0f), new Vector2(100f, 44f), UiTheme.Ink);
-                amount.font = UiTheme.Heavy;
-                amount.alignment = TextAnchor.MiddleLeft;
-                prices[i] = price;
-                priceTexts[i] = amount;
-                priceIcons[i] = coin;
-
-                // over the face's top edge, on a dark band of its own
-                var band = CreateImage(button.transform, "LockedBand", new Color(0.55f, 0.16f, 0.12f, 0.92f));
-                band.raycastTarget = false;
-                SetRect(band.rectTransform, new Vector2(0f, 82f), new Vector2(width - 16f, 34f));
-                var locked = CreateText(band.transform, "Locked", string.Empty, 22, Vector2.zero, new Vector2(width - 20f, 32f), Color.white);
-                locked.font = UiTheme.Heavy;
-                lockTexts[i] = locked;
+                var file = AssetDatabase.GUIDToAssetPath(path);
+                var name = System.IO.Path.GetFileNameWithoutExtension(file);
+                if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$")) continue;
+                keys.Add(name);
+                sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
             }
 
-            var so = new SerializedObject(cards);
-            so.FindProperty("panel").objectReferenceValue = panel;
-            so.FindProperty("row").objectReferenceValue = row;
-            var heroes = so.FindProperty("heroes");
-            heroes.arraySize = 3;
-            for (var i = 0; i < 3; i++) heroes.GetArrayElementAtIndex(i).enumValueIndex = System.Array.IndexOf(System.Enum.GetValues(typeof(SoldierType)), types[i]);
-            WriteObjects(so.FindProperty("faces"), faces);
-            WriteObjects(so.FindProperty("ticks"), ticks);
-            WriteObjects(so.FindProperty("prices"), prices);
-            WriteObjects(so.FindProperty("priceTexts"), priceTexts);
-            WriteObjects(so.FindProperty("priceIcons"), priceIcons);
-            WriteObjects(so.FindProperty("lockTexts"), lockTexts);
-            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            var so = new SerializedObject(runCard);
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("level").objectReferenceValue = level;
+            so.FindProperty("health").objectReferenceValue = health;
+            so.FindProperty("defense").objectReferenceValue = defense;
+            so.FindProperty("workerRow").objectReferenceValue = workerRow;
+            so.FindProperty("workers").objectReferenceValue = workers;
+            so.FindProperty("free").objectReferenceValue = free;
+            so.FindProperty("nextLevel").objectReferenceValue = next;
+            so.FindProperty("nextLevelImage").objectReferenceValue = picture;
+            so.FindProperty("gains").objectReferenceValue = gains.transform;
+            so.FindProperty("upgradeBlock").objectReferenceValue = upgradeBlock;
+            so.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
+            so.FindProperty("upgradeButton").objectReferenceValue = upgradeButton.gameObject;
+            so.FindProperty("upgradeLock").objectReferenceValue = upgradeLock;
+            so.FindProperty("repairBlock").objectReferenceValue = repairBlock;
+            so.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
+            so.FindProperty("demolishButton").objectReferenceValue = demolish.gameObject;
+            var keyProp = so.FindProperty("levelIconKeys");
+            keyProp.arraySize = keys.Count;
+            for (var i = 0; i < keys.Count; i++) keyProp.GetArrayElementAtIndex(i).stringValue = keys[i];
+            WriteObjects(so.FindProperty("levelIcons"), sprites.ToArray());
+            so.FindProperty("gainPlate").objectReferenceValue = panelSprite;
+            so.FindProperty("heartGlyph").objectReferenceValue = HudGlyph("Heart");
+            so.FindProperty("shieldGlyph").objectReferenceValue = HudGlyph("Shield");
+            so.FindProperty("houseGlyph").objectReferenceValue = HudGlyph("Home");
+            so.FindProperty("workerGlyph").objectReferenceValue = HudGlyph("People");
+            so.FindProperty("radiusGlyph").objectReferenceValue = HudGlyph("Radius");
             so.ApplyModifiedPropertiesWithoutUndo();
-            row.SetActive(false);
+
+            var panelSO = new SerializedObject(controller);
+            panelSO.FindProperty("runCard").objectReferenceValue = runCard;
+            panelSO.ApplyModifiedPropertiesWithoutUndo();
+            card.gameObject.SetActive(false);
         }
 
         private static void SetRect(RectTransform rect, Vector2 position, Vector2 size)

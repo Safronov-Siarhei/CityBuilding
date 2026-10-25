@@ -15,5 +15,8 @@ namespace CityBuilder.Buildings
     {
         /// <summary>The Ратуша: the settlement's first and mandatory building, whose loss is the game's defeat condition and whose model is the castle.</summary>
         public const string TownHall = "Castle";
+
+        /// <summary>The Казарма: where soldiers are hired (in a run, by the buttons beside the «!», UI.FocusHireBar).</summary>
+        public const string Barracks = "Barracks";
     }
 }

@@ -1,7 +1,7 @@
 # Invasion: the New Year map «Новогодняя»
 
-> **Status (2026-10-25):** built, in the game, chosen in the settings («Карта нашествия: Остров /
-> Новогодняя»). When it is open to players (holidays? always?) is NOT decided — the user: «пока что
+> **Status (2026-10-25):** built, in the game, chosen as the New Year THEME (the tree round button) in
+> the menu's invasion screen (was a settings row, removed the same day). When it is open to players (holidays? always?) is NOT decided — the user: «пока что
 > сделай её доступной в настройках, потом будем разбираться». Not seen on a phone.
 > **Read with:** [invasion-mode](invasion-mode.md), [maps-and-terrain](maps-and-terrain.md) («Seasons»).
 
@@ -18,7 +18,7 @@
   `H:/…/Buildings3D/Inv-2.blend`; export `export_map.py -- G:/Fork/CityBuilding Inv2 Inv-2`.
 - `SetupProjectCityScene`: `CreateMeshMapDefinition("Inv2", "Inv-2", null, MapSeason.Winter,
   conifers)` → `MeshMapDefinition.ForcedSeason` (SeasonStyle.MapForced) + fir forest only.
-- `InvasionMode.RunMapId` (settings: `GameSettings.InvasionMap`), `IsRunMap`, `IsNewYear`;
+- `InvasionMode.RunMapId` (`GameSettings.InvasionTheme == MapTheme.NewYear`), `IsRunMap`, `IsNewYear`;
   `InvasionMode.MapId` stays "Inv1" (tests).
 
 ## The rules (`Invasion/InvasionNewYear.cs`, numbers: invasion tab `inv_ny_*`, `inv_gold_thief`, `inv_gold_ice_shaman`)

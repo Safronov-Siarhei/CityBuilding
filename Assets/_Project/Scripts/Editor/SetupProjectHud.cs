@@ -142,10 +142,23 @@ namespace CityBuilder.EditorTools
         /// BuildingFocus holds the building and shows the button.
         /// </summary>
         private static void BuildBuildingFocus(Transform uiRoot, BuildingSelector selector, BuildingInfoPanelController infoPanel,
-            ResearchPanelController researchPanel, CitizenSelector citizenSelector, BuildingPlacer placer)
+            ResearchPanelController researchPanel, CitizenSelector citizenSelector, BuildingPlacer placer, ResourceIconLibrary iconLibrary)
         {
-            var button = CreateGlyphButton(uiRoot, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
-            Anchor(button.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin + 64f), new Vector2(128f, 128f));
+            // one centred row: a run's hiring buttons (FocusHireBar), then the «!» (the user's sketch, 2026-10-25)
+            var row = new GameObject("BuildingFocusBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(uiRoot, false);
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(1200f, 160f));
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 28f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = layout.childControlHeight = false;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+            BuildHireBar(row.transform, FocusHireBar.Kind.Barracks, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms },
+                new[] { "PortraitMilitia", "PortraitSpearman", "PortraitArcher", "PortraitManAtArms" }, iconLibrary);
+            BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
+                new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
+
+            var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
             if (icon != null) Object.DestroyImmediate(icon.gameObject);
             var mark = CreateText(button.transform, "Mark", "!", 76, new Vector2(0f, 4f), new Vector2(110f, 110f));
@@ -168,6 +181,93 @@ namespace CityBuilder.EditorTools
             selectorSO.FindProperty("focus").objectReferenceValue = focus;
             selectorSO.ApplyModifiedPropertiesWithoutUndo();
             button.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// A run's hiring buttons beside the «!» (FocusHireBar): a round face per soldier tier or
+        /// hero, its price on a plaque at its foot, a tick for a hero the run has, «Замок ур. N» for
+        /// one the castle is too low for.
+        /// </summary>
+        private static void BuildHireBar(Transform row, FocusHireBar.Kind kind, SoldierType[] types, string[] portraits, ResourceIconLibrary iconLibrary)
+        {
+            var go = new GameObject($"HireBar{kind}");
+            go.transform.SetParent(row.parent, false);
+            var bar = go.AddComponent<FocusHireBar>();
+            var n = types.Length;
+            var buttons = new Object[n];
+            var faces = new Object[n];
+            var prices = new Object[n];
+            var priceTexts = new Object[n];
+            var priceIcons = new Object[n];
+            var ticks = new Object[n];
+            var locks = new Object[n];
+            var lockTexts = new Object[n];
+            const float size = 128f;
+            for (var i = 0; i < n; i++)
+            {
+                var button = CreateGlyphButton(row, $"Hire{types[i]}", "round", HudInk.OnRound, null, null, size);
+                var icon = button.transform.Find("Icon");
+                if (icon != null) Object.DestroyImmediate(icon.gameObject);
+                UnityEventTools.AddIntPersistentListener(button.onClick, bar.Tap, i);
+                buttons[i] = button.gameObject;
+
+                var face = CreateImage(button.transform, "Face", Color.white);
+                face.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{portraits[i]}.png");
+                face.preserveAspect = true;
+                face.raycastTarget = false;
+                Anchor(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(size * 0.78f, size * 0.78f));
+                faces[i] = face;
+
+                // the price on a plaque across the button's foot
+                var price = HudImage(button.transform, "Price", "plaque", new Vector2(116f, 44f));
+                price.raycastTarget = false;
+                Anchor(price.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 2f), new Vector2(116f, 44f));
+                var coin = CreateImage(price.transform, "Coin", Color.white);
+                coin.preserveAspect = true;
+                coin.raycastTarget = false;
+                Anchor(coin.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-30f, 1f), new Vector2(32f, 32f));
+                var amount = CreateText(price.transform, "Amount", "0", 26, new Vector2(18f, 1f), new Vector2(70f, 40f));
+                amount.font = UiTheme.Heavy;
+                amount.alignment = TextAnchor.MiddleLeft;
+                amount.raycastTarget = false;
+                SkinInk(amount, HudInk.OnPlaque);
+                prices[i] = price.gameObject;
+                priceTexts[i] = amount;
+                priceIcons[i] = coin;
+
+                if (kind == FocusHireBar.Kind.Castle)
+                {
+                    var mark = CreateImage(button.transform, "Owned", new Color(0.35f, 0.8f, 0.35f, 1f));
+                    mark.sprite = HudGlyph("Check");
+                    mark.preserveAspect = true;
+                    mark.raycastTarget = false;
+                    Anchor(mark.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 4f), new Vector2(44f, 44f));
+                    ticks[i] = mark.gameObject;
+                    var band = CreateImage(button.transform, "LockedBand", new Color(0.55f, 0.16f, 0.12f, 0.92f));
+                    band.raycastTarget = false;
+                    Anchor(band.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -8f), new Vector2(150f, 32f));
+                    var locked = CreateText(band.transform, "Locked", string.Empty, 20, Vector2.zero, new Vector2(146f, 30f), Color.white);
+                    locked.font = UiTheme.Heavy;
+                    locks[i] = band.gameObject;
+                    lockTexts[i] = locked;
+                }
+                button.gameObject.SetActive(false);
+            }
+            var so = new SerializedObject(bar);
+            so.FindProperty("kind").enumValueIndex = (int)kind;
+            var typeProp = so.FindProperty("types");
+            typeProp.arraySize = n;
+            for (var i = 0; i < n; i++) typeProp.GetArrayElementAtIndex(i).enumValueIndex = System.Array.IndexOf(System.Enum.GetValues(typeof(SoldierType)), types[i]);
+            WriteObjects(so.FindProperty("buttons"), buttons);
+            WriteObjects(so.FindProperty("faces"), faces);
+            WriteObjects(so.FindProperty("prices"), prices);
+            WriteObjects(so.FindProperty("priceTexts"), priceTexts);
+            WriteObjects(so.FindProperty("priceIcons"), priceIcons);
+            WriteObjects(so.FindProperty("ticks"), ticks);
+            WriteObjects(so.FindProperty("locks"), locks);
+            WriteObjects(so.FindProperty("lockTexts"), lockTexts);
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ---------------------------------------------------------------- bottom-centre: placing

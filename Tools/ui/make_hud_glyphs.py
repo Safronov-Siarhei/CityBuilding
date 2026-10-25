@@ -344,6 +344,17 @@ def shield():
     return img
 
 
+def radius():
+    """A ring round a dot with an arrow out to it -- how far a building reaches."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.ellipse(box(0.1, 0.1, 0.9, 0.9), outline=WHITE, width=int(u(0.08)))
+    d.ellipse(box(0.42, 0.42, 0.58, 0.58), fill=WHITE)
+    d.line([(u(0.5), u(0.5)), (u(0.76), u(0.5))], fill=WHITE, width=int(u(0.07)))
+    d.polygon([(u(0.86), u(0.5)), (u(0.72), u(0.4)), (u(0.72), u(0.6))], fill=WHITE)
+    return img
+
+
 def crystal():
     """The game's currency (the user, 2026-10-25: a beautiful crystal): a cut gem in colour, not a
     white glyph -- it is shown as it is, never tinted. Facets lit from the top left."""
@@ -372,7 +383,7 @@ def main():
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
                      ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock),
-                     ("Info", info), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
+                     ("Info", info), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
                      ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):
         save(fn(), name)

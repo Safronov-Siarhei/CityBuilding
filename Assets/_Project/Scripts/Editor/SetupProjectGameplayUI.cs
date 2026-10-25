@@ -305,7 +305,7 @@ namespace CityBuilder.EditorTools
             var researchPanel = BuildResearchPanel(uiRoot, panelSprite, iconLibrary);
             var buildingSelector = BuildBuildingSelector(uiRoot, targetCamera, infoPanel, researchPanel);
             var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
-            BuildBuildingFocus(uiRoot, buildingSelector, infoPanel, researchPanel, citizenSelector, placer);
+            BuildBuildingFocus(uiRoot, buildingSelector, infoPanel, researchPanel, citizenSelector, placer, iconLibrary);
             BuildEventFeed(uiRoot, cameraRig);
             BuildTaxControl(uiRoot);
             BuildDayLabel(uiRoot, gameCalendar);

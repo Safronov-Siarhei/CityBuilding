@@ -1550,30 +1550,100 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(3, mode.Heroes.Count);
         }
 
-        /// <summary>The castle's card shows the three heroes; a tap on one the castle is too low for buys nothing (the user, 2026-10-23).</summary>
-        [UnityTest]
-        public IEnumerator TheCastleCard_ShowsTheHeroes_AndSellsThem()
+        private static CityBuilder.UI.FocusHireBar HireBar(CityBuilder.UI.FocusHireBar.Kind kind)
         {
-            var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
-            var cards = Object.FindFirstObjectByType<CityBuilder.UI.CastleHeroCards>(FindObjectsInactive.Include);
-            Assert.IsNotNull(cards, "No hero cards on the castle's card.");
-            panel.Show(InvasionMode.Instance.Castle);
+            var bar = GameObject.Find($"HireBar{kind}");
+            Assert.IsNotNull(bar, $"No {kind} hiring buttons in the HUD.");
+            return bar.GetComponent<CityBuilder.UI.FocusHireBar>();
+        }
+
+        /// <summary>
+        /// The castle held: the three heroes stand beside the «!» at the bottom of the screen (the
+        /// user, 2026-10-25: hiring off the cards); a tap on one the castle is too low for buys nothing,
+        /// then buys her once it is raised. Its card no longer sells heroes.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheCastleHeld_SellsTheHeroesBesideTheExclamation()
+        {
+            var castle = InvasionMode.Instance.Castle;
+            var bar = HireBar(CityBuilder.UI.FocusHireBar.Kind.Castle);
+            CityBuilder.UI.BuildingFocus.Instance.Select(castle);
             yield return null;
-            Assert.IsNotNull(GameObject.Find("CastleHeroCards"), "The castle's card shows no heroes.");
-            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, cards.Buy(1), "The Queen's card sold her at a level-1 castle.");
-            Assert.IsNull(InvasionMode.Instance.HeroOf(SoldierType.Queen));
+            yield return null;
+            Assert.IsTrue(bar.Shown, "Holding the castle shows no heroes beside the «!».");
+            Assert.IsNotNull(GameObject.Find("HireQueen"), "The Queen has no button.");
+            Assert.AreEqual(InvasionMode.HeroOffer.CastleTooLow, bar.Buy(1), "The Queen sold at a level-1 castle.");
             RaiseCastle(2);
             ResourceManager.Instance.Add(InvasionRules.Money, 1000);
-            Assert.AreEqual(InvasionMode.HeroOffer.Bought, cards.Buy(1), "The Queen's card did not sell her.");
+            Assert.AreEqual(InvasionMode.HeroOffer.Bought, bar.Buy(1), "The Queen's button did not sell her.");
             yield return new WaitForSeconds(0.3f);
             Assert.IsNotNull(GameObject.Find("QueenPortrait"), "The bought Queen has no portrait.");
-            if (PlaytestCapture.Available)
-            {
-                yield return PlaytestCapture.ShootWithUiAt("invasion-castle-heroes", 1600, 900, InvasionMode.Instance.Castle.transform.position, 18f, 52f, 0f);
-            }
-            panel.Close();
+            if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-castle-heroes", 1600, 900, castle.transform.position, 18f, 52f, 0f);
+
+            var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            CityBuilder.UI.BuildingFocus.Instance.OpenDetails();
             yield return null;
-            Assert.IsNull(GameObject.Find("CastleHeroCards"), "The hero cards stayed after the castle's card closed.");
+            yield return null;
+            Assert.IsTrue(panel.IsOpen);
+            Assert.IsNull(GameObject.Find("HireQueen"), "The heroes stayed over the castle's card.");
+            panel.Close();
+            CityBuilder.UI.BuildingFocus.Instance.Clear();
+            yield return null;
+            yield return null;
+            Assert.IsFalse(bar.Shown, "The heroes stayed after the castle was let go.");
+        }
+
+        /// <summary>The Barracks held: a face per open tier beside the «!», a tap hires one there.</summary>
+        [UnityTest]
+        public IEnumerator TheBarracksHeld_HiresFromTheButtonsBesideTheExclamation()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var barracks = PlaytestWorld.Place(PlaytestWorld.Building("Barracks"), PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(castle + new Vector3(-8f, 0f, 4f)), new Vector2Int(3, 3)));
+            if (barracks.Site != null) barracks.Site.Finish();
+            var bar = HireBar(CityBuilder.UI.FocusHireBar.Kind.Barracks);
+            CityBuilder.UI.BuildingFocus.Instance.Select(barracks);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(bar.Shown, "Holding the Barracks shows no hiring buttons.");
+            var militia = GameObject.Find("HireMilitia");
+            Assert.IsNotNull(militia, "The open tier has no button.");
+            ResourceManager.Instance.Add(InvasionRules.Money, 1000);
+            var before = ArmyManager.Instance.SoldierCount;
+            Assert.IsTrue(bar.Hire(0), $"The button hired nobody: {ArmyManager.Instance.DescribeRecruitBlocker(SoldierType.Militia)}");
+            Assert.AreEqual(before + 1, ArmyManager.Instance.SoldierCount);
+            if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-barracks-hire", 1600, 900, barracks.transform.position, 18f, 52f, 0f);
+            CityBuilder.UI.BuildingFocus.Instance.Clear();
+        }
+
+        /// <summary>
+        /// A run's card after the user's sketch (2026-10-25): health and defence, the next level's
+        /// picture with what it adds (a Hovel's next level: +1 place), and no upgrade at the top level.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ARunsCard_ShowsTheNextLevelAndItsGains_NoneAtTheTop()
+        {
+            var house = InvasionMode.Instance.Houses.First(h => h != null);
+            var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
+            panel.Show(house);
+            yield return null;
+            var card = panel.transform.Find("RunCard");
+            Assert.IsNotNull(card, "No run card.");
+            Assert.IsTrue(card.gameObject.activeInHierarchy, "The run shows the sandbox's card.");
+            Assert.IsFalse(panel.transform.Find("Card").gameObject.activeSelf, "The sandbox's card stayed under the run's.");
+            Assert.IsTrue(card.Find("NextLevel").gameObject.activeSelf, "No next level on a level-1 house.");
+            Assert.IsNotNull(card.Find("NextLevel/Picture").GetComponent<UnityEngine.UI.Image>().sprite, "The next level has no picture.");
+            var gains = card.Find("NextLevel/Gains");
+            Assert.Greater(gains.childCount, 0, "The next level adds nothing, says the card.");
+            Assert.IsTrue(gains.GetComponentsInChildren<UnityEngine.UI.Text>().Any(t => t.text == "+1"), "The house's next level does not say +1 place.");
+            if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-run-card", 1600, 900, house.transform.position, 18f, 52f, 0f);
+
+            panel.Close();
+            house.SetLevel(BuildingInstance.MaxLevel);
+            panel.Show(house);
+            yield return null;
+            Assert.IsFalse(card.Find("NextLevel").gameObject.activeSelf, "A top-level house still offers a next level.");
+            Assert.IsFalse(card.Find("UpgradeBlock").gameObject.activeSelf, "A top-level house still offers an upgrade.");
+            panel.Close();
         }
 
         /// <summary>Three heroes' portraits stand one under another down the right edge, none over another.</summary>

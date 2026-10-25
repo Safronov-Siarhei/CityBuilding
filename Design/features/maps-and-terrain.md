@@ -81,9 +81,10 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
   `DressTree` in `TreesAreaSpawner` (broadleaf palette picked by cell hash). Winter snow =
   `BuildingDetail.shader`: faces with normal.y > 0.35 go white × `_SnowMask`; figures (soldiers,
   heroes, orcs: `ArmyManager.AddFigure`, `OrcRaidManager`) wear `Seasons/Figures.mat` (_SnowMask 0).
-- For now a plain choice: settings card row «Время года» (`GameSettings.MapSeason`, PlayerPrefs
-  `settings.map_season`, sheet keys `#settings_season*`); taken at the next map load. Tests can pin
-  `SeasonStyle.Override`.
+- Picked as a THEME in the menu (2026-10-25: sandbox and invasion screens' round buttons,
+  `Core/MapTheme`; the settings row is gone): `GameSessionIntent.NewGameSeason` -> `SeasonStyle.Session`
+  (set in `MeshMapApplier.Start`), saved per game (`GameSaveData.season`; -1 in old saves = summer).
+  `Current = Override ?? MapForced ?? Session`. Tests can pin `SeasonStyle.Override`.
 - Test `SeasonTests.EverySeason_DressesTheMap` (+ photos season-<s>-base/-wide).
 - Not done: building greens (castle lawn, gardens) stay summer-green in autumn; water is its own
   material (unchanged); the main menu's live background is always summer; not seen on a phone.

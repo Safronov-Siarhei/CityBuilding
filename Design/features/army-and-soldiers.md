@@ -74,3 +74,5 @@ EditMode `ArmyBalanceTests` (relationships, not numbers), `SoldierTierTests`; Pl
 ## Open
 Splitting a type into several squads; equipment buildings; `#unit_militia_flavour` is a dead key and
 the three newer tiers have no flavour keys; melee has no swing effect.
+
+Trap (2026-10-25): `OrcsFightBack_AndAKilledSoldierCostsAPermanentCitizen` failed once in a full run (the militiaman lived past 25 s) and passed 3/3 alone -- order-dependent, not chased; since 2026-10-25 a melee soldier strikes the orc at hand while chasing (`SoldierUnit.OrcAtHand`), which may lengthen a lone soldier's fight.

@@ -106,6 +106,9 @@ namespace CityBuilder.UI
             if (detailsButton != null) detailsButton.SetActive(false);
         }
 
+        /// <summary>The «!» is up: a building held and its card closed -- when a run's hiring buttons stand beside it (FocusHireBar).</summary>
+        public bool DetailsShown => detailsButton != null && detailsButton.activeSelf;
+
         /// <summary>The «!»: the held building's card.</summary>
         public void OpenDetails()
         {
