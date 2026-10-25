@@ -115,6 +115,11 @@ namespace CityBuilder.Maps
                 ? saveController.LoadedMapId
                 : GameSessionIntent.NewGameMapId;
             GameSessionIntent.NewGameMapId = null;
+            // the game's season: the save's, or the theme picked in the menu for a new game
+            SeasonStyle.Session = saveController != null && saveController.LoadedSeason.HasValue
+                ? saveController.LoadedSeason.Value
+                : GameSessionIntent.NewGameSeason ?? Core.MapSeason.Summer;
+            GameSessionIntent.NewGameSeason = null;
 
             if (string.IsNullOrEmpty(mapId)) return;
 

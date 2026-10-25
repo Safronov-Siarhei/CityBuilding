@@ -30,8 +30,8 @@ namespace CityBuilder.Invasion
         /// <summary>The New Year map (Tools/blender/invasion2.py): map 1's structure, winter, its own rules (InvasionNewYear).</summary>
         public const string NewYearMapId = "Inv2";
 
-        /// <summary>The map the next run is played on: the settings' choice (GameSettings.InvasionMap).</summary>
-        public static string RunMapId => GameSettings.InvasionMap == InvasionMap.NewYear ? NewYearMapId : MapId;
+        /// <summary>The map the next run is played on: the New Year's for that theme, else the island (GameSettings.InvasionTheme).</summary>
+        public static string RunMapId => GameSettings.InvasionTheme == MapTheme.NewYear ? NewYearMapId : MapId;
 
         /// <summary>An Invasion map, either of them.</summary>
         public static bool IsRunMap(string mapId) => mapId == MapId || mapId == NewYearMapId;

@@ -11,6 +11,8 @@ namespace CityBuilder.Saving
     {
         public int version = 1;
         public string mapId = string.Empty;
+        /// <summary>The game's season (Core.MapSeason, picked as the menu's theme); -1 in saves made before it was kept: summer.</summary>
+        public int season = -1;
         public bool mandatoryBuildingPlaced;
         public int population;
         public int currentDay = 1;

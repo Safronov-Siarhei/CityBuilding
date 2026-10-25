@@ -210,12 +210,173 @@ def lock():
     return img
 
 
+def info():
+    """An exclamation mark -- "what is this?": a short word about a mode (the user, 2026-10-25)."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box(0.41, 0.12, 0.59, 0.64), u(0.08), fill=WHITE)
+    d.ellipse(box(0.4, 0.71, 0.6, 0.91), fill=WHITE)
+    return img
+
+
+def discord():
+    """The Discord mark, simplified: a wide rounded face, its brow dipping in the middle, its chin
+    parted into two lobes, two eyes cut out."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box(0.1, 0.22, 0.9, 0.8), u(0.24), fill=WHITE)
+    d.ellipse(box(0.36, 0.12, 0.64, 0.3), fill=0)
+    d.ellipse(box(0.34, 0.72, 0.66, 0.92), fill=0)
+    d.ellipse(box(0.29, 0.42, 0.43, 0.6), fill=0)
+    d.ellipse(box(0.57, 0.42, 0.71, 0.6), fill=0)
+    return img
+
+
+def youtube():
+    """The YouTube mark: a rounded screen with the play triangle cut out."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box(0.08, 0.2, 0.92, 0.8), u(0.16), fill=WHITE)
+    d.polygon([(u(0.4), u(0.34)), (u(0.68), u(0.5)), (u(0.4), u(0.66))], fill=0)
+    return img
+
+
+def theme_spring():
+    """A blossom: five petals round a cut-out heart."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    c = S / 2
+    for k in range(5):
+        a = -math.pi / 2 + math.pi * 2 * k / 5
+        px, py = c + math.cos(a) * u(0.22), c + math.sin(a) * u(0.22)
+        r = u(0.2)
+        d.ellipse([px - r, py - r, px + r, py + r], fill=WHITE)
+    d.ellipse(box(0.41, 0.41, 0.59, 0.59), fill=0)
+    d.ellipse(box(0.45, 0.45, 0.55, 0.55), fill=WHITE)
+    return img
+
+
+def theme_summer():
+    """The sun: a disc and twelve rays."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    c = S / 2
+    for k in range(12):
+        a = math.pi * 2 * k / 12
+        dx, dy = math.cos(a), math.sin(a)
+        px, py = -dy, dx
+        r0, r1, w = u(0.3), u(0.46), u(0.045)
+        d.polygon([(c + dx * r0 + px * w, c + dy * r0 + py * w), (c + dx * r1, c + dy * r1),
+                   (c + dx * r0 - px * w, c + dy * r0 - py * w)], fill=WHITE)
+    d.ellipse(box(0.25, 0.25, 0.75, 0.75), fill=WHITE)
+    return img
+
+
+def theme_autumn():
+    """A maple leaf: five pointed lobes round a palm, on a stalk."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    c, cy = S / 2, u(0.5)
+    pts = []
+    for ang, r in ((-90, 0.42), (-30, 0.36), (25, 0.3), (155, 0.3), (210, 0.36)):
+        for off, rr in ((-14, r * 0.55), (0, r), (14, r * 0.55)):
+            b = math.radians(ang + off)
+            pts.append((ang + off, (c + math.cos(b) * u(rr), cy + math.sin(b) * u(rr))))
+    pts.sort(key=lambda p: p[0])
+    d.polygon([p for _, p in pts], fill=WHITE)
+    d.ellipse(box(0.32, 0.32, 0.68, 0.66), fill=WHITE)
+    d.line([(c, cy), (c, u(0.94))], fill=WHITE, width=int(u(0.05)))
+    return img
+
+
+def theme_winter():
+    """A snowflake: six arms with forked tips."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    c = S / 2
+    w = int(u(0.07))
+    for k in range(6):
+        a = math.pi * 2 * k / 6 - math.pi / 2
+        dx, dy = math.cos(a), math.sin(a)
+        d.line([(c, c), (c + dx * u(0.42), c + dy * u(0.42))], fill=WHITE, width=w)
+        mid = (c + dx * u(0.27), c + dy * u(0.27))
+        for side in (-1, 1):
+            b = a + side * math.radians(42)
+            d.line([mid, (mid[0] + math.cos(b) * u(0.13), mid[1] + math.sin(b) * u(0.13))], fill=WHITE, width=w)
+    d.ellipse(box(0.43, 0.43, 0.57, 0.57), fill=WHITE)
+    return img
+
+
+def theme_newyear():
+    """A fir tree in three tiers with a star on top."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    for top, bottom, half in ((0.22, 0.46, 0.18), (0.36, 0.64, 0.27), (0.5, 0.82, 0.36)):
+        d.polygon([(u(0.5), u(top)), (u(0.5 + half), u(bottom)), (u(0.5 - half), u(bottom))], fill=WHITE)
+    d.rectangle(box(0.44, 0.82, 0.56, 0.94), fill=WHITE)
+    c, cy = S / 2, u(0.13)
+    star = []
+    for k in range(10):
+        a = -math.pi / 2 + math.pi * k / 5
+        r = u(0.11) if k % 2 == 0 else u(0.045)
+        star.append((c + math.cos(a) * r, cy + math.sin(a) * r))
+    d.polygon(star, fill=WHITE)
+    return img
+
+
+def heart():
+    """A heart -- a building's strength."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.ellipse(box(0.12, 0.18, 0.52, 0.58), fill=WHITE)
+    d.ellipse(box(0.48, 0.18, 0.88, 0.58), fill=WHITE)
+    d.polygon([(u(0.135), u(0.44)), (u(0.865), u(0.44)), (u(0.5), u(0.88))], fill=WHITE)
+    return img
+
+
+def shield():
+    """A heater shield with a cross cut in -- a building's defence."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.polygon([(u(0.16), u(0.14)), (u(0.84), u(0.14)), (u(0.84), u(0.5)), (u(0.5), u(0.9)), (u(0.16), u(0.5))], fill=WHITE)
+    d.rectangle(box(0.47, 0.22, 0.53, 0.72), fill=0)
+    d.rectangle(box(0.26, 0.36, 0.74, 0.42), fill=0)
+    return img
+
+
+def crystal():
+    """The game's currency (the user, 2026-10-25: a beautiful crystal): a cut gem in colour, not a
+    white glyph -- it is shown as it is, never tinted. Facets lit from the top left."""
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    top, girdle, bottom = 0.14, 0.4, 0.92
+    d.polygon([(u(0.3), u(top)), (u(0.38), u(0.27)), (u(0.31), u(girdle)), (u(0.12), u(girdle))], fill=(150, 235, 255, 255))
+    d.polygon([(u(0.38), u(0.27)), (u(0.62), u(0.27)), (u(0.69), u(girdle)), (u(0.31), u(girdle))], fill=(95, 200, 245, 255))
+    d.polygon([(u(0.7), u(top)), (u(0.88), u(girdle)), (u(0.69), u(girdle)), (u(0.62), u(0.27))], fill=(60, 160, 230, 255))
+    d.polygon([(u(0.3), u(top)), (u(0.7), u(top)), (u(0.62), u(0.27)), (u(0.38), u(0.27))], fill=(205, 248, 255, 255))
+    d.polygon([(u(0.12), u(girdle)), (u(0.31), u(girdle)), (u(0.5), u(bottom))], fill=(70, 175, 235, 255))
+    d.polygon([(u(0.31), u(girdle)), (u(0.5), u(girdle)), (u(0.5), u(bottom))], fill=(45, 140, 220, 255))
+    d.polygon([(u(0.5), u(girdle)), (u(0.69), u(girdle)), (u(0.5), u(bottom))], fill=(30, 105, 195, 255))
+    d.polygon([(u(0.69), u(girdle)), (u(0.88), u(girdle)), (u(0.5), u(bottom))], fill=(22, 80, 165, 255))
+    rim = [(u(0.3), u(top)), (u(0.7), u(top)), (u(0.88), u(girdle)), (u(0.5), u(bottom)), (u(0.12), u(girdle))]
+    d.line(rim + [rim[0]], fill=(16, 40, 90, 255), width=int(u(0.025)), joint="curve")
+    d.polygon([(u(0.4), u(0.17)), (u(0.47), u(0.17)), (u(0.36), u(0.33)), (u(0.32), u(0.3))], fill=(255, 255, 255, 220))
+    # with the menu's pictures, which keep their colours (the glyphs folder imports a silhouette)
+    art = os.path.join(PROJECT, "Assets", "_Project", "UI", "MenuArt")
+    os.makedirs(art, exist_ok=True)
+    img.resize((SIZE * 2, SIZE * 2), Image.LANCZOS).save(os.path.join(art, "Crystal.png"))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
-                     ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock)):
+                     ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock),
+                     ("Info", info), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
+                     ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
+                     ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):
         save(fn(), name)
+    crystal()
     print("HUD GLYPHS ->", OUT)
 
 

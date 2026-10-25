@@ -129,7 +129,7 @@ namespace CityBuilder.UI
                 if (background != null) background.gameObject.SetActive(shown);
                 if (!shown) continue;
 
-                PlaceChip(icons[i], amountTexts[i], background, slot++, slotWidth);
+                // the text first: the chip centres the icon and the number together by its width
                 if (amountTexts[i] != null)
                 {
                     amountTexts[i].text = Format(
@@ -137,36 +137,42 @@ namespace CityBuilder.UI
                         resources.GetCapacity(resourceOrder[i]),
                         infinite);
                 }
+                PlaceChip(icons[i], amountTexts[i], background, slot++, slotWidth);
             }
 
-            PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
             if (populationText != null)
             {
                 populationText.text = CitizenManager.Instance != null
                     ? $"{CitizenManager.Instance.TotalPopulation}/{CitizenManager.Instance.Capacity} ({CitizenManager.Instance.IdlePopulation})"
                     : "0";
             }
+            PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
         }
 
         /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>
+        private const float IconTextGap = 8f;
+        private const float PillInset = 10f;
+
         private void PlaceChip(RectTransform icon, Text amount, RectTransform background, int slot, float slotWidth)
         {
             var center = -barWidth * 0.5f + _packOffset + slotWidth * (slot + 0.5f);
 
             if (background != null)
             {
-                // A pill: the icon sits in its left end, the number fills the rest.
+                // A pill: the icon and the number together in its middle (the user, 2026-10-25: they
+                // stood at the left end with the right half empty); a long number takes the pill's width.
                 var width = slotWidth - chipGap;
                 background.anchoredPosition = new Vector2(center, 0f);
                 background.sizeDelta = new Vector2(width, background.sizeDelta.y);
-                var left = center - width * 0.5f;
-                if (icon != null) icon.anchoredPosition = new Vector2(left + icon.sizeDelta.x * 0.5f + 6f, 0f);
+                var iconWidth = icon != null ? icon.sizeDelta.x + IconTextGap : 0f;
+                var maxText = width - iconWidth - 2f * PillInset;
+                var textWidth = amount != null ? Mathf.Min(maxText, amount.preferredWidth + 2f) : 0f;
+                var groupLeft = center - (iconWidth + textWidth) * 0.5f;
+                if (icon != null) icon.anchoredPosition = new Vector2(groupLeft + icon.sizeDelta.x * 0.5f, 0f);
                 if (amount != null)
                 {
                     var rect = amount.GetComponent<RectTransform>();
-                    var textLeft = left + (icon != null ? icon.sizeDelta.x + 10f : 14f);
-                    var textWidth = width - (textLeft - left) - 12f;
-                    rect.anchoredPosition = new Vector2(textLeft + textWidth * 0.5f, 0f);
+                    rect.anchoredPosition = new Vector2(groupLeft + iconWidth + textWidth * 0.5f, 0f);
                     rect.sizeDelta = new Vector2(textWidth, rect.sizeDelta.y);
                 }
                 return;

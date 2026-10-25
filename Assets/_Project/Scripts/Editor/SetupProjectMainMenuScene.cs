@@ -115,29 +115,22 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            // Taller for the settings after the language: the fog's look, the HUD's look, the season, the Invasion's map.
-            cardRect.sizeDelta = new Vector2(800f, 1000f);
+            // The language, the fog's look, the HUD's look (the season and the Invasion's map left for
+            // the menu's theme buttons, the user 2026-10-25).
+            cardRect.sizeDelta = new Vector2(800f, 760f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 440f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 370f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
-            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 306f);
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 320f), new Vector2(680f, 70f)), "#settings_title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 250f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 186f);
 
-            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 240f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
-            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 176f);
+            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 120f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 56f);
 
-            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, 110f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
-            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", 46f);
+            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, -10f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
+            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -74f);
 
-            // the maps' season (Maps.SeasonStyle) -- a plain choice until the user decides how a player earns one
-            Localize(CreateText(card.transform, "SeasonLabel", string.Empty, 26, new Vector2(0f, -20f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_season");
-            var seasonRowRect = CreateSettingsRow(card.transform, "SeasonRow", -84f);
-
-            // the Invasion's map (the New Year map, a plain choice until the user decides when it is open)
-            Localize(CreateText(card.transform, "InvasionMapLabel", string.Empty, 26, new Vector2(0f, -150f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_invasion_map");
-            var invasionMapRowRect = CreateSettingsRow(card.transform, "InvasionMapRow", -214f);
-
-            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -400f), new Vector2(300f, 80f));
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -290f), new Vector2(300f, 80f));
 
             var controller = panelRoot.AddComponent<SettingsPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -145,8 +138,6 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
             controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
             controllerSO.FindProperty("hudRow").objectReferenceValue = hudRowRect;
-            controllerSO.FindProperty("seasonRow").objectReferenceValue = seasonRowRect;
-            controllerSO.FindProperty("invasionMapRow").objectReferenceValue = invasionMapRowRect;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 

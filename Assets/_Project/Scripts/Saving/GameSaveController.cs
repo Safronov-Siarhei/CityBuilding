@@ -53,6 +53,9 @@ namespace CityBuilder.Saving
         /// <summary>Map id carried by the save being loaded this session, resolved in Awake so MapTerrainGenerator's Start() can read it. Empty when starting a fresh game.</summary>
         public string LoadedMapId { get; private set; } = string.Empty;
 
+        /// <summary>The loaded save's season (summer in a save from before seasons were kept); null when no save was loaded.</summary>
+        public Core.MapSeason? LoadedSeason { get; private set; }
+
         private void Awake()
         {
             _catalog = new Dictionary<string, BuildingData>();
@@ -72,6 +75,7 @@ namespace CityBuilder.Saving
             // for one, not offer "_autosave".
             CurrentSaveName = nameToLoad == AutosaveName ? string.Empty : nameToLoad;
             LoadedMapId = _pendingLoad.mapId;
+            LoadedSeason = System.Enum.IsDefined(typeof(Core.MapSeason), _pendingLoad.season) ? (Core.MapSeason)_pendingLoad.season : Core.MapSeason.Summer;
 
             // Marked here (Awake, guaranteed to run before every Start() in the scene,
             // including BuildingPlacer's) so its Start() doesn't force-select the Town Hall
@@ -498,6 +502,7 @@ namespace CityBuilder.Saving
                 mapId = meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
                     ? meshMapApplier.CurrentMapId
                     : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
+                season = (int)Maps.SeasonStyle.Session,
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0,
                 currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1,

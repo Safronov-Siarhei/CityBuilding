@@ -12,84 +12,101 @@ using UnityEngine.UI;
 namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
-    /// The new-game map picker (2026-10-20, the user's rule: every new map is the player's to
-    /// choose) -- the sandbox's "New game" tab in the main menu. It opens with one row per designed
-    /// map, the newest selected; "Play" starts on the row picked.
+    /// The sandbox's screen in the main menu (the user's sketch, 2026-10-25; the rule since
+    /// 2026-10-20: every designed map is the player's to choose): a card per map, the newest picked;
+    /// the theme buttons dress the new game in their season; a theme no map comes in shows none.
     /// </summary>
     public class MapPickerTests
     {
+        private MapTheme _playersTheme;
+
         [UnitySetUp]
         public IEnumerator OpenTheMenu()
         {
             LogAssert.ignoreFailingMessages = true;
             Time.timeScale = 1f;
+            _playersTheme = GameSettings.SandboxTheme;
             SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
             yield return null;
             yield return null;
         }
 
         [TearDown]
-        public void Unblock() => ModalGate.SetBlocked(false);
+        public void PutItBack()
+        {
+            GameSettings.SandboxTheme = _playersTheme;
+            ModalGate.SetBlocked(false);
+        }
 
         [UnityTest]
-        public IEnumerator NewGame_OpensThePicker_WithEveryMap_TheNewestSelected()
+        public IEnumerator TheSandbox_ShowsACardPerMap_TheNewestPicked()
         {
-            var picker = OpenPicker();
+            var screen = OpenSandbox();
+            screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Summer);
             yield return null;
 
-            var rows = Rows(picker);
+            var cards = Cards(screen);
             var expected = MapSelector.Choosable().Select(m => "Map_" + m.MapId).ToArray();
             Assert.GreaterOrEqual(expected.Length, 3, "Fewer than three designed maps are imported.");
-            CollectionAssert.AreEqual(expected, rows.Select(r => r.name).ToArray(), "The picker does not list every designed map, newest first.");
-            foreach (var row in rows)
+            CollectionAssert.AreEqual(expected, cards.Where(c => c.gameObject.activeSelf).Select(c => c.name).ToArray(), "The sandbox does not show every designed map, newest first.");
+            foreach (var card in cards)
             {
-                var text = row.GetComponentInChildren<Text>().text;
-                StringAssert.DoesNotContain("#", text, $"{row.name} shows a raw localization key: \"{text}\"");
+                var text = card.Find("Name").GetComponent<Text>().text;
+                StringAssert.DoesNotContain("#", text, $"{card.name} shows a raw localization key: \"{text}\"");
+                Assert.IsNotNull(card.Find("Picture").GetComponent<Image>().sprite, $"{card.name} has no picture.");
             }
-            Assert.IsTrue(IsPicked(rows[0]), "The newest map is not selected to begin with.");
-            Assert.IsTrue(picker.transform.Find("PlayButton").GetComponent<Button>().interactable, "Play is not available with a map selected.");
+            Assert.IsTrue(cards[0].Find("Picked").gameObject.activeSelf, "The newest map is not picked to begin with.");
+            Assert.IsTrue(Start(screen).interactable, "«Начать» is not available with a map picked.");
 
+            yield return new WaitForSecondsRealtime(0.9f);
             yield return PlaytestCapture.ShootWithUi("map-picker", Vector3.zero);
             yield return PlaytestCapture.ShootWithUiAt("map-picker-phone", 2400, 1080, Vector3.zero, 40f, 50f, 25f);
         }
 
+        /// <summary>The New Year is the Invasion's own map: in the sandbox that theme has no map to show, and nothing to start.</summary>
         [UnityTest]
-        public IEnumerator PickingAMap_StartsTheGameOnIt()
+        public IEnumerator AThemeWithNoMaps_ShowsNone()
         {
-            var picker = OpenPicker();
+            var screen = OpenSandbox();
+            screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.NewYear);
             yield return null;
-
-            var row = Rows(picker).First(r => r.name == "Map_Map3");
-            row.GetComponent<Button>().onClick.Invoke();
-            Assert.IsTrue(IsPicked(row), "Tapping a row does not select it.");
-
-            picker.ConfirmPlay();
-            yield return PlayModeScene.WaitUntilMapIsPhysicsReady("Map3");
-            Assert.AreEqual("Map3", MeshMapApplier.Instance.CurrentMapId, "Play did not start on the map picked.");
+            Assert.IsFalse(Cards(screen).Any(c => c.gameObject.activeSelf), "A map is shown in a theme it does not come in.");
+            Assert.IsFalse(Start(screen).interactable, "«Начать» is available with no map to start on.");
         }
 
-        private static MapSelectPanelController OpenPicker()
+        /// <summary>A map picked in the winter theme starts in winter, and its save keeps the season.</summary>
+        [UnityTest]
+        public IEnumerator PickingAMapInATheme_StartsTheGameOnItInThatSeason()
+        {
+            var screen = OpenSandbox();
+            screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Winter);
+            var map = Cards(screen).First(r => r.name == "Map_Map3");
+            map.GetComponent<Button>().onClick.Invoke();
+            Assert.IsTrue(map.Find("Picked").gameObject.activeSelf, "Tapping a card does not pick it.");
+
+            screen.StartGame();
+            yield return PlayModeScene.WaitUntilMapIsPhysicsReady("Map3");
+            Assert.AreEqual("Map3", MeshMapApplier.Instance.CurrentMapId, "«Начать» did not start on the map picked.");
+            Assert.AreEqual(MapSeason.Winter, SeasonStyle.Current, "The game is not in the theme's season.");
+        }
+
+        private static SandboxScreenController OpenSandbox()
         {
             var menu = Object.FindAnyObjectByType<MainMenuController>();
             Assert.IsNotNull(menu, "The main menu has no controller.");
             menu.StartNewGame();
-            var picker = Object.FindAnyObjectByType<MapSelectPanelController>(FindObjectsInactive.Include);
-            Assert.IsNotNull(picker, "The main menu has no map picker.");
-            Assert.IsTrue(picker.gameObject.activeInHierarchy, "The sandbox did not open on its map list.");
-            return picker;
+            var screen = Object.FindAnyObjectByType<SandboxScreenController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(screen, "The main menu has no sandbox screen.");
+            return screen;
         }
 
-        /// <summary>The menu's rows show the look's picked-row sprite rather than a tint.</summary>
-        private static bool IsPicked(Transform row)
-        {
-            var sprite = row.GetComponent<Image>().sprite;
-            return sprite != null && sprite.name == "row_selected";
-        }
+        private static Button Start(SandboxScreenController screen) => screen.transform.Find("Window/StartButton").GetComponent<Button>();
 
-        private static Transform[] Rows(MapSelectPanelController picker)
+        private static Transform[] Cards(SandboxScreenController screen)
         {
-            var content = picker.GetComponentsInChildren<VerticalLayoutGroup>(true).First().transform;
-            return Enumerable.Range(0, content.childCount).Select(content.GetChild).ToArray();
+            var grid = screen.transform.Find("Window/Maps");
+            Assert.IsNotNull(grid, "The sandbox has no map cards.");
+            return Enumerable.Range(0, grid.childCount).Select(grid.GetChild).ToArray();
         }
     }
 }

@@ -10,9 +10,9 @@ using UnityEngine.UI;
 namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
-    /// The main menu after the user's sketch (2026-10-20): Play brings up the three mode cards, a
-    /// card slides left and brings in its panel, Back walks it all backwards and on the main screen
-    /// asks whether to quit -- and every look in the settings draws the whole menu in its own kit.
+    /// The main menu after the user's sketches (2026-10-25): «Продолжить» brings up the two modes, a
+    /// mode brings in its screen, Back walks it all backwards and on the main screen asks whether
+    /// to quit -- and every look in the settings draws the whole menu in its own kit.
     /// </summary>
     public class MainMenuTests
     {
@@ -37,7 +37,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator PlayCardsAndBack_WalkTheScreens()
+        public IEnumerator ContinueModesAndBack_WalkTheScreens()
         {
             var menu = Object.FindAnyObjectByType<MainMenuController>();
             Assert.IsNotNull(menu);
@@ -46,17 +46,17 @@ namespace CityBuilder.Tests.PlayMode
             menu.OpenModes();
             yield return Settle();
             Assert.IsNull(menu.ChosenMode);
-            Assert.Greater(Group("ModesScreen").alpha, 0.95f, "Play did not bring up the cards.");
+            Assert.Greater(Group("ModesScreen").alpha, 0.95f, "«Продолжить» did not bring up the modes.");
 
             menu.ChooseMode((int)GameMode.Invasion);
             yield return Settle();
             Assert.AreEqual(GameMode.Invasion, menu.ChosenMode);
-            Assert.Greater(Group("ModesScreen/InvasionPanel").alpha, 0.95f, "The invasion's panel did not come in.");
-            Assert.Less(Group("ModesScreen/Card_Sandbox").alpha, 0.05f, "A card not picked stayed on the screen.");
+            Assert.Greater(Group("InvasionScreen").alpha, 0.95f, "The invasion's screen did not come in.");
+            Assert.Less(Group("ModesScreen").alpha, 0.05f, "The modes stayed on the screen.");
 
             menu.Back();
             yield return Settle();
-            Assert.IsNull(menu.ChosenMode, "Back did not return to the three cards.");
+            Assert.IsNull(menu.ChosenMode, "Back did not return to the modes.");
             menu.Back();
             yield return Settle();
             Assert.Greater(Group("MainScreen").alpha, 0.95f, "Back did not return to the main screen.");
@@ -65,6 +65,27 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(exit.activeSelf, "Back on the main screen did not ask whether to quit.");
             menu.Back();
             Assert.IsFalse(exit.activeSelf, "Back did not close the question.");
+        }
+
+        /// <summary>The shop's «!» (the user, 2026-10-25) stands until the shop is first opened, and stays gone.</summary>
+        [UnityTest]
+        public IEnumerator TheShopsBadge_GoesOnceItIsOpened()
+        {
+            PlayerPrefs.DeleteKey("menu.seen.shop");
+            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            var badge = GameObject.Find("Canvas").transform.Find("MainScreen/OffersButton/Badge").gameObject;
+            Assert.IsTrue(badge.activeSelf, "The shop has no «!» before it was ever opened.");
+            menu.OpenShop();
+            Assert.IsFalse(badge.activeSelf, "The shop's «!» stayed after it was opened.");
+            SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+            badge = GameObject.Find("Canvas").transform.Find("MainScreen/OffersButton/Badge").gameObject;
+            Assert.IsFalse(badge.activeSelf, "The shop's «!» came back with the menu.");
+            PlayerPrefs.DeleteKey("menu.seen.shop");
         }
 
         [UnityTest]
@@ -87,6 +108,13 @@ namespace CityBuilder.Tests.PlayMode
                     menu.ChooseMode((int)mode);
                     yield return Settle();
                     yield return Shoot($"menu-{skin}-{mode}");
+                    if (skin == HudSkin.Classic)
+                    {
+                        menu.ShowInfo((int)mode);
+                        yield return Settle();
+                        yield return Shoot($"menu-{skin}-{mode}-info");
+                        menu.CloseInfo();
+                    }
                     menu.OpenModes();
                     yield return Settle();
                 }

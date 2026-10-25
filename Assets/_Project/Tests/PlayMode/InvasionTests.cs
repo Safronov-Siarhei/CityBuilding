@@ -1059,6 +1059,40 @@ namespace CityBuilder.Tests.PlayMode
             orc.TakeDamage(orc.MaxHealth);
         }
 
+        /// <summary>A road across an orc's way is walked over, never struck (the user, 2026-10-25: orcs hit the road).</summary>
+        [UnityTest]
+        public IEnumerator AnOrc_WalksOverARoad_WithoutStrikingIt()
+        {
+            var grid = GridManager.Instance;
+            InvasionMode.Instance.King.gameObject.SetActive(false);
+            foreach (var soldier in SoldierUnit.All.ToList()) if (soldier != null) soldier.gameObject.SetActive(false);
+            const int pieces = 7;
+            var block = PlaytestWorld.FindFreeAreaNearTheMiddle(new Vector2Int(pieces, 13));
+            var origin = block + new Vector2Int(0, 6);
+            var middle = grid.GetFootprintCenterWorld(origin + new Vector2Int(pieces / 2, 0), Vector2Int.one);
+            Assert.IsTrue(NavMesh.SamplePosition(middle - Vector3.forward * 6f, out var south, 2f, NavAreas.WithoutGates));
+            Assert.IsTrue(NavMesh.SamplePosition(middle + Vector3.forward * 6f, out var north, 2f, NavAreas.WithoutGates));
+            var road = new List<BuildingInstance>();
+            for (var i = 0; i < pieces; i++) road.Add(PlaytestWorld.Place(PlaytestWorld.Building("Road"), origin + new Vector2Int(i, 0)));
+            // and a road running along the way, under the orc's feet the whole time
+            for (var j = -4; j <= 4; j++) if (j != 0) road.Add(PlaytestWorld.Place(PlaytestWorld.Building("Road"), origin + new Vector2Int(pieces / 2, j)));
+            yield return new WaitForSeconds(1f);
+            var full = road.Where(r => r != null).ToDictionary(r => r, r => r.CurrentHealth);
+            var lane = OrcLane.Lay(south.position, north.position, 2f);
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(south.position, 1, OrcKind.Raider);
+            orc.Toughen(1000f);
+            orc.FollowLane(lane);
+            for (var t = 0f; t < 15f; t += Time.deltaTime)
+            {
+                foreach (var piece in full)
+                {
+                    Assert.IsTrue(piece.Key != null && piece.Key.CurrentHealth == piece.Value, $"The orc struck the road (target {(orc.Target != null ? orc.Target.name : "none")}).");
+                }
+                yield return null;
+            }
+            orc.TakeDamage(orc.MaxHealth);
+        }
+
         /// <summary>
         /// A fence put up between an orc and the tower it is hitting takes the next blow: the tower
         /// is out of its reach now (the user, 2026-10-25: the orcs hit on through the new fence).

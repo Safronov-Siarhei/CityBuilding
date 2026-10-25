@@ -5,6 +5,7 @@ using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
+using CityBuilder.Invasion;
 using CityBuilder.Maps;
 using CityBuilder.Saving;
 using NUnit.Framework;
@@ -113,6 +114,79 @@ namespace CityBuilder.Tests.PlayMode
                 yield return new WaitForSeconds(0.3f);
                 yield return PlaytestCapture.ShootTo(Path.Combine(ArtFolder, $"Map_{map.MapId}.png"), 640, 400,
                     new Vector3(0f, 0f, 2f), 178f, 62f, 0f, 50f);
+            }
+        }
+
+        /// <summary>
+        /// The sandbox's map cards in each season (the user, 2026-10-25: the theme buttons pick the
+        /// season, and the cards show the maps in it): Map_&lt;id&gt;_&lt;theme&gt;.png.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Bake_TheMapsInEverySeason()
+        {
+            Assume.That(PlaytestCapture.Available, "No graphics device: run with -Graphics.");
+            try
+            {
+                foreach (var map in MapSelector.Choosable())
+                {
+                    foreach (var theme in MapThemes.All)
+                    {
+                        if (!MapThemes.InSandbox(theme)) continue;
+                        SeasonStyle.Override = MapThemes.SeasonOf(theme);
+                        yield return Load(map.MapId);
+                        yield return new WaitForSeconds(0.3f);
+                        yield return PlaytestCapture.ShootTo(Path.Combine(ArtFolder, $"Map_{map.MapId}_{MapThemes.Id(theme)}.png"), 640, 360,
+                            new Vector3(0f, 0f, 2f), 178f, 62f, 0f, 50f);
+                    }
+                }
+            }
+            finally
+            {
+                SeasonStyle.Override = null;
+            }
+        }
+
+        /// <summary>
+        /// The invasion screen's picture for each theme (the user, 2026-10-25: a settlement on the
+        /// theme's map, seen a little from above and from the side): the run's own start with a few
+        /// more buildings round the castle, Inv_&lt;theme&gt;.png, as wide as the screen's picture.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Bake_TheInvasionThemes()
+        {
+            Assume.That(PlaytestCapture.Available, "No graphics device: run with -Graphics.");
+            var keep = GameSettings.InvasionTheme;
+            try
+            {
+                foreach (var theme in MapThemes.All)
+                {
+                    GameSettings.InvasionTheme = theme;
+                    SeasonStyle.Override = MapThemes.SeasonOf(theme);
+                    var mapId = Invasion.InvasionMode.RunMapId;
+                    InvasionRecords.FilePathOverride = Path.Combine(Application.temporaryCachePath, "invasion_records_bake.json");
+                    GameSessionIntent.NewGameIsInvasion = true;
+                    yield return Load(mapId);
+                    for (var frame = 0; frame < 300 && (Invasion.InvasionMode.Instance == null || !Invasion.InvasionMode.Instance.RunStarted); frame++) yield return null;
+                    var castle = Invasion.InvasionMode.Instance.Castle;
+                    var at = GridManager.Instance.WorldToCell(castle.transform.position);
+                    var rng = new System.Random(11);
+                    foreach (var id in new[] { "Tower", "Tower", "Sawmill", "Quarry", "Barracks", "HealerHouse", "Tower" })
+                    {
+                        var data = PlaytestWorld.Building(id);
+                        if (data != null) PlaceNear(data, at, rng);
+                    }
+                    if (FogOfWarManager.Instance != null) FogOfWarManager.Instance.RevealPermanent(at, 80);
+                    yield return new WaitForSeconds(FogOfWarManager.RevealSeconds + 1f);
+                    yield return PlaytestCapture.ShootTo(Path.Combine(ArtFolder, $"Inv_{MapThemes.Id(theme)}.png"), 1512, 340,
+                        castle.transform.position + new Vector3(0f, 1f, 0f), 17f, 26f, 205f, 24f);
+                }
+            }
+            finally
+            {
+                GameSettings.InvasionTheme = keep;
+                SeasonStyle.Override = null;
+                GameSessionIntent.NewGameIsInvasion = false;
+                InvasionRecords.FilePathOverride = null;
             }
         }
 

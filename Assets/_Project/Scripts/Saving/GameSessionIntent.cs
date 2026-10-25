@@ -15,5 +15,8 @@ namespace CityBuilder.Saving
 
         /// <summary>The new game is an Invasion run (the menu's «В бой»), not a sandbox game; consumed by InvasionMode.</summary>
         public static bool NewGameIsInvasion;
+
+        /// <summary>The season the fresh game is dressed in (the menu's theme); null is summer. Ignored when loading a save.</summary>
+        public static Core.MapSeason? NewGameSeason;
     }
 }

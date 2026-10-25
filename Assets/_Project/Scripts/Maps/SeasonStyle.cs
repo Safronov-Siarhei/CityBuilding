@@ -5,8 +5,8 @@ using UnityEngine;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Dresses the map in the season picked in the settings (GameSettings.MapSeason; the user,
-    /// 2026-10-24: a style for each season, the way the player earns them comes later). Nothing is
+    /// Dresses the map in its game's season (the menu's theme for a new game, the save's for a loaded
+    /// one -- Session; the user, 2026-10-24/25: a style for each season, picked in the menu). Nothing is
     /// remodelled -- the season is materials swapped as the map is laid out:
     ///
     /// - the ground, relief and decor draw through the season's terrain palette;
@@ -28,7 +28,10 @@ namespace CityBuilder.Maps
         /// <summary>The season of the map being laid out when the map has one of its own (MeshMapDefinition.ForcedSeason).</summary>
         public static MapSeason? MapForced { get; set; }
 
-        public static MapSeason Current => Override ?? MapForced ?? GameSettings.MapSeason;
+        /// <summary>The game's own season: set as its map is laid out (MeshMapApplier), from the save or the menu's theme.</summary>
+        public static MapSeason Session { get; set; } = MapSeason.Summer;
+
+        public static MapSeason Current => Override ?? MapForced ?? Session;
 
         private static SeasonLooks Looks
         {

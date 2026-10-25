@@ -13,8 +13,8 @@ namespace CityBuilder.Invasion
     ///   simply not written down (the run is not counted);
     /// - a day's points are the sum of its best inv_runs_per_day runs: play as often as you like,
     ///   only the best few add up;
-    /// - a week's and a month's points are the sums of their days' points (local calendar, the week
-    ///   from Monday).
+    /// - a week's and a month's points are the sums of their best inv_runs_per_day runs (the user,
+    ///   2026-10-25; was the sum of their days' points), local calendar, the week from Monday.
     ///
     /// The file keeps each day's best runs and nothing older than a couple of months. The sums are
     /// pure statics over a list of days, so the tests need no file and no clock.
@@ -89,23 +89,46 @@ namespace CityBuilder.Invasion
             return found == null ? 0 : Mathf.Min(found.runs.Count, counted);
         }
 
-        /// <summary>The week's points, Monday to Sunday round `day`: the sum of its days' points.</summary>
-        public static int WeekPoints(List<Day> days, DateTime day, int counted)
+        /// <summary>A leaderboard's span: the day, the week (Monday to Sunday) or the month round a date.</summary>
+        public enum Period { Day = 0, Week = 1, Month = 2 }
+
+        /// <summary>
+        /// The period's best `counted` runs, best first (the user, 2026-10-25: the hub shows them,
+        /// and their sum is the period's points). Each day keeps its own best `counted`, so these are
+        /// exact for a week and a month too.
+        /// </summary>
+        public static List<int> TopRuns(List<Day> days, DateTime day, Period period, int counted)
         {
-            var monday = day.Date.AddDays(-(((int)day.DayOfWeek + 6) % 7));
+            var first = period == Period.Day ? day.Date
+                : period == Period.Week ? day.Date.AddDays(-(((int)day.DayOfWeek + 6) % 7))
+                : new DateTime(day.Year, day.Month, 1);
+            var last = period == Period.Day ? first : period == Period.Week ? first.AddDays(6) : first.AddMonths(1).AddDays(-1);
+            var from = DateKey(first);
+            var to = DateKey(last);
+            var runs = new List<int>();
+            foreach (var d in days)
+            {
+                if (string.CompareOrdinal(d.date, from) < 0 || string.CompareOrdinal(d.date, to) > 0) continue;
+                runs.AddRange(d.runs);
+            }
+            runs.Sort((a, b) => b.CompareTo(a));
+            if (runs.Count > counted) runs.RemoveRange(counted, runs.Count - counted);
+            return runs;
+        }
+
+        /// <summary>The period's points: the sum of its best `counted` runs.</summary>
+        public static int PeriodPoints(List<Day> days, DateTime day, Period period, int counted)
+        {
             var sum = 0;
-            for (var i = 0; i < 7; i++) sum += DayPoints(days, monday.AddDays(i), counted);
+            foreach (var run in TopRuns(days, day, period, counted)) sum += run;
             return sum;
         }
 
-        /// <summary>The month's points round `day`: the sum of its days' points.</summary>
-        public static int MonthPoints(List<Day> days, DateTime day, int counted)
-        {
-            var first = new DateTime(day.Year, day.Month, 1);
-            var sum = 0;
-            for (var d = first; d.Month == day.Month; d = d.AddDays(1)) sum += DayPoints(days, d, counted);
-            return sum;
-        }
+        /// <summary>The week's points, Monday to Sunday round `day`: its best `counted` runs.</summary>
+        public static int WeekPoints(List<Day> days, DateTime day, int counted) => PeriodPoints(days, day, Period.Week, counted);
+
+        /// <summary>The month's points round `day`: its best `counted` runs.</summary>
+        public static int MonthPoints(List<Day> days, DateTime day, int counted) => PeriodPoints(days, day, Period.Month, counted);
 
         private static void Prune(List<Day> days, DateTime now)
         {

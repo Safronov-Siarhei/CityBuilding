@@ -57,5 +57,17 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(10 + 20 + 30, InvasionRecords.WeekPoints(days, new DateTime(2026, 10, 25), 5), "Sunday is not the week's last day.");
             Assert.AreEqual(100 + 10 + 20 + 30 + 40, InvasionRecords.MonthPoints(days, Wednesday, 5));
         }
+
+        /// <summary>The hub's period points: the period's best five runs and no more (the user, 2026-10-25), not every day's sum.</summary>
+        [Test]
+        public void APeriodsPoints_AreItsBestFiveRuns()
+        {
+            var days = new List<InvasionRecords.Day>();
+            foreach (var points in new[] { 50, 40, 30 }) InvasionRecords.Add(days, points, new DateTime(2026, 10, 19), 5);   // Monday
+            foreach (var points in new[] { 60, 10, 20 }) InvasionRecords.Add(days, points, Wednesday, 5);
+            CollectionAssert.AreEqual(new[] { 60, 50, 40, 30, 20 }, InvasionRecords.TopRuns(days, Wednesday, InvasionRecords.Period.Week, 5));
+            Assert.AreEqual(60 + 50 + 40 + 30 + 20, InvasionRecords.WeekPoints(days, Wednesday, 5), "The week counted more than its best five runs.");
+            CollectionAssert.AreEqual(new[] { 60, 20, 10 }, InvasionRecords.TopRuns(days, Wednesday, InvasionRecords.Period.Day, 5));
+        }
     }
 }

@@ -47,14 +47,18 @@ namespace CityBuilder.Core
     }
 
     /// <summary>
-    /// Which map an Invasion run is played on (Invasion.InvasionMode.RunMapId). The user,
-    /// 2026-10-25: the New Year map is a plain choice in the settings for now; when it is open is
-    /// decided later.
+    /// The look a map is played in, picked in the menu's sandbox and invasion screens (the user,
+    /// 2026-10-25: the round theme buttons; replaces the settings' season and invasion-map rows).
+    /// The four seasons dress any map (Maps.SeasonStyle); the New Year is its own Invasion map.
+    /// Ordered as the buttons stand.
     /// </summary>
-    public enum InvasionMap
+    public enum MapTheme
     {
-        Island = 0,
-        NewYear = 1,
+        Spring = 0,
+        Summer = 1,
+        Autumn = 2,
+        Winter = 3,
+        NewYear = 4,
     }
 
     /// <summary>
@@ -77,39 +81,41 @@ namespace CityBuilder.Core
         /// <summary>The HUD's look until the player picks another.</summary>
         public const HudSkin DefaultHudSkin = HudSkin.Classic;
 
-        private const string MapSeasonKey = "settings.map_season";
-        private const string InvasionMapKey = "settings.invasion_map";
-        private static bool _invasionMapLoaded;
-        private static InvasionMap _invasionMap;
+        private const string SandboxThemeKey = "menu.sandbox_theme";
+        private const string InvasionThemeKey = "menu.invasion_theme";
+        private static MapTheme? _sandboxTheme, _invasionTheme;
 
-        /// <summary>The map the next Invasion run is played on.</summary>
-        public static InvasionMap InvasionMap
+        /// <summary>The theme last picked in the sandbox screen: the next new game's.</summary>
+        public static MapTheme SandboxTheme
         {
-            get
-            {
-                if (!_invasionMapLoaded)
-                {
-                    _invasionMapLoaded = true;
-                    var saved = PlayerPrefs.GetInt(InvasionMapKey, (int)InvasionMap.Island);
-                    _invasionMap = Enum.IsDefined(typeof(InvasionMap), saved) ? (InvasionMap)saved : InvasionMap.Island;
-                }
-                return _invasionMap;
-            }
-            set
-            {
-                if (_invasionMapLoaded && _invasionMap == value) return;
-                _invasionMapLoaded = true;
-                _invasionMap = value;
-                PlayerPrefs.SetInt(InvasionMapKey, (int)value);
-                PlayerPrefs.Save();
-                OnChanged?.Invoke();
-            }
+            get => _sandboxTheme ??= LoadTheme(SandboxThemeKey);
+            set => SaveTheme(SandboxThemeKey, ref _sandboxTheme, value);
+        }
+
+        /// <summary>The theme last picked in the invasion screen: the next run's (InvasionMode.RunMapId).</summary>
+        public static MapTheme InvasionTheme
+        {
+            get => _invasionTheme ??= LoadTheme(InvasionThemeKey);
+            set => SaveTheme(InvasionThemeKey, ref _invasionTheme, value);
+        }
+
+        private static MapTheme LoadTheme(string key)
+        {
+            var saved = PlayerPrefs.GetInt(key, (int)MapTheme.Summer);
+            return Enum.IsDefined(typeof(MapTheme), saved) ? (MapTheme)saved : MapTheme.Summer;
+        }
+
+        private static void SaveTheme(string key, ref MapTheme? cached, MapTheme value)
+        {
+            if (cached == value) return;
+            cached = value;
+            PlayerPrefs.SetInt(key, (int)value);
+            PlayerPrefs.Save();
+            OnChanged?.Invoke();
         }
 
         private static bool _loaded;
         private static FogStyle _fogStyle;
-        private static bool _seasonLoaded;
-        private static MapSeason _season;
         private static bool _hudSkinLoaded;
         private static HudSkin _hudSkin;
 
@@ -161,37 +167,13 @@ namespace CityBuilder.Core
             }
         }
 
-        /// <summary>The season the next map is dressed in; summer, today's look, until the player picks another.</summary>
-        public static MapSeason MapSeason
-        {
-            get
-            {
-                if (!_seasonLoaded)
-                {
-                    _seasonLoaded = true;
-                    var saved = PlayerPrefs.GetInt(MapSeasonKey, (int)MapSeason.Summer);
-                    _season = Enum.IsDefined(typeof(MapSeason), saved) ? (MapSeason)saved : MapSeason.Summer;
-                }
-                return _season;
-            }
-            set
-            {
-                if (_seasonLoaded && _season == value) return;
-                _seasonLoaded = true;
-                _season = value;
-                PlayerPrefs.SetInt(MapSeasonKey, (int)value);
-                PlayerPrefs.Save();
-                OnChanged?.Invoke();
-            }
-        }
-
         /// <summary>Forgets the cached values so the next read comes from PlayerPrefs again -- for tests.</summary>
         public static void ReloadForTests()
         {
             _loaded = false;
             _hudSkinLoaded = false;
-            _seasonLoaded = false;
-            _invasionMapLoaded = false;
+            _sandboxTheme = null;
+            _invasionTheme = null;
         }
     }
 }
