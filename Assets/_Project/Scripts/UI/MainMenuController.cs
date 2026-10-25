@@ -160,7 +160,7 @@ namespace CityBuilder.UI
         public void StartInvasion()
         {
             GameSessionIntent.SaveNameToLoad = null;
-            GameSessionIntent.NewGameMapId = Invasion.InvasionMode.MapId;
+            GameSessionIntent.NewGameMapId = Invasion.InvasionMode.RunMapId;
             GameSessionIntent.NewGameIsInvasion = true;
             SceneManager.LoadScene(gameplaySceneName);
         }

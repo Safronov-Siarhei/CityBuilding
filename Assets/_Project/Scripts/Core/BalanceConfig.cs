@@ -542,6 +542,31 @@ namespace CityBuilder.Core
         [SerializeField] private float invasionRaidPartyBaseRadius = 22f;
         [SerializeField] private float invasionHealerHealShare = 0.01f;
         [SerializeField] private float invasionHealerHealSharePerLevel = 0.005f;
+        // the New Year map's rules (InvasionNewYear; the user, 2026-10-25)
+        [SerializeField] private int nyGiftsPerWave = 3;
+        [SerializeField] private int nyGiftsMax = 8;
+        [SerializeField] private float nyGiftMinRadius = 8f;
+        [SerializeField] private float nyGiftMaxRadius = 32f;
+        [SerializeField] private float nyGiftPickupMeters = 1.2f;
+        [SerializeField] private int nyGiftWood = 15;
+        [SerializeField] private int nyGiftStone = 10;
+        [SerializeField] private int nyGiftGold = 20;
+        [SerializeField] private int nyThiefFromWave = 2;
+        [SerializeField] private int nyThievesPerWave = 1;
+        [SerializeField] private int nyGoldThief = 5;
+        [SerializeField] private float nyBlizzardChance = 0.35f;
+        [SerializeField] private float nyBlizzardSeconds = 35f;
+        [SerializeField] private float nyBlizzardWarningSeconds = 8f;
+        [SerializeField] private float nyBlizzardRangeMult = 0.6f;
+        [SerializeField] private float nyBlizzardSpeedMult = 0.8f;
+        [SerializeField] private int nyChimesEvery = 12;
+        [SerializeField] private float nyChimesOrcsMult = 1.5f;
+        [SerializeField] private float nySaluteDelaySeconds = 8f;
+        [SerializeField] private float nySaluteDamageShare = 0.3f;
+        [SerializeField] private float nyShamanFreezeEverySeconds = 8f;
+        [SerializeField] private float nyShamanFreezeRadius = 10f;
+        [SerializeField] private float nyShamanFreezeSeconds = 4f;
+        [SerializeField] private int nyGoldShaman = 60;
 
         // The Invasion run's jungle (InvasionJungle): its monsters, camps, shrines and boss.
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -842,6 +867,54 @@ namespace CityBuilder.Core
         public float InvasionRaidPartyBaseRadius => invasionRaidPartyBaseRadius;
         /// <summary>The share of their health a manned Дом лекаря heals the wounded in its radius each second, at `level` (InvasionHealing).</summary>
         public float InvasionHealerHealShareAt(int level) => invasionHealerHealShare + invasionHealerHealSharePerLevel * (Mathf.Max(1, level) - 1);
+        /// <summary>New Year map: Gifts laid on the island after each wave.</summary>
+        public int NyGiftsPerWave => nyGiftsPerWave;
+        /// <summary>New Year map: Most gifts lying about at once.</summary>
+        public int NyGiftsMax => nyGiftsMax;
+        /// <summary>New Year map: Nearest to the castle a gift is laid, metres.</summary>
+        public float NyGiftMinRadius => nyGiftMinRadius;
+        /// <summary>New Year map: Furthest from the castle a gift is laid, metres.</summary>
+        public float NyGiftMaxRadius => nyGiftMaxRadius;
+        /// <summary>New Year map: How close the King, a soldier or an islander comes to take a gift.</summary>
+        public float NyGiftPickupMeters => nyGiftPickupMeters;
+        /// <summary>New Year map: Wood in a gift of wood.</summary>
+        public int NyGiftWood => nyGiftWood;
+        /// <summary>New Year map: Stone in a gift of stone.</summary>
+        public int NyGiftStone => nyGiftStone;
+        /// <summary>New Year map: Gold in a gift of gold.</summary>
+        public int NyGiftGold => nyGiftGold;
+        /// <summary>New Year map: From which wave the Thief comes.</summary>
+        public int NyThiefFromWave => nyThiefFromWave;
+        /// <summary>New Year map: Thieves with each wave (while gifts lie about).</summary>
+        public int NyThievesPerWave => nyThievesPerWave;
+        /// <summary>New Year map: Gold for a Thief killed.</summary>
+        public int NyGoldThief => nyGoldThief;
+        /// <summary>New Year map: Chance a wave brings a blizzard (never the midnight wave).</summary>
+        public float NyBlizzardChance => nyBlizzardChance;
+        /// <summary>New Year map: How long a blizzard lasts.</summary>
+        public float NyBlizzardSeconds => nyBlizzardSeconds;
+        /// <summary>New Year map: How long before a blizzard it is announced.</summary>
+        public float NyBlizzardWarningSeconds => nyBlizzardWarningSeconds;
+        /// <summary>New Year map: Towers' reach in a blizzard, times.</summary>
+        public float NyBlizzardRangeMult => nyBlizzardRangeMult;
+        /// <summary>New Year map: Everyone's walking speed in a blizzard, times.</summary>
+        public float NyBlizzardSpeedMult => nyBlizzardSpeedMult;
+        /// <summary>New Year map: Every how-many-th wave is midnight: the salute, a bigger wave, the Ice Shaman.</summary>
+        public int NyChimesEvery => nyChimesEvery;
+        /// <summary>New Year map: The midnight wave's orcs, times a wave's.</summary>
+        public float NyChimesOrcsMult => nyChimesOrcsMult;
+        /// <summary>New Year map: Seconds after the midnight wave comes out that the salute bursts over it.</summary>
+        public float NySaluteDelaySeconds => nySaluteDelaySeconds;
+        /// <summary>New Year map: Share of its health the salute takes off every orc of the run.</summary>
+        public float NySaluteDamageShare => nySaluteDamageShare;
+        /// <summary>New Year map: How often the Ice Shaman freezes a tower.</summary>
+        public float NyShamanFreezeEverySeconds => nyShamanFreezeEverySeconds;
+        /// <summary>New Year map: How far from him a tower can be frozen.</summary>
+        public float NyShamanFreezeRadius => nyShamanFreezeRadius;
+        /// <summary>New Year map: How long a frozen tower does not shoot.</summary>
+        public float NyShamanFreezeSeconds => nyShamanFreezeSeconds;
+        /// <summary>New Year map: Gold for the Ice Shaman killed.</summary>
+        public int NyGoldShaman => nyGoldShaman;
         public int InvasionCamp1Monsters => invasionCamp1Monsters;
         public int InvasionCamp2Monsters => invasionCamp2Monsters;
         public int InvasionCamp3Monsters => invasionCamp3Monsters;
@@ -1214,6 +1287,30 @@ namespace CityBuilder.Core
             invasionRaidPartyBaseRadius = Read(economy, "inv_raid_party_base_radius", invasionRaidPartyBaseRadius);
             invasionHealerHealShare = Read(economy, "inv_healer_heal_share", invasionHealerHealShare);
             invasionHealerHealSharePerLevel = Read(economy, "inv_healer_heal_share_per_level", invasionHealerHealSharePerLevel);
+            nyGiftsPerWave = (int)Read(economy, "inv_ny_gifts_per_wave", nyGiftsPerWave);
+            nyGiftsMax = (int)Read(economy, "inv_ny_gifts_max", nyGiftsMax);
+            nyGiftMinRadius = Read(economy, "inv_ny_gift_min_radius", nyGiftMinRadius);
+            nyGiftMaxRadius = Read(economy, "inv_ny_gift_max_radius", nyGiftMaxRadius);
+            nyGiftPickupMeters = Read(economy, "inv_ny_gift_pickup_meters", nyGiftPickupMeters);
+            nyGiftWood = (int)Read(economy, "inv_ny_gift_wood", nyGiftWood);
+            nyGiftStone = (int)Read(economy, "inv_ny_gift_stone", nyGiftStone);
+            nyGiftGold = (int)Read(economy, "inv_ny_gift_gold", nyGiftGold);
+            nyThiefFromWave = (int)Read(economy, "inv_ny_thief_from_wave", nyThiefFromWave);
+            nyThievesPerWave = (int)Read(economy, "inv_ny_thieves_per_wave", nyThievesPerWave);
+            nyGoldThief = (int)Read(economy, "inv_gold_thief", nyGoldThief);
+            nyBlizzardChance = Read(economy, "inv_ny_blizzard_chance", nyBlizzardChance);
+            nyBlizzardSeconds = Read(economy, "inv_ny_blizzard_sec", nyBlizzardSeconds);
+            nyBlizzardWarningSeconds = Read(economy, "inv_ny_blizzard_warning_sec", nyBlizzardWarningSeconds);
+            nyBlizzardRangeMult = Read(economy, "inv_ny_blizzard_range_mult", nyBlizzardRangeMult);
+            nyBlizzardSpeedMult = Read(economy, "inv_ny_blizzard_speed_mult", nyBlizzardSpeedMult);
+            nyChimesEvery = (int)Read(economy, "inv_ny_chimes_every", nyChimesEvery);
+            nyChimesOrcsMult = Read(economy, "inv_ny_chimes_orcs_mult", nyChimesOrcsMult);
+            nySaluteDelaySeconds = Read(economy, "inv_ny_salute_delay_sec", nySaluteDelaySeconds);
+            nySaluteDamageShare = Read(economy, "inv_ny_salute_damage_share", nySaluteDamageShare);
+            nyShamanFreezeEverySeconds = Read(economy, "inv_ny_shaman_freeze_every_sec", nyShamanFreezeEverySeconds);
+            nyShamanFreezeRadius = Read(economy, "inv_ny_shaman_freeze_radius", nyShamanFreezeRadius);
+            nyShamanFreezeSeconds = Read(economy, "inv_ny_shaman_freeze_sec", nyShamanFreezeSeconds);
+            nyGoldShaman = (int)Read(economy, "inv_gold_ice_shaman", nyGoldShaman);
             foreach (var m in monsters)
             {
                 m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);

@@ -47,6 +47,17 @@ namespace CityBuilder.Core
     }
 
     /// <summary>
+    /// Which map an Invasion run is played on (Invasion.InvasionMode.RunMapId). The user,
+    /// 2026-10-25: the New Year map is a plain choice in the settings for now; when it is open is
+    /// decided later.
+    /// </summary>
+    public enum InvasionMap
+    {
+        Island = 0,
+        NewYear = 1,
+    }
+
+    /// <summary>
     /// The player's own preferences that are not the language (Localization keeps that one), kept
     /// across sessions in PlayerPrefs. A change is announced, so whatever draws by a setting can
     /// follow it at once.
@@ -67,6 +78,33 @@ namespace CityBuilder.Core
         public const HudSkin DefaultHudSkin = HudSkin.Classic;
 
         private const string MapSeasonKey = "settings.map_season";
+        private const string InvasionMapKey = "settings.invasion_map";
+        private static bool _invasionMapLoaded;
+        private static InvasionMap _invasionMap;
+
+        /// <summary>The map the next Invasion run is played on.</summary>
+        public static InvasionMap InvasionMap
+        {
+            get
+            {
+                if (!_invasionMapLoaded)
+                {
+                    _invasionMapLoaded = true;
+                    var saved = PlayerPrefs.GetInt(InvasionMapKey, (int)InvasionMap.Island);
+                    _invasionMap = Enum.IsDefined(typeof(InvasionMap), saved) ? (InvasionMap)saved : InvasionMap.Island;
+                }
+                return _invasionMap;
+            }
+            set
+            {
+                if (_invasionMapLoaded && _invasionMap == value) return;
+                _invasionMapLoaded = true;
+                _invasionMap = value;
+                PlayerPrefs.SetInt(InvasionMapKey, (int)value);
+                PlayerPrefs.Save();
+                OnChanged?.Invoke();
+            }
+        }
 
         private static bool _loaded;
         private static FogStyle _fogStyle;
@@ -153,6 +191,7 @@ namespace CityBuilder.Core
             _loaded = false;
             _hudSkinLoaded = false;
             _seasonLoaded = false;
+            _invasionMapLoaded = false;
         }
     }
 }

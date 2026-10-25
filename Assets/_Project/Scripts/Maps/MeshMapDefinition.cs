@@ -32,6 +32,9 @@ namespace CityBuilder.Maps
         [SerializeField] private Material decorMaterial;
         [Tooltip("Keep the water mesh's own rotation. Map 1's water needs a -90 degree turn the others must not get.")]
         [SerializeField] private bool keepWaterRotation;
+
+        // A map that is always one season, whatever the settings say (the New Year map: winter); -1 for none.
+        [SerializeField] private int forcedSeason = -1;
         // Where a designed map puts the orcs (world x, z): the main base's centre and the camps'.
         // A map without them leaves OrcRaidManager to search round the Town Hall.
         [SerializeField] private bool hasMainBaseSpot;
@@ -51,6 +54,9 @@ namespace CityBuilder.Maps
         public GameObject WaterPlacementZonePrefab => waterPlacementZonePrefab;
         public GameObject TreesAreaPrefab => treesAreaPrefab;
         public GameObject[] TreePrefabs => treePrefabs;
+
+        /// <summary>The season this map always wears (the New Year map's winter), or null to follow the settings.</summary>
+        public Core.MapSeason? ForcedSeason => forcedSeason >= 0 ? (Core.MapSeason)forcedSeason : (Core.MapSeason?)null;
         /// <summary>The hand-gathered boulders, smallest first (Stone1..Stone10) -- RockSpawner relies on that order.</summary>
         public GameObject[] RockPrefabs => rockPrefabs;
         public Material WaterMaterial => waterMaterial;
@@ -90,6 +96,8 @@ namespace CityBuilder.Maps
             rockPrefabs = rocks;
             waterMaterial = waterMat;
         }
+
+        public void EditorForceSeason(Core.MapSeason season) => forcedSeason = (int)season;
 
         public void EditorInitializeExtras(GameObject relief, GameObject rocksArea, GameObject noBuildArea, MapDecorData decor, Material decorMat, bool keepWaterRot)
         {

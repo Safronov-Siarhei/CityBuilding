@@ -153,6 +153,8 @@ namespace CityBuilder.Invasion
             Wave++;
             var lanes = LanesAt(Wave, config.InvasionTwoLanesFromWave, config.InvasionThreeLanesFromWave, _laneStarts.Count);
             var perLane = OrcsPerLane(Wave, config.InvasionWaveBaseOrcs, config.InvasionWaveExtraOrcEvery, config.InvasionWaveMaxOrcs);
+            // the New Year's midnight wave is bigger (InvasionNewYear)
+            if (WaveSizeMultiplier != null) perLane = Mathf.Max(1, Mathf.RoundToInt(perLane * WaveSizeMultiplier(Wave)));
             var level = OrcLevel(Wave, config.InvasionWaveLevelEvery, config.InvasionWaveMaxOrcLevel);
             var boss = IsBossWave(Wave, config.InvasionBossWaveEvery);
 
@@ -182,6 +184,7 @@ namespace CityBuilder.Invasion
 
             _waveSeconds = 0f;
             Current = Phase.Underway;
+            WaveSent?.Invoke(Wave);
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_inv_wave", Wave, _waveOrcs.Count),
                 EventSeverity.Danger, EventGlyph.Swords, null, _laneStarts[_lastLanes[0]], leader != null ? leader.transform : null));
         }
@@ -197,6 +200,7 @@ namespace CityBuilder.Invasion
                 EventSeverity.Good, EventGlyph.Check, null));
             SecondsUntilNextWave = BalanceConfig.Instance.InvasionBreatherSeconds;
             Current = Phase.Breather;
+            WaveEnded?.Invoke(Wave);
         }
 
         /// <summary>Every enemy that falls in a run pays by its kind: a wave's orc, a camp's, a jungle monster.</summary>
@@ -208,6 +212,25 @@ namespace CityBuilder.Invasion
             ResourceManager.Instance?.Add(InvasionRules.Money, gold);
             // the gold rises over where it fell (the user, 2026-10-22)
             UI.ResourceGainPopups.Instance?.ShowCoins(orc.transform.position, gold);
+        }
+
+        /// <summary>A wave just came out of the portals (its number): the New Year map's rules hang on it.</summary>
+        public event System.Action<int> WaveSent;
+
+        /// <summary>A wave is over (its number) and the breather begins.</summary>
+        public event System.Action<int> WaveEnded;
+
+        /// <summary>Times the orcs a lane gets, by wave number (the New Year's midnight wave); null for none.</summary>
+        public System.Func<int, float> WaveSizeMultiplier { get; set; }
+
+        /// <summary>An orc that joins the wave underway on `lane` (the Ice Shaman): it follows that lane, the wave waits for it.</summary>
+        public void AddToWave(OrcUnit orc, int lane)
+        {
+            if (orc == null || lane < 0 || lane >= _laneStarts.Count) return;
+            var way = lane < _lanes.Count ? _lanes[lane] : null;
+            if (way != null) orc.FollowLane(way);
+            _waveOrcs.Add(orc);
+            _laneOf[orc] = lane;
         }
 
         /// <summary>The raiding party out now, those of it still standing. It is no part of the wave: the wave ends without it.</summary>
@@ -318,6 +341,8 @@ namespace CityBuilder.Invasion
                 case OrcKind.Bear: return config.InvasionGoldBear;
                 case OrcKind.Troll: return config.InvasionGoldTroll;
                 case OrcKind.Giant: return 0;      // the boss pays through InvasionJungle
+                case OrcKind.Thief: return config.NyGoldThief;
+                case OrcKind.IceShaman: return config.NyGoldShaman;
                 default: return config.InvasionGoldOrc;
             }
         }

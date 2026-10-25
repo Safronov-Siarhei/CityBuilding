@@ -62,6 +62,9 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject[] gruntModels;
         [SerializeField] private GameObject[] bruteModels;
         [SerializeField] private GameObject throwerModel;
+        // the New Year map's two (Tools/blender/newyear.py)
+        [SerializeField] private GameObject thiefModel;
+        [SerializeField] private GameObject iceShamanModel;
         [SerializeField] private GameObject chiefModel;
         // The walled camps (see OrcCamp, OrcBaseLayout): their buildings by level, and the ruins.
         [SerializeField] private GameObject[] watchtowerModels;
@@ -429,6 +432,8 @@ namespace CityBuilder.Combat
             if (kind == OrcKind.Thrower && throwerModel != null) { model = throwerModel; figureName = "Thrower"; }
             else if (kind == OrcKind.Chief && chiefModel != null) { model = chiefModel; figureName = "Chief"; }
             else if (kind == OrcKind.Boss && bossModel != null) { model = bossModel; figureName = "Boss"; }
+            else if (kind == OrcKind.Thief && thiefModel != null) { model = thiefModel; figureName = "Thief"; }
+            else if (kind == OrcKind.IceShaman && iceShamanModel != null) { model = iceShamanModel; figureName = "IceShaman"; }
             else if (kind == OrcKind.Brute && Pick(bruteModels, level) != null) { model = Pick(bruteModels, level); figureName = "Brute"; }
             else if (brute) { model = Pick(bruteModels, 1); figureName = "Brute"; }
             if (OrcUnit.IsMonster(kind))

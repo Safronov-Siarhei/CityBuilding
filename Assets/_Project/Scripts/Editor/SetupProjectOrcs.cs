@@ -60,6 +60,7 @@ namespace CityBuilder.EditorTools
             foreach (var (field, file) in new[]
                      {
                          ("portalClosedModel", "OrcPortal1-lvl1-Closed"), ("throwerModel", "OrcThrower"), ("chiefModel", "OrcChief"),
+                         ("thiefModel", "OrcThief"), ("iceShamanModel", "OrcIceShaman"),
                          ("watchtowerRuinModel", "OrcWatchtower1-lvl1-Ruin"),
                          ("warTentModel", "OrcWarTent1-lvl1"), ("warTentRuinModel", "OrcWarTent1-lvl1-Ruin"),
                          ("totemRuinModel", "OrcTotem1-lvl1-Ruin"), ("gateRuinModel", "OrcGate1-lvl1-Ruin"),

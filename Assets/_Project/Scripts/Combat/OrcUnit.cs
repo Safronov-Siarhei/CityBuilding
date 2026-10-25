@@ -42,6 +42,14 @@ namespace CityBuilder.Combat
 
         /// <summary>The jungle's boss in its southern lair.</summary>
         Giant = 8,
+
+        // The New Year map's own (InvasionNewYear, the user 2026-10-25).
+
+        /// <summary>Runs off with the gifts left on the island, fights no one.</summary>
+        Thief = 9,
+
+        /// <summary>The midnight boss: freezes the towers near him.</summary>
+        IceShaman = 10,
     }
 
     /// <summary>
@@ -72,12 +80,14 @@ namespace CityBuilder.Combat
                 case OrcKind.Chief: return "orc_chief";
                 case OrcKind.Brute: return "orc_brute";
                 case OrcKind.Boss: return "orc_chief_boss";
+                case OrcKind.Thief: return "orc_thief";
+                case OrcKind.IceShaman: return "orc_ice_shaman";
                 default: return "orc";
             }
         }
 
         /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
-        public static bool IsMonster(OrcKind kind) => kind >= OrcKind.Wolf;
+        public static bool IsMonster(OrcKind kind) => kind >= OrcKind.Wolf && kind <= OrcKind.Giant;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -263,8 +273,45 @@ namespace CityBuilder.Combat
             _guardRoute = NewRoute();
         }
 
+        /// <summary>
+        /// Moved by something else (the New Year's thief, InvasionNewYear): no target of its own, no
+        /// fight -- it goes where SteerTo sends it, nothing more.
+        /// </summary>
+        public bool Steered { get; set; }
+
+        private Vector3 _steerGoal = new Vector3(float.MaxValue, 0f, 0f);
+        private float _steerReplan;
+
+        /// <summary>One step toward `goal` over the NavMesh (off the gates), replanning when it moves or every second. False once there.</summary>
+        public bool SteerTo(Vector3 goal)
+        {
+            var to = goal - transform.position;
+            to.y = 0f;
+            if (to.magnitude <= 0.4f) return false;
+            _steerReplan -= Time.deltaTime;
+            if (_steerReplan <= 0f || (goal - _steerGoal).sqrMagnitude > 0.25f)
+            {
+                _steerGoal = goal;
+                _steerReplan = 1f;
+                _route = BuildRoute(transform.position, goal, out _);
+                _routeIndex = 0;
+            }
+            if (_route == null || _route.Length == 0) return false;
+            if (_routeIndex >= _route.Length - 1 && ReachedLastWaypoint()) Step(to.normalized);
+            else AdvanceAlongRoute();
+            FaceAlong(to);
+            return true;
+        }
+
+        private void FaceAlong(Vector3 direction)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
+        }
+
         private void Update()
         {
+            if (Steered) return;
             if (_guarding)
             {
                 GuardUpdate();
@@ -889,16 +936,7 @@ namespace CityBuilder.Combat
                 return;
             }
 
-            var direction = toWaypoint / distance;
-            if (_controller != null && _controller.enabled)
-            {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
-                PinToGroundHeight();
-            }
-            else
-            {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
-            }
+            Step(toWaypoint / distance);
         }
 
         private void PinToGroundHeight()
@@ -1261,7 +1299,8 @@ namespace CityBuilder.Combat
         {
             // wedged inside something (a building put up round it): through it to free ground first
             if (_escape.Step(transform, _controller, _walkSpeed)) return;
-            var step = direction * _walkSpeed * Time.deltaTime;
+            // the New Year's blizzard slows everyone (Weather)
+            var step = direction * _walkSpeed * Weather.SpeedMultiplier * Time.deltaTime;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);

@@ -25,7 +25,10 @@ namespace CityBuilder.Maps
         /// <summary>The season being laid out: a test may pin one without touching the player's setting.</summary>
         public static MapSeason? Override { get; set; }
 
-        public static MapSeason Current => Override ?? GameSettings.MapSeason;
+        /// <summary>The season of the map being laid out when the map has one of its own (MeshMapDefinition.ForcedSeason).</summary>
+        public static MapSeason? MapForced { get; set; }
+
+        public static MapSeason Current => Override ?? MapForced ?? GameSettings.MapSeason;
 
         private static SeasonLooks Looks
         {

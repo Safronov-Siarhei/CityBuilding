@@ -276,6 +276,7 @@ namespace CityBuilder.Maps
 
             // the season the player picked (SeasonStyle): its snow and sun now, its palettes on
             // the ground, trees and decor as each is laid out below
+            SeasonStyle.MapForced = map.ForcedSeason;
             SeasonStyle.ApplyToScene();
 
             // These FBX assets carry a corrective root rotation from Blender's Z-up authoring

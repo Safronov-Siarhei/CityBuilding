@@ -20,6 +20,7 @@ namespace CityBuilder.UI
         [SerializeField] private MinimapCameraIndicator map;
         [SerializeField] private CanvasGroup[] marks;
         [SerializeField] private CanvasGroup partyMark;
+        [SerializeField] private CanvasGroup thiefMark;
 
         private float _refreshIn;
 
@@ -38,6 +39,7 @@ namespace CityBuilder.UI
                 if (mark != null && mark.gameObject.activeSelf) mark.alpha = alpha;
             }
             if (partyMark != null && partyMark.gameObject.activeSelf) partyMark.alpha = alpha;
+            if (thiefMark != null && thiefMark.gameObject.activeSelf) thiefMark.alpha = alpha;
 
             _refreshIn -= Time.unscaledDeltaTime;
             if (_refreshIn > 0f) return;
@@ -50,6 +52,7 @@ namespace CityBuilder.UI
             var mode = InvasionMode.Instance;
             var waves = mode != null ? mode.Waves : null;
             PlaceParty(waves);
+            PlaceThief();
             if (waves == null || map == null || waves.Current != InvasionWaves.Phase.Underway)
             {
                 Hide(0);
@@ -97,6 +100,36 @@ namespace CityBuilder.UI
             partyMark.gameObject.SetActive(true);
             ((RectTransform)partyMark.transform).anchoredPosition = at;
         }
+
+        /// <summary>The New Year map's Thief, gold: the first one out (InvasionNewYear).</summary>
+        private void PlaceThief()
+        {
+            if (thiefMark == null) return;
+            var rules = InvasionNewYear.Instance;
+            Combat.OrcUnit thief = null;
+            if (rules != null && map != null)
+            {
+                foreach (var orc in rules.Thieves)
+                {
+                    if (orc == null || orc.CurrentHealth <= 0) continue;
+                    thief = orc;
+                    break;
+                }
+            }
+            if (thief == null)
+            {
+                if (thiefMark.gameObject.activeSelf) thiefMark.gameObject.SetActive(false);
+                return;
+            }
+            var rim = map.MapHalfExtent * RimShare;
+            var at = map.ToMapUnclamped(thief.transform.position);
+            if (at.magnitude > rim) at = at.normalized * rim;
+            thiefMark.gameObject.SetActive(true);
+            ((RectTransform)thiefMark.transform).anchoredPosition = at;
+        }
+
+        /// <summary>Whether the Thief's mark is up. For the tests.</summary>
+        public bool ThiefMarkShown => thiefMark != null && thiefMark.gameObject.activeSelf;
 
         /// <summary>Whether the raiding party's mark is up. For the tests.</summary>
         public bool PartyMarkShown => partyMark != null && partyMark.gameObject.activeSelf;

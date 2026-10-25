@@ -15,7 +15,7 @@ sc = bpy.context.scene
 for ob in sc.objects:
     ob.hide_render = True
 
-STEP = 0.42
+STEP = float(__import__("os").environ.get("FIG_STEP", "0.42"))
 for i, n in enumerate(names):
     ob = bpy.data.objects[n]
     ob.location = (i * STEP, 0, 0)

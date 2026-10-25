@@ -27,6 +27,18 @@ namespace CityBuilder.Invasion
     {
         public const string MapId = "Inv1";
 
+        /// <summary>The New Year map (Tools/blender/invasion2.py): map 1's structure, winter, its own rules (InvasionNewYear).</summary>
+        public const string NewYearMapId = "Inv2";
+
+        /// <summary>The map the next run is played on: the settings' choice (GameSettings.InvasionMap).</summary>
+        public static string RunMapId => GameSettings.InvasionMap == InvasionMap.NewYear ? NewYearMapId : MapId;
+
+        /// <summary>An Invasion map, either of them.</summary>
+        public static bool IsRunMap(string mapId) => mapId == MapId || mapId == NewYearMapId;
+
+        /// <summary>This run is on the New Year map.</summary>
+        public static bool IsNewYear => MeshMapApplier.Instance != null && MeshMapApplier.Instance.CurrentMapId == NewYearMapId;
+
         /// <summary>How far in from a causeway's middle its tower stands: just onto the island, at the causeway's foot.</summary>
         private const float TowerInsetMeters = 7f;
 
@@ -47,6 +59,14 @@ namespace CityBuilder.Invasion
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInARun = new MonoBehaviour[0];
         [SerializeField] private GameObject shrineModel;
+
+        // the New Year map's own (Tools/blender/newyear.py; InvasionNewYear)
+        [SerializeField] private GameObject newYearTreeModel;
+        [SerializeField] private GameObject newYearSnowmanModel;
+        [SerializeField] private GameObject[] newYearGiftModels = new GameObject[0];
+
+        /// <summary>The New Year map's rules, on that map only.</summary>
+        public InvasionNewYear NewYear { get; private set; }
 
         public static InvasionMode Instance { get; private set; }
 
@@ -163,7 +183,7 @@ namespace CityBuilder.Invasion
             for (var frame = 0; frame < 600; frame++)
             {
                 var applier = MeshMapApplier.Instance;
-                if (applier != null && applier.CurrentMapId == MapId && GridManager.Instance != null) break;
+                if (applier != null && IsRunMap(applier.CurrentMapId) && GridManager.Instance != null) break;
                 yield return null;
             }
             yield return new WaitForFixedUpdate();
@@ -268,6 +288,15 @@ namespace CityBuilder.Invasion
             Jungle = gameObject.AddComponent<InvasionJungle>();
             var map = applier.CurrentMap;
             Jungle.Begin(map.SpotsOf("monsters"), map.SpotsOf("boss"), map.SpotsOf("shrine"), shrineModel);
+
+            // the New Year map's own: its tree and snowmen, falling snow, gifts and the Thief, the
+            // blizzard, midnight and the Ice Shaman
+            Weather.Clear();
+            if (IsNewYear)
+            {
+                NewYear = gameObject.AddComponent<InvasionNewYear>();
+                NewYear.Begin(Waves, castleAt, Houses, newYearTreeModel, newYearSnowmanModel, newYearGiftModels);
+            }
 
             RunStarted = true;
         }

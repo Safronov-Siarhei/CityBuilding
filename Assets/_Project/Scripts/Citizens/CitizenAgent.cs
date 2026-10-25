@@ -374,7 +374,7 @@ namespace CityBuilder.Citizens
                     return;
                 }
                 var direction = toTarget / distance;
-                var speed = CurrentWalkSpeed();
+                var speed = CurrentWalkSpeed() * CityBuilder.Core.Weather.SpeedMultiplier;   // the New Year's blizzard
                 // Never a step past the point being walked to: a long frame (or the game sped up)
                 // carried a walker over a 5 cm corner and back again, round and round it for good.
                 speed = Mathf.Min(speed, distance / Mathf.Max(Time.deltaTime, 0.0001f));

@@ -23,6 +23,7 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform fogRow;
         [SerializeField] private RectTransform hudRow;
         [SerializeField] private RectTransform seasonRow;
+        [SerializeField] private RectTransform invasionMapRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -39,6 +40,13 @@ namespace CityBuilder.UI
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
         private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
         private readonly List<(MapSeason season, Image background)> _seasonButtons = new List<(MapSeason, Image)>();
+        private readonly List<(InvasionMap map, Image background)> _invasionMapButtons = new List<(InvasionMap, Image)>();
+
+        private static readonly (InvasionMap map, string key)[] InvasionMaps =
+        {
+            (InvasionMap.Island, "#settings_invasion_map_island"),
+            (InvasionMap.NewYear, "#settings_invasion_map_newyear"),
+        };
 
         /// <summary>The seasons in the order their buttons stand, each with its caption's sheet key.</summary>
         private static readonly (MapSeason season, string key)[] Seasons =
@@ -71,6 +79,7 @@ namespace CityBuilder.UI
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
             if (_seasonButtons.Count == 0) BuildSeasonButtons();
+            if (_invasionMapButtons.Count == 0) BuildInvasionMapButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -104,6 +113,30 @@ namespace CityBuilder.UI
         {
             GameSettings.MapSeason = season;
             HighlightSelected();
+        }
+
+        public void SelectInvasionMap(InvasionMap map)
+        {
+            GameSettings.InvasionMap = map;
+            HighlightSelected();
+        }
+
+        private void BuildInvasionMapButtons()
+        {
+            if (invasionMapRow == null) return;
+
+            const float width = 260f;
+            const float spacing = 16f;
+            for (var i = 0; i < InvasionMaps.Length; i++)
+            {
+                var (map, key) = InvasionMaps[i];
+                var x = (i - (InvasionMaps.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(invasionMapRow, $"InvasionMap_{map}", x, width, out var label);
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                var captured = map;
+                image.GetComponent<Button>().onClick.AddListener(() => SelectInvasionMap(captured));
+                _invasionMapButtons.Add((map, image));
+            }
         }
 
         private void BuildSeasonButtons()
@@ -224,6 +257,10 @@ namespace CityBuilder.UI
             foreach (var (code, background) in _buttons)
             {
                 background.color = code == Localization.Language ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (map, background) in _invasionMapButtons)
+            {
+                background.color = map == GameSettings.InvasionMap ? SelectedColor : UnselectedColor;
             }
             foreach (var (season, background) in _seasonButtons)
             {

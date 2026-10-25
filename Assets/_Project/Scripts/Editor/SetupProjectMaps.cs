@@ -84,7 +84,10 @@ namespace CityBuilder.EditorTools
         /// it. Parameterized rather than folder-scanning like the old MapImporter — a second map
         /// is just one more call to this with a different id/paths, not a new system.
         /// </summary>
-        private static void CreateMeshMapDefinition(string mapId, string prefix, Material waterMaterial)
+        /// <param name="forcedSeason">A season the map always wears (the New Year map's winter).</param>
+        /// <param name="treeNames">Only these tree models (Tree2, ...) for its forest; null for all of them.</param>
+        private static void CreateMeshMapDefinition(string mapId, string prefix, Material waterMaterial,
+            MapSeason? forcedSeason = null, string[] treeNames = null)
         {
             var folder = $"Assets/_Project/Models/{mapId}";
             var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Ground.fbx");
@@ -118,8 +121,10 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
+            if (treeNames != null) trees = System.Array.FindAll(trees, t => t != null && System.Array.IndexOf(treeNames, t.name) >= 0);
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
             map.EditorInitialize(mapId, ground, water, waterPlacementZone, treesArea, trees, rocks.ToArray(), waterMaterial);
+            if (forcedSeason.HasValue) map.EditorForceSeason(forcedSeason.Value);
 
             // Map 3's extra parts, each optional: relief, stony clearings, the no-build slopes and
             // the props. A map with a relief mesh is a new-style map and keeps its water as modelled.

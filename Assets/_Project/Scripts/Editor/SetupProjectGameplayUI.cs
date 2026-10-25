@@ -619,11 +619,22 @@ namespace CityBuilder.EditorTools
             partyBang.raycastTarget = false;
             var partyMark = partyBadge.gameObject.AddComponent<CanvasGroup>();
             partyBadge.gameObject.SetActive(false);
+            // the New Year map's Thief, gold
+            var thiefBadge = CreateImage(viewGO.transform, "ThiefAlert", UiTheme.Gold);
+            thiefBadge.sprite = SkinSprite("circle_mask");
+            thiefBadge.raycastTarget = false;
+            thiefBadge.rectTransform.sizeDelta = new Vector2(34f, 34f);
+            var thiefBang = CreateText(thiefBadge.transform, "Mark", "!", 28, Vector2.zero, new Vector2(34f, 34f), Color.white);
+            thiefBang.fontStyle = FontStyle.Bold;
+            thiefBang.raycastTarget = false;
+            var thiefMark = thiefBadge.gameObject.AddComponent<CanvasGroup>();
+            thiefBadge.gameObject.SetActive(false);
 
             var alerts = viewGO.AddComponent<MinimapAttackAlerts>();
             var alertsSO = new SerializedObject(alerts);
             alertsSO.FindProperty("map").objectReferenceValue = indicator;
             alertsSO.FindProperty("partyMark").objectReferenceValue = partyMark;
+            alertsSO.FindProperty("thiefMark").objectReferenceValue = thiefMark;
             var list = alertsSO.FindProperty("marks");
             list.arraySize = marks.Length;
             for (var i = 0; i < marks.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = marks[i];

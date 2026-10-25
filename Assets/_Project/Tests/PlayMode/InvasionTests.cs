@@ -237,7 +237,10 @@ namespace CityBuilder.Tests.PlayMode
             // the price follows the damage (the user, 2026-10-25)
             Assert.Greater(cost.Sum(c => c.amount), light, "Mending three quarters of a tower costs no more than mending a quarter.");
             var full = InvasionRules.RepairCost(tower.Data, tower.Level, 1f).Sum(c => c.amount);
-            Assert.Less(cost.Sum(c => c.amount), full, "Mending three quarters of a tower costs as much as mending it from nothing.");
+            Assert.LessOrEqual(cost.Sum(c => c.amount), full, "Mending three quarters of a tower costs more than mending it from nothing.");
+            // on a level-5 tower (its upgrades counted in) the rounding no longer hides the share
+            Assert.Less(InvasionRules.RepairCost(tower.Data, 5, 0.25f).Sum(c => c.amount), InvasionRules.RepairCost(tower.Data, 5, 1f).Sum(c => c.amount),
+                "A quarter's mending costs as much as the whole.");
             Assert.IsTrue(cost.All(c => c.type == ResourceType.Wood || c.type == ResourceType.Stone));
             Assert.IsTrue(tower.TryRepair(), "The repair was refused with the stock to pay for it.");
             Assert.AreEqual(tower.MaxHealth, tower.CurrentHealth, "The repair did not mend the damage.");

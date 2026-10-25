@@ -482,6 +482,11 @@ namespace CityBuilder.EditorTools
             var invasionModeSO = new SerializedObject(invasionMode);
             invasionModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             invasionModeSO.FindProperty("shrineModel").objectReferenceValue = LoadWild("WildShrine");
+            // the New Year map's tree, snowman and gift boxes (Tools/blender/newyear.py)
+            GameObject LoadNewYear(string name) => AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Buildings/{name}.fbx");
+            invasionModeSO.FindProperty("newYearTreeModel").objectReferenceValue = LoadNewYear("NYTree");
+            invasionModeSO.FindProperty("newYearSnowmanModel").objectReferenceValue = LoadNewYear("NYSnowman");
+            WriteArray(invasionModeSO.FindProperty("newYearGiftModels"), new Object[] { LoadNewYear("NYGift1"), LoadNewYear("NYGift2"), LoadNewYear("NYGift3") });
             WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -535,6 +540,10 @@ namespace CityBuilder.EditorTools
             // middle, three lanes over three bridges to three orc camps, jungles between them. Not
             // in the sandbox's map picker -- only «В бой» plays it.
             CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.MapId, "Inv-1", null);
+            // The Invasion's New Year map (Tools/blender/invasion2.py): map 1's structure drawn anew,
+            // always winter, a fir forest only (the conifers of trees1.py), its own New Year rules.
+            CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.NewYearMapId, "Inv-2", null,
+                MapSeason.Winter, new[] { "Tree2", "Tree5", "Tree6", "Tree9" });
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new

@@ -432,13 +432,14 @@ namespace CityBuilder.Combat
 
             if (!_route.TryGetDirection(transform.position, out var direction)) return;
 
+            var speed = _walkSpeed * Weather.SpeedMultiplier;   // the New Year's blizzard slows everyone
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
+                _controller.Move(direction * speed * Time.deltaTime);
             }
             else
             {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
+                transform.position += direction * speed * Time.deltaTime;
             }
 
             PinToGroundHeight();

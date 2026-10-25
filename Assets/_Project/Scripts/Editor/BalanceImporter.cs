@@ -217,8 +217,11 @@ namespace CityBuilder.EditorTools
                     }
                     if (target == null)
                     {
-                        Debug.LogError($"BalanceImporter: {path} has '{id}', which the sandbox's tab does not -- the invasion tab only changes what exists. Skipped.");
-                        continue;
+                        // a row of the run's own (the New Year map's orcs, 2026-10-25): the sandbox never meets it
+                        target = new List<string>();
+                        while (target.Count < header.Count) target.Add(string.Empty);
+                        if (idColumn >= 0) target[idColumn] = id;
+                        rows.Add(target);
                     }
 
                     for (var c = 0; c < header.Count; c++)
