@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Orchard
   displayName: "\u0424\u0440\u0443\u043A\u0442\u043E\u0432\u044B\u0439 \u0441\u0430\u0434"
-  prefab: {fileID: 7171527632932607120, guid: 56f19227af19d2b4f93e0886f3132d53, type: 3}
+  prefab: {fileID: 699863433570412612, guid: 56f19227af19d2b4f93e0886f3132d53, type: 3}
   footprintSize: {x: 3, y: 3}
   cost:
   - type: 0
@@ -30,8 +30,8 @@ MonoBehaviour:
   - maxHealth: 80
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 2
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -40,8 +40,8 @@ MonoBehaviour:
   - maxHealth: 128
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 2
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -50,8 +50,8 @@ MonoBehaviour:
   - maxHealth: 200
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 4
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -60,8 +60,8 @@ MonoBehaviour:
   - maxHealth: 288
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 4
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -70,15 +70,20 @@ MonoBehaviour:
   - maxHealth: 400
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
     buildSeconds: 32
-  recipes: []
-  productionIntervalSeconds: 6
+  recipes:
+  - id: fruit
+    displayName: "\u0424\u0440\u0443\u043A\u0442\u044B"
+    inputs: []
+    output: 2
+    outputAmount: 1
+  productionIntervalSeconds: 24
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

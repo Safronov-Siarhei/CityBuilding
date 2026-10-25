@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: PigFarm
   displayName: "\u0421\u0432\u0438\u043D\u043E\u0444\u0435\u0440\u043C\u0430"
-  prefab: {fileID: 5939959018908407691, guid: a635440af5831cf4cb63eebd42802c04, type: 3}
+  prefab: {fileID: 2681582235944325008, guid: a635440af5831cf4cb63eebd42802c04, type: 3}
   footprintSize: {x: 3, y: 4}
   cost:
   - type: 0
@@ -32,8 +32,8 @@ MonoBehaviour:
   - maxHealth: 120
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 2
+    batchesPerWorkerPerTick: 2
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -42,8 +42,8 @@ MonoBehaviour:
   - maxHealth: 192
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -52,8 +52,8 @@ MonoBehaviour:
   - maxHealth: 300
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 4
+    batchesPerWorkerPerTick: 4
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -62,8 +62,8 @@ MonoBehaviour:
   - maxHealth: 432
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 5
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -72,15 +72,20 @@ MonoBehaviour:
   - maxHealth: 600
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 6
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
     buildSeconds: 51
-  recipes: []
-  productionIntervalSeconds: 6
+  recipes:
+  - id: meat
+    displayName: "\u041C\u044F\u0441\u043E"
+    inputs: []
+    output: 15
+    outputAmount: 1
+  productionIntervalSeconds: 24
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

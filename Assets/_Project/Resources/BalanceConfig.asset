@@ -1028,6 +1028,8 @@ MonoBehaviour:
     category: 4
     cost:
     - type: 0
+      amount: 8
+    - type: 1
       amount: 12
     recipes:
     - id: stone
@@ -3629,8 +3631,8 @@ MonoBehaviour:
       inputs:
       - type: 9
         amount: 1
-      output: 10
-      outputAmount: 2
+      output: 2
+      outputAmount: 3
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -3835,8 +3837,15 @@ MonoBehaviour:
       amount: 25
     - type: 1
       amount: 8
-    recipes: []
-    productionIntervalSeconds: 6
+    recipes:
+    - id: smoked
+      displayName: "\u041A\u043E\u043F\u0447\u0451\u043D\u043E\u0441\u0442\u0438"
+      inputs:
+      - type: 15
+        amount: 2
+      output: 2
+      outputAmount: 3
+    productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
     storageGroup: 0
@@ -3845,8 +3854,8 @@ MonoBehaviour:
     - maxHealth: 110
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3855,8 +3864,8 @@ MonoBehaviour:
     - maxHealth: 176
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3865,8 +3874,8 @@ MonoBehaviour:
     - maxHealth: 275
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3875,8 +3884,8 @@ MonoBehaviour:
     - maxHealth: 396
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3885,14 +3894,14 @@ MonoBehaviour:
     - maxHealth: 550
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
       happiness: 0
       buildSeconds: 48
-    requiredBuildingId: 
+    requiredBuildingId: PigFarm
     upgradeToLevel2Cost:
     - type: 0
       amount: 40
@@ -3934,8 +3943,13 @@ MonoBehaviour:
       amount: 30
     - type: 1
       amount: 5
-    recipes: []
-    productionIntervalSeconds: 6
+    recipes:
+    - id: meat
+      displayName: "\u041C\u044F\u0441\u043E"
+      inputs: []
+      output: 15
+      outputAmount: 1
+    productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
     storageGroup: 0
@@ -3944,8 +3958,8 @@ MonoBehaviour:
     - maxHealth: 120
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3954,8 +3968,8 @@ MonoBehaviour:
     - maxHealth: 192
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3964,8 +3978,8 @@ MonoBehaviour:
     - maxHealth: 300
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3974,8 +3988,8 @@ MonoBehaviour:
     - maxHealth: 432
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -3984,8 +3998,8 @@ MonoBehaviour:
     - maxHealth: 600
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 6
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -4031,8 +4045,13 @@ MonoBehaviour:
     cost:
     - type: 0
       amount: 12
-    recipes: []
-    productionIntervalSeconds: 6
+    recipes:
+    - id: fruit
+      displayName: "\u0424\u0440\u0443\u043A\u0442\u044B"
+      inputs: []
+      output: 2
+      outputAmount: 1
+    productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
     storageGroup: 0
@@ -4041,8 +4060,8 @@ MonoBehaviour:
     - maxHealth: 80
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 2
+      batchesPerWorkerPerTick: 1
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -4051,8 +4070,8 @@ MonoBehaviour:
     - maxHealth: 128
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 3
+      batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -4061,8 +4080,8 @@ MonoBehaviour:
     - maxHealth: 200
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 4
+      batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -4071,8 +4090,8 @@ MonoBehaviour:
     - maxHealth: 288
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 5
+      batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -4081,8 +4100,8 @@ MonoBehaviour:
     - maxHealth: 400
       defense: 0
       housingCapacity: 0
-      maxWorkers: 0
-      batchesPerWorkerPerTick: 0
+      maxWorkers: 6
+      batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
       serviceRadius: 0
@@ -5352,7 +5371,7 @@ MonoBehaviour:
   harvestSeconds: 15
   foodPerMouthPerDay: 1
   hungryDaysBeforeDeaths: 2
-  foodVarietyTarget: 2
+  foodVarietyTarget: 1
   deathsMemoryDays: 3
   happinessPenaltyPerDeath: 10
   happinessPerCitizenTarget: 0.8

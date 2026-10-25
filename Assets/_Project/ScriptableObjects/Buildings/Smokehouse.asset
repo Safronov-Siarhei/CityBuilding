@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Smokehouse
   displayName: "\u041A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u044F"
-  prefab: {fileID: 3400998401849650769, guid: c195b9d56c760b44ebe0fa43f6e8fb4a, type: 3}
+  prefab: {fileID: 8589847784709955320, guid: c195b9d56c760b44ebe0fa43f6e8fb4a, type: 3}
   footprintSize: {x: 1, y: 2}
   cost:
   - type: 0
@@ -32,8 +32,8 @@ MonoBehaviour:
   - maxHealth: 110
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 2
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -42,8 +42,8 @@ MonoBehaviour:
   - maxHealth: 176
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 2
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -52,8 +52,8 @@ MonoBehaviour:
   - maxHealth: 275
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 4
+    batchesPerWorkerPerTick: 3
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -62,8 +62,8 @@ MonoBehaviour:
   - maxHealth: 396
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 4
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
@@ -72,15 +72,22 @@ MonoBehaviour:
   - maxHealth: 550
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    batchesPerWorkerPerTick: 0
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 5
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     happiness: 0
     buildSeconds: 48
-  recipes: []
-  productionIntervalSeconds: 6
+  recipes:
+  - id: smoked
+    displayName: "\u041A\u043E\u043F\u0447\u0451\u043D\u043E\u0441\u0442\u0438"
+    inputs:
+    - type: 15
+      amount: 2
+    output: 2
+    outputAmount: 3
+  productionIntervalSeconds: 24
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
@@ -105,4 +112,4 @@ MonoBehaviour:
   fogRevealRadius: 10
   citizensOnBuild: 0
   maxCount: 0
-  requiredBuilding: {fileID: 0}
+  requiredBuilding: {fileID: 11400000, guid: 866200e7e4e190548b61efc407bc1516, type: 2}
