@@ -1024,6 +1024,7 @@ namespace CityBuilder.Tests.PlayMode
             var grid = GridManager.Instance;
             var castle = InvasionMode.Instance.Castle.transform.position;
             InvasionMode.Instance.King.gameObject.SetActive(false);
+            foreach (var soldier in SoldierUnit.All.ToList()) if (soldier != null) soldier.gameObject.SetActive(false);   // the garrison would draw it off
             // nobody about for it to go for instead: the King away, the islanders indoors
             foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
             // and no other building near enough for it to turn on first
@@ -1068,6 +1069,7 @@ namespace CityBuilder.Tests.PlayMode
             var grid = GridManager.Instance;
             var castle = InvasionMode.Instance.Castle.transform.position;
             InvasionMode.Instance.King.gameObject.SetActive(false);
+            foreach (var soldier in SoldierUnit.All.ToList()) if (soldier != null) soldier.gameObject.SetActive(false);   // the garrison would draw it off
             foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
             foreach (var house in InvasionMode.Instance.Houses) if (house != null) Object.Destroy(house.gameObject);
             var centre = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-11f, 0f, 3f)) - Vector2Int.one, new Vector2Int(3, 3)) + Vector2Int.one;
@@ -1082,12 +1084,16 @@ namespace CityBuilder.Tests.PlayMode
 
             // the fence goes in on the orc's side of the tower, where it stands
             var side = grid.WorldToCell(orc.transform.position) - centre;
-            var between = centre + new Vector2Int(System.Math.Sign(side.x), side.x == 0 ? System.Math.Sign(side.y) : 0);
-            var fence = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), between);
+            // standing off a corner, both cells beside that corner: else the fence is not between them
+            var cells = new List<Vector2Int>();
+            if (side.x != 0) cells.Add(centre + new Vector2Int(System.Math.Sign(side.x), 0));
+            if (side.y != 0) cells.Add(centre + new Vector2Int(0, System.Math.Sign(side.y)));
+            var fences = cells.Select(c => PlaytestWorld.Place(PlaytestWorld.Building("Fence"), c)).ToList();
             var hit = tower.CurrentHealth;
-            var fenceFull = fence.CurrentHealth;
-            for (var t = 0f; t < 6f && fence != null && fence.CurrentHealth == fenceFull; t += Time.deltaTime) yield return null;
-            Assert.IsTrue(fence == null || fence.CurrentHealth < fenceFull, "The orc did not turn on the fence put in its way.");
+            int FenceHealth() => fences.Sum(f => f != null ? f.CurrentHealth : 0);
+            var fenceFull = FenceHealth();
+            for (var t = 0f; t < 6f && FenceHealth() == fenceFull; t += Time.deltaTime) yield return null;
+            Assert.Less(FenceHealth(), fenceFull, $"The orc did not turn on the fence put in its way: orc at {grid.WorldToCell(orc.transform.position)}, tower {centre}, fence {string.Join(" ", cells)}, tower hit since {hit - tower.CurrentHealth}");
             Assert.AreEqual(hit, tower.CurrentHealth, "The orc hit the tower through the fence.");
             orc.TakeDamage(orc.MaxHealth);
         }
