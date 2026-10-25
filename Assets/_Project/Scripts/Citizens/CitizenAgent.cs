@@ -119,6 +119,7 @@ namespace CityBuilder.Citizens
         private bool _resumingAfterStuck;
 
         private CharacterController _controller;
+        private readonly CityBuilder.Core.StuckEscape _escape = new CityBuilder.Core.StuckEscape();
 
         // Set whenever SetWorking/SetIdleWander runs while OnWorkVisitCompleted is being
         // dispatched, so OnPauseElapsed can tell a subscriber already reassigned this agent
@@ -367,6 +368,11 @@ namespace CityBuilder.Citizens
                     }
                 }
 
+                if (_escape.Step(transform, _controller, CurrentWalkSpeed()))
+                {
+                    ResetStuckTracking();
+                    return;
+                }
                 var direction = toTarget / distance;
                 var speed = CurrentWalkSpeed();
                 // Never a step past the point being walked to: a long frame (or the game sped up)
@@ -428,6 +434,13 @@ namespace CityBuilder.Citizens
         /// </summary>
         private void OnStuck()
         {
+            // wedged inside something (a building put up round it): it passes through to free
+            // ground, still walking, before anything else is tried (the user, 2026-10-25)
+            if (_escape.TryFree(transform))
+            {
+                ResetStuckTracking();
+                return;
+            }
             _isWalking = false;
 
             if (_mode == Mode.Wandering)

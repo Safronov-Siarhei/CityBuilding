@@ -11,7 +11,8 @@ namespace CityBuilder.Invasion
 {
     /// <summary>
     /// The people of an Invasion run (the user, 2026-10-21): they live in the six houses that stand
-    /// on the island from the start, three to a house, and nowhere else -- no house is ever built
+    /// on the island from the start -- as many to a house as the invasion tab's Hovel row gives its
+    /// level (housing_capacity, _2.._5; the user, 2026-10-25: one more with each upgrade) -- and nowhere else -- no house is ever built
     /// again. People are workers or, hired at the Barracks, soldiers; a soldier who falls is replaced
     /// by his house after a wait (a bar over the house shows it filling), but only while the island
     /// has fewer people than its standing houses have places. A burnt house takes its places with it
@@ -33,8 +34,20 @@ namespace CityBuilder.Invasion
 
         private readonly List<House> _houses = new List<House>();
 
-        /// <summary>Places in the standing houses.</summary>
-        public int Places => _houses.Count * BalanceConfig.Instance.InvasionPeoplePerHouse;
+        /// <summary>Places in the standing houses, each at its own level.</summary>
+        public int Places
+        {
+            get
+            {
+                var places = 0;
+                foreach (var house in _houses) places += PlacesOf(house.Building);
+                return places;
+            }
+        }
+
+        /// <summary>How many live in this house at its level: the run's Hovel row, housing_capacity at that level.</summary>
+        public static int PlacesOf(BuildingInstance house) =>
+            house == null || house.Data == null ? 0 : Mathf.Max(0, house.Data.LevelStats(house.Level).housingCapacity);
 
         /// <summary>Everyone alive: the town's people and its soldiers.</summary>
         public static int People
@@ -117,14 +130,13 @@ namespace CityBuilder.Invasion
         private void Balance(int shortfall)
         {
             if (_houses.Count == 0) return;
-            var perHouse = BalanceConfig.Instance.InvasionPeoplePerHouse;
             var owed = Owed;
             while (owed < shortfall)
             {
                 House least = null;
                 foreach (var house in _houses)
                 {
-                    if (house.Owed < perHouse && (least == null || house.Owed < least.Owed)) least = house;
+                    if (house.Owed < PlacesOf(house.Building) && (least == null || house.Owed < least.Owed)) least = house;
                 }
                 if (least == null) break;
                 least.Owed++;

@@ -375,9 +375,10 @@ namespace CityBuilder.Buildings
         public List<ResourceAmount> GetRepairCost()
         {
             // In an Invasion run nothing decays, and mending is for what the orcs broke: any
-            // damage at all, for a share of the building's wood and stone.
+            // damage at all, priced by how much of it there is.
             if (Invasion.InvasionRules.Active)
-                return Data == null || CurrentHealth >= MaxHealth ? null : Invasion.InvasionRules.RepairCost(Data);
+                return Data == null || CurrentHealth >= MaxHealth ? null
+                    : Invasion.InvasionRules.RepairCost(Data, Level, 1f - CurrentHealth / (float)Mathf.Max(1, MaxHealth));
             if (Data == null || Decay <= 0f) return null;
 
             var scaled = new List<ResourceAmount>();

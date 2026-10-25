@@ -36,6 +36,7 @@ namespace CityBuilder.Combat
         public static IReadOnlyList<SoldierUnit> All => _all;
 
         private readonly NavRoute _route = new NavRoute();
+        private readonly StuckEscape _escape = new StuckEscape();
 
         private CharacterController _controller;
         private IDamageTarget _target;
@@ -403,6 +404,8 @@ namespace CityBuilder.Combat
         /// <summary>Routes to a destination, replanning when the destination has moved or the plan has gone stale. Movement itself is one step along the current route.</summary>
         private void WalkTowards(Vector3 destination)
         {
+            // wedged inside something (two buildings put up round him): through it to free ground first
+            if (_escape.Step(transform, _controller, _walkSpeed)) return;
             _routeRefreshTimer -= Time.deltaTime;
             var destinationMoved = HorizontalDistance(destination, _routeDestination) > 0.5f;
 
@@ -440,6 +443,7 @@ namespace CityBuilder.Combat
 
             PinToGroundHeight();
             FaceTowards(transform.position + direction);
+            _escape.Watch(transform, direction, _walkSpeed);
         }
 
         private void FaceTowards(Vector3 worldPosition)

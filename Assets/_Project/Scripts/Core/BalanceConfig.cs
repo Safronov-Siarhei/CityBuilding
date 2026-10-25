@@ -508,7 +508,6 @@ namespace CityBuilder.Core
 
         // The Invasion run's own economy (InvasionRules): the houses and their people, the opening stock.
         [SerializeField] private int invasionHouses = 6;
-        [SerializeField] private int invasionPeoplePerHouse = 3;
         [SerializeField] private float invasionPersonRespawnSeconds = 15f;
         [SerializeField] private int invasionStartWood = 60;
         [SerializeField] private int invasionStartStone = 40;
@@ -809,7 +808,6 @@ namespace CityBuilder.Core
         /// <summary>Every hero skill in the sheet, by id order.</summary>
         public IReadOnlyList<HeroSkillBalance> HeroSkills => heroSkills;
         public int InvasionHouses => invasionHouses;
-        public int InvasionPeoplePerHouse => invasionPeoplePerHouse;
         public float InvasionPersonRespawnSeconds => invasionPersonRespawnSeconds;
         public int InvasionStartWood => invasionStartWood;
         public int InvasionStartStone => invasionStartStone;
@@ -1184,7 +1182,6 @@ namespace CityBuilder.Core
             _heroUnits = null;
             _kingUnit = null;
             invasionHouses = (int)Read(economy, "inv_houses", invasionHouses);
-            invasionPeoplePerHouse = (int)Read(economy, "inv_people_per_house", invasionPeoplePerHouse);
             invasionPersonRespawnSeconds = Read(economy, "inv_person_respawn_sec", invasionPersonRespawnSeconds);
             invasionStartWood = (int)Read(economy, "inv_start_wood", invasionStartWood);
             invasionStartStone = (int)Read(economy, "inv_start_stone", invasionStartStone);

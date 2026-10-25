@@ -189,7 +189,8 @@ namespace CityBuilder.Tests.PlayMode
             var mode = InvasionMode.Instance;
             var config = BalanceConfig.Instance;
             Assert.AreEqual(config.InvasionHouses, mode.Houses.Count, "Not every house found its place on the island.");
-            Assert.AreEqual(config.InvasionHouses * config.InvasionPeoplePerHouse, mode.People.Places);
+            Assert.AreEqual(mode.Houses.Sum(InvasionPeople.PlacesOf), mode.People.Places);
+            Assert.AreEqual(config.InvasionHouses * config.Building("Hovel").levels[0].housingCapacity, mode.People.Places, "A level-1 house does not hold the invasion tab's housing_capacity.");
             Assert.AreEqual(mode.People.Places, InvasionPeople.People, "The island does not open with a full house.");
             Assert.AreEqual(mode.People.Places, CitizenManager.Instance.Capacity, "The town's room is not just the houses' places.");
 
@@ -228,9 +229,15 @@ namespace CityBuilder.Tests.PlayMode
         {
             var tower = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None).First(b => b.Data != null && b.Data.buildingName == "Tower");
             Assert.IsNull(tower.GetRepairCost(), "An unhurt building offers a repair.");
+            tower.TryDamage(tower.MaxHealth / 4);
+            var light = tower.GetRepairCost().Sum(c => c.amount);
             tower.TryDamage(tower.MaxHealth / 2);
             var cost = tower.GetRepairCost();
             Assert.IsNotNull(cost, "A damaged building cannot be repaired.");
+            // the price follows the damage (the user, 2026-10-25)
+            Assert.Greater(cost.Sum(c => c.amount), light, "Mending three quarters of a tower costs no more than mending a quarter.");
+            var full = InvasionRules.RepairCost(tower.Data, tower.Level, 1f).Sum(c => c.amount);
+            Assert.Less(cost.Sum(c => c.amount), full, "Mending three quarters of a tower costs as much as mending it from nothing.");
             Assert.IsTrue(cost.All(c => c.type == ResourceType.Wood || c.type == ResourceType.Stone));
             Assert.IsTrue(tower.TryRepair(), "The repair was refused with the stock to pay for it.");
             Assert.AreEqual(tower.MaxHealth, tower.CurrentHealth, "The repair did not mend the damage.");
@@ -259,10 +266,10 @@ namespace CityBuilder.Tests.PlayMode
             var mode = InvasionMode.Instance;
             var places = mode.People.Places;
             var house = mode.Houses[0];
+            var perHouse = InvasionPeople.PlacesOf(house);
             house.TryDamage(house.MaxHealth);
             yield return null;
             yield return null;
-            var perHouse = BalanceConfig.Instance.InvasionPeoplePerHouse;
             Assert.AreEqual(places - perHouse, mode.People.Places, "A burnt house kept its places.");
             Assert.AreEqual(places, InvasionPeople.People, "The house's people died with it -- they should only stop being replaced.");
 
@@ -966,7 +973,7 @@ namespace CityBuilder.Tests.PlayMode
             var build = InvasionRules.BuildCost(data);
             Assert.AreEqual(2, build.Count, "A run's price kept something besides wood, stone and the run's money.");
             Assert.AreEqual(11, build.First(c => c.type == InvasionRules.Money).amount, "A run's price did not ask its gold (and the rest) in the run's money.");
-            Assert.IsFalse(InvasionRules.RepairCost(data).Any(c => c.type == InvasionRules.Money), "Mending asks for gold.");
+            Assert.IsFalse(InvasionRules.RepairCost(data, 1, 1f).Any(c => c.type == InvasionRules.Money), "Mending asks for gold.");
             Object.DestroyImmediate(data);
         }
 
@@ -1126,6 +1133,48 @@ namespace CityBuilder.Tests.PlayMode
             yield return new WaitForSeconds(0.6f);
             if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("reach-sawmill", sawmill.transform.position, 30f, 55f, 20f, 45f);
             CityBuilder.UI.BuildingFocus.Instance.Clear();
+        }
+
+        /// <summary>A house upgraded holds one more islander a level (the invasion tab's housing_capacity per level; the user, 2026-10-25), and makes him.</summary>
+        [UnityTest]
+        public IEnumerator AnUpgradedHouse_HoldsOneMore()
+        {
+            var mode = InvasionMode.Instance;
+            var house = mode.Houses[0];
+            var places = mode.People.Places;
+            var levels = BalanceConfig.Run.Building("Hovel").levels;
+            Assert.AreEqual(levels[0].housingCapacity + 1, levels[1].housingCapacity, "Level 2 of a house does not hold one more in the sheet.");
+            house.SetLevel(2);
+            yield return null;
+            Assert.AreEqual(places + 1, mode.People.Places, "The upgraded house holds no more people.");
+            Assert.AreEqual(1, mode.People.Owed, "The house does not make its new islander.");
+        }
+
+        /// <summary>
+        /// A unit wedged inside buildings put up round it passes through to free ground and walks on
+        /// (the user, 2026-10-25: the King stood stuck between two buildings set against the castle).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AUnitWalledInByBuildings_WalksOut()
+        {
+            var king = InvasionMode.Instance.King;
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            // two barracks side by side, the King in the seam between them, as if they went up round him
+            var cell = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-12f, 0f, 6f)), new Vector2Int(6, 3));
+            var west = PlaytestWorld.Place(PlaytestWorld.Building("Barracks"), cell);
+            var east = PlaytestWorld.Place(PlaytestWorld.Building("Barracks"), cell + new Vector2Int(3, 0));
+            yield return new WaitForSeconds(1f);   // the carves land
+            var seam = (west.transform.position + east.transform.position) * 0.5f;
+            king.transform.position = new Vector3(seam.x, king.transform.position.y, seam.z);
+            Physics.SyncTransforms();
+            Assert.IsFalse(NavMesh.SamplePosition(seam, out _, 0.25f, NavMesh.AllAreas), "The seam is walkable: the fixture does not wedge him.");
+            // he guards the castle: walking home is what he tries, and the seam holds him
+            for (var t = 0f; t < 10f && !NavMesh.SamplePosition(king.transform.position, out _, 0.25f, NavMesh.AllAreas); t += Time.deltaTime) yield return null;
+            Assert.IsTrue(NavMesh.SamplePosition(king.transform.position, out _, 0.25f, NavMesh.AllAreas), "The King wedged between two buildings never got out.");
+            yield return new WaitForSeconds(0.5f);
+            var controller = king.GetComponent<CharacterController>();
+            Assert.IsTrue(controller == null || controller.enabled, "The King was left with his collider off.");
         }
 
         /// <summary>A hired soldier steps out where he can walk to the castle, not into the gap between the barracks and a house (the user, 2026-10-23).</summary>

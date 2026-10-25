@@ -1259,6 +1259,8 @@ namespace CityBuilder.Combat
 
         private void Step(Vector3 direction)
         {
+            // wedged inside something (a building put up round it): through it to free ground first
+            if (_escape.Step(transform, _controller, _walkSpeed)) return;
             var step = direction * _walkSpeed * Time.deltaTime;
             if (_controller != null && _controller.enabled)
             {
@@ -1269,7 +1271,10 @@ namespace CityBuilder.Combat
             {
                 transform.position += step;
             }
+            _escape.Watch(transform, direction, _walkSpeed, CityBuilder.Maps.NavAreas.WithoutGates);
         }
+
+        private readonly StuckEscape _escape = new StuckEscape();
 
 
         /// <summary>

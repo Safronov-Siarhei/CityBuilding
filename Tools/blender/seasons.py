@@ -77,7 +77,7 @@ TREES = {
     },
     "Spring": {
         "broadleaf": [crowns("F2A7C3", "D97FA6", "F6BCD2", "FFD9E6"),        # pink blossom
-                      crowns("F1EEE6", "D6D2C6", "FAF8F2", "FFFFFF"),        # white blossom
+                      crowns("F3F0EA", "7FBF5E", "9ED07A", "FAF7F1"),        # white blossom on green (all-white read as a feather)
                       crowns("5DBE4A", "48A43F", "6CC955", "9BE06A")],       # fresh green
         "conifer": crowns("4A9E45", "5DAA41", "5FB653", "8ACB5C"),
     },

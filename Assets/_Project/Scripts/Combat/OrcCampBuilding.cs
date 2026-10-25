@@ -65,6 +65,8 @@ namespace CityBuilder.Combat
         public int MaxHealth { get; private set; }
         public int CurrentHealth { get; private set; }
 
+        private Buildings.BuildingHealthBar _healthBar;
+
         public bool IsWall => OrcBaseLayout.IsWall(Kind);
 
         private GameObject _ruinModel;
@@ -197,7 +199,14 @@ namespace CityBuilder.Combat
             if (amount <= 0 || CurrentHealth <= 0) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            if (CurrentHealth > 0) return;
+            // a bar over it while it is being hit, as over the player's own (the user, 2026-10-25:
+            // no way to see how much a blow took off an orc building)
+            if (CurrentHealth > 0)
+            {
+                if (_healthBar == null) _healthBar = Buildings.BuildingHealthBar.CreateFor(transform);
+                _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
+                return;
+            }
 
             Fall(announce: true);
         }
