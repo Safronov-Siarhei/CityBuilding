@@ -83,6 +83,7 @@ namespace CityBuilder.EditorTools
             // scenes with, so they have to be this run's, not the last one's.
             BuildCityScene();
             BuildMainMenuScene();
+            BuildLoadingScreen();
 
             EditorBuildSettings.scenes = new[]
             {

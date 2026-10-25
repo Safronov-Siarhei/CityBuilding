@@ -190,6 +190,89 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// The loading screen's pictures (the user, 2026-10-25): each sandbox map as the game's own
+        /// ink-on-parchment chart, whole, from straight above (playtest_shots/loading/LoadInk_<map>.png, which a pen draws
+        /// while the game loads); and for each Invasion theme a scene of the run's island with the
+        /// King at the front (LoadRaw_<theme>.png, painted over by Tools/ui/illustrate.py into
+        /// UI/Loading/Load_<theme>.png).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Bake_TheLoadingPictures()
+        {
+            Assume.That(PlaytestCapture.Available, "No graphics device: run with -Graphics.");
+            // raw shots outside Assets (playtest_shots is ignored); Tools/ui/illustrate.py writes the finished ones into UI/Loading
+            var folder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "playtest_shots", "loading");
+            Directory.CreateDirectory(folder);
+            var fog = GameSettings.FogStyle;
+            var keep = GameSettings.InvasionTheme;
+            try
+            {
+                GameSettings.FogStyle = FogStyle.Parchment;
+                foreach (var map in MapSelector.Choosable())
+                {
+                    yield return Load(map.MapId);
+                    foreach (var man in Citizens.CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
+                    yield return new WaitForSeconds(3.5f);   // the chart waits for the trees and rocks
+                    FogOfWarManager.Instance.ConcealAll();
+                    yield return null;
+                    yield return new WaitForSeconds(0.3f);
+                    yield return PlaytestCapture.ShootTo(Path.Combine(folder, $"LoadInk_{map.MapId}.png"), 1600, 1000,
+                        new Vector3(0f, 0f, 0f), 265f, 89.5f, 0f, 40f);
+                }
+
+                foreach (var theme in MapThemes.All)
+                {
+                    GameSettings.InvasionTheme = theme;
+                    SeasonStyle.Override = MapThemes.SeasonOf(theme);
+                    InvasionRecords.FilePathOverride = Path.Combine(Application.temporaryCachePath, "invasion_records_bake.json");
+                    GameSessionIntent.NewGameIsInvasion = true;
+                    yield return Load(Invasion.InvasionMode.RunMapId);
+                    for (var frame = 0; frame < 300 && (Invasion.InvasionMode.Instance == null || !Invasion.InvasionMode.Instance.RunStarted); frame++) yield return null;
+                    var mode = Invasion.InvasionMode.Instance;
+                    var castle = mode.Castle;
+                    var at = GridManager.Instance.WorldToCell(castle.transform.position);
+                    var rng = new System.Random(11);
+                    foreach (var id in new[] { "Tower", "Tower", "Sawmill", "Quarry", "Barracks", "HealerHouse", "Tower", "Fence", "Fence" })
+                    {
+                        var data = PlaytestWorld.Building(id);
+                        if (data != null) PlaceNear(data, at, rng);
+                    }
+                    if (FogOfWarManager.Instance != null) FogOfWarManager.Instance.RevealPermanent(at, 80);
+                    // the King at the front, left of the middle, turned half to the camera; orcs far behind the village
+                    var yaw = 205f;
+                    var turn = Quaternion.Euler(0f, yaw, 0f);
+                    var toCamera = turn * Vector3.back;
+                    var right = turn * Vector3.right;
+                    var king = mode.King;
+                    king.Unit.enabled = false;
+                    var kingAt = castle.transform.position + toCamera * 13f - right * 1.6f;
+                    if (UnityEngine.AI.NavMesh.SamplePosition(kingAt, out var stand, 4f, UnityEngine.AI.NavMesh.AllAreas)) kingAt = stand.position;
+                    king.transform.position = kingAt;
+                    king.transform.rotation = Quaternion.LookRotation(toCamera + right * 0.7f);
+                    for (var i = 0; i < 4; i++)
+                    {
+                        var orcAt = castle.transform.position - toCamera * (24f + i * 2f) + right * (i - 1.5f) * 3f;
+                        if (!UnityEngine.AI.NavMesh.SamplePosition(orcAt, out var orcStand, 6f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                        var orc = OrcRaidManager.Instance.SpawnOrcOfKind(orcStand.position, 1, OrcKind.Raider);
+                        orc.Steered = true;
+                        orc.transform.rotation = Quaternion.LookRotation(toCamera);
+                    }
+                    yield return new WaitForSeconds(FogOfWarManager.RevealSeconds + 1f);
+                    yield return PlaytestCapture.ShootTo(Path.Combine(folder, $"LoadRaw_{MapThemes.Id(theme)}.png"), 1920, 1080,
+                        kingAt + Vector3.up * 0.55f + right * 0.55f - toCamera * 1.5f, 3.6f, 7f, yaw, 50f);
+                }
+            }
+            finally
+            {
+                GameSettings.FogStyle = fog;
+                GameSettings.InvasionTheme = keep;
+                SeasonStyle.Override = null;
+                GameSessionIntent.NewGameIsInvasion = false;
+                InvasionRecords.FilePathOverride = null;
+            }
+        }
+
         private static IEnumerator Load(string mapId)
         {
             LogAssert.ignoreFailingMessages = true;

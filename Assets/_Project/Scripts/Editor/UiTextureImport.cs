@@ -19,7 +19,7 @@ namespace CityBuilder.EditorTools
     public class UiTextureImport : AssetPostprocessor
     {
         /// <summary>Raised when these rules change, so Unity reimports the pictures they cover (2: the Android ASTC override).</summary>
-        public override uint GetVersion() => 2;
+        public override uint GetVersion() => 3;
 
         public const string SkinFolder = "Assets/_Project/UI/Skin";
         public const string IconsFolder = "Assets/_Project/UI/Icons";
@@ -36,11 +36,14 @@ namespace CityBuilder.EditorTools
         /// <summary>The mode cards' pictures, photographed in the game (MenuArtBake). Big, so compressed, unlike the rest of the interface.</summary>
         public const string MenuArtFolder = "Assets/_Project/UI/MenuArt";
 
+        /// <summary>The loading screen's pictures (Tools/ui/illustrate.py, render_runner.py): big, so compressed as the menu's art.</summary>
+        public const string LoadingFolder = "Assets/_Project/UI/Loading";
+
         private void OnPreprocessTexture()
         {
             var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isArt = assetPath.StartsWith(MenuArtFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/");
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;

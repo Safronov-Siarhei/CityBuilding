@@ -67,7 +67,7 @@ namespace CityBuilder.UI
             GameSessionIntent.NewGameIsInvasion = false;
             GameSessionIntent.NewGameMapId = _picked;
             GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(Theme);
-            SceneManager.LoadScene(gameplaySceneName);
+            LoadingScreen.IntoGame(gameplaySceneName);
         }
 
         private MapTheme Theme => themes != null ? themes.Current : GameSettings.SandboxTheme;

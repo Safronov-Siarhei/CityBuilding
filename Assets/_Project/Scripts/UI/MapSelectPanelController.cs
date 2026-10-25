@@ -55,7 +55,7 @@ namespace CityBuilder.UI
             MapSelector.MarkChosen(_selected);
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameMapId = _selected.MapId;
-            SceneManager.LoadScene(gameplaySceneName);
+            LoadingScreen.IntoGame(gameplaySceneName);
         }
 
         private void Populate()

@@ -98,7 +98,7 @@ namespace CityBuilder.UI
             // Must run before the scene unloads -- MainMenu would otherwise inherit a frozen
             // timescale and its own flythrough camera/UI would never animate.
             Time.timeScale = 1f;
-            SceneManager.LoadScene(mainMenuSceneName);
+            LoadingScreen.OutToMenu(mainMenuSceneName);
         }
     }
 }

@@ -79,7 +79,7 @@ namespace CityBuilder.UI
             if (saveController != null) saveController.Autosave();
             Time.timeScale = 1f;
             ModalGate.Reset();
-            SceneManager.LoadScene(mainMenuSceneName);
+            LoadingScreen.OutToMenu(mainMenuSceneName);
         }
 
         private void ShowMenu()

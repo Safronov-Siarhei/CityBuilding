@@ -445,6 +445,22 @@ namespace CityBuilder.Maps
 
         private bool IsRevealed(int x, int z) => _permanent[x, z] || _citizenRevealed[x, z];
 
+        /// <summary>
+        /// The whole map under the parchment at once, nothing revealed -- the loading screen's
+        /// ink map is photographed so (MenuArtBake). Walkers are let go; anything that reveals
+        /// again afterwards (a citizen's walk) does so as usual.
+        /// </summary>
+        public void ConcealAll()
+        {
+            EnsureInitialized();
+            if (_permanent == null) return;
+            System.Array.Clear(_permanent, 0, _permanent.Length);
+            System.Array.Clear(_citizenRevealed, 0, _citizenRevealed.Length);
+            _walkers.Clear();
+            _active = true;
+            _needsSnap = true;
+        }
+
         // ---------------------------------------------------------------- easing the mask
 
         private void MarkCellChanged(int x, int z)

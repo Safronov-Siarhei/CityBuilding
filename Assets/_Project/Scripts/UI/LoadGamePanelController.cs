@@ -48,7 +48,7 @@ namespace CityBuilder.UI
         {
             if (string.IsNullOrEmpty(_selectedName)) return;
             GameSessionIntent.SaveNameToLoad = _selectedName;
-            SceneManager.LoadScene(gameplaySceneName);
+            LoadingScreen.IntoGame(gameplaySceneName);
         }
 
         private void Populate()

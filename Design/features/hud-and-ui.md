@@ -48,6 +48,23 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
 Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMenuTests`,
 `MapPickerTests` (sandbox screen).
 
+## Loading screen (user's pick, 2026-10-25: 1 for the sandbox, 2 for the Invasion, tips, both ways)
+`UI/LoadingScreen.cs`, prefab `Resources/LoadingScreen.prefab` (built by `SetupProjectLoading.cs`),
+DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (menu: sandbox Start, saves Load, Run) and
+`OutToMenu` (game menu Home, game over); loads with `LoadSceneAsync`, shown ≥ 2.4 s, gone once the new
+scene's map is laid out (`MeshMapApplier.CurrentMap`).
+- sandbox: parchment page, the map's own ink chart (`UI/Loading/Ink_<map>.png`) drawn in left→right
+  (Image Filled) over a faint copy, a quill (`Quill.png`) riding the edge; the map's name at the end.
+- invasion: the theme's painted scene (`Load_<theme>.png`), a plank filling at the foot with a running
+  militiaman (`Runner_A/B.png`, Tools/blender/render_runner.py).
+- tips: rotating every 4 s from `#tip_sandbox_N` / `#tip_invasion_N` (the builder reads the CSV keys).
+- Pictures: `MenuArtBake.Bake_TheLoadingPictures` (-Graphics) writes raw shots to the IGNORED
+  `playtest_shots/loading/` (the chart = `FogOfWarManager.ConcealAll()` + top-down shot of the
+  parchment fog; the scene = the run with the King in front), then `python Tools/ui/illustrate.py .`
+  paints them (flatten, ink edges, paper, vignette), crops the charts, draws the quill.
+- Trap: a Filled Image without a sprite draws WHOLE (the plank fill uses the HUD card sprite).
+Test `LoadingScreenTests` (+ photos loading-sandbox / loading-invasion).
+
 ## Building card in a run (user's sketch, 2026-10-25)
 `UI/RunBuildingCard.cs` replaces the sandbox card in a run only (sandbox card unchanged «пока»): name,
 «Уровень N», heart+shield numbers, − workers/free + (minus LEFT), next level's picture

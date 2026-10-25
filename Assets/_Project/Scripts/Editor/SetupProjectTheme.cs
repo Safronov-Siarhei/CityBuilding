@@ -35,7 +35,7 @@ namespace CityBuilder.EditorTools
         /// <summary>Makes sure the skin and icon files carry UiTextureImport's settings, the same way ForceReimportModels does for the models.</summary>
         private static void EnsureUiTextures()
         {
-            foreach (var folder in new[] { UiTextureImport.SkinFolder, UiTextureImport.IconsFolder, UiTextureImport.GlyphsFolder, UiTextureImport.HudSkinsFolder, UiTextureImport.MenuSkinsFolder, UiTextureImport.MenuArtFolder })
+            foreach (var folder in new[] { UiTextureImport.SkinFolder, UiTextureImport.IconsFolder, UiTextureImport.GlyphsFolder, UiTextureImport.HudSkinsFolder, UiTextureImport.MenuSkinsFolder, UiTextureImport.MenuArtFolder, UiTextureImport.LoadingFolder })
             {
                 if (AssetDatabase.IsValidFolder(folder))
                 {

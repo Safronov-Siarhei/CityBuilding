@@ -133,7 +133,7 @@ namespace CityBuilder.UI
             GameSessionIntent.NewGameMapId = Invasion.InvasionMode.RunMapId;
             GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(GameSettings.InvasionTheme);
             GameSessionIntent.NewGameIsInvasion = true;
-            SceneManager.LoadScene(gameplaySceneName);
+            LoadingScreen.IntoGame(gameplaySceneName);
         }
 
         public void OpenShop()
