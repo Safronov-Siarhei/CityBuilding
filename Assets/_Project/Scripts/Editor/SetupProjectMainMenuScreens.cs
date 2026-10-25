@@ -28,6 +28,8 @@ namespace CityBuilder.EditorTools
         private static readonly Vector2 MenuWindowSize = new Vector2(1560f, 840f);
         private static readonly Vector2 MenuWindowPos = new Vector2(0f, -10f);
         private const float CornerButton = 140f;
+        /// <summary>The period tabs: centred between the window's foot and the screen's (1080 high), the user 2026-10-25.</summary>
+        private static float PeriodTabsY => (MenuWindowPos.y - MenuWindowSize.y * 0.5f - 540f) * 0.5f;
         private const float CornerInset = 100f;
         private static readonly Color BadgeColour = new Color(0.94f, 0.54f, 0.17f);
 
@@ -409,7 +411,7 @@ namespace CityBuilder.EditorTools
             var selected = new Object[periods.Length];
             for (var i = 0; i < periods.Length; i++)
             {
-                var tab = MenuTab(screen, $"Tab_{i}", periods[i], new Vector2((i - 1) * 480f, MenuWindowPos.y - MenuWindowSize.y * 0.5f - 40f), new Vector2(300f, 80f));
+                var tab = MenuTab(screen, $"Tab_{i}", periods[i], new Vector2((i - 1) * 480f, PeriodTabsY), new Vector2(300f, 72f));
                 tab.selected.SetActive(i == 0);
                 selected[i] = tab.selected;
                 UnityEventTools.AddIntPersistentListener(tab.button.onClick, hub.SelectPeriod, i);
