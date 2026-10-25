@@ -15,8 +15,8 @@ namespace CityBuilder.EditorTools
     /// The HUD after the user's layout sketch (2026-10-14): pictures instead of words, and each
     /// piece on the edge it belongs to --
     ///
-    ///   top-left      the menu (save, settings, main menu), which pauses the game, and the
-    ///                 citizens button under it;
+    ///   top-left      the menu (save, settings, main menu), which pauses the game, the
+    ///                 citizens button under it, and the inventory (a sack) under that;
     ///   top-centre    one resource bar, the day under it;
     ///   top-right     happiness as a round number (tap for the breakdown), then migration, army;
     ///   left          the event feed;
@@ -34,8 +34,10 @@ namespace CityBuilder.EditorTools
         private const float MenuButtonTop = -HudMargin * 0.7f;
         private const float WorkforceButtonSize = 96f;
         private const float WorkforceButtonTop = MenuButtonTop - RoundButton - 18f;
-        /// <summary>Where the left column under the menu and the citizens button frees up -- the event feed starts here.</summary>
-        private const float LeftColumnTop = WorkforceButtonTop - WorkforceButtonSize - 20f;
+        /// <summary>The inventory's round button, under the citizens button (the user, 2026-10-25).</summary>
+        private const float InventoryButtonTop = WorkforceButtonTop - WorkforceButtonSize - 18f;
+        /// <summary>Where the left column under the menu, the citizens and the inventory buttons frees up -- the event feed starts here.</summary>
+        private const float LeftColumnTop = InventoryButtonTop - WorkforceButtonSize - 20f;
 
         /// <summary>One of Tools/ui/make_hud_glyphs.py's white silhouettes, or null if it was never drawn.</summary>
         private static Sprite HudGlyph(string name)

@@ -26,7 +26,10 @@ namespace CityBuilder.Resources
         /// <summary>Milled wheat. The Ветряк's only output and the Пекарня's only input -- nobody eats it, which is the point of a middle link.</summary>
         Flour,
 
-        /// <summary>The chain's end: the first food the settlement makes rather than gathers.</summary>
+        /// <summary>
+        /// No longer made or eaten (the user, 2026-10-25: one food counter -- the Пекарня makes Food).
+        /// Kept so an old save's bread can be read and turned into Food (GameSaveController).
+        /// </summary>
         Bread,
 
         /// <summary>Copper ore. The third mine's output, and the only one of the three whose name says "ore" out loud.</summary>
@@ -35,6 +38,9 @@ namespace CityBuilder.Resources
         /// <summary>Smelted metal -- what the Плавильня makes out of ore and coal, and what anything better than timber and stone is built from.</summary>
         IronBar,
         CopperBar,
-        GoldBar
+        GoldBar,
+
+        /// <summary>The Свиноферма's pork, the Коптильня's input: a middle link like flour -- nobody eats it raw.</summary>
+        Meat
     }
 }

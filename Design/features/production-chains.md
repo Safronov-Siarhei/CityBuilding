@@ -1,7 +1,13 @@
 # Production chains and recipes
 
-> **Status (2026-10-21):** grain→flour→bread, ore+coal→bars, gold+coal→coins shipped. Meat/fruit
-> chains await the user's design (asked 2026-08-17, unanswered).
+> **2026-10-25:** the user's food design: ONE Food counter, chains pay more per worker the longer they are.
+> New: Orchard `fruit` -> Food 1; PigFarm `meat` -> Meat 1 (new `ResourceType.Meat`, kept in the
+> Кладовая like flour); Smokehouse `smoked` Meat 2 -> Food 3 (`requires` PigFarm); Baker `bread` Flour 1
+> -> Food 3 (was Bread 2). Workers 2..6 and batches per level for the three new ones are on the buildings
+> tab (Smokehouse batches 1..5 -- `UpgradeBalanceTests` wants more per worker every level). See
+> [food-and-hunger](food-and-hunger.md).
+
+> **Status (2026-10-25):** grain→flour→Food, pigs→meat→Food, fruit/fish→Food, ore+coal→bars, gold+coal→coins.
 > **Read with:** [resources-and-storage](resources-and-storage.md), [citizens-and-workforce](citizens-and-workforce.md),
 > [building-levels-and-decay](building-levels-and-decay.md).
 

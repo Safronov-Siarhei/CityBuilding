@@ -170,6 +170,93 @@ namespace CityBuilder.EditorTools
             panelRoot.SetActive(false);
         }
 
+        /// <summary>
+        /// The inventory (the user, 2026-10-25): every resource the town can hold in one card, three
+        /// to a row -- picture, name, amount (InventoryPanelController fills them) -- opened by a
+        /// round sack button under the citizens button. The resource bar along the top keeps only
+        /// Food of the food chain; the wheat, flour and pork are here.
+        /// </summary>
+        private static void BuildInventoryPanel(Transform canvasParent, Sprite panelSprite, HudHider hud, ResourceIconLibrary iconLibrary)
+        {
+            var panelRoot = new GameObject("InventoryPanel", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var types = new List<ResourceType>();
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+            {
+                // people are counted on their own button; bread is only an old save's
+                if (type == ResourceType.Population || type == ResourceType.Bread) continue;
+                types.Add(type);
+            }
+
+            const int perRow = 3;
+            const float rowHeight = 84f;
+            const float columnWidth = 300f;
+            var rows = (types.Count + perRow - 1) / perRow;
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            var cardHeight = 230f + rows * rowHeight;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(perRow * columnWidth + 60f, cardHeight));
+
+            Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, cardHeight * 0.5f - 50f), new Vector2(880f, 56f)), "#inventory_title");
+
+            var icons = new Image[types.Count];
+            var names = new Text[types.Count];
+            var amounts = new Text[types.Count];
+            var top = cardHeight * 0.5f - 120f;
+            for (var i = 0; i < types.Count; i++)
+            {
+                var column = i % perRow;
+                var row = i / perRow;
+                var centre = new Vector2((column - (perRow - 1) * 0.5f) * columnWidth, top - row * rowHeight);
+                var cell = CreateImage(card.transform, "Row_" + types[i], new Color(1f, 1f, 1f, 0.06f));
+                SetRect(cell.rectTransform, centre, new Vector2(columnWidth - 12f, rowHeight - 10f));
+                cell.raycastTarget = false;
+                icons[i] = CreateImage(cell.transform, "Icon", Color.white);
+                icons[i].preserveAspect = true;
+                icons[i].raycastTarget = false;
+                icons[i].sprite = iconLibrary != null ? iconLibrary.GetIcon(types[i]) : null;
+                SetRect(icons[i].rectTransform, new Vector2(-columnWidth * 0.5f + 46f, 0f), new Vector2(56f, 56f));
+                names[i] = CreateText(cell.transform, "Name", string.Empty, 22, new Vector2(10f, 12f), new Vector2(170f, 30f), new Color(1f, 1f, 1f, 0.8f));
+                names[i].alignment = TextAnchor.MiddleLeft;
+                names[i].resizeTextForBestFit = true;
+                names[i].resizeTextMinSize = 14;
+                names[i].resizeTextMaxSize = 22;
+                amounts[i] = CreateText(cell.transform, "Amount", string.Empty, 28, new Vector2(10f, -16f), new Vector2(170f, 34f));
+                amounts[i].alignment = TextAnchor.MiddleLeft;
+            }
+
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -cardHeight * 0.5f + 56f), new Vector2(300f, 64f));
+
+            var controller = panelRoot.AddComponent<InventoryPanelController>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            var typesProp = so.FindProperty("types");
+            typesProp.arraySize = types.Count;
+            for (var i = 0; i < types.Count; i++) typesProp.GetArrayElementAtIndex(i).enumValueIndex = (int)types[i];
+            WriteObjects(so.FindProperty("icons"), icons);
+            WriteObjects(so.FindProperty("names"), names);
+            WriteObjects(so.FindProperty("amounts"), amounts);
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.FindProperty("hud").objectReferenceValue = hud;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.ClosePanel);
+
+            // under the citizens button, the same size: a sack -- everything the town holds
+            var openButton = CreateGlyphButton(canvasParent, "InventoryButton", "round", HudInk.OnRound, "Bag", null, WorkforceButtonSize, 0.62f);
+            Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(HudMargin + (RoundButton - WorkforceButtonSize) * 0.5f, InventoryButtonTop), new Vector2(WorkforceButtonSize, WorkforceButtonSize));
+            UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
+
+            panelRoot.SetActive(false);
+        }
+
         private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
         {
             var panelRoot = new GameObject("BuildingInfoPanel", typeof(RectTransform));

@@ -20,6 +20,9 @@ namespace CityBuilder.Saving
     /// </summary>
     public class GameSaveController : MonoBehaviour
     {
+        /// <summary>A save-format conversion, not balance: an old save's bread is worth this much Food (the Пекарня made 2 bread a flour, it makes 3 Food now).</summary>
+        public const float BreadToFood = 1.5f;
+
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private GameCalendar gameCalendar;
@@ -161,10 +164,19 @@ namespace CityBuilder.Saving
                 taxManager.SetTaxRate(data.taxRatePercent);
             }
 
+            var bread = 0;
             foreach (var entry in data.resources)
             {
+                if (entry.type == ResourceType.Bread)
+                {
+                    bread += entry.amount;
+                    continue;
+                }
                 ResourceManager.Instance.SetAmount(entry.type, entry.amount);
             }
+            // One food counter since 2026-10-25: an old save's bread is baked into Food at the
+            // Пекарня's new rate (a flour made 2 bread then, makes 3 Food now).
+            if (bread > 0) ResourceManager.Instance.Add(ResourceType.Food, Mathf.CeilToInt(bread * BreadToFood));
 
             ResourceManager.Instance.RestoreLifetimeProduced(data.lifetimeProduced);
 

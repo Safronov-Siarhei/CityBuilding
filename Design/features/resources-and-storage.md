@@ -1,5 +1,11 @@
 # Resources, storage, coins and taxes
 
+> **2026-10-25:** the bar along the top shows Food but no longer Grain/Flour/Bread; EVERY resource is in
+> the INVENTORY -- a round sack button under the citizens button (`UI/InventoryPanelController`, built
+> by `SetupProject.BuildInventoryPanel`; glyph `Hud_Bag` from make_hud_glyphs.py): picture, name,
+> amount, dimmed at 0; no per-row room (a storehouse's room is shared by its group). New `Meat`
+> (Food group, icon `Res_Meat`). Tests PlayMode `FoodAndInventoryTests`.
+
 > **Status (2026-10-21):** shipped and stable. Coins come from tax and from minting
 > ([production-chains](production-chains.md)). Balance of coin income vs research/army still unplayed.
 > **Read with:** [production-chains](production-chains.md), [food-and-hunger](food-and-hunger.md).

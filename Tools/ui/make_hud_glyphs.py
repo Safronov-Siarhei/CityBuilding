@@ -171,6 +171,18 @@ def shop():
     return img
 
 
+def bag():
+    """A sack tied at the neck, its mouth flaring above the cord -- the inventory: all the town holds (the user, 2026-10-25)."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.ellipse(box(0.14, 0.36, 0.86, 0.92), fill=WHITE)
+    d.polygon([(u(0.38), u(0.42)), (u(0.62), u(0.42)), (u(0.57), u(0.26)), (u(0.43), u(0.26))], fill=WHITE)
+    d.polygon([(u(0.43), u(0.26)), (u(0.3), u(0.1)), (u(0.5), u(0.2)), (u(0.7), u(0.1)), (u(0.57), u(0.26))], fill=WHITE)
+    d.rectangle(box(0.36, 0.27, 0.64, 0.32), fill=0)
+    d.rounded_rectangle(box(0.34, 0.285, 0.66, 0.305), u(0.01), fill=WHITE)
+    return img
+
+
 def back():
     """A chevron pointing left."""
     img = canvas()
@@ -395,7 +407,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
-                     ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock),
+                     ("Play", play), ("Shop", shop), ("Bag", bag), ("Back", back), ("Resume", resume), ("Lock", lock),
                      ("Info", info), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
                      ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):

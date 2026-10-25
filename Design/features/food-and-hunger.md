@@ -1,5 +1,13 @@
 # Food, eating and starvation
 
+> **2026-10-25: ONE FOOD COUNTER** (the user): `ResourceDiet.Edible` = Food only. Bread is no longer made
+> or eaten -- the Пекарня makes Food (`ResourceType.Bread` kept only so an old save's bread becomes Food
+> at `GameSaveController.BreadToFood` = 1.5). Food buildings differ in how much Food they give: the
+> longer the chain, the more per worker (L1: fish/fruit 1.0, PigFarm->Smokehouse 1.5, Farm->Windmill->
+> Baker 2.0; EditMode `ALongerFoodChain_FeedsMorePerWorker`). `food_variety_target` = 1 (contentment is
+> off anyway). Middle links (Grain, Flour, Meat) are not eaten. The houses replace the starved, so
+> hunger only slows growth now ([sandbox-run-systems](sandbox-run-systems.md)).
+
 > **Status (2026-10-21):** shipped 2026-08-17. Only two edible types exist (Bread, Food), so the
 > variety factor is a three-state switch. Grace period and harshness are Claude's guesses, never playtested.
 > **Read with:** [production-chains](production-chains.md), [happiness-and-migration](happiness-and-migration.md).

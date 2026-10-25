@@ -1,5 +1,9 @@
 # HUD and UI
 
+> **2026-10-25:** left column = menu, citizens, INVENTORY (sack; `InventoryButtonTop`), then the event
+> feed (`LeftColumnTop` moved down); the run's building card and hero portraits are the sandbox's too
+> ([sandbox-run-systems](sandbox-run-systems.md)); contentment's round number is off.
+
 > **Status (2026-10-25):** main menu and the run's building card redone after the user's sketches (below). Earlier (2026-10-21): HUD follows the user's sketch (round 2, 2026-10-14) in style D, with four
 > switchable HUD looks (Classic/Soft/Glass/Dock) chosen in settings. Windows (info card, research,
 > save, settings) are NOT skinned per look — still parchment.

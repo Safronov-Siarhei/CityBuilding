@@ -100,7 +100,9 @@ namespace CityBuilder.Tests.EditMode
         public void FlourIsNotEaten()
         {
             Assert.IsFalse(ResourceDiet.IsEdible(ResourceType.Flour));
-            Assert.IsTrue(ResourceDiet.IsEdible(ResourceType.Bread));
+            Assert.IsFalse(ResourceDiet.IsEdible(ResourceType.Meat), "Raw pork is eaten -- the smokehouse would starve.");
+            // one food counter since 2026-10-25: bread is baked into Food, not eaten as bread
+            Assert.IsFalse(ResourceDiet.IsEdible(ResourceType.Bread));
             Assert.IsTrue(ResourceDiet.IsEdible(ResourceType.Food));
         }
 

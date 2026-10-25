@@ -314,6 +314,7 @@ namespace CityBuilder.EditorTools
             BuildHeroSkillBar(uiRoot);
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
+            BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 
@@ -422,9 +423,10 @@ namespace CityBuilder.EditorTools
             var barPlaque = HudImage(root.transform, "ResourceBar", "bar", new Vector2(400f, chipHeight + 18f));
 
             // Reading order: raw materials, then the ore and the metal it becomes side by side,
-            // then money, then the food chain in the order it is actually made. A chip is only on
-            // screen once its resource has existed -- ResourceHUDController lays the visible ones
-            // out, which is why nothing here is positioned.
+            // then money, then Food -- the one food counter (the user, 2026-10-25); the food
+            // chain's middle links (wheat, flour, pork) are in the inventory window only. A chip is
+            // only on screen once its resource has existed -- ResourceHUDController lays the
+            // visible ones out, which is why nothing here is positioned.
             var resourceTypes = new[]
             {
                 ResourceType.Wood, ResourceType.Stone, ResourceType.Coal,
@@ -432,7 +434,7 @@ namespace CityBuilder.EditorTools
                 ResourceType.CopperOre, ResourceType.CopperBar,
                 ResourceType.Gold, ResourceType.GoldBar,
                 ResourceType.Coins,
-                ResourceType.Grain, ResourceType.Flour, ResourceType.Bread, ResourceType.Food,
+                ResourceType.Food,
             };
             var icons = new RectTransform[resourceTypes.Length];
             var amountTexts = new Text[resourceTypes.Length];

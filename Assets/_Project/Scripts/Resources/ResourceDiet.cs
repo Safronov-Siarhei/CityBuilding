@@ -12,13 +12,13 @@ namespace CityBuilder.Resources
     public static class ResourceDiet
     {
         /// <summary>
-        /// Every edible resource, in the order the settlement is served from them. Grows as the
-        /// design's food types arrive (фрукты, мясо, рыба, овощи) -- each new one widens the table
-        /// automatically, including the variety score in HappinessManager.
+        /// Every edible resource, in the order the settlement is served from them: Food alone (the
+        /// user, 2026-10-25: one food counter). The food buildings differ in how much Food they
+        /// make -- the longer the chain behind one, the more per worker (fish and fruit, pork smoked
+        /// in the Коптильня, bread) -- not in what is eaten.
         /// </summary>
         public static readonly IReadOnlyList<ResourceType> Edible = new[]
         {
-            ResourceType.Bread,
             ResourceType.Food,
         };
 

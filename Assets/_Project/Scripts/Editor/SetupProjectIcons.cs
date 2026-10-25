@@ -678,6 +678,20 @@ namespace CityBuilder.EditorTools
                         FillIconRect(p, s, 0.62f, 0.16f, 0.88f, 0.24f, powder);
                         FillIconRect(p, s, 0.7f, 0.24f, 0.84f, 0.3f, powder);
                     });
+                case ResourceType.Meat:
+                    // A ham: a red joint with a pale rind and the bone sticking out of its end.
+                    return CreateIconSprite("Res_Meat", 64, (p, s) =>
+                    {
+                        var flesh = new Color(0.74f, 0.28f, 0.24f);
+                        var rind = new Color(0.93f, 0.78f, 0.66f);
+                        var bone = new Color(0.95f, 0.93f, 0.86f);
+                        FillIconRect(p, s, 0.14f, 0.24f, 0.66f, 0.72f, flesh);
+                        FillIconRect(p, s, 0.2f, 0.18f, 0.6f, 0.24f, flesh);
+                        FillIconRect(p, s, 0.2f, 0.72f, 0.6f, 0.78f, flesh);
+                        FillIconRect(p, s, 0.14f, 0.24f, 0.2f, 0.72f, rind);
+                        FillIconRect(p, s, 0.66f, 0.42f, 0.84f, 0.54f, bone);
+                        FillIconRect(p, s, 0.8f, 0.36f, 0.9f, 0.6f, bone);
+                    });
                 case ResourceType.Bread:
                     // A loaf: a darker crust with the slashes cut across its top.
                     return CreateIconSprite("Res_Bread", 64, (p, s) =>
