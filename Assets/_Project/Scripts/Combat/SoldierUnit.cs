@@ -237,6 +237,13 @@ namespace CityBuilder.Combat
                 _retargetTimer = RetargetIntervalSeconds;
                 Group.ClearFinishedAttackOrder();
                 _target = AcquireTarget();
+                // on the way to it, hemmed in by others: a melee fighter cuts down the one at hand
+                // instead of pushing past (the King in a crowd stood not striking, playtest 2026-10-25)
+                if (_target != null && !_target.IsStructure && HorizontalDistance(_target.Transform.position, transform.position) > _unitAttackRange)
+                {
+                    var atHand = OrcAtHand();
+                    if (atHand != null) _target = atHand;
+                }
             }
 
             if (_breach != null && _breach.CurrentHealth <= 0) _breach = null;
@@ -271,6 +278,23 @@ namespace CityBuilder.Combat
 
             var slot = Group.SlotPositionFor(this);
             if (HorizontalDistance(slot, transform.position) > SlotArrivalDistance) WalkTowards(slot);
+        }
+
+        /// <summary>A live orc within a melee blow; none for archers.</summary>
+        private OrcUnit OrcAtHand()
+        {
+            if (IsRanged) return null;
+            OrcUnit nearest = null;
+            var best = _unitAttackRange;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var d = HorizontalDistance(orc.transform.position, transform.position);
+                if (d > best) continue;
+                best = d;
+                nearest = orc;
+            }
+            return nearest;
         }
 
         /// <summary>

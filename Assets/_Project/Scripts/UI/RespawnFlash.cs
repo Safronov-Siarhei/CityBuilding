@@ -22,10 +22,17 @@ namespace CityBuilder.UI
         private Material _pillarMaterial;
         private LineRenderer[] _rings;
         private float _clock = -1f;
+        private Transform _follow;
 
-        public static void Play(Vector3 at)
+        public static void Play(Vector3 at) => Play(at, null);
+
+        /// <summary>On someone: the light goes along with him while it lasts (the user, 2026-10-25).</summary>
+        public static void Play(Transform follow) => Play(follow.position, follow);
+
+        private static void Play(Vector3 at, Transform follow)
         {
             if (_instance == null) _instance = new GameObject("RespawnFlash").AddComponent<RespawnFlash>().Build();
+            _instance._follow = follow;
             _instance.transform.position = at;
             _instance._clock = 0f;
             _instance.gameObject.SetActive(true);
@@ -65,6 +72,7 @@ namespace CityBuilder.UI
         {
             if (_clock < 0f) return;
             _clock += Time.deltaTime;
+            if (_follow != null) transform.position = _follow.position;
             Tick(_clock / Seconds);
         }
 

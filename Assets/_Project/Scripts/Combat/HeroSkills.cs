@@ -105,7 +105,7 @@ namespace CityBuilder.Combat
                 unit.SetCurrentHealth(Mathf.Max(1, Mathf.RoundToInt(unit.MaxHealth * skill.PowerAt(Level))));
                 unit.Shield(skill.DurationAt(Level));
                 _slots[i].Cooldown = skill.cooldownSeconds;
-                UI.RespawnFlash.Play(transform.position);
+                UI.RespawnFlash.Play(transform);
                 Used?.Invoke(i);
                 return true;
             }
@@ -121,7 +121,7 @@ namespace CityBuilder.Combat
             {
                 case KingHeal:
                     unit.SetCurrentHealth(unit.CurrentHealth + Mathf.RoundToInt(unit.MaxHealth * power));
-                    UI.RespawnFlash.Play(transform.position);
+                    UI.RespawnFlash.Play(transform);
                     break;
                 case KingShield:
                     unit.Shield(seconds);
@@ -133,7 +133,7 @@ namespace CityBuilder.Combat
                 {
                     HeroBlessing.Begin(seconds);
                     var castle = Castle;
-                    UI.RespawnFlash.Play(castle != null ? castle.transform.position : transform.position);
+                    if (castle != null) UI.RespawnFlash.Play(castle.transform.position); else UI.RespawnFlash.Play(transform);
                     break;
                 }
                 case QueenShot:
@@ -167,7 +167,7 @@ namespace CityBuilder.Combat
                     if (ArmyManager.Instance == null) return false;
                     ArmyManager.Instance.SpawnSummons(SummonedType, transform.position, Mathf.Max(1, Mathf.RoundToInt(power)),
                         Mathf.Max(1, skill.tier), seconds);
-                    UI.RespawnFlash.Play(transform.position);
+                    UI.RespawnFlash.Play(transform);
                     break;
                 case QueenSacrifice:
                     unit.Shield(seconds);

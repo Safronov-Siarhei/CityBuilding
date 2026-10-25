@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
@@ -1317,6 +1318,118 @@ namespace CityBuilder.Tests.PlayMode
                 HeroBlessing.End();
             }
         }
+
+        /// <summary>
+        /// Playtest 2026-10-25: in a crowd of orcs the King used his skills, the Blessing last, and
+        /// then stood -- stuck or not striking. He must keep cutting them down and still go where sent.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheKing_InACrowd_KeepsStriking_AfterHisSkills()
+        {
+            var king = InvasionMode.Instance.King;
+            var skills = king.GetComponent<HeroSkills>();
+            foreach (var tower in Object.FindObjectsByType<DefensiveBuilding>(FindObjectsSortMode.None)) tower.enabled = false;
+            while (king.Level < 15) king.AddExperience(Hero.XpForLevel(king.Level));
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            Assert.IsTrue(NavMesh.SamplePosition(castle + new Vector3(10f, 0f, 6f), out var spot, 4f, NavMesh.AllAreas));
+            ArmyManager.Instance.SelectGroup(king.Unit.Group);
+            king.Unit.Group.OrderMoveTo(spot.position);
+            king.Unit.Group.NotifyPlayerOrder();
+            for (var t = 0f; t < 10f && HorizontalDistance(king.transform.position, spot.position) > 1.5f; t += Time.deltaTime) yield return null;
+
+            var orcs = new List<OrcUnit>();
+            for (var i = 0; i < 6; i++)
+            {
+                var a = i * Mathf.PI / 3f;
+                if (!NavMesh.SamplePosition(king.transform.position + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 1.6f, out var at, 2f, NavMesh.AllAreas)) continue;
+                var orc = OrcRaidManager.Instance.SpawnOrcOfKind(at.position, 1, OrcKind.Raider);
+                orc.Toughen(30f);
+                orcs.Add(orc);
+            }
+            int Health() => orcs.Where(o => o != null && o.CurrentHealth > 0).Sum(o => o.CurrentHealth);
+            try
+            {
+                yield return new WaitForSeconds(1f);
+                for (var i = 1; i < 4; i++) Assert.IsTrue(skills.Use(i), $"Skill {i + 1} could not be used.");
+                for (var window = 0; window < 3; window++)
+                {
+                    var before = Health();
+                    yield return new WaitForSeconds(2.5f);
+                    Assert.Less(Health(), before, $"The King stopped striking {window * 2.5f + 2.5f} s after his skills (at {king.transform.position}).");
+                }
+                foreach (var orc in orcs) if (orc != null) Object.Destroy(orc.gameObject);
+                yield return null;
+                Assert.IsTrue(NavMesh.SamplePosition(spot.position + new Vector3(-6f, 0f, 0f), out var away, 4f, NavMesh.AllAreas));
+                king.Unit.Group.OrderMoveTo(away.position);
+                king.Unit.Group.NotifyPlayerOrder();
+                for (var t = 0f; t < 8f && HorizontalDistance(king.transform.position, away.position) > 1.5f; t += Time.deltaTime) yield return null;
+                Assert.LessOrEqual(HorizontalDistance(king.transform.position, away.position), 1.5f, $"After his skills the King no longer walks where he is sent: at {king.transform.position}, sent to {away.position}, hold {king.Unit.Group.HoldPosition}, target {king.Unit.Group.AttackTarget}, fighting {king.Unit.IsFighting}, guarding {king.Guarding}, controller {king.GetComponent<CharacterController>()?.enabled}, orcs {OrcUnit.All.Count}");
+            }
+            finally
+            {
+                HeroBlessing.End();
+            }
+        }
+
+        /// <summary>
+        /// Sent at one orc with others hemming him in, the King cuts down those within reach
+        /// rather than pushing at the crowd for the one he was sent at (playtest 2026-10-25).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheKing_HemmedIn_StrikesTheOrcsWithinReach()
+        {
+            var king = InvasionMode.Instance.King;
+            foreach (var tower in Object.FindObjectsByType<DefensiveBuilding>(FindObjectsSortMode.None)) tower.enabled = false;
+            yield return new WaitForSeconds(0.5f);
+            var at = king.transform.position;
+            Assert.IsTrue(NavMesh.SamplePosition(at + new Vector3(7f, 0f, 0f), out var far, 3f, NavMesh.AllAreas));
+            var sentAt = OrcRaidManager.Instance.SpawnOrcOfKind(far.position, 1, OrcKind.Raider);
+            sentAt.Steered = true;
+            var ring = new List<OrcUnit>();
+            for (var i = 0; i < 8; i++)
+            {
+                var a = i * Mathf.PI / 4f;
+                if (!NavMesh.SamplePosition(at + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 1.1f, out var spot, 1f, NavMesh.AllAreas)) continue;
+                var orc = OrcRaidManager.Instance.SpawnOrcOfKind(spot.position, 1, OrcKind.Raider);
+                orc.Toughen(30f);
+                orc.Steered = true;   // a crowd that stands
+                ring.Add(orc);
+            }
+            var full = ring.Sum(o => o.CurrentHealth);
+            ArmyManager.Instance.SelectGroup(king.Unit.Group);
+            king.Unit.Group.OrderAttack(sentAt);
+            king.Unit.Group.NotifyPlayerOrder();
+            for (var t = 0f; t < 4f && ring.Sum(o => o != null ? o.CurrentHealth : 0) >= full; t += Time.deltaTime) yield return null;
+            Assert.Less(ring.Sum(o => o != null ? o.CurrentHealth : 0), full,
+                $"Hemmed in, the King struck none of the orcs round him (he is {HorizontalDistance(king.transform.position, at):0.0} m from where he stood).");
+        }
+
+        /// <summary>
+        /// Each jungle's ridge has a gorge one walks straight through to the shrine behind it (playtest
+        /// 2026-10-25: the King could not pass; the floor was 2-3 m, now 8 m and more).
+        /// </summary>
+        [Test]
+        public void TheGorge_ThroughEachRidge_IsWalkable()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var shrines = InvasionMode.Instance.Jungle.Shrines;
+            Assert.Greater(shrines.Count, 0);
+            var path = new NavMeshPath();
+            foreach (var shrine in shrines)
+            {
+                // before the ridge (r 50 of the shrine's 68.5) on the gorge's bearing, to the shrine behind it
+                var before = castle + (shrine - castle) * (50f / 68.5f);
+                Assert.IsTrue(NavMesh.SamplePosition(before, out var from, 3f, NavMesh.AllAreas), $"No ground before the gorge at {before}.");
+                Assert.IsTrue(NavMesh.SamplePosition(shrine, out var to, 3f, NavMesh.AllAreas), $"No ground at the shrine {shrine}.");
+                Assert.IsTrue(NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete,
+                    $"No way from {from.position} to the shrine {shrine}.");
+                var length = 0f;
+                for (var i = 1; i < path.corners.Length; i++) length += HorizontalDistance(path.corners[i - 1], path.corners[i]);
+                Assert.Less(length, HorizontalDistance(from.position, to.position) * 1.6f, $"The way to the shrine {shrine} goes round the ridge, not through its gorge ({length:0} m).");
+            }
+        }
+
+        private static float HorizontalDistance(Vector3 a, Vector3 b) => Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
 
         /// <summary>The King in hand puts his skills where the build menu stands; let go, the menu is back (the user, 2026-10-23).</summary>
         [UnityTest]

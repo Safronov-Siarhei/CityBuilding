@@ -39,7 +39,8 @@ namespace CityBuilder.Tests.EditMode
             // GameCalendar.Instance is null in this isolated test (no GameCalendar was created) --
             // Log must fall back to day 1 rather than throwing or omitting the day prefix.
             _log.Log("message");
-            StringAssert.StartsWith("День 1:", _log.Entries[0]);
+            // in whatever language the editor is set to (a playtest in English left it so)
+            Assert.AreEqual(Localization.Format("#log_day", 1, "message"), _log.Entries[0]);
         }
 
         [Test]

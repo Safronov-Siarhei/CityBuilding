@@ -505,7 +505,8 @@ namespace CityBuilder.Tests.PlayMode
             var count = 0;
             foreach (var entry in EventLogManager.Instance.Entries)
             {
-                if (entry.Contains("Некуда складывать")) count++;
+                // in whatever language the game is set to: the notice's words before its building's name
+                if (entry.Contains(Localization.Get("#log_no_storage").Split('{')[0])) count++;
             }
             return count;
         }

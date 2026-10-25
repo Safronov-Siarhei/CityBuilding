@@ -97,7 +97,7 @@ JUNGLE_ANGLES = (30.0, 150.0, 270.0)           # bearings of the three jungles b
 CAMP_R = 70.0                                  # how far out the orc camps stand
 CAMP_PAD = 17.0                                # a camp's round flat ground (the palisade is at ~15)
 LANE_CLEAR = 7.5                               # half width of a lane kept free of forest
-RIDGE_R, RIDGE_GAP, RIDGE_END = 59.0, 0.12, 0.62   # the jungle ridge: radius, half gap, half span (rad)
+RIDGE_R, RIDGE_GAP, RIDGE_END = 59.0, 0.17, 0.62   # the jungle ridge: radius, half gap, half span (rad); gap 0.12 left a 2-3 m floor nobody could walk (playtest 2026-10-25), 0.17 = 8 m+
 RIDGE_HALF = 6.0                               # the ridge's half width at its foot
 START = (0.0, 0.0)                             # the player's base: kept flat, open and dry
 
