@@ -1,6 +1,6 @@
 # Balance and localization pipeline
 
-> **2026-10-25:** new tab `sandbox` (gid 291742027, `Balance/sandbox.csv`, `BalanceSheetSettings.sandboxCsvUrl`) laid over buildings/units/economy for the SANDBOX config, same shape as `invasion`; made through the Sheets API (connector), NOT yet published -- [sandbox-run-systems](sandbox-run-systems.md). Sheet edits go through the API/MCP only (the user).
+> **2026-10-25:** new tab `sandbox` (gid 291742027, `Balance/sandbox.csv`, `BalanceSheetSettings.sandboxCsvUrl`) laid over buildings/units/economy for the SANDBOX config, same shape as `invasion`; made through the Sheets API (connector), published and pulled 2026-10-25 (0 differences) -- [sandbox-run-systems](sandbox-run-systems.md). Sheet edits go through the API/MCP only (the user).
 
 > **Status (2026-10-21):** sheet == repo (verify_sheet: no differences, 2026-10-20). Claude edits the
 > Google Sheet DIRECTLY via the `balance-sheet` project skill (`.claude/skills/balance-sheet/`) —

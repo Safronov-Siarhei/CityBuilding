@@ -3,8 +3,9 @@
 > **Status (2026-10-25):** in code, tests green (`PlayMode/SandboxRulesTests`). The sheet's `sandbox` tab
 > (gid 291742027) was created and filled THROUGH THE SHEETS API (Google Sheets connector; the user:
 > sheet work only via API/MCP, never the browser), with header notes; `repair_cost_fraction` deleted
-> from the sheet's economy tab. The tab is NOT PUBLISHED yet (the API cannot publish): until the user
-> adds it under File -> Share -> Publish to web, Pull skips it and `verify_sheet.py sandbox` gets HTML.
+> from the sheet's economy tab. Published by the user (the API cannot publish; the first try gave 401
+> until the tab was ticked under «Опубликованное содержание»); verify_sheet: 0 differences on all 7 tabs,
+> and `sandbox.csv` is now Google's own export (Pull).
 > Not played on a phone.
 > **Read with:** [invasion-mode](invasion-mode.md) (where every system came from),
 > [balance-and-localization](balance-and-localization.md), [hud-and-ui](hud-and-ui.md),
@@ -74,5 +75,4 @@ Hall, the card's band, heroes and half-built buildings through a save. Existing 
   three switches -- the code behind them is kept, not deleted.
 
 ## Open
-The user publishes the `sandbox` tab; then `verify_sheet.py sandbox` and a Pull (the committed CSV
-becomes Google's export format); playtest the build times and hero prices; the migration/decay/happiness keys in economy are unused.
+Playtest the build times and hero prices; the migration/decay/happiness keys in economy are unused.
