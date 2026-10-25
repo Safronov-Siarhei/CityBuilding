@@ -344,32 +344,34 @@ namespace CityBuilder.EditorTools
             var hub = screen.gameObject.AddComponent<InvasionHubController>();
 
             // the theme's picture across the top, the heroes leaning in at its sides
-            var frameSize = new Vector2(MenuWindowSize.x - 48f, 340f);
+            // under the title plate, which hangs over the window's top edge
+            var frameSize = new Vector2(MenuWindowSize.x - 48f, 300f);
             var frame = new GameObject("Picture", typeof(RectTransform), typeof(RectMask2D));
             frame.transform.SetParent(window, false);
-            Anchor((RectTransform)frame.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 222f), frameSize);
+            Anchor((RectTransform)frame.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 196f), frameSize);
             var picture = CreateImage(frame.transform, "Image", new Color(0.3f, 0.45f, 0.25f));
-            StretchFull(picture.rectTransform);
+            // baked at 1512x340 (MenuArtBake): shown whole across, its top and bottom trimmed by the frame
+            Anchor(picture.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(frameSize.x, 340f));
             picture.raycastTarget = false;
             var firstPicture = MenuArt("Inv_summer");
             if (firstPicture != null) { picture.sprite = firstPicture; picture.color = Color.white; }
             Peek(frame.transform, "King", new Vector2(-frameSize.x * 0.5f - 20f, -frameSize.y * 0.5f), new Vector2(0f, 0f));
             Peek(frame.transform, "Queen", new Vector2(frameSize.x * 0.5f + 20f, -frameSize.y * 0.5f), new Vector2(1f, 0f));
 
-            var points = MenuImage(frame.transform, "Points", "plaque", new Vector2(-frameSize.x * 0.5f + 330f, 100f), new Vector2(260f, 116f));
+            var points = MenuImage(frame.transform, "Points", "plaque", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Vector2(260f, 116f));
             points.raycastTarget = false;
             MenuLabel(points.transform, "Heading", "#invasion_points", 22, new Vector2(0f, 28f), new Vector2(230f, 34f), HudInk.OnMenuPlaque);
             var pointsText = MenuLabel(points.transform, "Number", null, 44, new Vector2(0f, -16f), new Vector2(230f, 56f), HudInk.OnMenuPlaque, bold: true);
 
-            var crystals = MenuImage(frame.transform, "Crystals", "plaque", new Vector2(frameSize.x * 0.5f - 400f, 100f), new Vector2(240f, 96f));
+            var crystals = MenuImage(frame.transform, "Crystals", "plaque", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Vector2(240f, 96f));
             crystals.raycastTarget = false;
             Gem(crystals.transform, new Vector2(-70f, 2f), 64f);
             var crystalsText = MenuLabel(crystals.transform, "Number", null, 40, new Vector2(30f, 2f), new Vector2(140f, 56f), HudInk.OnMenuPlaque, bold: true);
             var info = MenuRoundButton(frame.transform, "InfoButton", "round", "Info", HudInk.OnRound, 96f, 0.5f);
-            Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 100f), new Vector2(96f, 96f));
+            Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 80f), new Vector2(96f, 96f));
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
 
-            var themes = BuildThemes(frame.transform, new Vector2(0f, -100f), 96f, 128f, invasion: true);
+            var themes = BuildThemes(frame.transform, new Vector2(0f, -86f), 96f, 128f, invasion: true);
 
             // the period's best runs
             var heading = MenuLabel(window, "TopHeading", null, 34, new Vector2(0f, 6f), new Vector2(1000f, 50f), HudInk.OnPanel, bold: true);
