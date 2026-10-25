@@ -6,8 +6,11 @@ using UnityEngine.Rendering;
 namespace CityBuilder.Grid
 {
     /// <summary>
-    /// The green carpet of cells showing how far a gatherer reaches, drawn under the ghost while
-    /// the player is choosing where to put it and again when they tap the finished building.
+    /// The green disc showing how far a building reaches -- a gatherer's yard (harvest radius) or
+    /// a service such as the healer's house (service radius) -- drawn under the ghost while the
+    /// player is choosing where to put it and again when they tap the finished building. A soft
+    /// fill and a firmer edge; it was a carpet of cell squares until the user asked for a round
+    /// radius (2026-10-25). CellsWithin still says which cells the rule counts.
     ///
     /// Worth showing at all because stone does not come back: a Quarry is placed once, works out
     /// the boulders it can reach, and is then a dead building on a spot that will never be worth
@@ -26,18 +29,19 @@ namespace CityBuilder.Grid
     /// </summary>
     public class HarvestRadiusOverlay : MonoBehaviour
     {
-        // How much of each cell the green square fills. The gap is what makes it read as a grid of
-        // cells rather than one flat green disc -- the point is to show the player the shape in
-        // the units the game actually thinks in.
-        private const float CellFillFraction = 0.82f;
         private const float HeightAboveGround = 0.04f;
+        private const int DiscSides = 72;
+        private const float EdgeWidth = 0.18f;
 
-        private static readonly Color FillColor = new Color(0.35f, 0.85f, 0.4f, 0.35f);
+        private static readonly Color FillColor = new Color(0.35f, 0.85f, 0.4f, 0.25f);
+        private static readonly Color EdgeColor = new Color(0.3f, 0.8f, 0.35f, 0.85f);
 
         private static HarvestRadiusOverlay _instance;
 
         private MeshFilter _filter;
         private Mesh _mesh;
+        private Mesh _edgeMesh;
+        private MeshFilter _edgeFilter;
         private int _builtForRadius = -1;
         private float _builtForCellSize = -1f;
 
@@ -61,7 +65,15 @@ namespace CityBuilder.Grid
             }
         }
 
-        /// <summary>Lays the carpet under a building centred at this point. A radius of zero hides it, which is every building that is not a Sawmill or a Quarry.</summary>
+        /// <summary>How far `data` reaches at `level`: its harvest radius, or its service radius when it gathers nothing; 0 for most buildings.</summary>
+        public static int RadiusOf(Buildings.BuildingData data, int level)
+        {
+            if (data == null) return 0;
+            var stats = data.LevelStats(level);
+            return stats.harvestRadius > 0 ? stats.harvestRadius : Mathf.Max(0, stats.serviceRadius);
+        }
+
+        /// <summary>Lays the disc under a building centred at this point. A radius of zero hides it.</summary>
         public static void ShowFor(Vector3 center, int radiusMetres)
         {
             if (radiusMetres <= 0)
@@ -222,6 +234,18 @@ namespace CityBuilder.Grid
 
             _mesh = new Mesh { name = "HarvestRadius" };
             _filter.sharedMesh = _mesh;
+
+            // the edge: a firmer ring on the same transform, so the reach reads at a glance
+            var edge = new GameObject("Edge", typeof(MeshFilter), typeof(MeshRenderer));
+            edge.transform.SetParent(transform, false);
+            edge.transform.localPosition = Vector3.up * 0.005f;
+            var edgeRenderer = edge.GetComponent<MeshRenderer>();
+            edgeRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            edgeRenderer.receiveShadows = false;
+            var edgeMaterial = CreateTransparentMaterial();
+            edgeMaterial.color = EdgeColor;
+            edgeRenderer.sharedMaterial = edgeMaterial;
+            _edgeFilter = edge.GetComponent<MeshFilter>();
         }
 
         /// <summary>
@@ -252,43 +276,25 @@ namespace CityBuilder.Grid
             _builtForRadius = radiusMetres;
             _builtForCellSize = cellSize;
 
-            var cells = CellsWithin(radiusMetres, cellSize);
-            var half = cellSize * CellFillFraction * 0.5f;
-
-            var vertices = new Vector3[cells.Count * 4];
-            var triangles = new int[cells.Count * 6];
-
-            for (var i = 0; i < cells.Count; i++)
+            // a fan from the middle, wound clockwise seen from above so it faces the camera
+            var vertices = new Vector3[DiscSides + 1];
+            var triangles = new int[DiscSides * 3];
+            for (var i = 0; i < DiscSides; i++)
             {
-                var c = cells[i];
-                var x = c.x * cellSize;
-                var z = c.y * cellSize;
-                var v = i * 4;
-
-                // Wound counter-clockwise seen from above, so the quads face up at the camera
-                // rather than being back-face culled into invisibility.
-                vertices[v + 0] = new Vector3(x - half, 0f, z - half);
-                vertices[v + 1] = new Vector3(x - half, 0f, z + half);
-                vertices[v + 2] = new Vector3(x + half, 0f, z + half);
-                vertices[v + 3] = new Vector3(x + half, 0f, z - half);
-
-                var t = i * 6;
-                triangles[t + 0] = v + 0;
-                triangles[t + 1] = v + 1;
-                triangles[t + 2] = v + 2;
-                triangles[t + 3] = v + 0;
-                triangles[t + 4] = v + 2;
-                triangles[t + 5] = v + 3;
+                var a = i / (float)DiscSides * Mathf.PI * 2f;
+                vertices[i + 1] = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * radiusMetres;
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = (i + 1) % DiscSides + 1;
+                triangles[i * 3 + 2] = i + 1;
             }
-
             _mesh.Clear();
-            // A 16-bit index buffer tops out at 65535 vertices, which a radius of about 64 cells
-            // would exceed. Switched only when it has to be: the wider buffer is twice the memory
-            // for every mesh that never needed it.
-            _mesh.indexFormat = vertices.Length > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16;
             _mesh.vertices = vertices;
             _mesh.triangles = triangles;
             _mesh.RecalculateBounds();
+
+            if (_edgeMesh != null) Destroy(_edgeMesh);
+            _edgeMesh = RingMesh(Mathf.Max(0f, radiusMetres - EdgeWidth), radiusMetres, DiscSides);
+            _edgeFilter.sharedMesh = _edgeMesh;
         }
 
         /// <summary>

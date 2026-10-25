@@ -600,6 +600,36 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
+        /// A building (not a road) nearer this orc than `target`'s wall and on its side of it: one it
+        /// stands in, or one whose wall lies the way the target's does. The nearest such, or null.
+        /// </summary>
+        private BuildingInstance BuildingInTheWay(BuildingInstance target)
+        {
+            if (target == null) return null;
+            var at = transform.position;
+            var targetWall = DistanceToWall(target);
+            var toTarget = ClosestPointOf(target) - at;
+            toTarget.y = 0f;
+            BuildingInstance nearest = null;
+            var nearestDistance = targetWall - 0.05f;
+            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (instance == target || instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                var distance = DistanceToWall(instance);
+                if (distance >= nearestDistance) continue;
+                if (distance > 0.15f && toTarget.sqrMagnitude > 0.0001f)
+                {
+                    var toWall = ClosestPointOf(instance) - at;
+                    toWall.y = 0f;
+                    if (Vector3.Dot(toWall.normalized, toTarget.normalized) < 0.5f) continue;
+                }
+                nearestDistance = distance;
+                nearest = instance;
+            }
+            return nearest;
+        }
+
+        /// <summary>
         /// Close enough to hit this building: a thrower from its range of the building's middle,
         /// anyone fighting hand to hand only standing at its wall (orc_melee_reach_meters) -- from
         /// its middle, three metres reached over a fence into the tower behind it (the user,
@@ -820,6 +850,15 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = _attackIntervalSeconds;
+
+            // a wall put up between this orc and what it was hitting takes the blow instead (the
+            // user, 2026-10-25: a fence laid round a tower under attack, and the orcs hit on
+            // through it). Only hand to hand: a thrower hits over a wall.
+            if (!IsRanged)
+            {
+                var between = BuildingInTheWay(_target);
+                if (between != null) _target = between;
+            }
 
             Strike(_target);
             // TryDamage updates CurrentHealth synchronously even though the resulting Destroy()

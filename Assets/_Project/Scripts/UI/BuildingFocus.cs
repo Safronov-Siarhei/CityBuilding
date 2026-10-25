@@ -70,8 +70,8 @@ namespace CityBuilder.UI
             _ring.gameObject.SetActive(true);
             _rippleClock = 0f;
 
-            // its reach: a yard's cells (the same carpet as when placing it), a defender's circle
-            var harvest = building.HarvestRadius;
+            // its reach: a yard's or a service's disc (the same as when placing it), a defender's circle
+            var harvest = HarvestRadiusOverlay.RadiusOf(building.Data, building.Level);
             var centre = GridManager.Instance != null ? GridManager.Instance.GetFootprintCenterWorld(building.OriginCell, footprint) : at;
             if (harvest > 0) HarvestRadiusOverlay.ShowFor(centre, harvest, building.Data);
             else HarvestRadiusOverlay.HideIfShown();

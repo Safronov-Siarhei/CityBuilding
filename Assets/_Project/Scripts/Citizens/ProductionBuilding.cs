@@ -26,6 +26,14 @@ namespace CityBuilder.Citizens
 
         public int AssignedWorkers { get; private set; }
 
+        /// <summary>
+        /// How many the player put to work here. A worker lost without the player's say (killed, or
+        /// laid off because the town ran short of people) leaves AssignedWorkers below it, and in an
+        /// Invasion run the next idle islander steps back in (CitizenManager.RefillWantedJobs; the
+        /// user, 2026-10-25: the healer's house stayed empty after its man was killed).
+        /// </summary>
+        public int WantedWorkers { get; private set; }
+
         /// <summary>Fired whenever AssignedWorkers changes, so CitizenVisualsManager can keep visible workers in sync.</summary>
         public event Action OnAssignedWorkersChanged;
 
@@ -356,11 +364,21 @@ namespace CityBuilder.Citizens
             if (AssignedWorkers >= MaxWorkers) return false;
             if (CitizenManager.Instance == null || !CitizenManager.Instance.NotifyWorkerAssigned()) return false;
             AssignedWorkers++;
+            WantedWorkers = Mathf.Max(WantedWorkers, AssignedWorkers);
             OnAssignedWorkersChanged?.Invoke();
             return true;
         }
 
+        /// <summary>The player takes a worker off: this building wants one fewer.</summary>
         public bool TryUnassignWorker()
+        {
+            if (!LayOffWorker()) return false;
+            WantedWorkers = AssignedWorkers;
+            return true;
+        }
+
+        /// <summary>A worker taken off without the player's say (the town ran short of people): the place stays wanted.</summary>
+        public bool LayOffWorker()
         {
             if (AssignedWorkers <= 0) return false;
             AssignedWorkers--;
@@ -373,6 +391,7 @@ namespace CityBuilder.Citizens
         public void SetAssignedWorkers(int count)
         {
             AssignedWorkers = Mathf.Clamp(count, 0, MaxWorkers);
+            WantedWorkers = AssignedWorkers;
             CitizenManager.Instance?.NotifyWorkersAssignedBulk(AssignedWorkers);
             OnAssignedWorkersChanged?.Invoke();
         }

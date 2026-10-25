@@ -342,13 +342,15 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var o in waves.WaveOrcs.ToList()) o.TakeDamage(o.MaxHealth);
         }
 
-        /// <summary>A run has two sawmills and two quarries at most (the user, 2026-10-23; the invasion tab's max_count): past that the card greys and the placer refuses.</summary>
+        /// <summary>A run has as many sawmills and quarries as the invasion tab's max_count says (the user: two, 2026-10-23; three, 2026-10-25): past that the card greys and the placer refuses.</summary>
         [Test]
         public void ARun_HasTwoSawmillsAndTwoQuarries()
         {
-            foreach (var (id, max) in new[] { ("Sawmill", 2), ("Quarry", 2) })
+            foreach (var id in new[] { "Sawmill", "Quarry" })
             {
                 var data = PlaytestWorld.Building(id);
+                var max = BalanceConfig.Run.Building(id).maxCount;
+                Assert.Greater(max, 0, $"The invasion tab sets no limit on {id}.");
                 Assert.AreEqual(max, InvasionRules.LimitOf(data), $"A run's limit of {id} is not the sheet's.");
                 for (var i = 0; i < max; i++)
                 {
@@ -697,7 +699,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(BalanceConfig.Run.DefenceAttackRangeMeters, DefensiveBuilding.RangeOf(tower), 0.01f, "A run's tower does not shoot as far as the invasion tab says.");
             Assert.AreEqual(BalanceConfig.Run.Building("Tower").levels[0].maxHealth, tower.MaxHealth, "A run's tower does not have the invasion tab's health.");
             var quarry = PlaytestWorld.Building("Quarry");
-            Assert.AreEqual(2, quarry.maxCount);
+            Assert.AreEqual(BalanceConfig.Run.Building("Quarry").maxCount, quarry.maxCount);
             Assert.AreEqual(BalanceConfig.Run.Building("Quarry").cost.Sum(c => c.amount), quarry.cost.Sum(c => c.amount), "The menu's quarry does not cost what the invasion tab says.");
         }
 
@@ -982,7 +984,7 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.AreSame(PlaytestWorld.Building(id), placer.SelectedBuilding, $"The {id} card puts the sandbox's building in hand.");
                 placer.ClearSelection();
             }
-            Assert.AreEqual(2, PlaytestWorld.Building("Sawmill").maxCount);
+            Assert.AreEqual(BalanceConfig.Run.Building("Sawmill").maxCount, PlaytestWorld.Building("Sawmill").maxCount);
 
             // and their price chips say the RUN's price (the invasion tab), gold included, not the sandbox's
             foreach (var card in Object.FindObjectsByType<UI.HotbarButtonHandler>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -1043,6 +1045,87 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsFalse(onTheGate, "The orc walked onto the gate.");
             Assert.Less(ring.Sum(b => b != null ? b.CurrentHealth : 0), wallHealth, "The orc did not break the wall in its way -- it stood there.");
             orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>
+        /// A fence put up between an orc and the tower it is hitting takes the next blow: the tower
+        /// is out of its reach now (the user, 2026-10-25: the orcs hit on through the new fence).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AFenceLaidBetween_TakesTheOrcsBlowsOffTheTower()
+        {
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            InvasionMode.Instance.King.gameObject.SetActive(false);
+            foreach (var man in CitizenVisualsManager.Instance.AllAgents.ToList()) if (man != null) man.gameObject.SetActive(false);
+            foreach (var house in InvasionMode.Instance.Houses) if (house != null) Object.Destroy(house.gameObject);
+            var centre = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-11f, 0f, 3f)) - Vector2Int.one, new Vector2Int(3, 3)) + Vector2Int.one;
+            var tower = PlaytestWorld.Place(PlaytestWorld.Building("Tower"), centre);
+            yield return new WaitForSeconds(1f);
+            Assert.IsTrue(NavMesh.SamplePosition(tower.transform.position + Vector3.right * 3f, out var start, 2f, NavAreas.WithoutGates));
+            var orc = OrcRaidManager.Instance.SpawnOrcOfKind(start.position, 1, OrcKind.Raider);
+            orc.Toughen(1000f);
+            var full = tower.CurrentHealth;
+            for (var t = 0f; t < 15f && tower.CurrentHealth == full; t += Time.deltaTime) yield return null;
+            Assert.Less(tower.CurrentHealth, full, "The orc never got to the tower.");
+
+            // the fence goes in on the orc's side of the tower, where it stands
+            var side = grid.WorldToCell(orc.transform.position) - centre;
+            var between = centre + new Vector2Int(System.Math.Sign(side.x), side.x == 0 ? System.Math.Sign(side.y) : 0);
+            var fence = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), between);
+            var hit = tower.CurrentHealth;
+            var fenceFull = fence.CurrentHealth;
+            for (var t = 0f; t < 6f && fence != null && fence.CurrentHealth == fenceFull; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(fence == null || fence.CurrentHealth < fenceFull, "The orc did not turn on the fence put in its way.");
+            Assert.AreEqual(hit, tower.CurrentHealth, "The orc hit the tower through the fence.");
+            orc.TakeDamage(orc.MaxHealth);
+        }
+
+        /// <summary>
+        /// A place a worker was lost from without the player's say is taken again by the next idle
+        /// islander -- the healer's house as the sawmill (the user, 2026-10-25).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AWorkplaceThatLostItsMan_GetsTheNextOne()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var cell = PlaytestWorld.FindFreeAreaNear(GridManager.Instance.WorldToCell(castle + new Vector3(-9f, 0f, 3f)), new Vector2Int(3, 3));
+            var healer = PlaytestWorld.Place(PlaytestWorld.Building("HealerHouse"), cell).GetComponent<CityBuilder.Citizens.ProductionBuilding>();
+            yield return null;
+            var people = CitizenManager.Instance;
+            Assert.IsTrue(healer.TryAssignWorker(), "Nobody idle to put in the healer's house.");
+            // the whole island lost: everyone laid off, the places still wanted
+            var everyone = people.TotalPopulation;
+            people.KillCitizens(everyone);
+            Assert.AreEqual(0, healer.AssignedWorkers);
+            Assert.AreEqual(1, healer.WantedWorkers, "Losing its man made the house stop wanting one.");
+            people.AddCitizens(everyone);
+            Assert.AreEqual(1, healer.AssignedWorkers, "The islanders back did not step into the healer's house.");
+            // one the player takes off is not given back
+            healer.TryUnassignWorker();
+            people.AddCitizens(1);
+            Assert.AreEqual(0, healer.AssignedWorkers, "A worker the player took off came back by himself.");
+            yield return null;
+        }
+
+        /// <summary>A building's reach is a round disc: the healer's house shows its service radius, a sawmill its yard -- the photographs show both.</summary>
+        [UnityTest]
+        public IEnumerator Photograph_TheReachDiscs()
+        {
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var grid = GridManager.Instance;
+            var healer = PlaytestWorld.Place(PlaytestWorld.Building("HealerHouse"), PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-9f, 0f, 3f)), new Vector2Int(3, 3)));
+            var sawmill = Object.FindObjectsByType<BuildingInstance>(FindObjectsInactive.Exclude).FirstOrDefault(b => b.Data != null && b.Data.buildingName == "Sawmill")
+                          ?? PlaytestWorld.Place(PlaytestWorld.Building("Sawmill"), PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(9f, 0f, -6f)), new Vector2Int(3, 3)));
+            yield return null;
+            Assert.Greater(HarvestRadiusOverlay.RadiusOf(healer.Data, 1), 0, "The healer's house has no reach to show.");
+            CityBuilder.UI.BuildingFocus.Instance.Select(healer);
+            yield return new WaitForSeconds(0.6f);
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("reach-healer", healer.transform.position, 26f, 55f, 20f, 45f);
+            CityBuilder.UI.BuildingFocus.Instance.Select(sawmill);
+            yield return new WaitForSeconds(0.6f);
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("reach-sawmill", sawmill.transform.position, 30f, 55f, 20f, 45f);
+            CityBuilder.UI.BuildingFocus.Instance.Clear();
         }
 
         /// <summary>A hired soldier steps out where he can walk to the castle, not into the gap between the barracks and a house (the user, 2026-10-23).</summary>

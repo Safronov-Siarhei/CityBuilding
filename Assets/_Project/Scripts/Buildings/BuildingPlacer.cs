@@ -430,11 +430,11 @@ namespace CityBuilder.Buildings
                 }
             }
 
-            // What a gatherer will be able to reach from here, laid out in cells under the ghost.
+            // What a gatherer or a service (the healer's house) will reach from here, a disc under the ghost.
             // Level 1's radius, because that is what is about to be built -- see
             // HarvestRadiusOverlay for why this is worth showing before the decision rather than
             // after it. Costs nothing for the other 47 buildings: a zero radius hides it.
-            if (ghostVisible) HarvestRadiusOverlay.ShowFor(center, _selectedBuilding.LevelStats(1).harvestRadius, _selectedBuilding);
+            if (ghostVisible) HarvestRadiusOverlay.ShowFor(center, HarvestRadiusOverlay.RadiusOf(_selectedBuilding, 1), _selectedBuilding);
 
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(CostOf(_selectedBuilding));

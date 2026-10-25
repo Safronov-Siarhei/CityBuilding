@@ -110,6 +110,26 @@ namespace CityBuilder.Citizens
             if (amount == 0) return;
             _totalPopulation += amount;
             OnPopulationChanged?.Invoke();
+            if (amount > 0) RefillWantedJobs();
+        }
+
+        /// <summary>
+        /// In an Invasion run, idle people go back to the places that lost a worker the player did
+        /// not take off (ProductionBuilding.WantedWorkers) -- every building alike, the healer's
+        /// house as the sawmill (the user, 2026-10-25). The sandbox keeps its rule: jobs lost to
+        /// an epidemic are handed back by the player.
+        /// </summary>
+        public void RefillWantedJobs()
+        {
+            if (!Invasion.InvasionRules.Active || IdlePopulation <= 0) return;
+            foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
+            {
+                while (building.AssignedWorkers < building.WantedWorkers && IdlePopulation > 0)
+                {
+                    if (!building.TryAssignWorker()) break;
+                }
+                if (IdlePopulation <= 0) return;
+            }
         }
 
         /// <summary>
@@ -210,8 +230,8 @@ namespace CityBuilder.Citizens
                 var hadWorkers = building.AssignedWorkers;
                 while (_assignedPopulation > workforce && building.AssignedWorkers > 0)
                 {
-                    // Decrements _assignedPopulation through NotifyWorkerUnassigned.
-                    building.TryUnassignWorker();
+                    // Decrements _assignedPopulation through NotifyWorkerUnassigned; the place stays wanted.
+                    building.LayOffWorker();
                 }
 
                 // Only the building that went completely quiet is worth a line -- losing one of
