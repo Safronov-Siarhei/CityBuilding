@@ -344,6 +344,19 @@ def shield():
     return img
 
 
+def trophy():
+    """A cup on a stem and a foot, with two handles -- a run's points."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.pieslice(box(0.24, -0.06, 0.76, 0.6), 0, 180, fill=WHITE)
+    d.rectangle(box(0.24, 0.14, 0.76, 0.28), fill=WHITE)
+    for x0, x1 in ((0.08, 0.34), (0.66, 0.92)):
+        d.ellipse(box(x0, 0.14, x1, 0.44), outline=WHITE, width=int(u(0.06)))
+    d.rectangle(box(0.45, 0.56, 0.55, 0.74), fill=WHITE)
+    d.rounded_rectangle(box(0.3, 0.74, 0.7, 0.86), u(0.03), fill=WHITE)
+    return img
+
+
 def radius():
     """A ring round a dot with an arrow out to it -- how far a building reaches."""
     img = canvas()
@@ -383,7 +396,7 @@ def main():
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
                      ("Play", play), ("Shop", shop), ("Back", back), ("Resume", resume), ("Lock", lock),
-                     ("Info", info), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
+                     ("Info", info), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
                      ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):
         save(fn(), name)

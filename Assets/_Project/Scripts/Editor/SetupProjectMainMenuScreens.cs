@@ -360,15 +360,10 @@ namespace CityBuilder.EditorTools
             Peek(frame.transform, "King", new Vector2(-frameSize.x * 0.5f - 20f, -frameSize.y * 0.5f), new Vector2(0f, 0f));
             Peek(frame.transform, "Queen", new Vector2(frameSize.x * 0.5f + 20f, -frameSize.y * 0.5f), new Vector2(1f, 0f));
 
-            var points = MenuImage(frame.transform, "Points", "plaque", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Vector2(260f, 116f));
-            points.raycastTarget = false;
-            MenuLabel(points.transform, "Heading", "#invasion_points", 22, new Vector2(0f, 28f), new Vector2(230f, 34f), HudInk.OnMenuPlaque);
-            var pointsText = MenuLabel(points.transform, "Number", null, 44, new Vector2(0f, -16f), new Vector2(230f, 56f), HudInk.OnMenuPlaque, bold: true);
-
-            var crystals = MenuImage(frame.transform, "Crystals", "plaque", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Vector2(240f, 96f));
-            crystals.raycastTarget = false;
-            Gem(crystals.transform, new Vector2(-70f, 2f), 64f);
-            var crystalsText = MenuLabel(crystals.transform, "Number", null, 40, new Vector2(30f, 2f), new Vector2(140f, 56f), HudInk.OnMenuPlaque, bold: true);
+            // the points and the crystals as the game's resource chips (the user's pick «А», 2026-10-25):
+            // a parchment capsule, a disc with its sign on the left, the number
+            var pointsText = Counter(frame.transform, "Points", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Color(0.88f, 0.66f, 0.23f), "Trophy", null);
+            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, MenuArt("Crystal"));
             var info = MenuRoundButton(frame.transform, "InfoButton", "round", "Info", HudInk.OnRound, 96f, 0.5f);
             Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 80f), new Vector2(96f, 96f));
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
@@ -439,6 +434,36 @@ namespace CityBuilder.EditorTools
             var group = Group(screen.gameObject);
             group.alpha = 0f;
             return group;
+        }
+
+        /// <summary>A number on a parchment capsule with a disc on its left -- the HUD's resource chip, as the user picked for the points and the crystals.</summary>
+        private static Text Counter(Transform parent, string name, Vector2 position, Color disc, string glyph, Sprite picture)
+        {
+            var plaque = MenuImage(parent, name, "plaque", position, new Vector2(230f, 84f));
+            plaque.raycastTarget = false;
+            var round = CreateImage(plaque.transform, "Disc", disc);
+            round.sprite = SkinSprite("circle_mask");
+            round.raycastTarget = false;
+            Anchor(round.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(40f, 3f), new Vector2(62f, 62f));
+            var rim = round.gameObject.AddComponent<Outline>();
+            rim.effectColor = new Color(0.35f, 0.2f, 0.09f);
+            rim.effectDistance = new Vector2(3f, -3f);
+            if (glyph != null)
+            {
+                var sign = MenuGlyph(round.transform, glyph, HudInk.Keep, 40f);
+                sign.color = new Color(0.25f, 0.13f, 0.06f);
+                sign.rectTransform.anchoredPosition = Vector2.zero;
+                Object.DestroyImmediate(sign.GetComponent<Shadow>());
+            }
+            if (picture != null)
+            {
+                var gem = CreateImage(round.transform, "Picture", Color.white);
+                gem.sprite = picture;
+                gem.preserveAspect = true;
+                gem.raycastTarget = false;
+                Anchor(gem.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(46f, 46f));
+            }
+            return MenuLabel(plaque.transform, "Number", null, 42, new Vector2(38f, 3f), new Vector2(130f, 60f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleLeft);
         }
 
         /// <summary>The crystal, the game's currency, in its own colours (Tools/ui/make_hud_glyphs.py draws it into MenuArt).</summary>
