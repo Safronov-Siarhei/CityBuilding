@@ -23,6 +23,9 @@ namespace CityBuilder.Buildings
 
         private readonly Dictionary<Vector2Int, FenceAppearance> _cells = new Dictionary<Vector2Int, FenceAppearance>();
 
+        // the Barbican's end cells, whose side arms follow the neighbours as a fence piece does (GateArms)
+        private readonly Dictionary<Vector2Int, GateArms> _arms = new Dictionary<Vector2Int, GateArms>();
+
         private static readonly Vector2Int[] Neighbours =
         {
             new Vector2Int(0, 1),   // north
@@ -53,8 +56,16 @@ namespace CityBuilder.Buildings
             RefreshCellAndNeighbours(cell);
         }
 
+        /// <summary>A Barbican's end cell: its arms are re-shaped with the neighbours, like a fence piece.</summary>
+        public void RegisterArms(Vector2Int cell, GateArms arms)
+        {
+            _arms[cell] = arms;
+            arms.Refresh(this);
+        }
+
         public void Unregister(Vector2Int cell)
         {
+            _arms.Remove(cell);
             if (!_cells.Remove(cell)) return;
 
             // The neighbours are refreshed, not the cell itself -- it is gone. This is what turns
@@ -83,6 +94,7 @@ namespace CityBuilder.Buildings
 
         private void Refresh(Vector2Int cell)
         {
+            if (_arms.TryGetValue(cell, out var arms) && arms != null) arms.Refresh(this);
             if (!_cells.TryGetValue(cell, out var appearance) || appearance == null) return;
 
             appearance.Apply(

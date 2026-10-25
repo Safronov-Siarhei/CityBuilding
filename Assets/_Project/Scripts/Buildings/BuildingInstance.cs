@@ -166,6 +166,12 @@ namespace CityBuilder.Buildings
 
             var appearance = GetComponent<FenceAppearance>();
             foreach (var cell in OccupiedCells()) network.Register(cell, appearance);
+            var arms = GetComponent<GateArms>();
+            if (arms != null)
+            {
+                network.RegisterArms(arms.EndCell(0), arms);
+                network.RegisterArms(arms.EndCell(1), arms);
+            }
         }
 
         /// <summary>The cells this building sits on, with the footprint turned to match its placement rotation -- the same swap BuildingPlacer applies before it reserves them.</summary>

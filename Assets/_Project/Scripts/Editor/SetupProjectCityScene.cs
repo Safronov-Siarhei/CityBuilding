@@ -180,6 +180,8 @@ namespace CityBuilder.EditorTools
                 wallColor: new Color(0.44f, 0.42f, 0.4f), roofColor: new Color(0.34f, 0.32f, 0.3f),
                 style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 connectsToFences: true, motif: BuildingMotif.Archway);
+            // its end walls turn toward a fence meeting them from the side (the user, 2026-10-25)
+            AddGateArms(fortifiedGateData);
 
             // One storehouse per resource family, so every group has somewhere to go -- what each
             // one holds is the storage_group column, not anything decided here. A store is a wide

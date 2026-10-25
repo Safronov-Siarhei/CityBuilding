@@ -1177,6 +1177,38 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(controller == null || controller.enabled, "The King was left with his collider off.");
         }
 
+        /// <summary>
+        /// A fence meeting the Barbican's end from the side gets a stone arm from that end to it, as
+        /// fence pieces join (the user, 2026-10-25); the arm goes when the fence does.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheBarbicansEnd_TurnsTowardAFenceBesideIt()
+        {
+            var grid = GridManager.Instance;
+            var castle = InvasionMode.Instance.Castle.transform.position;
+            var cell = PlaytestWorld.FindFreeAreaNear(grid.WorldToCell(castle + new Vector3(-11f, 0f, 4f)), new Vector2Int(3, 3)) + Vector2Int.right;
+            var barbican = PlaytestWorld.Place(PlaytestWorld.Building("FortifiedGate"), cell);
+            yield return null;
+            var arms = barbican.GetComponent<GateArms>();
+            Assert.IsNotNull(arms, "The Barbican has no side arms.");
+            GameObject Arm(string name) => barbican.GetComponentsInChildren<Transform>(true).First(t => t.name == name).gameObject;
+            Assert.IsFalse(Arm("ArmNE").activeSelf || Arm("ArmNW").activeSelf || Arm("ArmSE").activeSelf || Arm("ArmSW").activeSelf, "An arm shows with no fence beside the Barbican.");
+
+            // the end cells, read the way GateArms reads them: which of them is north depends on the placement
+            var north = arms.EndCell(0);
+            var fence = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), north + Vector2Int.right);
+            var tail = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), north + Vector2Int.right * 2);
+            yield return null;
+            Assert.IsTrue(Arm("ArmNE").activeSelf, "The Barbican's end did not turn toward the fence beside it.");
+            Assert.IsFalse(Arm("ArmNW").activeSelf || Arm("ArmSE").activeSelf || Arm("ArmSW").activeSelf, "An arm shows toward no fence.");
+            if (PlaytestCapture.Available) yield return PlaytestCapture.Shoot("barbican-arm", grid.GetFootprintCenterWorld(north, Vector2Int.one), 7f, 60f, 30f, 40f);
+
+            Object.DestroyImmediate(tail.gameObject);
+            Object.Destroy(fence.gameObject);
+            yield return null;
+            Assert.IsFalse(Arm("ArmNE").activeSelf, "The arm stayed when the fence went.");
+        }
+
         /// <summary>A hired soldier steps out where he can walk to the castle, not into the gap between the barracks and a house (the user, 2026-10-23).</summary>
         [UnityTest]
         public IEnumerator AHiredSoldier_StepsOutOnOpenGround()
