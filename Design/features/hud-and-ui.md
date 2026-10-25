@@ -16,7 +16,10 @@ card row up, re-tap/map tap closes; replaced by ✕ ⟳ ✓ while placing; tax b
 
 ## Main menu (user's sketches, 2026-10-25; was the 2026-10-20 cards)
 Only the CLASSIC look was designed for (the user: «переделывать будем только под него»); the layout is
-one for all four looks, each shows it in its own sprites. Screens (`UI/MainMenuController.cs`, built by
+one for all four looks, each shows it in its own sprites. The Classic menu is drawn in the HUD's OWN
+Classic kit (`Tools/ui/make_menu_classic.py`, reusing make_hud_skins.py; the user, 2026-10-25: the
+carved menu wood "changed the style" -- ugly next to the game); make_menu_kit.py now draws Dock/Soft/
+Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment plaques). Screens (`UI/MainMenuController.cs`, built by
 `Editor/SetupProjectMainMenuScreens.cs`; helpers + dialogs in `SetupProjectMainMenu.cs`):
 - main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Предложения» (= the
   shop), Discord + YouTube rounds under them. No resume-last-save plaque any more.

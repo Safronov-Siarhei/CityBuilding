@@ -386,7 +386,7 @@ namespace CityBuilder.EditorTools
                 pip.color = new Color(pip.color.r, pip.color.g, pip.color.b, 0.35f);
                 runs[i] = MenuLabel(window, $"Run{i + 1}", null, 36, new Vector2(x + 25f, -50f), new Vector2(120f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleLeft);
             }
-            var divider = MenuImage(window, "Divider", "divider", new Vector2(0f, -100f), new Vector2(1200f, 30f), Image.Type.Simple);
+            var divider = MenuImage(window, "Divider", "divider", new Vector2(0f, -100f), new Vector2(1100f, 8f), Image.Type.Sliced);
             divider.raycastTarget = false;
 
             // the leaderboard: the player's own row, lit, until the online one exists

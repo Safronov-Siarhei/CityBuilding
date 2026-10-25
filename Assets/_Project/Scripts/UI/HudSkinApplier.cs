@@ -100,6 +100,15 @@ namespace CityBuilder.UI
                     return role == HudInk.OnTitle || role == HudInk.OnButton || role == HudInk.OnTabSelected ? Color.white : SoftInk;
                 case HudSkin.Glass:
                     return role == HudInk.OnTitle || role == HudInk.OnButton ? GlassGold : Cream;
+                case HudSkin.Classic:
+                    // the HUD's own kit (make_menu_classic.py): parchment plaques, wood titles and tabs
+                    switch (role)
+                    {
+                        case HudInk.OnTitle:
+                        case HudInk.OnTab: return UiTheme.OnWood;
+                        case HudInk.OnButton: return DarkOnGold;
+                        default: return UiTheme.Ink;
+                    }
                 default:
                     switch (role)
                     {

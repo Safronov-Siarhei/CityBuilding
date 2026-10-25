@@ -771,7 +771,7 @@ def glass_look():
 
 def main():
     os.makedirs(ROOT, exist_ok=True)
-    wood_look("Classic", dock=False)
+    # Classic is drawn in the HUD's own kit by make_menu_classic.py (the user, 2026-10-25)
     wood_look("Dock", dock=True)
     soft_look()
     glass_look()
