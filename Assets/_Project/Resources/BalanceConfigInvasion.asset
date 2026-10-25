@@ -328,6 +328,76 @@ MonoBehaviour:
     unlockResearch:
       coins: 0
       seconds: 0
+  - id: orc_thief
+    displayName: "\u0412\u043E\u0440\u0438\u0448\u043A\u0430"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 3
+    engageRadius: 0
+    levels:
+    - maxHealth: 25
+      attackDamage: 0
+      attackIntervalSeconds: 1.2
+      walkSpeed: 2.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 25
+      attackDamage: 0
+      attackIntervalSeconds: 1.2
+      walkSpeed: 2.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 25
+      attackDamage: 0
+      attackIntervalSeconds: 1.2
+      walkSpeed: 2.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc_ice_shaman
+    displayName: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0428\u0430\u043C\u0430\u043D"
+    attackRangeUnits: 1.8
+    attackRangeStructures: 3
+    engageRadius: 8
+    levels:
+    - maxHealth: 700
+      attackDamage: 22
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 700
+      attackDamage: 22
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 700
+      attackDamage: 22
+      attackIntervalSeconds: 1.6
+      walkSpeed: 1
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
   buildings:
   - id: Hovel
     displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
@@ -5390,7 +5460,7 @@ MonoBehaviour:
   decayPerDayAtLevel1: 0.02
   decayPenaltyThreshold: 0.7
   minDecayProductionMultiplier: 0.5
-  repairCostFraction: 0.4
+  repairCostFraction: 0.2
   demolishRefundFraction: 0.5
   woodPerTree: 5
   stonePerRock: 20
@@ -5621,6 +5691,30 @@ MonoBehaviour:
   invasionRaidPartyBaseRadius: 22
   invasionHealerHealShare: 0.01
   invasionHealerHealSharePerLevel: 0.005
+  nyGiftsPerWave: 3
+  nyGiftsMax: 8
+  nyGiftMinRadius: 8
+  nyGiftMaxRadius: 32
+  nyGiftPickupMeters: 1.2
+  nyGiftWood: 15
+  nyGiftStone: 10
+  nyGiftGold: 20
+  nyThiefFromWave: 2
+  nyThievesPerWave: 1
+  nyGoldThief: 5
+  nyBlizzardChance: 0.35
+  nyBlizzardSeconds: 35
+  nyBlizzardWarningSeconds: 8
+  nyBlizzardRangeMult: 0.6
+  nyBlizzardSpeedMult: 0.8
+  nyChimesEvery: 12
+  nyChimesOrcsMult: 1.5
+  nySaluteDelaySeconds: 8
+  nySaluteDamageShare: 0.3
+  nyShamanFreezeEverySeconds: 8
+  nyShamanFreezeRadius: 10
+  nyShamanFreezeSeconds: 4
+  nyGoldShaman: 60
   monsters:
   - id: wolf
     maxHealth: 30
