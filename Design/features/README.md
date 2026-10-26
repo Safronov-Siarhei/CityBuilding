@@ -13,6 +13,9 @@ implement it, the traps already paid for, and what is open.
    is worse than none. A new feature gets a new card and a row in this table.
 4. Cards hold durable knowledge. Day-by-day history lives in git log and `archive/`.
 
+A short Russian overview of the whole game (genres, modes, loop, mechanics): `Design/GDD.md` —
+keep it in step when a mechanic changes in a way a newcomer would notice.
+
 Shared plumbing almost every feature touches: [balance-and-localization](balance-and-localization.md)
 (numbers/text never in C#) and [build-and-test](build-and-test.md) (SetupProject generates the whole
 game; batchmode loop). Read those two only when changing data or running Unity.
