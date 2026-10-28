@@ -830,6 +830,16 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(shown.Any(r => r.transform.parent != null && r.transform.parent.name.StartsWith("Stone")), "A level 2 fence does not show the stone pieces.");
             Assert.IsFalse(shown.Any(r => r.transform.parent != null && r.transform.parent.name == "Straight"), "A level 2 fence still shows the wooden one.");
             Assert.IsFalse(fence.transform.Cast<Transform>().Any(c => c.name == "LevelMarker" && c.gameObject.activeSelf), "A stone fence still has the level disc over it.");
+
+            // every level above it its own pieces (the user, 2026-10-28)
+            for (var level = 3; level <= 5; level++)
+            {
+                fence.SetLevel(level);
+                var parents = fence.GetComponentsInChildren<Renderer>().Where(r => r.enabled && r.gameObject.activeInHierarchy && r.transform.parent != null)
+                    .Select(r => r.transform.parent.name).ToList();
+                Assert.IsTrue(parents.Any(n => n.StartsWith("Lvl" + level)), $"A level {level} fence shows {string.Join(", ", parents)}, not its own pieces.");
+                Assert.IsFalse(fence.transform.Cast<Transform>().Any(c => c.name == "LevelMarker" && c.gameObject.activeSelf), $"A level {level} fence has the level disc over it.");
+            }
         }
 
         /// <summary>

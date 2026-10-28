@@ -70,6 +70,8 @@ another selection or picking up a building to place lets go.
 - The sketch reuses its buffers — keep the per-frame rebuild garbage-free.
 
 ## Open
-Fence levels: from level 2 the fence shows the stone `FortifiedFence1` pieces (user, 2026-10-23:
-the silver disc read as "a stone pancake"; `FenceAppearance.SetLevel/HasOwnModel`); levels 3–5 look the
-same as 2. The Bridge stays research-locked.
+Fence levels: every level has its own pieces (`FenceAppearance.levelModels`, 4 shapes per level 2..5;
+`SetLevel/HasOwnModel`): 1 wooden palisade, 2 the stone `FortifiedFence1` (user, 2026-10-23: the silver
+disc read as "a stone pancake"), 3–5 `Fence1-lvl3..5-*` from `Tools/blender/fences1_lvl.py` (user,
+2026-10-28): 3 blue banners on a run + a pier with a blue spire at a joint, 4 blue merlon caps + glazed
+spire, 5 gilded. Test `InvasionTests.AnUpgradedFence_IsStone` checks 2..5. The Bridge stays research-locked.

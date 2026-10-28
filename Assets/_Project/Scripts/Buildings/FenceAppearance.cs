@@ -19,34 +19,44 @@ namespace CityBuilder.Buildings
         [SerializeField] private GameObject tModel;
         [SerializeField] private GameObject crossModel;
 
-        // The stone pieces (FortifiedFence1) an upgraded fence turns into from level 2 (the user,
-        // 2026-10-23: the upgrade drew a silver disc over the wood instead of a new fence).
-        [SerializeField] private GameObject stoneStraightModel;
-        [SerializeField] private GameObject stoneCornerModel;
-        [SerializeField] private GameObject stoneTModel;
-        [SerializeField] private GameObject stoneCrossModel;
+        // The pieces of levels 2..5, four per level in Straight, Corner, T, Cross order: level 2 is
+        // the stone wall (FortifiedFence1, the user 2026-10-23), levels 3-5 grow it (Fence1-lvl3..5,
+        // the user 2026-10-28: every level its own model). A level with no straight run modelled
+        // shows the nearest modelled level below it.
+        [SerializeField] private GameObject[] levelModels = new GameObject[0];
 
-        private bool _stone;
+        public const int Shapes = 4;
+
+        private int _look = 1;
         private bool _north, _east, _south, _west;
 
-        public void SetStoneModels(GameObject straight, GameObject corner, GameObject t, GameObject cross)
-        {
-            stoneStraightModel = straight;
-            stoneCornerModel = corner;
-            stoneTModel = t;
-            stoneCrossModel = cross;
-        }
+        public void SetLevelModels(GameObject[] models) => levelModels = models;
 
-        /// <summary>Whether this level has a look of its own: level 1 the wood, the stone above it when it was modelled.</summary>
-        public bool HasOwnModel(int level) => level <= 1 || stoneStraightModel != null;
+        /// <summary>Whether this level has a look of its own: level 1 the wood, any level above it whose pieces were modelled.</summary>
+        public bool HasOwnModel(int level) => level <= 1 || LookFor(level) == level;
 
-        /// <summary>Wood at level 1, stone above it (when modelled), keeping the shape the neighbours give it.</summary>
+        /// <summary>The level's own pieces (or the nearest modelled level below it), keeping the shape the neighbours give it.</summary>
         public void SetLevel(int level)
         {
-            var stone = level >= 2 && stoneStraightModel != null;
-            if (stone == _stone) return;
-            _stone = stone;
+            var look = LookFor(level);
+            if (look == _look) return;
+            _look = look;
             Apply(_north, _east, _south, _west);
+        }
+
+        private int LookFor(int level)
+        {
+            for (var l = level; l >= 2; l--)
+            {
+                if (Piece(l, 0) != null) return l;
+            }
+            return 1;
+        }
+
+        private GameObject Piece(int level, int shape)
+        {
+            var i = (level - 2) * Shapes + shape;
+            return levelModels != null && i >= 0 && i < levelModels.Length ? levelModels[i] : null;
         }
 
         /// <summary>Set by SetupProject when it builds the prefab -- the models are FBX instances, not something authored in an inspector. `t` and `cross` may be null: the junctions then fall back to the straight run.</summary>
@@ -71,9 +81,16 @@ namespace CityBuilder.Buildings
             }
 
             var chosen = Model(variant);
-            foreach (var model in new[] { straightModel, cornerModel, tModel, crossModel, stoneStraightModel, stoneCornerModel, stoneTModel, stoneCrossModel })
+            foreach (var model in new[] { straightModel, cornerModel, tModel, crossModel })
             {
                 if (model != null && model != chosen && model.activeSelf) model.SetActive(false);
+            }
+            if (levelModels != null)
+            {
+                foreach (var model in levelModels)
+                {
+                    if (model != null && model != chosen && model.activeSelf) model.SetActive(false);
+                }
             }
             if (chosen == null) return;
 
@@ -84,14 +101,14 @@ namespace CityBuilder.Buildings
 
         private GameObject Model(FenceVariant variant)
         {
-            if (_stone)
+            if (_look >= 2)
             {
                 switch (variant)
                 {
-                    case FenceVariant.Corner: return stoneCornerModel;
-                    case FenceVariant.T: return stoneTModel;
-                    case FenceVariant.Cross: return stoneCrossModel;
-                    default: return stoneStraightModel;
+                    case FenceVariant.Corner: return Piece(_look, 1);
+                    case FenceVariant.T: return Piece(_look, 2);
+                    case FenceVariant.Cross: return Piece(_look, 3);
+                    default: return Piece(_look, 0);
                 }
             }
             switch (variant)
