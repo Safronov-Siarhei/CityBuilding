@@ -156,6 +156,9 @@ namespace CityBuilder.Citizens
         /// <summary>The colour of his clothes, what the workforce panel's row draws him in (the model's main colour, or the old cube's).</summary>
         public Color Clothes { get; set; } = Color.grey;
 
+        /// <summary>His face for the workforce panel's row (UI/Icons/PortraitVillager*), or null for an old cube citizen.</summary>
+        public Sprite Portrait { get; set; }
+
         /// <summary>His own name, in the current language.</summary>
         public string CitizenName => CitizenNames.Of(NameIndex);
 

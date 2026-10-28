@@ -24,6 +24,9 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject saveDialogRoot;
         [SerializeField] private SettingsPanelController settingsPanel;
         [SerializeField] private GameObject settingsPanelRoot;
+        /// <summary>The menu's round entries top to bottom -- save, settings, home -- and the step between them.</summary>
+        [SerializeField] private RectTransform[] entries = new RectTransform[0];
+        [SerializeField] private float entryStep = 112f;
 
         private enum State { Closed, Menu, Save, Settings }
 
@@ -38,7 +41,31 @@ namespace CityBuilder.UI
             _timeScaleBefore = Time.timeScale > 0f ? Time.timeScale : 1f;
             Time.timeScale = 0f;
             if (hud != null) hud.Hide(this);
+            LayEntries();
             ShowMenu();
+        }
+
+        private float _firstEntryY = float.NaN;
+
+        /// <summary>
+        /// A run is never saved (the user, 2026-10-28: «зачем в нашествии кнопка сохранения?»):
+        /// there the save entry goes and the ones below it move up into its place.
+        /// </summary>
+        private void LayEntries()
+        {
+            if (entries.Length == 0 || entries[0] == null) return;
+            if (float.IsNaN(_firstEntryY)) _firstEntryY = entries[0].anchoredPosition.y;
+            var run = Invasion.InvasionMode.IsActive;
+            var slot = 0;
+            for (var i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry == null) continue;
+                var shown = !(run && i == 0);
+                entry.gameObject.SetActive(shown);
+                if (!shown) continue;
+                entry.anchoredPosition = new Vector2(entry.anchoredPosition.x, _firstEntryY - slot++ * entryStep);
+            }
         }
 
         public void Close()

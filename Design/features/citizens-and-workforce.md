@@ -23,6 +23,9 @@
   green disc on the pill's upper-left rim, only when > 0 (`ResourceHUDController.idleBadge`); the
   icon is the peasant's portrait (UI/Icons/Res_Population.png, render_portrait.py VillagerPeasant1,
   cropped to the head).
+- Workforce citizens tab: each row shows the citizen's own face (`CitizenAgent.Portrait` <- 
+  `CitizenVisualsManager.villagerPortraits` <- UI/Icons/PortraitVillager{Kind}{n}.png, render_portrait.py
+  at head_z 0.45, cropped 46..210 and scaled to 128); the cube figure only for a citizen without one.
 
 ## What the player sees
 Little people walking between home, work and resources. A citizens button (left, under the menu)

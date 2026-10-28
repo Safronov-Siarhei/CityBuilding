@@ -88,6 +88,34 @@ namespace CityBuilder.Tests.PlayMode
             PlayerPrefs.DeleteKey("menu.seen.shop");
         }
 
+        /// <summary>A window over the menu -- the offers, a mode's «!» -- puts the screen behind it away, and closing it brings it back (the user, 2026-10-28).</summary>
+        [UnityTest]
+        public IEnumerator AWindowOverTheMenu_PutsTheScreenBehindItAway()
+        {
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            var main = Group("MainScreen");
+            menu.ShowMain();
+            yield return Settle();
+            menu.OpenShop();
+            yield return Settle();
+            Assert.Less(main.alpha, 0.05f, "The main screen shows round the offers.");
+            Assert.IsFalse(main.blocksRaycasts, "The main screen behind the offers still takes taps.");
+            menu.CloseShop();
+            yield return Settle();
+            Assert.Greater(main.alpha, 0.95f, "The main screen did not come back when the offers closed.");
+
+            menu.OpenModes();
+            yield return Settle();
+            var modes = Group("ModesScreen");
+            menu.ShowInfo((int)GameMode.Sandbox);
+            yield return Settle();
+            Assert.Less(modes.alpha, 0.05f, "The modes show under a mode's «!» -- two «Песочница» plates over each other.");
+            yield return Shoot("menu-info-over-modes");
+            menu.CloseInfo();
+            menu.ShowMain();
+            yield return Settle();
+        }
+
         [UnityTest]
         public IEnumerator Photograph_EveryLook()
         {

@@ -117,3 +117,4 @@ Mockup canvases: https://claude.ai/artifact/6NUqZfA52W2gZxMSDUdxUV (style D),
 https://claude.ai/artifact/DLLxzFesTdktVVR6uSUwD6 (looks).
 
 - 2026-10-28: the main menu's Discord and YouTube corner buttons wear their brands' colours (Discord #5865F2, YouTube #FF0000) on the kit's wooden ring, white glyph (`SetupProjectMainMenuScreens.BrandCorner`).
+- 2026-10-28: a window over the main menu (offers, a mode's «!», the saves) fades the screen behind it out (`MainMenuController.Covered`; test `AWindowOverTheMenu_PutsTheScreenBehindItAway`) -- fixes the two «Песочница» plates queued 10-25. The in-game menu has no save entry in a run (`GameMenuController.LayEntries`, the others move up; test `TheRunsMenu_HasNoSaveEntry`).

@@ -208,12 +208,23 @@ namespace CityBuilder.UI
             swatchRect.anchorMin = swatchRect.anchorMax = new Vector2(0.5f, 0.5f);
             swatchRect.anchoredPosition = new Vector2(-395f, -8f);
             swatchRect.sizeDelta = new Vector2(30f, 38f);
-            swatch.color = agent.Clothes;
-            var head = new GameObject("Head", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-            head.transform.SetParent(swatch.transform, false);
-            head.rectTransform.anchoredPosition = new Vector2(0f, 30f);
-            head.rectTransform.sizeDelta = new Vector2(22f, 22f);
-            head.color = new Color(0.85f, 0.68f, 0.55f);
+            if (agent.Portrait != null)
+            {
+                // his own face (the user, 2026-10-28: the little cube figures were the old people)
+                swatch.sprite = agent.Portrait;
+                swatch.preserveAspect = true;
+                swatchRect.anchoredPosition = new Vector2(-395f, 0f);
+                swatchRect.sizeDelta = new Vector2(60f, 60f);
+            }
+            else
+            {
+                swatch.color = agent.Clothes;
+                var head = new GameObject("Head", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                head.transform.SetParent(swatch.transform, false);
+                head.rectTransform.anchoredPosition = new Vector2(0f, 30f);
+                head.rectTransform.sizeDelta = new Vector2(22f, 22f);
+                head.color = new Color(0.85f, 0.68f, 0.55f);
+            }
 
             var name = CreateRowText(rowGO.transform, "Title", Localization.Format("#citizen_name", agent.CitizenName), 22, TextAnchor.MiddleLeft,
                 new Vector2(-235f, 0f), new Vector2(240f, 40f), UiTheme.Ink);

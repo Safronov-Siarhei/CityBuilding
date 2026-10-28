@@ -31,6 +31,8 @@ namespace CityBuilder.Citizens
         [SerializeField] private GameObject[] villagerModels = new GameObject[0];
         /// <summary>Each model's main colour -- what most of it is -- measured at project setup, parallel to villagerModels.</summary>
         [SerializeField] private Color[] villagerClothes = new Color[0];
+        /// <summary>Each model's face (render_portrait.py), parallel to villagerModels: the workforce panel's row.</summary>
+        [SerializeField] private Sprite[] villagerPortraits = new Sprite[0];
 
         private static readonly Color[] ClothingColors =
         {
@@ -507,10 +509,12 @@ namespace CityBuilder.Citizens
             var pick = villagerModels != null && villagerModels.Length > 0 ? UnityEngine.Random.Range(0, villagerModels.Length) : -1;
             var model = pick >= 0 ? villagerModels[pick] : null;
             var clothes = Color.grey;
+            Sprite portrait = null;
             if (model != null)
             {
                 AddFigure(root.transform, model);
                 if (villagerClothes != null && pick < villagerClothes.Length) clothes = villagerClothes[pick];
+                if (villagerPortraits != null && pick < villagerPortraits.Length) portrait = villagerPortraits[pick];
             }
             else
             {
@@ -539,6 +543,7 @@ namespace CityBuilder.Citizens
             agent.Initialize(spawnPosition, center.Value);
             agent.NameIndex = _namesGiven++;
             agent.Clothes = clothes;
+            agent.Portrait = portrait;
             root.name = "Citizen " + agent.CitizenName;
 
             return agent;

@@ -219,12 +219,21 @@ namespace CityBuilder.UI
 
         private void Snap() => Animate(1f);
 
+        /// <summary>
+        /// A window over the screen -- the offers, a mode's «!», the saves -- puts the screen behind
+        /// it away (the user, 2026-10-28: the menu showed round the offers, and two «Песочница»
+        /// plates stood one over the other under a mode's info); it comes back when the window closes.
+        /// </summary>
+        private bool Covered => (shopDialog != null && shopDialog.activeSelf) || (infoDialog != null && infoDialog.activeSelf)
+                                || (savesDialog != null && savesDialog.activeSelf);
+
         private void Animate(float k)
         {
-            Fade(mainScreen, _screen == Screen.Main, k);
-            Fade(modesScreen, _screen == Screen.Modes, k);
-            Fade(sandboxScreen, _screen == Screen.Sandbox, k);
-            Fade(invasionScreen, _screen == Screen.Invasion, k);
+            var covered = Covered;
+            Fade(mainScreen, _screen == Screen.Main && !covered, k);
+            Fade(modesScreen, _screen == Screen.Modes && !covered, k);
+            Fade(sandboxScreen, _screen == Screen.Sandbox && !covered, k);
+            Fade(invasionScreen, _screen == Screen.Invasion && !covered, k);
         }
 
         private static void Fade(CanvasGroup group, bool shown, float k)

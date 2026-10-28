@@ -124,6 +124,10 @@ namespace CityBuilder.EditorTools
             so.FindProperty("saveDialogRoot").objectReferenceValue = saveDialogRoot;
             so.FindProperty("settingsPanel").objectReferenceValue = settings;
             so.FindProperty("settingsPanelRoot").objectReferenceValue = settings.gameObject;
+            var entriesProp = so.FindProperty("entries");
+            entriesProp.arraySize = buttons.Length;
+            for (var i = 0; i < buttons.Length; i++) entriesProp.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i].GetComponent<RectTransform>();
+            so.FindProperty("entryStep").floatValue = 112f;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(menuButton.onClick, controller.Toggle);

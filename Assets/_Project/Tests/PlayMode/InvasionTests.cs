@@ -99,6 +99,31 @@ namespace CityBuilder.Tests.PlayMode
             Time.timeScale = 1f;
         }
 
+        /// <summary>A run is never saved: its menu has no save entry, and the settings move up into its place (the user, 2026-10-28).</summary>
+        [UnityTest]
+        public IEnumerator TheRunsMenu_HasNoSaveEntry()
+        {
+            var menu = Object.FindAnyObjectByType<CityBuilder.UI.GameMenuController>();
+            menu.Open();
+            yield return null;
+            var save = FindDeep("SaveEntry");
+            var settings = FindDeep("SettingsEntry");
+            Assert.IsTrue(save == null || !save.gameObject.activeInHierarchy, "A run's menu offers to save.");
+            Assert.IsNotNull(settings, "The menu has no settings entry.");
+            Assert.IsTrue(settings.gameObject.activeInHierarchy, "The settings entry went with the save entry.");
+            yield return PlaytestCapture.ShootWithUi("invasion-menu-no-save", InvasionMode.Instance.Castle.transform.position);
+            menu.Close();
+        }
+
+        private static Transform FindDeep(string name)
+        {
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (t.name == name) return t;
+            }
+            return null;
+        }
+
         /// <summary>The run's clock under the minimap (the user, 2026-10-28): counts the run's time, stops when it ends; not in the sandbox.</summary>
         [UnityTest]
         public IEnumerator TheRunsClock_UnderTheMinimap_CountsTheRun_AndStopsAtItsEnd()

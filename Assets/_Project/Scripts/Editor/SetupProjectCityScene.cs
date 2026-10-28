@@ -506,6 +506,7 @@ namespace CityBuilder.EditorTools
             // the townsfolk (Tools/blender/villagers.py): four kinds, three colourings each
             var villagers = new List<Object>();
             var clothes = citizenVisualsManagerSO.FindProperty("villagerClothes");
+            var portraits = new List<Object>();
             clothes.arraySize = 0;
             foreach (var kind in new[] { "Peasant", "Woman", "Craftsman", "Elder" })
             for (var n = 1; n <= 3; n++)
@@ -515,7 +516,9 @@ namespace CityBuilder.EditorTools
                 villagers.Add(villager);
                 clothes.arraySize++;
                 clothes.GetArrayElementAtIndex(clothes.arraySize - 1).colorValue = MainColourOf(villager);
+                portraits.Add(AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/PortraitVillager{kind}{n}.png"));
             }
+            WriteArray(citizenVisualsManagerSO.FindProperty("villagerPortraits"), portraits.ToArray());
             WriteArray(citizenVisualsManagerSO.FindProperty("villagerModels"), villagers.ToArray());
             citizenVisualsManagerSO.ApplyModifiedPropertiesWithoutUndo();
 

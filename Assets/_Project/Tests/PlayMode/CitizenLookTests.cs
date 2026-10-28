@@ -48,6 +48,7 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsTrue(figure.name.StartsWith("Figure") && agent.GetComponent<CitizenWaddle>() != null, $"{agent.name} does not waddle.");
                 // the workforce panel draws him in his clothes: the model's main colour, measured at setup
                 Assert.AreNotEqual(Color.grey, agent.Clothes, $"{agent.name} has no clothes colour for the workforce panel.");
+                Assert.IsNotNull(agent.Portrait, $"{agent.name} has no face for the workforce panel's row.");
             }
 
             // he faces the way he walks, and only rises and falls on it (the user: no sway)
