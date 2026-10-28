@@ -48,6 +48,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Modes** | | |
 | [invasion-mode](invasion-mode.md) | «Нашествие»: endless waves, the King hero, run economy, Dota-like map (log: `Design/Invasion.md`) | нашествие, король, герой, волны, забег, рейтинг |
 | [sandbox-run-systems](sandbox-run-systems.md) | the sandbox on the run's systems (2026-10-25): houses make people, heroes for coins, timed build/upgrade, repair by damage, no decay/happiness/migration, run card + minimap, the `sandbox` sheet tab | песочница, жители из домов, герои, стройка по таймеру, ремонт, лист sandbox |
+| [construction-look](construction-look.md) | a building site with scaffolding while building/upgrading, the finish effect (dust or fanfare, picked in the settings) | стройка, леса, стройплощадка, эффект окончания стройки |
 | [invasion-newyear](invasion-newyear.md) | the New Year Invasion map: winter fir map, tree, gifts and the Thief, blizzard, midnight salute, Ice Shaman | новогодняя карта, подарки, воришка, метель, куранты, шаман |
 | **Interface & meta** | | |
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню |

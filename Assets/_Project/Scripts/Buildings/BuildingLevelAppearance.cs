@@ -77,6 +77,20 @@ namespace CityBuilder.Buildings
             return levelModels != null && level >= 1 && level <= levelModels.Count && levelModels[level - 1] != null;
         }
 
+        /// <summary>The model this level shows (its own or the one it borrows), or null with no models.</summary>
+        public GameObject ModelFor(int level)
+        {
+            var index = Resolve(level);
+            return index < 0 ? null : levelModels[index];
+        }
+
+        /// <summary>How tall the model this level shows measured at setup; 0 when unknown.</summary>
+        public float HeightFor(int level)
+        {
+            var index = Resolve(level);
+            return index < 0 || levelHeights == null || index >= levelHeights.Count ? 0f : levelHeights[index];
+        }
+
         /// <summary>The index of the model for this level, or of the nearest one below it -- see the fallback rule in the class summary. -1 when there are no models at all.</summary>
         private int Resolve(int level)
         {

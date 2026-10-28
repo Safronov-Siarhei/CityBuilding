@@ -34,6 +34,19 @@ namespace CityBuilder.Core
     }
 
     /// <summary>
+    /// How a building's construction ends (Buildings.ConstructionLook; the user, 2026-10-28: both
+    /// made in the game to pick from): the site with its scaffolding goes and the building stands.
+    /// </summary>
+    public enum BuildFinish
+    {
+        /// <summary>A cloud of dust, the scaffold's planks thrown off, the building springs up.</summary>
+        Dust = 0,
+
+        /// <summary>A flash and a ring of gold sparks, the building pops up out of it.</summary>
+        Fanfare = 1,
+    }
+
+    /// <summary>
     /// The season the maps are dressed in (Maps.SeasonStyle; Tools/blender/seasons.py). The user,
     /// 2026-10-24: a style per season now, how the player comes by them is decided later -- until
     /// then it is a plain choice in the settings.
@@ -80,6 +93,31 @@ namespace CityBuilder.Core
 
         /// <summary>The HUD's look until the player picks another.</summary>
         public const HudSkin DefaultHudSkin = HudSkin.Classic;
+
+        private const string BuildFinishKey = "settings.build_finish";
+        private static BuildFinish? _buildFinish;
+
+        /// <summary>How construction ends (the settings' row): dust until the player picks otherwise.</summary>
+        public static BuildFinish BuildFinish
+        {
+            get
+            {
+                if (_buildFinish == null)
+                {
+                    var saved = PlayerPrefs.GetInt(BuildFinishKey, (int)BuildFinish.Dust);
+                    _buildFinish = Enum.IsDefined(typeof(BuildFinish), saved) ? (BuildFinish)saved : BuildFinish.Dust;
+                }
+                return _buildFinish.Value;
+            }
+            set
+            {
+                if (_buildFinish == value) return;
+                _buildFinish = value;
+                PlayerPrefs.SetInt(BuildFinishKey, (int)value);
+                PlayerPrefs.Save();
+                OnChanged?.Invoke();
+            }
+        }
 
         private const string SandboxThemeKey = "menu.sandbox_theme";
         private const string InvasionThemeKey = "menu.invasion_theme";
@@ -174,6 +212,7 @@ namespace CityBuilder.Core
             _hudSkinLoaded = false;
             _sandboxTheme = null;
             _invasionTheme = null;
+            _buildFinish = null;
         }
     }
 }

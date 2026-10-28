@@ -339,7 +339,7 @@ namespace CityBuilder.Buildings
             }
         }
 
-        private static Mesh Quad()
+        internal static Mesh Quad()
         {
             if (_quad != null) return _quad;
             _quad = new Mesh { name = "DustMote" };
@@ -350,7 +350,7 @@ namespace CityBuilder.Buildings
             return _quad;
         }
 
-        private static Material Material()
+        internal static Material Material()
         {
             if (_material != null) return _material;
             // a soft round blot, made once

@@ -34,6 +34,7 @@ namespace CityBuilder.Buildings
         public float Progress => Total > 0f ? 1f - Remaining / Total : 1f;
 
         private Action _onDone;
+        private ConstructionLook _look;
 
         /// <summary>
         /// Puts the building under construction for `seconds`; `onDone` runs as it finishes (an
@@ -55,6 +56,7 @@ namespace CityBuilder.Buildings
             site.IsUpgrade = upgrade;
             site._onDone = onDone;
             building.Site = site;
+            site._look = ConstructionLook.Raise(building, upgrade);
             return site;
         }
 
@@ -81,6 +83,8 @@ namespace CityBuilder.Buildings
             enabled = false;
             Destroy(this);
             done?.Invoke();
+            // after the level is applied, so the finish shows the new model
+            if (_look != null) _look.Complete();
             Finished?.Invoke(Building);
         }
     }
