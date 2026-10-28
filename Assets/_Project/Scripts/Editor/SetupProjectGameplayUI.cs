@@ -481,6 +481,25 @@ namespace CityBuilder.EditorTools
             var popIconRect = popIcon.GetComponent<RectTransform>();
             popIconRect.anchorMin = popIconRect.anchorMax = new Vector2(0.5f, 0.5f);
             popIconRect.sizeDelta = new Vector2(48f, 48f);
+            // the free hands: a small disc on the icon's corner (ResourceHUDController.idleBadge)
+            var idleBadge = CreateImage(popIcon.transform, "Idle", UiTheme.Good);
+            idleBadge.sprite = SkinSprite("circle_mask");
+            idleBadge.raycastTarget = false;
+            var idleRect = idleBadge.rectTransform;
+            // on the pill's upper-left rim, off the portrait's face
+            idleRect.anchorMin = idleRect.anchorMax = new Vector2(0f, 1f);
+            idleRect.anchoredPosition = new Vector2(-10f, 4f);
+            idleRect.sizeDelta = new Vector2(34f, 34f);
+            var idleOutline = idleBadge.gameObject.AddComponent<Outline>();
+            idleOutline.effectColor = new Color(0.15f, 0.08f, 0.03f, 0.9f);
+            idleOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            var idleText = CreateText(idleBadge.transform, "Count", "0", 22, new Vector2(0f, 1f), new Vector2(34f, 34f), Color.white);
+            idleText.font = UiTheme.Heavy;
+            idleText.raycastTarget = false;
+            idleText.resizeTextForBestFit = true;
+            idleText.resizeTextMinSize = 12;
+            idleText.resizeTextMaxSize = 22;
+            idleBadge.gameObject.SetActive(false);
 
             var populationText = Amount("Population");
 
@@ -500,6 +519,8 @@ namespace CityBuilder.EditorTools
             }
             hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
+            hudSO.FindProperty("idleBadge").objectReferenceValue = idleBadge.gameObject;
+            hudSO.FindProperty("idleText").objectReferenceValue = idleText;
             hudSO.FindProperty("barWidth").floatValue = barWidth;
             hudSO.FindProperty("barBackground").objectReferenceValue = barPlaque.rectTransform;
             if (chipSprite != null)

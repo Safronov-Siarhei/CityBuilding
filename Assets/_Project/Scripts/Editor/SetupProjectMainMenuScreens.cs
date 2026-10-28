@@ -53,9 +53,9 @@ namespace CityBuilder.EditorTools
             var offers = MenuTextButton(main, "OffersButton", "plaque", "#menu_offers", HudInk.OnMenuPlaque, Vector2.zero, new Vector2(440f, 110f), 38);
             Anchor((RectTransform)offers.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 195f), new Vector2(440f, 110f));
             shopBadges.Add(Badge(offers.transform));
-            var discord = Corner(main, "DiscordButton", "Discord", new Vector2(0.5f, 0f), new Vector2(-340f, 120f), CornerButton);
+            var discord = BrandCorner(main, "DiscordButton", "Discord", new Vector2(0.5f, 0f), new Vector2(-340f, 120f), CornerButton, DiscordColour);
             discordBadges.Add(Badge(discord.transform));
-            var youTube = Corner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton);
+            var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(youTube.transform));
 
             // ---- the modes
@@ -65,9 +65,9 @@ namespace CityBuilder.EditorTools
             dim.raycastTarget = false;
             var modesBack = Corner(modes, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
             var modesSettings = Corner(modes, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
-            var modesDiscord = Corner(modes, "DiscordButton", "Discord", new Vector2(0f, 0f), new Vector2(CornerInset, CornerInset), CornerButton);
+            var modesDiscord = BrandCorner(modes, "DiscordButton", "Discord", new Vector2(0f, 0f), new Vector2(CornerInset, CornerInset), CornerButton, DiscordColour);
             discordBadges.Add(Badge(modesDiscord.transform));
-            var modesYouTube = Corner(modes, "YouTubeButton", "YouTube", new Vector2(1f, 0f), new Vector2(-CornerInset, CornerInset), CornerButton);
+            var modesYouTube = BrandCorner(modes, "YouTubeButton", "YouTube", new Vector2(1f, 0f), new Vector2(-CornerInset, CornerInset), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(modesYouTube.transform));
             var modeIds = new[] { GameMode.Sandbox, GameMode.Invasion };
             for (var i = 0; i < modeIds.Length; i++)
@@ -159,6 +159,28 @@ namespace CityBuilder.EditorTools
         {
             var button = MenuRoundButton(parent, name, "round", glyph, HudInk.OnRound, size, 0.5f);
             Anchor((RectTransform)button.transform, anchor, new Vector2(0.5f, 0.5f), offset, new Vector2(size, size));
+            return button;
+        }
+
+        /// <summary>Discord's own blurple and YouTube's red (the user, 2026-10-28: «цветными», each in its brand's colour).</summary>
+        private static readonly Color DiscordColour = new Color32(0x58, 0x65, 0xF2, 0xFF);
+        private static readonly Color YouTubeColour = new Color32(0xFF, 0x00, 0x00, 0xFF);
+
+        /// <summary>
+        /// A corner button in a brand's colour: the kit's wooden ring kept, its face filled with
+        /// the colour, the glyph white on it -- whatever the menu's look.
+        /// </summary>
+        private static Button BrandCorner(Transform parent, string name, string glyph, Vector2 anchor, Vector2 offset, float size, Color colour)
+        {
+            var button = MenuRoundButton(parent, name, "round", glyph, HudInk.Keep, size, 0.5f);
+            Anchor((RectTransform)button.transform, anchor, new Vector2(0.5f, 0.5f), offset, new Vector2(size, size));
+            var face = CreateImage(button.transform, "BrandFace", colour);
+            face.sprite = SkinSprite("circle_mask");
+            face.raycastTarget = false;
+            Anchor(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 3f), new Vector2(size * 0.78f, size * 0.78f));
+            face.transform.SetSiblingIndex(0);
+            var icon = button.transform.Find("Icon").GetComponent<Image>();
+            icon.color = Color.white;
             return button;
         }
 

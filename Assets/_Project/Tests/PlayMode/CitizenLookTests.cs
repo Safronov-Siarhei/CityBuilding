@@ -50,6 +50,29 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.AreNotEqual(Color.grey, agent.Clothes, $"{agent.name} has no clothes colour for the workforce panel.");
             }
 
+            // he faces the way he walks, and only rises and falls on it (the user: no sway)
+            var walker = visuals.AllAgents[0];
+            walker.enabled = false;
+            var controller = walker.GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = false;
+            var waddle = walker.GetComponent<CitizenWaddle>();
+            var walkerFigure = walker.transform.Find("Figure");
+            foreach (var way in new[] { Vector3.right, Vector3.back })
+            {
+                for (var f = 0; f < 40; f++)
+                {
+                    walker.transform.position += way * 0.02f;
+                    yield return null;
+                    var tilt = Vector3.Angle(walkerFigure.up, Vector3.up);
+                    Assert.Less(tilt, 1f, $"{walker.name} tips over {tilt:0.0}° as he walks.");
+                }
+                Assert.Less(Vector3.Angle(waddle.Facing, way), 10f, $"{walker.name} walks {way} facing {waddle.Facing}.");
+                // the model's own front -- its local -z, Blender's -y -- is where he is going
+                var front = walkerFigure.TransformDirection(Vector3.back);
+                front.y = 0f;
+                Assert.Less(Vector3.Angle(front, way), 10f, $"{walker.name}'s face looks {front} while he walks {way}.");
+            }
+
             // the twelve in a row before the hall, for the user
             var models = UnityEngine.Resources.FindObjectsOfTypeAll<GameObject>().Where(g => g.name.StartsWith("Villager") && g.transform.parent == null)
                 .OrderBy(g => g.name).ToList();

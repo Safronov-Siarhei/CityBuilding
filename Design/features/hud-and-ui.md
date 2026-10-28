@@ -115,3 +115,5 @@ Tap on an event icon could also open the building card; persistent problems as m
 buildings; the old tier-up toast; skinning windows per look; no highlight of the selected card.
 Mockup canvases: https://claude.ai/artifact/6NUqZfA52W2gZxMSDUdxUV (style D),
 https://claude.ai/artifact/DLLxzFesTdktVVR6uSUwD6 (looks).
+
+- 2026-10-28: the main menu's Discord and YouTube corner buttons wear their brands' colours (Discord #5865F2, YouTube #FF0000) on the kit's wooden ring, white glyph (`SetupProjectMainMenuScreens.BrandCorner`).

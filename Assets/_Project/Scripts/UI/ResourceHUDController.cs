@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CityBuilder.Citizens;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -26,6 +26,12 @@ namespace CityBuilder.UI
         [SerializeField] private Text[] amountTexts;
         [SerializeField] private RectTransform populationIcon;
         [SerializeField] private Text populationText;
+        /// <summary>
+        /// The free hands, a small disc on the people's icon -- shown only when there are any (the
+        /// user, 2026-10-28: «18/18 (18)» did not fit the pill and broke onto two lines).
+        /// </summary>
+        [SerializeField] private GameObject idleBadge;
+        [SerializeField] private Text idleText;
         [SerializeField] private float barWidth = 1800f;
 
         // Optional pill behind each chip (the skin's resource chip). With them the chips are
@@ -142,9 +148,15 @@ namespace CityBuilder.UI
 
             if (populationText != null)
             {
-                populationText.text = CitizenManager.Instance != null
-                    ? $"{CitizenManager.Instance.TotalPopulation}/{CitizenManager.Instance.Capacity} ({CitizenManager.Instance.IdlePopulation})"
-                    : "0";
+                var people = CitizenManager.Instance;
+                populationText.text = people != null ? $"{people.TotalPopulation}/{people.Capacity}" : "0";
+                var idle = people != null ? people.IdlePopulation : 0;
+                if (idleBadge != null && idleBadge.activeSelf != idle > 0) idleBadge.SetActive(idle > 0);
+                if (idleText != null && idle > 0)
+                {
+                    idleText.text = idle.ToString();
+                    idleText.color = Color.white;   // the HUD's theme pass inks every label; this one sits on green
+                }
             }
             PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
         }

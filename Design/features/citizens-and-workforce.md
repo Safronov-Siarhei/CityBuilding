@@ -16,6 +16,13 @@
 - `CitizenAgent.Clothes`: the model's main colour, measured at setup (`MainColourOf`: biggest palette
   cell by triangle area, skin excluded) -> `villagerClothes`; the workforce panel's row swatch uses it
   (it read the cube "Body" before). Test `CitizenLookTests` (+ photos citizens-lineup/-town).
+- WALK (the user, same day: «лицом вперёд, убери тряску»): the root never turns (CitizenAgent only
+  moves it), so `CitizenWaddle` turns the FIGURE to the way walked (slerp 10/s) and only lifts it on
+  each step (0.018 m); no sway. Test checks the facing and < 1° tilt.
+- Top bar people chip: «total/capacity» on one line (was «18/18 (18)», wrapped); the idle count is a
+  green disc on the pill's upper-left rim, only when > 0 (`ResourceHUDController.idleBadge`); the
+  icon is the peasant's portrait (UI/Icons/Res_Population.png, render_portrait.py VillagerPeasant1,
+  cropped to the head).
 
 ## What the player sees
 Little people walking between home, work and resources. A citizens button (left, under the menu)
