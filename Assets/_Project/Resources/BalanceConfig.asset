@@ -109,7 +109,7 @@ MonoBehaviour:
       walkSpeed: 1.5
       recruitCoins: 105
       upkeepCoinsPerDay: 4
-    startsUnlocked: 0
+    startsUnlocked: 1
     barracksLevel: 2
     recruitIronBars: 1
     recruitCopperBars: 0
@@ -119,8 +119,8 @@ MonoBehaviour:
     - coins: 220
       seconds: 120
     unlockResearch:
-      coins: 60
-      seconds: 60
+      coins: 0
+      seconds: 0
   - id: archer
     displayName: "\u041B\u0443\u0447\u043D\u0438\u043A"
     attackRangeUnits: 8
@@ -145,7 +145,7 @@ MonoBehaviour:
       walkSpeed: 1.4
       recruitCoins: 135
       upkeepCoinsPerDay: 6
-    startsUnlocked: 0
+    startsUnlocked: 1
     barracksLevel: 3
     recruitIronBars: 0
     recruitCopperBars: 1
@@ -155,8 +155,8 @@ MonoBehaviour:
     - coins: 320
       seconds: 140
     unlockResearch:
-      coins: 140
-      seconds: 90
+      coins: 0
+      seconds: 0
   - id: manatarms
     displayName: "\u041B\u0430\u0442\u043D\u0438\u043A"
     attackRangeUnits: 1.4
@@ -181,7 +181,7 @@ MonoBehaviour:
       walkSpeed: 1.2
       recruitCoins: 200
       upkeepCoinsPerDay: 9
-    startsUnlocked: 0
+    startsUnlocked: 1
     barracksLevel: 4
     recruitIronBars: 2
     recruitCopperBars: 1
@@ -191,8 +191,8 @@ MonoBehaviour:
     - coins: 600
       seconds: 180
     unlockResearch:
-      coins: 260
-      seconds: 120
+      coins: 0
+      seconds: 0
   - id: orc_thrower
     displayName: "\u041E\u0440\u043A-\u043C\u0435\u0442\u0430\u0442\u0435\u043B\u044C"
     attackRangeUnits: 6
@@ -3140,14 +3140,14 @@ MonoBehaviour:
       coins: 0
       seconds: 0
     levelResearch:
-    - coins: 15
-      seconds: 60
-    - coins: 25
-      seconds: 120
-    - coins: 40
-      seconds: 180
-    - coins: 70
-      seconds: 240
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: DecTree
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0435
       \u0434\u0435\u0440\u0435\u0432\u043E"
@@ -3230,14 +3230,14 @@ MonoBehaviour:
       coins: 0
       seconds: 0
     levelResearch:
-    - coins: 15
-      seconds: 60
-    - coins: 25
-      seconds: 120
-    - coins: 40
-      seconds: 180
-    - coins: 70
-      seconds: 240
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: DecBush
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
       \u043A\u0443\u0441\u0442"
@@ -3320,14 +3320,14 @@ MonoBehaviour:
       coins: 0
       seconds: 0
     levelResearch:
-    - coins: 15
-      seconds: 60
-    - coins: 25
-      seconds: 120
-    - coins: 40
-      seconds: 180
-    - coins: 70
-      seconds: 240
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: DecGarden
     displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
       \u0441\u0430\u0434"
@@ -3415,19 +3415,19 @@ MonoBehaviour:
       amount: 43
     - type: 1
       amount: 18
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
-      coins: 10
-      seconds: 60
+      coins: 0
+      seconds: 0
     levelResearch:
-    - coins: 15
-      seconds: 60
-    - coins: 25
-      seconds: 120
-    - coins: 40
-      seconds: 180
-    - coins: 70
-      seconds: 240
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: Granary
     displayName: "\u041A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
     category: 1
@@ -5696,6 +5696,8 @@ MonoBehaviour:
   researchFreeWorkers: 1
   researchCancelRefundPercent: 70
   researchMinSeconds: 5
+  researchCrystals: 1
+  researchCrystalsFromLevel: 3
   baseCapacityMaterials: 200
   baseCapacityFood: 100
   baseCapacityValuables: 300
