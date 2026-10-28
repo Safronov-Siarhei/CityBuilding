@@ -53,3 +53,10 @@ EditMode `ResearchTests` (crystal price, DescribeGain); PlayMode `ResearchGateTe
 ## Traps
 Keys `#research_start/_cost/_cancel/_lab_state/_empty_lab_level` are no longer shown (kept: LocalizationTests
 list them). Ships go into the Армия tab later (3 levels, see archipelago memory).
+
+## Next (agreed 2026-10-28, not built)
+Window v2 after the user's final mockup: coins + upgrade crystals only, top centre (no status line);
+PARALLEL research, one slot per scientist, a timer on each researched icon, «Отмена» under it; a tap on
+a picture = a bubble with what the level gives; a blocker flashes the counter red; «Улучшить
+лабораторию» / «Отремонтировать» open their own small windows (icon, price, what the level gives,
+confirm). User's principle: no wall on upgrades -- the game is about growing the settlement.
