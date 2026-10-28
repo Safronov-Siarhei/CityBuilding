@@ -52,6 +52,8 @@ namespace CityBuilder.Buildings
         private MaterialPropertyBlock _block;
         private Transform _model;
         private Vector3 _modelScale;
+        /// <summary>How deep the building's spring goes: a new building's full squash, an upgrade's nod.</summary>
+        private float _squash = 0.3f;
         private float _age;
 
         public static BuildFinishEffect Play(Transform building, Transform model, Vector2 footprint, float height)
@@ -65,6 +67,55 @@ namespace CityBuilder.Buildings
             effect.Burst(footprint, Mathf.Max(1f, height));
             effect.Spring();
             return effect;
+        }
+
+        /// <summary>
+        /// An upgrade done (the user, 2026-10-28: «нужно всё же какой-то эффектик при улучшении»),
+        /// lighter than a new building's: a little dust at the foot, a few of the scaffold's planks
+        /// thrown off, gold sparks spiralling up the walls to the roof, the building nodding once.
+        /// </summary>
+        public static BuildFinishEffect PlayUpgrade(Transform building, Transform model, Vector2 footprint, float height)
+        {
+            var go = new GameObject("UpgradeFinish");
+            go.transform.SetPositionAndRotation(building.position, building.rotation);
+            var effect = go.AddComponent<BuildFinishEffect>();
+            effect._block = new MaterialPropertyBlock();
+            effect._model = model;
+            effect._squash = 0.1f;
+            if (model != null) effect._modelScale = model.localScale;
+            effect.Sparkle(footprint, Mathf.Max(1f, height));
+            effect.Spring();
+            return effect;
+        }
+
+        private void Sparkle(Vector2 footprint, float height)
+        {
+            var hx = footprint.x * 0.5f;
+            var hz = footprint.y * 0.5f;
+            var span = footprint.x + footprint.y;
+            var scale = Mathf.Clamp(0.25f * span, 0.6f, 1.4f);
+
+            var ground = Mathf.Clamp(Mathf.RoundToInt(3f * span), 8, 20);
+            for (var i = 0; i < ground; i++)
+            {
+                var dir = Around(i, ground, 0.25f);
+                Add(Kind.Puff, Edge(dir, hx, hz) + Vector3.up * 0.15f, dir * Random.Range(1.2f, 2f) + Vector3.up * 0.3f,
+                    Random.Range(0.7f, 1f) * scale, 1.3f, 0f, Random.Range(0.7f, 1f), DustColour());
+            }
+            Throw(Mathf.Clamp(Mathf.RoundToInt(1.2f * span), 4, 8), hx, hz, height, Plank(), Wood(), new Vector3(0.24f, 0.05f, 0.9f));
+            Throw(Mathf.Clamp(Mathf.RoundToInt(0.6f * span), 2, 4), hx, hz, height, Plank(), Wood(), new Vector3(0.07f, 0.07f, 1.8f));
+
+            // the sparks: round the walls and up, each a turn of a spiral
+            var sparks = Mathf.Clamp(Mathf.RoundToInt(4f * span), 12, 28);
+            for (var i = 0; i < sparks; i++)
+            {
+                var dir = Around(i, sparks, 0.1f);
+                var rise = Random.Range(0.6f, 1f) * height / 0.9f;
+                var swirl = new Vector3(-dir.z, 0f, dir.x) * Random.Range(0.6f, 1.2f);
+                Add(Kind.Star, Edge(dir, hx, hz) * 0.95f + Vector3.up * Random.Range(0.1f, height * 0.4f), Vector3.up * rise + swirl,
+                    Random.Range(0.3f, 0.5f), 1f, i * 0.025f, Random.Range(0.75f, 1f), Twinkle);
+            }
+            Add(Kind.Ring, Vector3.up * 0.06f, Vector3.zero, Mathf.Max(footprint.x, footprint.y) * 1.05f, 1.6f, 0f, 0.45f, Twinkle);
         }
 
         private void Burst(Vector2 footprint, float height)
@@ -252,7 +303,7 @@ namespace CityBuilder.Buildings
         private void Spring()
         {
             if (_model == null) return;
-            var y = 1f - 0.3f * Mathf.Exp(-5.5f * _age) * Mathf.Cos(13f * _age);
+            var y = 1f - _squash * Mathf.Exp(-5.5f * _age) * Mathf.Cos(13f * _age);
             var xz = 1f + (1f - y) * 0.45f;
             _model.localScale = Vector3.Scale(_modelScale, new Vector3(xz, y, xz));
             if (_age >= 1.1f)

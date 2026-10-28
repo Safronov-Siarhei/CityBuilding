@@ -15,8 +15,8 @@ namespace CityBuilder.Buildings
     ///
     /// An upgrade (the user's pick В, same day): the building in plain sight, scaffolding round it
     /// without the net, a hoist on top lifting a pallet of stones up and down a gap in the front
-    /// decks (ConstructionHoist); when it is done the scaffolding just goes -- the finish effect is
-    /// for a new building only.
+    /// decks (ConstructionHoist); when it is done a lighter finish than a new building's
+    /// (BuildFinishEffect.PlayUpgrade: gold sparks up the walls, a little dust, a nod).
     ///
     /// All of it is made here from the footprint and the model's own size, the same for every
     /// building, and never leaves the building's own cells, so it cannot run into a neighbour
@@ -313,12 +313,15 @@ namespace CityBuilder.Buildings
 
             var appearance = GetComponent<BuildingLevelAppearance>();
             var model = appearance != null && _building != null ? appearance.ModelFor(_building.Level) : null;
-            // the finish marks a new building; an upgrade's scaffolding just goes (the user, 2026-10-28)
-            if (!_upgrade && Application.isPlaying && _building != null && _building.Data != null)
+            // a new building under the dust; an upgrade with a lighter touch (the user, 2026-10-28:
+            // none at first, then «нужно всё же какой-то эффектик»)
+            if (Application.isPlaying && _building != null && _building.Data != null)
             {
                 var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
                 var size = new Vector2(_building.Data.footprintSize.x * cell, _building.Data.footprintSize.y * cell);
-                BuildFinishEffect.Play(transform, model != null ? model.transform : null, size, height);
+                var shown = model != null ? model.transform : null;
+                if (_upgrade) BuildFinishEffect.PlayUpgrade(transform, shown, size, height);
+                else BuildFinishEffect.Play(transform, shown, size, height);
             }
             Gone(this);
         }

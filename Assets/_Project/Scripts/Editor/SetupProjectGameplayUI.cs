@@ -575,6 +575,27 @@ namespace CityBuilder.EditorTools
                 ring.raycastTarget = false;
             }
 
+            // An Invasion run's clock, on a plaque laid over the ring's foot (the screen's edge is
+            // right under the map) -- RunClockLabel shows it in a run only.
+            var clockRoot = new GameObject("RunClock", typeof(RectTransform));
+            clockRoot.transform.SetParent(canvasParent, false);
+            var clockRect = (RectTransform)clockRoot.transform;
+            clockRect.anchorMin = clockRect.anchorMax = new Vector2(0.5f, 0.5f);
+            clockRect.anchoredPosition = frame.rectTransform.anchoredPosition + new Vector2(0f, -frame.rectTransform.sizeDelta.y * 0.5f + 22f);
+            clockRect.sizeDelta = new Vector2(132f, 46f);
+            var clockPlaque = HudImage(clockRoot.transform, "Plaque", "plaque", new Vector2(132f, 46f));
+            clockPlaque.raycastTarget = false;
+            var clockText = CreateText(clockPlaque.transform, "Time", "0:00", 30, new Vector2(0f, 2f), new Vector2(124f, 42f), UiTheme.Ink);
+            clockText.font = UiTheme.Heavy;
+            clockText.raycastTarget = false;
+            SkinInk(clockText, HudInk.OnPlaque);
+            var clock = clockRoot.AddComponent<RunClockLabel>();
+            var clockSO = new SerializedObject(clock);
+            clockSO.FindProperty("plaque").objectReferenceValue = clockPlaque.gameObject;
+            clockSO.FindProperty("time").objectReferenceValue = clockText;
+            clockSO.ApplyModifiedPropertiesWithoutUndo();
+            clockPlaque.gameObject.SetActive(false);
+
             var indicator = viewGO.AddComponent<MinimapCameraIndicator>();
             var indicatorSO = new SerializedObject(indicator);
             indicatorSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;

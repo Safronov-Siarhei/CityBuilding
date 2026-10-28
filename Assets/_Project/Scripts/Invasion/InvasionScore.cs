@@ -24,6 +24,9 @@ namespace CityBuilder.Invasion
 
         private InvasionWaves _waves;
 
+        /// <summary>How long the run has gone on, in game seconds (the clock under the minimap, the user 2026-10-28); stops when it ends.</summary>
+        public float RunSeconds { get; private set; }
+
         public int WavesSurvived => _waves != null ? _waves.WavesSurvived : 0;
 
         public int WavePoints => WavePointsFor(WavesSurvived, BalanceConfig.Instance.InvasionScorePerWaveSquared);
@@ -54,6 +57,20 @@ namespace CityBuilder.Invasion
         private void Start()
         {
             if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded += OnGameEnded;
+        }
+
+        private void Update()
+        {
+            if (Finished || _waves == null) return;
+            if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver) return;
+            RunSeconds += Time.deltaTime;
+        }
+
+        /// <summary>«m:ss», or «h:mm:ss» past an hour.</summary>
+        public static string Clock(float seconds)
+        {
+            var s = Mathf.Max(0, Mathf.FloorToInt(seconds));
+            return s >= 3600 ? $"{s / 3600}:{s / 60 % 60:00}:{s % 60:00}" : $"{s / 60}:{s % 60:00}";
         }
 
         private void OnEnemyDied(OrcUnit enemy)

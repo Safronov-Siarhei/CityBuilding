@@ -14,8 +14,11 @@
   Castle (0 s, placed at the start) -- except what is walked on: Road and Bridge
   (`isRoad` / `providesWalkableSurface`, `ConstructionLook.Wraps`) get only the hammer timer.
 - UPGRADE (the user's pick В of three, 2026-10-28): no net, the building in plain sight, scaffolding
-  round it, a hoist on top winching a pallet of stones up and down; NO finish effect at its end
-  («эффекты нужны чтобы обозначить новое здание»). An upgrading building already does not work
+  round it, a hoist on top winching a pallet of stones up and down. At its end first no effect
+  («эффекты нужны чтобы обозначить новое здание»), then the same day «нужно всё же какой-то
+  эффектик при улучшении» -> a lighter one (`BuildFinishEffect.PlayUpgrade`): a little dust at the
+  foot, a few planks/poles thrown, gold sparks spiralling up the walls, a gold ground ring, the
+  building nodding (squash 0.1 instead of 0.3). An upgrading building already does not work
   (IsOperational: production, towers, hiring, healing, service radius, happiness); its storage and
   its residents stay -- proposed to keep that way, the user did not object.
 - Everywhere (sandbox and run), building AND upgrading; scaffolding must not go into a neighbour
@@ -29,7 +32,7 @@
 - Upgrade: `Scaffolding(..., hoistGap: true)` leaves the front (local -z) side's decks open over the
   first bay's middle; `Gallows` adds a pole, an arm and a drum with a crank there;
   `ConstructionHoist` (pallet + stones + rope, 3 more draws) cycles 4.2 s on game time: up loaded,
-  unload on top, down empty, load. `Complete` plays no effect for an upgrade.
+  unload on top, down empty, load. `Complete` plays `PlayUpgrade` for an upgrade, `Play` for a build.
 - The building stays visible under the net. Net = 4 hanging sides + a
   sagging cover, around the model's own bounds +0.06 m, clamped to the cells' edge -0.03 m (a model built out to
   its cells' edge gets the net over the poles rather than walls poking through); sags between poles

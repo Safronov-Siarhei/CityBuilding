@@ -120,7 +120,7 @@ model into `InvasionMode.shrineModel`;
 `DayPoints`/`WeekPoints`/`MonthPoints`; tests set `FilePathOverride`), `UI/GameOverController.ShowRunEnd`
 («Замок пал» + waves/points/today), `UI/InvasionHubController.cs` (menu hub numbers + day/week/month tabs,
 built in `SetupProjectMainMenu.BuildInvasionPanel`);
-`UI/MinimapAttackAlerts.cs` (the blinking «!», from `InvasionWaves.TryLaneFront`),
+`UI/MinimapAttackAlerts.cs` (the blinking «!», from `InvasionWaves.TryLaneFront`), `UI/RunClockLabel.cs` (the run's time on a plaque over the minimap ring's foot, «m:ss»/«h:mm:ss», from `InvasionScore.RunSeconds` -- game time, stops at the end; the user 2026-10-28),
 `UI/ResourceGainPopups.cs` («+N», on `CitizenVisualsManager.Delivered`; every mode),
 `UI/MoveOrderMarker.ShowFlagFor` (army orders plant the citizens' flag), `OrcUnit.Toughen`/health bar
 (`BuildingHealthBar.CreateFor(unit, height, width)`), `InvasionRules.AtLimit`/`LimitOf` (`BuildingData.maxCount` from the invasion tab: two sawmills, two quarries; the card greys with «2/2»),

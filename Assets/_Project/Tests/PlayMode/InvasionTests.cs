@@ -99,6 +99,35 @@ namespace CityBuilder.Tests.PlayMode
             Time.timeScale = 1f;
         }
 
+        /// <summary>The run's clock under the minimap (the user, 2026-10-28): counts the run's time, stops when it ends; not in the sandbox.</summary>
+        [UnityTest]
+        public IEnumerator TheRunsClock_UnderTheMinimap_CountsTheRun_AndStopsAtItsEnd()
+        {
+            var clock = Object.FindAnyObjectByType<CityBuilder.UI.RunClockLabel>();
+            Assert.IsNotNull(clock, "No run clock under the minimap.");
+            yield return new WaitForSeconds(2.2f);
+            var score = InvasionMode.Instance.Score;
+            Assert.GreaterOrEqual(score.RunSeconds, 2f, "The run's clock does not count.");
+            // the label is written in LateUpdate, a frame behind the count
+            Assert.That(clock.Text == CityBuilder.Invasion.InvasionScore.Clock(score.RunSeconds) || clock.Text == CityBuilder.Invasion.InvasionScore.Clock(score.RunSeconds - 1f),
+                $"The clock under the minimap reads {clock.Text}, the run is {score.RunSeconds:0.0} s in.");
+            // wholly on the screen, though the minimap sits right by its foot
+            var corners = new Vector3[4];
+            ((RectTransform)clock.transform.GetChild(0)).GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                Assert.That(corner.x >= 0f && corner.y >= 0f && corner.x <= Screen.width && corner.y <= Screen.height,
+                    $"The run's clock runs off the screen: a corner at {corner}, the screen {Screen.width}x{Screen.height}.");
+            }
+            Debug.Log($"[RunClock] plaque corners {corners[0]} .. {corners[2]}, screen {Screen.width}x{Screen.height}");
+            score.Finish();
+            var at = score.RunSeconds;
+            yield return new WaitForSeconds(1.2f);
+            Assert.AreEqual(at, score.RunSeconds, "The clock went on after the run ended.");
+            Assert.AreEqual("1:05:09", CityBuilder.Invasion.InvasionScore.Clock(3909f));
+            Assert.AreEqual("2:07", CityBuilder.Invasion.InvasionScore.Clock(127.9f));
+        }
+
         [UnityTest]
         public IEnumerator TheRun_StartsWithTheCastleTheTowersAndTheKing_AndTheCausewaysCross()
         {

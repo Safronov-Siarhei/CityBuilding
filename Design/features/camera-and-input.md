@@ -19,6 +19,14 @@
   along its line of sight and lifts itself (quickly up, gently down) — it used to fly through the
   Caldera's mountains. Guarded by PlayMode `CameraTerrainTests`.
 - Modals block input via `ModalGate`, not time.
+- SMOOTH FOLLOW (2026-10-28, the user: «камера двигается как будто не плавно»): gestures, fling,
+  focus and keys move a GOAL (`_goal`, xz); each frame the rig closes on it at
+  `followSharpness` 18/s (exponential, ~50 ms behind). The drag sets the goal from where the rig is
+  NOW + the grab correction, so it stays exact under the lag. The fling uses `_panVelocity`, an
+  average of the goal's steps over time (one uneven touch no longer decides it); no fling if the
+  finger rested >0.1 s before lifting. Mouse-wheel zoom eases (`zoomSharpness` 14); a PINCH zooms
+  at once (its pan needs the real distance). A move from outside (`JumpTo`, a test setting the rig)
+  is adopted as the new goal (`AdoptOutsideMoves`). Not felt on a phone yet.
 
 ## Code
 `Input/TouchInputRouter.cs`, `Input/WorldInputDispatcher.cs`, `Camera/RTSCameraController.cs`,

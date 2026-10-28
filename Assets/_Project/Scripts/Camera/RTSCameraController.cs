@@ -85,7 +85,28 @@ namespace CityBuilder.CameraControl
         private bool _hasGrab;
 
         private Vector3 _flingVelocity;
-        private Vector3 _lastPanStep;
+
+        [Header("Smoothing")]
+        /// <summary>
+        /// The rig follows where the gestures put it rather than jumping there (the user,
+        /// 2026-10-28: «камера двигается как будто не плавно»): touches arrive unevenly against the
+        /// frames, so moving the rig straight to each one stuttered. Gestures move a goal; each
+        /// frame the rig closes on it exponentially at this rate per second, ~50 ms behind.
+        /// </summary>
+        [SerializeField] private float followSharpness = 18f;
+        /// <summary>The same for the mouse wheel's zoom, whose notches jumped. A pinch zooms at once: it is already smooth, and the pan that keeps the fingers' point under them needs the real distance.</summary>
+        [SerializeField] private float zoomSharpness = 14f;
+
+        private Vector3 _goal;
+        private float _goalDistance;
+        private bool _hasGoal;
+        /// <summary>What the follow last moved the rig to, so a move from outside (JumpTo, a test) is taken as the new goal.</summary>
+        private Vector3 _written;
+        private float _writtenDistance;
+
+        /// <summary>The drag's speed, averaged over its last steps -- one uneven touch no longer decides the fling.</summary>
+        private Vector3 _panVelocity;
+        private float _lastStepTime;
 
         [Header("Focus")]
         /// <summary>How fast FocusOn closes on its target -- a rate, so a long trip is quick and a short one gentle.</summary>
@@ -119,7 +140,7 @@ namespace CityBuilder.CameraControl
         /// </summary>
         public void FocusOn(Vector3 worldPoint)
         {
-            _focusTarget = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
+            _focusTarget = new Vector3(worldPoint.x, 0f, worldPoint.z);
             _focusing = true;
             _flingVelocity = Vector3.zero;
         }
@@ -130,6 +151,7 @@ namespace CityBuilder.CameraControl
             transform.position = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
             _focusing = false;
             _flingVelocity = Vector3.zero;
+            TakeGoalFromRig();
         }
 
         public bool IsFocusing => _focusing;
@@ -176,6 +198,7 @@ namespace CityBuilder.CameraControl
             if (ModalGate.IsBlocked) return;
 
             var dt = Time.unscaledDeltaTime;
+            AdoptOutsideMoves();
 
             ApplyFocus(dt);
             ApplyFling(dt);
@@ -186,7 +209,52 @@ namespace CityBuilder.CameraControl
             var mouse = Mouse.current;
             if (mouse != null) HandleScrollZoom(mouse, dt);
 
+            Follow(dt);
             KeepAboveTheLand(dt);
+        }
+
+        // ---------------------------------------------------------------- the follow
+
+        private void TakeGoalFromRig()
+        {
+            _goal = new Vector3(transform.position.x, 0f, transform.position.z);
+            _written = _goal;
+            if (cameraTransform != null) _goalDistance = _writtenDistance = -cameraTransform.localPosition.z;
+            _hasGoal = true;
+        }
+
+        /// <summary>The rig or the camera moved by someone else since the last follow: that is where the goal is now.</summary>
+        private void AdoptOutsideMoves()
+        {
+            if (!_hasGoal)
+            {
+                TakeGoalFromRig();
+                return;
+            }
+            var at = new Vector3(transform.position.x, 0f, transform.position.z);
+            if ((at - _written).sqrMagnitude > 1e-6f) _goal = _written = at;
+            if (cameraTransform != null && Mathf.Abs(-cameraTransform.localPosition.z - _writtenDistance) > 1e-4f)
+            {
+                _goalDistance = _writtenDistance = -cameraTransform.localPosition.z;
+            }
+        }
+
+        /// <summary>The rig and the zoom closing on their goals.</summary>
+        private void Follow(float dt)
+        {
+            var pos = transform.position;
+            var flat = Vector3.Lerp(new Vector3(pos.x, 0f, pos.z), _goal, 1f - Mathf.Exp(-followSharpness * dt));
+            if ((flat - _goal).sqrMagnitude < 1e-6f) flat = _goal;
+            transform.position = new Vector3(flat.x, pos.y, flat.z);
+            _written = flat;
+
+            if (cameraTransform == null) return;
+            var local = cameraTransform.localPosition;
+            var distance = Mathf.Lerp(-local.z, _goalDistance, 1f - Mathf.Exp(-zoomSharpness * dt));
+            if (Mathf.Abs(distance - _goalDistance) < 1e-3f) distance = _goalDistance;
+            local.z = -distance;
+            cameraTransform.localPosition = local;
+            _writtenDistance = distance;
         }
 
         // ---------------------------------------------------------------- over the hills
@@ -241,7 +309,8 @@ namespace CityBuilder.CameraControl
 
             _focusing = false;
             _flingVelocity = Vector3.zero;
-            _lastPanStep = Vector3.zero;
+            _panVelocity = Vector3.zero;
+            _lastStepTime = Time.unscaledTime;
             _hasGrab = TryGroundPoint(screenPosition, out _grabPoint);
         }
 
@@ -259,16 +328,16 @@ namespace CityBuilder.CameraControl
             // not throwing the map.
             if (!InertiaEnabled || !completed) return;
 
-            var dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
-            var velocity = _lastPanStep / dt;
-            if (velocity.magnitude >= minFlingSpeed) _flingVelocity = velocity;
+            // a finger held still before it lifted throws nothing
+            if (Time.unscaledTime - _lastStepTime > 0.1f) return;
+            if (_panVelocity.magnitude >= minFlingSpeed) _flingVelocity = _panVelocity;
         }
 
         private void HandlePinchStarted(Vector2 centroid, float distance)
         {
             _focusing = false;
             _flingVelocity = Vector3.zero;
-            _lastPanStep = Vector3.zero;
+            _panVelocity = Vector3.zero;
             _hasGrab = TryGroundPoint(centroid, out _grabPoint);
         }
 
@@ -313,15 +382,22 @@ namespace CityBuilder.CameraControl
 
             var step = _grabPoint - current;
             step.y = 0f;
-            MoveClamped(step);
-            _lastPanStep = step;
+            // the goal: where the rig must stand, measured from where it stands now, so it is exact
+            // however far the follow lags behind
+            var before = _goal;
+            _goal = Clamped(new Vector3(transform.position.x, 0f, transform.position.z) + step);
+
+            var now = Time.unscaledTime;
+            var since = Mathf.Max(now - _lastStepTime, 1f / 120f);
+            _lastStepTime = now;
+            _panVelocity = Vector3.Lerp(_panVelocity, (_goal - before) / since, 0.4f);
         }
 
         private void ApplyFocus(float dt)
         {
             if (!_focusing) return;
 
-            var offset = _focusTarget - transform.position;
+            var offset = _focusTarget - _goal;
             offset.y = 0f;
             if (offset.sqrMagnitude < 0.01f)
             {
@@ -330,11 +406,11 @@ namespace CityBuilder.CameraControl
                 return;
             }
 
-            var before = transform.position;
+            var before = _goal;
             MoveClamped(offset * (1f - Mathf.Exp(-focusSharpness * dt)));
 
-            // A target beyond the pan bounds is never reached: stop once the clamp holds the rig still.
-            if ((transform.position - before).sqrMagnitude < 1e-6f) _focusing = false;
+            // A target beyond the pan bounds is never reached: stop once the clamp holds the goal still.
+            if ((_goal - before).sqrMagnitude < 1e-6f) _focusing = false;
         }
 
         private void ApplyFling(float dt)
@@ -351,13 +427,15 @@ namespace CityBuilder.CameraControl
             _flingVelocity *= Mathf.Exp(-flingDamping * dt);
         }
 
+        /// <summary>Moves the goal, which the rig follows: a fling, a focus, the keys.</summary>
         private void MoveClamped(Vector3 move)
         {
-            var newPos = transform.position + move;
-            newPos.x = Mathf.Clamp(newPos.x, panBoundsMin.x, panBoundsMax.x);
-            newPos.z = Mathf.Clamp(newPos.z, panBoundsMin.y, panBoundsMax.y);
-            transform.position = newPos;
+            move.y = 0f;
+            _goal = Clamped(_goal + move);
         }
+
+        private Vector3 Clamped(Vector3 at) =>
+            new Vector3(Mathf.Clamp(at.x, panBoundsMin.x, panBoundsMax.x), 0f, Mathf.Clamp(at.z, panBoundsMin.y, panBoundsMax.y));
 
         /// <summary>
         /// Where this screen ray meets the ground PLANE -- not the ground mesh. A mesh raycast
@@ -413,14 +491,11 @@ namespace CityBuilder.CameraControl
             ApplyZoomDelta(-scroll * zoomSpeed * dt);
         }
 
+        /// <summary>The wheel's zoom: moves the goal, the follow glides there.</summary>
         private void ApplyZoomDelta(float distanceDelta)
         {
             if (cameraTransform == null) return;
-
-            var localPos = cameraTransform.localPosition;
-            var distance = Mathf.Clamp(-localPos.z + distanceDelta, minDistance, maxDistance);
-            localPos.z = -distance;
-            cameraTransform.localPosition = localPos;
+            _goalDistance = Mathf.Clamp(_goalDistance + distanceDelta, minDistance, maxDistance);
         }
 
         /// <summary>
@@ -437,6 +512,8 @@ namespace CityBuilder.CameraControl
             var distance = Mathf.Clamp(-localPos.z * factor, minDistance, maxDistance);
             localPos.z = -distance;
             cameraTransform.localPosition = localPos;
+            // at once, goal and all (see zoomSharpness)
+            _goalDistance = _writtenDistance = distance;
         }
     }
 }

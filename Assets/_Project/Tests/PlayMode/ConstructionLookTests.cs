@@ -88,8 +88,11 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNull(Object.FindAnyObjectByType<BuildFinishEffect>(), "A finish effect never went.");
             barn.Site.Finish();
             yield return null;
-            Assert.IsNull(Object.FindAnyObjectByType<BuildFinishEffect>(), "An upgrade's end raised the new building's dust.");
-            yield return new WaitForSecondsRealtime(0.2f);
+            var upgradeFx = Object.FindAnyObjectByType<BuildFinishEffect>();
+            Assert.IsTrue(upgradeFx != null && upgradeFx.name == "UpgradeFinish", "An upgrade's end has no effect of its own.");
+            yield return new WaitForSecondsRealtime(0.35f);
+            yield return PlaytestCapture.Shoot("construction-upgrade-finish", barn.transform.position + Vector3.up, 7f, 25f, 200f);
+            yield return new WaitForSecondsRealtime(2f);
             yield return PlaytestCapture.Shoot("construction-done", focus, 14f, 40f, 25f);
 
             Assert.AreEqual(scale, model.transform.localScale, "The church is left squashed after the finish.");

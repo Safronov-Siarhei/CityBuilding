@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace CityBuilder.EditorTools
@@ -39,6 +39,7 @@ namespace CityBuilder.EditorTools
             // Everything else is anchored to its own edge where it is built (SetupProjectHud).
             Pin(uiRoot, "Minimap", BottomLeft);
             Pin(uiRoot, "MinimapRing", BottomLeft);
+            Pin(uiRoot, "RunClock", BottomLeft);
         }
 
         /// <summary>
