@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
@@ -89,6 +90,46 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsNull(building.transform.Find("ConstructionSite"), $"{building.Data.buildingName}'s scaffolding outlived its finish.");
             }
             Assert.IsNull(Object.FindAnyObjectByType<BuildFinishEffect>(), "A finish effect never went.");
+        }
+
+        /// <summary>Every building in the hotbar under construction, photographed a dozen at a time: wrapped, all but what is walked on.</summary>
+        [UnityTest]
+        public IEnumerator EveryBuilding_GoesUpUnderTheNet_ButRoadsAndBridges()
+        {
+            const int columns = 4;
+            const int perShot = 12;
+            const int spacing = 5;
+            var catalogue = new List<BuildingData>(Object.FindAnyObjectByType<BuildingPlacer>().AvailableBuildings);
+            var shot = 0;
+            for (var first = 0; first < catalogue.Count; first += perShot)
+            {
+                var count = Mathf.Min(perShot, catalogue.Count - first);
+                var plot = new Vector2Int(columns * spacing, Mathf.CeilToInt(count / (float)columns) * spacing);
+                var origin = PlaytestWorld.FindFreeArea(plot);
+                Assert.AreNotEqual(new Vector2Int(-1, -1), origin, "No room on the map for the next dozen.");
+                var placed = new List<BuildingInstance>();
+                for (var i = 0; i < count; i++)
+                {
+                    var data = catalogue[first + i];
+                    if (data == null) continue;
+                    var building = PlaytestWorld.Place(data, origin + new Vector2Int(i % columns * spacing, i / columns * spacing));
+                    if (building == null) continue;
+                    building.BuildOnTimer(600f);
+                    placed.Add(building);
+                }
+                yield return null;
+                foreach (var building in placed)
+                {
+                    var look = building.GetComponent<ConstructionLook>();
+                    var flat = building.Data.isRoad || building.Data.providesWalkableSurface;
+                    if (flat) Assert.IsNull(look, $"{building.Data.buildingName} is walked on and got a net and scaffolding.");
+                    else Assert.IsTrue(look != null && look.Site.transform.Find("Net") != null, $"{building.Data.buildingName} goes up without its net.");
+                }
+                shot++;
+                yield return PlaytestCapture.Shoot($"construction-catalogue-{shot}", PlaytestWorld.CellCenter(origin + plot / 2), 22f, 40f, 20f);
+                foreach (var building in placed) Object.DestroyImmediate(building.gameObject);
+                yield return null;
+            }
         }
     }
 }

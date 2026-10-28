@@ -39,13 +39,20 @@ namespace CityBuilder.Buildings
 
         public static ConstructionLook Raise(BuildingInstance building, bool upgrade)
         {
-            if (building == null || building.Data == null) return null;
+            if (!Wraps(building)) return null;
             var look = building.gameObject.AddComponent<ConstructionLook>();
             look._building = building;
             look._upgrade = upgrade;
             look.Build();
             return look;
         }
+
+        /// <summary>
+        /// Every building gets a site (the user, 2026-10-28: «добавляй в игру на все здания") but what
+        /// is walked on -- a road, a bridge -- which a net and scaffolding would stand over as a box.
+        /// </summary>
+        public static bool Wraps(BuildingInstance building) =>
+            building != null && building.Data != null && !building.Data.isRoad && !building.Data.providesWalkableSurface;
 
         private void Build()
         {
@@ -80,10 +87,14 @@ namespace CityBuilder.Buildings
             renderer.shadowCastingMode = shadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
         }
 
-        /// <summary>Half the net's width and depth: just round the model, never past the poles.</summary>
+        /// <summary>
+        /// Half the net's width and depth: just round the model, inside the poles where it fits; a
+        /// model built out to its cells' edge gets the net out there too, over the poles, rather
+        /// than walls poking through it. Never past the building's own cells.
+        /// </summary>
         private Vector2 NetHalf(Vector2 size, BuildingLevelAppearance appearance)
         {
-            var most = new Vector2(size.x * 0.5f - Inset - Pole, size.y * 0.5f - Inset - Pole);
+            var most = new Vector2(size.x * 0.5f - 0.03f, size.y * 0.5f - 0.03f);
             var model = appearance != null ? appearance.ModelFor(_building.Level) : null;
             var reach = Vector2.zero;
             if (model != null)
@@ -99,7 +110,7 @@ namespace CityBuilder.Buildings
                     }
                 }
             }
-            if (reach == Vector2.zero) reach = most - new Vector2(0.25f, 0.25f);
+            if (reach == Vector2.zero) reach = most - new Vector2(0.3f, 0.3f);
             return new Vector2(Mathf.Clamp(reach.x + 0.06f, 0.3f, most.x), Mathf.Clamp(reach.y + 0.06f, 0.3f, most.y));
         }
 
