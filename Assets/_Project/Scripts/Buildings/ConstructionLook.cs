@@ -337,6 +337,9 @@ namespace CityBuilder.Buildings
 
         private static void Gone(Object thing)
         {
+            // hidden at once: Destroy waits for the frame's end, and until then the scaffolding would
+            // stand beside the new level's model as a second one
+            if (thing is GameObject go) go.SetActive(false);
             if (Application.isPlaying) Destroy(thing);
             else DestroyImmediate(thing);
         }

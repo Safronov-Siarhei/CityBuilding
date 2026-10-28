@@ -171,16 +171,18 @@ namespace CityBuilder.Tests.EditMode
             }
         }
 
-        /// <summary>A row has to say what it costs and, for a soldier level, what it buys -- "уровень 2" alone tells the player nothing.</summary>
+        /// <summary>
+        /// Tapping a level's picture says what it buys -- "уровень 2" alone tells the player nothing;
+        /// and levels 3-5 cost an upgrade crystal on top of the coins (the user, 2026-10-28).
+        /// </summary>
         [Test]
-        public void ARowSaysItsPriceAndWhatASoldierLevelBuys()
+        public void ALevelSaysWhatItBuys_AndFromLevelThreeCostsACrystal()
         {
-            var buildingTopic = ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Warehouse", 2));
-            Assert.IsNotNull(buildingTopic);
-            StringAssert.Contains(buildingTopic.Coins.ToString(), UI.ResearchPanelController.DescribeCost(buildingTopic));
+            Assert.AreEqual(0, ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Warehouse", 2)).Crystals, "Level 2 costs a crystal.");
+            Assert.AreEqual(1, ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Warehouse", 3)).Crystals, "Level 3 costs no crystal.");
+            Assert.AreEqual(1, ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Warehouse", 5)).Crystals, "Level 5 costs no crystal.");
 
-            var unitTopic = ResearchCatalog.ById(ResearchTopic.UnitLevelId("militia", 2));
-            var line = UI.ResearchPanelController.DescribeCost(unitTopic);
+            var line = UI.ResearchPanelController.DescribeGain("militia", 2, isUnit: true);
             var health = SoldierStats.StatsAt(SoldierType.Militia, 2).maxHealth - SoldierStats.StatsAt(SoldierType.Militia, 1).maxHealth;
             StringAssert.Contains(health.ToString(), line, $"A soldier level's row does not say what it adds: \"{line}\"");
         }

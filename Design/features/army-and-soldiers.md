@@ -15,8 +15,8 @@ gather = ring; refused = red ripple.
 ## Rules (decided)
 - **Barracks level opens the tier (the user, 2026-10-28, «каждый уровень открывал нового солдата»):**
   units tab `barracks_level` (militia 1, spearman 2, archer 3, man-at-arms 4) -> `UnitBalance.barracksLevel`
-  -> `SoldierStats.BarracksLevel`. Both modes; in the sandbox the Laboratory must ALSO have opened the
-  tier (research first, then the level). `ArmyManager.DescribeRecruitBlocker/TryRecruit(type, ..., barracksLevel)`
+  -> `SoldierStats.BarracksLevel`. Both modes. Since 2026-10-28 the Barracks ALONE opens a tier (every
+  tier starts_unlocked=1, no unlock research; user: no double key) -- the Laboratory only raises levels 2/3. `ArmyManager.DescribeRecruitBlocker/TryRecruit(type, ..., barracksLevel)`
   (default int.MaxValue = no gate, which every older caller/test uses); the hire bar passes the held
   Barracks' level and shows a too-high tier dimmed under «Казарма ур. N» (`#army_card_barracks`, the
   castle's «Замок ур. N» band now built for both bars); a tap says `#army_need_barracks`. Test

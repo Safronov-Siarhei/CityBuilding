@@ -39,6 +39,8 @@ namespace CityBuilder.Saving
         public string currentResearchId = string.Empty;
         public float currentResearchElapsedSeconds;
         public int currentResearchPaidCoins;
+        /// <summary>The upgrade crystals the running research took -- given back if it is cancelled after a load.</summary>
+        public int currentResearchPaidCrystals;
 
         /// <summary>
         /// The player's army, group by group. Empty in saves made before the army was saved at all,

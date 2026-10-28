@@ -113,13 +113,27 @@ def res_people(b):
     b.box(-0.045, 0.045, -0.045, 0.045, 0.2, 0.29, 'plaster_pink', bevel=0.01)
 
 
+def res_upgrade_crystal(b):
+    """The upgrade crystal (the user, 2026-10-28: its own unique icon): a cluster of violet shards
+    in a gold setting -- purple so it is never taken for the blue crystal of the shop."""
+    b.cylinder(0, 0, 0, 0.05, 0.17, 'gold', sides=10)
+    b.cylinder(0, 0, 0.05, 0.065, 0.15, 'plaster_yellow', sides=10)
+    for x, y, h, r, col in ((0.0, 0.0, 0.34, 0.075, 'roof_purple'), (-0.09, 0.03, 0.22, 0.05, 'roof_purple_dark'),
+                            (0.09, 0.02, 0.25, 0.055, 'roof_purple_dark'), (0.03, -0.08, 0.17, 0.045, 'roof_purple'),
+                            (-0.04, 0.09, 0.15, 0.04, 'roof_purple')):
+        b.cylinder(x, y, 0.06, 0.06 + h, r, col, sides=6)
+        b.pyramid(x, y, 0.06 + h, r, r, 0.06 + h + r * 1.8, col, sides=6)
+    b.pyramid(-0.025, -0.06, 0.3, 0.012, 0.012, 0.33, 'white', sides=4)
+
+
 # Named after ResourceType, which is how the game finds them (Res_<ResourceType>.png).
 RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Iron": res_iron_ore, "Res_IronBar": res_iron_bar,
              "Res_CopperOre": res_copper_ore, "Res_CopperBar": res_copper_bar,
              "Res_Gold": res_gold_ore, "Res_GoldBar": res_gold_bar, "Res_Coins": res_coins,
              "Res_Grain": res_grain, "Res_Flour": res_flour, "Res_Bread": res_bread,
-             "Res_Food": res_food, "Res_Population": res_people}
+             "Res_Food": res_food, "Res_Population": res_people,
+             "Res_UpgradeCrystal": res_upgrade_crystal}
 
 
 # -- staging ---------------------------------------------------------------------------------------

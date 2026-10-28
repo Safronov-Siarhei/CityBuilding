@@ -41,6 +41,7 @@ namespace CityBuilder.Research
 
         private float _elapsedSeconds;
         private int _paidCoins;
+        private int _paidCrystals;
 
         // The lab is found once per lab built, not per frame: HasAny is a dictionary lookup, and the
         // scene scan behind it only runs when that says there is a lab and the cached one is gone.
@@ -263,6 +264,7 @@ namespace CityBuilder.Research
 
             var resources = ResourceManager.Instance;
             if (resources != null && !resources.HasEnough(CoinCost(topic.Coins))) return Localization.Get("#research_blocked_coins");
+            if (topic.Crystals > 0 && !CrystalsAreFree && Wallet.UpgradeCrystals < topic.Crystals) return Localization.Get("#research_blocked_crystals");
 
             return null;
         }
@@ -279,6 +281,8 @@ namespace CityBuilder.Research
             // be refunded later either -- paying it back would mint coins (the same trap
             // ArmyManager.TryRecruit documents).
             _paidCoins = resources != null && resources.InfiniteResources ? 0 : topic.Coins;
+            _paidCrystals = CrystalsAreFree ? 0 : topic.Crystals;
+            if (_paidCrystals > 0) Wallet.UpgradeCrystals -= _paidCrystals;
             Current = topic;
             _elapsedSeconds = 0f;
 
@@ -287,12 +291,13 @@ namespace CityBuilder.Research
             return true;
         }
 
-        /// <summary>The player changing their mind: most of the coins come back, the progress does not.</summary>
+        /// <summary>The player changing their mind: most of the coins come back, the crystals all of them, the progress does not.</summary>
         public void CancelCurrent()
         {
             if (Current == null) return;
 
             Refund(CurrentCancelRefund);
+            RefundCrystals();
             EventLogManager.Instance?.Log(Localization.Format("#log_research_cancelled", Current.Title));
             ClearCurrent();
         }
@@ -306,6 +311,7 @@ namespace CityBuilder.Research
             if (Current == null) return;
 
             Refund(_paidCoins);
+            RefundCrystals();
             EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_lost", Current.Title), EventSeverity.Warning, EventGlyph.Alert, LaboratoryBuildingId));
             ClearCurrent();
         }
@@ -328,8 +334,18 @@ namespace CityBuilder.Research
             Current = null;
             _elapsedSeconds = 0f;
             _paidCoins = 0;
+            _paidCrystals = 0;
             OnResearchChanged?.Invoke();
         }
+
+        private void RefundCrystals()
+        {
+            if (_paidCrystals > 0) Wallet.UpgradeCrystals += _paidCrystals;
+            _paidCrystals = 0;
+        }
+
+        /// <summary>The infinite-resources cheat covers the crystals too: a tester looking at level 5 should not need a wallet.</summary>
+        private static bool CrystalsAreFree => ResourceManager.Instance != null && ResourceManager.Instance.InfiniteResources;
 
         private static void Refund(int coins)
         {
@@ -402,11 +418,12 @@ namespace CityBuilder.Research
         public IEnumerable<string> CompletedTopicIds => _completed;
 
         /// <summary>What is under way, for the save file: the topic, how far in it is, and how much was paid for it.</summary>
-        public void ReadCurrentForSave(out string topicId, out float elapsedSeconds, out int paidCoins)
+        public void ReadCurrentForSave(out string topicId, out float elapsedSeconds, out int paidCoins, out int paidCrystals)
         {
             topicId = Current != null ? Current.Id : string.Empty;
             elapsedSeconds = Current != null ? _elapsedSeconds : 0f;
             paidCoins = Current != null ? _paidCoins : 0;
+            paidCrystals = Current != null ? _paidCrystals : 0;
         }
 
         /// <summary>
@@ -414,7 +431,7 @@ namespace CityBuilder.Research
         /// dropped with a warning rather than kept as dead entries -- the save's own coins were
         /// already spent, so the honest thing is to say what was lost.
         /// </summary>
-        public void RestoreFromSave(IEnumerable<string> completedTopicIds, string currentTopicId, float elapsedSeconds, int paidCoins)
+        public void RestoreFromSave(IEnumerable<string> completedTopicIds, string currentTopicId, float elapsedSeconds, int paidCoins, int paidCrystals = 0)
         {
             _completed.Clear();
             if (completedTopicIds != null)
@@ -434,6 +451,7 @@ namespace CityBuilder.Research
             Current = ResearchCatalog.ById(currentTopicId);
             _elapsedSeconds = Current != null ? Mathf.Max(0f, elapsedSeconds) : 0f;
             _paidCoins = Current != null ? Mathf.Max(0, paidCoins) : 0;
+            _paidCrystals = Current != null ? Mathf.Max(0, paidCrystals) : 0;
 
             // Soldiers restored before this point were built at level 1; a save with researched
             // levels has to bring them up to date.

@@ -40,6 +40,13 @@ namespace CityBuilder.Cheats
             EventLogManager.Instance?.Log($"[Чит] изучено: {topicId}");
         }
 
+        /// <summary>Ten upgrade crystals into the wallet -- the only way to get them until dungeons and the shop exist.</summary>
+        public void GrantCrystals()
+        {
+            Wallet.UpgradeCrystals += 10;
+            EventLogManager.Instance?.Log($"[Чит] кристаллы улучшения: {Wallet.UpgradeCrystals}");
+        }
+
         /// <summary>Grants every topic in the catalogue. Bound to the Inspector's button.</summary>
         public void GrantEverything()
         {

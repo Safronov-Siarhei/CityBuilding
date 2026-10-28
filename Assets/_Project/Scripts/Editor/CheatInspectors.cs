@@ -91,6 +91,11 @@ namespace CityBuilder.EditorTools
             {
                 cheat.GrantEverything();
             }
+
+            if (GUILayout.Button("+10 кристаллов улучшения"))
+            {
+                cheat.GrantCrystals();
+            }
         }
     }
 }

@@ -32,19 +32,19 @@ namespace CityBuilder.Tests.EditMode
             }
         }
 
-        /// <summary>Militia is the tier a settlement can raise on day one; everything above it has to be opened, or the Laboratory has nothing to do with the army at all.</summary>
+        /// <summary>
+        /// The Barracks opens each tier, the Laboratory only raises its levels (the user, 2026-10-28:
+        /// no double key): every tier is open to research, and each needs a higher Barracks than the one below.
+        /// </summary>
         [Test]
-        public void OnlyMilitiaStartsOpen_AndEveryOtherTierNamesItsUnlock()
+        public void TheBarracksOpensEachTier_TheLaboratoryOnlyItsLevels()
         {
-            Assert.IsTrue(Row(SoldierType.Militia).startsUnlocked, "Militia has to be recruitable before anything is researched, or a new game has no army at all.");
-
+            var previous = 0;
             foreach (var type in SoldierStats.All)
             {
-                if (type == SoldierType.Militia) continue;
-
-                Assert.IsFalse(Row(type).startsUnlocked, $"{type} is open from the start, so the Laboratory never gates it.");
-                Assert.IsTrue(Row(type).unlockResearch.IsAuthored,
-                    $"{type} is marked starts_unlocked=0 but names no unlock research, so nothing could ever open it.");
+                Assert.IsTrue(Row(type).startsUnlocked, $"{type} still waits on the Laboratory to be opened -- the Barracks' level does that now.");
+                Assert.Greater(Row(type).barracksLevel, previous, $"{type} needs no higher a Barracks than the tier below it.");
+                previous = Row(type).barracksLevel;
             }
         }
 

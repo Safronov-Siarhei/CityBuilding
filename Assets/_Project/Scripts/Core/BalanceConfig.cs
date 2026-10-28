@@ -641,6 +641,8 @@ namespace CityBuilder.Core
         [SerializeField] private int researchFreeWorkers = 1;
         [SerializeField] private int researchCancelRefundPercent = 70;
         [SerializeField] private float researchMinSeconds = 5f;
+        [SerializeField] private int researchCrystals = 1;
+        [SerializeField] private int researchCrystalsFromLevel = 3;
 
         [Header("Storage (economy.csv)")]
         // What the settlement can hold before a single storehouse is built. Without these a new
@@ -780,6 +782,10 @@ namespace CityBuilder.Core
         public int ResearchFreeWorkers => researchFreeWorkers;
         public int ResearchCancelRefundPercent => researchCancelRefundPercent;
         public float ResearchMinSeconds => researchMinSeconds;
+
+        /// <summary>Upgrade crystals a research costs from `research_crystals_from_level` up (the user, 2026-10-28: levels 3-5, one crystal each).</summary>
+        public int ResearchCrystals => researchCrystals;
+        public int ResearchCrystalsFromLevel => researchCrystalsFromLevel;
         public int MigrationHappinessThreshold => migrationHappinessThreshold;
         public float MigrationArriveIntervalAtThresholdSeconds => migrationArriveIntervalAtThresholdSeconds;
         public float MigrationArriveIntervalAtFullSeconds => migrationArriveIntervalAtFullSeconds;
@@ -1235,6 +1241,8 @@ namespace CityBuilder.Core
             researchFreeWorkers = (int)Read(economy, "research_free_workers", researchFreeWorkers);
             researchCancelRefundPercent = (int)Read(economy, "research_cancel_refund_percent", researchCancelRefundPercent);
             researchMinSeconds = Read(economy, "research_min_seconds", researchMinSeconds);
+            researchCrystals = (int)Read(economy, "research_crystals", researchCrystals);
+            researchCrystalsFromLevel = (int)Read(economy, "research_crystals_from_level", researchCrystalsFromLevel);
             migrationHappinessThreshold = (int)Read(economy, "migration_happiness_threshold", migrationHappinessThreshold);
             migrationArriveIntervalAtThresholdSeconds = Read(economy, "migration_arrive_interval_at_threshold_sec", migrationArriveIntervalAtThresholdSeconds);
             migrationArriveIntervalAtFullSeconds = Read(economy, "migration_arrive_interval_at_full_sec", migrationArriveIntervalAtFullSeconds);

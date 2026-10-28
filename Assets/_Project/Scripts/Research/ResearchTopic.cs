@@ -67,6 +67,16 @@ namespace CityBuilder.Research
 
         public bool IsBuildingTopic => Kind == ResearchKind.UnlockBuilding || Kind == ResearchKind.BuildingLevel;
 
+        /// <summary>Upgrade crystals on top of the coins: one per level from level 3 up (the user, 2026-10-28; economy `research_crystals`, `research_crystals_from_level`).</summary>
+        public int Crystals
+        {
+            get
+            {
+                var config = BalanceConfig.Instance;
+                return config != null && Level >= config.ResearchCrystalsFromLevel ? config.ResearchCrystals : 0;
+            }
+        }
+
         /// <summary>
         /// The Laboratory level this needs, straight from the design: level 1 only OPENS things,
         /// level 2 is what lets anything be researched to level 2, level 3 to level 3.

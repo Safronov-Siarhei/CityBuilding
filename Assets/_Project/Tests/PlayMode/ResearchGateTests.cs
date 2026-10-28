@@ -281,6 +281,62 @@ namespace CityBuilder.Tests.PlayMode
             panel.Close();
         }
 
+        /// <summary>
+        /// Levels 3-5 cost an upgrade crystal on top of the coins (the user, 2026-10-28): with none
+        /// in the wallet a level 3 will not start; with one it takes it, and cancelling gives it back.
+        /// </summary>
+        [Test]
+        public void ALevelThree_TakesAnUpgradeCrystal_AndCancellingGivesItBack()
+        {
+            var research = Research();
+            var lab = PlaceStaffedLab(out _);
+            lab.SetLevel(3);
+            research.CompleteInstantly(ResearchTopic.BuildingLevelId("Warehouse", 2));
+            var topic = ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Warehouse", 3));
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, topic.Coins + 100);
+            var saved = Wallet.UpgradeCrystals;
+            try
+            {
+                Wallet.UpgradeCrystals = 0;
+                Assert.IsFalse(research.TryStart(topic), "A level 3 started with no upgrade crystal.");
+                StringAssert.Contains(Localization.Get("#research_blocked_crystals"), research.DescribeBlocker(topic));
+
+                Wallet.UpgradeCrystals = 1;
+                Assert.IsTrue(research.TryStart(topic), research.DescribeBlocker(topic));
+                Assert.AreEqual(0, Wallet.UpgradeCrystals, "The level 3 took no crystal.");
+                research.CancelCurrent();
+                Assert.AreEqual(1, Wallet.UpgradeCrystals, "Cancelling did not give the crystal back.");
+            }
+            finally
+            {
+                Wallet.UpgradeCrystals = saved;
+            }
+        }
+
+        /// <summary>The window after the user's sketch, both tabs, with a research under way -- for the user.</summary>
+        [UnityTest]
+        public IEnumerator Photograph_TheLaboratoryWindow()
+        {
+            var research = Research();
+            var lab = PlaceStaffedLab(out _);
+            lab.SetLevel(2);
+            research.CompleteInstantly(ResearchTopic.UnlockBuildingId("Smelter"));
+            research.CompleteInstantly(ResearchTopic.BuildingLevelId("Hovel", 2));
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 500);
+            research.TryStart(ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Castle", 2)));
+
+            var panel = Object.FindFirstObjectByType<ResearchPanelController>(FindObjectsInactive.Include);
+            panel.Show(lab);
+            Assert.Greater(panel.RowCount, 20, "The buildings tab has hardly any rows.");
+            yield return PlaytestCapture.ShootWithUi("lab-window-buildings", lab.transform.position);
+            panel.SelectUnitsTab();
+            Assert.AreEqual(4, panel.RowCount, "The army tab is not the four soldier tiers.");
+            yield return PlaytestCapture.ShootWithUi("lab-window-army", lab.transform.position);
+            panel.ToggleHint();
+            yield return PlaytestCapture.ShootWithUi("lab-window-hint", lab.transform.position);
+            panel.Close();
+        }
+
         private static ResearchManager Research()
         {
             var research = ResearchManager.Instance;

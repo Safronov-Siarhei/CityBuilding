@@ -185,7 +185,7 @@ namespace CityBuilder.Saving
             if (researchManager != null)
             {
                 researchManager.RestoreFromSave(data.completedResearch, data.currentResearchId,
-                    data.currentResearchElapsedSeconds, data.currentResearchPaidCoins);
+                    data.currentResearchElapsedSeconds, data.currentResearchPaidCoins, data.currentResearchPaidCrystals);
             }
 
             foreach (var entry in data.buildings)
@@ -559,7 +559,8 @@ namespace CityBuilder.Saving
             if (researchManager != null)
             {
                 data.completedResearch.AddRange(researchManager.CompletedTopicIds);
-                researchManager.ReadCurrentForSave(out var currentResearchId, out var elapsed, out var paid);
+                researchManager.ReadCurrentForSave(out var currentResearchId, out var elapsed, out var paid, out var paidCrystals);
+                data.currentResearchPaidCrystals = paidCrystals;
                 data.currentResearchId = currentResearchId;
                 data.currentResearchElapsedSeconds = elapsed;
                 data.currentResearchPaidCoins = paid;

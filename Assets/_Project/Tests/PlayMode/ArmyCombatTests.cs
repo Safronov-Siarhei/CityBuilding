@@ -182,11 +182,9 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNull(army.DescribeRecruitBlocker(SoldierType.Militia),
                 "Militia is the tier a settlement starts with; nothing should be refusing it with coins and citizens to spare.");
 
-            Assert.IsNotNull(army.DescribeRecruitBlocker(SoldierType.ManAtArms),
-                "An unresearched tier was recruitable, so the Laboratory has nothing to do with the army.");
-            Assert.IsFalse(army.TryRecruit(SoldierType.ManAtArms, WalkablePoint()));
-
-            research.CompleteInstantly(Research.ResearchTopic.UnlockUnitId(SoldierStats.SheetIdOf(SoldierType.ManAtArms)));
+            Assert.IsNotNull(army.DescribeRecruitBlocker(SoldierType.ManAtArms, 1),
+                "A level-1 Barracks raised a man-at-arms, so the Barracks' level gates nothing.");
+            Assert.IsFalse(army.TryRecruit(SoldierType.ManAtArms, WalkablePoint(), 1));
 
             ResourceManager.Instance.SetAmount(ResourceType.IronBar, 0);
             ResourceManager.Instance.SetAmount(ResourceType.CopperBar, 0);

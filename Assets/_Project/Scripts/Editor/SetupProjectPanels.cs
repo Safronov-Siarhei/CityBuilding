@@ -647,6 +647,13 @@ namespace CityBuilder.EditorTools
         /// because a row here holds a title, a price and a button, and there are two tabs of them.
         /// 980 tall spans y -490..490 on a 1080-high canvas, which clears the edge.
         /// </summary>
+        /// <summary>
+        /// The Laboratory's window after the user's sketch (2026-10-28): «Лаборатория: уровень N» on a
+        /// wooden plaque between the two tabs, the crystals and the status line under them, the
+        /// rows of levels in a scroll list, and along the foot the scientists, the Laboratory's own
+        /// upgrade and repair, «Закрыть» and the «!» hint. The rows are built at run time
+        /// (ResearchPanelController.Populate).
+        /// </summary>
         private static ResearchPanelController BuildResearchPanel(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
         {
             var panelRoot = new GameObject("ResearchPanel", typeof(RectTransform));
@@ -661,52 +668,97 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(1240f, 980f);
+            cardRect.sizeDelta = new Vector2(1760f, 1030f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 430f), new Vector2(1160f, 60f));
-            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 390f), new Vector2(1160f, 36f), new Color(1f, 1f, 1f, 0.6f));
+            var wood = SkinSprite("pill_wood") ?? panelSprite;
+            var plaque = CreateImage(card.transform, "TitlePlaque", Color.white);
+            plaque.sprite = wood;
+            plaque.type = Image.Type.Sliced;
+            var plaqueRect = plaque.rectTransform;
+            plaqueRect.anchorMin = plaqueRect.anchorMax = new Vector2(0.5f, 0.5f);
+            plaqueRect.anchoredPosition = new Vector2(0f, 452f);
+            plaqueRect.sizeDelta = new Vector2(560f, 76f);
+            var title = CreateText(plaque.transform, "Title", string.Empty, 34, Vector2.zero, new Vector2(540f, 70f));
+            title.fontStyle = FontStyle.Bold;
 
-            // Header band: the scientists on the left, the building's own two actions on the right.
-            var scientists = CreateText(card.transform, "Scientists", string.Empty, 24, new Vector2(-330f, 335f), new Vector2(500f, 44f), new Color(1f, 1f, 1f, 0.9f), addShadow: false);
-            scientists.alignment = TextAnchor.MiddleLeft;
-            var removeScientist = CreateButton(card.transform, panelSprite, "RemoveScientistButton", "-", new Vector2(-120f, 335f), new Vector2(64f, 64f));
-            var addScientist = CreateButton(card.transform, panelSprite, "AddScientistButton", "+", new Vector2(-40f, 335f), new Vector2(64f, 64f));
+            var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-560f, 452f), new Vector2(400f, 68f));
+            var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(560f, 452f), new Vector2(400f, 68f));
+
+            // the status line: what is under way, or why a level cannot start, or what a level gives
+            var status = CreateText(card.transform, "Status", string.Empty, 24, new Vector2(-60f, 378f), new Vector2(1400f, 40f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 405f), new Vector2(400f, 30f), new Color(1f, 0.6f, 0.5f));
+
+            // the upgrade crystals, top right under the army tab
+            var crystalIcon = IconSprite("Res_UpgradeCrystal");
+            var gem = CreateImage(card.transform, "CrystalIcon", Color.white);
+            gem.sprite = crystalIcon;
+            gem.preserveAspect = true;
+            gem.raycastTarget = false;
+            gem.rectTransform.anchorMin = gem.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            gem.rectTransform.anchoredPosition = new Vector2(740f, 380f);
+            gem.rectTransform.sizeDelta = new Vector2(48f, 48f);
+            var crystals = CreateText(card.transform, "Crystals", "0", 28, new Vector2(800f, 380f), new Vector2(80f, 44f));
+            crystals.alignment = TextAnchor.MiddleLeft;
+            crystals.fontStyle = FontStyle.Bold;
+
+            BuildScrollList(card.transform, new Vector2(0f, -8f), new Vector2(1700f, 720f),
+                "#research_empty", out var content, out var emptyLabelGO);
+
+            // the foot: scientists, the Laboratory's own upgrade and repair, close, the hint
+            const float footY = -425f;
+            var removeScientist = CreateButton(card.transform, panelSprite, "RemoveScientistButton", "-", new Vector2(-810f, footY), new Vector2(68f, 68f));
+            var scientists = CreateText(card.transform, "Scientists", string.Empty, 22, new Vector2(-575f, footY), new Vector2(390f, 60f), new Color(1f, 1f, 1f, 0.9f), addShadow: false);
+            var addScientist = CreateButton(card.transform, panelSprite, "AddScientistButton", "+", new Vector2(-340f, footY), new Vector2(68f, 68f));
 
             var upgradeControls = new GameObject("UpgradeControls", typeof(RectTransform));
             upgradeControls.transform.SetParent(card.transform, false);
             StretchFull(upgradeControls.GetComponent<RectTransform>());
-            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(200f, 345f), new Vector2(260f, 64f));
-            var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(200f, 297f));
+            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#research_upgrade_lab", new Vector2(-20f, footY), new Vector2(380f, 70f));
+            var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(-20f, footY - 62f));
 
             var repairControls = new GameObject("RepairControls", typeof(RectTransform));
             repairControls.transform.SetParent(card.transform, false);
             StretchFull(repairControls.GetComponent<RectTransform>());
-            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(490f, 345f), new Vector2(260f, 64f));
-            var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(490f, 297f));
+            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(345f, footY), new Vector2(330f, 70f));
+            var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(345f, footY - 62f));
 
-            // What is being researched right now, and the way out of it.
-            var progress = CreateText(card.transform, "Progress", string.Empty, 22, new Vector2(-160f, 240f), new Vector2(840f, 40f), new Color(0.82f, 0.88f, 0.7f));
-            progress.alignment = TextAnchor.MiddleLeft;
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(640f, footY), new Vector2(230f, 70f));
+            var hintButton = CreateButton(card.transform, panelSprite, "HintButton", string.Empty, new Vector2(815f, footY), new Vector2(72f, 72f));
+            var hintGlyph = hintButton.GetComponentInChildren<Text>();
+            var glyphKey = hintGlyph.GetComponent<LocalizedText>();
+            if (glyphKey != null) Object.DestroyImmediate(glyphKey);
+            hintGlyph.text = "!";
+            hintGlyph.fontStyle = FontStyle.Bold;
 
-            var cancelControls = new GameObject("CancelControls", typeof(RectTransform));
-            cancelControls.transform.SetParent(card.transform, false);
-            StretchFull(cancelControls.GetComponent<RectTransform>());
-            var cancelButton = CreateDynamicButton(cancelControls.transform, panelSprite, "CancelResearchButton", new Vector2(400f, 240f), new Vector2(420f, 60f), out var cancelLabel);
+            // the «!»'s card over the list; a tap anywhere on it puts it away
+            var hint = CreateImage(card.transform, "Hint", Color.white);
+            hint.sprite = panelSprite;
+            hint.type = Image.Type.Sliced;
+            hint.rectTransform.anchorMin = hint.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            hint.rectTransform.anchoredPosition = new Vector2(0f, -40f);
+            hint.rectTransform.sizeDelta = new Vector2(1180f, 380f);
+            var hintText = CreateText(hint.transform, "Text", string.Empty, 26, Vector2.zero, new Vector2(1100f, 340f), addShadow: false);
+            hintText.alignment = TextAnchor.MiddleLeft;
+            var hintClose = hint.gameObject.AddComponent<Button>();
+            hintClose.targetGraphic = hint;
 
-            var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-200f, 178f), new Vector2(380f, 60f));
-            var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(200f, 178f), new Vector2(380f, 60f));
-
-            BuildScrollList(card.transform, new Vector2(0f, -130f), new Vector2(1180f, 560f),
-                "#research_empty", out var content, out var emptyLabelGO);
-
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -450f), new Vector2(300f, 70f));
+            var keys = new List<string>();
+            var sprites = new List<Object>();
+            foreach (var guid in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
+            {
+                var file = AssetDatabase.GUIDToAssetPath(guid);
+                keys.Add(System.IO.Path.GetFileNameWithoutExtension(file));
+                sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
+            }
 
             var controller = panelRoot.AddComponent<ResearchPanelController>();
             var so = new SerializedObject(controller);
             so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             so.FindProperty("titleLabel").objectReferenceValue = title;
             so.FindProperty("conditionLabel").objectReferenceValue = condition;
+            so.FindProperty("statusLabel").objectReferenceValue = status;
+            so.FindProperty("crystalsLabel").objectReferenceValue = crystals;
             so.FindProperty("scientistsLabel").objectReferenceValue = scientists;
             so.FindProperty("addScientistButton").objectReferenceValue = addScientist;
             so.FindProperty("removeScientistButton").objectReferenceValue = removeScientist;
@@ -714,27 +766,35 @@ namespace CityBuilder.EditorTools
             so.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
             so.FindProperty("repairControls").objectReferenceValue = repairControls;
             so.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
-            so.FindProperty("progressLabel").objectReferenceValue = progress;
-            so.FindProperty("cancelControls").objectReferenceValue = cancelControls;
-            so.FindProperty("cancelLabel").objectReferenceValue = cancelLabel;
-            so.FindProperty("buildingsTabBackground").objectReferenceValue = buildingsTab.GetComponent<Image>();
-            so.FindProperty("unitsTabBackground").objectReferenceValue = unitsTab.GetComponent<Image>();
+            so.FindProperty("buildingsTab").objectReferenceValue = buildingsTab.transform;
+            so.FindProperty("unitsTab").objectReferenceValue = unitsTab.transform;
             so.FindProperty("listContent").objectReferenceValue = content;
             so.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
+            so.FindProperty("hintPanel").objectReferenceValue = hint.gameObject;
+            so.FindProperty("hintText").objectReferenceValue = hintText;
             so.FindProperty("rowSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
+            so.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
+            so.FindProperty("plaqueSprite").objectReferenceValue = wood;
             so.FindProperty("completedIcon").objectReferenceValue = CreateCheckIcon();
+            so.FindProperty("crystalIcon").objectReferenceValue = crystalIcon;
             so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            var keyProp = so.FindProperty("iconKeys");
+            keyProp.arraySize = keys.Count;
+            for (var i = 0; i < keys.Count; i++) keyProp.GetArrayElementAtIndex(i).stringValue = keys[i];
+            WriteObjects(so.FindProperty("icons"), sprites.ToArray());
             so.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(addScientist.onClick, controller.AddScientist);
             UnityEventTools.AddPersistentListener(removeScientist.onClick, controller.RemoveScientist);
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.UpgradeLab);
             UnityEventTools.AddPersistentListener(repairButton.onClick, controller.RepairLab);
-            UnityEventTools.AddPersistentListener(cancelButton.onClick, controller.CancelResearch);
             UnityEventTools.AddPersistentListener(buildingsTab.onClick, controller.SelectBuildingsTab);
             UnityEventTools.AddPersistentListener(unitsTab.onClick, controller.SelectUnitsTab);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+            UnityEventTools.AddPersistentListener(hintButton.onClick, controller.ToggleHint);
+            UnityEventTools.AddPersistentListener(hintClose.onClick, controller.ToggleHint);
 
+            hint.gameObject.SetActive(false);
             panelRoot.SetActive(false);
             return controller;
         }
