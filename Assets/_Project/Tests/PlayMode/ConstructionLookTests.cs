@@ -51,7 +51,11 @@ namespace CityBuilder.Tests.PlayMode
             {
                 var site = building.GetComponent<ConstructionLook>().Site;
                 Assert.IsNotNull(site, $"{building.Data.buildingName}: no scaffolding.");
-                Assert.IsNotNull(site.transform.Find("Net"), $"{building.Data.buildingName}: not wrapped in the net.");
+                var upgrade = building == barn;
+                Assert.AreEqual(!upgrade, site.transform.Find("Net") != null,
+                    upgrade ? "An upgrade wraps the building in the net." : $"{building.Data.buildingName}: not wrapped in the net.");
+                Assert.AreEqual(upgrade, site.GetComponentInChildren<ConstructionHoist>() != null,
+                    upgrade ? "An upgrade's scaffolding has no hoist." : "A new building got the upgrade's hoist.");
                 var cell = GridManager.Instance.CellSize;
                 var half = new Vector2(building.RotatedFootprint().x, building.RotatedFootprint().y) * (cell * 0.5f);
                 var centre = building.transform.position;
@@ -79,8 +83,13 @@ namespace CityBuilder.Tests.PlayMode
 
             cottage.Site.Finish();
 
+            yield return new WaitForSecondsRealtime(2.2f);
+            yield return PlaytestCapture.Shoot("construction-upgrade-hoist", barn.transform.position + Vector3.up, 6f, 20f, 200f);
+            Assert.IsNull(Object.FindAnyObjectByType<BuildFinishEffect>(), "A finish effect never went.");
             barn.Site.Finish();
-            yield return new WaitForSecondsRealtime(2f);
+            yield return null;
+            Assert.IsNull(Object.FindAnyObjectByType<BuildFinishEffect>(), "An upgrade's end raised the new building's dust.");
+            yield return new WaitForSecondsRealtime(0.2f);
             yield return PlaytestCapture.Shoot("construction-done", focus, 14f, 40f, 25f);
 
             Assert.AreEqual(scale, model.transform.localScale, "The church is left squashed after the finish.");

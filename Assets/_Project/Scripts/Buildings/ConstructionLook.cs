@@ -11,11 +11,17 @@ namespace CityBuilder.Buildings
     /// house under renovation): the building wrapped in a green construction net hanging between
     /// the scaffolding's poles, the scaffolding round it; when the time is up the dust finish
     /// (BuildFinishEffect) takes the site away and the building stands. Nothing is revealed bit by
-    /// bit (rejected as risky); the same for building and upgrading.
+    /// bit (rejected as risky).
     ///
-    /// Both are made here from the footprint and the model's own size, the same for every
-    /// building, and never leave the building's own cells, so they cannot run into a neighbour
-    /// (the user's worry about upgrades). Two meshes per site (wood, net) = two draws.
+    /// An upgrade (the user's pick В, same day): the building in plain sight, scaffolding round it
+    /// without the net, a hoist on top lifting a pallet of stones up and down a gap in the front
+    /// decks (ConstructionHoist); when it is done the scaffolding just goes -- the finish effect is
+    /// for a new building only.
+    ///
+    /// All of it is made here from the footprint and the model's own size, the same for every
+    /// building, and never leaves the building's own cells, so it cannot run into a neighbour
+    /// (the user's worry about upgrades). Two meshes per site (wood, net; an upgrade's wood and
+    /// its pallet and rope) = two or three draws.
     /// </summary>
     public class ConstructionLook : MonoBehaviour
     {
@@ -67,13 +73,32 @@ namespace CityBuilder.Buildings
             if (height < 0.5f) height = 2f;
 
             var netHeight = height + 0.08f;
+            var top = netHeight + 0.35f;
             var wood = new MeshBits();
-            Scaffolding(wood, size, netHeight + 0.35f);
+            var hoist = Scaffolding(wood, size, top, _upgrade);
 
             _site = new GameObject("ConstructionSite");
             _site.transform.SetParent(transform, false);
+            if (_upgrade)
+            {
+                Gallows(wood, hoist, top);
+                AddPart("Wood", wood.ToMesh("Scaffolding"), WoodMaterial(), true);
+                ConstructionHoist.Raise(_site.transform, hoist, top - 0.12f, WoodMaterial(), _meshes);
+                return;
+            }
             AddPart("Wood", wood.ToMesh("Scaffolding"), WoodMaterial(), true);
             AddPart("Net", Net(NetHalf(size, appearance), netHeight), NetMaterial(), false);
+        }
+
+        /// <summary>The hoist's frame over the gap: an arm in from the front poles' tops and the drum the rope winds on.</summary>
+        private static void Gallows(MeshBits wood, Vector3 hoist, float top)
+        {
+            var pole = new Vector3(hoist.x, 0f, hoist.z - HoistInward);
+            wood.Box(new Vector3(hoist.x, top - 0.04f, (pole.z + hoist.z) * 0.5f + 0.03f), new Vector3(0.07f, 0.07f, HoistInward + 0.12f), Quaternion.identity);
+            wood.Box(pole + Vector3.up * (top * 0.5f), new Vector3(Pole, top, Pole), Quaternion.identity);
+            wood.Box(new Vector3(hoist.x, top - 0.08f, hoist.z), new Vector3(0.26f, 0.1f, 0.1f), Quaternion.identity);
+            // a crank on the drum's side
+            wood.Box(new Vector3(hoist.x + 0.16f, top - 0.08f, hoist.z - 0.05f), new Vector3(0.03f, 0.03f, 0.12f), Quaternion.identity);
         }
 
         private void AddPart(string name, Mesh mesh, Material material, bool shadows)
@@ -203,8 +228,17 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>Poles round the footprint's edge, a plank deck every storey, a brace in every other bay.</summary>
-        private static void Scaffolding(MeshBits wood, Vector2 size, float height)
+        /// <summary>How far in from the front poles the hoist's rope hangs: clear of them, over the gap in the decks.</summary>
+        private const float HoistInward = 0.17f;
+
+        /// <summary>
+        /// Poles round the footprint's edge, a plank deck every storey, a brace in every other bay.
+        /// With `hoistGap` the front decks leave the first bay's middle open for the hoist; the
+        /// point the rope hangs from comes back (on the ground).
+        /// </summary>
+        private static Vector3 Scaffolding(MeshBits wood, Vector2 size, float height, bool hoistGap)
         {
+            var hoist = Vector3.zero;
             var hx = size.x * 0.5f - Inset;
             var hz = size.y * 0.5f - Inset;
             var corners = new[] { new Vector3(-hx, 0f, -hz), new Vector3(hx, 0f, -hz), new Vector3(hx, 0f, hz), new Vector3(-hx, 0f, hz) };
@@ -234,12 +268,25 @@ namespace CityBuilder.Buildings
                     }
                 }
                 var turn = Quaternion.LookRotation(dir);
+                var gap = hoistGap && side == 0;
+                if (gap) hoist = a + dir * (bay * 0.5f) + inward * HoistInward;
                 for (var s = 1; s <= storeys; s++)
                 {
                     var y = Mathf.Min(s * StoreyMetres, height - 0.05f);
                     // the deck along the poles, on the building's own cells
-                    var deck = (a + b) * 0.5f + inward * 0.06f + Vector3.up * y;
-                    wood.Box(deck, new Vector3(0.18f, 0.05f, length + Pole), turn);
+                    if (gap)
+                    {
+                        // the deck in two, round the hoist's way up
+                        var from = bay * 0.5f - 0.24f;
+                        var to = bay * 0.5f + 0.24f;
+                        if (from > 0f) wood.Box(a + dir * (from * 0.5f) + inward * 0.06f + Vector3.up * y, new Vector3(0.18f, 0.05f, from + Pole), turn);
+                        wood.Box(a + dir * ((to + length) * 0.5f) + inward * 0.06f + Vector3.up * y, new Vector3(0.18f, 0.05f, length - to + Pole), turn);
+                    }
+                    else
+                    {
+                        var deck = (a + b) * 0.5f + inward * 0.06f + Vector3.up * y;
+                        wood.Box(deck, new Vector3(0.18f, 0.05f, length + Pole), turn);
+                    }
                     // the rail on the outside, on the poles: never over their tops (a low building's
                     // top rail stood in the air), and none where it would lie on the deck
                     var railY = Mathf.Min(y + 0.45f, height - 0.03f);
@@ -248,9 +295,10 @@ namespace CityBuilder.Buildings
                     wood.Box(rail, new Vector3(0.04f, 0.04f, length), turn);
                 }
             }
+            return hoist;
         }
 
-        /// <summary>The time is up: the site goes (an upgrade's new level already on) under the dust.</summary>
+        /// <summary>The time is up: the site goes (an upgrade's new level already on), a new building's under the dust.</summary>
         public void Complete()
         {
             var height = 2f;
@@ -265,7 +313,8 @@ namespace CityBuilder.Buildings
 
             var appearance = GetComponent<BuildingLevelAppearance>();
             var model = appearance != null && _building != null ? appearance.ModelFor(_building.Level) : null;
-            if (Application.isPlaying && _building != null && _building.Data != null)
+            // the finish marks a new building; an upgrade's scaffolding just goes (the user, 2026-10-28)
+            if (!_upgrade && Application.isPlaying && _building != null && _building.Data != null)
             {
                 var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
                 var size = new Vector2(_building.Data.footprintSize.x * cell, _building.Data.footprintSize.y * cell);
