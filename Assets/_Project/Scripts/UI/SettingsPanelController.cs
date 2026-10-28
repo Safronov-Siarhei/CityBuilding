@@ -7,8 +7,7 @@ namespace CityBuilder.UI
 {
     /// <summary>
     /// The settings card: the language, how the fog of war looks (see GameSettings.FogStyle), and
-    /// how the HUD looks (GameSettings.HudSkin -- four looks, see HudSkinApplier), and how a
-    /// construction ends (GameSettings.BuildFinish). The maps' season
+    /// how the HUD looks (GameSettings.HudSkin -- four looks, see HudSkinApplier). The maps' season
     /// and the Invasion's map are the menu's theme buttons now (the user, 2026-10-25).
     /// The language buttons are built at play time from whatever columns the localization sheet
     /// has, so adding a third language is a column in the spreadsheet and nothing here.
@@ -23,7 +22,6 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform languageRow;
         [SerializeField] private RectTransform fogRow;
         [SerializeField] private RectTransform hudRow;
-        [SerializeField] private RectTransform finishRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -39,14 +37,6 @@ namespace CityBuilder.UI
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
         private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
-        private readonly List<(BuildFinish finish, Image background)> _finishButtons = new List<(BuildFinish, Image)>();
-
-        /// <summary>How construction ends, in the order the buttons stand (the user, 2026-10-28: both made, to pick one).</summary>
-        private static readonly (BuildFinish finish, string key)[] FinishChoices =
-        {
-            (BuildFinish.Dust, "#settings_finish_dust"),
-            (BuildFinish.Fanfare, "#settings_finish_fanfare"),
-        };
         /// <summary>The HUD's looks in the order their buttons stand -- А, В, Г, Д of the mockups -- each with its caption's sheet key.</summary>
         private static readonly (HudSkin skin, string key)[] HudSkinChoices =
         {
@@ -68,7 +58,6 @@ namespace CityBuilder.UI
             if (_buttons.Count == 0) BuildLanguageButtons();
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
-            if (_finishButtons.Count == 0) BuildFinishButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -96,30 +85,6 @@ namespace CityBuilder.UI
         {
             GameSettings.HudSkin = skin;
             HighlightSelected();
-        }
-
-        public void SelectBuildFinish(BuildFinish finish)
-        {
-            GameSettings.BuildFinish = finish;
-            HighlightSelected();
-        }
-
-        private void BuildFinishButtons()
-        {
-            if (finishRow == null) return;
-
-            const float width = 260f;
-            const float spacing = 16f;
-            for (var i = 0; i < FinishChoices.Length; i++)
-            {
-                var (finish, key) = FinishChoices[i];
-                var x = (i - (FinishChoices.Length - 1) * 0.5f) * (width + spacing);
-                var image = CreateRowButton(finishRow, $"Finish_{finish}", x, width, out var label);
-                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
-                var captured = finish;
-                image.GetComponent<Button>().onClick.AddListener(() => SelectBuildFinish(captured));
-                _finishButtons.Add((finish, image));
-            }
         }
 
         private void BuildHudButtons()
@@ -230,10 +195,6 @@ namespace CityBuilder.UI
             foreach (var (skin, background) in _hudButtons)
             {
                 background.color = skin == GameSettings.HudSkin ? SelectedColor : UnselectedColor;
-            }
-            foreach (var (finish, background) in _finishButtons)
-            {
-                background.color = finish == GameSettings.BuildFinish ? SelectedColor : UnselectedColor;
             }
         }
     }

@@ -1,6 +1,5 @@
 using System.Collections;
 using CityBuilder.Buildings;
-using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Saving;
 using NUnit.Framework;
@@ -11,30 +10,20 @@ using UnityEngine.TestTools;
 namespace CityBuilder.Tests.PlayMode
 {
     /// <summary>
-    /// A building under construction (the user, 2026-10-28): a site with scaffolding in its place,
-    /// never reaching past its own cells; at the finish the site goes, the building is back at its
-    /// own size, under dust or a gold flash. Photographed both ways for the user to pick.
+    /// A building under construction (the user, 2026-10-28): wrapped in a green net inside
+    /// scaffolding, never reaching past its own cells; at the finish the site goes under the dust and
+    /// the building is left at its own size. Photographed, the dust in three moments.
     /// </summary>
     public class ConstructionLookTests
     {
-        private BuildFinish _finish;
-
         [UnitySetUp]
         public IEnumerator OpenTheMap()
         {
             LogAssert.ignoreFailingMessages = true;
             Time.timeScale = 1f;
-            _finish = GameSettings.BuildFinish;
             GameSessionIntent.NewGameMapId = "Map3";
             SceneManager.LoadScene("CityBuilder", LoadSceneMode.Single);
             yield return PlayModeScene.WaitUntilMapIsPhysicsReady("Map3");
-        }
-
-        [UnityTearDown]
-        public IEnumerator PutItBack()
-        {
-            GameSettings.BuildFinish = _finish;
-            yield return null;
         }
 
         [UnityTest]
@@ -56,17 +45,12 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
 
             var model = church.GetComponent<BuildingLevelAppearance>().ModelFor(church.Level);
-            foreach (var r in model.GetComponentsInChildren<Renderer>())
-            {
-                Assert.IsFalse(r.enabled, "The church shows through its own building site.");
-            }
-            Assert.IsTrue(barn.GetComponent<BuildingLevelAppearance>().ModelFor(barn.Level).GetComponentInChildren<Renderer>().enabled,
-                "An upgrade hides the building it works on.");
 
             foreach (var building in new[] { church, cottage, barn })
             {
                 var site = building.GetComponent<ConstructionLook>().Site;
                 Assert.IsNotNull(site, $"{building.Data.buildingName}: no scaffolding.");
+                Assert.IsNotNull(site.transform.Find("Net"), $"{building.Data.buildingName}: not wrapped in the net.");
                 var cell = GridManager.Instance.CellSize;
                 var half = new Vector2(building.RotatedFootprint().x, building.RotatedFootprint().y) * (cell * 0.5f);
                 var centre = building.transform.position;
@@ -83,24 +67,21 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("construction-sites", focus, 14f, 40f, 25f);
 
             var scale = model.transform.localScale;
-            GameSettings.BuildFinish = BuildFinish.Dust;
+            yield return PlaytestCapture.Shoot("construction-net-close", church.transform.position, 9f, 30f, 25f);
             church.Site.Finish();
-            yield return new WaitForSecondsRealtime(0.12f);
-            yield return PlaytestCapture.Shoot("construction-finish-dust", church.transform.position, 12f, 35f, 25f);
-
-            GameSettings.BuildFinish = BuildFinish.Fanfare;
-            cottage.Site.Finish();
             yield return new WaitForSecondsRealtime(0.1f);
-            yield return PlaytestCapture.Shoot("construction-finish-fanfare", cottage.transform.position, 9f, 35f, 25f);
+            yield return PlaytestCapture.Shoot("construction-dust-1", church.transform.position, 12f, 35f, 25f);
+            yield return new WaitForSecondsRealtime(0.35f);
+            yield return PlaytestCapture.Shoot("construction-dust-2", church.transform.position, 12f, 35f, 25f);
+            yield return new WaitForSecondsRealtime(0.4f);
+            yield return PlaytestCapture.Shoot("construction-dust-3", church.transform.position, 12f, 35f, 25f);
+
+            cottage.Site.Finish();
 
             barn.Site.Finish();
             yield return new WaitForSecondsRealtime(2f);
             yield return PlaytestCapture.Shoot("construction-done", focus, 14f, 40f, 25f);
 
-            foreach (var r in model.GetComponentsInChildren<Renderer>())
-            {
-                Assert.IsTrue(r.enabled, "The church is still hidden after its site finished.");
-            }
             Assert.AreEqual(scale, model.transform.localScale, "The church is left squashed after the finish.");
             foreach (var building in new[] { church, cottage, barn })
             {
