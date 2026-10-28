@@ -593,18 +593,28 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- top-centre: day and citizens
 
-        /// <summary>"День N" under the resource bar, in light letters with a shadow over the world -- no plaque, as sketched.</summary>
+        /// <summary>
+        /// "День N" under the resource bar -- in a run "Волна N: орков M" -- on a plaque (the user,
+        /// 2026-10-28: the light letters with a shadow read badly over the world). The plaque is
+        /// the "SettlementStatus" piece the Dock layout moves; its text a child.
+        /// </summary>
         private static void BuildDayLabel(Transform uiRoot, GameCalendar gameCalendar)
         {
-            var statusText = CreateText(uiRoot, "SettlementStatus", string.Empty, 28, Vector2.zero, new Vector2(320f, 44f), new Color(1f, 0.98f, 0.92f), addShadow: true);
+            var plaque = HudImage(uiRoot, "SettlementStatus", "plaque", new Vector2(360f, 50f));
+            plaque.raycastTarget = false;
+            Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -114f), new Vector2(360f, 50f));
+            var statusText = CreateText(plaque.transform, "Label", string.Empty, 28, Vector2.zero, new Vector2(340f, 44f), UiTheme.Ink);
             statusText.font = UiTheme.Bold;
-            Anchor(statusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -112f), new Vector2(320f, 44f));
-            var shadow = statusText.GetComponent<Shadow>();
-            if (shadow != null)
-            {
-                shadow.effectColor = new Color(0.18f, 0.1f, 0.04f, 0.85f);
-                shadow.effectDistance = new Vector2(2f, -2f);
-            }
+            statusText.raycastTarget = false;
+            statusText.resizeTextForBestFit = true;
+            statusText.resizeTextMinSize = 18;
+            statusText.resizeTextMaxSize = 28;
+            var labelRect = statusText.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(14f, 4f);
+            labelRect.offsetMax = new Vector2(-14f, -2f);
+            SkinInk(statusText, HudInk.OnPlaque);
 
             var go = new GameObject("SettlementStatusController");
             go.transform.SetParent(uiRoot, false);

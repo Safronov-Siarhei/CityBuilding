@@ -58,6 +58,15 @@ namespace CityBuilder.InputControl
         /// <summary>Fired on RELEASE for a touch that never left the slop circle. Screen position of the finger.</summary>
         public event Action<Vector2> Tapped;
 
+        /// <summary>
+        /// The first finger down, wherever it lands -- the world or the HUD -- before anything is
+        /// made of it: what the tapped node's badge goes at (NodeYieldBubble, the user 2026-10-28).
+        /// </summary>
+        public event Action<Vector2> TouchedDown;
+
+        /// <summary>Raises TouchedDown; Update does on a finger landing, and the tests, which cannot press a real one.</summary>
+        public void NotifyTouchDown(Vector2 screenPosition) => TouchedDown?.Invoke(screenPosition);
+
         /// <summary>Fired ON THE TIMER, while the finger is still down -- a long press the player has to wait out is one they can feel happening.</summary>
         public event Action<Vector2> LongPressed;
 
@@ -149,6 +158,7 @@ namespace CityBuilder.InputControl
             switch (_phase)
             {
                 case Phase.Idle:
+                    if (count >= 1) NotifyTouchDown(positionA);
                     if (count >= 2) BeginPinch(positionA, positionB, fromTouch);
                     else if (count == 1) BeginPending(positionA, fromTouch);
                     break;

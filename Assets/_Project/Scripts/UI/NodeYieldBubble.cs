@@ -1,4 +1,6 @@
 using CityBuilder.Maps;
+using CityBuilder.Core;
+using CityBuilder.InputControl;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +9,9 @@ namespace CityBuilder.UI
     /// <summary>
     /// The little round badge over a tree or a boulder the player tapped: how much is left in it
     /// (the user, 2026-10-21). It follows the node and counts down while a worker chips at it --
-    /// 5, 4, 3 -- and goes after a few seconds, or with the node.
+    /// 5, 4, 3 -- and goes after a few seconds, with the node, or at the next touch of the screen
+    /// anywhere, the HUD's buttons included (the user, 2026-10-28: it stayed up over a building's
+    /// card).
     ///
     /// One badge for the whole game, on its own overlay canvas, created on the first tap: a
     /// world-space canvas per node would be layout and batching cost on a phone for a number
@@ -29,6 +33,7 @@ namespace CityBuilder.UI
         private float _heightAbove;
         private float _hideIn;
         private int _shown = -1;
+        private int _shownFrame;
 
         /// <summary>The node it currently stands over, or null -- for the tests.</summary>
         public static ResourceNode Showing => _instance != null && _instance._badge.gameObject.activeSelf ? _instance._node : null;
@@ -89,6 +94,8 @@ namespace CityBuilder.UI
             _heightAbove = HarvestProgressBar.MeasuredHeightOf(node.transform) + ClearanceAboveNode;
             _hideIn = ShowSeconds;
             _shown = -1;
+            _shownFrame = Time.frameCount;
+            Listen();
             _badge.gameObject.SetActive(true);
             LateUpdate();
         }
@@ -98,7 +105,8 @@ namespace CityBuilder.UI
             if (!_badge.gameObject.activeSelf) return;
 
             _hideIn -= Time.unscaledDeltaTime;
-            if (_node == null || !_node.isActiveAndEnabled || _node.IsDepleted || _camera == null || _hideIn <= 0f)
+            // a card or a dialog over it
+            if (ModalGate.IsBlocked || _node == null || !_node.isActiveAndEnabled || _node.IsDepleted || _camera == null || _hideIn <= 0f)
             {
                 _badge.gameObject.SetActive(false);
                 _node = null;
@@ -122,6 +130,30 @@ namespace CityBuilder.UI
                 _shown = _node.RemainingYield;
                 _label.text = _shown.ToString();
             }
+        }
+
+        private TouchInputRouter _router;
+
+        private void Listen()
+        {
+            var router = TouchInputRouter.Instance;
+            if (router == null || router == _router) return;
+            if (_router != null) _router.TouchedDown -= HandleTouchDown;
+            _router = router;
+            _router.TouchedDown += HandleTouchDown;
+        }
+
+        /// <summary>A new touch anywhere puts it away (the tap that put it up landed frames before it came).</summary>
+        private void HandleTouchDown(Vector2 _)
+        {
+            if (Time.frameCount <= _shownFrame || !_badge.gameObject.activeSelf) return;
+            _badge.gameObject.SetActive(false);
+            _node = null;
+        }
+
+        private void OnDestroy()
+        {
+            if (_router != null) _router.TouchedDown -= HandleTouchDown;
         }
 
         /// <summary>A parchment disc with an ink rim, drawn once.</summary>

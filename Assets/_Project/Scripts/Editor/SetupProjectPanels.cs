@@ -253,6 +253,8 @@ namespace CityBuilder.EditorTools
             Anchor(openButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f),
                 new Vector2(HudMargin + (RoundButton - WorkforceButtonSize) * 0.5f, InventoryButtonTop), new Vector2(WorkforceButtonSize, WorkforceButtonSize));
             UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
+            // a run's three resources are all on the bar: no sack there
+            openButton.gameObject.AddComponent<SandboxOnly>();
 
             panelRoot.SetActive(false);
         }

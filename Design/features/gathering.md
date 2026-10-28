@@ -8,7 +8,7 @@
 ## What the player sees
 Sawmill/Quarry workers walk to trees/rocks inside the building's harvest radius, chop under a
 harvest bar (parchment medallion + gold pill), and carry the load home. Tapping a tree or boulder
-shows a round badge with what is left, counting down while worked. A selected citizen sent to a tree
+shows a round badge with what is left, counting down while worked. It goes after 4 s, at the next finger down ANYWHERE (world or HUD; `TouchInputRouter.TouchedDown`), or under a dialog (ModalGate) -- the user 2026-10-28, it used to stay up over a building card. A selected citizen sent to a tree
 or boulder just goes (no badge) — manual gathering breaks the no-wood bootstrap deadlock.
 Ore veins are glowing patches of broken ground; a mine is built ON one.
 

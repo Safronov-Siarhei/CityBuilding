@@ -544,7 +544,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0, waves.Wave);
             Assert.AreEqual(config.InvasionFirstWaveSeconds, waves.SecondsUntilNextWave, 3f, "The first wave is not the sheet's wait away.");
             Assert.AreEqual(3, waves.LaneStarts.Count, "Not one lane per orc camp.");
-            var status = GameObject.Find("SettlementStatus").GetComponent<UnityEngine.UI.Text>();
+            var status = GameObject.Find("SettlementStatus").GetComponentInChildren<UnityEngine.UI.Text>();
             yield return new WaitForSecondsRealtime(0.4f);
             StringAssert.Contains(Localization.Format("#hud_inv_wave_in", 1, ""), status.text, "The line under the resource bar does not count down to wave 1.");
 

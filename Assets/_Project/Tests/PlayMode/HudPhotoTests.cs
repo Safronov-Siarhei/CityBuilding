@@ -573,7 +573,7 @@ namespace CityBuilder.Tests.PlayMode
         [Test]
         public void TheDayLine_NamesNoSettlementTier()
         {
-            var day = HudRoot().Find("SettlementStatus").GetComponent<Text>().text;
+            var day = HudRoot().Find("SettlementStatus").GetComponentInChildren<Text>().text;
             Assert.IsFalse(string.IsNullOrEmpty(day), "The day line is empty.");
             foreach (var tier in new[] { "hamlet", "village", "town", "city", "kingdom" })
             {

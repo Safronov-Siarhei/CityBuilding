@@ -14,7 +14,8 @@ namespace CityBuilder.UI
     /// shoots in -- its health bar stays up, and a «!» button comes up at the bottom in place of
     /// the build menu. The «!» opens the building's card (BuildingInfoPanelController, or the
     /// Laboratory's own), with its upgrade and repair. A tap on open ground, picking up anything
-    /// else, or the building's end lets it go.
+    /// else, the building's end, or the camera taken away till the building is off the screen
+    /// (the user, 2026-10-28) lets it go.
     /// </summary>
     public class BuildingFocus : MonoBehaviour
     {
@@ -40,6 +41,7 @@ namespace CityBuilder.UI
         private LineRenderer[] _ripples;
         private float _rippleClock = -1f;
         private float _footRadius;
+        private RTSCameraController _rig;
 
         private void Awake() => Instance = this;
 
@@ -60,6 +62,7 @@ namespace CityBuilder.UI
 
             var rig = FindAnyObjectByType<RTSCameraController>();
             if (rig != null) rig.FocusOn(building.transform.position);
+            _rig = rig;
 
             EnsureBuilt();
             var footprint = building.RotatedFootprint();
@@ -138,12 +141,25 @@ namespace CityBuilder.UI
                 return;
             }
             // the «!» steps aside while the card it opened is up, and comes back when it closes
-            if (detailsButton != null)
+            var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen);
+            if (detailsButton != null && detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
+            // the camera taken away till the building is off the screen lets it go
+            if (!cardUp && OffScreen(Current))
             {
-                var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen);
-                if (detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
+                Clear();
+                return;
             }
             TickRipples();
+        }
+
+        /// <summary>The building's middle is out of the camera's view -- not while the camera is still gliding to it.</summary>
+        private bool OffScreen(BuildingInstance building)
+        {
+            if (_rig != null && _rig.IsFocusing) return false;
+            var camera = Camera.main;
+            if (camera == null) return false;
+            var view = camera.WorldToViewportPoint(building.transform.position);
+            return view.z <= 0f || view.x < 0f || view.x > 1f || view.y < 0f || view.y > 1f;
         }
 
         private void TickRipples()

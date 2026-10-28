@@ -81,5 +81,30 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             yield return PlaytestCapture.ShootThrough("harvest-bar-stone", camera, 1600, 900);
         }
+
+        /// <summary>The badge goes at the next touch anywhere (the user, 2026-10-28: it stayed up over a building's card).</summary>
+        [UnityTest]
+        public IEnumerator TheBadge_GoesAtTheNextTouchAnywhere()
+        {
+            var tree = ResourceNode.All.First(n => n.ResourceType == ResourceType.Wood);
+            var camera = Object.FindAnyObjectByType<CitizenSelector>().TapCamera;
+            NodeYieldBubble.Show(tree, camera);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(tree, NodeYieldBubble.Showing, "No badge over the tapped tree.");
+
+            // a finger landing anywhere (the router's TouchedDown, as Update raises it)
+            CityBuilder.InputControl.TouchInputRouter.Instance.NotifyTouchDown(new Vector2(10f, 10f));
+            yield return null;
+            Assert.IsNull(NodeYieldBubble.Showing, "The badge stayed up after a touch elsewhere.");
+
+            // and under a building's card (a dialog blocks the world)
+            NodeYieldBubble.Show(tree, camera);
+            yield return null;
+            ModalGate.SetBlocked(true);
+            yield return null;
+            ModalGate.SetBlocked(false);
+            Assert.IsNull(NodeYieldBubble.Showing, "The badge stayed up under a card.");
+        }
     }
 }

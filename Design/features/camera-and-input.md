@@ -27,6 +27,10 @@
   finger rested >0.1 s before lifting. Mouse-wheel zoom eases (`zoomSharpness` 14); a PINCH zooms
   at once (its pan needs the real distance). A move from outside (`JumpTo`, a test setting the rig)
   is adopted as the new goal (`AdoptOutsideMoves`). Not felt on a phone yet.
+- A held building (BuildingFocus) is let go once the camera leaves it -- its middle off the
+  screen, not while the camera is still gliding to it (`BuildingFocus.OffScreen`, the user
+  2026-10-28; test `BuildingFocusTests`). The router raises `TouchedDown` on the first finger
+  anywhere (world or HUD), before anything is made of it; `NotifyTouchDown` is the tests' way in.
 
 ## Code
 `Input/TouchInputRouter.cs`, `Input/WorldInputDispatcher.cs`, `Camera/RTSCameraController.cs`,
