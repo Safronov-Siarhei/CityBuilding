@@ -140,6 +140,13 @@ namespace CityBuilder.Core
         public bool startsUnlocked = true;
 
         /// <summary>
+        /// The Barracks' level that hires this tier (the user, 2026-10-28: «каждый уровень открывал
+        /// нового солдата»): units tab `barracks_level` -- militia 1, spearman 2, archer 3,
+        /// man-at-arms 4. Both modes; in the sandbox the Laboratory still has to open the tier too.
+        /// </summary>
+        public int barracksLevel = 1;
+
+        /// <summary>
         /// Smelted metal a recruit of this type has to be equipped with, on top of the coins.
         /// Militia is zero on both -- an armed peasant needs no forge, which is what makes it the
         /// tier a settlement can raise before it has an industry.

@@ -150,11 +150,15 @@ namespace CityBuilder.Combat
         /// message rather than a bool so the Barracks panel can tell the player which of the three
         /// limits they've hit instead of just greying a button out.
         /// </summary>
-        public string DescribeRecruitBlocker(SoldierType type)
+        public string DescribeRecruitBlocker(SoldierType type, int barracksLevel = int.MaxValue)
         {
             // First, because it is the only one of the four the player cannot fix in the next
             // minute: the others say "wait" and this one says "go and research it".
             if (!SoldierStats.IsUnlocked(type)) return Localization.Get("#army_not_researched");
+
+            // then the Barracks' own level: each level opens the next tier (the user, 2026-10-28)
+            var need = SoldierStats.BarracksLevel(type);
+            if (barracksLevel < need) return Localization.Format("#army_need_barracks", SoldierStats.DisplayName(type), need);
 
             if (SoldierCount >= SoldierStats.MaxArmySize) return Localization.Format("#army_full", SoldierStats.MaxArmySize);
 
@@ -168,9 +172,9 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Recruits one soldier at the given position (the Barracks that ordered it). False if any of the three limits in DescribeRecruitBlocker applies.</summary>
-        public bool TryRecruit(SoldierType type, Vector3 position)
+        public bool TryRecruit(SoldierType type, Vector3 position, int barracksLevel = int.MaxValue)
         {
-            if (DescribeRecruitBlocker(type) != null) return false;
+            if (DescribeRecruitBlocker(type, barracksLevel) != null) return false;
 
             var resources = ResourceManager.Instance;
             if (resources != null && !resources.TrySpend(SoldierStats.RecruitCost(type))) return false;

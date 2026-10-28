@@ -249,14 +249,17 @@ namespace CityBuilder.EditorTools
                     mark.raycastTarget = false;
                     Anchor(mark.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 4f), new Vector2(44f, 44f));
                     ticks[i] = mark.gameObject;
-                    var band = CreateImage(button.transform, "LockedBand", new Color(0.55f, 0.16f, 0.12f, 0.92f));
-                    band.raycastTarget = false;
-                    Anchor(band.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -8f), new Vector2(150f, 32f));
-                    var locked = CreateText(band.transform, "Locked", string.Empty, 20, Vector2.zero, new Vector2(146f, 30f), Color.white);
-                    locked.font = UiTheme.Heavy;
-                    locks[i] = band.gameObject;
-                    lockTexts[i] = locked;
                 }
+                // «Замок ур. N» over a hero the castle is too low for, «Казарма ур. N» over a soldier
+                // the Barracks is (the user, 2026-10-28: each level opens the next)
+                var band = CreateImage(button.transform, "LockedBand", new Color(0.55f, 0.16f, 0.12f, 0.92f));
+                band.raycastTarget = false;
+                Anchor(band.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -8f), new Vector2(150f, 32f));
+                var locked = CreateText(band.transform, "Locked", string.Empty, 20, Vector2.zero, new Vector2(146f, 30f), Color.white);
+                locked.font = UiTheme.Heavy;
+                locks[i] = band.gameObject;
+                lockTexts[i] = locked;
+                band.gameObject.SetActive(false);
                 button.gameObject.SetActive(false);
             }
             var so = new SerializedObject(bar);

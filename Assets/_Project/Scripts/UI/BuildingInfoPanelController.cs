@@ -181,7 +181,7 @@ namespace CityBuilder.UI
         {
             if (_currentInstance == null || ArmyManager.Instance == null) return;
 
-            ArmyManager.Instance.TryRecruit(_recruitType, _currentInstance.transform.position);
+            ArmyManager.Instance.TryRecruit(_recruitType, _currentInstance.transform.position, _currentInstance.Level);
             Refresh();
         }
 
@@ -471,7 +471,7 @@ namespace CityBuilder.UI
             BuildCostRow(recruitCostRow, SoldierStats.RecruitCost(_recruitType));
 
             if (recruitLabel == null) return;
-            var blocker = army.DescribeRecruitBlocker(_recruitType);
+            var blocker = army.DescribeRecruitBlocker(_recruitType, _currentInstance.Level);
             // a run's soldiers are bought once and cost nothing by the day (the user, 2026-10-25): no upkeep shown
             recruitLabel.text = blocker ?? (Invasion.InvasionMode.IsActive
                 ? Localization.Format("#army_summary_run", army.SoldierCount, SoldierStats.MaxArmySize)

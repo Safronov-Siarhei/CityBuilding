@@ -1665,7 +1665,28 @@ namespace CityBuilder.Tests.PlayMode
             var before = ArmyManager.Instance.SoldierCount;
             Assert.IsTrue(bar.Hire(0), $"The button hired nobody: {ArmyManager.Instance.DescribeRecruitBlocker(SoldierType.Militia)}");
             Assert.AreEqual(before + 1, ArmyManager.Instance.SoldierCount);
+
+            // each level opens the next soldier (the user, 2026-10-28): a level-1 Barracks hires
+            // the militia only, the others stand locked under «Казарма ур. N»
+            yield return new WaitForSecondsRealtime(0.3f);
+            var tiers = new[] { SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms };
+            for (var i = 0; i < tiers.Length; i++)
+            {
+                var need = SoldierStats.BarracksLevel(tiers[i]);
+                Assert.AreEqual(i + 2, need, $"{tiers[i]} does not come at Barracks level {i + 2} (units tab barracks_level).");
+                var button = GameObject.Find($"Hire{tiers[i]}");
+                var band = button != null ? button.transform.Find("LockedBand") : null;
+                Assert.IsTrue(band != null && band.gameObject.activeSelf, $"{tiers[i]} shows no «Казарма ур. {need}» at a level-1 Barracks.");
+                Assert.IsFalse(bar.Hire(i + 1), $"A level-1 Barracks hired a {tiers[i]}.");
+            }
             if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-barracks-hire", 1600, 900, barracks.transform.position, 18f, 52f, 0f);
+
+            barracks.SetLevel(2);
+            yield return new WaitForSecondsRealtime(0.3f);
+            before = ArmyManager.Instance.SoldierCount;
+            Assert.IsTrue(bar.Hire(1), $"A level-2 Barracks would not hire a spearman: {ArmyManager.Instance.DescribeRecruitBlocker(SoldierType.Spearman, 2)}");
+            Assert.AreEqual(before + 1, ArmyManager.Instance.SoldierCount);
+            Assert.IsFalse(bar.Hire(2), "A level-2 Barracks hired an archer.");
             CityBuilder.UI.BuildingFocus.Instance.Clear();
         }
 

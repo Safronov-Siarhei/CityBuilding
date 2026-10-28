@@ -196,6 +196,12 @@ namespace CityBuilder.Combat
         /// Zero-valued entries are left out rather than listed: the panel draws this as a row of
         /// icon chips, and a chip reading "0 iron" is worse than no chip.
         /// </summary>
+        public static int BarracksLevel(SoldierType type)
+        {
+            var row = IsHero(type) ? null : BalanceConfig.Instance.Unit(SheetIdOf(type));
+            return row != null ? System.Math.Max(1, row.barracksLevel) : 1;
+        }
+
         public static List<ResourceAmount> RecruitCost(SoldierType type)
         {
             var row = Row(type);

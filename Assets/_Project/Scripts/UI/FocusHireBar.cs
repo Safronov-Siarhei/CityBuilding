@@ -66,8 +66,8 @@ namespace CityBuilder.UI
             var barracks = Target;
             var army = ArmyManager.Instance;
             if (barracks == null || army == null || index < 0 || index >= types.Length) return false;
-            var blocker = army.DescribeRecruitBlocker(types[index]);
-            var hired = blocker == null && army.TryRecruit(types[index], barracks.transform.position);
+            var blocker = army.DescribeRecruitBlocker(types[index], barracks.Level);
+            var hired = blocker == null && army.TryRecruit(types[index], barracks.transform.position, barracks.Level);
             if (!hired && blocker != null)
             {
                 EventLogManager.Instance?.Post(GameEvent.ForSettlement(blocker, EventSeverity.Warning, EventGlyph.Alert, null));
@@ -118,10 +118,15 @@ namespace CityBuilder.UI
             if (_refreshIn > 0f) return;
             _refreshIn = RefreshSeconds;
             if (kind == Kind.Castle) ShowHeroes(target);
-            else ShowSoldiers();
+            else ShowSoldiers(target);
         }
 
-        private void ShowSoldiers()
+        /// <summary>
+        /// A face per tier the Laboratory has opened; one the Barracks is still too low for stands
+        /// dimmed under «Казарма ур. N», its price hidden (the user, 2026-10-28: each level opens
+        /// the next soldier).
+        /// </summary>
+        private void ShowSoldiers(BuildingInstance barracks)
         {
             var army = ArmyManager.Instance;
             for (var i = 0; i < types.Length; i++)
@@ -129,6 +134,16 @@ namespace CityBuilder.UI
                 var open = SoldierStats.IsUnlocked(types[i]);
                 buttons[i].SetActive(open);
                 if (!open) continue;
+                var need = SoldierStats.BarracksLevel(types[i]);
+                var tooLow = barracks.Level < need;
+                if (i < locks.Length && locks[i] != null) locks[i].SetActive(tooLow);
+                if (tooLow && i < lockTexts.Length && lockTexts[i] != null) lockTexts[i].text = Localization.Format("#army_card_barracks", need);
+                if (tooLow)
+                {
+                    prices[i].SetActive(false);
+                    faces[i].color = Dimmed;
+                    continue;
+                }
                 var cost = SoldierStats.RecruitCost(types[i]);
                 var price = cost != null && cost.Count > 0 ? cost[0] : null;
                 prices[i].SetActive(price != null);
@@ -137,7 +152,7 @@ namespace CityBuilder.UI
                     priceTexts[i].text = price.amount.ToString();
                     if (iconLibrary != null) priceIcons[i].sprite = iconLibrary.GetIcon(price.type);
                 }
-                faces[i].color = army != null && army.DescribeRecruitBlocker(types[i]) == null ? Color.white : Dimmed;
+                faces[i].color = army != null && army.DescribeRecruitBlocker(types[i], barracks.Level) == null ? Color.white : Dimmed;
             }
         }
 

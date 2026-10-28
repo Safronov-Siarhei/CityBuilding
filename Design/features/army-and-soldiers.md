@@ -13,6 +13,14 @@ the other selectors stand down. A move order shows a ripple + gold flag + dot tr
 gather = ring; refused = red ripple.
 
 ## Rules (decided)
+- **Barracks level opens the tier (the user, 2026-10-28, «каждый уровень открывал нового солдата»):**
+  units tab `barracks_level` (militia 1, spearman 2, archer 3, man-at-arms 4) -> `UnitBalance.barracksLevel`
+  -> `SoldierStats.BarracksLevel`. Both modes; in the sandbox the Laboratory must ALSO have opened the
+  tier (research first, then the level). `ArmyManager.DescribeRecruitBlocker/TryRecruit(type, ..., barracksLevel)`
+  (default int.MaxValue = no gate, which every older caller/test uses); the hire bar passes the held
+  Barracks' level and shows a too-high tier dimmed under «Казарма ур. N» (`#army_card_barracks`, the
+  castle's «Замок ур. N» band now built for both bars); a tap says `#army_need_barracks`. Test
+  `TheBarracksHeld_HiresFromTheButtonsBesideTheExclamation` (L1 militia only, L2 spearman).
 - Tiers (`SoldierType`): Militia («жители с вилами», coins only, open from the start), Spearman
   (reach 2 m, + iron bar), Archer (shoots 8 m, fragile), Man-at-arms (4× militia HP, slow). Kit is paid
   AT THE BARRACKS in `recruit_ironbar`/`recruit_copperbar` (user, 2026-08-19, overriding "one workshop
