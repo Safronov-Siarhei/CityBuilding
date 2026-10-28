@@ -226,7 +226,7 @@ namespace CityBuilder.Buildings
                     if (i % 2 == side % 2)
                     {
                         // a brace across the bay's first storey
-                        var rise = Mathf.Min(StoreyMetres, height);
+                        var rise = Mathf.Min(StoreyMetres, height - 0.05f);
                         var from = p + Vector3.up * 0.1f;
                         var to = p + dir * bay + Vector3.up * rise;
                         var span = to - from;
@@ -240,8 +240,11 @@ namespace CityBuilder.Buildings
                     // the deck along the poles, on the building's own cells
                     var deck = (a + b) * 0.5f + inward * 0.06f + Vector3.up * y;
                     wood.Box(deck, new Vector3(0.18f, 0.05f, length + Pole), turn);
-                    // the rail on the outside
-                    var rail = (a + b) * 0.5f + Vector3.up * (y + 0.45f);
+                    // the rail on the outside, on the poles: never over their tops (a low building's
+                    // top rail stood in the air), and none where it would lie on the deck
+                    var railY = Mathf.Min(y + 0.45f, height - 0.03f);
+                    if (railY - y < 0.2f) continue;
+                    var rail = (a + b) * 0.5f + Vector3.up * railY;
                     wood.Box(rail, new Vector3(0.04f, 0.04f, length), turn);
                 }
             }

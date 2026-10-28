@@ -38,6 +38,9 @@
   billboards use `DustPuff.Quad()` (internal).
 
 ## Traps
+- A low building's top rail (deck + 0.45) once stood over its poles' tops, in the air (the user's
+  screenshots, 2026-10-28): rails are capped at the poles' height and braces kept under it; the
+  catalogue test checks no wood is over the poles for every building.
 - A building put down by `PlaytestWorld.Place` / `InvasionMode.PlaceFinished` has no site, so no look.
 - The net is transparent Lit set up at runtime (`_SURFACE_TYPE_TRANSPARENT`); it relies on Lit being in
   Always Included Shaders with its variants (as Unlit's transparent dust does).

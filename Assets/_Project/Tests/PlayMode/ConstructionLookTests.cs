@@ -123,7 +123,12 @@ namespace CityBuilder.Tests.PlayMode
                     var look = building.GetComponent<ConstructionLook>();
                     var flat = building.Data.isRoad || building.Data.providesWalkableSurface;
                     if (flat) Assert.IsNull(look, $"{building.Data.buildingName} is walked on and got a net and scaffolding.");
-                    else Assert.IsTrue(look != null && look.Site.transform.Find("Net") != null, $"{building.Data.buildingName} goes up without its net.");
+                    if (flat) continue;
+                    Assert.IsTrue(look != null && look.Site.transform.Find("Net") != null, $"{building.Data.buildingName} goes up without its net.");
+                    // nothing of the scaffolding over its poles' tops (0.35 over the net): the user saw rails in the air
+                    var wood = look.Site.transform.Find("Wood").GetComponent<MeshFilter>().sharedMesh.bounds;
+                    var net = look.Site.transform.Find("Net").GetComponent<MeshFilter>().sharedMesh.bounds;
+                    Assert.LessOrEqual(wood.max.y, net.max.y + 0.36f, $"{building.Data.buildingName}'s scaffolding has a piece hanging over its poles.");
                 }
                 shot++;
                 yield return PlaytestCapture.Shoot($"construction-catalogue-{shot}", PlaytestWorld.CellCenter(origin + plot / 2), 22f, 40f, 20f);
