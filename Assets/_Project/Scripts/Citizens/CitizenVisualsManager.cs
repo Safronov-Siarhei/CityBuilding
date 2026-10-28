@@ -24,6 +24,13 @@ namespace CityBuilder.Citizens
 
         [SerializeField] private CitizenManager citizenManager;
         [SerializeField] private GridManager gridManager;
+        /// <summary>
+        /// The townsfolk's looks (Tools/blender/villagers.py, Models/Citizens: four kinds in three
+        /// colourings), one picked at random per citizen; with none, the old two cubes.
+        /// </summary>
+        [SerializeField] private GameObject[] villagerModels = new GameObject[0];
+        /// <summary>Each model's main colour -- what most of it is -- measured at project setup, parallel to villagerModels.</summary>
+        [SerializeField] private Color[] villagerClothes = new Color[0];
 
         private static readonly Color[] ClothingColors =
         {
@@ -497,9 +504,21 @@ namespace CityBuilder.Citizens
             root.transform.SetParent(transform, false);
             root.transform.localScale = Vector3.one * UnitSize.Scale;
 
-            var clothing = _clothingMaterials[UnityEngine.Random.Range(0, _clothingMaterials.Length)];
-            AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);
-            AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
+            var pick = villagerModels != null && villagerModels.Length > 0 ? UnityEngine.Random.Range(0, villagerModels.Length) : -1;
+            var model = pick >= 0 ? villagerModels[pick] : null;
+            var clothes = Color.grey;
+            if (model != null)
+            {
+                AddFigure(root.transform, model);
+                if (villagerClothes != null && pick < villagerClothes.Length) clothes = villagerClothes[pick];
+            }
+            else
+            {
+                var clothing = _clothingMaterials[UnityEngine.Random.Range(0, _clothingMaterials.Length)];
+                clothes = clothing.color;
+                AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);
+                AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
+            }
 
             // Added before CitizenAgent so its Awake() can find it via GetComponent. Sized to
             // roughly match the cube body+head (feet at local y=0, top of head around y=0.72),
@@ -519,6 +538,7 @@ namespace CityBuilder.Citizens
             var agent = root.AddComponent<CitizenAgent>();
             agent.Initialize(spawnPosition, center.Value);
             agent.NameIndex = _namesGiven++;
+            agent.Clothes = clothes;
             root.name = "Citizen " + agent.CitizenName;
 
             return agent;
@@ -562,6 +582,22 @@ namespace CityBuilder.Citizens
                 _clothingMaterials[i] = new Material(RuntimeShaders.Lit) { color = ClothingColors[i] };
             }
             _skinMaterial = new Material(RuntimeShaders.Lit) { color = SkinColor };
+        }
+
+        /// <summary>
+        /// A townsman's model under the citizen's root, at its real size (the root is scaled to
+        /// UnitSize, as a soldier's is), turned round -- modelled facing Blender's -y -- and
+        /// waddling as he walks (CitizenWaddle). No shadow, as the cubes had none.
+        /// </summary>
+        private static void AddFigure(Transform root, GameObject model)
+        {
+            var figure = Instantiate(model, root, false);
+            figure.name = "Figure";
+            figure.transform.localScale = Vector3.one / UnitSize.Scale;
+            figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * figure.transform.localRotation;
+            foreach (var renderer in figure.GetComponentsInChildren<Renderer>()) renderer.shadowCastingMode = ShadowCastingMode.Off;
+            SeasonStyle.NoSnow(figure);
+            root.gameObject.AddComponent<CitizenWaddle>().Bind(figure.transform);
         }
 
         private static void AddCubePart(Transform parent, string partName, Vector3 localPosition, Vector3 size, Material material)

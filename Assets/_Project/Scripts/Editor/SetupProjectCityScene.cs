@@ -503,6 +503,20 @@ namespace CityBuilder.EditorTools
             var citizenVisualsManagerSO = new SerializedObject(citizenVisualsManager);
             citizenVisualsManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             citizenVisualsManagerSO.FindProperty("gridManager").objectReferenceValue = gridManager;
+            // the townsfolk (Tools/blender/villagers.py): four kinds, three colourings each
+            var villagers = new List<Object>();
+            var clothes = citizenVisualsManagerSO.FindProperty("villagerClothes");
+            clothes.arraySize = 0;
+            foreach (var kind in new[] { "Peasant", "Woman", "Craftsman", "Elder" })
+            for (var n = 1; n <= 3; n++)
+            {
+                var villager = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Citizens/Villager{kind}{n}.fbx");
+                if (villager == null) continue;
+                villagers.Add(villager);
+                clothes.arraySize++;
+                clothes.GetArrayElementAtIndex(clothes.arraySize - 1).colorValue = MainColourOf(villager);
+            }
+            WriteArray(citizenVisualsManagerSO.FindProperty("villagerModels"), villagers.ToArray());
             citizenVisualsManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var fogOfWarManager = managers.AddComponent<FogOfWarManager>();
@@ -596,6 +610,49 @@ namespace CityBuilder.EditorTools
         /// its own buttons (see CheatInspectors). Nothing here runs unless the tester acts --
         /// they're event-driven with no Update.
         /// </summary>
+        private static Texture2D _paletteForColours;
+
+        /// <summary>
+        /// What most of a palette model is, by area: each triangle's UV points at a palette cell, so
+        /// summing the areas per cell and reading the biggest cell's colour is the model's main
+        /// colour -- a townsman's tunic or dress (the workforce panel's row draws him in it).
+        /// </summary>
+        private static Color MainColourOf(GameObject model)
+        {
+            var filter = model.GetComponentInChildren<MeshFilter>();
+            if (filter == null || filter.sharedMesh == null) return Color.grey;
+            if (_paletteForColours == null)
+            {
+                _paletteForColours = new Texture2D(2, 2);
+                _paletteForColours.LoadImage(File.ReadAllBytes(ModelImportDefaults.PaletteTexturePath));
+            }
+            var mesh = filter.sharedMesh;
+            var vertices = mesh.vertices;
+            var uv = mesh.uv;
+            var triangles = mesh.triangles;
+            var areas = new Dictionary<Color32, float>();
+            for (var i = 0; i < triangles.Length; i += 3)
+            {
+                var a = vertices[triangles[i]];
+                var area = Vector3.Cross(vertices[triangles[i + 1]] - a, vertices[triangles[i + 2]] - a).magnitude;
+                var at = uv[triangles[i]];
+                Color32 colour = _paletteForColours.GetPixelBilinear(at.x, at.y);
+                // skin and hair are everyone's; the clothes are what tells them apart
+                if (colour.r > 220 && colour.g > 160 && colour.g < 190 && colour.b > 120 && colour.b < 150) continue;
+                areas.TryGetValue(colour, out var sum);
+                areas[colour] = sum + area;
+            }
+            var best = Color.grey;
+            var most = 0f;
+            foreach (var pair in areas)
+            {
+                if (pair.Value <= most) continue;
+                most = pair.Value;
+                best = pair.Key;
+            }
+            return best;
+        }
+
         private static void BuildCheats()
         {
             var root = new GameObject("GameCheats");

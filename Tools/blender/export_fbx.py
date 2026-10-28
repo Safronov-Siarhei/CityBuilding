@@ -4,7 +4,7 @@
 
 One FBX per object, holding one mesh, named after the object -- the contract SetupProject reads
 by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) and
-boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes, the army (`Soldier*`, soldiers.py) to Models/Soldiers, the Invasion jungle (`Wild*`, wild.py) to Models/Wild. Each is written with its origin at the centre of its
+boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes, the army (`Soldier*`, soldiers.py) to Models/Soldiers, the Invasion jungle (`Wild*`, wild.py) to Models/Wild, the townsfolk (`Villager*`, villagers.py) to Models/Citizens. Each is written with its origin at the centre of its
 footprint on the ground (the object's placement in the scene is dropped), so the game can trust
 the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
 every model's one material is named `Buildings` and the game swaps in its own palette material
@@ -33,6 +33,7 @@ ORCS = os.path.join(project, "Assets", "_Project", "Models", "Orcs")
 HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
 SOLDIERS = os.path.join(project, "Assets", "_Project", "Models", "Soldiers")
 WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
+CITIZENS = os.path.join(project, "Assets", "_Project", "Models", "Citizens")
 PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 
 
@@ -61,6 +62,9 @@ def target(o):
     if o.name.startswith("Wild"):
         os.makedirs(WILD, exist_ok=True)
         return os.path.join(WILD, o.name + ".fbx")
+    if o.name.startswith("Villager"):
+        os.makedirs(CITIZENS, exist_ok=True)
+        return os.path.join(CITIZENS, o.name + ".fbx")
     folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS
     return os.path.join(folder, o.name + ".fbx")
 

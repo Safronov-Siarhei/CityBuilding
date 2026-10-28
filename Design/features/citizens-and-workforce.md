@@ -1,9 +1,21 @@
 # Citizens and workforce
 
-> **Status (2026-10-21):** shipped. Since 2026-10-20 citizens have NAMES and the workforce panel has a
+> **Status (2026-10-28):** shipped; townsfolk are villager MODELS now (see Looks). Since 2026-10-20 citizens have NAMES and the workforce panel has a
 > second tab: one row per citizen.
 > **Read with:** [happiness-and-migration](happiness-and-migration.md), [production-chains](production-chains.md),
 > [performance-mobile](performance-mobile.md) (walking citizens ARE the CPU budget).
+
+## Looks (2026-10-28, the user: «чуть более детализированные модельки жителей»; pick A)
+- Every citizen is one of 12 villager models in ONE piece (no joints, 1 draw each, ~700-840 tris):
+  `Tools/blender/villagers.py` -> Models/Citizens/Villager{Peasant,Woman,Craftsman,Elder}{1..3}.fbx
+  (straw-hat peasant, headscarf+apron woman, leather-apron craftsman with a hammer, stooped grey elder
+  with a stick; 3 colourings each), soldiers' size and face; exported by export_fbx.py (`Villager*`).
+- `CitizenVisualsManager.villagerModels` (wired in SetupProjectCityScene) -> random pick -> child
+  "Figure" (scale 1/UnitSize, turned 180°, no shadow, NoSnow) + `CitizenWaddle` (hop + sway from the
+  distance walked). With no models, the old two cubes.
+- `CitizenAgent.Clothes`: the model's main colour, measured at setup (`MainColourOf`: biggest palette
+  cell by triangle area, skin excluded) -> `villagerClothes`; the workforce panel's row swatch uses it
+  (it read the cube "Body" before). Test `CitizenLookTests` (+ photos citizens-lineup/-town).
 
 ## What the player sees
 Little people walking between home, work and resources. A citizens button (left, under the menu)

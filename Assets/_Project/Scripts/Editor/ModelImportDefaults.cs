@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace CityBuilder.EditorTools
@@ -30,6 +30,7 @@ namespace CityBuilder.EditorTools
         private const string HeroesFolder = "Assets/_Project/Models/Heroes/";
         private const string SoldiersFolder = "Assets/_Project/Models/Soldiers/";
         private const string WildFolder = "Assets/_Project/Models/Wild/";
+        private const string CitizensFolder = "Assets/_Project/Models/Citizens/";
 
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
         public const string PaletteMaterialPath = "Assets/_Project/Models/Palette/BuildingsPalette.mat";
@@ -72,7 +73,7 @@ namespace CityBuilder.EditorTools
 
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder)
                              || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder) || assetPath.StartsWith(SoldiersFolder)
-                             || assetPath.StartsWith(WildFolder);
+                             || assetPath.StartsWith(WildFolder) || assetPath.StartsWith(CitizensFolder);
             if (!isSetPiece)
             {
                 // MeshMapApplier.BuildNavMesh (NavMeshBuilder.BuildNavMeshData) needs CPU access

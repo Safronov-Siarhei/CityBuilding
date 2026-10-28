@@ -208,9 +208,7 @@ namespace CityBuilder.UI
             swatchRect.anchorMin = swatchRect.anchorMax = new Vector2(0.5f, 0.5f);
             swatchRect.anchoredPosition = new Vector2(-395f, -8f);
             swatchRect.sizeDelta = new Vector2(30f, 38f);
-            var body = agent.transform.Find("Body");
-            var bodyRenderer = body != null ? body.GetComponent<Renderer>() : null;
-            swatch.color = bodyRenderer != null ? bodyRenderer.sharedMaterial.color : UiTheme.InkSoft;
+            swatch.color = agent.Clothes;
             var head = new GameObject("Head", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
             head.transform.SetParent(swatch.transform, false);
             head.rectTransform.anchoredPosition = new Vector2(0f, 30f);

@@ -153,6 +153,9 @@ namespace CityBuilder.Citizens
         /// <summary>Which name this citizen goes by -- his place in the town's arrival order (see CitizenNames).</summary>
         public int NameIndex { get; set; }
 
+        /// <summary>The colour of his clothes, what the workforce panel's row draws him in (the model's main colour, or the old cube's).</summary>
+        public Color Clothes { get; set; } = Color.grey;
+
         /// <summary>His own name, in the current language.</summary>
         public string CitizenName => CitizenNames.Of(NameIndex);
 
