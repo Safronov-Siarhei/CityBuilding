@@ -39,6 +39,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 3
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -75,6 +78,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -111,6 +117,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 4
     startsUnlocked: 1
     barracksLevel: 2
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -147,6 +156,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 6
     startsUnlocked: 1
     barracksLevel: 3
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -183,6 +195,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 9
     startsUnlocked: 1
     barracksLevel: 4
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -219,6 +234,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -255,6 +273,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -291,6 +312,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -327,6 +351,87 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ship_scout
+    displayName: "\u0420\u0430\u0437\u0432\u0435\u0434\u0447\u0438\u043A"
+    attackRangeUnits: 0
+    attackRangeStructures: 0
+    engageRadius: 14
+    levels:
+    - maxHealth: 60
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 4.5
+      recruitCoins: 40
+      upkeepCoinsPerDay: 0
+    - maxHealth: 60
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 4.5
+      recruitCoins: 40
+      upkeepCoinsPerDay: 0
+    - maxHealth: 60
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 4.5
+      recruitCoins: 40
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ship_transport
+    displayName: "\u0422\u0440\u0430\u043D\u0441\u043F\u043E\u0440\u0442"
+    attackRangeUnits: 0
+    attackRangeStructures: 0
+    engageRadius: 8
+    levels:
+    - maxHealth: 140
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 90
+      upkeepCoinsPerDay: 0
+    - maxHealth: 140
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 90
+      upkeepCoinsPerDay: 0
+    - maxHealth: 140
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 90
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 8
+    shipyardLevel: 2
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -363,6 +468,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -399,6 +507,9 @@ MonoBehaviour:
       upkeepCoinsPerDay: 0
     startsUnlocked: 1
     barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
     levelResearch:
@@ -3015,6 +3126,105 @@ MonoBehaviour:
       happiness: 0
       buildSeconds: 0
     - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 32
+    - type: 1
+      amount: 13
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 56
+    - type: 1
+      amount: 22
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 98
+    - type: 1
+      amount: 38
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 172
+    - type: 1
+      amount: 67
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 15
+      seconds: 60
+    levelResearch:
+    - coins: 25
+      seconds: 60
+    - coins: 40
+      seconds: 120
+    - coins: 70
+      seconds: 180
+    - coins: 115
+      seconds: 240
+  - id: Shipyard
+    displayName: "\u0412\u0435\u0440\u0444\u044C"
+    category: 6
+    cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 10
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 12
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 256
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 576
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 800
       defense: 0
       housingCapacity: 0
       maxWorkers: 0
