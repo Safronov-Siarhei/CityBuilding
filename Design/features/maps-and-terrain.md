@@ -18,6 +18,10 @@
 - Every new map joins the player's picker («каждая новая карта должна быть доступна в выборе»).
 - Look: «сочное лето», smooth shores, calm colour zones (per-triangle shades read as broken glass).
 
+## General map rules (the user, 2026-10-29 — every map and island, add new ones here)
+1. No trees on a beach: the forest (TreesArea) and its decor start where the sand ends, the wide
+   landing beaches included (`islands.py`: forest cells need `sd > sand_width + 1.5`; beach decor = pebbles only).
+
 ## Maps
 - **Map 3 «Летняя долина»** — redrawn 2026-10-21 to the designed-map rules: an island with a lake under
   the northern hills and a river to the sea; start zone in the south-west meadow; four camps + the main

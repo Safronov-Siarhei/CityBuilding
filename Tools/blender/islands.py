@@ -733,7 +733,7 @@ def scatter_decor(flat, forest_cells, rnd):
                     elif r < 0.3 and z < 10:
                         add("tuft", x, y, rnd.uniform(0.9, 1.3))
                     continue
-                if sd < BEACH:                        # the beach itself stays clean but for pebbles
+                if sd < max(BEACH, sand_width(x, y) + 0.5):   # the beach, all its sand, stays clean but for pebbles
                     if r < 0.03:
                         add("pebbles", x, y)
                     continue
@@ -892,8 +892,11 @@ def main():
 
     # zones, by cell: flat ground only, clear of the beach
     cell_sd = {(i, j): height_at(i - HALF + 0.5, j - HALF + 0.5)[1] for i in range(N) for j in range(N)}
+    # the user's rule for every map (2026-10-29): no tree on a beach -- the forest starts where the
+    # sand ends, the wide landing beaches included
     forest_cells = {(i, j) for i in range(N) for j in range(N)
                     if flat[i][j] and cell_sd[i, j] > BEACH + 1
+                    and cell_sd[i, j] > sand_width(i - HALF + 0.5, j - HALF + 0.5) + 1.5
                     and math.hypot(i - HALF + 0.5 - START[0], j - HALF + 0.5 - START[1]) > 24
                     and in_forest(i - HALF + 0.5, j - HALF + 0.5)}
     rocks_cells = {(i, j) for i in range(N) for j in range(N)
