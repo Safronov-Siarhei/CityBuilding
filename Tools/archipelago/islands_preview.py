@@ -326,4 +326,5 @@ def main():
     print("saved", out, sheet.size)
 
 
-main()
+if __name__ == '__main__':
+    main()
