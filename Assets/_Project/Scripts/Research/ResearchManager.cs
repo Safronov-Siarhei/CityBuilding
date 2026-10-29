@@ -14,12 +14,12 @@ namespace CityBuilder.Research
     /// what that permits.
     ///
     /// The rules, as decided:
-    /// - One research at a time. Coins are paid when it STARTS; cancelling pays most of them back,
-    ///   and losing the Laboratory mid-research pays all of them back (the player did not choose that).
-    /// - Time is real seconds. Scientists shorten it: the first one is what makes it run at all, and
-    ///   each one after that cuts a fixed number of seconds off the total -- so pulling a scientist
-    ///   off mid-research adds those seconds back, exactly as if they had never been there.
-    /// - With no scientists the research stands still rather than being lost.
+    /// - As many researches at once as the Laboratory has SCIENTISTS (the user, 2026-10-28: each
+    ///   scientist is a slot -- the player must not hit a wall on upgrades). Coins (and, from level
+    ///   3, an upgrade crystal) are paid when one STARTS; cancelling pays most of the coins and the
+    ///   whole crystal back, and losing the Laboratory pays everything back.
+    /// - Time is real seconds, the topic's own. Taking scientists away stops the researches beyond
+    ///   the scientists left -- the newest first -- where they stand, rather than losing them.
     /// - The Laboratory's own level decides WHAT may be researched: level 1 opens things, level 2
     ///   permits second levels, level 3 permits third ones. The Laboratory is deliberately outside
     ///   its own gate -- its sheet row names no level research, so nothing can lock its upgrade
@@ -36,12 +36,23 @@ namespace CityBuilder.Research
 
         private readonly HashSet<string> _completed = new HashSet<string>();
 
-        /// <summary>What is being researched, or null. Never set without coins having been taken for it.</summary>
-        public ResearchTopic Current { get; private set; }
+        /// <summary>One research under way: what, how far in, and what was paid for it.</summary>
+        public class Running
+        {
+            public ResearchTopic Topic;
+            public float Elapsed;
+            public int PaidCoins;
+            public int PaidCrystals;
+        }
 
-        private float _elapsedSeconds;
-        private int _paidCoins;
-        private int _paidCrystals;
+        // In the order they were started: the first LabWorkers of them run, the rest stand still.
+        private readonly List<Running> _running = new List<Running>();
+
+        /// <summary>Everything under way, oldest first.</summary>
+        public IReadOnlyList<Running> UnderWay => _running;
+
+        /// <summary>The oldest research under way, or null -- for the callers that only ask "is anything being researched".</summary>
+        public ResearchTopic Current => _running.Count > 0 ? _running[0].Topic : null;
 
         // The lab is found once per lab built, not per frame: HasAny is a dictionary lookup, and the
         // scene scan behind it only runs when that says there is a lab and the cached one is gone.
@@ -64,11 +75,48 @@ namespace CityBuilder.Research
         /// <summary>Scientists currently assigned to that Laboratory.</summary>
         public int LabWorkers => _labWorkplace != null && Lab != null ? _labWorkplace.AssignedWorkers : 0;
 
-        /// <summary>How long the current research will take in total at the present number of scientists. Zero when nothing is running.</summary>
-        public float CurrentTotalSeconds => Current != null ? DurationSeconds(Current.BaseSeconds, LabWorkers) : 0f;
+        /// <summary>How many more researches the scientists could take on right now.</summary>
+        public int FreeSlots => Mathf.Max(0, LabWorkers - _running.Count);
 
-        /// <summary>Seconds left of the current research at the present number of scientists -- which is why taking a scientist away makes this number jump up.</summary>
-        public float RemainingSeconds => Mathf.Max(0f, CurrentTotalSeconds - _elapsedSeconds);
+        public bool IsRunning(ResearchTopic topic) => Find(topic) != null;
+
+        /// <summary>How long this research takes in all: the topic's own seconds, never under `research_min_seconds`.</summary>
+        public static float TotalSeconds(ResearchTopic topic)
+        {
+            if (topic == null) return 0f;
+            var config = BalanceConfig.Instance;
+            return Mathf.Max(config != null ? config.ResearchMinSeconds : 0f, topic.BaseSeconds);
+        }
+
+        /// <summary>Seconds left of this research, or zero when it is not under way.</summary>
+        public float RemainingSeconds(ResearchTopic topic)
+        {
+            var run = Find(topic);
+            return run != null ? Mathf.Max(0f, TotalSeconds(topic) - run.Elapsed) : 0f;
+        }
+
+        /// <summary>Under way but standing still: there are fewer scientists than researches, and this is one of the newest.</summary>
+        public bool IsPaused(ResearchTopic topic)
+        {
+            var index = IndexOf(topic);
+            return index >= 0 && index >= LabWorkers;
+        }
+
+        private Running Find(ResearchTopic topic)
+        {
+            var index = IndexOf(topic);
+            return index >= 0 ? _running[index] : null;
+        }
+
+        private int IndexOf(ResearchTopic topic)
+        {
+            if (topic == null) return -1;
+            for (var i = 0; i < _running.Count; i++)
+            {
+                if (_running[i].Topic.Id == topic.Id) return i;
+            }
+            return -1;
+        }
 
         private void Awake()
         {
@@ -87,7 +135,7 @@ namespace CityBuilder.Research
 
         private void Update()
         {
-            if (Current == null) return;
+            if (_running.Count == 0) return;
 
             if (Lab == null)
             {
@@ -95,11 +143,13 @@ namespace CityBuilder.Research
                 return;
             }
 
-            // Standing still, not lost: the player took the scientists off, and they may put them back.
-            if (LabWorkers <= 0) return;
-
-            _elapsedSeconds += Time.deltaTime;
-            if (_elapsedSeconds >= CurrentTotalSeconds) Complete();
+            // One scientist per research: the ones beyond the scientists stand still, not lost.
+            var working = Mathf.Min(_running.Count, LabWorkers);
+            for (var i = 0; i < working; i++) _running[i].Elapsed += Time.deltaTime;
+            for (var i = working - 1; i >= 0; i--)
+            {
+                if (_running[i].Elapsed >= TotalSeconds(_running[i].Topic)) Complete(i);
+            }
         }
 
         /// <summary>
@@ -139,35 +189,18 @@ namespace CityBuilder.Research
             }
         }
 
-        /// <summary>
-        /// How long a research of this base length takes with this many scientists. The first
-        /// `research_free_workers` of them buy no speed -- one scientist is what makes the research
-        /// run in the first place -- and the total can never fall below `research_min_seconds`.
-        ///
-        /// Pure and static so the arithmetic is pinned down by an EditMode test: the interesting
-        /// cases are one scientist (no bonus), ten (the full bonus) and a research short enough for
-        /// the floor to bite.
-        /// </summary>
-        public static float DurationSeconds(float baseSeconds, int workers, float secondsPerWorker, int freeWorkers, float minSeconds)
-        {
-            var paidWorkers = Mathf.Max(0, workers - Mathf.Max(0, freeWorkers));
-            return Mathf.Max(minSeconds, baseSeconds - paidWorkers * secondsPerWorker);
-        }
-
-        private static float DurationSeconds(float baseSeconds, int workers)
-        {
-            var config = BalanceConfig.Instance;
-            return DurationSeconds(baseSeconds, workers, config.ResearchSecondsPerWorker, config.ResearchFreeWorkers, config.ResearchMinSeconds);
-        }
-
         /// <summary>What a cancelled research pays back. Rounded down, so cancelling is never free money.</summary>
         public static int RefundCoins(int paidCoins, int refundPercent)
         {
             return Mathf.Max(0, paidCoins * Mathf.Clamp(refundPercent, 0, 100) / 100);
         }
 
-        /// <summary>Coins the player gets back if they cancel right now -- shown on the cancel button, so the number they see is the number they get.</summary>
-        public int CurrentCancelRefund => RefundCoins(_paidCoins, BalanceConfig.Instance.ResearchCancelRefundPercent);
+        /// <summary>Coins the player gets back if they cancel this research right now.</summary>
+        public int CancelRefund(ResearchTopic topic)
+        {
+            var run = Find(topic);
+            return run != null ? RefundCoins(run.PaidCoins, BalanceConfig.Instance.ResearchCancelRefundPercent) : 0;
+        }
 
         public bool IsCompleted(string topicId)
         {
@@ -249,7 +282,7 @@ namespace CityBuilder.Research
         {
             if (topic == null) return Localization.Get("#research_blocked_unknown");
             if (IsCompleted(topic.Id)) return Localization.Get("#research_done");
-            if (Current != null) return Localization.Get("#research_blocked_busy");
+            if (IsRunning(topic)) return Localization.Get("#research_blocked_busy");
 
             if (Lab == null) return Localization.Get("#research_blocked_no_lab");
             if (LabLevel < topic.RequiredLabLevel) return Localization.Format("#research_blocked_lab_level", topic.RequiredLabLevel);
@@ -261,6 +294,7 @@ namespace CityBuilder.Research
             }
 
             if (LabWorkers <= 0) return Localization.Get("#research_blocked_workers");
+            if (FreeSlots <= 0) return Localization.Get("#research_blocked_slots");
 
             var resources = ResourceManager.Instance;
             if (resources != null && !resources.HasEnough(CoinCost(topic.Coins))) return Localization.Get("#research_blocked_coins");
@@ -280,78 +314,69 @@ namespace CityBuilder.Research
             // Nothing was actually deducted while the infinite-resources cheat is on, so nothing may
             // be refunded later either -- paying it back would mint coins (the same trap
             // ArmyManager.TryRecruit documents).
-            _paidCoins = resources != null && resources.InfiniteResources ? 0 : topic.Coins;
-            _paidCrystals = CrystalsAreFree ? 0 : topic.Crystals;
-            if (_paidCrystals > 0) Wallet.UpgradeCrystals -= _paidCrystals;
-            Current = topic;
-            _elapsedSeconds = 0f;
+            var run = new Running
+            {
+                Topic = topic,
+                PaidCoins = resources != null && resources.InfiniteResources ? 0 : topic.Coins,
+                PaidCrystals = CrystalsAreFree ? 0 : topic.Crystals,
+            };
+            if (run.PaidCrystals > 0) Wallet.UpgradeCrystals -= run.PaidCrystals;
+            _running.Add(run);
 
             EventLogManager.Instance?.Log(Localization.Format("#log_research_started", topic.Title));
             OnResearchChanged?.Invoke();
             return true;
         }
 
-        /// <summary>The player changing their mind: most of the coins come back, the crystals all of them, the progress does not.</summary>
-        public void CancelCurrent()
+        /// <summary>The player changing their mind: most of the coins come back, the crystal all of it, the progress does not.</summary>
+        public void Cancel(ResearchTopic topic)
         {
-            if (Current == null) return;
-
-            Refund(CurrentCancelRefund);
-            RefundCrystals();
-            EventLogManager.Instance?.Log(Localization.Format("#log_research_cancelled", Current.Title));
-            ClearCurrent();
+            var index = IndexOf(topic);
+            if (index < 0) return;
+            var run = _running[index];
+            Refund(RefundCoins(run.PaidCoins, BalanceConfig.Instance.ResearchCancelRefundPercent), run.PaidCrystals);
+            EventLogManager.Instance?.Log(Localization.Format("#log_research_cancelled", run.Topic.Title));
+            _running.RemoveAt(index);
+            OnResearchChanged?.Invoke();
         }
 
         /// <summary>
-        /// The Laboratory is gone mid-research. All of the coins come back, unlike a cancellation:
-        /// the player did not choose this, an orc did.
+        /// The Laboratory is gone mid-research. Everything comes back, unlike a cancellation: the
+        /// player did not choose this, an orc did.
         /// </summary>
         private void AbandonForLostLab()
         {
-            if (Current == null) return;
-
-            Refund(_paidCoins);
-            RefundCrystals();
-            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_lost", Current.Title), EventSeverity.Warning, EventGlyph.Alert, LaboratoryBuildingId));
-            ClearCurrent();
+            foreach (var run in _running)
+            {
+                Refund(run.PaidCoins, run.PaidCrystals);
+                EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_lost", run.Topic.Title), EventSeverity.Warning, EventGlyph.Alert, LaboratoryBuildingId));
+            }
+            _running.Clear();
+            OnResearchChanged?.Invoke();
         }
 
-        private void Complete()
+        private void Complete(int index)
         {
-            var finished = Current;
+            var finished = _running[index].Topic;
+            _running.RemoveAt(index);
             _completed.Add(finished.Id);
-            ClearCurrent();
 
             // Every soldier of the type, including the ones already standing: the whole point of a
             // level being researched rather than bought per recruit.
             if (finished.Kind == ResearchKind.UnitLevel) SoldierUnit.RefreshStatsForAll();
 
             EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_research_done", finished.Title), EventSeverity.Good, EventGlyph.Star, LaboratoryBuildingId, LaboratoryBuildingId));
-        }
-
-        private void ClearCurrent()
-        {
-            Current = null;
-            _elapsedSeconds = 0f;
-            _paidCoins = 0;
-            _paidCrystals = 0;
             OnResearchChanged?.Invoke();
         }
 
-        private void RefundCrystals()
+        private static void Refund(int coins, int crystals)
         {
-            if (_paidCrystals > 0) Wallet.UpgradeCrystals += _paidCrystals;
-            _paidCrystals = 0;
+            if (coins > 0) ResourceManager.Instance?.Add(ResourceType.Coins, coins);
+            if (crystals > 0) Wallet.UpgradeCrystals += crystals;
         }
 
         /// <summary>The infinite-resources cheat covers the crystals too: a tester looking at level 5 should not need a wallet.</summary>
         private static bool CrystalsAreFree => ResourceManager.Instance != null && ResourceManager.Instance.InfiniteResources;
-
-        private static void Refund(int coins)
-        {
-            if (coins <= 0) return;
-            ResourceManager.Instance?.Add(ResourceType.Coins, coins);
-        }
 
         // Rebuilt in place rather than allocated per call -- DescribeBlocker runs on every refresh of
         // a window holding dozens of rows.
@@ -391,9 +416,7 @@ namespace CityBuilder.Research
         public void ResetForTesting()
         {
             _completed.Clear();
-            Current = null;
-            _elapsedSeconds = 0f;
-            _paidCoins = 0;
+            _running.Clear();
             OnResearchChanged?.Invoke();
         }
 
@@ -417,21 +440,15 @@ namespace CityBuilder.Research
         /// <summary>Everything researched, for the save file.</summary>
         public IEnumerable<string> CompletedTopicIds => _completed;
 
-        /// <summary>What is under way, for the save file: the topic, how far in it is, and how much was paid for it.</summary>
-        public void ReadCurrentForSave(out string topicId, out float elapsedSeconds, out int paidCoins, out int paidCrystals)
-        {
-            topicId = Current != null ? Current.Id : string.Empty;
-            elapsedSeconds = Current != null ? _elapsedSeconds : 0f;
-            paidCoins = Current != null ? _paidCoins : 0;
-            paidCrystals = Current != null ? _paidCrystals : 0;
-        }
+        /// <summary>What is under way, for the save file: each topic, how far in, and what was paid for it.</summary>
+        public IEnumerable<Running> UnderWayForSave => _running;
 
         /// <summary>
         /// Restores a saved game's research. Ids that no longer exist (a renamed sheet row) are
         /// dropped with a warning rather than kept as dead entries -- the save's own coins were
         /// already spent, so the honest thing is to say what was lost.
         /// </summary>
-        public void RestoreFromSave(IEnumerable<string> completedTopicIds, string currentTopicId, float elapsedSeconds, int paidCoins, int paidCrystals = 0)
+        public void RestoreFromSave(IEnumerable<string> completedTopicIds, IEnumerable<Running> underWay)
         {
             _completed.Clear();
             if (completedTopicIds != null)
@@ -448,10 +465,18 @@ namespace CityBuilder.Research
                 }
             }
 
-            Current = ResearchCatalog.ById(currentTopicId);
-            _elapsedSeconds = Current != null ? Mathf.Max(0f, elapsedSeconds) : 0f;
-            _paidCoins = Current != null ? Mathf.Max(0, paidCoins) : 0;
-            _paidCrystals = Current != null ? Mathf.Max(0, paidCrystals) : 0;
+            _running.Clear();
+            if (underWay != null)
+            {
+                foreach (var run in underWay)
+                {
+                    if (run == null || run.Topic == null || IsCompleted(run.Topic.Id) || IsRunning(run.Topic)) continue;
+                    run.Elapsed = Mathf.Max(0f, run.Elapsed);
+                    run.PaidCoins = Mathf.Max(0, run.PaidCoins);
+                    run.PaidCrystals = Mathf.Max(0, run.PaidCrystals);
+                    _running.Add(run);
+                }
+            }
 
             // Soldiers restored before this point were built at level 1; a save with researched
             // levels has to bring them up to date.

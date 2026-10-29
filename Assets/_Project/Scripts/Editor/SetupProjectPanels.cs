@@ -685,22 +685,26 @@ namespace CityBuilder.EditorTools
             var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-560f, 452f), new Vector2(400f, 68f));
             var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(560f, 452f), new Vector2(400f, 68f));
 
-            // the status line: what is under way, or why a level cannot start, or what a level gives
-            var status = CreateText(card.transform, "Status", string.Empty, 24, new Vector2(-60f, 378f), new Vector2(1400f, 40f));
-            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(0f, 405f), new Vector2(400f, 30f), new Color(1f, 0.6f, 0.5f));
+            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(520f, 380f), new Vector2(300f, 30f), new Color(1f, 0.6f, 0.5f));
 
-            // the upgrade crystals, top right under the army tab
+            // the player's coins and upgrade crystals, top centre -- nothing else (the user's mockup)
             var crystalIcon = IconSprite("Res_UpgradeCrystal");
-            var gem = CreateImage(card.transform, "CrystalIcon", Color.white);
-            gem.sprite = crystalIcon;
-            gem.preserveAspect = true;
-            gem.raycastTarget = false;
-            gem.rectTransform.anchorMin = gem.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            gem.rectTransform.anchoredPosition = new Vector2(740f, 380f);
-            gem.rectTransform.sizeDelta = new Vector2(48f, 48f);
-            var crystals = CreateText(card.transform, "Crystals", "0", 28, new Vector2(800f, 380f), new Vector2(80f, 44f));
-            crystals.alignment = TextAnchor.MiddleLeft;
-            crystals.fontStyle = FontStyle.Bold;
+            Text Counter(string name, Sprite icon, float x)
+            {
+                var image = CreateImage(card.transform, name + "Icon", Color.white);
+                image.sprite = icon;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+                image.rectTransform.anchorMin = image.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                image.rectTransform.anchoredPosition = new Vector2(x, 380f);
+                image.rectTransform.sizeDelta = new Vector2(46f, 46f);
+                var amount = CreateText(card.transform, name, "0", 30, new Vector2(x + 82f, 380f), new Vector2(110f, 44f), addShadow: false);
+                amount.alignment = TextAnchor.MiddleLeft;
+                amount.fontStyle = FontStyle.Bold;
+                return amount;
+            }
+            var coins = Counter("Coins", iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, -150f);
+            var crystals = Counter("Crystals", crystalIcon, 40f);
 
             BuildScrollList(card.transform, new Vector2(0f, -8f), new Vector2(1700f, 720f),
                 "#research_empty", out var content, out var emptyLabelGO);
@@ -715,13 +719,11 @@ namespace CityBuilder.EditorTools
             upgradeControls.transform.SetParent(card.transform, false);
             StretchFull(upgradeControls.GetComponent<RectTransform>());
             var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#research_upgrade_lab", new Vector2(-20f, footY), new Vector2(380f, 70f));
-            var upgradeCostRow = CreateCostRow(upgradeControls.transform, "UpgradeCostRow", new Vector2(-20f, footY - 62f));
 
             var repairControls = new GameObject("RepairControls", typeof(RectTransform));
             repairControls.transform.SetParent(card.transform, false);
             StretchFull(repairControls.GetComponent<RectTransform>());
             var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(345f, footY), new Vector2(330f, 70f));
-            var repairCostRow = CreateCostRow(repairControls.transform, "RepairCostRow", new Vector2(345f, footY - 62f));
 
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(640f, footY), new Vector2(230f, 70f));
             var hintButton = CreateButton(card.transform, panelSprite, "HintButton", string.Empty, new Vector2(815f, footY), new Vector2(72f, 72f));
@@ -743,6 +745,39 @@ namespace CityBuilder.EditorTools
             var hintClose = hint.gameObject.AddComponent<Button>();
             hintClose.targetGraphic = hint;
 
+            // the bubble over a tapped picture: what the level gives, or why it cannot start
+            var bubble = CreateImage(card.transform, "Bubble", Color.white);
+            bubble.sprite = panelSprite;
+            bubble.type = Image.Type.Sliced;
+            bubble.raycastTarget = false;
+            bubble.rectTransform.anchorMin = bubble.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            bubble.rectTransform.sizeDelta = new Vector2(440f, 110f);
+            var bubbleText = CreateText(bubble.transform, "Text", string.Empty, 22, Vector2.zero, new Vector2(410f, 96f), addShadow: false);
+
+            // the small window «Улучшить лабораторию» / «Отремонтировать» opens: picture, what it gives, price, confirm
+            var dialog = CreateImage(card.transform, "Dialog", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(dialog.rectTransform);
+            var dialogDismiss = dialog.gameObject.AddComponent<Button>();
+            dialogDismiss.targetGraphic = dialog;
+            var dialogCard = CreateImage(dialog.transform, "DialogCard", Color.white);
+            dialogCard.sprite = panelSprite;
+            dialogCard.type = Image.Type.Sliced;
+            dialogCard.rectTransform.anchorMin = dialogCard.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            dialogCard.rectTransform.sizeDelta = new Vector2(680f, 620f);
+            dialogCard.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // a tap on the card is not a tap outside it
+            var dialogTitle = CreateText(dialogCard.transform, "Title", string.Empty, 32, new Vector2(0f, 250f), new Vector2(620f, 50f), addShadow: false);
+            dialogTitle.fontStyle = FontStyle.Bold;
+            var dialogIcon = CreateImage(dialogCard.transform, "Icon", Color.white);
+            dialogIcon.preserveAspect = true;
+            dialogIcon.raycastTarget = false;
+            dialogIcon.rectTransform.anchorMin = dialogIcon.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            dialogIcon.rectTransform.anchoredPosition = new Vector2(0f, 100f);
+            dialogIcon.rectTransform.sizeDelta = new Vector2(220f, 220f);
+            var dialogGain = CreateText(dialogCard.transform, "Gain", string.Empty, 22, new Vector2(0f, -55f), new Vector2(620f, 80f), addShadow: false);
+            var dialogCostRow = CreateCostRow(dialogCard.transform, "CostRow", new Vector2(0f, -130f));
+            var dialogConfirm = CreateDynamicButton(dialogCard.transform, panelSprite, "Confirm", new Vector2(-150f, -230f), new Vector2(280f, 76f), out var dialogConfirmLabel);
+            var dialogClose = CreateButton(dialogCard.transform, panelSprite, "Close", "#ui_close", new Vector2(150f, -230f), new Vector2(240f, 76f));
+
             var keys = new List<string>();
             var sprites = new List<Object>();
             foreach (var guid in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
@@ -757,15 +792,21 @@ namespace CityBuilder.EditorTools
             so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             so.FindProperty("titleLabel").objectReferenceValue = title;
             so.FindProperty("conditionLabel").objectReferenceValue = condition;
-            so.FindProperty("statusLabel").objectReferenceValue = status;
+            so.FindProperty("coinsLabel").objectReferenceValue = coins;
             so.FindProperty("crystalsLabel").objectReferenceValue = crystals;
+            so.FindProperty("bubble").objectReferenceValue = bubble.rectTransform;
+            so.FindProperty("bubbleText").objectReferenceValue = bubbleText;
+            so.FindProperty("dialog").objectReferenceValue = dialog.gameObject;
+            so.FindProperty("dialogTitle").objectReferenceValue = dialogTitle;
+            so.FindProperty("dialogIcon").objectReferenceValue = dialogIcon;
+            so.FindProperty("dialogGain").objectReferenceValue = dialogGain;
+            so.FindProperty("dialogCostRow").objectReferenceValue = dialogCostRow;
+            so.FindProperty("dialogConfirmLabel").objectReferenceValue = dialogConfirmLabel;
             so.FindProperty("scientistsLabel").objectReferenceValue = scientists;
             so.FindProperty("addScientistButton").objectReferenceValue = addScientist;
             so.FindProperty("removeScientistButton").objectReferenceValue = removeScientist;
             so.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
-            so.FindProperty("upgradeCostRow").objectReferenceValue = upgradeCostRow;
             so.FindProperty("repairControls").objectReferenceValue = repairControls;
-            so.FindProperty("repairCostRow").objectReferenceValue = repairCostRow;
             so.FindProperty("buildingsTab").objectReferenceValue = buildingsTab.transform;
             so.FindProperty("unitsTab").objectReferenceValue = unitsTab.transform;
             so.FindProperty("listContent").objectReferenceValue = content;
@@ -786,8 +827,11 @@ namespace CityBuilder.EditorTools
 
             UnityEventTools.AddPersistentListener(addScientist.onClick, controller.AddScientist);
             UnityEventTools.AddPersistentListener(removeScientist.onClick, controller.RemoveScientist);
-            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.UpgradeLab);
-            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.RepairLab);
+            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.OpenUpgradeDialog);
+            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.OpenRepairDialog);
+            UnityEventTools.AddPersistentListener(dialogConfirm.onClick, controller.ConfirmDialog);
+            UnityEventTools.AddPersistentListener(dialogClose.onClick, controller.CloseDialog);
+            UnityEventTools.AddPersistentListener(dialogDismiss.onClick, controller.CloseDialog);
             UnityEventTools.AddPersistentListener(buildingsTab.onClick, controller.SelectBuildingsTab);
             UnityEventTools.AddPersistentListener(unitsTab.onClick, controller.SelectUnitsTab);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
@@ -795,6 +839,8 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(hintClose.onClick, controller.ToggleHint);
 
             hint.gameObject.SetActive(false);
+            bubble.gameObject.SetActive(false);
+            dialog.gameObject.SetActive(false);
             panelRoot.SetActive(false);
             return controller;
         }

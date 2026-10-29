@@ -184,8 +184,17 @@ namespace CityBuilder.Saving
             // moment it is placed, and a fresh ResearchManager would answer "no".
             if (researchManager != null)
             {
-                researchManager.RestoreFromSave(data.completedResearch, data.currentResearchId,
-                    data.currentResearchElapsedSeconds, data.currentResearchPaidCoins, data.currentResearchPaidCrystals);
+                var underWay = new List<Research.ResearchManager.Running>();
+                foreach (var entry in data.runningResearch)
+                {
+                    underWay.Add(new Research.ResearchManager.Running { Topic = Research.ResearchCatalog.ById(entry.topicId), Elapsed = entry.elapsedSeconds, PaidCoins = entry.paidCoins, PaidCrystals = entry.paidCrystals });
+                }
+                // a save from before parallel research keeps its one research
+                if (data.runningResearch.Count == 0 && !string.IsNullOrEmpty(data.currentResearchId))
+                {
+                    underWay.Add(new Research.ResearchManager.Running { Topic = Research.ResearchCatalog.ById(data.currentResearchId), Elapsed = data.currentResearchElapsedSeconds, PaidCoins = data.currentResearchPaidCoins });
+                }
+                researchManager.RestoreFromSave(data.completedResearch, underWay);
             }
 
             foreach (var entry in data.buildings)
@@ -559,11 +568,10 @@ namespace CityBuilder.Saving
             if (researchManager != null)
             {
                 data.completedResearch.AddRange(researchManager.CompletedTopicIds);
-                researchManager.ReadCurrentForSave(out var currentResearchId, out var elapsed, out var paid, out var paidCrystals);
-                data.currentResearchPaidCrystals = paidCrystals;
-                data.currentResearchId = currentResearchId;
-                data.currentResearchElapsedSeconds = elapsed;
-                data.currentResearchPaidCoins = paid;
+                foreach (var run in researchManager.UnderWayForSave)
+                {
+                    data.runningResearch.Add(new RunningResearchEntry { topicId = run.Topic.Id, elapsedSeconds = run.Elapsed, paidCoins = run.PaidCoins, paidCrystals = run.PaidCrystals });
+                }
             }
 
             foreach (ResourceType type in Enum.GetValues(typeof(ResourceType)))

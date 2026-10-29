@@ -11,25 +11,28 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The Laboratory's window, after the user's sketch (2026-10-28). Tapping the Laboratory opens
-    /// THIS instead of the ordinary building card, which is why the card's own controls --
-    /// scientists, upgrade, repair -- live along its foot.
+    /// The Laboratory's window, after the user's sketch and final mockup (2026-10-28). Tapping the
+    /// Laboratory opens THIS instead of the ordinary building card, which is why the card's own
+    /// controls -- scientists, upgrade, repair -- live along its foot.
     ///
-    /// Two tabs, «Здания» and «Армия»; the chosen one stands larger and lit. Under them one ROW per
-    /// building (in the build menu's order) or per soldier: its name, then its levels left to right,
-    /// a picture each joined by a line, the price and a «Прокачать» button under each. A level
-    /// already had shows a tick; the one being researched a bar with the time and «Отмена» on its
-    /// button; one waiting on the level before it a grey button; one the Laboratory is too small
-    /// for a grey «Лаб. ур. N». Tapping a picture says what that level gives. A building with
-    /// nothing to research (the flag, the decor, the Laboratory itself) has no row.
+    /// «Лаборатория: уровень N» between the tabs «Здания» and «Армия» (the chosen one larger and
+    /// lit); under it the player's coins and upgrade crystals, nothing else. Then one ROW per
+    /// building (in the build menu's order) or per soldier: its name, its levels left to right, a
+    /// picture each joined by a line, the price and a «Прокачать» button under each. A level already
+    /// had shows a tick; one being researched its own timer and «Отмена» -- as many at once as there
+    /// are scientists; one waiting on the level before it a grey button; one the Laboratory is too
+    /// small for a grey «Лаб. ур. N». Tapping a picture shows what that level gives in a bubble over
+    /// it; a level that cannot start says why there, or flashes the coins or the crystals red.
+    /// «Улучшить лабораторию» and «Отремонтировать» open their own small window to confirm.
     /// </summary>
     public class ResearchPanelController : MonoBehaviour
     {
-        /// <summary>How often the open window re-reads the countdown and each cell's state. Every frame would allocate a fistful of strings per cell for no visible gain.</summary>
+        /// <summary>How often the open window re-reads the countdowns and each cell's state. Every frame would allocate a fistful of strings per cell for no visible gain.</summary>
         private const float RefreshIntervalSeconds = 0.25f;
 
-        /// <summary>How long a message (why a level cannot start, what a level gives) stays on the status line.</summary>
-        private const float MessageSeconds = 4f;
+        private const float BubbleSeconds = 3f;
+        private const float FlashSeconds = 0.8f;
+        private const float ShakeSeconds = 0.35f;
 
         private const float CellStep = 250f;
         private const float RowHeight = 290f;
@@ -39,21 +42,30 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Text titleLabel;
         [SerializeField] private Text conditionLabel;
-        [SerializeField] private Text statusLabel;
+        [SerializeField] private Text coinsLabel;
         [SerializeField] private Text crystalsLabel;
         [SerializeField] private Text scientistsLabel;
         [SerializeField] private Button addScientistButton;
         [SerializeField] private Button removeScientistButton;
         [SerializeField] private GameObject upgradeControls;
-        [SerializeField] private Transform upgradeCostRow;
         [SerializeField] private GameObject repairControls;
-        [SerializeField] private Transform repairCostRow;
         [SerializeField] private RectTransform buildingsTab;
         [SerializeField] private RectTransform unitsTab;
         [SerializeField] private RectTransform listContent;
         [SerializeField] private GameObject emptyLabel;
         [SerializeField] private GameObject hintPanel;
         [SerializeField] private Text hintText;
+        [SerializeField] private RectTransform bubble;
+        [SerializeField] private Text bubbleText;
+
+        // the small window «Улучшить лабораторию» / «Отремонтировать» opens
+        [SerializeField] private GameObject dialog;
+        [SerializeField] private Text dialogTitle;
+        [SerializeField] private Image dialogIcon;
+        [SerializeField] private Text dialogGain;
+        [SerializeField] private Transform dialogCostRow;
+        [SerializeField] private Text dialogConfirmLabel;
+
         [SerializeField] private Sprite rowSprite;
         [SerializeField] private Sprite buttonSprite;
         [SerializeField] private Sprite plaqueSprite;
@@ -80,6 +92,7 @@ namespace CityBuilder.UI
             public string TargetId;
             public int Level;
             public bool IsUnit;
+            public RectTransform Frame;
             public Image Icon;
             public GameObject Tick;
             public GameObject Price;
@@ -89,6 +102,7 @@ namespace CityBuilder.UI
             public Button Action;
             public Image ActionImage;
             public Text ActionLabel;
+            public Vector2 ActionHome;
         }
 
         private readonly List<Cell> _cells = new List<Cell>();
@@ -99,10 +113,13 @@ namespace CityBuilder.UI
         private BuildingInstance _lab;
         private ProductionBuilding _labWorkplace;
         private bool _unitsTab;
+        private bool _dialogIsRepair;
         private float _refreshTimer;
-        private string _message;
-        private Color _messageColor;
-        private float _messageUntil;
+        private float _bubbleUntil;
+        private Text _flashing;
+        private float _flashUntil;
+        private Cell _shaking;
+        private float _shakeUntil;
 
         /// <summary>How many rows (buildings or soldiers) the list holds, for the PlayMode tests.</summary>
         public int RowCount => _rowCount;
@@ -124,8 +141,11 @@ namespace CityBuilder.UI
         /// <summary>The card is up.</summary>
         public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
 
-        /// <summary>What the status line says now, for the tests.</summary>
-        public string StatusText => statusLabel != null ? statusLabel.text : string.Empty;
+        /// <summary>What the bubble over a picture says while it is up, for the tests.</summary>
+        public string BubbleText => bubble != null && bubble.gameObject.activeSelf && bubbleText != null ? bubbleText.text : string.Empty;
+
+        /// <summary>The confirm window is up, for the tests.</summary>
+        public bool IsDialogOpen => dialog != null && dialog.activeSelf;
 
         /// <summary>Opens the window on a particular Laboratory (the one that was tapped).</summary>
         public void Show(BuildingInstance laboratory)
@@ -135,7 +155,6 @@ namespace CityBuilder.UI
 
             // Always opens on the buildings tab: that is where almost all of the list lives.
             _unitsTab = false;
-            _message = null;
 
             if (panelRoot != null)
             {
@@ -144,13 +163,15 @@ namespace CityBuilder.UI
                 panelRoot.transform.SetAsLastSibling();
             }
             if (hintPanel != null) hintPanel.SetActive(false);
+            if (dialog != null) dialog.SetActive(false);
+            HideBubble();
             ModalGate.SetBlocked(true);
 
             var research = ResearchManager.Instance;
             if (research != null)
             {
                 // Removed first: tapping a second Laboratory without closing the window would
-                // otherwise subscribe twice and rebuild the list twice per event.
+                // otherwise subscribe twice and refresh twice per event.
                 research.OnResearchChanged -= Refresh;
                 research.OnResearchChanged += Refresh;
             }
@@ -168,6 +189,7 @@ namespace CityBuilder.UI
 
             _lab = null;
             _labWorkplace = null;
+            if (dialog != null) dialog.SetActive(false);
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
         }
@@ -198,22 +220,47 @@ namespace CityBuilder.UI
             Refresh();
         }
 
-        /// <summary>The Laboratory's own upgrade, paid in resources like any other building's -- its levels are deliberately not researched (see ResearchManager).</summary>
-        public void UpgradeLab()
+        /// <summary>«Улучшить лабораторию»: its own window with the next level's picture, what it gives and the price.</summary>
+        public void OpenUpgradeDialog()
         {
-            _lab?.TryUpgrade();
-            Refresh();
+            if (_lab == null || _lab.GetUpgradeCost() == null) return;
+            _dialogIsRepair = false;
+            var next = _lab.Level + 1;
+            dialogTitle.text = Localization.Format("#research_level", _lab.Data.LocalizedName, next);
+            dialogIcon.sprite = IconFor(_lab.Data.buildingName, next, isUnit: false);
+            dialogGain.text = DescribeGain(_lab.Data.buildingName, next, false, _lab.Data) + "\n" + Localization.Format("#research_lab_opens", next);
+            dialogConfirmLabel.text = Localization.Get("#building_upgrade");
+            CostRowBuilder.Build(dialogCostRow, _lab.GetUpgradeCost(), iconLibrary);
+            dialog.SetActive(true);
         }
 
-        public void RepairLab()
+        /// <summary>«Отремонтировать»: its own window with the Laboratory's picture and the price.</summary>
+        public void OpenRepairDialog()
         {
-            _lab?.TryRepair();
-            Refresh();
+            if (_lab == null || _lab.GetRepairCost() == null) return;
+            _dialogIsRepair = true;
+            dialogTitle.text = _lab.Data.LocalizedName;
+            dialogIcon.sprite = IconFor(_lab.Data.buildingName, _lab.Level, isUnit: false);
+            dialogGain.text = $"{_lab.CurrentHealth}/{_lab.MaxHealth}";
+            dialogConfirmLabel.text = Localization.Get("#building_repair");
+            CostRowBuilder.Build(dialogCostRow, _lab.GetRepairCost(), iconLibrary);
+            dialog.SetActive(true);
         }
 
-        public void CancelResearch()
+        /// <summary>The confirm window's own button: the upgrade or the repair it was opened for.</summary>
+        public void ConfirmDialog()
         {
-            ResearchManager.Instance?.CancelCurrent();
+            if (_lab != null)
+            {
+                if (_dialogIsRepair) _lab.TryRepair();
+                else _lab.TryUpgrade();
+            }
+            CloseDialog();
+        }
+
+        public void CloseDialog()
+        {
+            if (dialog != null) dialog.SetActive(false);
             Refresh();
         }
 
@@ -223,26 +270,38 @@ namespace CityBuilder.UI
             if (hintPanel == null) return;
             var show = !hintPanel.activeSelf;
             hintPanel.SetActive(show);
-            if (show && hintText != null)
-            {
-                hintText.text = Localization.Format("#research_hint",
-                    Mathf.RoundToInt(BalanceConfig.Instance != null ? BalanceConfig.Instance.ResearchSecondsPerWorker : 5f));
-            }
+            if (show && hintText != null) hintText.text = Localization.Get("#research_hint");
         }
 
-        /// <summary>Starts a research; when it cannot, the status line says why.</summary>
+        /// <summary>Starts a research; when it cannot, the counter it is short of flashes red, or a bubble over the picture says why.</summary>
         public void StartResearch(ResearchTopic topic)
         {
             var research = ResearchManager.Instance;
             if (research == null) return;
             var blocker = research.DescribeBlocker(topic);
-            if (blocker != null || !research.TryStart(topic))
+            if (blocker == null && research.TryStart(topic))
             {
-                Say(blocker ?? Localization.Get("#research_blocked_unknown"), UiTheme.Warning);
+                HideBubble();
                 Refresh();
                 return;
             }
-            _message = null;
+
+            var cell = CellOf(topic);
+            if (cell != null)
+            {
+                _shaking = cell;
+                _shakeUntil = Time.unscaledTime + ShakeSeconds;
+            }
+            if (blocker == Localization.Get("#research_blocked_coins")) Flash(coinsLabel);
+            else if (blocker == Localization.Get("#research_blocked_crystals")) Flash(crystalsLabel);
+            else if (cell != null) ShowBubble(cell, blocker ?? Localization.Get("#research_blocked_unknown"));
+            Refresh();
+        }
+
+        /// <summary>«Отмена» under a level being researched.</summary>
+        public void CancelResearch(ResearchTopic topic)
+        {
+            ResearchManager.Instance?.Cancel(topic);
             Refresh();
         }
 
@@ -258,10 +317,44 @@ namespace CityBuilder.UI
                 return;
             }
 
+            Animate();
+
             _refreshTimer += Time.unscaledDeltaTime;
             if (_refreshTimer < RefreshIntervalSeconds) return;
             _refreshTimer = 0f;
             Refresh();
+        }
+
+        /// <summary>The red flash on a counter, the shake of a button, the bubble's time running out.</summary>
+        private void Animate()
+        {
+            var now = Time.unscaledTime;
+            if (_flashing != null)
+            {
+                var on = now < _flashUntil;
+                _flashing.color = on ? Color.Lerp(UiTheme.Ink, UiTheme.Danger, Mathf.PingPong(now * 8f, 1f)) : UiTheme.Ink;
+                _flashing.transform.localScale = Vector3.one * (on ? 1.15f : 1f);
+                if (!on) _flashing = null;
+            }
+            if (_shaking != null)
+            {
+                var rect = (RectTransform)_shaking.Action.transform;
+                var on = now < _shakeUntil;
+                rect.anchoredPosition = _shaking.ActionHome + (on ? new Vector2(Mathf.Sin(now * 60f) * 8f, 0f) : Vector2.zero);
+                if (!on) _shaking = null;
+            }
+            if (bubble != null && bubble.gameObject.activeSelf && now > _bubbleUntil) HideBubble();
+        }
+
+        private void Flash(Text counter)
+        {
+            if (_flashing != null && _flashing != counter)
+            {
+                _flashing.color = UiTheme.Ink;
+                _flashing.transform.localScale = Vector3.one;
+            }
+            _flashing = counter;
+            _flashUntil = Time.unscaledTime + FlashSeconds;
         }
 
         // -- the list -------------------------------------------------------------------------------
@@ -277,6 +370,8 @@ namespace CityBuilder.UI
             }
             _cells.Clear();
             _rowCount = 0;
+            _shaking = null;
+            HideBubble();
 
             if (_unitsTab) PopulateUnits();
             else PopulateBuildings();
@@ -390,6 +485,7 @@ namespace CityBuilder.UI
 
             var frame = NewImage(row, $"Level{level}", rowSprite, UiTheme.RowHeader, at, new Vector2(IconSize + 16f, IconSize + 16f));
             frame.type = Image.Type.Sliced;
+            cell.Frame = frame.rectTransform;
             var tap = frame.gameObject.AddComponent<Button>();
             tap.targetGraphic = frame;
             var captured = cell;
@@ -409,25 +505,25 @@ namespace CityBuilder.UI
             tick.raycastTarget = false;
             cell.Tick = tick.gameObject;
 
-            // the bar of the research under way, across the picture's foot
+            // the research's own timer, across the picture's foot
             var bar = NewImage(frame.transform, "Progress", null, new Color(0f, 0f, 0f, 0.6f), new Vector2(0f, -(IconSize * 0.5f) + 14f), new Vector2(IconSize, 28f));
             bar.raycastTarget = false;
-            var fill = NewImage(bar.transform, "Fill", null, UiTheme.Good, Vector2.zero, new Vector2(IconSize, 28f));
+            var fill = NewImage(bar.transform, "Fill", completedIcon, UiTheme.Good, Vector2.zero, new Vector2(IconSize, 28f));
             fill.raycastTarget = false;
             var fillRect = fill.rectTransform;
             fillRect.anchorMin = new Vector2(0f, 0f);
             fillRect.anchorMax = new Vector2(1f, 1f);
             fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
-            fill.type = Image.Type.Filled;
+            fill.type = Image.Type.Filled;    // a Filled image needs a sprite; its look is the colour
             fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.sprite = completedIcon;   // a Filled image needs a sprite; its look is the colour
             cell.BarFill = fill;
             cell.BarText = NewText(bar.transform, "Time", string.Empty, 18, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(IconSize, 28f), Color.white, UiTheme.Bold);
             cell.Bar = bar.gameObject;
 
             cell.Price = CreatePrice(row, new Vector2(at.x, at.y - 88f), topic);
 
-            var action = NewImage(row, $"Action{level}", buttonSprite, AvailableColor, new Vector2(at.x, at.y - 130f), new Vector2(190f, 50f));
+            cell.ActionHome = new Vector2(at.x, at.y - 130f);
+            var action = NewImage(row, $"Action{level}", buttonSprite, AvailableColor, cell.ActionHome, new Vector2(190f, 50f));
             action.type = Image.Type.Sliced;
             cell.ActionImage = action;
             cell.Action = action.gameObject.AddComponent<Button>();
@@ -454,41 +550,72 @@ namespace CityBuilder.UI
             layout.childForceExpandWidth = layout.childForceExpandHeight = false;
             if (topic == null) return price;
 
-            void Chip(Sprite icon, int amount)
-            {
-                var image = NewImage(price.transform, "Icon", icon, Color.white, Vector2.zero, new Vector2(30f, 30f));
-                image.preserveAspect = true;
-                image.raycastTarget = false;
-                var text = NewText(price.transform, "Amount", amount.ToString(), 20, TextAnchor.MiddleLeft, Vector2.zero, new Vector2(16f + 12f * amount.ToString().Length, 30f), UiTheme.Ink, UiTheme.Bold);
-                text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            }
-
-            if (topic.Coins > 0) Chip(iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, topic.Coins);
-            if (topic.Crystals > 0) Chip(crystalIcon, topic.Crystals);
+            if (topic.Coins > 0) Chip(price.transform, iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, topic.Coins);
+            if (topic.Crystals > 0) Chip(price.transform, crystalIcon, topic.Crystals);
             return price;
+        }
+
+        private static void Chip(Transform parent, Sprite icon, int amount)
+        {
+            var image = NewImage(parent, "Icon", icon, Color.white, Vector2.zero, new Vector2(30f, 30f));
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            var text = NewText(parent, "Amount", amount.ToString(), 20, TextAnchor.MiddleLeft, Vector2.zero, new Vector2(16f + 12f * amount.ToString().Length, 30f), UiTheme.Ink, UiTheme.Bold);
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         private void Act(Cell cell)
         {
             var research = ResearchManager.Instance;
             if (research == null || cell.Topic == null) return;
-            if (research.Current == cell.Topic)
+            if (research.IsRunning(cell.Topic))
             {
-                CancelResearch();
+                CancelResearch(cell.Topic);
                 return;
             }
             StartResearch(cell.Topic);
         }
 
-        /// <summary>A picture tapped: what that level gives, on the status line.</summary>
+        private Cell CellOf(ResearchTopic topic)
+        {
+            foreach (var cell in _cells)
+            {
+                if (cell.Topic == topic) return cell;
+            }
+            return null;
+        }
+
+        /// <summary>A picture tapped: what that level gives, in a bubble over it.</summary>
         private void ShowLevelInfo(Cell cell)
         {
+            var data = DataOf(cell.TargetId);
             var name = cell.IsUnit
                 ? (SoldierStats.TryTypeFromSheetId(cell.TargetId, out var type) ? SoldierStats.DisplayName(type) : cell.TargetId)
-                : (DataOf(cell.TargetId) != null ? DataOf(cell.TargetId).LocalizedName : cell.TargetId);
-            var gain = DescribeGain(cell.TargetId, cell.Level, cell.IsUnit, DataOf(cell.TargetId));
-            Say(Localization.Format("#research_level", name, cell.Level) + ": " + gain, UiTheme.Ink);
-            Refresh();
+                : (data != null ? data.LocalizedName : cell.TargetId);
+            ShowBubble(cell, Localization.Format("#research_level", name, cell.Level) + "\n" + DescribeGain(cell.TargetId, cell.Level, cell.IsUnit, data));
+        }
+
+        private void ShowBubble(Cell cell, string text)
+        {
+            if (bubble == null || bubbleText == null) return;
+            bubbleText.text = text;
+            bubble.gameObject.SetActive(true);
+            bubble.SetAsLastSibling();
+            // the rows may have been laid out this very frame (a tab switch): place by where they end up
+            Canvas.ForceUpdateCanvases();
+            // over the picture, kept inside the card
+            bubble.position = cell.Frame.position;
+            var local = bubble.anchoredPosition + new Vector2(0f, IconSize * 0.5f + bubble.sizeDelta.y * 0.5f + 12f);
+            var card = (RectTransform)bubble.parent;
+            var halfW = card.rect.width * 0.5f - bubble.sizeDelta.x * 0.5f - 10f;
+            local.x = Mathf.Clamp(local.x, -halfW, halfW);
+            bubble.anchoredPosition = local;
+            _bubbleUntil = Time.unscaledTime + BubbleSeconds;
+        }
+
+        private void HideBubble()
+        {
+            if (bubble != null) bubble.gameObject.SetActive(false);
         }
 
         private BuildingData DataOf(string id) => _dataById != null && id != null && _dataById.TryGetValue(id, out var data) ? data : null;
@@ -555,7 +682,6 @@ namespace CityBuilder.UI
             var research = ResearchManager.Instance;
 
             RefreshHeader();
-            RefreshStatus(research);
 
             SetTab(buildingsTab, !_unitsTab);
             SetTab(unitsTab, _unitsTab);
@@ -575,7 +701,7 @@ namespace CityBuilder.UI
         {
             var topic = cell.Topic;
             var done = topic == null || (research != null && research.IsCompleted(topic.Id));
-            var running = !done && research != null && research.Current == topic;
+            var running = !done && research != null && research.IsRunning(topic);
 
             cell.Tick.SetActive(done);
             cell.Bar.SetActive(running);
@@ -586,9 +712,10 @@ namespace CityBuilder.UI
 
             if (running)
             {
-                var total = research.CurrentTotalSeconds;
-                cell.BarFill.fillAmount = total > 0f ? 1f - research.RemainingSeconds / total : 0f;
-                cell.BarText.text = research.LabWorkers > 0 ? Clock(research.RemainingSeconds) : "—";
+                var total = ResearchManager.TotalSeconds(topic);
+                var left = research.RemainingSeconds(topic);
+                cell.BarFill.fillAmount = total > 0f ? 1f - left / total : 0f;
+                cell.BarText.text = research.IsPaused(topic) ? "—" : Clock(left);
                 cell.ActionLabel.text = Localization.Get("#research_cancel_short");
                 cell.ActionImage.color = CancelColor;
                 cell.Action.interactable = true;
@@ -613,7 +740,7 @@ namespace CityBuilder.UI
                 return;
             }
 
-            // the next step: green when it can start now; otherwise still tappable, so the status line can say why not
+            // the next step: green when it can start now; otherwise still tappable, so it can say why not
             var blocker = research != null ? research.DescribeBlocker(topic) : null;
             cell.ActionImage.color = blocker == null ? AvailableColor : LockedColor;
             cell.Action.interactable = true;
@@ -621,6 +748,8 @@ namespace CityBuilder.UI
 
         private void RefreshHeader()
         {
+            var resources = ResourceManager.Instance;
+            if (coinsLabel != null) coinsLabel.text = resources != null ? resources.GetAmount(ResourceType.Coins).ToString() : "0";
             if (crystalsLabel != null) crystalsLabel.text = Wallet.UpgradeCrystals.ToString();
             if (_lab == null || _lab.Data == null) return;
 
@@ -638,43 +767,8 @@ namespace CityBuilder.UI
             if (addScientistButton != null) addScientistButton.interactable = assigned < max && idle > 0;
             if (removeScientistButton != null) removeScientistButton.interactable = assigned > 0;
 
-            var upgradeCost = _lab.GetUpgradeCost();
-            if (upgradeControls != null) upgradeControls.SetActive(upgradeCost != null);
-            CostRowBuilder.Build(upgradeCostRow, upgradeCost, iconLibrary);
-
-            var repairCost = _lab.GetRepairCost();
-            if (repairControls != null) repairControls.SetActive(repairCost != null);
-            CostRowBuilder.Build(repairCostRow, repairCost, iconLibrary);
-        }
-
-        private void RefreshStatus(ResearchManager research)
-        {
-            if (statusLabel == null) return;
-            if (_message != null && Time.unscaledTime < _messageUntil)
-            {
-                statusLabel.text = _message;
-                statusLabel.color = _messageColor;
-                return;
-            }
-            _message = null;
-            statusLabel.color = UiTheme.Ink;
-
-            var current = research != null ? research.Current : null;
-            if (current == null)
-            {
-                statusLabel.text = Localization.Get("#research_idle");
-                return;
-            }
-            statusLabel.text = research.LabWorkers > 0
-                ? Localization.Format("#research_running", current.Title, Mathf.CeilToInt(research.RemainingSeconds))
-                : Localization.Format("#research_paused", current.Title);
-        }
-
-        private void Say(string message, Color color)
-        {
-            _message = message;
-            _messageColor = color;
-            _messageUntil = Time.unscaledTime + MessageSeconds;
+            if (upgradeControls != null) upgradeControls.SetActive(_lab.GetUpgradeCost() != null);
+            if (repairControls != null) repairControls.SetActive(_lab.GetRepairCost() != null);
         }
 
         private static string Clock(float seconds)

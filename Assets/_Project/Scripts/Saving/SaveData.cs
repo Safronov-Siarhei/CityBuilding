@@ -36,11 +36,13 @@ namespace CityBuilder.Saving
         /// </summary>
         public List<string> completedResearch = new List<string>();
 
+        /// <summary>Every research under way (one per scientist since 2026-10-29), oldest first.</summary>
+        public List<RunningResearchEntry> runningResearch = new List<RunningResearchEntry>();
+
+        // The one research under way in saves made before research ran in parallel -- read on load, never written.
         public string currentResearchId = string.Empty;
         public float currentResearchElapsedSeconds;
         public int currentResearchPaidCoins;
-        /// <summary>The upgrade crystals the running research took -- given back if it is cancelled after a load.</summary>
-        public int currentResearchPaidCrystals;
 
         /// <summary>
         /// The player's army, group by group. Empty in saves made before the army was saved at all,
@@ -173,6 +175,16 @@ namespace CityBuilder.Saving
         /// so there is nothing about a forest that a reload could unfairly restore.
         /// </summary>
         public List<RockEntry> rocks = new List<RockEntry>();
+    }
+
+    [Serializable]
+    public class RunningResearchEntry
+    {
+        public string topicId;
+        public float elapsedSeconds;
+        public int paidCoins;
+        /// <summary>The upgrade crystals it took -- given back if it is cancelled after a load.</summary>
+        public int paidCrystals;
     }
 
     [Serializable]

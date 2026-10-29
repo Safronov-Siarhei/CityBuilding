@@ -1,8 +1,8 @@
 # Research and the Laboratory
 
-> **Status (2026-10-28):** the WINDOW redone after the user's sketch (rows of 5 level pictures per
-> building, tabs Здания/Армия, «!» hint); levels 3-5 cost an UPGRADE CRYSTAL too; the Barracks (not the
-> Lab) opens soldier tiers. Shipped originally 2026-08-17. Prices still "a price list" (audit).
+> **Status (2026-10-29):** window v2 after the user's final mockup: rows of level pictures, tabs
+> Здания/Армия, coins + crystals top centre, PARALLEL research (one per scientist), bubbles, own
+> upgrade/repair windows; levels 3-5 cost an UPGRADE CRYSTAL; the Barracks opens soldier tiers.
 > **Read with:** [building-levels-and-decay](building-levels-and-decay.md), [army-and-soldiers](army-and-soldiers.md).
 
 ## Rules (the user's spec — do not re-ask)
@@ -10,10 +10,12 @@
   (2026-10-28): plaque «Лаборатория: уровень N» between tabs «Здания» / «Армия» (chosen tab x1.12 + lit);
   one ROW per building in build-menu order (category, then menu order) / per soldier tier: name plaque,
   level pictures 1..5 (1..3 soldiers) joined by a line, price (coins + crystal) and a button under each.
-  States: had = tick; under way = bar + time, button «Отмена»; waits on previous = grey «Прокачать»;
-  lab too small = grey «Лаб. ур. N»; next step = green (grey but tappable when busy/broke -> the status
-  line says why). Tap a picture = what that level gives (DescribeGain) on the status line. Foot:
-  scientists -/+, «Улучшить лабораторию», «Отремонтировать», «Закрыть», «!» (hint card).
+  Under the title ONLY the coins and upgrade crystals (no status line). States: had = tick; under way =
+  its own timer bar + «Отмена»; waits on previous = grey «Прокачать»; lab too small = grey «Лаб. ур. N»;
+  next step = green (grey but tappable when blocked). Tap a picture = a BUBBLE over it with what the
+  level gives (DescribeGain); a refused start shakes the button and flashes the coins/crystals counter
+  red, or says why in the bubble. Foot: scientists -/+, «Улучшить лабораторию» and «Отремонтировать»
+  (each opens its own small window: picture, what it gives / health, price, confirm), «Закрыть», «!».
 - A building with no research topic has no row: Flag and decor (DecTree/DecBush/DecGarden) had their
   research zeroed (user: not in the lab), so their levels are free; the Laboratory itself has none.
 - UPGRADE CRYSTALS (user, 2026-10-28): levels >= `research_crystals_from_level` (3) cost
@@ -22,10 +24,13 @@
   cancel / lost lab refund it in full; saved as `currentResearchPaidCrystals`; infinite-resources cheat
   makes them free; cheat GameCheats/Research «+10 кристаллов улучшения». Separate from the blue shop
   crystal `Wallet.Crystals`. Icon `UI/Icons/Res_UpgradeCrystal.png` (render_icons.py, violet shards on gold).
-- Cost in coins, taken at start; time in real seconds (≥ 60 s). One research at a time. Cancel
-  refunds 70 %.
-- Scientists: up to 10; each AFTER THE FIRST cuts 5 s; zero = research stands still (not lost);
-  removing one adds its 5 s back.
+- Cost in coins (+ crystal from lvl 3), taken at start; time = the topic's own real seconds (floor
+  `research_min_seconds`). Cancel refunds 70 % of the coins and the whole crystal.
+- PARALLEL (user, 2026-10-28, answer Б): each scientist runs ONE research -- as many at once as
+  scientists (`FreeSlots`; blocker `#research_blocked_slots`). Fewer scientists than researches = the
+  newest stand still (`IsPaused`), not lost. Scientists no longer speed research up (economy
+  `research_seconds_per_worker`/`research_free_workers` are now unused). User's principle: no wall on
+  upgrades -- the game is about growing the settlement.
 - Lab level gates: L1 opens buildings and soldier types; level N permits level N of anything. Lab's
   own levels are NOT gated.
 - Lose the Lab → nothing researched is lost; an interrupted research refunds in full and resets.
@@ -48,15 +53,9 @@ buildings/units: `research_coins(_N)`, `research_sec(_N)`, `starts_unlocked`; ec
 `research_crystals`, `research_crystals_from_level`. Pictures: `UI/Icons/<id>.png`, `<id>_L2..5.png`, `Portrait<SoldierType>.png`.
 
 ## Tests
-EditMode `ResearchTests` (crystal price, DescribeGain); PlayMode `ResearchGateTests` (`ALevelThree_TakesAnUpgradeCrystal_AndCancellingGivesItBack`, `Photograph_TheLaboratoryWindow` -> lab-window-buildings/army/hint).
+EditMode `ResearchTests` (crystal price, DescribeGain); PlayMode `ResearchGateTests` (`EachScientist_RunsOneResearch_SideBySide`, `ALevelThree_TakesAnUpgradeCrystal_AndCancellingGivesItBack`, `Photograph_TheLaboratoryWindow` -> lab-window-buildings/army/hint/upgrade/bubble).
+Save: `GameSaveData.runningResearch` (list); the old single `currentResearch*` fields are read for old saves only.
 
 ## Traps
 Keys `#research_start/_cost/_cancel/_lab_state/_empty_lab_level` are no longer shown (kept: LocalizationTests
 list them). Ships go into the Армия tab later (3 levels, see archipelago memory).
-
-## Next (agreed 2026-10-28, not built)
-Window v2 after the user's final mockup: coins + upgrade crystals only, top centre (no status line);
-PARALLEL research, one slot per scientist, a timer on each researched icon, «Отмена» under it; a tap on
-a picture = a bubble with what the level gives; a blocker flashes the counter red; «Улучшить
-лабораторию» / «Отремонтировать» open their own small windows (icon, price, what the level gives,
-confirm). User's principle: no wall on upgrades -- the game is about growing the settlement.

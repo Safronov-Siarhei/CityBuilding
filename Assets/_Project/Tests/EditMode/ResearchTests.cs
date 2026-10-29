@@ -19,38 +19,6 @@ namespace CityBuilder.Tests.EditMode
     /// </summary>
     public class ResearchTests
     {
-        private const float SecondsPerWorker = 5f;
-        private const int FreeWorkers = 1;
-        private const float MinSeconds = 5f;
-
-        private static float Duration(float baseSeconds, int workers)
-        {
-            return ResearchManager.DurationSeconds(baseSeconds, workers, SecondsPerWorker, FreeWorkers, MinSeconds);
-        }
-
-        [Test]
-        public void NoScientists_AndOne_TakeTheFullTime()
-        {
-            Assert.AreEqual(60f, Duration(60f, 0), "With nobody in the lab the research is paused, not faster -- the duration itself is the base.");
-            Assert.AreEqual(60f, Duration(60f, 1), "The first scientist is what makes the research run at all; the speed bonus starts with the second.");
-        }
-
-        [Test]
-        public void EachScientistAfterTheFirst_CutsFiveSeconds()
-        {
-            Assert.AreEqual(55f, Duration(60f, 2));
-            Assert.AreEqual(50f, Duration(60f, 3));
-            Assert.AreEqual(15f, Duration(60f, 10), "Ten scientists are nine paid ones: 60 - 9*5.");
-        }
-
-        /// <summary>The floor matters because the sheet is hand-edited: a 30-second research with ten scientists would otherwise finish before it started.</summary>
-        [Test]
-        public void TheFloorStopsAShortResearchFromGoingNegative()
-        {
-            Assert.AreEqual(MinSeconds, Duration(30f, 10));
-            Assert.AreEqual(MinSeconds, Duration(1f, 10));
-        }
-
         [Test]
         public void CancellingPaysBackTheStatedShare_RoundedDown()
         {

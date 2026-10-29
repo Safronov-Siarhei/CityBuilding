@@ -145,16 +145,12 @@ namespace CityBuilder.Tests.PlayMode
 
             // With nobody in the lab it stands still rather than being lost.
             workplace.SetAssignedWorkers(0);
-            var remainingWhenEmptied = research.RemainingSeconds;
+            var remainingWhenEmptied = research.RemainingSeconds(topic);
             Time.timeScale = TestTimeScale;
             yield return new WaitForSeconds(0.5f);
-            Assert.AreEqual(remainingWhenEmptied, research.RemainingSeconds, 0.01f,
+            Assert.AreEqual(remainingWhenEmptied, research.RemainingSeconds(topic), 0.01f,
                 "The research kept running with no scientists in the Laboratory.");
-
-            // And a full staff shortens what is left, rather than only speeding up from here.
             workplace.SetAssignedWorkers(workplace.MaxWorkers);
-            Assert.Less(research.RemainingSeconds, remainingWhenEmptied,
-                "Adding scientists did not take seconds off the research that was already under way.");
 
             yield return WaitForResearchToFinish(research);
             Time.timeScale = 1f;
@@ -176,11 +172,11 @@ namespace CityBuilder.Tests.PlayMode
             var before = resources.GetAmount(ResourceType.Coins);
             Assert.IsTrue(research.TryStart(topic));
 
-            var refund = research.CurrentCancelRefund;
+            var refund = research.CancelRefund(topic);
             Assert.Greater(refund, 0);
             Assert.Less(refund, topic.Coins, "Cancelling pays back a share, not the whole price -- otherwise starting a research costs nothing.");
 
-            research.CancelCurrent();
+            research.Cancel(topic);
 
             Assert.IsNull(research.Current);
             Assert.AreEqual(before - topic.Coins + refund, resources.GetAmount(ResourceType.Coins));
@@ -304,13 +300,52 @@ namespace CityBuilder.Tests.PlayMode
                 Wallet.UpgradeCrystals = 1;
                 Assert.IsTrue(research.TryStart(topic), research.DescribeBlocker(topic));
                 Assert.AreEqual(0, Wallet.UpgradeCrystals, "The level 3 took no crystal.");
-                research.CancelCurrent();
+                research.Cancel(topic);
                 Assert.AreEqual(1, Wallet.UpgradeCrystals, "Cancelling did not give the crystal back.");
             }
             finally
             {
                 Wallet.UpgradeCrystals = saved;
             }
+        }
+
+        /// <summary>
+        /// One scientist, one research (the user, 2026-10-28, answer Б): with two scientists two
+        /// researches run side by side and a third waits for a scientist; take one scientist away and
+        /// the newer research stands still where it is.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EachScientist_RunsOneResearch_SideBySide()
+        {
+            var research = Research();
+            PlaceStaffedLab(out var workplace);
+            workplace.SetAssignedWorkers(2);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, StartingCoins * 10);
+
+            var first = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Smelter"));
+            var second = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Treasury"));
+            var third = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Barn"));
+            Assert.IsTrue(research.TryStart(first), research.DescribeBlocker(first));
+            Assert.IsTrue(research.TryStart(second), research.DescribeBlocker(second));
+            Assert.IsFalse(research.TryStart(third), "A third research started with two scientists.");
+            Assert.AreEqual(Localization.Get("#research_blocked_slots"), research.DescribeBlocker(third));
+
+            Time.timeScale = TestTimeScale;
+            var firstLeft = research.RemainingSeconds(first);
+            var secondLeft = research.RemainingSeconds(second);
+            yield return new WaitForSeconds(0.3f);
+            Assert.Less(research.RemainingSeconds(first), firstLeft, "The first research stood still.");
+            Assert.Less(research.RemainingSeconds(second), secondLeft, "The second research did not run beside the first.");
+
+            workplace.SetAssignedWorkers(1);
+            secondLeft = research.RemainingSeconds(second);
+            yield return new WaitForSeconds(0.3f);
+            Time.timeScale = 1f;
+            Assert.IsTrue(research.IsPaused(second), "With one scientist the newer research still runs.");
+            Assert.AreEqual(secondLeft, research.RemainingSeconds(second), 0.01f, "The newer research ran with no scientist of its own.");
+
+            research.Cancel(first);
+            research.Cancel(second);
         }
 
         /// <summary>The window after the user's sketch, both tabs, with a research under way -- for the user.</summary>
@@ -323,7 +358,9 @@ namespace CityBuilder.Tests.PlayMode
             research.CompleteInstantly(ResearchTopic.UnlockBuildingId("Smelter"));
             research.CompleteInstantly(ResearchTopic.BuildingLevelId("Hovel", 2));
             ResourceManager.Instance.SetAmount(ResourceType.Coins, 500);
+
             research.TryStart(ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Castle", 2)));
+            research.TryStart(ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Cottage")));
 
             var panel = Object.FindFirstObjectByType<ResearchPanelController>(FindObjectsInactive.Include);
             panel.Show(lab);
@@ -334,7 +371,17 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.ShootWithUi("lab-window-army", lab.transform.position);
             panel.ToggleHint();
             yield return PlaytestCapture.ShootWithUi("lab-window-hint", lab.transform.position);
+            panel.ToggleHint();
+            lab.TryDamage(lab.MaxHealth / 3);
+            panel.OpenUpgradeDialog();
+            Assert.IsTrue(panel.IsDialogOpen, "«Улучшить лабораторию» opened no window.");
+            yield return PlaytestCapture.ShootWithUi("lab-window-upgrade", lab.transform.position);
+            panel.CloseDialog();
+            panel.SelectBuildingsTab();
+            panel.StartResearch(ResearchCatalog.ById(ResearchTopic.BuildingLevelId("Hovel", 3)));
+            yield return PlaytestCapture.ShootWithUi("lab-window-bubble", lab.transform.position);
             panel.Close();
+            foreach (var run in new List<ResearchManager.Running>(research.UnderWay)) research.Cancel(run.Topic);
         }
 
         private static ResearchManager Research()
@@ -373,7 +420,7 @@ namespace CityBuilder.Tests.PlayMode
             // Bounded rather than open-ended: a research that never completes must fail the test
             // rather than hang the whole run.
             var deadline = Time.realtimeSinceStartup + 20f;
-            while (research.Current != null && Time.realtimeSinceStartup < deadline)
+            while (research.UnderWay.Count > 0 && Time.realtimeSinceStartup < deadline)
             {
                 yield return null;
             }
