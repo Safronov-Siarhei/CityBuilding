@@ -25,7 +25,8 @@
   the water by the Shipyard. No crew. Count unlimited, but a per-type `max_count` column (0 = no
   limit). Repair only for resources. Control like the army. Boarding: select a unit, tap the ship.
   Landing ONLY at beaches (button). A sunk ship kills all aboard; the hero respawns at the Town Hall.
-  The scout temporarily reveals some shore. Ship levels are raised in the Laboratory.
+  The scout reveals the shore it passes FOREVER (the user, 2026-10-29: «так проще» -- no
+  temporary reveal, no return to a sketch). Ship levels are raised in the Laboratory.
 - Orcs get ONE shipyard at the main base; destroyed, it is rebuilt after a sheet-set time.
 
 ## Boarding and landing (built 2026-10-29)
@@ -43,8 +44,8 @@
   «aboard/seats»); a tap lands everyone on the beach in their group's rings and the groups hold
   there; dimmed with nobody aboard or no beach (`#ship_empty`, `#ship_no_beach`).
 - Saved: `SoldierEntry.aboardShip` / `HeroEntry.aboardShip` (1-based ship index, 0 = land).
-- The scout's «temporary shore reveal» is for now just its fog walker (radius = `engage_radius`
-  14 vs the transport's 8); the «land falls back to a sketch» half waits for the 3-state fog.
+- The scout's reveal is its fog walker (radius = `engage_radius` 14 vs the transport's 8); what it
+  opens stays open, like everything the fog opens -- final rule, nothing waits on a 3-state fog.
 
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
@@ -91,5 +92,6 @@
 - Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
 - A sunk ship must kill everyone aboard and send a hero to respawn at the Town Hall (no sinking yet).
 - Phase 4: war ships, battleship, sea combat, orc shipyard + landings. Phase 5: lighthouse (coins),
-  fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones. Mirrored islands.
+  fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones (no longer needed by
+  the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.
