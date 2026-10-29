@@ -146,6 +146,11 @@ namespace CityBuilder.Core
         /// </summary>
         public int barracksLevel = 1;
 
+        /// <summary>A ship's row (ship_*): how many it carries, the Shipyard level that builds it, how many may sail (0 = no limit).</summary>
+        public int capacity;
+        public int shipyardLevel = 1;
+        public int maxCount;
+
         /// <summary>
         /// Smelted metal a recruit of this type has to be equipped with, on top of the coins.
         /// Militia is zero on both -- an armed peasant needs no forge, which is what makes it the

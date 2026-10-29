@@ -20,7 +20,8 @@ namespace CityBuilder.UI
     /// </summary>
     public class FocusHireBar : MonoBehaviour
     {
-        public enum Kind { Barracks = 0, Castle = 1 }
+        // the Shipyard (the user, 2026-10-28): a ship per button, the shipyard's level opens them
+        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2 }
 
         private const float RefreshSeconds = 0.25f;
         private static readonly Color Dimmed = new Color(0.45f, 0.45f, 0.45f, 1f);
@@ -49,6 +50,7 @@ namespace CityBuilder.UI
                 var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.DetailsShown ? BuildingFocus.Instance.Current : null;
                 if (focus == null || focus.Data == null) return null;
                 if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
+                if (kind == Kind.Shipyard) return focus.Data.buildingName == Ships.ShipManager.ShipyardId && focus.IsOperational ? focus : null;
                 return focus.Data.buildingName == BuildingIds.Barracks && focus.IsOperational ? focus : null;
             }
         }
@@ -57,6 +59,7 @@ namespace CityBuilder.UI
         public void Tap(int index)
         {
             if (kind == Kind.Castle) Buy(index);
+            else if (kind == Kind.Shipyard) BuildShip(index);
             else Hire(index);
         }
 
@@ -74,6 +77,42 @@ namespace CityBuilder.UI
             }
             _refreshIn = 0f;
             return hired;
+        }
+
+        /// <summary>The ship of this button from the Shipyard in focus; says why not when it cannot.</summary>
+        public Ships.ShipUnit BuildShip(int index)
+        {
+            var shipyard = Target;
+            var ships = Ships.ShipManager.Instance;
+            if (shipyard == null || ships == null || index < 0 || index >= Ships.ShipStats.All.Length) return null;
+            var shipKind = Ships.ShipStats.All[index];
+            var blocker = ships.DescribeBuildBlocker(shipKind, shipyard);
+            var built = blocker == null ? ships.TryBuild(shipKind, shipyard) : null;
+            if (built == null && blocker != null)
+            {
+                EventLogManager.Instance?.Post(GameEvent.ForSettlement(blocker, EventSeverity.Warning, EventGlyph.Alert, null));
+            }
+            _refreshIn = 0f;
+            return built;
+        }
+
+        /// <summary>A face per ship; one the Shipyard is too low for dimmed under «Верфь ур. N».</summary>
+        private void ShowShips(BuildingInstance shipyard)
+        {
+            var coin = iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null;
+            for (var i = 0; i < buttons.Length && i < Ships.ShipStats.All.Length; i++)
+            {
+                var shipKind = Ships.ShipStats.All[i];
+                buttons[i].SetActive(true);
+                var need = Ships.ShipStats.ShipyardLevel(shipKind);
+                var tooLow = shipyard.Level < need;
+                if (i < locks.Length && locks[i] != null) locks[i].SetActive(tooLow);
+                if (tooLow && i < lockTexts.Length && lockTexts[i] != null) lockTexts[i].text = Localization.Format("#ship_card_shipyard", need);
+                prices[i].SetActive(!tooLow);
+                priceTexts[i].text = Ships.ShipStats.PriceCoins(shipKind).ToString();
+                if (priceIcons[i] != null) priceIcons[i].sprite = coin;
+                faces[i].color = !tooLow && Ships.ShipManager.Instance != null && Ships.ShipManager.Instance.DescribeBuildBlocker(shipKind, shipyard) == null ? Color.white : Dimmed;
+            }
         }
 
         /// <summary>The hero of this button: bought if the castle and the purse allow; why not otherwise.</summary>
@@ -118,6 +157,7 @@ namespace CityBuilder.UI
             if (_refreshIn > 0f) return;
             _refreshIn = RefreshSeconds;
             if (kind == Kind.Castle) ShowHeroes(target);
+            else if (kind == Kind.Shipyard) ShowShips(target);
             else ShowSoldiers(target);
         }
 

@@ -39,6 +39,9 @@ namespace CityBuilder.Saving
         /// <summary>Every research under way (one per scientist since 2026-10-29), oldest first.</summary>
         public List<RunningResearchEntry> runningResearch = new List<RunningResearchEntry>();
 
+        /// <summary>The archipelago's ships; empty in a save made before ships existed.</summary>
+        public List<ShipEntry> ships = new List<ShipEntry>();
+
         // The one research under way in saves made before research ran in parallel -- read on load, never written.
         public string currentResearchId = string.Empty;
         public float currentResearchElapsedSeconds;
@@ -175,6 +178,15 @@ namespace CityBuilder.Saving
         /// so there is nothing about a forest that a reload could unfairly restore.
         /// </summary>
         public List<RockEntry> rocks = new List<RockEntry>();
+    }
+
+    /// <summary>A ship afloat on the archipelago: what it is, where, which way, how whole.</summary>
+    [Serializable]
+    public class ShipEntry
+    {
+        public int kind;
+        public float x, z, yaw;
+        public int health;
     }
 
     [Serializable]

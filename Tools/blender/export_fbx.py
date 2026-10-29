@@ -34,6 +34,7 @@ HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
 SOLDIERS = os.path.join(project, "Assets", "_Project", "Models", "Soldiers")
 WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
 CITIZENS = os.path.join(project, "Assets", "_Project", "Models", "Citizens")
+SHIPS = os.path.join(project, "Assets", "_Project", "Models", "Ships")
 PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 
 
@@ -62,6 +63,9 @@ def target(o):
     if o.name.startswith("Wild"):
         os.makedirs(WILD, exist_ok=True)
         return os.path.join(WILD, o.name + ".fbx")
+    if o.name.startswith("Ship") and not o.name.startswith("Shipyard"):
+        os.makedirs(SHIPS, exist_ok=True)
+        return os.path.join(SHIPS, o.name + ".fbx")
     if o.name.startswith("Villager"):
         os.makedirs(CITIZENS, exist_ok=True)
         return os.path.join(CITIZENS, o.name + ".fbx")

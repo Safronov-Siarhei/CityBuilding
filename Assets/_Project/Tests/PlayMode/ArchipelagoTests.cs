@@ -140,6 +140,60 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// The Shipyard (the user, 2026-10-28): its level opens the ships -- a level 1 builds the
+        /// scout, not the transport; a ship built appears on the water beside it and sails where
+        /// it is sent.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail()
+        {
+            var applier = MeshMapApplier.Instance;
+            var grid = GridManager.Instance;
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var ships = CityBuilder.Ships.ShipManager.Instance;
+            Assert.IsNotNull(ships, "No ship manager.");
+            Assert.IsTrue(ships.HasSea, "The sea has no NavMesh for ships.");
+            CityBuilder.Resources.ResourceManager.Instance.SetInfiniteResources(true);
+
+            // a Shipyard on the water by the start island: the nearest cell where its 3 x 4 fits
+            var data = PlaytestWorld.Building(CityBuilder.Ships.ShipManager.ShipyardId);
+            Assert.IsNotNull(data, "No Shipyard in the catalogue.");
+            Vector2Int? spot = null;
+            for (var r = 0; r < 120 && spot == null; r += 2)
+            for (var dz = -r; dz <= r && spot == null; dz += 2)
+            for (var dx = -r; dx <= r && spot == null; dx += 2)
+            {
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                var fits = true;
+                for (var x = 0; x < 3 && fits; x++)
+                for (var z = 0; z < 4 && fits; z++) fits = applier.IsWaterPlacementZone(c + new Vector2Int(x, z));
+                if (fits) spot = c;
+            }
+            Assert.IsTrue(spot.HasValue, "No shore water for a Shipyard by the start island.");
+            var shipyard = PlaytestWorld.Place(data, spot.Value);
+
+            Assert.IsNull(ships.DescribeBuildBlocker(CityBuilder.Ships.ShipKind.Scout, shipyard), "A level 1 Shipyard refuses the scout.");
+            Assert.IsNotNull(ships.DescribeBuildBlocker(CityBuilder.Ships.ShipKind.Transport, shipyard), "A level 1 Shipyard builds the transport.");
+            var ship = ships.TryBuild(CityBuilder.Ships.ShipKind.Scout, shipyard);
+            Assert.IsNotNull(ship, "The scout was not built.");
+            Assert.IsTrue(applier.IsWaterCell(grid.WorldToCell(ship.transform.position)), "The scout was put on land.");
+
+            // somewhere on open water round it: the first point of a widening ring the scout can reach
+            var from = ship.transform.position;
+            var sailing = false;
+            for (var r = 20f; r <= 120f && !sailing; r += 10f)
+            for (var k = 0; k < 8 && !sailing; k++)
+            {
+                var a = k * Mathf.PI / 4f;
+                sailing = ship.SailTo(from + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r);
+            }
+            Assert.IsTrue(sailing, "The scout has no course anywhere on the sea.");
+            yield return new WaitForSeconds(2f);
+            Assert.Greater(Vector3.Distance(ship.transform.position, from), 2f, "The scout did not sail.");
+            CityBuilder.Resources.ResourceManager.Instance.SetInfiniteResources(false);
+        }
+
         private static bool DeepRelief(ArchipelagoMap world, int i)
         {
             var n = world.Size;

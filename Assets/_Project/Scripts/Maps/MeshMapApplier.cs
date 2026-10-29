@@ -493,7 +493,8 @@ namespace CityBuilder.Maps
                 if (!world.Land[i])
                 {
                     _waterCells.Add(cell);
-                    if (fromLibrary ? world.Shore[i] : LandWithin(world, x, z, dockReach)) _waterPlacementZoneCells.Add(cell);
+                    // six metres out from any shore: room for the Shipyard's slipway (3 x 4)
+                    if (LandWithin(world, x, z, fromLibrary ? 6 : dockReach)) _waterPlacementZoneCells.Add(cell);
                     continue;
                 }
                 if (world.IsRelief(i))
@@ -516,6 +517,7 @@ namespace CityBuilder.Maps
 
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
+            Ships.ShipManager.Instance?.BuildSea(world, origin);
         }
 
         /// <summary>

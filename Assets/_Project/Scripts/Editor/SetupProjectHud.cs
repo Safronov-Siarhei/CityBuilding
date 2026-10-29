@@ -176,6 +176,9 @@ namespace CityBuilder.EditorTools
                 new[] { "PortraitMilitia", "PortraitSpearman", "PortraitArcher", "PortraitManAtArms" }, iconLibrary);
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
+            // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers
+            BuildHireBar(row.transform, FocusHireBar.Kind.Shipyard, new[] { SoldierType.Militia, SoldierType.Spearman },
+                new[] { "PortraitShipScout", "PortraitShipTransport" }, iconLibrary, new[] { "ShipScout", "ShipTransport" });
 
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
@@ -207,7 +210,7 @@ namespace CityBuilder.EditorTools
         /// hero, its price on a plaque at its foot, a tick for a hero the run has, «Замок ур. N» for
         /// one the castle is too low for.
         /// </summary>
-        private static void BuildHireBar(Transform row, FocusHireBar.Kind kind, SoldierType[] types, string[] portraits, ResourceIconLibrary iconLibrary)
+        private static void BuildHireBar(Transform row, FocusHireBar.Kind kind, SoldierType[] types, string[] portraits, ResourceIconLibrary iconLibrary, string[] names = null)
         {
             var go = new GameObject($"HireBar{kind}");
             go.transform.SetParent(row.parent, false);
@@ -224,7 +227,7 @@ namespace CityBuilder.EditorTools
             const float size = 128f;
             for (var i = 0; i < n; i++)
             {
-                var button = CreateGlyphButton(row, $"Hire{types[i]}", "round", HudInk.OnRound, null, null, size);
+                var button = CreateGlyphButton(row, names != null ? $"Build{names[i]}" : $"Hire{types[i]}", "round", HudInk.OnRound, null, null, size);
                 var icon = button.transform.Find("Icon");
                 if (icon != null) Object.DestroyImmediate(icon.gameObject);
                 UnityEventTools.AddIntPersistentListener(button.onClick, bar.Tap, i);

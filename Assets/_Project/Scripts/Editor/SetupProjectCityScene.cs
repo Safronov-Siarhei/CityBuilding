@@ -292,6 +292,13 @@ namespace CityBuilder.EditorTools
                     motif: shell.Item7));
             }
 
+            // the archipelago's Shipyard (Tools/blender/ships.py): out over the water by a shore
+            var shipyardData = CreateBuildingData(
+                Ships.ShipManager.ShipyardId, new Vector2Int(3, 4), height: 2.4f,
+                wallColor: new Color(0.5f, 0.36f, 0.22f), roofColor: new Color(0.3f, 0.2f, 0.12f),
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
+                isWaterCategory: true);
+
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, manorData, fishermanHutData, farmData,
@@ -300,7 +307,7 @@ namespace CityBuilder.EditorTools
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
                 fortifiedTowerData, fortifiedGateData,
-                bridgeData, waterMillData, dockData,
+                bridgeData, waterMillData, dockData, shipyardData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData
             };
             hotbarBuildingData.AddRange(shellBuildings);
@@ -575,6 +582,15 @@ namespace CityBuilder.EditorTools
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
             // game; MapTerrainGenerator's existing "not found in catalog" no-op then harmlessly
             // skips it, and vice versa for a legacy PNG map id.
+            // the archipelago's ships (Tools/blender/ships.py), in ShipKind order
+            var shipManager = managers.AddComponent<Ships.ShipManager>();
+            var shipSO = new SerializedObject(shipManager);
+            WriteArray(shipSO.FindProperty("models"), new Object[]
+            {
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipScout.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipTransport.fbx"),
+            });
+            shipSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();
             var meshMapApplierSO = new SerializedObject(meshMapApplier);
             meshMapApplierSO.FindProperty("saveController").objectReferenceValue = saveController;

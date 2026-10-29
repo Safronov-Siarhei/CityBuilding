@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.UI;
 using UnityEngine;
@@ -69,6 +69,10 @@ namespace CityBuilder.InputControl
                 return;
             }
 
+            // 2. A selected ship: a tap on the sea sends it; on the land it is put down and the tap goes on.
+            var tapCamera = citizenSelector != null ? citizenSelector.TapCamera : Camera.main;
+            if (Ships.ShipInput.HasSelection && Ships.ShipInput.HandleTap(screenPosition, tapCamera)) return;
+
             // 2. A selected army group turns a tap into an order.
             if (armyOrderInput != null && ArmyManager.Instance != null && ArmyManager.Instance.SelectedGroup != null)
             {
@@ -85,6 +89,7 @@ namespace CityBuilder.InputControl
             //    boulder (how much is left in it), or nothing. A building behind a tree's wide
             //    click box still wins -- the card is what the player was reaching for.
             if (citizenSelector != null && HeroPortraitController.TrySelectAt(screenPosition, citizenSelector.TapCamera)) return;
+            if (Ships.ShipInput.TrySelectAt(screenPosition, tapCamera)) return;
             if (citizenSelector != null && citizenSelector.TrySelectCitizen(screenPosition)) return;
             if (citizenSelector != null && (buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)))
             {
@@ -114,6 +119,7 @@ namespace CityBuilder.InputControl
             }
 
             if (citizenSelector != null && citizenSelector.HasSelection) citizenSelector.Deselect();
+            if (Ships.ShipInput.HasSelection) Ships.ShipInput.Select(null);
         }
     }
 }

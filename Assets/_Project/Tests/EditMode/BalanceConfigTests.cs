@@ -58,6 +58,8 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var unit in config.Units)
             {
+                // the ships fight with cannons, in the next step of the archipelago -- none yet
+                if (unit.id.StartsWith("ship_")) continue;
                 // Every level, not just the first: a blank _2/_3 column inherits, so a level that
                 // came out at zero means a cell was filled in wrongly rather than left empty.
                 for (var level = 1; level <= UnitBalance.MaxLevel; level++)

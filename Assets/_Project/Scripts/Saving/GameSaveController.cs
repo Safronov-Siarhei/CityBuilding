@@ -197,6 +197,16 @@ namespace CityBuilder.Saving
                 researchManager.RestoreFromSave(data.completedResearch, underWay);
             }
 
+            var shipManager = Ships.ShipManager.Instance;
+            if (shipManager != null && data.ships != null)
+            {
+                shipManager.ClearForLoad();
+                foreach (var ship in data.ships)
+                {
+                    shipManager.Spawn((Ships.ShipKind)ship.kind, new Vector3(ship.x, 0f, ship.z), Quaternion.Euler(0f, ship.yaw, 0f), ship.health);
+                }
+            }
+
             foreach (var entry in data.buildings)
             {
                 if (!_catalog.TryGetValue(entry.buildingName, out var buildingData) || buildingData.prefab == null) continue;
@@ -568,6 +578,11 @@ namespace CityBuilder.Saving
             if (researchManager != null)
             {
                 data.completedResearch.AddRange(researchManager.CompletedTopicIds);
+                foreach (var ship in Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.Ships : new List<Ships.ShipUnit>())
+                {
+                    if (ship == null) continue;
+                    data.ships.Add(new ShipEntry { kind = (int)ship.Kind, x = ship.transform.position.x, z = ship.transform.position.z, yaw = ship.transform.eulerAngles.y, health = ship.Health });
+                }
                 foreach (var run in researchManager.UnderWayForSave)
                 {
                     data.runningResearch.Add(new RunningResearchEntry { topicId = run.Topic.Id, elapsedSeconds = run.Elapsed, paidCoins = run.PaidCoins, paidCrystals = run.PaidCrystals });
