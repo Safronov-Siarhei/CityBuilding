@@ -501,30 +501,6 @@ MonoBehaviour:
     values:
     - "\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u043D\u0435\u0442"
     - Not enough coins
-  - key: '#unit_ship_scout'
-    values:
-    - "\u0420\u0430\u0437\u0432\u0435\u0434\u0447\u0438\u043A"
-    - Scout ship
-  - key: '#unit_ship_transport'
-    values:
-    - "\u0422\u0440\u0430\u043D\u0441\u043F\u043E\u0440\u0442"
-    - Transport ship
-  - key: '#unit_ship_war'
-    values:
-    - "\u0411\u043E\u0435\u0432\u043E\u0439 \u043A\u043E\u0440\u0430\u0431\u043B\u044C"
-    - Warship
-  - key: '#unit_ship_battleship'
-    values:
-    - "\u041B\u0438\u043D\u043A\u043E\u0440"
-    - Battleship
-  - key: '#unit_ship_orc_transport'
-    values:
-    - "\u041E\u0440\u043E\u0447\u0438\u0439 \u0431\u0430\u0440\u043A\u0430\u0441"
-    - Orc barge
-  - key: '#unit_ship_orc_war'
-    values:
-    - "\u041E\u0440\u043E\u0447\u0438\u0439 \u0434\u0440\u0430\u043A\u043A\u0430\u0440"
-    - Orc longship
   - key: '#unit_militia'
     values:
     - "\u041E\u043F\u043E\u043B\u0447\u0435\u043D\u0438\u0435"
@@ -906,10 +882,6 @@ MonoBehaviour:
     values:
     - "\u041F\u0440\u0438\u0441\u0442\u0430\u043D\u044C"
     - Dock
-  - key: '#building_shipyard'
-    values:
-    - "\u0412\u0435\u0440\u0444\u044C"
-    - Shipyard
   - key: '#building_townsquare'
     values:
     - "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C"
@@ -1628,92 +1600,6 @@ MonoBehaviour:
     values:
     - "\u041A\u043E\u0434 {0} \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D"
     - Code {0} copied
-  - key: '#ship_card_shipyard'
-    values:
-    - "\u0412\u0435\u0440\u0444\u044C \u0443\u0440. {0}"
-    - Shipyard lvl {0}
-  - key: '#ship_need_shipyard'
-    values:
-    - "{0}: \u043D\u0443\u0436\u043D\u0430 \u0432\u0435\u0440\u0444\u044C {1} \u0443\u0440\u043E\u0432\u043D\u044F"
-    - '{0}: needs a level {1} shipyard'
-  - key: '#ship_limit'
-    values:
-    - "{0}: \u0431\u043E\u043B\u044C\u0448\u0435 {1} \u043D\u0435 \u043F\u043E\u0441\u0442\u0440\u043E\u0438\u0442\u044C"
-    - '{0}: no more than {1}'
-  - key: '#ship_no_coins'
-    values:
-    - "{0}: \u043D\u0443\u0436\u043D\u043E {1} \u043C\u043E\u043D\u0435\u0442"
-    - '{0}: needs {1} coins'
-  - key: '#ship_no_sea'
-    values:
-    - "\u041A\u043E\u0440\u0430\u0431\u043B\u044F\u043C \u0437\u0434\u0435\u0441\u044C
-      \u043D\u0435\u0433\u0434\u0435 \u043F\u043B\u0430\u0432\u0430\u0442\u044C"
-    - There is no sea for ships here
-  - key: '#ship_built'
-    values:
-    - "{0} \u0441\u043F\u0443\u0449\u0435\u043D \u043D\u0430 \u0432\u043E\u0434\u0443"
-    - '{0} launched'
-  - key: '#ship_cannot_carry'
-    values:
-    - "{0} \u043D\u0435 \u0431\u0435\u0440\u0451\u0442 \u043F\u0430\u0441\u0441\u0430\u0436\u0438\u0440\u043E\u0432"
-    - '{0} carries nobody'
-  - key: '#ship_full'
-    values:
-    - "{0}: \u043C\u0435\u0441\u0442 \u043D\u0430 \u0431\u043E\u0440\u0442\u0443
-      \u043D\u0435\u0442"
-    - '{0}: no room aboard'
-  - key: '#ship_no_beach'
-    values:
-    - "\u0420\u044F\u0434\u043E\u043C \u043D\u0435\u0442 \u043F\u043B\u044F\u0436\u0430:
-      \u043F\u043E\u0434\u0432\u0435\u0434\u0438\u0442\u0435 \u043A\u043E\u0440\u0430\u0431\u043B\u044C
-      \u043A \u043F\u0435\u0441\u0447\u0430\u043D\u043E\u043C\u0443 \u0431\u0435\u0440\u0435\u0433\u0443"
-    - 'No beach here: bring the ship to a sandy shore'
-  - key: '#ship_empty'
-    values:
-    - "\u041D\u0430 \u0431\u043E\u0440\u0442\u0443 \u043D\u0438\u043A\u043E\u0433\u043E"
-    - Nobody aboard
-  - key: '#ship_sunk'
-    values:
-    - "{0} \u043F\u043E\u0442\u043E\u043F\u043B\u0435\u043D"
-    - '{0} sunk'
-  - key: '#ship_sunk_with'
-    values:
-    - "{0} \u043F\u043E\u0442\u043E\u043F\u043B\u0435\u043D, \u0443\u0442\u043E\u043D\u0443\u043B\u0438:
-      {1}"
-    - '{0} sunk, drowned: {1}'
-  - key: '#ship_whole'
-    values:
-    - "\u041A\u043E\u0440\u0430\u0431\u043B\u044C \u0446\u0435\u043B"
-    - The ship is whole
-  - key: '#ship_repair_far'
-    values:
-    - "\u0427\u0438\u043D\u0438\u0442\u044C \u043C\u043E\u0436\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E
-      \u0443 \u0432\u0435\u0440\u0444\u0438"
-    - Ships are repaired only at a shipyard
-  - key: '#ship_repair_cost'
-    values:
-    - "\u0414\u043B\u044F \u0440\u0435\u043C\u043E\u043D\u0442\u0430 \u043D\u0443\u0436\u043D\u043E
-      {0} \u0434\u0435\u0440\u0435\u0432\u0430"
-    - The repair needs {0} wood
-  - key: '#log_orc_fleet'
-    values:
-    - "\u0424\u043B\u043E\u0442 \u043E\u0440\u043A\u043E\u0432 \u0432\u044B\u0448\u0435\u043B
-      \u0432 \u043C\u043E\u0440\u0435, \u0434\u0435\u0441\u0430\u043D\u0442: {0}"
-    - An orc fleet has set sail, {0} aboard
-  - key: '#log_orc_landing'
-    values:
-    - "\u041E\u0440\u043A\u0438 \u0432\u044B\u0441\u0430\u0434\u0438\u043B\u0438\u0441\u044C
-      \u043D\u0430 \u0431\u0435\u0440\u0435\u0433: {0}"
-    - 'Orcs have landed: {0}'
-  - key: '#log_orc_shipyard_destroyed'
-    values:
-    - "\u0412\u0435\u0440\u0444\u044C \u043E\u0440\u043A\u043E\u0432 \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u0430"
-    - The orc shipyard is destroyed
-  - key: '#log_orc_shipyard_rebuilt'
-    values:
-    - "\u041E\u0440\u043A\u0438 \u043E\u0442\u0441\u0442\u0440\u043E\u0438\u043B\u0438
-      \u0432\u0435\u0440\u0444\u044C"
-    - The orcs have rebuilt their shipyard
   - key: '#map_name_map5'
     values:
     - "\u041A\u0430\u043B\u044C\u0434\u0435\u0440\u0430"
@@ -2151,3 +2037,117 @@ MonoBehaviour:
     values:
     - "\u0417\u0430\u043F\u0430\u0441\u044B"
     - Stores
+  - key: '#unit_ship_scout'
+    values:
+    - "\u0420\u0430\u0437\u0432\u0435\u0434\u0447\u0438\u043A"
+    - Scout ship
+  - key: '#unit_ship_transport'
+    values:
+    - "\u0422\u0440\u0430\u043D\u0441\u043F\u043E\u0440\u0442"
+    - Transport ship
+  - key: '#building_shipyard'
+    values:
+    - "\u0412\u0435\u0440\u0444\u044C"
+    - Shipyard
+  - key: '#ship_card_shipyard'
+    values:
+    - "\u0412\u0435\u0440\u0444\u044C \u0443\u0440. {0}"
+    - Shipyard lvl {0}
+  - key: '#ship_need_shipyard'
+    values:
+    - "{0}: \u043D\u0443\u0436\u043D\u0430 \u0432\u0435\u0440\u0444\u044C {1} \u0443\u0440\u043E\u0432\u043D\u044F"
+    - '{0}: needs a level {1} shipyard'
+  - key: '#ship_limit'
+    values:
+    - "{0}: \u0431\u043E\u043B\u044C\u0448\u0435 {1} \u043D\u0435 \u043F\u043E\u0441\u0442\u0440\u043E\u0438\u0442\u044C"
+    - '{0}: no more than {1}'
+  - key: '#ship_no_coins'
+    values:
+    - "{0}: \u043D\u0443\u0436\u043D\u043E {1} \u043C\u043E\u043D\u0435\u0442"
+    - '{0}: needs {1} coins'
+  - key: '#ship_no_sea'
+    values:
+    - "\u041A\u043E\u0440\u0430\u0431\u043B\u044F\u043C \u0437\u0434\u0435\u0441\u044C
+      \u043D\u0435\u0433\u0434\u0435 \u043F\u043B\u0430\u0432\u0430\u0442\u044C"
+    - There is no sea for ships here
+  - key: '#ship_built'
+    values:
+    - "{0} \u0441\u043F\u0443\u0449\u0435\u043D \u043D\u0430 \u0432\u043E\u0434\u0443"
+    - '{0} launched'
+  - key: '#ship_cannot_carry'
+    values:
+    - "{0} \u043D\u0435 \u0431\u0435\u0440\u0451\u0442 \u043F\u0430\u0441\u0441\u0430\u0436\u0438\u0440\u043E\u0432"
+    - '{0} carries nobody'
+  - key: '#ship_full'
+    values:
+    - "{0}: \u043C\u0435\u0441\u0442 \u043D\u0430 \u0431\u043E\u0440\u0442\u0443
+      \u043D\u0435\u0442"
+    - '{0}: no room aboard'
+  - key: '#ship_no_beach'
+    values:
+    - "\u0420\u044F\u0434\u043E\u043C \u043D\u0435\u0442 \u043F\u043B\u044F\u0436\u0430:
+      \u043F\u043E\u0434\u0432\u0435\u0434\u0438\u0442\u0435 \u043A\u043E\u0440\u0430\u0431\u043B\u044C
+      \u043A \u043F\u0435\u0441\u0447\u0430\u043D\u043E\u043C\u0443 \u0431\u0435\u0440\u0435\u0433\u0443"
+    - 'No beach here: bring the ship to a sandy shore'
+  - key: '#ship_empty'
+    values:
+    - "\u041D\u0430 \u0431\u043E\u0440\u0442\u0443 \u043D\u0438\u043A\u043E\u0433\u043E"
+    - Nobody aboard
+  - key: '#unit_ship_war'
+    values:
+    - "\u0411\u043E\u0435\u0432\u043E\u0439 \u043A\u043E\u0440\u0430\u0431\u043B\u044C"
+    - Warship
+  - key: '#unit_ship_battleship'
+    values:
+    - "\u041B\u0438\u043D\u043A\u043E\u0440"
+    - Battleship
+  - key: '#ship_sunk'
+    values:
+    - "{0} \u043F\u043E\u0442\u043E\u043F\u043B\u0435\u043D"
+    - '{0} sunk'
+  - key: '#ship_sunk_with'
+    values:
+    - "{0} \u043F\u043E\u0442\u043E\u043F\u043B\u0435\u043D, \u0443\u0442\u043E\u043D\u0443\u043B\u0438:
+      {1}"
+    - '{0} sunk, drowned: {1}'
+  - key: '#ship_whole'
+    values:
+    - "\u041A\u043E\u0440\u0430\u0431\u043B\u044C \u0446\u0435\u043B"
+    - The ship is whole
+  - key: '#ship_repair_far'
+    values:
+    - "\u0427\u0438\u043D\u0438\u0442\u044C \u043C\u043E\u0436\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E
+      \u0443 \u0432\u0435\u0440\u0444\u0438"
+    - Ships are repaired only at a shipyard
+  - key: '#ship_repair_cost'
+    values:
+    - "\u0414\u043B\u044F \u0440\u0435\u043C\u043E\u043D\u0442\u0430 \u043D\u0443\u0436\u043D\u043E
+      {0} \u0434\u0435\u0440\u0435\u0432\u0430"
+    - The repair needs {0} wood
+  - key: '#unit_ship_orc_transport'
+    values:
+    - "\u041E\u0440\u043E\u0447\u0438\u0439 \u0431\u0430\u0440\u043A\u0430\u0441"
+    - Orc barge
+  - key: '#unit_ship_orc_war'
+    values:
+    - "\u041E\u0440\u043E\u0447\u0438\u0439 \u0434\u0440\u0430\u043A\u043A\u0430\u0440"
+    - Orc longship
+  - key: '#log_orc_fleet'
+    values:
+    - "\u0424\u043B\u043E\u0442 \u043E\u0440\u043A\u043E\u0432 \u0432\u044B\u0448\u0435\u043B
+      \u0432 \u043C\u043E\u0440\u0435, \u0434\u0435\u0441\u0430\u043D\u0442: {0}"
+    - An orc fleet has set sail, {0} aboard
+  - key: '#log_orc_landing'
+    values:
+    - "\u041E\u0440\u043A\u0438 \u0432\u044B\u0441\u0430\u0434\u0438\u043B\u0438\u0441\u044C
+      \u043D\u0430 \u0431\u0435\u0440\u0435\u0433: {0}"
+    - 'Orcs have landed: {0}'
+  - key: '#log_orc_shipyard_destroyed'
+    values:
+    - "\u0412\u0435\u0440\u0444\u044C \u043E\u0440\u043A\u043E\u0432 \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D\u0430"
+    - The orc shipyard is destroyed
+  - key: '#log_orc_shipyard_rebuilt'
+    values:
+    - "\u041E\u0440\u043A\u0438 \u043E\u0442\u0441\u0442\u0440\u043E\u0438\u043B\u0438
+      \u0432\u0435\u0440\u0444\u044C"
+    - The orcs have rebuilt their shipyard

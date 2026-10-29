@@ -33,6 +33,13 @@
   temporary reveal, no return to a sketch). Ship levels are raised in the Laboratory.
 - Orcs get ONE shipyard at the main base; destroyed, it is rebuilt after a sheet-set time.
 
+## Placing the Shipyard (fixed 2026-10-29)
+- The user could not put it down at all: a water building had to have EVERY cell in the shore-water
+  zone (6 cells off land), and a 3x4 slipway in a band that narrow nearly always touched the beach.
+  Now (`BuildingPlacer.CanPlaceSelectedBuilding`, every Water building): cells may be shore water OR
+  plain land, at least HALF in the water; relief/cliff cells never. Test
+  `TheShipyard_GoesDownOnShoreWater_AndAcrossTheShoreline` (water / across the shoreline / mostly land refused).
+
 ## Boarding and landing (built 2026-10-29)
 - With an army group (or a hero) selected, a tap on a ship = board order (`ArmyOrderInput`):
   the group walks to the BEACH the ship stands at; each member there (≤ 4 m of the landing or

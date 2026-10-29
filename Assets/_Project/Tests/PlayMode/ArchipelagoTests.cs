@@ -363,6 +363,78 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsFalse(ships.LaunchOrcFleet(3, 1), "A fleet sailed with the shipyard broken.");
         }
 
+        /// <summary>
+        /// The player puts a Shipyard down as on the phone, through the placer (the user,
+        /// 2026-10-29: it went down neither at the beach nor on the water): out on the shore water,
+        /// and across the shoreline with at least half of it in the water; not with most of it on land.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheShipyard_GoesDownOnShoreWater_AndAcrossTheShoreline()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var applier = MeshMapApplier.Instance;
+            var grid = GridManager.Instance;
+            var hallData = PlaytestWorld.Building(BuildingIds.TownHall);
+            Assert.IsNotNull(PlaytestWorld.Place(hallData, world.StartCell - hallData.footprintSize / 2), "No Town Hall.");
+            var placer = Object.FindAnyObjectByType<BuildingPlacer>();
+            placer.MarkMandatoryBuildingAlreadyPlaced();
+            CityBuilder.Research.ResearchManager.Instance.CompleteEverything();
+            CityBuilder.Resources.ResourceManager.Instance.SetInfiniteResources(true);
+            var data = PlaytestWorld.Building(CityBuilder.Ships.ShipManager.ShipyardId);
+            var size = data.footprintSize;
+
+            // spots round the start island by how much of the 3 x 4 is shore water (the rest plain land)
+            Vector2Int? wet = null, straddle = null, dry = null;
+            for (var r = 0; r < 140 && (wet == null || straddle == null || dry == null); r++)
+            for (var dz = -r; dz <= r; dz++)
+            for (var dx = -r; dx <= r; dx++)
+            {
+                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                if (!grid.IsWithinBounds(c, size) || !grid.IsAreaFree(c, size)) continue;
+                int water = 0, land = 0;
+                for (var x = 0; x < size.x; x++)
+                for (var z = 0; z < size.y; z++)
+                {
+                    var cell = c + new Vector2Int(x, z);
+                    if (applier.IsNoBuildCell(cell)) land = -999;
+                    else if (applier.IsWaterCell(cell)) water += applier.IsWaterPlacementZone(cell) ? 1 : -999;
+                    else land++;
+                }
+                if (water < 0 || land < 0) continue;
+                var total = size.x * size.y;
+                if (water == total) wet ??= c;
+                else if (water * 2 >= total && land > 0) straddle ??= c;
+                else if (water > 0 && water * 2 < total) dry ??= c;
+            }
+            Assert.IsTrue(wet.HasValue && straddle.HasValue && dry.HasValue, $"No test spots: water {wet}, shoreline {straddle}, mostly land {dry}.");
+
+            foreach (var (spot, should) in new[] { (wet.Value, true), (straddle.Value, true), (dry.Value, false) })
+            {
+                placer.PinnedOriginForTests = spot;
+                placer.SelectBuilding(data);
+                Assert.IsTrue(placer.IsSelecting, "The Shipyard cannot be picked up.");
+                yield return null;
+                var status = placer.StatusText;
+                var before = Shipyards();
+                placer.ConfirmPlacement();
+                yield return null;
+                Assert.AreEqual(should, Shipyards() > before, $"Shipyard at {spot}: placed should be {should}; the placer said «{status}».");
+                placer.ClearSelection();
+            }
+            placer.PinnedOriginForTests = null;
+        }
+
+        private static int Shipyards()
+        {
+            var count = 0;
+            foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (b.Data != null && b.Data.buildingName == CityBuilder.Ships.ShipManager.ShipyardId) count++;
+            }
+            return count;
+        }
+
         private static bool DeepRelief(ArchipelagoMap world, int i)
         {
             var n = world.Size;

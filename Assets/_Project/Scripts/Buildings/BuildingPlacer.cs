@@ -641,6 +641,7 @@ namespace CityBuilder.Buildings
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
 
+            var inWater = 0;
             for (var x = 0; x < footprint.x; x++)
             {
                 for (var z = 0; z < footprint.y; z++)
@@ -652,7 +653,14 @@ namespace CityBuilder.Buildings
 
                     if (_selectedBuilding.isWaterCategory)
                     {
-                        if (isWater && mapApplier.IsWaterPlacementZone(c)) continue;
+                        if (isWater && mapApplier.IsWaterPlacementZone(c))
+                        {
+                            inWater++;
+                            continue;
+                        }
+                        // a water building may run up onto the shore it stands at (the user,
+                        // 2026-10-29: the Shipyard would not go down at the beach)
+                        if (!isWater) continue;
                         return false;
                     }
 
@@ -660,6 +668,8 @@ namespace CityBuilder.Buildings
                     return false;
                 }
             }
+            // ...as long as at least half of it stands in the water
+            if (_selectedBuilding.isWaterCategory && wholeFootprintRules && inWater * 2 < footprint.x * footprint.y) return false;
             return true;
         }
 
