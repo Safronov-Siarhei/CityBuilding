@@ -173,6 +173,81 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// The archipelago's island library (the user, 2026-10-29): every island Tools/blender/islands.py
+        /// made and export_map.py put in Models/Islands -- its meshes, its cells (Isl-*-Cells.bytes), its
+        /// props and its spots -- as an IslandAsset, all of them in Resources/ArchipelagoLibrary.
+        /// None exported: no library, and the game draws its own islands.
+        /// </summary>
+        private static void CreateArchipelagoLibrary()
+        {
+            const string folder = "Assets/_Project/Models/Islands";
+            const string assetsFolder = "Assets/_Project/ScriptableObjects/Islands";
+            var islands = new List<CityBuilder.Maps.Archipelago.IslandAsset>();
+            if (AssetDatabase.IsValidFolder(folder))
+            {
+                Directory.CreateDirectory(assetsFolder);
+                foreach (var file in Directory.GetFiles(folder, "Isl-*-Ground.fbx"))
+                {
+                    var prefix = Path.GetFileName(file).Replace("-Ground.fbx", "");
+                    var name = prefix.Substring(4);                       // "start1"
+                    var kindName = name.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+                    if (!System.Enum.TryParse<CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Kind>(kindName, true, out var kind))
+                    {
+                        Debug.LogWarning($"CreateArchipelagoLibrary: {prefix} names no island kind -- skipped.");
+                        continue;
+                    }
+                    var cells = AssetDatabase.LoadAssetAtPath<TextAsset>($"{folder}/{prefix}-Cells.bytes");
+                    var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Ground.fbx");
+                    if (cells == null || ground == null)
+                    {
+                        Debug.LogWarning($"CreateArchipelagoLibrary: {prefix} has no cells or no ground -- skipped.");
+                        continue;
+                    }
+                    var relief = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Relief.fbx");
+                    var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Water.fbx");
+                    var decor = CreateMapDecorData(prefix, folder, prefix);
+
+                    var zone = new List<Vector2>();
+                    var beaches = new List<Vector2>();
+                    Vector2? main = null, bot = null;
+                    var spots = $"{folder}/{prefix}-Spots.csv";
+                    if (File.Exists(spots))
+                    {
+                        var culture = System.Globalization.CultureInfo.InvariantCulture;
+                        foreach (var line in File.ReadAllLines(spots))
+                        {
+                            var f = line.Split(',');
+                            if (f.Length < 3 || f[0] == "kind") continue;
+                            var at = new Vector2(float.Parse(f[1], culture), float.Parse(f[2], culture));
+                            switch (f[0])
+                            {
+                                case "zone": zone.Add(at); break;
+                                case "main": main = at; break;
+                                case "bot": bot = at; break;
+                                case "beach": beaches.Add(at); break;
+                            }
+                        }
+                    }
+
+                    var island = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.IslandAsset>();
+                    island.EditorInitialize(prefix, kind, cells.bytes, ground, relief, water, decor, zone.ToArray(), main, bot, beaches.ToArray());
+                    var path = $"{assetsFolder}/{prefix}.asset";
+                    DeleteIfExists(path);
+                    AssetDatabase.CreateAsset(island, path);
+                    islands.Add(island);
+                }
+            }
+
+            var library = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoLibrary>();
+            library.EditorInitialize(islands.ToArray());
+            Directory.CreateDirectory("Assets/_Project/Resources");
+            var libraryPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoLibrary.ResourcePath}.asset";
+            DeleteIfExists(libraryPath);
+            AssetDatabase.CreateAsset(library, libraryPath);
+            Debug.Log($"CreateArchipelagoLibrary: {islands.Count} island(s).");
+        }
+
+        /// <summary>
         /// A designed map's spots from <prefix>-Spots.csv (kind,x,y[,level] in Blender's axes:
         /// Blender (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's and
         /// the level it grows to, "zone" a corner of the Town Hall's start zone; every other kind

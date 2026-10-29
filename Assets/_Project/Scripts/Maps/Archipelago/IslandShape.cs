@@ -150,6 +150,74 @@ namespace CityBuilder.Maps.Archipelago
             return island;
         }
 
+        /// <summary>
+        /// A library island turned `turns` quarters: its cells, start zone and spots in the frame's
+        /// cells, turned the way the game will turn its meshes (Quaternion.Euler(0, 90 * turns, 0),
+        /// which takes a point (x, z) to (z, -x) per quarter).
+        /// </summary>
+        public static Island FromAsset(IslandAsset asset, int turns)
+        {
+            var n = asset.Frame;
+            var half = n / 2f;
+            var island = new Island
+            {
+                Kind = asset.Kind,
+                Frame = n,
+                Land = new bool[n * n],
+                Height = new float[n * n],
+                Beach = new bool[n * n],
+                Cliff = new bool[n * n],
+                Forest = new bool[n * n],
+                Stony = new bool[n * n],
+                Shore = new bool[n * n],
+                Asset = asset,
+                Turns = turns,
+            };
+            for (var j = 0; j < n; j++)
+            for (var i = 0; i < n; i++)
+            {
+                var flags = asset.Cell(i, j);
+                if (flags == 0) continue;
+                var p = Turn(new Vector2(i - half + 0.5f, j - half + 0.5f), turns);
+                var di = Mathf.FloorToInt(p.x + half);
+                var dj = Mathf.FloorToInt(p.y + half);
+                if (di < 0 || dj < 0 || di >= n || dj >= n) continue;
+                var k = dj * n + di;
+                island.Land[k] = (flags & IslandAsset.Land) != 0;
+                island.Height[k] = (flags & IslandAsset.NoBuild) != 0 ? 1f : 0f;
+                island.Forest[k] = (flags & IslandAsset.Forest) != 0;
+                island.Stony[k] = (flags & IslandAsset.Stony) != 0;
+                island.Shore[k] = (flags & IslandAsset.Shore) != 0;
+            }
+            // a beach for every island is the library's promise; the drawn shapes' flags are not needed
+            island.LandCentre = Centroid(island.Land, n);
+            Vector2Int Cell(Vector2 local)
+            {
+                var p = Turn(local, turns);
+                return new Vector2Int(Mathf.FloorToInt(p.x + half), Mathf.FloorToInt(p.y + half));
+            }
+            if (asset.Kind == ArchipelagoGenerator.Kind.Start && asset.StartZone.Length > 0)
+            {
+                var centre = Vector2.zero;
+                island.StartZone = new Vector2[asset.StartZone.Length];
+                for (var k = 0; k < asset.StartZone.Length; k++)
+                {
+                    island.StartZone[k] = Turn(asset.StartZone[k], turns) + new Vector2(half, half);
+                    centre += asset.StartZone[k];
+                }
+                island.Zone = Cell(centre / asset.StartZone.Length);
+            }
+            if (asset.HasMainBase) island.Zone = Cell(asset.MainBase);
+            if (asset.HasBot) island.Zone = Cell(asset.Bot);
+            return island;
+        }
+
+        public static Vector2 Turn(Vector2 p, int turns)
+        {
+            for (var t = 0; t < (turns & 3); t++) p = new Vector2(p.y, -p.x);
+            return p;
+        }
+
         private static float Sq(float v) => v * v;
 
         public static bool IsCoast(bool[] land, int n, int x, int y)

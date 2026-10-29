@@ -658,7 +658,9 @@ def build_water(verts):
                     elif c[6] < 0:
                         col = "water"
                     else:
-                        col = "water_deep"
+                        # the deep sea is the game's own layer under every island (ArchipelagoMeshes.Sea):
+                        # an island brings only its coastal bands, so two islands' frames may overlap
+                        continue
                     b.poly([p[:3] for p in pc], col)
     return b
 
@@ -911,6 +913,27 @@ def main():
     # a ford is ground everyone walks: a building on it would shut the crossing
     no_build |= {(i, j) for i in range(N) for j in range(N)
                  if ford_at(i - HALF + 0.5, j - HALF + 0.5) > 0 and cell_sd[i, j] < BEACH + 1}
+    # the cells the game lays the island out by (ArchipelagoLibrary): a byte a cell, row by row from
+    # the south-west, after two bytes of the frame's side -- 1 land, 2 no-build (relief, cliff),
+    # 4 forest, 8 stony, 16 shore water a dock may stand on
+    cells_bytes = bytearray(N.to_bytes(2, "little"))
+    for j in range(N):
+        for i in range(N):
+            v = 0
+            if cell_sd[i, j] > 0:
+                v |= 1
+            if (i, j) in no_build:
+                v |= 2
+            if (i, j) in forest_cells:
+                v |= 4
+            if (i, j) in rocks_cells:
+                v |= 8
+            if (i, j) in shore_cells and cell_sd[i, j] <= 0:
+                v |= 16
+            cells_bytes.append(v)
+    with open(os.path.splitext(OUT)[0] + "-cells.bytes", "wb") as f:
+        f.write(cells_bytes)
+
     zones = []
     for name, cells, z, col in (("TreesArea", forest_cells, -0.02, "leaf"),
                                 ("RocksArea", rocks_cells, -0.03, "rock_dark"),

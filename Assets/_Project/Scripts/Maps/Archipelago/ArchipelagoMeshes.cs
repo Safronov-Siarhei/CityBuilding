@@ -79,7 +79,7 @@ namespace CityBuilder.Maps.Archipelago
         /// at the coast, then blue, then deep; foam where the calm sea meets the storm, and the storm
         /// itself deep and dark, out to past the world's edge.
         /// </summary>
-        public static GameObject Sea(ArchipelagoMap map, Vector3 origin, Material terrain, Transform parent)
+        public static GameObject Sea(ArchipelagoMap map, Vector3 origin, Material terrain, Transform parent, bool bands = true)
         {
             const int margin = 60;
             const int block = Chunk * 2;
@@ -96,7 +96,7 @@ namespace CityBuilder.Maps.Archipelago
                 for (var x = cx; x < Mathf.Min(n + margin, cx + block); x++)
                 {
                     var inside = x >= 0 && z >= 0 && x < n && z < n;
-                    if (inside && map.Land[z * n + x]) continue;
+                    if (bands && inside && map.Land[z * n + x]) continue;
                     var edge = Mathf.Min(Mathf.Min(x, z), Mathf.Min(n - 1 - x, n - 1 - z));
                     int colour;
                     if (edge < ArchipelagoGenerator.Storm - 3) colour = WaterDeep;
@@ -104,11 +104,12 @@ namespace CityBuilder.Maps.Archipelago
                     else
                     {
                         var near = inside ? toLand[z * n + x] : int.MaxValue;
-                        colour = near <= 4 ? WaterShallow : near <= 14 ? Water : WaterDeep;
+                        colour = !bands ? WaterDeep : near <= 4 ? WaterShallow : near <= 14 ? Water : WaterDeep;
                     }
                     flat.Set(x, z, colour);
                 }
-                flat.Merge(b, origin, WaterLevel);
+                // under the islands' own coastal water when they bring it
+                flat.Merge(b, origin, bands ? WaterLevel : WaterLevel - 0.04f);
                 b.Emit($"Sea-{cx}-{cz}", sea.transform, terrain);
             }
             return sea;

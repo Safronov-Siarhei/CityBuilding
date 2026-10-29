@@ -436,11 +436,18 @@ namespace CityBuilder.Maps
             // no camps (the user, 2026-10-29: only the main island for now); the bot's spot kept
             var zone = new Vector2[8];
             var start = At(world.StartCell);
+            var fromLibrary = world.StartZone != null;
             var r = Archipelago.ArchipelagoGenerator.StartZoneRadiusMeters;
             for (var k = 0; k < 8; k++)
             {
                 var a = Mathf.PI / 8f + k * Mathf.PI / 4f;
                 zone[k] = start + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+            }
+            // a library start island brings its own zone
+            if (fromLibrary)
+            {
+                zone = new Vector2[world.StartZone.Length];
+                for (var k = 0; k < zone.Length; k++) zone[k] = new Vector2(origin.x + world.StartZone[k].x, origin.z + world.StartZone[k].y);
             }
             map.EditorInitializeSpots(At(world.OrcBaseCell), new Vector2[0], new int[0], zone,
                 new[] { new MapSpot { kind = "bot", position = At(world.BotCell), level = 1 } });
@@ -451,7 +458,9 @@ namespace CityBuilder.Maps
             SeasonStyle.MapForced = map.ForcedSeason;
             SeasonStyle.ApplyToScene();
 
-            var (ground, relief) = Archipelago.ArchipelagoMeshes.Build(world, origin, map.TerrainMaterial, transform);
+            GameObject ground, relief;
+            if (fromLibrary) (ground, relief) = PlaceLibraryIslands(world, origin);
+            else (ground, relief) = Archipelago.ArchipelagoMeshes.Build(world, origin, map.TerrainMaterial, transform);
             _groundInstance = ground;
             SeasonStyle.DressTerrain(ground);
             AddMeshCollidersToAll(ground);
@@ -467,7 +476,8 @@ namespace CityBuilder.Maps
             SceneryShadows.DisableCasting(relief);
             _reliefColliders = relief.GetComponentsInChildren<Collider>();
 
-            var sea = Archipelago.ArchipelagoMeshes.Sea(world, origin, map.TerrainMaterial, transform);
+            // under the library islands' own coastal water, the deep sea and the storm alone
+            var sea = Archipelago.ArchipelagoMeshes.Sea(world, origin, map.TerrainMaterial, transform, bands: !fromLibrary);
             SeasonStyle.DressTerrain(sea);
             TerrainPhysicsLayer.Assign(sea);
             SceneryShadows.DisableCasting(sea);
@@ -483,7 +493,7 @@ namespace CityBuilder.Maps
                 if (!world.Land[i])
                 {
                     _waterCells.Add(cell);
-                    if (LandWithin(world, x, z, dockReach)) _waterPlacementZoneCells.Add(cell);
+                    if (fromLibrary ? world.Shore[i] : LandWithin(world, x, z, dockReach)) _waterPlacementZoneCells.Add(cell);
                     continue;
                 }
                 if (world.IsRelief(i))
@@ -505,6 +515,57 @@ namespace CityBuilder.Maps
             if (indicator != null) indicator.MapHalfExtent = half;
 
             FillTheLand(map);
+            if (fromLibrary) DecorateLibraryIslands(world, origin, map);
+        }
+
+        /// <summary>
+        /// The library's islands as they were made in Blender: each one's plain, relief and coastal
+        /// water put where the layout put its frame, turned its quarter -- the same turn the layout
+        /// gave its cells (IslandShape.FromAsset).
+        /// </summary>
+        private (GameObject ground, GameObject relief) PlaceLibraryIslands(Archipelago.ArchipelagoMap world, Vector3 origin)
+        {
+            var ground = new GameObject("ArchipelagoGround");
+            ground.transform.SetParent(transform, false);
+            var relief = new GameObject("ArchipelagoRelief");
+            relief.transform.SetParent(transform, false);
+            var water = new GameObject("ArchipelagoCoasts");
+            water.transform.SetParent(transform, false);
+            foreach (var island in world.Islands)
+            {
+                if (island.Asset == null) continue;
+                var at = origin + new Vector3(island.OffsetX + island.Frame * 0.5f, 0f, island.OffsetY + island.Frame * 0.5f);
+                var turn = Quaternion.Euler(0f, 90f * island.Turns, 0f);
+                void Put(GameObject prefab, Transform parent)
+                {
+                    if (prefab == null) return;
+                    var instance = Instantiate(prefab, at, turn * prefab.transform.rotation, parent);
+                    instance.name = $"{island.Asset.IslandName}-{prefab.name}";
+                }
+                Put(island.Asset.Ground, ground.transform);
+                Put(island.Asset.Relief, relief.transform);
+                Put(island.Asset.Water, water.transform);
+            }
+            SeasonStyle.DressTerrain(water);
+            TerrainPhysicsLayer.Assign(water);
+            SceneryShadows.DisableCasting(water);
+            return (ground, relief);
+        }
+
+        /// <summary>Every library island's props in one set, each turned and moved with its island.</summary>
+        private void DecorateLibraryIslands(Archipelago.ArchipelagoMap world, Vector3 origin, MeshMapDefinition map)
+        {
+            var parts = new List<(MapDecorData data, Vector3 at, Quaternion turn)>();
+            foreach (var island in world.Islands)
+            {
+                if (island.Asset == null || island.Asset.Decor == null) continue;
+                var at = origin + new Vector3(island.OffsetX + island.Frame * 0.5f, 0f, island.OffsetY + island.Frame * 0.5f);
+                parts.Add((island.Asset.Decor, at, Quaternion.Euler(0f, 90f * island.Turns, 0f)));
+            }
+            if (parts.Count == 0 || map.TerrainMaterial == null) return;
+            var decor = GetComponent<MapDecorRenderer>();
+            if (decor == null) decor = gameObject.AddComponent<MapDecorRenderer>();
+            decor.Initialize(MapDecorData.Combine(parts), SeasonStyle.TerrainMaterial(map.TerrainMaterial));
         }
 
         private static bool LandWithin(Archipelago.ArchipelagoMap world, int x, int z, int reach)

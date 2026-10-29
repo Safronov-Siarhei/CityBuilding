@@ -53,6 +53,11 @@ namespace CityBuilder.Tests.EditMode
 
                 foreach (var island in map.Islands)
                 {
+                    if (island.Asset != null)
+                    {
+                        Assert.Greater(island.Asset.Beaches.Length, 0, $"Seed {seed}: library island {island.Asset.IslandName} has no beach.");
+                        continue;
+                    }
                     var beach = false;
                     for (var i = 0; i < island.Beach.Length && !beach; i++) beach = island.Beach[i];
                     Assert.IsTrue(beach, $"Seed {seed}: a {island.Kind} island has no beach to land on.");

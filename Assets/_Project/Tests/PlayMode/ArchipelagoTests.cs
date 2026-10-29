@@ -56,7 +56,8 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(NavMesh.SamplePosition(start, out _, 1f, NavMesh.AllAreas), "No NavMesh in the start zone.");
             for (var i = 0; i < n * n; i += 211)
             {
-                if (!world.IsRelief(i)) continue;
+                // deep in the relief: its whole neighbourhood relief too (a slope's foot may be plain)
+                if (!DeepRelief(world, i)) continue;
                 var cell = new Vector2Int(i % n, i / n);
                 var at = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 Assert.IsFalse(NavMesh.SamplePosition(at, out var hit, 0.1f, NavMesh.AllAreas) && Mathf.Abs(hit.position.y - at.y) < 0.2f,
@@ -92,6 +93,19 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("archipelago-start-island", start, 70f, 50f, 20f);
             var orc = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
             yield return PlaytestCapture.Shoot("archipelago-orc-island", orc, 80f, 55f, 30f);
+        }
+
+        private static bool DeepRelief(ArchipelagoMap world, int i)
+        {
+            var n = world.Size;
+            int x = i % n, z = i / n;
+            for (var dz = -2; dz <= 2; dz++)
+            for (var dx = -2; dx <= 2; dx++)
+            {
+                int xx = x + dx, zz = z + dz;
+                if (xx < 0 || zz < 0 || xx >= n || zz >= n || !world.IsRelief(zz * n + xx)) return false;
+            }
+            return true;
         }
     }
 }

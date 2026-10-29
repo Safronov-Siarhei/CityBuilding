@@ -30,7 +30,7 @@ OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit")
 def objects_of(part):
     found = []
     for o in bpy.data.objects:
-        if o.type != 'MESH' or not o.name.startswith(("Map-", "Inv-")):
+        if o.type != 'MESH' or not o.name.startswith(("Map-", "Inv-", "Isl-")):
             continue
         head = o.name.split("-" + part)
         # Map-N-<part> exactly, or Map-N-<part>-<anything> (a chunk, a kit piece); Inv-N- for
@@ -85,6 +85,11 @@ def main():
     if os.path.isfile(spots):
         dst = os.path.join(folder, f"{prefix}-Spots.csv")
         shutil.copyfile(spots, dst)
+        print("COPIED", dst)
+    cells = os.path.splitext(bpy.data.filepath)[0] + "-cells.bytes"
+    if os.path.isfile(cells):          # an archipelago island's cells (islands.py)
+        dst = os.path.join(folder, f"{prefix}-Cells.bytes")
+        shutil.copyfile(cells, dst)
         print("COPIED", dst)
     decor = os.path.splitext(bpy.data.filepath)[0] + "-decor.csv"
     if os.path.isfile(decor):

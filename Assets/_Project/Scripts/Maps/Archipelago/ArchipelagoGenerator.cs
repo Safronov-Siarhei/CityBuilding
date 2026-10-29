@@ -21,7 +21,8 @@ namespace CityBuilder.Maps.Archipelago
     public static class ArchipelagoGenerator
     {
         /// <summary>Bumped whenever a seed would come out as a different map; it is part of the map's code.</summary>
-        public const int Version = 1;
+        // 2: the islands come from the Blender library (2026-10-29)
+        public const int Version = 2;
 
         public const int World = 500;
         public const int Storm = 24;
@@ -47,6 +48,13 @@ namespace CityBuilder.Maps.Archipelago
         {
             var rng = new SeedRandom(seed);
             var map = new ArchipelagoMap(seed, World);
+            var library = ArchipelagoLibrary.Load();
+            var used = new HashSet<IslandAsset>();
+            Island Make(Kind kind, int size, int shapeSeed)
+            {
+                return library != null ? FromLibrary(library, kind, rng, used) ?? IslandShape.Make(kind, size, shapeSeed)
+                    : IslandShape.Make(kind, size, shapeSeed);
+            }
             var claimed = new bool[World * World];
             var placed = new List<Island>();
 
@@ -73,7 +81,7 @@ namespace CityBuilder.Maps.Archipelago
                         var start = placed[0].Centre;
                         spots.RemoveAll(p => Vector2.Distance(p, start) < 0.55f * World);
                     }
-                    var island = IslandShape.Make(kind, size, seed * 1000 + attempt * 7 + placed.Count);
+                    var island = Make(kind, size, seed * 1000 + attempt * 7 + placed.Count);
                     // a named island with no room for its zone is no use: try another
                     done = island.Zone.HasValue && TryPlace(island, spots, claimed, placed);
                 }
@@ -98,19 +106,42 @@ namespace CityBuilder.Maps.Archipelago
                     if (pick <= 0f) break;
                 }
                 var size = Mathf.RoundToInt(choice.size * rng.Range(0.75f, 1f));
-                TryPlace(IslandShape.Make(choice.kind, size, seed * 1000 + 500 + tries), RandomSpots(rng, 60), claimed, placed);
+                TryPlace(Make(choice.kind, size, seed * 1000 + 500 + tries), RandomSpots(rng, 60), claimed, placed);
             }
             while (placed.Count < total && tries < 160)
             {
                 tries++;
                 var size = Mathf.RoundToInt(70 * rng.Range(0.8f, 1.3f));
-                TryPlace(IslandShape.Make(Kind.Islet, size, seed * 1000 + 500 + tries), RandomSpots(rng, 40), claimed, placed);
+                TryPlace(Make(Kind.Islet, size, seed * 1000 + 500 + tries), RandomSpots(rng, 40), claimed, placed);
             }
 
             foreach (var island in placed) Stamp(map, island);
-            Dress(map, rng);
+            // a library island brings its own forest, stone and clear zones from Blender
+            if (library == null) Dress(map, rng);
             map.Islands.AddRange(placed);
             return map;
+        }
+
+        /// <summary>
+        /// A library island of the kind, turned a random quarter (0-3): one not yet on this map when
+        /// there is one, so two islands of a map are rarely the same. Null when the library has none
+        /// of the kind.
+        /// </summary>
+        private static Island FromLibrary(ArchipelagoLibrary library, Kind kind, SeedRandom rng, HashSet<IslandAsset> used)
+        {
+            var fresh = new List<IslandAsset>();
+            var any = new List<IslandAsset>();
+            foreach (var asset in library.Islands)
+            {
+                if (asset == null || asset.Kind != kind) continue;
+                any.Add(asset);
+                if (!used.Contains(asset)) fresh.Add(asset);
+            }
+            var pool = fresh.Count > 0 ? fresh : any;
+            if (pool.Count == 0) return null;
+            var chosen = pool[rng.RangeInt(0, pool.Count)];
+            used.Add(chosen);
+            return IslandShape.FromAsset(chosen, rng.RangeInt(0, 4));
         }
 
         private static List<Vector2> RandomSpots(SeedRandom rng, int count)
@@ -183,16 +214,30 @@ namespace CityBuilder.Maps.Archipelago
             for (var x = 0; x < n; x++)
             {
                 var i = y * n + x;
+                if (island.Shore != null && island.Shore[i])
+                {
+                    map.Shore[(y + island.OffsetY) * World + x + island.OffsetX] = true;
+                }
                 if (!island.Land[i]) continue;
                 var w = (y + island.OffsetY) * World + x + island.OffsetX;
                 map.Land[w] = true;
                 map.Height[w] = island.Height[i];
                 map.Beach[w] = island.Beach[i];
                 map.Cliff[w] = island.Cliff[i];
+                if (island.Forest != null)
+                {
+                    map.Forest[w] = island.Forest[i];
+                    map.Stony[w] = island.Stony[i];
+                }
             }
             if (island.Zone.HasValue)
             {
                 var z = island.Zone.Value + new Vector2Int(island.OffsetX, island.OffsetY);
+                if (island.Kind == Kind.Start && island.StartZone != null)
+                {
+                    map.StartZone = new Vector2[island.StartZone.Length];
+                    for (var k = 0; k < island.StartZone.Length; k++) map.StartZone[k] = island.StartZone[k] + new Vector2(island.OffsetX, island.OffsetY);
+                }
                 switch (island.Kind)
                 {
                     case Kind.Start: map.StartCell = z; break;
@@ -261,6 +306,13 @@ namespace CityBuilder.Maps.Archipelago
         public Vector2Int? Zone;
         public int OffsetX, OffsetY;
 
+        // a library island: what it is, how far it is turned, its own forest, stone and shore water,
+        // and its start zone (frame cells), all already turned
+        public IslandAsset Asset;
+        public int Turns;
+        public bool[] Forest, Stony, Shore;
+        public Vector2[] StartZone;
+
         public Vector2 Centre => LandCentre + new Vector2(OffsetX, OffsetY);
     }
 
@@ -275,6 +327,10 @@ namespace CityBuilder.Maps.Archipelago
         public readonly bool[] Cliff;
         public readonly bool[] Forest;
         public readonly bool[] Stony;
+        /// <summary>Water a dock may stand on, from a library island's own shore; empty on a drawn map.</summary>
+        public readonly bool[] Shore;
+        /// <summary>The start zone's corners in world cells, from a library start island; null on a drawn map.</summary>
+        public Vector2[] StartZone;
         public Vector2Int StartCell;
         public Vector2Int OrcBaseCell;
         public Vector2Int BotCell;
@@ -290,6 +346,7 @@ namespace CityBuilder.Maps.Archipelago
             Cliff = new bool[size * size];
             Forest = new bool[size * size];
             Stony = new bool[size * size];
+            Shore = new bool[size * size];
         }
 
         public bool IsRelief(int i) => Land[i] && Height[i] >= ArchipelagoGenerator.ReliefFrom;

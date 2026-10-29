@@ -561,6 +561,7 @@ namespace CityBuilder.EditorTools
             // The archipelago (the user, 2026-10-29): the sandbox's map from now on, generated in the
             // game from a seed -- only its template is made here.
             CreateArchipelagoDefinition();
+            CreateArchipelagoLibrary();
             // The Invasion mode's first map (Tools/blender/invasion1.py): the base island in the
             // middle, three lanes over three bridges to three orc camps, jungles between them. Not
             // in the sandbox's map picker -- only «В бой» plays it.
