@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -70,8 +70,10 @@ namespace CityBuilder.Maps
             Instance = this;
         }
 
-        public void Initialize(Vector2Int[] zoneCells, GameObject[] treePrefabs)
+        /// <summary>`count` 0 = the designed maps' own InitialTreeCount; a generated map passes one for its forest's size.</summary>
+        public void Initialize(Vector2Int[] zoneCells, GameObject[] treePrefabs, int count = 0)
         {
+            var initial = count > 0 ? count : InitialTreeCount;
             _zoneCells = zoneCells ?? new Vector2Int[0];
             _treePrefabs = treePrefabs ?? new GameObject[0];
             if (_zoneCells.Length == 0 || _treePrefabs.Length == 0)
@@ -80,7 +82,7 @@ namespace CityBuilder.Maps
                 return;
             }
 
-            for (var i = 0; i < InitialTreeCount; i++)
+            for (var i = 0; i < initial; i++)
             {
                 // The starting forest is already mature -- only trees planted later (after a
                 // harvest) grow up from a sapling. See SpawnOneTree's startGrown parameter.
@@ -89,7 +91,7 @@ namespace CityBuilder.Maps
 
             if (_treeCells.Count == 0)
             {
-                Debug.LogWarning($"TreesAreaSpawner: 0 of {InitialTreeCount} initial trees placed -- the zone resolved to {_zoneCells.Length} cells. Every placement attempt failed the water/occupancy/spacing checks.");
+                Debug.LogWarning($"TreesAreaSpawner: 0 of {initial} initial trees placed -- the zone resolved to {_zoneCells.Length} cells. Every placement attempt failed the water/occupancy/spacing checks.");
             }
         }
 

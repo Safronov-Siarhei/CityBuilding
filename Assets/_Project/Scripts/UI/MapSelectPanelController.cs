@@ -35,8 +35,12 @@ namespace CityBuilder.UI
         private readonly List<(MeshMapDefinition map, Image image)> _rows = new List<(MeshMapDefinition, Image)>();
         private MeshMapDefinition _selected;
 
-        public static string NameKey(string mapId) => $"#map_name_{mapId.ToLowerInvariant()}";
-        public static string DescriptionKey(string mapId) => $"#map_desc_{mapId.ToLowerInvariant()}";
+        public static string NameKey(string mapId) => $"#map_name_{KeyOf(mapId)}";
+
+        /// <summary>A generated map's id carries its seed; its text is the template's.</summary>
+        private static string KeyOf(string mapId) =>
+            (Maps.Archipelago.ArchipelagoMapId.IsArchipelago(mapId) ? Maps.Archipelago.ArchipelagoMapId.TemplateId : mapId).ToLowerInvariant();
+        public static string DescriptionKey(string mapId) => $"#map_desc_{KeyOf(mapId)}";
 
         public void OpenPanel()
         {

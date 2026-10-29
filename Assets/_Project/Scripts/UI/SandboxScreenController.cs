@@ -65,10 +65,13 @@ namespace CityBuilder.UI
             MapSelector.MarkChosen(map);
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameIsInvasion = false;
-            GameSessionIntent.NewGameMapId = _picked;
+            // a generated map starts on a fresh seed of its own
+            GameSessionIntent.NewGameMapId = map.IsGenerated ? ArchipelagoMapIdFor(map) : _picked;
             GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(Theme);
             LoadingScreen.IntoGame(gameplaySceneName);
         }
+
+        private static string ArchipelagoMapIdFor(MeshMapDefinition map) => Maps.Archipelago.ArchipelagoMapId.NewRandom();
 
         private MapTheme Theme => themes != null ? themes.Current : GameSettings.SandboxTheme;
 

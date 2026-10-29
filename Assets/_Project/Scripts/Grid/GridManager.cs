@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace CityBuilder.Grid
 {
+    // First of all: a generated map sizes the grid in Awake, before anything reads it (the fog does in its own Awake).
+    [DefaultExecutionOrder(-1000)]
     public class GridManager : MonoBehaviour
     {
         public static GridManager Instance { get; private set; }
@@ -38,6 +40,19 @@ namespace CityBuilder.Grid
             // A fresh CityBuilder scene load should never inherit a stuck "modal open" state
             // from a previous session (e.g. leaving via the exit-to-menu shortcut).
             ModalGate.Reset();
+
+            // the archipelago is a 500 m world; the scene is built for the 200 m maps
+            if (Maps.Archipelago.ArchipelagoMapId.IsArchipelago(Maps.Archipelago.ArchipelagoMapId.Pending()))
+            {
+                Resize(Maps.Archipelago.ArchipelagoGenerator.World);
+            }
+        }
+
+        /// <summary>A square world of `cells` a side, centred on the origin like the scene's own.</summary>
+        public void Resize(int cells)
+        {
+            gridSize = new Vector2Int(cells, cells);
+            originWorldPosition = new Vector3(-cells * cellSize * 0.5f, originWorldPosition.y, -cells * cellSize * 0.5f);
         }
 
         public Vector2Int WorldToCell(Vector3 worldPosition)

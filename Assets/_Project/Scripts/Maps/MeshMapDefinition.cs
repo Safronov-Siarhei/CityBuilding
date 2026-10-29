@@ -48,7 +48,17 @@ namespace CityBuilder.Maps
         // shrines, boss lair...), by kind; read by whatever mode needs it.
         [SerializeField] private MapSpot[] otherSpots = new MapSpot[0];
 
+        // The archipelago (the user, 2026-10-29): not meshes from Blender but a template the game
+        // generates its islands into from the seed in the map's id (MeshMapApplier.ApplyGenerated).
+        [SerializeField] private bool generated;
+        [SerializeField] private Material terrainMaterial;
+        // no orc raids over land: on the archipelago they will come by sea (later)
+        [SerializeField] private bool noRaids;
+
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
+        public bool IsGenerated => generated;
+        public Material TerrainMaterial => terrainMaterial;
+        public bool NoRaids => noRaids;
         public GameObject GroundPrefab => groundPrefab;
         public GameObject WaterPrefab => waterPrefab;
         public GameObject WaterPlacementZonePrefab => waterPlacementZonePrefab;
@@ -98,6 +108,13 @@ namespace CityBuilder.Maps
         }
 
         public void EditorForceSeason(Core.MapSeason season) => forcedSeason = (int)season;
+
+        public void EditorInitializeGenerated(Material terrain, bool withoutRaids)
+        {
+            generated = true;
+            terrainMaterial = terrain;
+            noRaids = withoutRaids;
+        }
 
         public void EditorInitializeExtras(GameObject relief, GameObject rocksArea, GameObject noBuildArea, MapDecorData decor, Material decorMat, bool keepWaterRot)
         {

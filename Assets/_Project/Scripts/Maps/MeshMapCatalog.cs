@@ -22,6 +22,8 @@ namespace CityBuilder.Maps
         public static MeshMapDefinition GetById(string mapId)
         {
             EnsureLoaded();
+            // a generated map's id carries its seed; the definition is the archipelago's template
+            if (Archipelago.ArchipelagoMapId.IsArchipelago(mapId)) mapId = Archipelago.ArchipelagoMapId.TemplateId;
             return !string.IsNullOrEmpty(mapId) && _byId.TryGetValue(mapId, out var map) ? map : null;
         }
 

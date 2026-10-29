@@ -243,6 +243,10 @@ namespace CityBuilder.Combat
             // squads it spawns deliberately.
             if (RaidsSuspended) return;
 
+            // the archipelago: no raids over land -- the orcs will come by sea (the user, 2026-10-29)
+            var map = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            if (map != null && map.NoRaids) return;
+
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
 

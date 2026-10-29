@@ -143,6 +143,36 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// The archipelago's template (Maps/Archipelago): no meshes -- the game generates the islands
+        /// from the seed in the map's id -- just what they are dressed with: the terrain palette, the
+        /// trees and the boulders. No orc raids over land.
+        /// </summary>
+        private static void CreateArchipelagoDefinition()
+        {
+            var trees = new List<GameObject>();
+            for (var i = 0; i < TreeModelCount; i++)
+            {
+                var tree = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Tree{i + 1}.fbx");
+                if (tree != null) trees.Add(tree);
+            }
+            var rocks = new List<GameObject>();
+            for (var i = 0; i < StoneModelCount; i++)
+            {
+                var rock = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsTerrainFolder}/Stone{i + 1}.fbx");
+                if (rock != null) rocks.Add(rock);
+            }
+            var terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
+            var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
+            map.EditorInitialize(CityBuilder.Maps.Archipelago.ArchipelagoMapId.TemplateId, null, null, null, null, trees.ToArray(), rocks.ToArray(), null);
+            map.EditorInitializeGenerated(terrainMaterial, withoutRaids: true);
+
+            Directory.CreateDirectory(MeshMapsFolder);
+            var path = $"{MeshMapsFolder}/{CityBuilder.Maps.Archipelago.ArchipelagoMapId.TemplateId}.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(map, path);
+        }
+
+        /// <summary>
         /// A designed map's spots from <prefix>-Spots.csv (kind,x,y[,level] in Blender's axes:
         /// Blender (x, y) is Unity (x, z)). "main" is the main base's centre, "camp" a camp's and
         /// the level it grows to, "zone" a corner of the Town Hall's start zone; every other kind

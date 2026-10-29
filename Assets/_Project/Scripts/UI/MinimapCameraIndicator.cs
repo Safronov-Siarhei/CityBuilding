@@ -56,6 +56,10 @@ namespace CityBuilder.UI
             return new Vector2((world.x - centre.x) * scale, (world.z - centre.z) * scale);
         }
 
-        public float MapHalfExtent => mapHalfExtent;
+        public float MapHalfExtent
+        {
+            get => mapHalfExtent;
+            set => mapHalfExtent = value;
+        }
     }
 }

@@ -21,7 +21,9 @@ namespace CityBuilder.Maps
         /// Every designed map joins this list (the user, 2026-10-20: «каждая новая карта должна
         /// быть доступна в выборе у игрока»). Maps 1 and 2 stay in the catalog only for old saves.
         /// </summary>
-        public static readonly string[] PlayerMapIds = { "Map5", "Map4", "Map3" };
+        // The archipelago alone since 2026-10-29 (the user: «старые карты убираем, у нас сейчас
+        // совершенно новая концепция»). Map3 stays in the catalog as the tests' fixture and for old saves.
+        public static readonly string[] PlayerMapIds = { Archipelago.ArchipelagoMapId.TemplateId };
 
         /// <summary>The pickable maps that are actually imported, in PlayerMapIds order.</summary>
         public static List<MeshMapDefinition> Choosable()

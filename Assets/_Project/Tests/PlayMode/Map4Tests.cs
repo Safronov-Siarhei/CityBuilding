@@ -54,8 +54,8 @@ namespace CityBuilder.Tests.PlayMode
         {
             Assert.AreEqual(MapId, MeshMapApplier.Instance.CurrentMapId, "Map 4 was not applied -- is it in Resources/MeshMaps?");
             var choosable = MapSelector.Choosable().ConvertAll(m => m.MapId);
-            CollectionAssert.Contains(choosable, MapId, "The Two Rivers Valley must be in the new-game map picker.");
-            CollectionAssert.Contains(choosable, "Map3", "Every designed map stays pickable -- the Summer Valley is missing.");
+            // the old maps left the picker on 2026-10-29 (the user: the archipelago is the new concept)
+            CollectionAssert.DoesNotContain(choosable, MapId, "The Two Rivers Valley is still in the new-game map picker.");
         }
 
         [Test]

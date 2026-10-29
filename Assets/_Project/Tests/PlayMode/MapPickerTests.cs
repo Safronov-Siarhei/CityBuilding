@@ -2,6 +2,7 @@
 using System.Linq;
 using CityBuilder.Core;
 using CityBuilder.Maps;
+using CityBuilder.Saving;
 using CityBuilder.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -47,7 +48,8 @@ namespace CityBuilder.Tests.PlayMode
 
             var cards = Cards(screen);
             var expected = MapSelector.Choosable().Select(m => "Map_" + m.MapId).ToArray();
-            Assert.GreaterOrEqual(expected.Length, 3, "Fewer than three designed maps are imported.");
+            // the archipelago alone since 2026-10-29 (the user: the old maps are out)
+            CollectionAssert.AreEqual(new[] { "Map_Archipelago" }, expected, "The sandbox's map is not the archipelago alone.");
             CollectionAssert.AreEqual(expected, cards.Where(c => c.gameObject.activeSelf).Select(c => c.name).ToArray(), "The sandbox does not show every designed map, newest first.");
             foreach (var card in cards)
             {
@@ -80,13 +82,16 @@ namespace CityBuilder.Tests.PlayMode
         {
             var screen = OpenSandbox();
             screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Winter);
-            var map = Cards(screen).First(r => r.name == "Map_Map3");
+            var map = Cards(screen).First(r => r.name == "Map_Archipelago");
             map.GetComponent<Button>().onClick.Invoke();
             Assert.IsTrue(map.Find("Picked").gameObject.activeSelf, "Tapping a card does not pick it.");
 
             screen.StartGame();
-            yield return PlayModeScene.WaitUntilMapIsPhysicsReady("Map3");
-            Assert.AreEqual("Map3", MeshMapApplier.Instance.CurrentMapId, "«Начать» did not start on the map picked.");
+            // a new game on the archipelago is a fresh seed of its own
+            var id = GameSessionIntent.NewGameMapId;
+            Assert.IsTrue(Maps.Archipelago.ArchipelagoMapId.TryParse(id, out _, out _), $"«Начать» started on \"{id}\", not a seeded archipelago.");
+            yield return PlayModeScene.WaitUntilMapIsPhysicsReady(id);
+            Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId, "«Начать» did not start on the map picked.");
             Assert.AreEqual(MapSeason.Winter, SeasonStyle.Current, "The game is not in the theme's season.");
         }
 

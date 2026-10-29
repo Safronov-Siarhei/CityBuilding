@@ -99,6 +99,8 @@ namespace CityBuilder.Combat
             // change, so re-running this every frame would just repeat the same failure forever.
             _portalsPlaced = true;
 
+            // the archipelago has the main base alone (the user, 2026-10-29): no camp is no fault there
+            if (opened == 0 && designed != null && designed.HasMainBaseSpot && designed.CampSpots.Length == 0) return;
             if (opened == 0)
             {
                 Debug.LogError($"OrcRaidManager: not one of the {template.Count} portal slots around the Town Hall at {townHallPosition} " +

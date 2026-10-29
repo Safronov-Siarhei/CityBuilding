@@ -558,6 +558,9 @@ namespace CityBuilder.EditorTools
             // Map 5, the Caldera (Tools/blender/map5.py): the town on a volcano's floor, a ring of
             // mountains that four gorges cut through, the orcs outside it.
             CreateMeshMapDefinition("Map5", "Map-5", null);
+            // The archipelago (the user, 2026-10-29): the sandbox's map from now on, generated in the
+            // game from a seed -- only its template is made here.
+            CreateArchipelagoDefinition();
             // The Invasion mode's first map (Tools/blender/invasion1.py): the base island in the
             // middle, three lanes over three bridges to three orc camps, jungles between them. Not
             // in the sandbox's map picker -- only «В бой» plays it.

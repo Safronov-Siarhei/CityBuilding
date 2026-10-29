@@ -127,8 +127,18 @@ namespace CityBuilder.Maps
             if (map == null) return; // not a mesh map id -- leave it for MapTerrainGenerator (legacy PNG saves)
 
             CurrentMapId = mapId;
-            CurrentMap = map;
-            Apply(map);
+            if (map.IsGenerated)
+            {
+                // a copy: the spots it gets are this seed's, and the template asset must not keep them
+                CurrentMap = Instantiate(map);
+                ApplyGenerated(CurrentMap, mapId);
+            }
+            else
+            {
+                CurrentMap = map;
+                Apply(map);
+            }
+            map = CurrentMap;
             // A designed map shows where the Town Hall may go until it stands (see StartZone).
             if (map.TownHallZone.Length >= 3 && !CityBuilder.Buildings.BuildingInstance.HasAny(CityBuilder.Buildings.BuildingIds.TownHall))
             {
@@ -402,6 +412,116 @@ namespace CityBuilder.Maps
                 Destroy(treesAreaInstance);
             }
 
+            FillTheLand(map);
+        }
+
+        /// <summary>
+        /// The archipelago (the user, 2026-10-29): its islands generated from the seed in the map's id
+        /// (ArchipelagoGenerator), built as meshes here (ArchipelagoMeshes) and handed the same way
+        /// as a Blender map's: the plain is the NavMesh and the land test, the relief is not. The
+        /// cells come straight from the generator rather than from a raycast per cell -- a 500 m
+        /// world is a quarter of a million of them.
+        /// </summary>
+        private void ApplyGenerated(MeshMapDefinition map, string mapId)
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+            Archipelago.ArchipelagoMapId.TryParse(mapId, out var seed, out _);
+            var world = Archipelago.ArchipelagoGenerator.Generate(seed);
+            var n = world.Size;
+            var origin = grid.CellToWorld(Vector2Int.zero);
+            Vector2 At(Vector2Int cell) => new Vector2(origin.x + cell.x + 0.5f, origin.z + cell.y + 0.5f);
+
+            // the start zone an octagon round the start island's spot; the orcs' main base on theirs;
+            // no camps (the user, 2026-10-29: only the main island for now); the bot's spot kept
+            var zone = new Vector2[8];
+            var start = At(world.StartCell);
+            var r = Archipelago.ArchipelagoGenerator.StartZoneRadiusMeters;
+            for (var k = 0; k < 8; k++)
+            {
+                var a = Mathf.PI / 8f + k * Mathf.PI / 4f;
+                zone[k] = start + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+            }
+            map.EditorInitializeSpots(At(world.OrcBaseCell), new Vector2[0], new int[0], zone,
+                new[] { new MapSpot { kind = "bot", position = At(world.BotCell), level = 1 } });
+
+            if (baseGroundToHide != null) baseGroundToHide.SetActive(false);
+            if (baseForestBorderToHide != null) baseForestBorderToHide.SetActive(false);
+            TerrainPhysicsLayer.ExcludeFromCollisions();
+            SeasonStyle.MapForced = map.ForcedSeason;
+            SeasonStyle.ApplyToScene();
+
+            var (ground, relief) = Archipelago.ArchipelagoMeshes.Build(world, origin, map.TerrainMaterial, transform);
+            _groundInstance = ground;
+            SeasonStyle.DressTerrain(ground);
+            AddMeshCollidersToAll(ground);
+            TerrainPhysicsLayer.Assign(ground);
+            SceneryShadows.DisableCasting(ground);
+            _groundColliders = ground.GetComponentsInChildren<Collider>();
+            BuildNavMesh();
+
+            _reliefInstance = relief;
+            SeasonStyle.DressTerrain(relief);
+            AddMeshCollidersToAll(relief);
+            TerrainPhysicsLayer.Assign(relief);
+            SceneryShadows.DisableCasting(relief);
+            _reliefColliders = relief.GetComponentsInChildren<Collider>();
+
+            var sea = Archipelago.ArchipelagoMeshes.Sea(world, origin, map.TerrainMaterial, transform);
+            SeasonStyle.DressTerrain(sea);
+            TerrainPhysicsLayer.Assign(sea);
+            SceneryShadows.DisableCasting(sea);
+
+            // the cells: water where there is no plain; boats may stand within four metres of a
+            // shore; the forest, the stony clearings; nothing built on the relief or a cliff
+            const int dockReach = 4;
+            for (var z = 0; z < n; z++)
+            for (var x = 0; x < n; x++)
+            {
+                var i = z * n + x;
+                var cell = new Vector2Int(x, z);
+                if (!world.Land[i])
+                {
+                    _waterCells.Add(cell);
+                    if (LandWithin(world, x, z, dockReach)) _waterPlacementZoneCells.Add(cell);
+                    continue;
+                }
+                if (world.IsRelief(i))
+                {
+                    // relief is land to the land test but no cell of the plain
+                    _noBuildCells.Add(cell);
+                    continue;
+                }
+                if (world.Cliff[i]) _noBuildCells.Add(cell);
+                if (world.Forest[i]) _treesZoneCells.Add(cell);
+                if (world.Stony[i]) _rocksZoneCells.Add(cell);
+            }
+
+            // the camera and the minimap's frame reach over the whole archipelago
+            var half = n * grid.CellSize * 0.5f;
+            var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
+            if (rig != null) rig.SetPanBounds(new Vector2(-half + 10f, -half + 10f), new Vector2(half - 10f, half - 10f));
+            var indicator = FindAnyObjectByType<CityBuilder.UI.MinimapCameraIndicator>();
+            if (indicator != null) indicator.MapHalfExtent = half;
+
+            FillTheLand(map);
+        }
+
+        private static bool LandWithin(Archipelago.ArchipelagoMap world, int x, int z, int reach)
+        {
+            var n = world.Size;
+            for (var dz = -reach; dz <= reach; dz++)
+            for (var dx = -reach; dx <= reach; dx++)
+            {
+                int xx = x + dx, zz = z + dz;
+                if (xx >= 0 && zz >= 0 && xx < n && zz < n && world.Land[zz * n + xx]) return true;
+            }
+            return false;
+        }
+
+        /// <summary>What every map grows once its cells are known: the ore veins, the forest, the boulders, the props.</summary>
+        private void FillTheLand(MeshMapDefinition map)
+        {
             // The ore veins first of all: they are dealt from the map's id alone, so they have to
             // take their ground before the forest and the boulders (dealt by unseeded Random)
             // take theirs -- or the same map would deal different veins on every load.
@@ -409,9 +529,12 @@ namespace CityBuilder.Maps
 
             // Called even when the zone resolved to nothing, so TreesAreaSpawner gets to report a
             // forest that silently failed to materialise rather than staying quiet about it.
-            if (map.TreesAreaPrefab != null && TreesAreaSpawner.Instance != null)
+            if ((map.TreesAreaPrefab != null || map.IsGenerated) && TreesAreaSpawner.Instance != null)
             {
-                TreesAreaSpawner.Instance.Initialize(_treesZoneCells.ToArray(), map.TreePrefabs);
+                // a generated map's forest is as dense as a designed map's -- a tree to every ten
+                // forest cells -- up to what a phone carries (1800 trees, the user's devices to check)
+                var count = map.IsGenerated ? Mathf.Clamp(_treesZoneCells.Count / 10, 600, 1800) : 0;
+                TreesAreaSpawner.Instance.Initialize(_treesZoneCells.ToArray(), map.TreePrefabs, count);
             }
 
             // After the forest, so boulders can't land on a cell a tree already took (they share

@@ -42,6 +42,13 @@ namespace CityBuilder.CameraControl
         [SerializeField] private Vector2 panBoundsMin = new Vector2(-100f, -100f);
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
+        /// <summary>A map bigger than the scene was built for (the archipelago) widens where the camera may go.</summary>
+        public void SetPanBounds(Vector2 min, Vector2 max)
+        {
+            panBoundsMin = min;
+            panBoundsMax = max;
+        }
+
         [Header("Zoom")]
         /// <summary>
         /// How far the camera may sit from the rig point, in metres. These two numbers decide how
