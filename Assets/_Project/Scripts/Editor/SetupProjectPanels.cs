@@ -685,7 +685,6 @@ namespace CityBuilder.EditorTools
             var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-560f, 452f), new Vector2(400f, 68f));
             var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(560f, 452f), new Vector2(400f, 68f));
 
-            var condition = CreateText(card.transform, "Condition", string.Empty, 20, new Vector2(520f, 380f), new Vector2(300f, 30f), new Color(1f, 0.6f, 0.5f));
 
             // the player's coins and upgrade crystals, top centre -- nothing else (the user's mockup)
             var crystalIcon = IconSprite("Res_UpgradeCrystal");
@@ -791,7 +790,6 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(controller);
             so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             so.FindProperty("titleLabel").objectReferenceValue = title;
-            so.FindProperty("conditionLabel").objectReferenceValue = condition;
             so.FindProperty("coinsLabel").objectReferenceValue = coins;
             so.FindProperty("crystalsLabel").objectReferenceValue = crystals;
             so.FindProperty("bubble").objectReferenceValue = bubble.rectTransform;

@@ -41,7 +41,6 @@ namespace CityBuilder.UI
 
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Text titleLabel;
-        [SerializeField] private Text conditionLabel;
         [SerializeField] private Text coinsLabel;
         [SerializeField] private Text crystalsLabel;
         [SerializeField] private Text scientistsLabel;
@@ -754,11 +753,6 @@ namespace CityBuilder.UI
             if (_lab == null || _lab.Data == null) return;
 
             if (titleLabel != null) titleLabel.text = Localization.Format("#research_title", _lab.Data.LocalizedName, _lab.Level);
-            if (conditionLabel != null)
-            {
-                conditionLabel.gameObject.SetActive(_lab.CurrentHealth < _lab.MaxHealth);
-                conditionLabel.text = $"{_lab.CurrentHealth}/{_lab.MaxHealth}";
-            }
 
             var assigned = _labWorkplace != null ? _labWorkplace.AssignedWorkers : 0;
             var max = _labWorkplace != null ? _labWorkplace.MaxWorkers : 0;
