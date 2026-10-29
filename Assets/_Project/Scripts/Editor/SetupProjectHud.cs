@@ -177,8 +177,9 @@ namespace CityBuilder.EditorTools
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
             // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers
-            BuildHireBar(row.transform, FocusHireBar.Kind.Shipyard, new[] { SoldierType.Militia, SoldierType.Spearman },
-                new[] { "PortraitShipScout", "PortraitShipTransport" }, iconLibrary, new[] { "ShipScout", "ShipTransport" });
+            BuildHireBar(row.transform, FocusHireBar.Kind.Shipyard, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms },
+                new[] { "PortraitShipScout", "PortraitShipTransport", "PortraitShipWar", "PortraitShipBattleship" }, iconLibrary,
+                new[] { "ShipScout", "ShipTransport", "ShipWar", "ShipBattleship" });
 
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
@@ -588,15 +589,20 @@ namespace CityBuilder.EditorTools
         /// A selected transport's landing button where the build menu stands (ShipActionBar): the
         /// people glyph, «aboard/seats» on a plaque at its foot.
         /// </summary>
-        private static void BuildShipActionBar(Transform uiRoot)
+        private static void BuildShipActionBar(Transform uiRoot, ResourceIconLibrary iconLibrary)
         {
             const float size = 128f;
-            var row = new GameObject("ShipActionBar", typeof(RectTransform));
+            // one centred row: land, then repair; each hides itself when it does not apply
+            var row = new GameObject("ShipActionBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             row.transform.SetParent(uiRoot, false);
             row.AddComponent<HudOverlay>();
-            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(size, size + 16f));
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(size * 2f + 28f, size + 16f));
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 28f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = layout.childControlHeight = false;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
             var button = CreateGlyphButton(row.transform, "LandButton", "round", HudInk.OnRound, "People", null, size);
-            Anchor((RectTransform)button.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
             var plaque = HudImage(button.transform, "Seats", "plaque", new Vector2(110f, 44f));
             plaque.raycastTarget = false;
             Anchor(plaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -14f), new Vector2(110f, 44f));
@@ -604,6 +610,22 @@ namespace CityBuilder.EditorTools
             seats.font = UiTheme.Heavy;
             seats.alignment = TextAnchor.MiddleCenter;
             seats.raycastTarget = false;
+
+            // repair: the hammer, the wood it costs on a plaque
+            var repair = CreateGlyphButton(row.transform, "RepairButton", "round", HudInk.OnRound, "Repair",
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hammer.png"), size);
+            var costPlaque = HudImage(repair.transform, "Cost", "plaque", new Vector2(116f, 44f));
+            costPlaque.raycastTarget = false;
+            Anchor(costPlaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -14f), new Vector2(116f, 44f));
+            var wood = CreateImage(costPlaque.transform, "Wood", Color.white);
+            wood.sprite = iconLibrary != null ? iconLibrary.GetIcon(CityBuilder.Resources.ResourceType.Wood) : null;
+            wood.preserveAspect = true;
+            wood.raycastTarget = false;
+            Anchor(wood.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-30f, 1f), new Vector2(32f, 32f));
+            var cost = CreateText(costPlaque.transform, "Amount", "0", 26, new Vector2(18f, 1f), new Vector2(70f, 40f), UiTheme.Ink);
+            cost.font = UiTheme.Heavy;
+            cost.alignment = TextAnchor.MiddleLeft;
+            cost.raycastTarget = false;
 
             var go = new GameObject("ShipActionBarController");
             go.transform.SetParent(uiRoot, false);
@@ -613,6 +635,9 @@ namespace CityBuilder.EditorTools
             so.FindProperty("landButton").objectReferenceValue = button;
             so.FindProperty("landIcon").objectReferenceValue = button.transform.Find("Icon").GetComponent<Image>();
             so.FindProperty("seats").objectReferenceValue = seats;
+            so.FindProperty("repairButton").objectReferenceValue = repair;
+            so.FindProperty("repairIcon").objectReferenceValue = repair.transform.Find("Icon").GetComponent<Image>();
+            so.FindProperty("repairCost").objectReferenceValue = cost;
             so.ApplyModifiedPropertiesWithoutUndo();
             row.SetActive(false);
         }

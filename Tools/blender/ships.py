@@ -4,6 +4,10 @@
   carries nobody, opens the sea's fog. About 3 m long.
 - ShipTransport: a cog -- a deep round hull, a raised castle at the stern with a blue awning,
   one mast with a big square sail striped blue; carries citizens, soldiers and heroes. About 5 m.
+- ShipWar: a carrack -- a dark hull with a red wale, three guns a side, a forecastle and a stern
+  castle, two masts with white sails crossed blue. Shipyard level 3. About 4.6 m.
+- ShipBattleship: a galleon -- a long two-decked hull, five guns a side on each deck, a tall
+  gilded stern castle under a blue roof, three masts. Carries a landing party. Level 4. About 6.6 m.
 - Shipyard1-lvl1: a slipway out over the water on piles (3 x 4 cells): a planked deck, a hull's
   ribs on the stocks, a timber crane and a stack of planks, a blue banner on a post.
 
@@ -87,6 +91,78 @@ def ship_transport():
     return b
 
 
+def guns(b, ys, z, beam):
+    """A gun a side at each y: a dark port in the hull, an iron barrel run out of it."""
+    for y in ys:
+        for side in (-1, 1):
+            x = side * beam / 2
+            b.box(x - 0.03 if side > 0 else x - 0.01, x + 0.01 if side > 0 else x + 0.03, y - 0.11, y + 0.11, z - 0.09, z + 0.09, 'window')
+            b.rod((x, y, z), (x + side * 0.28, y, z), 0.085, 'iron')
+
+
+def ship_war():
+    b = Builder()
+    hull(b, 4.6, 1.5, 0.64, colour='wood_dark', rail='wood_light', stations=9)
+    for x0, x1 in ((-0.76, -0.7), (0.7, 0.76)):                          # the red wale
+        b.box(x0, x1, -1.5, 1.5, 0.5, 0.58, 'banner_red')
+    b.box(-0.68, 0.68, -1.7, 1.7, 0.62, 0.66, 'wood_light')               # the deck
+    guns(b, (-0.8, 0.0, 0.8), 0.36, 1.42)
+    # the forecastle (-y) and the stern castle (+y)
+    b.box(-0.6, 0.6, -2.05, -1.35, 0.64, 1.0, 'wood_mid', bevel=0.02)
+    b.box(-0.64, 0.64, -2.1, -1.3, 1.0, 1.05, 'wood_dark')
+    b.box(-0.72, 0.72, 1.25, 2.2, 0.64, 1.3, 'wood_mid', bevel=0.02)
+    b.box(-0.76, 0.76, 1.2, 2.25, 1.3, 1.36, 'wood_dark')
+    for x in (-0.45, 0.0, 0.45):                                         # the castle's windows
+        b.box(x - 0.1, x + 0.1, 2.22, 2.26, 0.85, 1.1, 'window_light')
+    # two masts, white sails crossed blue
+    b.cylinder(0, -0.55, 0.64, 3.6, 0.07, 'wood_dark', sides=6)
+    sail(b, 0, -0.45, 1.3, 3.3, 1.8, 'white', stripe='banner_blue')
+    b.prism([(-0.9, 2.3), (0.9, 2.3), (0.9, 2.42), (-0.9, 2.42)], (0, -0.525, 0), (1, 0, 0), (0, 0, 1), 0.01, 'banner_blue', back_cap=True)
+    b.cylinder(0, 0.9, 0.64, 3.0, 0.06, 'wood_dark', sides=6)
+    sail(b, 0, 1.0, 1.5, 2.8, 1.3, 'white', stripe='banner_blue')
+    b.prism([(0, 3.6), (0.7, 3.5), (0.58, 3.56), (0.7, 3.64), (0, 3.72)], (0, -0.55, 0), (1, 0, 0), (0, 0, 1), 0.01,
+            'banner_blue', back_cap=True)
+    b.rod((0, -2.3, 0.95), (0, -2.9, 1.25), 0.06, 'wood_dark')             # the bowsprit
+    return b
+
+
+def ship_battleship():
+    b = Builder()
+    hull(b, 6.6, 2.1, 0.95, colour='wood_dark', rail='wood_light', stations=11)
+    for x0, x1 in ((-1.06, -0.99), (0.99, 1.06)):                        # two red wales
+        for z0 in (0.42, 0.78):
+            b.box(x0, x1, -2.3, 2.3, z0, z0 + 0.07, 'banner_red')
+    b.box(-0.95, 0.95, -2.5, 2.5, 0.93, 0.97, 'wood_light')               # the upper deck
+    guns(b, (-1.6, -0.8, 0.0, 0.8, 1.6), 0.3, 2.0)                        # the lower battery
+    guns(b, (-1.2, -0.4, 0.4, 1.2), 0.66, 2.0)                            # the upper battery
+    # the forecastle
+    b.box(-0.85, 0.85, -3.0, -2.1, 0.95, 1.35, 'wood_mid', bevel=0.02)
+    b.box(-0.9, 0.9, -3.05, -2.05, 1.35, 1.41, 'wood_dark')
+    # the tall stern castle, gilded, under a blue roof
+    b.box(-1.0, 1.0, 1.8, 3.15, 0.95, 1.95, 'wood_mid', bevel=0.02)
+    b.box(-1.04, 1.04, 1.76, 3.19, 1.95, 2.02, 'gold')
+    for z0 in (1.15, 1.55):
+        for x in (-0.6, -0.2, 0.2, 0.6):
+            b.box(x - 0.12, x + 0.12, 3.16, 3.2, z0, z0 + 0.25, 'window_light')
+    b.pyramid(0, 2.5, 2.02, 1.0, 0.7, 2.55, 'roof_blue')
+    b.cylinder(0, 3.25, 1.2, 2.4, 0.05, 'gold', sides=6)                   # the stern lantern post
+    b.cylinder(0, 3.25, 2.4, 2.6, 0.12, 'window_light', sides=6)
+    # three masts
+    b.cylinder(0, -1.5, 0.95, 4.6, 0.08, 'wood_dark', sides=6)
+    sail(b, 0, -1.4, 1.6, 3.0, 2.2, 'white', stripe='banner_blue')
+    sail(b, 0, -1.4, 3.2, 4.3, 1.6, 'white', stripe='banner_blue')
+    b.cylinder(0, 0.2, 0.95, 5.2, 0.09, 'wood_dark', sides=6)
+    sail(b, 0, 0.3, 1.7, 3.4, 2.5, 'white', stripe='banner_blue')
+    sail(b, 0, 0.3, 3.6, 4.9, 1.9, 'white', stripe='banner_blue')
+    b.box(-0.18, 0.18, 0.02, 0.38, 4.0, 4.15, 'wood_dark')                # the top
+    b.cylinder(0, 1.5, 2.02, 4.2, 0.07, 'wood_dark', sides=6)
+    sail(b, 0, 1.6, 2.5, 4.0, 1.4, 'white', stripe='banner_blue')
+    b.prism([(0, 5.2), (0.9, 5.08), (0.75, 5.16), (0.9, 5.26), (0, 5.34)], (0, 0.2, 0), (1, 0, 0), (0, 0, 1), 0.01,
+            'banner_blue', back_cap=True)
+    b.rod((0, -3.3, 1.3), (0, -4.1, 1.75), 0.08, 'wood_dark')              # the bowsprit
+    return b
+
+
 def shipyard():
     """3 x 4 cells over the water: x -1.5..1.5, y -2..2, the deck at 0.25 on piles down to -0.6."""
     b = Builder()
@@ -121,7 +197,8 @@ def shipyard():
     return b
 
 
-MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "Shipyard1-lvl1": shipyard}
+MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "ShipWar": ship_war, "ShipBattleship": ship_battleship,
+          "Shipyard1-lvl1": shipyard}
 
 
 def main():

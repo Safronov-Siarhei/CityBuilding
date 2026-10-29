@@ -5,6 +5,9 @@
 > from a Blender LIBRARY; the map code («2-482915») is in the pause menu and the sandbox screen.
 > **Ships, phase 3:** the Shipyard builds a scout (lvl 1) and a transport (lvl 2), they sail where
 > tapped and are saved. BOARDING and LANDING built 2026-10-29 (see «Boarding and landing»).
+> **Phase 4a (2026-10-29):** the war ship (lvl 3) and the battleship (lvl 4, carries 8), cannons,
+> health bars, sinking that drowns everyone aboard, repair at a Shipyard for wood (see «Sea war»).
+> Orc ships = phase 4b, next.
 > The user has NOT seen ships in game.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [fog-of-war](fog-of-war.md),
 > [army-and-soldiers](army-and-soldiers.md), [research-laboratory](research-laboratory.md).
@@ -47,6 +50,24 @@
 - The scout's reveal is its fog walker (radius = `engage_radius` 14 vs the transport's 8); what it
   opens stays open, like everything the fog opens -- final rule, nothing waits on a 3-state fog.
 
+## Sea war (phase 4a, built 2026-10-29)
+- Ships are `IDamageTarget`s with a health bar once hurt. An armed ship (units tab `attack_damage`
+  > 0: `ship_war`, `ship_battleship`) fires a CANNONBALL (`ProjectileKind.Cannonball`) every
+  `attack_interval_sec` at the nearest orc within `attack_range_units` m, else at an orc camp
+  building (+2.5 m reach to its walls). The scout and the transport carry no guns.
+- At 0 health `ShipManager.Sink`: everyone aboard drowns (`ArmyManager.NotifyDrowned`: a soldier is
+  gone, no corpse; a hero `Fall(drowned: true)` -- no Captain's Бессмертие at sea -- and rises at
+  the Town Hall as usual); the ship leaves `Ships` (not saved), heels over and goes down in 4 s;
+  event line `#ship_sunk` / `#ship_sunk_with`.
+- Repair: a holed ship's `ShipActionBar` shows a hammer button with the wood price; works only
+  within `ship_repair_reach_meters` (14) of a working Shipyard; price `ship_repair_wood_per_hp`
+  (0.5) x lost health, rounded up; mends to full at once. Blockers `#ship_whole`,
+  `#ship_repair_far`, `#ship_repair_cost`. The bar shows for a ship that carries people OR is holed.
+- My defaults the user has NOT confirmed: the numbers (war 220 HP / 12 dmg / 2.5 s / 11 m / 160
+  coins; battleship 520 / 18 / 3 s / 13 m / 340 coins / 8 seats), repair in WOOD, instant repair.
+- Next (4b): orc shipyard at the main base (shoots like a tower, rebuilt after a sheet-set time),
+  orc transports landing raids + escorting war ships; player towers and ships shoot orc ships.
+
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
   `IslandAsset.cs`, `ArchipelagoLibrary.cs`, `ArchipelagoMeshes.cs`, `ArchipelagoMapId.cs`
@@ -55,18 +76,20 @@
   water placement zone = 6 m from any shore in library mode; ends with `ShipManager.BuildSea`.
 - `Grid/GridManager` resizes to 500 in Awake (`ArchipelagoMapId.Pending()`).
 - Ships: `Ships/ShipUnit.cs` (`ShipKind`, `ShipStats` from units rows `ship_*`), `Ships/ShipManager.cs`
-  (sea NavMesh, `DescribeBuildBlocker`, `TryBuild`, `Spawn`), `Ships/ShipInput.cs` (via
+  (sea NavMesh, `DescribeBuildBlocker`, `TryBuild`, `Spawn`, `Sink`, `TryRepair`, `RepairCost`), `Ships/ShipInput.cs` (via
   `Input/WorldInputDispatcher`), `UI/FocusHireBar.cs` `Kind.Shipyard`.
 - Map code UI: `UI/GameMenuController.cs` (plaque, copy), `UI/SandboxScreenController.cs` (input).
 - Save: `SaveData.ShipEntry`, `GameSaveData.ships`, `GameSaveController`.
 - Editor: `SetupProjectMaps.CreateArchipelagoDefinition/CreateArchipelagoLibrary`,
   `SetupProjectCityScene` (Shipyard building, ShipManager with models), `SetupProjectHud` (third hire bar).
+- Projectile: `Combat/CombatProjectiles.cs` `Cannonball` (pooled ball mesh). UI: `UI/ShipActionBar.cs`
+  (land + repair), built by `SetupProjectHud.BuildShipActionBar`.
 - Blender: `Tools/blender/islands.py` (`-- <out.blend> <kind> <variant> [preview]`, writes
   `-cells.bytes`), `export_map.py` (`Isl-` prefix), `render_island.py`, `ships.py`.
 - Prototypes: `Tools/archipelago/islands_preview.py`, `archipelago_preview.py`.
 
 ## Data
-- units tab: `ship_scout`, `ship_transport` rows; columns `capacity`, `shipyard_level`, `max_count`
+- units tab: `ship_scout`, `ship_transport`, `ship_war`, `ship_battleship` rows; columns `capacity`, `shipyard_level`, `max_count`
   (`engage_radius` = scout reveal cells). Ships are skipped by the soldier balance test.
 - buildings tab: `Shipyard` (3×4, Water), health 160/256/400/576/800.
 - localization: `#unit_ship_*`, `#building_shipyard`, `#ship_*`, `#map_*_archipelago`, `#sandbox_code_*`,
@@ -75,11 +98,13 @@
 ## Tests
 - `Tests/EditMode/ArchipelagoGeneratorTests.cs`.
 - `Tests/PlayMode/ArchipelagoTests.cs`: map build + Town Hall in the zone; save round trip;
-  `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail`, `AGroup_BoardsATransportAtABeach_AndLandsAgain`
-  (both green 2026-10-29).
+  `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail`, `AGroup_BoardsATransportAtABeach_AndLandsAgain`,
+  `AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard` (all 5 green 2026-10-29).
 - `MapPickerTests.AMapCode_StartsThatVeryMap`.
 
 ## Traps already paid for
+- `kit.hull()`'s rail is a full-width slab: its colour IS the deck's (a gold rail = a gold deck).
+- `OrcUnit`/`OrcCampBuilding` implement `IsAlive` explicitly: test `CurrentHealth > 0` on them.
 - Island cells: 1 land, 2 no-build, 4 forest, 8 stony, 16 shore. A quarter turn maps (x,z)→(z,−x).
 - Island water meshes carry only coastal bands; the game draws the deep sea at −0.54.
 - `ArchipelagoLibrary` must live in its own file (Unity serialization).
@@ -90,8 +115,7 @@
 
 ## Open
 - Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
-- A sunk ship must kill everyone aboard and send a hero to respawn at the Town Hall (no sinking yet).
-- Phase 4: war ships, battleship, sea combat, orc shipyard + landings. Phase 5: lighthouse (coins),
+- Phase 4b: orc shipyard + orc ships + landings; towers vs ships. Ship levels in the Laboratory. Phase 5: lighthouse (coins),
   fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones (no longer needed by
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.

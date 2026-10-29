@@ -251,10 +251,11 @@ namespace CityBuilder.Combat
         /// experience stay where they are. The Captain's Бессмертие, when it is ready, has him back
         /// on his feet where he fell instead (HeroSkills.TryCheatDeath).
         /// </summary>
-        public void Fall()
+        public void Fall(bool drowned = false)
         {
             if (IsFallen) return;
-            var skills = GetComponent<HeroSkills>();
+            // drowned with a ship: Бессмертие would leave him standing on the sea
+            var skills = drowned ? null : GetComponent<HeroSkills>();
             if (skills != null && skills.TryCheatDeath()) return;
             IsFallen = true;
             ReturnIn = -1f;
@@ -267,7 +268,7 @@ namespace CityBuilder.Combat
             if (_controller != null) _controller.enabled = false;
             // he falls where he stood, as an orc does, and is gone until he rises at the castle
             // (the user, 2026-10-23: the Queen gave her life and just vanished on her feet)
-            OrcCorpse.LeaveCopy(transform, null);
+            if (!drowned) OrcCorpse.LeaveCopy(transform, null);
             SetVisible(false);
             StopRevealing();
             Changed?.Invoke();

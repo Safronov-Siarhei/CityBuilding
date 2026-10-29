@@ -442,6 +442,84 @@ MonoBehaviour:
     unlockResearch:
       coins: 0
       seconds: 0
+  - id: ship_war
+    displayName: "\u0411\u043E\u0435\u0432\u043E\u0439 \u043A\u043E\u0440\u0430\u0431\u043B\u044C"
+    attackRangeUnits: 11
+    attackRangeStructures: 11
+    engageRadius: 10
+    levels:
+    - maxHealth: 220
+      attackDamage: 12
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.5
+      recruitCoins: 160
+      upkeepCoinsPerDay: 0
+    - maxHealth: 220
+      attackDamage: 12
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.5
+      recruitCoins: 160
+      upkeepCoinsPerDay: 0
+    - maxHealth: 220
+      attackDamage: 12
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.5
+      recruitCoins: 160
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 3
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ship_battleship
+    displayName: "\u041B\u0438\u043D\u043A\u043E\u0440"
+    attackRangeUnits: 13
+    attackRangeStructures: 13
+    engageRadius: 10
+    levels:
+    - maxHealth: 520
+      attackDamage: 18
+      attackIntervalSeconds: 3
+      walkSpeed: 2.4
+      recruitCoins: 340
+      upkeepCoinsPerDay: 0
+    - maxHealth: 520
+      attackDamage: 18
+      attackIntervalSeconds: 3
+      walkSpeed: 2.4
+      recruitCoins: 340
+      upkeepCoinsPerDay: 0
+    - maxHealth: 520
+      attackDamage: 18
+      attackIntervalSeconds: 3
+      walkSpeed: 2.4
+      recruitCoins: 340
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 8
+    shipyardLevel: 4
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
   buildings:
   - id: Hovel
     displayName: "\u041B\u0430\u0447\u0443\u0433\u0430"
@@ -5619,6 +5697,8 @@ MonoBehaviour:
   kingMaxLevel: 25
   kingRespawnBaseSeconds: 8
   kingRespawnPerLevelSeconds: 2
+  shipRepairWoodPerHp: 0.5
+  shipRepairReachMeters: 14
   kingXpRadius: 12
   kingGuardRadius: 30
   kingRevealRadius: 9

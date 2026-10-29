@@ -34,6 +34,7 @@ namespace CityBuilder.Ships
         }
 
         private readonly List<Boarding> _boarding = new List<Boarding>();
+        private static readonly Collider[] Near = new Collider[256];
 
         [SerializeField] private GameObject[] models = new GameObject[0];   // by ShipKind
 
@@ -202,6 +203,77 @@ namespace CityBuilder.Ships
             return null;
         }
 
+        /// <summary>
+        /// Holed through (the user, 2026-10-28): everyone aboard drowns -- a soldier is lost, a
+        /// hero falls and rises at the Town Hall after his wait -- and the ship goes down.
+        /// </summary>
+        public void Sink(ShipUnit ship)
+        {
+            if (ship == null || ship.Sinking) return;
+            var army = Combat.ArmyManager.Instance;
+            var drowned = ship.Aboard.Count;
+            foreach (var unit in ship.Aboard.ToArray()) army?.NotifyDrowned(unit, ship.transform.position);
+            ship.Aboard.Clear();
+            _boarding.RemoveAll(b => b.Ship == ship);
+            _ships.Remove(ship);
+            if (ShipInput.Selected == ship) ShipInput.Select(null);
+            ship.BeginSinking();
+            var line = drowned > 0
+                ? Localization.Format("#ship_sunk_with", ShipStats.DisplayName(ship.Kind), drowned)
+                : Localization.Format("#ship_sunk", ShipStats.DisplayName(ship.Kind));
+            EventLogManager.Instance?.Post(GameEvent.At(line, EventSeverity.Danger, EventGlyph.Skull, ShipyardId, ship.transform.position));
+        }
+
+        /// <summary>What mending this ship to full costs: ship_repair_wood_per_hp wood per lost point, rounded up; null when whole.</summary>
+        public static List<ResourceAmount> RepairCost(ShipUnit ship)
+        {
+            if (ship == null || ship.Health >= ship.MaxHealth) return null;
+            var per = BalanceConfig.Instance != null ? BalanceConfig.Instance.ShipRepairWoodPerHp : 0.5f;
+            var wood = Mathf.Max(1, Mathf.CeilToInt((ship.MaxHealth - ship.Health) * per));
+            return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = wood } };
+        }
+
+        /// <summary>A working Shipyard within ship_repair_reach_meters of the ship, or null.</summary>
+        public static BuildingInstance ShipyardNear(ShipUnit ship)
+        {
+            if (ship == null) return null;
+            var reach = BalanceConfig.Instance != null ? BalanceConfig.Instance.ShipRepairReachMeters : 14f;
+            BuildingInstance best = null;
+            var bestDistance = reach;
+            // the buildings' click boxes round the ship: no scene search on a phone every refresh
+            var count = Physics.OverlapSphereNonAlloc(ship.transform.position, reach, Near, ~0, QueryTriggerInteraction.Collide);
+            for (var i = 0; i < count; i++)
+            {
+                var building = Near[i].GetComponentInParent<BuildingInstance>();
+                if (building == null || building.Data == null || building.Data.buildingName != ShipyardId || !building.IsOperational) continue;
+                var d = Flat(building.transform.position - ship.transform.position);
+                if (d > bestDistance) continue;
+                bestDistance = d;
+                best = building;
+            }
+            return best;
+        }
+
+        /// <summary>Why this ship cannot be mended now, or null when it can (the user: repair only for resources, at the Shipyard).</summary>
+        public string DescribeRepairBlocker(ShipUnit ship)
+        {
+            var cost = RepairCost(ship);
+            if (cost == null) return Localization.Get("#ship_whole");
+            if (ShipyardNear(ship) == null) return Localization.Get("#ship_repair_far");
+            if (ResourceManager.Instance != null && !ResourceManager.Instance.HasEnough(cost)) return Localization.Format("#ship_repair_cost", cost[0].amount);
+            return null;
+        }
+
+        /// <summary>Pays and mends the ship to full; false (and nothing paid) when it cannot.</summary>
+        public bool TryRepair(ShipUnit ship)
+        {
+            if (DescribeRepairBlocker(ship) != null) return false;
+            var cost = RepairCost(ship);
+            if (ResourceManager.Instance != null && !ResourceManager.Instance.TrySpend(cost)) return false;
+            ship.Repair();
+            return true;
+        }
+
         /// <summary>Everyone aboard onto the beach the ship stands at; how many landed (0 = no beach or nobody aboard).</summary>
         public int TryLand(ShipUnit ship)
         {
@@ -304,7 +376,7 @@ namespace CityBuilder.Ships
                 foreach (var r in figure.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.On;
             }
             var box = root.AddComponent<BoxCollider>();
-            var len = kind == ShipKind.Scout ? 3f : 5f;
+            var len = kind == ShipKind.Scout ? 3f : kind == ShipKind.Battleship ? 7f : 5f;
             box.size = new Vector3(len * 0.45f, 2.5f, len);
             box.center = new Vector3(0f, 1f, 0f);
             var ship = root.AddComponent<ShipUnit>();

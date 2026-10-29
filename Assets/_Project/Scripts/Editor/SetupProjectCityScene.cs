@@ -589,6 +589,8 @@ namespace CityBuilder.EditorTools
             {
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipScout.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipTransport.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipWar.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipBattleship.fbx"),
             });
             shipSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();

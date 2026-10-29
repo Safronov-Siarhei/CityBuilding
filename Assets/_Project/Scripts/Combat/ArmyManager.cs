@@ -233,6 +233,26 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
+        /// Went down with a ship (ShipManager.Sink): a soldier is lost with no body to leave; a hero
+        /// falls -- no last-moment escape at sea -- and rises at the Town Hall as from any fall.
+        /// </summary>
+        public void NotifyDrowned(SoldierUnit unit, Vector3 at)
+        {
+            if (unit == null) return;
+            unit.transform.position = at;
+            var hero = unit.GetComponent<Hero>();
+            if (hero != null)
+            {
+                unit.gameObject.SetActive(true);
+                hero.Fall(true);
+                return;
+            }
+            RemoveFromGroup(unit);
+            Destroy(unit.gameObject);
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>
         /// Puts a saved group back, with the rally point and target priority the player had given
         /// it. Empty of members until RestoreSoldier fills it -- the two are separate so the group
         /// exists before its first soldier asks for a formation slot in it.

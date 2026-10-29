@@ -6,11 +6,12 @@ using UnityEngine.Rendering;
 
 namespace CityBuilder.Combat
 {
-    /// <summary>What flies: an arrow (the player's towers, archers, the orcs' towers) or an orc thrower's javelin.</summary>
+    /// <summary>What flies: an arrow (the player's towers, archers, the orcs' towers), an orc thrower's javelin or a ship's cannonball.</summary>
     public enum ProjectileKind
     {
         Arrow = 0,
         Javelin = 1,
+        Cannonball = 2,
     }
 
     /// <summary>
@@ -46,11 +47,13 @@ namespace CityBuilder.Combat
 
         private const float ArrowSpeed = 14f;
         private const float JavelinSpeed = 9f;
+        private const float CannonballSpeed = 16f;
         private const float MinFlightSeconds = 0.22f;
         private const float MaxFlightSeconds = 0.9f;
         // Peak of the arc as a share of the distance flown: an arrow flies flat, a javelin is lobbed.
         private const float ArrowArc = 0.1f;
         private const float JavelinArc = 0.16f;
+        private const float CannonballArc = 0.2f;
 
         private const float StickSeconds = 0.45f;
         private const float StickShrinkSeconds = 0.15f;
@@ -68,6 +71,7 @@ namespace CityBuilder.Combat
 
         private static readonly Color ArrowColor = new Color(0.86f, 0.74f, 0.52f);
         private static readonly Color JavelinColor = new Color(0.62f, 0.45f, 0.3f);
+        private static readonly Color CannonballColor = new Color(0.16f, 0.16f, 0.18f);
         private static readonly Color ChipColor = new Color(0.93f, 0.88f, 0.76f);
 
         private static CombatProjectiles _instance;
@@ -75,15 +79,17 @@ namespace CityBuilder.Combat
 
         private readonly List<Shot> _shots = new List<Shot>(32);
         private readonly List<Chip> _chips = new List<Chip>(64);
-        private readonly Stack<Transform> _arrowPool = new Stack<Transform>();
-        private readonly Stack<Transform> _javelinPool = new Stack<Transform>();
+        // by ProjectileKind
+        private readonly Stack<Transform>[] _pools = { new Stack<Transform>(), new Stack<Transform>(), new Stack<Transform>() };
         private readonly Stack<Transform> _chipPool = new Stack<Transform>();
 
         private Mesh _arrowMesh;
         private Mesh _javelinMesh;
+        private Mesh _cannonballMesh;
         private Mesh _chipMesh;
         private Material _arrowMaterial;
         private Material _javelinMaterial;
+        private Material _cannonballMaterial;
         private Material _chipMaterial;
 
         /// <summary>Shots in the air or stuck in a target right now -- for tests.</summary>
@@ -263,13 +269,13 @@ namespace CityBuilder.Combat
 
             var aim = shot.TargetTransform.position + shot.AimOffset;
             var distance = Vector3.Distance(from, aim);
-            var speed = kind == ProjectileKind.Javelin ? JavelinSpeed : ArrowSpeed;
+            var speed = kind == ProjectileKind.Javelin ? JavelinSpeed : kind == ProjectileKind.Cannonball ? CannonballSpeed : ArrowSpeed;
 
             shot.Kind = kind;
             shot.Start = from;
             shot.Aim = aim;
             shot.Duration = Mathf.Clamp(distance / speed, MinFlightSeconds, MaxFlightSeconds);
-            shot.Arc = distance * (kind == ProjectileKind.Javelin ? JavelinArc : ArrowArc);
+            shot.Arc = distance * (kind == ProjectileKind.Javelin ? JavelinArc : kind == ProjectileKind.Cannonball ? CannonballArc : ArrowArc);
             shot.Visual = Take(kind);
             PlaceInFlight(ref shot, 0f);
             _shots.Add(shot);
@@ -407,12 +413,14 @@ namespace CityBuilder.Combat
 
         private Transform Take(ProjectileKind kind)
         {
-            var pool = kind == ProjectileKind.Javelin ? _javelinPool : _arrowPool;
+            var pool = _pools[(int)kind];
             var visual = pool.Count > 0
                 ? pool.Pop()
                 : kind == ProjectileKind.Javelin
                     ? CreatePiece("Javelin", JavelinMesh, JavelinMaterial)
-                    : CreatePiece("Arrow", ArrowMesh, ArrowMaterial);
+                    : kind == ProjectileKind.Cannonball
+                        ? CreatePiece("Cannonball", CannonballMesh, CannonballMaterial)
+                        : CreatePiece("Arrow", ArrowMesh, ArrowMaterial);
             visual.localScale = Vector3.one;
             visual.gameObject.SetActive(true);
             return visual;
@@ -422,7 +430,7 @@ namespace CityBuilder.Combat
         {
             if (visual == null) return;
             visual.gameObject.SetActive(false);
-            (kind == ProjectileKind.Javelin ? _javelinPool : _arrowPool).Push(visual);
+            _pools[(int)kind].Push(visual);
         }
 
         private Transform CreatePiece(string name, Mesh mesh, Material material)
@@ -439,15 +447,18 @@ namespace CityBuilder.Combat
             return go.transform;
         }
 
-        private static float LengthOf(ProjectileKind kind) => kind == ProjectileKind.Javelin ? 0.7f : 0.52f;
+        // a cannonball does not sink into what it hits: no length
+        private static float LengthOf(ProjectileKind kind) => kind == ProjectileKind.Javelin ? 0.7f : kind == ProjectileKind.Cannonball ? 0f : 0.52f;
 
         // Drawn larger than life on purpose: at the game's zoom a true-to-scale arrow is a pixel.
         private Mesh ArrowMesh => _arrowMesh != null ? _arrowMesh : _arrowMesh = BuildShaft("ShotArrow", LengthOf(ProjectileKind.Arrow), 0.036f, 0.09f, 0.13f);
         private Mesh JavelinMesh => _javelinMesh != null ? _javelinMesh : _javelinMesh = BuildShaft("ShotJavelin", LengthOf(ProjectileKind.Javelin), 0.042f, 0.095f, 0.15f);
+        private Mesh CannonballMesh => _cannonballMesh != null ? _cannonballMesh : _cannonballMesh = BuildBall();
         private Mesh ChipMesh => _chipMesh != null ? _chipMesh : _chipMesh = BuildChip();
 
         private Material ArrowMaterial => _arrowMaterial != null ? _arrowMaterial : _arrowMaterial = new Material(RuntimeShaders.Lit) { color = ArrowColor };
         private Material JavelinMaterial => _javelinMaterial != null ? _javelinMaterial : _javelinMaterial = new Material(RuntimeShaders.Lit) { color = JavelinColor };
+        private Material CannonballMaterial => _cannonballMaterial != null ? _cannonballMaterial : _cannonballMaterial = new Material(RuntimeShaders.Lit) { color = CannonballColor };
         private Material ChipMaterial => _chipMaterial != null ? _chipMaterial : _chipMaterial = new Material(RuntimeShaders.Unlit) { color = ChipColor };
 
         /// <summary>
@@ -521,6 +532,38 @@ namespace CityBuilder.Combat
                 AddTriangle(vertices, triangles, b, Vector3.down * 0.5f, a);
             }
             var mesh = new Mesh { name = "ShotChip" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>A cannonball: a low-poly ball 0.22 m across (drawn large, as the arrow is), smooth-shaded.</summary>
+        private static Mesh BuildBall()
+        {
+            const int rings = 5;
+            const int sides = 8;
+            const float radius = 0.11f;
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            for (var r = 0; r <= rings; r++)
+            {
+                var phi = Mathf.PI * r / rings;
+                for (var k = 0; k <= sides; k++)
+                {
+                    var theta = Mathf.PI * 2f * k / sides;
+                    vertices.Add(new Vector3(Mathf.Sin(phi) * Mathf.Cos(theta), Mathf.Cos(phi), Mathf.Sin(phi) * Mathf.Sin(theta)) * radius);
+                }
+            }
+            for (var r = 0; r < rings; r++)
+            for (var k = 0; k < sides; k++)
+            {
+                var i = r * (sides + 1) + k;
+                var j = i + sides + 1;
+                triangles.AddRange(new[] { i, i + 1, j, i + 1, j + 1, j });
+            }
+            var mesh = new Mesh { name = "ShotCannonball" };
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();

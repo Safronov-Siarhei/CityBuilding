@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3277211747410598696
+--- !u!1 &6001004711610278261
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,10 +8,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8514827462259638834}
-  - component: {fileID: 6471575649702333385}
-  - component: {fileID: 6550911732342174078}
-  - component: {fileID: 1001200051559216466}
+  - component: {fileID: 2491007647403961978}
+  - component: {fileID: 697718467289243958}
+  - component: {fileID: 8650999446077251564}
+  - component: {fileID: 4071767609821240806}
   m_Layer: 0
   m_Name: Road
   m_TagString: Untagged
@@ -19,42 +19,42 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8514827462259638834
+--- !u!4 &2491007647403961978
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3277211747410598696}
+  m_GameObject: {fileID: 6001004711610278261}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8550179282871586275}
-  - {fileID: 59506445959861737}
+  - {fileID: 5923265803324306512}
+  - {fileID: 7287678495794009252}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6471575649702333385
+--- !u!114 &697718467289243958
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3277211747410598696}
+  m_GameObject: {fileID: 6001004711610278261}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &6550911732342174078
+--- !u!65 &8650999446077251564
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3277211747410598696}
+  m_GameObject: {fileID: 6001004711610278261}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -69,21 +69,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.92, y: 0.032030515, z: 0.92}
   m_Center: {x: 0, y: 0.016015258, z: 0}
---- !u!114 &1001200051559216466
+--- !u!114 &4071767609821240806
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3277211747410598696}
+  m_GameObject: {fileID: 6001004711610278261}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5b9271cb3d3ae0b47941f8fbeeffdee8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingLevelAppearance
   levelModels:
-  - {fileID: 8694575679959179945}
-  - {fileID: 7350269832548917696}
+  - {fileID: 7774867635482457092}
+  - {fileID: 8892717417360906364}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -93,7 +93,7 @@ MonoBehaviour:
   - 0
   - 0
   - 0
---- !u!1 &7350269832548917696
+--- !u!1 &7774867635482457092
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,46 +101,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 59506445959861737}
-  - component: {fileID: 8079189036698530685}
-  - component: {fileID: 444727224253667324}
+  - component: {fileID: 5923265803324306512}
+  - component: {fileID: 4718504295732125271}
+  - component: {fileID: 1003934934047255513}
   m_Layer: 0
-  m_Name: Road-lvl2
+  m_Name: Road1-lvl1(Clone)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &59506445959861737
+  m_IsActive: 1
+--- !u!4 &5923265803324306512
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7350269832548917696}
+  m_GameObject: {fileID: 7774867635482457092}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.000015258789, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8514827462259638834}
+  m_Father: {fileID: 2491007647403961978}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8079189036698530685
+--- !u!33 &4718504295732125271
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7350269832548917696}
-  m_Mesh: {fileID: 2306568290835899537, guid: f876464172ba3094c8c9d5293ad92afa, type: 3}
---- !u!23 &444727224253667324
+  m_GameObject: {fileID: 7774867635482457092}
+  m_Mesh: {fileID: 5707277398198024280, guid: 37069e6a6f09dd241991f2d52c60bd81, type: 3}
+--- !u!23 &1003934934047255513
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7350269832548917696}
+  m_GameObject: {fileID: 7774867635482457092}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -183,7 +183,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &8694575679959179945
+--- !u!1 &8892717417360906364
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -191,46 +191,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8550179282871586275}
-  - component: {fileID: 8887931932535099432}
-  - component: {fileID: 3328516247734733780}
+  - component: {fileID: 7287678495794009252}
+  - component: {fileID: 6515895993027020267}
+  - component: {fileID: 8385131797073983978}
   m_Layer: 0
-  m_Name: Road1-lvl1(Clone)
+  m_Name: Road-lvl2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8550179282871586275
+  m_IsActive: 0
+--- !u!4 &7287678495794009252
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8694575679959179945}
+  m_GameObject: {fileID: 8892717417360906364}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.000015258789, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8514827462259638834}
+  m_Father: {fileID: 2491007647403961978}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8887931932535099432
+--- !u!33 &6515895993027020267
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8694575679959179945}
-  m_Mesh: {fileID: 5707277398198024280, guid: 37069e6a6f09dd241991f2d52c60bd81, type: 3}
---- !u!23 &3328516247734733780
+  m_GameObject: {fileID: 8892717417360906364}
+  m_Mesh: {fileID: 2306568290835899537, guid: f876464172ba3094c8c9d5293ad92afa, type: 3}
+--- !u!23 &8385131797073983978
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8694575679959179945}
+  m_GameObject: {fileID: 8892717417360906364}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

@@ -249,6 +249,67 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsFalse(MeshMapApplier.Instance.IsWaterCell(grid.WorldToCell(first.transform.position)), "A soldier was landed in the sea.");
         }
 
+        /// <summary>
+        /// Sea war, phase 4 (the user, 2026-10-28): a war ship's cannons hit an orc on the beach in
+        /// reach; a ship holed through goes down with everyone aboard; a holed ship is mended only
+        /// by a Shipyard, for wood.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var grid = GridManager.Instance;
+            var ships = CityBuilder.Ships.ShipManager.Instance;
+            var start = grid.GetFootprintCenterWorld(world.StartCell, Vector2Int.one);
+            Vector3? sea = null;
+            for (var r = 10f; r <= 160f && sea == null; r += 4f)
+            for (var k = 0; k < 24 && sea == null; k++)
+            {
+                var a = k * Mathf.PI / 12f;
+                var near = start + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
+                if (ships.TrySampleSea(near, 2f, out var p) && CityBuilder.Ships.ShipManager.TryFindLandingAt(p, out _)) sea = p;
+            }
+            Assert.IsTrue(sea.HasValue, "No sea by a beach of the start island.");
+
+            // the war ship and an orc on the beach it lies off
+            var war = ships.Spawn(CityBuilder.Ships.ShipKind.War, sea.Value, Quaternion.identity, CityBuilder.Ships.ShipStats.MaxHealth(CityBuilder.Ships.ShipKind.War));
+            Assert.Greater(CityBuilder.Ships.ShipStats.AttackDamage(CityBuilder.Ships.ShipKind.War), 0, "The war ship has no guns in the sheet.");
+            Assert.IsTrue(ships.TryFindLanding(war, out var beach));
+            var orc = CityBuilder.Combat.OrcRaidManager.Instance.SpawnOrcs(beach, count: 1, level: 1);
+            Assert.IsNotNull(orc, "No orc spawned on the beach.");
+            yield return null;
+            var full = orc.CurrentHealth;
+            for (var t = 0f; t < 10f && orc != null && orc.CurrentHealth == full; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(orc == null || orc.CurrentHealth < full, "The war ship never fired at the orc on the beach.");
+            ships.Remove(war);
+
+            // a battleship with a soldier aboard, holed through
+            var army = CityBuilder.Combat.ArmyManager.Instance;
+            var group = army.RestoreGroup(CityBuilder.Combat.SoldierType.Militia, beach, CityBuilder.Combat.TargetPriority.Units);
+            var soldier = army.RestoreSoldier(group, beach, 50);
+            var battleship = ships.Spawn(CityBuilder.Ships.ShipKind.Battleship, sea.Value, Quaternion.identity, CityBuilder.Ships.ShipStats.MaxHealth(CityBuilder.Ships.ShipKind.Battleship));
+            Assert.Greater(battleship.Capacity, 0, "The battleship carries nobody.");
+            Assert.IsTrue(battleship.Embark(soldier));
+            yield return null;
+
+            // holed: mended only by a Shipyard (none here), the price in wood
+            battleship.TakeDamage(10);
+            Assert.AreEqual(battleship.MaxHealth - 10, battleship.Health);
+            Assert.IsNotNull(ships.DescribeRepairBlocker(battleship), "Repaired with no Shipyard by.");
+            var cost = CityBuilder.Ships.ShipManager.RepairCost(battleship);
+            Assert.AreEqual(CityBuilder.Resources.ResourceType.Wood, cost[0].type);
+            Assert.Greater(cost[0].amount, 0);
+
+            battleship.TakeDamage(battleship.MaxHealth);
+            Assert.IsTrue(battleship.Sinking, "A ship at no health is still afloat.");
+            Assert.IsFalse(System.Linq.Enumerable.Contains(ships.Ships, battleship), "A sinking ship is still counted (and saved).");
+            yield return null;
+            Assert.IsTrue(soldier == null, "The soldier aboard survived the sinking.");
+            Assert.AreEqual(0, group.Count, "The drowned soldier is still in his group.");
+            for (var t = 0f; t < 6f && battleship != null; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(battleship == null, "The sunk ship never went down.");
+        }
+
         private static bool DeepRelief(ArchipelagoMap world, int i)
         {
             var n = world.Size;

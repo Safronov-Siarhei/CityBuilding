@@ -508,6 +508,8 @@ namespace CityBuilder.Core
         [SerializeField] private int kingMaxLevel = 25;
         [SerializeField] private float kingRespawnBaseSeconds = 8f;
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
+        [SerializeField] private float shipRepairWoodPerHp = 0.5f;
+        [SerializeField] private float shipRepairReachMeters = 14f;
         [SerializeField] private float kingXpRadius = 12f;
         [SerializeField] private float kingGuardRadius = 30f;
         [SerializeField] private int kingRevealRadius = 9;
@@ -804,6 +806,10 @@ namespace CityBuilder.Core
         public int KingMaxLevel => kingMaxLevel;
         public float KingRespawnBaseSeconds => kingRespawnBaseSeconds;
         public float KingRespawnPerLevelSeconds => kingRespawnPerLevelSeconds;
+        /// <summary>Wood a ship's repair costs per lost health point (the user: repair only for resources).</summary>
+        public float ShipRepairWoodPerHp => shipRepairWoodPerHp;
+        /// <summary>How near a working Shipyard a ship must be to be repaired, metres.</summary>
+        public float ShipRepairReachMeters => shipRepairReachMeters;
         public float KingXpRadius => kingXpRadius;
         public float KingGuardRadius => kingGuardRadius;
         public int KingRevealRadius => kingRevealRadius;
@@ -1267,6 +1273,8 @@ namespace CityBuilder.Core
             kingMaxLevel = (int)Read(economy, "king_max_level", kingMaxLevel);
             kingRespawnBaseSeconds = Read(economy, "king_respawn_base_sec", kingRespawnBaseSeconds);
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
+            shipRepairWoodPerHp = Read(economy, "ship_repair_wood_per_hp", shipRepairWoodPerHp);
+            shipRepairReachMeters = Read(economy, "ship_repair_reach_meters", shipRepairReachMeters);
             kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);
