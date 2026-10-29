@@ -1,11 +1,13 @@
 """A whole sandbox archipelago from one seed (the user, 2026-10-29): the prototype of the in-game
-generator's LAYOUT step. 400x400 m of sea with a stormy band round the edge («Бурное море», ships stop
+generator's LAYOUT step. 500x500 m of sea with a stormy band round the edge («Бурное море», ships stop
 at it); the player's start island near one side, the orcs' main island far across on the other, the
 bot's island off to a flank between them, and 9-17 ordinary islands in the rest of the sea, each its
 own kind and size, never closer than a strait a ship can pass (15-40 m of water between coasts).
 No small orc camps for now -- only the main island (the user, 2026-10-29).
 
     python Tools/archipelago/archipelago_preview.py <out.png> [seed ...]
+
+The orcs' island is never next door: its centre stands at least 55 % of the world from the start's.
 
 Several seeds draw several maps side by side.
 """
@@ -19,7 +21,7 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import islands_preview as isl  # noqa: E402
 
-WORLD = 400
+WORLD = 500               # the user, 2026-10-29: 500x500 (variant А) with smaller big islands (Б)
 STORM = 24                # the stormy band round the edge, metres
 STRAIT_MIN, STRAIT_MAX = 15, 40
 STORM_COLOUR = (38, 52, 74)
@@ -78,14 +80,17 @@ def layout(seed):
     side = rng.random() * math.tau
     c = WORLD / 2
     flank = math.pi / 2 * (1 if rng.random() < 0.5 else -1)
-    for kind, size, turn in (('start', 170, 0.0), ('orc', 160, math.pi), ('bot', 140, flank)):
+    for kind, size, turn in (('start', 130, 0.0), ('orc', 125, math.pi), ('bot', 120, flank)):
         def spots():
             for _ in range(60):
                 a = side + turn + rng.normal(0, 0.25)
-                d = rng.uniform(70, 150)    # pushed outward: the first that fits is taken, so try far first
+                d = rng.uniform(90, 200)    # pushed outward: the first that fits is taken, so try far first
                 yield c + math.cos(a) * d, c + math.sin(a) * d
         for attempt in range(25):
             ordered = sorted(spots(), key=lambda p: -math.hypot(p[0] - c, p[1] - c))
+            if kind == 'orc':
+                sx, sy = placed[0][1], placed[0][2]
+                ordered = [p for p in ordered if math.hypot(p[0] - sx, p[1] - sy) >= 0.55 * WORLD]
             if try_place(kind, size, seed * 1000 + attempt * 7 + len(placed), ordered):
                 break
         else:

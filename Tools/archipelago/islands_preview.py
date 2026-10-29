@@ -57,41 +57,45 @@ def fbm(size, rng, base=48, octaves=4):
 def island(kind, size, seed):
     """Returns (land mask, height 0..1, beach mask, markers) for one island of a kind."""
     rng = np.random.default_rng(seed)
+    # the island is drawn to `scale` inside a frame 40 % bigger, so a cape the noise throws out
+    # never runs into the frame's edge and comes back as a straight cut
+    scale = size
+    size = int(scale * 1.4)
     c = size / 2
     ys, xs = np.mgrid[0:size, 0:size].astype(float)
     angle0 = rng.random() * math.tau
     # the coast is bent twice: a slow wobble and a fine fringe (bays, capes, spits)
-    warp = ((fbm(size, rng, base=size // 3) - 0.5) * 0.75 + (fbm(size, rng, base=size // 7) - 0.5) * 0.45
-            + (fbm(size, rng, base=max(4, size // 18)) - 0.5) * 0.3)
+    warp = ((fbm(size, rng, base=scale // 3) - 0.5) * 0.75 + (fbm(size, rng, base=scale // 7) - 0.5) * 0.45
+            + (fbm(size, rng, base=max(4, scale // 18)) - 0.5) * 0.3)
     dx, dy = xs - c, ys - c
     ca, sa = math.cos(angle0), math.sin(angle0)
     u, v = dx * ca + dy * sa, -dx * sa + dy * ca   # the island's own axes, turned at random
     markers = []
 
     if kind in ('start', 'flat', 'hilly', 'rocky', 'orc', 'bot'):
-        r = {'start': 0.33, 'flat': 0.33, 'hilly': 0.34, 'rocky': 0.32, 'orc': 0.38, 'bot': 0.33}[kind] * size
+        r = {'start': 0.33, 'flat': 0.33, 'hilly': 0.34, 'rocky': 0.32, 'orc': 0.38, 'bot': 0.33}[kind] * scale
         squash = 1.0 + rng.random() * 0.35
         d = np.sqrt((u / squash) ** 2 + (v * squash * 0.9) ** 2) / r
     elif kind == 'long':
-        d = np.sqrt((u / (0.46 * size)) ** 2 + (v / (0.14 * size)) ** 2)
+        d = np.sqrt((u / (0.46 * scale)) ** 2 + (v / (0.14 * scale)) ** 2)
         # a gentle bend, so a long island is not a sausage
-        d = np.sqrt((u / (0.46 * size)) ** 2 + ((v - (u / size) ** 2 * size * 0.5) / (0.14 * size)) ** 2)
+        d = np.sqrt((u / (0.46 * scale)) ** 2 + ((v - (u / scale) ** 2 * scale * 0.5) / (0.14 * scale)) ** 2)
     elif kind == 'crescent':
-        r0 = 0.32 * size
-        ring = np.abs(np.sqrt(u ** 2 + v ** 2) - r0) / (0.11 * size)
-        bite = np.clip((u / (0.4 * size)) + 0.35, 0, None)   # the open side of the moon
+        r0 = 0.32 * scale
+        ring = np.abs(np.sqrt(u ** 2 + v ** 2) - r0) / (0.11 * scale)
+        bite = np.clip((u / (0.4 * scale)) + 0.35, 0, None)   # the open side of the moon
         d = ring + bite * 1.4
     elif kind == 'atoll':
-        r0 = 0.34 * size
-        thick = 0.06 + fbm(size, rng, base=size // 4) * 0.06     # the ring fattens and thins
-        d = np.abs(np.sqrt(u ** 2 + v ** 2) - r0) / (thick * size)
+        r0 = 0.34 * scale
+        thick = 0.06 + fbm(size, rng, base=scale // 4) * 0.06     # the ring fattens and thins
+        d = np.abs(np.sqrt(u ** 2 + v ** 2) - r0) / (thick * scale)
         # one or two channels into the lagoon
         ang = np.arctan2(v, u)
         for _ in range(int(rng.integers(1, 3))):
             a = rng.random() * math.tau
             d = d + np.exp(-(((ang - a + math.pi) % math.tau - math.pi) / 0.12) ** 2) * 2.0
     elif kind == 'islet':
-        d = np.sqrt(u ** 2 + v ** 2) / (0.16 * size)
+        d = np.sqrt(u ** 2 + v ** 2) / (0.16 * scale)
     else:
         raise ValueError(kind)
 
@@ -102,16 +106,16 @@ def island(kind, size, seed):
     inland = np.clip(1.0 - shore, 0, 1)   # 0 at the coast, rising inland
 
     h = inland * 0.5
-    detail = fbm(size, rng, base=size // 6)
+    detail = fbm(size, rng, base=scale // 6)
     if kind in ('flat', 'start', 'bot', 'islet', 'atoll'):
         h = inland * 0.25 + detail * 0.08
     elif kind == 'hilly':
         h = inland ** 0.8 * 0.75 + detail * 0.2
     elif kind in ('rocky', 'orc'):
-        ridges = 1 - np.abs(fbm(size, rng, base=size // 4) - 0.5) * 2
+        ridges = 1 - np.abs(fbm(size, rng, base=scale // 4) - 0.5) * 2
         h = inland ** 0.6 * 0.55 + ridges ** 3 * inland * 0.6
     elif kind == 'long':
-        spine = np.exp(-((v - (u / size) ** 2 * size * 0.5) / (0.06 * size)) ** 2)
+        spine = np.exp(-((v - (u / scale) ** 2 * scale * 0.5) / (0.06 * scale)) ** 2)
         h = spine * inland * 1.1 + detail * 0.15
     elif kind == 'crescent':
         h = inland * 0.5 + detail * 0.2
@@ -128,15 +132,15 @@ def island(kind, size, seed):
     cliffs = inner & land & ~beach
     if kind == 'start':
         # the zone must fit: shrink it step by step on a narrow island rather than leave none
-        spot, r = None, 0.13 * size
+        spot, r = None, 0.13 * scale
         while spot is None and r > 8:
             spot = flat_spot(land, h, beach, size, rng, radius=r)
             r *= 0.85
         markers.append(('start', spot))
     if kind == 'orc':
-        markers.append(('orc', flat_spot(land, h, beach, size, rng, radius=0.10 * size, near_coast=True)))
+        markers.append(('orc', flat_spot(land, h, beach, size, rng, radius=0.10 * scale, near_coast=True)))
     if kind == 'bot':
-        markers.append(('bot', flat_spot(land, h, beach, size, rng, radius=0.10 * size)))
+        markers.append(('bot', flat_spot(land, h, beach, size, rng, radius=0.10 * scale)))
     return land, h, beach, cliffs, markers
 
 
