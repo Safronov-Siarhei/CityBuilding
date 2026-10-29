@@ -194,6 +194,61 @@ namespace CityBuilder.Tests.PlayMode
             CityBuilder.Resources.ResourceManager.Instance.SetInfiniteResources(false);
         }
 
+        /// <summary>
+        /// Boarding and landing (the user, 2026-10-28): a group sent to a transport walks to the
+        /// beach it stands at and goes aboard -- out of the world, still in its group -- and the
+        /// ship lands them again only by a beach; the scout carries nobody.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AGroup_BoardsATransportAtABeach_AndLandsAgain()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var grid = GridManager.Instance;
+            var ships = CityBuilder.Ships.ShipManager.Instance;
+            var start = grid.GetFootprintCenterWorld(world.StartCell, Vector2Int.one);
+
+            // a spot on the sea by a beach of the start island
+            Vector3? sea = null;
+            for (var r = 10f; r <= 160f && sea == null; r += 4f)
+            for (var k = 0; k < 24 && sea == null; k++)
+            {
+                var a = k * Mathf.PI / 12f;
+                var near = start + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
+                if (ships.TrySampleSea(near, 2f, out var p) && CityBuilder.Ships.ShipManager.TryFindLandingAt(p, out _)) sea = p;
+            }
+            Assert.IsTrue(sea.HasValue, "No sea by a beach of the start island.");
+            var transport = ships.Spawn(CityBuilder.Ships.ShipKind.Transport, sea.Value, Quaternion.identity, 100);
+            var scout = ships.Spawn(CityBuilder.Ships.ShipKind.Scout, sea.Value + Vector3.right * 0.5f, Quaternion.identity, 50);
+            Assert.IsTrue(ships.TryFindLanding(transport, out var beach));
+
+            var army = CityBuilder.Combat.ArmyManager.Instance;
+            var group = army.RestoreGroup(CityBuilder.Combat.SoldierType.Militia, beach, CityBuilder.Combat.TargetPriority.Units);
+            var first = army.RestoreSoldier(group, beach + new Vector3(3f, 0f, 0f), 50);
+            var second = army.RestoreSoldier(group, beach + new Vector3(0f, 0f, 3f), 50);
+            yield return null;
+
+            Assert.IsNotNull(ships.DescribeBoardBlocker(group, scout), "The scout takes passengers.");
+            Assert.IsTrue(ships.OrderBoard(group, transport, out _), ships.DescribeBoardBlocker(group, transport));
+            for (var t = 0f; t < 15f && transport.Aboard.Count < 2; t += Time.deltaTime) yield return null;
+            Assert.AreEqual(2, transport.Aboard.Count, "The group did not go aboard.");
+            Assert.IsFalse(first.gameObject.activeSelf, "A soldier aboard still stands in the world.");
+            Assert.AreEqual(2, group.Count, "Boarding took the soldiers out of their group.");
+
+            // out at sea there is no beach to land on
+            var open = ships.SeaPoint(sea.Value + (sea.Value - beach).normalized * 40f);
+            if (!CityBuilder.Ships.ShipManager.TryFindLandingAt(open, out _))
+            {
+                transport.transform.position = open;
+                Assert.AreEqual(0, ships.TryLand(transport), "Landed with no beach in reach.");
+                Assert.AreEqual(2, transport.Aboard.Count);
+            }
+
+            transport.transform.position = sea.Value;
+            Assert.AreEqual(2, ships.TryLand(transport), "The transport did not land its people at the beach.");
+            Assert.IsTrue(first.gameObject.activeSelf && second.gameObject.activeSelf, "A landed soldier is still put away.");
+            Assert.IsFalse(MeshMapApplier.Instance.IsWaterCell(grid.WorldToCell(first.transform.position)), "A soldier was landed in the sea.");
+        }
+
         private static bool DeepRelief(ArchipelagoMap world, int i)
         {
             var n = world.Size;

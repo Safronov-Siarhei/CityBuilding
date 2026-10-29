@@ -3,8 +3,9 @@
 > **Status (2026-10-29):** the sandbox plays ONLY on the archipelago (Map3/4/5 removed from the
 > picker; Map3 stays as the test fixture). A seed builds a 500×500 sea with 12–20 islands taken
 > from a Blender LIBRARY; the map code («2-482915») is in the pause menu and the sandbox screen.
-> **Ships, phase 3, half done:** the Shipyard builds a scout (lvl 1) and a transport (lvl 2), they
-> sail where tapped and are saved. Boarding/landing not built. The user has NOT seen ships in game.
+> **Ships, phase 3:** the Shipyard builds a scout (lvl 1) and a transport (lvl 2), they sail where
+> tapped and are saved. BOARDING and LANDING built 2026-10-29 (see «Boarding and landing»).
+> The user has NOT seen ships in game.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [fog-of-war](fog-of-war.md),
 > [army-and-soldiers](army-and-soldiers.md), [research-laboratory](research-laboratory.md).
 
@@ -26,6 +27,24 @@
   Landing ONLY at beaches (button). A sunk ship kills all aboard; the hero respawns at the Town Hall.
   The scout temporarily reveals some shore. Ship levels are raised in the Laboratory.
 - Orcs get ONE shipyard at the main base; destroyed, it is rebuilt after a sheet-set time.
+
+## Boarding and landing (built 2026-10-29)
+- With an army group (or a hero) selected, a tap on a ship = board order (`ArmyOrderInput`):
+  the group walks to the BEACH the ship stands at; each member there (≤ 4 m of the landing or
+  ≤ 1 m of its ring slot) goes aboard while seats last (`ShipManager.Update`). Another order to
+  the group, or the ship sailing off, calls it off. Refused (red ripple + event-feed line):
+  `#ship_cannot_carry` (scout, capacity 0), `#ship_full`, `#ship_no_beach`.
+- A BEACH = walkable land (the land NavMesh, agent type 0) within `ShipManager.LandingReach` = 7 m
+  of the hull. Cliffs and the rocky rim are not walkable, so they never count. (The island cells
+  have no beach flag: 16 is shore WATER.)
+- Aboard = the unit's GameObject inactive, still in its group (army count, upkeep, save); out of
+  `SoldierUnit.All`, so orcs do not see it.
+- A selected transport replaces the build menu with ONE button (`UI/ShipActionBar`, people glyph,
+  «aboard/seats»); a tap lands everyone on the beach in their group's rings and the groups hold
+  there; dimmed with nobody aboard or no beach (`#ship_empty`, `#ship_no_beach`).
+- Saved: `SoldierEntry.aboardShip` / `HeroEntry.aboardShip` (1-based ship index, 0 = land).
+- The scout's «temporary shore reveal» is for now just its fog walker (radius = `engage_radius`
+  14 vs the transport's 8); the «land falls back to a sketch» half waits for the 3-state fog.
 
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
@@ -55,7 +74,8 @@
 ## Tests
 - `Tests/EditMode/ArchipelagoGeneratorTests.cs`.
 - `Tests/PlayMode/ArchipelagoTests.cs`: map build + Town Hall in the zone; save round trip;
-  `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail` (green 2026-10-29).
+  `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail`, `AGroup_BoardsATransportAtABeach_AndLandsAgain`
+  (both green 2026-10-29).
 - `MapPickerTests.AMapCode_StartsThatVeryMap`.
 
 ## Traps already paid for
@@ -68,8 +88,8 @@
 - MapPicker tests must wait for `LoadingScreen.Busy` or the next test inherits the loading screen.
 
 ## Open
-- Step 3b: boarding (unit/group taps a ship, walks to it), landing button at beaches only, scout
-  shore reveal, transport capacity in use.
+- Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
+- A sunk ship must kill everyone aboard and send a hero to respawn at the Town Hall (no sinking yet).
 - Phase 4: war ships, battleship, sea combat, orc shipyard + landings. Phase 5: lighthouse (coins),
   fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones. Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.

@@ -323,6 +323,9 @@ namespace CityBuilder.Saving
 
         /// <summary>Carried across rather than reset to full: reloading in the middle of a raid must not heal the survivors, the same rule BuildingInstance follows for a damaged building.</summary>
         public int currentHealth;
+
+        /// <summary>The ship it sails on, 1-based into GameSaveData.ships; 0 = on land.</summary>
+        public int aboardShip;
     }
 
     [Serializable]
@@ -342,6 +345,9 @@ namespace CityBuilder.Saving
         public int currentHealth;
         public bool fallen;
         public float respawnRemaining;
+
+        /// <summary>The ship he sails on, 1-based into GameSaveData.ships; 0 = on land.</summary>
+        public int aboardShip;
     }
 
     [Serializable]

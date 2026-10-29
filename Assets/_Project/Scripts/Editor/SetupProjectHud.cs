@@ -584,6 +584,39 @@ namespace CityBuilder.EditorTools
             row.SetActive(false);
         }
 
+        /// <summary>
+        /// A selected transport's landing button where the build menu stands (ShipActionBar): the
+        /// people glyph, «aboard/seats» on a plaque at its foot.
+        /// </summary>
+        private static void BuildShipActionBar(Transform uiRoot)
+        {
+            const float size = 128f;
+            var row = new GameObject("ShipActionBar", typeof(RectTransform));
+            row.transform.SetParent(uiRoot, false);
+            row.AddComponent<HudOverlay>();
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(size, size + 16f));
+            var button = CreateGlyphButton(row.transform, "LandButton", "round", HudInk.OnRound, "People", null, size);
+            Anchor((RectTransform)button.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+            var plaque = HudImage(button.transform, "Seats", "plaque", new Vector2(110f, 44f));
+            plaque.raycastTarget = false;
+            Anchor(plaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -14f), new Vector2(110f, 44f));
+            var seats = CreateText(plaque.transform, "Text", "0/0", 28, Vector2.zero, new Vector2(110f, 44f), UiTheme.Ink);
+            seats.font = UiTheme.Heavy;
+            seats.alignment = TextAnchor.MiddleCenter;
+            seats.raycastTarget = false;
+
+            var go = new GameObject("ShipActionBarController");
+            go.transform.SetParent(uiRoot, false);
+            var controller = go.AddComponent<ShipActionBar>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("bar").objectReferenceValue = row;
+            so.FindProperty("landButton").objectReferenceValue = button;
+            so.FindProperty("landIcon").objectReferenceValue = button.transform.Find("Icon").GetComponent<Image>();
+            so.FindProperty("seats").objectReferenceValue = seats;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            row.SetActive(false);
+        }
+
         private static void SetArray(SerializedProperty property, Object[] values)
         {
             property.arraySize = values.Length;

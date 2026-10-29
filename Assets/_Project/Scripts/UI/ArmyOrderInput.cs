@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -64,6 +64,27 @@ namespace CityBuilder.UI
 
             var army = ArmyManager.Instance;
             if (army == null || army.SelectedGroup == null) return false;
+
+            // a ship under the finger: the group walks to the beach it stands at and goes aboard
+            // (the user, 2026-10-28: select a unit, tap the ship)
+            var ship = Ships.ShipInput.ShipAt(screenPosition, targetCamera);
+            if (ship != null && Ships.ShipManager.Instance != null)
+            {
+                var boarding = army.SelectedGroup;
+                var blocker = Ships.ShipManager.Instance.DescribeBoardBlocker(boarding, ship);
+                if (blocker == null && Ships.ShipManager.Instance.OrderBoard(boarding, ship, out var landing))
+                {
+                    boarding.NotifyPlayerOrder();
+                    if (boarding.Count > 0) OrderMarker.ShowFlagFor(boarding.Members[0].transform, landing);
+                }
+                else
+                {
+                    OrderMarker.HideOrder();
+                    OrderMarker.ShowRefused(ship.transform.position);
+                    if (blocker != null) EventLogManager.Instance?.Post(GameEvent.ForSettlement(blocker, EventSeverity.Warning, EventGlyph.Alert, null));
+                }
+                return true;
+            }
 
             var ray = targetCamera.ScreenPointToRay(screenPosition);
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, ~0);

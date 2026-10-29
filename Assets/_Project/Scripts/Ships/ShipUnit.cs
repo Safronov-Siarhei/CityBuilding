@@ -54,8 +54,42 @@ namespace CityBuilder.Ships
         public bool Selected { get; private set; }
         public bool IsMoving => _corners.Count > 0;
 
-        /// <summary>Who is aboard (the transport, next step): kept here so a sinking takes them with it.</summary>
-        public readonly List<Object> Cargo = new List<Object>();
+        /// <summary>
+        /// Who is aboard: soldiers and heroes, put away (inactive) while they sail, kept in their
+        /// groups so the army, upkeep and the save still count them. A sinking takes them with it.
+        /// </summary>
+        public readonly List<Combat.SoldierUnit> Aboard = new List<Combat.SoldierUnit>();
+
+        public int Capacity => ShipStats.Capacity(Kind);
+        public int FreeSeats => Mathf.Max(0, Capacity - Aboard.Count);
+
+        /// <summary>Takes this one aboard: out of the world until the ship lands them. False when it is full.</summary>
+        public bool Embark(Combat.SoldierUnit unit)
+        {
+            if (unit == null || FreeSeats == 0 || Aboard.Contains(unit)) return false;
+            Aboard.Add(unit);
+            unit.gameObject.SetActive(false);
+            return true;
+        }
+
+        /// <summary>Everyone aboard back on land at this point, in their groups' rings, the groups told to hold there.</summary>
+        public int Disembark(Vector3 at)
+        {
+            var landed = 0;
+            var groups = new List<Combat.ArmyGroup>();
+            foreach (var unit in Aboard)
+            {
+                if (unit == null) continue;
+                var spot = at + Combat.ArmyGroup.FormationOffset(landed);
+                unit.transform.position = ShipManager.TrySampleLand(spot, 3f, out var onLand) ? onLand : at;
+                unit.gameObject.SetActive(true);
+                if (unit.Group != null && !groups.Contains(unit.Group)) groups.Add(unit.Group);
+                landed++;
+            }
+            Aboard.Clear();
+            foreach (var group in groups) group.OrderMoveTo(at);
+            return landed;
+        }
 
         private readonly List<Vector3> _corners = new List<Vector3>();
         private NavMeshPath _path;

@@ -312,6 +312,7 @@ namespace CityBuilder.EditorTools
             BuildHappiness(uiRoot);
             BuildKingPortrait(uiRoot);
             BuildHeroSkillBar(uiRoot);
+            BuildShipActionBar(uiRoot);
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);

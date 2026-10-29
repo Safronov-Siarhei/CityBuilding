@@ -20,7 +20,20 @@ namespace CityBuilder.Ships
         public const string ShipyardId = "Shipyard";
         public const float WaterLevel = -0.5f;
 
+        /// <summary>How far from the hull a beach may be for boarding and landing, metres.</summary>
+        public const float LandingReach = 7f;
+        private const float BoardDistance = 4f;
+
         public static ShipManager Instance { get; private set; }
+
+        private class Boarding
+        {
+            public Combat.ArmyGroup Group;
+            public ShipUnit Ship;
+            public Vector3 Landing;
+        }
+
+        private readonly List<Boarding> _boarding = new List<Boarding>();
 
         [SerializeField] private GameObject[] models = new GameObject[0];   // by ShipKind
 
@@ -128,6 +141,117 @@ namespace CityBuilder.Ships
         /// <summary>A ship's own spot on the sea NavMesh (it rides a little above it).</summary>
         public Vector3 SeaPoint(Vector3 at) => TrySampleSea(at, 4f, out var p) ? p : new Vector3(at.x, WaterLevel, at.z);
 
+        /// <summary>The nearest walkable land by a point (the land's own NavMesh, never the sea's).</summary>
+        public static bool TrySampleLand(Vector3 near, float radius, out Vector3 point)
+        {
+            point = near;
+            if (!NavMesh.SamplePosition(near, out var hit, radius, new NavMeshQueryFilter { agentTypeID = 0, areaMask = NavMesh.AllAreas })) return false;
+            point = hit.position;
+            return true;
+        }
+
+        /// <summary>
+        /// Where the ship touches a beach: walkable land within reach of its hull. A cliff or the
+        /// rocky rim is not walkable, so a ship under one finds nothing (the user, 2026-10-28:
+        /// landing only at beaches).
+        /// </summary>
+        public bool TryFindLanding(ShipUnit ship, out Vector3 point)
+        {
+            point = default;
+            return ship != null && TryFindLandingAt(ship.transform.position, out point);
+        }
+
+        /// <summary>The beach a ship standing here would touch (see TryFindLanding).</summary>
+        public static bool TryFindLandingAt(Vector3 at, out Vector3 point)
+        {
+            if (!TrySampleLand(at, LandingReach, out point)) return false;
+            var flat = point - at;
+            flat.y = 0f;
+            return flat.magnitude <= LandingReach;
+        }
+
+        /// <summary>Why this group cannot board this ship now, or null when it can.</summary>
+        public string DescribeBoardBlocker(Combat.ArmyGroup group, ShipUnit ship)
+        {
+            if (group == null || ship == null) return Localization.Get("#ship_cannot_carry");
+            if (ship.Capacity <= 0) return Localization.Format("#ship_cannot_carry", ShipStats.DisplayName(ship.Kind));
+            if (ship.FreeSeats == 0) return Localization.Format("#ship_full", ShipStats.DisplayName(ship.Kind));
+            if (!TryFindLanding(ship, out _)) return Localization.Get("#ship_no_beach");
+            return null;
+        }
+
+        /// <summary>
+        /// Sends the group to the beach the ship stands at; each member that gets there goes aboard
+        /// while there is room (Update). A new order to the group calls it off.
+        /// </summary>
+        public bool OrderBoard(Combat.ArmyGroup group, ShipUnit ship, out Vector3 landing)
+        {
+            landing = default;
+            if (DescribeBoardBlocker(group, ship) != null || !TryFindLanding(ship, out landing)) return false;
+            _boarding.RemoveAll(b => b.Group == group);
+            group.OrderMoveTo(landing);
+            _boarding.Add(new Boarding { Group = group, Ship = ship, Landing = landing });
+            return true;
+        }
+
+        /// <summary>Why the ship cannot land its people here, or null when it can.</summary>
+        public string DescribeLandBlocker(ShipUnit ship)
+        {
+            if (ship == null || ship.Aboard.Count == 0) return Localization.Get("#ship_empty");
+            if (!TryFindLanding(ship, out _)) return Localization.Get("#ship_no_beach");
+            return null;
+        }
+
+        /// <summary>Everyone aboard onto the beach the ship stands at; how many landed (0 = no beach or nobody aboard).</summary>
+        public int TryLand(ShipUnit ship)
+        {
+            if (DescribeLandBlocker(ship) != null || !TryFindLanding(ship, out var at)) return 0;
+            return ship.Disembark(at);
+        }
+
+        private void Update()
+        {
+            for (var i = _boarding.Count - 1; i >= 0; i--)
+            {
+                var b = _boarding[i];
+                // gone, sailed off, or the player sent the group elsewhere
+                if (b.Ship == null || b.Group == null || b.Group.Count == 0 || (b.Group.HoldPosition - b.Landing).sqrMagnitude > 0.01f
+                    || Flat(b.Ship.transform.position - b.Landing) > LandingReach + 1f)
+                {
+                    _boarding.RemoveAt(i);
+                    continue;
+                }
+                var waiting = false;
+                foreach (var unit in b.Group.Members)
+                {
+                    if (unit == null || !unit.gameObject.activeSelf) continue;
+                    // at the landing, or as near its ring slot as the beach lets it stand
+                    if (Flat(unit.transform.position - b.Landing) <= BoardDistance || Flat(unit.transform.position - b.Group.SlotPositionFor(unit)) <= 1f) b.Ship.Embark(unit);
+                    if (unit.gameObject.activeSelf) waiting = true;
+                }
+                if (!waiting || b.Ship.FreeSeats == 0) _boarding.RemoveAt(i);
+            }
+        }
+
+        private static float Flat(Vector3 v)
+        {
+            v.y = 0f;
+            return v.magnitude;
+        }
+
+        /// <summary>A save's soldier back aboard the ship it sailed on (index into Ships).</summary>
+        public void RestoreAboard(int shipIndex, Combat.SoldierUnit unit)
+        {
+            if (shipIndex >= 0 && shipIndex < _ships.Count && _ships[shipIndex] != null) _ships[shipIndex].Embark(unit);
+        }
+
+        /// <summary>The ship this one sails on, as an index into Ships; -1 on land.</summary>
+        public int ShipIndexOf(Combat.SoldierUnit unit)
+        {
+            for (var i = 0; i < _ships.Count; i++) if (_ships[i] != null && _ships[i].Aboard.Contains(unit)) return i;
+            return -1;
+        }
+
         public int CountOf(ShipKind kind)
         {
             var count = 0;
@@ -199,6 +323,7 @@ namespace CityBuilder.Ships
         {
             foreach (var ship in _ships) if (ship != null) Destroy(ship.gameObject);
             _ships.Clear();
+            _boarding.Clear();
         }
     }
 }

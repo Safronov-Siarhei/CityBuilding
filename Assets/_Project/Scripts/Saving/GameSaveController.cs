@@ -422,6 +422,9 @@ namespace CityBuilder.Saving
         /// a soldier reads its health and damage off the level its type has been researched to, and
         /// a militia restored against a fresh ResearchManager would come back at level 1.
         /// </summary>
+        /// <summary>The ship this one sails on, 1-based as the save writes it; 0 on land.</summary>
+        private static int AboardShip(Combat.SoldierUnit unit) => Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.ShipIndexOf(unit) + 1 : 0;
+
         private static List<Combat.ArmyGroup> RestoreArmy(GameSaveData data)
         {
             // Parallel to data.armyGroups, so the orders pass below can pair the two up by index.
@@ -438,7 +441,8 @@ namespace CityBuilder.Saving
 
                 foreach (var soldier in groupEntry.soldiers)
                 {
-                    army.RestoreSoldier(group, soldier.position, soldier.currentHealth);
+                    var unit = army.RestoreSoldier(group, soldier.position, soldier.currentHealth);
+                    if (soldier.aboardShip > 0) Ships.ShipManager.Instance?.RestoreAboard(soldier.aboardShip - 1, unit);
                 }
             }
 
@@ -453,6 +457,11 @@ namespace CityBuilder.Saving
             foreach (var entry in data.heroes)
             {
                 roster.Restore(entry.type, entry.position, entry.level, entry.experience, entry.currentHealth, entry.fallen, entry.respawnRemaining);
+                if (entry.aboardShip <= 0 || entry.fallen) continue;
+                foreach (var hero in roster.Heroes)
+                {
+                    if (hero != null && hero.Type == entry.type && hero.Unit != null) Ships.ShipManager.Instance?.RestoreAboard(entry.aboardShip - 1, hero.Unit);
+                }
             }
         }
 
@@ -674,7 +683,7 @@ namespace CityBuilder.Saving
                     foreach (var soldier in group.Members)
                     {
                         if (soldier == null) continue;
-                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth });
+                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth, aboardShip = AboardShip(soldier) });
                     }
                     data.armyGroups.Add(entry);
 
@@ -697,6 +706,7 @@ namespace CityBuilder.Saving
                         currentHealth = hero.Unit.CurrentHealth,
                         fallen = hero.IsFallen,
                         respawnRemaining = hero.RespawnRemaining,
+                        aboardShip = AboardShip(hero.Unit),
                     });
                 }
             }
