@@ -39,6 +39,13 @@
   Now (`BuildingPlacer.CanPlaceSelectedBuilding`, every Water building): cells may be shore water OR
   plain land, at least HALF in the water; relief/cliff cells never. Test
   `TheShipyard_GoesDownOnShoreWater_AndAcrossTheShoreline` (water / across the shoreline / mostly land refused).
+- THE REAL CAUSE (found second): the placer aims at `MeshMapApplier.TryRaycastGround`, and on the
+  archipelago the islands are the only ground -- over open water the ray hit nothing and the ghost
+  stayed stuck on the beach. A Water building now aims at the sea's surface (`ShipManager.WaterLevel`
+  plane) when the ray hits nothing or the seabed (`BuildingPlacer.TryGetGroundCell`). The test taps
+  the water through `HandleWorldTap`; it FAILS with the aim fix switched off (checked).
+- Trap: pinning `PinnedOriginForTests` skips the aiming -- the first fix passed a pinned test and
+  the bug stayed. Test what the finger does.
 
 ## Boarding and landing (built 2026-10-29)
 - With an army group (or a hero) selected, a tap on a ship = board order (`ArmyOrderInput`):

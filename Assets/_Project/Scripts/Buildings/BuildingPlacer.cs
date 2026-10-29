@@ -361,7 +361,19 @@ namespace CityBuilder.Buildings
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier != null)
             {
-                if (!mapApplier.TryRaycastGround(ray, out var groundHit)) return false;
+                var onGround = mapApplier.TryRaycastGround(ray, out var groundHit);
+                // A water building aims at the water's surface (the user, 2026-10-29: the Shipyard
+                // would not go onto the water): the archipelago's islands are the only ground
+                // there is, so over the open sea the ray met nothing and the ghost stayed stuck on
+                // the beach; and a ray through shallow water meets the seabed metres beyond.
+                if (_selectedBuilding != null && _selectedBuilding.isWaterCategory && Ships.ShipManager.Instance != null && Ships.ShipManager.Instance.HasSea
+                    && (!onGround || groundHit.point.y < Ships.ShipManager.WaterLevel)
+                    && new Plane(Vector3.up, new Vector3(0f, Ships.ShipManager.WaterLevel, 0f)).Raycast(ray, out var toSea))
+                {
+                    cell = GridManager.Instance.WorldToCell(ray.GetPoint(toSea));
+                    return true;
+                }
+                if (!onGround) return false;
                 cell = GridManager.Instance.WorldToCell(groundHit.point);
                 return true;
             }

@@ -423,6 +423,41 @@ namespace CityBuilder.Tests.PlayMode
                 placer.ClearSelection();
             }
             placer.PinnedOriginForTests = null;
+
+            // aimed by a tap on the water, as with a mouse: the ray must find the water's surface,
+            // not the seabed or nothing (the islands are the only ground mesh there is)
+            // a free spot all on the shore water, found now the first ones stand
+            Vector2Int? aimed = null;
+            for (var r = 0; r < 140 && aimed == null; r++)
+            for (var dz = -r; dz <= r && aimed == null; dz++)
+            for (var dx = -r; dx <= r && aimed == null; dx++)
+            {
+                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                if (!grid.IsWithinBounds(c, size) || !grid.IsAreaFree(c, size)) continue;
+                var all = true;
+                for (var x = 0; x < size.x && all; x++)
+                for (var z = 0; z < size.y && all; z++) all = applier.IsWaterPlacementZone(c + new Vector2Int(x, z)) && !applier.IsNoBuildCell(c + new Vector2Int(x, z));
+                if (all) aimed = c;
+            }
+            Assert.IsTrue(aimed.HasValue, "No free shore-water spot left.");
+            // the cell the placer centres the footprint on (BuildingPlacer.OriginForCentredFootprint)
+            var target = grid.GetFootprintCenterWorld(aimed.Value + new Vector2Int(size.x / 2, size.y / 2), Vector2Int.one);
+            target.y = CityBuilder.Ships.ShipManager.WaterLevel;
+            var camera = Camera.main;
+            camera.transform.position = target + new Vector3(0f, 30f, -18f);
+            camera.transform.LookAt(target);
+            placer.SelectBuilding(data);
+            var count = Shipyards();
+            placer.HandleWorldTap(camera.WorldToScreenPoint(target));
+            yield return null;
+            var screen = camera.WorldToScreenPoint(target);
+            var ray = camera.ScreenPointToRay(screen);
+            var onGround = applier.TryRaycastGround(ray, out var groundHit);
+            new Plane(Vector3.up, target).Raycast(ray, out var toSea);
+            var why = $"screen {screen} of {Screen.width}x{Screen.height}, ground hit {onGround} at {groundHit.point}, sea cell {grid.WorldToCell(ray.GetPoint(toSea))}, "
+                + $"selected {placer.SelectedBuilding?.buildingName} water {placer.SelectedBuilding?.isWaterCategory}, touch {placer.UsesTouchAiming}, sea {CityBuilder.Ships.ShipManager.Instance.HasSea}";
+            Assert.Greater(Shipyards(), count, $"A tap on the water at {aimed} put no Shipyard there; {why}");
         }
 
         private static int Shipyards()
