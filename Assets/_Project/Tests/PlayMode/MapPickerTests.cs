@@ -95,6 +95,27 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(MapSeason.Winter, SeasonStyle.Current, "The game is not in the theme's season.");
         }
 
+        /// <summary>A friend's code typed in starts their very map (the user, 2026-10-28); a bad code starts nothing and says so.</summary>
+        [UnityTest]
+        public IEnumerator AMapCode_StartsThatVeryMap()
+        {
+            var screen = OpenSandbox();
+            screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Summer);
+            var field = screen.transform.Find("Window/MapCode").GetComponent<InputField>();
+            field.text = "nonsense";
+            screen.StartGame();
+            Assert.IsTrue(screen.transform.Find("Window/MapCodeError").gameObject.activeSelf, "A bad code started a game without a word.");
+
+            var id = Maps.Archipelago.ArchipelagoMapId.For(4242);
+            field.text = Maps.Archipelago.ArchipelagoMapId.Code(id);
+            screen.StartGame();
+            Assert.AreEqual(id, GameSessionIntent.NewGameMapId, "The typed code did not start its map.");
+            yield return PlayModeScene.WaitUntilMapIsPhysicsReady(id);
+            Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId);
+            // the loading screen lets the next test load its own scene only once it is gone
+            for (var f = 0; f < 600 && LoadingScreen.Busy; f++) yield return null;
+        }
+
         private static SandboxScreenController OpenSandbox()
         {
             var menu = Object.FindAnyObjectByType<MainMenuController>();

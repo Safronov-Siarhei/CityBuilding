@@ -19,6 +19,9 @@ namespace CityBuilder.UI
         [SerializeField] private ThemePicker themes;
         [SerializeField] private Button startButton;
         [SerializeField] private GameObject noMapsLabel;
+        // the archipelago's code (the user, 2026-10-28): empty starts a random map, a friend's code their map
+        [SerializeField] private InputField mapCode;
+        [SerializeField] private Text mapCodeError;
 
         [Header("A card per map, in MapSelector.PlayerMapIds order")]
         [SerializeField] private string[] mapIds = new string[0];
@@ -65,8 +68,24 @@ namespace CityBuilder.UI
             MapSelector.MarkChosen(map);
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameIsInvasion = false;
-            // a generated map starts on a fresh seed of its own
-            GameSessionIntent.NewGameMapId = map.IsGenerated ? ArchipelagoMapIdFor(map) : _picked;
+            // a generated map starts on a fresh seed of its own, or on the code typed in
+            var id = _picked;
+            if (map.IsGenerated)
+            {
+                var typed = mapCode != null ? mapCode.text : string.Empty;
+                if (string.IsNullOrWhiteSpace(typed)) id = ArchipelagoMapIdFor(map);
+                else if (!Maps.Archipelago.ArchipelagoMapId.TryParseCode(typed, out id, out var otherVersion))
+                {
+                    if (mapCodeError != null)
+                    {
+                        mapCodeError.gameObject.SetActive(true);
+                        mapCodeError.text = Localization.Get(otherVersion ? "#sandbox_code_old" : "#sandbox_code_bad");
+                    }
+                    return;
+                }
+            }
+            if (mapCodeError != null) mapCodeError.gameObject.SetActive(false);
+            GameSessionIntent.NewGameMapId = id;
             GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(Theme);
             LoadingScreen.IntoGame(gameplaySceneName);
         }

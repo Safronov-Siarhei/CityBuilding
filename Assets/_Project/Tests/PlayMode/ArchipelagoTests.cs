@@ -93,6 +93,51 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlaytestCapture.Shoot("archipelago-start-island", start, 70f, 50f, 20f);
             var orc = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
             yield return PlaytestCapture.Shoot("archipelago-orc-island", orc, 80f, 55f, 30f);
+
+            // the map's code at the foot of the pause menu (the user, 2026-10-28: share a map with a friend)
+            var menu = Object.FindAnyObjectByType<CityBuilder.UI.GameMenuController>();
+            menu.Open();
+            yield return null;
+            var code = GameObject.Find("MapCode");
+            Assert.IsNotNull(code, "The pause menu shows no map code.");
+            StringAssert.Contains(ArchipelagoMapId.Code(MapId), code.GetComponentInChildren<UnityEngine.UI.Text>().text);
+            yield return PlaytestCapture.ShootWithUi("archipelago-menu-code", start);
+            menu.Close();
+        }
+
+        /// <summary>A save on the archipelago brings back its own islands: the same seed, the 500 m world, the Town Hall where it stood.</summary>
+        [UnityTest]
+        public IEnumerator ASave_BringsBackItsArchipelago()
+        {
+            const string saveName = "ArchipelagoRoundTrip";
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var hallData = PlaytestWorld.Building(BuildingIds.TownHall);
+            var hall = PlaytestWorld.Place(hallData, world.StartCell - hallData.footprintSize / 2);
+            var hallAt = hall.transform.position;
+            yield return null;
+            try
+            {
+                Object.FindAnyObjectByType<GameSaveController>().SaveGame(saveName);
+                GameSessionIntent.NewGameMapId = null;
+                GameSessionIntent.SaveNameToLoad = saveName;
+                SceneManager.LoadScene("CityBuilder", LoadSceneMode.Single);
+                yield return PlayModeScene.WaitUntilMapIsPhysicsReady(MapId);
+
+                Assert.AreEqual(MapId, MeshMapApplier.Instance.CurrentMapId, "The save did not bring back its archipelago.");
+                Assert.AreEqual(ArchipelagoGenerator.World, GridManager.Instance.GridSize.x, "The loaded world is not the archipelago's size.");
+                var n = world.Size;
+                for (var i = 0; i < n * n; i += 1999)
+                {
+                    Assert.AreEqual(!world.Land[i], MeshMapApplier.Instance.IsWaterCell(new Vector2Int(i % n, i / n)), "The loaded islands are not the saved ones.");
+                }
+                var halls = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
+                Assert.IsTrue(System.Array.Exists(halls, b => b.Data != null && b.Data.buildingName == BuildingIds.TownHall && Vector3.Distance(b.transform.position, hallAt) < 0.1f),
+                    "The Town Hall is not where it stood.");
+            }
+            finally
+            {
+                SaveSystem.Delete(saveName);
+            }
         }
 
         private static bool DeepRelief(ArchipelagoMap world, int i)

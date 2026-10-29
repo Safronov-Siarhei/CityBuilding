@@ -110,6 +110,16 @@ namespace CityBuilder.EditorTools
                     new Vector2(HudMargin + (RoundButton - 96f) * 0.5f, MenuButtonTop - RoundButton - 18f - i * 112f), new Vector2(96f, 96f));
             }
 
+            // the archipelago's code at the menu's foot; a tap copies it
+            var codePlaque = CreateImage(root.transform, "MapCode", Color.white);
+            codePlaque.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.HudSkinsFolder}/Classic/plaque.png");
+            codePlaque.type = Image.Type.Sliced;
+            Anchor(codePlaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 60f), new Vector2(880f, 76f));
+            var codeLabel = CreateText(codePlaque.transform, "Label", string.Empty, 28, Vector2.zero, new Vector2(850f, 64f), UiTheme.Ink);
+            codeLabel.font = UiTheme.Bold;
+            var codeButton = codePlaque.gameObject.AddComponent<Button>();
+            codeButton.targetGraphic = codePlaque;
+
             var settings = BuildSettingsPanel(uiRoot, panelSprite, null);
             settings.gameObject.AddComponent<HudOverlay>();
 
@@ -128,6 +138,8 @@ namespace CityBuilder.EditorTools
             entriesProp.arraySize = buttons.Length;
             for (var i = 0; i < buttons.Length; i++) entriesProp.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i].GetComponent<RectTransform>();
             so.FindProperty("entryStep").floatValue = 112f;
+            so.FindProperty("mapCodePlaque").objectReferenceValue = codePlaque.gameObject;
+            so.FindProperty("mapCodeLabel").objectReferenceValue = codeLabel;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(menuButton.onClick, controller.Toggle);
@@ -136,6 +148,7 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(buttons[0].onClick, controller.OpenSave);
             UnityEventTools.AddPersistentListener(buttons[1].onClick, controller.OpenSettings);
             UnityEventTools.AddPersistentListener(buttons[2].onClick, controller.GoToMainMenu);
+            UnityEventTools.AddPersistentListener(codeButton.onClick, controller.CopyMapCode);
 
             root.SetActive(false);
         }

@@ -28,6 +28,34 @@ namespace CityBuilder.Maps.Archipelago
                    && int.TryParse(parts[2], out seed);
         }
 
+        /// <summary>
+        /// The code a player sees and shares (the user, 2026-10-28): "{version}-{seed}", e.g. "2-482915"
+        /// -- digits only, easy to type on a phone; the version in front keeps an old code from
+        /// silently drawing another map. Empty for an id that is not a generated map.
+        /// </summary>
+        public static string Code(string mapId) => TryParse(mapId, out var seed, out var version) ? $"{version}-{seed}" : string.Empty;
+
+        /// <summary>
+        /// A typed code back to a map id: "2-482915" (spaces round it forgiven) for this version of
+        /// the generator. False for anything else -- a bad code, or one from another version, which
+        /// would draw a different map than the friend's.
+        /// </summary>
+        public static bool TryParseCode(string code, out string mapId, out bool otherVersion)
+        {
+            mapId = null;
+            otherVersion = false;
+            if (string.IsNullOrWhiteSpace(code)) return false;
+            var parts = code.Trim().Split('-');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out var version) || !int.TryParse(parts[1], out var seed) || seed <= 0) return false;
+            if (version != ArchipelagoGenerator.Version)
+            {
+                otherVersion = true;
+                return false;
+            }
+            mapId = For(seed);
+            return true;
+        }
+
         /// <summary>A fresh random seed for a new game, as an id.</summary>
         public static string NewRandom() => For(UnityEngine.Random.Range(1, 1000000));
 

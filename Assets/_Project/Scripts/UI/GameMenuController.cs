@@ -2,6 +2,7 @@ using CityBuilder.Core;
 using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace CityBuilder.UI
 {
@@ -27,6 +28,9 @@ namespace CityBuilder.UI
         /// <summary>The menu's round entries top to bottom -- save, settings, home -- and the step between them.</summary>
         [SerializeField] private RectTransform[] entries = new RectTransform[0];
         [SerializeField] private float entryStep = 112f;
+        // the map's code on a plaque at the menu's foot, a tap copies it (the user, 2026-10-28: share a map with a friend)
+        [SerializeField] private GameObject mapCodePlaque;
+        [SerializeField] private Text mapCodeLabel;
 
         private enum State { Closed, Menu, Save, Settings }
 
@@ -42,6 +46,7 @@ namespace CityBuilder.UI
             Time.timeScale = 0f;
             if (hud != null) hud.Hide(this);
             LayEntries();
+            ShowMapCode();
             ShowMenu();
         }
 
@@ -66,6 +71,28 @@ namespace CityBuilder.UI
                 if (!shown) continue;
                 entry.anchoredPosition = new Vector2(entry.anchoredPosition.x, _firstEntryY - slot++ * entryStep);
             }
+        }
+
+        private string MapCode()
+        {
+            var applier = Maps.MeshMapApplier.Instance;
+            return applier != null ? Maps.Archipelago.ArchipelagoMapId.Code(applier.CurrentMapId) : string.Empty;
+        }
+
+        private void ShowMapCode()
+        {
+            var code = MapCode();
+            if (mapCodePlaque != null) mapCodePlaque.SetActive(!string.IsNullOrEmpty(code));
+            if (mapCodeLabel != null && !string.IsNullOrEmpty(code)) mapCodeLabel.text = Localization.Format("#menu_map_code", code);
+        }
+
+        /// <summary>The plaque tapped: the code to the clipboard, and the plaque says so.</summary>
+        public void CopyMapCode()
+        {
+            var code = MapCode();
+            if (string.IsNullOrEmpty(code)) return;
+            GUIUtility.systemCopyBuffer = code;
+            if (mapCodeLabel != null) mapCodeLabel.text = Localization.Format("#menu_map_code_copied", code);
         }
 
         public void Close()

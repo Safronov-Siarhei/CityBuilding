@@ -27,6 +27,21 @@ namespace CityBuilder.Tests.EditMode
             CollectionAssert.AreEqual(a.Forest, b.Forest, "The same seed grew a different forest.");
         }
 
+        /// <summary>The code a player shares is the map's id back again; a bad or old-version code is refused, not turned into some other map.</summary>
+        [Test]
+        public void AMapCode_IsTheMapBackAgain()
+        {
+            var id = ArchipelagoMapId.For(482915);
+            var code = ArchipelagoMapId.Code(id);
+            Assert.AreEqual($"{ArchipelagoGenerator.Version}-482915", code);
+            Assert.IsTrue(ArchipelagoMapId.TryParseCode($"  {code} ", out var back, out _));
+            Assert.AreEqual(id, back);
+            Assert.IsFalse(ArchipelagoMapId.TryParseCode("hello", out _, out var old));
+            Assert.IsFalse(old);
+            Assert.IsFalse(ArchipelagoMapId.TryParseCode($"{ArchipelagoGenerator.Version + 7}-482915", out _, out old));
+            Assert.IsTrue(old, "A code from another version is not told apart from a bad one.");
+        }
+
         [Test]
         public void EverySeed_KeepsTheRules()
         {

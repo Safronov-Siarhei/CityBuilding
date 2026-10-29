@@ -296,11 +296,24 @@ namespace CityBuilder.EditorTools
 
             var themes = BuildThemes(window, new Vector2(0f, -235f), 104f, 136f, invasion: false);
             var start = MenuTextButton(window, "StartButton", "button", "#sandbox_start", HudInk.OnButton, new Vector2(0f, -345f), new Vector2(420f, 110f), 44);
+            // the archipelago's code: empty = a random map, a friend's code = their map
+            var mapCode = CreateInputField(window, "MapCode", string.Empty, new Vector2(0f, -110f), new Vector2(560f, 76f),
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.HudSkinsFolder}/Classic/plaque.png"));
+            mapCode.contentType = InputField.ContentType.Standard;
+            mapCode.characterLimit = 16;
+            mapCode.textComponent.alignment = TextAnchor.MiddleCenter;
+            var codePlaceholder = (Text)mapCode.placeholder;
+            codePlaceholder.alignment = TextAnchor.MiddleCenter;
+            Localize(codePlaceholder, "#sandbox_code_hint");
+            var codeError = CreateText(window, "MapCodeError", string.Empty, 24, new Vector2(0f, -160f), new Vector2(900f, 34f), UiTheme.Danger);
+            codeError.gameObject.SetActive(false);
 
             sandbox = screen.gameObject.AddComponent<SandboxScreenController>();
             var so = new SerializedObject(sandbox);
             so.FindProperty("themes").objectReferenceValue = themes;
             so.FindProperty("startButton").objectReferenceValue = start;
+            so.FindProperty("mapCode").objectReferenceValue = mapCode;
+            so.FindProperty("mapCodeError").objectReferenceValue = codeError;
             so.FindProperty("noMapsLabel").objectReferenceValue = noMaps.gameObject;
             WriteStrings(so.FindProperty("mapIds"), ids);
             WriteArray(so.FindProperty("cards"), cards);
