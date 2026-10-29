@@ -591,7 +591,10 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipTransport.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipWar.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipBattleship.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipOrcTransport.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipOrcWar.fbx"),
             });
+            shipSO.FindProperty("orcShipyardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcShipyard1.fbx");
             shipSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();
             var meshMapApplierSO = new SerializedObject(meshMapApplier);

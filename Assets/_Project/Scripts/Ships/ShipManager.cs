@@ -15,7 +15,7 @@ namespace CityBuilder.Ships
     /// from the sea once the map is laid out: every water cell inside the storm, a hull's width
     /// off the shores. Kept here: the ships afloat, for the save, the limits and the selection.
     /// </summary>
-    public class ShipManager : MonoBehaviour
+    public partial class ShipManager : MonoBehaviour
     {
         public const string ShipyardId = "Shipyard";
         public const float WaterLevel = -0.5f;
@@ -221,7 +221,8 @@ namespace CityBuilder.Ships
             var line = drowned > 0
                 ? Localization.Format("#ship_sunk_with", ShipStats.DisplayName(ship.Kind), drowned)
                 : Localization.Format("#ship_sunk", ShipStats.DisplayName(ship.Kind));
-            EventLogManager.Instance?.Post(GameEvent.At(line, EventSeverity.Danger, EventGlyph.Skull, ShipyardId, ship.transform.position));
+            EventLogManager.Instance?.Post(GameEvent.At(line, ship.IsOrc ? EventSeverity.Good : EventSeverity.Danger,
+                ship.IsOrc ? EventGlyph.Swords : EventGlyph.Skull, ShipyardId, ship.transform.position));
         }
 
         /// <summary>What mending this ship to full costs: ship_repair_wood_per_hp wood per lost point, rounded up; null when whole.</summary>
@@ -283,6 +284,7 @@ namespace CityBuilder.Ships
 
         private void Update()
         {
+            TickOrcs();
             for (var i = _boarding.Count - 1; i >= 0; i--)
             {
                 var b = _boarding[i];

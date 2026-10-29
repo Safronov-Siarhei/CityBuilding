@@ -42,6 +42,11 @@ namespace CityBuilder.Saving
         /// <summary>The archipelago's ships; empty in a save made before ships existed.</summary>
         public List<ShipEntry> ships = new List<ShipEntry>();
 
+        /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
+        public bool orcShipyardSaved;
+        public int orcShipyardHealth;
+        public float orcShipyardRebuildIn;
+
         // The one research under way in saves made before research ran in parallel -- read on load, never written.
         public string currentResearchId = string.Empty;
         public float currentResearchElapsedSeconds;
@@ -187,6 +192,10 @@ namespace CityBuilder.Saving
         public int kind;
         public float x, z, yaw;
         public int health;
+        /// <summary>An orc ship's voyage (ShipUnit.Orc*): its raid, the orcs aboard and their level, where it lands them, homeward or not.</summary>
+        public int orcRaid, orcCargo, orcLevel;
+        public float destX, destZ;
+        public bool homeward;
     }
 
     [Serializable]

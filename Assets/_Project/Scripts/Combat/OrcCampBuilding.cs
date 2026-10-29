@@ -32,6 +32,8 @@ namespace CityBuilder.Combat
         Cage = 10,
         /// <summary>The chief's treasury on the main base (2026-10-19): no part in a fight, a big payout when broken.</summary>
         Treasury = 11,
+        /// <summary>The orcs' shipyard on the archipelago (phase 4b): stands in the water by the main base, launches their fleets, fires on ships and soldiers like a tower; broken, it is raised again after a while (ShipManager).</summary>
+        Shipyard = 12,
     }
 
     /// <summary>
@@ -91,7 +93,12 @@ namespace CityBuilder.Combat
             var balance = BalanceConfig.Instance;
             MaxHealth = HealthOf(kind, Level, balance);
             CurrentHealth = MaxHealth;
-            if (Level >= OrcBaseLayout.MainLevel && kind == OrcCampBuildingKind.Watchtower)
+            if (kind == OrcCampBuildingKind.Shipyard)
+            {
+                _shotDamage = balance.OrcShipyardDamage;
+                _shotRange = balance.OrcShipyardRangeMeters;
+            }
+            else if (Level >= OrcBaseLayout.MainLevel && kind == OrcCampBuildingKind.Watchtower)
             {
                 _shotDamage = balance.OrcMainTowerDamage;
                 _shotRange = balance.OrcMainTowerRangeMeters;
@@ -116,6 +123,7 @@ namespace CityBuilder.Combat
         /// <summary>How much a building of this kind and level can take, from the sheet.</summary>
         public static int HealthOf(OrcCampBuildingKind kind, int level, BalanceConfig balance)
         {
+            if (kind == OrcCampBuildingKind.Shipyard) return balance.OrcShipyardHealth;
             if (level >= OrcBaseLayout.MainLevel)
             {
                 switch (kind)
@@ -170,11 +178,20 @@ namespace CityBuilder.Combat
             _shotTimer -= Time.deltaTime;
             if (_shotTimer > 0f) return;
 
+            // the shipyard fires cannonballs; any shooting orc building fires on the player's ships in reach too
+            var kind = Kind == OrcCampBuildingKind.Shipyard ? ProjectileKind.Cannonball : ProjectileKind.Arrow;
             var target = NearestSoldierWithin(_shotRange);
-            if (target == null) return;
+            if (target == null)
+            {
+                var ship = Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.NearestShip(transform.position, _shotRange, orc: false) : null;
+                if (ship == null) return;
+                _shotTimer = BalanceConfig.Instance.OrcTowerIntervalSeconds;
+                CombatProjectiles.Fire(kind, CombatProjectiles.MuzzleOf(this, ship.transform.position), ship, _shotDamage);
+                return;
+            }
 
             _shotTimer = BalanceConfig.Instance.OrcTowerIntervalSeconds;
-            CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _shotDamage);
+            CombatProjectiles.Fire(kind, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _shotDamage);
         }
 
         private SoldierUnit NearestSoldierWithin(float range)

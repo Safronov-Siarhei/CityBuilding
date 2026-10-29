@@ -131,7 +131,8 @@ namespace CityBuilder.UI
                 if (_hits[i].distance >= nearestDistance) continue;
 
                 var candidate = _hits[i].collider.GetComponentInParent<IDamageTarget>();
-                if (candidate == null || !candidate.IsAlive) continue;
+                // a ship at sea is out of a soldier's reach: the war ships deal with the orcs' fleet
+                if (candidate == null || !candidate.IsAlive || candidate is Ships.ShipUnit) continue;
 
                 nearest = candidate;
                 nearestDistance = _hits[i].distance;

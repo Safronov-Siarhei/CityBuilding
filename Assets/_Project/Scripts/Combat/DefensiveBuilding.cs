@@ -87,7 +87,13 @@ namespace CityBuilder.Combat
             _attackRangeMeters = RangeOf(_buildingInstance);
 
             var target = FindNearestOrcInRange();
-            if (target == null) return;
+            if (target == null)
+            {
+                // an orc ship in reach of the shore (the archipelago, phase 4b)
+                var ship = Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.NearestShip(transform.position, _attackRangeMeters, orc: true) : null;
+                if (ship != null) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, ship.transform.position), ship, _buildingInstance.Defense);
+                return;
+            }
             // Seen flying from the parapet and landing (see CombatProjectiles); the damage lands with it.
             CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, target.transform.position), target, _buildingInstance.Defense);
         }

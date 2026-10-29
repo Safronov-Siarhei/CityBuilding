@@ -7,18 +7,24 @@ using UnityEngine.AI;
 namespace CityBuilder.Ships
 {
     /// <summary>The ships (the user, 2026-10-28): what each is for, by its row in the units tab.</summary>
-    public enum ShipKind { Scout = 0, Transport = 1, War = 2, Battleship = 3 }
+    public enum ShipKind { Scout = 0, Transport = 1, War = 2, Battleship = 3, OrcTransport = 4, OrcWar = 5 }
 
     /// <summary>A ship's numbers, read from its units-tab row (`ship_scout`, `ship_transport`).</summary>
     public static class ShipStats
     {
+        /// <summary>The player's ships, in the Shipyard's button order.</summary>
         public static readonly ShipKind[] All = { ShipKind.Scout, ShipKind.Transport, ShipKind.War, ShipKind.Battleship };
+
+        /// <summary>The orcs' ships (phase 4b): sailed by the orcs from their shipyard, never the player's.</summary>
+        public static bool IsOrc(ShipKind kind) => kind >= ShipKind.OrcTransport;
 
         public static string SheetId(ShipKind kind) => kind switch
         {
             ShipKind.Scout => "ship_scout",
             ShipKind.Transport => "ship_transport",
             ShipKind.War => "ship_war",
+            ShipKind.OrcTransport => "ship_orc_transport",
+            ShipKind.OrcWar => "ship_orc_war",
             _ => "ship_battleship",
         };
 
@@ -69,6 +75,14 @@ namespace CityBuilder.Ships
         public int MaxHealth => ShipStats.MaxHealth(Kind);
         public bool Selected { get; private set; }
         public bool IsMoving => _corners.Count > 0;
+        public bool IsOrc => ShipStats.IsOrc(Kind);
+
+        /// <summary>An orc ship's voyage (ShipManager runs it): the raid it sails in, the orcs it carries and at what level, where it lands them, and whether it is on its way home.</summary>
+        public int OrcRaid { get; set; }
+        public int OrcCargo { get; set; }
+        public int OrcLevel { get; set; } = 1;
+        public Vector3 OrcDestination { get; set; }
+        public bool OrcHomeward { get; set; }
         /// <summary>Going down: out of the fight, the selection and the save; gone in a few seconds.</summary>
         public bool Sinking { get; private set; }
 
@@ -159,7 +173,8 @@ namespace CityBuilder.Ships
             _ring = BuildRing();
             _ring.enabled = false;
             _reload = ShipStats.AttackInterval(kind);
-            FogOfWarManager.Instance?.AddWalker(transform, ShipStats.RevealCells(kind));
+            // only the player's ships open the fog
+            if (!IsOrc) FogOfWarManager.Instance?.AddWalker(transform, ShipStats.RevealCells(kind));
             if (health < MaxHealth) ShowHealth();
         }
 
@@ -244,9 +259,10 @@ namespace CityBuilder.Ships
         }
 
         /// <summary>
-        /// A war ship's broadside: every reload, a cannonball at the nearest enemy in reach -- an orc,
-        /// an orc camp's building -- from the side turned to it. The scout and the transport carry no
-        /// guns (attack_damage 0).
+        /// A war ship's broadside: every reload, a cannonball at the nearest enemy in reach from the
+        /// side turned to it. The player's: an orc, an orc ship, an orc camp's building. The orcs':
+        /// a ship of the player's, a soldier, a building on the shore. The scout and the transports
+        /// carry no guns (attack_damage 0).
         /// </summary>
         private void TickCannons(float t)
         {
@@ -254,16 +270,69 @@ namespace CityBuilder.Ships
             if (damage <= 0) return;
             _reload -= t;
             if (_reload > 0f) return;
-            var target = NearestEnemy(ShipStats.AttackRange(Kind));
-            if (target == null)
+            var range = ShipStats.AttackRange(Kind);
+            Vector3 aim;
+            Combat.IDamageTarget enemy = null;
+            Combat.SoldierUnit soldier = null;
+            Buildings.BuildingInstance building = null;
+            if (IsOrc)
+            {
+                enemy = ShipManager.Instance != null ? ShipManager.Instance.NearestShip(transform.position, range, orc: false) : null;
+                if (enemy == null) soldier = NearestSoldier(range);
+                if (enemy == null && soldier == null) building = NearestBuilding(range);
+            }
+            else enemy = NearestEnemy(range);
+            if (enemy != null) aim = enemy.Transform.position;
+            else if (soldier != null) aim = soldier.transform.position;
+            else if (building != null) aim = building.transform.position;
+            else
             {
                 _reload = TargetScanSeconds;
                 return;
             }
             _reload = ShipStats.AttackInterval(Kind);
-            var side = Vector3.Dot(target.Transform.position - transform.position, transform.right) >= 0f ? 1f : -1f;
+            var side = Vector3.Dot(aim - transform.position, transform.right) >= 0f ? 1f : -1f;
             var muzzle = transform.position + Vector3.up * 0.8f + transform.right * (side * (Kind == ShipKind.Battleship ? 1.1f : 0.8f));
-            Combat.CombatProjectiles.Fire(Combat.ProjectileKind.Cannonball, muzzle, target, damage);
+            const Combat.ProjectileKind ball = Combat.ProjectileKind.Cannonball;
+            if (enemy != null) Combat.CombatProjectiles.Fire(ball, muzzle, enemy, damage);
+            else if (soldier != null) Combat.CombatProjectiles.Fire(ball, muzzle, soldier, damage);
+            else Combat.CombatProjectiles.Fire(ball, muzzle, building, damage);
+        }
+
+        private Combat.SoldierUnit NearestSoldier(float range)
+        {
+            Combat.SoldierUnit best = null;
+            var bestSq = range * range;
+            foreach (var unit in Combat.SoldierUnit.All)
+            {
+                if (unit == null || unit.CurrentHealth <= 0) continue;
+                var d = FlatSq(unit.transform.position - transform.position);
+                if (d >= bestSq) continue;
+                bestSq = d;
+                best = unit;
+            }
+            return best;
+        }
+
+        private static readonly Collider[] Near = new Collider[128];
+
+        /// <summary>The player's nearest building on the shore within reach of the guns (+ the reach to its walls).</summary>
+        private Buildings.BuildingInstance NearestBuilding(float range)
+        {
+            Buildings.BuildingInstance best = null;
+            var reach = range + StructureReach;
+            var bestSq = reach * reach;
+            var count = Physics.OverlapSphereNonAlloc(transform.position, reach, Near, ~0, QueryTriggerInteraction.Collide);
+            for (var i = 0; i < count; i++)
+            {
+                var building = Near[i].GetComponentInParent<Buildings.BuildingInstance>();
+                if (building == null || building.CurrentHealth <= 0) continue;
+                var d = FlatSq(building.transform.position - transform.position);
+                if (d >= bestSq) continue;
+                bestSq = d;
+                best = building;
+            }
+            return best;
         }
 
         private Combat.IDamageTarget NearestEnemy(float range)
@@ -271,6 +340,12 @@ namespace CityBuilder.Ships
             Combat.IDamageTarget best = null;
             var bestSq = range * range;
             var here = transform.position;
+            var ship = ShipManager.Instance != null ? ShipManager.Instance.NearestShip(here, range, orc: true) : null;
+            if (ship != null)
+            {
+                best = ship;
+                bestSq = FlatSq(ship.transform.position - here);
+            }
             foreach (var orc in Combat.OrcUnit.All)
             {
                 if (orc == null || orc.CurrentHealth <= 0) continue;

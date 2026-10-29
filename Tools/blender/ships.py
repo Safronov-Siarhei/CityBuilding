@@ -8,6 +8,12 @@
   castle, two masts with white sails crossed blue. Shipyard level 3. About 4.6 m.
 - ShipBattleship: a galleon -- a long two-decked hull, five guns a side on each deck, a tall
   gilded stern castle under a blue roof, three masts. Carries a landing party. Level 4. About 6.6 m.
+- ShipOrcTransport: the orcs' landing barge -- a black, crude hull of raw planks, a hide sail
+  daubed rust on a crooked mast, shields and stakes along the rails, a skull on the stem.
+- ShipOrcWar: the orcs' war galley -- longer, a ram of iron at the bow, two guns a side, a
+  rust sail with a black stripe, horns on the stern post.
+- OrcShipyard1: the orcs' slipway by the main base (3 x 4): a deck of raw logs on piles, a black
+  hull's ribs, a crude crane of logs, a war banner, skulls, a brazier. It shoots like a tower.
 - Shipyard1-lvl1: a slipway out over the water on piles (3 x 4 cells): a planked deck, a hull's
   ribs on the stocks, a timber crane and a stack of planks, a blue banner on a post.
 
@@ -163,6 +169,89 @@ def ship_battleship():
     return b
 
 
+RUST, HIDE, BONE = 'roof_orange_dark', 'burlap', 'plaster'
+
+
+def skull(b, x, y, z, s=0.12):
+    """A bone skull facing -y: a dome, two black sockets."""
+    b.box(x - s * 0.5, x + s * 0.5, y - s * 0.45, y + s * 0.45, z, z + s * 0.8, BONE, bevel=s * 0.12)
+    for k in (-1, 1):
+        b.box(x + k * s * 0.2 - s * 0.1, x + k * s * 0.2 + s * 0.1, y - s * 0.47, y - s * 0.4, z + s * 0.3, z + s * 0.52, 'window')
+
+
+def ship_orc_transport():
+    b = Builder()
+    hull(b, 4.8, 1.6, 0.6, colour='window', rail='wood_dark', stations=8)
+    b.box(-0.7, 0.7, -1.7, 1.7, 0.6, 0.64, 'wood_dark')                  # the deck
+    for y in (-1.3, -0.5, 0.3, 1.1):                                      # hide shields on the rails
+        for x in (-0.76, 0.76):
+            b.box(x - 0.02, x + 0.02, y - 0.17, y + 0.17, 0.42, 0.72, HIDE if (y > 0) == (x > 0) else RUST)
+    for y in (-1.7, -0.9, 0.7, 1.5):                                      # stakes leaning out
+        for x in (-0.72, 0.72):
+            b.rod((x, y, 0.6), (x * 1.25, y, 1.0), 0.04, 'wood_mid')
+    b.rod((0.0, -0.1, 0.6), (0.08, -0.1, 3.2), 0.08, 'wood_dark')           # the crooked mast
+    sail(b, 0.06, 0.0, 1.2, 2.9, 1.9, HIDE, stripe=RUST)
+    b.box(-0.06, 0.06, -2.5, -2.38, 0.9, 1.4, 'wood_dark')                # the stem post
+    skull(b, 0.0, -2.55, 1.35, 0.2)
+    b.box(-0.05, 0.05, 2.15, 2.6, 0.3, 0.38, 'wood_dark')                 # the tiller
+    return b
+
+
+def ship_orc_war():
+    b = Builder()
+    hull(b, 5.2, 1.5, 0.62, colour='window', rail='wood_dark', stations=9)
+    b.box(-0.66, 0.66, -1.9, 1.9, 0.62, 0.66, 'wood_dark')                # the deck
+    for x0, x1 in ((-0.74, -0.68), (0.68, 0.74)):                         # a rust wale
+        b.box(x0, x1, -1.7, 1.7, 0.46, 0.54, RUST)
+    guns(b, (-0.6, 0.6), 0.36, 1.42)
+    b.rod((0.0, -2.55, 0.25), (0.0, -3.15, 0.2), 0.16, 'iron')            # the ram
+    b.cylinder(0, -0.3, 0.62, 3.5, 0.07, 'wood_dark', sides=5)            # the mast
+    sail(b, 0, -0.2, 1.3, 3.2, 2.0, RUST, stripe='window')
+    # a raised stern deck and its horned post
+    b.box(-0.68, 0.68, 1.3, 2.3, 0.62, 1.1, 'wood_dark', bevel=0.02)
+    b.box(-0.06, 0.06, 2.3, 2.45, 0.6, 1.7, 'wood_dark')
+    for k in (-1, 1):
+        b.rod((0, 2.38, 1.65), (k * 0.35, 2.45, 2.0), 0.05, BONE)
+    skull(b, 0.0, -2.42, 1.0, 0.18)
+    for y in (-1.4, 1.0):                                                 # stakes
+        for x in (-0.7, 0.7):
+            b.rod((x, y, 0.62), (x * 1.3, y, 1.05), 0.04, 'wood_mid')
+    return b
+
+
+def orc_shipyard():
+    """3 x 4 cells over the water like the town's, all raw: logs on piles, a black hull on the stocks."""
+    b = Builder()
+    for x in (-1.3, 0.0, 1.3):
+        for y in (-1.8, -0.6, 0.6, 1.8):
+            b.cylinder(x, y, -0.6, 0.22, 0.09, 'wood_dark', sides=5)
+    for k in range(8):                                                    # a deck of raw logs
+        y = -2.0 + k * 0.5 + 0.25
+        b.box(-1.5, 1.5, y - 0.23, y + 0.23, 0.2, 0.3, 'wood_mid' if k % 2 else 'wood_dark', bevel=0.04)
+    b.box(-0.09, 0.09, -1.6, 1.4, 0.3, 0.48, 'wood_dark')                 # the stocks
+    for k in range(6):                                                    # a black hull's ribs
+        y = -1.3 + k * 0.5
+        w = 0.9 * (1.0 - (abs(y) / 1.6) ** 2 * 0.6)
+        for side in (-1, 1):
+            b.rod((0, y, 0.48), (side * w * 0.5, y, 0.78), 0.06, 'window')
+            b.rod((side * w * 0.5, y, 0.78), (side * w * 0.62, y, 1.15), 0.06, 'window')
+    skull(b, 0.0, -1.85, 1.2, 0.22)
+    b.box(-0.05, 0.05, -1.8, -1.6, 0.48, 1.2, 'wood_dark')
+    # a crude crane of lashed logs
+    b.rod((1.2, 1.5, 0.3), (1.0, 1.4, 2.4), 0.09, 'wood_dark')
+    b.rod((1.0, 1.4, 2.3), (0.2, 0.6, 2.5), 0.08, 'wood_dark')
+    b.rod((0.2, 0.6, 2.5), (0.2, 0.6, 1.5), 0.02, 'iron')
+    for k in (-1, 1):
+        b.rod((1.0, 1.4, 2.4), (1.0 + k * 0.25, 1.4, 2.75), 0.05, BONE)
+    # a war banner, a brazier
+    b.cylinder(-1.3, -1.8, 0.3, 2.1, 0.04, 'wood_dark', sides=5)
+    b.prism([(0, 1.25), (0.5, 1.25), (0.42, 1.55), (0.5, 1.95), (0, 1.95)], (-1.3, -1.83, 0), (1, 0, 0), (0, 0, 1), 0.02,
+            RUST, back_cap=True)
+    b.cylinder(-1.2, 1.6, 0.3, 0.6, 0.2, 'iron', sides=6)
+    b.pyramid(-1.2, 1.6, 0.6, 0.14, 0.14, 0.9, 'fire', sides=5)
+    return b
+
+
 def shipyard():
     """3 x 4 cells over the water: x -1.5..1.5, y -2..2, the deck at 0.25 on piles down to -0.6."""
     b = Builder()
@@ -198,6 +287,7 @@ def shipyard():
 
 
 MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "ShipWar": ship_war, "ShipBattleship": ship_battleship,
+          "ShipOrcTransport": ship_orc_transport, "ShipOrcWar": ship_orc_war, "OrcShipyard1": orc_shipyard,
           "Shipyard1-lvl1": shipyard}
 
 

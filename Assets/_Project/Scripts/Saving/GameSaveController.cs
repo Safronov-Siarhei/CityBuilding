@@ -203,8 +203,15 @@ namespace CityBuilder.Saving
                 shipManager.ClearForLoad();
                 foreach (var ship in data.ships)
                 {
-                    shipManager.Spawn((Ships.ShipKind)ship.kind, new Vector3(ship.x, 0f, ship.z), Quaternion.Euler(0f, ship.yaw, 0f), ship.health);
+                    var unit = shipManager.Spawn((Ships.ShipKind)ship.kind, new Vector3(ship.x, 0f, ship.z), Quaternion.Euler(0f, ship.yaw, 0f), ship.health);
+                    if (!unit.IsOrc) continue;
+                    unit.OrcRaid = ship.orcRaid;
+                    unit.OrcCargo = ship.orcCargo;
+                    unit.OrcLevel = Mathf.Max(1, ship.orcLevel);
+                    unit.OrcDestination = new Vector3(ship.destX, Ships.ShipManager.WaterLevel, ship.destZ);
+                    unit.OrcHomeward = ship.homeward;
                 }
+                if (data.orcShipyardSaved) shipManager.RestoreOrcShipyard(data.orcShipyardHealth, data.orcShipyardRebuildIn);
             }
 
             foreach (var entry in data.buildings)
@@ -590,7 +597,19 @@ namespace CityBuilder.Saving
                 foreach (var ship in Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.Ships : new List<Ships.ShipUnit>())
                 {
                     if (ship == null) continue;
-                    data.ships.Add(new ShipEntry { kind = (int)ship.Kind, x = ship.transform.position.x, z = ship.transform.position.z, yaw = ship.transform.eulerAngles.y, health = ship.Health });
+                    data.ships.Add(new ShipEntry
+                    {
+                        kind = (int)ship.Kind, x = ship.transform.position.x, z = ship.transform.position.z, yaw = ship.transform.eulerAngles.y, health = ship.Health,
+                        orcRaid = ship.OrcRaid, orcCargo = ship.OrcCargo, orcLevel = ship.OrcLevel,
+                        destX = ship.OrcDestination.x, destZ = ship.OrcDestination.z, homeward = ship.OrcHomeward,
+                    });
+                }
+                var orcShips = Ships.ShipManager.Instance;
+                if (orcShips != null)
+                {
+                    data.orcShipyardSaved = true;
+                    data.orcShipyardHealth = orcShips.OrcShipyard != null ? orcShips.OrcShipyard.CurrentHealth : 0;
+                    data.orcShipyardRebuildIn = orcShips.OrcShipyardRebuildIn;
                 }
                 foreach (var run in researchManager.UnderWayForSave)
                 {

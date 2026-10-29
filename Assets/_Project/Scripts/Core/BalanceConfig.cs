@@ -510,6 +510,11 @@ namespace CityBuilder.Core
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
         [SerializeField] private float shipRepairWoodPerHp = 0.5f;
         [SerializeField] private float shipRepairReachMeters = 14f;
+        [SerializeField] private int orcShipyardHealth = 900;
+        [SerializeField] private int orcShipyardDamage = 10;
+        [SerializeField] private float orcShipyardRangeMeters = 12f;
+        [SerializeField] private float orcShipyardRebuildSeconds = 300f;
+        [SerializeField] private int orcFleetEscorts = 1;
         [SerializeField] private float kingXpRadius = 12f;
         [SerializeField] private float kingGuardRadius = 30f;
         [SerializeField] private int kingRevealRadius = 9;
@@ -810,6 +815,13 @@ namespace CityBuilder.Core
         public float ShipRepairWoodPerHp => shipRepairWoodPerHp;
         /// <summary>How near a working Shipyard a ship must be to be repaired, metres.</summary>
         public float ShipRepairReachMeters => shipRepairReachMeters;
+        /// <summary>The orcs' shipyard on the archipelago (phase 4b): its health, its gun, and how long the orcs take to raise it again once broken.</summary>
+        public int OrcShipyardHealth => orcShipyardHealth;
+        public int OrcShipyardDamage => orcShipyardDamage;
+        public float OrcShipyardRangeMeters => orcShipyardRangeMeters;
+        public float OrcShipyardRebuildSeconds => orcShipyardRebuildSeconds;
+        /// <summary>War ships that sail with every orc fleet to guard its transports.</summary>
+        public int OrcFleetEscorts => orcFleetEscorts;
         public float KingXpRadius => kingXpRadius;
         public float KingGuardRadius => kingGuardRadius;
         public int KingRevealRadius => kingRevealRadius;
@@ -1275,6 +1287,11 @@ namespace CityBuilder.Core
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
             shipRepairWoodPerHp = Read(economy, "ship_repair_wood_per_hp", shipRepairWoodPerHp);
             shipRepairReachMeters = Read(economy, "ship_repair_reach_meters", shipRepairReachMeters);
+            orcShipyardHealth = (int)Read(economy, "orc_shipyard_health", orcShipyardHealth);
+            orcShipyardDamage = (int)Read(economy, "orc_shipyard_damage", orcShipyardDamage);
+            orcShipyardRangeMeters = Read(economy, "orc_shipyard_range_meters", orcShipyardRangeMeters);
+            orcShipyardRebuildSeconds = Read(economy, "orc_shipyard_rebuild_seconds", orcShipyardRebuildSeconds);
+            orcFleetEscorts = (int)Read(economy, "orc_fleet_escorts", orcFleetEscorts);
             kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);

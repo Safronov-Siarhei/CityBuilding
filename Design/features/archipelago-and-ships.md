@@ -7,7 +7,8 @@
 > tapped and are saved. BOARDING and LANDING built 2026-10-29 (see «Boarding and landing»).
 > **Phase 4a (2026-10-29):** the war ship (lvl 3) and the battleship (lvl 4, carries 8), cannons,
 > health bars, sinking that drowns everyone aboard, repair at a Shipyard for wood (see «Sea war»).
-> Orc ships = phase 4b, next.
+> **Phase 4b (2026-10-29):** the orcs' shipyard, fleets that land the raids, towers vs ships
+> (see «The orcs at sea»).
 > The user has NOT seen ships in game.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [fog-of-war](fog-of-war.md),
 > [army-and-soldiers](army-and-soldiers.md), [research-laboratory](research-laboratory.md).
@@ -65,8 +66,29 @@
   `#ship_repair_far`, `#ship_repair_cost`. The bar shows for a ship that carries people OR is holed.
 - My defaults the user has NOT confirmed: the numbers (war 220 HP / 12 dmg / 2.5 s / 11 m / 160
   coins; battleship 520 / 18 / 3 s / 13 m / 340 coins / 8 seats), repair in WOOD, instant repair.
-- Next (4b): orc shipyard at the main base (shoots like a tower, rebuilt after a sheet-set time),
-  orc transports landing raids + escorting war ships; player towers and ships shoot orc ships.
+
+## The orcs at sea (phase 4b, built 2026-10-29)
+- The orc SHIPYARD (`OrcCampBuilding`, kind `Shipyard` = 12, no camp, model `OrcShipyard1`) rises on
+  the sea nearest the main base's centre once the main base exists (`ShipManager.RaiseOrcShipyard`,
+  `Ships/ShipManagerOrcs.cs`). It is a normal army target (it is in `OrcCampBuilding.All`), fires
+  cannonballs like a tower (`orc_shipyard_damage` / `_range_meters`) at soldiers, else the player's
+  ships. Broken: `#log_orc_shipyard_destroyed`, raised again after `orc_shipyard_rebuild_seconds`
+  (`#log_orc_shipyard_rebuilt`); never while the main base is cleared.
+- RAIDS BY SEA: on a NoRaids map the raids' clock (OrcRaidManager, same interval/size/level as the
+  land raids) calls `ShipManager.LaunchOrcFleet(size, level)`: transports (`ship_orc_transport`,
+  `capacity` orcs each) + `orc_fleet_escorts` war ships (`ship_orc_war`) sail from the shipyard to
+  the sea by the beach nearest the Town Hall (`TryFindOrcLanding`). A transport there puts its
+  orcs ashore (`OrcRaidManager.SpawnLanding`, the land raid's wave mix) and sails home; at home it
+  is removed. War ships hunt the player's ships within 25 m, wait off the beach, go home with the
+  transports. No shipyard standing = no raid that turn (the clock runs on).
+- Orc ships: not selectable or boardable (`ShipInput.ShipAt` skips them), open no fog, are not a
+  soldier's tap target (`ArmyOrderInput`). The player's war ships fire at them; the orcs' war ships
+  fire at the player's ships, then soldiers, then shore buildings. Player towers
+  (`DefensiveBuilding`) and every shooting orc building fire at ships of the other side in reach.
+- Saved: `ShipEntry.orcRaid/orcCargo/orcLevel/destX/destZ/homeward`; `GameSaveData.orcShipyardSaved/
+  orcShipyardHealth/orcShipyardRebuildIn`.
+- My defaults (unconfirmed): shipyard 900 HP / 10 dmg / 12 m / 300 s rebuild; barge 160 HP, 8 orcs;
+  longship 200 HP / 10 dmg / 2.5 s / 11 m; 1 escort per fleet. Orc ships are seen through the fog.
 
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
@@ -99,7 +121,8 @@
 - `Tests/EditMode/ArchipelagoGeneratorTests.cs`.
 - `Tests/PlayMode/ArchipelagoTests.cs`: map build + Town Hall in the zone; save round trip;
   `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail`, `AGroup_BoardsATransportAtABeach_AndLandsAgain`,
-  `AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard` (all 5 green 2026-10-29).
+  `AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard`, `AnOrcFleet_SailsFromTheirShipyard_AndLandsItsRaid`
+  (all 6 green 2026-10-29).
 - `MapPickerTests.AMapCode_StartsThatVeryMap`.
 
 ## Traps already paid for
@@ -115,7 +138,8 @@
 
 ## Open
 - Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
-- Phase 4b: orc shipyard + orc ships + landings; towers vs ships. Ship levels in the Laboratory. Phase 5: lighthouse (coins),
+- Orc ships hidden in the fog; soldiers may not reach the orc shipyard in the water (archers and
+  ships can). Ship levels in the Laboratory. Phase 5: lighthouse (coins),
   fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones (no longer needed by
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.

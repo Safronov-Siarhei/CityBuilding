@@ -310,6 +310,59 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(battleship == null, "The sunk ship never went down.");
         }
 
+        /// <summary>
+        /// The orcs at sea (phase 4b): their shipyard rises by the main base once the Town Hall
+        /// stands; a fleet out of it sails for the beach nearest the Town Hall and puts its raid
+        /// ashore on the player's island; broken, the shipyard waits to be raised again.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AnOrcFleet_SailsFromTheirShipyard_AndLandsItsRaid()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var hallData = PlaytestWorld.Building(BuildingIds.TownHall);
+            Assert.IsNotNull(PlaytestWorld.Place(hallData, world.StartCell - hallData.footprintSize / 2), "No Town Hall.");
+            var ships = CityBuilder.Ships.ShipManager.Instance;
+            for (var t = 0f; t < 5f && ships.OrcShipyard == null; t += Time.deltaTime) yield return null;
+            var shipyard = ships.OrcShipyard;
+            Assert.IsNotNull(shipyard, "The orcs raised no shipyard by their main base.");
+            Assert.IsTrue(System.Linq.Enumerable.Contains(CityBuilder.Combat.OrcCampBuilding.All, shipyard), "The orc shipyard is no target for the army.");
+            var map = MeshMapApplier.Instance.CurrentMap;
+            var mainBase = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
+
+            var orcsBefore = CityBuilder.Combat.OrcUnit.All.Count;
+            Assert.IsTrue(ships.LaunchOrcFleet(3, 1), "No fleet sailed.");
+            CityBuilder.Ships.ShipUnit transport = null;
+            var escorts = 0;
+            foreach (var ship in ships.Ships)
+            {
+                if (ship.Kind == CityBuilder.Ships.ShipKind.OrcTransport) transport = ship;
+                if (ship.Kind == CityBuilder.Ships.ShipKind.OrcWar) escorts++;
+            }
+            Assert.IsNotNull(transport, "The fleet has no transport.");
+            Assert.AreEqual(3, transport.OrcCargo, "The raid is not aboard.");
+            Assert.Greater(escorts, 0, "The fleet sailed with no war ship.");
+            var start = GridManager.Instance.GetFootprintCenterWorld(world.StartCell, Vector2Int.one);
+            Assert.Less(Vector3.Distance(transport.OrcDestination, start), Vector3.Distance(transport.OrcDestination, mainBase),
+                "The fleet is not headed for the player's island.");
+
+            // the crossing takes minutes: put it off its beach
+            transport.Stop();
+            transport.transform.position = transport.OrcDestination;
+            for (var t = 0f; t < 5f && !transport.OrcHomeward; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(transport.OrcHomeward, "The transport never put its orcs ashore.");
+            Assert.AreEqual(orcsBefore + 3, CityBuilder.Combat.OrcUnit.All.Count, "The raid did not land.");
+            var landed = CityBuilder.Combat.OrcUnit.All[CityBuilder.Combat.OrcUnit.All.Count - 1];
+            Assert.IsFalse(MeshMapApplier.Instance.IsWaterCell(GridManager.Instance.WorldToCell(landed.transform.position)), "An orc was landed in the sea.");
+            Assert.Less(Vector3.Distance(landed.transform.position, start), Vector3.Distance(landed.transform.position, mainBase), "The orcs landed off the player's island.");
+
+            // broken, the shipyard is raised again only after a wait
+            shipyard.TakeDamage(shipyard.MaxHealth);
+            yield return null;
+            Assert.IsNull(ships.OrcShipyard, "The broken shipyard still stands.");
+            Assert.Greater(ships.OrcShipyardRebuildIn, 0f, "No wait before the orcs rebuild.");
+            Assert.IsFalse(ships.LaunchOrcFleet(3, 1), "A fleet sailed with the shipyard broken.");
+        }
+
         private static bool DeepRelief(ArchipelagoMap world, int i)
         {
             var n = world.Size;

@@ -35,7 +35,8 @@ namespace CityBuilder.Ships
             for (var i = 0; i < count; i++)
             {
                 var ship = Hits[i].collider.GetComponentInParent<ShipUnit>();
-                if (ship == null || Hits[i].distance >= bestDistance) continue;
+                // the orcs' ships are not the player's to select or board
+                if (ship == null || ship.IsOrc || Hits[i].distance >= bestDistance) continue;
                 best = ship;
                 bestDistance = Hits[i].distance;
             }

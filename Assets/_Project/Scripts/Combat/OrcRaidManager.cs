@@ -243,10 +243,6 @@ namespace CityBuilder.Combat
             // squads it spawns deliberately.
             if (RaidsSuspended) return;
 
-            // the archipelago: no raids over land -- the orcs will come by sea (the user, 2026-10-29)
-            var map = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
-            if (map != null && map.NoRaids) return;
-
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
 
@@ -255,6 +251,16 @@ namespace CityBuilder.Combat
             // minute where that is affordable.
             var score = PlayerProgression.Score();
             _raidTimer = ComputeRaidIntervalSeconds(score);
+
+            // the archipelago: no raids over land -- the orcs come by sea, a fleet out of their
+            // shipyard (the user, 2026-10-28/29); none while it lies broken
+            var map = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            if (map != null && map.NoRaids)
+            {
+                Ships.ShipManager.Instance?.LaunchOrcFleet(ComputeRaidSize(score), ComputeOrcLevel(score));
+                return;
+            }
+
             GrowCamps(score);
             SpawnRaid(score);
         }
@@ -313,6 +319,9 @@ namespace CityBuilder.Combat
             }
             return first;
         }
+
+        /// <summary>A raid's wave put ashore by an orc ship (ShipManager): raiders, throwers and a chief as SpawnRaid's are.</summary>
+        public OrcUnit SpawnLanding(Vector3 beach, int count, int level) => SpawnWave(beach, count, level);
 
         /// <summary>One orc of a given kind and level -- the Invasion run's waves make up their own mixes (InvasionWaves). Works with the raids switched off, as they are in a run.</summary>
         public OrcUnit SpawnOrcOfKind(Vector3 origin, int level, OrcKind kind)

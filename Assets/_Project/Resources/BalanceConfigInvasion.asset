@@ -520,6 +520,84 @@ MonoBehaviour:
     unlockResearch:
       coins: 0
       seconds: 0
+  - id: ship_orc_transport
+    displayName: "\u041E\u0440\u043E\u0447\u0438\u0439 \u0431\u0430\u0440\u043A\u0430\u0441"
+    attackRangeUnits: 0
+    attackRangeStructures: 0
+    engageRadius: 6
+    levels:
+    - maxHealth: 160
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 160
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 160
+      attackDamage: 0
+      attackIntervalSeconds: 1
+      walkSpeed: 3
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 8
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ship_orc_war
+    displayName: "\u041E\u0440\u043E\u0447\u0438\u0439 \u0434\u0440\u0430\u043A\u043A\u0430\u0440"
+    attackRangeUnits: 11
+    attackRangeStructures: 11
+    engageRadius: 8
+    levels:
+    - maxHealth: 200
+      attackDamage: 10
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 200
+      attackDamage: 10
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 200
+      attackDamage: 10
+      attackIntervalSeconds: 2.5
+      walkSpeed: 3.4
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
   - id: orc_thief
     displayName: "\u0412\u043E\u0440\u0438\u0448\u043A\u0430"
     attackRangeUnits: 1.4
@@ -5823,6 +5901,11 @@ MonoBehaviour:
   kingRespawnPerLevelSeconds: 2
   shipRepairWoodPerHp: 0.5
   shipRepairReachMeters: 14
+  orcShipyardHealth: 900
+  orcShipyardDamage: 10
+  orcShipyardRangeMeters: 12
+  orcShipyardRebuildSeconds: 300
+  orcFleetEscorts: 1
   kingXpRadius: 12
   kingGuardRadius: 30
   kingRevealRadius: 9
