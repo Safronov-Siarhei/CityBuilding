@@ -6,6 +6,7 @@ using CityBuilder.Core;
 using CityBuilder.Research;
 using CityBuilder.Resources;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CityBuilder.UI
@@ -30,7 +31,6 @@ namespace CityBuilder.UI
         /// <summary>How often the open window re-reads the countdowns and each cell's state. Every frame would allocate a fistful of strings per cell for no visible gain.</summary>
         private const float RefreshIntervalSeconds = 0.25f;
 
-        private const float BubbleSeconds = 3f;
         private const float FlashSeconds = 0.8f;
         private const float ShakeSeconds = 0.35f;
 
@@ -114,7 +114,7 @@ namespace CityBuilder.UI
         private bool _unitsTab;
         private bool _dialogIsRepair;
         private float _refreshTimer;
-        private float _bubbleUntil;
+        private int _bubbleFrame;
         private Text _flashing;
         private float _flashUntil;
         private Cell _shaking;
@@ -342,7 +342,9 @@ namespace CityBuilder.UI
                 rect.anchoredPosition = _shaking.ActionHome + (on ? new Vector2(Mathf.Sin(now * 60f) * 8f, 0f) : Vector2.zero);
                 if (!on) _shaking = null;
             }
-            if (bubble != null && bubble.gameObject.activeSelf && now > _bubbleUntil) HideBubble();
+            // any tap anywhere puts the bubble away (the user, 2026-10-29) -- not the tap that opened it,
+            // which was released on this or an earlier frame, so its press is already past
+            if (bubble != null && bubble.gameObject.activeSelf && Time.frameCount > _bubbleFrame && PressedThisFrame()) HideBubble();
         }
 
         private void Flash(Text counter)
@@ -609,7 +611,13 @@ namespace CityBuilder.UI
             var halfW = card.rect.width * 0.5f - bubble.sizeDelta.x * 0.5f - 10f;
             local.x = Mathf.Clamp(local.x, -halfW, halfW);
             bubble.anchoredPosition = local;
-            _bubbleUntil = Time.unscaledTime + BubbleSeconds;
+            _bubbleFrame = Time.frameCount;
+        }
+
+        private static bool PressedThisFrame()
+        {
+            var pointer = Pointer.current;
+            return pointer != null && pointer.press.wasPressedThisFrame;
         }
 
         private void HideBubble()
