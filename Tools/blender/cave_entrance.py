@@ -223,7 +223,8 @@ MODELS = {"CaveEntranceMine": cave_mine, "CaveEntranceLair": cave_lair, "CaveEnt
           "CaveEntranceFairy": cave_fairy}
 
 
-def main():
+def main(models=None, row_y=-60.0):
+    models = models or MODELS
     coll = bpy.data.collections.get(COLLECTION)
     if coll is None:
         coll = bpy.data.collections.new(COLLECTION)
@@ -233,7 +234,7 @@ def main():
     mat = kit.ensure_material(img)
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
-    for i, (name, build) in enumerate(MODELS.items()):
+    for i, (name, build) in enumerate(models.items()):
         me = build().to_mesh(name)
         me.materials.append(mat)
         detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
@@ -246,10 +247,11 @@ def main():
             obj.data = me
             if old.users == 0:
                 bpy.data.meshes.remove(old)
-        obj.location = Vector((60.0 + i * 8.0, -60.0, 0.0))
+        obj.location = Vector((60.0 + i * 8.0, row_y, 0.0))
         print(f"MODEL {name}: tris={sum(len(p.vertices) - 2 for p in obj.data.polygons)}")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
 
 
-main()
+if __name__ == "__main__":
+    main()
