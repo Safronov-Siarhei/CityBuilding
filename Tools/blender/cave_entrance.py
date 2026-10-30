@@ -73,20 +73,53 @@ def torch(b, x, y, h=0.75):
     b.pyramid(x, y, h, 0.08, 0.08, h + 0.3, 'fire', sides=5)
 
 
-def mountain(b, mouth_rim=STONE_D):
-    """The mountain: one big rock, a peak behind, two shoulders, turf on top; a cave in its face."""
-    b.crag(0.0, 0.55, 1.75, 1.3, 1.9, STONE, top=TURF, sides=8, taper=0.5, seed=1)
+# the tunnel seen through the mouth: the outline again and again, smaller and darker as it goes in,
+# (depth y, scale, floor colour, wall colour) of each ring; it ends in black
+TUNNEL = ((MOUTH_Y, 1.0, 'sand', STONE), (-0.86, 0.8, 'sand', STONE_D), (-0.73, 0.63, STONE_D, STONE_D),
+          (-0.62, 0.46, 'iron', 'iron'))
+
+
+def tunnel(b):
+    """A tunnel into the rock instead of a flat black patch: walls, roof and floor narrowing from
+    the mouth inwards, shading darker, closed by black at the back. A face is turned to look into
+    the tunnel, so it is seen from the front and culled from behind."""
+    rings = [[b.bm.verts.new((x * k, y, z * k)) for x, z in MOUTH] for y, k, _, _ in TUNNEL]
+    n = len(MOUTH)
+    for r in range(len(rings) - 1):
+        for i in range(n):
+            j = (i + 1) % n
+            quad = [rings[r][i], rings[r][j], rings[r + 1][j], rings[r + 1][i]]
+            axis = Vector((0.0, sum(v.co.y for v in quad) / 4, 0.45))
+            mid = sum((v.co for v in quad), Vector()) / 4
+            colour = TUNNEL[r][2] if i == 0 else TUNNEL[r][3]
+            f = b._face(quad, colour)
+            f.normal_update()
+            if f.normal.dot(axis - mid) < 0:
+                f.normal_flip()
+    y, k = TUNNEL[-1][0], TUNNEL[-1][1]
+    front(b, MOUTH, y + 0.001, 0.05, DARK, scale=k)
+
+
+def mountain(b, mouth_rim=STONE_D, hollow=False):
+    """The mountain: one big rock, a peak behind, two shoulders, turf on top; a cave in its face.
+    `hollow` leaves the mouth open for a tunnel the caller builds (tunnel()): the big rock steps
+    back to make room for it and the cheeks stand aside."""
+    b.crag(0.0, 0.8 if hollow else 0.55, 1.75, 1.3, 1.9, STONE, top=TURF, sides=8, taper=0.5, seed=1)
     b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE, top=TURF, sides=6, taper=0.4, seed=4)
     b.crag(-1.25, 0.85, 0.75, 0.9, 1.25, STONE_D, top=TURF, sides=6, seed=7)
     b.crag(1.3, 0.65, 0.7, 0.85, 1.05, STONE, top=TURF, sides=6, seed=9)
     # the cave's cheeks and the brow over it
-    b.crag(-0.85, -0.8, 0.42, 0.38, 1.25, STONE_D, top=TURF, sides=6, seed=12)
-    b.crag(0.9, -0.75, 0.4, 0.36, 1.05, STONE, top=TURF, sides=6, seed=15)
+    side = 0.12 if hollow else 0.0
+    b.crag(-0.85 - side, -0.8, 0.42, 0.38, 1.25, STONE_D, top=TURF, sides=6, seed=12)
+    b.crag(0.9 + side, -0.75, 0.4, 0.36, 1.05, STONE, top=TURF, sides=6, seed=15)
     b.obox((0.0, -0.75, 1.22), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.75, 0.32, 0.17, STONE_D, bevel=0.03)
     b.box(-0.78, 0.78, -1.02, -0.45, 1.39, 1.45, TURF)                     # turf over the brow
     # the mouth: a rim of dark stone, the black inside, a floor running in
-    front(b, MOUTH, MOUTH_Y - 0.01, 0.4, mouth_rim, scale=1.18)
-    front(b, MOUTH, MOUTH_Y - 0.03, 0.4, DARK)
+    if hollow:
+        tunnel(b)
+    else:
+        front(b, MOUTH, MOUTH_Y - 0.01, 0.4, mouth_rim, scale=1.18)
+        front(b, MOUTH, MOUTH_Y - 0.03, 0.4, DARK)
     b.crag(0.0, -1.35, 0.75, 0.45, 0.04, 'sand', sides=7, taper=0.9, seed=3)  # trodden earth before it
     # ivy hanging over the mouth from the brow
     for x, z0 in ((-0.5, 0.95), (-0.32, 1.05), (0.18, 1.0), (0.42, 0.85), (0.6, 1.1)):

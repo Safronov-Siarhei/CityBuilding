@@ -136,8 +136,18 @@ def mine_working():
 
 def mine_abandoned():
     b = Builder()
-    mountain(b)
+    mountain(b, hollow=True)
     portal(b, broken=True)
+    # inside the tunnel: a second set of props, the rails running on in, a lantern still burning deep in
+    for x in (-0.31, 0.31):
+        b.box(x - 0.05, x + 0.05, -0.84, -0.76, 0.0, 0.7, WOOD_D)
+    b.box(-0.36, 0.36, -0.84, -0.76, 0.66, 0.76, WOOD_D)
+    for k in range(3):
+        y = -0.95 + k * 0.11
+        b.box(-0.24, 0.24, y, y + 0.05, 0.0, 0.03, WOOD_D)
+    for dx in (-0.16, 0.16):
+        b.box(dx - 0.015, dx + 0.015, -0.98, -0.63, 0.03, 0.05, 'iron')
+    lantern(b, 0.1, -0.7, 0.52, 0.06)
     # boards nailed across, one torn away
     b.obox((0.0, -1.27, 0.55), (0.87, 0, 0.5), (0, 1, 0), (-0.5, 0, 0.87), 0.62, 0.03, 0.07, WOOD_L)
     b.obox((-0.25, -1.29, 0.3), (0.98, 0, -0.17), (0, 1, 0), (0.17, 0, 0.98), 0.4, 0.03, 0.07, WOOD)
