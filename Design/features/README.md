@@ -43,6 +43,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [orc-camps-and-main-base](orc-camps-and-main-base.md) | walled camps L1–3, spawners, totems, cages, treasury, main base, boss | лагерь, база орков, вождь, клетки, сокровищница |
 | **World** | | |
 | [maps-and-terrain](maps-and-terrain.md) | map pipeline, Maps 3–5 + Inv1, picker, decor, fords/bridges, map spots, Vikings/dungeons plans | карта, рельеф, мост, брод, выбор карты |
+| [dungeon](dungeon.md) | dungeon: the mine entrance (Blender), one level with monsters + boss, open questions | подземелье, шахта, вход, босс, герой |
 | [archipelago-and-ships](archipelago-and-ships.md) | sandbox archipelago: seed generator, Blender island library, map code, Shipyard and ships | архипелаг, острова, сид, код карты, верфь, корабли |
 | [fog-of-war](fog-of-war.md) | exploration, parchment/cloud looks | туман, разведка |
 | [camera-and-input](camera-and-input.md) | RTS camera, touch gestures, input routing | камера, тач, жесты, управление |
