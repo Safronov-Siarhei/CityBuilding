@@ -299,6 +299,12 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial,
                 isWaterCategory: true);
 
+            // the archipelago's lighthouse (Tools/blender/ships.py): a land building, at the shore only
+            var lighthouseData = CreateBuildingData(
+                Ships.LighthouseAim.BuildingId, new Vector2Int(2, 2), height: 5f,
+                wallColor: new Color(0.95f, 0.93f, 0.88f), roofColor: new Color(0.25f, 0.25f, 0.3f),
+                style: BuildingStyle.Hut, trimMaterial: trimMaterial, doorMaterial: doorMaterial, windowMaterial: windowMaterial);
+
             var hotbarBuildingData = new List<BuildingData>
             {
                 houseData, cottageData, manorData, fishermanHutData, farmData,
@@ -307,7 +313,7 @@ namespace CityBuilder.EditorTools
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
                 fortifiedTowerData, fortifiedGateData,
-                bridgeData, waterMillData, dockData, shipyardData,
+                bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData
             };
             hotbarBuildingData.AddRange(shellBuildings);

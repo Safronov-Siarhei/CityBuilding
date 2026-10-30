@@ -44,6 +44,9 @@ namespace CityBuilder.Saving
 
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;
+        /// <summary>The archipelago's fish shoals; shoalsSaved false in a save made before them (the map's own are kept).</summary>
+        public bool shoalsSaved;
+        public List<ShoalEntry> shoals = new List<ShoalEntry>();
         public int orcShipyardHealth;
         public float orcShipyardRebuildIn;
 
@@ -183,6 +186,15 @@ namespace CityBuilder.Saving
         /// so there is nothing about a forest that a reload could unfairly restore.
         /// </summary>
         public List<RockEntry> rocks = new List<RockEntry>();
+    }
+
+    /// <summary>A fish shoal on the archipelago: where, how many fish are left, the wait of one fished out.</summary>
+    [Serializable]
+    public class ShoalEntry
+    {
+        public float x, z;
+        public int stock;
+        public float respawnIn;
     }
 
     /// <summary>A ship afloat on the archipelago: what it is, where, which way, how whole.</summary>

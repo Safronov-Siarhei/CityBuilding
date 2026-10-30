@@ -229,8 +229,12 @@ namespace CityBuilder.Citizens
 
             if (recipe.HasInputs && !ReportMissingInput(recipe, batches <= 0)) return;
 
-            var amount = Mathf.RoundToInt(batches * recipe.outputAmount * DecayProductionMultiplier());
+            var site = SiteMultiplier();
+            var amount = Mathf.RoundToInt(batches * recipe.outputAmount * DecayProductionMultiplier() * site);
             if (amount <= 0) return;
+            // a Fisher's Hut's catch beyond its own share comes out of the shoal it fishes
+            if (site > 1f && data.buildingName == Ships.ShipManager.FisherHutId)
+                Ships.ShipManager.Instance?.TakeFish(transform.position, amount - Mathf.RoundToInt(amount / site));
 
             // Nothing is smelted into a store that cannot hold it. A gatherer may waste its output
             // -- there is nothing to lose but the tick -- but a converter would be burning ore to
@@ -342,6 +346,36 @@ namespace CityBuilder.Citizens
         }
 
         private bool _reportedOverflow;
+
+        /// <summary>
+        /// What the place adds (the archipelago, the user 2026-10-28): a Farm on fertile soil yields
+        /// fertile_farm_bonus more with its whole plot fertile, in proportion to the share that is;
+        /// a Fisher's Hut by a shoal, fish_shoal_bonus more. 1 everywhere else.
+        /// </summary>
+        public float SiteMultiplier()
+        {
+            var data = Data;
+            var applier = MeshMapApplier.Instance;
+            if (data == null || _buildingInstance == null) return 1f;
+            // a Fisher's Hut by a shoal of fish (the archipelago)
+            if (data.buildingName == Ships.ShipManager.FisherHutId)
+                return Ships.ShipManager.Instance != null && Ships.ShipManager.Instance.HasSea ? Ships.ShipManager.Instance.FishMultiplier(transform.position) : 1f;
+            if (applier == null || data.buildingName != FarmId) return 1f;
+            return 1f + FertileShare(_buildingInstance, applier) * BalanceConfig.Instance.FertileFarmBonus;
+        }
+
+        public const string FarmId = "Farm";
+
+        /// <summary>The share of a building's plot that is fertile soil, 0..1.</summary>
+        public static float FertileShare(BuildingInstance building, MeshMapApplier applier)
+        {
+            var size = building.RotatedFootprint();
+            var fertile = 0;
+            for (var x = 0; x < size.x; x++)
+            for (var z = 0; z < size.y; z++)
+                if (applier.IsFertileCell(building.OriginCell + new Vector2Int(x, z))) fertile++;
+            return fertile / (float)Mathf.Max(1, size.x * size.y);
+        }
 
         /// <summary>1 below BuildingInstance.DecayPenaltyThreshold, falling linearly to MinDecayProductionMultiplier at full decay -- a neglected building still produces something, just less, right up until it's destroyed outright.</summary>
         private float DecayProductionMultiplier()

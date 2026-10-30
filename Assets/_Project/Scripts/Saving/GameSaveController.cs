@@ -212,6 +212,7 @@ namespace CityBuilder.Saving
                     unit.OrcHomeward = ship.homeward;
                 }
                 if (data.orcShipyardSaved) shipManager.RestoreOrcShipyard(data.orcShipyardHealth, data.orcShipyardRebuildIn);
+                if (data.shoalsSaved && shipManager.HasSea) shipManager.RestoreShoals(data.shoals);
             }
 
             foreach (var entry in data.buildings)
@@ -610,6 +611,11 @@ namespace CityBuilder.Saving
                     data.orcShipyardSaved = true;
                     data.orcShipyardHealth = orcShips.OrcShipyard != null ? orcShips.OrcShipyard.CurrentHealth : 0;
                     data.orcShipyardRebuildIn = orcShips.OrcShipyardRebuildIn;
+                    if (orcShips.HasSea)
+                    {
+                        data.shoalsSaved = true;
+                        foreach (var shoal in orcShips.Shoals) data.shoals.Add(new ShoalEntry { x = shoal.At.x, z = shoal.At.z, stock = shoal.Stock, respawnIn = shoal.RespawnIn });
+                    }
                 }
                 foreach (var run in researchManager.UnderWayForSave)
                 {

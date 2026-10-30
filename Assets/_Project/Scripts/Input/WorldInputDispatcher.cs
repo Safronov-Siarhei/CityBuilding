@@ -71,6 +71,13 @@ namespace CityBuilder.InputControl
 
             // 2. A selected ship: a tap on the sea sends it; on the land it is put down and the tap goes on.
             var tapCamera = citizenSelector != null ? citizenSelector.TapCamera : Camera.main;
+
+            // a lighthouse's light waiting for its spot takes the tap
+            if (Ships.LighthouseAim.Aiming != null)
+            {
+                Ships.LighthouseAim.HandleTap(screenPosition, tapCamera);
+                return;
+            }
             if (Ships.ShipInput.HasSelection && Ships.ShipInput.HandleTap(screenPosition, tapCamera)) return;
 
             // 2. A selected army group turns a tap into an order.

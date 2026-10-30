@@ -83,6 +83,11 @@ namespace CityBuilder.Maps
         private GameObject _reliefInstance;
         private readonly List<Vector2Int> _rocksZoneCells = new List<Vector2Int>();
         private readonly HashSet<Vector2Int> _noBuildCells = new HashSet<Vector2Int>();
+        // the archipelago's fertile soil (Archipelago.FertileLand): a Farm on it yields more
+        private HashSet<Vector2Int> _fertileCells = new HashSet<Vector2Int>();
+
+        /// <summary>Fertile soil under this cell (the archipelago only): a Farm standing on it yields more.</summary>
+        public bool IsFertileCell(Vector2Int cell) => _fertileCells.Contains(cell);
         private NavMeshDataInstance _navMeshDataInstance;
 
         // Kept past the initial bake so walkable-surface buildings can be folded in later without
@@ -517,6 +522,8 @@ namespace CityBuilder.Maps
 
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
+            _fertileCells = Archipelago.FertileLand.Compute(world);
+            Archipelago.FertileLand.Build(_fertileCells, transform, this);
             Ships.ShipManager.Instance?.BuildSea(world, origin);
         }
 

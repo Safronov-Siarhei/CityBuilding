@@ -8,7 +8,8 @@
 > **Phase 4a (2026-10-29):** the war ship (lvl 3) and the battleship (lvl 4, carries 8), cannons,
 > health bars, sinking that drowns everyone aboard, repair at a Shipyard for wood (see «Sea war»).
 > **Phase 4b (2026-10-29):** the orcs' shipyard, fleets that land the raids, towers vs ships
-> (see «The orcs at sea»).
+> (see «The orcs at sea»). **Phase 5 (2026-10-30):** fertile land, fish shoals, the lighthouse
+> (see «Land and sea riches»).
 > The user has NOT seen ships in game.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [fog-of-war](fog-of-war.md),
 > [army-and-soldiers](army-and-soldiers.md), [research-laboratory](research-laboratory.md).
@@ -104,6 +105,26 @@
 - My defaults (unconfirmed): shipyard 900 HP / 10 dmg / 12 m / 300 s rebuild; barge 160 HP, 8 orcs;
   longship 200 HP / 10 dmg / 2.5 s / 11 m; 1 escort per fleet. Orc ships are seen through the fog.
 
+## Land and sea riches (phase 5, built 2026-10-30)
+- FERTILE LAND (`Maps/Archipelago/FertileLand.cs`): `fertile_patches_per_island` ragged blobs of
+  `fertile_patch_radius` cells on plain ground (no forest/stones/beach/cliff/relief), none within 60
+  cells of the orc base, one always 12-30 cells from the start. Drawn as dark soil quads with darker
+  furrow rows (one mesh, 2 materials, no shadows). From its own seeded RNG: the generator and map
+  codes are untouched, nothing saved. `MeshMapApplier.IsFertileCell`. A FARM ONLY yields
+  `1 + fertile_farm_bonus x share of its plot that is fertile` (`ProductionBuilding.SiteMultiplier`).
+- FISH SHOALS (`Ships/ShipManagerFish.cs`): `fish_shoal_count` shoals on sea within reach of a beach,
+  2 by the start island; seen as 7 dark fish backs + glints spinning slowly (1 mesh, 2 materials).
+  A Fisher's Hut with a live shoal within `fish_hut_reach_meters` catches `1 + fish_shoal_bonus`;
+  the extra comes out of the shoal's `fish_shoal_stock`; fished out = gone (`#log_shoal_gone`), back
+  after `fish_shoal_respawn_seconds` at a random shore. Saved (`GameSaveData.shoals`).
+- LIGHTHOUSE (`Ships/Lighthouse.cs` LighthouseAim, `UI/LighthouseBar.cs`, model `Lighthouse1-lvl1`
+  in ships.py, buildings row `Lighthouse` category Water but a LAND building): only within
+  `lighthouse_coast_cells` of water (`#place_blocked_coast`). In focus, a button with its coin
+  price; tap -> the next map tap (WorldInputDispatcher, before everything but placement) lights a
+  spot within `lighthouse_range_meters` (range ring shown): `lighthouse_reveal_coins`, fog opened
+  for good over `lighthouse_reveal_cells`, then `lighthouse_cooldown_seconds` (not saved).
+- All numbers mine, unconfirmed.
+
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
   `IslandAsset.cs`, `ArchipelagoLibrary.cs`, `ArchipelagoMeshes.cs`, `ArchipelagoMapId.cs`
@@ -135,12 +156,14 @@
 - `Tests/EditMode/ArchipelagoGeneratorTests.cs`.
 - `Tests/PlayMode/ArchipelagoTests.cs`: map build + Town Hall in the zone; save round trip;
   `AShipyard_BuildsTheShipsItsLevelOpens_AndTheySail`, `AGroup_BoardsATransportAtABeach_AndLandsAgain`,
-  `AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard`, `AnOrcFleet_SailsFromTheirShipyard_AndLandsItsRaid`
-  (all 6 green 2026-10-29).
+  `AWarShip_ShellsAnOrc_AndASunkShipDrownsEveryoneAboard`, `AnOrcFleet_SailsFromTheirShipyard_AndLandsItsRaid`,
+  `TheShipyard_GoesDownOnShoreWater_AndAcrossTheShoreline`, `FertileLand_FishShoals_AndTheLighthouse`
+  (all 8 green 2026-10-30).
 - `MapPickerTests.AMapCode_StartsThatVeryMap`.
 
 ## Traps already paid for
 - `kit.hull()`'s rail is a full-width slab: its colour IS the deck's (a gold rail = a gold deck).
+- Orcs landed at the very water's edge spread into the sea: a fleet lands them 4 m up the beach.
 - `OrcUnit`/`OrcCampBuilding` implement `IsAlive` explicitly: test `CurrentHealth > 0` on them.
 - Island cells: 1 land, 2 no-build, 4 forest, 8 stony, 16 shore. A quarter turn maps (x,z)→(z,−x).
 - Island water meshes carry only coastal bands; the game draws the deep sea at −0.54.
@@ -153,7 +176,7 @@
 ## Open
 - Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
 - Orc ships hidden in the fog; soldiers may not reach the orc shipyard in the water (archers and
-  ships can). Ship levels in the Laboratory. Phase 5: lighthouse (coins),
-  fish shoals, fertile land (farms only). Fog with 3 states for 500 m on phones (no longer needed by
+  ships can). Ship levels in the Laboratory. Lighthouse cooldowns are not saved;
+  no hint on the Farm/Fisher's Hut card of the bonus it gets. Fog with 3 states for 500 m on phones (no longer needed by
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.

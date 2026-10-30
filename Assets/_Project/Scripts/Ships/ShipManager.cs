@@ -126,6 +126,7 @@ namespace CityBuilder.Ships
             _sea = NavMesh.AddNavMeshData(data);
             // an agent type made at run time may have any id, a negative one too
             _hasSea = _sea.valid;
+            if (_hasSea) SeedShoals(map, origin);
             Debug.Log($"ShipManager: the sea's NavMesh baked from {vertices.Count / 4} rectangles.");
         }
 
@@ -285,6 +286,7 @@ namespace CityBuilder.Ships
         private void Update()
         {
             TickOrcs();
+            TickShoals();
             for (var i = _boarding.Count - 1; i >= 0; i--)
             {
                 var b = _boarding[i];

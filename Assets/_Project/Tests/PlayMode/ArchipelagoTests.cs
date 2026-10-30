@@ -460,6 +460,102 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(Shipyards(), count, $"A tap on the water at {aimed} put no Shipyard there; {why}");
         }
 
+        /// <summary>
+        /// Phase 5 (the user, 2026-10-28): fertile soil lies on the start island and a Farm on it
+        /// yields more (a Farm elsewhere does not); a shoal lies by the start island, a Fisher's Hut
+        /// by it catches more and fishes it out, and the shoal goes; the lighthouse stands only at
+        /// the shore and, for coins, opens the fog over a spot in reach, then has to recover.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator FertileLand_FishShoals_AndTheLighthouse()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var applier = MeshMapApplier.Instance;
+            var grid = GridManager.Instance;
+            var ships = CityBuilder.Ships.ShipManager.Instance;
+            CityBuilder.Resources.ResourceManager.Instance.SetInfiniteResources(true);
+
+            // fertile soil near the start, and a Farm on it beats a Farm off it
+            Vector2Int? fertile = null, plain = null;
+            var farm = PlaytestWorld.Building("Farm");
+            var size = farm.footprintSize;
+            for (var r = 0; r < 60 && (fertile == null || plain == null); r++)
+            for (var dz = -r; dz <= r; dz++)
+            for (var dx = -r; dx <= r; dx++)
+            {
+                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                int rich = 0, poor = 0, bad = 0;
+                for (var x = 0; x < size.x; x++)
+                for (var z = 0; z < size.y; z++)
+                {
+                    var cell = c + new Vector2Int(x, z);
+                    if (applier.IsWaterCell(cell) || applier.IsNoBuildCell(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) bad++;
+                    else if (applier.IsFertileCell(cell)) rich++;
+                    else poor++;
+                }
+                if (bad > 0) continue;
+                if (poor == 0) fertile ??= c;
+                if (rich == 0 && Vector2Int.Distance(c, world.StartCell) > 6) plain ??= c;
+            }
+            Assert.IsTrue(fertile.HasValue, "No fertile soil within 60 cells of the start.");
+            Assert.IsTrue(plain.HasValue);
+            var richFarm = PlaytestWorld.Place(farm, fertile.Value).GetComponent<CityBuilder.Citizens.ProductionBuilding>();
+            var poorFarm = PlaytestWorld.Place(farm, plain.Value).GetComponent<CityBuilder.Citizens.ProductionBuilding>();
+            Assert.AreEqual(1f + CityBuilder.Core.BalanceConfig.Instance.FertileFarmBonus, richFarm.SiteMultiplier(), 0.001f, "A Farm on fertile soil yields no more.");
+            Assert.AreEqual(1f, poorFarm.SiteMultiplier(), 0.001f, "A Farm off fertile soil yields more.");
+
+            // a shoal by the start island; a Fisher's Hut by it catches double and fishes it out
+            var start = grid.GetFootprintCenterWorld(world.StartCell, Vector2Int.one);
+            CityBuilder.Ships.ShipManager.Shoal near = null;
+            foreach (var shoal in ships.Shoals)
+            {
+                if (shoal.Alive && (near == null || Vector3.Distance(shoal.At, start) < Vector3.Distance(near.At, start))) near = shoal;
+            }
+            Assert.IsNotNull(near, "No fish shoals on the archipelago.");
+            Assert.Less(Vector3.Distance(near.At, start), 80f, "No shoal by the start island.");
+            Assert.IsTrue(ShipManagerFishVisible(near), "The shoal cannot be seen.");
+            Assert.AreEqual(1f + CityBuilder.Core.BalanceConfig.Instance.FishShoalBonus, ships.FishMultiplier(near.At), 0.001f, "A hut by the shoal catches no more.");
+            ships.TakeFish(near.At, near.Stock);
+            Assert.IsFalse(near.Alive, "The fished-out shoal is still there.");
+            Assert.AreEqual(1f, ships.FishMultiplier(near.At), 0.001f, "A fished-out shoal still adds to the catch.");
+            Assert.Greater(near.RespawnIn, 0f, "The shoal will not turn up again.");
+
+            // the lighthouse: at the shore only; lights a spot in reach for coins, then recovers
+            var lighthouseData = PlaytestWorld.Building(CityBuilder.Ships.LighthouseAim.BuildingId);
+            Assert.IsNotNull(lighthouseData, "No lighthouse in the build menu.");
+            Vector2Int? coast = null;
+            for (var r = 0; r < 120 && coast == null; r++)
+            for (var dz = -r; dz <= r && coast == null; dz++)
+            for (var dx = -r; dx <= r && coast == null; dx++)
+            {
+                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                var ok = grid.IsAreaFree(c, lighthouseData.footprintSize);
+                for (var x = 0; x < lighthouseData.footprintSize.x && ok; x++)
+                for (var z = 0; z < lighthouseData.footprintSize.y && ok; z++)
+                    ok = !applier.IsWaterCell(c + new Vector2Int(x, z)) && !applier.IsNoBuildCell(c + new Vector2Int(x, z));
+                if (ok && applier.IsWaterCell(c + new Vector2Int(-1, 0))) coast = c;
+            }
+            Assert.IsTrue(coast.HasValue, "No shore for a lighthouse.");
+            var lighthouse = PlaytestWorld.Place(lighthouseData, coast.Value);
+            yield return null;
+            var fog = FogOfWarManager.Instance;
+            var target = lighthouse.transform.position + new Vector3(-50f, 0f, 0f);
+            var coins = CityBuilder.Resources.ResourceManager.Instance;
+            coins.SetInfiniteResources(false);
+            coins.SetAmount(CityBuilder.Resources.ResourceType.Coins, 50);
+            Assert.IsFalse(CityBuilder.Ships.LighthouseAim.LightAt(lighthouse, lighthouse.transform.position + new Vector3(-300f, 0f, 0f)), "The lighthouse lit a spot out of its reach.");
+            Assert.AreEqual(50, coins.GetAmount(CityBuilder.Resources.ResourceType.Coins), "Paid for a light out of reach.");
+            Assert.IsTrue(CityBuilder.Ships.LighthouseAim.LightAt(lighthouse, target), CityBuilder.Ships.LighthouseAim.DescribeBlocker(lighthouse));
+            Assert.AreEqual(50 - CityBuilder.Ships.LighthouseAim.Price, coins.GetAmount(CityBuilder.Resources.ResourceType.Coins), "The light was not paid for.");
+            if (fog != null) Assert.IsTrue(fog.IsCellRevealed(grid.WorldToCell(target)), "The lit spot is still under the fog.");
+            Assert.IsNotNull(CityBuilder.Ships.LighthouseAim.DescribeBlocker(lighthouse), "The lighthouse lights again at once.");
+        }
+
+        private static bool ShipManagerFishVisible(CityBuilder.Ships.ShipManager.Shoal shoal) =>
+            shoal.Visual != null && shoal.Visual.GetComponent<MeshRenderer>() != null;
+
         private static int Shipyards()
         {
             var count = 0;

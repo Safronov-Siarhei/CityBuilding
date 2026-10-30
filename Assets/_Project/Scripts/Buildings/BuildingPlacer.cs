@@ -538,6 +538,7 @@ namespace CityBuilder.Buildings
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
+                if (mapApplier != null && IsLighthouse(_selectedBuilding) && !NearWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_coast");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
                 return Localization.Get("#place_blocked_occupied");
@@ -549,6 +550,18 @@ namespace CityBuilder.Buildings
         }
 
         private static bool IsTownHall(BuildingData data) => data != null && data.buildingName == BuildingIds.TownHall;
+
+        private static bool IsLighthouse(BuildingData data) => data != null && data.buildingName == Ships.LighthouseAim.BuildingId;
+
+        /// <summary>Water within lighthouse_coast_cells of the footprint's edge.</summary>
+        private static bool NearWater(MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
+        {
+            var reach = BalanceConfig.Instance != null ? BalanceConfig.Instance.LighthouseCoastCells : 2;
+            for (var x = -reach; x < footprint.x + reach; x++)
+            for (var z = -reach; z < footprint.y + reach; z++)
+                if (mapApplier.IsWaterCell(cell + new Vector2Int(x, z))) return true;
+            return false;
+        }
 
         private static bool FootprintTouchesWater(MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
         {
@@ -682,6 +695,8 @@ namespace CityBuilder.Buildings
             }
             // ...as long as at least half of it stands in the water
             if (_selectedBuilding.isWaterCategory && wholeFootprintRules && inWater * 2 < footprint.x * footprint.y) return false;
+            // a lighthouse stands at the shore (the archipelago)
+            if (wholeFootprintRules && IsLighthouse(_selectedBuilding) && !NearWater(mapApplier, cell, footprint)) return false;
             return true;
         }
 

@@ -181,6 +181,8 @@ namespace CityBuilder.EditorTools
                 new[] { "PortraitShipScout", "PortraitShipTransport", "PortraitShipWar", "PortraitShipBattleship" }, iconLibrary,
                 new[] { "ShipScout", "ShipTransport", "ShipWar", "ShipBattleship" });
 
+            BuildLighthouseButton(row.transform, iconLibrary);
+
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
             if (icon != null) Object.DestroyImmediate(icon.gameObject);
@@ -589,6 +591,36 @@ namespace CityBuilder.EditorTools
         /// A selected transport's landing button where the build menu stands (ShipActionBar): the
         /// people glyph, «aboard/seats» on a plaque at its foot.
         /// </summary>
+        /// <summary>The lighthouse's button in the focus row: its glyph and its price in coins (LighthouseBar).</summary>
+        private static void BuildLighthouseButton(Transform row, ResourceIconLibrary iconLibrary)
+        {
+            var button = CreateGlyphButton(row, "LighthouseButton", "round", HudInk.OnRound, "Radius", null, 128f);
+            var plaque = HudImage(button.transform, "Price", "plaque", new Vector2(116f, 44f));
+            plaque.raycastTarget = false;
+            Anchor(plaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 2f), new Vector2(116f, 44f));
+            var coin = CreateImage(plaque.transform, "Coin", Color.white);
+            coin.sprite = iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null;
+            coin.preserveAspect = true;
+            coin.raycastTarget = false;
+            Anchor(coin.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-30f, 1f), new Vector2(32f, 32f));
+            var amount = CreateText(plaque.transform, "Amount", "0", 26, new Vector2(18f, 1f), new Vector2(70f, 40f));
+            amount.font = UiTheme.Heavy;
+            amount.alignment = TextAnchor.MiddleLeft;
+            amount.raycastTarget = false;
+            SkinInk(amount, HudInk.OnPlaque);
+
+            var go = new GameObject("LighthouseBar");
+            go.transform.SetParent(row.parent, false);
+            var bar = go.AddComponent<LighthouseBar>();
+            var so = new SerializedObject(bar);
+            so.FindProperty("button").objectReferenceValue = button.gameObject;
+            so.FindProperty("icon").objectReferenceValue = button.transform.Find("Icon").GetComponent<Image>();
+            so.FindProperty("price").objectReferenceValue = amount;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
+            button.gameObject.SetActive(false);
+        }
+
         private static void BuildShipActionBar(Transform uiRoot, ResourceIconLibrary iconLibrary)
         {
             const float size = 128f;

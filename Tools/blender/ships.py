@@ -14,6 +14,8 @@
   rust sail with a black stripe, horns on the stern post.
 - OrcShipyard1: the orcs' slipway by the main base (3 x 4): a deck of raw logs on piles, a black
   hull's ribs, a crude crane of logs, a war banner, skulls, a brazier. It shoots like a tower.
+- Lighthouse1-lvl1: the archipelago's lighthouse (2 x 2) -- a banded tower with a lantern alight;
+  for coins it lights up a chosen stretch of the map.
 - Shipyard1-lvl1: a slipway out over the water on piles (3 x 4 cells): a planked deck, a hull's
   ribs on the stocks, a timber crane and a stack of planks, a blue banner on a post.
 
@@ -252,6 +254,37 @@ def orc_shipyard():
     return b
 
 
+def lighthouse():
+    """The archipelago's lighthouse (2 x 2): a rock footing, a tapering white tower banded red, a
+    gallery on brackets, a glazed lantern that burns, an iron cap with a vane. About 5 m."""
+    b = Builder()
+    b.cylinder(0, 0, 0.0, 0.35, 0.95, 'stone_mid', sides=10, bevel=0.03)      # the footing
+    b.cylinder(0, 0, 0.35, 0.45, 1.0, 'stone_dark', sides=10)
+    for k in range(6):                                                    # the tower, banded
+        z0 = 0.45 + k * 0.55
+        r = 0.7 - k * 0.06
+        b.cylinder(0, 0, z0, z0 + 0.55, r, 'banner_red' if k % 2 else 'plaster_white', sides=10)
+    b.box(-0.12, 0.12, -0.72, -0.6, 0.45, 1.15, 'door')                    # the door (-y)
+    for z in (1.6, 2.7):                                                  # windows up the front
+        b.box(-0.08, 0.08, -0.62 + z * 0.06, -0.5 + z * 0.06, z, z + 0.25, 'window')
+    top = 0.45 + 6 * 0.55
+    b.cylinder(0, 0, top, top + 0.08, 0.62, 'stone_light', sides=10)       # the gallery floor
+    for k in range(10):                                                   # its rail posts
+        a = k * math.pi * 2 / 10
+        b.cylinder(math.cos(a) * 0.56, math.sin(a) * 0.56, top + 0.08, top + 0.36, 0.02, 'iron', sides=4)
+    b.cylinder(0, 0, top + 0.34, top + 0.38, 0.6, 'iron', sides=10)
+    b.cylinder(0, 0, top + 0.08, top + 0.75, 0.34, 'window_light', sides=8)  # the lantern, alight
+    for k in range(8):
+        a = (k + 0.5) * math.pi * 2 / 8
+        b.cylinder(math.cos(a) * 0.34, math.sin(a) * 0.34, top + 0.08, top + 0.75, 0.025, 'iron', sides=4)
+    b.cylinder(0, 0, top + 0.28, top + 0.55, 0.16, 'fire', sides=6)          # the flame within
+    b.pyramid(0, 0, top + 0.75, 0.42, 0.42, top + 1.15, 'iron', sides=8)    # the cap
+    b.cylinder(0, 0, top + 1.1, top + 1.45, 0.02, 'iron', sides=4)
+    b.prism([(0, top + 1.3), (0.28, top + 1.3), (0.2, top + 1.37), (0.28, top + 1.44), (0, top + 1.44)],
+            (0, 0, 0), (1, 0, 0), (0, 0, 1), 0.01, 'banner_blue', back_cap=True)
+    return b
+
+
 def shipyard():
     """3 x 4 cells over the water: x -1.5..1.5, y -2..2, the deck at 0.25 on piles down to -0.6."""
     b = Builder()
@@ -288,7 +321,7 @@ def shipyard():
 
 MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "ShipWar": ship_war, "ShipBattleship": ship_battleship,
           "ShipOrcTransport": ship_orc_transport, "ShipOrcWar": ship_orc_war, "OrcShipyard1": orc_shipyard,
-          "Shipyard1-lvl1": shipyard}
+          "Shipyard1-lvl1": shipyard, "Lighthouse1-lvl1": lighthouse}
 
 
 def main():

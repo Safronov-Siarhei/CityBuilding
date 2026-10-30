@@ -19,6 +19,7 @@ namespace CityBuilder.Ships
         private const float OrcHomeMeters = 8f;
         private const float EscortHuntMeters = 25f;
         private const float EscortSpread = 6f;
+        private const float InlandSteps = 4f;
 
         [SerializeField] private GameObject orcShipyardModel;
 
@@ -285,6 +286,11 @@ namespace CityBuilder.Ships
             ship.Stop();
             if (ship.OrcCargo > 0 && TryFindLandingAt(here, out var beach))
             {
+                // a few steps up the beach: a wave spreads round its point, and at the water's very
+                // edge some of it would stand in the sea
+                var inland = beach - here;
+                inland.y = 0f;
+                if (inland.sqrMagnitude > 0.01f && TrySampleLand(beach + inland.normalized * InlandSteps, 2f, out var up)) beach = up;
                 var leader = OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_landing", ship.OrcCargo), EventSeverity.Danger, EventGlyph.Swords, null,
                     beach, leader != null ? leader.transform : null));
