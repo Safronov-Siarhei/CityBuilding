@@ -25,6 +25,10 @@ from kit import Builder  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 COLLECTION = "Подземелье"
+# the mountain is natural rock: its greys draw rough, not as the town's dressed courses (the user,
+# 2026-10-30: "looks like bricks"); stone_light stays dressed for the carved pieces
+detail.OVERRIDE['stone_mid'] = detail.PLASTER
+detail.OVERRIDE['stone_dark'] = detail.PLASTER
 DARK = 'window'
 STONE, STONE_D, STONE_L = 'stone_mid', 'stone_dark', 'stone_light'
 TURF, TURF_D, LEAF = 'grass', 'grass_dark', 'leaf'
@@ -72,7 +76,7 @@ def torch(b, x, y, h=0.75):
 def mountain(b, mouth_rim=STONE_D):
     """The mountain: one big rock, a peak behind, two shoulders, turf on top; a cave in its face."""
     b.crag(0.0, 0.55, 1.75, 1.3, 1.9, STONE, top=TURF, sides=8, taper=0.5, seed=1)
-    b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE_L, top=TURF, sides=6, taper=0.4, seed=4)
+    b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE, top=TURF, sides=6, taper=0.4, seed=4)
     b.crag(-1.25, 0.85, 0.75, 0.9, 1.25, STONE_D, top=TURF, sides=6, seed=7)
     b.crag(1.3, 0.65, 0.7, 0.85, 1.05, STONE, top=TURF, sides=6, seed=9)
     # the cave's cheeks and the brow over it
@@ -96,7 +100,7 @@ def mountain(b, mouth_rim=STONE_D):
     for x, y, r in ((-1.35, -1.35, 0.2), (1.45, -1.2, 0.17), (-1.75, 1.7, 0.2), (0.6, 1.9, 0.16), (-0.85, -0.85, 0.14)):
         bush(b, x, y, 0.0 if y < -1 or y > 1.5 else 1.15, r)
     for x, y in ((-1.1, -1.75), (1.0, -1.7), (1.85, 0.3)):                 # stones in the grass
-        b.crag(x, y, 0.13, 0.1, 0.1, STONE_L, sides=5, seed=int(x * 10) % 9)
+        b.crag(x, y, 0.13, 0.1, 0.1, STONE, sides=5, seed=int(x * 10) % 9)
 
 
 def cave_mine():
@@ -136,9 +140,9 @@ def cave_lair():
     mountain(b)
     # stone fangs: down from the brow, up from the floor
     for x, l in ((-0.32, 0.32), (-0.1, 0.22), (0.12, 0.3), (0.33, 0.2)):
-        front(b, [(x - 0.07, 1.0), (x + 0.07, 1.0), (x, 1.0 - l)], MOUTH_Y - 0.06, 0.1, STONE_L)
+        front(b, [(x - 0.07, 1.0), (x + 0.07, 1.0), (x, 1.0 - l)], MOUTH_Y - 0.06, 0.1, BONE)
     for x, l in ((-0.38, 0.22), (0.38, 0.26)):
-        front(b, [(x - 0.07, 0.0), (x + 0.07, 0.0), (x, l)], MOUTH_Y - 0.06, 0.1, STONE_L)
+        front(b, [(x - 0.07, 0.0), (x + 0.07, 0.0), (x, l)], MOUTH_Y - 0.06, 0.1, BONE)
     # two eyes in the dark
     for x in (-0.11, 0.11):
         front(b, [(x - 0.06, 0.48), (x + 0.06, 0.48), (x + 0.04, 0.53), (x - 0.04, 0.53)], MOUTH_Y - 0.05, 0.01, 'fire')
@@ -203,7 +207,7 @@ def cave_fairy():
     b.cylinder(0.45, -1.75, 0.0, 0.03, 0.35, 'water', sides=9)
     for i in range(7):                                                      # stones round the pool
         a = i * 2 * math.pi / 7
-        b.crag(0.45 + math.cos(a) * 0.38, -1.75 + math.sin(a) * 0.38, 0.07, 0.06, 0.06, STONE_L, sides=5, seed=i)
+        b.crag(0.45 + math.cos(a) * 0.38, -1.75 + math.sin(a) * 0.38, 0.07, 0.06, 0.06, STONE, sides=5, seed=i)
     # flowers
     for i, (x, y) in enumerate(((-1.0, -1.6), (-1.25, -1.1), (1.1, -1.3), (1.5, -1.6), (-0.2, -1.8), (0.95, -1.95))):
         b.rod((x, y, 0.0), (x, y, 0.12), 0.015, TURF_D)
