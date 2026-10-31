@@ -1,248 +1,521 @@
-"""Dungeon 1, the first test labyrinth (the user, 2026-10-31): 100 x 100 m, an old mine, made in
-Blender ahead of time (no generator in the game). Built from a 1 m grid carved here by hand:
+"""Dungeon 1, the first test labyrinth (the user, 2026-10-31): 100 x 100 m, an old mine overgrown
+like a Warcraft cave -- lush, bright, made in Blender ahead of time (no generator in the game).
 
-- south: the CAMP at the entrance -- the gnome prospectors' hiring tent, the potion stall, a
-  campfire, the place hirelings wait; the daylight of the way out behind it;
-- west: the GALLERY with rails, side pockets with crystals;
-- centre: the LAKE HALL -- an underground lake with a plank bridge, glowing mushrooms;
-- east: the workings in cobwebs and the SPIDER QUEEN's lair (boss 1);
-- north: the deep face and the ORE GOLEM's hall (boss 2), great ore crystals, a chest;
-- 12 upgrade crystals in dead ends and on the far sides of the halls.
+Version 2 (the user, 2026-10-31: v1 «cubic, monotonous, too simple»; «start from the main map's
+style -- its geometry and forms»): built the way the island maps are (map5.py) --
 
-Rock walls are faceted crags round every floor edge; the solid rock beyond is a dark roof, so from
-the game camera the passages read as cut into darkness. Light points (lanterns, fires, crystals)
-are Empties named DungeonLight_<kind>_<n> for the preview and, later, the game's lights.
-Scale: the hero stands ~0.5 m; corridors 3-4 m, halls 25-36 m (bosses are much bigger than a hero).
+- the passages are a signed-distance field (capsules along routes + noisy ellipse halls);
+- inside them the floor is the plain at z = 0, cut into calm colour ZONES along smooth contours
+  (forest floor, lush grass, moss under the walls, trodden dirt paths, stony patches, a sandy
+  lake shore); outside, the rock rises as RELIEF -- faceted slopes in moss and banded rock, a
+  rocky top with moss on it -- exactly the map's mountains;
+- the lake is the map's water: foam rim, turquoise shallows, blue, deep blue;
+- the decor is the map's own kit (tufts, ferns, bushes, flowers, mushrooms, reeds, lilies,
+  pebbles, logs, stumps, crags) scattered by the same rules;
+- the props (building palette): the camp's gnome hut, the potion stall, the fire, mine supports
+  and rails, the bridge, crystals, giant glowing mushrooms, the spider lair, the golem's hall.
 
-    blender --background Buildings-Size1-Models.blend --python dungeon1.py
+    blender --background --factory-startup --python dungeon1.py -- <out.blend> [preview]
+
+Light points are Empties DungeonLight_<kind>_<n> (lanterns, fires, crystals, mushrooms) for the
+preview (dungeon_preview.py) and, later, the game.
 """
 import math
 import os
 import random
 import sys
 
+import bmesh
+import bpy
+from mathutils import Vector
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import bpy  # noqa: E402
-import cave_entrance as cave  # noqa: E402  (the rough-rock pattern override)
 import detail  # noqa: E402
 import kit  # noqa: E402
+import terrain  # noqa: E402
 from kit import Builder  # noqa: E402
-from mathutils import Vector  # noqa: E402
+from terrain import TerrainBuilder  # noqa: E402
 
-NAME = "Dungeon1"
-N = 100                     # metres a side, one cell a metre
-ORIGIN = Vector((400.0, 400.0, 0.0))   # far from the building models in the file
-ROOF = 1.15                 # the dark rock top over solid ground
+argv = sys.argv[sys.argv.index("--") + 1:]
+OUT = argv[0]
+PREVIEW = "preview" in argv[1:]
+PREFIX = "Dungeon-1"
+
+N = 100
+HALF = N // 2
+WATER_Z = -0.5
+CLIP_Z = -0.47
+BEACH = 1.6                 # metres of shore slope round the lake
+BEACH_DROP = 0.40
+WALL_RISE = 2.2             # metres from the passage's edge over which the rock climbs
+WALL_H = 3.2                # the rock's height above the floor (plus noise)
+
+
+# -- noise (as map5) -------------------------------------------------------------------------
+
+def _hash(ix, iy, seed):
+    h = (ix * 374761393 + iy * 668265263 + seed * 2147483647) & 0xFFFFFFFF
+    h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
+    return ((h ^ (h >> 16)) & 0xFFFF) / 65535.0
+
+
+def _vnoise(x, y, seed):
+    ix, iy = math.floor(x), math.floor(y)
+    fx, fy = x - ix, y - iy
+    sx, sy = fx * fx * (3 - 2 * fx), fy * fy * (3 - 2 * fy)
+    a, b = _hash(ix, iy, seed), _hash(ix + 1, iy, seed)
+    c, d = _hash(ix, iy + 1, seed), _hash(ix + 1, iy + 1, seed)
+    return (a + (b - a) * sx) + ((c + (d - c) * sx) - (a + (b - a) * sx)) * sy
+
+
+def fbm(x, y, seed, octaves=4):
+    v, amp, tot = 0.0, 1.0, 0.0
+    for o in range(octaves):
+        v += _vnoise(x * (2 ** o), y * (2 ** o), seed + o * 17) * amp
+        tot += amp
+        amp *= 0.5
+    return v / tot
+
+
+def smoothstep(e0, e1, x):
+    t = max(0.0, min(1.0, (x - e0) / (e1 - e0)))
+    return t * t * (3 - 2 * t)
+
+
+# -- the layout (grid metres 0..100, north = +y away from the camera) -------------------------
+
+HALLS = [  # (cx, cy, rx, ry, wobble)
+    (50, 11, 12, 8, 0.25),       # the camp at the way in
+    (50, 50, 22, 13, 0.3),       # the lake hall
+    (19, 28, 6.5, 5.5, 0.35),    #   a room off the west gallery (crystal)
+    (7, 55, 5, 4, 0.35),         #   a pocket west (crystal)
+    (82, 80, 14, 13, 0.3),       # the spider queen's lair
+    (89, 25, 6, 5.5, 0.35),      #   the pocket south-east (crystal)
+    (44, 84, 18, 12, 0.3),       # the ore golem's hall
+    (17, 90, 5.5, 4.5, 0.35),    #   its pocket west (crystal)
+]
+ROUTES = [  # (points, half width): passages
+    ([(50, 0), (50, 6)], 3.2),                                  # the way out
+    ([(50, 17), (49, 27), (51, 38)], 2.8),                      # north to the lake (rails)
+    ([(40, 10), (26, 11), (12, 13)], 2.6),                      # west from the camp
+    ([(12, 13), (11, 30), (13, 50), (11, 66), (12, 77)], 2.6),  # the west gallery
+    ([(11, 30), (16, 29)], 2.2),
+    ([(12, 55), (8, 55)], 2.0),
+    ([(13, 49), (22, 50), (30, 49)], 2.4),                      # the gallery into the lake hall
+    ([(71, 49), (78, 48), (83, 50), (83, 67)], 2.6),            # east to the spiders
+    ([(83, 50), (84, 38), (85, 28)], 2.3),                      # south-east branch
+    ([(50, 62), (47, 68), (48, 73)], 2.8),                      # north to the golem
+    ([(28, 88), (21, 90)], 2.2),
+]
+LAKE = (50, 50, 13, 7)
+PILLARS = [(33, 47, 1.6), (67, 45, 1.4), (40, 60, 1.3), (62, 59, 1.5), (76, 78, 1.2), (88, 81, 1.3),
+           (37, 80, 1.8), (51, 87, 1.6), (44, 91, 1.2), (57, 80, 1.3)]
+
+
+def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
+    ang = math.atan2((y - cy) / ry, (x - cx) / rx)
+    k = 1.0 + wobble * (fbm(math.cos(ang) * 1.3 + seed, math.sin(ang) * 1.3 - seed, seed) - 0.5)
+    r = math.hypot((x - cx) / rx, (y - cy) / ry)
+    return (r - k) * min(rx, ry)
+
+
+def _seg(px, py, ax, ay, bx, by):
+    dx, dy = bx - ax, by - ay
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / max(1e-9, dx * dx + dy * dy)))
+    return math.hypot(px - ax - dx * t, py - ay - dy * t)
+
+
+def route_dist(x, y):
+    """Distance to the nearest route's centre line, and that route's half width."""
+    best, hw = 1e9, 2.0
+    for pts, wd in ROUTES:
+        for a, b in zip(pts, pts[1:]):
+            d = _seg(x, y, *a, *b)
+            if d < best:
+                best, hw = d, wd
+    return best, hw
+
+
+def pass_sd(x, y):
+    """Signed distance to the passages: negative on walkable ground, positive in the rock."""
+    best = 1e9
+    for i, (cx, cy, rx, ry, wob) in enumerate(HALLS):
+        best = min(best, _ellipse_sd(x, y, cx, cy, rx, ry, wob, 11 + i * 7))
+    d, hw = route_dist(x, y)
+    return min(best, d - hw * (0.85 + 0.3 * fbm(x / 6, y / 6, 41)))
+
+
+def lake_sd(x, y):
+    return _ellipse_sd(x, y, *LAKE, 0.3, 5)
+
+
+def pillar(x, y):
+    h = 0.0
+    for px, py, r in PILLARS:
+        d = math.hypot(x - px, y - py) / (r * (0.85 + 0.3 * fbm(x / 2, y / 2, 61)))
+        if d < 1.0:
+            h = max(h, (WALL_H + 0.6) * smoothstep(1.0, 0.45, d))
+    return h
+
+
+def height_at(x, y):
+    """(z, distance from the lake): the floor at 0, the lake's bed below, the rock above."""
+    sd = pass_sd(x, y)
+    lk = lake_sd(x, y)
+    if lk >= BEACH:
+        base = 0.0
+    elif lk >= 0:
+        base = -BEACH_DROP * (1 - lk / BEACH) ** 1.6
+    else:
+        base = -BEACH_DROP + lk * 0.6
+    rock = smoothstep(-0.2, WALL_RISE, sd) * (WALL_H + 1.4 * fbm(x / 7, y / 7, 53))
+    rock += smoothstep(WALL_RISE, WALL_RISE + 5, sd) * 2.2 * fbm(x / 3.5, y / 3.5, 57)   # a broken, craggy top
+    rock = max(rock, pillar(x, y))
+    if x < 1 or y < 1 or x > N - 1 or y > N - 1:
+        rock = max(rock, WALL_H)
+    return base + rock, lk
+
+
+# -- colour zones (as map5: fields negative inside, cut along their zero lines) --------------
+
+FIELD_NAMES = ("wet", "sand", "moss", "path", "lush", "stony", "dark", "alt")
+
+
+def fields_at(x, y, lk):
+    sd = pass_sd(x, y)
+    d, hw = route_dist(x, y)
+    return (
+        lk - 0.35,                                                    # wet sand at the waterline
+        lk - (1.6 + 0.8 * (fbm(x / 5, y / 5, 101) - 0.5)),            # the lake's sandy shore
+        -sd - (1.2 + 1.4 * fbm(x / 4, y / 4, 103)),                   # moss under the walls: negative there
+        d - (0.9 + 0.5 * fbm(x / 5, y / 5, 105)),                     # the trodden path down a route
+        0.58 - fbm(x / 9, y / 9, 107),                                # lush grass
+        0.66 - fbm(x / 7, y / 7, 109),                                # stony patches
+        0.55 - fbm(x / 12, y / 12, 111),                              # darker forest floor
+        0.6 - fbm(x / 3.2, y / 3.2, 119),                             # a second shade
+    )
+
+
+def zone_colour(f):
+    wet, sand, moss, path, lush, stony, dark, alt = f
+    if wet < 0:
+        return "sand_wet"
+    if sand < 0:
+        return "sand"
+    b = "_b" if alt < 0 else ""
+    if moss < 0:
+        return "moss"
+    if path < 0:
+        return "path" if alt > 0 else "dirt"
+    if stony < 0:
+        return "stony" if alt < 0 else "pebble"
+    if lush < 0:
+        return "grass_lush" + b
+    if dark < 0:
+        return "forest_floor" + b
+    return "grass_dark" + b
+
+
+def relief_colour(z, nz, x, y):
+    """Green only at the rock's foot; banded rock up the walls; a dark rocky top with a little moss,
+    so from above the passages stand out from the mass they are cut through."""
+    if z < 0.6:
+        return "moss" if nz > 0.6 or fbm(x / 4, y / 4, 113) > 0.4 else "rock_mid"
+    if z < 1.3:
+        return "moss" if fbm(x / 5, y / 5, 115) > 0.62 else "rock_mid" if nz < 0.8 else "grass_dark"
+    if z > WALL_H + 0.3 and nz > 0.8:
+        if fbm(x / 6, y / 6, 123) > 0.7:
+            return "moss"
+        return "rock_deep" if fbm(x / 9, y / 9, 125) > 0.45 else "rock_dark"
+    band = int((z + 1.5 * fbm(x / 7, y / 7, 117)) / 0.8) % 3
+    return ["rock_mid", "rock_dark", "rock"][band]
+
+
+# -- the surface (as map5) ---------------------------------------------------------------------
+
+def build_vertices():
+    verts = {}
+    for i in range(N + 1):
+        for j in range(N + 1):
+            jx = (_hash(i, j, 5) - 0.5) * 0.6 if 0 < i < N else 0.0
+            jy = (_hash(i, j, 7) - 0.5) * 0.6 if 0 < j < N else 0.0
+            px, py = i + jx, j + jy
+            z, lk = height_at(px, py)
+            verts[i, j] = (px - HALF, py - HALF, z, lk) + fields_at(px, py, lk)
+    return verts
+
+
+def _cut(poly, k, value=0.0):
+    lo, hi = [], []
+    for m in range(len(poly)):
+        a, b = poly[m], poly[(m + 1) % len(poly)]
+        (lo if a[k] < value else hi).append(a)
+        if (a[k] < value) != (b[k] < value):
+            t = (value - a[k]) / (b[k] - a[k])
+            p = tuple(a[q] + (b[q] - a[q]) * t for q in range(len(a)))
+            lo.append(p)
+            hi.append(p)
+    return (lo if len(lo) >= 3 else None), (hi if len(hi) >= 3 else None)
+
+
+def _split(poly, ks):
+    pieces = [poly]
+    for k in ks:
+        out = []
+        for pc in pieces:
+            vals = [p[k] for p in pc]
+            if min(vals) < 0 < max(vals):
+                lo, hi = _cut(pc, k)
+                out.extend(q for q in (lo, hi) if q)
+            else:
+                out.append(pc)
+        pieces = out
+    return pieces
+
+
+FIELD_KS = tuple(range(4, 4 + len(FIELD_NAMES)))
+CHUNKS = 4
+
+
+def _centre(poly):
+    n = len(poly)
+    return tuple(sum(p[q] for p in poly) / n for q in range(len(poly[0])))
+
+
+def _chunk_of(x, y):
+    size = N / CHUNKS
+    return (min(CHUNKS - 1, max(0, int((x + HALF) // size))), min(CHUNKS - 1, max(0, int((y + HALF) // size))))
+
+
+def build_surface(verts):
+    ground, relief = {}, {}
+    for i in range(N):
+        for j in range(N):
+            corners = [verts[i, j], verts[i + 1, j], verts[i + 1, j + 1], verts[i, j + 1]]
+            if _hash(i, j, 3) < 0.5:
+                tris = [(corners[0], corners[1], corners[2]), (corners[0], corners[2], corners[3])]
+            else:
+                tris = [(corners[0], corners[1], corners[3]), (corners[1], corners[2], corners[3])]
+            for tri in tris:
+                _, above = _cut(list(tri), 2, CLIP_Z)
+                if not above:
+                    continue
+                is_relief = max(p[2] for p in above) > 0.02
+                for piece in _split(above, FIELD_KS):
+                    c = _centre(piece)
+                    key = _chunk_of(c[0], c[1])
+                    if is_relief:
+                        a, b, d = (Vector(p[:3]) for p in piece[:3])
+                        n = (b - a).cross(d - a)
+                        nz = abs(n.z) / max(n.length, 1e-9)
+                        relief.setdefault(key, TerrainBuilder()).poly([p[:3] for p in piece],
+                                                                      relief_colour(c[2], nz, c[0], c[1]))
+                    else:
+                        ground.setdefault(key, TerrainBuilder()).poly([p[:3] for p in piece], zone_colour(c[4:]))
+    return ground, relief
+
+
+def build_water(verts):
+    b = TerrainBuilder()
+    for i in range(N):
+        for j in range(N):
+            corners = [verts[i, j], verts[i + 1, j], verts[i + 1, j + 1], verts[i, j + 1]]
+            if min(c[3] for c in corners) > 0.6:
+                continue
+            pts = []
+            for c in corners:
+                x, y, lk = c[0], c[1], c[3]
+                depth = -lk + 1.2 * (fbm(x / 6, y / 6, 121) - 0.5)
+                pts.append((x, y, WATER_Z, depth, -lk - 0.28, depth - 1.4, depth - 4.0))
+            for tri in ((pts[0], pts[1], pts[2]), (pts[0], pts[2], pts[3])):
+                for pc in _split(list(tri), (4, 5, 6)):
+                    c = _centre(pc)
+                    col = "foam" if c[4] < 0 else "water_shallow" if c[5] < 0 else "water" if c[6] < 0 else "water_deep"
+                    b.poly([p[:3] for p in pc], col)
+    return b
+
+
+def merge_flat(obj):
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(0.5), use_dissolve_boundaries=False,
+                             verts=bm.verts, edges=bm.edges, delimit={'UV'})
+    bmesh.ops.triangulate(bm, faces=bm.faces, quad_method='BEAUTY', ngon_method='BEAUTY')
+    bm.to_mesh(me)
+    bm.free()
+    return sum(len(p.vertices) - 2 for p in me.polygons)
+
+
+# -- the map's own decor -----------------------------------------------------------------------
+
+CAMP = (50, 11, 9)           # kept tidy: (x, y, radius)
+
+
+def scatter_decor(rnd):
+    items = []
+
+    def add(kind, x, y, s=1.0):
+        items.append((kind, x, y, rnd.uniform(0, 6.283), s))
+
+    for i in range(N):
+        for j in range(N):
+            for _ in range(2):
+                x, y = i + rnd.random(), j + rnd.random()
+                z, lk = height_at(x, y)
+                sd = pass_sd(x, y)
+                r = rnd.random()
+                if lk < -0.9:
+                    if fbm(x / 6, y / 6, 131) > 0.5 and r < 0.2 and abs(x - 50) > 1.6:
+                        add("lily", x, y, rnd.uniform(0.8, 1.2))
+                    continue
+                if lk < 0.6:
+                    if r < 0.35 and abs(x - 50) > 2.0:
+                        add("reeds", x, y, rnd.uniform(0.8, 1.25))
+                    continue
+                if z > 0.05:                                   # the rock: green at its foot, crags above
+                    if z < 1.2:
+                        if r < 0.14:
+                            add("bush", x, y, rnd.uniform(0.9, 1.5))
+                        elif r < 0.4:
+                            add("tuft" if r < 0.3 else "fern", x, y, rnd.uniform(1.0, 1.5))
+                    elif r < 0.05:
+                        add("crag", x, y, rnd.uniform(0.6, 1.3))
+                    continue
+                if math.hypot(x - CAMP[0], y - CAMP[1]) < CAMP[2]:
+                    if r < 0.03:
+                        add("tuft", x, y)
+                    continue
+                d, hw = route_dist(x, y)
+                if d < 0.8:                                    # the path itself stays clear
+                    if r < 0.02:
+                        add("pebbles", x, y)
+                    continue
+                clump = fbm(x / 3, y / 3, 139)
+                if sd > -1.8 and r < 0.22:                     # thick along the foot of the rock
+                    add("fern" if r < 0.12 else "mushrooms" if r < 0.17 else "bush", x, y, rnd.uniform(0.9, 1.5))
+                elif r < 0.2 * clump * 1.6:
+                    add("tuft", x, y, rnd.uniform(0.9, 1.4))
+                elif r < 0.25 and fbm(x / 10, y / 10, 141) > 0.6:
+                    add("flowers", x, y, rnd.uniform(0.9, 1.3))
+                elif r < 0.27:
+                    add("mushrooms", x, y)
+                elif r < 0.285:
+                    add("pebbles", x, y, rnd.uniform(0.9, 1.4))
+                elif r < 0.288:
+                    add("log" if r < 0.2865 else "stump", x, y)
+    return items
+
+
+def decor_variant(kind, x, y, count):
+    return int(_hash(int(x * 7), int(y * 7), 151) * count) % count
+
+
+def decor_z(kind, x, y):
+    if kind == "lily":
+        return WATER_Z + 0.005
+    return max(height_at(x, y)[0], WATER_Z)
+
+
+# -- the props (building palette) ----------------------------------------------------------------
+
 DARK, STONE, STONE_D, STONE_L = 'window', 'stone_mid', 'stone_dark', 'stone_light'
 WOOD, WOOD_D, WOOD_L = 'wood_mid', 'wood_dark', 'wood_light'
-CRYSTAL = 'roof_purple'
-SOLID, FLOOR, WATER = 0, 1, 2
-
-rng = random.Random(31)
-grid = [[SOLID] * N for _ in range(N)]
-lights = []                 # (kind, x, y, z)
-
-
-# -- carving ---------------------------------------------------------------------------------
-
-def rect(x0, y0, x1, y1, kind=FLOOR):
-    for x in range(max(0, x0), min(N, x1)):
-        for y in range(max(0, y0), min(N, y1)):
-            grid[x][y] = kind
-
-
-def ellipse(cx, cy, rx, ry, kind=FLOOR):
-    for x in range(max(0, int(cx - rx) - 1), min(N, int(cx + rx) + 2)):
-        for y in range(max(0, int(cy - ry) - 1), min(N, int(cy + ry) + 2)):
-            if ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0:
-                grid[x][y] = kind
-
-
-def is_floor(x, y):
-    return 0 <= x < N and 0 <= y < N and grid[x][y] == FLOOR
-
-
-def roughen(passes=2, chance=0.28):
-    """Bites out of the walls, so a carved rectangle reads as a cave, not a room."""
-    for _ in range(passes):
-        bite = []
-        for x in range(1, N - 1):
-            for y in range(1, N - 1):
-                if grid[x][y] != SOLID:
-                    continue
-                if any(grid[x + dx][y + dy] == FLOOR for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))) and rng.random() < chance:
-                    bite.append((x, y))
-        for x, y in bite:
-            grid[x][y] = FLOOR
-
-
-def carve():
-    rect(39, 4, 61, 18)                        # the camp
-    rect(47, 0, 53, 5)                         # the way out
-    rect(48, 18, 52, 40)                       # north corridor (rails)
-    ellipse(50, 50, 22, 13)                    # the lake hall
-    rect(10, 10, 39, 14)                       # west: from the camp
-    rect(10, 10, 14, 77)                       # west: the gallery north
-    rect(14, 24, 25, 33)                       #   a room off it (crystal)
-    rect(3, 52, 11, 59)                        #   a pocket west (crystal)
-    rect(13, 47, 30, 51)                       #   joins the lake hall
-    rect(71, 47, 85, 51)                       # east: out of the lake hall
-    rect(81, 47, 85, 68)                       # east: north to the spiders
-    ellipse(82, 80, 14, 13)                    # the spider queen's lair
-    rect(81, 22, 85, 48)                       # east: south branch
-    rect(84, 19, 95, 31)                       #   its pocket (crystal)
-    rect(48, 61, 52, 74)                       # north: the deep corridor
-    ellipse(44, 84, 18, 12)                    # the ore golem's hall
-    rect(22, 87, 28, 91)                       #   west out of it
-    rect(13, 85, 24, 95)                       #   its pocket (crystal)
-    roughen()
-    # the lake, after the roughening so its shore stays a shore
-    ellipse(50, 50, 13, 7, WATER)
-    for x in range(N):                         # a closed rim: nothing walks off the map (the way out aside)
-        if not 47 <= x < 53:
-            grid[x][0] = SOLID
-        grid[x][N - 1] = SOLID
-        grid[0][x] = grid[N - 1][x] = SOLID
-
-
-def nearest_floor(x, y):
-    for r in range(0, 12):
-        for dx in range(-r, r + 1):
-            for dy in range(-r, r + 1):
-                if is_floor(x + dx, y + dy):
-                    return x + dx, y + dy
-    return x, y
+lights = []
 
 
 def w(x, y, z=0.0):
-    """Grid metres (0..100) -> the object's local space, centred."""
-    return (x - N / 2, y - N / 2, z)
+    return (x - HALF, y - HALF, z)
 
-
-# -- the shell: floor, walls, roof, water ----------------------------------------------------
-
-def floor_colour(x, y):
-    return STONE           # one tone; the variety comes from patches and scatter (build_scatter)
-
-
-def build_shell(b):
-    # floor and roof, each a run of cells along x merged into one quad
-    for y in range(N):
-        x = 0
-        while x < N:
-            kind = grid[x][y]
-            colour = floor_colour(x, y) if kind == FLOOR else None
-            x1 = x
-            while x1 < N and grid[x1][y] == kind and (kind != FLOOR or floor_colour(x1, y) == colour):
-                x1 += 1
-            x0w, y0w, _ = w(x, y)
-            x1w, y1w, _ = w(x1, y + 1)
-            if kind == FLOOR:
-                b.box(x0w, x1w, y0w, y1w, -0.05, 0.0, colour)
-            elif kind == SOLID:
-                b.box(x0w, x1w, y0w, y1w, ROOF - 0.05, ROOF, DARK)
-            x = x1
-    # the lake
-    for y in range(N):
-        x = 0
-        while x < N:
-            if grid[x][y] != WATER:
-                x += 1
-                continue
-            x1 = x
-            while x1 < N and grid[x1][y] == WATER:
-                x1 += 1
-            b.box(*w(x, y)[:1], *w(x1, y)[:1], w(0, y)[1], w(0, y + 1)[1], -0.35, -0.3, 'water')
-            x = x1
-    # the walls: a crag on every rock cell next to the way, every other one to save triangles
-    for x in range(N):
-        for y in range(N):
-            if grid[x][y] != SOLID:
-                continue
-            edge = any(0 <= x + dx < N and 0 <= y + dy < N and grid[x + dx][y + dy] != SOLID
-                       for dx in (-1, 0, 1) for dy in (-1, 0, 1))
-            if not edge or (x + y) % 2:
-                continue
-            cx, cy, _ = w(x + 0.5, y + 0.5)
-            h = ROOF + 0.25 + rng.random() * 0.9
-            b.crag(cx, cy, 0.95, 0.95, h, STONE_D if rng.random() < 0.55 else STONE, top=DARK, sides=5,
-                   rot_deg=rng.random() * 72, seed=rng.randrange(40))
-
-
-# -- props -----------------------------------------------------------------------------------
 
 def light(kind, x, y, z):
     lights.append((kind, x, y, z))
 
 
-def support(b, x, y, axis):
-    """Timber props across a passage at cell (x, y): posts at both walls, a beam, a lantern."""
-    dx, dy = (1, 0) if axis == 'x' else (0, 1)
-    a, c = (x, y), (x, y)
-    while is_floor(a[0] - dx, a[1] - dy):
-        a = (a[0] - dx, a[1] - dy)
-    while is_floor(c[0] + dx, c[1] + dy):
-        c = (c[0] + dx, c[1] + dy)
-    p0 = Vector(w(a[0] + 0.5 - dx * 0.35, a[1] + 0.5 - dy * 0.35))
-    p1 = Vector(w(c[0] + 0.5 + dx * 0.35, c[1] + 0.5 + dy * 0.35))
-    for p in (p0, p1):
-        b.box(p.x - 0.09, p.x + 0.09, p.y - 0.09, p.y + 0.09, 0.0, 1.05, WOOD)
-    b.rod((p0.x, p0.y, 1.05), (p1.x, p1.y, 1.05), 0.16, WOOD_D)
+def edge_point(x, y, dx, dy, inset=0.35):
+    """Walks from (x, y) along (dx, dy) to just short of where the rock begins."""
+    t = 0.0
+    while t < 12 and pass_sd(x + dx * (t + 0.1), y + dy * (t + 0.1)) < -inset:
+        t += 0.1
+    return x + dx * t, y + dy * t
+
+
+def support(b, x, y, dx, dy):
+    """Timber props across a passage at (x, y), the beam along (dx, dy): posts where the rock begins."""
+    p0, p1 = Vector(w(*edge_point(x, y, -dx, -dy))), Vector(w(*edge_point(x, y, dx, dy)))
     m = (p0 + p1) / 2
-    b.rod((m.x, m.y, 1.0), (m.x, m.y, 0.85), 0.015, 'iron')
-    b.box(m.x - 0.06, m.x + 0.06, m.y - 0.06, m.y + 0.06, 0.68, 0.85, 'window_light')
-    light('lantern', m.x, m.y, 0.75)
+    for p in (p0, p1):
+        b.box(p.x - 0.1, p.x + 0.1, p.y - 0.1, p.y + 0.1, 0.0, 1.25, WOOD)
+        q = p * 0.75 + m * 0.25
+        b.rod((p.x, p.y, 0.95), (q.x, q.y, 1.25), 0.07, WOOD)
+    b.rod((p0.x, p0.y, 1.25), (p1.x, p1.y, 1.25), 0.18, WOOD_D)
+    b.rod((m.x, m.y, 1.18), (m.x, m.y, 1.02), 0.015, 'iron')
+    b.box(m.x - 0.07, m.x + 0.07, m.y - 0.07, m.y + 0.07, 0.82, 1.02, 'window_light')
+    b.box(m.x - 0.08, m.x + 0.08, m.y - 0.08, m.y + 0.08, 1.02, 1.05, 'iron')
+    light('lantern', m.x, m.y, 0.9)
 
 
-def rails(b, x0, y0, x1, y1):
-    """Rails down the middle of a straight passage from cell (x0, y0) to (x1, y1)."""
-    p0, p1 = Vector(w(x0, y0)), Vector(w(x1, y1))
-    d = (p1 - p0)
-    length = d.length
-    d.normalize()
-    side = Vector((-d.y, d.x, 0.0))
-    for k in range(int(length / 0.55)):
-        c = p0 + d * (k * 0.55 + 0.2)
-        a, e = c - side * 0.38, c + side * 0.38
-        b.rod((a.x, a.y, 0.03), (e.x, e.y, 0.03), 0.12, WOOD_D)
-    for s in (-0.25, 0.25):
-        a, e = p0 + side * s, p1 + side * s
-        b.rod((a.x, a.y, 0.07), (e.x, e.y, 0.07), 0.05, 'iron')
+def rails(b, pts):
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        p0, p1 = Vector(w(ax, ay)), Vector(w(bx, by))
+        d = p1 - p0
+        length = d.length
+        d.normalize()
+        side = Vector((-d.y, d.x, 0.0))
+        for k in range(int(length / 0.55)):
+            c = p0 + d * (k * 0.55 + 0.2)
+            a, e = c - side * 0.38, c + side * 0.38
+            b.rod((a.x, a.y, 0.03), (e.x, e.y, 0.03), 0.12, WOOD_D)
+        for s in (-0.25, 0.25):
+            a, e = p0 + side * s, p1 + side * s
+            b.rod((a.x, a.y, 0.08), (e.x, e.y, 0.08), 0.05, 'iron')
 
 
-def crystal(b, x, y, big=1.0, colour=CRYSTAL):
-    """An upgrade crystal cluster (a pickup in the game): three points of different height."""
-    cx, cy, _ = w(x + 0.5, y + 0.5)
-    for k, (ox, oy, h, r) in enumerate(((0, 0, 0.75, 0.14), (0.18, 0.1, 0.5, 0.1), (-0.15, 0.12, 0.42, 0.09))):
-        h, r = h * big, r * big
-        b.frustum(cx + ox, cy + oy, 0.0, h * 0.7, r, r * 0.8, colour, sides=6, cap=False)
-        b.pyramid(cx + ox, cy + oy, h * 0.7, r * 0.8, r * 0.8, h, colour, sides=6)
-    light('crystal', cx, cy, 0.5 * big)
-
-
-def mushrooms(b, x, y, n=4):
+def crystal(b, x, y, big=1.0, colour='roof_purple', glow='crystal'):
     cx, cy, _ = w(x, y)
-    for k in range(n):
-        a = k * 2.4
-        px, py, s = cx + math.cos(a) * 0.5, cy + math.sin(a) * 0.4, 0.7 + 0.3 * (k % 2)
-        b.cylinder(px, py, 0.0, 0.16 * s, 0.035 * s, 'plaster_white', sides=5)
-        b.frustum(px, py, 0.16 * s, 0.24 * s, 0.13 * s, 0.04 * s, 'water', sides=7)
-    light('mushroom', cx, cy, 0.3)
+    for ox, oy, h, r, lean in ((0, 0, 0.8, 0.15, 0.0), (0.2, 0.08, 0.55, 0.11, 0.12), (-0.17, 0.12, 0.45, 0.1, -0.1),
+                               (0.05, -0.18, 0.35, 0.08, 0.05)):
+        h, r = h * big, r * big
+        b.frustum(cx + ox * big, cy + oy * big, 0.0, h * 0.7, r, r * 0.8, colour, sides=6, cap=False)
+        b.pyramid(cx + ox * big + lean * big, cy + oy * big, h * 0.7, r * 0.8, r * 0.8, h, colour, sides=6)
+    b.crag(cx, cy, 0.35 * big, 0.3 * big, 0.12 * big, STONE_D, sides=6, seed=int(x))
+    light(glow, cx, cy, 0.6 * big)
+
+
+def giant_mushroom(b, x, y, h, cap, r=None):
+    """A Warcraft-style glowing toadstool: a pale stem, a broad cap in a strong colour with spots."""
+    cx, cy, _ = w(x, y)
+    r = r or h * 0.55
+    b.frustum(cx, cy, 0.0, h, h * 0.13, h * 0.09, 'plaster_white', sides=7)
+    b.frustum(cx, cy, h - 0.02, h + r * 0.35, r, r * 0.55, cap, sides=9)
+    b.pyramid(cx, cy, h + r * 0.35, r * 0.55, r * 0.55, h + r * 0.6, cap, sides=9)
+    for k in range(4):
+        a = k * 1.6 + x
+        sx, sy = cx + math.cos(a) * r * 0.6, cy + math.sin(a) * r * 0.6
+        b.box(sx - 0.04, sx + 0.04, sy - 0.04, sy + 0.04, h + r * 0.28, h + r * 0.36, 'plaster_white')
+    kind = 'mushroom' if cap == 'water' else 'crystal' if cap == 'roof_purple' else 'fire'
+    light(kind, cx, cy, h * 0.7)
+
+
+def mushroom_grove(b, x, y, seed, caps):
+    r = random.Random(seed)
+    for k in range(3 + r.randrange(3)):
+        a = r.random() * 6.283
+        d = 0.4 + r.random() * 1.4
+        giant_mushroom(b, x + math.cos(a) * d, y + math.sin(a) * d, 0.5 + r.random() * 1.1, caps[k % len(caps)])
 
 
 def web(b, x, y, z, s=1.0, a=0.0):
-    """A cobweb hung between rocks: a flat white fan."""
     cx, cy, _ = w(x, y)
     u = (math.cos(a), math.sin(a), 0.0)
-    b.prism([(-0.6 * s, 0.0), (0.6 * s, 0.0), (0.0, 0.9 * s)], (cx, cy, z), u, (0, 0, 1), 0.01, 'plaster_white',
-            back_cap=True)
+    b.prism([(-0.7 * s, 0.0), (0.7 * s, 0.0), (0.0, 1.0 * s)], (cx, cy, z), u, (0, 0, 1), 0.01, 'plaster_white', back_cap=True)
 
 
-def eggs(b, x, y):
-    cx, cy, _ = w(x, y)
-    for k in range(5):
-        a = k * 1.3
-        b.ball(cx + math.cos(a) * 0.35, cy + math.sin(a) * 0.3, 0.0, 0.22, 0.4, 'plaster_white', sides=6)
+def skull(b, x, y, z, s=0.16):
+    b.box(x - s * 0.5, x + s * 0.5, y - s * 0.45, y + s * 0.45, z, z + s * 0.8, 'plaster', bevel=s * 0.12)
+    for k in (-1, 1):
+        b.box(x + k * s * 0.2 - s * 0.1, x + k * s * 0.2 + s * 0.1, y - s * 0.47, y - s * 0.4, z + s * 0.3, z + s * 0.52, DARK)
 
 
 def bones(b, x, y):
@@ -251,21 +524,11 @@ def bones(b, x, y):
         a = k * 2.1 + x
         p0 = (cx + math.cos(a) * 0.2, cy + math.sin(a) * 0.2, 0.03)
         b.rod(p0, (p0[0] + math.cos(a + 1.2) * 0.3, p0[1] + math.sin(a + 1.2) * 0.3, 0.03), 0.05, 'plaster')
-    cave.skull(b, cx, cy, 0.0, 0.16)
-
-
-def tent(b, x, y, w_, d, colour='burlap'):
-    """A ridge tent along y: two sloping cloth sides on a pole frame."""
-    cx, cy, _ = w(x, y)
-    b.prism([(-w_ / 2, 0.0), (w_ / 2, 0.0), (0.0, w_ * 0.8)], (cx, cy + d / 2, 0.0), (1, 0, 0), (0, 0, 1), d, colour,
-            back_cap=True)
-    for s in (-1, 1):
-        b.rod((cx, cy + s * (d / 2 + 0.05), 0.0), (cx, cy + s * (d / 2 + 0.05), w_ * 0.85), 0.06, WOOD_D)
+    skull(b, cx, cy, 0.0)
 
 
 def build_camp(b):
-    # the gnome prospectors' camp: a stone-footed timber hut under a red roof, a sign, barrels
-    hx, hy, _ = w(42.5, 13.0)
+    hx, hy, _ = w(44.0, 13.5)                                           # the gnome prospectors' hut
     b.box(hx - 1.6, hx + 1.6, hy - 1.3, hy + 1.3, 0.0, 0.25, STONE_L, bevel=0.03)
     b.box(hx - 1.45, hx + 1.45, hy - 1.15, hy + 1.15, 0.25, 1.35, 'plaster', bevel=0.02)
     for px in (-1.45, 1.45):
@@ -275,22 +538,19 @@ def build_camp(b):
     b.gable_roof(hx, hy, 'x', 1.75, 1.45, 1.3, 2.25, 'roof_red', 'roof_red_dark')
     b.box(hx + 0.3, hx + 0.9, hy - 1.2, hy - 1.15, 0.25, 1.05, 'door')
     b.box(hx - 1.0, hx - 0.45, hy - 1.2, hy - 1.15, 0.55, 1.0, 'window_light')
-    b.box(hx - 0.25, hx - 0.05, hy + 0.5, hy + 0.75, 1.6, 2.5, STONE_D)      # the chimney
+    b.box(hx - 0.25, hx - 0.05, hy + 0.5, hy + 0.75, 1.6, 2.5, STONE_D)
+    sx, sy = hx - 1.0, hy - 1.9                                         # its sign
+    b.box(sx - 0.05, sx + 0.05, sy - 0.05, sy + 0.05, 0.0, 1.3, WOOD_D)
+    b.box(sx - 0.45, sx + 0.45, sy - 0.06, sy, 0.95, 1.25, WOOD_L)
     light('lantern', hx - 0.7, hy - 1.6, 0.8)
-    cx, cy, _ = w(45.0, 10.2)
-    b.box(cx - 0.05, cx + 0.05, cy - 0.05, cy + 0.05, 0.0, 1.5, WOOD_D)
-    b.box(cx - 0.55, cx + 0.55, cy - 0.06, cy + 0.0, 1.05, 1.45, WOOD_L)
-    for i, (px, py) in enumerate(((40.0, 9.5), (40.6, 8.8), (39.6, 16.0))):
+    for px, py in ((40.5, 11.0), (41.0, 10.2), (40.2, 16.0), (47.8, 15.8)):
         bx, by, _ = w(px, py)
         b.cylinder(bx, by, 0.0, 0.5, 0.2, WOOD, sides=8)
         b.cylinder(bx, by, 0.36, 0.4, 0.21, 'iron', sides=8)
-    # pick and shovel racks
-    for k in range(3):
-        rx, ry, _ = w(39.2 + k * 0.4, 12.0)
-        b.rod((rx, ry, 0.0), (rx + 0.1, ry + 0.25, 0.9), 0.04, WOOD_L)
-        b.obox((rx + 0.1, ry + 0.25, 0.92), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.16, 0.03, 0.03, 'iron')
-    # the potion stall: a counter under an awning, bottles in colours
-    sx, sy, _ = w(57.0, 12.0)
+    for px, py, z, s in ((41.5, 16.5, 0.0, 0.45), (42.1, 16.0, 0.0, 0.4), (41.7, 16.3, 0.45, 0.32)):
+        bx, by, _ = w(px, py)
+        b.zbox(bx, by, z, z + s, s / 2, s / 2, px * 20, WOOD_L)
+    sx, sy, _ = w(57.0, 12.5)                                           # the potion stall
     b.box(sx - 1.4, sx + 1.4, sy - 0.35, sy + 0.35, 0.0, 0.6, WOOD, bevel=0.02)
     for s in (-1, 1):
         b.box(sx + s * 1.35 - 0.05, sx + s * 1.35 + 0.05, sy + 0.25, sy + 0.35, 0.0, 1.6, WOOD_D)
@@ -303,8 +563,7 @@ def build_camp(b):
         b.cylinder(px, sy, 0.6, 0.78, 0.07, colour, sides=6)
         b.cylinder(px, sy, 0.78, 0.85, 0.03, 'wood_light', sides=5)
     light('lantern', sx, sy, 1.3)
-    # the campfire, logs to sit on
-    fx, fy, _ = w(50.0, 9.0)
+    fx, fy, _ = w(50.0, 9.0)                                            # the campfire
     for a in (0, 60, 120):
         r = math.radians(a)
         b.rod((fx - math.cos(r) * 0.35, fy - math.sin(r) * 0.35, 0.05), (fx + math.cos(r) * 0.35, fy + math.sin(r) * 0.35, 0.05),
@@ -314,193 +573,144 @@ def build_camp(b):
         b.crag(fx + math.cos(a) * 0.55, fy + math.sin(a) * 0.55, 0.12, 0.1, 0.1, STONE_L, sides=5, seed=k)
     b.pyramid(fx, fy, 0.06, 0.22, 0.22, 0.7, 'fire', sides=5)
     light('fire', fx, fy, 0.5)
-    for lx, ly, a in ((48.0, 7.2, 0), (52.2, 8.0, 70)):
+    for lx, ly, ax in ((48.2, 7.6, 'x'), (52.3, 8.4, 'y')):
         px, py, _ = w(lx, ly)
-        b.hcylinder('x' if a == 0 else 'y', (px, py, 0.13), 0.6, 0.13, WOOD, sides=7)
-    # where the hirelings wait: a little banner on a pole
-    px, py, _ = w(54.0, 16.0)
+        b.hcylinder(ax, (px, py, 0.13), 0.6, 0.13, WOOD, sides=7)
+    px, py, _ = w(55.0, 16.5)                                           # where the hirelings wait
     b.rod((px, py, 0.0), (px, py, 1.8), 0.05, WOOD_D)
     b.box(px + 0.03, px + 0.6, py - 0.02, py + 0.02, 1.2, 1.75, 'banner_red')
-    # the way out: daylight at the end of the tunnel
-    ox, oy, _ = w(50.0, 0.0)
-    b.box(ox - 3.0, ox + 3.0, oy - 0.02, oy, 0.0, 1.6, 'window_light', skip=())
+    ox, oy, _ = w(50.0, 0.3)                                            # the way out: daylight
+    b.box(ox - 2.4, ox + 2.4, oy - 0.02, oy, 0.0, 2.2, 'window_light', skip=())
     light('day', ox, oy + 1.0, 0.8)
+    for x, y in ((46.5, 4.0), (53.5, 4.0)):                            # torches by the way out
+        tx, ty, _ = w(x, y)
+        b.rod((tx, ty, 0.0), (tx, ty, 1.0), 0.06, WOOD_D)
+        b.pyramid(tx, ty, 0.98, 0.09, 0.09, 1.35, 'fire', sides=5)
+        light('fire', tx, ty, 1.1)
 
 
-def build_lake(b):
-    # the plank bridge across the lake, north to south
-    for y in range(41, 60):
+def build_props(b):
+    build_camp(b)
+    rails(b, [(50, 17), (49, 27), (51, 38)])
+    rails(b, [(40, 10), (26, 11), (12, 13), (11, 30), (13, 50), (11, 66), (12, 75)])
+    rails(b, [(50, 62), (47, 68), (48, 76)])
+    for x, y, dx, dy in ((49.5, 23, 1, 0), (50.5, 33, 1, 0), (30, 10.7, 0, 1), (20, 11.6, 0, 1), (11.5, 22, 1, 0),
+                         (12, 40, 1, 0), (12, 60, 1, 0), (11.6, 71, 1, 0), (76, 48.4, 0, 1), (83, 58, 1, 0),
+                         (84.5, 35, 1, 0), (48.6, 66, 1, 0), (24, 49.5, 0, 1)):
+        support(b, x, y, dx, dy)
+    for y in range(40, 61):                                            # the lake's plank bridge
         bx, by, _ = w(50.0, y + 0.5)
         b.box(bx - 0.8, bx + 0.8, by - 0.42, by + 0.42, -0.05, 0.05, WOOD if y % 2 else WOOD_L)
-    for y in (41, 46, 51, 56, 60):
+    for y in (40, 45, 50, 55, 61):
         for s in (-1, 1):
             px, py, _ = w(50.0 + s * 0.85, y)
-            b.box(px - 0.06, px + 0.06, py - 0.06, py + 0.06, -0.35, 0.5, WOOD_D)
-    b.rod(w(49.15, 41, 0.45), w(49.15, 60, 0.45), 0.05, WOOD)
-    b.rod(w(50.85, 41, 0.45), w(50.85, 60, 0.45), 0.05, WOOD)
-    for x, y in ((31, 42), (68, 57), (35, 59), (64, 40), (30, 53)):
-        mushrooms(b, x, y)
-    # rocks standing in the water
-    for x, y in ((33, 47), (67, 44), (40, 60), (62, 60), (36, 40)):        # pillars left by the miners
+            b.box(px - 0.06, px + 0.06, py - 0.06, py + 0.06, -0.6, 0.5, WOOD_D)
+    b.rod(w(49.15, 40, 0.45), w(49.15, 61, 0.45), 0.05, WOOD)
+    b.rod(w(50.85, 40, 0.45), w(50.85, 61, 0.45), 0.05, WOOD)
+    for k, (x, y) in enumerate(((31, 42), (69, 56), (36, 59), (64, 40), (29, 53), (15, 33), (8, 58), (82, 42),
+                                (13, 64), (52, 68), (90, 22), (20, 93))):  # glowing mushroom groves
+        mushroom_grove(b, x, y, k, (('water', 'roof_purple'), ('roof_purple', 'banner_red'), ('water',))[k % 3])
+    for x, y, z, s, a in ((70, 78, 0.3, 1.4, 1.4), (94, 82, 0.2, 1.6, 1.7), (80, 92, 0.3, 1.2, 0.1), (75, 70, 0.2, 1.0, 0.5),
+                          (90, 72, 0.3, 1.3, 2.4), (83, 66, 0.2, 0.9, 0.0), (77, 78, 0.6, 1.1, 0.3), (87, 81, 0.6, 1.2, 2.0)):
+        web(b, x, y, z, s, a)                                          # the spider lair
+    for x, y in ((88, 88), (74, 86), (92, 76), (79, 83), (86, 72)):
         cx, cy, _ = w(x, y)
-        b.crag(cx, cy, 1.0, 0.9, ROOF + 0.8, STONE_D, top=DARK, sides=6, seed=x + y)
-    for x, y, r in ((42, 47, 0.9), (58, 53, 0.7), (45, 54, 0.5)):
-        cx, cy, _ = w(x, y)
-        b.crag(cx, cy, r, r * 0.8, 0.5, STONE, sides=6, seed=x)
-
-
-def build_spiders(b):
-    for x, y, z, s, a in ((70, 78, 0.4, 1.2, 1.4), (93, 82, 0.3, 1.4, 1.7), (80, 92, 0.4, 1.0, 0.1), (75, 70, 0.3, 0.9, 0.5),
-                          (90, 72, 0.4, 1.1, 2.4), (83, 66, 0.2, 0.8, 0.0), (84, 52, 0.2, 0.7, 1.57)):
-        web(b, x, y, z, s, a)
-    for x, y in ((88, 88), (74, 86), (92, 76), (79, 82), (86, 72)):
-        eggs(b, x, y)
-    for x, y in ((76, 78), (88, 80), (82, 88)):                         # pillars draped in web
-        cx, cy, _ = w(x, y)
-        b.crag(cx, cy, 0.8, 0.8, ROOF + 0.6, STONE_D, top=DARK, sides=6, seed=x)
-        web(b, x - 0.8, y - 0.9, 0.2, 1.0, 0.3)
-    for x, y in ((80, 74), (86, 84), (78, 88), (83, 60)):
+        for k in range(5):
+            a = k * 1.3
+            b.ball(cx + math.cos(a) * 0.35, cy + math.sin(a) * 0.3, 0.0, 0.22, 0.4, 'plaster_white', sides=6)
+    for x, y in ((80, 74), (86, 84), (78, 88), (83, 61)):
         bones(b, x, y)
-    # cocooned victims leaning on the rock
     for x, y in ((71, 83), (94, 79)):
         cx, cy, _ = w(x, y)
         b.ball(cx, cy, 0.0, 0.18, 0.75, 'plaster_white', sides=6)
-
-
-def build_golem(b):
-    # great blue ore crystals out of the hall's walls, pillars of rock left standing, a broken cart
-    for x, y, s in ((29, 82, 2.2), (60, 88, 2.6), (40, 95, 2.0), (55, 76, 1.6), (32, 90, 1.7)):
-        crystal(b, x, y, s, 'water')
-    for x, y in ((38, 80), (50, 86), (44, 90), (32, 86), (56, 80)):
-        cx, cy, _ = w(x, y)
-        b.crag(cx, cy, 1.1, 1.0, ROOF + 0.9, STONE_D, top=DARK, sides=6, seed=x)
-    rails(b, 50, 62, 50, 78)
-    cx, cy, _ = w(47.0, 77.0)
+    for x, y, s in ((29, 82, 2.4), (60, 88, 2.6), (40, 95, 2.0), (55, 76, 1.8), (32, 90, 1.8), (48, 79, 1.2)):
+        crystal(b, x, y, s, 'water', 'mushroom')                       # the golem's great ore crystals
+    cx, cy, _ = w(46.5, 77.0)
     b.obox((cx, cy, 0.25), (0.94, 0.34, 0), (-0.24, 0.66, 0.71), (0.24, -0.66, 0.71), 0.45, 0.32, 0.28, WOOD, bevel=0.02)
-    # the chest the golem guards
-    cx, cy, _ = w(44.0, 93.0)
+    cx, cy, _ = w(44.0, 92.0)                                          # the chest
     b.box(cx - 0.45, cx + 0.45, cy - 0.3, cy + 0.3, 0.0, 0.45, WOOD, bevel=0.02)
     b.box(cx - 0.47, cx + 0.47, cy - 0.32, cy + 0.32, 0.45, 0.55, 'gold')
     b.box(cx - 0.06, cx + 0.06, cy - 0.34, cy - 0.3, 0.25, 0.45, 'iron')
     light('fire', cx, cy - 1.0, 0.6)
     for x, y in ((36, 76), (52, 92)):
         bones(b, x, y)
+    for x, y in ((19, 29), (6, 55), (12, 76), (90, 26), (16, 91), (93, 86), (56, 92), (31, 78), (66, 53), (31, 47),
+                 (84, 63), (12, 33)):                                  # the 12 upgrade crystals
+        crystal(b, x, y)
 
 
-def build_scatter(b):
-    """What makes a passage look old and walked: patches on the floor, pebbles, rubble, stalagmites
-    by the walls, boards and broken barrels. Seeded, so the map is the same every build."""
-    r = random.Random(7)
-    for x in range(2, N - 2):
-        for y in range(2, N - 2):
-            if grid[x][y] != FLOOR or (38 <= x < 62 and 2 <= y < 19):
-                continue                                   # the camp keeps its own clean ground
-            walls = sum(grid[x + dx][y + dy] == SOLID for dx in (-1, 0, 1) for dy in (-1, 0, 1))
-            cx, cy, _ = w(x + r.random(), y + r.random())
-            roll = r.random()
-            if roll < 0.035:                               # a patch: damp dark stone or trodden earth
-                rad = 0.8 + r.random() * 1.6
-                b.crag(cx, cy, rad, rad * (0.6 + r.random() * 0.4), 0.015, STONE_D if r.random() < 0.7 else 'wood_dark',
-                       sides=7, taper=0.95, rot_deg=r.random() * 60, seed=r.randrange(40))
-            elif roll < 0.11:                              # a pebble or two
-                for _ in range(1 + (r.random() < 0.4)):
-                    s = 0.08 + r.random() * 0.14
-                    b.crag(cx + r.random() * 0.4, cy + r.random() * 0.4, s, s * 0.8, s * 0.9, STONE_L if r.random() < 0.4 else STONE,
-                           sides=5, rot_deg=r.random() * 72, seed=r.randrange(40))
-            elif walls >= 2 and roll < 0.2:                # stalagmites grow along the walls
-                for k in range(1 + r.randrange(3)):
-                    rad = 0.12 + r.random() * 0.22
-                    h = 0.35 + r.random() * 1.0
-                    px, py = cx + (r.random() - 0.5) * 0.7, cy + (r.random() - 0.5) * 0.7
-                    b.frustum(px, py, 0.0, h * 0.45, rad, rad * 0.6, STONE_D if k % 2 else STONE, sides=6, cap=False)
-                    b.pyramid(px, py, h * 0.45, rad * 0.6, rad * 0.6, h, STONE_D if k % 2 else STONE, sides=6)
-            elif walls >= 1 and roll < 0.215:              # a heap of rubble fallen from the wall
-                for k in range(4):
-                    s = 0.15 + r.random() * 0.2
-                    b.crag(cx + (r.random() - 0.5) * 0.8, cy + (r.random() - 0.5) * 0.8, s, s, s * 0.8, STONE_D,
-                           sides=5, seed=r.randrange(40))
-            elif roll < 0.222:                             # an old board or a broken barrel
-                if r.random() < 0.5:
-                    a = r.random() * math.pi
-                    b.obox((cx, cy, 0.03), (math.cos(a), math.sin(a), 0), (-math.sin(a), math.cos(a), 0), (0, 0, 1),
-                           0.6, 0.1, 0.025, WOOD_L if r.random() < 0.5 else WOOD)
-                else:
-                    b.cylinder(cx, cy, 0.0, 0.22, 0.2, WOOD, sides=8)
-                    b.cylinder(cx, cy, 0.18, 0.22, 0.21, 'iron', sides=8)
-            elif roll < 0.226:
-                bones(b, x + 0.5, y + 0.5)
+# -- scene -----------------------------------------------------------------------------------
 
-
-def build_props(b):
-    build_camp(b)
-    build_scatter(b)
-    rails(b, 50, 18, 50, 39)
-    rails(b, 12, 12, 37, 12)
-    rails(b, 12, 12, 12, 76)
-    for x, y, axis in ((50, 24, 'x'), (50, 32, 'x'), (20, 12, 'y'), (30, 12, 'y'), (12, 22, 'x'), (12, 38, 'x'),
-                       (12, 62, 'x'), (12, 72, 'x'), (78, 49, 'y'), (83, 56, 'x'), (83, 30, 'x'), (50, 66, 'x'),
-                       (20, 49, 'y')):
-        support(b, x, y, axis)
-    build_lake(b)
-    build_spiders(b)
-    build_golem(b)
-    for x, y in ((19, 28), (6, 55), (11, 74), (89, 25), (18, 90), (92, 86), (56, 92), (32, 78), (66, 52), (30, 46),
-                 (83, 62), (12, 32)):
-        fx, fy = nearest_floor(x, y)
-        crystal(b, fx, fy)
-    # ore veins glinting along the walls of the gallery and the corridors
-    for _ in range(70):
-        x, y = rng.randrange(2, N - 2), rng.randrange(2, N - 2)
-        if grid[x][y] != FLOOR:
-            continue
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            if grid[x + dx][y + dy] == SOLID:
-                cx, cy, _ = w(x + 0.5 + dx * 0.45, y + 0.5 + dy * 0.45)
-                z = 0.4 + rng.random() * 0.5
-                b.obox((cx, cy, z), (0.7, 0.7, 0), (-0.7, 0.7, 0), (0, 0, 1), 0.08, 0.08, 0.1, 'gold')
-                break
+def make_object(name, builder, material, collection):
+    me = builder.to_mesh(name)
+    me.materials.append(material)
+    obj = bpy.data.objects.new(name, me)
+    collection.objects.link(obj)
+    return obj
 
 
 def main():
-    carve()
-    b = Builder()
-    build_shell(b)
-    build_props(b)
-
-    coll = bpy.data.collections.get(cave.COLLECTION)
-    if coll is None:
-        coll = bpy.data.collections.new(cave.COLLECTION)
-        bpy.context.scene.collection.children.link(coll)
-    folder = os.path.dirname(bpy.data.filepath)
-    img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
-    mat = kit.ensure_material(img)
+    folder = os.path.dirname(OUT)
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.wm.save_as_mainfile(filepath=OUT)
+    timg = terrain.ensure_palette(os.path.join(folder, "Terrain-Palette.png"))
+    tmat = terrain.ensure_material(timg)
+    bimg = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
+    bmat = kit.ensure_material(bimg)
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
-    detail.build_material_nodes(mat, img, atlas)
-    me = b.to_mesh(NAME)
-    me.materials.append(mat)
-    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
-    obj = bpy.data.objects.get(NAME)
-    if obj is None:
-        obj = bpy.data.objects.new(NAME, me)
-        coll.objects.link(obj)
-    else:
-        old = obj.data
-        obj.data = me
-        if old.users == 0:
-            bpy.data.meshes.remove(old)
-    obj.location = ORIGIN
-    for o in list(obj.children):
-        bpy.data.objects.remove(o, do_unlink=True)
+    detail.build_material_nodes(bmat, bimg, atlas)
+
+    verts = build_vertices()
+    ground, relief = build_surface(verts)
+    coll = bpy.data.collections.new("Dungeon")
+    bpy.context.scene.collection.children.link(coll)
+    g = r = 0
+    for (cx, cy), b in sorted(ground.items()):
+        g += merge_flat(make_object(f"{PREFIX}-Ground-c{cx}{cy}", b, tmat, coll))
+    for (cx, cy), b in sorted(relief.items()):
+        r += merge_flat(make_object(f"{PREFIX}-Relief-c{cx}{cy}", b, tmat, coll))
+    wtr = merge_flat(make_object(f"{PREFIX}-Water", build_water(verts), tmat, coll))
+
+    pb = Builder()
+    build_props(pb)
+    ptris = pb.triangles()
+    props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
+    detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
     for i, (kind, x, y, z) in enumerate(lights):
         e = bpy.data.objects.new(f"DungeonLight_{kind}_{i}", None)
         e.empty_display_size = 0.3
         coll.objects.link(e)
-        e.parent = obj
         e.location = (x, y, z)
-    print(f"MODEL {NAME}: tris={sum(len(p.vertices) - 2 for p in obj.data.polygons)} lights={len(lights)} "
-          f"floor={sum(row.count(FLOOR) for row in grid)}")
+
+    rnd = random.Random(31)
+    items = scatter_decor(rnd)
+    kcoll = bpy.data.collections.new("DecorKit")
+    bpy.context.scene.collection.children.link(kcoll)
+    protos = terrain.build_prototypes(tmat, kcoll)
+    decor_tris = 0
+    with open(os.path.splitext(OUT)[0] + "-decor.csv", "w", encoding="utf-8") as f:
+        f.write("kind,variant,x,y,z,rot,scale\n")
+        for kind, x, y, rot, sc in items:
+            v = decor_variant(kind, x, y, len(protos[kind]))
+            decor_tris += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
+            f.write(f"{kind},{v},{x - HALF:.3f},{y - HALF:.3f},{decor_z(kind, x, y):.3f},{rot:.3f},{sc:.3f}\n")
+    if PREVIEW:
+        dcoll = bpy.data.collections.new("Decor")
+        bpy.context.scene.collection.children.link(dcoll)
+        for kind, x, y, rot, sc in items:
+            o = bpy.data.objects.new(f"d_{kind}", protos[kind][decor_variant(kind, x, y, len(protos[kind]))])
+            o.location = (x - HALF, y - HALF, decor_z(kind, x, y))
+            o.rotation_euler = (0, 0, rot)
+            o.scale = (sc, sc, sc)
+            dcoll.objects.link(o)
+    counts = {}
+    for it in items:
+        counts[it[0]] = counts.get(it[0], 0) + 1
+    print(f"DUNGEON ground tris={g} relief tris={r} water tris={wtr} props tris={ptris} "
+          f"decor={len(items)} ({decor_tris} tris) lights={len(lights)} {counts}")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
+    print("SAVED", OUT)
 
 
 main()

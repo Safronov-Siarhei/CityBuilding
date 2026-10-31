@@ -74,20 +74,26 @@ dungeon opens as a SEPARATE SCENE.
   (a stone golem tank), from «Лагерь гномов-старателей».
 - **Next step:** the user wants the test MAP (100 x 100) made in Blender to approve its style first;
   it will be redone if needed.
-- **Test map v1** (2026-10-31, shown, awaiting the user's style verdict):
-  - Scripts: `Tools/blender/dungeon1.py` builds the 1 m grid and object `Dungeon1`;
-    `dungeon_preview.py` renders a top view plus game-angle views lit from the DungeonLight_* Empties.
-  - Layout:
-    - camp with a gnome hut, potion stall, fire and a waiting banner;
-    - rail gallery in the west;
-    - lake hall with a bridge in the centre;
-    - spider lair in the east;
-    - golem hall in the north;
-    - 12 crystals.
-  - Look:
-    - crag walls with a dark roof beyond;
-    - one-tone floor with patches, pebbles, stalagmites, rubble and boards.
-  - Cost: ~58k triangles in one mesh — it needs chunking before the game.
+- **Test map v1** (grid of cubes and crags) was REJECTED (the user, 2026-10-31):
+  - it had cubic elements, it was monotonous, it looked too simple;
+  - the user's rule: a dungeon starts from the MAIN MAP's style -- its geometry and forms;
+  - the reference is WARCRAFT: dungeons saturated and bright, greenery welcome even underground.
+- **Test map v2** (2026-10-31, shown, awaiting the verdict): `Tools/blender/dungeon1.py -- <Dungeon-1.blend> [preview]`
+  - Built the island maps' way (as `map5.py`):
+    - passages are a signed-distance field (route capsules + noisy hall ellipses);
+    - floor zones along smooth contours (forest floor, lush grass, moss under the walls, dirt
+      paths, stony patches, a sandy lake shore);
+    - rock as relief: moss at the foot, banded rock up the walls, a dark craggy top with moss;
+    - the map's water bands;
+    - the map's decor kit (`*-decor.csv`).
+  - Props: building palette (`Dungeon-1-Props`) plus the DungeonLight_* Empties.
+    - giant glowing mushrooms in blue, purple and red;
+    - crystals;
+    - the camp, supports, rails, the bridge, the spider lair, the golem hall.
+  - Preview: `dungeon_preview.py -- Dungeon1 <out> name:x:y ...`
+  - Counts: ground 10k tris, relief 19k, props 13.5k, decor 2.8k items.
+  - Its own .blend: `Dungeon-1.blend` next to the Buildings file. Map5's surface code is copied
+    in, since map5.py can't be imported (it runs on import).
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).

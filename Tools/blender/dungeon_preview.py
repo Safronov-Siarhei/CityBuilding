@@ -1,7 +1,10 @@
 """Review shots of a dungeon map: one from straight above, and close views at the game camera's
 angle on chosen spots, lit dim with a point light at every DungeonLight_* Empty. Never saves.
 
-    blender --background X.blend --python dungeon_preview.py -- <ObjectName> <out_dir> name:x:y [name:x:y ...]
+    blender --background Dungeon-N.blend --python dungeon_preview.py -- <Name> <out_dir> name:x:y [name:x:y ...]
+
+The file is a dungeon's own .blend (dungeon1.py): everything in it is shown but the decor kit's
+prototypes; <Name> only names the pictures.
 
 x, y are grid metres (0..100) of the spot a close view looks at.
 """
@@ -20,10 +23,9 @@ for a in argv[2:]:
     spots.append((name, float(x), float(y)))
 
 sc = bpy.context.scene
-target = bpy.data.objects[target_name]
-keep = {target_name} | {c.name for c in target.children_recursive}
+kit_coll = bpy.data.collections.get("DecorKit")
 for o in sc.objects:
-    o.hide_render = o.name not in keep
+    o.hide_render = kit_coll is not None and o.name in kit_coll.objects
 
 LIGHTS = {  # kind: (colour, watts, radius m)
     'lantern': ((1.0, 0.72, 0.38), 60, 0.1),
@@ -32,7 +34,7 @@ LIGHTS = {  # kind: (colour, watts, radius m)
     'mushroom': ((0.4, 0.8, 1.0), 25, 0.1),
     'day': ((1.0, 0.95, 0.85), 400, 1.0),
 }
-for c in target.children:
+for c in list(sc.objects):
     if not c.name.startswith("DungeonLight_"):
         continue
     kind = c.name.split("_")[1]
@@ -69,7 +71,7 @@ cam_data = bpy.data.cameras.new("PreviewCam")
 cam = bpy.data.objects.new("PreviewCam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
-origin = target.location
+origin = Vector((0.0, 0.0, 0.0))
 os.makedirs(out_dir, exist_ok=True)
 
 
