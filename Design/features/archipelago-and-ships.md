@@ -140,9 +140,21 @@
   turquoise, so the light water = the 6 m water-building zone; deep sea refuses the player's
   water buildings (`BuildingPlacer`, already so) and now the orc shipyard too
   (`TryNearestSea(shoreOnly)`, any sea only if no shore water is reachable).
-- EDGE: `Maps/Archipelago/StormEdge.cs` -- the old 3-cell foam strip is gone; a ragged surf line
-  a cell inside the ships' limit (`Storm`), dark storm water beyond (tinted copy of the terrain
-  material), sea stacks along the line and whitecaps on the dark water. 2 draws.
+- EDGE: `Maps/Archipelago/StormEdge.cs`, REDONE the same evening after the user said the
+  whitecaps were "white diamonds that hardly look like a storm". It is now built from:
+  - a broken white surf line, Unlit, its width wandering 0 to 2 m;
+  - storm water in three darkening bands, from levels 0/6/13 of the field outwards, plain Lit colours;
+  - rows of long tapered wave crests bowed towards the islands, one object per side, swinging
+    0.9 m in and out over 3.2 s (`StormSwell.cs`);
+  - massive 7-sided sea stacks with foam rings at their feet;
+  - dark cloud puffs at 5-8 m over the far storm.
+  - Cost: about 10 draws, no shadows.
+- FERTILE TAP (2026-10-31): a tap on fertile soil with no building over it lights the whole
+  patch's edge for 4 s and posts «Обнаружена плодородная земля» (`#log_fertile_found`).
+  - The patch's edge is a pulsing gold ribbon on the same softened outline the soil uses
+    (`FertileLand.PatchAt`/`Flash`, `FertileFlash.cs`).
+  - The tap is handled by `WorldInputDispatcher.TryShowFertileLand`; the patch comes from
+    `MeshMapApplier.FertilePatchAt`.
 
 ## Forest, boulders and the dungeons (2026-10-31)
 - Denser forest: one tree per `archipelago_forest_cells_per_tree` (6) forest cells, clamped

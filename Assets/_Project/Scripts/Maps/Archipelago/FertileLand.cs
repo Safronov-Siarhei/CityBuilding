@@ -215,6 +215,124 @@ namespace CityBuilder.Maps.Archipelago
             return go;
         }
 
+        /// <summary>The cells joined to `start` (eight ways round), out of `cells`.</summary>
+        public static HashSet<Vector2Int> PatchAt(HashSet<Vector2Int> cells, Vector2Int start)
+        {
+            var patch = new HashSet<Vector2Int>();
+            if (cells == null || !cells.Contains(start)) return patch;
+            var queue = new Queue<Vector2Int>();
+            queue.Enqueue(start);
+            patch.Add(start);
+            while (queue.Count > 0)
+            {
+                var c = queue.Dequeue();
+                for (var dz = -1; dz <= 1; dz++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var next = c + new Vector2Int(dx, dz);
+                    if (cells.Contains(next) && patch.Add(next)) queue.Enqueue(next);
+                }
+            }
+            return patch;
+        }
+
+        private static GameObject _flash;
+
+        /// <summary>
+        /// Lights up a patch's edge for a few seconds (FertileFlash): a gold ribbon traced on the
+        /// same softened outline the soil is drawn with, a hand's breadth over the ground. One at a
+        /// time -- a new tap takes the last one down.
+        /// </summary>
+        public static GameObject Flash(HashSet<Vector2Int> patch, MeshMapApplier applier)
+        {
+            if (_flash != null) Object.Destroy(_flash);
+            var grid = GridManager.Instance;
+            if (patch == null || patch.Count == 0 || grid == null) return null;
+            var min = new Vector2Int(int.MaxValue, int.MaxValue);
+            var max = new Vector2Int(int.MinValue, int.MinValue);
+            foreach (var c in patch)
+            {
+                min = Vector2Int.Min(min, c);
+                max = Vector2Int.Max(max, c);
+            }
+            min -= Vector2Int.one * 2;
+            max += Vector2Int.one * 2;
+            var w = max.x - min.x + 1;
+            var h = max.y - min.y + 1;
+            var field = new float[w * h];
+            for (var z = 1; z < h - 1; z++)
+            for (var x = 1; x < w - 1; x++)
+            {
+                var around = 0f;
+                for (var dz = -1; dz <= 1; dz++)
+                for (var dx = -1; dx <= 1; dx++)
+                    if ((dx != 0 || dz != 0) && patch.Contains(new Vector2Int(min.x + x + dx, min.y + z + dz))) around += 1f;
+                field[z * w + x] = (patch.Contains(new Vector2Int(min.x + x, min.y + z)) ? 0.5f : 0f) + around / 16f;
+            }
+            Vector3 Point(float x, float z)
+            {
+                var c = grid.GetFootprintCenterWorld(new Vector2Int(min.x, min.y), Vector2Int.one) + new Vector3(x, 0f, z) * grid.CellSize;
+                var ray = new Ray(new Vector3(c.x, c.y + 50f, c.z), Vector3.down);
+                c.y = (applier != null && applier.TryRaycastGround(ray, out var hit) ? hit.point.y : grid.GroundHeight) + 0.07f;
+                return c;
+            }
+
+            const float Level = 0.5f;
+            const float Half = 0.09f;
+            var sx = new[] { 0, 1, 1, 0 };
+            var sz = new[] { 0, 0, 1, 1 };
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var crossings = new List<Vector2>(4);
+            for (var z = 0; z < h - 1; z++)
+            for (var x = 0; x < w - 1; x++)
+            {
+                crossings.Clear();
+                for (var k = 0; k < 4; k++)
+                {
+                    int ax = x + sx[k], az = z + sz[k], bx = x + sx[(k + 1) % 4], bz = z + sz[(k + 1) % 4];
+                    var va = field[az * w + ax];
+                    var vb = field[bz * w + bx];
+                    if ((va >= Level) == (vb >= Level)) continue;
+                    var t = (Level - va) / (vb - va);
+                    crossings.Add(new Vector2(Mathf.Lerp(ax, bx, t), Mathf.Lerp(az, bz, t)));
+                }
+                for (var k = 0; k + 1 < crossings.Count; k += 2)
+                {
+                    var a = Point(crossings[k].x, crossings[k].y);
+                    var b = Point(crossings[k + 1].x, crossings[k + 1].y);
+                    var along = b - a;
+                    along.y = 0f;
+                    if (along.sqrMagnitude < 1e-6f) continue;
+                    var side = Vector3.Cross(Vector3.up, along.normalized) * Half;
+                    // a little past each end, so the pieces overlap into one line
+                    var reach = along.normalized * Half;
+                    var s = vertices.Count;
+                    vertices.Add(a - reach - side);
+                    vertices.Add(a - reach + side);
+                    vertices.Add(b + reach + side);
+                    vertices.Add(b + reach - side);
+                    // both windings: the crossings come in either order
+                    triangles.AddRange(new[] { s, s + 1, s + 2, s, s + 2, s + 3, s, s + 2, s + 1, s, s + 3, s + 2 });
+                }
+            }
+            if (triangles.Count == 0) return null;
+            var mesh = new Mesh { name = "FertileFlash", indexFormat = vertices.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            var go = new GameObject("FertileFlash");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = new Material(RuntimeShaders.Unlit) { name = "FertileFlash", color = FertileFlash.Gold };
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            go.AddComponent<FertileFlash>();
+            _flash = go;
+            return go;
+        }
+
         /// <summary>True when every lattice point round the square is well inside: not the rim.</summary>
         private static bool Deep(float[] field, int w, int h, int x, int z)
         {

@@ -284,7 +284,10 @@ dungeon opens as a SEPARATE SCENE.
     LEVEL 1 = nearest;
   - on each, a 5 x 5 plain spot (with a 1-cell margin, no beach/shore/relief/cliff) nearest
     the island's middle;
-  - the mouth turned to the start; the cells are no-build and occupied;
+  - the mouth turned to FACE THE CAMERA, which never turns (the user, 2026-10-31);
+  - the 5 x 5 must be GRASS by ground colour (`AllGrass`, ray + UV): one stood on sand. An island
+    with no grassy spot gives way to its neighbour in the distance list;
+  - the cells are no-build and occupied;
   - from the seed alone, nothing saved.
 - Model `MineAbandoned` exported to `Models/Buildings` (4.3 x 4.5 x 3.4 cells); wired in
   `SetupProjectMaps.CreateArchipelagoDefinition` (`MeshMapDefinition.DungeonEntrancePrefab`).

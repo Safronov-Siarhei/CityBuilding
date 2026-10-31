@@ -115,6 +115,7 @@ namespace CityBuilder.InputControl
                 return;
             }
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;
+            if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryShowFertileLand(screenPosition, tapCamera)) return;
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
         }
 
@@ -134,6 +135,25 @@ namespace CityBuilder.InputControl
             Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
                 string.Format(Core.Localization.Get("#log_deposit_found"), ore), Core.EventSeverity.Good, Core.EventGlyph.Star,
                 deposit.Kind + "Mine", deposit.transform.position));
+            return true;
+        }
+
+        /// <summary>
+        /// A tap on fertile soil lights up the edge of its patch and says so in the event feed
+        /// (the user, 2026-10-31: «Обнаружена плодородная земля»).
+        /// </summary>
+        private static bool TryShowFertileLand(Vector2 screenPosition, Camera tapCamera)
+        {
+            var map = Maps.MeshMapApplier.Instance;
+            var grid = Grid.GridManager.Instance;
+            if (map == null || grid == null || tapCamera == null) return false;
+            if (!map.TryRaycastGround(tapCamera.ScreenPointToRay(screenPosition), out var hit)) return false;
+            var cell = grid.WorldToCell(hit.point);
+            if (!map.IsFertileCell(cell)) return false;
+            var patch = map.FertilePatchAt(cell);
+            Maps.Archipelago.FertileLand.Flash(patch, map);
+            Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
+                Core.Localization.Get("#log_fertile_found"), Core.EventSeverity.Good, Core.EventGlyph.Star, "Farm", hit.point));
             return true;
         }
 

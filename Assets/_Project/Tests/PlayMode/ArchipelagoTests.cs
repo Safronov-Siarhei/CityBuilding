@@ -494,7 +494,14 @@ namespace CityBuilder.Tests.PlayMode
                     var cell = e.Cell + new Vector2Int(x, z);
                     Assert.IsTrue(applier.IsNoBuildCell(cell), "One may build over a dungeon entrance.");
                     Assert.IsFalse(applier.IsWaterCell(cell), "A dungeon entrance stands in the water.");
+                    var c = GridManager.Instance.GetFootprintCenterWorld(cell, Vector2Int.one);
+                    Assert.IsTrue(applier.TryRaycastGround(new Ray(c + Vector3.up * 50f, Vector3.down), out var hit)
+                        && ArchipelagoMeshes.IsGrassUv(hit.textureCoord), $"A dungeon entrance stands on sand at {cell}.");
                 }
+                // its mouth (the model's -z) to the camera, which never turns
+                var view = Camera.main.transform.forward;
+                view.y = 0f;
+                Assert.Greater(Vector3.Dot(e.transform.forward, view.normalized), 0.99f, "A dungeon entrance does not face the camera.");
                 foreach (var node in ResourceNode.All)
                 {
                     if (node == null) continue;
@@ -592,6 +599,12 @@ namespace CityBuilder.Tests.PlayMode
                 if (shoal.Alive && (near == null || Vector3.Distance(shoal.At, start) < Vector3.Distance(near.At, start))) near = shoal;
             }
             Assert.IsNotNull(near, "No fish shoals on the archipelago.");
+            // a tap on fertile soil lights the whole patch's edge
+            var patch = applier.FertilePatchAt(fertile.Value);
+            Assert.Greater(patch.Count, 4, "The fertile patch under the Farm is a scrap.");
+            var flash = FertileLand.Flash(patch, applier);
+            Assert.IsNotNull(flash, "The fertile patch's edge does not light up.");
+            Assert.Greater(flash.GetComponent<MeshFilter>().sharedMesh.vertexCount, patch.Count / 2, "The lit edge does not go round the patch.");
             Assert.Less(Vector3.Distance(near.At, start), 80f, "No shoal by the start island.");
             Assert.IsTrue(ShipManagerFishVisible(near), "The shoal cannot be seen.");
             // shoals only on the light coastal water (the user, 2026-10-31)

@@ -88,6 +88,9 @@ namespace CityBuilder.Maps
 
         /// <summary>Fertile soil under this cell (the archipelago only): a Farm standing on it yields more.</summary>
         public bool IsFertileCell(Vector2Int cell) => _fertileCells.Contains(cell);
+
+        /// <summary>The whole patch of fertile soil this cell is in (empty when it is not fertile).</summary>
+        public HashSet<Vector2Int> FertilePatchAt(Vector2Int cell) => Archipelago.FertileLand.PatchAt(_fertileCells, cell);
         private NavMeshDataInstance _navMeshDataInstance;
 
         // Kept past the initial bake so walkable-surface buildings can be folded in later without
