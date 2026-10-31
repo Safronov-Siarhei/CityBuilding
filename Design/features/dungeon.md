@@ -21,11 +21,12 @@ dungeon opens as a SEPARATE SCENE.
   (`detail.OVERRIDE` in `cave_entrance.py`).
 - **ONE level only**: monsters and a boss (the user, 2026-10-30). Do NOT propose themed tiers or
   floors (mine → crystal caves → crypt → lair was rejected).
-- That is all decided so far. Discussion is to continue.
+- The CITY IS PAUSED while the hero is in the dungeon (the user, 2026-10-31).
+- ONLY THE HERO goes in -- no soldiers (the user, 2026-10-31).
+- Layout and rewards: the user is describing their own ideas (2026-10-31); wait for them, do not
+  propose the shuffled-rooms / crystals defaults again.
 
 ## Proposed, NOT agreed yet (ask, don't build)
-- City while the hero is inside: pause (recommended) or keep running without raids.
-- Hero alone, or with 2–3 soldiers.
 - Layout: shuffled hand-made rooms each visit (recommended), or one fixed labyrinth.
 - Rewards: crystals (the Laboratory's lvl 3-5 currency), gold, relics with permanent town bonuses;
   hero gear later.
