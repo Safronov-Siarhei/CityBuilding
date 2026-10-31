@@ -538,6 +538,15 @@ def light(kind, x, y, z):
     lights.append((kind, x, y, z))
 
 
+fires = []
+
+
+def fire_spot(x, y, z):
+    """Where a bonfire's or a torch's fire goes: no flame model and no light here -- the fire and
+    its glow are a Unity effect at the DungeonFire_<n> Empty (the user, 2026-10-31)."""
+    fires.append((x, y, z))
+
+
 def edge_point(x, y, dx, dy, inset=0.35):
     """Walks from (x, y) along (dx, dy) to just short of where the rock begins."""
     t = 0.0
@@ -665,7 +674,7 @@ def build_camp(b):
     for k in range(7):
         a = k * 2 * math.pi / 7
         b.crag(fx + math.cos(a) * 0.55, fy + math.sin(a) * 0.55, 0.12, 0.1, 0.1, STONE_L, sides=5, seed=k)
-    light('fire', fx, fy, 0.5)
+    fire_spot(fx, fy, 0.5)
     for lx, ly, ax in ((48.2, 7.6, 'x'), (52.3, 8.4, 'y')):
         px, py, _ = cw(lx, ly)
         b.hcylinder(ax, (px, py, 0.13), 0.6, 0.13, WOOD, sides=7)
@@ -675,8 +684,7 @@ def build_camp(b):
     for x, y in ((46.5, 4.0), (53.5, 4.0)):                            # torches by the way out
         tx, ty, _ = cw(x, y)
         b.rod((tx, ty, 0.0), (tx, ty, 1.0), 0.06, WOOD_D)
-        b.pyramid(tx, ty, 0.98, 0.09, 0.09, 1.35, 'fire', sides=5)
-        light('fire', tx, ty, 1.1)
+        fire_spot(tx, ty, 1.1)
 
 
 def eggs(b, x, y, n=6):
@@ -735,7 +743,7 @@ def bonfire(b, x, y, big=1.0):
         a = k * 2 * math.pi / 8
         b.crag(fx + math.cos(a) * 0.7 * big, fy + math.sin(a) * 0.7 * big, 0.15, 0.12, 0.14, STONE_D, sides=5, seed=k)
     # no flame: the fire will be an effect at the DungeonLight_fire Empty (the user, 2026-10-31)
-    light('fire', fx, fy, 0.6)
+    fire_spot(fx, fy, 0.6)
 
 
 def totem(b, x, y):
@@ -965,8 +973,7 @@ def build_props(b):
             bones(b, x + 1.0, y - 0.8)
             cx, cy, _ = w(x - 0.8, y + 0.6)
             b.rod((cx, cy, 0.0), (cx, cy, 1.0), 0.06, WOOD_D)                    # a torch
-            b.pyramid(cx, cy, 0.98, 0.09, 0.09, 1.35, 'fire', sides=5)
-            light('fire', cx, cy, 1.1)
+            fire_spot(cx, cy, 1.1)
         elif kind == "web":
             web(b, x, y, 0.4, 1.6, i)
             web(b, x + 0.9, y + 0.7, 0.8, 1.1, i + 1.3)
@@ -1047,7 +1054,7 @@ def build_props(b):
     b.box(cx - 0.45, cx + 0.45, cy - 0.3, cy + 0.3, 0.0, 0.45, WOOD, bevel=0.02)
     b.box(cx - 0.47, cx + 0.47, cy - 0.32, cy + 0.32, 0.45, 0.55, 'gold')
     b.box(cx - 0.06, cx + 0.06, cy - 0.34, cy - 0.3, 0.25, 0.45, 'iron')
-    light('fire', cx, cy - 1.0, 0.6)
+    light('lantern', cx, cy - 1.0, 0.6)
     build_halls(b, random.Random(9))
     # the crystal rooms: nothing on the ground -- the reward will float in the air (the user)
     for i, c in enumerate(PLAN["crystal_rooms"]):
@@ -1135,6 +1142,11 @@ def main():
     props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
     pchunks = split_by_chunk(props, coll)
+    for i, (x, y, z) in enumerate(fires):
+        e = bpy.data.objects.new(f"DungeonFire_{i}", None)
+        e.empty_display_size = 0.3
+        coll.objects.link(e)
+        e.location = (x, y, z)
     for i, (x, y, z) in enumerate(rewards):
         e = bpy.data.objects.new(f"DungeonReward_{i}", None)
         e.empty_display_type = 'SPHERE'

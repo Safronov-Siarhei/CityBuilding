@@ -180,8 +180,8 @@ dungeon opens as a SEPARATE SCENE.
   - The flat web triangles read as shards hanging in the AIR. A web is now an orb of thread rods
     strung upright between two rock spurs, standing on the ground. This raised props to 72.6k tris
     (the webs' rods); trim before export.
-  - NO FLAME models on bonfires or the campfire: fire will be an EFFECT at the DungeonLight_fire
-    Empties. The torches still carry a small flame.
+  - NO FLAME models and NO GLOW on bonfires, the campfire or torches: the fire and its light are a
+    Unity EFFECT at the `DungeonFire_<n>` Empties (`fire_spot()`; not DungeonLight_*).
   - NO potion stall and NO hirelings' camp (the hut, barrels, banner) at the way in for now. Only
     the campfire, logs, torches and the daylight exit remain.
 - Measured 2026-10-31:
