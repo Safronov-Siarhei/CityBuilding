@@ -712,6 +712,228 @@ def eggs(b, x, y, n=6):
 rewards = []
 
 
+# -- the halls' furniture (v5, the user: «the rooms are too empty») -------------------------------
+
+def column(b, x, y, h, broken=False):
+    """An old dwarven column: a square base, a round shaft, a capital -- or a jagged stump."""
+    cx, cy, _ = w(x, y)
+    b.box(cx - 0.55, cx + 0.55, cy - 0.55, cy + 0.55, -0.1, 0.35, STONE_D, bevel=0.04)
+    b.cylinder(cx, cy, 0.35, h, 0.38, STONE_L, sides=8)
+    if broken:
+        b.pyramid(cx, cy, h - 0.02, 0.36, 0.36, h + 0.45, STONE_L, sides=5, rot_deg=x * 17)
+    else:
+        b.box(cx - 0.5, cx + 0.5, cy - 0.5, cy + 0.5, h, h + 0.3, STONE_D, bevel=0.04)
+    for k in range(3):                                              # ivy creeping up
+        a = k * 2.1 + y
+        b.box(cx + math.cos(a) * 0.36 - 0.1, cx + math.cos(a) * 0.36 + 0.1, cy + math.sin(a) * 0.36 - 0.1,
+              cy + math.sin(a) * 0.36 + 0.1, 0.3, 0.3 + h * (0.3 + 0.2 * k), 'leaf' if k % 2 else 'grass')
+
+
+def fallen_column(b, x, y, a, length=3.0):
+    cx, cy, _ = w(x, y)
+    dx, dy = math.cos(a) * length / 2, math.sin(a) * length / 2
+    b.rod((cx - dx, cy - dy, 0.3), (cx + dx, cy + dy, 0.3), 0.6, STONE_L)
+    b.box(cx + dx - 0.5, cx + dx + 0.5, cy + dy - 0.5, cy + dy + 0.5, -0.1, 0.5, STONE_D, bevel=0.04)
+
+
+def ruin_arch(b, x, y, a, span=3.2, h=2.6):
+    """Two columns and a lintel, half fallen in: a gateway of the old halls."""
+    dx, dy = math.cos(a) * span / 2, math.sin(a) * span / 2
+    column(b, x - dx, y - dy, h)
+    column(b, x + dx, y + dy, h * 0.75, broken=True)
+    p, q = w(x - dx, y - dy, h + 0.45), w(x + dx * 0.4, y + dy * 0.4, h + 0.2)
+    b.rod(p, q, 0.45, STONE_D)
+
+
+def bonfire(b, x, y, big=1.0):
+    fx, fy, _ = w(x, y)
+    for a in (0, 60, 120):
+        r = math.radians(a)
+        b.rod((fx - math.cos(r) * 0.45 * big, fy - math.sin(r) * 0.45 * big, 0.06),
+              (fx + math.cos(r) * 0.45 * big, fy + math.sin(r) * 0.45 * big, 0.06), 0.12 * big, WOOD_D)
+    for k in range(8):
+        a = k * 2 * math.pi / 8
+        b.crag(fx + math.cos(a) * 0.7 * big, fy + math.sin(a) * 0.7 * big, 0.15, 0.12, 0.14, STONE_D, sides=5, seed=k)
+    b.pyramid(fx, fy, 0.06, 0.3 * big, 0.3 * big, 1.0 * big, 'fire', sides=5)
+    b.pyramid(fx, fy, 0.06, 0.16 * big, 0.16 * big, 1.35 * big, 'window_light', sides=4)
+    light('fire', fx, fy, 0.6)
+
+
+def totem(b, x, y):
+    """The monsters' marker: a crooked pole, skulls up it, a red rag."""
+    cx, cy, _ = w(x, y)
+    b.rod((cx, cy, 0.0), (cx + 0.08, cy, 2.4), 0.14, WOOD_D)
+    b.rod((cx - 0.5, cy, 1.8), (cx + 0.55, cy, 1.95), 0.08, WOOD_D)
+    for z in (1.1, 1.55, 2.2):
+        skull(b, cx + 0.04, cy - 0.08, z, 0.26)
+    b.obox((cx + 0.35, cy - 0.02, 1.6), (1, 0, 0), (0, 1, 0), (0.15, 0, 1), 0.2, 0.02, 0.32, 'banner_red')
+    for k in range(4):
+        a = k * 1.57 + 0.5
+        bones(b, x + math.cos(a) * 0.8, y + math.sin(a) * 0.8) if k % 2 else None
+
+
+def spikes(b, x, y, a, n=5):
+    """A row of sharpened stakes leaning outwards."""
+    ux, uy = math.cos(a), math.sin(a)
+    for k in range(n):
+        t = (k - (n - 1) / 2) * 0.55
+        px, py, _ = w(x + ux * t, y + uy * t)
+        b.rod((px, py, 0.0), (px - uy * 0.5, py + ux * 0.5, 1.3 + 0.2 * (k % 2)), 0.1, WOOD_L if k % 2 else WOOD)
+    p0, p1 = w(x - ux * n * 0.3, y - uy * n * 0.3, 0.45), w(x + ux * n * 0.3, y + uy * n * 0.3, 0.45)
+    b.rod(p0, p1, 0.08, WOOD_D)
+
+
+def crate(b, x, y, size=0.6, z=0.0):
+    cx, cy, _ = w(x, y)
+    b.zbox(cx, cy, z, z + size, size / 2, size / 2, x * 37, WOOD_L)
+    b.zbox(cx, cy, z + size * 0.42, z + size * 0.58, size / 2 + 0.02, size / 2 + 0.02, x * 37, WOOD_D)
+
+
+def cart(b, x, y, a, ore=True):
+    cx, cy, _ = w(x, y)
+    deg = math.degrees(a)
+    b.zbox(cx, cy, 0.25, 0.85, 0.75, 0.5, deg, WOOD, bevel=0.03)
+    b.zbox(cx, cy, 0.8, 0.88, 0.78, 0.53, deg, 'iron')
+    for sx in (-0.5, 0.5):
+        for sy in (-0.52, 0.52):
+            px = cx + math.cos(a) * sx - math.sin(a) * sy
+            py = cy + math.sin(a) * sx + math.cos(a) * sy
+            b.zbox(px, py, 0.0, 0.42, 0.21, 0.05, deg, 'iron')
+    if ore:
+        b.ball(cx, cy, 0.75, 0.55, 0.45, STONE_D, sides=6, top=STONE)
+
+
+def cage(b, x, y):
+    cx, cy, _ = w(x, y)
+    b.box(cx - 0.8, cx + 0.8, cy - 0.8, cy + 0.8, 0.0, 0.15, WOOD_D)
+    b.box(cx - 0.85, cx + 0.85, cy - 0.85, cy + 0.85, 1.8, 1.95, WOOD_D)
+    for k in range(12):
+        t = -0.75 + (k % 6) * 0.3
+        px, py = (cx + t, cy - 0.75) if k < 6 else (cx - 0.75, cy + t)
+        b.rod((px, py, 0.15), (px, py, 1.8), 0.05, 'iron')
+        b.rod((2 * cx - px, 2 * cy - py, 0.15), (2 * cx - px, 2 * cy - py, 1.8), 0.05, 'iron')
+    skull(b, cx + 0.1, cy, 0.15, 0.22)
+
+
+def rune_circle(b, x, y, r=5.0):
+    """Where the golem stands: a ring of standing stones round flagstones."""
+    cx, cy, _ = w(x, y)
+    for k in range(9):
+        a = k * 2 * math.pi / 9
+        b.crag(cx + math.cos(a) * r, cy + math.sin(a) * r, 0.45, 0.35, 1.6 + 0.6 * (k % 3), STONE_L, top=STONE_D,
+               sides=5, seed=k)
+        b.box(cx + math.cos(a) * r * 0.55 - 0.6, cx + math.cos(a) * r * 0.55 + 0.6,
+              cy + math.sin(a) * r * 0.55 - 0.6, cy + math.sin(a) * r * 0.55 + 0.6, -0.1, 0.06, STONE_D)
+    b.cylinder(cx, cy, -0.1, 0.08, r * 0.35, STONE_L, sides=9)
+    light('crystal', cx, cy, 0.5)
+
+
+def pedestal(b, x, y):
+    """Where a floating reward hangs: stepped stones, a glow to draw the eye."""
+    cx, cy, _ = w(x, y)
+    b.cylinder(cx, cy, -0.1, 0.2, 1.1, STONE_D, sides=8)
+    b.cylinder(cx, cy, 0.2, 0.5, 0.7, STONE_L, sides=8)
+    for k in range(4):
+        a = k * math.pi / 2 + 0.4
+        b.crag(cx + math.cos(a) * 1.6, cy + math.sin(a) * 1.6, 0.25, 0.2, 0.9, STONE_L, sides=5, seed=k)
+    light('crystal', cx, cy, 0.9)
+
+
+def tent(b, x, y, a):
+    cx, cy, _ = w(x, y)
+    b.pyramid(cx, cy, 0.0, 1.1, 1.1, 1.7, 'plaster', sides=4, rot_deg=math.degrees(a) + 45)
+    b.rod((cx, cy, 1.6), (cx, cy, 2.0), 0.05, WOOD_D)
+    b.zbox(cx + math.cos(a) * 1.4, cy + math.sin(a) * 1.4, 0.0, 0.12, 0.35, 0.8, math.degrees(a), 'banner_blue')
+
+
+def pier(b, x0, y0, x1, y1):
+    dx, dy = x1 - x0, y1 - y0
+    ln = math.hypot(dx, dy)
+    ux, uy = dx / ln, dy / ln
+    for k in range(int(ln / 0.5)):
+        px, py, _ = w(x0 + ux * (k * 0.5 + 0.25), y0 + uy * (k * 0.5 + 0.25))
+        b.zbox(px, py, -0.05, 0.05, 0.23, 0.7, math.degrees(math.atan2(uy, ux)), WOOD if k % 2 else WOOD_L)
+    for k in range(0, int(ln) + 1, 2):
+        for sd in (-0.65, 0.65):
+            px, py, _ = w(x0 + ux * k - uy * sd, y0 + uy * k + ux * sd)
+            b.box(px - 0.06, px + 0.06, py - 0.06, py + 0.06, -0.7, 0.3, WOOD_D)
+
+
+def boat(b, x, y, a):
+    cx, cy, _ = w(x, y)
+    deg = math.degrees(a)
+    b.zbox(cx, cy, -0.25, 0.15, 1.1, 0.42, deg, WOOD, bevel=0.06)
+    b.zbox(cx, cy, 0.1, 0.18, 0.9, 0.3, deg, WOOD_D)
+    b.rod((cx, cy, 0.2), (cx + math.cos(a + 0.4) * 1.3, cy + math.sin(a + 0.4) * 1.3, 0.25), 0.05, WOOD_L)
+
+
+def scatter(r, box, n, fn, clear=-1.5):
+    for _ in range(n):
+        spot = free_spot(r, *box, clear=clear)
+        if spot:
+            fn(*spot)
+
+
+def build_halls(b, r):
+    # the lake hall: ruins of the old halls, an abandoned camp, a pier and a boat
+    lx, ly, rx, ry = LAKE
+    box = hall_rect("lake", 3.0)
+    scatter(r, box, 2, lambda x, y: ruin_arch(b, x, y, r.uniform(0, 3.1)), -2.5)
+    scatter(r, box, 5, lambda x, y: column(b, x, y, r.uniform(2.0, 3.4), r.random() < 0.5), -1.2)
+    scatter(r, box, 3, lambda x, y: fallen_column(b, x, y, r.uniform(0, 3.1), r.uniform(2.5, 4.0)), -2.0)
+    pier(b, lx - rx - 2.5, ly - 2.0, lx - rx + 4.0, ly - 2.0)
+    boat(b, lx - rx + 5.0, ly - 3.6, 0.3)
+    spot = free_spot(r, *box, clear=-4.0)
+    if spot:
+        tx, ty = spot
+        tent(b, tx, ty, r.uniform(0, 3.1))
+        bonfire(b, tx + 2.2, ty - 1.0, 0.8)
+        crate(b, tx - 1.6, ty + 0.4)
+        crate(b, tx - 1.5, ty + 1.1, 0.45)
+    # the monster arenas: a den round a bonfire -- totems, stakes, a cage, loot, bones
+    for name in ("west", "east", "deep"):
+        cx, cy = hall_centre(name)
+        if pass_sd(cx, cy) > -2:
+            cx, cy = free_spot(r, *hall_rect(name, 5.0), clear=-3.0) or (cx, cy)
+        bonfire(b, cx, cy, 1.2)
+        box = hall_rect(name, 3.0)
+        scatter(r, box, 2, lambda x, y: totem(b, x, y))
+        scatter(r, box, 3, lambda x, y: spikes(b, x, y, r.uniform(0, 3.1)), -1.0)
+        scatter(r, box, 1, lambda x, y: cage(b, x, y), -2.0)
+        scatter(r, box, 4, lambda x, y: crate(b, x, y, r.uniform(0.45, 0.7)))
+        scatter(r, box, 6, lambda x, y: bones(b, x, y), -0.8)
+        scatter(r, box, 2, lambda x, y: column(b, x, y, r.uniform(1.6, 2.8), True), -1.0)
+    # the spider queen's lair: more webs, wrapped victims, broken columns under webs
+    box = hall_rect("spiders", 3.0)
+    scatter(r, box, 4, lambda x, y: (column(b, x, y, r.uniform(1.8, 3.0), r.random() < 0.6),
+                                     web(b, x + 0.6, y, 0.3, 2.2, r.uniform(0, 3.1))), -1.2)
+    scatter(r, box, 10, lambda x, y: web(b, x, y, r.uniform(0.0, 0.4), r.uniform(1.6, 2.6), r.uniform(0, 3.1)), -0.6)
+    scatter(r, box, 8, lambda x, y: (b.ball(*w(x, y)[:2], 0.0, 0.3, 1.1, 'plaster_white', sides=6),
+                                     skull(b, *w(x, y + 0.3)[:2], 0.85, 0.2)))
+    scatter(r, box, 3, lambda x, y: (cart(b, x, y, r.uniform(0, 3.1), False), web(b, x, y, 0.3, 1.4, 0.7)))
+    # the golem's hall: the old works -- a rune ring where he stands, carts, rails, props, lanterns
+    gx, gy = hall_centre("golem")
+    if pass_sd(gx, gy) > -6:
+        gx, gy = free_spot(r, *hall_rect("golem", 8.0), clear=-6.0) or (gx, gy)
+    rune_circle(b, gx, gy)
+    box = hall_rect("golem", 3.0)
+    scatter(r, box, 4, lambda x, y: column(b, x, y, r.uniform(2.2, 3.6), r.random() < 0.5), -1.2)
+    scatter(r, box, 2, lambda x, y: fallen_column(b, x, y, r.uniform(0, 3.1)), -2.0)
+    scatter(r, box, 3, lambda x, y: cart(b, x, y, r.uniform(0, 3.1)), -2.0)
+    scatter(r, box, 2, lambda x, y: rails(b, [(x - 3, y), (x + 3, y + r.uniform(-1, 1))]), -2.5)
+    scatter(r, box, 5, lambda x, y: crate(b, x, y, r.uniform(0.45, 0.7)))
+    scatter(r, box, 2, lambda x, y: bonfire(b, x, y, 0.7), -2.0)
+    # the monster junctions: a totem each; the crystal rooms: a pedestal, mushrooms round it
+    for c in PLAN["monster_halls"]:
+        cx, cy = cell_centre(c)
+        totem(b, cx + 2.0, cy + 1.5)
+    for i, c in enumerate(PLAN["crystal_rooms"]):
+        cx, cy = cell_centre(c)
+        pedestal(b, cx, cy)
+        giant_mushroom(b, cx + 2.6, cy - 1.4, 1.3, 'water')
+        giant_mushroom(b, cx - 2.4, cy + 1.6, 1.0, 'roof_purple')
+
+
 def stalagmite(b, x, y, h):
     cx, cy, _ = w(x, y)
     r = h * 0.28
@@ -847,6 +1069,7 @@ def build_props(b):
     b.box(cx - 0.47, cx + 0.47, cy - 0.32, cy + 0.32, 0.45, 0.55, 'gold')
     b.box(cx - 0.06, cx + 0.06, cy - 0.34, cy - 0.3, 0.25, 0.45, 'iron')
     light('fire', cx, cy - 1.0, 0.6)
+    build_halls(b, random.Random(9))
     # the crystal rooms: nothing on the ground -- the reward will float in the air (the user)
     for i, c in enumerate(PLAN["crystal_rooms"]):
         cx, cy, _ = w(*cell_centre(c))
@@ -854,6 +1077,48 @@ def build_props(b):
 
 
 # -- scene -----------------------------------------------------------------------------------
+
+def split_by_chunk(obj, coll):
+    """Cuts a props mesh into the ground's chunks: each loose part goes whole to the chunk its middle
+    is in, so a prop never pops in half. Returns the number of chunk objects."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    parent = list(range(len(bm.verts)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for e in bm.edges:
+        a, c = find(e.verts[0].index), find(e.verts[1].index)
+        if a != c:
+            parent[a] = c
+    sums = {}
+    for v in bm.verts:
+        t = sums.setdefault(find(v.index), [0.0, 0.0, 0])
+        t[0] += v.co.x
+        t[1] += v.co.y
+        t[2] += 1
+    of_root = {k: _chunk_of(t[0] / t[2], t[1] / t[2]) for k, t in sums.items()}
+    face_chunk = [of_root[find(f.verts[0].index)] for f in bm.faces]
+    for ch in sorted(set(face_chunk)):
+        part = bm.copy()
+        part.faces.ensure_lookup_table()
+        bmesh.ops.delete(part, geom=[f for f, c in zip(part.faces, face_chunk) if c != ch], context='FACES')
+        me = bpy.data.meshes.new(f"{obj.name}-c{ch[0]}{ch[1]}")
+        part.to_mesh(me)
+        part.free()
+        for m in obj.data.materials:
+            me.materials.append(m)
+        coll.objects.link(bpy.data.objects.new(me.name, me))
+    bm.free()
+    n = len(set(face_chunk))
+    bpy.data.objects.remove(obj)
+    return n
+
 
 def make_object(name, builder, material, collection):
     me = builder.to_mesh(name)
@@ -890,6 +1155,7 @@ def main():
     ptris = pb.triangles()
     props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
+    pchunks = split_by_chunk(props, coll)
     for i, (x, y, z) in enumerate(rewards):
         e = bpy.data.objects.new(f"DungeonReward_{i}", None)
         e.empty_display_type = 'SPHERE'
@@ -927,7 +1193,7 @@ def main():
     for it in items:
         counts[it[0]] = counts.get(it[0], 0) + 1
     print(f"DUNGEON ground tris={g} relief tris={r} water tris={wtr} props tris={ptris} "
-          f"decor={len(items)} ({decor_tris} tris) lights={len(lights)} {counts}")
+          f"in {pchunks} chunks decor={len(items)} ({decor_tris} tris) lights={len(lights)} {counts}")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
     print("SAVED", OUT)

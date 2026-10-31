@@ -1,7 +1,7 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v4
-> (200 x 200, organic, from plan v3) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v5
+> (200 x 200, organic, from plan v3, halls furnished, props in chunks) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -154,6 +154,28 @@ dungeon opens as a SEPARATE SCENE.
   - a crystal room has only an Empty `DungeonReward_<n>` at z 1.6, where the floating reward
     will hang;
   - counts: ground 62k, relief 66k, props 32k tris, 14.3k decor, 179 lights.
+- **v4 feedback** (the user, 2026-10-31): the rooms are too EMPTY. And the user's own proposal: cut the
+  map into SQUARES before it goes to the game, so the player loads only the nearest ones.
+- **Map v5** (2026-10-31, shown, awaiting the verdict): `build_halls()` furnishes every hall:
+  - **lake hall:** 2 ruined arches, 5 dwarven columns (some broken, with ivy), 3 fallen columns, a
+    pier with a boat, an abandoned camp (tent, crates, bonfire);
+  - **monster arenas:** a den round a big bonfire, with 2 skull totems, 3 rows of stakes, a cage,
+    crates, bones and broken columns;
+  - **spiders:** more webs, broken columns under webs, wrapped victims with skulls, webbed carts;
+  - **golem:** a rune ring of standing stones where he stands, columns, carts with ore, rail
+    stubs, crates, fires;
+  - **monster junctions:** a totem each;
+  - **crystal rooms:** a stepped pedestal under the floating-reward Empty, with a glow and two
+    giant mushrooms.
+  - Props are 48.5k tris, 207 lights.
+- **Chunks (the user's proposal, agreed):**
+  - The ground, relief and now the PROPS are cut into the same 8 x 8 squares of 25 m
+    (`CHUNKS = 8`, names `…-c<x><y>`).
+  - Props are cut by loose part (`split_by_chunk`), so a prop never splits between two squares.
+  - Decor rows and DungeonLight/DungeonReward Empties carry positions, so the game buckets them
+    into the same squares.
+  - **In the game:** keep only the hero's square plus its neighbours (3 x 3, about 75 m) live, and
+    switch the others off. NOT built yet.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
