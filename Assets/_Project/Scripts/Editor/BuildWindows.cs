@@ -52,6 +52,9 @@ namespace CityBuilder.EditorTools
                 target = BuildTarget.StandaloneWindows64,
                 targetGroup = BuildTargetGroup.Standalone,
                 options = options,
+                // a release for strangers (-release) leaves the cheat window out: CheatsPanel
+                // compiles to an empty component under CB_RELEASE (the user, 2026-10-31)
+                extraScriptingDefines = HasFlag("-release") ? new[] { "CB_RELEASE" } : null,
             };
 
             Debug.Log($"[BuildWindows] Building {(development ? "DEVELOPMENT" : "release")} player to {exePath}");

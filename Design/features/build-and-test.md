@@ -86,6 +86,14 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 `com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
 
 ## Cheats / debug
-`Cheats/DebugPanel.cs` (on-screen, reachable on a phone: free resources, pause raids, game speed, FPS,
-per-camp fly-to/rebuild/send squad), `ResourceCheat`, `ResearchCheat`, `OrcSpawnCheat` (Inspector),
-`Editor/CheatInspectors.cs`. Cheats don't reach the phone except the debug panel.
+`Cheats/CheatsPanel*.cs` (2026-10-31, was DebugPanel): a «Читы» button top-right opens a plain draggable IMGUI
+window with 8 tabs -- Ресурсы (exact amounts, step/typed, crystals, ∞), Здания (research per building/level,
+focused building or all of its kind to any level, finish all, repair all, instant build), Жители, Армия
+(squad at screen centre, unit research, invulnerable), Герои (free, level, heal, raise, no cooldown), Орки
+(raid now size/level, end wait, kill all, camps, Invasion next wave), Мир (speed x0-x10, end day, fog, lighthouses,
+ships on the archipelago), Служебное (FPS, draw calls/tris via ProfilerRecorder, save/load slot «cheat», restart).
+Hooks: ConstructionSite.InstantCheat, SoldierUnit.InvulnerableCheat, HeroSkills.NoCooldownCheat,
+OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetCooldowns.
+RELEASE: build scripts take `-release` -> extraScriptingDefines CB_RELEASE -> the panel compiles empty.
+Also `ResourceCheat`, `ResearchCheat`, `OrcSpawnCheat` (Inspector), `Editor/CheatInspectors.cs`.
+User has NOT checked the window in game yet.

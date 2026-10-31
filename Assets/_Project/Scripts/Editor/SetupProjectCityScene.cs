@@ -705,10 +705,10 @@ namespace CityBuilder.EditorTools
             research.transform.SetParent(root.transform, false);
             research.AddComponent<ResearchCheat>();
 
-            // The one cheat a phone can reach: an on-screen panel (see DebugPanel).
-            var panel = new GameObject("DebugPanel");
+            // The one cheat a phone can reach: the cheat window (see CheatsPanel).
+            var panel = new GameObject("CheatsPanel");
             panel.transform.SetParent(root.transform, false);
-            panel.AddComponent<DebugPanel>();
+            panel.AddComponent<CheatsPanel>();
         }
 
         /// <summary>

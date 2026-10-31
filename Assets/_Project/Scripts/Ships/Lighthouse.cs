@@ -28,6 +28,9 @@ namespace CityBuilder.Ships
         public static int Price => Balance != null ? Balance.LighthouseRevealCoins : 30;
 
         /// <summary>Seconds until this lighthouse can light again; 0 when ready.</summary>
+        /// <summary>The cheat window: every lighthouse ready to light again.</summary>
+        public static void ResetCooldowns() => ReadyAt.Clear();
+
         public static float CooldownLeft(BuildingInstance lighthouse) =>
             lighthouse != null && ReadyAt.TryGetValue(lighthouse, out var at) ? Mathf.Max(0f, at - Time.time) : 0f;
 

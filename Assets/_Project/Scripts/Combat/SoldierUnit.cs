@@ -490,9 +490,12 @@ namespace CityBuilder.Combat
             transform.position = position;
         }
 
+        /// <summary>The cheat window's switch: the player's soldiers and heroes take no damage.</summary>
+        public static bool InvulnerableCheat;
+
         public void TakeDamage(int amount)
         {
-            if (amount <= 0 || CurrentHealth <= 0 || IsShielded) return;
+            if (amount <= 0 || CurrentHealth <= 0 || IsShielded || InvulnerableCheat) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth > 0)

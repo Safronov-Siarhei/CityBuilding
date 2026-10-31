@@ -57,6 +57,9 @@ namespace CityBuilder.Combat
         public event Action<int> Used;
 
         /// <summary>Takes this hero's skills from the sheet: every skill whose id starts with `heroId`_.</summary>
+        /// <summary>The cheat window's switch: a skill is ready again as soon as it is used.</summary>
+        public static bool NoCooldownCheat;
+
         public void Bind(Hero hero, string heroId)
         {
             _hero = hero;
@@ -84,7 +87,7 @@ namespace CityBuilder.Combat
             if (!IsReady(index) || IsPassive(_slots[index].Balance)) return false;
             var slot = _slots[index];
             if (!Apply(slot.Balance)) return false;
-            slot.Cooldown = slot.Balance.cooldownSeconds;
+            slot.Cooldown = NoCooldownCheat ? 0f : slot.Balance.cooldownSeconds;
             Used?.Invoke(index);
             return true;
         }

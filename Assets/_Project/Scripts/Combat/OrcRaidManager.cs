@@ -268,6 +268,30 @@ namespace CityBuilder.Combat
         /// <summary>How far round a designed spot (metres) a camp may move to find ground it fits on.</summary>
         private const float SpotSearchMeters = 8f;
 
+        /// <summary>The cheat window: the wait for the next raid ends now.</summary>
+        public void EndRaidWait() => _raidTimer = 0f;
+
+        /// <summary>
+        /// The cheat window: a raid of `size` orcs of `level` right now, out of a standing portal's
+        /// camp gate as a real one comes -- by sea on a map without land raids. False when no portal
+        /// is left to send one.
+        /// </summary>
+        public bool RaidNow(int size, int level)
+        {
+            var map = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            if (map != null && map.NoRaids)
+            {
+                Ships.ShipManager.Instance?.LaunchOrcFleet(size, level);
+                return true;
+            }
+            var portals = RaidSources();
+            if (portals.Count == 0) return false;
+            var source = portals[Random.Range(0, portals.Count)];
+            var camp = OrcCamp.Of(source);
+            SpawnWave(camp != null ? camp.RaidExit : source.transform.position, size, level);
+            return true;
+        }
+
         private void SpawnRaid(int score)
         {
             // Out of one of the portals still standing, picked at random -- so which side of the

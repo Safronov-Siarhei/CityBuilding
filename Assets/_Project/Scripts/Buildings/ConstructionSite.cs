@@ -24,6 +24,9 @@ namespace CityBuilder.Buildings
         /// <summary>Raised when a building is done -- built, or its new level in place -- and works again.</summary>
         public static event Action<BuildingInstance> Finished;
 
+        /// <summary>The cheat window's switch: building and upgrading take no time.</summary>
+        public static bool InstantCheat;
+
         public BuildingInstance Building { get; private set; }
         public float Total { get; private set; }
         public float Remaining { get; private set; }
@@ -44,7 +47,7 @@ namespace CityBuilder.Buildings
         public static ConstructionSite Begin(BuildingInstance building, float seconds, bool upgrade, Action onDone = null, float total = 0f)
         {
             if (building == null) return null;
-            if (seconds <= 0f)
+            if (seconds <= 0f || InstantCheat)
             {
                 onDone?.Invoke();
                 return null;

@@ -44,6 +44,9 @@ namespace CityBuilder.Core
             OnDayPassed?.Invoke();
         }
 
+        /// <summary>The cheat window: the day ends on the next frame, with everything a day's end brings.</summary>
+        public void EndDayNow() => _timer = _dayLengthSeconds;
+
         /// <summary>Used by save/load to restore an already-valid day count directly.</summary>
         public void SetCurrentDay(int day)
         {

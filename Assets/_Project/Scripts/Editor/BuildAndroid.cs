@@ -80,6 +80,9 @@ namespace CityBuilder.EditorTools
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
                 options = options,
+                // a release for strangers (-release) leaves the cheat window out: CheatsPanel
+                // compiles to an empty component under CB_RELEASE (the user, 2026-10-31)
+                extraScriptingDefines = HasFlag("-release") ? new[] { "CB_RELEASE" } : null,
             };
 
             Debug.Log($"[BuildAndroid] Building {(development ? "DEVELOPMENT" : "release")} APK to {apkPath}");
