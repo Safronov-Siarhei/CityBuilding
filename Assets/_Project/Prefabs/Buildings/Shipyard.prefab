@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3171051999144913124
+--- !u!1 &27755687544765641
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1703384655547084666}
-  - component: {fileID: 2245229222452832028}
-  - component: {fileID: 689953522917579941}
+  - component: {fileID: 960347489119039481}
+  - component: {fileID: 1246366010039005660}
+  - component: {fileID: 5442996322981698046}
   m_Layer: 0
   m_Name: Shipyard1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1703384655547084666
+--- !u!4 &960347489119039481
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3171051999144913124}
+  m_GameObject: {fileID: 27755687544765641}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.6000678, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6290265175316821179}
+  m_Father: {fileID: 2183116039126024504}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2245229222452832028
+--- !u!33 &1246366010039005660
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3171051999144913124}
+  m_GameObject: {fileID: 27755687544765641}
   m_Mesh: {fileID: 8230946824554350525, guid: cf1e616fca925fe47974a8d90c7a3382, type: 3}
---- !u!23 &689953522917579941
+--- !u!23 &5442996322981698046
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3171051999144913124}
+  m_GameObject: {fileID: 27755687544765641}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &6941139093964139421
+--- !u!1 &3052693300620747710
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6290265175316821179}
-  - component: {fileID: 8818486813983985690}
-  - component: {fileID: 8695705370136284020}
+  - component: {fileID: 2183116039126024504}
+  - component: {fileID: 5714582907068999588}
+  - component: {fileID: 3905884266216993716}
   m_Layer: 0
   m_Name: Shipyard
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6290265175316821179
+--- !u!4 &2183116039126024504
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6941139093964139421}
+  m_GameObject: {fileID: 3052693300620747710}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1703384655547084666}
+  - {fileID: 960347489119039481}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8818486813983985690
+--- !u!114 &5714582907068999588
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6941139093964139421}
+  m_GameObject: {fileID: 3052693300620747710}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &8695705370136284020
+--- !u!65 &3905884266216993716
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6941139093964139421}
+  m_GameObject: {fileID: 3052693300620747710}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
