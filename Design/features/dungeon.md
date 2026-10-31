@@ -1,7 +1,7 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v3
-> (200 x 200, from plan v2) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v4
+> (200 x 200, organic, from plan v3) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -132,6 +132,28 @@ dungeon opens as a SEPARATE SCENE.
   - counts: ground 50k tris, relief 80k, props 21k, decor 13.9k items, 156 lights, CHUNKS = 8 --
     far too heavy to export as is; cut before it goes to the game.
   - preview: `dungeon_preview.py` now centres on HALF = 100 (env `DUNGEON_HALF` overrides).
+- **v3 feedback** (the user, 2026-10-31):
+  - NO right angles and NO square rooms: the labyrinth needs a LIVING shape;
+  - FEWER passages, but MORE DETAIL: same-looking passages tire the player;
+  - NO crystals lying on the ground like ore. The reward crystal will FLOAT in the air later, so the
+    player sees at once that it is a reward.
+- **Plan v3** (`dungeon_plan.py`, seed 11, in `dungeon1-plan.json`):
+  - a 14 x 14 grid (~14.3 m cells), 4 loops;
+  - every node is jittered off its cell centre (`pos`), every passage bowed (`bends`, a quadratic
+    bezier, `curve()`);
+  - 7 crystal rooms, 17 dead ends, 7 monster junctions, ~700 m to each boss.
+- **Map v4** (2026-10-31, shown, awaiting the verdict): `dungeon1.py`:
+  - passage width changes along the way (1.5-3.2 m half width, fbm);
+  - soft blobs at every turn; everything is joined with a smooth min (`smin`), so no corners;
+  - halls are unions of wobbly ellipses (a core, 5 lobes, one lobe at each way in), never
+    rectangles;
+  - side NICHES on half the passages, each with something in it: a pool with stalagmites,
+    mushrooms, a mine prop with rails and a barrel, rubble, bones with a torch, webs with eggs;
+  - stalagmites along the sides;
+  - the golem hall has boulders instead of crystals;
+  - a crystal room has only an Empty `DungeonReward_<n>` at z 1.6, where the floating reward
+    will hang;
+  - counts: ground 62k, relief 66k, props 32k tris, 14.3k decor, 179 lights.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).

@@ -1,6 +1,13 @@
 """Dungeon 1, the first labyrinth (the user, 2026-10-31): 200 x 200 m, an old mine overgrown like
 a Warcraft cave -- lush, bright, made in Blender ahead of time (no generator in the game).
 
+Version 4 (the user, 2026-10-31: «no right angles, no square rooms, a living shape; fewer
+passages, but more detail; no crystals lying on the ground like ore»): plan v3 (seed 11) on ~14 m
+cells, every node off its centre and every passage bowed; passages of changing width, blobs at the
+turns, side NICHES with something in each (a pool, mushrooms, a mine prop, rubble, bones, webs);
+halls are unions of overlapping blobs, never rectangles; a crystal room holds only an Empty
+(`DungeonReward_<n>`) where the floating reward crystal will hang.
+
 Version 3: the user's approved SCHEME (dungeon_plan.py, seed 7, saved as dungeon1-plan.json) is
 what the passages follow -- a labyrinth on 10 m cells with 4 m passages, the camp, the lake hall,
 two boss lairs with one way in, monster arenas and junctions, crystal rooms in the farthest dead
@@ -87,19 +94,20 @@ def smoothstep(e0, e1, x):
     return t * t * (3 - 2 * t)
 
 
-# -- the layout: the approved plan (grid metres 0..200, north = +y away from the camera) -------
+# -- the layout: the plan (grid metres 0..200, north = +y away from the camera) ---------------
 
 import json  # noqa: E402
 
 PLAN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon1-plan.json"), encoding="utf-8"))
 CELL = PLAN["cell"]
 BIG = {k: tuple(v) for k, v in PLAN["big"].items()}
-PASSAGE_HW = 2.0            # half the width of a passage
-CRYSTAL_R, MONSTER_R = 4.2, 5.2
+POS = {(c[0], c[1]): (c[2], c[3]) for c in PLAN["pos"]}
+CRYSTAL_R, MONSTER_R = 4.6, 5.6
+SMOOTH = 3.0                # how softly passages, niches and halls flow into each other
 
 
 def cell_centre(c):
-    return ((c[0] + 0.5) * CELL, (c[1] + 0.5) * CELL)
+    return POS[tuple(c)]
 
 
 def hall_rect(name, inset=1.5):
@@ -119,25 +127,77 @@ def hall_of(c):
     return None
 
 
-SEGMENTS = [(cell_centre(a), cell_centre(b)) for a, b in PLAN["links"]]
-ROOMS = [(cell_centre(c), CRYSTAL_R) for c in PLAN["crystal_rooms"]] + \
-        [(cell_centre(c), MONSTER_R) for c in PLAN["monster_halls"]]
-BUCKET = {}                 # 10 m cell -> segments touching it, so a lookup checks a handful
+def curve(pa, pb, bend, steps=6):
+    """A passage from pa to pb, bowed sideways by `bend` of its length (as dungeon_plan.curve)."""
+    mx, my = (pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2
+    cx, cy = mx - (pb[1] - pa[1]) * bend, my + (pb[0] - pa[0]) * bend
+    return [((1 - t) ** 2 * pa[0] + 2 * (1 - t) * t * cx + t * t * pb[0],
+             (1 - t) ** 2 * pa[1] + 2 * (1 - t) * t * cy + t * t * pb[1]) for t in (k / steps for k in range(steps + 1))]
+
+
+def smin(a, b, k=SMOOTH):
+    h = max(k - abs(a - b), 0.0) / k
+    return min(a, b) - h * h * k * 0.25
+
+
+_lr = random.Random(23)
+CURVES = []                 # (polyline, touches a hall)
+for (ca, cb), bend in zip(PLAN["links"], PLAN["bends"]):
+    CURVES.append((curve(cell_centre(ca), cell_centre(cb), bend), bool(hall_of(ca) or hall_of(cb))))
+SEGMENTS = [(pl[k], pl[k + 1]) for pl, _ in CURVES for k in range(len(pl) - 1)]
+BUCKET = {}                 # ~14 m cell -> sub-segments touching it, so a lookup checks a handful
 for k, (pa, pb) in enumerate(SEGMENTS):
-    for p in (pa, pb):
+    for p in (pa, pb, ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)):
         BUCKET.setdefault((int(p[0] // CELL), int(p[1] // CELL)), set()).add(k)
+NODES = sorted({tuple(c) for l in PLAN["links"] for c in l if not hall_of(c)})
+BLOBS = [(cell_centre(c), _lr.uniform(2.3, 3.8)) for c in NODES]          # soft bulges at the turns
+BLOBS += [(cell_centre(c), CRYSTAL_R) for c in PLAN["crystal_rooms"]]
+BLOBS += [(cell_centre(c), MONSTER_R) for c in PLAN["monster_halls"]]
+NICHE_KINDS = ("pool", "grove", "mine", "rubble", "bones", "web", "grove", "pool")
+NICHES = []                 # (x, y, r, kind, (tx, ty) the passage's direction there)
+for i, (pl, near_hall) in enumerate(CURVES):
+    if near_hall or _lr.random() > 0.5:
+        continue
+    k = len(pl) // 2
+    (ax, ay), (bx, by) = pl[k - 1], pl[k + 1]
+    ln = math.hypot(bx - ax, by - ay) or 1.0
+    tx, ty = (bx - ax) / ln, (by - ay) / ln
+    side = _lr.choice((-1, 1))
+    r = _lr.uniform(2.4, 3.6)
+    off = r + 1.2
+    NICHES.append((pl[k][0] - ty * side * off, pl[k][1] + tx * side * off, r, NICHE_KINDS[i % len(NICHE_KINDS)], (tx, ty)))
+BLOBS += [((x, y), r) for x, y, r, _k, _t in NICHES]
+BLOB_BUCKET = {}
+for k, ((x, y), r) in enumerate(BLOBS):
+    BLOB_BUCKET.setdefault((int(x // CELL), int(y // CELL)), []).append(k)
+HALL_BLOBS = {}             # a hall = overlapping wobbly ellipses: a big core, lobes, one at every way in
+for name in BIG:
+    x0, y0, x1, y1 = hall_rect(name)
+    wd, ht = x1 - x0, y1 - y0
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    lobes = [(cx, cy, wd * 0.4, ht * 0.4)]
+    for _ in range(5):
+        r0 = min(wd, ht) * _lr.uniform(0.18, 0.3)
+        lobes.append((_lr.uniform(x0 + r0, x1 - r0), _lr.uniform(y0 + r0, y1 - r0), r0 * _lr.uniform(0.9, 1.4), r0))
+    for ca, cb in PLAN["links"]:
+        for c in (ca, cb):
+            if hall_of(c) == name:
+                ex, ey = cell_centre(c)
+                lobes.append((ex, ey, 5.0, 5.0))
+    HALL_BLOBS[name] = lobes
 LAKE_C = hall_centre("lake")
-LAKE = (LAKE_C[0], LAKE_C[1], 11.0, 7.5)
+LAKE = (LAKE_C[0], LAKE_C[1], 13.0, 8.5)
 BRIDGE_X = LAKE_C[0]
+POOLS = [(x, y, r * 0.75, r * 0.6) for x, y, r, kind, _t in NICHES if kind == "pool"]
 PILLARS = []
-for _name in ("west", "east", "golem", "spiders", "lake"):
+for _name in ("west", "east", "golem", "spiders", "lake", "deep"):
     _x0, _y0, _x1, _y1 = hall_rect(_name, 6.0)
     _r = random.Random(len(_name) * 13)
-    for _ in range(2 if _name in ("west", "east") else 3):
+    for _ in range(4 if _name in ("golem", "spiders", "lake") else 2):
         _px, _py = _r.uniform(_x0, _x1), _r.uniform(_y0, _y1)
-        if _name == "lake" and math.hypot(_px - LAKE[0], _py - LAKE[1]) < 14:
+        if _name == "lake" and math.hypot(_px - LAKE[0], _py - LAKE[1]) < 17:
             continue
-        PILLARS.append((_px, _py, _r.uniform(1.2, 1.9)))
+        PILLARS.append((_px, _py, _r.uniform(1.2, 2.2)))
 
 
 def _seg(px, py, ax, ay, bx, by):
@@ -147,7 +207,7 @@ def _seg(px, py, ax, ay, bx, by):
 
 
 def route_dist(x, y):
-    """Distance to the nearest passage's centre line (and the passage's half width)."""
+    """Distance to the nearest passage's centre line, and the passage's half width there."""
     ix, iy = int(x // CELL), int(y // CELL)
     best = 1e9
     for dx in (-1, 0, 1):
@@ -155,7 +215,7 @@ def route_dist(x, y):
             for k in BUCKET.get((ix + dx, iy + dy), ()):
                 (ax, ay), (bx, by) = SEGMENTS[k]
                 best = min(best, _seg(x, y, ax, ay, bx, by))
-    return best, PASSAGE_HW
+    return best, 1.5 + 1.7 * fbm(x / 14, y / 14, 47)
 
 
 def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
@@ -165,32 +225,33 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
     return (r - k) * min(rx, ry)
 
 
-def _box_sd(x, y, x0, y0, x1, y1, r):
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    hx, hy = (x1 - x0) / 2 - r, (y1 - y0) / 2 - r
-    qx, qy = abs(x - cx) - hx, abs(y - cy) - hy
-    return math.hypot(max(qx, 0.0), max(qy, 0.0)) + min(max(qx, qy), 0.0) - r
-
-
 def pass_sd(x, y):
     """Signed distance to the walkable ground: negative inside, positive in the rock."""
     d, hw = route_dist(x, y)
-    best = d - hw * (0.85 + 0.35 * fbm(x / 6, y / 6, 41))
+    best = d - hw * (0.85 + 0.3 * fbm(x / 5, y / 5, 41))
+    ix, iy = int(x // CELL), int(y // CELL)
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for k in BLOB_BUCKET.get((ix + dx, iy + dy), ()):
+                (cx, cy), r = BLOBS[k]
+                if abs(x - cx) < r + 6 and abs(y - cy) < r + 6:
+                    best = smin(best, math.hypot(x - cx, y - cy) - r * (0.8 + 0.4 * fbm(x / 3, y / 3, 43 + k % 7)))
     for i, name in enumerate(BIG):
         x0, y0, x1, y1 = hall_rect(name)
-        if x0 - 8 < x < x1 + 8 and y0 - 8 < y < y1 + 8:
-            wob = 2.2 * (fbm(x / 7, y / 7, 11 + i * 7) - 0.5)
-            best = min(best, _box_sd(x, y, x0, y0, x1, y1, 5.0) + wob)
-    for (cx, cy), r in ROOMS:
-        if abs(x - cx) < 8 and abs(y - cy) < 8:
-            best = min(best, math.hypot(x - cx, y - cy) - r * (0.85 + 0.3 * fbm(x / 3, y / 3, 43)))
+        if x0 - 10 < x < x1 + 10 and y0 - 10 < y < y1 + 10:
+            for j, (cx, cy, rx, ry) in enumerate(HALL_BLOBS[name]):
+                best = smin(best, _ellipse_sd(x, y, cx, cy, rx, ry, 0.45, 11 + i * 7 + j), 5.0)
     if y < 3 and abs(x - hall_centre("camp")[0]) < 3.5:          # the way out, south
         best = min(best, -1.0)
     return best
 
 
 def lake_sd(x, y):
-    return _ellipse_sd(x, y, *LAKE, 0.3, 5)
+    best = _ellipse_sd(x, y, *LAKE, 0.3, 5)
+    for k, (cx, cy, rx, ry) in enumerate(POOLS):
+        if abs(x - cx) < rx + 4 and abs(y - cy) < ry + 4:
+            best = min(best, _ellipse_sd(x, y, cx, cy, rx, ry, 0.4, 70 + k))
+    return best
 
 
 def pillar(x, y):
@@ -638,32 +699,6 @@ def build_camp(b):
         light('fire', tx, ty, 1.1)
 
 
-def path_cells(start, goal):
-    """The cells walked from hall `start` to hall `goal` along the plan's links (breadth first)."""
-    adj = {}
-    for (ax, ay), (bx, by) in PLAN["links"]:
-        a, c = (ax, ay), (bx, by)
-        adj.setdefault(a, []).append(c)
-        adj.setdefault(c, []).append(a)
-    for (x0, y0, wd, ht) in [BIG[start], BIG[goal]]:
-        pass
-    begin = [c for c in adj if hall_of(c) == start]
-    prev, todo, seen = {}, list(begin), set(begin)
-    while todo:
-        cur = todo.pop(0)
-        if hall_of(cur) == goal:
-            out = [cur]
-            while out[-1] in prev:
-                out.append(prev[out[-1]])
-            return list(reversed(out))
-        for n in adj.get(cur, []):
-            if n not in seen:
-                seen.add(n)
-                prev[n] = cur
-                todo.append(n)
-    return []
-
-
 def eggs(b, x, y, n=6):
     """A spider's clutch: pale, glossy, egg-shaped sacs under a sheet of web."""
     cx, cy, _ = w(x, y)
@@ -674,83 +709,148 @@ def eggs(b, x, y, n=6):
     web(b, x, y, 0.7, 1.4, x)                                            # the web strung over it
 
 
+rewards = []
+
+
+def stalagmite(b, x, y, h):
+    cx, cy, _ = w(x, y)
+    r = h * 0.28
+    b.frustum(cx, cy, -0.1, h * 0.55, r, r * 0.55, STONE, sides=6)
+    b.pyramid(cx, cy, h * 0.55, r * 0.55, r * 0.55, h, STONE_L, sides=6)
+
+
+def boulder(b, x, y, r):
+    cx, cy, _ = w(x, y)
+    b.ball(cx, cy, -0.15, r, r * 1.3, STONE if int(x * 7) % 2 else STONE_D, sides=6, top=STONE_L)
+
+
+def free_spot(r, x0, y0, x1, y1, clear=-1.2, tries=30):
+    """A random spot inside the box that is floor, with room round it, off the trodden path."""
+    for _ in range(tries):
+        x, y = r.uniform(x0, x1), r.uniform(y0, y1)
+        if pass_sd(x, y) < clear and route_dist(x, y)[0] > 2.5 and lake_sd(x, y) > 1.5:
+            return x, y
+    return None
+
+
 def build_props(b):
     build_camp(b)
-    # rails and lanterns down the way from the camp to the lake hall
-    route = [cell_centre(c) for c in path_cells("camp", "lake") if hall_of(c) is None]
-    if len(route) > 1:
-        rails(b, route)
     rnd = random.Random(5)
-    for (ax, ay), (bx, by) in SEGMENTS:                                 # timber props along the passages
-        if hall_of((int(ax // CELL), int(ay // CELL))) or hall_of((int(bx // CELL), int(by // CELL))):
-            continue
-        if rnd.random() < 0.2:
+    caps = (('water', 'roof_purple'), ('roof_purple', 'banner_red'), ('water',), ('banner_red', 'water'))
+    # the niches: each has something in it, so no two stretches of passage look alike
+    for i, (x, y, r, kind, (tx, ty)) in enumerate(NICHES):
+        if kind == "grove":
+            mushroom_grove(b, x, y, i, caps[i % 4])
+        elif kind == "pool":
+            for k in range(3):
+                a = k * 2.1 + i
+                stalagmite(b, x + math.cos(a) * (r + 0.3), y + math.sin(a) * (r + 0.3), rnd.uniform(0.8, 1.6))
+        elif kind == "mine":
+            support(b, x - tx * 1.2, y - ty * 1.2, tx, ty)
+            pts = [(x - tx * 2.5, y - ty * 2.5), (x + tx * 2.5, y + ty * 2.5)]
+            rails(b, pts)
+            cx, cy, _ = w(x + ty * 1.2, y - tx * 1.2)
+            b.frustum(cx, cy, 0.0, 0.7, 0.32, 0.36, WOOD, sides=8)               # a barrel
+        elif kind == "rubble":
+            for k in range(5):
+                a = k * 1.3 + i
+                d = rnd.uniform(0.5, r - 0.4)
+                if k % 2:
+                    boulder(b, x + math.cos(a) * d, y + math.sin(a) * d, rnd.uniform(0.35, 0.8))
+                else:
+                    stalagmite(b, x + math.cos(a) * d, y + math.sin(a) * d, rnd.uniform(1.2, 2.6))
+        elif kind == "bones":
+            bones(b, x, y)
+            bones(b, x + 1.0, y - 0.8)
+            cx, cy, _ = w(x - 0.8, y + 0.6)
+            b.rod((cx, cy, 0.0), (cx, cy, 1.0), 0.06, WOOD_D)                    # a torch
+            b.pyramid(cx, cy, 0.98, 0.09, 0.09, 1.35, 'fire', sides=5)
+            light('fire', cx, cy, 1.1)
+        elif kind == "web":
+            web(b, x, y, 0.4, 1.6, i)
+            web(b, x + 0.9, y + 0.7, 0.8, 1.1, i + 1.3)
+            eggs(b, x - 0.6, y - 0.5, 4)
+    # stalagmites along the passages' sides, here and there
+    for k, ((ax, ay), (bx, by)) in enumerate(SEGMENTS):
+        if rnd.random() < 0.12:
             mx, my = (ax + bx) / 2, (ay + by) / 2
-            dx, dy = (0, 1) if abs(ax - bx) > abs(ay - by) else (1, 0)
-            support(b, mx, my, dx, dy)
+            ln = math.hypot(bx - ax, by - ay) or 1.0
+            nx, ny = -(by - ay) / ln, (bx - ax) / ln
+            if rnd.random() < 0.5:
+                nx, ny = -nx, -ny
+            ex, ey = edge_point(mx, my, nx, ny, 0.6)
+            stalagmite(b, ex, ey, rnd.uniform(0.9, 2.2))
     # the lake's bridge, south to north
     y0, y1 = int(LAKE[1] - LAKE[3] - 3), int(LAKE[1] + LAKE[3] + 3)
     for y in range(y0, y1):
         bx_, by_, _ = w(BRIDGE_X, y + 0.5)
         b.box(bx_ - 0.8, bx_ + 0.8, by_ - 0.42, by_ + 0.42, -0.05, 0.05, WOOD if y % 2 else WOOD_L)
     for y in range(y0, y1 + 1, 5):
-        for s in (-1, 1):
-            px, py, _ = w(BRIDGE_X + s * 0.85, y)
+        for sd in (-1, 1):
+            px, py, _ = w(BRIDGE_X + sd * 0.85, y)
             b.box(px - 0.06, px + 0.06, py - 0.06, py + 0.06, -0.6, 0.5, WOOD_D)
     b.rod(w(BRIDGE_X - 0.85, y0, 0.45), w(BRIDGE_X - 0.85, y1, 0.45), 0.05, WOOD)
     b.rod(w(BRIDGE_X + 0.85, y0, 0.45), w(BRIDGE_X + 0.85, y1, 0.45), 0.05, WOOD)
-    # glowing mushroom groves: in the halls' corners and at some junctions
-    caps = (('water', 'roof_purple'), ('roof_purple', 'banner_red'), ('water',), ('banner_red', 'water'))
-    k = 0
-    for name in ("lake", "west", "east", "deep", "golem", "camp"):
-        x0, y0, x1, y1 = hall_rect(name, 4.5)
-        for cx, cy in ((x0, y0), (x1, y1), (x0, y1), (x1, y0))[: 2 if name in ("deep", "camp") else 4]:
-            if pass_sd(cx, cy) < -1.0 and route_dist(cx, cy)[0] > 2.0:
-                mushroom_grove(b, cx, cy, k, caps[k % 4])
+    # mushroom groves and stalagmites in the halls
+    k = 100
+    for name in ("lake", "west", "east", "deep", "golem", "spiders"):
+        box = hall_rect(name, 3.0)
+        for _ in range(5 if name in ("lake", "golem", "spiders") else 3):
+            spot = free_spot(rnd, *box)
+            if spot:
+                mushroom_grove(b, spot[0], spot[1], k, caps[k % 4])
                 k += 1
-    for c in PLAN["monster_halls"][::2]:
-        cx, cy = cell_centre(c)
-        mushroom_grove(b, cx + 2.5, cy + 2.5, k, caps[k % 4])
-        k += 1
-    # monster junctions and arenas: bones, a torch
+        for _ in range(6):
+            spot = free_spot(rnd, *box, clear=-0.3)
+            if spot and pass_sd(*spot) > -1.5:
+                stalagmite(b, spot[0], spot[1], rnd.uniform(1.0, 2.8))
+    # monster junctions and arenas: bones
     for c in PLAN["monster_halls"]:
         cx, cy = cell_centre(c)
         bones(b, cx - 1.5, cy + 0.8)
         bones(b, cx + 1.2, cy - 1.4)
     for name in ("west", "east", "deep"):
-        cx, cy = hall_centre(name)
-        for dx, dy in ((-3, 2), (2, -3), (4, 3)):
-            bones(b, cx + dx, cy + dy)
+        box = hall_rect(name, 4.0)
+        for _ in range(4):
+            spot = free_spot(rnd, *box)
+            if spot:
+                bones(b, *spot)
     # the spider queen's lair: webs, clutches, cocoons, bones
-    x0, y0, x1, y1 = hall_rect("spiders", 4.0)
-    r = random.Random(17)
-    for _ in range(14):
-        web(b, r.uniform(x0, x1), r.uniform(y0, y1), r.uniform(0.2, 0.6), r.uniform(1.0, 1.8), r.uniform(0, 3.1))
-    for _ in range(7):
-        eggs(b, r.uniform(x0, x1), r.uniform(y0, y1))
-    for _ in range(6):
-        cx, cy, _z = w(r.uniform(x0, x1), r.uniform(y0, y1))
-        b.ball(cx, cy, 0.0, 0.2, 0.85, 'plaster_white', sides=6)
-    for _ in range(6):
-        bones(b, r.uniform(x0, x1), r.uniform(y0, y1))
-    # the golem's hall: great blue ore crystals, a broken cart, the chest
-    x0, y0, x1, y1 = hall_rect("golem", 4.0)
+    box = hall_rect("spiders", 4.0)
+    for _ in range(16):
+        spot = free_spot(rnd, *box, clear=-0.5)
+        if spot:
+            web(b, spot[0], spot[1], rnd.uniform(0.2, 0.6), rnd.uniform(1.0, 1.8), rnd.uniform(0, 3.1))
     for _ in range(8):
-        crystal(b, r.uniform(x0, x1), r.uniform(y0, y1), r.uniform(1.4, 2.6), 'water', 'mushroom')
+        spot = free_spot(rnd, *box)
+        if spot:
+            eggs(b, *spot)
+    for _ in range(6):
+        spot = free_spot(rnd, *box)
+        if spot:
+            cx, cy, _z = w(*spot)
+            b.ball(cx, cy, 0.0, 0.2, 0.85, 'plaster_white', sides=6)
+            bones(b, spot[0] + 0.8, spot[1])
+    # the golem's hall: tumbled boulders and stalagmites, a broken cart, the chest
+    box = hall_rect("golem", 4.0)
+    for _ in range(12):
+        spot = free_spot(rnd, *box)
+        if spot:
+            boulder(b, spot[0], spot[1], rnd.uniform(0.6, 1.6))
     gx, gy = hall_centre("golem")
-    cx, cy, _ = w(gx + 6, gy - 8)
+    spot = free_spot(rnd, gx - 10, gy - 12, gx + 10, gy - 4) or (gx, gy - 8)
+    cx, cy, _ = w(*spot)
     b.obox((cx, cy, 0.25), (0.94, 0.34, 0), (-0.24, 0.66, 0.71), (0.24, -0.66, 0.71), 0.45, 0.32, 0.28, WOOD, bevel=0.02)
-    cx, cy, _ = w(gx - 4, gy + 9)
+    spot = free_spot(rnd, gx - 10, gy + 4, gx + 10, gy + 12) or (gx, gy + 8)
+    cx, cy, _ = w(*spot)
     b.box(cx - 0.45, cx + 0.45, cy - 0.3, cy + 0.3, 0.0, 0.45, WOOD, bevel=0.02)
     b.box(cx - 0.47, cx + 0.47, cy - 0.32, cy + 0.32, 0.45, 0.55, 'gold')
     b.box(cx - 0.06, cx + 0.06, cy - 0.34, cy - 0.3, 0.25, 0.45, 'iron')
     light('fire', cx, cy - 1.0, 0.6)
-    # the crystal rooms: two or three clusters each
+    # the crystal rooms: nothing on the ground -- the reward will float in the air (the user)
     for i, c in enumerate(PLAN["crystal_rooms"]):
-        cx, cy = cell_centre(c)
-        for k2 in range(2 + i % 2):
-            a = k2 * 2.2 + i
-            crystal(b, cx + math.cos(a) * 1.6, cy + math.sin(a) * 1.6, 0.9 + 0.2 * (k2 % 2))
+        cx, cy, _ = w(*cell_centre(c))
+        rewards.append((cx, cy, 1.6))
 
 
 # -- scene -----------------------------------------------------------------------------------
@@ -790,6 +890,12 @@ def main():
     ptris = pb.triangles()
     props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
+    for i, (x, y, z) in enumerate(rewards):
+        e = bpy.data.objects.new(f"DungeonReward_{i}", None)
+        e.empty_display_type = 'SPHERE'
+        e.empty_display_size = 0.5
+        coll.objects.link(e)
+        e.location = (x, y, z)
     for i, (kind, x, y, z) in enumerate(lights):
         e = bpy.data.objects.new(f"DungeonLight_{kind}_{i}", None)
         e.empty_display_size = 0.3
