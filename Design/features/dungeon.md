@@ -22,9 +22,15 @@ dungeon opens as a SEPARATE SCENE.
 - **ONE level only**: monsters and a boss (the user, 2026-10-30). Do NOT propose themed tiers or
   floors (mine → crystal caves → crypt → lair was rejected).
 - The CITY IS PAUSED while the hero is in the dungeon (the user, 2026-10-31).
-- ONLY THE HERO goes in -- no soldiers (the user, 2026-10-31).
-- Layout and rewards: the user is describing their own ideas (2026-10-31); wait for them, do not
-  propose the shuffled-rooms / crystals defaults again.
+- The user's CONCEPT (2026-10-31), it replaces «only the hero» and my room/reward proposals:
+  - a LABYRINTH about 200 x 200 m the player walks through, fighting monsters;
+  - a kill gives the hero coins and experience;
+  - hiring buildings inside the labyrinth sell soldiers for coins, "as many as he had on the rest
+    of the map" (meaning being clarified);
+  - BOSSES in the labyrinth: killing one gives resources, coins and upgrade crystals;
+  - upgrade crystals (the Laboratory's) are scattered all over the labyrinth;
+  - SEVERAL dungeons on a map;
+  - SEVERAL heroes may go into one dungeon together, to deal with the bosses.
 
 ## Proposed, NOT agreed yet (ask, don't build)
 - Layout: shuffled hand-made rooms each visit (recommended), or one fixed labyrinth.
