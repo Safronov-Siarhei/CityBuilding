@@ -101,7 +101,7 @@ namespace CityBuilder.Dungeon
             var rig = FindAnyObjectByType<RTSCameraController>();
             if (rig != null)
             {
-                var half = HalfSize(map);
+                var half = MapHalf = HalfSize(map);
                 rig.SetPanBounds(new Vector2(-half, -half), new Vector2(half, half));
                 rig.JumpTo(StartSpot);
             }
@@ -112,11 +112,15 @@ namespace CityBuilder.Dungeon
             Arrived = true;
         }
 
+        /// <summary>Half the dungeon's side, in cells: it is square round the origin.</summary>
+        public float MapHalf { get; private set; } = 50f;
+
         private static float HalfSize(MeshMapDefinition map)
         {
-            var spots = map.SpotsOf("exit");
-            // the dungeon is square round the origin and its way out sits on the south edge
-            return spots.Count > 0 ? Mathf.Abs(spots[0].position.y) + 2f : 50f;
+            // the "edge" spot marks the middle of the south edge (dungeon1.py); the way out is no
+            // longer on it -- it is in the camp's north wall, facing the camera
+            var spots = map.SpotsOf("edge");
+            return spots.Count > 0 ? Mathf.Abs(spots[0].position.y) : 50f;
         }
 
         private static Vector3 SpotOr(MeshMapDefinition map, string kind, Vector3 fallback)

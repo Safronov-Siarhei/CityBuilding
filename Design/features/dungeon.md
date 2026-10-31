@@ -287,8 +287,28 @@ dungeon opens as a SEPARATE SCENE.
   `DungeonTravel.Leave` adds the coins to the town save. Slain bosses (`DungeonRecord`, save field
   `dungeonBossesSlain`, id `{dungeon}-L{level}-{spiders|golem}`) never come back; the rest respawn
   on every visit (each visit is a fresh scene).
-- Tests (`DungeonTests`): `TheMonsters_StandInTheirLairs_EachKindJointedAndAnimated`,
+- **Sleep** (the user's item 4, 2026-10-31): a monster out of the camera's frame (quarter-screen
+  border, `Camera.WorldToViewportPoint`) and more than `dungeon_monster_wake_margin` (6) cells from
+  every hero has `OrcUnit.Asleep` = no Update at all (powers too); in a fight, busy, or hurt in the
+  last 6 s it stays awake, and any blow wakes it. Checked every 0.3 s by `DungeonMonsters.RefreshSleep`.
+  At the camp ~half the dungeon sleeps. Animation was already culled off screen (FigureAnimator).
+  Not measured on a phone.
+- Tests (`DungeonTests`): `TheMonsters_StandInTheirLairs_EachKindJointedAndAnimated` (+ sleep),
   `ASkeleton_GetsUpOnce`, `TheBosses_CocoonAndArmour_AndTheyPay` (break-checked).
+
+## The way out (2026-10-31, redone)
+- The user: «выход ... должен быть развёрнут к игроку, ... дать ему стиль». The old one was a flat
+  daylight pane in the camp's SOUTH wall, seen from behind by the camera (which looks north).
+- Now `mine_exit()` in `dungeon1.py`: a mine adit cut into the camp's NORTH wall (`find_exit()`
+  walks north from the campfire to the rock; adit up to 3 build units deep, never into the passage
+  behind), in the style of the surface entrance (MineAbandoned) but whole: timber posts and beam with
+  lanterns, a gold sun on the beam (the way up), a stone stair climbing to a daylight pane, a rock
+  brow with grass, rails, a loaded cart, crates, two torches (fire spots).
+- The `exit` spot is at the mouth's foot, ~5 cells north of `start`. A new `edge` spot (middle of
+  the south edge) gives the map's half size (`DungeonMode.MapHalf`) -- that used to be read off
+  the exit.
+- Seen only in Blender previews; a long slanted stone slab behind the brow (some prop of the
+  passage behind, not the exit) shows over it -- check in the game.
 
 ## In the game (phase 1, 2026-10-31)
 - **Export:**
@@ -397,6 +417,6 @@ dungeon opens as a SEPARATE SCENE.
 ## Open
 - Patrols in passages (2-3), crystals scattered in rooms, rewards in crystal rooms.
 - The camp: hiring and the shop.
-- Monsters far from the camera sleeping (performance on a phone, not measured).
+- Monsters asleep off screen: measure the gain on a phone.
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.
 - Elite monsters: an idea, not now.

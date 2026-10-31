@@ -83,11 +83,20 @@ namespace CityBuilder.Maps
         {
             get
             {
+                var squares = Mathf.Max(1, Mathf.CeilToInt(InFrame / _square));
+                return (squares + 0.5f) * _square;
+            }
+        }
+
+        /// <summary>How far from the looked-at point the frame reaches, in cells (no rounding up to squares).</summary>
+        public float InFrame
+        {
+            get
+            {
                 var cam = Camera.main;
                 var distance = cam != null && _focus != null ? Vector3.Distance(cam.transform.position, _focus.position) : 0f;
                 // the strip in frame runs about 2x the camera's distance deep (RTSCameraController)
-                var squares = Mathf.Max(1, Mathf.CeilToInt(distance * 1.2f / _square));
-                return (squares + 0.5f) * _square;
+                return distance * 1.2f;
             }
         }
 

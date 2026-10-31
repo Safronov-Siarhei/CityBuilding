@@ -96,6 +96,17 @@ namespace CityBuilder.Tests.PlayMode
                 seen.Add(Mathf.RoundToInt(bat.WingAngle / 10f));
             }
             Assert.Greater(seen.Count, 2, "The bat's wings do not beat.");
+
+            // the camera at the camp: the bosses' halls are far off, so they sleep; a blow wakes one
+            Object.FindAnyObjectByType<RTSCameraController>().JumpTo(DungeonMode.Instance.StartSpot);
+            for (var i = 0; i < 10; i++) yield return null;
+            monsters.RefreshSleep();
+            var queen = First(OrcKind.SpiderQueen);
+            Assert.IsTrue(queen.Asleep, "A boss far from the camera and the heroes is still thinking.");
+            Assert.Less(monsters.AwakeCount, OrcUnit.All.Count / 2, "Most of the dungeon's monsters think while out of sight.");
+            queen.TakeDamage(1);
+            monsters.RefreshSleep();
+            Assert.IsFalse(queen.Asleep, "A boss struck from afar sleeps on.");
         }
 
         /// <summary>A skeleton struck down falls apart, lies, and gets up once; struck down again it stays down.</summary>
@@ -172,7 +183,12 @@ namespace CityBuilder.Tests.PlayMode
             var start = DungeonMode.Instance.StartSpot;
             Assert.Less(Vector3.Distance(Flat(king.transform.position), Flat(start)), 3f, "The King is not at the camp.");
             Assert.IsTrue(NavMesh.SamplePosition(start, out _, 1f, NavMesh.AllAreas), "The camp has no NavMesh to walk on.");
-            Assert.AreEqual(88f, Mathf.Abs(DungeonMode.Instance.ExitSpot.z) * 2f, 2f, "The dungeon is not 88 cells across.");
+            Assert.AreEqual(88f, DungeonMode.Instance.MapHalf * 2f, 2f, "The dungeon is not 88 cells across.");
+            // the way out stands in the camp's north wall, facing the camera, a short walk from the start
+            var exit = DungeonMode.Instance.ExitSpot;
+            Assert.Greater(exit.z, start.z, "The way out is not north of the camp, where the camera looks.");
+            Assert.Less(Vector3.Distance(Flat(exit), Flat(start)), 8f, "The way out is not by the camp.");
+            Assert.IsTrue(NavMesh.SamplePosition(exit, out _, 1f, NavMesh.AllAreas), "The way out cannot be walked to.");
             Assert.IsFalse(Object.FindAnyObjectByType<CityBuilder.Buildings.BuildingPlacer>().IsPlacingMandatoryBuilding,
                 "The game asks for a Town Hall below ground.");
         }

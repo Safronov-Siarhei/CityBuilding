@@ -536,6 +536,7 @@ namespace CityBuilder.Core
         [SerializeField] private int dungeonBossCrystals = 5;
         [SerializeField] private int lairRats = 5;
         [SerializeField] private int dungeonBossThemeLairs = 2;
+        [SerializeField] private float dungeonMonsterWakeMargin = 6f;
         [SerializeField] private int lairBats = 3;
         [SerializeField] private int lairSpiders = 2;
         [SerializeField] private int lairSpiderlings = 3;
@@ -920,6 +921,7 @@ namespace CityBuilder.Core
         public int DungeonBossCrystals => dungeonBossCrystals;
         public int LairRats => lairRats;
         public int DungeonBossThemeLairs => dungeonBossThemeLairs;
+        public float DungeonMonsterWakeMargin => dungeonMonsterWakeMargin;
         public int LairBats => lairBats;
         public int LairSpiders => lairSpiders;
         public int LairSpiderlings => lairSpiderlings;
@@ -1451,6 +1453,7 @@ namespace CityBuilder.Core
             dungeonBossCrystals = (int)Read(economy, "dungeon_boss_crystals", dungeonBossCrystals);
             lairRats = (int)Read(economy, "dungeon_lair_rats", lairRats);
             dungeonBossThemeLairs = (int)Read(economy, "dungeon_boss_theme_lairs", dungeonBossThemeLairs);
+            dungeonMonsterWakeMargin = Read(economy, "dungeon_monster_wake_margin", dungeonMonsterWakeMargin);
             lairBats = (int)Read(economy, "dungeon_lair_bats", lairBats);
             lairSpiders = (int)Read(economy, "dungeon_lair_spiders", lairSpiders);
             lairSpiderlings = (int)Read(economy, "dungeon_lair_spiderlings", lairSpiderlings);

@@ -22,6 +22,10 @@ namespace CityBuilder.Dungeon
     ///   their health and damage. A kill pays coins by its health (dungeon_coins_per_health); a boss
     ///   pays dungeon_boss_coins and dungeon_boss_crystals times the dungeon's level.
     /// - The monsters come back only with the next visit: each visit is a fresh scene.
+    /// - A monster SLEEPS (OrcUnit.Asleep: no thinking at all) while it is out of the camera's
+    ///   frame (with a quarter-screen border) and dungeon_monster_wake_margin cells from every hero; one in a
+    ///   fight, lying in pieces or hurt in the last seconds stays awake. For the phone's CPU: the
+    ///   labyrinth holds ~60 monsters and only a lair or two is ever in sight.
     /// What was earned below goes home with the heroes (DungeonTravel.Leave).
     /// </summary>
     public class DungeonMonsters : MonoBehaviour
@@ -50,6 +54,12 @@ namespace CityBuilder.Dungeon
         private readonly Dictionary<OrcUnit, Lair> _lairOf = new Dictionary<OrcUnit, Lair>();
         private readonly HashSet<string> _slainNow = new HashSet<string>();
         private int _monsterLevel = 1;
+        private float _sleepTimer;
+        private const float SleepCheckSeconds = 0.3f;
+        private const float StayAwakeAfterHurtSeconds = 6f;
+
+        /// <summary>Monsters thinking now, out of all the living ones.</summary>
+        public int AwakeCount { get; private set; }
 
         private void Awake() => Instance = this;
 
@@ -60,6 +70,55 @@ namespace CityBuilder.Dungeon
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+        }
+
+        private void Update()
+        {
+            _sleepTimer -= Time.unscaledDeltaTime;
+            if (_sleepTimer > 0f) return;
+            _sleepTimer = SleepCheckSeconds;
+            RefreshSleep();
+        }
+
+        /// <summary>Lays far monsters to sleep and wakes near ones. Public for the tests.</summary>
+        public void RefreshSleep()
+        {
+            var margin = BalanceConfig.Instance.DungeonMonsterWakeMargin;
+            var cam = Camera.main;
+            var awake = 0;
+            foreach (var lair in _lairs)
+            {
+                foreach (var monster in lair.Monsters)
+                {
+                    if (monster == null) continue;
+                    var on = cam == null || monster.Fighting != null || monster.BusyFor > 0f
+                        || Time.time - monster.LastHurtAt < StayAwakeAfterHurtSeconds
+                        || InFrame(cam, monster.transform.position) || HeroNear(monster.transform.position, margin);
+                    monster.Asleep = !on;
+                    if (on) awake++;
+                }
+            }
+            AwakeCount = awake;
+        }
+
+        private const float FrameBorder = 0.25f;
+
+        private static bool InFrame(Camera cam, Vector3 at)
+        {
+            var v = cam.WorldToViewportPoint(at);
+            return v.z > 0f && v.x > -FrameBorder && v.x < 1f + FrameBorder && v.y > -FrameBorder && v.y < 1f + FrameBorder;
+        }
+
+        private static bool Near(Vector3 a, Vector3 b, float reach) => Mathf.Abs(a.x - b.x) <= reach && Mathf.Abs(a.z - b.z) <= reach;
+
+        private static bool HeroNear(Vector3 at, float margin)
+        {
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                if (Near(soldier.transform.position, at, margin)) return true;
+            }
+            return false;
         }
 
         /// <summary>The boss's id in the town's record: one per dungeon, level and hall.</summary>

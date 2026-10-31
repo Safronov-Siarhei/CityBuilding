@@ -348,7 +348,7 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
-            if (Steered) return;
+            if (Steered || Asleep) return;
             // sealed in a cocoon, down on the ground: nothing to do until it is over
             if (BusyFor > 0f)
             {
@@ -441,6 +441,9 @@ namespace CityBuilder.Combat
         public void TakeDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
+            // a blow wakes it, whatever dealt it (a far shot, a test)
+            Asleep = false;
+            LastHurtAt = Time.time;
 
             // ore armour (the ore golem past half health): a share of every blow turned aside
             if (Armour > 0f) amount = Mathf.Max(1, Mathf.RoundToInt(amount * (1f - Mathf.Clamp01(Armour))));
@@ -499,6 +502,15 @@ namespace CityBuilder.Combat
 
         /// <summary>Seconds it does nothing at all -- in a cocoon, lying in pieces. Set by the dungeon's powers.</summary>
         public float BusyFor { get; set; }
+
+        /// <summary>
+        /// Thinks nothing this frame: a dungeon monster far from the camera and every hero
+        /// (DungeonMonsters). It stays where it stands; a blow wakes it.
+        /// </summary>
+        public bool Asleep { get; set; }
+
+        /// <summary>When it was last hurt (Time.time), so whatever lays it to sleep leaves a fight alone.</summary>
+        public float LastHurtAt { get; private set; } = float.NegativeInfinity;
 
         /// <summary>The share of every blow it shrugs off (0 none .. 1 all but one point).</summary>
         public float Armour { get; set; }

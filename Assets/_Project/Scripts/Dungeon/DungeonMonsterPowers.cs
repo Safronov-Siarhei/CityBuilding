@@ -86,7 +86,7 @@ namespace CityBuilder.Dungeon
 
         private void Update()
         {
-            if (_unit == null || _unit.CurrentHealth <= 0) return;
+            if (_unit == null || _unit.CurrentHealth <= 0 || _unit.Asleep) return;
             var dt = Time.deltaTime;
             var c = BalanceConfig.Instance;
             if (_unit.Kind == OrcKind.SpiderQueen) QueenUpdate(dt, c);
