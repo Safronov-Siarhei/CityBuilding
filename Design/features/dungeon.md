@@ -236,12 +236,21 @@ dungeon opens as a SEPARATE SCENE.
 - Bosses:
   - spider queen ~3x3: a web spit holds a hero for 2 s, calls spiderlings;
   - ore golem ~3 tall: a ring slam, throws boulders, ore armour at half health.
-  - The queen's «on the wall at half health» phase is REJECTED; its replacement is still open.
+  - The queen's «on the wall» phase is REJECTED. At half health she seals herself in a COCOON for
+    6-8 s and spiderlings run to her; spiderlings left alive heal her through the cocoon (the user chose it).
 - Placement: a lair of 3-6 at each of the 7 monster junctions, 2-3 patrols in passages; the
   camp is safe.
 - Monsters HOLD THEIR LAIR: they aggro at ~4 cells, chase only a short way, then return.
 - Levels 1/2/3: the SAME monsters, stronger and better paid, by multipliers in the sheet.
 - Elite (rare stronger) monsters: an idea to keep, NOT now (the user).
+- **Models v1 (2026-10-31, shown, awaiting the verdict):** `Tools/blender/monsters.py`, collection
+  «Подземелье-монстры» in Buildings-Size1-Models.blend, not exported.
+  - The models are built at GAME size: the King is 0.53 cells tall.
+  - Sizes: rat 0.22 long; bat 0.3 wingspan, flying at 0.35; spider 0.42 across; spiderling 0.22;
+    skeleton 0.5; kobold 0.4; stone golem 0.8; queen ~2 across; cocoon 1.2 tall; ore golem 2 tall.
+  - Jointed like `wild.py` (LegL/R or LegFL..BR, Head, ArmStrike/ArmOff, bat WingL/R).
+  - 260-660 tris each.
+  - Previews: `render_figures.py` with HeroKing.
 - Technical plan: build on the orcs' combat code as another hostile side; units rows `monster_*`;
   monsters far from the camera sleep; 30-40 active at most; Blender models first, shown next to
   a hero for scale.
