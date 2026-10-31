@@ -1178,6 +1178,11 @@ def main():
     kcoll = bpy.data.collections.new("DecorKit")
     bpy.context.scene.collection.children.link(kcoll)
     protos = terrain.build_prototypes(tmat, kcoll)
+    for kind, meshes in protos.items():                       # the kit export_map.py writes out
+        for v, me in enumerate(meshes):
+            o = bpy.data.objects.new(f"{PREFIX}-DecorKit-{kind}_{v}", me)
+            kcoll.objects.link(o)
+            o.hide_render = True
     decor_tris = 0
     with open(os.path.splitext(OUT)[0] + "-decor.csv", "w", encoding="utf-8") as f:
         f.write("kind,variant,x,y,z,rot,scale\n")
@@ -1205,6 +1210,25 @@ def main():
             ob.data.transform(Matrix.Scale(SCALE, 4))
         ob.location = ob.location * SCALE
     bpy.context.scene["dungeon_half"] = HALF * SCALE
+    # the Empties as a list for the game (Blender axes, the game's units): kind,x,y,z -- kind is
+    # light_<colour> / fire / reward / hirecamp / potionshop / exit
+    with open(os.path.splitext(OUT)[0] + "-points.csv", "w", encoding="utf-8") as f:
+        f.write("kind,x,y,z\n")
+        for ob in coll.objects:
+            p = ob.location
+            if ob.type == 'EMPTY':
+                kind = ob.name.split("_")[0]
+                kind = {"DungeonLight": "light_" + ob.name.split("_")[1], "DungeonFire": "fire",
+                        "DungeonReward": "reward"}.get(kind, kind)
+            elif ob.name.endswith(("-HireCamp", "-PotionShop")):
+                kind = ob.name.rsplit("-", 1)[1].lower()
+            else:
+                continue
+            f.write(f"{kind},{p.x:.3f},{p.y:.3f},{p.z:.3f}\n")
+        ex, ey, _ = w(CAMP[0], 1.0)
+        f.write(f"exit,{ex * SCALE:.3f},{ey * SCALE:.3f},0.000\n")
+        sx, sy, _ = w(CAMP[0], CAMP[1] + 1.0)
+        f.write(f"start,{sx * SCALE:.3f},{sy * SCALE:.3f},0.000\n")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
     print("SAVED", OUT)

@@ -23,14 +23,15 @@ import bpy
 argv = sys.argv[sys.argv.index("--") + 1:]
 project, map_id, prefix = argv[0], argv[1], argv[2]
 folder = os.path.join(project, "Assets", "_Project", "Models", map_id)
-PARTS = ("Ground", "Water", "TreesArea", "PlaceForWaterObjects")
-OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit")
+DUNGEON = prefix.startswith("Dungeon-")   # a dungeon (dungeon1.py): no forest, no water zone
+PARTS = ("Ground", "Water") if DUNGEON else ("Ground", "Water", "TreesArea", "PlaceForWaterObjects")
+OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit", "Props", "HireCamp", "PotionShop")
 
 
 def objects_of(part):
     found = []
     for o in bpy.data.objects:
-        if o.type != 'MESH' or not o.name.startswith(("Map-", "Inv-", "Isl-")):
+        if o.type != 'MESH' or not o.name.startswith(("Map-", "Inv-", "Isl-", "Dungeon-")):
             continue
         head = o.name.split("-" + part)
         # Map-N-<part> exactly, or Map-N-<part>-<anything> (a chunk, a kit piece); Inv-N- for
@@ -90,6 +91,11 @@ def main():
     if os.path.isfile(cells):          # an archipelago island's cells (islands.py)
         dst = os.path.join(folder, f"{prefix}-Cells.bytes")
         shutil.copyfile(cells, dst)
+        print("COPIED", dst)
+    points = os.path.splitext(bpy.data.filepath)[0] + "-points.csv"
+    if os.path.isfile(points):         # a dungeon's lights, fires, rewards, buildings, way in/out
+        dst = os.path.join(folder, f"{prefix}-Points.csv")
+        shutil.copyfile(points, dst)
         print("COPIED", dst)
     decor = os.path.splitext(bpy.data.filepath)[0] + "-decor.csv"
     if os.path.isfile(decor):
