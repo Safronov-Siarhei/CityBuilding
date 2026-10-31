@@ -225,6 +225,27 @@ dungeon opens as a SEPARATE SCENE.
 - Enemy ideas for an old mine: skeleton miners, bats, rats, spiders, kobolds. Boss ideas: an ore
   golem, a spider queen, a cave troll.
 
+## Monsters (agreed with the user 2026-10-31, nothing built)
+- Roster «пока что подходит» (sizes in cells, hero ~0.8):
+  - cave rats 0.3, a pack of 4-6;
+  - bats 0.4, hit and fly off;
+  - spider hunter 0.6, leaps from webs, poison slows;
+  - skeleton miner 0.8, a pick, slow and tough, gets up once;
+  - kobold blaster 0.6, keeps its distance and throws dynamite that hits an area;
+  - small stone golem 1.2, a tank, near the golem hall.
+- Bosses:
+  - spider queen ~3x3: a web spit holds a hero for 2 s, calls spiderlings;
+  - ore golem ~3 tall: a ring slam, throws boulders, ore armour at half health.
+  - The queen's «on the wall at half health» phase is REJECTED; its replacement is still open.
+- Placement: a lair of 3-6 at each of the 7 monster junctions, 2-3 patrols in passages; the
+  camp is safe.
+- Monsters HOLD THEIR LAIR: they aggro at ~4 cells, chase only a short way, then return.
+- Levels 1/2/3: the SAME monsters, stronger and better paid, by multipliers in the sheet.
+- Elite (rare stronger) monsters: an idea to keep, NOT now (the user).
+- Technical plan: build on the orcs' combat code as another hostile side; units rows `monster_*`;
+  monsters far from the camera sleep; 30-40 active at most; Blender models first, shown next to
+  a hero for scale.
+
 ## In the game (phase 1, 2026-10-31)
 - **Export:**
   - Run `export_map.py -- G:/Fork/CityBuilding Dungeon1 Dungeon-1` on `Dungeon-1.blend`.
