@@ -455,7 +455,7 @@ def merge_flat(obj):
 
 # -- the map's own decor -----------------------------------------------------------------------
 
-CAMP = (hall_centre("camp")[0], hall_centre("camp")[1], 14)   # kept tidy: (x, y, radius)
+CAMP = (hall_centre("camp")[0], hall_centre("camp")[1] - 2.0, 6)   # kept tidy: (x, y, radius)
 
 
 def scatter_decor(rnd):
@@ -612,9 +612,26 @@ def mushroom_grove(b, x, y, seed, caps):
 
 
 def web(b, x, y, z, s=1.0, a=0.0):
+    """An orb web strung upright between two rock spurs: spokes and rings of thread, its lowest
+    point just off the ground (v5's flat triangles read as shards hanging in the air -- the user).
+    `z` is kept for the callers but the web always stands on its spurs."""
     cx, cy, _ = w(x, y)
-    u = (math.cos(a), math.sin(a), 0.0)
-    b.prism([(-0.7 * s, 0.0), (0.7 * s, 0.0), (0.0, 1.0 * s)], (cx, cy, z), u, (0, 0, 1), 0.01, 'plaster_white', back_cap=True)
+    ux, uy = math.cos(a), math.sin(a)
+    hub = s + 0.15
+
+    def at(ang, r):
+        return (cx + ux * math.cos(ang) * r, cy + uy * math.cos(ang) * r, hub + math.sin(ang) * r)
+
+    for side in (-1, 1):                                       # the spurs it hangs between
+        px, py = cx + ux * side * (s + 0.25), cy + uy * side * (s + 0.25)
+        b.crag(px, py, 0.22, 0.2, hub + 0.4, STONE_D, top=STONE, sides=5, seed=int(x * 5) + side)
+        b.rod(at(0 if side > 0 else math.pi, s), (px, py, hub + 0.1), 0.03, 'plaster_white')
+    spokes = 8
+    for k in range(spokes):
+        b.rod(at(0, 0), at(k * 2 * math.pi / spokes, s), 0.03, 'plaster_white')
+    for ring in (0.35, 0.65, 0.95):
+        for k in range(spokes):
+            b.rod(at(k * 2 * math.pi / spokes, s * ring), at((k + 1) * 2 * math.pi / spokes, s * ring), 0.025, 'plaster_white')
 
 
 def skull(b, x, y, z, s=0.16):
@@ -638,41 +655,8 @@ def build_camp(b):
     def cw(x, y, z=0.0):
         return w(x + ox, y + oy, z)
 
-    hx, hy, _ = cw(44.0, 13.5)                                           # the gnome prospectors' hut
-    b.box(hx - 1.6, hx + 1.6, hy - 1.3, hy + 1.3, 0.0, 0.25, STONE_L, bevel=0.03)
-    b.box(hx - 1.45, hx + 1.45, hy - 1.15, hy + 1.15, 0.25, 1.35, 'plaster', bevel=0.02)
-    for px in (-1.45, 1.45):
-        for py in (-1.15, 1.15):
-            b.box(hx + px - 0.08, hx + px + 0.08, hy + py - 0.08, hy + py + 0.08, 0.25, 1.35, WOOD_D)
-    b.box(hx - 1.5, hx + 1.5, hy - 1.2, hy - 1.12, 0.8, 0.9, WOOD_D)
-    b.gable_roof(hx, hy, 'x', 1.75, 1.45, 1.3, 2.25, 'roof_red', 'roof_red_dark')
-    b.box(hx + 0.3, hx + 0.9, hy - 1.2, hy - 1.15, 0.25, 1.05, 'door')
-    b.box(hx - 1.0, hx - 0.45, hy - 1.2, hy - 1.15, 0.55, 1.0, 'window_light')
-    b.box(hx - 0.25, hx - 0.05, hy + 0.5, hy + 0.75, 1.6, 2.5, STONE_D)
-    sx, sy = hx - 1.0, hy - 1.9                                         # its sign
-    b.box(sx - 0.05, sx + 0.05, sy - 0.05, sy + 0.05, 0.0, 1.3, WOOD_D)
-    b.box(sx - 0.45, sx + 0.45, sy - 0.06, sy, 0.95, 1.25, WOOD_L)
-    light('lantern', hx - 0.7, hy - 1.6, 0.8)
-    for px, py in ((40.5, 11.0), (41.0, 10.2), (40.2, 16.0), (47.8, 15.8)):
-        bx, by, _ = cw(px, py)
-        b.cylinder(bx, by, 0.0, 0.5, 0.2, WOOD, sides=8)
-        b.cylinder(bx, by, 0.36, 0.4, 0.21, 'iron', sides=8)
-    for px, py, z, s in ((41.5, 16.5, 0.0, 0.45), (42.1, 16.0, 0.0, 0.4), (41.7, 16.3, 0.45, 0.32)):
-        bx, by, _ = cw(px, py)
-        b.zbox(bx, by, z, z + s, s / 2, s / 2, px * 20, WOOD_L)
-    sx, sy, _ = cw(57.0, 12.5)                                           # the potion stall
-    b.box(sx - 1.4, sx + 1.4, sy - 0.35, sy + 0.35, 0.0, 0.6, WOOD, bevel=0.02)
-    for s in (-1, 1):
-        b.box(sx + s * 1.35 - 0.05, sx + s * 1.35 + 0.05, sy + 0.25, sy + 0.35, 0.0, 1.6, WOOD_D)
-        b.box(sx + s * 1.35 - 0.05, sx + s * 1.35 + 0.05, sy - 0.75, sy - 0.65, 0.0, 1.35, WOOD_D)
-    for k in range(6):
-        b.obox((sx - 1.25 + k * 0.5, sy - 0.2, 1.5), (1, 0, 0), (0, 0.9, -0.44), (0, 0.44, 0.9), 0.25, 0.55, 0.02,
-               'banner_blue' if k % 2 else 'plaster_white')
-    for k, colour in enumerate(('banner_red', 'fire', 'water', 'grass', 'banner_red', 'water')):
-        px = sx - 1.1 + k * 0.44
-        b.cylinder(px, sy, 0.6, 0.78, 0.07, colour, sides=6)
-        b.cylinder(px, sy, 0.78, 0.85, 0.03, 'wood_light', sides=5)
-    light('lantern', sx, sy, 1.3)
+    # no hut, barrels or potion stall at the way in (the user, 2026-10-31): the hirelings' camp
+    # and the shop are not placed yet
     fx, fy, _ = cw(50.0, 9.0)                                            # the campfire
     for a in (0, 60, 120):
         r = math.radians(a)
@@ -681,14 +665,10 @@ def build_camp(b):
     for k in range(7):
         a = k * 2 * math.pi / 7
         b.crag(fx + math.cos(a) * 0.55, fy + math.sin(a) * 0.55, 0.12, 0.1, 0.1, STONE_L, sides=5, seed=k)
-    b.pyramid(fx, fy, 0.06, 0.22, 0.22, 0.7, 'fire', sides=5)
     light('fire', fx, fy, 0.5)
     for lx, ly, ax in ((48.2, 7.6, 'x'), (52.3, 8.4, 'y')):
         px, py, _ = cw(lx, ly)
         b.hcylinder(ax, (px, py, 0.13), 0.6, 0.13, WOOD, sides=7)
-    px, py, _ = cw(55.0, 16.5)                                           # where the hirelings wait
-    b.rod((px, py, 0.0), (px, py, 1.8), 0.05, WOOD_D)
-    b.box(px + 0.03, px + 0.6, py - 0.02, py + 0.02, 1.2, 1.75, 'banner_red')
     ex, ey, _ = cw(50.0, 0.3)                                            # the way out: daylight
     b.box(ex - 2.4, ex + 2.4, ey - 0.02, ey, 0.0, 2.2, 'window_light', skip=())
     light('day', ex, ey + 1.0, 0.8)
@@ -754,8 +734,7 @@ def bonfire(b, x, y, big=1.0):
     for k in range(8):
         a = k * 2 * math.pi / 8
         b.crag(fx + math.cos(a) * 0.7 * big, fy + math.sin(a) * 0.7 * big, 0.15, 0.12, 0.14, STONE_D, sides=5, seed=k)
-    b.pyramid(fx, fy, 0.06, 0.3 * big, 0.3 * big, 1.0 * big, 'fire', sides=5)
-    b.pyramid(fx, fy, 0.06, 0.16 * big, 0.16 * big, 1.35 * big, 'window_light', sides=4)
+    # no flame: the fire will be an effect at the DungeonLight_fire Empty (the user, 2026-10-31)
     light('fire', fx, fy, 0.6)
 
 

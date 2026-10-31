@@ -176,6 +176,14 @@ dungeon opens as a SEPARATE SCENE.
     into the same squares.
   - **In the game:** keep only the hero's square plus its neighbours (3 x 3, about 75 m) live, and
     switch the others off. NOT built yet.
+- **v5 fixes** (the user, 2026-10-31):
+  - The flat web triangles read as shards hanging in the AIR. A web is now an orb of thread rods
+    strung upright between two rock spurs, standing on the ground. This raised props to 72.6k tris
+    (the webs' rods); trim before export.
+  - NO FLAME models on bonfires or the campfire: fire will be an EFFECT at the DungeonLight_fire
+    Empties. The torches still carry a small flame.
+  - NO potion stall and NO hirelings' camp (the hut, barrels, banner) at the way in for now. Only
+    the campfire, logs, torches and the daylight exit remain.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
