@@ -39,7 +39,7 @@ import sys
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import detail  # noqa: E402
@@ -52,6 +52,9 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 OUT = argv[0]
 PREVIEW = "preview" in argv[1:]
 PREFIX = "Dungeon-1"
+# Built in "metres" for a 1.8 m person, then shrunk to the GAME's units (one map cell; a hero is
+# 0.6-0.8 tall): the 200 x 200 build comes out 88 x 88 cells (the user chose this, 2026-10-31).
+SCALE = 0.44
 
 N = 200
 HALF = N // 2
@@ -1170,21 +1173,28 @@ def main():
         for kind, x, y, rot, sc in items:
             v = decor_variant(kind, x, y, len(protos[kind]))
             decor_tris += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
-            f.write(f"{kind},{v},{x - HALF:.3f},{y - HALF:.3f},{decor_z(kind, x, y):.3f},{rot:.3f},{sc:.3f}\n")
+            f.write(f"{kind},{v},{(x - HALF) * SCALE:.3f},{(y - HALF) * SCALE:.3f},{decor_z(kind, x, y) * SCALE:.3f},"
+                    f"{rot:.3f},{sc * SCALE:.3f}\n")
     if PREVIEW:
         dcoll = bpy.data.collections.new("Decor")
         bpy.context.scene.collection.children.link(dcoll)
         for kind, x, y, rot, sc in items:
             o = bpy.data.objects.new(f"d_{kind}", protos[kind][decor_variant(kind, x, y, len(protos[kind]))])
-            o.location = (x - HALF, y - HALF, decor_z(kind, x, y))
+            o.location = ((x - HALF) * SCALE, (y - HALF) * SCALE, decor_z(kind, x, y) * SCALE)
             o.rotation_euler = (0, 0, rot)
-            o.scale = (sc, sc, sc)
+            o.scale = (sc * SCALE,) * 3
             dcoll.objects.link(o)
     counts = {}
     for it in items:
         counts[it[0]] = counts.get(it[0], 0) + 1
     print(f"DUNGEON ground tris={g} relief tris={r} water tris={wtr} props tris={ptris} "
           f"in {pchunks} chunks decor={len(items)} ({decor_tris} tris) lights={len(lights)} {counts}")
+    for ob in coll.objects:                                   # into the game's units
+        if ob.type == 'MESH':
+            ob.data.transform(Matrix.Scale(SCALE, 4))
+        else:
+            ob.location = ob.location * SCALE
+    bpy.context.scene["dungeon_half"] = HALF * SCALE
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
     print("SAVED", OUT)

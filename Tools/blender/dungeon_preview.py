@@ -6,7 +6,7 @@ angle on chosen spots, lit dim with a point light at every DungeonLight_* Empty.
 The file is a dungeon's own .blend (dungeon1.py): everything in it is shown but the decor kit's
 prototypes; <Name> only names the pictures.
 
-x, y are grid metres (0..N, N read from the scene's size) of the spot a close view looks at.
+x, y are map cells (0..2*HALF; HALF stored in the scene by dungeon1.py) of the spot a close view looks at.
 """
 import math
 import os
@@ -40,7 +40,7 @@ for c in list(sc.objects):
     kind = c.name.split("_")[1]
     colour, watts, radius = LIGHTS.get(kind, LIGHTS['lantern'])
     data = bpy.data.lights.new("L_" + c.name, 'POINT')
-    data.color, data.energy, data.shadow_soft_size = colour, watts, radius
+    data.color, data.energy, data.shadow_soft_size = colour, watts * (float(sc.get("dungeon_half", 100.0)) / 100) ** 2, radius
     lo = bpy.data.objects.new("L_" + c.name, data)
     sc.collection.objects.link(lo)
     lo.location = c.matrix_world.translation
@@ -72,7 +72,7 @@ cam = bpy.data.objects.new("PreviewCam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
 origin = Vector((0.0, 0.0, 0.0))
-HALF = float(argv_half) if (argv_half := os.environ.get("DUNGEON_HALF")) else 100.0
+HALF = float(sc.get("dungeon_half", 100.0))   # dungeon1.py stores it, in the game's units
 os.makedirs(out_dir, exist_ok=True)
 
 
@@ -98,4 +98,4 @@ sun_data.energy = 2.2              # the plan reads better in daylight
 shoot("top", origin, 89.9, 0, HALF * 3, res=(1400, 1400), ortho=HALF * 2 + 4)
 sun_data.energy = 0.9
 for name, x, y in spots:
-    shoot(name, origin + Vector((x - HALF, y - HALF, 0)), 50, 0, 22)
+    shoot(name, origin + Vector((x - HALF, y - HALF, 0)), 50, 0, 22 * HALF / 100)

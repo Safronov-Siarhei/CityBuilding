@@ -1,7 +1,7 @@
 # Dungeon (подземелье)
 
 > Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v5
-> (200 x 200, organic, from plan v3, halls furnished, props in chunks) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> (88 x 88 CELLS, organic, from plan v3, halls furnished, props in chunks) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -227,13 +227,17 @@ dungeon opens as a SEPARATE SCENE.
 - All are in collection «Подземелье» of Buildings-Size1-Models.blend. None are exported.
 
 ## Traps
-- **SCALE (found 2026-10-31):** the game's world unit is one map CELL, not a metre.
-  - Heroes are 0.6-0.8 tall (HeroKing 0.79, HeroQueen 0.62, HeroCaptain 0.81); a level-1 building
-    is about 1 x 1-2 cells and 1.2-1.5 tall.
-  - The dungeon map and its camp buildings were made thinking a 1.8 m person, so next to a hero
-    they are about 2.3x too big. A factor of 0.44 matches them.
-  - The user is to choose: scale the whole dungeon (about 90 x 90 cells) or keep 200 cells and
-    shrink only the props.
+- **SCALE:** the game's unit is one MAP CELL. A hero is 0.6-0.8 cells tall; a level-1 building is
+  1 x 1-2 cells and 1.2-1.5 tall. Talk sizes with the user in CELLS (the user, 2026-10-31).
+  - Content was built for a 1.8 m person, so it is shrunk by `SCALE = 0.44`:
+    - `dungeon1.py`: every mesh, every Empty and the decor CSV;
+    - `dungeon_camp.py`: `orcs.scale_since`.
+  - The dungeon is therefore **88 x 88 cells** (the user chose this over 200 cells with small
+    props). Passages are ~1.3-2.8 cells wide; the walk to each boss is ~300 cells.
+  - The hire camp is 4.2 x 4.0 x 1.4; the shop is 3.0 x 3.0 x 1.35.
+  - The plan json and the build code stay in build units (0..200). Only the output is scaled;
+    `scene["dungeon_half"]` = 44 tells `dungeon_preview.py` the size, so preview spots are given
+    in CELLS 0..88.
 - The terrain hides everything below z=0. A way down must live inside a raised mountain or
   platform, with a black floor at z≈0.03.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.

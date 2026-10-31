@@ -21,6 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cave_entrance as cave  # noqa: E402  (the rough-rock override, the «Подземелье» collection)
+import orcs as o  # noqa: E402
 from kit import Builder  # noqa: E402
 
 WOOD, WOOD_D, WOOD_L = 'wood_mid', 'wood_dark', 'wood_light'
@@ -247,6 +248,17 @@ def potion_shop():
     return b
 
 
-MODELS = {"DungeonHireCamp": hire_camp, "DungeonPotionShop": potion_shop}
+SCALE = 0.44     # built for a 1.8 m person; the game's hero is 0.6-0.8 cells tall (as dungeon1.SCALE)
+
+
+def scaled(build):
+    def run():
+        b = build()
+        o.scale_since(b, 0, SCALE)
+        return b
+    return run
+
+
+MODELS = {"DungeonHireCamp": scaled(hire_camp), "DungeonPotionShop": scaled(potion_shop)}
 
 cave.main(MODELS, row_y=-76.0)
