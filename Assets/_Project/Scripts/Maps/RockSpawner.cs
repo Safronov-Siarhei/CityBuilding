@@ -52,6 +52,8 @@ namespace CityBuilder.Maps
         private readonly HashSet<Vector2Int> _rockCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _rockCellByInstance = new Dictionary<GameObject, Vector2Int>();
 
+        private int _count = InitialRockCount;
+        private float _scattered;
         private Material _rockMaterial;
         private Material _rockShadeMaterial;
         private bool _initialized;
@@ -142,20 +144,24 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>Called once from MeshMapApplier.Apply, after the map's water cells are known (boulders must not land in the lake) and its ground colliders exist (IsGroundAt raycasts against them).</summary>
-        public void Initialize(GameObject[] rockPrefabs = null)
+        /// <summary>`count` 0 = the designed maps' own InitialRockCount; `scattered` the share of them laid over open land rather than in the stony clearings.</summary>
+        public void Initialize(GameObject[] rockPrefabs = null, int count = 0, float scattered = 0f)
         {
             if (_initialized) return;
             _initialized = true;
+            if (count > 0) _count = count;
+            _scattered = Mathf.Clamp01(scattered);
             _rockPrefabs = rockPrefabs ?? new GameObject[0];
 
-            for (var i = 0; i < InitialRockCount; i++)
+            var spread = Mathf.RoundToInt(_count * _scattered);
+            for (var i = 0; i < _count; i++)
             {
-                SpawnOneRock();
+                SpawnOneRock(i < spread);
             }
 
             if (_rockCells.Count == 0)
             {
-                Debug.LogWarning($"RockSpawner: 0 of {InitialRockCount} boulders placed -- every attempt failed the water/ground/occupancy checks. Hand-gathering Stone will be impossible on this map.");
+                Debug.LogWarning($"RockSpawner: 0 of {_count} boulders placed -- every attempt failed the water/ground/occupancy checks. Hand-gathering Stone will be impossible on this map.");
             }
         }
 
@@ -180,7 +186,7 @@ namespace CityBuilder.Maps
             Destroy(rockInstance);
         }
 
-        private void SpawnOneRock()
+        private void SpawnOneRock(bool scatter = false)
         {
             var grid = GridManager.Instance;
             if (grid == null) return;
@@ -191,7 +197,7 @@ namespace CityBuilder.Maps
             // A map with stony clearings (Map 3's RocksArea) keeps its stone there, packed close the
             // way an outcrop lies; a map without them scatters it over all dry land, spaced out.
             var zone = mapApplier != null ? mapApplier.RocksZoneCells : null;
-            var inZone = zone != null && zone.Count > 0;
+            var inZone = !scatter && zone != null && zone.Count > 0;
             var spacing = inZone ? ZoneSpacingCells : MinSpacingCells;
 
             for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
@@ -267,6 +273,7 @@ namespace CityBuilder.Maps
             GridManager.Instance?.SetAreaOccupied(cell, Vector2Int.one, true);
             _rockCells.Add(cell);
             _rockCellByInstance[root] = cell;
+            SceneryStreamer.Instance?.Register(root);
             return root;
         }
 

@@ -144,6 +144,17 @@
   a cell inside the ships' limit (`Storm`), dark storm water beyond (tinted copy of the terrain
   material), sea stacks along the line and whitecaps on the dark water. 2 draws.
 
+## Forest, boulders and the dungeons (2026-10-31)
+- Denser forest: one tree per `archipelago_forest_cells_per_tree` (6) forest cells, clamped
+  `archipelago_trees_min/max` (600/3000). Boulders: one per `archipelago_stony_cells_per_rock` (5)
+  stony cells, clamped 250/900, and `archipelago_rocks_scattered_share` (0.3) of them over open
+  land (`RockSpawner.Initialize(prefabs, count, scattered)`).
+- `Maps/SceneryStreamer.cs` draws trees and boulders only in squares of
+  `scenery_stream_square_cells` (24) near the camera focus. The reach is the same as
+  `DungeonChunkStreamer`'s. Trees and rocks register as they are made; only renderers are
+  switched, never colliders or the grid.
+- Three dungeon entrances: see [dungeon](dungeon.md) «Entrances on the map».
+
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
   `IslandAsset.cs`, `ArchipelagoLibrary.cs`, `ArchipelagoMeshes.cs`, `ArchipelagoMapId.cs`

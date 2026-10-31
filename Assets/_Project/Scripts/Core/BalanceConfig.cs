@@ -515,6 +515,16 @@ namespace CityBuilder.Core
         [SerializeField] private float orcShipyardRangeMeters = 12f;
         [SerializeField] private float orcShipyardRebuildSeconds = 300f;
         [SerializeField] private int orcFleetEscorts = 1;
+        [SerializeField] private float forestCellsPerTree = 6f;
+        [SerializeField] private int archipelagoTreesMin = 600;
+        [SerializeField] private int archipelagoTreesMax = 3000;
+        [SerializeField] private float stonyCellsPerRock = 5f;
+        [SerializeField] private int archipelagoRocksMin = 250;
+        [SerializeField] private int archipelagoRocksMax = 900;
+        [SerializeField] private float rocksScatteredShare = 0.3f;
+        [SerializeField] private float sceneryStreamSquare = 24f;
+        [SerializeField] private int dungeonEntranceCount = 3;
+        [SerializeField] private float dungeonEnterReach = 4f;
         [SerializeField] private int fertilePatchesPerIsland = 2;
         [SerializeField] private float fertilePatchRadius = 5f;
         [SerializeField] private float fertileFarmBonus = 0.5f;
@@ -835,6 +845,19 @@ namespace CityBuilder.Core
         public float OrcShipyardRebuildSeconds => orcShipyardRebuildSeconds;
         /// <summary>War ships that sail with every orc fleet to guard its transports.</summary>
         public int OrcFleetEscorts => orcFleetEscorts;
+        /// <summary>The archipelago's forest and boulders: cells per tree/boulder and the bounds a phone carries; the share of boulders scattered over open land.</summary>
+        public float ForestCellsPerTree => forestCellsPerTree;
+        public int ArchipelagoTreesMin => archipelagoTreesMin;
+        public int ArchipelagoTreesMax => archipelagoTreesMax;
+        public float StonyCellsPerRock => stonyCellsPerRock;
+        public int ArchipelagoRocksMin => archipelagoRocksMin;
+        public int ArchipelagoRocksMax => archipelagoRocksMax;
+        public float RocksScatteredShare => rocksScatteredShare;
+        /// <summary>Trees and boulders are drawn by squares of this side (cells), only near the camera (SceneryStreamer).</summary>
+        public float SceneryStreamSquare => sceneryStreamSquare;
+        /// <summary>Dungeon entrances on an archipelago, and how near a hero must be to go in (cells).</summary>
+        public int DungeonEntranceCount => dungeonEntranceCount;
+        public float DungeonEnterReach => dungeonEnterReach;
         /// <summary>The archipelago's fertile soil: patches per island, their radius in cells, and a Farm's extra yield on it (0.5 = +50% with its whole plot fertile).</summary>
         public int FertilePatchesPerIsland => fertilePatchesPerIsland;
         public float FertilePatchRadius => fertilePatchRadius;
@@ -1321,6 +1344,16 @@ namespace CityBuilder.Core
             orcShipyardRangeMeters = Read(economy, "orc_shipyard_range_meters", orcShipyardRangeMeters);
             orcShipyardRebuildSeconds = Read(economy, "orc_shipyard_rebuild_seconds", orcShipyardRebuildSeconds);
             orcFleetEscorts = (int)Read(economy, "orc_fleet_escorts", orcFleetEscorts);
+            forestCellsPerTree = Read(economy, "archipelago_forest_cells_per_tree", forestCellsPerTree);
+            archipelagoTreesMin = (int)Read(economy, "archipelago_trees_min", archipelagoTreesMin);
+            archipelagoTreesMax = (int)Read(economy, "archipelago_trees_max", archipelagoTreesMax);
+            stonyCellsPerRock = Read(economy, "archipelago_stony_cells_per_rock", stonyCellsPerRock);
+            archipelagoRocksMin = (int)Read(economy, "archipelago_rocks_min", archipelagoRocksMin);
+            archipelagoRocksMax = (int)Read(economy, "archipelago_rocks_max", archipelagoRocksMax);
+            rocksScatteredShare = Read(economy, "archipelago_rocks_scattered_share", rocksScatteredShare);
+            sceneryStreamSquare = Read(economy, "scenery_stream_square_cells", sceneryStreamSquare);
+            dungeonEntranceCount = (int)Read(economy, "dungeon_entrance_count", dungeonEntranceCount);
+            dungeonEnterReach = Read(economy, "dungeon_enter_reach_cells", dungeonEnterReach);
             fertilePatchesPerIsland = (int)Read(economy, "fertile_patches_per_island", fertilePatchesPerIsland);
             fertilePatchRadius = Read(economy, "fertile_patch_radius", fertilePatchRadius);
             fertileFarmBonus = Read(economy, "fertile_farm_bonus", fertileFarmBonus);

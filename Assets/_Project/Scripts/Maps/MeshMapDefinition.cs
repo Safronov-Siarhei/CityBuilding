@@ -18,6 +18,8 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject treesAreaPrefab;
         [SerializeField] private GameObject[] treePrefabs = new GameObject[0];
         [SerializeField] private GameObject[] rockPrefabs = new GameObject[0];
+        // the archipelago's dungeon entrances (Maps/Archipelago/DungeonEntrances): MineAbandoned
+        [SerializeField] private GameObject dungeonEntrancePrefab;
         [SerializeField] private Material waterMaterial;
 
         // Map 3 onwards (Tools/blender/map3.py). All optional: a map without them behaves exactly
@@ -79,6 +81,7 @@ namespace CityBuilder.Maps
         public Core.MapSeason? ForcedSeason => forcedSeason >= 0 ? (Core.MapSeason)forcedSeason : (Core.MapSeason?)null;
         /// <summary>The hand-gathered boulders, smallest first (Stone1..Stone10) -- RockSpawner relies on that order.</summary>
         public GameObject[] RockPrefabs => rockPrefabs;
+        public GameObject DungeonEntrancePrefab => dungeonEntrancePrefab;
         public Material WaterMaterial => waterMaterial;
         public GameObject ReliefPrefab => reliefPrefab;
         public GameObject RocksAreaPrefab => rocksAreaPrefab;
@@ -118,6 +121,8 @@ namespace CityBuilder.Maps
         }
 
         public void EditorForceSeason(Core.MapSeason season) => forcedSeason = (int)season;
+
+        public void EditorSetDungeonEntrance(GameObject prefab) => dungeonEntrancePrefab = prefab;
 
         public void EditorInitializeGenerated(Material terrain, bool withoutRaids)
         {

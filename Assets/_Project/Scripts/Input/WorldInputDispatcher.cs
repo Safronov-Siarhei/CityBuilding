@@ -107,6 +107,13 @@ namespace CityBuilder.InputControl
                     return;
                 }
             }
+            // a dungeon's mouth: its card, with its level and «Войти»
+            var entrance = Dungeon.DungeonEntrance.At(screenPosition, tapCamera);
+            if (entrance != null && UI.DungeonEntranceCard.Instance != null)
+            {
+                UI.DungeonEntranceCard.Instance.Show(entrance);
+                return;
+            }
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
         }

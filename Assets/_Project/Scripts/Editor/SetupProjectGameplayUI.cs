@@ -317,6 +317,7 @@ namespace CityBuilder.EditorTools
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
+            BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 

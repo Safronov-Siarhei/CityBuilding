@@ -181,6 +181,7 @@ namespace CityBuilder.Maps
                 grid.SetAreaOccupied(cell, Vector2Int.one, true);
                 _treeCells.Add(cell);
                 _treeCellByInstance[instance] = cell;
+                SceneryStreamer.Instance?.Register(instance);
                 return;
             }
         }

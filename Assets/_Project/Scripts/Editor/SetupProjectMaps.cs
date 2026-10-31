@@ -216,6 +216,7 @@ namespace CityBuilder.EditorTools
             var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
             map.EditorInitialize(CityBuilder.Maps.Archipelago.ArchipelagoMapId.TemplateId, null, null, null, null, trees.ToArray(), rocks.ToArray(), null);
             map.EditorInitializeGenerated(terrainMaterial, withoutRaids: true);
+            map.EditorSetDungeonEntrance(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/MineAbandoned.fbx"));
 
             Directory.CreateDirectory(MeshMapsFolder);
             var path = $"{MeshMapsFolder}/{CityBuilder.Maps.Archipelago.ArchipelagoMapId.TemplateId}.asset";

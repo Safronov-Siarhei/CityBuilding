@@ -403,6 +403,9 @@ namespace CityBuilder.Tests.PlayMode
                 }
                 if (water < 0 || land < 0) continue;
                 var total = size.x * size.y;
+                // apart from one another: the first Shipyard placed must not stand on the next spot
+                bool Apart(Vector2Int? other) => other == null || Mathf.Abs(other.Value.x - c.x) >= size.x + 1 || Mathf.Abs(other.Value.y - c.y) >= size.y + 1;
+                if (!Apart(wet) || !Apart(straddle) || !Apart(dry)) continue;
                 if (water == total) wet ??= c;
                 else if (water * 2 >= total && land > 0) straddle ??= c;
                 else if (water > 0 && water * 2 < total) dry ??= c;
@@ -458,6 +461,82 @@ namespace CityBuilder.Tests.PlayMode
             var why = $"screen {screen} of {Screen.width}x{Screen.height}, ground hit {onGround} at {groundHit.point}, sea cell {grid.WorldToCell(ray.GetPoint(toSea))}, "
                 + $"selected {placer.SelectedBuilding?.buildingName} water {placer.SelectedBuilding?.isWaterCategory}, touch {placer.UsesTouchAiming}, sea {CityBuilder.Ships.ShipManager.Instance.HasSea}";
             Assert.Greater(Shipyards(), count, $"A tap on the water at {aimed} put no Shipyard there; {why}");
+        }
+
+        /// <summary>
+        /// The user, 2026-10-31: three dungeon entrances on three islands, level 1 nearest the start,
+        /// none built over and no tree in them; a hero walking up opens the entrance's card. And the
+        /// denser forest and boulders, drawn only near the camera.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator DungeonEntrances_AndTheForest_DrawnNearTheCameraOnly()
+        {
+            var world = ArchipelagoGenerator.Generate(Seed);
+            var applier = MeshMapApplier.Instance;
+            var balance = CityBuilder.Core.BalanceConfig.Instance;
+            var entrances = new System.Collections.Generic.List<CityBuilder.Dungeon.DungeonEntrance>(CityBuilder.Dungeon.DungeonEntrance.All);
+            Assert.AreEqual(balance.DungeonEntranceCount, entrances.Count, "Not every dungeon entrance is on the map.");
+            entrances.Sort((a, b) => a.Level.CompareTo(b.Level));
+            var start = new Vector2(world.StartCell.x, world.StartCell.y);
+            var last = -1f;
+            for (var k = 0; k < entrances.Count; k++)
+            {
+                var e = entrances[k];
+                Assert.AreEqual(k + 1, e.Level, "The levels are not 1, 2, 3.");
+                Assert.AreEqual(CityBuilder.Dungeon.DungeonTravel.FirstDungeonId, e.DungeonId);
+                Assert.IsNotNull(e.transform.Find("Model"), "An entrance has no mine model.");
+                var d = Vector2.Distance(new Vector2(e.Cell.x, e.Cell.y), start);
+                Assert.Greater(d, last, "A deeper dungeon is nearer the start than a shallower one.");
+                last = d;
+                for (var x = 0; x < DungeonEntrances.Footprint.x; x++)
+                for (var z = 0; z < DungeonEntrances.Footprint.y; z++)
+                {
+                    var cell = e.Cell + new Vector2Int(x, z);
+                    Assert.IsTrue(applier.IsNoBuildCell(cell), "One may build over a dungeon entrance.");
+                    Assert.IsFalse(applier.IsWaterCell(cell), "A dungeon entrance stands in the water.");
+                }
+                foreach (var node in ResourceNode.All)
+                {
+                    if (node == null) continue;
+                    var c = GridManager.Instance.WorldToCell(node.transform.position) - e.Cell;
+                    Assert.IsFalse(c.x >= 0 && c.y >= 0 && c.x < DungeonEntrances.Footprint.x && c.y < DungeonEntrances.Footprint.y,
+                        "A tree or boulder grows in a dungeon's mouth.");
+                }
+            }
+
+            // a hero at the mouth opens the card; «Войти» is live
+            var card = CityBuilder.UI.DungeonEntranceCard.Instance;
+            Assert.IsNotNull(card, "No dungeon entrance card in the scene.");
+            var first = entrances[0];
+            var towards = new Vector3(start.x, 0f, start.y) - new Vector3(first.Cell.x + 2.5f, 0f, first.Cell.y + 2.5f);
+            var spot = first.transform.position + towards.normalized * 3.2f;
+            var roster = CityBuilder.Combat.HeroRoster.Instance;
+            var king = roster.HeroOf(CityBuilder.Combat.SoldierType.King) ?? roster.Restore(CityBuilder.Combat.SoldierType.King, spot, 1, 0, 50, false, 0f);
+            Assert.IsNotNull(king, "No King to send down.");
+            var agent = king.Unit.GetComponent<NavMeshAgent>();
+            if (agent != null && agent.enabled) agent.Warp(spot);
+            else king.Unit.transform.position = spot;
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsTrue(first.HeroNear(), "The King at the mouth is not near the entrance.");
+            Assert.IsTrue(card.IsOpen && card.Shown == first, "A hero at the mouth does not open the entrance's card.");
+            card.Close();
+
+            // the forest and the boulders: as dense as the sheet says, drawn only near the camera
+            int trees = 0, rocks = 0, drawn = 0, hidden = 0;
+            foreach (var node in ResourceNode.All)
+            {
+                if (node == null) continue;
+                if (node.ResourceType == CityBuilder.Resources.ResourceType.Wood) trees++;
+                else if (node.ResourceType == CityBuilder.Resources.ResourceType.Stone) rocks++;
+                var r = node.GetComponentInChildren<Renderer>();
+                if (r == null) continue;
+                if (r.enabled) drawn++;
+                else hidden++;
+            }
+            Assert.GreaterOrEqual(trees, balance.ArchipelagoTreesMin * 0.9f, $"Only {trees} trees on the archipelago.");
+            Assert.GreaterOrEqual(rocks, balance.ArchipelagoRocksMin * 0.8f, $"Only {rocks} boulders on the archipelago.");
+            Assert.Greater(drawn, 0, "No tree or boulder is drawn near the camera.");
+            Assert.Greater(hidden, drawn, "The trees and boulders far from the camera are still drawn.");
         }
 
         /// <summary>

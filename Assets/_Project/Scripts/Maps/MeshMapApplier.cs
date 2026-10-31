@@ -552,6 +552,12 @@ namespace CityBuilder.Maps
             var indicator = FindAnyObjectByType<CityBuilder.UI.MinimapCameraIndicator>();
             if (indicator != null) indicator.MapHalfExtent = half;
 
+            // trees and boulders drawn only near the camera: registered as they are made
+            var streamer = GetComponent<SceneryStreamer>();
+            if (streamer == null) streamer = gameObject.AddComponent<SceneryStreamer>();
+            streamer.Initialize(rig != null ? rig.transform : null);
+            // the dungeons' mouths before the forest, so no tree grows in one
+            if (fromLibrary) Archipelago.DungeonEntrances.Place(world, this, map.DungeonEntrancePrefab, _noBuildCells);
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
             _fertileCells = Archipelago.FertileLand.Compute(world);
@@ -644,16 +650,28 @@ namespace CityBuilder.Maps
             // forest that silently failed to materialise rather than staying quiet about it.
             if ((map.TreesAreaPrefab != null || map.IsGenerated) && TreesAreaSpawner.Instance != null)
             {
-                // a generated map's forest is as dense as a designed map's -- a tree to every ten
-                // forest cells -- up to what a phone carries (1800 trees, the user's devices to check)
-                var count = map.IsGenerated ? Mathf.Clamp(_treesZoneCells.Count / 10, 600, 1800) : 0;
+                // a generated map's forest: a tree to every archipelago_forest_cells_per_tree forest
+                // cells, within what a phone carries -- drawn only near the camera (SceneryStreamer)
+                var balance = BalanceConfig.Instance;
+                var count = map.IsGenerated && balance != null
+                    ? Mathf.Clamp(Mathf.RoundToInt(_treesZoneCells.Count / Mathf.Max(1f, balance.ForestCellsPerTree)), balance.ArchipelagoTreesMin, balance.ArchipelagoTreesMax)
+                    : 0;
                 TreesAreaSpawner.Instance.Initialize(_treesZoneCells.ToArray(), map.TreePrefabs, count);
             }
 
             // After the forest, so boulders can't land on a cell a tree already took (they share
             // GridManager occupancy), and after ComputeWaterAndZoneCells so they stay out of the
             // water.
-            if (!map.IsDungeon) RockSpawner.Instance?.Initialize(map.RockPrefabs);
+            if (!map.IsDungeon)
+            {
+                var balance = BalanceConfig.Instance;
+                if (map.IsGenerated && balance != null)
+                {
+                    var rocks = Mathf.Clamp(Mathf.RoundToInt(_rocksZoneCells.Count / Mathf.Max(1f, balance.StonyCellsPerRock)), balance.ArchipelagoRocksMin, balance.ArchipelagoRocksMax);
+                    RockSpawner.Instance?.Initialize(map.RockPrefabs, rocks, balance.RocksScatteredShare);
+                }
+                else RockSpawner.Instance?.Initialize(map.RockPrefabs);
+            }
 
             // Last, so the props start out hidden under every tree and boulder just placed.
             if (map.DecorData != null && map.DecorMaterial != null)

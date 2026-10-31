@@ -271,9 +271,31 @@ dungeon opens as a SEPARATE SCENE.
   - fire effects and lights (spots exist);
   - coins/XP for kills;
   - respawn on re-entry;
-  - the mine entrance on the town's map;
   - the bridge over the lake (a prop, not walkable — the shore goes round);
   - a dark/cave look (lit like the surface).
+
+## Entrances on the map (phase 2a, 2026-10-31)
+- The user: «размести три подземелья, пока что все ведут к одной карте».
+- `Maps/Archipelago/DungeonEntrances.Place` (called in `MeshMapApplier.ApplyGenerated` before the
+  forest, library maps only):
+  - `dungeon_entrance_count` (3) islands, none of them the start's, the orcs' or the bot's,
+    nor within 40 cells of the orc base;
+  - the nearest, the farthest and evenly between, sorted by distance to the start;
+    LEVEL 1 = nearest;
+  - on each, a 5 x 5 plain spot (with a 1-cell margin, no beach/shore/relief/cliff) nearest
+    the island's middle;
+  - the mouth turned to the start; the cells are no-build and occupied;
+  - from the seed alone, nothing saved.
+- Model `MineAbandoned` exported to `Models/Buildings` (4.3 x 4.5 x 3.4 cells); wired in
+  `SetupProjectMaps.CreateArchipelagoDefinition` (`MeshMapDefinition.DungeonEntrancePrefab`).
+- `Dungeon/DungeonEntrance.cs` holds Level, DungeonId (all `Dungeon1` for now) and Cell; `All`.
+  - A hero within `dungeon_enter_reach_cells` + 2.5 of its centre opens the card by himself, once
+    per arrival.
+- `UI/DungeonEntranceCard.cs`: «Подземелье», «Уровень N», then «Герой у входа» or «Приведите героя
+  ко входу»; «Войти» is live only with a hero there and calls `DungeonTravel.Enter`.
+  - A tap on the mine opens it (`WorldInputDispatcher`, before the deposit tap).
+- The level is not passed down yet: every entrance opens the same Dungeon 1.
+- Test: `ArchipelagoTests.DungeonEntrances_AndTheForest_DrawnNearTheCameraOnly`.
 
 ## Files
 - `Tools/blender/cave_entrance.py`: mountain, tunnel, the 4 cave proposals; importable, `main(models, row_y)`.
@@ -302,4 +324,4 @@ dungeon opens as a SEPARATE SCENE.
 ## Open
 - Phase 2 order to agree with the user: entrance on the map → monsters + bosses → camp (hire, shop) → rewards.
 - The user's answers to the list above.
-- Export MineAbandoned with an icon, put it on a map spot, tap → hero enters (dungeon scene a stub).
+- Per-level dungeons (each entrance its own map and bosses), the level label over the mine.
