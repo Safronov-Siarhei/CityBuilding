@@ -5891,6 +5891,41 @@ MonoBehaviour:
   sceneryStreamSquare: 24
   dungeonEntranceCount: 3
   dungeonEnterReach: 4
+  dungeonGuardRadius: 4
+  dungeonBossGuardRadius: 7
+  dungeonMonsterLevel1: 1
+  dungeonMonsterLevel2: 2
+  dungeonMonsterLevel3: 3
+  dungeonCoinsPerHealth: 0.1
+  dungeonXpShare: 0.25
+  dungeonBossCoins: 300
+  dungeonBossCrystals: 5
+  lairRats: 5
+  dungeonBossThemeLairs: 2
+  lairBats: 3
+  lairSpiders: 2
+  lairSpiderlings: 3
+  lairSkeletons: 2
+  lairKobolds: 2
+  lairStoneGolems: 1
+  spiderPoisonSeconds: 3
+  spiderPoisonKeep: 0.5
+  skeletonGetUpSeconds: 2.5
+  skeletonGetUpHealth: 0.5
+  queenWebEvery: 9
+  queenWebStun: 2
+  queenWebRange: 6
+  queenBroodEvery: 15
+  queenBroodCount: 2
+  queenCocoonSeconds: 7
+  queenCocoonBrood: 4
+  queenCocoonHeal: 0.015
+  golemSlamEvery: 8
+  golemSlamRadius: 2.2
+  golemSlamDamage: 1.5
+  golemBoulderEvery: 6
+  golemBoulderRange: 9
+  golemArmour: 0.4
   fertilePatchesPerIsland: 2
   fertilePatchRadius: 5
   fertileFarmBonus: 0.5
@@ -6139,6 +6174,60 @@ MonoBehaviour:
     attackIntervalSeconds: 2
     attackRange: 2
     walkSpeed: 1.2
+  - id: rat
+    maxHealth: 14
+    attackDamage: 2
+    attackIntervalSeconds: 0.8
+    attackRange: 0.7
+    walkSpeed: 2.2
+  - id: bat
+    maxHealth: 18
+    attackDamage: 3
+    attackIntervalSeconds: 1
+    attackRange: 0.7
+    walkSpeed: 2.4
+  - id: spider
+    maxHealth: 45
+    attackDamage: 5
+    attackIntervalSeconds: 1.1
+    attackRange: 0.8
+    walkSpeed: 2
+  - id: spiderling
+    maxHealth: 14
+    attackDamage: 2
+    attackIntervalSeconds: 0.9
+    attackRange: 0.6
+    walkSpeed: 2.2
+  - id: skeleton
+    maxHealth: 70
+    attackDamage: 7
+    attackIntervalSeconds: 1.4
+    attackRange: 0.8
+    walkSpeed: 1.2
+  - id: kobold
+    maxHealth: 35
+    attackDamage: 6
+    attackIntervalSeconds: 2
+    attackRange: 4
+    walkSpeed: 1.5
+  - id: stone_golem
+    maxHealth: 180
+    attackDamage: 12
+    attackIntervalSeconds: 1.8
+    attackRange: 1
+    walkSpeed: 0.9
+  - id: spider_queen
+    maxHealth: 1200
+    attackDamage: 22
+    attackIntervalSeconds: 1.6
+    attackRange: 1.6
+    walkSpeed: 1.4
+  - id: ore_golem
+    maxHealth: 1600
+    attackDamage: 30
+    attackIntervalSeconds: 2.2
+    attackRange: 1.8
+    walkSpeed: 1
   invasionCamp1Monsters: 3
   invasionCamp2Monsters: 2
   invasionCamp3Monsters: 2
