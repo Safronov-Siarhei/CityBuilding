@@ -198,7 +198,11 @@ dungeon opens as a SEPARATE SCENE.
     - four big bottles on the counter with colour tags: healing red, rage orange, speed green,
       defence blue;
     - shelves of potions, a hanging bottle sign, a cauldron of green brew, crates of bottles.
-  - Shown 2026-10-31, verdict pending. They will NOT go into the dungeon map until approved.
+  - APPROVED by the user on 2026-10-31 and SET IN THE MAP. `dungeon1.py` imports the builders from
+    `dungeon_camp.py` (its `cave.main` only runs as `__main__`) and makes them whole objects,
+    `Dungeon-1-HireCamp` and `Dungeon-1-PotionShop`, not chunked, so the game can tap them.
+    - The hire camp is ~6 cells west of the campfire, the shop ~6 cells east; both face the way in.
+    - Decor keeps off their pads (`CAMP_SPOTS`).
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
@@ -237,7 +241,9 @@ dungeon opens as a SEPARATE SCENE.
   - The hire camp is 4.2 x 4.0 x 1.4; the shop is 3.0 x 3.0 x 1.35.
   - The plan json and the build code stay in build units (0..200). Only the output is scaled;
     `scene["dungeon_half"]` = 44 tells `dungeon_preview.py` the size, so preview spots are given
-    in CELLS 0..88.
+    in CELLS 0..88 (`name:x:y[:camera distance]`).
+  - The scaling loop scales mesh data AND object locations. Objects placed off the origin, like the
+    camp buildings, would otherwise stay at their build-unit spot.
 - The terrain hides everything below z=0. A way down must live inside a raised mountain or
   platform, with a black floor at z≈0.03.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.

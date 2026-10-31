@@ -1,7 +1,7 @@
 """Review shots of a dungeon map: one from straight above, and close views at the game camera's
 angle on chosen spots, lit dim with a point light at every DungeonLight_* Empty. Never saves.
 
-    blender --background Dungeon-N.blend --python dungeon_preview.py -- <Name> <out_dir> name:x:y [name:x:y ...]
+    blender --background Dungeon-N.blend --python dungeon_preview.py -- <Name> <out_dir> name:x:y[:dist] ...
 
 The file is a dungeon's own .blend (dungeon1.py): everything in it is shown but the decor kit's
 prototypes; <Name> only names the pictures.
@@ -19,8 +19,8 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 target_name, out_dir = argv[0], argv[1]
 spots = []
 for a in argv[2:]:
-    name, x, y = a.split(":")
-    spots.append((name, float(x), float(y)))
+    name, x, y, *d = a.split(":")                  # an optional 4th field: the camera's distance
+    spots.append((name, float(x), float(y), float(d[0]) if d else None))
 
 sc = bpy.context.scene
 kit_coll = bpy.data.collections.get("DecorKit")
@@ -97,5 +97,5 @@ def shoot(name, look_at, pitch, yaw, dist, lens=40, res=(1400, 1000), ortho=0.0)
 sun_data.energy = 2.2              # the plan reads better in daylight
 shoot("top", origin, 89.9, 0, HALF * 3, res=(1400, 1400), ortho=HALF * 2 + 4)
 sun_data.energy = 0.9
-for name, x, y in spots:
-    shoot(name, origin + Vector((x - HALF, y - HALF, 0)), 50, 0, 22 * HALF / 100)
+for name, x, y, d in spots:
+    shoot(name, origin + Vector((x - HALF, y - HALF, 0)), 50, 0, d or 22 * HALF / 100)

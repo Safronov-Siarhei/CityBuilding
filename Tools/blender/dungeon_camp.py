@@ -261,4 +261,5 @@ def scaled(build):
 
 MODELS = {"DungeonHireCamp": scaled(hire_camp), "DungeonPotionShop": scaled(potion_shop)}
 
-cave.main(MODELS, row_y=-76.0)
+if __name__ == "__main__":     # dungeon1.py imports the builders to set them in the map
+    cave.main(MODELS, row_y=-76.0)

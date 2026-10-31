@@ -461,6 +461,11 @@ def merge_flat(obj):
 CAMP = (hall_centre("camp")[0], hall_centre("camp")[1] - 2.0, 6)   # kept tidy: (x, y, radius)
 
 
+HIRE_AT = (CAMP[0] - 14.0, CAMP[1] + 4.0)      # the approved camp buildings (dungeon_camp.py), west
+SHOP_AT = (CAMP[0] + 14.0, CAMP[1] + 3.0)      # and east of the campfire, facing the way in
+CAMP_SPOTS = ((*HIRE_AT, 5.0), (*SHOP_AT, 3.6))
+
+
 def scatter_decor(rnd):
     items = []
 
@@ -491,7 +496,7 @@ def scatter_decor(rnd):
                     elif r < 0.05:
                         add("crag", x, y, rnd.uniform(0.6, 1.3))
                     continue
-                if math.hypot(x - CAMP[0], y - CAMP[1]) < CAMP[2]:
+                if math.hypot(x - CAMP[0], y - CAMP[1]) < CAMP[2] or                         any(math.hypot(x - cx, y - cy) < r for cx, cy, r in CAMP_SPOTS):
                     if r < 0.03:
                         add("tuft", x, y)
                     continue
@@ -1145,6 +1150,12 @@ def main():
     props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
     pchunks = split_by_chunk(props, coll)
+    import dungeon_camp                                       # the approved camp buildings, whole
+    for name, build, (x, y) in (("HireCamp", dungeon_camp.hire_camp, HIRE_AT),
+                                ("PotionShop", dungeon_camp.potion_shop, SHOP_AT)):
+        ob = make_object(f"{PREFIX}-{name}", build(), bmat, coll)
+        detail.add_layers(ob.data, kit.NAMES, kit.COLS, kit.ROWS)
+        ob.location = w(x, y)
     for i, (x, y, z) in enumerate(fires):
         e = bpy.data.objects.new(f"DungeonFire_{i}", None)
         e.empty_display_size = 0.3
@@ -1192,8 +1203,7 @@ def main():
     for ob in coll.objects:                                   # into the game's units
         if ob.type == 'MESH':
             ob.data.transform(Matrix.Scale(SCALE, 4))
-        else:
-            ob.location = ob.location * SCALE
+        ob.location = ob.location * SCALE
     bpy.context.scene["dungeon_half"] = HALF * SCALE
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
