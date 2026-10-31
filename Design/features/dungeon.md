@@ -299,7 +299,16 @@ dungeon opens as a SEPARATE SCENE.
     junctions, longest and farthest from lairs, never by the camp): `dungeon_patrol_size` 3
     monsters walk there and back via `OrcUnit.MovePost`, pausing `dungeon_patrol_pause_sec` at the
     ends; they never move mid-fight or asleep.
-  - ~140 monsters in all (was 46). The crystals THEMSELVES are not in the game yet (spots only).
+  - ~140 monsters in all (was 46).
+- **Crystals** (2026-10-31, «делай»): `Dungeon/DungeonCrystals` -- `dungeon_crystals_per_room` (2) at
+  every `reward` spot, `dungeon_crystals_lone` (1) at every `crystal` spot: 20 on Dungeon 1 + 10
+  from the bosses = the agreed ~30 for level 1. Model `MonsterRewardCrystal` (monsters.py, a blue
+  gem with two shards, 0.5 tall, 66 tris; wired through OrcRaidManager.RewardCrystalModel), floating
+  `dungeon_crystal_float` cells up, spinning and bobbing. A hero within `dungeon_crystal_pick_reach`
+  takes it (a room's pair goes together): +1 `Wallet.UpgradeCrystals`, `#log_dungeon_crystal`, id
+  `{dungeon}-L{level}-c{index}` into `DungeonRecord.CrystalsTaken` / save `dungeonCrystalsTaken`
+  (also written on Leave) -- never comes back. No need to kill the guards first. Test
+  `TheCrystals_FloatGuarded_AndAHeroTakesOne` (break-checked). Not seen in the game by the user.
   - Test `EveryCrystal_IsGuarded_AndThePatrolsWalk`, break-checked (lone guards off; patrol frozen).
 - **Sleep** (the user's item 4, 2026-10-31): a monster out of the camera's frame (quarter-screen
   border, `Camera.WorldToViewportPoint`) and more than `dungeon_monster_wake_margin` (6) cells from
@@ -440,7 +449,6 @@ dungeon opens as a SEPARATE SCENE.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
 
 ## Open
-- The crystals themselves: 2 floating at each reward room, 1 at each lone crystal spot (spots and guards are done).
 - The camp: hiring and the shop.
 - Monsters asleep off screen: measure the gain on a phone.
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.

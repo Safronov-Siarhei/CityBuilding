@@ -107,8 +107,10 @@ namespace CityBuilder.Dungeon
             }
             SpawnHeroes();
             // the monsters in their lairs and the bosses the town has not slain on this level yet
-            var slain = SaveSystem.Load(SaveSystem.HiddenTownSlot)?.dungeonBossesSlain;
-            gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, slain);
+            var town = SaveSystem.Load(SaveSystem.HiddenTownSlot);
+            gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, town?.dungeonBossesSlain);
+            // the crystals the town has not taken yet, each by its guards
+            gameObject.AddComponent<DungeonCrystals>().Begin(map, DungeonId, Level, town?.dungeonCrystalsTaken);
             Arrived = true;
         }
 

@@ -102,6 +102,7 @@ namespace CityBuilder.EditorTools
                          ("spiderlingModel", "MonsterSpiderling"), ("skeletonModel", "MonsterSkeleton"), ("koboldModel", "MonsterKobold"),
                          ("stoneGolemModel", "MonsterStoneGolem"), ("spiderQueenModel", "MonsterSpiderQueen"),
                          ("spiderCocoonModel", "MonsterSpiderCocoon"), ("oreGolemModel", "MonsterOreGolem"),
+                         ("rewardCrystalModel", "MonsterRewardCrystal"),
                      })
             {
                 var path = $"Assets/_Project/Models/Monsters/{file}.fbx";

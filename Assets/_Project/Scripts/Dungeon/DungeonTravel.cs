@@ -96,6 +96,13 @@ namespace CityBuilder.Dungeon
                 foreach (var id in monsters.BossesSlainNow)
                     if (!town.dungeonBossesSlain.Contains(id)) town.dungeonBossesSlain.Add(id);
             }
+            var crystals = DungeonCrystals.Instance;
+            if (crystals != null)
+            {
+                town.dungeonCrystalsTaken ??= new List<string>();
+                foreach (var id in crystals.TakenNow)
+                    if (!town.dungeonCrystalsTaken.Contains(id)) town.dungeonCrystalsTaken.Add(id);
+            }
             SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             GameSessionIntent.SaveNameToLoad = SaveSystem.HiddenTownSlot;
             GameSessionIntent.SaveNameAfterLoad = mode.ReturnName ?? string.Empty;

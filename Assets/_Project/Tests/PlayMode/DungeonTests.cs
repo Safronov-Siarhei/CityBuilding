@@ -157,6 +157,43 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(Vector3.Distance(lead.transform.position, from), 1f, "The patrol's lead stands still.");
         }
 
+        /// <summary>
+        /// The crystals (the user, 2026-10-31): two floating in each reward room, one at each lone
+        /// crystal spot, each drawn by its model in the air; a hero who comes up takes it into the
+        /// Laboratory's wallet, and it is written down so it never comes back.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheCrystals_FloatGuarded_AndAHeroTakesOne()
+        {
+            var crystals = DungeonCrystals.Instance;
+            Assert.IsNotNull(crystals, "No crystals were put down in the dungeon.");
+            var map = MeshMapApplier.Instance.CurrentMap;
+            var config = CityBuilder.Core.BalanceConfig.Instance;
+            Assert.AreEqual(map.SpotsOf("reward").Count * config.DungeonCrystalsPerRoom + map.SpotsOf("crystal").Count * config.DungeonCrystalsLone,
+                crystals.Lying.Count, "Not every crystal is lying in the dungeon.");
+            foreach (var c in crystals.Lying)
+            {
+                Assert.IsNotNull(c.Shown, "A crystal is not drawn.");
+                Assert.IsNotNull(c.Shown.GetComponentInChildren<Renderer>(), "A crystal has no model.");
+                Assert.Greater(c.Shown.position.y - c.At.y, 0.2f, "A crystal lies on the ground instead of floating.");
+            }
+
+            var king = HeroRoster.Instance.HeroOf(SoldierType.King);
+            var crystal = crystals.Lying[crystals.Lying.Count - 1];          // a lone one: a room's pair is taken together
+            var id = crystal.Id;
+            var wallet = CityBuilder.Core.Wallet.UpgradeCrystals;
+            var before = crystals.Lying.Count;
+            var kingAt = king.transform.position;
+            king.transform.position = crystal.At;
+            crystals.PickUp();
+            yield return null;
+            Assert.AreEqual(wallet + 1, CityBuilder.Core.Wallet.UpgradeCrystals, "The crystal taken did not go into the wallet.");
+            Assert.AreEqual(before - 1, crystals.Lying.Count, "The crystal taken is still lying there.");
+            Assert.IsTrue(DungeonRecord.CrystalsTaken.Contains(id), "The crystal taken is not written down.");
+            CityBuilder.Core.Wallet.UpgradeCrystals = wallet;
+            king.transform.position = kingAt;
+        }
+
         /// <summary>A skeleton struck down falls apart, lies, and gets up once; struck down again it stays down.</summary>
         [UnityTest]
         public IEnumerator ASkeleton_GetsUpOnce()

@@ -14,6 +14,9 @@ Run in the models file:
 - MonsterSpiderQueen: the boss, 2 across -- a black body, a huge purple abdomen marked violet,
   a gold crown of spikes, eight red eyes.
 - MonsterSpiderCocoon: the queen sealed in at half health -- a web-wrapped egg 1.2 tall.
+- MonsterRewardCrystal: an upgrade crystal the heroes pick up below (the user, 2026-10-31: it
+  FLOATS, so it reads at once as a reward, not as ore) -- a blue gem with two shards, 0.5 tall;
+  the game spins it and bobs it in the air.
 - MonsterOreGolem: the boss, 2 tall -- dark rock veined with gold and copper, blue crystals
   on its shoulders, a glowing core.
 
@@ -221,6 +224,15 @@ def cocoon(b):
     b.obox((0, -0.37, 0.62), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.2, 0.06, 0.14, BROOD, bevel=0.05)
     for k in (-1, 1):
         b.box(k * 0.07 - 0.025, k * 0.07 + 0.025, -0.44, -0.425, 0.7, 0.74, EYE)
+
+
+def reward_crystal(b):
+    # one tall six-sided gem, point down and point up, two small shards at its waist
+    for (x, y, h, r, rot) in ((0.0, 0.0, 0.5, 0.11, 0.0), (0.1, 0.03, 0.26, 0.05, 20.0), (-0.09, -0.04, 0.22, 0.045, 40.0)):
+        z0 = 0.25 - h / 2
+        mid = z0 + h * 0.35
+        b.frustum(x, y, z0, mid, 0.004, r, 'water', sides=6, rot_deg=rot)
+        b.pyramid(x, y, mid, r, r, z0 + h, 'roof_blue' if r < 0.1 else 'water', sides=6, rot_deg=rot)
 
 
 # ---------------------------------------------------------------- bipeds: the skeleton, the kobold, the golems
@@ -456,6 +468,9 @@ def main():
     mesh, tris = part_mesh("MonsterSpiderCocoon", cocoon, (0, 0, 0), mat)
     install("MonsterSpiderCocoon", mesh, None, base + Vector((x, 0, 0)), coll)
     print(f"MODEL MonsterSpiderCocoon: tris={tris}")
+    mesh, tris = part_mesh("MonsterRewardCrystal", reward_crystal, (0, 0, 0), mat)
+    install("MonsterRewardCrystal", mesh, None, base + Vector((x + 2.0, 0, 0)), coll)
+    print(f"MODEL MonsterRewardCrystal: tris={tris}")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
 

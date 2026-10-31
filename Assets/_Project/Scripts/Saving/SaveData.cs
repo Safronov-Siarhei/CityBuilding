@@ -45,6 +45,9 @@ namespace CityBuilder.Saving
         /// <summary>The dungeons' bosses the town has slain (Dungeon.DungeonRecord): they never come back.</summary>
         public List<string> dungeonBossesSlain = new List<string>();
 
+        /// <summary>The dungeons' crystals the town has taken (Dungeon.DungeonRecord): they never come back.</summary>
+        public List<string> dungeonCrystalsTaken = new List<string>();
+
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;
         /// <summary>The archipelago's fish shoals; shoalsSaved false in a save made before them (the map's own are kept).</summary>

@@ -382,16 +382,21 @@ namespace CityBuilder.Dungeon
         }
     }
 
-    /// <summary>The bosses the town has slain below, by id -- kept in the town's save (GameSaveData.dungeonBossesSlain).</summary>
+    /// <summary>
+    /// What never comes back below, by id -- the bosses the town has slain and the crystals it has
+    /// taken -- kept in the town's save (dungeonBossesSlain, dungeonCrystalsTaken).
+    /// </summary>
     public static class DungeonRecord
     {
         public static readonly HashSet<string> BossesSlain = new HashSet<string>();
+        public static readonly HashSet<string> CrystalsTaken = new HashSet<string>();
 
-        public static void Load(IEnumerable<string> ids)
+        public static void Load(IEnumerable<string> bosses, IEnumerable<string> crystals = null)
         {
             BossesSlain.Clear();
-            if (ids == null) return;
-            foreach (var id in ids) BossesSlain.Add(id);
+            CrystalsTaken.Clear();
+            if (bosses != null) foreach (var id in bosses) BossesSlain.Add(id);
+            if (crystals != null) foreach (var id in crystals) CrystalsTaken.Add(id);
         }
     }
 }

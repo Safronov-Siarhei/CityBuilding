@@ -124,9 +124,13 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject spiderQueenModel;
         [SerializeField] private GameObject spiderCocoonModel;
         [SerializeField] private GameObject oreGolemModel;
+        [SerializeField] private GameObject rewardCrystalModel;
 
         /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
         public GameObject SpiderCocoonModel => spiderCocoonModel;
+
+        /// <summary>An upgrade crystal floating below (DungeonCrystals).</summary>
+        public GameObject RewardCrystalModel => rewardCrystalModel;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;

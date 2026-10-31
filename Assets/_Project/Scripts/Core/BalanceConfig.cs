@@ -537,6 +537,10 @@ namespace CityBuilder.Core
         [SerializeField] private int lairRats = 8;
         [SerializeField] private int dungeonBossThemeLairs = 2;
         [SerializeField] private float dungeonMonsterWakeMargin = 6f;
+        [SerializeField] private int dungeonCrystalsPerRoom = 2;
+        [SerializeField] private int dungeonCrystalsLone = 1;
+        [SerializeField] private float dungeonCrystalPickReach = 1f;
+        [SerializeField] private float dungeonCrystalFloat = 0.45f;
         [SerializeField] private float dungeonLairPackShare = 0.75f;
         [SerializeField] private float dungeonGuardRoomShare = 0.5f;
         [SerializeField] private float dungeonGuardSingleShare = 0.35f;
@@ -928,6 +932,10 @@ namespace CityBuilder.Core
         public int LairRats => lairRats;
         public int DungeonBossThemeLairs => dungeonBossThemeLairs;
         public float DungeonMonsterWakeMargin => dungeonMonsterWakeMargin;
+        public int DungeonCrystalsPerRoom => dungeonCrystalsPerRoom;
+        public int DungeonCrystalsLone => dungeonCrystalsLone;
+        public float DungeonCrystalPickReach => dungeonCrystalPickReach;
+        public float DungeonCrystalFloat => dungeonCrystalFloat;
         public float DungeonLairPackShare => dungeonLairPackShare;
         public float DungeonGuardRoomShare => dungeonGuardRoomShare;
         public float DungeonGuardSingleShare => dungeonGuardSingleShare;
@@ -1466,6 +1474,10 @@ namespace CityBuilder.Core
             lairRats = (int)Read(economy, "dungeon_lair_rats", lairRats);
             dungeonBossThemeLairs = (int)Read(economy, "dungeon_boss_theme_lairs", dungeonBossThemeLairs);
             dungeonMonsterWakeMargin = Read(economy, "dungeon_monster_wake_margin", dungeonMonsterWakeMargin);
+            dungeonCrystalsPerRoom = (int)Read(economy, "dungeon_crystals_per_room", dungeonCrystalsPerRoom);
+            dungeonCrystalsLone = (int)Read(economy, "dungeon_crystals_lone", dungeonCrystalsLone);
+            dungeonCrystalPickReach = Read(economy, "dungeon_crystal_pick_reach", dungeonCrystalPickReach);
+            dungeonCrystalFloat = Read(economy, "dungeon_crystal_float", dungeonCrystalFloat);
             dungeonLairPackShare = Read(economy, "dungeon_lair_pack_share", dungeonLairPackShare);
             dungeonGuardRoomShare = Read(economy, "dungeon_guard_room_share", dungeonGuardRoomShare);
             dungeonGuardSingleShare = Read(economy, "dungeon_guard_single_share", dungeonGuardSingleShare);
