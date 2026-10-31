@@ -1,7 +1,8 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v5
-> (88 x 88 CELLS, organic, from plan v3, halls furnished, props in chunks) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> Status 2026-10-31: IN THE GAME (phase 1, the walk). Dungeon 1 (88 x 88 CELLS) is exported and
+> playable through the cheats window. Monsters, hiring, the shop, crystals and the entrance on the
+> map are not done yet. Not seen on a phone or by the user in the game. built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -224,6 +225,56 @@ dungeon opens as a SEPARATE SCENE.
 - Enemy ideas for an old mine: skeleton miners, bats, rats, spiders, kobolds. Boss ideas: an ore
   golem, a spider queen, a cave troll.
 
+## In the game (phase 1, 2026-10-31)
+- **Export:**
+  - Run `export_map.py -- G:/Fork/CityBuilding Dungeon1 Dungeon-1` on `Dungeon-1.blend`.
+  - It writes `Models/Dungeon1/`: Ground, Relief, Props (each 64 chunks), Water, DecorKit + Decor.csv,
+    HireCamp, PotionShop, and `-Points.csv`.
+  - `Points.csv` holds kind,x,y,z in Blender axes and game units. The kinds are light_<kind>, fire,
+    reward, hirecamp, potionshop, start and exit.
+  - `SetupProjectMaps.CreateDungeonDefinition` turns that into `Resources/MeshMaps/Dungeon1.asset`.
+    It is a `MeshMapDefinition` with `IsDungeon`, `PropsPrefab`, `BuildingPrefabs`, and the points
+    as MapSpots. A dungeon is NoRaids.
+- **`MeshMapApplier`:**
+  - The ground, relief, water and decor load as on any map.
+  - A dungeon gets no ore veins and no boulders.
+  - `DressDungeon` adds the props and the camp buildings, plus a `DungeonChunkStreamer`. The
+    streamer switches RENDERERS only, never colliders. It draws a square only near the point the
+    camera looks at: the camera's square plus a ring, widened as the camera pulls back. At the
+    camp that is under half of the 407 renderers.
+- **`Dungeon/DungeonTravel`:**
+  - `Enter(id)` autosaves, then writes the town into the hidden slot `_dungeon`
+    (`SaveSystem.HiddenTownSlot`, not listed). It notes the living heroes (level, XP, health) and
+    reloads the game scene on the dungeon's map.
+  - `Leave()` writes the heroes' level, XP and health into that slot (a fallen hero comes up with
+    1 HP), then loads the town from it under its old name (`GameSessionIntent.SaveNameAfterLoad`).
+  - The town does not run while the heroes are below — that is the user's «город на паузе».
+- **`Dungeon/DungeonMode`** (on GameManagers, wired in SetupProjectCityScene):
+  - It switches off the same managers as Invasion and marks the Town Hall as placed.
+  - It hides `BuildingMenu`, `Hotbar` and `TaxRate`, sets the camera's pan bounds and jumps the
+    camera to the camp.
+  - It restores the heroes at the `start` spot (the King at level 1 if none came).
+  - A hero within 1.6 cells of `exit` takes the party home.
+  - Autosave and `SaveGame` are blocked in a dungeon.
+- **Cheats:** the Мир tab has «Войти в подземелье 1» and «Выйти из подземелья».
+- **Tests:** PlayMode `DungeonTests`, 4/4, verified by breaking the streamer and the save guard.
+  - The King comes down at level 3, at the camp, on the NavMesh.
+  - The dungeon is 88 cells across.
+  - No Town Hall prompt appears.
+  - Every hall and boss is reachable on foot, by a winding path.
+  - Only near squares are drawn.
+  - Nothing is saved below.
+- **Not yet:**
+  - monsters and bosses;
+  - hiring at the camp, the shop;
+  - rewards (the reward spots exist);
+  - fire effects and lights (spots exist);
+  - coins/XP for kills;
+  - respawn on re-entry;
+  - the mine entrance on the town's map;
+  - the bridge over the lake (a prop, not walkable — the shore goes round);
+  - a dark/cave look (lit like the surface).
+
 ## Files
 - `Tools/blender/cave_entrance.py`: mountain, tunnel, the 4 cave proposals; importable, `main(models, row_y)`.
 - `Tools/blender/mine_entrance.py`: MineWorking / MineAbandoned / MineHeadframe.
@@ -249,5 +300,6 @@ dungeon opens as a SEPARATE SCENE.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
 
 ## Open
+- Phase 2 order to agree with the user: entrance on the map → monsters + bosses → camp (hire, shop) → rewards.
 - The user's answers to the list above.
 - Export MineAbandoned with an icon, put it on a map spot, tap → hero enters (dungeon scene a stub).
