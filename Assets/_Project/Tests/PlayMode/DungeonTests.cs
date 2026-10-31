@@ -77,7 +77,8 @@ namespace CityBuilder.Tests.PlayMode
             var monsters = DungeonMonsters.Instance;
             Assert.IsNotNull(monsters, "No monsters were put down in the dungeon.");
             var map = MeshMapApplier.Instance.CurrentMap;
-            Assert.AreEqual(map.SpotsOf("lair").Count + 2, monsters.Lairs.Count, "Not every lair and boss hall has its monsters.");
+            Assert.AreEqual(map.SpotsOf("lair").Count + 2 + map.SpotsOf("reward").Count + map.SpotsOf("crystal").Count + 5, monsters.Lairs.Count,
+                "Not every lair, boss hall, crystal and patrol has its monsters.");
             foreach (var kind in DungeonKinds)
             {
                 var monster = First(kind);
@@ -107,6 +108,53 @@ namespace CityBuilder.Tests.PlayMode
             queen.TakeDamage(1);
             monsters.RefreshSleep();
             Assert.IsFalse(queen.Asleep, "A boss struck from afar sleeps on.");
+        }
+
+        /// <summary>
+        /// The user, 2026-10-31: «каждый кристалл должен быть защищён монстрами», and patrols in the
+        /// passages. Every 2-crystal room and every lone crystal has a band standing by it; every
+        /// patrol route has its band, and a patrol in sight walks its route.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EveryCrystal_IsGuarded_AndThePatrolsWalk()
+        {
+            var monsters = DungeonMonsters.Instance;
+            var map = MeshMapApplier.Instance.CurrentMap;
+            var crystals = new List<Vector2>();
+            foreach (var s in map.SpotsOf("reward")) crystals.Add(s.position);
+            foreach (var s in map.SpotsOf("crystal")) crystals.Add(s.position);
+            Assert.GreaterOrEqual(crystals.Count, 13, "The crystal spots are missing from the map.");
+            var reach = CityBuilder.Core.BalanceConfig.Instance.DungeonGuardRadius;
+            foreach (var c in crystals)
+            {
+                var near = 0;
+                foreach (var o in OrcUnit.All)
+                    if (o != null && Vector2.Distance(new Vector2(o.transform.position.x, o.transform.position.z), c) <= reach) near++;
+                Assert.GreaterOrEqual(near, 2, $"The crystal at {c} is not guarded.");
+            }
+
+            var patrols = new List<DungeonMonsters.Lair>();
+            foreach (var lair in monsters.Lairs) if (lair.Route != null) patrols.Add(lair);
+            Assert.AreEqual(5, patrols.Count, "Not every patrol route has its band.");
+            foreach (var p in patrols)
+                Assert.AreEqual(CityBuilder.Core.BalanceConfig.Instance.DungeonPatrolSize, p.Monsters.Count, "A patrol band is the wrong size.");
+
+            // look at the first patrol: it walks on along its route
+            var band = patrols[0];
+            var lead = band.Monsters[0];
+            var from = lead.transform.position;
+            Object.FindAnyObjectByType<RTSCameraController>().JumpTo(from);
+            Time.timeScale = 4f;
+            try
+            {
+                for (var t = 0f; t < 8f && band.RouteAt < 3; t += Time.unscaledDeltaTime) yield return null;
+            }
+            finally
+            {
+                Time.timeScale = 1f;
+            }
+            Assert.GreaterOrEqual(band.RouteAt, 3, "The patrol does not walk its route.");
+            Assert.Greater(Vector3.Distance(lead.transform.position, from), 1f, "The patrol's lead stands still.");
         }
 
         /// <summary>A skeleton struck down falls apart, lies, and gets up once; struck down again it stays down.</summary>

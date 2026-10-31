@@ -287,6 +287,20 @@ dungeon opens as a SEPARATE SCENE.
   `DungeonTravel.Leave` adds the coins to the town save. Slain bosses (`DungeonRecord`, save field
   `dungeonBossesSlain`, id `{dungeon}-L{level}-{spiders|golem}`) never come back; the rest respawn
   on every visit (each visit is a fresh scene).
+- **Guards and patrols** (the user, 2026-10-31: «слишком мало монстров ... каждый кристалл
+  должен быть защищён монстрами», then «делай охрану и патрули» after the marked top view v2):
+  - Lairs bigger (rats 8, bats 5, spiders 3+4, skeletons 3+3 kobolds, golems 2+3 skeletons,
+    rats+bats = `dungeon_lair_pack_share` 0.75 of each); an 11th lair on the lake hall's south shore
+    (`LAKE_LAIR` in dungeon_lairs.py; its theme comes out of the cycle: bats).
+  - A guard band at every crystal: the 7 `reward` rooms (`dungeon_guard_room_share` 0.5 of a lair)
+    and 6 lone `crystal` spots in the farthest empty dead ends (`dungeon_guard_single_share` 0.35).
+    Theme: the nearer boss's within `dungeon_guard_boss_reach` 30 cells, else the cycle.
+  - 5 patrols (`patrol_<k>` route spots from dungeon_lairs.patrols: corridor runs between
+    junctions, longest and farthest from lairs, never by the camp): `dungeon_patrol_size` 3
+    monsters walk there and back via `OrcUnit.MovePost`, pausing `dungeon_patrol_pause_sec` at the
+    ends; they never move mid-fight or asleep.
+  - ~140 monsters in all (was 46). The crystals THEMSELVES are not in the game yet (spots only).
+  - Test `EveryCrystal_IsGuarded_AndThePatrolsWalk`, break-checked (lone guards off; patrol frozen).
 - **Sleep** (the user's item 4, 2026-10-31): a monster out of the camera's frame (quarter-screen
   border, `Camera.WorldToViewportPoint`) and more than `dungeon_monster_wake_margin` (6) cells from
   every hero has `OrcUnit.Asleep` = no Update at all (powers too); in a fight, busy, or hurt in the
@@ -426,7 +440,7 @@ dungeon opens as a SEPARATE SCENE.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
 
 ## Open
-- Patrols in passages (2-3), crystals scattered in rooms, rewards in crystal rooms.
+- The crystals themselves: 2 floating at each reward room, 1 at each lone crystal spot (spots and guards are done).
 - The camp: hiring and the shop.
 - Monsters asleep off screen: measure the gain on a phone.
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.

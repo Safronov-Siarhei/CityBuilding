@@ -310,6 +310,9 @@ namespace CityBuilder.Combat
             _guardRoute = NewRoute();
         }
 
+        /// <summary>Moves the post it holds without ending a fight: a dungeon patrol walking its route.</summary>
+        public void MovePost(Vector3 post) => _guardPost = post;
+
         /// <summary>
         /// Moved by something else (the New Year's thief, InvasionNewYear): no target of its own, no
         /// fight -- it goes where SteerTo sends it, nothing more.

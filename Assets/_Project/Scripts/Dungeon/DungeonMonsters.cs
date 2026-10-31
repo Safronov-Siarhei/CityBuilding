@@ -21,6 +21,13 @@ namespace CityBuilder.Dungeon
     /// - Levels 1/2/3: the same monsters at the sheet's dungeon_monster_level_N, which multiplies
     ///   their health and damage. A kill pays coins by its health (dungeon_coins_per_health); a boss
     ///   pays dungeon_boss_coins and dungeon_boss_crystals times the dungeon's level.
+    /// - EVERY CRYSTAL IS GUARDED (the user, 2026-10-31): a band at each 2-crystal room ("reward"
+    ///   spot, dungeon_guard_room_share of a lair of the place's theme) and at each lone crystal
+    ///   ("crystal" spot, dungeon_guard_single_share). The theme is the nearer boss's within
+    ///   dungeon_guard_boss_reach cells, else the lairs' cycle.
+    /// - PATROLS: dungeon_patrol_size monsters walk a "patrol_<k>" route there and back, pausing
+    ///   dungeon_patrol_pause_sec at each end; they fight whoever comes near the point they are at
+    ///   and take up the route again after.
     /// - The monsters come back only with the next visit: each visit is a fresh scene.
     /// - A monster SLEEPS (OrcUnit.Asleep: no thinking at all) while it is out of the camera's
     ///   frame (with a quarter-screen border) and dungeon_monster_wake_margin cells from every hero; one in a
@@ -37,7 +44,13 @@ namespace CityBuilder.Dungeon
             public Vector3 Post;
             public Theme Theme;
             public string BossId;
+            public bool Guard;
             public readonly List<OrcUnit> Monsters = new List<OrcUnit>();
+            // a patrol's route (null for a lair), where along it the band is headed, and its pause
+            public List<Vector3> Route;
+            public int RouteAt;
+            public int RouteStep = 1;
+            public float Pause;
         }
 
         public static DungeonMonsters Instance { get; private set; }
@@ -74,6 +87,8 @@ namespace CityBuilder.Dungeon
 
         private void Update()
         {
+            foreach (var lair in _lairs)
+                if (lair.Route != null) Patrol(lair);
             _sleepTimer -= Time.unscaledDeltaTime;
             if (_sleepTimer > 0f) return;
             _sleepTimer = SleepCheckSeconds;
@@ -152,6 +167,84 @@ namespace CityBuilder.Dungeon
 
             if (queenAt.HasValue) AddBoss(queenAt.Value, Theme.BossQueen, BossId(dungeonId, Level, "spiders"), slainBefore);
             if (golemAt.HasValue) AddBoss(golemAt.Value, Theme.BossGolem, BossId(dungeonId, Level, "golem"), slainBefore);
+
+            // a band at every crystal: the rooms' and the lone ones'
+            var k = 0;
+            foreach (var spot in map.SpotsOf("reward")) AddGuard(Ground(spot.position), config.DungeonGuardRoomShare, queenAt, golemAt, k++);
+            foreach (var spot in map.SpotsOf("crystal")) AddGuard(Ground(spot.position), config.DungeonGuardSingleShare, queenAt, golemAt, k++);
+
+            // the patrols, route by route
+            for (var r = 0; ; r++)
+            {
+                var spots = map.SpotsOf($"patrol_{r}");
+                if (spots.Count < 2) break;
+                var route = new List<Vector3>(spots.Count);
+                foreach (var spot in spots) route.Add(Ground(spot.position));
+                AddPatrol(route, ThemeAt(route[route.Count / 2], queenAt, golemAt, k++));
+            }
+        }
+
+        private static readonly Theme[] Cycle = { Theme.Rats, Theme.Undead, Theme.Bats, Theme.Pack };
+
+        /// <summary>Who guards a place: the nearer boss's own kind when one is near, else the lairs' cycle.</summary>
+        private static Theme ThemeAt(Vector3 at, Vector3? queen, Vector3? golem, int k)
+        {
+            var reach = BalanceConfig.Instance.DungeonGuardBossReach;
+            var dq = queen.HasValue ? Flat(at - queen.Value) : float.MaxValue;
+            var dg = golem.HasValue ? Flat(at - golem.Value) : float.MaxValue;
+            if (dq < reach && dq <= dg) return Theme.Spiders;
+            if (dg < reach) return Theme.Golems;
+            return Cycle[k % Cycle.Length];
+        }
+
+        private static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;
+
+        private void AddGuard(Vector3 at, float share, Vector3? queen, Vector3? golem, int k)
+        {
+            var lair = new Lair { Post = at, Theme = ThemeAt(at, queen, golem, k), Guard = true };
+            _lairs.Add(lair);
+            Fill(lair, share);
+        }
+
+        private void AddPatrol(List<Vector3> route, Theme theme)
+        {
+            var lair = new Lair { Post = route[0], Theme = theme, Route = route };
+            _lairs.Add(lair);
+            // the band: as many as the sheet says, the theme's kinds in turn
+            var roster = Roster(theme);
+            var size = Mathf.Max(1, BalanceConfig.Instance.DungeonPatrolSize);
+            for (var i = 0; i < size; i++)
+                SpawnAt(lair, roster[i % roster.Count].kind, route[0] + PatrolOffset(i), BalanceConfig.Instance.DungeonGuardRadius);
+        }
+
+        /// <summary>Where member `i` keeps round the band's point: a little cluster, not one spot.</summary>
+        private static Vector3 PatrolOffset(int i) => i == 0 ? Vector3.zero : new Vector3(Mathf.Cos(i * 2.4f), 0f, Mathf.Sin(i * 2.4f)) * 0.7f;
+
+        /// <summary>The band walks on when its first living member has reached the point and waited; never mid-fight.</summary>
+        private void Patrol(Lair lair)
+        {
+            OrcUnit lead = null;
+            foreach (var m in lair.Monsters)
+            {
+                if (m == null) continue;
+                if (m.Fighting != null || m.BusyFor > 0f) return;
+                if (lead == null) lead = m;
+            }
+            if (lead == null || lead.Asleep) return;
+            var to = lead.GuardPost - lead.transform.position;
+            to.y = 0f;
+            if (to.magnitude > 0.8f) return;
+            lair.Pause -= Time.deltaTime;
+            if (lair.Pause > 0f) return;
+            var last = lair.Route.Count - 1;
+            if (lair.RouteAt + lair.RouteStep > last || lair.RouteAt + lair.RouteStep < 0) lair.RouteStep = -lair.RouteStep;
+            lair.RouteAt += lair.RouteStep;
+            if (lair.RouteAt == 0 || lair.RouteAt == last) lair.Pause = BalanceConfig.Instance.DungeonPatrolPauseSeconds;
+            var point = lair.Route[lair.RouteAt];
+            lair.Post = point;
+            var i = 0;
+            foreach (var m in lair.Monsters)
+                if (m != null) m.MovePost(point + PatrolOffset(i++));
         }
 
         private static void ThemeNearest(List<Vector3> lairs, Theme?[] themes, Vector3? boss, Theme theme, int count)
@@ -191,18 +284,28 @@ namespace CityBuilder.Dungeon
                 case Theme.Rats: return new List<(OrcKind, int)> { (OrcKind.Rat, c.LairRats) };
                 case Theme.Undead: return new List<(OrcKind, int)> { (OrcKind.Skeleton, c.LairSkeletons), (OrcKind.Kobold, c.LairKobolds) };
                 case Theme.Bats: return new List<(OrcKind, int)> { (OrcKind.Bat, c.LairBats) };
-                case Theme.Pack: return new List<(OrcKind, int)> { (OrcKind.Rat, c.LairRats), (OrcKind.Bat, c.LairBats) };
+                case Theme.Pack:
+                    return new List<(OrcKind, int)>
+                    {
+                        (OrcKind.Rat, Mathf.CeilToInt(c.LairRats * c.DungeonLairPackShare - 0.001f)),
+                        (OrcKind.Bat, Mathf.CeilToInt(c.LairBats * c.DungeonLairPackShare - 0.001f)),
+                    };
                 case Theme.Spiders: return new List<(OrcKind, int)> { (OrcKind.Spider, c.LairSpiders), (OrcKind.Spiderling, c.LairSpiderlings) };
                 case Theme.Golems: return new List<(OrcKind, int)> { (OrcKind.StoneGolem, c.LairStoneGolems), (OrcKind.Skeleton, c.LairSkeletons) };
                 default: return new List<(OrcKind, int)>();
             }
         }
 
-        private void Fill(Lair lair)
+        /// <summary>Puts the theme's roster down round the lair; `share` of each kind (rounded up) for a crystal's guard.</summary>
+        private void Fill(Lair lair, float share = 1f)
         {
             var roster = Roster(lair.Theme);
             var total = 0;
-            foreach (var (_, count) in roster) total += count;
+            for (var i = 0; i < roster.Count; i++)
+            {
+                roster[i] = (roster[i].kind, Mathf.CeilToInt(roster[i].count * share - 0.001f));
+                total += roster[i].count;
+            }
             var index = 0;
             foreach (var (kind, count) in roster)
             for (var k = 0; k < count; k++) Spawn(lair, kind, Mathf.Max(1, total), BalanceConfig.Instance.DungeonGuardRadius, index++);
