@@ -296,6 +296,15 @@ dungeon opens as a SEPARATE SCENE.
 - Tests (`DungeonTests`): `TheMonsters_StandInTheirLairs_EachKindJointedAndAnimated` (+ sleep),
   `ASkeleton_GetsUpOnce`, `TheBosses_CocoonAndArmour_AndTheyPay` (break-checked).
 
+## Brightness (2026-10-31)
+- The user: «подземелье тусклее основной карты» -> «вариант 1»: as bright as the surface. Measured
+  as the area-weighted luminance of the terrain palette seen from above (scratch script over the
+  Ground/Relief meshes): it was 0.52 (moss 32%, rock_deep/rock_dark tops 28%) against Map 3's 0.65;
+  now 0.66 (grass_mid, rock, rock_light, path, grass). Same scene light as the surface -- the
+  difference was only the palette (`zone_colour`, `relief_colour`, the moss hem in `fields_at`).
+- Option 2 (keep it a little darker, ~0.58-0.60, for a cave mood with glowing mushrooms and fires)
+  was offered and set aside «пока что».
+
 ## The way out (2026-10-31, redone)
 - The user: «выход ... должен быть развёрнут к игроку, ... дать ему стиль». The old one was a flat
   daylight pane in the camp's SOUTH wall, seen from behind by the camera (which looks north).

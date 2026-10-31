@@ -298,7 +298,7 @@ def fields_at(x, y, lk):
     return (
         lk - 0.35,                                                    # wet sand at the waterline
         lk - (1.6 + 0.8 * (fbm(x / 5, y / 5, 101) - 0.5)),            # the lake's sandy shore
-        -sd - (1.2 + 1.4 * fbm(x / 4, y / 4, 103)),                   # moss under the walls: negative there
+        -sd - (0.5 + 0.7 * fbm(x / 4, y / 4, 103)),                   # a thin hem of moss under the walls
         d - (0.9 + 0.5 * fbm(x / 5, y / 5, 105)),                     # the trodden path down a route
         0.58 - fbm(x / 9, y / 9, 107),                                # lush grass
         0.66 - fbm(x / 7, y / 7, 109),                                # stony patches
@@ -320,26 +320,30 @@ def zone_colour(f):
         return "path" if alt > 0 else "dirt"
     if stony < 0:
         return "stony" if alt < 0 else "pebble"
+    # as bright as the surface maps (the user, 2026-10-31: «подземелье тусклее основной карты»)
     if lush < 0:
         return "grass_lush" + b
     if dark < 0:
-        return "forest_floor" + b
-    return "grass_dark" + b
+        return "grass_mid" + b
+    return "grass" + b
 
 
 def relief_colour(z, nz, x, y):
-    """Green only at the rock's foot; banded rock up the walls; a dark rocky top with a little moss,
-    so from above the passages stand out from the mass they are cut through."""
+    """Green at the rock's foot; banded rock up the walls; a light rocky top with grass on it. As
+    bright as the surface maps (the user, 2026-10-31, «вариант 1»): the dark tops and the wide moss
+    made the dungeon ~20% duller than Map 3 (mean luminance 0.52 vs 0.65)."""
     if z < 0.6:
-        return "moss" if nz > 0.6 or fbm(x / 4, y / 4, 113) > 0.4 else "rock_mid"
+        if nz > 0.6:
+            return "moss" if fbm(x / 4, y / 4, 113) > 0.6 else "grass_mid"
+        return "rock"
     if z < 1.3:
-        return "moss" if fbm(x / 5, y / 5, 115) > 0.62 else "rock_mid" if nz < 0.8 else "grass_dark"
+        return "moss" if fbm(x / 5, y / 5, 115) > 0.75 else "rock" if nz < 0.8 else "grass"
     if z > WALL_H + 0.3 and nz > 0.8:
-        if fbm(x / 6, y / 6, 123) > 0.7:
-            return "moss"
-        return "rock_deep" if fbm(x / 9, y / 9, 125) > 0.45 else "rock_dark"
+        if fbm(x / 6, y / 6, 123) > 0.6:
+            return "grass_mid"
+        return "rock_light" if fbm(x / 9, y / 9, 125) > 0.45 else "rock"
     band = int((z + 1.5 * fbm(x / 7, y / 7, 117)) / 0.8) % 3
-    return ["rock_mid", "rock_dark", "rock"][band]
+    return ["rock", "rock_mid", "rock_light"][band]
 
 
 # -- the surface (as map5) ---------------------------------------------------------------------
