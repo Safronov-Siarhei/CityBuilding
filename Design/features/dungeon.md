@@ -184,6 +184,21 @@ dungeon opens as a SEPARATE SCENE.
     Unity EFFECT at the `DungeonFire_<n>` Empties (`fire_spot()`; not DungeonLight_*).
   - NO potion stall and NO hirelings' camp (the hut, barrels, banner) at the way in for now. Only
     the campfire, logs, torches and the daylight exit remain.
+- **Camp buildings, made SEPARATELY for approval** (the user, 2026-10-31: «approve first, add
+  them later»). They live in `Tools/blender/dungeon_camp.py`, collection «Подземелье» of the Models
+  file, row y = -76; previews come from `render_preview.py`.
+  - `DungeonHireCamp` (2.6k tris): a gnome hut (low, steep red roof, round door, chimney) with one
+    corner per hireling:
+    - pick rack + ore cart = the miner;
+    - straw target with bolts + crossbow rack = the crossbowman;
+    - stone golem on a plinth = the ore guardian;
+    - also a hiring board, a blue banner with a gold hammer, barrels, crates, logs and a cold fire
+      ring.
+  - `DungeonPotionShop` (4.5k tris): a wagon-shop under a green-white striped awning:
+    - four big bottles on the counter with colour tags: healing red, rage orange, speed green,
+      defence blue;
+    - shelves of potions, a hanging bottle sign, a cauldron of green brew, crates of bottles.
+  - Shown 2026-10-31, verdict pending. They will NOT go into the dungeon map until approved.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
