@@ -245,9 +245,21 @@ namespace CityBuilder.Cheats
             GUILayout.EndHorizontal();
             if (Button("Маяки: готовы светить снова")) { LighthouseAim.ResetCooldowns(); Say("маяки готовы"); }
 
+            Header("Подземелье");
+            GUILayout.BeginHorizontal();
+            if (Dungeon.DungeonMode.IsActive)
+            {
+                if (Button("Выйти из подземелья")) Dungeon.DungeonTravel.Leave();
+            }
+            else if (Dungeon.DungeonTravel.CanEnter && Button("Войти в подземелье 1 (герои города)"))
+            {
+                Dungeon.DungeonTravel.Enter(Dungeon.DungeonTravel.FirstDungeonId);
+            }
+            GUILayout.EndHorizontal();
+
             var ships = ShipManager.Instance;
             var map = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
-            if (ships == null || map == null || !map.NoRaids) return;
+            if (ships == null || map == null || !map.NoRaids || map.IsDungeon) return;
             Header("Корабли (архипелаг)");
             GUILayout.BeginHorizontal();
             foreach (var kind in ShipStats.All)

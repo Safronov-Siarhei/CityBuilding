@@ -18,5 +18,17 @@ namespace CityBuilder.Saving
 
         /// <summary>The season the fresh game is dressed in (the menu's theme); null is summer. Ignored when loading a save.</summary>
         public static Core.MapSeason? NewGameSeason;
+
+        /// <summary>The game is a walk through this dungeon (Dungeon.DungeonTravel.Enter): its map id; consumed by DungeonMode.</summary>
+        public static string DungeonId;
+
+        /// <summary>The heroes who went down into the dungeon, as they were (consumed by DungeonMode).</summary>
+        public static System.Collections.Generic.List<HeroEntry> DungeonHeroes;
+
+        /// <summary>The town's save name while the heroes are below, given back to it when they come up.</summary>
+        public static string DungeonReturnName;
+
+        /// <summary>The name a loaded game is saved back under, when the slot it came from is not it (the town coming back from a dungeon).</summary>
+        public static string SaveNameAfterLoad;
     }
 }

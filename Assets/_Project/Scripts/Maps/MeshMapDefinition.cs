@@ -55,10 +55,20 @@ namespace CityBuilder.Maps
         // no orc raids over land: on the archipelago they will come by sea (later)
         [SerializeField] private bool noRaids;
 
+        // A dungeon (Tools/blender/dungeon1.py, the user, 2026-10-31): a labyrinth the heroes walk
+        // while the town waits (Dungeon.DungeonMode). No forest, no boulders, no ore; its props and
+        // camp buildings are meshes of their own, and its spots are the Blender points list.
+        [SerializeField] private bool dungeon;
+        [SerializeField] private GameObject propsPrefab;
+        [SerializeField] private GameObject[] buildingPrefabs = new GameObject[0];
+
         public string MapId => string.IsNullOrEmpty(mapId) ? name : mapId;
         public bool IsGenerated => generated;
         public Material TerrainMaterial => terrainMaterial;
-        public bool NoRaids => noRaids;
+        public bool NoRaids => noRaids || dungeon;
+        public bool IsDungeon => dungeon;
+        public GameObject PropsPrefab => propsPrefab;
+        public GameObject[] BuildingPrefabs => buildingPrefabs ?? new GameObject[0];
         public GameObject GroundPrefab => groundPrefab;
         public GameObject WaterPrefab => waterPrefab;
         public GameObject WaterPlacementZonePrefab => waterPlacementZonePrefab;
@@ -124,6 +134,13 @@ namespace CityBuilder.Maps
             decorData = decor;
             decorMaterial = decorMat;
             keepWaterRotation = keepWaterRot;
+        }
+
+        public void EditorInitializeDungeon(GameObject props, GameObject[] buildings)
+        {
+            dungeon = true;
+            propsPrefab = props;
+            buildingPrefabs = buildings ?? new GameObject[0];
         }
 
         public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps, int[] levels, Vector2[] zone, MapSpot[] others = null)

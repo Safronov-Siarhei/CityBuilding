@@ -418,6 +418,36 @@ namespace CityBuilder.Maps
             }
 
             FillTheLand(map);
+            if (map.IsDungeon) DressDungeon(map);
+        }
+
+        /// <summary>
+        /// A dungeon's own meshes on top of its land -- the props (in the same squares as the
+        /// ground) and the camp's buildings -- and the streamer that draws only the squares near
+        /// the camera (DungeonChunkStreamer).
+        /// </summary>
+        private void DressDungeon(MeshMapDefinition map)
+        {
+            if (map.PropsPrefab != null) Instantiate(map.PropsPrefab, Vector3.zero, map.PropsPrefab.transform.rotation, transform);
+            foreach (var building in map.BuildingPrefabs)
+            {
+                if (building != null) Instantiate(building, Vector3.zero, building.transform.rotation, transform);
+            }
+            // the squares: the ground comes cut 8 x 8 (dungeon1.py CHUNKS)
+            var square = 11f;
+            if (_groundInstance != null)
+            {
+                var renderers = _groundInstance.GetComponentsInChildren<Renderer>();
+                if (renderers.Length > 0)
+                {
+                    var bounds = renderers[0].bounds;
+                    foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+                    square = Mathf.Max(bounds.size.x, bounds.size.z) / 8f;
+                }
+            }
+            var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
+            var streamer = gameObject.AddComponent<DungeonChunkStreamer>();
+            streamer.Initialize(new[] { gameObject }, square, rig != null ? rig.transform : null);
         }
 
         /// <summary>
@@ -595,7 +625,8 @@ namespace CityBuilder.Maps
             // The ore veins first of all: they are dealt from the map's id alone, so they have to
             // take their ground before the forest and the boulders (dealt by unseeded Random)
             // take theirs -- or the same map would deal different veins on every load.
-            OreDepositSpawner.Instance?.Initialize(map, new HashSet<Vector2Int>(_treesZoneCells));
+            // a dungeon has none of the land's riches: no veins, no forest, no boulders
+            if (!map.IsDungeon) OreDepositSpawner.Instance?.Initialize(map, new HashSet<Vector2Int>(_treesZoneCells));
 
             // Called even when the zone resolved to nothing, so TreesAreaSpawner gets to report a
             // forest that silently failed to materialise rather than staying quiet about it.
@@ -610,7 +641,7 @@ namespace CityBuilder.Maps
             // After the forest, so boulders can't land on a cell a tree already took (they share
             // GridManager occupancy), and after ComputeWaterAndZoneCells so they stay out of the
             // water.
-            RockSpawner.Instance?.Initialize(map.RockPrefabs);
+            if (!map.IsDungeon) RockSpawner.Instance?.Initialize(map.RockPrefabs);
 
             // Last, so the props start out hidden under every tree and boulder just placed.
             if (map.DecorData != null && map.DecorMaterial != null)

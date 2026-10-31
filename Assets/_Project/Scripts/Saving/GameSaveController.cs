@@ -77,6 +77,11 @@ namespace CityBuilder.Saving
             // Resuming from the autosave gives no name to save back under: the dialog should ask
             // for one, not offer "_autosave".
             CurrentSaveName = nameToLoad == AutosaveName ? string.Empty : nameToLoad;
+            if (GameSessionIntent.SaveNameAfterLoad != null)
+            {
+                CurrentSaveName = GameSessionIntent.SaveNameAfterLoad;
+                GameSessionIntent.SaveNameAfterLoad = null;
+            }
             LoadedMapId = _pendingLoad.mapId;
             LoadedSeason = System.Enum.IsDefined(typeof(Core.MapSeason), _pendingLoad.season) ? (Core.MapSeason)_pendingLoad.season : Core.MapSeason.Summer;
 
@@ -118,7 +123,8 @@ namespace CityBuilder.Saving
         /// never an Invasion run: it is ranked, and a run that could be reloaded could be replayed
         /// (the user, 2026-10-20: a dropped run is not resumed).
         /// </summary>
-        private bool CanAutosave => (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) && !Invasion.InvasionMode.IsActive;
+        private bool CanAutosave => (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) && !Invasion.InvasionMode.IsActive
+            && !Dungeon.DungeonMode.IsActive;
 
         /// <summary>Writes the autosave slot now and starts the interval over. Does not touch CurrentSaveName.</summary>
         public void Autosave()
@@ -139,10 +145,14 @@ namespace CityBuilder.Saving
         /// <summary>Explicit, player-triggered save under the given (already sanitized) name.</summary>
         public void SaveGame(string saveName)
         {
-            if (string.IsNullOrEmpty(saveName)) return;
+            // below ground the game is the dungeon, not the town: the town waits in its own slot
+            if (string.IsNullOrEmpty(saveName) || Dungeon.DungeonMode.IsActive) return;
             CurrentSaveName = saveName;
             SaveSystem.Save(saveName, CollectSaveData());
         }
+
+        /// <summary>Writes the game as it stands into this slot, leaving CurrentSaveName alone (the town before its heroes go down).</summary>
+        public void WriteSlot(string slot) => SaveSystem.Save(slot, CollectSaveData());
 
         private void ApplyLoadedState(GameSaveData data)
         {

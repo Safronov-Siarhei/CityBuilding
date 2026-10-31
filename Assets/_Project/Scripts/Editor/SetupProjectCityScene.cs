@@ -508,6 +508,14 @@ namespace CityBuilder.EditorTools
             WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes
+            // down, the scene is the dungeon's map and what a town runs is switched off.
+            var dungeonMode = managers.AddComponent<CityBuilder.Dungeon.DungeonMode>();
+            var dungeonModeSO = new SerializedObject(dungeonMode);
+            dungeonModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            WriteArray(dungeonModeSO.FindProperty("notInDungeon"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
+            dungeonModeSO.ApplyModifiedPropertiesWithoutUndo();
+
             // The Laboratory's brain. No wiring of its own: it finds the Laboratory through
             // BuildingInstance's registry, because the building comes and goes while it does not.
             var researchManager = managers.AddComponent<CityBuilder.Research.ResearchManager>();
@@ -583,6 +591,9 @@ namespace CityBuilder.EditorTools
             // always winter, a fir forest only (the conifers of trees1.py), its own New Year rules.
             CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.NewYearMapId, "Inv-2", null,
                 MapSeason.Winter, new[] { "Tree2", "Tree5", "Tree6", "Tree9" });
+            // The first dungeon (Tools/blender/dungeon1.py): the labyrinth the heroes walk while the
+            // town waits (Dungeon/DungeonMode). Not in any picker -- DungeonTravel opens it.
+            CreateDungeonDefinition(CityBuilder.Dungeon.DungeonTravel.FirstDungeonId, "Dungeon-1");
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new

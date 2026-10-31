@@ -143,6 +143,57 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// A dungeon's map (Tools/blender/dungeon1.py, exported by export_map.py): its ground,
+        /// relief, water and decor as any designed map's, plus its props and camp buildings, and
+        /// its points list (<prefix>-Points.csv: kind,x,y,z in Blender axes) as the map's spots --
+        /// start, exit, rewards, fires, lights, the camp's two buildings. No forest, no boulders.
+        /// </summary>
+        private static void CreateDungeonDefinition(string mapId, string prefix)
+        {
+            var folder = $"Assets/_Project/Models/{mapId}";
+            var ground = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Ground.fbx");
+            var water = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Water.fbx");
+            if (ground == null || water == null)
+            {
+                Debug.LogWarning($"CreateDungeonDefinition: {folder}/{prefix}-Ground/-Water.fbx missing -- skipping {mapId}.");
+                return;
+            }
+            var map = ScriptableObject.CreateInstance<MeshMapDefinition>();
+            map.EditorInitialize(mapId, ground, water, null, null, new GameObject[0], new GameObject[0], null);
+            var relief = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Relief.fbx");
+            var decor = CreateMapDecorData(mapId, folder, prefix);
+            var terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
+            map.EditorInitializeExtras(relief, null, null, decor, terrainMaterial, keepWaterRot: true);
+            var buildings = new List<GameObject>();
+            foreach (var part in new[] { "HireCamp", "PotionShop" })
+            {
+                var building = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-{part}.fbx");
+                if (building != null) buildings.Add(building);
+            }
+            map.EditorInitializeDungeon(AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Props.fbx"), buildings.ToArray());
+
+            var spots = new List<MapSpot>();
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            var pointsPath = $"{folder}/{prefix}-Points.csv";
+            if (File.Exists(pointsPath))
+            {
+                foreach (var line in File.ReadAllLines(pointsPath))
+                {
+                    var f = line.Split(',');
+                    if (f.Length < 4 || f[0] == "kind") continue;
+                    // Blender x, y -> the game's x, z
+                    spots.Add(new MapSpot { kind = f[0], position = new Vector2(float.Parse(f[1], culture), float.Parse(f[2], culture)) });
+                }
+            }
+            map.EditorInitializeSpots(null, null, null, null, spots.ToArray());
+
+            Directory.CreateDirectory(MeshMapsFolder);
+            var path = $"{MeshMapsFolder}/{mapId}.asset";
+            DeleteIfExists(path);
+            AssetDatabase.CreateAsset(map, path);
+        }
+
+        /// <summary>
         /// The archipelago's template (Maps/Archipelago): no meshes -- the game generates the islands
         /// from the seed in the map's id -- just what they are dressed with: the terrain palette, the
         /// trees and the boulders. No orc raids over land.

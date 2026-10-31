@@ -73,6 +73,9 @@ namespace CityBuilder.Saving
             return JsonUtility.FromJson<GameSaveData>(File.ReadAllText(path));
         }
 
+        /// <summary>The slot the town waits in while its heroes are below (Dungeon.DungeonTravel); never listed.</summary>
+        public const string HiddenTownSlot = "_dungeon";
+
         public static List<SaveSlotInfo> ListSaves()
         {
             var result = new List<SaveSlotInfo>();
@@ -80,6 +83,8 @@ namespace CityBuilder.Saving
 
             foreach (var file in Directory.GetFiles(SavesFolder, "*.json"))
             {
+                // the town waiting while its heroes are in a dungeon is not a save of the player's
+                if (Path.GetFileNameWithoutExtension(file) == HiddenTownSlot) continue;
                 result.Add(new SaveSlotInfo
                 {
                     Name = Path.GetFileNameWithoutExtension(file),
