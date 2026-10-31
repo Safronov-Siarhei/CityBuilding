@@ -95,6 +95,21 @@ namespace CityBuilder.EditorTools
                 so.FindProperty(field).objectReferenceValue = LoadWild(file);
             }
 
+            // the dungeon's monsters (Tools/blender/monsters.py)
+            foreach (var (field, file) in new[]
+                     {
+                         ("ratModel", "MonsterRat"), ("batModel", "MonsterBat"), ("spiderModel", "MonsterSpider"),
+                         ("spiderlingModel", "MonsterSpiderling"), ("skeletonModel", "MonsterSkeleton"), ("koboldModel", "MonsterKobold"),
+                         ("stoneGolemModel", "MonsterStoneGolem"), ("spiderQueenModel", "MonsterSpiderQueen"),
+                         ("spiderCocoonModel", "MonsterSpiderCocoon"), ("oreGolemModel", "MonsterOreGolem"),
+                     })
+            {
+                var path = $"Assets/_Project/Models/Monsters/{file}.fbx";
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/monsters.py and export_fbx.py.");
+                so.FindProperty(field).objectReferenceValue = model;
+            }
+
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();
             foreach (var level in new[] { 1, 2 })

@@ -35,6 +35,7 @@ SOLDIERS = os.path.join(project, "Assets", "_Project", "Models", "Soldiers")
 WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
 CITIZENS = os.path.join(project, "Assets", "_Project", "Models", "Citizens")
 SHIPS = os.path.join(project, "Assets", "_Project", "Models", "Ships")
+MONSTERS = os.path.join(project, "Assets", "_Project", "Models", "Monsters")
 PALETTE_DIR = os.path.join(project, "Assets", "_Project", "Models", "Palette")
 
 
@@ -42,7 +43,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild")):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -66,6 +67,9 @@ def target(o):
     if o.name.startswith("Ship") and not o.name.startswith("Shipyard"):
         os.makedirs(SHIPS, exist_ok=True)
         return os.path.join(SHIPS, o.name + ".fbx")
+    if o.name.startswith("Monster"):
+        os.makedirs(MONSTERS, exist_ok=True)
+        return os.path.join(MONSTERS, o.name + ".fbx")
     if o.name.startswith("Villager"):
         os.makedirs(CITIZENS, exist_ok=True)
         return os.path.join(CITIZENS, o.name + ".fbx")

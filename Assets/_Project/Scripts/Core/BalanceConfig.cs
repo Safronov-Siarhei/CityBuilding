@@ -525,6 +525,41 @@ namespace CityBuilder.Core
         [SerializeField] private float sceneryStreamSquare = 24f;
         [SerializeField] private int dungeonEntranceCount = 3;
         [SerializeField] private float dungeonEnterReach = 4f;
+        [SerializeField] private float dungeonGuardRadius = 4f;
+        [SerializeField] private float dungeonBossGuardRadius = 7f;
+        [SerializeField] private int dungeonMonsterLevel1 = 1;
+        [SerializeField] private int dungeonMonsterLevel2 = 2;
+        [SerializeField] private int dungeonMonsterLevel3 = 3;
+        [SerializeField] private float dungeonCoinsPerHealth = 0.1f;
+        [SerializeField] private float dungeonXpShare = 0.25f;
+        [SerializeField] private int dungeonBossCoins = 300;
+        [SerializeField] private int dungeonBossCrystals = 5;
+        [SerializeField] private int lairRats = 5;
+        [SerializeField] private int dungeonBossThemeLairs = 2;
+        [SerializeField] private int lairBats = 3;
+        [SerializeField] private int lairSpiders = 2;
+        [SerializeField] private int lairSpiderlings = 3;
+        [SerializeField] private int lairSkeletons = 2;
+        [SerializeField] private int lairKobolds = 2;
+        [SerializeField] private int lairStoneGolems = 1;
+        [SerializeField] private float spiderPoisonSeconds = 3f;
+        [SerializeField] private float spiderPoisonKeep = 0.5f;
+        [SerializeField] private float skeletonGetUpSeconds = 2.5f;
+        [SerializeField] private float skeletonGetUpHealth = 0.5f;
+        [SerializeField] private float queenWebEvery = 9f;
+        [SerializeField] private float queenWebStun = 2f;
+        [SerializeField] private float queenWebRange = 6f;
+        [SerializeField] private float queenBroodEvery = 15f;
+        [SerializeField] private int queenBroodCount = 2;
+        [SerializeField] private float queenCocoonSeconds = 7f;
+        [SerializeField] private int queenCocoonBrood = 4;
+        [SerializeField] private float queenCocoonHeal = 0.015f;
+        [SerializeField] private float golemSlamEvery = 8f;
+        [SerializeField] private float golemSlamRadius = 2.2f;
+        [SerializeField] private float golemSlamDamage = 1.5f;
+        [SerializeField] private float golemBoulderEvery = 6f;
+        [SerializeField] private float golemBoulderRange = 9f;
+        [SerializeField] private float golemArmour = 0.4f;
         [SerializeField] private int fertilePatchesPerIsland = 2;
         [SerializeField] private float fertilePatchRadius = 5f;
         [SerializeField] private float fertileFarmBonus = 0.5f;
@@ -611,12 +646,27 @@ namespace CityBuilder.Core
         [SerializeField] private int nyGoldShaman = 60;
 
         // The Invasion run's jungle (InvasionJungle): its monsters, camps, shrines and boss.
+        /// <summary>Every monster the economy tab has mon_ID_* keys for: the jungle's and the dungeon's.</summary>
+        private static readonly string[] MonsterIds =
+        {
+            "wolf", "bear", "troll", "giant", "rat", "bat", "spider", "spiderling", "skeleton", "kobold", "stone_golem", "spider_queen", "ore_golem",
+        };
+
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
         {
             new MonsterStats { id = "wolf", maxHealth = 30, attackDamage = 3, attackIntervalSeconds = 1f, attackRange = 1.1f, walkSpeed = 2f },
             new MonsterStats { id = "bear", maxHealth = 90, attackDamage = 8, attackIntervalSeconds = 1.4f, attackRange = 1.3f, walkSpeed = 1.5f },
             new MonsterStats { id = "troll", maxHealth = 200, attackDamage = 14, attackIntervalSeconds = 1.5f, attackRange = 1.5f, walkSpeed = 1.3f },
             new MonsterStats { id = "giant", maxHealth = 900, attackDamage = 30, attackIntervalSeconds = 2f, attackRange = 2f, walkSpeed = 1.2f },
+            new MonsterStats { id = "rat", maxHealth = 14, attackDamage = 2, attackIntervalSeconds = 0.8f, attackRange = 0.7f, walkSpeed = 2.2f },
+            new MonsterStats { id = "bat", maxHealth = 18, attackDamage = 3, attackIntervalSeconds = 1.0f, attackRange = 0.7f, walkSpeed = 2.4f },
+            new MonsterStats { id = "spider", maxHealth = 45, attackDamage = 5, attackIntervalSeconds = 1.1f, attackRange = 0.8f, walkSpeed = 2.0f },
+            new MonsterStats { id = "spiderling", maxHealth = 14, attackDamage = 2, attackIntervalSeconds = 0.9f, attackRange = 0.6f, walkSpeed = 2.2f },
+            new MonsterStats { id = "skeleton", maxHealth = 70, attackDamage = 7, attackIntervalSeconds = 1.4f, attackRange = 0.8f, walkSpeed = 1.2f },
+            new MonsterStats { id = "kobold", maxHealth = 35, attackDamage = 6, attackIntervalSeconds = 2.0f, attackRange = 4.0f, walkSpeed = 1.5f },
+            new MonsterStats { id = "stone_golem", maxHealth = 180, attackDamage = 12, attackIntervalSeconds = 1.8f, attackRange = 1.0f, walkSpeed = 0.9f },
+            new MonsterStats { id = "spider_queen", maxHealth = 1200, attackDamage = 22, attackIntervalSeconds = 1.6f, attackRange = 1.6f, walkSpeed = 1.4f },
+            new MonsterStats { id = "ore_golem", maxHealth = 1600, attackDamage = 30, attackIntervalSeconds = 2.2f, attackRange = 1.8f, walkSpeed = 1.0f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -858,6 +908,42 @@ namespace CityBuilder.Core
         /// <summary>Dungeon entrances on an archipelago, and how near a hero must be to go in (cells).</summary>
         public int DungeonEntranceCount => dungeonEntranceCount;
         public float DungeonEnterReach => dungeonEnterReach;
+        /// <summary>The dungeon (Dungeon/DungeonMonsters, DungeonMonsterPowers): lairs, levels, rewards and the monsters' and bosses' powers.</summary>
+        public float DungeonGuardRadius => dungeonGuardRadius;
+        public float DungeonBossGuardRadius => dungeonBossGuardRadius;
+        public int DungeonMonsterLevel1 => dungeonMonsterLevel1;
+        public int DungeonMonsterLevel2 => dungeonMonsterLevel2;
+        public int DungeonMonsterLevel3 => dungeonMonsterLevel3;
+        public float DungeonCoinsPerHealth => dungeonCoinsPerHealth;
+        public float DungeonXpShare => dungeonXpShare;
+        public int DungeonBossCoins => dungeonBossCoins;
+        public int DungeonBossCrystals => dungeonBossCrystals;
+        public int LairRats => lairRats;
+        public int DungeonBossThemeLairs => dungeonBossThemeLairs;
+        public int LairBats => lairBats;
+        public int LairSpiders => lairSpiders;
+        public int LairSpiderlings => lairSpiderlings;
+        public int LairSkeletons => lairSkeletons;
+        public int LairKobolds => lairKobolds;
+        public int LairStoneGolems => lairStoneGolems;
+        public float SpiderPoisonSeconds => spiderPoisonSeconds;
+        public float SpiderPoisonKeep => spiderPoisonKeep;
+        public float SkeletonGetUpSeconds => skeletonGetUpSeconds;
+        public float SkeletonGetUpHealth => skeletonGetUpHealth;
+        public float QueenWebEvery => queenWebEvery;
+        public float QueenWebStun => queenWebStun;
+        public float QueenWebRange => queenWebRange;
+        public float QueenBroodEvery => queenBroodEvery;
+        public int QueenBroodCount => queenBroodCount;
+        public float QueenCocoonSeconds => queenCocoonSeconds;
+        public int QueenCocoonBrood => queenCocoonBrood;
+        public float QueenCocoonHeal => queenCocoonHeal;
+        public float GolemSlamEvery => golemSlamEvery;
+        public float GolemSlamRadius => golemSlamRadius;
+        public float GolemSlamDamage => golemSlamDamage;
+        public float GolemBoulderEvery => golemBoulderEvery;
+        public float GolemBoulderRange => golemBoulderRange;
+        public float GolemArmour => golemArmour;
         /// <summary>The archipelago's fertile soil: patches per island, their radius in cells, and a Farm's extra yield on it (0.5 = +50% with its whole plot fertile).</summary>
         public int FertilePatchesPerIsland => fertilePatchesPerIsland;
         public float FertilePatchRadius => fertilePatchRadius;
@@ -1354,6 +1440,41 @@ namespace CityBuilder.Core
             sceneryStreamSquare = Read(economy, "scenery_stream_square_cells", sceneryStreamSquare);
             dungeonEntranceCount = (int)Read(economy, "dungeon_entrance_count", dungeonEntranceCount);
             dungeonEnterReach = Read(economy, "dungeon_enter_reach_cells", dungeonEnterReach);
+            dungeonGuardRadius = Read(economy, "dungeon_monster_guard_radius", dungeonGuardRadius);
+            dungeonBossGuardRadius = Read(economy, "dungeon_boss_guard_radius", dungeonBossGuardRadius);
+            dungeonMonsterLevel1 = (int)Read(economy, "dungeon_monster_level_1", dungeonMonsterLevel1);
+            dungeonMonsterLevel2 = (int)Read(economy, "dungeon_monster_level_2", dungeonMonsterLevel2);
+            dungeonMonsterLevel3 = (int)Read(economy, "dungeon_monster_level_3", dungeonMonsterLevel3);
+            dungeonCoinsPerHealth = Read(economy, "dungeon_coins_per_health", dungeonCoinsPerHealth);
+            dungeonXpShare = Read(economy, "dungeon_xp_share", dungeonXpShare);
+            dungeonBossCoins = (int)Read(economy, "dungeon_boss_coins", dungeonBossCoins);
+            dungeonBossCrystals = (int)Read(economy, "dungeon_boss_crystals", dungeonBossCrystals);
+            lairRats = (int)Read(economy, "dungeon_lair_rats", lairRats);
+            dungeonBossThemeLairs = (int)Read(economy, "dungeon_boss_theme_lairs", dungeonBossThemeLairs);
+            lairBats = (int)Read(economy, "dungeon_lair_bats", lairBats);
+            lairSpiders = (int)Read(economy, "dungeon_lair_spiders", lairSpiders);
+            lairSpiderlings = (int)Read(economy, "dungeon_lair_spiderlings", lairSpiderlings);
+            lairSkeletons = (int)Read(economy, "dungeon_lair_skeletons", lairSkeletons);
+            lairKobolds = (int)Read(economy, "dungeon_lair_kobolds", lairKobolds);
+            lairStoneGolems = (int)Read(economy, "dungeon_lair_stone_golems", lairStoneGolems);
+            spiderPoisonSeconds = Read(economy, "dungeon_spider_poison_sec", spiderPoisonSeconds);
+            spiderPoisonKeep = Read(economy, "dungeon_spider_poison_keep", spiderPoisonKeep);
+            skeletonGetUpSeconds = Read(economy, "dungeon_skeleton_getup_sec", skeletonGetUpSeconds);
+            skeletonGetUpHealth = Read(economy, "dungeon_skeleton_getup_health", skeletonGetUpHealth);
+            queenWebEvery = Read(economy, "dungeon_queen_web_every_sec", queenWebEvery);
+            queenWebStun = Read(economy, "dungeon_queen_web_stun_sec", queenWebStun);
+            queenWebRange = Read(economy, "dungeon_queen_web_range", queenWebRange);
+            queenBroodEvery = Read(economy, "dungeon_queen_brood_every_sec", queenBroodEvery);
+            queenBroodCount = (int)Read(economy, "dungeon_queen_brood_count", queenBroodCount);
+            queenCocoonSeconds = Read(economy, "dungeon_queen_cocoon_sec", queenCocoonSeconds);
+            queenCocoonBrood = (int)Read(economy, "dungeon_queen_cocoon_brood", queenCocoonBrood);
+            queenCocoonHeal = Read(economy, "dungeon_queen_cocoon_heal", queenCocoonHeal);
+            golemSlamEvery = Read(economy, "dungeon_golem_slam_every_sec", golemSlamEvery);
+            golemSlamRadius = Read(economy, "dungeon_golem_slam_radius", golemSlamRadius);
+            golemSlamDamage = Read(economy, "dungeon_golem_slam_damage_mult", golemSlamDamage);
+            golemBoulderEvery = Read(economy, "dungeon_golem_boulder_every_sec", golemBoulderEvery);
+            golemBoulderRange = Read(economy, "dungeon_golem_boulder_range", golemBoulderRange);
+            golemArmour = Read(economy, "dungeon_golem_armour", golemArmour);
             fertilePatchesPerIsland = (int)Read(economy, "fertile_patches_per_island", fertilePatchesPerIsland);
             fertilePatchRadius = Read(economy, "fertile_patch_radius", fertilePatchRadius);
             fertileFarmBonus = Read(economy, "fertile_farm_bonus", fertileFarmBonus);
@@ -1434,6 +1555,11 @@ namespace CityBuilder.Core
             nyShamanFreezeRadius = Read(economy, "inv_ny_shaman_freeze_radius", nyShamanFreezeRadius);
             nyShamanFreezeSeconds = Read(economy, "inv_ny_shaman_freeze_sec", nyShamanFreezeSeconds);
             nyGoldShaman = (int)Read(economy, "inv_gold_ice_shaman", nyGoldShaman);
+            // the asset keeps the list it was first written with: a monster added since must be put in
+            foreach (var id in MonsterIds)
+            {
+                if (!monsters.Exists(m => m.id == id)) monsters.Add(new MonsterStats { id = id });
+            }
             foreach (var m in monsters)
             {
                 m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);

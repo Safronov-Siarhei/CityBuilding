@@ -50,6 +50,28 @@ namespace CityBuilder.Combat
 
         /// <summary>The midnight boss: freezes the towers near him.</summary>
         IceShaman = 10,
+
+        // The dungeon's monsters (Dungeon/DungeonMonsters, Tools/blender/monsters.py; the user,
+        // 2026-10-31). They hold their lairs like the jungle's; stats economy mon_<id>_*.
+
+        /// <summary>A pack animal: small, quick, weak.</summary>
+        Rat = 11,
+        /// <summary>Flies, bites and is off again.</summary>
+        Bat = 12,
+        /// <summary>The hunter: its bite poisons -- the hero slows.</summary>
+        Spider = 13,
+        /// <summary>The queen's brood.</summary>
+        Spiderling = 14,
+        /// <summary>A dead miner with a pick: falls once and gets up again.</summary>
+        Skeleton = 15,
+        /// <summary>Keeps its distance and throws dynamite.</summary>
+        Kobold = 16,
+        /// <summary>The small golem: slow, a lot of health.</summary>
+        StoneGolem = 17,
+        /// <summary>Boss: webs a hero, calls her brood, seals herself in a cocoon at half health.</summary>
+        SpiderQueen = 18,
+        /// <summary>Boss: slams the ground round him, throws boulders, grows ore armour at half health.</summary>
+        OreGolem = 19,
     }
 
     /// <summary>
@@ -82,12 +104,27 @@ namespace CityBuilder.Combat
                 case OrcKind.Boss: return "orc_chief_boss";
                 case OrcKind.Thief: return "orc_thief";
                 case OrcKind.IceShaman: return "orc_ice_shaman";
+                case OrcKind.Rat: return "rat";
+                case OrcKind.Bat: return "bat";
+                case OrcKind.Spider: return "spider";
+                case OrcKind.Spiderling: return "spiderling";
+                case OrcKind.Skeleton: return "skeleton";
+                case OrcKind.Kobold: return "kobold";
+                case OrcKind.StoneGolem: return "stone_golem";
+                case OrcKind.SpiderQueen: return "spider_queen";
+                case OrcKind.OreGolem: return "ore_golem";
                 default: return "orc";
             }
         }
 
         /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
-        public static bool IsMonster(OrcKind kind) => kind >= OrcKind.Wolf && kind <= OrcKind.Giant;
+        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind);
+
+        /// <summary>One of the dungeon's monsters.</summary>
+        public static bool IsDungeonMonster(OrcKind kind) => kind >= OrcKind.Rat && kind <= OrcKind.OreGolem;
+
+        /// <summary>A boss: the jungle's giant, the dungeon's queen and ore golem.</summary>
+        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -312,6 +349,12 @@ namespace CityBuilder.Combat
         private void Update()
         {
             if (Steered) return;
+            // sealed in a cocoon, down on the ground: nothing to do until it is over
+            if (BusyFor > 0f)
+            {
+                BusyFor -= Time.deltaTime;
+                return;
+            }
             if (_guarding)
             {
                 GuardUpdate();
@@ -399,10 +442,24 @@ namespace CityBuilder.Combat
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
 
+            // ore armour (the ore golem past half health): a share of every blow turned aside
+            if (Armour > 0f) amount = Mathf.Max(1, Mathf.RoundToInt(amount * (1f - Mathf.Clamp01(Armour))));
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth > 0)
             {
                 ShowHealth();
+                Hurt?.Invoke(this);
+                return;
+            }
+            // a skeleton falls apart once and pulls itself together again (DungeonMonsterPowers)
+            if (GetsUpOnce)
+            {
+                GetsUpOnce = false;
+                CurrentHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * Mathf.Clamp01(GetUpHealthShare)));
+                BusyFor = GetUpSeconds;
+                _soldierTarget = null;
+                ShowHealth();
+                Collapsed?.Invoke();
                 return;
             }
             // the figure falls and sinks on its own, after the unit is gone
@@ -423,13 +480,44 @@ namespace CityBuilder.Combat
                 var feet = transform.position.y;
                 var top = feet + 0.6f;
                 foreach (var r in GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
-                _healthBar = BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, Kind == OrcKind.Giant ? 1.2f : 0.7f);
+                _healthBar = BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, IsBossKind(Kind) ? 1.2f : 0.7f);
             }
             _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, _maxHealth));
         }
 
         /// <summary>Raised on each blow it lands -- a jointed figure (FigureAnimator) swings with it.</summary>
         public event System.Action Struck;
+
+        /// <summary>Raised on each blow or shot at a soldier or hero, with him -- the spider's poison rides on it.</summary>
+        public event System.Action<SoldierUnit> HitSoldier;
+
+        /// <summary>Raised when it is hurt and still standing -- a boss watches for its half-health turn.</summary>
+        public event System.Action<OrcUnit> Hurt;
+
+        /// <summary>Raised as a skeleton falls apart to get up again (FigureAnimator shows the fall and the rise).</summary>
+        public event System.Action Collapsed;
+
+        /// <summary>Seconds it does nothing at all -- in a cocoon, lying in pieces. Set by the dungeon's powers.</summary>
+        public float BusyFor { get; set; }
+
+        /// <summary>The share of every blow it shrugs off (0 none .. 1 all but one point).</summary>
+        public float Armour { get; set; }
+
+        /// <summary>Falls apart once instead of dying, and gets up GetUpSeconds later with GetUpHealthShare of its health.</summary>
+        public bool GetsUpOnce { get; set; }
+        public float GetUpSeconds { get; set; }
+        public float GetUpHealthShare { get; set; }
+
+        /// <summary>Gives back health, never past its full -- the queen's brood feeding her through the cocoon.</summary>
+        public void Heal(int amount)
+        {
+            if (amount <= 0 || CurrentHealth <= 0) return;
+            CurrentHealth = Mathf.Min(_maxHealth, CurrentHealth + amount);
+            if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, _maxHealth));
+        }
+
+        /// <summary>The soldier or hero it is fighting now, if any.</summary>
+        public SoldierUnit Fighting => _soldierTarget != null && _soldierTarget.CurrentHealth > 0 ? _soldierTarget : null;
 
         /// <summary>Raised as an orc falls, whoever struck it -- the King's experience and a run's gold are counted from it.</summary>
         public static event System.Action<OrcUnit> Died;
@@ -845,7 +933,10 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
-        public bool IsRanged => Kind == OrcKind.Thrower;
+        public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold;
+
+        /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>
+        private ProjectileKind Shot => Kind == OrcKind.Kobold ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
 
         /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
         private void StrikeAt(Vector3 target)
@@ -874,21 +965,22 @@ namespace CityBuilder.Combat
         private void Strike(SoldierUnit soldier)
         {
             StrikeAt(soldier.transform.position);
-            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
+            if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
             else soldier.TakeDamage(_attackDamage);
+            HitSoldier?.Invoke(soldier);
         }
 
         private void Strike(FreedPrisoner prisoner)
         {
             StrikeAt(prisoner.transform.position);
-            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), prisoner, _attackDamage);
+            if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), prisoner, _attackDamage);
             else prisoner.TakeDamage(_attackDamage);
         }
 
         private void Strike(BuildingInstance building)
         {
             StrikeAt(building.transform.position);
-            if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Javelin, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
+            if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
             else building.TryDamage(_attackDamage);
         }
 

@@ -26,7 +26,7 @@ namespace CityBuilder.Dungeon
         /// <summary>A sandbox town may send its heroes down; a run and a dungeon may not.</summary>
         public static bool CanEnter => !Invasion.InvasionMode.IsActive && !DungeonMode.IsActive && !LoadingScreen.Busy;
 
-        public static void Enter(string dungeonId)
+        public static void Enter(string dungeonId, int level = 1)
         {
             if (!CanEnter) return;
             var save = Object.FindAnyObjectByType<GameSaveController>();
@@ -51,6 +51,7 @@ namespace CityBuilder.Dungeon
             }
 
             GameSessionIntent.DungeonId = dungeonId;
+            GameSessionIntent.DungeonLevel = Mathf.Clamp(level, 1, 3);
             GameSessionIntent.DungeonHeroes = heroes;
             GameSessionIntent.DungeonReturnName = save.CurrentSaveName;
             GameSessionIntent.NewGameMapId = dungeonId;
@@ -81,8 +82,21 @@ namespace CityBuilder.Dungeon
                     // a hero who fell below comes up hurt, not dead (the Town Hall raises him -- later)
                     entry.currentHealth = hero.IsFallen || hero.Unit == null ? 1 : hero.Unit.CurrentHealth;
                 }
-                SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             }
+            // what the heroes earned below: the coins into the shared treasury, the slain bosses into the record
+            var monsters = DungeonMonsters.Instance;
+            if (monsters != null)
+            {
+                if (monsters.CoinsEarned > 0)
+                {
+                    var entry = town.resources.Find(r => r.type == HeroRoster.Money);
+                    if (entry == null) town.resources.Add(entry = new ResourceEntry { type = HeroRoster.Money });
+                    entry.amount += monsters.CoinsEarned;
+                }
+                foreach (var id in monsters.BossesSlainNow)
+                    if (!town.dungeonBossesSlain.Contains(id)) town.dungeonBossesSlain.Add(id);
+            }
+            SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             GameSessionIntent.SaveNameToLoad = SaveSystem.HiddenTownSlot;
             GameSessionIntent.SaveNameAfterLoad = mode.ReturnName ?? string.Empty;
             LoadingScreen.IntoGame(SceneManager.GetActiveScene().name);

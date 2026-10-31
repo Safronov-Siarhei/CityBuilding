@@ -52,6 +52,114 @@ namespace CityBuilder.Tests.PlayMode
             Physics.SyncTransforms();
         }
 
+        private static readonly OrcKind[] DungeonKinds =
+        {
+            OrcKind.Rat, OrcKind.Bat, OrcKind.Spider, OrcKind.Spiderling, OrcKind.Skeleton, OrcKind.Kobold,
+            OrcKind.StoneGolem, OrcKind.SpiderQueen, OrcKind.OreGolem,
+        };
+
+        private static OrcUnit First(OrcKind kind)
+        {
+            foreach (var orc in OrcUnit.All)
+                if (orc != null && orc.Kind == kind && orc.CurrentHealth > 0) return orc;
+            return null;
+        }
+
+        /// <summary>
+        /// The user, 2026-10-31: the monsters in the game and every one of them animated. A lair at
+        /// every lair spot and both bosses; all nine kinds are there, each drawn by its own jointed
+        /// model (not the cube stand-in) and moved by a FigureAnimator; a bat's wings beat; every
+        /// monster holds its lair.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheMonsters_StandInTheirLairs_EachKindJointedAndAnimated()
+        {
+            var monsters = DungeonMonsters.Instance;
+            Assert.IsNotNull(monsters, "No monsters were put down in the dungeon.");
+            var map = MeshMapApplier.Instance.CurrentMap;
+            Assert.AreEqual(map.SpotsOf("lair").Count + 2, monsters.Lairs.Count, "Not every lair and boss hall has its monsters.");
+            foreach (var kind in DungeonKinds)
+            {
+                var monster = First(kind);
+                Assert.IsNotNull(monster, $"No {kind} in the dungeon.");
+                Assert.IsTrue(monster.IsGuard, $"The {kind} does not hold its lair.");
+                Assert.IsNotNull(monster.transform.Find(kind.ToString()), $"The {kind} is not drawn by its model.");
+                Assert.IsNotNull(monster.GetComponent<FigureAnimator>(), $"The {kind} has no animation.");
+            }
+            var bat = First(OrcKind.Bat).GetComponent<FigureAnimator>();
+            var seen = new HashSet<int>();
+            Camera.main.transform.position = First(OrcKind.Bat).transform.position + new Vector3(0f, 6f, -4f);
+            Camera.main.transform.LookAt(First(OrcKind.Bat).transform.position);
+            for (var i = 0; i < 20; i++)
+            {
+                yield return null;
+                seen.Add(Mathf.RoundToInt(bat.WingAngle / 10f));
+            }
+            Assert.Greater(seen.Count, 2, "The bat's wings do not beat.");
+        }
+
+        /// <summary>A skeleton struck down falls apart, lies, and gets up once; struck down again it stays down.</summary>
+        [UnityTest]
+        public IEnumerator ASkeleton_GetsUpOnce()
+        {
+            var skeleton = First(OrcKind.Skeleton);
+            Assert.IsNotNull(skeleton, "No skeleton in the dungeon.");
+            skeleton.TakeDamage(skeleton.MaxHealth * 10);
+            Assert.Greater(skeleton.CurrentHealth, 0, "A skeleton struck down the first time did not get up.");
+            Assert.Greater(skeleton.BusyFor, 0f, "The skeleton did not lie in pieces before getting up.");
+            yield return null;
+            Assert.IsTrue(skeleton.GetComponent<FigureAnimator>().IsDown, "The skeleton's fall is not shown.");
+            skeleton.TakeDamage(skeleton.MaxHealth * 10);
+            yield return null;
+            Assert.IsTrue(skeleton == null, "A skeleton got up twice.");
+        }
+
+        /// <summary>
+        /// The queen at half health seals herself in a cocoon: she does nothing, spiderlings come, and
+        /// while they live she heals. The ore golem at half health grows his armour. A boss slain
+        /// pays coins and crystals and is written down as slain.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheBosses_CocoonAndArmour_AndTheyPay()
+        {
+            var queen = First(OrcKind.SpiderQueen);
+            Assert.IsNotNull(queen, "No spider queen.");
+            // the sheet's numbers, not a fallback: a boss is far tougher than a rat
+            Assert.AreEqual(CityBuilder.Core.BalanceConfig.Instance.MonsterUnit("spider_queen").LevelStats(1).maxHealth, queen.MaxHealth,
+                "The queen does not have the sheet's health.");
+            Assert.Greater(queen.MaxHealth, First(OrcKind.Rat).MaxHealth * 10, "The queen is no tougher than a rat.");
+            var lings = 0;
+            foreach (var o in OrcUnit.All) if (o != null && o.Kind == OrcKind.Spiderling) lings++;
+            queen.TakeDamage(queen.MaxHealth / 2 + 1);
+            var powers = queen.GetComponent<DungeonMonsterPowers>();
+            Assert.IsTrue(powers.InCocoon, "The queen at half health is not in her cocoon.");
+            Assert.Greater(queen.BusyFor, 0f, "The queen in her cocoon still fights.");
+            var after = 0;
+            foreach (var o in OrcUnit.All) if (o != null && o.Kind == OrcKind.Spiderling) after++;
+            Assert.Greater(after, lings, "No spiderlings came to the cocoon.");
+            var health = queen.CurrentHealth;
+            yield return new WaitForSeconds(1.5f);
+            Assert.Greater(queen.CurrentHealth, health, "The living spiderlings do not heal the queen in her cocoon.");
+
+            var golem = First(OrcKind.OreGolem);
+            Assert.IsNotNull(golem, "No ore golem.");
+            golem.TakeDamage(golem.MaxHealth / 2 + 1);
+            Assert.Greater(golem.Armour, 0f, "The ore golem at half health has no armour.");
+            golem.GetComponent<FigureAnimator>().Slam();
+            Assert.IsTrue(golem.GetComponent<FigureAnimator>().IsSlamming, "The golem's slam is not shown.");
+
+            var monsters = DungeonMonsters.Instance;
+            var crystals = CityBuilder.Core.Wallet.UpgradeCrystals;
+            golem.Armour = 0f;
+            golem.TakeDamage(golem.MaxHealth * 10);
+            yield return null;
+            Assert.Greater(monsters.CoinsEarned, 0, "The golem slain paid no coins.");
+            Assert.Greater(CityBuilder.Core.Wallet.UpgradeCrystals, crystals, "The golem slain paid no crystals.");
+            Assert.Contains(DungeonMonsters.BossId(DungeonTravel.FirstDungeonId, 1, "golem"), new List<string>(monsters.BossesSlainNow),
+                "The slain golem is not written down.");
+            CityBuilder.Core.Wallet.UpgradeCrystals = crystals;
+        }
+
         [Test]
         public void TheHeroComesDownToTheCamp_AndTheTownIsNotThere()
         {

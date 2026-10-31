@@ -43,6 +43,9 @@ namespace CityBuilder.Dungeon
 
         public string DungeonId { get; private set; }
 
+        /// <summary>The level of the entrance the heroes came down by: the monsters' strength and the rewards.</summary>
+        public int Level { get; private set; } = 1;
+
         /// <summary>The town's save name, given back to it when the heroes come up.</summary>
         public string ReturnName { get; private set; }
 
@@ -58,6 +61,8 @@ namespace CityBuilder.Dungeon
             Instance = this;
             _active = !string.IsNullOrEmpty(GameSessionIntent.DungeonId);
             DungeonId = GameSessionIntent.DungeonId;
+            Level = GameSessionIntent.DungeonLevel;
+            GameSessionIntent.DungeonLevel = 1;
             _arriving = GameSessionIntent.DungeonHeroes ?? new List<HeroEntry>();
             ReturnName = GameSessionIntent.DungeonReturnName;
             GameSessionIntent.DungeonId = null;
@@ -101,6 +106,9 @@ namespace CityBuilder.Dungeon
                 rig.JumpTo(StartSpot);
             }
             SpawnHeroes();
+            // the monsters in their lairs and the bosses the town has not slain on this level yet
+            var slain = SaveSystem.Load(SaveSystem.HiddenTownSlot)?.dungeonBossesSlain;
+            gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, slain);
             Arrived = true;
         }
 

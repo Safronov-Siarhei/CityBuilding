@@ -21,6 +21,13 @@ namespace CityBuilder.Combat
     /// (its other ArmOff); a four-legged one has LegFL/LegFR/LegBL/LegBR, trots on diagonal pairs,
     /// and bites -- its head dips and snaps -- for a blow.
     ///
+    /// The dungeon's monsters (Tools/blender/monsters.py) add their own (the user, 2026-10-31: every
+    /// monster animated):
+    /// - a bat's wings (WingL/WingR) beat all the time, faster in flight, and the bat bobs on them;
+    /// - a spider's four leg groups scuttle as a four-legged beast's legs trot;
+    /// - a skeleton falling apart (OrcUnit.Collapsed) pitches over and sinks, lies, and rises;
+    /// - a golem's slam (Slam, from DungeonMonsterPowers) raises both fists and brings them down.
+    ///
     /// The parts swing about the body's own side-to-side axis. One figure on the map, a handful of
     /// rotations a frame: nothing a phone notices, and no animation clips to import or keep in step
     /// with the model.
@@ -46,6 +53,16 @@ namespace CityBuilder.Combat
 
         private Transform _figure, _legL, _legR, _armSword, _armShield, _head;
         private Transform _legFL, _legFR, _legBL, _legBR;
+        private Transform _wingL, _wingR;
+        private Quaternion _wingLRot, _wingRRot;
+        private const float FlapRadiansPerSecond = 16f;
+        private const float FlapDegrees = 40f;
+        private const float HoverBob = 0.02f;
+        private const float SlamSeconds = 0.8f;
+        private float _flap;
+        private float _slam = -1f;
+        private float _down = -1f;
+        private float _downSeconds = 1f;
         private Quaternion _figureRot, _legLRot, _legRRot, _swordRot, _shieldRot, _headRot;
         private Quaternion _legFLRot, _legFRRot, _legBLRot, _legBRRot;
         private Vector3 _figurePos;
@@ -83,6 +100,10 @@ namespace CityBuilder.Combat
             _legFR = Part("LegFR");
             _legBL = Part("LegBL");
             _legBR = Part("LegBR");
+            _wingL = Part("WingL");
+            _wingR = Part("WingR");
+            _wingLRot = Rest(_wingL);
+            _wingRRot = Rest(_wingR);
             _figureRot = figure.localRotation;
             _figurePos = figure.localPosition;
             _legLRot = Rest(_legL);
@@ -116,6 +137,7 @@ namespace CityBuilder.Combat
             if (_unit != null) _unit.Struck += OnStruck;
             _orc = GetComponent<OrcUnit>();
             if (_orc != null) _orc.Struck += OnStruck;
+            if (_orc != null) _orc.Collapsed += OnCollapsed;
             // only the jungle's crowd sits out off screen -- the King is the one figure always
             // watched -- and nothing does without a graphics device, where nothing is "visible"
             if (_orc == null || SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) _visibility = null;
@@ -125,6 +147,25 @@ namespace CityBuilder.Combat
         {
             if (_unit != null) _unit.Struck -= OnStruck;
             if (_orc != null) _orc.Struck -= OnStruck;
+            if (_orc != null) _orc.Collapsed -= OnCollapsed;
+        }
+
+        /// <summary>A golem's slam: both fists up and down. Public for the dungeon's powers and the tests.</summary>
+        public void Slam() => _slam = 0f;
+
+        /// <summary>A slam is being shown.</summary>
+        public bool IsSlamming => _slam >= 0f;
+
+        /// <summary>Lying in pieces before getting up (a skeleton).</summary>
+        public bool IsDown => _down >= 0f;
+
+        /// <summary>The wings' beat, in degrees, as shown this frame -- for the tests.</summary>
+        public float WingAngle { get; private set; }
+
+        private void OnCollapsed()
+        {
+            _down = 0f;
+            _downSeconds = _orc != null && _orc.GetUpSeconds > 0.2f ? _orc.GetUpSeconds : 2f;
         }
 
         /// <summary>Starts a blow. Public for the tests and for anything that strikes without a SoldierUnit.</summary>
@@ -174,14 +215,57 @@ namespace CityBuilder.Combat
                 else if (_armSword != null) sword = _draws ? DrawAngle(t) : StrikeAngle(t);
                 else head = BiteAngle(t);      // a beast with no arm to swing bites
             }
+            // a golem's slam: both arms over the head, then down together, the body dipping into it
+            var dip = 0f;
+            if (_slam >= 0f)
+            {
+                _slam += dt;
+                var t = _slam / SlamSeconds;
+                if (t >= 1f) _slam = -1f;
+                else
+                {
+                    var arms = t < 0.45f ? -110f * Mathf.SmoothStep(0f, 1f, t / 0.45f)
+                        : t < 0.6f ? Mathf.Lerp(-110f, 40f, (t - 0.45f) / 0.15f)
+                        : Mathf.Lerp(40f, 0f, Mathf.SmoothStep(0f, 1f, (t - 0.6f) / 0.4f));
+                    sword = arms;
+                    Turn(_armShield, _shieldRot, arms);
+                    dip = t > 0.45f && t < 0.75f ? 0.04f : 0f;
+                }
+            }
             Turn(_armSword, _swordRot, sword);
             Turn(_head, _headRot, head);
 
+            // a bat's wings beat all the time, harder in flight; the body bobs on the beat
+            if (_wingL != null || _wingR != null)
+            {
+                _flap += dt * FlapRadiansPerSecond * (1f + 0.4f * Run);
+                WingAngle = FlapDegrees * Mathf.Sin(_flap);
+                if (_wingL != null) _wingL.localRotation = Quaternion.AngleAxis(WingAngle, Vector3.forward) * _wingLRot;
+                if (_wingR != null) _wingR.localRotation = Quaternion.AngleAxis(-WingAngle, Vector3.forward) * _wingRRot;
+                dip -= HoverBob * Mathf.Sin(_flap);
+                // a bite is a dive at the target
+                if (_strike >= 0f) dip += 0.06f * Mathf.Sin(Mathf.Clamp01(_strike / StrikeSeconds) * Mathf.PI);
+            }
+
             // the whole figure: a bob on each footfall or on the breath, a lean into the run
-            var bob = Run * StepBob * Mathf.Abs(step) + stand * BreathBob * (breath + 1f) * 0.5f;
+            var bob = Run * StepBob * Mathf.Abs(step) + stand * BreathBob * (breath + 1f) * 0.5f - dip;
+            var pitch = Forward * Run * RunLean;
+            // a skeleton in pieces: pitched over and sunk for most of the wait, then rising
+            if (_down >= 0f)
+            {
+                _down += dt;
+                var t = _down / Mathf.Max(0.2f, _downSeconds);
+                if (t >= 1f) _down = -1f;
+                else
+                {
+                    var fall = t < 0.15f ? Mathf.SmoothStep(0f, 1f, t / 0.15f) : t > 0.75f ? 1f - Mathf.SmoothStep(0f, 1f, (t - 0.75f) / 0.25f) : 1f;
+                    pitch += Forward * 80f * fall;
+                    bob -= 0.12f * fall;
+                }
+            }
             _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale);
             // about the figure's OWN side axis: the model may stand turned on its root
-            _figure.localRotation = _figureRot * Quaternion.AngleAxis(Forward * Run * RunLean, Vector3.right);
+            _figure.localRotation = _figureRot * Quaternion.AngleAxis(pitch, Vector3.right);
         }
 
         /// <summary>

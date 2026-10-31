@@ -1,8 +1,9 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-31: IN THE GAME (phase 1, the walk). Dungeon 1 (88 x 88 CELLS) is exported and
-> playable through the cheats window. Monsters, hiring, the shop, crystals and the entrance on the
-> map are not done yet. Not seen on a phone or by the user in the game. built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> Status 2026-10-31: IN THE GAME: the walk (phase 1), 3 entrances on the archipelago (phase 2a), and
+> the MONSTERS + BOSSES with animations (phase 2b). Hiring, the shop, crystals in rooms and patrols
+> are not done. The user has not seen the monsters in the game yet; not measured on a phone.
+> Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes), orc-faction (OrcUnit).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -225,7 +226,7 @@ dungeon opens as a SEPARATE SCENE.
 - Enemy ideas for an old mine: skeleton miners, bats, rats, spiders, kobolds. Boss ideas: an ore
   golem, a spider queen, a cave troll.
 
-## Monsters (agreed with the user 2026-10-31, nothing built)
+## Monsters (agreed with the user 2026-10-31; in the game, see below)
 - Roster «пока что подходит» (sizes in cells, hero ~0.8):
   - cave rats 0.3, a pack of 4-6;
   - bats 0.4, hit and fly off;
@@ -243,8 +244,8 @@ dungeon opens as a SEPARATE SCENE.
 - Monsters HOLD THEIR LAIR: they aggro at ~4 cells, chase only a short way, then return.
 - Levels 1/2/3: the SAME monsters, stronger and better paid, by multipliers in the sheet.
 - Elite (rare stronger) monsters: an idea to keep, NOT now (the user).
-- **Models v1 (2026-10-31, shown, awaiting the verdict):** `Tools/blender/monsters.py`, collection
-  «Подземелье-монстры» in Buildings-Size1-Models.blend, not exported.
+- **Models v1 (2026-10-31, shown, «переноси в игре»):** `Tools/blender/monsters.py`, collection
+  «Подземелье-монстры» in Buildings-Size1-Models.blend; exported to `Assets/_Project/Models/Monsters/`.
   - The models are built at GAME size: the King is 0.53 cells tall.
   - Sizes: rat 0.22 long; bat 0.3 wingspan, flying at 0.35; spider 0.42 across; spiderling 0.22;
     skeleton 0.5; kobold 0.4; stone golem 0.8; queen ~2 across; cocoon 1.2 tall; ore golem 2 tall.
@@ -254,6 +255,40 @@ dungeon opens as a SEPARATE SCENE.
 - Technical plan: build on the orcs' combat code as another hostile side; units rows `monster_*`;
   monsters far from the camera sleep; 30-40 active at most; Blender models first, shown next to
   a hero for scale.
+
+## Monsters in the game (phase 2b, 2026-10-31)
+- **What they are:** kinds of `OrcUnit` (`OrcKind` Rat=11 .. OreGolem=19, `IsDungeonMonster`,
+  `IsBossKind`), like the jungle's wild animals. Stats are economy rows `mon_<id>_*`
+  (rat, bat, spider, spiderling, skeleton, kobold, stone_golem, spider_queen, ore_golem) read by
+  `BalanceConfig.MonsterUnit`. The asset's monster list is topped up from `MonsterIds`, so a
+  monster added later is never silently left on its C# fallback.
+- **Lairs:** `dungeon_lairs.py` writes `lair` spots (the 7 monster halls + 3 arenas) and
+  `boss_spiders` / `boss_golem` into `Dungeon-1-Points.csv` (also run by `dungeon1.py`).
+  `DungeonMonsters.Begin` (added by `DungeonMode` after the heroes): the `dungeon_boss_theme_lairs`
+  lairs nearest each boss take its theme (spiders+spiderlings / stone golems+skeletons); the rest
+  cycle rats, skeletons+kobolds, bats, rats+bats. Counts are `dungeon_lair_*`.
+- **Hold the lair:** `SetGuardPost(null, post, radius)`; radius `dungeon_monster_guard_radius`
+  (4 cells), bosses `dungeon_boss_guard_radius` (7).
+- **Levels:** the entrance's level goes through `DungeonTravel.Enter(id, level)` →
+  `GameSessionIntent.DungeonLevel` → `DungeonMode.Level`; the monsters' unit level is
+  `dungeon_monster_level_N`.
+- **Powers** (`DungeonMonsterPowers`, numbers `dungeon_*`): spider poison slows (`SoldierUnit.Slow`);
+  skeleton collapses once and gets up (`OrcUnit.GetsUpOnce`); kobold throws (ranged, cannonball
+  projectile); queen: web spit stuns (`SoldierUnit.Stun`) with a white web disc, brood calls,
+  COCOON at half health (figure hidden, `SpiderCocoon` model, spiderlings heal her each second
+  they live); ore golem: ring slam, boulder at a far hero, ore armour at half health (`Armour`, gold
+  and copper lumps).
+- **Animations** (`FigureAnimator`): walk legs (2 or 4), head, strike arm for all; bat wings flap
+  and bob, dive on a strike; `Slam()` both fists for the golems; `OnCollapsed` falls and rises
+  (skeleton).
+- **Rewards:** coins per kill = ceil(health × `dungeon_coins_per_health`); a boss adds
+  `dungeon_boss_coins` and `dungeon_boss_crystals` × level (crystals straight into
+  `Wallet.UpgradeCrystals`), posts `#log_dungeon_boss_slain`. XP = health × `dungeon_xp_share`.
+  `DungeonTravel.Leave` adds the coins to the town save. Slain bosses (`DungeonRecord`, save field
+  `dungeonBossesSlain`, id `{dungeon}-L{level}-{spiders|golem}`) never come back; the rest respawn
+  on every visit (each visit is a fresh scene).
+- Tests (`DungeonTests`): `TheMonsters_StandInTheirLairs_EachKindJointedAndAnimated`,
+  `ASkeleton_GetsUpOnce`, `TheBosses_CocoonAndArmour_AndTheyPay` (break-checked).
 
 ## In the game (phase 1, 2026-10-31)
 - **Export:**
@@ -331,12 +366,17 @@ dungeon opens as a SEPARATE SCENE.
 - Test: `ArchipelagoTests.DungeonEntrances_AndTheForest_DrawnNearTheCameraOnly`.
 
 ## Files
+- Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,
+  `DungeonMonsterPowers.cs`; `Combat/OrcUnit.cs`, `OrcRaidManager.cs` (models, boss controller),
+  `FigureAnimator.cs`, `SoldierUnit.cs` (Stun/Slow); `Editor/SetupProjectOrcs.cs` (model wiring).
 - `Tools/blender/cave_entrance.py`: mountain, tunnel, the 4 cave proposals; importable, `main(models, row_y)`.
 - `Tools/blender/mine_entrance.py`: MineWorking / MineAbandoned / MineHeadframe.
 - `Tools/blender/crypt_entrance.py`: the rejected ruins.
 - All are in collection «Подземелье» of Buildings-Size1-Models.blend. None are exported.
 
 ## Traps
+- A monster needs THREE places or it silently falls back: the `mon_*` sheet rows, `BalanceConfig`
+  `MonsterIds`, and `OrcRaidManager.MonsterModel` + `SetupProjectOrcs` wiring.
 - **SCALE:** the game's unit is one MAP CELL. A hero is 0.6-0.8 cells tall; a level-1 building is
   1 x 1-2 cells and 1.2-1.5 tall. Talk sizes with the user in CELLS (the user, 2026-10-31).
   - Content was built for a 1.8 m person, so it is shrunk by `SCALE = 0.44`:
@@ -355,6 +395,8 @@ dungeon opens as a SEPARATE SCENE.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
 
 ## Open
-- Phase 2 order to agree with the user: entrance on the map → monsters + bosses → camp (hire, shop) → rewards.
-- The user's answers to the list above.
+- Patrols in passages (2-3), crystals scattered in rooms, rewards in crystal rooms.
+- The camp: hiring and the shop.
+- Monsters far from the camera sleeping (performance on a phone, not measured).
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.
+- Elite monsters: an idea, not now.

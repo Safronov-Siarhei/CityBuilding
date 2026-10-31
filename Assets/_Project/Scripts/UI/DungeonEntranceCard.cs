@@ -50,8 +50,9 @@ namespace CityBuilder.UI
         {
             if (Shown == null || !Shown.HeroNear() || !DungeonTravel.CanEnter) return;
             var id = Shown.DungeonId;
+            var level = Shown.Level;
             Close();
-            DungeonTravel.Enter(id);
+            DungeonTravel.Enter(id, level);
         }
 
         private void Update()

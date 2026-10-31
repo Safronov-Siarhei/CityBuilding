@@ -69,10 +69,16 @@ namespace CityBuilder.Saving
 
             var nameToLoad = GameSessionIntent.SaveNameToLoad;
             GameSessionIntent.SaveNameToLoad = null;
-            if (string.IsNullOrEmpty(nameToLoad)) return;
+            // a new game, or a dungeon (which reads the town's record from its slot): no bosses slain yet here
+            if (string.IsNullOrEmpty(nameToLoad))
+            {
+                Dungeon.DungeonRecord.Load(null);
+                return;
+            }
 
             _pendingLoad = SaveSystem.Load(nameToLoad);
             if (_pendingLoad == null) return;
+            Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain);
 
             // Resuming from the autosave gives no name to save back under: the dialog should ask
             // for one, not offer "_autosave".
@@ -605,6 +611,7 @@ namespace CityBuilder.Saving
             if (researchManager != null)
             {
                 data.completedResearch.AddRange(researchManager.CompletedTopicIds);
+                data.dungeonBossesSlain.AddRange(Dungeon.DungeonRecord.BossesSlain);
                 foreach (var ship in Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.Ships : new List<Ships.ShipUnit>())
                 {
                     if (ship == null) continue;

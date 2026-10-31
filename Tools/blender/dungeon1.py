@@ -1229,6 +1229,9 @@ def main():
         f.write(f"exit,{ex * SCALE:.3f},{ey * SCALE:.3f},0.000\n")
         sx, sy, _ = w(CAMP[0], CAMP[1] + 1.0)
         f.write(f"start,{sx * SCALE:.3f},{sy * SCALE:.3f},0.000\n")
+        import dungeon_lairs                                   # the monsters' lairs and the bosses' halls
+        for lk, lx, ly in dungeon_lairs.rows(PLAN):
+            f.write(f"{lk},{lx:.3f},{ly:.3f},0.000\n")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
     print("SAVED", OUT)

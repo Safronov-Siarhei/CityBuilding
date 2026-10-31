@@ -113,6 +113,20 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject bearModel;
         [SerializeField] private GameObject trollModel;
         [SerializeField] private GameObject giantModel;
+        // The dungeon's monsters (Tools/blender/monsters.py, Models/Monsters), jointed; the queen's cocoon is a prop.
+        [SerializeField] private GameObject ratModel;
+        [SerializeField] private GameObject batModel;
+        [SerializeField] private GameObject spiderModel;
+        [SerializeField] private GameObject spiderlingModel;
+        [SerializeField] private GameObject skeletonModel;
+        [SerializeField] private GameObject koboldModel;
+        [SerializeField] private GameObject stoneGolemModel;
+        [SerializeField] private GameObject spiderQueenModel;
+        [SerializeField] private GameObject spiderCocoonModel;
+        [SerializeField] private GameObject oreGolemModel;
+
+        /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
+        public GameObject SpiderCocoonModel => spiderCocoonModel;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;
@@ -512,6 +526,14 @@ namespace CityBuilder.Combat
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
+            // the dungeon's bosses are two cells across: a body to match, or the heroes stand inside them
+            if (kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem)
+            {
+                controller.radius = 0.7f / UnitSize.Scale;
+                controller.height = 1.8f / UnitSize.Scale;
+                controller.center = new Vector3(0f, controller.height * 0.5f, 0f);
+            }
+
             var unit = root.AddComponent<OrcUnit>();
             unit.Initialize(level, kind);
             return unit;
@@ -525,6 +547,15 @@ namespace CityBuilder.Combat
                 case OrcKind.Bear: return bearModel;
                 case OrcKind.Troll: return trollModel;
                 case OrcKind.Giant: return giantModel;
+                case OrcKind.Rat: return ratModel;
+                case OrcKind.Bat: return batModel;
+                case OrcKind.Spider: return spiderModel;
+                case OrcKind.Spiderling: return spiderlingModel;
+                case OrcKind.Skeleton: return skeletonModel;
+                case OrcKind.Kobold: return koboldModel;
+                case OrcKind.StoneGolem: return stoneGolemModel;
+                case OrcKind.SpiderQueen: return spiderQueenModel;
+                case OrcKind.OreGolem: return oreGolemModel;
                 default: return null;
             }
         }

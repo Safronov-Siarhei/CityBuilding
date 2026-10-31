@@ -164,7 +164,13 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Experience for one enemy he struck down: its health.</summary>
-        public static int ExperienceFor(IDamageTarget target) => target is OrcUnit orc ? Mathf.Max(1, orc.MaxHealth) : 0;
+        public static int ExperienceFor(IDamageTarget target)
+        {
+            if (!(target is OrcUnit orc)) return 0;
+            // a dungeon's monsters teach little (the user, 2026-10-31: the map has many more places to level)
+            if (OrcUnit.IsDungeonMonster(orc.Kind)) return Mathf.Max(1, Mathf.RoundToInt(orc.MaxHealth * BalanceConfig.Instance.DungeonXpShare));
+            return Mathf.Max(1, orc.MaxHealth);
+        }
 
         /// <summary>
         /// As in Dota, the hero learns from every enemy that falls near him, not only from his own

@@ -22,6 +22,9 @@ namespace CityBuilder.Saving
         /// <summary>The game is a walk through this dungeon (Dungeon.DungeonTravel.Enter): its map id; consumed by DungeonMode.</summary>
         public static string DungeonId;
 
+        /// <summary>The level of the entrance the heroes went down by (1 nearest the start); consumed by DungeonMode.</summary>
+        public static int DungeonLevel = 1;
+
         /// <summary>The heroes who went down into the dungeon, as they were (consumed by DungeonMode).</summary>
         public static System.Collections.Generic.List<HeroEntry> DungeonHeroes;
 

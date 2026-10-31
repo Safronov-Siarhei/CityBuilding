@@ -214,10 +214,33 @@ namespace CityBuilder.Combat
             _attackDamage = level.attackDamage;
         }
 
+        /// <summary>Seconds he stands bound (the spider queen's web): no step, no blow.</summary>
+        public float StunnedFor { get; private set; }
+
+        /// <summary>Seconds he walks slowed (a spider's poison), and how much of his speed he keeps.</summary>
+        public float SlowedFor { get; private set; }
+        private float _slowFactor = 1f;
+
+        /// <summary>Binds him for `seconds` (the longer of this and what is left).</summary>
+        public void Stun(float seconds) => StunnedFor = Mathf.Max(StunnedFor, seconds);
+
+        /// <summary>Slows him to `keep` of his speed for `seconds`.</summary>
+        public void Slow(float seconds, float keep)
+        {
+            SlowedFor = Mathf.Max(SlowedFor, seconds);
+            _slowFactor = Mathf.Clamp(keep, 0.1f, 1f);
+        }
+
         private void Update()
         {
             if (_shieldLeft > 0f) _shieldLeft -= Time.deltaTime;
             if (_rageLeft > 0f) _rageLeft -= Time.deltaTime;
+            if (SlowedFor > 0f) SlowedFor -= Time.deltaTime;
+            if (StunnedFor > 0f)
+            {
+                StunnedFor -= Time.deltaTime;
+                return;
+            }
             if (Group == null) return;
 
             if (_retreatLeft > 0f)
@@ -457,6 +480,7 @@ namespace CityBuilder.Combat
             if (!_route.TryGetDirection(transform.position, out var direction)) return;
 
             var speed = _walkSpeed * Weather.SpeedMultiplier;   // the New Year's blizzard slows everyone
+            if (SlowedFor > 0f) speed *= _slowFactor;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(direction * speed * Time.deltaTime);
