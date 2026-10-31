@@ -112,6 +112,13 @@ dungeon opens as a SEPARATE SCENE.
     - the golem (north-west) and the spiders (north-east), each with ONE way in.
   - 8 dead-end crystal rooms and 10 monster halls.
   - Writes `<out>.json` for the 3D build to follow.
+- **Plan v1** was judged TOO SIMPLE by the user. **Plan v2** (2026-10-31, shown, seed 7):
+  - A 20 x 20 grid of 10 m cells, passages about 4 m wide, only 6 loops.
+  - Halls: camp 4x2, lake 4x4, the bosses 5x5 in the corners with one way in from their farthest
+    side, two 3x3 monster arenas and a 2x2 one.
+  - Dead ends: 31 in all. The 8 FARTHEST are crystal rooms; the other 23 are empty, to mislead.
+  - 10 monster junctions.
+  - The shortest walk: ~1140 m to the spider queen, ~790 m to the golem.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
