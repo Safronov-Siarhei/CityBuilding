@@ -74,6 +74,20 @@ dungeon opens as a SEPARATE SCENE.
   (a stone golem tank), from «Лагерь гномов-старателей».
 - **Next step:** the user wants the test MAP (100 x 100) made in Blender to approve its style first;
   it will be redone if needed.
+- **Test map v1** (2026-10-31, shown, awaiting the user's style verdict):
+  - Scripts: `Tools/blender/dungeon1.py` builds the 1 m grid and object `Dungeon1`;
+    `dungeon_preview.py` renders a top view plus game-angle views lit from the DungeonLight_* Empties.
+  - Layout:
+    - camp with a gnome hut, potion stall, fire and a waiting banner;
+    - rail gallery in the west;
+    - lake hall with a bridge in the centre;
+    - spider lair in the east;
+    - golem hall in the north;
+    - 12 crystals.
+  - Look:
+    - crag walls with a dark roof beyond;
+    - one-tone floor with patches, pebbles, stalagmites, rubble and boards.
+  - Cost: ~58k triangles in one mesh — it needs chunking before the game.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
