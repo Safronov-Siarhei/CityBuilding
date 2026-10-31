@@ -94,6 +94,24 @@ dungeon opens as a SEPARATE SCENE.
   - Counts: ground 10k tris, relief 19k, props 13.5k, decor 2.8k items.
   - Its own .blend: `Dungeon-1.blend` next to the Buildings file. Map5's surface code is copied
     in, since map5.py can't be imported (it runs on import).
+- **v2 feedback** (the user, 2026-10-31):
+  - **SIZE 200 x 200** (100 is too small).
+  - **A REAL LABYRINTH:** more passages so the player truly wanders, plus rooms holding the
+    crystals.
+  - **What the user could not read:**
+    - the grey spider egg clutches (they looked like stones);
+    - the blue giant mushrooms seen from above (they looked like blobs).
+    Both need a clearer look, or should go.
+  - **The scheme comes FIRST,** before the 3D.
+- **Plan v1** (`Tools/blender/dungeon_plan.py <out.png> [seed]`, seed 7; shown 2026-10-31):
+  - A 10 x 10 grid of 20 m cells holding a seeded depth-first maze plus 9 extra loops, so it has
+    real dead ends.
+  - 2 x 2 halls:
+    - the camp (south, the way in);
+    - the lake (centre);
+    - the golem (north-west) and the spiders (north-east), each with ONE way in.
+  - 8 dead-end crystal rooms and 10 monster halls.
+  - Writes `<out>.json` for the 3D build to follow.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
