@@ -13,8 +13,6 @@ namespace CityBuilder.Maps.Archipelago
     /// </summary>
     public static class FertileLand
     {
-        private static readonly Color Soil = new Color(0.36f, 0.25f, 0.15f);
-        private static readonly Color Furrow = new Color(0.29f, 0.2f, 0.12f);
         private const float OrcClearance = 60f;
 
         /// <summary>
@@ -88,34 +86,121 @@ namespace CityBuilder.Maps.Archipelago
         }
 
         /// <summary>
-        /// The patches drawn: a quad of dark soil on each cell, a hair over the ground, every other
-        /// row a shade darker for the furrows. One mesh, two materials, no shadows -- two draws.
+        /// Drops the cells whose ground is not grass where it is drawn: the library's islands carry
+        /// no beach flags, so their sand is only known by its colour (the user, 2026-10-31: no
+        /// fertile land on a sandy shore). A ray per cell, once, when the map is laid.
         /// </summary>
-        public static GameObject Build(HashSet<Vector2Int> cells, Transform parent, MeshMapApplier applier)
+        public static void KeepGrass(HashSet<Vector2Int> cells, MeshMapApplier applier)
         {
             var grid = GridManager.Instance;
-            if (cells.Count == 0 || grid == null) return null;
-            var vertices = new List<Vector3>();
-            var soil = new List<int>();
-            var furrows = new List<int>();
-            var half = grid.CellSize * 0.5f;
+            if (grid == null || cells.Count == 0) return;
+            var drop = new List<Vector2Int>();
             foreach (var cell in cells)
             {
                 var c = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 var ray = new Ray(new Vector3(c.x, c.y + 50f, c.z), Vector3.down);
-                var y = applier.TryRaycastGround(ray, out var hit) ? hit.point.y : grid.GroundHeight;
-                y += 0.03f;
-                var s = vertices.Count;
-                vertices.Add(new Vector3(c.x - half, y, c.z - half));
-                vertices.Add(new Vector3(c.x - half, y, c.z + half));
-                vertices.Add(new Vector3(c.x + half, y, c.z + half));
-                vertices.Add(new Vector3(c.x + half, y, c.z - half));
-                (cell.y % 2 == 0 ? soil : furrows).AddRange(new[] { s, s + 1, s + 2, s, s + 2, s + 3 });
+                if (!applier.TryRaycastGround(ray, out var hit) || !(hit.collider is MeshCollider)
+                    || !ArchipelagoMeshes.IsGrassUv(hit.textureCoord)) drop.Add(cell);
             }
-            var mesh = new Mesh { name = "FertileLand", indexFormat = IndexFormat.UInt32, subMeshCount = 2 };
+            foreach (var cell in drop) cells.Remove(cell);
+        }
+
+        /// <summary>
+        /// The patches drawn as part of the ground (the user, 2026-10-31: not squares laid on the
+        /// map but the map's own soil): smooth outlines traced round the cells (marching squares
+        /// over a softened field), lying on the ground in the ground's own material and palette --
+        /// so a season's palette dresses them with it -- dark tilled soil inside, a lighter rim
+        /// where it meets the grass. One mesh, one material: one draw.
+        /// </summary>
+        public static GameObject Build(HashSet<Vector2Int> cells, Transform parent, MeshMapApplier applier, Material terrain)
+        {
+            var grid = GridManager.Instance;
+            if (cells.Count == 0 || grid == null || terrain == null) return null;
+            var min = new Vector2Int(int.MaxValue, int.MaxValue);
+            var max = new Vector2Int(int.MinValue, int.MinValue);
+            foreach (var c in cells)
+            {
+                min = Vector2Int.Min(min, c);
+                max = Vector2Int.Max(max, c);
+            }
+            min -= Vector2Int.one * 2;
+            max += Vector2Int.one * 2;
+            var w = max.x - min.x + 1;
+            var h = max.y - min.y + 1;
+
+            // membership, softened: half the cell itself, half its eight neighbours
+            var field = new float[w * h];
+            for (var z = 1; z < h - 1; z++)
+            for (var x = 1; x < w - 1; x++)
+            {
+                var around = 0f;
+                for (var dz = -1; dz <= 1; dz++)
+                for (var dx = -1; dx <= 1; dx++)
+                    if ((dx != 0 || dz != 0) && cells.Contains(new Vector2Int(min.x + x + dx, min.y + z + dz))) around += 1f;
+                field[z * w + x] = (cells.Contains(new Vector2Int(min.x + x, min.y + z)) ? 0.5f : 0f) + around / 16f;
+            }
+
+            var heights = new Dictionary<int, float>();
+            float HeightAt(int x, int z)
+            {
+                var key = z * w + x;
+                if (heights.TryGetValue(key, out var y)) return y;
+                var c = grid.GetFootprintCenterWorld(new Vector2Int(min.x + x, min.y + z), Vector2Int.one);
+                var ray = new Ray(new Vector3(c.x, c.y + 50f, c.z), Vector3.down);
+                y = applier.TryRaycastGround(ray, out var hit) ? hit.point.y : grid.GroundHeight;
+                heights[key] = y;
+                return y;
+            }
+            Vector3 Corner(int x, int z)
+            {
+                var c = grid.GetFootprintCenterWorld(new Vector2Int(min.x + x, min.y + z), Vector2Int.one);
+                return new Vector3(c.x, HeightAt(x, z) + 0.035f, c.z);
+            }
+
+            var dark = ArchipelagoMeshes.PaletteUvOf(ArchipelagoMeshes.SoilDark);
+            var light = ArchipelagoMeshes.PaletteUvOf(ArchipelagoMeshes.SoilLight);
+            var vertices = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var triangles = new List<int>();
+            var polygon = new List<Vector3>(8);
+            const float Level = 0.5f;
+            var sx = new[] { 0, 1, 1, 0 };
+            var sz = new[] { 0, 0, 1, 1 };
+            for (var z = 0; z < h - 1; z++)
+            for (var x = 0; x < w - 1; x++)
+            {
+                var inside = 0;
+                for (var k = 0; k < 4; k++)
+                    if (field[(z + sz[k]) * w + x + sx[k]] >= Level) inside++;
+                if (inside == 0) continue;
+                // the square's piece inside the outline: its corners inside, and where an edge crosses
+                polygon.Clear();
+                for (var k = 0; k < 4; k++)
+                {
+                    int ax = x + sx[k], az = z + sz[k], bx = x + sx[(k + 1) % 4], bz = z + sz[(k + 1) % 4];
+                    var va = field[az * w + ax];
+                    var vb = field[bz * w + bx];
+                    var pa = Corner(ax, az);
+                    if (va >= Level) polygon.Add(pa);
+                    if ((va >= Level) != (vb >= Level)) polygon.Add(Vector3.Lerp(pa, Corner(bx, bz), (Level - va) / (vb - va)));
+                }
+                if (polygon.Count < 3) continue;
+                // the rim: squares the outline crosses, or touching it, take the lighter soil
+                var uv = inside == 4 && Deep(field, w, h, x, z) ? dark : light;
+                var s = vertices.Count;
+                foreach (var v in polygon)
+                {
+                    vertices.Add(v);
+                    uvs.Add(uv);
+                }
+                // wound clockwise seen from above (Unity's front face): the corners run x+, then z+
+                for (var k = 1; k < polygon.Count - 1; k++) triangles.AddRange(new[] { s, s + k + 1, s + k });
+            }
+            if (triangles.Count == 0) return null;
+            var mesh = new Mesh { name = "FertileLand", indexFormat = IndexFormat.UInt32 };
             mesh.SetVertices(vertices);
-            mesh.SetTriangles(soil, 0);
-            mesh.SetTriangles(furrows, 1);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
@@ -124,13 +209,22 @@ namespace CityBuilder.Maps.Archipelago
             go.transform.SetParent(parent, true);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterials = new[]
-            {
-                new Material(RuntimeShaders.Lit) { color = Soil },
-                new Material(RuntimeShaders.Lit) { color = Furrow },
-            };
+            renderer.sharedMaterial = terrain;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
+            SeasonStyle.DressTerrain(go);
             return go;
+        }
+
+        /// <summary>True when every lattice point round the square is well inside: not the rim.</summary>
+        private static bool Deep(float[] field, int w, int h, int x, int z)
+        {
+            for (var dz = -1; dz <= 2; dz++)
+            for (var dx = -1; dx <= 2; dx++)
+            {
+                int px = x + dx, pz = z + dz;
+                if (px < 0 || pz < 0 || px >= w || pz >= h || field[pz * w + px] < 0.5f) return false;
+            }
+            return true;
         }
     }
 }

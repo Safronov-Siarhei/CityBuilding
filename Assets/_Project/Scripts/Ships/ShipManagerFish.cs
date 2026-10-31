@@ -16,7 +16,8 @@ namespace CityBuilder.Ships
     public partial class ShipManager
     {
         public const string FisherHutId = "FisherHut";
-        private const float ShoalSpinDegrees = 25f;
+        private const int FishPerShoal = 9;
+        private const float FishSeconds = 2.4f;     // between one fish leaping and the next, on average
 
         public sealed class Shoal
         {
@@ -24,6 +25,11 @@ namespace CityBuilder.Ships
             public int Stock;
             public float RespawnIn;
             public GameObject Visual;
+            /// <summary>The fish of its visual, each on its own circuit (radius, speed, phase); and which one is in the air.</summary>
+            public Transform[] Fish;
+            public Vector3[] Swim;
+            public int Leaper = -1;
+            public float LeapClock;
             public bool Alive => Stock > 0;
         }
 
@@ -47,6 +53,7 @@ namespace CityBuilder.Ships
                 if (k < 2 ? TryShoreSea(start, 15f, 60f, rng, out shoal.At) : TryShoreSea(origin + new Vector3(world.Size * 0.5f, 0f, world.Size * 0.5f), 0f, world.Size * 0.48f, rng, out shoal.At))
                 {
                     shoal.Visual = BuildShoal(shoal.At);
+                    FillShoal(shoal);
                     _shoals.Add(shoal);
                 }
             }
@@ -65,6 +72,11 @@ namespace CityBuilder.Ships
                 var r = rng.Range(minRadius, maxRadius);
                 var probe = centre + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
                 if (!TrySampleSea(probe, 2f, out var sea) || !TrySampleLand(sea, reach, out _)) continue;
+                // on the light coastal water only (the user, 2026-10-31): a shoal far out at sea is
+                // no use to a hut on the shore
+                var map = Maps.MeshMapApplier.Instance;
+                var grid = Grid.GridManager.Instance;
+                if (map != null && grid != null && !map.IsWaterPlacementZone(grid.WorldToCell(sea))) continue;
                 point = sea;
                 return true;
             }
@@ -117,7 +129,7 @@ namespace CityBuilder.Ships
             {
                 if (shoal.Visual != null)
                 {
-                    shoal.Visual.transform.Rotate(0f, ShoalSpinDegrees * t, 0f);
+                    SwimShoal(shoal, t);
                     continue;
                 }
                 if (shoal.Alive) continue;
@@ -135,6 +147,7 @@ namespace CityBuilder.Ships
                 shoal.At = at;
                 shoal.Stock = ShoalStock();
                 shoal.Visual = BuildShoal(at);
+                FillShoal(shoal);
             }
         }
 
@@ -145,7 +158,11 @@ namespace CityBuilder.Ships
             foreach (var e in entries)
             {
                 var shoal = new Shoal { At = new Vector3(e.x, WaterLevel, e.z), Stock = e.stock, RespawnIn = e.respawnIn };
-                if (shoal.Alive) shoal.Visual = BuildShoal(shoal.At);
+                if (shoal.Alive)
+                {
+                    shoal.Visual = BuildShoal(shoal.At);
+                    FillShoal(shoal);
+                }
                 _shoals.Add(shoal);
             }
         }
@@ -156,66 +173,124 @@ namespace CityBuilder.Ships
             _shoals.Clear();
         }
 
-        /// <summary>Seven dark fish backs swimming round under the surface and a few glints on it: one mesh, two materials, spun as one.</summary>
+        /// <summary>
+        /// A shoal: boxy fish (the game's look -- the user, 2026-10-31: «прямоугольные модельки рыб»)
+        /// swimming round where the fish are, each on its own circuit at the surface, and every
+        /// couple of seconds one leaping out -- so a good fishing spot reads from far off.
+        /// </summary>
         private GameObject BuildShoal(Vector3 at)
         {
             if (_fishMesh == null)
             {
                 _fishMesh = BuildFishMesh();
-                _fishMaterial = new Material(RuntimeShaders.Lit) { color = new Color(0.16f, 0.25f, 0.33f) };
-                _glintMaterial = new Material(RuntimeShaders.Unlit) { color = new Color(0.92f, 0.97f, 1f) };
+                _fishMaterial = new Material(RuntimeShaders.Lit) { color = new Color(0.55f, 0.66f, 0.74f) };
+                _glintMaterial = new Material(RuntimeShaders.Lit) { color = new Color(0.2f, 0.32f, 0.44f) };
             }
             var go = new GameObject("FishShoal");
-            go.transform.SetPositionAndRotation(new Vector3(at.x, WaterLevel + 0.03f, at.z), Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
-            go.AddComponent<MeshFilter>().sharedMesh = _fishMesh;
-            var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterials = new[] { _fishMaterial, _glintMaterial };
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
+            go.transform.position = new Vector3(at.x, WaterLevel, at.z);
             return go;
         }
 
+        private void FillShoal(Shoal shoal)
+        {
+            if (shoal.Visual == null) return;
+            var rng = new SeedRandom(Mathf.RoundToInt(shoal.At.x * 31f + shoal.At.z * 17f));
+            shoal.Fish = new Transform[FishPerShoal];
+            shoal.Swim = new Vector3[FishPerShoal];
+            for (var k = 0; k < FishPerShoal; k++)
+            {
+                var fish = new GameObject("Fish");
+                fish.transform.SetParent(shoal.Visual.transform, false);
+                fish.AddComponent<MeshFilter>().sharedMesh = _fishMesh;
+                var renderer = fish.AddComponent<MeshRenderer>();
+                renderer.sharedMaterials = new[] { _fishMaterial, _glintMaterial };
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                var scale = rng.Range(0.85f, 1.2f);
+                fish.transform.localScale = Vector3.one * scale;
+                // radius, angular speed (either way round), phase
+                shoal.Swim[k] = new Vector3(rng.Range(0.6f, 2.2f), rng.Range(0.5f, 1.1f) * (k % 3 == 0 ? -1f : 1f), rng.Range(0f, Mathf.PI * 2f));
+                shoal.Fish[k] = fish.transform;
+            }
+            shoal.LeapClock = rng.Range(0.5f, FishSeconds);
+            SwimShoal(shoal, 0f);
+        }
+
+        /// <summary>Moves every fish along its circuit, nose first, and lifts the leaper on its arc.</summary>
+        private static void SwimShoal(Shoal shoal, float dt)
+        {
+            if (shoal.Fish == null) return;
+            var time = Time.time;
+            shoal.LeapClock -= dt;
+            if (shoal.LeapClock <= 0f)
+            {
+                shoal.Leaper = Random.Range(0, shoal.Fish.Length);
+                shoal.LeapClock = FishSeconds * Random.Range(0.6f, 1.4f);
+            }
+            for (var k = 0; k < shoal.Fish.Length; k++)
+            {
+                var fish = shoal.Fish[k];
+                if (fish == null) continue;
+                var swim = shoal.Swim[k];
+                var a = swim.z + time * swim.y;
+                // a lazy wobble in and out, so the circle never looks drawn with compasses
+                var r = swim.x * (1f + 0.18f * Mathf.Sin(time * 0.7f + swim.z * 3f));
+                var pos = new Vector3(Mathf.Cos(a) * r, 0.02f, Mathf.Sin(a) * r);
+                var heading = new Vector3(-Mathf.Sin(a), 0f, Mathf.Cos(a)) * Mathf.Sign(swim.y);
+                var pitch = 0f;
+                if (k == shoal.Leaper)
+                {
+                    // the leap: up and over in the last 0.7 s before the next one is chosen
+                    var t = 1f - Mathf.Clamp01(shoal.LeapClock / 0.7f);
+                    if (shoal.LeapClock < 0.7f)
+                    {
+                        pos.y += Mathf.Sin(t * Mathf.PI) * 0.55f;
+                        pitch = Mathf.Lerp(-50f, 50f, t);
+                    }
+                }
+                fish.localPosition = pos;
+                fish.localRotation = Quaternion.LookRotation(heading) * Quaternion.Euler(pitch, 0f, Mathf.Sin(time * 6f + k) * 8f);
+            }
+        }
+
+        /// <summary>One boxy fish, nose along +z: a body, a tail fin, a back fin (sub-mesh 1 = the darker fins and back).</summary>
         private static Mesh BuildFishMesh()
         {
             var vertices = new List<Vector3>();
-            var fish = new List<int>();
-            var glints = new List<int>();
-            var rng = new SeedRandom(4242);
-            for (var k = 0; k < 7; k++)
+            var normals = new List<Vector3>();
+            var body = new List<int>();
+            var fins = new List<int>();
+            void Box(Vector3 c, Vector3 half, List<int> into)
             {
-                // a fish on a ring, nose along the way round: a diamond body and a tail
-                var a = k * Mathf.PI * 2f / 7f + rng.Range(-0.2f, 0.2f);
-                var r = rng.Range(0.7f, 1.6f);
-                var centre = new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                var along = new Vector3(-Mathf.Sin(a), 0f, Mathf.Cos(a));
-                var side = new Vector3(along.z, 0f, -along.x);
-                var len = rng.Range(0.32f, 0.45f);
-                var s = vertices.Count;
-                vertices.Add(centre + along * len);
-                vertices.Add(centre + side * (len * 0.3f));
-                vertices.Add(centre - along * (len * 0.55f));
-                vertices.Add(centre - side * (len * 0.3f));
-                vertices.Add(centre - along * (len * 0.95f) + side * (len * 0.28f));
-                vertices.Add(centre - along * (len * 0.95f) - side * (len * 0.28f));
-                fish.AddRange(new[] { s, s + 1, s + 2, s, s + 2, s + 3, s + 2, s + 4, s + 5 });
-                // a glint on the surface above every other fish
-                if (k % 2 != 0) continue;
-                var g = vertices.Count;
-                var up = Vector3.up * 0.02f;
-                vertices.Add(centre + up + along * 0.08f);
-                vertices.Add(centre + up + side * 0.05f);
-                vertices.Add(centre + up - along * 0.08f);
-                vertices.Add(centre + up - side * 0.05f);
-                glints.AddRange(new[] { g, g + 1, g + 2, g, g + 2, g + 3 });
+                var faces = new[]
+                {
+                    (Vector3.up, Vector3.right, Vector3.forward), (Vector3.down, Vector3.forward, Vector3.right),
+                    (Vector3.right, Vector3.forward, Vector3.up), (Vector3.left, Vector3.up, Vector3.forward),
+                    (Vector3.forward, Vector3.up, Vector3.right), (Vector3.back, Vector3.right, Vector3.up),
+                };
+                foreach (var (n, u, v) in faces)
+                {
+                    var o = c + Vector3.Scale(n, half);
+                    var du = Vector3.Scale(u, half);
+                    var dv = Vector3.Scale(v, half);
+                    var s = vertices.Count;
+                    vertices.Add(o - du - dv);
+                    vertices.Add(o - du + dv);
+                    vertices.Add(o + du + dv);
+                    vertices.Add(o + du - dv);
+                    for (var i = 0; i < 4; i++) normals.Add(n);
+                    into.AddRange(new[] { s, s + 1, s + 2, s, s + 2, s + 3 });
+                }
             }
-            var mesh = new Mesh { name = "FishShoal", subMeshCount = 2 };
+            Box(new Vector3(0f, 0f, 0.02f), new Vector3(0.07f, 0.055f, 0.19f), body);       // the body
+            Box(new Vector3(0f, 0.045f, 0.03f), new Vector3(0.072f, 0.015f, 0.17f), fins);  // its dark back
+            Box(new Vector3(0f, 0.08f, 0f), new Vector3(0.012f, 0.03f, 0.06f), fins);       // the back fin
+            Box(new Vector3(0f, 0f, -0.21f), new Vector3(0.012f, 0.065f, 0.035f), fins);    // the tail
+            var mesh = new Mesh { name = "Fish", subMeshCount = 2 };
             mesh.SetVertices(vertices);
-            mesh.SetTriangles(fish, 0);
-            mesh.SetTriangles(glints, 1);
-            // both faces up whichever way the winding came out: a fish seen from above
-            var normals = new Vector3[vertices.Count];
-            for (var i = 0; i < normals.Length; i++) normals[i] = Vector3.up;
-            mesh.normals = normals;
+            mesh.SetNormals(normals);
+            mesh.SetTriangles(body, 0);
+            mesh.SetTriangles(fins, 1);
             mesh.RecalculateBounds();
             return mesh;
         }

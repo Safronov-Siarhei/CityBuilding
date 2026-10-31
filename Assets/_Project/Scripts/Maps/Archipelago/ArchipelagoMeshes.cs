@@ -24,6 +24,8 @@ namespace CityBuilder.Maps.Archipelago
         private const int Cols = 8, Rows = 6;
         private const int GrassLight = 0, Grass = 1, GrassMid = 2, GrassLush = 3, GrassDark = 4, ForestFloor = 5, Moss = 6, GrassDry = 7;
         private const int Sand = 8, SandWet = 9, Dirt = 10;
+        public const int SoilLight = 10, SoilDark = 11;
+        public const int FoamIndex = Foam, WaterDeepIndex = WaterDeep, RockMidIndex = RockMid, RockDarkIndex = RockDark;
         private const int Pebble = 15, RockLight = 16, RockStone = 17, RockMid = 18, RockDark = 19, RockDeep = 20;
         private const int WaterShallow = 21, Water = 22, WaterDeep = 23, Foam = 24;
         private const int GrassB = 40, GrassLightB = 41, GrassMidB = 42, GrassLushB = 43, GrassDarkB = 44, ForestFloorB = 45, GrassDryB = 46, Stony = 47;
@@ -99,8 +101,8 @@ namespace CityBuilder.Maps.Archipelago
                     if (bands && inside && map.Land[z * n + x]) continue;
                     var edge = Mathf.Min(Mathf.Min(x, z), Mathf.Min(n - 1 - x, n - 1 - z));
                     int colour;
-                    if (edge < ArchipelagoGenerator.Storm - 3) colour = WaterDeep;
-                    else if (edge < ArchipelagoGenerator.Storm) colour = Foam;
+                    // the storm beyond the ships' limit is StormEdge's, drawn over this
+                    if (edge < ArchipelagoGenerator.Storm) colour = WaterDeep;
                     else
                     {
                         var near = inside ? toLand[z * n + x] : int.MaxValue;
@@ -208,6 +210,43 @@ namespace CityBuilder.Maps.Archipelago
             if (h < 0.74f) return RockStone;
             if (h < 0.85f) return RockMid;
             return alt > 0.5f ? RockDark : RockDeep;
+        }
+
+        /// <summary>
+        /// An island's coastal water with its blue band painted the shallows' light turquoise
+        /// (the user, 2026-10-31): the light water is exactly the strip a water building may stand
+        /// on (MeshMapApplier's placement zone, 6 m out), and what is beyond it reads as deep sea.
+        /// A copy per mesh; the shared asset is left alone.
+        /// </summary>
+        public static Mesh LightenCoast(Mesh source)
+        {
+            if (source == null) return null;
+            var mesh = Object.Instantiate(source);
+            mesh.name = source.name + "-Light";
+            var uvs = new List<Vector2>();
+            mesh.GetUVs(0, uvs);
+            var from = PaletteUv(Water);
+            var to = PaletteUv(WaterShallow);
+            var halfCell = new Vector2(0.5f / Cols, 0.5f / Rows);
+            for (var i = 0; i < uvs.Count; i++)
+            {
+                var d = uvs[i] - from;
+                if (Mathf.Abs(d.x) < halfCell.x && Mathf.Abs(d.y) < halfCell.y) uvs[i] = to + d;
+            }
+            mesh.SetUVs(0, uvs);
+            return mesh;
+        }
+
+        /// <summary>Where one of the palette's colours sits on the terrain texture (for things drawn in the ground's own material).</summary>
+        public static Vector2 PaletteUvOf(int index) => PaletteUv(index);
+
+        /// <summary>True for a uv on one of the palette's grasses (not sand, rock, dirt or water).</summary>
+        public static bool IsGrassUv(Vector2 uv)
+        {
+            var col = Mathf.Clamp(Mathf.FloorToInt(uv.x * Cols), 0, Cols - 1);
+            var row = Mathf.Clamp(Mathf.FloorToInt((1f - uv.y) * Rows), 0, Rows - 1);
+            var index = row * Cols + col;
+            return (index >= GrassLight && index <= GrassDry) || (index >= GrassB && index <= GrassDryB);
         }
 
         private static Vector2 PaletteUv(int index)

@@ -57,7 +57,13 @@ namespace CityBuilder.UI
 
         private void Start()
         {
-            var maps = MeshMapCatalog.All;
+            // only a designed map with land of its own: the archipelago is generated (no ground
+            // mesh -- the menu showed houses floating on the sky) and a dungeon is not a meadow
+            var maps = new List<MeshMapDefinition>();
+            foreach (var m in MeshMapCatalog.All)
+            {
+                if (m != null && m.GroundPrefab != null && !m.IsGenerated && !m.IsDungeon) maps.Add(m);
+            }
             if (maps.Count == 0) return;
             _map = null;
             if (!string.IsNullOrEmpty(ForcedMapId)) _map = MeshMapCatalog.GetById(ForcedMapId);

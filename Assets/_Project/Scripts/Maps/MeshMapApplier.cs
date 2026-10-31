@@ -516,6 +516,8 @@ namespace CityBuilder.Maps
             SeasonStyle.DressTerrain(sea);
             TerrainPhysicsLayer.Assign(sea);
             SceneryShadows.DisableCasting(sea);
+            // the edge: a ragged line of surf, the dark storm sea and its rocks beyond
+            Archipelago.StormEdge.Build(world, origin, map.TerrainMaterial, transform);
 
             // the cells: water where there is no plain; boats may stand within four metres of a
             // shore; the forest, the stony clearings; nothing built on the relief or a cliff
@@ -553,7 +555,8 @@ namespace CityBuilder.Maps
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
             _fertileCells = Archipelago.FertileLand.Compute(world);
-            Archipelago.FertileLand.Build(_fertileCells, transform, this);
+            Archipelago.FertileLand.KeepGrass(_fertileCells, this);
+            Archipelago.FertileLand.Build(_fertileCells, transform, this, map.TerrainMaterial);
             Ships.ShipManager.Instance?.BuildSea(world, origin);
         }
 
@@ -584,6 +587,15 @@ namespace CityBuilder.Maps
                 Put(island.Asset.Ground, ground.transform);
                 Put(island.Asset.Relief, relief.transform);
                 Put(island.Asset.Water, water.transform);
+            }
+            // the blue band lightened: light water = where a water building may stand
+            var lightened = new Dictionary<Mesh, Mesh>();
+            foreach (var filter in water.GetComponentsInChildren<MeshFilter>())
+            {
+                var shared = filter.sharedMesh;
+                if (shared == null) continue;
+                if (!lightened.TryGetValue(shared, out var light)) lightened[shared] = light = Archipelago.ArchipelagoMeshes.LightenCoast(shared);
+                filter.sharedMesh = light;
             }
             SeasonStyle.DressTerrain(water);
             TerrainPhysicsLayer.Assign(water);

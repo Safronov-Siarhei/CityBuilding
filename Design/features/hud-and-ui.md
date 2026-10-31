@@ -7,6 +7,11 @@
 > **Status (2026-10-25):** main menu and the run's building card redone after the user's sketches (below). Earlier (2026-10-21): HUD follows the user's sketch (round 2, 2026-10-14) in style D, with four
 > switchable HUD looks (Classic/Soft/Glass/Dock) chosen in settings. Windows (info card, research,
 > save, settings) are NOT skinned per look — still parchment.
+> **2026-10-31 (playtest):** the «Выбран король» badge sits bottom-right above the taxes; «Запасы»
+> text in dark ink (`InventoryPanelController.Ink`); a tapped ORC building gets a RED ring like the
+> player's own (`BuildingFocus.SelectForeign`) and its «!» opens `UI/ForeignBuildingCard.cs`
+> (owner, level, health, damage/reach; keys `#foreign_*`, `#orc_building_<kind>`); the main menu
+> backdrop skips maps without a ground prefab (the archipelago, dungeons) -- that was the lost ground.
 > **Rule:** the user SKETCHES layouts; implement their sketch, don't redesign or restyle unasked.
 > **Read with:** [art-pipeline](art-pipeline.md) (icons), [balance-and-localization](balance-and-localization.md) (all text).
 

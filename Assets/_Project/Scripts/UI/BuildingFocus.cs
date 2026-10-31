@@ -24,6 +24,9 @@ namespace CityBuilder.UI
         private const float RippleSeconds = 0.8f;
         private static readonly Color Gold = new Color(1f, 0.85f, 0.3f, 1f);
         private static readonly Color ReachColor = new Color(1f, 0.93f, 0.6f, 1f);
+        // a building that is not the player's: outlined in red (the user, 2026-10-31)
+        private static readonly Color Red = new Color(0.95f, 0.18f, 0.12f, 1f);
+        private static readonly Color RedReach = new Color(1f, 0.45f, 0.38f, 1f);
 
         [SerializeField] private BuildingInfoPanelController infoPanel;
         [SerializeField] private ResearchPanelController researchPanel;
@@ -36,6 +39,12 @@ namespace CityBuilder.UI
 
         /// <summary>The building held, or null.</summary>
         public BuildingInstance Current { get; private set; }
+
+        /// <summary>A building of another side held instead (an orc camp's), or null: red ring, its «!» opens ForeignBuildingCard.</summary>
+        public OrcCampBuilding Foreign { get; private set; }
+
+        private Transform Held => Current != null ? Current.transform : Foreign != null ? Foreign.transform : null;
+        private Color _ringColour = Gold;
 
         private LineRenderer _ring, _reach;
         private LineRenderer[] _ripples;
@@ -57,14 +66,16 @@ namespace CityBuilder.UI
                 Clear();
                 return;
             }
-            if (Current != null && Current != building) Release();
+            if ((Current != null && Current != building) || Foreign != null) Release();
             Current = building;
+            _ringColour = Gold;
 
             var rig = FindAnyObjectByType<RTSCameraController>();
             if (rig != null) rig.FocusOn(building.transform.position);
             _rig = rig;
 
             EnsureBuilt();
+            Paint(Gold, ReachColor);
             var footprint = building.RotatedFootprint();
             var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
             _footRadius = Mathf.Max(footprint.x, footprint.y) * cell * 0.5f * 1.2f + RingMargin;
@@ -89,18 +100,58 @@ namespace CityBuilder.UI
             if (detailsButton != null) detailsButton.SetActive(true);
         }
 
+        /// <summary>Holds a building of another side: a red ring round it, its reach if it shoots, the «!» for its card.</summary>
+        public void SelectForeign(OrcCampBuilding building)
+        {
+            if (building == null)
+            {
+                Clear();
+                return;
+            }
+            Release();
+            Foreign = building;
+            _ringColour = Red;
+            var rig = FindAnyObjectByType<RTSCameraController>();
+            if (rig != null) rig.FocusOn(building.transform.position);
+            _rig = rig;
+            EnsureBuilt();
+            Paint(Red, RedReach);
+            var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            _footRadius = Mathf.Max(building.Footprint.x, building.Footprint.y) * cell * 0.5f * 1.2f + RingMargin;
+            var at = Ground(building.transform.position);
+            Circle(_ring, at, _footRadius);
+            _ring.gameObject.SetActive(true);
+            _rippleClock = 0f;
+            HarvestRadiusOverlay.HideIfShown();
+            if (building.ShotRange > 0f)
+            {
+                Circle(_reach, at, building.ShotRange);
+                _reach.gameObject.SetActive(true);
+            }
+            else _reach.gameObject.SetActive(false);
+            if (detailsButton != null) detailsButton.SetActive(true);
+        }
+
+        private void Paint(Color ring, Color reach)
+        {
+            _ring.material.color = ring;
+            _reach.material.color = reach;
+        }
+
         /// <summary>Lets the building go, and closes its card.</summary>
         public void Clear()
         {
             Release();
             if (infoPanel != null) infoPanel.Close();
             if (researchPanel != null) researchPanel.Close();
+            if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Close();
         }
 
         private void Release()
         {
             if (Current != null) Current.PinHealthBar(false);
             Current = null;
+            Foreign = null;
             if (_ring != null) _ring.gameObject.SetActive(false);
             if (_reach != null) _reach.gameObject.SetActive(false);
             if (_ripples != null) foreach (var ripple in _ripples) ripple.gameObject.SetActive(false);
@@ -115,6 +166,11 @@ namespace CityBuilder.UI
         /// <summary>The «!»: the held building's card.</summary>
         public void OpenDetails()
         {
+            if (Foreign != null)
+            {
+                if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Show(Foreign);
+                return;
+            }
             if (Current == null) return;
             if (researchPanel != null && Current.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
             {
@@ -126,7 +182,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            if (Current == null)
+            if (Current == null && (Foreign == null || Foreign.CurrentHealth <= 0))
             {
                 // destroyed while held (Unity's null): take the marks down
                 if (_ring != null && _ring.gameObject.activeSelf) Release();
@@ -141,10 +197,11 @@ namespace CityBuilder.UI
                 return;
             }
             // the «!» steps aside while the card it opened is up, and comes back when it closes
-            var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen);
+            var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen)
+                || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen);
             if (detailsButton != null && detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
             // the camera taken away till the building is off the screen lets it go
-            if (!cardUp && OffScreen(Current))
+            if (!cardUp && OffScreen(Held))
             {
                 Clear();
                 return;
@@ -153,12 +210,12 @@ namespace CityBuilder.UI
         }
 
         /// <summary>The building's middle is out of the camera's view -- not while the camera is still gliding to it.</summary>
-        private bool OffScreen(BuildingInstance building)
+        private bool OffScreen(Transform building)
         {
             if (_rig != null && _rig.IsFocusing) return false;
             var camera = Camera.main;
-            if (camera == null) return false;
-            var view = camera.WorldToViewportPoint(building.transform.position);
+            if (camera == null || building == null) return false;
+            var view = camera.WorldToViewportPoint(building.position);
             return view.z <= 0f || view.x < 0f || view.x > 1f || view.y < 0f || view.y > 1f;
         }
 
@@ -166,7 +223,7 @@ namespace CityBuilder.UI
         {
             if (_rippleClock < 0f) return;
             _rippleClock += Time.unscaledDeltaTime;
-            var at = Ground(Current.transform.position);
+            var at = Ground(Held.position);
             for (var i = 0; i < _ripples.Length; i++)
             {
                 var t = (_rippleClock - i * 0.18f) / RippleSeconds;
@@ -178,7 +235,7 @@ namespace CityBuilder.UI
                 }
                 var spread = 1f - (1f - t) * (1f - t);
                 Circle(ripple, at, _footRadius * Mathf.Lerp(0.6f, 1.8f, spread));
-                var c = Gold;
+                var c = _ringColour;
                 c.a = 0.9f * (1f - t);
                 ripple.material.color = c;
                 ripple.gameObject.SetActive(true);

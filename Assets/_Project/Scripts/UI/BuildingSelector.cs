@@ -41,6 +41,16 @@ namespace CityBuilder.UI
             if (targetCamera == null) return;
 
             var nearest = FindBuilding(screenPosition);
+            var foreign = nearest == null && focus != null ? FindForeign(screenPosition) : null;
+            if (foreign != null)
+            {
+                // another side's building: a red ring and its «!»; a second tap opens its card
+                if (infoPanel != null) infoPanel.Close();
+                if (researchPanel != null) researchPanel.Close();
+                if (focus.Foreign == foreign) focus.OpenDetails();
+                else focus.SelectForeign(foreign);
+                return;
+            }
             if (nearest == null)
             {
                 if (focus != null) focus.Clear();
@@ -79,6 +89,24 @@ namespace CityBuilder.UI
         /// </summary>
         /// <summary>Whether a tap here would open a building's card.</summary>
         public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && FindBuilding(screenPosition) != null;
+
+        /// <summary>The nearest standing building of another side (an orc camp's) along the ray.</summary>
+        private Combat.OrcCampBuilding FindForeign(Vector2 screenPosition)
+        {
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
+            var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
+            Combat.OrcCampBuilding nearest = null;
+            var nearestDistance = float.MaxValue;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].distance >= nearestDistance) continue;
+                var building = _hits[i].collider.GetComponentInParent<Combat.OrcCampBuilding>();
+                if (building == null || building.CurrentHealth <= 0) continue;
+                nearest = building;
+                nearestDistance = _hits[i].distance;
+            }
+            return nearest;
+        }
 
         private BuildingInstance FindBuilding(Vector2 screenPosition)
         {

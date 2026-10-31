@@ -123,7 +123,10 @@ namespace CityBuilder.Ships
             var grid = Grid.GridManager.Instance;
             if (camp == null || camp.Cleared || grid == null) return null;
             var centre = grid.GetFootprintCenterWorld(camp.Centre, Vector2Int.one);
-            if (!TryNearestSea(centre, 120f, out var at)) return null;
+            // on the light coastal water, like any water building of the player's: deep sea holds
+            // no building of any side (the user, 2026-10-31); only if no shore water is reachable
+            // at all does it take the nearest sea
+            if (!TryNearestSea(centre, 120f, out var at, shoreOnly: true) && !TryNearestSea(centre, 120f, out at)) return null;
 
             var root = new GameObject("OrcShipyard");
             var away = at - centre;
@@ -150,10 +153,13 @@ namespace CityBuilder.Ships
         }
 
         /// <summary>The sea a ship can reach nearest a point on land, searched outwards in rings.</summary>
-        private bool TryNearestSea(Vector3 from, float maxRadius, out Vector3 point)
+        private bool TryNearestSea(Vector3 from, float maxRadius, out Vector3 point, bool shoreOnly = false)
         {
             point = default;
-            if (TrySampleSea(from, 2f, out point)) return true;
+            var map = Maps.MeshMapApplier.Instance;
+            var grid = Grid.GridManager.Instance;
+            bool Allowed(Vector3 p) => !shoreOnly || (map != null && grid != null && map.IsWaterPlacementZone(grid.WorldToCell(p)));
+            if (TrySampleSea(from, 2f, out point) && Allowed(point)) return true;
             for (var r = 4f; r <= maxRadius; r += 3f)
             {
                 var steps = Mathf.Clamp(Mathf.RoundToInt(r * 0.8f), 12, 64);
@@ -163,7 +169,7 @@ namespace CityBuilder.Ships
                 {
                     var a = k * Mathf.PI * 2f / steps;
                     var probe = from + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
-                    if (!TrySampleSea(probe, 1.5f, out var p)) continue;
+                    if (!TrySampleSea(probe, 1.5f, out var p) || !Allowed(p)) continue;
                     var d = (p - from).sqrMagnitude;
                     if (d >= best) continue;
                     best = d;

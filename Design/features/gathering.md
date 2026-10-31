@@ -28,6 +28,11 @@ Ore veins are glowing patches of broken ground; a mine is built ON one.
   than a worker's search).
 - Gatherer upgrades add workers (Sawmill/Quarry 3/4/5) or reach, not batches.
 
+## Deposit tap (2026-10-31)
+Tapping an ore vein with no mine on it posts «Обнаружено месторождение: <вид>» in the event feed
+(`WorldInputDispatcher.TryReportDeposit`, keys `#log_deposit_found`, `#ore_<kind>`), unless a
+building is under the tap.
+
 ## Code
 `Maps/ResourceNode.cs` (registry `All`, stock), `Maps/TreesAreaSpawner.cs`, `Maps/RockSpawner.cs`
 (`ClearCell`), `Maps/TreeGrowth.cs`, `Maps/OreDeposit.cs`, `Maps/OreDepositSpawner.cs`,

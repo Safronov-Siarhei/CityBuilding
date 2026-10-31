@@ -10,6 +10,8 @@
 > **Phase 4b (2026-10-29):** the orcs' shipyard, fleets that land the raids, towers vs ships
 > (see «The orcs at sea»). **Phase 5 (2026-10-30):** fertile land, fish shoals, the lighthouse
 > (see «Land and sea riches»).
+> **Playtest fixes (2026-10-31):** fertile land drawn into the ground, fish as boxy swimming fish on
+> the coast only, a real storm edge, light water = the building zone (see «Playtest fixes»).
 > The user has NOT seen ships in game.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [fog-of-war](fog-of-war.md),
 > [army-and-soldiers](army-and-soldiers.md), [research-laboratory](research-laboratory.md).
@@ -124,6 +126,23 @@
   spot within `lighthouse_range_meters` (range ring shown): `lighthouse_reveal_coins`, fog opened
   for good over `lighthouse_reveal_cells`, then `lighthouse_cooldown_seconds` (not saved).
 - All numbers mine, unconfirmed.
+
+## Playtest fixes (2026-10-31)
+- FERTILE LAND is no longer squares on the map: `FertileLand.Build` traces smooth outlines round the
+  cells (marching squares over a softened field) in the TERRAIN material and palette (dirt_dark
+  inside, dirt rim) -- one draw, dressed by the season. `KeepGrass` drops every cell whose ground
+  is not a grass colour (ray + `hit.textureCoord`): library islands carry NO beach flags
+  (`IslandShape.FromAsset` leaves `Beach` empty), so the sand is only known by its colour.
+- FISH: 9 boxy fish per shoal (body, dark back, back fin, tail; 2 materials) swimming their own
+  circles round the shoal, one leaping every ~2.4 s; all moved from `TickShoals`, no per-fish
+  scripts. Shoals spawn ONLY on `IsWaterPlacementZone` water (the light coastal strip).
+- COAST: `ArchipelagoMeshes.LightenCoast` repaints the island water's blue band as shallow
+  turquoise, so the light water = the 6 m water-building zone; deep sea refuses the player's
+  water buildings (`BuildingPlacer`, already so) and now the orc shipyard too
+  (`TryNearestSea(shoreOnly)`, any sea only if no shore water is reachable).
+- EDGE: `Maps/Archipelago/StormEdge.cs` -- the old 3-cell foam strip is gone; a ragged surf line
+  a cell inside the ships' limit (`Storm`), dark storm water beyond (tinted copy of the terrain
+  material), sea stacks along the line and whitecaps on the dark water. 2 draws.
 
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,

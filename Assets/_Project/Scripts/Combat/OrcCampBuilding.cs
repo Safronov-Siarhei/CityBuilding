@@ -71,6 +71,10 @@ namespace CityBuilder.Combat
 
         public bool IsWall => OrcBaseLayout.IsWall(Kind);
 
+        /// <summary>What one of its shots does and how far it reaches; 0 for a building that does not shoot (ForeignBuildingCard).</summary>
+        public int ShotDamage => _shotDamage;
+        public float ShotRange => _shotRange;
+
         private GameObject _ruinModel;
         private float _shotTimer;
         private int _shotDamage;

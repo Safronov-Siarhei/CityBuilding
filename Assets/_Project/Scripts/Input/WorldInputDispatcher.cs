@@ -107,7 +107,27 @@ namespace CityBuilder.InputControl
                     return;
                 }
             }
+            if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
+        }
+
+        /// <summary>
+        /// A tap on a bare ore vein says what it is in the event feed (the user, 2026-10-31:
+        /// «Обнаружено месторождение: Железо») -- the patch alone does not tell iron from copper.
+        /// </summary>
+        private static bool TryReportDeposit(Vector2 screenPosition, Camera tapCamera)
+        {
+            var map = Maps.MeshMapApplier.Instance;
+            var grid = Grid.GridManager.Instance;
+            if (map == null || grid == null || tapCamera == null) return false;
+            if (!map.TryRaycastGround(tapCamera.ScreenPointToRay(screenPosition), out var hit)) return false;
+            var deposit = Maps.OreDeposit.At(grid.WorldToCell(hit.point));
+            if (deposit == null || deposit.Mine != null) return false;
+            var ore = Core.Localization.Get("#ore_" + deposit.Kind.ToString().ToLowerInvariant());
+            Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
+                string.Format(Core.Localization.Get("#log_deposit_found"), ore), Core.EventSeverity.Good, Core.EventGlyph.Star,
+                deposit.Kind + "Mine", deposit.transform.position));
+            return true;
         }
 
         /// <summary>

@@ -515,6 +515,9 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(near, "No fish shoals on the archipelago.");
             Assert.Less(Vector3.Distance(near.At, start), 80f, "No shoal by the start island.");
             Assert.IsTrue(ShipManagerFishVisible(near), "The shoal cannot be seen.");
+            // shoals only on the light coastal water (the user, 2026-10-31)
+            foreach (var shoal in ships.Shoals)
+                if (shoal.Alive) Assert.IsTrue(applier.IsWaterPlacementZone(grid.WorldToCell(shoal.At)), $"A shoal out at sea at {shoal.At}.");
             Assert.AreEqual(1f + CityBuilder.Core.BalanceConfig.Instance.FishShoalBonus, ships.FishMultiplier(near.At), 0.001f, "A hut by the shoal catches no more.");
             ships.TakeFish(near.At, near.Stock);
             Assert.IsFalse(near.Alive, "The fished-out shoal is still there.");
@@ -554,7 +557,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         private static bool ShipManagerFishVisible(CityBuilder.Ships.ShipManager.Shoal shoal) =>
-            shoal.Visual != null && shoal.Visual.GetComponent<MeshRenderer>() != null;
+            shoal.Visual != null && shoal.Visual.GetComponentsInChildren<MeshRenderer>().Length > 0;
 
         private static int Shipyards()
         {

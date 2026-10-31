@@ -316,6 +316,7 @@ namespace CityBuilder.EditorTools
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
+            BuildForeignBuildingCard(uiRoot, panelSprite);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 
@@ -762,10 +763,10 @@ namespace CityBuilder.EditorTools
             badge.sprite = panelSprite;
             badge.type = Image.Type.Sliced;
             var badgeRect = badge.GetComponent<RectTransform>();
-            badgeRect.anchorMin = badgeRect.anchorMax = badgeRect.pivot = new Vector2(0.5f, 1f);
-            // Under the resource row (which ends 165 down), not over it: at -30 it covered the
-            // status pill and the right end of the chips whenever a citizen was selected.
-            badgeRect.anchoredPosition = new Vector2(0f, -274f);
+            // Bottom right, just over the tax plaque (the user, 2026-10-31): in the middle of the
+            // screen it sat on the very ground the player was ordering the selection across.
+            badgeRect.anchorMin = badgeRect.anchorMax = badgeRect.pivot = new Vector2(1f, 0f);
+            badgeRect.anchoredPosition = new Vector2(-HudMargin, HudMargin + 84f + 14f);
             badgeRect.sizeDelta = new Vector2(460f, 96f);
 
             var label = CreateText(badge.transform, "Label", string.Empty, 30, new Vector2(-40f, 0f), new Vector2(300f, 60f));

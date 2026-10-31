@@ -21,6 +21,11 @@ namespace CityBuilder.UI
     {
         private static readonly Color Dimmed = new Color(1f, 1f, 1f, 0.35f);
 
+        // the card is parchment (the theme pass): white words vanished into it (the user,
+        // 2026-10-31) -- the words are dark ink, an empty store's paler
+        private static readonly Color Ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+        private static readonly Color InkDimmed = new Color(0.27f, 0.16f, 0.07f, 0.4f);
+
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private ResourceType[] types = new ResourceType[0];
         [SerializeField] private Image[] icons = new Image[0];
@@ -84,12 +89,12 @@ namespace CityBuilder.UI
                 if (i < names.Length && names[i] != null)
                 {
                     names[i].text = Capitalized(ResourceNames.Of(type));
-                    names[i].color = tint;
+                    names[i].color = amount > 0 ? Ink : InkDimmed;
                 }
                 if (i < amounts.Length && amounts[i] != null)
                 {
                     amounts[i].text = amount.ToString();
-                    amounts[i].color = tint;
+                    amounts[i].color = amount > 0 ? Ink : InkDimmed;
                 }
             }
         }

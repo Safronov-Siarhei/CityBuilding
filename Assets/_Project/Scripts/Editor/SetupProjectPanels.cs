@@ -215,7 +215,7 @@ namespace CityBuilder.EditorTools
                 var column = i % perRow;
                 var row = i / perRow;
                 var centre = new Vector2((column - (perRow - 1) * 0.5f) * columnWidth, top - row * rowHeight);
-                var cell = CreateImage(card.transform, "Row_" + types[i], new Color(1f, 1f, 1f, 0.06f));
+                var cell = CreateImage(card.transform, "Row_" + types[i], new Color(0.35f, 0.2f, 0.08f, 0.08f));
                 SetRect(cell.rectTransform, centre, new Vector2(columnWidth - 12f, rowHeight - 10f));
                 cell.raycastTarget = false;
                 icons[i] = CreateImage(cell.transform, "Icon", Color.white);
@@ -256,6 +256,40 @@ namespace CityBuilder.EditorTools
             // a run's three resources are all on the bar: no sack there
             openButton.gameObject.AddComponent<SandboxOnly>();
 
+            panelRoot.SetActive(false);
+        }
+
+        /// <summary>
+        /// The card of another side's building (ForeignBuildingCard): its name, whose it is, level,
+        /// health, and damage and reach for one that shoots -- opened by the «!» under a red-ringed
+        /// orc building (BuildingFocus.SelectForeign).
+        /// </summary>
+        private static void BuildForeignBuildingCard(Transform canvasParent, Sprite panelSprite)
+        {
+            var panelRoot = new GameObject("ForeignBuildingCard", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(620f, 440f));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 160f), new Vector2(560f, 56f), ink);
+            var body = CreateText(card.transform, "Body", string.Empty, 28, new Vector2(0f, 10f), new Vector2(540f, 220f), ink);
+            body.alignment = TextAnchor.MiddleLeft;
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -170f), new Vector2(300f, 64f));
+
+            var controller = canvasParent.gameObject.AddComponent<ForeignBuildingCard>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("body").objectReferenceValue = body;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
             panelRoot.SetActive(false);
         }
 
