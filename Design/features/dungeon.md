@@ -1,7 +1,7 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-30: DESIGN. Entrance model chosen (Blender only, not exported); the dungeon itself
-> not started. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
+> Status 2026-10-31: DESIGN. Entrance model chosen (Blender only, not exported); Dungeon 1 map v3
+> (200 x 200, from plan v2) built in Blender and shown, awaiting the verdict; nothing in the game yet. Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes).
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the
@@ -119,6 +119,19 @@ dungeon opens as a SEPARATE SCENE.
   - Dead ends: 31 in all. The 8 FARTHEST are crystal rooms; the other 23 are empty, to mislead.
   - 10 monster junctions.
   - The shortest walk: ~1140 m to the spider queen, ~790 m to the golem.
+- Plan v2 APPROVED («мне нравится, делай»). Saved as `Tools/blender/dungeon1-plan.json` (seed 7).
+- **Map v3** (2026-10-31, shown, awaiting the verdict): `dungeon1.py` now READS the plan json:
+  - passages = capsules along every link (half width 2 m, noisy), halls = noisy rounded rectangles
+    of the plan's cells, crystal rooms r 4.2, monster junctions r 5.2; a 10 m bucket index of the
+    segments keeps the SDF fast (whole build ~30 s);
+  - the lake (11 x 7.5 m) with a N-S bridge in the lake hall; the old camp moved to the plan's camp;
+  - rails along the camp->lake path, timber supports on ~20 % of maze links, bones at the monster
+    junctions and arenas, mushroom groves (taller, 1-2.2 m) in hall corners and at junctions;
+  - the spider lair: 14 webs, 7 clutches of pale elongated eggs under webs, cocoons, bones;
+  - the golem hall: 8 big blue crystals, a cart, the chest; crystal rooms: 2-3 clusters each;
+  - counts: ground 50k tris, relief 80k, props 21k, decor 13.9k items, 156 lights, CHUNKS = 8 --
+    far too heavy to export as is; cut before it goes to the game.
+  - preview: `dungeon_preview.py` now centres on HALF = 100 (env `DUNGEON_HALF` overrides).
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
