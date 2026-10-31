@@ -235,6 +235,7 @@ namespace CityBuilder.Cheats
             GUILayout.BeginHorizontal();
             if (calendar != null && Button($"День {calendar.CurrentDay} → закончить")) { calendar.EndDayNow(); Say("день прошёл"); }
             var fog = FogOfWarManager.Instance;
+            if (fog != null) fog.DisabledCheat = Switch("Туман выключен", fog.DisabledCheat);
             if (fog != null && Button("Снять туман"))
             {
                 fog.RevealPermanent(new Vector2Int(0, 0), 20000);   // clamped to the grid; 20000² still fits an int

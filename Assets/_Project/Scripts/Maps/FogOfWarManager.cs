@@ -280,9 +280,25 @@ namespace CityBuilder.Maps
             if (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) Activate();
         }
 
+        /// <summary>
+        /// The cheat window's switch: no fog at all while on -- the cloud is hidden and every cell
+        /// counts as seen; switched back, the fog is as it was (nothing it had kept is lost).
+        /// </summary>
+        public bool DisabledCheat
+        {
+            get => _disabledCheat;
+            set
+            {
+                _disabledCheat = value;
+                if (_cloudRoot != null) _cloudRoot.SetActive(!value);
+            }
+        }
+
+        private bool _disabledCheat;
+
         private void Update()
         {
-            if (!_active) return;
+            if (!_active || _disabledCheat) return;
             EnsureInitialized();
             if (!_initialized) return;
 
@@ -333,6 +349,7 @@ namespace CityBuilder.Maps
         /// <summary>Whether this cell is open to view right now (a building's permanent reveal, or a citizen nearby).</summary>
         public bool IsCellRevealed(Vector2Int cell)
         {
+            if (_disabledCheat) return true;
             if (!_initialized || cell.x < 0 || cell.y < 0 || cell.x >= _width || cell.y >= _depth) return false;
             return IsRevealed(cell.x, cell.y);
         }
@@ -340,6 +357,7 @@ namespace CityBuilder.Maps
         /// <summary>How clear of cloud this cell is drawn right now, 0..1 -- the eased value the shader sees.</summary>
         public float DisplayedClearness(Vector2Int cell)
         {
+            if (_disabledCheat) return 1f;
             if (!_initialized || cell.x < 0 || cell.y < 0 || cell.x >= _width || cell.y >= _depth) return 0f;
             return _display[cell.y * _width + cell.x] / 255f;
         }
@@ -521,7 +539,7 @@ namespace CityBuilder.Maps
             _anyRecheck = true;
             RecheckChunks();
             _maskDirty = true;
-            if (_cloudRoot != null) _cloudRoot.SetActive(true);
+            if (_cloudRoot != null) _cloudRoot.SetActive(!_disabledCheat);
         }
 
         private void UploadMask()

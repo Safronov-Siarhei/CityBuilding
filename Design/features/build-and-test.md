@@ -91,7 +91,7 @@ window with 8 tabs -- Ресурсы (exact amounts, step/typed, crystals, ∞),
 focused building or all of its kind to any level, finish all, repair all, instant build), Жители, Армия
 (squad at screen centre, unit research, invulnerable), Герои (free, level, heal, raise, no cooldown), Орки
 (raid now size/level, end wait, kill all, camps, Invasion next wave), Мир (speed x0-x10, end day, fog, lighthouses,
-ships on the archipelago), Служебное (FPS, draw calls/tris via ProfilerRecorder, save/load slot «cheat», restart).
+ships on the archipelago; «Туман выключен» switch = FogOfWarManager.DisabledCheat hides the cloud, keeps what the fog knew), Служебное (FPS, draw calls/tris via ProfilerRecorder, save/load slot «cheat», restart).
 Hooks: ConstructionSite.InstantCheat, SoldierUnit.InvulnerableCheat, HeroSkills.NoCooldownCheat,
 OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetCooldowns.
 RELEASE: build scripts take `-release` -> extraScriptingDefines CB_RELEASE -> the panel compiles empty.
