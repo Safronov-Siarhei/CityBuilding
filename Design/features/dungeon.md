@@ -56,6 +56,24 @@ dungeon opens as a SEPARATE SCENE.
   - **Test:** a first labyrinth of 100 x 100 m.
   - **Next to discuss:** the crystal economy, i.e. how many crystals the Laboratory needs and how
     many lie in a dungeon.
+- **Crystals** (the user, 2026-10-31):
+  - **Why they exist:** they give the player a CHOICE. Either collect them in dungeons for free, or
+    watch rewarded ads / buy them for real money. So crystals are shared across the whole Sandbox
+    mode (Wallet is PlayerPrefs, global) and are deliberately hard to get.
+  - **Price per level:** level 3 = 1, level 4 = 2, level 5 = 3 crystals.
+  - **Supply on a map:**
+    - dungeon level 1 ≈ 30, level 2 ≈ 50, level 3 ≈ 80 (≈160 in total, scattered + bosses);
+    - the orcs' MAIN BASE ≈ 60;
+    - the BOT CITY ≈ 60.
+  - **Tap on the crystals** (the HUD plaque) shows how to get them.
+- **Over the entrance:** a label with the dungeon's LEVEL (1/2/3) when it is tapped.
+- **Respawn:** monsters come back ONLY when the player leaves the dungeon and enters again (replaces
+  «after N minutes»). Bosses never come back.
+- **Bosses:** the spider queen and the ore golem are approved. They must be MUCH bigger than a hero.
+- **Hirelings:** gnomes approved — the miner (melee), the crossbowman (ranged), the ore guardian
+  (a stone golem tank), from «Лагерь гномов-старателей».
+- **Next step:** the user wants the test MAP (100 x 100) made in Blender to approve its style first;
+  it will be redone if needed.
 - Measured 2026-10-31:
   - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
     (`research_crystals_from_level`).
