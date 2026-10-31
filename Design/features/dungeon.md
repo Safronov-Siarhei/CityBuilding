@@ -227,6 +227,13 @@ dungeon opens as a SEPARATE SCENE.
 - All are in collection «Подземелье» of Buildings-Size1-Models.blend. None are exported.
 
 ## Traps
+- **SCALE (found 2026-10-31):** the game's world unit is one map CELL, not a metre.
+  - Heroes are 0.6-0.8 tall (HeroKing 0.79, HeroQueen 0.62, HeroCaptain 0.81); a level-1 building
+    is about 1 x 1-2 cells and 1.2-1.5 tall.
+  - The dungeon map and its camp buildings were made thinking a 1.8 m person, so next to a hero
+    they are about 2.3x too big. A factor of 0.44 matches them.
+  - The user is to choose: scale the whole dungeon (about 90 x 90 cells) or keep 200 cells and
+    shrink only the props.
 - The terrain hides everything below z=0. A way down must live inside a raised mountain or
   platform, with a black floor at z≈0.03.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
