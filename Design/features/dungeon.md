@@ -31,11 +31,38 @@ dungeon opens as a SEPARATE SCENE.
   - upgrade crystals (the Laboratory's) are scattered all over the labyrinth;
   - SEVERAL dungeons on a map;
   - SEVERAL heroes may go into one dungeon together, to deal with the bosses.
+- The user's answers (2026-10-31):
+  - **Hiring:** up to 5 soldiers per dungeon; the cap is a config key.
+    - They are NEW dungeon units from new themed dungeon buildings, not the kingdom's soldiers. The
+      army on the map and in the dungeon are unrelated.
+    - Hired soldiers can never leave the dungeon.
+    - They are not controlled one by one: they follow the hero and help him fight.
+    - With several heroes, all of them move together after the hero the player controls.
+  - **Coins:** the treasury is shared with the town.
+  - **Between visits:** the soldiers wait at the entrance and join the hero again on the next visit.
+  - **Persistence:**
+    - the dungeon is saved; monsters respawn after N minutes, bosses don't — so it can be farmed;
+    - crystals do not respawn;
+    - kills give heroes only a little XP. Sandbox hero XP should be made harder overall, because
+      the map has many more places to level.
+  - **Three dungeons per map,** each with a different structure and different bosses.
+  - **Difficulty:** the nearer the Town Hall, the weaker the monsters and the smaller the rewards.
+  - **Death:** a dead hero rises at the Town Hall.
+  - **Shops in the dungeon** sell, for coins, timed potions for the party: healing, rage, speed,
+    defence.
+  - **Layout:** dungeon maps are made in BLENDER ahead of time (N of them), and a dungeon picks one.
+    No generator — the user judged the map generator's quality low.
+  - **Opening:** every dungeon is open from the start.
+  - **Test:** a first labyrinth of 100 x 100 m.
+  - **Next to discuss:** the crystal economy, i.e. how many crystals the Laboratory needs and how
+    many lie in a dungeon.
+- Measured 2026-10-31:
+  - The Laboratory asks `research_crystals` = 1 crystal per level topic from level 3
+    (`research_crystals_from_level`).
+  - 46 buildings x levels 3/4/5 = 138, plus unit levels 3 ≈ 142 crystals for everything.
 
 ## Proposed, NOT agreed yet (ask, don't build)
-- Layout: shuffled hand-made rooms each visit (recommended), or one fixed labyrinth.
-- Rewards: crystals (the Laboratory's lvl 3-5 currency), gold, relics with permanent town bonuses;
-  hero gear later.
+- (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
 - Room content:
   - chests (a mimic);
   - traps;
