@@ -1,0 +1,691 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21ce126cfe363934a985205ab9775481, type: 3}
+  m_Name: Dungeon1
+  m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Maps.MeshMapDefinition
+  mapId: Dungeon1
+  groundPrefab: {fileID: 919132149155446097, guid: 2563702b29ed1044c97f58c419f946f2, type: 3}
+  waterPrefab: {fileID: 919132149155446097, guid: f15a452bd6daca1428b0cdb1cd2f6047, type: 3}
+  waterPlacementZonePrefab: {fileID: 0}
+  treesAreaPrefab: {fileID: 0}
+  treePrefabs: []
+  rockPrefabs: []
+  waterMaterial: {fileID: 0}
+  reliefPrefab: {fileID: 919132149155446097, guid: e64d9141a6da90f4a847fcd0587af01d, type: 3}
+  rocksAreaPrefab: {fileID: 0}
+  noBuildAreaPrefab: {fileID: 0}
+  decorData: {fileID: 11400000, guid: 9bc23724b2f232f47b7df41c9a4679c6, type: 2}
+  decorMaterial: {fileID: 2100000, guid: c9950e45187654f4f8de5e392f3f2841, type: 2}
+  keepWaterRotation: 1
+  forcedSeason: -1
+  hasMainBaseSpot: 0
+  mainBaseSpot: {x: 0, y: 0}
+  campSpots: []
+  campLevels: 
+  townHallZone: []
+  otherSpots:
+  - kind: hirecamp
+    position: {x: -6.16, y: -36.834}
+    level: 0
+  - kind: potionshop
+    position: {x: 6.16, y: -37.274}
+    level: 0
+  - kind: fire
+    position: {x: 0, y: -38.594}
+    level: 0
+  - kind: fire
+    position: {x: -1.54, y: -40.794}
+    level: 0
+  - kind: fire
+    position: {x: 1.54, y: -40.794}
+    level: 0
+  - kind: fire
+    position: {x: 12.526, y: -18.559}
+    level: 0
+  - kind: fire
+    position: {x: 36.111, y: -39.771}
+    level: 0
+  - kind: fire
+    position: {x: 36.647, y: -23.731}
+    level: 0
+  - kind: fire
+    position: {x: -41.433, y: -19.688}
+    level: 0
+  - kind: fire
+    position: {x: -43.19, y: 0.661}
+    level: 0
+  - kind: fire
+    position: {x: -5.28, y: 22.13}
+    level: 0
+  - kind: fire
+    position: {x: 39.233, y: 1.566}
+    level: 0
+  - kind: fire
+    position: {x: 6.761, y: 40.025}
+    level: 0
+  - kind: fire
+    position: {x: -32.281, y: 17.181}
+    level: 0
+  - kind: fire
+    position: {x: -19.859, y: -30.713}
+    level: 0
+  - kind: fire
+    position: {x: -9.064, y: 0.799}
+    level: 0
+  - kind: fire
+    position: {x: -31.429, y: -12.571}
+    level: 0
+  - kind: fire
+    position: {x: 31.429, y: -12.571}
+    level: 0
+  - kind: fire
+    position: {x: 0, y: 31.429}
+    level: 0
+  - kind: fire
+    position: {x: -34.623, y: 32.725}
+    level: 0
+  - kind: fire
+    position: {x: -26.797, y: 36.126}
+    level: 0
+  - kind: reward
+    position: {x: -11.05, y: 36.081}
+    level: 0
+  - kind: reward
+    position: {x: 41.702, y: -16.77}
+    level: 0
+  - kind: reward
+    position: {x: 27.569, y: 2.175}
+    level: 0
+  - kind: reward
+    position: {x: -40.189, y: 15.062}
+    level: 0
+  - kind: reward
+    position: {x: -34.107, y: -33.611}
+    level: 0
+  - kind: reward
+    position: {x: -8.185, y: -15.217}
+    level: 0
+  - kind: reward
+    position: {x: 27.379, y: -32.599}
+    level: 0
+  - kind: light_day
+    position: {x: 0, y: -41.982}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 18.474, y: -30.688}
+    level: 0
+  - kind: light_crystal
+    position: {x: 18.027, y: -30.284}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 18.297, y: -29.81}
+    level: 0
+  - kind: light_crystal
+    position: {x: 18.86, y: -30.519}
+    level: 0
+  - kind: light_lantern
+    position: {x: 11.788, y: -26.548}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 38.244, y: -28.588}
+    level: 0
+  - kind: light_crystal
+    position: {x: 38.606, y: -29.073}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 38.255, y: -28.412}
+    level: 0
+  - kind: light_lantern
+    position: {x: 42.852, y: -29.631}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 30.148, y: -41.977}
+    level: 0
+  - kind: light_crystal
+    position: {x: 30.678, y: -42.202}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 30.005, y: -42.29}
+    level: 0
+  - kind: light_crystal
+    position: {x: 23.027, y: 0.445}
+    level: 0
+  - kind: light_fire
+    position: {x: 23.659, y: -0.636}
+    level: 0
+  - kind: light_crystal
+    position: {x: 23.603, y: -0.685}
+    level: 0
+  - kind: light_fire
+    position: {x: 23.843, y: 0.033}
+    level: 0
+  - kind: light_lantern
+    position: {x: -2.471, y: -17.989}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -17.318, y: -32.101}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -17.105, y: -32.584}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -17.846, y: -31.723}
+    level: 0
+  - kind: light_lantern
+    position: {x: -29.041, y: -38.392}
+    level: 0
+  - kind: light_fire
+    position: {x: -37.128, y: -37.368}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -37.752, y: -36.994}
+    level: 0
+  - kind: light_fire
+    position: {x: -37.146, y: -36.805}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -37.49, y: -37.172}
+    level: 0
+  - kind: light_lantern
+    position: {x: -35.648, y: -40.506}
+    level: 0
+  - kind: light_lantern
+    position: {x: -32.204, y: 1.224}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -19.419, y: 5.847}
+    level: 0
+  - kind: light_crystal
+    position: {x: -19.642, y: 6.155}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -19.828, y: 6.303}
+    level: 0
+  - kind: light_lantern
+    position: {x: -21.179, y: -2.442}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -14.147, y: 11.319}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -13.619, y: 11.246}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -13.324, y: 11.47}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -14.617, y: 10.824}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -14.128, y: 11.313}
+    level: 0
+  - kind: light_fire
+    position: {x: -12.567, y: 26.42}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -12.185, y: 26.563}
+    level: 0
+  - kind: light_fire
+    position: {x: -11.973, y: 26.388}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -12.257, y: 25.649}
+    level: 0
+  - kind: light_fire
+    position: {x: -11.78, y: 25.836}
+    level: 0
+  - kind: light_crystal
+    position: {x: -6.836, y: 18.701}
+    level: 0
+  - kind: light_fire
+    position: {x: -6.262, y: 18.605}
+    level: 0
+  - kind: light_crystal
+    position: {x: -5.807, y: 19.126}
+    level: 0
+  - kind: light_fire
+    position: {x: -5.796, y: 19.121}
+    level: 0
+  - kind: light_crystal
+    position: {x: -5.559, y: 18.821}
+    level: 0
+  - kind: light_lantern
+    position: {x: 18.779, y: 12.066}
+    level: 0
+  - kind: light_fire
+    position: {x: 32.266, y: 7.179}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 32.254, y: 6.81}
+    level: 0
+  - kind: light_fire
+    position: {x: 32.005, y: 6.438}
+    level: 0
+  - kind: light_crystal
+    position: {x: 39.178, y: -3.749}
+    level: 0
+  - kind: light_fire
+    position: {x: 39.019, y: -3.954}
+    level: 0
+  - kind: light_crystal
+    position: {x: 39.45, y: -3.742}
+    level: 0
+  - kind: light_fire
+    position: {x: 39.896, y: -4.414}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31.04, y: -2.404}
+    level: 0
+  - kind: light_crystal
+    position: {x: 31.386, y: -2.084}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31.428, y: -2.427}
+    level: 0
+  - kind: light_crystal
+    position: {x: 31.508, y: -2.663}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 12.885, y: 25.298}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 13.387, y: 25.47}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 13.506, y: 24.917}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 12.657, y: 37.286}
+    level: 0
+  - kind: light_crystal
+    position: {x: 12.995, y: 36.34}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 12.615, y: 36.916}
+    level: 0
+  - kind: light_crystal
+    position: {x: 12.601, y: 36.409}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 12.904, y: 36.293}
+    level: 0
+  - kind: light_crystal
+    position: {x: -18.22, y: -22.48}
+    level: 0
+  - kind: light_fire
+    position: {x: -18.053, y: -22.462}
+    level: 0
+  - kind: light_crystal
+    position: {x: -18.486, y: -22.62}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -3.972, y: -9.878}
+    level: 0
+  - kind: light_crystal
+    position: {x: -3.541, y: -9.826}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -3.041, y: -9.91}
+    level: 0
+  - kind: light_crystal
+    position: {x: 5.386, y: -9.102}
+    level: 0
+  - kind: light_fire
+    position: {x: 4.834, y: -8.34}
+    level: 0
+  - kind: light_crystal
+    position: {x: 4.37, y: -8.943}
+    level: 0
+  - kind: light_fire
+    position: {x: 5.042, y: -8.87}
+    level: 0
+  - kind: light_crystal
+    position: {x: 4.955, y: -8.225}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 5.767, y: -4.035}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 5.791, y: -3.924}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 5.462, y: -3.45}
+    level: 0
+  - kind: light_fire
+    position: {x: -0.85, y: 8.577}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -0.205, y: 8.628}
+    level: 0
+  - kind: light_fire
+    position: {x: 0.042, y: 8.695}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -0.081, y: 8.23}
+    level: 0
+  - kind: light_fire
+    position: {x: -0.136, y: 9.085}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 9.873, y: -5.356}
+    level: 0
+  - kind: light_crystal
+    position: {x: 9.14, y: -4.366}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 9.716, y: -4.875}
+    level: 0
+  - kind: light_crystal
+    position: {x: -33.406, y: -9.73}
+    level: 0
+  - kind: light_fire
+    position: {x: -33.267, y: -9.669}
+    level: 0
+  - kind: light_crystal
+    position: {x: -32.818, y: -9.934}
+    level: 0
+  - kind: light_fire
+    position: {x: -32.67, y: -9.803}
+    level: 0
+  - kind: light_crystal
+    position: {x: -32.804, y: -9.884}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -30.911, y: -10.535}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -31.84, y: -10.549}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -31.39, y: -10.255}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -31.822, y: -10.454}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -31.442, y: -10.164}
+    level: 0
+  - kind: light_fire
+    position: {x: -30.766, y: -10.075}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -30.869, y: -9.339}
+    level: 0
+  - kind: light_fire
+    position: {x: -30.747, y: -9.398}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 30.236, y: -11.357}
+    level: 0
+  - kind: light_crystal
+    position: {x: 30.23, y: -11.539}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 30.198, y: -10.861}
+    level: 0
+  - kind: light_crystal
+    position: {x: 32.297, y: -9.705}
+    level: 0
+  - kind: light_fire
+    position: {x: 32.305, y: -9.676}
+    level: 0
+  - kind: light_crystal
+    position: {x: 32.431, y: -10.266}
+    level: 0
+  - kind: light_fire
+    position: {x: 31.798, y: -10.17}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31.617, y: -13.743}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31.337, y: -13.772}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31, y: -13.352}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 31.833, y: -12.889}
+    level: 0
+  - kind: light_fire
+    position: {x: -0.285, y: 34.261}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -1.198, y: 34.774}
+    level: 0
+  - kind: light_fire
+    position: {x: -0.779, y: 33.944}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 0.033, y: 31.182}
+    level: 0
+  - kind: light_crystal
+    position: {x: -0.657, y: 31.74}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -0.557, y: 32.025}
+    level: 0
+  - kind: light_crystal
+    position: {x: -0.498, y: 31.463}
+    level: 0
+  - kind: light_crystal
+    position: {x: 2.272, y: 32.099}
+    level: 0
+  - kind: light_fire
+    position: {x: 2.269, y: 32.708}
+    level: 0
+  - kind: light_crystal
+    position: {x: 2.869, y: 32.698}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -26.634, y: 28.778}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -26.424, y: 28.779}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -26.766, y: 28.83}
+    level: 0
+  - kind: light_fire
+    position: {x: -22.471, y: 35.919}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -22.533, y: 34.982}
+    level: 0
+  - kind: light_fire
+    position: {x: -22.799, y: 35.173}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -23.062, y: 35.742}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -38.299, y: 28.873}
+    level: 0
+  - kind: light_crystal
+    position: {x: -38.179, y: 28.736}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -38.122, y: 29.27}
+    level: 0
+  - kind: light_crystal
+    position: {x: -38.41, y: 28.882}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -38.15, y: 29.347}
+    level: 0
+  - kind: light_crystal
+    position: {x: -32.404, y: 29.652}
+    level: 0
+  - kind: light_fire
+    position: {x: -33.099, y: 29.156}
+    level: 0
+  - kind: light_crystal
+    position: {x: -32.172, y: 29.252}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -42.336, y: 30.16}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -42.138, y: 30.612}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -41.614, y: 30.511}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -42.453, y: 30.992}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -42.625, y: 30.122}
+    level: 0
+  - kind: light_fire
+    position: {x: 36.516, y: 30.751}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 36.747, y: 30.084}
+    level: 0
+  - kind: light_fire
+    position: {x: 36.621, y: 30.365}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 36.567, y: 30.135}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 24.48, y: 28.304}
+    level: 0
+  - kind: light_crystal
+    position: {x: 24.41, y: 26.96}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 24.347, y: 27.828}
+    level: 0
+  - kind: light_crystal
+    position: {x: 24.401, y: 27.145}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 24.927, y: 27.919}
+    level: 0
+  - kind: light_crystal
+    position: {x: 25.953, y: 36.222}
+    level: 0
+  - kind: light_fire
+    position: {x: 26.109, y: 36.12}
+    level: 0
+  - kind: light_crystal
+    position: {x: 25.67, y: 35.776}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 37.655, y: 25.193}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 37.853, y: 24.673}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 38.071, y: 24.403}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 37.685, y: 24.806}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 37.513, y: 24.92}
+    level: 0
+  - kind: light_fire
+    position: {x: 32.11, y: 39.731}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 32.559, y: 38.478}
+    level: 0
+  - kind: light_fire
+    position: {x: 31.825, y: 38.938}
+    level: 0
+  - kind: light_lantern
+    position: {x: -33.822, y: 32.768}
+    level: 0
+  - kind: light_crystal
+    position: {x: -31.429, y: 31.429}
+    level: 0
+  - kind: light_crystal
+    position: {x: -11.05, y: 36.081}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -9.906, y: 35.465}
+    level: 0
+  - kind: light_crystal
+    position: {x: -12.106, y: 36.785}
+    level: 0
+  - kind: light_crystal
+    position: {x: 41.702, y: -16.77}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 42.846, y: -17.386}
+    level: 0
+  - kind: light_crystal
+    position: {x: 40.646, y: -16.066}
+    level: 0
+  - kind: light_crystal
+    position: {x: 27.569, y: 2.175}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 28.713, y: 1.559}
+    level: 0
+  - kind: light_crystal
+    position: {x: 26.513, y: 2.879}
+    level: 0
+  - kind: light_crystal
+    position: {x: -40.189, y: 15.062}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -39.045, y: 14.446}
+    level: 0
+  - kind: light_crystal
+    position: {x: -41.245, y: 15.766}
+    level: 0
+  - kind: light_crystal
+    position: {x: -34.107, y: -33.611}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -32.963, y: -34.227}
+    level: 0
+  - kind: light_crystal
+    position: {x: -35.163, y: -32.907}
+    level: 0
+  - kind: light_crystal
+    position: {x: -8.185, y: -15.217}
+    level: 0
+  - kind: light_mushroom
+    position: {x: -7.041, y: -15.833}
+    level: 0
+  - kind: light_crystal
+    position: {x: -9.241, y: -14.513}
+    level: 0
+  - kind: light_crystal
+    position: {x: 27.379, y: -32.599}
+    level: 0
+  - kind: light_mushroom
+    position: {x: 28.523, y: -33.215}
+    level: 0
+  - kind: light_crystal
+    position: {x: 26.323, y: -31.895}
+    level: 0
+  - kind: exit
+    position: {x: 0, y: -43.56}
+    level: 0
+  - kind: start
+    position: {x: 0, y: -38.154}
+    level: 0
+  generated: 0
+  terrainMaterial: {fileID: 0}
+  noRaids: 0
+  dungeon: 1
+  propsPrefab: {fileID: 919132149155446097, guid: 5a6d1e83a66ca7943b0a047d060797af, type: 3}
+  buildingPrefabs:
+  - {fileID: 919132149155446097, guid: 4be166d38a720b742abe1214aa4cbead, type: 3}
+  - {fileID: 919132149155446097, guid: f083c23c28e65aa4c8eec4bd4c7aa843, type: 3}
