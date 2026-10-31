@@ -299,16 +299,18 @@ dungeon opens as a SEPARATE SCENE.
 ## The way out (2026-10-31, redone)
 - The user: «выход ... должен быть развёрнут к игроку, ... дать ему стиль». The old one was a flat
   daylight pane in the camp's SOUTH wall, seen from behind by the camera (which looks north).
-- Now `mine_exit()` in `dungeon1.py`: a mine adit cut into the camp's NORTH wall (`find_exit()`
-  walks north from the campfire to the rock; adit up to 3 build units deep, never into the passage
-  behind), in the style of the surface entrance (MineAbandoned) but whole: timber posts and beam with
-  lanterns, a gold sun on the beam (the way up), a stone stair climbing to a daylight pane, a rock
-  brow with grass, rails, a loaded cart, crates, two torches (fire spots).
-- The `exit` spot is at the mouth's foot, ~5 cells north of `start`. A new `edge` spot (middle of
+- A timbered mine adit (v2, same day) was REJECTED: «полная фигня ... как будто в пустоту и с
+  кучей ненужной геометрии». Rule: the way out is a cave in a SOLID ROCK, no props round it.
+- Now (v3) `mine_exit()` in `dungeon1.py`: the surface entrance's mountain (cave_entrance.mountain
+  layout) built 2.6x as big through `placed()` -- big rock, peak, two shoulders, cheeks, a rock brow,
+  turf on top -- standing on the camp floor 2 build units in front of the north wall
+  (`find_exit()`), with a dark cave mouth (rim + black) facing the camera. No cut in the terrain.
+  `rough_exit_rock()` rewrites its stone faces to the rough (plaster) pattern after
+  `detail.add_layers`, since stone_* draws dressed courses everywhere else.
+- The `exit` spot is at the cave's foot, ~4 cells north of `start`. A new `edge` spot (middle of
   the south edge) gives the map's half size (`DungeonMode.MapHalf`) -- that used to be read off
   the exit.
-- Seen only in Blender previews; a long slanted stone slab behind the brow (some prop of the
-  passage behind, not the exit) shows over it -- check in the game.
+- Seen only in Blender previews.
 
 ## In the game (phase 1, 2026-10-31)
 - **Export:**

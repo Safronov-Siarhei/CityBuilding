@@ -228,10 +228,9 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
     return (r - k) * min(rx, ry)
 
 
-# the way out: a mine adit cut into the camp's NORTH wall, so it faces the game's camera (which
-# looks north) -- set by find_exit() at the start of main(); (x, y of the mouth, depth)
+# the way out: a cave in a big rock standing against the camp's NORTH wall, so it faces the game's
+# camera (which looks north) -- set by find_exit() at the start of main(); (x, y of the cave's face)
 EXIT_AT = None
-EXIT_HALF_W = 2.0
 
 
 def pass_sd(x, y):
@@ -250,8 +249,6 @@ def pass_sd(x, y):
         if x0 - 10 < x < x1 + 10 and y0 - 10 < y < y1 + 10:
             for j, (cx, cy, rx, ry) in enumerate(HALL_BLOBS[name]):
                 best = smin(best, _ellipse_sd(x, y, cx, cy, rx, ry, 0.45, 11 + i * 7 + j), 5.0)
-    if EXIT_AT is not None and abs(x - EXIT_AT[0]) < EXIT_HALF_W and EXIT_AT[1] - 1.0 < y < EXIT_AT[1] + EXIT_AT[2]:
-        best = min(best, -1.0)                                     # the adit of the way out
     return best
 
 
@@ -473,19 +470,16 @@ CAMP_SPOTS = [(*HIRE_AT, 5.0), (*SHOP_AT, 3.6)]   # + the way out's forecourt (f
 
 
 def find_exit():
-    """The way out (the user, 2026-10-31: «должен быть развёрнут к игроку»): where the camp's
-    north wall stands, straight up from the campfire. The adit goes as deep as the rock allows
-    without breaking into the passage behind it."""
+    """The way out (the user, 2026-10-31: «развёрнут к игроку», then «в полноценной скале»): a big
+    rock standing on the camp's floor against its north wall, straight up from the campfire, the
+    cave in its south face."""
     global EXIT_AT
     x, y = CAMP[0], CAMP[1]
     while pass_sd(x, y + 0.25) < 0:
         y += 0.25
-    gap = 0.0
-    while gap < 12 and pass_sd(x, y + gap + 0.25) >= 0:
-        gap += 0.25
-    EXIT_AT = (x, y, max(1.2, min(3.0, gap - 2.6)))
-    CAMP_SPOTS.append((x, y - 1.5, 4.0))
-    print(f"EXIT mouth at {x:.1f},{y:.1f}, adit {EXIT_AT[2]:.1f} deep, rock behind {gap:.1f}")
+    EXIT_AT = (x, y - 2.0)
+    CAMP_SPOTS.append((x, y - 3.5, 5.0))
+    print(f"EXIT cave face at {x:.1f},{y - 2.0:.1f} (wall at {y:.1f})")
 
 
 def scatter_decor(rnd):
@@ -711,65 +705,66 @@ def build_camp(b):
     mine_exit(b)
 
 
+def placed(b, origin, k):
+    """Context for building in a model's own units (the surface entrance's, ~1 = a cell's worth)
+    and moving what was built to `origin`, scaled by `k`."""
+    class _Placed:
+        def __enter__(self):
+            b.bm.verts.ensure_lookup_table()
+            self.since = len(b.bm.verts)
+
+        def __exit__(self, *_):
+            b.bm.verts.ensure_lookup_table()
+            for v in list(b.bm.verts)[self.since:]:
+                v.co = Vector(origin) + v.co * k
+    return _Placed()
+
+
+EXIT_MOUTH = [(-0.45, 0.0), (0.45, 0.0), (0.52, 0.55), (0.32, 0.93), (0.0, 1.05), (-0.34, 0.9), (-0.52, 0.5)]
+
+
 def mine_exit(b):
-    """The way out, facing the camera (the user, 2026-10-31: «развёрнут к игроку ... дать ему
-    стиль»): the same timbered mine as the MineAbandoned entrance up on the surface, but whole and
-    in use -- a stone stair climbing to daylight inside, timber props with lanterns, a rock brow
-    with moss over it, a sun on the beam (the way up), rails running in, a cart and torches."""
-    x, y, depth = EXIT_AT
+    """The way out (the user, 2026-10-31: «сделай выход в полноценной скале ... без ненужной
+    геометрии»): the surface entrance's mountain, whole and solid, 2.6x as big -- one big rock, a
+    peak behind, two shoulders, turf on top -- with a dark cave in its face. Nothing else."""
+    x, y = EXIT_AT
+    k = 2.6
     cx, cy, _ = w(x, y)
-    top = cy + depth
-    # the stair to the daylight, between dark tunnel sides
-    n = 6
-    step = (depth - 0.4) / n
-    for k in range(n):
-        y0 = cy + 0.4 + k * step
-        b.box(cx - 1.25, cx + 1.25, y0, top + 0.2, 0.0, (k + 1) * 0.3, STONE_L if k % 2 else STONE, bevel=0.03)
-    b.box(cx - 1.75, cx - 1.25, cy - 0.1, top + 0.3, 0.0, 2.6, DARK)                  # the tunnel's dark sides
-    b.box(cx + 1.25, cx + 1.75, cy - 0.1, top + 0.3, 0.0, 2.6, DARK)
-    b.box(cx - 1.25, cx + 1.25, top + 0.2, top + 0.3, n * 0.3, 2.6, 'window_light')    # daylight up the stair
-    light('day', cx, top - 0.6, 2.0)
-    # the props at the mouth: two posts on stones, a beam, struts, lanterns
-    for s in (-1, 1):
-        px = cx + s * 1.6
-        b.box(px - 0.2, px + 0.2, cy - 0.25, cy + 0.15, 0.0, 0.18, STONE_D)
-        b.box(px - 0.16, px + 0.16, cy - 0.2, cy + 0.1, 0.0, 2.55, WOOD)
-        b.rod((px, cy - 0.05, 1.9), (cx + s * 0.95, cy - 0.05, 2.55), 0.12, WOOD)
-        b.rod((px, cy - 0.32, 2.35), (px, cy - 0.32, 2.15), 0.03, 'iron')
-        b.box(px - 0.11, px + 0.11, cy - 0.43, cy - 0.21, 1.85, 2.15, 'window_light')
-        b.box(px - 0.13, px + 0.13, cy - 0.45, cy - 0.19, 2.15, 2.21, 'iron')
-    b.box(cx - 2.0, cx + 2.0, cy - 0.25, cy + 0.15, 2.55, 2.9, WOOD_D, bevel=0.03)
-    # a rock brow over the mouth, moss on top: the mine is in a hill, as up on the surface
-    b.box(cx - 2.3, cx + 2.3, cy - 0.1, cy + 1.3, 2.9, 3.25, STONE_D, bevel=0.05)
-    for k, (ox, oy, r, h) in enumerate(((-1.7, 0.7, 1.0, 0.9), (0.1, 1.0, 1.3, 1.3), (1.8, 0.7, 0.95, 0.8),
-                                        (-0.8, 2.0, 1.2, 1.1), (1.0, 2.2, 1.1, 1.0))):
-        b.bm.verts.ensure_lookup_table()
-        since = len(b.bm.verts)
-        b.crag(cx + ox, cy + oy, r, r * 0.8, h, STONE, top='grass', sides=6, seed=k)
-        b.bm.verts.ensure_lookup_table()
-        for v in list(b.bm.verts)[since:]:
-            v.co.z += 3.2                                                  # lifted onto the brow
-    for ox in (-1.9, -0.9, 0.6, 1.5):
-        b.box(cx + ox, cx + ox + 0.08, cy - 0.17, cy - 0.12, 1.9 + 0.2 * (ox > 0), 2.9, 'leaf')   # ivy down the beam
-    # the sign of the way up: a gold sun on the beam
-    b.hcylinder('y', (cx, cy - 0.3, 3.05), 0.04, 0.3, 'gold', sides=10)
-    for k in range(8):
-        a = k * math.pi / 4
-        b.rod((cx + math.cos(a) * 0.36, cy - 0.32, 3.05 + math.sin(a) * 0.36),
-              (cx + math.cos(a) * 0.55, cy - 0.32, 3.05 + math.sin(a) * 0.55), 0.06, 'gold')
-    # rails running in from the forecourt, a loaded cart, crates, and torches either side
-    for k in range(7):
-        sy = cy - 3.0 + k * 0.5
-        b.box(cx - 0.55, cx + 0.55, sy, sy + 0.18, 0.0, 0.06, WOOD_D)
-    for dx in (-0.38, 0.38):
-        b.box(cx + dx - 0.04, cx + dx + 0.04, cy - 3.1, cy + 0.4, 0.06, 0.12, 'iron')
-    cart(b, x + 2.9, y - 1.9, 0.25)
-    crate(b, x - 2.8, y - 1.2)
-    crate(b, x - 3.3, y - 1.9, 0.45)
-    for s in (-1, 1):
-        tx, ty, _ = w(x + s * 3.0, y - 0.4)
-        b.rod((tx, ty, 0.0), (tx, ty, 1.3), 0.07, WOOD_D)
-        fire_spot(tx, ty, 1.4)
+    with placed(b, (cx, cy + 1.0 * k, 0.0), k):                          # local y -1.0 = the face
+        b.crag(0.0, 0.55, 1.75, 1.3, 1.9, STONE, top='grass', sides=8, taper=0.5, seed=1)
+        b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE, top='grass', sides=6, taper=0.4, seed=4)
+        b.crag(-1.25, 0.85, 0.75, 0.9, 1.25, STONE_D, top='grass', sides=6, seed=7)
+        b.crag(1.3, 0.65, 0.7, 0.85, 1.05, STONE, top='grass', sides=6, seed=9)
+        b.crag(-0.85, -0.8, 0.42, 0.38, 1.25, STONE_D, top='grass', sides=6, seed=12)     # the cave's cheeks
+        b.crag(0.9, -0.75, 0.4, 0.36, 1.05, STONE, top='grass', sides=6, seed=15)
+        b.crag(0.0, -0.55, 0.85, 0.42, 1.55, STONE_D, top='grass', sides=7, taper=0.6, seed=18)  # the brow, rock not a slab
+        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, DARK, 0.03)):   # the rim, the black inside
+            b.prism([(px * scale, pz * scale) for px, pz in EXIT_MOUTH], (0.0, -1.0 - dy + 0.4, 0.0),
+                    (1, 0, 0), (0, 0, 1), 0.4, color, back_cap=True)
+    light('day', cx, cy + 0.6, 1.2)                                     # a breath of daylight in the dark
+
+
+def rough_exit_rock(me):
+    """The way out's rock is natural rock: its greys draw rough (plaster's grain) instead of the
+    dressed courses every other stone prop of the dungeon draws (the user, 2026-10-31). Patterns go
+    by colour over the whole props mesh (detail.add_layers), so the rock's faces are rewritten after."""
+    x, y = EXIT_AT
+    cx, cy, _ = w(x, y)
+    pat, det = me.uv_layers["Pattern"], me.uv_layers["Detail"]
+    to = detail.METRES[detail.STONE] / detail.METRES[detail.PLASTER]
+    n = 0
+    for poly in me.polygons:
+        c = poly.center
+        if not (abs(c.x - cx) < 7.0 and cy - 0.5 < c.y < cy + 9.0):
+            continue
+        if int(pat.data[poly.loop_indices[0]].uv[0]) != detail.STONE:
+            continue
+        for li in poly.loop_indices:
+            pat.data[li].uv = (detail.PLASTER + 0.5, 0.5)
+            u, v = det.data[li].uv
+            det.data[li].uv = (u * to, v * to)
+        n += 1
+    print(f"EXIT rock: {n} faces drawn rough")
 
 
 def eggs(b, x, y, n=6):
@@ -1227,6 +1222,7 @@ def main():
     ptris = pb.triangles()
     props = make_object(f"{PREFIX}-Props", pb, bmat, coll)
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
+    rough_exit_rock(props.data)
     pchunks = split_by_chunk(props, coll)
     import dungeon_camp                                       # the approved camp buildings, whole
     for name, build, (x, y) in (("HireCamp", dungeon_camp.hire_camp, HIRE_AT),
@@ -1303,7 +1299,7 @@ def main():
             else:
                 continue
             f.write(f"{kind},{p.x:.3f},{p.y:.3f},{p.z:.3f}\n")
-        ex, ey, _ = w(EXIT_AT[0], EXIT_AT[1] - 0.8)                # at the foot of the adit's mouth
+        ex, ey, _ = w(EXIT_AT[0], EXIT_AT[1] - 1.0)                # at the foot of the cave's mouth
         f.write(f"exit,{ex * SCALE:.3f},{ey * SCALE:.3f},0.000\n")
         f.write(f"edge,0.000,{-HALF * SCALE:.3f},0.000\n")          # the south edge: the map's half size
         sx, sy, _ = w(CAMP[0], CAMP[1] + 1.0)
