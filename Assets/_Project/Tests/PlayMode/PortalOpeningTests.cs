@@ -60,6 +60,45 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
+        /// The portals are alive (the user, 2026-11-01: A + B + D): a whirlpool and runes on every
+        /// standing portal, the glow with embers round the lit one, and a wave coming out flares it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator PortalsBurn_WithAWhirlpoolRunesAndAFlare()
+        {
+            yield return PlaceTownHallAndWait();
+            OrcPortal lit = null;
+            foreach (var portal in OrcPortal.All)
+            {
+                var look = portal.transform.Find("PortalActive");
+                Assert.IsNotNull(look, $"Portal at {portal.Cell} has no lit look.");
+                Assert.IsNotNull(look.Find("PortalVortex"), $"Portal at {portal.Cell} has no whirlpool.");
+                Assert.IsNotNull(look.Find("PortalRunes"), $"Portal at {portal.Cell} has no runes.");
+                Assert.IsNotNull(look.Find("PortalHalo"), $"Portal at {portal.Cell} has no glow.");
+                var banked = portal.transform.Find("PortalPassive");
+                if (banked != null)
+                {
+                    Assert.IsNotNull(banked.Find("PortalVortex"), $"A banked portal at {portal.Cell} has no whirlpool.");
+                    Assert.IsNull(banked.Find("PortalHalo"), "A banked portal glows like the lit one.");
+                }
+                if (!portal.IsMain && portal.IsShownActive) lit = portal;
+            }
+            Assert.IsNotNull(lit, "No portal is lit for the next wave.");
+            OrcPortalFx.FlareOn(lit);
+            yield return null;
+            yield return null;
+            var fx = lit.transform.Find("PortalActive").GetComponent<OrcPortalFx>();
+            Assert.Greater(fx.Flaring, 0f, "A wave coming out does not flare the portal.");
+            // for the user to see (only with -Graphics)
+            yield return PlaytestCapture.Shoot("portal_lit_a", lit.transform.position + Vector3.up, 9f, 25f, lit.transform.eulerAngles.y);
+            yield return PlaytestCapture.Shoot("portal_lit_b", lit.transform.position + Vector3.up, 9f, 25f, lit.transform.eulerAngles.y + 180f);
+            var main = OrcPortal.All.FirstOrDefault(p => p.IsMain);
+            if (main != null) yield return PlaytestCapture.Shoot("portal_main", main.transform.position + Vector3.up * 2f, 16f, 25f, main.transform.eulerAngles.y + 180f);
+            yield return new WaitForSeconds(1.6f);
+            Assert.Less(fx.Flaring, 0f, "The flare never dies down.");
+        }
+
+        /// <summary>
         /// Every portal on real ground at the playable height. A portal on the lake or up a
         /// decorative cliff strands every orc it spawns off the NavMesh, and they then walk to the
         /// settlement through the world in a straight line.

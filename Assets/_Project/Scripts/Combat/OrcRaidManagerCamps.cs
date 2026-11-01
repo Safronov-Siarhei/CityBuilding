@@ -190,6 +190,7 @@ namespace CityBuilder.Combat
                 var look = Instantiate(mainPortalModel, portal.transform, false);
                 look.name = "PortalActive";
                 portal.SetLooks(look, null);
+                OrcPortalFx.Dress(look, null, true);
                 return;
             }
             portal.SetLevel(level, BalanceConfig.Instance.PortalHealthAt(level));
@@ -201,6 +202,7 @@ namespace CityBuilder.Combat
             activeLook.name = "PortalActive";
             passiveLook.name = "PortalPassive";
             portal.SetLooks(activeLook, passiveLook);
+            OrcPortalFx.Dress(activeLook, passiveLook, false);
         }
 
         /// <summary>One building of a camp's plan on its plot. The camp has already checked the plot is its own ground.</summary>

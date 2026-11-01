@@ -129,6 +129,10 @@ namespace CityBuilder.Combat
         [SerializeField] private Material crystalMaterial;
         [SerializeField] private Material crystalHaloMaterial;
         [SerializeField] private Material crystalGroundMaterial;
+        // the portal's life (OrcPortalFx): the whirlpool, the runes, the glow with embers
+        [SerializeField] private Material portalVortexMaterial;
+        [SerializeField] private Material portalRunesMaterial;
+        [SerializeField] private Material portalHaloMaterial;
 
         /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
         public GameObject SpiderCocoonModel => spiderCocoonModel;
@@ -138,6 +142,9 @@ namespace CityBuilder.Combat
         public Material CrystalMaterial => crystalMaterial;
         public Material CrystalHaloMaterial => crystalHaloMaterial;
         public Material CrystalGroundMaterial => crystalGroundMaterial;
+        public Material PortalVortexMaterial => portalVortexMaterial;
+        public Material PortalRunesMaterial => portalRunesMaterial;
+        public Material PortalHaloMaterial => portalHaloMaterial;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;
@@ -338,6 +345,7 @@ namespace CityBuilder.Combat
             var camp = OrcCamp.Of(source);
             var origin = camp != null ? camp.RaidExit : source.transform.position;
             var leader = SpawnWave(origin, size, level);
+            OrcPortalFx.FlareOn(source);
             PickNextSource();
             // Two messages, because "the orcs are raiding (5)" says nothing about the wave that has
             // quietly become five times as hard as the last one at the very same size. The icon

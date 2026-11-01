@@ -115,6 +115,12 @@ namespace CityBuilder.EditorTools
             so.FindProperty("crystalHaloMaterial").objectReferenceValue = CrystalMaterial("CrystalHalo", "CityBuilder/CrystalHalo", null);
             so.FindProperty("crystalGroundMaterial").objectReferenceValue =
                 CrystalMaterial("CrystalGroundGlow", "CityBuilder/OreGlow", new Color(0.35f, 0.75f, 1f, 1f));
+            // the orc portal's life (the user, 2026-11-01: A + B + D -- whirlpool, glow and runes, a flare per wave)
+            so.FindProperty("portalVortexMaterial").objectReferenceValue = CrystalMaterial("PortalVortex", "CityBuilder/PortalVortex", null);
+            so.FindProperty("portalRunesMaterial").objectReferenceValue = CrystalMaterial("PortalRunes", "CityBuilder/PortalRunes", null);
+            var portalHalo = CrystalMaterial("PortalHalo", "CityBuilder/CrystalHalo", new Color(0.55f, 0.18f, 0.95f, 1f));
+            if (portalHalo != null) portalHalo.SetColor("_SparkColor", new Color(0.6f, 1f, 0.4f, 1f));
+            so.FindProperty("portalHaloMaterial").objectReferenceValue = portalHalo;
 
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();

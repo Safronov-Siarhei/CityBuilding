@@ -21,6 +21,19 @@
   Raiders are drawn as the brute from raid level 4.
 - Portal states: ACTIVE (next wave's source, picked at random, visual only, not saved) burns bright;
   passive smoulders; closed leaves a ruin (`closedPortalCells`). Portal plot 2×2 facing the Town Hall.
+- Portal LIFE (the user, 2026-11-01, picked A + B + D): `Combat/OrcPortalFx.cs` dresses each look
+  (`ApplyPortalLevel` → `Dress`).
+  - A: a whirlpool turning in the arch (`Shaders/PortalVortex`).
+    - Lit portal: fast and bright. Banked portal: `_Intensity` 0.32, `_Speed` 0.35.
+  - B: a ring of runes on the platform (`Shaders/PortalRunes`). The LIT portal also gets a breathing
+    glow with rising embers (the crystals' `CrystalHalo` shader in violet/green, material `PortalHalo`).
+  - D: `FlareOn(source)` at each wave throws the whirlpool white for 0.6 s and rolls a shock ring
+    out over the grass for 1.4 s.
+  - The opening's size is hard-wired from `orcportal1.py` / `orcmainbase2.py` (`OrcPortalFx.Camp` /
+    `Main`). REMODEL THE ARCH → update those numbers.
+  - Materials are made in `SetupProjectOrcs` and held by `OrcRaidManager`.
+  - Test: `PortalOpeningTests.PortalsBurn_WithAWhirlpoolRunesAndAFlare`. It also shoots
+    `playtest_shots/portal_*.png` under -Graphics.
 - Closing a portal → `PlunderCamp` (coins/wood/stone × level) + `orc_camp_breather_seconds` on the raid timer.
 - Victory: main portal closed (`GameOverManager.WonByMainPortal`) → panel with «Продолжить игру»
   (`ContinuePlaying`, `IsFreeMode`). Maps without a main base: last portal wins.
