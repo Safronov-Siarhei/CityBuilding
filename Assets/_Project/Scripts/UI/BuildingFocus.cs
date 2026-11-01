@@ -164,6 +164,8 @@ namespace CityBuilder.UI
             HarvestRadiusOverlay.HideIfShown();
             _reach.gameObject.SetActive(false);
             if (detailsButton != null) detailsButton.SetActive(true);
+            // «Уровень N» over the mine while it is held (the user, 2026-11-01)
+            DungeonLevelLabel.Follow(entrance);
         }
 
         private void Paint(Color ring, Color reach)

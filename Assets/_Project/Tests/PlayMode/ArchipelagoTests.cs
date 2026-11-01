@@ -545,10 +545,15 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreSame(first, focus.Entrance, "A tap on the notice does not select the dungeon.");
             Assert.IsTrue(focus.Holding && focus.DetailsShown, "A selected dungeon has no «!».");
             Assert.IsFalse(card.IsOpen, "Selecting the dungeon opened its card at once.");
+            // its level over the mine while it is held (the user, 2026-11-01)
+            Assert.AreSame(first, CityBuilder.UI.DungeonLevelLabel.Shown, "No level plaque over the held dungeon.");
+            Assert.AreEqual(string.Format(CityBuilder.Core.Localization.Get("#dungeon_entrance_level"), first.Level), CityBuilder.UI.DungeonLevelLabel.Words);
             focus.OpenDetails();
             Assert.IsTrue(card.IsOpen && card.Shown == first, "The «!» does not open the dungeon's card.");
             focus.Clear();
             Assert.IsFalse(card.IsOpen);
+            yield return null;
+            Assert.IsNull(CityBuilder.UI.DungeonLevelLabel.Shown, "The level plaque stays after the dungeon is let go.");
             // a hero sent to the mouth: his arrival opens the card
             first.Await();
             yield return new WaitForSeconds(0.8f);

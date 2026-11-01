@@ -68,7 +68,19 @@ dungeon opens as a SEPARATE SCENE.
     - the orcs' MAIN BASE ≈ 60;
     - the BOT CITY ≈ 60.
   - **Tap on the crystals** (the HUD plaque) shows how to get them.
-- **Over the entrance:** a label with the dungeon's LEVEL (1/2/3) when it is tapped.
+- **The user's answers of 2026-11-01 on the camp:**
+  - **Gnome hirelings:** the concept is approved.
+    - They can be hired WITHOUT END (a dead one is hired again), but at most 5 at a time.
+    - NEXT: the three gnome models (miner, crossbowman, ore guardian). Render them for approval first.
+  - **Potions** are NOT drunk on purchase.
+    - A bought potion becomes an icon under the heroes' portrait in the top-right corner; tapping
+      the icon drinks it.
+    - They work only in the dungeon and never carry over to the town's inventory.
+  - Dungeons of levels 2 and 3: LATER.
+- **Over the entrance:** a label with the dungeon's LEVEL (1/2/3) when it is tapped. BUILT
+  2026-11-01 as `UI/DungeonLevelLabel`: a parchment plaque «Уровень N» over the mine while it
+  is held (`BuildingFocus.SelectEntrance` → `Follow`), gone when it is let go or a card covers it,
+  never over the way out.
 - **Respawn:** monsters come back ONLY when the player leaves the dungeon and enters again (replaces
   «after N minutes»). Bosses never come back.
 - **Bosses:** the spider queen and the ore golem are approved. They must be MUCH bigger than a hero.
