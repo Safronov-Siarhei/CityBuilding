@@ -98,6 +98,36 @@ namespace CityBuilder.Combat
         }
 
         private float RageFactor => _rageLeft > 0f ? _rageFactor : 1f;
+
+        private float _hasteLeft;
+        private float _hasteFactor = 1f;
+        private float _wardLeft;
+        private float _wardKeep = 1f;
+
+        /// <summary>Walks `factor` times as fast for this long (the dungeon's potion of speed).</summary>
+        public void Haste(float factor, float seconds)
+        {
+            _hasteFactor = Mathf.Max(1f, factor);
+            _hasteLeft = Mathf.Max(_hasteLeft, seconds);
+        }
+
+        /// <summary>Takes only `keep` of every blow for this long (the dungeon's potion of defence).</summary>
+        public void Ward(float keep, float seconds)
+        {
+            _wardKeep = Mathf.Clamp01(keep);
+            _wardLeft = Mathf.Max(_wardLeft, seconds);
+        }
+
+        public float HasteLeft => _hasteLeft;
+        public float WardLeft => _wardLeft;
+
+        /// <summary>Health back, never past the most he can have (the potion of healing).</summary>
+        public void Heal(int amount)
+        {
+            if (amount <= 0 || CurrentHealth <= 0) return;
+            CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
+            if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
+        }
         // the Captain's Сила round him adds to every blow struck near him (HeroAuras)
         private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor * HeroAuras.MightAt(transform.position));
 
@@ -235,6 +265,8 @@ namespace CityBuilder.Combat
         {
             if (_shieldLeft > 0f) _shieldLeft -= Time.deltaTime;
             if (_rageLeft > 0f) _rageLeft -= Time.deltaTime;
+            if (_hasteLeft > 0f) _hasteLeft -= Time.deltaTime;
+            if (_wardLeft > 0f) _wardLeft -= Time.deltaTime;
             if (SlowedFor > 0f) SlowedFor -= Time.deltaTime;
             if (StunnedFor > 0f)
             {
@@ -481,6 +513,7 @@ namespace CityBuilder.Combat
 
             var speed = _walkSpeed * Weather.SpeedMultiplier;   // the New Year's blizzard slows everyone
             if (SlowedFor > 0f) speed *= _slowFactor;
+            if (_hasteLeft > 0f) speed *= _hasteFactor;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(direction * speed * Time.deltaTime);
@@ -520,6 +553,7 @@ namespace CityBuilder.Combat
         public void TakeDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0 || IsShielded || InvulnerableCheat) return;
+            if (_wardLeft > 0f) amount = Mathf.Max(1, Mathf.RoundToInt(amount * _wardKeep));
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             if (CurrentHealth > 0)

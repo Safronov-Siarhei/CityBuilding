@@ -311,6 +311,7 @@ namespace CityBuilder.EditorTools
             BuildDayLabel(uiRoot, gameCalendar);
             BuildHappiness(uiRoot);
             BuildKingPortrait(uiRoot);
+            BuildDungeonPotionBar(uiRoot);
             BuildHeroSkillBar(uiRoot);
             BuildShipActionBar(uiRoot, iconLibrary);
             BuildMigrationPanel(uiRoot, panelSprite);
@@ -319,6 +320,7 @@ namespace CityBuilder.EditorTools
             BuildForeignBuildingCard(uiRoot, panelSprite);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonHireCard(uiRoot, panelSprite);
+            BuildDungeonShopCard(uiRoot, panelSprite);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 

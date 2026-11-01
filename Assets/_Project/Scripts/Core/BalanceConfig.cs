@@ -581,6 +581,11 @@ namespace CityBuilder.Core
         [SerializeField] private int dungeonHirelingMax = 5;
         [SerializeField] private float dungeonHirelingFollowCells = 2.5f;
         [SerializeField] private float dungeonHirelingLeashCells = 9f;
+        // the dungeon's potions, by Dungeon.PotionKind (healing, rage, speed, defence)
+        [SerializeField] private int[] potionCoins = { 30, 40, 25, 35 };
+        [SerializeField] private float[] potionSeconds = { 10f, 20f, 30f, 20f };
+        [SerializeField] private float[] potionPower = { 0.6f, 1.5f, 1.4f, 0.5f };
+        private static readonly string[] PotionIds = { "healing", "rage", "speed", "defence" };
         [SerializeField] private float fertilePatchRadius = 5f;
         [SerializeField] private float fertileFarmBonus = 0.5f;
         [SerializeField] private int fishShoalCount = 12;
@@ -987,6 +992,10 @@ namespace CityBuilder.Core
         public int DungeonHirelingMax => dungeonHirelingMax;
         public float DungeonHirelingFollowCells => dungeonHirelingFollowCells;
         public float DungeonHirelingLeashCells => dungeonHirelingLeashCells;
+        /// <summary>A dungeon potion (Dungeon.PotionKind as an index): its price in the shop, how long it works, and its strength (healing: share of health back; rage/speed: factor; defence: share of damage taken).</summary>
+        public int PotionCoins(int kind) => potionCoins[kind];
+        public float PotionSeconds(int kind) => potionSeconds[kind];
+        public float PotionPower(int kind) => potionPower[kind];
         public float FertilePatchRadius => fertilePatchRadius;
         public float FertileFarmBonus => fertileFarmBonus;
         /// <summary>The archipelago's fish shoals: how many, the fish in each, a Fisher's Hut's extra catch by one (1 = double), its reach, and the wait before a fished-out shoal turns up elsewhere.</summary>
@@ -1537,6 +1546,12 @@ namespace CityBuilder.Core
             dungeonHirelingMax = (int)Read(economy, "dungeon_hireling_max", dungeonHirelingMax);
             dungeonHirelingFollowCells = Read(economy, "dungeon_hireling_follow_cells", dungeonHirelingFollowCells);
             dungeonHirelingLeashCells = Read(economy, "dungeon_hireling_leash_cells", dungeonHirelingLeashCells);
+            for (var i = 0; i < PotionIds.Length; i++)
+            {
+                potionCoins[i] = (int)Read(economy, $"potion_{PotionIds[i]}_coins", potionCoins[i]);
+                potionSeconds[i] = Read(economy, $"potion_{PotionIds[i]}_seconds", potionSeconds[i]);
+                potionPower[i] = Read(economy, $"potion_{PotionIds[i]}_power", potionPower[i]);
+            }
             fertilePatchRadius = Read(economy, "fertile_patch_radius", fertilePatchRadius);
             fertileFarmBonus = Read(economy, "fertile_farm_bonus", fertileFarmBonus);
             fishShoalCount = (int)Read(economy, "fish_shoal_count", fishShoalCount);

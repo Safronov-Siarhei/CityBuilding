@@ -113,6 +113,8 @@ namespace CityBuilder.Dungeon
                 town.dungeonHirelings.RemoveAll(h => h == null || h.dungeonId == mode.DungeonId);
                 town.dungeonHirelings.AddRange(party.Survivors());
             }
+            // the potions not drunk wait below too, never in the town's inventory
+            if (DungeonPotions.Instance != null) town.dungeonPotions = DungeonPotions.Instance.Carried();
             SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             GameSessionIntent.SaveNameToLoad = SaveSystem.HiddenTownSlot;
             GameSessionIntent.SaveNameAfterLoad = mode.ReturnName ?? string.Empty;

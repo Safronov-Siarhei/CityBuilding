@@ -417,6 +417,53 @@ namespace CityBuilder.EditorTools
             BuildHeroPortrait(uiRoot, SoldierType.Captain, UiTextureImport.IconsFolder + "/PortraitCaptain.png");
         }
 
+        /// <summary>The dungeon's potion icons (DungeonPotionBar) under the heroes' portraits, top right.</summary>
+        private static void BuildDungeonPotionBar(Transform uiRoot)
+        {
+            const float icon = 84f;
+            var root = new GameObject("DungeonPotionBar", typeof(RectTransform));
+            root.transform.SetParent(uiRoot, false);
+            root.AddComponent<HudOverlay>();
+            var rootRect = (RectTransform)root.transform;
+            Anchor(rootRect, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f - HeroPortraitStep), new Vector2(icon * 4f + 36f, icon + 10f));
+            var circle = SkinSprite("circle_mask");
+            var buttons = new Button[4];
+            var counts = new Text[4];
+            var names = new[] { "Healing", "Rage", "Speed", "Defence" };
+            for (var i = 0; i < 4; i++)
+            {
+                var frame = HudImage(root.transform, "Potion" + names[i], "round_value", new Vector2(icon, icon), sliced: false);
+                Anchor(frame.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), Vector2.zero, new Vector2(icon, icon));
+                buttons[i] = frame.gameObject.AddComponent<Button>();
+                var picture = CreateImage(frame.transform, "Icon", Color.white);
+                picture.sprite = LoadSprite(UiTextureImport.IconsFolder + "/Potion" + names[i] + ".png");
+                picture.preserveAspect = true;
+                picture.raycastTarget = false;
+                Anchor(picture.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(icon - 18f, icon - 18f));
+                var badge = CreateImage(frame.transform, "CountBadge", UiTheme.Wood);
+                badge.sprite = circle;
+                badge.raycastTarget = false;
+                Anchor(badge.rectTransform, new Vector2(0f, 0f), new Vector2(0.5f, 0.5f), new Vector2(10f, 10f), new Vector2(36f, 36f));
+                counts[i] = CreateText(badge.transform, "Count", "1", 22, new Vector2(0f, 1f), new Vector2(36f, 32f), UiTheme.OnWood);
+                counts[i].font = UiTheme.Heavy;
+            }
+
+            var go = new GameObject("DungeonPotionBarController");
+            go.transform.SetParent(uiRoot, false);
+            var controller = go.AddComponent<DungeonPotionBar>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("root").objectReferenceValue = rootRect;
+            so.FindProperty("slot").floatValue = icon + 12f;
+            for (var i = 0; i < 4; i++)
+            {
+                so.FindProperty("buttons").GetArrayElementAtIndex(i).objectReferenceValue = buttons[i];
+                so.FindProperty("counts").GetArrayElementAtIndex(i).objectReferenceValue = counts[i];
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            for (var i = 0; i < 4; i++) UnityEventTools.AddIntPersistentListener(buttons[i].onClick, controller.Tap, i);
+            root.SetActive(false);   // DungeonPotionBar shows it below, once the bag has a potion
+        }
+
         /// <summary>How far down the right edge each next hero's portrait stands.</summary>
         private const float HeroPortraitStep = RoundButton + 30f;
 

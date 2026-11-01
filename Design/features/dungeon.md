@@ -1,8 +1,8 @@
 # Dungeon (подземелье)
 
-> Status 2026-10-31: IN THE GAME: the walk (phase 1), 3 entrances on the archipelago (phase 2a), and
-> the MONSTERS + BOSSES with animations (phase 2b). Hiring, the shop, crystals in rooms and patrols
-> are not done. The user has not seen the monsters in the game yet; not measured on a phone.
+> Status 2026-11-01: IN THE GAME: the walk, 3 entrances, monsters + bosses, crystals and patrols,
+> the darkness, the GNOME HIRE CAMP and the POTION SHOP (both 2026-11-01, user not seen them yet).
+> Not done: dungeons of levels 2-3 (own maps). Not measured on a phone.
 > Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes), orc-faction (OrcUnit).
 
 ## What the player sees
@@ -533,7 +533,7 @@ dungeon opens as a SEPARATE SCENE.
 - **Places:** `DungeonEntrance.Place` = Mouth / Exit / HireCamp / Shop. `DungeonMode.MakeCamp`
   puts a tap box round the model standing on the `hirecamp` / `potionshop` spot; held with the
   ring and «!» (`BuildingFocus` uses `entrance.Half`), a hero sent there opens its card
-  (`OpenCard`). No «Уровень N» plaque over camps. The shop's card is the next step.
+  (`OpenCard`). No «Уровень N» plaque over camps.
 - **`Dungeon/DungeonHirelings`:** one party group of its own (`IsSummoned`, not in the army's
   groups: no icon, no upkeep, not in `SoldierCount`). `Hire(type)` pays through
   `DungeonMode.TrySpendCoins` and spawns at the camp; at most `dungeon_hireling_max` (5) alive; a
@@ -548,6 +548,24 @@ dungeon opens as a SEPARATE SCENE.
   name / «Здоровье N, урон N» / «Нанять: N», the count «В отряде гномов: N/5» or «Приведите героя
   к лагерю». Localization rows 514-521.
 - **Test:** `DungeonTests.TheHireCamp_HiresUpToFiveGnomes_WhoFollowTheHero`.
+
+## Potion shop in the game (2026-11-01; user not seen it)
+- **`Dungeon/DungeonPotions`** (`PotionKind` Healing/Rage/Speed/Defence): `Buy` pays through
+  `DungeonMode.TrySpendCoins` and puts it in the bag -- NOT drunk. `Drink` works on the whole
+  party (living heroes + gnomes) for `potion_<kind>_seconds`: rage = `SoldierUnit.Enrage(power)`,
+  speed = `Haste(power)` (walk factor), defence = `Ward(power)` (share of each blow taken, min 1),
+  healing = `power` share of max health back over its seconds (0.5 s ticks, `SoldierUnit.Heal`).
+  Only units in the party at the moment of drinking get it. Feed line `#log_potion_drunk`.
+- **Sheet:** economy rows 283-294 `potion_<healing|rage|speed|defence>_<coins|seconds|power>`
+  (30/10/0.6, 40/20/1.5, 25/30/1.4, 35/20/0.5); localization rows 522-535.
+- **UI:** `UI/DungeonShopCard` (four rows: picture, name «(в сумке: N)», what it does, «Купить: N»;
+  built in `SetupProjectPanels.BuildDungeonShopCard`). `UI/DungeonPotionBar` (built in
+  `SetupProjectHud.BuildDungeonPotionBar`): round icons with a count badge, top right UNDER the
+  heroes' portraits (`HeroPortraitController.StackBottom`), only kinds in the bag, packed to the
+  right; a tap drinks one. Icons `UI/Icons/Potion*.png` drawn with PIL (flask, cork, liquid).
+- **Persistence:** the bag goes into `town.dungeonPotions` on the way up (`DungeonRecord.Potions`
+  round-trips it); never into the town's inventory.
+- **Test:** `DungeonTests.ThePotionShop_SellsPotions_DrunkFromTheBarForTheParty`.
 
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,

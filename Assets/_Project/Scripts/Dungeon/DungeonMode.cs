@@ -176,6 +176,8 @@ namespace CityBuilder.Dungeon
             // the gnomes hired last time, waiting by the way in
             gameObject.AddComponent<DungeonHirelings>().Begin(DungeonId, StartSpot + Vector3.back * 1.5f,
                 HireCamp != null ? HireCamp.ApproachFrom(StartSpot) : StartSpot, town?.dungeonHirelings);
+            // the potions not drunk last time, back under the portraits
+            gameObject.AddComponent<DungeonPotions>().Begin(town?.dungeonPotions);
             Arrived = true;
         }
 

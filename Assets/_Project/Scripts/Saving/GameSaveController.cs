@@ -78,7 +78,7 @@ namespace CityBuilder.Saving
 
             _pendingLoad = SaveSystem.Load(nameToLoad);
             if (_pendingLoad == null) return;
-            Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain, _pendingLoad.dungeonCrystalsTaken, _pendingLoad.dungeonHirelings);
+            Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain, _pendingLoad.dungeonCrystalsTaken, _pendingLoad.dungeonHirelings, _pendingLoad.dungeonPotions);
 
             // Resuming from the autosave gives no name to save back under: the dialog should ask
             // for one, not offer "_autosave".
@@ -614,6 +614,7 @@ namespace CityBuilder.Saving
                 data.dungeonBossesSlain.AddRange(Dungeon.DungeonRecord.BossesSlain);
                 data.dungeonCrystalsTaken.AddRange(Dungeon.DungeonRecord.CrystalsTaken);
                 data.dungeonHirelings.AddRange(Dungeon.DungeonRecord.Hirelings);
+                data.dungeonPotions.AddRange(Dungeon.DungeonRecord.Potions);
                 foreach (var ship in Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.Ships : new List<Ships.ShipUnit>())
                 {
                     if (ship == null) continue;

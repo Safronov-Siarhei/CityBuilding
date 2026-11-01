@@ -453,9 +453,12 @@ namespace CityBuilder.Dungeon
         public static readonly HashSet<string> BossesSlain = new HashSet<string>();
         public static readonly HashSet<string> CrystalsTaken = new HashSet<string>();
         public static readonly List<Saving.HirelingEntry> Hirelings = new List<Saving.HirelingEntry>();
+        public static readonly List<int> Potions = new List<int>();
 
-        public static void Load(IEnumerable<string> bosses, IEnumerable<string> crystals = null, IEnumerable<Saving.HirelingEntry> hirelings = null)
+        public static void Load(IEnumerable<string> bosses, IEnumerable<string> crystals = null, IEnumerable<Saving.HirelingEntry> hirelings = null, IEnumerable<int> potions = null)
         {
+            Potions.Clear();
+            if (potions != null) Potions.AddRange(potions);
             BossesSlain.Clear();
             CrystalsTaken.Clear();
             Hirelings.Clear();

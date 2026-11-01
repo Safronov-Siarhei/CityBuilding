@@ -379,6 +379,63 @@ namespace CityBuilder.EditorTools
             panelRoot.SetActive(false);
         }
 
+        /// <summary>
+        /// The card of the dungeon's potion shop (DungeonShopCard): four rows -- the potion's
+        /// picture, its name and count in the bag, what it does, a «Купить: N» button.
+        /// </summary>
+        private static void BuildDungeonShopCard(Transform canvasParent, Sprite panelSprite)
+        {
+            var panelRoot = new GameObject("DungeonShopCard", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(860f, 720f));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+            var title = CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 305f), new Vector2(800f, 56f), ink);
+            var hint = CreateText(card.transform, "Hint", string.Empty, 24, new Vector2(0f, 258f), new Vector2(800f, 40f), ink);
+            var names = new Text[4];
+            var descriptions = new Text[4];
+            var buttons = new Button[4];
+            var pictures = new[] { "Healing", "Rage", "Speed", "Defence" };
+            for (var i = 0; i < 4; i++)
+            {
+                var y = 175f - i * 115f;
+                var icon = CreateImage(card.transform, "Icon" + i, Color.white);
+                icon.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Potion" + pictures[i] + ".png");
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                SetRect(icon.rectTransform, new Vector2(-350f, y), new Vector2(90f, 90f));
+                names[i] = CreateText(card.transform, "Name" + i, string.Empty, 28, new Vector2(-90f, y + 22f), new Vector2(420f, 40f), ink);
+                names[i].alignment = TextAnchor.MiddleLeft;
+                descriptions[i] = CreateText(card.transform, "Description" + i, string.Empty, 21, new Vector2(-90f, y - 20f), new Vector2(420f, 52f), ink);
+                descriptions[i].alignment = TextAnchor.UpperLeft;
+                buttons[i] = CreateDynamicButton(card.transform, panelSprite, "BuyButton" + i, new Vector2(275f, y), new Vector2(240f, 76f), out _);
+            }
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -300f), new Vector2(260f, 70f));
+
+            var controller = canvasParent.gameObject.AddComponent<DungeonShopCard>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("hint").objectReferenceValue = hint;
+            for (var i = 0; i < 4; i++)
+            {
+                so.FindProperty("names").GetArrayElementAtIndex(i).objectReferenceValue = names[i];
+                so.FindProperty("descriptions").GetArrayElementAtIndex(i).objectReferenceValue = descriptions[i];
+                so.FindProperty("buyButtons").GetArrayElementAtIndex(i).objectReferenceValue = buttons[i];
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            for (var i = 0; i < 4; i++) UnityEventTools.AddIntPersistentListener(buttons[i].onClick, controller.Buy, i);
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+            panelRoot.SetActive(false);
+        }
+
         private static BuildingInfoPanelController BuildBuildingInfoPanel(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
         {
             var panelRoot = new GameObject("BuildingInfoPanel", typeof(RectTransform));

@@ -93,7 +93,8 @@ namespace CityBuilder.Dungeon
                     if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Show(this);
                     break;
                 case Place.Shop:
-                    break;   // the potion shop's card comes next
+                    if (DungeonShopCard.Instance != null) DungeonShopCard.Instance.Show(this);
+                    break;
                 default:
                     if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Show(this);
                     break;
@@ -103,13 +104,15 @@ namespace CityBuilder.Dungeon
         /// <summary>Any place's card is up.</summary>
         public static bool AnyCardOpen =>
             (DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen)
-            || (DungeonHireCard.Instance != null && DungeonHireCard.Instance.IsOpen);
+            || (DungeonHireCard.Instance != null && DungeonHireCard.Instance.IsOpen)
+            || (DungeonShopCard.Instance != null && DungeonShopCard.Instance.IsOpen);
 
         /// <summary>Every place's card down.</summary>
         public static void CloseCards()
         {
             if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Close();
             if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Close();
+            if (DungeonShopCard.Instance != null) DungeonShopCard.Instance.Close();
         }
 
         private void OnEnable() => _all.Add(this);

@@ -51,6 +51,9 @@ namespace CityBuilder.Saving
         /// <summary>The gnomes hired below and still alive (Dungeon.DungeonRecord): they wait at the way in for the next visit.</summary>
         public List<HirelingEntry> dungeonHirelings = new List<HirelingEntry>();
 
+        /// <summary>The potions bought below and not drunk, by Dungeon.PotionKind: kept for the next visit, never in the town's inventory.</summary>
+        public List<int> dungeonPotions = new List<int>();
+
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;
         /// <summary>The archipelago's fish shoals; shoalsSaved false in a save made before them (the map's own are kept).</summary>

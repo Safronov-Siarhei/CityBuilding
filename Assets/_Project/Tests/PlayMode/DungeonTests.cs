@@ -488,6 +488,75 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(survivors.TrueForAll(h => h.dungeonId == mode.DungeonId && h.currentHealth > 0));
         }
 
+        /// <summary>
+        /// The potion shop (the user, 2026-11-01): a hero sent there opens its card; a potion bought
+        /// is paid for and NOT drunk -- it shows as an icon under the portraits; a tap on the icon
+        /// drinks it for the whole party (rage, speed, defence on every one, healing over time);
+        /// those not drunk are written down for the next visit.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ThePotionShop_SellsPotions_DrunkFromTheBarForTheParty()
+        {
+            var mode = DungeonMode.Instance;
+            var king = HeroRoster.Instance.HeroOf(SoldierType.King);
+            var shop = mode.Shop;
+            Assert.IsNotNull(shop, "The potion shop is no place to tap.");
+            var card = CityBuilder.UI.DungeonShopCard.Instance;
+            Assert.IsNotNull(card, "No shop card.");
+            var agent = king.Unit.GetComponent<NavMeshAgent>();
+            var to = shop.ApproachFrom(mode.StartSpot);
+            if (agent != null && agent.enabled) agent.Warp(to);
+            else king.Unit.transform.position = to;
+            king.Unit.Group.OrderMoveTo(to);
+            shop.Await();
+            yield return new WaitForSeconds(0.8f);
+            Assert.IsTrue(card.IsOpen && card.Shown == shop, "A hero sent to the shop does not open its card.");
+
+            var resources = CityBuilder.Resources.ResourceManager.Instance;
+            resources.SetAmount(HeroRoster.Money, 500);
+            var potions = DungeonPotions.Instance;
+            Assert.AreEqual(0, CityBuilder.UI.DungeonPotionBar.Shown, "Potion icons before any was bought.");
+            for (var i = 0; i < DungeonPotions.Kinds; i++) card.Buy(i);
+            card.Buy((int)PotionKind.Healing);
+            var paid = 2 * DungeonPotions.Price(PotionKind.Healing) + DungeonPotions.Price(PotionKind.Rage)
+                + DungeonPotions.Price(PotionKind.Speed) + DungeonPotions.Price(PotionKind.Defence);
+            Assert.AreEqual(500 - paid, resources.GetAmount(HeroRoster.Money), "The potions were not paid for.");
+            Assert.AreEqual(2, potions.Count(PotionKind.Healing));
+            Assert.AreEqual(0f, king.Unit.RageLeft, "A bought potion was drunk at once.");
+            card.Close();
+            yield return null;
+            Assert.AreEqual(DungeonPotions.Kinds, CityBuilder.UI.DungeonPotionBar.Shown, "The bought potions are not on the bar under the portraits.");
+
+            // drunk from the bar, for the party: the King and a gnome
+            resources.SetAmount(HeroRoster.Money, 500);
+            var gnome = DungeonHirelings.Instance.Hire(SoldierType.GnomeGuardian);
+            Assert.IsNotNull(gnome);
+            var bar = CityBuilder.UI.DungeonPotionBar.Instance;
+            bar.Tap((int)PotionKind.Rage);
+            bar.Tap((int)PotionKind.Speed);
+            bar.Tap((int)PotionKind.Defence);
+            foreach (var unit in new[] { king.Unit, gnome })
+            {
+                Assert.Greater(unit.RageLeft, 0f, $"{unit.Type} is not enraged.");
+                Assert.Greater(unit.HasteLeft, 0f, $"{unit.Type} is not hasted.");
+                Assert.Greater(unit.WardLeft, 0f, $"{unit.Type} is not warded.");
+            }
+            var before = gnome.CurrentHealth;
+            gnome.TakeDamage(20);
+            Assert.AreEqual(before - Mathf.RoundToInt(20 * DungeonPotions.Power(PotionKind.Defence)), gnome.CurrentHealth, "The defence potion does not soften a blow.");
+            var hurt = gnome.CurrentHealth;
+            bar.Tap((int)PotionKind.Healing);
+            yield return new WaitForSeconds(2f);
+            Assert.Greater(gnome.CurrentHealth, hurt, "The healing potion heals nobody.");
+            Assert.AreEqual(1, potions.Count(PotionKind.Healing));
+            yield return null;
+            Assert.AreEqual(1, CityBuilder.UI.DungeonPotionBar.Shown, "Drunk potions stay on the bar.");
+
+            // the rest wait below for the next visit
+            var carried = potions.Carried();
+            Assert.AreEqual(new List<int> { 1, 0, 0, 0 }, carried);
+        }
+
         [Test]
         public void EveryHall_IsReachableOnFoot_FromTheCamp()
         {
