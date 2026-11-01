@@ -567,6 +567,36 @@ dungeon opens as a SEPARATE SCENE.
   round-trips it); never into the town's inventory.
 - **Test:** `DungeonTests.ThePotionShop_SellsPotions_DrunkFromTheBarForTheParty`.
 
+## Playtest round 4 (2026-11-01, commit b8a5d4b0; user not seen it)
+- **One party below:** the held hero leads; the other heroes walk after him
+  (`DungeonHirelings.FollowWithHeroes`, places beside him by `FormationOffset`); with nobody held
+  the last held one leads (`Leader()`).
+- **Death:** a hero who falls below does NOT rise below -- he rises at the Town Hall, in the town:
+  `Hero.Update` keeps counting but never `Rise()` while `HoldWhereLeft`; `DungeonTravel.Leave`
+  writes `fallen` + `respawnRemaining`. Every hero fallen -> `DungeonMode.Update` takes the party
+  up (`LeaveWhenAllFall`, false in the tests). Every death costs a LEVEL (sandbox and dungeon; not
+  Invasion -- not asked yet); skills lock again by themselves (`HeroSkills.IsOpen` reads Level).
+- **Going down:** only heroes within reach of the mouth (`DungeonEntrance.IsNear`,
+  `DungeonTravel.Enter(id, level, from)`). The entrance card shows the King/Queen/Captain faces
+  with «Доступен» / «Далеко» / «Пал».
+- **Back up:** the camera looks at the mouth (`GameSessionIntent.DungeonMouth` ->
+  `LookAtAfterLoad`, jumped 3 frames after `GameSaveController.Start`).
+- **Camp and shop:** a tap with a hero held is no order -- the card opens (`ArmyOrderInput`);
+  hiring and buying work from anywhere below; a gnome hired far away runs to the party (leash).
+  Held, the camp shows a FocusHireBar like the Barracks (`Kind.HireCamp`): gnome portraits
+  (`UI/Icons/PortraitGnome*.png`, render_portrait.py now takes a `frame` size) with prices.
+- **Passability:** the NavMesh was cut by low relief bumps (a reach map showed 4 086 such cells).
+  `MeshMapApplier.AddLowRelief` adds relief triangles wholly under 0.3 m as walkable source in a
+  dungeon. Diagnostic: `DungeonTests.Diagnostic_ReachMap` (Explicit) -> playtest_shots/dungeon_reach.png.
+- **Lake:** the bridge is gone; `dungeon1.py spider_statue` -- a stone spider queen on a rock
+  islet with purple eyes; a `statue` spot; `Dungeon/DungeonStatue` hangs a big turning crystal with
+  a halo over it. Statue is small (~1 cell tall) -- maybe enlarge.
+- Camera distance 12 -> 10 (economy 277). Way-out tap box 3 x 2.5 x 2.5. Map-edge darkness hugs
+  the edge (0..1 cell, `_MapEdge` 1). Crystal notice shows `Res_UpgradeCrystal`. No build menu
+  below (`BuildingPlacerUIVisibility`).
+- **Open:** the way-out look (options offered, awaiting choice); old box rocks (screen 9) not
+  found -- Stone1-10 are crags; asked which map.
+
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,
   `DungeonMonsterPowers.cs`; `Combat/OrcUnit.cs`, `OrcRaidManager.cs` (models, boss controller),
