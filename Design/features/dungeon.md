@@ -631,3 +631,8 @@ dungeon opens as a SEPARATE SCENE.
 - Monsters asleep off screen: measure the gain on a phone.
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.
 - Elite monsters: an idea, not now.
+- Way out look: the user chose STONE STAIRS going up (torches, daylight at the top), 2026-11-02 — to build.
+- IDEA (the user, 2026-11-02): chests in the dungeon with ordinary resources, bonuses as the player goes through.
+- Playtest round 5 (2026-11-02, not started): Queen range halved + aggro radius smaller (no shooting through rocks),
+  a move order beats auto-aggro, melee reach counts the boss's size, Queen skill 1 = a strong shot (not one-shot kill),
+  a boss kill must pay a reward, floating crags sunk, after a wipe: grey cube rock + fogged start island on the main map.
