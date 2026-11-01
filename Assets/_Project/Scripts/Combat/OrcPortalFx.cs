@@ -46,6 +46,7 @@ namespace CityBuilder.Combat
         private static readonly int WaveId = Shader.PropertyToID("_Wave");
         private static readonly int SizeId = Shader.PropertyToID("_Size");
         private static readonly int PhaseId = Shader.PropertyToID("_Phase");
+        private static readonly int PullId = Shader.PropertyToID("_Pull");
 
         private static Mesh _upright, _flat;
 
@@ -107,6 +108,7 @@ namespace CityBuilder.Combat
                 _block.Clear();
                 _block.SetFloat(SizeId, size);
                 _block.SetFloat(PhaseId, transform.position.x * 0.37f);
+                _block.SetFloat(PullId, size * 0.6f);
                 halo.SetPropertyBlock(_block);
             }
         }

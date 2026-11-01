@@ -10,6 +10,7 @@ Shader "CityBuilder/CrystalHalo"
         _SparkColor ("Sparkles", Color) = (1, 1, 1, 1)
         _Size ("Size (cells)", Float) = 1.6
         _Phase ("Phase", Float) = 0
+        _Pull ("Pulled to the camera (world units)", Float) = 0
     }
 
     SubShader
@@ -33,6 +34,7 @@ Shader "CityBuilder/CrystalHalo"
                 half4 _SparkColor;
                 float _Size;
                 float _Phase;
+                float _Pull;
             CBUFFER_END
 
             struct Attributes
@@ -52,6 +54,10 @@ Shader "CityBuilder/CrystalHalo"
                 Varyings output;
                 float3 centre = float3(UNITY_MATRIX_M._m03, UNITY_MATRIX_M._m13, UNITY_MATRIX_M._m23);
                 float3 centreVS = TransformWorldToView(centre);
+                // pulled towards the camera, so the top of a glow round something solid (an orc
+                // portal's arch) is not swallowed by it: facing the camera from above, the quad's
+                // top leans back into whatever stands behind its middle (the user, 2026-11-01)
+                centreVS.z += _Pull;
                 float2 corner = (input.uv - 0.5) * _Size;
                 output.positionCS = TransformWViewToHClip(centreVS + float3(corner, 0.0));
                 output.uv = input.uv;
