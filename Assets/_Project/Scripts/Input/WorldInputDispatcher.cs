@@ -116,6 +116,7 @@ namespace CityBuilder.InputControl
             }
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryShowFertileLand(screenPosition, tapCamera)) return;
+            if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryShowShoal(screenPosition, tapCamera)) return;
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
         }
 
@@ -154,6 +155,19 @@ namespace CityBuilder.InputControl
             Maps.Archipelago.FertileLand.Flash(patch, map);
             Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
                 Core.Localization.Get("#log_fertile_found"), Core.EventSeverity.Good, Core.EventGlyph.Star, "Farm", hit.point));
+            return true;
+        }
+
+        /// <summary>A tap on a school of fish rings it and says so in the feed (the user, 2026-11-01: as fertile land).</summary>
+        private static bool TryShowShoal(Vector2 screenPosition, Camera tapCamera)
+        {
+            var ships = Ships.ShipManager.Instance;
+            if (ships == null || tapCamera == null) return false;
+            var ray = tapCamera.ScreenPointToRay(screenPosition);
+            if (!new Plane(Vector3.up, new Vector3(0f, Ships.ShipManager.WaterLevel, 0f)).Raycast(ray, out var enter)) return false;
+            var shoal = ships.ShoalAt(ray.GetPoint(enter));
+            if (shoal == null) return false;
+            ships.FlashShoal(shoal);
             return true;
         }
 

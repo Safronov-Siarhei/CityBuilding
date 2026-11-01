@@ -158,7 +158,21 @@ namespace CityBuilder.Ships
             point = default;
             var map = Maps.MeshMapApplier.Instance;
             var grid = Grid.GridManager.Instance;
-            bool Allowed(Vector3 p) => !shoreOnly || (map != null && grid != null && map.IsWaterPlacementZone(grid.WorldToCell(p)));
+            // the WHOLE slipway on the light water, not just its middle: it runs 4 cells out from the
+            // base, so a middle on the shallows' edge put its far end in deep sea (the user, 2026-11-01)
+            bool Allowed(Vector3 p)
+            {
+                if (!shoreOnly) return true;
+                if (map == null || grid == null) return false;
+                var away = p - from;
+                away.y = 0f;
+                var forward = away.sqrMagnitude > 0.01f ? away.normalized : Vector3.forward;
+                var side = new Vector3(forward.z, 0f, -forward.x);
+                for (var x = -1; x <= 1; x++)
+                for (var z = -1; z <= 1; z++)
+                    if (!map.IsWaterPlacementZone(grid.WorldToCell(p + side * (x * 1.5f) + forward * (z * 2f)))) return false;
+                return true;
+            }
             if (TrySampleSea(from, 2f, out point) && Allowed(point)) return true;
             for (var r = 4f; r <= maxRadius; r += 3f)
             {

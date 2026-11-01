@@ -325,6 +325,13 @@ namespace CityBuilder.Tests.PlayMode
             for (var t = 0f; t < 5f && ships.OrcShipyard == null; t += Time.deltaTime) yield return null;
             var shipyard = ships.OrcShipyard;
             Assert.IsNotNull(shipyard, "The orcs raised no shipyard by their main base.");
+            // the whole slipway on the light water, none of it out at sea (the user, 2026-11-01)
+            var yardGrid = GridManager.Instance;
+            foreach (var corner in new[] { new Vector3(-1.5f, 0f, -2f), new Vector3(1.5f, 0f, -2f), new Vector3(-1.5f, 0f, 2f), new Vector3(1.5f, 0f, 2f) })
+            {
+                var p = shipyard.transform.TransformPoint(corner);
+                Assert.IsTrue(MeshMapApplier.Instance.IsWaterPlacementZone(yardGrid.WorldToCell(p)), $"The orc shipyard reaches deep sea at {p}.");
+            }
             Assert.IsTrue(System.Linq.Enumerable.Contains(CityBuilder.Combat.OrcCampBuilding.All, shipyard), "The orc shipyard is no target for the army.");
             var map = MeshMapApplier.Instance.CurrentMap;
             var mainBase = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
@@ -605,11 +612,36 @@ namespace CityBuilder.Tests.PlayMode
             var flash = FertileLand.Flash(patch, applier);
             Assert.IsNotNull(flash, "The fertile patch's edge does not light up.");
             Assert.Greater(flash.GetComponent<MeshFilter>().sharedMesh.vertexCount, patch.Count / 2, "The lit edge does not go round the patch.");
+            // no fertile soil by the shore (the user, 2026-11-01): no water within the sheet's distance
+            var minCoast = CityBuilder.Core.BalanceConfig.Instance.FertileMinCoastCells;
+            foreach (var cell in patch)
+                for (var dz = -minCoast + 1; dz < minCoast; dz++)
+                for (var dx = -minCoast + 1; dx < minCoast; dx++)
+                    if (Mathf.Abs(dx) + Mathf.Abs(dz) < minCoast)
+                        Assert.IsFalse(applier.IsWaterCell(cell + new Vector2Int(dx, dz)), $"Fertile soil at {cell} lies by the water.");
             Assert.Less(Vector3.Distance(near.At, start), 80f, "No shoal by the start island.");
             Assert.IsTrue(ShipManagerFishVisible(near), "The shoal cannot be seen.");
             // shoals only on the light coastal water (the user, 2026-10-31)
             foreach (var shoal in ships.Shoals)
                 if (shoal.Alive) Assert.IsTrue(applier.IsWaterPlacementZone(grid.WorldToCell(shoal.At)), $"A shoal out at sea at {shoal.At}.");
+            // shoals right by a shore (the user, 2026-11-01): land within the sheet's distance
+            var shoreReach = CityBuilder.Core.BalanceConfig.Instance.FishShoalShoreMeters + grid.CellSize;
+            foreach (var shoal in ships.Shoals)
+            {
+                if (!shoal.Alive) continue;
+                var byLand = false;
+                for (var k = 0; k < 24 && !byLand; k++)
+                {
+                    var a = k * Mathf.PI / 12f;
+                    byLand = !applier.IsWaterCell(grid.WorldToCell(shoal.At + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * shoreReach));
+                }
+                Assert.IsTrue(byLand, $"A shoal far from the shore at {shoal.At}.");
+            }
+            // a tap on a shoal finds it and rings it in gold
+            Assert.AreSame(near, ships.ShoalAt(near.At + new Vector3(1f, 0f, 0.5f)), "A tap by the shoal does not find it.");
+            Assert.IsNull(ships.ShoalAt(near.At + new Vector3(30f, 0f, 0f)), "A tap far off finds a shoal.");
+            ships.FlashShoal(near);
+            Assert.IsNotNull(GameObject.Find("ShoalFlash"), "The tapped shoal is not ringed.");
             Assert.AreEqual(1f + CityBuilder.Core.BalanceConfig.Instance.FishShoalBonus, ships.FishMultiplier(near.At), 0.001f, "A hut by the shoal catches no more.");
             ships.TakeFish(near.At, near.Stock);
             Assert.IsFalse(near.Alive, "The fished-out shoal is still there.");

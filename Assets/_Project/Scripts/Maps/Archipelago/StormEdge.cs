@@ -12,7 +12,7 @@ namespace CityBuilder.Maps.Archipelago
     /// - The storm water darkening in three steps outwards.
     /// - Rows of long wave crests, roughly along the edge, rolling in and out (StormSwell).
     /// - Massive sea stacks along the line, foam round their feet.
-    /// - Dark clouds hanging over the far storm.
+    /// No clouds: their puffs read as grey pyramids hanging in the air (the user, 2026-11-01).
     /// It starts a cell short of where the ships stop (ArchipelagoGenerator.Storm), so no ship
     /// ever sails into it. Ten draws for the whole edge, none with shadows.
     /// </summary>
@@ -27,7 +27,6 @@ namespace CityBuilder.Maps.Archipelago
             new Color(0.17f, 0.31f, 0.47f), new Color(0.12f, 0.23f, 0.37f), new Color(0.08f, 0.16f, 0.27f),
         };
         private static readonly Color Foam = new Color(0.93f, 0.97f, 1f);
-        private static readonly Color Cloud = new Color(0.36f, 0.39f, 0.46f);
 
         public static GameObject Build(ArchipelagoMap map, Vector3 origin, Material terrain, Transform parent)
         {
@@ -117,21 +116,6 @@ namespace CityBuilder.Maps.Archipelago
                 if (go != null) swell.Add(go.transform, Inward(side), side * 1.3f);
             }
 
-            // dark clouds over the far storm
-            var clouds = new Mesher();
-            for (var k = 0; k < perimeter / 16; k++)
-            {
-                var p = OnBand(n, rng, -Margin + 10f, ArchipelagoGenerator.Storm - 16f, out _);
-                var at = origin + new Vector3(p.x, rng.Range(5f, 8f), p.y);
-                var puffs = rng.RangeInt(2, 5);
-                for (var c = 0; c < puffs; c++)
-                {
-                    var offset = new Vector3(rng.Range(-3f, 3f), rng.Range(-0.4f, 0.6f), rng.Range(-3f, 3f));
-                    var size = rng.Range(2f, 4f);
-                    clouds.Puff(at + offset, new Vector3(size, size * 0.45f, size * rng.Range(0.7f, 1.1f)));
-                }
-            }
-
             white.Emit("StormSurf", root.transform, new Material(RuntimeShaders.Unlit) { name = "StormSurf", color = Foam });
             for (var k = 0; k < bands.Length; k++)
                 bands[k].Emit($"StormWater{k}", root.transform, new Material(RuntimeShaders.Lit) { name = $"StormSea{k}", color = Tints[k] });
@@ -139,7 +123,6 @@ namespace CityBuilder.Maps.Archipelago
                 ? SeasonStyle.TerrainMaterial(terrain)
                 : new Material(RuntimeShaders.Lit) { color = new Color(0.45f, 0.43f, 0.4f) };
             rocks.Emit("StormRocks", root.transform, rockMaterial);
-            clouds.Emit("StormClouds", root.transform, new Material(RuntimeShaders.Lit) { name = "StormClouds", color = Cloud });
             return root;
         }
 
@@ -301,38 +284,6 @@ namespace CityBuilder.Maps.Archipelago
                     _t.AddRange(new[] { s, s + 1, s + 2, s + 1, s + 3, s + 2 });
                     _t.AddRange(new[] { s, s + 2, s + 1, s + 1, s + 2, s + 3 });
                 }
-            }
-
-            /// <summary>A cloud's puff: a squashed eight-faced blob.</summary>
-            public void Puff(Vector3 centre, Vector3 size)
-            {
-                var top = centre + new Vector3(0f, size.y, 0f);
-                var bottom = centre - new Vector3(0f, size.y * 0.4f, 0f);
-                var ring = new[]
-                {
-                    centre + new Vector3(size.x, 0f, 0f), centre + new Vector3(0f, 0f, size.z),
-                    centre + new Vector3(-size.x, 0f, 0f), centre + new Vector3(0f, 0f, -size.z),
-                };
-                for (var k = 0; k < 4; k++)
-                {
-                    var a = ring[k];
-                    var b = ring[(k + 1) % 4];
-                    Tri(top, b, a, centre);
-                    Tri(bottom, a, b, centre);
-                }
-            }
-
-            /// <summary>One flat triangle, wound to face away from `inside`.</summary>
-            private void Tri(Vector3 a, Vector3 b, Vector3 c, Vector3 inside)
-            {
-                var s = _v.Count;
-                _v.Add(a);
-                _v.Add(b);
-                _v.Add(c);
-                for (var i = 0; i < 3; i++) _uv.Add(Vector2.zero);
-                var normal = Vector3.Cross(b - a, c - a);
-                if (Vector3.Dot(normal, (a + b + c) / 3f - inside) >= 0f) _t.AddRange(new[] { s, s + 1, s + 2 });
-                else _t.AddRange(new[] { s, s + 2, s + 1 });
             }
 
             /// <summary>A flat four-cornered face in one palette colour, wound to face out from `axis`.</summary>

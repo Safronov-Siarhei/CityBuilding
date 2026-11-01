@@ -18,7 +18,8 @@ namespace CityBuilder.Maps.Archipelago
         /// <summary>
         /// The fertile cells: fertile_patches_per_island blobs of fertile_patch_radius cells per
         /// island, on plain ground only (no forest, stones, beach, cliff or relief), none on the
-        /// orcs' island; one always near the start, where the first farms go.
+        /// orcs' island; one always near the start, where the first farms go. None nearer the water
+        /// than fertile_min_coast_cells (the user, 2026-11-01: soil by the shore looks bad).
         /// </summary>
         public static HashSet<Vector2Int> Compute(ArchipelagoMap world)
         {
@@ -28,11 +29,13 @@ namespace CityBuilder.Maps.Archipelago
             var perIsland = balance != null ? balance.FertilePatchesPerIsland : 2;
             var radius = balance != null ? balance.FertilePatchRadius : 5f;
             if (perIsland <= 0 || radius <= 0f) return cells;
+            var coast = CoastDistance(world, balance != null ? balance.FertileMinCoastCells : 8);
+            var minCoast = balance != null ? balance.FertileMinCoastCells : 8;
 
             var plain = new List<int>();
             for (var i = 0; i < n * n; i++)
             {
-                if (!IsPlain(world, i)) continue;
+                if (!IsPlain(world, i) || coast[i] < minCoast) continue;
                 var x = i % n;
                 var z = i / n;
                 if (Vector2Int.Distance(new Vector2Int(x, z), world.OrcBaseCell) < OrcClearance) continue;
@@ -53,22 +56,51 @@ namespace CityBuilder.Maps.Archipelago
                 bestD = d;
                 best = i;
             }
-            Patch(world, cells, best % n, best / n, radius, rng);
+            Patch(world, cells, best % n, best / n, radius, rng, coast, minCoast);
 
             var patches = world.Islands.Count * perIsland - 1;
             for (var k = 0; k < patches; k++)
             {
                 var i = plain[rng.RangeInt(0, plain.Count)];
-                Patch(world, cells, i % n, i / n, radius * rng.Range(0.7f, 1.2f), rng);
+                Patch(world, cells, i % n, i / n, radius * rng.Range(0.7f, 1.2f), rng, coast, minCoast);
             }
             return cells;
+        }
+
+        /// <summary>Cells from the nearest water, counted in steps (capped at `cap`): a breadth-first walk out from the sea.</summary>
+        private static int[] CoastDistance(ArchipelagoMap world, int cap)
+        {
+            var n = world.Size;
+            var d = new int[n * n];
+            var queue = new Queue<int>();
+            for (var i = 0; i < n * n; i++)
+            {
+                if (world.Land[i]) d[i] = int.MaxValue;
+                else queue.Enqueue(i);
+            }
+            while (queue.Count > 0)
+            {
+                var i = queue.Dequeue();
+                if (d[i] >= cap) continue;
+                int x = i % n, z = i / n;
+                for (var k = 0; k < 4; k++)
+                {
+                    int nx = x + (k == 0 ? 1 : k == 1 ? -1 : 0), nz = z + (k == 2 ? 1 : k == 3 ? -1 : 0);
+                    if (nx < 0 || nz < 0 || nx >= n || nz >= n) continue;
+                    var j = nz * n + nx;
+                    if (d[j] <= d[i] + 1) continue;
+                    d[j] = d[i] + 1;
+                    queue.Enqueue(j);
+                }
+            }
+            return d;
         }
 
         private static bool IsPlain(ArchipelagoMap world, int i) =>
             world.Land[i] && !world.IsRelief(i) && !world.Cliff[i] && !world.Forest[i] && !world.Stony[i] && !world.Beach[i];
 
         /// <summary>A blob with a ragged edge: a circle whose radius wobbles with the angle.</summary>
-        private static void Patch(ArchipelagoMap world, HashSet<Vector2Int> cells, int cx, int cz, float radius, SeedRandom rng)
+        private static void Patch(ArchipelagoMap world, HashSet<Vector2Int> cells, int cx, int cz, float radius, SeedRandom rng, int[] coast, int minCoast)
         {
             var n = world.Size;
             var r = Mathf.CeilToInt(radius * 1.3f);
@@ -78,7 +110,7 @@ namespace CityBuilder.Maps.Archipelago
             for (var dx = -r; dx <= r; dx++)
             {
                 int x = cx + dx, z = cz + dz;
-                if (x < 0 || z < 0 || x >= n || z >= n || !IsPlain(world, z * n + x)) continue;
+                if (x < 0 || z < 0 || x >= n || z >= n || !IsPlain(world, z * n + x) || coast[z * n + x] < minCoast) continue;
                 var angle = Mathf.Atan2(dz, dx);
                 var edge = radius * (1f + 0.2f * Mathf.Sin(angle * 3f + p1) + 0.1f * Mathf.Sin(angle * 5f + p2));
                 if (dx * dx + dz * dz <= edge * edge) cells.Add(new Vector2Int(x, z));

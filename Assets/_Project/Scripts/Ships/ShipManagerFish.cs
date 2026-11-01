@@ -65,7 +65,8 @@ namespace CityBuilder.Ships
         private bool TryShoreSea(Vector3 centre, float minRadius, float maxRadius, SeedRandom rng, out Vector3 point)
         {
             point = default;
-            var reach = HutReach() * 0.6f;
+            // right by the shore (the user, 2026-11-01: «ближе к берегу, чтобы был смысл в рыбацкой хижине»)
+            var reach = BalanceConfig.Instance != null ? BalanceConfig.Instance.FishShoalShoreMeters : 4f;
             for (var attempt = 0; attempt < 400; attempt++)
             {
                 var a = rng.Range(0f, Mathf.PI * 2f);
@@ -81,6 +82,68 @@ namespace CityBuilder.Ships
                 return true;
             }
             return false;
+        }
+
+        /// <summary>The live shoal under a point on the water, within its fish's circle and a little more; null if none.</summary>
+        public Shoal ShoalAt(Vector3 point)
+        {
+            Shoal best = null;
+            var bestD = ShoalTapRadius;
+            foreach (var shoal in _shoals)
+            {
+                if (!shoal.Alive || shoal.Visual == null) continue;
+                var d = new Vector2(point.x - shoal.At.x, point.z - shoal.At.z).magnitude;
+                if (d > bestD) continue;
+                bestD = d;
+                best = shoal;
+            }
+            return best;
+        }
+
+        // the fish swim up to 2.2 m out (FillShoal); a tap a little wider still finds them
+        private const float ShoalTapRadius = 3.5f;
+
+        private static GameObject _shoalFlash;
+
+        /// <summary>
+        /// A tap on a shoal (the user, 2026-11-01: like fertile land): a gold ring round its fish,
+        /// pulsing for a few seconds (FertileFlash), and «Обнаружен косяк рыб» in the feed.
+        /// </summary>
+        public void FlashShoal(Shoal shoal)
+        {
+            if (shoal == null) return;
+            if (_shoalFlash != null) Destroy(_shoalFlash);
+            const int Sides = 40;
+            const float Radius = 3f;
+            const float Half = 0.12f;
+            var vertices = new Vector3[Sides * 2];
+            var triangles = new int[Sides * 12];
+            for (var k = 0; k < Sides; k++)
+            {
+                var a = k * Mathf.PI * 2f / Sides;
+                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                vertices[k * 2] = dir * (Radius - Half);
+                vertices[k * 2 + 1] = dir * (Radius + Half);
+                int s = k * 2, n = (k + 1) % Sides * 2, t = k * 12;
+                // both windings, so it shows from any side
+                triangles[t] = s; triangles[t + 1] = n; triangles[t + 2] = s + 1;
+                triangles[t + 3] = s + 1; triangles[t + 4] = n; triangles[t + 5] = n + 1;
+                triangles[t + 6] = s; triangles[t + 7] = s + 1; triangles[t + 8] = n;
+                triangles[t + 9] = s + 1; triangles[t + 10] = n + 1; triangles[t + 11] = n;
+            }
+            var mesh = new Mesh { name = "ShoalFlash", vertices = vertices, triangles = triangles };
+            mesh.RecalculateBounds();
+            var go = new GameObject("ShoalFlash");
+            go.transform.position = new Vector3(shoal.At.x, WaterLevel + 0.08f, shoal.At.z);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = new Material(RuntimeShaders.Unlit) { name = "ShoalFlash", color = Maps.Archipelago.FertileFlash.Gold };
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            go.AddComponent<Maps.Archipelago.FertileFlash>();
+            _shoalFlash = go;
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_shoal_found"), EventSeverity.Good, EventGlyph.Star,
+                FisherHutId, shoal.At));
         }
 
         private static float HutReach() => BalanceConfig.Instance != null ? BalanceConfig.Instance.FishHutReachMeters : 16f;
