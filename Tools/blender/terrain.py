@@ -15,6 +15,7 @@ import math
 import bpy
 
 import kit
+from stone_shapes import STONES
 
 COLS, ROWS, CELL = 8, 6, 4
 
@@ -231,29 +232,37 @@ def stump(v):
     return b
 
 
+# the boulders' colours in the terrain palette
+_STONE_COLOURS = {"stone_light": "rock_light", "stone_mid": "rock", "stone_dark": "rock_mid",
+                  "grass": "grass", "grass_dark": "grass_dark", None: None}
+
+
+def _stone(b, name, scale):
+    """One of the gatherable boulders' layouts (stone_shapes.STONES) at `scale`."""
+    for x, y, rx, ry, h, col, top, seed, rot, taper in STONES[name]:
+        b.crag(x * scale, y * scale, rx * scale, ry * scale, h * scale, _STONE_COLOURS[col],
+               top=_STONE_COLOURS[top], sides=6, rot_deg=rot, taper=taper, seed=seed)
+
+
 def pebbles(v):
+    """The smallest boulders' shapes, a little smaller: loose stones on the beaches and fields."""
     b = TerrainBuilder()
-    for k, (x, y, r) in enumerate([(0.0, 0.0, 0.06), (0.1, 0.04, 0.04), (-0.07, 0.08, 0.035)]):
-        b.crag(x, y, r, r * 0.8, r * 0.8, "pebble" if (k + v) % 2 else "rock", sides=4, seed=k + v)
+    _stone(b, ("Stone1", "Stone2", "Stone3")[v], 0.8)
     return b
 
 
 def crag(v):
-    """A decorative boulder for the slopes of hills and mountains: bigger than the stone the
-    player gathers, and never on ground where it could be mistaken for one."""
+    """A decorative boulder for the slopes of hills and mountains: the big boulders' shapes
+    (Stone7..10) grown half again, so it never reads as one the player gathers."""
     b = TerrainBuilder()
-    s = [1.0, 1.5, 0.7, 2.1][v % 4]
-    b.crag(0.0, 0.0, 0.7 * s, 0.55 * s, 0.75 * s, ["rock", "rock_mid", "rock_light", "rock_mid"][v % 4],
-           top="moss" if v % 2 == 0 else None, sides=6, seed=v * 3, lean=(0.05 * s, 0.03 * s))
-    if v % 4 == 1:
-        b.crag(0.6 * s, -0.3 * s, 0.35 * s, 0.3 * s, 0.4 * s, "rock_dark", sides=5, seed=v + 5)
+    _stone(b, ("Stone7", "Stone8", "Stone9", "Stone10")[v], 1.5)
     return b
 
 
 DECOR = {
     "tuft": (tuft, 3), "flowers": (flowers, 5), "bush": (bush, 3), "reeds": (reeds, 2),
     "lily": (lily, 2), "mushrooms": (mushrooms, 2), "fern": (fern, 2), "log": (log, 2),
-    "stump": (stump, 2), "pebbles": (pebbles, 2), "crag": (crag, 4),
+    "stump": (stump, 2), "pebbles": (pebbles, 3), "crag": (crag, 4),
 }
 
 

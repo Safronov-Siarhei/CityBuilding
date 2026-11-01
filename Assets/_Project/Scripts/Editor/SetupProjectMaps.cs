@@ -344,6 +344,19 @@ namespace CityBuilder.EditorTools
         /// Blender (x, y, z) is Unity (x, z, y); a turn about Blender's up axis is the opposite
         /// turn about Unity's. Null when the map has no props.
         /// </summary>
+        private const string DecorRocksPath = "Assets/_Project/Models/Decor/DecorRocks.fbx";
+
+        /// <summary>A string's hash that is the same on every run (string.GetHashCode is not promised to be).</summary>
+        private static int StableHash(string s)
+        {
+            unchecked
+            {
+                var h = 17;
+                foreach (var c in s) h = h * 31 + c;
+                return h & int.MaxValue;
+            }
+        }
+
         private static MapDecorData CreateMapDecorData(string mapId, string folder, string prefix)
         {
             var csvPath = $"{folder}/{prefix}-Decor.csv";
@@ -357,6 +370,23 @@ namespace CityBuilder.EditorTools
                 var at = name.IndexOf("DecorKit-", System.StringComparison.Ordinal);
                 if (at < 0 || filter.sharedMesh == null) continue;
                 meshByName[name.Substring(at + "DecorKit-".Length)] = filter.sharedMesh;
+            }
+            // the land maps' stones from the one kit of the new boulders' shapes (the user,
+            // 2026-11-01: the old box rocks replaced; Tools/blender/decor_rocks.py); a dungeon
+            // keeps its own
+            var rockKit = prefix.StartsWith("Dungeon-") ? null : AssetDatabase.LoadAssetAtPath<GameObject>(DecorRocksPath);
+            var rockVariants = new Dictionary<string, int>();
+            if (rockKit != null)
+            {
+                foreach (var filter in rockKit.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    var name = filter.gameObject.name;
+                    if (!name.StartsWith("DecorRocks-") || filter.sharedMesh == null) continue;
+                    var kindVariant = name.Substring("DecorRocks-".Length);
+                    meshByName[kindVariant] = filter.sharedMesh;
+                    var kind = kindVariant.Substring(0, kindVariant.LastIndexOf('_'));
+                    rockVariants[kind] = rockVariants.TryGetValue(kind, out var count) ? count + 1 : 1;
+                }
             }
 
             var prototypes = new List<Mesh>();
@@ -373,6 +403,9 @@ namespace CityBuilder.EditorTools
                 var f = line.Split(',');
                 if (f.Length < 7 || f[0] == "kind") continue;
                 var key = $"{f[0]}_{f[1]}";
+                // the kit's own count of variants, dealt by the spot so a map looks the same every build
+                if (rockVariants.TryGetValue(f[0], out var variants))
+                    key = $"{f[0]}_{StableHash(f[2] + f[3]) % variants}";
                 if (!prototypeIndex.TryGetValue(key, out var p))
                 {
                     if (!meshByName.TryGetValue(key, out var mesh))

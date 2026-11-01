@@ -45,6 +45,12 @@ MAIN_BASE, START_ZONE, BEACHES) → `render_mapN.py` review shots → regenerate
 `export_map.py -- D:/Fork/CityBuilding MapN Map-N` (Ground/Relief chunks, Water, TreesArea, RocksArea,
 NoBuildArea, DecorKit, TerrainPalette, Decor.csv, Spots.csv) → SetupProject `CreateMeshMapDefinition`,
 `ReadOrcSpots`, `CreateMapDecorData` → `Resources/MeshMaps/MapN.asset`.
+Decor STONES (2026-11-01, the user: «старые камни-коробки заменить»): every land map's `pebbles`
+and `crag` props are drawn from ONE kit, `Models/Decor/DecorRocks.fbx` (`Tools/blender/decor_rocks.py
+-- <project>`, shapes = the gatherable Stone1..10 layouts in `stone_shapes.py`: pebbles = Stone1-3 x0.8,
+crags = Stone7-10 x1.5), swapped in by `CreateMapDecorData` (variant dealt by a stable hash of the spot);
+a map's own DecorKit pebbles/crags are ignored, dungeons keep theirs. No map needs regenerating for
+a new rock shape -- only decor_rocks.py + setup. Cost: ~56-112 tris per stone (was 26-54).
 Probe a layout without Blender: `probe_map.py` (counts water/relief cells per camp square — 0 = fits).
 The .blend files live OUTSIDE git: `D:/blender projects/Buildings3D/Map-*.blend`.
 
