@@ -305,7 +305,10 @@ dungeon opens as a SEPARATE SCENE.
   from the bosses = the agreed ~30 for level 1. Model `MonsterRewardCrystal` (monsters.py, a blue
   gem with two shards, 0.5 tall, 66 tris; wired through OrcRaidManager.RewardCrystalModel), floating
   `dungeon_crystal_float` cells up, spinning and bobbing. A hero within `dungeon_crystal_pick_reach`
-  takes it (a room's pair goes together): +1 `Wallet.UpgradeCrystals`, `#log_dungeon_crystal`, id
+  takes it (a room's pair goes together). A reward spot carries its height (`MapSpot.height`, read
+  from Points.csv z): it is the crystal's MIDDLE over the room's pedestal (0.7 up; the pedestal is
+  0.22 tall) -- floor + 0.45 would have sunk the crystals into the pedestal. No NavMesh snap: it
+  would pull them off the pedestal: +1 `Wallet.UpgradeCrystals`, `#log_dungeon_crystal`, id
   `{dungeon}-L{level}-c{index}` into `DungeonRecord.CrystalsTaken` / save `dungeonCrystalsTaken`
   (also written on Leave) -- never comes back. No need to kill the guards first. Test
   `TheCrystals_FloatGuarded_AndAHeroTakesOne` (break-checked). Not seen in the game by the user.

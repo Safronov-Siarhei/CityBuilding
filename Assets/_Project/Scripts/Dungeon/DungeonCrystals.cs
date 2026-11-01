@@ -3,7 +3,6 @@ using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace CityBuilder.Dungeon
 {
@@ -24,6 +23,8 @@ namespace CityBuilder.Dungeon
         {
             public string Id;
             public Vector3 At;
+            /// <summary>The height of the crystal's foot over the floor.</summary>
+            public float Lift;
             public Transform Shown;
         }
 
@@ -43,6 +44,8 @@ namespace CityBuilder.Dungeon
         private const float PickCheckSeconds = 0.2f;
         private const float SpinDegreesPerSecond = 70f;
         private const float BobCells = 0.06f;
+        // the model's half height (MonsterRewardCrystal is 0.5 tall): a reward spot marks the crystal's middle
+        private const float HalfHeight = 0.25f;
 
         private void Awake() => Instance = this;
 
@@ -57,22 +60,24 @@ namespace CityBuilder.Dungeon
         {
             var config = BalanceConfig.Instance;
             var index = 0;
-            foreach (var spot in map.SpotsOf("reward")) Put(spot.position, config.DungeonCrystalsPerRoom, dungeonId, level, ref index, takenBefore);
-            foreach (var spot in map.SpotsOf("crystal")) Put(spot.position, config.DungeonCrystalsLone, dungeonId, level, ref index, takenBefore);
+            foreach (var spot in map.SpotsOf("reward")) Put(spot, config.DungeonCrystalsPerRoom, dungeonId, level, ref index, takenBefore);
+            foreach (var spot in map.SpotsOf("crystal")) Put(spot, config.DungeonCrystalsLone, dungeonId, level, ref index, takenBefore);
         }
 
-        private void Put(Vector2 spot, int count, string dungeonId, int level, ref int index, ICollection<string> takenBefore)
+        private void Put(MapSpot spot, int count, string dungeonId, int level, ref int index, ICollection<string> takenBefore)
         {
-            var ground = new Vector3(spot.x, 0f, spot.y);
+            var ground = new Vector3(spot.position.x, 0f, spot.position.y);
             if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryGetGroundHeight(ground, out var y)) ground.y = y;
-            if (NavMesh.SamplePosition(ground, out var hit, 3f, NavMesh.AllAreas)) ground = hit.position;
             for (var k = 0; k < count; k++)
             {
                 var id = CrystalId(dungeonId, level, index++);
                 if (takenBefore != null && takenBefore.Contains(id)) continue;
                 // two side by side in a room, a little apart
                 var at = ground + (count > 1 ? new Vector3((k - (count - 1) * 0.5f) * 0.5f, 0f, 0f) : Vector3.zero);
-                _lying.Add(new Crystal { Id = id, At = at, Shown = Show(at, k) });
+                // a reward room's spot hangs over its pedestal (dungeon1.py): the crystal's middle there;
+                // a lone crystal floats dungeon_crystal_float over the floor
+                var lift = spot.height > 0f ? spot.height - HalfHeight : BalanceConfig.Instance.DungeonCrystalFloat;
+                _lying.Add(new Crystal { Id = id, At = at, Lift = lift, Shown = Show(at + Vector3.up * lift, k) });
             }
         }
 
@@ -89,7 +94,7 @@ namespace CityBuilder.Dungeon
             }
             shown.name = "RewardCrystal";
             shown.transform.SetParent(transform, false);
-            shown.transform.SetPositionAndRotation(at + Vector3.up * BalanceConfig.Instance.DungeonCrystalFloat, Quaternion.Euler(0f, k * 40f, 0f));
+            shown.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, k * 40f, 0f));
             SceneryShadows.DisableCasting(shown);
             return shown.transform;
         }
@@ -97,14 +102,13 @@ namespace CityBuilder.Dungeon
         private void Update()
         {
             var t = Time.time;
-            var lift = BalanceConfig.Instance.DungeonCrystalFloat;
             for (var i = 0; i < _lying.Count; i++)
             {
                 var c = _lying[i];
                 if (c.Shown == null) continue;
                 c.Shown.Rotate(0f, SpinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
                 var p = c.At;
-                p.y += lift + Mathf.Sin(t * 2f + i) * BobCells;
+                p.y += c.Lift + Mathf.Sin(t * 2f + i) * BobCells;
                 c.Shown.position = p;
             }
             _pickTimer -= Time.deltaTime;

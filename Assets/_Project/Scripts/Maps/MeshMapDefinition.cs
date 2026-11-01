@@ -167,5 +167,8 @@ namespace CityBuilder.Maps
         public string kind;
         public Vector2 position;
         public int level;
+
+        /// <summary>How high above the floor the spot stands (a dungeon's points list: a reward on its pedestal).</summary>
+        public float height;
     }
 }

@@ -182,7 +182,12 @@ namespace CityBuilder.EditorTools
                     var f = line.Split(',');
                     if (f.Length < 4 || f[0] == "kind") continue;
                     // Blender x, y -> the game's x, z
-                    spots.Add(new MapSpot { kind = f[0], position = new Vector2(float.Parse(f[1], culture), float.Parse(f[2], culture)) });
+                    spots.Add(new MapSpot
+                    {
+                        kind = f[0],
+                        position = new Vector2(float.Parse(f[1], culture), float.Parse(f[2], culture)),
+                        height = float.Parse(f[3], culture),
+                    });
                 }
             }
             map.EditorInitializeSpots(null, null, null, null, spots.ToArray());
