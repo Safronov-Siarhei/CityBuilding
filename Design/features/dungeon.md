@@ -373,6 +373,9 @@ dungeon opens as a SEPARATE SCENE.
     - The void past the map's edge (sky depth) is dark, and the camera clears to black. That is
       the answer to «край карты выглядит странно».
     - Strength 1: in linear light, 0.97 still showed the map at about 20% brightness.
+    - The edge is like the parchment's, after the user saw «темнота квадратами»: a 9-tap blur
+      1.6 texels wide, then a two-octave value-noise wobble (`_Wobble` 0.35, drifting slowly)
+      cut by a smoothstep. No cell steps show.
   - Needs the depth texture: `GetUniversalAdditionalCameraData(cam).requiresDepthTexture`, in a
     dungeon only. A test photo camera needs the same (`PlaytestCapture.Configure`).
   - The runtime asmdef now references URP (Universal + Core Runtime).
