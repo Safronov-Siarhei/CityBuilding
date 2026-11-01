@@ -141,6 +141,7 @@ namespace CityBuilder.UI
             if (clicked == null) return;
 
             if (cameraRig != null && clicked.Event.TryGetTarget(out var target)) cameraRig.FocusOn(target);
+            clicked.Event.Tapped?.Invoke();
         }
 
         private void ReleaseView(EventFeedSlot slot)

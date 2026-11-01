@@ -530,9 +530,30 @@ namespace CityBuilder.Tests.PlayMode
             var agent = king.Unit.GetComponent<NavMeshAgent>();
             if (agent != null && agent.enabled) agent.Warp(spot);
             else king.Unit.transform.position = spot;
+            // passing by (the user, 2026-11-01): a notice in the feed, never the card
+            var log = CityBuilder.Core.EventLogManager.Instance;
+            CityBuilder.Core.GameEvent notice = null;
+            void Seen(CityBuilder.Core.GameEvent e) { if (e.Text == CityBuilder.Core.Localization.Get("#log_dungeon_near")) notice = e; }
+            log.OnEventPosted += Seen;
             yield return new WaitForSeconds(1.2f);
             Assert.IsTrue(first.HeroNear(), "The King at the mouth is not near the entrance.");
-            Assert.IsTrue(card.IsOpen && card.Shown == first, "A hero at the mouth does not open the entrance's card.");
+            Assert.IsFalse(card.IsOpen, "A hero passing by opens the entrance's card.");
+            Assert.IsNotNull(notice, "No «Рядом обнаружено подземелье» for a hero passing by.");
+            // a tap on the notice holds the mouth: a ring, the «!» in place of the build menu
+            var focus = CityBuilder.UI.BuildingFocus.Instance;
+            notice.Tapped();
+            Assert.AreSame(first, focus.Entrance, "A tap on the notice does not select the dungeon.");
+            Assert.IsTrue(focus.Holding && focus.DetailsShown, "A selected dungeon has no «!».");
+            Assert.IsFalse(card.IsOpen, "Selecting the dungeon opened its card at once.");
+            focus.OpenDetails();
+            Assert.IsTrue(card.IsOpen && card.Shown == first, "The «!» does not open the dungeon's card.");
+            focus.Clear();
+            Assert.IsFalse(card.IsOpen);
+            // a hero sent to the mouth: his arrival opens the card
+            first.Await();
+            yield return new WaitForSeconds(0.8f);
+            log.OnEventPosted -= Seen;
+            Assert.IsTrue(card.IsOpen && card.Shown == first, "A hero sent to the mouth does not open its card on arrival.");
             card.Close();
 
             // the forest and the boulders: as dense as the sheet says, drawn only near the camera

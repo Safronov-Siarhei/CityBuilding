@@ -42,6 +42,9 @@ namespace CityBuilder.Core
         public Vector3 Position;
         public Transform Follow;
 
+        /// <summary>What a tap on its icon does besides taking the camera there (a dungeon nearby: selects it), or null.</summary>
+        public System.Action Tapped;
+
         /// <summary>Where the camera should go for this event right now, if anywhere.</summary>
         public bool TryGetTarget(out Vector3 target)
         {

@@ -86,6 +86,20 @@ namespace CityBuilder.UI
                 return true;
             }
 
+            // a dungeon's mouth: the group walks up to it; a hero's arrival opens its card (the user, 2026-11-01)
+            var entrance = Dungeon.DungeonEntrance.At(screenPosition, targetCamera);
+            if (entrance != null)
+            {
+                var walking = army.SelectedGroup;
+                var mouth = entrance.ApproachFrom(walking.Count > 0 ? walking.Members[0].transform.position : entrance.transform.position);
+                walking.OrderMoveTo(mouth);
+                walking.NotifyPlayerOrder();
+                if (SoldierStats.IsHero(walking.Type)) entrance.Await();
+                if (walking.Count > 0) OrderMarker.ShowFlagFor(walking.Members[0].transform, mouth);
+                return true;
+            }
+            Dungeon.DungeonEntrance.Awaited = null;
+
             var ray = targetCamera.ScreenPointToRay(screenPosition);
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, ~0);
 

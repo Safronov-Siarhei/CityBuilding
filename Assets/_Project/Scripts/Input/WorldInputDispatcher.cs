@@ -107,11 +107,12 @@ namespace CityBuilder.InputControl
                     return;
                 }
             }
-            // a dungeon's mouth: its card, with its level and «Войти»
+            // a dungeon's mouth: held like a town building, its «!» opens the card (the user, 2026-11-01)
             var entrance = Dungeon.DungeonEntrance.At(screenPosition, tapCamera);
-            if (entrance != null && UI.DungeonEntranceCard.Instance != null)
+            if (entrance != null)
             {
-                UI.DungeonEntranceCard.Instance.Show(entrance);
+                if (UI.BuildingFocus.Instance != null) UI.BuildingFocus.Instance.SelectEntrance(entrance);
+                else if (UI.DungeonEntranceCard.Instance != null) UI.DungeonEntranceCard.Instance.Show(entrance);
                 return;
             }
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;

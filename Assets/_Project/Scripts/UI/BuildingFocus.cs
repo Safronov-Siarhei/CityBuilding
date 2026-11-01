@@ -43,7 +43,14 @@ namespace CityBuilder.UI
         /// <summary>A building of another side held instead (an orc camp's), or null: red ring, its «!» opens ForeignBuildingCard.</summary>
         public OrcCampBuilding Foreign { get; private set; }
 
-        private Transform Held => Current != null ? Current.transform : Foreign != null ? Foreign.transform : null;
+        /// <summary>A dungeon's mouth held instead (the user, 2026-11-01: like a town building): gold ring, its «!» opens DungeonEntranceCard.</summary>
+        public Dungeon.DungeonEntrance Entrance { get; private set; }
+
+        private Transform Held => Current != null ? Current.transform : Foreign != null ? Foreign.transform
+            : Entrance != null ? Entrance.transform : null;
+
+        /// <summary>Anything held -- own, foreign or a dungeon: the build menu steps aside for the «!» (BuildingPlacerUIVisibility).</summary>
+        public bool Holding => Held != null;
         private Color _ringColour = Gold;
 
         private LineRenderer _ring, _reach;
@@ -132,6 +139,33 @@ namespace CityBuilder.UI
             if (detailsButton != null) detailsButton.SetActive(true);
         }
 
+        /// <summary>Holds a dungeon's mouth: a gold ring round it and the «!» for its card -- the card no longer opens at the tap.</summary>
+        public void SelectEntrance(Dungeon.DungeonEntrance entrance)
+        {
+            if (entrance == null)
+            {
+                Clear();
+                return;
+            }
+            Release();
+            Entrance = entrance;
+            _ringColour = Gold;
+            var rig = FindAnyObjectByType<RTSCameraController>();
+            if (rig != null) rig.FocusOn(entrance.transform.position);
+            _rig = rig;
+            EnsureBuilt();
+            Paint(Gold, ReachColor);
+            var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            var footprint = Maps.Archipelago.DungeonEntrances.Footprint;
+            _footRadius = Mathf.Max(footprint.x, footprint.y) * cell * 0.5f * 1.2f + RingMargin;
+            Circle(_ring, Ground(entrance.transform.position), _footRadius);
+            _ring.gameObject.SetActive(true);
+            _rippleClock = 0f;
+            HarvestRadiusOverlay.HideIfShown();
+            _reach.gameObject.SetActive(false);
+            if (detailsButton != null) detailsButton.SetActive(true);
+        }
+
         private void Paint(Color ring, Color reach)
         {
             _ring.material.color = ring;
@@ -141,10 +175,13 @@ namespace CityBuilder.UI
         /// <summary>Lets the building go, and closes its card.</summary>
         public void Clear()
         {
+            // the dungeon's card closes only if it was the dungeon held (a hero's arrival opens it on its own)
+            var heldEntrance = Entrance != null;
             Release();
             if (infoPanel != null) infoPanel.Close();
             if (researchPanel != null) researchPanel.Close();
             if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Close();
+            if (heldEntrance && DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Close();
         }
 
         private void Release()
@@ -152,6 +189,7 @@ namespace CityBuilder.UI
             if (Current != null) Current.PinHealthBar(false);
             Current = null;
             Foreign = null;
+            Entrance = null;
             if (_ring != null) _ring.gameObject.SetActive(false);
             if (_reach != null) _reach.gameObject.SetActive(false);
             if (_ripples != null) foreach (var ripple in _ripples) ripple.gameObject.SetActive(false);
@@ -171,6 +209,11 @@ namespace CityBuilder.UI
                 if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Show(Foreign);
                 return;
             }
+            if (Entrance != null)
+            {
+                if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Show(Entrance);
+                return;
+            }
             if (Current == null) return;
             if (researchPanel != null && Current.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
             {
@@ -182,7 +225,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            if (Current == null && (Foreign == null || Foreign.CurrentHealth <= 0))
+            if (Current == null && (Foreign == null || Foreign.CurrentHealth <= 0) && Entrance == null)
             {
                 // destroyed while held (Unity's null): take the marks down
                 if (_ring != null && _ring.gameObject.activeSelf) Release();
@@ -198,7 +241,8 @@ namespace CityBuilder.UI
             }
             // the «!» steps aside while the card it opened is up, and comes back when it closes
             var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen)
-                || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen);
+                || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen)
+                || (DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen);
             if (detailsButton != null && detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
             // the camera taken away till the building is off the screen lets it go
             if (!cardUp && OffScreen(Held))

@@ -9,8 +9,10 @@ namespace CityBuilder.Dungeon
     /// <summary>
     /// A dungeon's entrance on the town's map (Maps/Archipelago/DungeonEntrances): its level
     /// (1 nearest the start) and the dungeon it leads to. A tap opens its card
-    /// (DungeonEntranceCard); a hero walking up to it opens the card by itself, once per arrival,
-    /// so going down is: send a hero to the mine, then «Войти».
+    /// (BuildingFocus.SelectEntrance: a ring and the «!»; the «!» opens DungeonEntranceCard).
+    /// The user, 2026-11-01: a hero merely passing by gets a feed notice «Рядом обнаружено
+    /// подземелье» (a tap on it selects the mouth), never the card; the card opens by itself only
+    /// for a hero SENT to this mouth (a tap on it with the hero held: Await), once he is there.
     /// </summary>
     public class DungeonEntrance : MonoBehaviour
     {
@@ -18,6 +20,9 @@ namespace CityBuilder.Dungeon
 
         private static readonly List<DungeonEntrance> _all = new List<DungeonEntrance>();
         public static IReadOnlyList<DungeonEntrance> All => _all;
+
+        /// <summary>The mouth a hero was sent to: his arrival opens its card. Any other order of the player's clears it.</summary>
+        public static DungeonEntrance Awaited;
 
         public int Level { get; private set; }
         public string DungeonId { get; private set; }
@@ -34,7 +39,30 @@ namespace CityBuilder.Dungeon
         }
 
         private void OnEnable() => _all.Add(this);
-        private void OnDisable() => _all.Remove(this);
+
+        private void OnDisable()
+        {
+            _all.Remove(this);
+            if (Awaited == this) Awaited = null;
+        }
+
+        /// <summary>A hero is on his way here: his arrival -- or his being here already -- opens the card.</summary>
+        public void Await()
+        {
+            Awaited = this;
+            _heroWasNear = false;
+            _timer = 0f;
+        }
+
+        /// <summary>Where a walker coming from `from` stops: in front of the mouth on his side, well inside the reach.</summary>
+        public Vector3 ApproachFrom(Vector3 from)
+        {
+            var away = from - transform.position;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = -transform.forward;
+            var stop = transform.position + away.normalized * (Maps.Archipelago.DungeonEntrances.Footprint.x * 0.5f + 0.7f);
+            return UnityEngine.AI.NavMesh.SamplePosition(stop, out var hit, 4f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : stop;
+        }
 
         /// <summary>A living hero within dungeon_enter_reach_cells of the entrance (its footprint's edge, not its middle).</summary>
         public bool HeroNear()
@@ -59,8 +87,28 @@ namespace CityBuilder.Dungeon
             if (_timer > 0f) return;
             _timer = CheckEverySeconds;
             var near = HeroNear();
-            if (near && !_heroWasNear && DungeonTravel.CanEnter && DungeonEntranceCard.Instance != null && !DungeonEntranceCard.Instance.IsOpen)
-                DungeonEntranceCard.Instance.Show(this);
+            if (near && !_heroWasNear)
+            {
+                if (Awaited == this)
+                {
+                    Awaited = null;
+                    if (DungeonTravel.CanEnter && DungeonEntranceCard.Instance != null && !DungeonEntranceCard.Instance.IsOpen)
+                        DungeonEntranceCard.Instance.Show(this);
+                }
+                else
+                {
+                    var entrance = this;
+                    var notice = GameEvent.At(Localization.Get("#log_dungeon_near"), EventSeverity.Good, EventGlyph.Star, null, transform.position);
+                    notice.Tapped = () =>
+                    {
+                        if (entrance == null) return;
+                        // the hero let go first, or holding him would let the mouth go at once
+                        if (ArmyManager.Instance != null) ArmyManager.Instance.SelectGroup(null);
+                        if (BuildingFocus.Instance != null) BuildingFocus.Instance.SelectEntrance(entrance);
+                    };
+                    EventLogManager.Instance?.Post(notice);
+                }
+            }
             _heroWasNear = near;
         }
 

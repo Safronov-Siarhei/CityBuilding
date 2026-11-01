@@ -41,8 +41,9 @@ namespace CityBuilder.UI
                 var at = placementControls.anchoredPosition;
                 placementControls.anchoredPosition = new Vector2(at.x, _controlsY + (mandatory ? liftWhilePlacingMandatory : 0f));
             }
-            // a held building (BuildingFocus) puts its «!» where the build menu stands
-            var held = BuildingFocus.Instance != null && BuildingFocus.Instance.Current != null;
+            // a held building (BuildingFocus) puts its «!» where the build menu stands -- an orc's
+            // or a dungeon's as well as one's own (the user, 2026-11-01)
+            var held = BuildingFocus.Instance != null && BuildingFocus.Instance.Holding;
             // ...and a hero in hand puts his skills there (HeroSkillBar)
             var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held && !HeroSkillBar.Showing && !ShipActionBar.Showing;
             if (hideWhilePlacingMandatory != null && hideWhilePlacingMandatory.activeSelf != showMenu)

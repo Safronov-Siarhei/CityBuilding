@@ -423,11 +423,15 @@ dungeon opens as a SEPARATE SCENE.
 - Model `MineAbandoned` exported to `Models/Buildings` (4.3 x 4.5 x 3.4 cells); wired in
   `SetupProjectMaps.CreateArchipelagoDefinition` (`MeshMapDefinition.DungeonEntrancePrefab`).
 - `Dungeon/DungeonEntrance.cs` holds Level, DungeonId (all `Dungeon1` for now) and Cell; `All`.
-  - A hero within `dungeon_enter_reach_cells` + 2.5 of its centre opens the card by himself, once
-    per arrival.
+  - SINCE 2026-11-01 (the user): a hero merely passing within `dungeon_enter_reach_cells` + 2.5 gets
+    the feed notice `#log_dungeon_near` «Рядом обнаружено подземелье», never the card; a tap on the
+    notice (`GameEvent.Tapped`) lets the hero go and selects the mouth.
+  - A tap on the mouth with a HERO held sends him there (`ArmyOrderInput`: `ApproachFrom`, `Await`);
+    his arrival opens the card (`DungeonEntrance.Awaited`). Any other order clears it.
 - `UI/DungeonEntranceCard.cs`: «Подземелье», «Уровень N», then «Герой у входа» or «Приведите героя
   ко входу»; «Войти» is live only with a hero there and calls `DungeonTravel.Enter`.
-  - A tap on the mine opens it (`WorldInputDispatcher`, before the deposit tap).
+  - A tap on the mine SELECTS it like a town building (`BuildingFocus.SelectEntrance`): a gold ring,
+    the build menu hidden, the «!» at the bottom; the «!» opens the card (2026-11-01).
 - The level is not passed down yet: every entrance opens the same Dungeon 1.
 - Test: `ArchipelagoTests.DungeonEntrances_AndTheForest_DrawnNearTheCameraOnly`.
 

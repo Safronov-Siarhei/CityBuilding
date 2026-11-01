@@ -12,6 +12,8 @@
 > player's own (`BuildingFocus.SelectForeign`) and its «!» opens `UI/ForeignBuildingCard.cs`
 > (owner, level, health, damage/reach; keys `#foreign_*`, `#orc_building_<kind>`); the main menu
 > backdrop skips maps without a ground prefab (the archipelago, dungeons) -- that was the lost ground.
+> **2026-11-01:** an orc building or a dungeon mouth held hides the build menu like one's own
+> (`BuildingFocus.Holding`, read by `BuildingPlacerUIVisibility`), so the «!» stands alone.
 > **Rule:** the user SKETCHES layouts; implement their sketch, don't redesign or restyle unasked.
 > **Read with:** [art-pipeline](art-pipeline.md) (icons), [balance-and-localization](balance-and-localization.md) (all text).
 
