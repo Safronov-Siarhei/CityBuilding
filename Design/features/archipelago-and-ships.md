@@ -156,6 +156,21 @@
   - The tap is handled by `WorldInputDispatcher.TryShowFertileLand`; the patch comes from
     `MeshMapApplier.FertilePatchAt`.
 
+## Playtest fixes (2026-11-01, pushed 39fc7a56; user has not seen them yet)
+- Fertile land: no patch cell is closer to water than `fertile_min_coast_cells` (8), measured as a
+  4-neighbour BFS from the water (`FertileLand.CoastDistance`). It looked bad on the beach.
+- The storm edge has NO clouds any more. Its low-poly puffs read as grey "pyramids" hanging in the
+  air (`StormEdge.cs`).
+- Fish shoals spawn within `fish_shoal_shore_meters` (4 m) of land, in `TryShoreSea`, so that the
+  Fisher's Hut makes sense.
+- Tapping a shoal rings it with a pulsing gold ring (FertileFlash) and posts
+  `#log_shoal_found` «Обнаружен косяк рыб».
+  - Code: `ShipManager.ShoalAt`/`FlashShoal`, `WorldInputDispatcher.TryShowShoal`.
+  - The tap is checked AFTER fertile land.
+- The orc shipyard now needs its WHOLE 3×4 m slipway on the light water (`TryNearestSea`
+  shoreOnly). Before, only the middle was checked, so the far end stood in deep sea.
+- OPEN: «у горы кусок висит в воздухе» (screenshot 4). Not found yet; the user was asked where.
+
 ## Forest, boulders and the dungeons (2026-10-31)
 - Denser forest: one tree per `archipelago_forest_cells_per_tree` (6) forest cells, clamped
   `archipelago_trees_min/max` (600/3000). Boulders: one per `archipelago_stony_cells_per_rock` (5)
