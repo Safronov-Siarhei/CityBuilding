@@ -21,7 +21,8 @@ namespace CityBuilder.UI
     public class FocusHireBar : MonoBehaviour
     {
         // the Shipyard (the user, 2026-10-28): a ship per button, the shipyard's level opens them
-        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2 }
+        // the dungeon's hire camp (the user, 2026-11-01): a gnome per button, held like the Barracks
+        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3 }
 
         private const float RefreshSeconds = 0.25f;
         private static readonly Color Dimmed = new Color(0.45f, 0.45f, 0.45f, 1f);
@@ -55,10 +56,54 @@ namespace CityBuilder.UI
             }
         }
 
+        /// <summary>The dungeon's hire camp held, its «!» up.</summary>
+        private static bool CampHeld
+        {
+            get
+            {
+                var focus = BuildingFocus.Instance;
+                return focus != null && focus.DetailsShown && focus.Entrance != null && focus.Entrance.Kind == Dungeon.DungeonEntrance.Place.HireCamp;
+            }
+        }
+
+        /// <summary>One gnome of the button's kind from the hire camp; says why not when it cannot.</summary>
+        public SoldierUnit HireGnome(int index)
+        {
+            var party = Dungeon.DungeonHirelings.Instance;
+            if (!CampHeld || party == null || index < 0 || index >= types.Length) return null;
+            var hired = party.Hire(types[index]);
+            if (hired == null)
+            {
+                var why = party.Count >= Dungeon.DungeonHirelings.Max
+                    ? Localization.Format("#dungeon_hire_full", Dungeon.DungeonHirelings.Max)
+                    : Localization.Format("#dungeon_hire_nocoins", Dungeon.DungeonHirelings.Price(types[index]));
+                EventLogManager.Instance?.Post(GameEvent.Nowhere(why, EventSeverity.Warning, EventGlyph.Alert, null));
+            }
+            _refreshIn = 0f;
+            return hired;
+        }
+
+        /// <summary>A face per gnome with his price; dimmed while the party is full or the purse short.</summary>
+        private void ShowGnomes()
+        {
+            var party = Dungeon.DungeonHirelings.Instance;
+            var coin = iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null;
+            for (var i = 0; i < buttons.Length && i < types.Length; i++)
+            {
+                buttons[i].SetActive(true);
+                if (i < locks.Length && locks[i] != null) locks[i].SetActive(false);
+                prices[i].SetActive(true);
+                priceTexts[i].text = Dungeon.DungeonHirelings.Price(types[i]).ToString();
+                if (priceIcons[i] != null) priceIcons[i].sprite = coin;
+                faces[i].color = party != null && party.CanHire(types[i]) ? Color.white : Dimmed;
+            }
+        }
+
         /// <summary>A button tapped (a persistent listener wants no answer back).</summary>
         public void Tap(int index)
         {
-            if (kind == Kind.Castle) Buy(index);
+            if (kind == Kind.HireCamp) HireGnome(index);
+            else if (kind == Kind.Castle) Buy(index);
             else if (kind == Kind.Shipyard) BuildShip(index);
             else Hire(index);
         }
@@ -144,8 +189,8 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            var target = Target;
-            var show = target != null;
+            var target = kind == Kind.HireCamp ? null : Target;
+            var show = kind == Kind.HireCamp ? CampHeld : target != null;
             if (show != _shown)
             {
                 _shown = show;
@@ -156,7 +201,8 @@ namespace CityBuilder.UI
             _refreshIn -= Time.unscaledDeltaTime;
             if (_refreshIn > 0f) return;
             _refreshIn = RefreshSeconds;
-            if (kind == Kind.Castle) ShowHeroes(target);
+            if (kind == Kind.HireCamp) ShowGnomes();
+            else if (kind == Kind.Castle) ShowHeroes(target);
             else if (kind == Kind.Shipyard) ShowShips(target);
             else ShowSoldiers(target);
         }

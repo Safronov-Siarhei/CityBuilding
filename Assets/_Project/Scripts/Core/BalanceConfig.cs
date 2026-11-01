@@ -602,6 +602,8 @@ namespace CityBuilder.Core
         [SerializeField] private float kingGuardRadius = 30f;
         [SerializeField] private int kingRevealRadius = 9;
         [SerializeField] private float heroReturnWaitSeconds = 10f;
+        [SerializeField] private float heroPatrolRadiusCells = 1.5f;
+        [SerializeField] private float heroPatrolPauseSeconds = 5f;
         [SerializeField] private List<HeroSkillBalance> heroSkills = new List<HeroSkillBalance>();
         [SerializeField] private List<HeroBalance> heroes = new List<HeroBalance>();
 
@@ -1014,6 +1016,9 @@ namespace CityBuilder.Core
         public float KingGuardRadius => kingGuardRadius;
         public int KingRevealRadius => kingRevealRadius;
         public float HeroReturnWaitSeconds => heroReturnWaitSeconds;
+        /// <summary>The sandbox's hero let go (the user, 2026-11-01): he stands where he is and strolls this far round it, a step every this many seconds.</summary>
+        public float HeroPatrolRadiusCells => heroPatrolRadiusCells;
+        public float HeroPatrolPauseSeconds => heroPatrolPauseSeconds;
 
         /// <summary>A hero's row by id ("king", "queen", "captain"), or null.</summary>
         public HeroBalance Hero(string id)
@@ -1568,6 +1573,8 @@ namespace CityBuilder.Core
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);
             heroReturnWaitSeconds = Read(economy, "hero_return_wait_sec", heroReturnWaitSeconds);
+            heroPatrolRadiusCells = ReadOptional(economy, "hero_patrol_radius_cells", heroPatrolRadiusCells);
+            heroPatrolPauseSeconds = ReadOptional(economy, "hero_patrol_pause_sec", heroPatrolPauseSeconds);
             heroSkills = ReadHeroSkills(economy);
             heroes = new List<HeroBalance>();
             foreach (var id in HeroIds) heroes.Add(ReadHero(economy, id));

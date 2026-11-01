@@ -17,6 +17,9 @@ namespace CityBuilder.Dungeon
     /// its reach. One left too far behind drops the fight and catches up. They never leave the
     /// dungeon: going up, the living are written down (DungeonRecord.Hirelings) and on the next
     /// visit they are waiting at the way in, as hurt as they were.
+    ///
+    /// The heroes below are one party too (the user, 2026-11-01): the player leads ONE of them --
+    /// the one held, or the last one held -- and the others walk after him like the gnomes do.
     /// </summary>
     public class DungeonHirelings : MonoBehaviour
     {
@@ -114,7 +117,9 @@ namespace CityBuilder.Dungeon
             return list;
         }
 
-        /// <summary>The hero they follow: the one held, else the first one standing.</summary>
+        private static Hero _lastLed;
+
+        /// <summary>The hero the party follows: the one held, else the last one held while he stands, else the first one standing.</summary>
         public static Hero Leader()
         {
             var roster = HeroRoster.Instance;
@@ -124,15 +129,39 @@ namespace CityBuilder.Dungeon
             foreach (var hero in roster.Heroes)
             {
                 if (hero == null || hero.IsFallen || hero.Unit == null) continue;
-                if (held != null && hero.Unit.Group == held) return hero;
+                if (held != null && hero.Unit.Group == held)
+                {
+                    _lastLed = hero;
+                    return hero;
+                }
                 if (first == null) first = hero;
             }
+            if (_lastLed != null && !_lastLed.IsFallen && _lastLed.Unit != null) return _lastLed;
             return first;
+        }
+
+        private readonly System.Collections.Generic.Dictionary<Hero, Vector3> _heroOrders = new System.Collections.Generic.Dictionary<Hero, Vector3>();
+
+        /// <summary>The heroes not led walk after the leader, each to his own place beside him.</summary>
+        private void FollowWithHeroes(Hero leader, float follow)
+        {
+            var roster = HeroRoster.Instance;
+            if (roster == null) return;
+            var at = leader.Unit.transform.position;
+            var place = 1;
+            foreach (var hero in roster.Heroes)
+            {
+                if (hero == null || hero == leader || hero.IsFallen || hero.Unit == null || hero.Unit.Group == null) continue;
+                var spot = at + ArmyGroup.FormationOffset(place++) * 1.5f;
+                if (NavMesh.SamplePosition(spot, out var hit, 2f, NavMesh.AllAreas)) spot = hit.position;
+                if (_heroOrders.TryGetValue(hero, out var given) && Flat(given - spot) <= follow && Flat(hero.Unit.transform.position - spot) <= follow * 2f) continue;
+                _heroOrders[hero] = spot;
+                hero.Unit.Group.OrderMoveTo(spot);
+            }
         }
 
         private void Update()
         {
-            if (_party == null || _party.Count == 0) return;
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;
             _timer = TickSeconds;
@@ -141,6 +170,8 @@ namespace CityBuilder.Dungeon
             var balance = BalanceConfig.Instance;
             var follow = balance != null ? balance.DungeonHirelingFollowCells : 2.5f;
             var leash = balance != null ? balance.DungeonHirelingLeashCells : 9f;
+            FollowWithHeroes(leader, follow);
+            if (_party == null || _party.Count == 0) return;
             var at = leader.Unit.transform.position;
             if (!_hasOrder || Flat(at - _ordered) > follow)
             {

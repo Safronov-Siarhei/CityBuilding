@@ -78,6 +78,19 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(hall, "No Town Hall in the start zone.");
             yield return null;
 
+            // the whole start island in view (the user, 2026-11-01): its land far past the Town Hall's own reveal
+            applier.RevealStartIsland(world.StartCell);
+            var fog = CityBuilder.Maps.FogOfWarManager.Instance;
+            var far = 0;
+            for (var dx = -60; dx <= 60; dx += 3)
+            for (var dz = -60; dz <= 60; dz += 3)
+            {
+                var c = world.StartCell + new Vector2Int(dx, dz);
+                if (dx * dx + dz * dz < 22 * 22 || applier.IsWaterCell(c)) continue;
+                if (fog.IsCellRevealed(c)) far++;
+            }
+            Assert.Greater(far, 0, "The start island is not in view past the Town Hall.");
+
             // what the phone draws: the land, the relief, the sea
             var triangles = new System.Collections.Generic.Dictionary<string, int>();
             foreach (var filter in applier.GetComponentsInChildren<MeshFilter>())

@@ -26,7 +26,11 @@ namespace CityBuilder.Dungeon
         /// <summary>A sandbox town may send its heroes down; a run and a dungeon may not.</summary>
         public static bool CanEnter => !Invasion.InvasionMode.IsActive && !DungeonMode.IsActive && !LoadingScreen.Busy;
 
-        public static void Enter(string dungeonId, int level = 1)
+        /// <summary>
+        /// Down with the heroes standing by `from` (the user, 2026-11-01: only those near the
+        /// mouth go; with no mouth given -- a cheat -- every hero standing does).
+        /// </summary>
+        public static void Enter(string dungeonId, int level = 1, DungeonEntrance from = null)
         {
             if (!CanEnter) return;
             var save = Object.FindAnyObjectByType<GameSaveController>();
@@ -40,6 +44,7 @@ namespace CityBuilder.Dungeon
                 foreach (var hero in HeroRoster.Instance.Heroes)
                 {
                     if (hero == null || hero.IsFallen || hero.Unit == null) continue;
+                    if (from != null && !from.IsNear(hero)) continue;
                     heroes.Add(new HeroEntry
                     {
                         type = hero.Type,
@@ -54,6 +59,8 @@ namespace CityBuilder.Dungeon
             GameSessionIntent.DungeonLevel = Mathf.Clamp(level, 1, 3);
             GameSessionIntent.DungeonHeroes = heroes;
             GameSessionIntent.DungeonReturnName = save.CurrentSaveName;
+            // the camera comes back to this mouth, not to the Town Hall (the user, 2026-11-01)
+            GameSessionIntent.DungeonMouth = from != null ? from.transform.position : (Vector3?)null;
             GameSessionIntent.NewGameMapId = dungeonId;
             GameSessionIntent.SaveNameToLoad = null;
             LoadingScreen.IntoGame(SceneManager.GetActiveScene().name);
@@ -79,7 +86,9 @@ namespace CityBuilder.Dungeon
                     if (hero == null) continue;
                     entry.level = hero.Level;
                     entry.experience = hero.Experience;
-                    // a hero who fell below comes up hurt, not dead (the Town Hall raises him -- later)
+                    // a hero who fell below rises at the Town Hall when his wait is out (the user, 2026-11-01)
+                    entry.fallen = hero.IsFallen;
+                    entry.respawnRemaining = hero.IsFallen ? Mathf.Max(0.1f, hero.RespawnRemaining) : 0f;
                     entry.currentHealth = hero.IsFallen || hero.Unit == null ? 1 : hero.Unit.CurrentHealth;
                 }
             }
@@ -117,6 +126,7 @@ namespace CityBuilder.Dungeon
             if (DungeonPotions.Instance != null) town.dungeonPotions = DungeonPotions.Instance.Carried();
             SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             GameSessionIntent.SaveNameToLoad = SaveSystem.HiddenTownSlot;
+            GameSessionIntent.LookAtAfterLoad = GameSessionIntent.DungeonMouth;
             GameSessionIntent.SaveNameAfterLoad = mode.ReturnName ?? string.Empty;
             LoadingScreen.IntoGame(SceneManager.GetActiveScene().name);
         }

@@ -180,6 +180,9 @@ namespace CityBuilder.EditorTools
             BuildHireBar(row.transform, FocusHireBar.Kind.Shipyard, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms },
                 new[] { "PortraitShipScout", "PortraitShipTransport", "PortraitShipWar", "PortraitShipBattleship" }, iconLibrary,
                 new[] { "ShipScout", "ShipTransport", "ShipWar", "ShipBattleship" });
+            // the dungeon's hire camp (the user, 2026-11-01: «окно как в казарме»): a gnome per button
+            BuildHireBar(row.transform, FocusHireBar.Kind.HireCamp, new[] { SoldierType.GnomeMiner, SoldierType.GnomeCrossbow, SoldierType.GnomeGuardian },
+                new[] { "PortraitGnomeMiner", "PortraitGnomeCrossbow", "PortraitGnomeGuardian" }, iconLibrary);
 
             BuildLighthouseButton(row.transform, iconLibrary);
 

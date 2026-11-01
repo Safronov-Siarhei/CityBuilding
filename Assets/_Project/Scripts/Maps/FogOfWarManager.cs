@@ -362,6 +362,19 @@ namespace CityBuilder.Maps
             return _display[cell.y * _width + cell.x] / 255f;
         }
 
+        /// <summary>Permanently clears every cell given (the start island, MeshMapApplier.RevealStartIsland).</summary>
+        public void RevealCells(IEnumerable<Vector2Int> cells)
+        {
+            EnsureInitialized();
+            if (_permanent == null) return;
+            foreach (var c in cells)
+            {
+                if (c.x < 0 || c.y < 0 || c.x >= _width || c.y >= _depth || _permanent[c.x, c.y]) continue;
+                _permanent[c.x, c.y] = true;
+                MarkCellChanged(c.x, c.y);
+            }
+        }
+
         /// <summary>Permanently clears a circular radius (in grid cells) around center. Cheap no-op for cells already revealed.</summary>
         public void RevealPermanent(Vector2Int center, int radiusCells)
         {

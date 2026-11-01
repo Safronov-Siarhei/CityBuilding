@@ -842,6 +842,8 @@ namespace CityBuilder.Buildings
                 _mandatoryBuildingPlaced = true;
                 // The mandatory Town Hall's own reveal already ran above (Initialize runs before
                 // this point) -- fog only starts covering the rest of the map from here.
+                // the archipelago's start island in view whole (the user, 2026-11-01)
+                Maps.MeshMapApplier.Instance?.RevealStartIsland(GridManager.Instance != null ? GridManager.Instance.WorldToCell(instance.transform.position) : Vector2Int.zero);
                 FogOfWarManager.Instance?.Activate();
             }
 

@@ -33,5 +33,11 @@ namespace CityBuilder.Saving
 
         /// <summary>The name a loaded game is saved back under, when the slot it came from is not it (the town coming back from a dungeon).</summary>
         public static string SaveNameAfterLoad;
+
+        /// <summary>The dungeon mouth the heroes went down by, kept while they are below.</summary>
+        public static UnityEngine.Vector3? DungeonMouth;
+
+        /// <summary>Where the camera looks once the next game is loaded (back from a dungeon: its mouth); null = where it always does.</summary>
+        public static UnityEngine.Vector3? LookAtAfterLoad;
     }
 }

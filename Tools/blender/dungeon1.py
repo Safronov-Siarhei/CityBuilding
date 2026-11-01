@@ -1023,6 +1023,45 @@ def build_halls(b, r):
         giant_mushroom(b, cx - 2.4, cy + 1.6, 1.0, 'roof_purple')
 
 
+STATUE_TOP = 4.6   # the crystal's height over the floor above the statue (build units)
+
+
+def spider_statue(b, x, y):
+    """A stone spider queen on a rock islet, facing the camp (south): a ring of rough rock, a
+    plinth, the body and the swollen abdomen, eight jointed legs gripping the plinth's edge, and
+    six glowing eyes. ~4 build units tall (1.8 cells)."""
+    cx, cy, _ = w(x, y)
+    # the islet: rough rock rising out of the water, and the plinth on it
+    b.frustum(cx, cy, -1.4, 0.25, 3.0, 2.4, STONE_D, sides=9)
+    for k in range(7):
+        a = k * 2 * math.pi / 7 + 0.4
+        boulder(b, x + math.cos(a) * 2.6, y + math.sin(a) * 2.2, 0.55 + 0.15 * (k % 3))
+    b.cylinder(cx, cy, 0.25, 0.75, 1.9, STONE, sides=8)
+    b.cylinder(cx, cy, 0.75, 0.9, 1.7, STONE_L, sides=8)
+    z = 0.9
+    # the abdomen behind (north), the head-and-body in front (south)
+    b.ball(cx, cy + 0.7, z + 0.35, 1.05, 1.5, STONE, sides=8, top=STONE_L)
+    b.ball(cx, cy - 0.55, z + 0.55, 0.62, 0.9, STONE_L, sides=7)
+    b.ball(cx, cy - 1.05, z + 0.75, 0.42, 0.6, STONE, sides=7)                    # the head
+    for ex, ez in ((-0.14, 1.15), (0.14, 1.15), (-0.26, 1.02), (0.26, 1.02), (-0.08, 1.28), (0.08, 1.28)):
+        b.box(cx + ex - 0.05, cx + ex + 0.05, cy - 1.47, cy - 1.37, z + ez - 0.05, z + ez + 0.05, 'roof_purple')
+    light('crystal', cx, cy - 1.4, z + 1.15)                                      # the eyes' glow
+    for sd in (-1, 1):                                                           # fangs
+        b.rod((cx + sd * 0.12, cy - 1.4, z + 0.85), (cx + sd * 0.1, cy - 1.55, z + 0.55), 0.05, STONE_L)
+    # eight legs: up to the knee, down to the plinth's rim
+    for sd in (-1, 1):
+        for k, (fy, spread) in enumerate(((-0.9, 0.9), (-0.5, 0.5), (-0.1, 0.0), (0.3, -0.5))):
+            hip = (cx + sd * 0.45, cy + fy * 0.6 - 0.4, z + 0.8)
+            knee = (cx + sd * 1.45, cy + fy * 1.2 - 0.4 - spread * 0.3, z + 1.7 - abs(spread) * 0.2)
+            foot = (cx + sd * 1.85, cy + fy * 1.5 - 0.4 - spread * 0.6, z - 0.05)
+            b.rod(hip, knee, 0.12, STONE)
+            b.rod(knee, foot, 0.09, STONE_D)
+    statues.append((cx, cy, z + STATUE_TOP))
+
+
+statues = []
+
+
 def stalagmite(b, x, y, h):
     cx, cy, _ = w(x, y)
     r = h * 0.28
@@ -1090,17 +1129,10 @@ def build_props(b):
                 nx, ny = -nx, -ny
             ex, ey = edge_point(mx, my, nx, ny, 0.6)
             stalagmite(b, ex, ey, rnd.uniform(0.9, 2.2))
-    # the lake's bridge, south to north
-    y0, y1 = int(LAKE[1] - LAKE[3] - 3), int(LAKE[1] + LAKE[3] + 3)
-    for y in range(y0, y1):
-        bx_, by_, _ = w(BRIDGE_X, y + 0.5)
-        b.box(bx_ - 0.8, bx_ + 0.8, by_ - 0.42, by_ + 0.42, -0.05, 0.05, WOOD if y % 2 else WOOD_L)
-    for y in range(y0, y1 + 1, 5):
-        for sd in (-1, 1):
-            px, py, _ = w(BRIDGE_X + sd * 0.85, y)
-            b.box(px - 0.06, px + 0.06, py - 0.06, py + 0.06, -0.6, 0.5, WOOD_D)
-    b.rod(w(BRIDGE_X - 0.85, y0, 0.45), w(BRIDGE_X - 0.85, y1, 0.45), 0.05, WOOD)
-    b.rod(w(BRIDGE_X + 0.85, y0, 0.45), w(BRIDGE_X + 0.85, y1, 0.45), 0.05, WOOD)
+    # the lake's middle (the user, 2026-11-01: the bridge across it went, a monster's statue
+    # instead): the spider queen in stone on a rock islet, her eyes glowing; the game hangs a
+    # turning crystal with its halo over her (the `statue` spot)
+    spider_statue(b, LAKE[0], LAKE[1])
     # mushroom groves and stalagmites in the halls
     k = 100
     for name in ("lake", "west", "east", "deep", "golem", "spiders"):
@@ -1260,6 +1292,11 @@ def main():
     for i, (x, y, z) in enumerate(rewards):
         e = bpy.data.objects.new(f"DungeonReward_{i}", None)
         e.empty_display_type = 'SPHERE'
+        e.empty_display_size = 0.5
+        coll.objects.link(e)
+        e.location = (x, y, z)
+    for i, (x, y, z) in enumerate(statues):
+        e = bpy.data.objects.new(f"statue_{i}", None)
         e.empty_display_size = 0.5
         coll.objects.link(e)
         e.location = (x, y, z)

@@ -263,7 +263,7 @@ namespace CityBuilder.Dungeon
             CrystalsTaken++;
             Wallet.UpgradeCrystals += 1;
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_dungeon_crystal", 1), EventSeverity.Good,
-                EventGlyph.Upgrade, null, c.At));
+                EventGlyph.Upgrade, "Res_UpgradeCrystal", c.At));   // the crystal itself on the notice (the user, 2026-11-01)
         }
     }
 }

@@ -146,16 +146,20 @@ namespace CityBuilder.Dungeon
         {
             var roster = HeroRoster.Instance;
             if (roster == null) return false;
+            foreach (var hero in roster.Heroes)
+                if (IsNear(hero)) return true;
+            return false;
+        }
+
+        /// <summary>This hero stands and is within reach: he goes down with the party (the user, 2026-11-01: only those by the mouth do).</summary>
+        public bool IsNear(Hero hero)
+        {
+            if (hero == null || hero.IsFallen || hero.Unit == null) return false;
             var balance = BalanceConfig.Instance;
             var reach = (balance != null ? balance.DungeonEnterReach : 4f) + _half;
-            foreach (var hero in roster.Heroes)
-            {
-                if (hero == null || hero.IsFallen || hero.Unit == null) continue;
-                var d = hero.Unit.transform.position - transform.position;
-                d.y = 0f;
-                if (d.sqrMagnitude <= reach * reach) return true;
-            }
-            return false;
+            var d = hero.Unit.transform.position - transform.position;
+            d.y = 0f;
+            return d.sqrMagnitude <= reach * reach;
         }
 
         private void Update()

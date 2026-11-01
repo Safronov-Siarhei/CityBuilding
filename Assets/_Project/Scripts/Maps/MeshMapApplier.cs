@@ -160,6 +160,48 @@ namespace CityBuilder.Maps
         }
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
+
+        // how far out over the water round the start island the fog lifts too (cells): its beaches and shallows
+        private const int StartIslandShoreCells = 3;
+
+        /// <summary>
+        /// The archipelago's start island all in view from the start (the user, 2026-11-01: «у игрока
+        /// должен быть виден весь начальный остров»): every land cell joined to `from` (the Town
+        /// Hall's), and a band of sea round it. Other maps are one island already -- nothing to do.
+        /// </summary>
+        public void RevealStartIsland(Vector2Int from)
+        {
+            var fog = FogOfWarManager.Instance;
+            var grid = GridManager.Instance;
+            if (fog == null || grid == null || !Archipelago.ArchipelagoMapId.IsArchipelago(CurrentMapId) || _waterCells.Contains(from)) return;
+            var size = grid.GridSize;
+            var seen = new HashSet<Vector2Int> { from };
+            var queue = new Queue<Vector2Int>();
+            queue.Enqueue(from);
+            var steps = new[] { Vector2Int.right, Vector2Int.left, Vector2Int.up, Vector2Int.down };
+            while (queue.Count > 0)
+            {
+                var c = queue.Dequeue();
+                foreach (var d in steps)
+                {
+                    var n = c + d;
+                    if (n.x < 0 || n.y < 0 || n.x >= size.x || n.y >= size.y || _waterCells.Contains(n) || !seen.Add(n)) continue;
+                    queue.Enqueue(n);
+                }
+            }
+            // the shore band: the sea next to the island
+            var band = new HashSet<Vector2Int>(seen);
+            foreach (var c in seen)
+            {
+                for (var dz = -StartIslandShoreCells; dz <= StartIslandShoreCells; dz++)
+                for (var dx = -StartIslandShoreCells; dx <= StartIslandShoreCells; dx++)
+                {
+                    if (dx * dx + dz * dz > StartIslandShoreCells * StartIslandShoreCells) continue;
+                    band.Add(new Vector2Int(c.x + dx, c.y + dz));
+                }
+            }
+            fog.RevealCells(band);
+        }
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
 
         /// <summary>A cell on the slope or at the foot of the map's relief: nothing is built there.</summary>
@@ -334,6 +376,14 @@ namespace CityBuilder.Maps
                 TerrainPhysicsLayer.Assign(reliefInstance);
                 SceneryShadows.DisableCasting(reliefInstance);
                 _reliefColliders = reliefInstance.GetComponentsInChildren<Collider>();
+                // below, the floor's low bumps are floor too (the user, 2026-11-01: «герой идёт
+                // искать несуществующие маршруты»): a ridge a hand high across a tunnel cut the
+                // NavMesh in two and sent the heroes round the long way
+                if (map.IsDungeon)
+                {
+                    AddLowRelief(reliefInstance);
+                    BuildNavMesh();
+                }
             }
 
             if (map.WaterPrefab != null)
@@ -729,6 +779,57 @@ namespace CityBuilder.Maps
         /// map is ever reapplied within the same play session (nothing else in this project adds
         /// NavMesh data, so this is safe to own outright).
         /// </summary>
+        // the relief's triangles lying wholly below this height (world metres over the floor) are
+        // walked over: a dungeon's bumps and shoulders, never its walls
+        private const float LowReliefHeight = 0.3f;
+        private readonly List<NavMeshBuildSource> _lowReliefSources = new List<NavMeshBuildSource>();
+
+        /// <summary>
+        /// The relief's low triangles (all three corners under LowReliefHeight) as one extra
+        /// walkable mesh for the NavMesh: the bumps that read as floor to the eye stop splitting it.
+        /// </summary>
+        private void AddLowRelief(GameObject relief)
+        {
+            _lowReliefSources.Clear();
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            foreach (var filter in relief.GetComponentsInChildren<MeshFilter>())
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null || !mesh.isReadable) continue;
+                var matrix = filter.transform.localToWorldMatrix;
+                var source = mesh.vertices;
+                var world = new Vector3[source.Length];
+                for (var i = 0; i < source.Length; i++) world[i] = matrix.MultiplyPoint3x4(source[i]);
+                var indices = mesh.triangles;
+                for (var t = 0; t + 2 < indices.Length; t += 3)
+                {
+                    var a = world[indices[t]];
+                    var b = world[indices[t + 1]];
+                    var c = world[indices[t + 2]];
+                    if (a.y > LowReliefHeight || b.y > LowReliefHeight || c.y > LowReliefHeight) continue;
+                    triangles.Add(vertices.Count);
+                    vertices.Add(a);
+                    triangles.Add(vertices.Count);
+                    vertices.Add(b);
+                    triangles.Add(vertices.Count);
+                    vertices.Add(c);
+                }
+            }
+            if (triangles.Count == 0) return;
+            var low = new Mesh { indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            low.SetVertices(vertices);
+            low.SetTriangles(triangles, 0);
+            low.RecalculateBounds();
+            _lowReliefSources.Add(new NavMeshBuildSource
+            {
+                shape = NavMeshBuildSourceShape.Mesh,
+                sourceObject = low,
+                transform = Matrix4x4.identity,
+                area = 0,
+            });
+        }
+
         private void BuildNavMesh()
         {
             // NavMesh is an enhancement (CitizenAgent falls back to a direct line when no path is
@@ -756,6 +857,7 @@ namespace CityBuilder.Maps
                         });
                     }
                 }
+                _groundSources.AddRange(_lowReliefSources);
                 var sources = _groundSources;
                 if (sources.Count == 0)
                 {

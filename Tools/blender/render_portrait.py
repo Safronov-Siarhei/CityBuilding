@@ -1,7 +1,7 @@
 """A hero's portrait for the HUD: the figure's head and shoulders, front three-quarter, on a
 transparent background. Opens the models file, renders, never saves.
 
-    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size] [head_z]
+    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size] [head_z] [frame]
 
 head_z is the height (m) the camera looks at: 0.58 for the King's crown, less for a shorter hero.
 
@@ -18,6 +18,8 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 target_name, out_path = argv[0], argv[1]
 size = int(argv[2]) if len(argv) > 2 else 256
 head_z = float(argv[3]) if len(argv) > 3 else 0.58
+# how much of him the frame holds (m): the King's 0.42; a gnome, half his height, less
+frame = float(argv[4]) if len(argv) > 4 else 0.42
 
 sc = bpy.context.scene
 target = bpy.data.objects[target_name]
@@ -52,7 +54,7 @@ sc.render.resolution_x = sc.render.resolution_y = size
 
 cam_data = bpy.data.cameras.new("PortraitCam")
 cam_data.type = 'ORTHO'
-cam_data.ortho_scale = 0.42
+cam_data.ortho_scale = frame
 cam = bpy.data.objects.new("PortraitCam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam

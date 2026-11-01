@@ -55,7 +55,7 @@ namespace CityBuilder.UI
         public void Hire(int index)
         {
             var party = DungeonHirelings.Instance;
-            if (Shown == null || party == null || !Shown.HeroNear() || index < 0 || index >= DungeonHirelings.Offered.Length) return;
+            if (Shown == null || party == null || index < 0 || index >= DungeonHirelings.Offered.Length) return;
             party.Hire(DungeonHirelings.Offered[index]);
             Refresh();
         }
@@ -73,12 +73,10 @@ namespace CityBuilder.UI
                 return;
             }
             var party = DungeonHirelings.Instance;
-            var near = Shown.HeroNear();
+            // no hero needed at the camp (the user, 2026-11-01): a gnome hired from afar runs to the party
             if (title != null) title.text = Localization.Get("#dungeon_hire_title");
             if (count != null)
-                count.text = near
-                    ? string.Format(Localization.Get("#dungeon_hire_count"), party != null ? party.Count : 0, DungeonHirelings.Max)
-                    : Localization.Get("#dungeon_hire_far");
+                count.text = string.Format(Localization.Get("#dungeon_hire_count"), party != null ? party.Count : 0, DungeonHirelings.Max);
             _labels ??= new Text[hireButtons.Length];
             for (var i = 0; i < DungeonHirelings.Offered.Length && i < hireButtons.Length; i++)
             {
@@ -88,7 +86,7 @@ namespace CityBuilder.UI
                 if (i < stats.Length && stats[i] != null) stats[i].text = string.Format(Localization.Get("#dungeon_hire_stats"), row.maxHealth, row.attackDamage);
                 var button = hireButtons[i];
                 if (button == null) continue;
-                button.interactable = near && party != null && party.CanHire(type);
+                button.interactable = party != null && party.CanHire(type);
                 if (_labels[i] == null) _labels[i] = button.GetComponentInChildren<Text>();
                 var word = string.Format(Localization.Get("#dungeon_hire_buy"), DungeonHirelings.Price(type));
                 if (_labels[i] != null && _labels[i].text != word) _labels[i].text = word;

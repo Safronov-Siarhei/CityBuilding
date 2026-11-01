@@ -54,7 +54,7 @@ namespace CityBuilder.UI
         public void Buy(int kind)
         {
             var potions = DungeonPotions.Instance;
-            if (Shown == null || potions == null || !Shown.HeroNear() || kind < 0 || kind >= DungeonPotions.Kinds) return;
+            if (Shown == null || potions == null || kind < 0 || kind >= DungeonPotions.Kinds) return;
             potions.Buy((PotionKind)kind);
             Refresh();
         }
@@ -72,9 +72,9 @@ namespace CityBuilder.UI
                 return;
             }
             var potions = DungeonPotions.Instance;
-            var near = Shown.HeroNear();
+            // bought from anywhere below (the user, 2026-11-01: a tap on the shop is no order)
             if (title != null) title.text = Localization.Get("#dungeon_shop_title");
-            if (hint != null) hint.text = Localization.Get(near ? "#dungeon_shop_hint" : "#dungeon_shop_far");
+            if (hint != null) hint.text = Localization.Get("#dungeon_shop_hint");
             _labels ??= new Text[buyButtons.Length];
             for (var i = 0; i < DungeonPotions.Kinds && i < buyButtons.Length; i++)
             {
@@ -91,7 +91,7 @@ namespace CityBuilder.UI
                 }
                 var button = buyButtons[i];
                 if (button == null) continue;
-                button.interactable = near && potions != null && potions.CanBuy(kind);
+                button.interactable = potions != null && potions.CanBuy(kind);
                 if (_labels[i] == null) _labels[i] = button.GetComponentInChildren<Text>();
                 var word = string.Format(Localization.Get("#dungeon_shop_buy"), DungeonPotions.Price(kind));
                 if (_labels[i] != null && _labels[i].text != word) _labels[i].text = word;

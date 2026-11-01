@@ -105,9 +105,19 @@ namespace CityBuilder.Saving
 
         private void Start()
         {
+            if (GameSessionIntent.LookAtAfterLoad.HasValue) StartCoroutine(LookAfterLoad(GameSessionIntent.LookAtAfterLoad.Value));
+            GameSessionIntent.LookAtAfterLoad = null;
             if (_pendingLoad == null) return;
             ApplyLoadedState(_pendingLoad);
             _pendingLoad = null;
+        }
+
+        /// <summary>The camera to a spot once the loaded game has settled (whatever looked at the Town Hall first).</summary>
+        private System.Collections.IEnumerator LookAfterLoad(Vector3 at)
+        {
+            for (var frame = 0; frame < 3; frame++) yield return null;
+            var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
+            if (rig != null) rig.JumpTo(at);
         }
 
         private void Update()

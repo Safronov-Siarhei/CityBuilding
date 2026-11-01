@@ -145,8 +145,56 @@ namespace CityBuilder.Combat
                 ReturnIn = -1f;
                 return;
             }
-            if (IsFallen || Guarding || ReturnIn >= 0f || HoldWhereLeft) return;
+            if (IsFallen || HoldWhereLeft) return;
+            if (StrollsWhenLetGo)
+            {
+                // the sandbox (the user, 2026-11-01): he stays where he was left -- where he was sent,
+                // once there -- and strolls round it; no walk back to the Town Hall
+                ReturnIn = -1f;
+                if (Guarding)
+                {
+                    Guarding = false;
+                    Changed?.Invoke();
+                }
+                _strollCentre = _unit.Group.HoldPosition;
+                _strolling = true;
+                _strollIn = BalanceConfig.Instance.HeroPatrolPauseSeconds;
+                return;
+            }
+            if (Guarding || ReturnIn >= 0f) return;
             ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
+        }
+
+        /// <summary>The sandbox's main map: a hero let go stays and strolls (Invasion and the dungeon keep their own rules).</summary>
+        private static bool StrollsWhenLetGo => !HoldWhereLeft && !Invasion.InvasionRules.Active;
+
+        private bool _strolling;
+        private Vector3 _strollCentre;
+        private float _strollIn;
+
+        /// <summary>Strolling round where he was left (the sandbox) -- for the tests.</summary>
+        public bool Strolling => _strolling;
+
+        /// <summary>A step of his stroll: a point within hero_patrol_radius_cells of where he was left, once he stands and has nobody to fight.</summary>
+        private void TickStroll()
+        {
+            if (!_strolling || _unit.Group == null) return;
+            var army = ArmyManager.Instance;
+            if (army != null && army.SelectedGroup == _unit.Group)
+            {
+                _strolling = false;
+                return;
+            }
+            if (_unit.IsFighting || _unit.Group.AttackTarget != null) return;
+            // still on his way to where he was sent
+            if (Flat(transform.position - _unit.Group.HoldPosition).sqrMagnitude > 0.36f) return;
+            _strollIn -= Time.deltaTime;
+            if (_strollIn > 0f) return;
+            var balance = BalanceConfig.Instance;
+            _strollIn = balance.HeroPatrolPauseSeconds * UnityEngine.Random.Range(0.7f, 1.3f);
+            var offset = UnityEngine.Random.insideUnitCircle * balance.HeroPatrolRadiusCells;
+            var goal = _strollCentre + new Vector3(offset.x, 0f, offset.y);
+            if (NavMesh.SamplePosition(goal, out var hit, 1f, NavMesh.AllAreas)) _unit.Group.OrderMoveTo(hit.position);
         }
 
         /// <summary>The wait after an order: it runs only while he stands with nobody to fight.</summary>
@@ -278,6 +326,15 @@ namespace CityBuilder.Combat
             IsFallen = true;
             ReturnIn = -1f;
             _onMoveOrder = false;
+            _strolling = false;
+            // every death costs a level (the user, 2026-11-01); a skill of the level lost locks again (HeroSkills.IsOpen reads Level)
+            // (the sandbox and its dungeons; a run keeps its own rule -- ask before changing Invasion)
+            if (!Invasion.InvasionRules.Active)
+            {
+                if (Level > 1) Level--;
+                Experience = 0;
+                ApplyLevel();
+            }
             RespawnRemaining = RespawnSecondsAt(Level);
             // a fallen hero takes no orders: let go of him if he was in hand
             var army = ArmyManager.Instance;
@@ -326,12 +383,15 @@ namespace CityBuilder.Combat
 
             if (IsFallen)
             {
-                RespawnRemaining -= Time.deltaTime;
-                if (RespawnRemaining <= 0f) Rise();
+                RespawnRemaining = Mathf.Max(0f, RespawnRemaining - Time.deltaTime);
+                // below, a fallen hero is out of the dungeon: he rises at the Town Hall, back in the
+                // town (the user, 2026-11-01: rising at the way out invited spamming deaths)
+                if (RespawnRemaining <= 0f && !HoldWhereLeft) Rise();
                 return;
             }
             RevealAround();
             TickReturn();
+            TickStroll();
             TickFlee();
             if (!Guarding || _unit.Group == null || HoldWhereLeft) return;
 

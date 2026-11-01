@@ -17,6 +17,12 @@ namespace CityBuilder.UI
         [SerializeField] private Text title;
         [SerializeField] private Text body;
         [SerializeField] private Button enterButton;
+        // the player's heroes, each «Доступен» by the mouth or «Далеко» (the user, 2026-11-01)
+        [SerializeField] private GameObject heroRow;
+        [SerializeField] private Image[] heroFaces = new Image[3];
+        [SerializeField] private Text[] heroWords = new Text[3];
+
+        private static readonly Combat.SoldierType[] HeroOrder = { Combat.SoldierType.King, Combat.SoldierType.Queen, Combat.SoldierType.Captain };
 
         public static DungeonEntranceCard Instance { get; private set; }
 
@@ -55,10 +61,11 @@ namespace CityBuilder.UI
             var id = Shown.DungeonId;
             var level = Shown.Level;
             var exit = Shown.IsExit;
+            var entrance = Shown;
             Close();
             if (BuildingFocus.Instance != null) BuildingFocus.Instance.Clear();
             if (exit) DungeonTravel.Leave();
-            else DungeonTravel.Enter(id, level);
+            else DungeonTravel.Enter(id, level, entrance);
         }
 
         private void Update()
@@ -79,12 +86,34 @@ namespace CityBuilder.UI
             if (body != null)
                 body.text = string.Format(Localization.Get("#dungeon_entrance_level"), Shown.Level) + "\n\n"
                     + Localization.Get(key + (near ? "_ready" : "_far"));
+            RefreshHeroes();
             if (enterButton != null)
             {
                 enterButton.interactable = Shown.CanGo;
                 if (_label == null) _label = enterButton.GetComponentInChildren<Text>();
                 var word = Localization.Get(key + "_enter");
                 if (_label != null && _label.text != word) _label.text = word;
+            }
+        }
+
+        /// <summary>A face per hero the player has: who goes down (by the mouth), who is too far, who is down.</summary>
+        private void RefreshHeroes()
+        {
+            if (heroRow == null) return;
+            var roster = Combat.HeroRoster.Instance;
+            var show = !Shown.IsExit && roster != null && roster.Heroes.Count > 0;
+            if (heroRow.activeSelf != show) heroRow.SetActive(show);
+            if (!show) return;
+            for (var i = 0; i < HeroOrder.Length && i < heroFaces.Length; i++)
+            {
+                var hero = roster.HeroOf(HeroOrder[i]);
+                if (heroFaces[i] == null) continue;
+                heroFaces[i].gameObject.SetActive(hero != null);
+                if (hero == null) continue;
+                var near = Shown.IsNear(hero);
+                heroFaces[i].color = near ? Color.white : new Color(0.55f, 0.55f, 0.55f, 1f);
+                if (i < heroWords.Length && heroWords[i] != null)
+                    heroWords[i].text = Localization.Get(hero.IsFallen ? "#dungeon_hero_fallen" : near ? "#dungeon_hero_ready" : "#dungeon_hero_far");
             }
         }
     }

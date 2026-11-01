@@ -88,6 +88,12 @@ namespace CityBuilder.UI
 
             // a dungeon's mouth: the group walks up to it; a hero's arrival opens its card (the user, 2026-11-01)
             var entrance = Dungeon.DungeonEntrance.At(screenPosition, targetCamera);
+            // the hire camp and the potion shop are no order (the user, 2026-11-01): their card opens, the hero stays
+            if (entrance != null && entrance.IsCamp)
+            {
+                entrance.OpenCard();
+                return true;
+            }
             if (entrance != null)
             {
                 var walking = army.SelectedGroup;

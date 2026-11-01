@@ -29,7 +29,7 @@ namespace CityBuilder.Dungeon
         // how far from the way out (cells, towards the camp) a fallen hero rises
         private const float RiseFromExitCells = 2f;
         // the box a tap on the way out's rock hits (cells): its foot round the exit spot
-        private static readonly Vector3 ExitTapBox = new Vector3(5f, 4f, 5f);
+        private static readonly Vector3 ExitTapBox = new Vector3(3f, 2.5f, 2.5f);   // just the cave's mouth (the user, 2026-11-01: was too wide)
         // the box a tap on a camp building hits when it has no model to measure (cells)
         private static readonly Vector3 CampTapBox = new Vector3(3f, 3f, 3f);
 
@@ -159,6 +159,8 @@ namespace CityBuilder.Dungeon
                 rig.JumpTo(StartSpot);
             }
             Exit = MakeExit();
+            // the stone spider queen in the lake, a crystal turning over her
+            DungeonStatue.RaiseAll(map, transform);
             HireCamp = MakeCamp(map, "hirecamp", DungeonEntrance.Place.HireCamp);
             Shop = MakeCamp(map, "potionshop", DungeonEntrance.Place.Shop);
             SpawnHeroes();
@@ -179,6 +181,25 @@ namespace CityBuilder.Dungeon
             // the potions not drunk last time, back under the portraits
             gameObject.AddComponent<DungeonPotions>().Begin(town?.dungeonPotions);
             Arrived = true;
+        }
+
+        private float _wipeCheck;
+
+        /// <summary>False in the tests, which strike their heroes down on purpose and must stay below.</summary>
+        public static bool LeaveWhenAllFall = true;
+
+        /// <summary>Every hero down below: nobody is left to lead, the dungeon is left (they rise at the Town Hall).</summary>
+        private void Update()
+        {
+            if (!_active || !Arrived || !LeaveWhenAllFall || UI.LoadingScreen.Busy) return;
+            _wipeCheck -= Time.deltaTime;
+            if (_wipeCheck > 0f) return;
+            _wipeCheck = 1f;
+            var roster = HeroRoster.Instance;
+            if (roster == null || roster.Heroes.Count == 0) return;
+            foreach (var hero in roster.Heroes)
+                if (hero != null && !hero.IsFallen) return;
+            DungeonTravel.Leave();
         }
 
         /// <summary>Half the dungeon's side, in cells: it is square round the origin.</summary>

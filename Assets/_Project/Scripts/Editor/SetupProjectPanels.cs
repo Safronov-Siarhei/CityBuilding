@@ -309,12 +309,29 @@ namespace CityBuilder.EditorTools
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
             card.type = Image.Type.Sliced;
-            SetRect(card.rectTransform, Vector2.zero, new Vector2(620f, 420f));
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(620f, 580f));
             var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
-            var title = CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 150f), new Vector2(560f, 56f), ink);
-            var body = CreateText(card.transform, "Body", string.Empty, 28, new Vector2(0f, 30f), new Vector2(540f, 160f), ink);
-            var enterButton = CreateButton(card.transform, panelSprite, "EnterButton", "#dungeon_entrance_enter", new Vector2(-150f, -140f), new Vector2(260f, 70f));
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(150f, -140f), new Vector2(260f, 70f));
+            var title = CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 230f), new Vector2(560f, 56f), ink);
+            var body = CreateText(card.transform, "Body", string.Empty, 28, new Vector2(0f, 120f), new Vector2(540f, 150f), ink);
+            // the heroes: a face and «Доступен» / «Далеко» under it
+            var heroRow = new GameObject("Heroes", typeof(RectTransform));
+            heroRow.transform.SetParent(card.transform, false);
+            SetRect((RectTransform)heroRow.transform, new Vector2(0f, -45f), new Vector2(560f, 150f));
+            var heroFaces = new Image[3];
+            var heroWords = new Text[3];
+            var heroPictures = new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" };
+            for (var i = 0; i < 3; i++)
+            {
+                var x = (i - 1) * 175f;
+                heroFaces[i] = CreateImage(heroRow.transform, "Hero" + i, Color.white);
+                heroFaces[i].sprite = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/" + heroPictures[i] + ".png");
+                heroFaces[i].preserveAspect = true;
+                heroFaces[i].raycastTarget = false;
+                SetRect(heroFaces[i].rectTransform, new Vector2(x, 20f), new Vector2(100f, 100f));
+                heroWords[i] = CreateText(heroFaces[i].transform, "Word", string.Empty, 22, new Vector2(0f, -66f), new Vector2(170f, 32f), ink);
+            }
+            var enterButton = CreateButton(card.transform, panelSprite, "EnterButton", "#dungeon_entrance_enter", new Vector2(-150f, -220f), new Vector2(260f, 70f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(150f, -220f), new Vector2(260f, 70f));
 
             var controller = canvasParent.gameObject.AddComponent<DungeonEntranceCard>();
             var so = new SerializedObject(controller);
@@ -322,6 +339,12 @@ namespace CityBuilder.EditorTools
             so.FindProperty("title").objectReferenceValue = title;
             so.FindProperty("body").objectReferenceValue = body;
             so.FindProperty("enterButton").objectReferenceValue = enterButton;
+            so.FindProperty("heroRow").objectReferenceValue = heroRow;
+            for (var i = 0; i < 3; i++)
+            {
+                so.FindProperty("heroFaces").GetArrayElementAtIndex(i).objectReferenceValue = heroFaces[i];
+                so.FindProperty("heroWords").GetArrayElementAtIndex(i).objectReferenceValue = heroWords[i];
+            }
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(enterButton.onClick, controller.Enter);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
