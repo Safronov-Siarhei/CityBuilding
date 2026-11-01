@@ -71,7 +71,17 @@ dungeon opens as a SEPARATE SCENE.
 - **The user's answers of 2026-11-01 on the camp:**
   - **Gnome hirelings:** the concept is approved.
     - They can be hired WITHOUT END (a dead one is hired again), but at most 5 at a time.
-    - NEXT: the three gnome models (miner, crossbowman, ore guardian). Render them for approval first.
+    - MODELLED 2026-11-01, AWAITING APPROVAL. `Tools/blender/gnomes.py`, in the models file,
+      collection «Подземелье-гномы». Facing -y, jointed like the monsters.
+      - GnomeMiner, 0.4 cells tall, 790 tris: a brass helmet with a lamp, a white beard, a blue
+        jerkin, an apron, a pickaxe.
+      - GnomeCrossbow, 0.42 cells tall, 804 tris: a green pointed hood, a ginger beard, a brown
+        coat, a crossbow held ready, a quiver.
+      - GnomeGuardian, ~0.6 cells tall, 555 tris: `monsters.golem` at s=0.78 in light stone with
+        brass veins and a blue core.
+      - Render: `render_figures.py`, next to the King and a skeleton.
+      - Not exported, not in the game yet.
+      - `monsters.py` now builds only when run, so it can be imported.
   - **Potions** are NOT drunk on purchase.
     - A bought potion becomes an icon under the heroes' portrait in the top-right corner; tapping
       the icon drinks it.

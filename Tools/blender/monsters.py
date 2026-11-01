@@ -482,4 +482,6 @@ def main():
     bpy.ops.wm.save_mainfile()
 
 
-main()
+# importable (gnomes.py borrows the golem): build only when run
+if __name__ == "__main__":
+    main()
