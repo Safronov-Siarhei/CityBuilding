@@ -309,7 +309,7 @@ dungeon opens as a SEPARATE SCENE.
   from Points.csv z): it is the crystal's MIDDLE over the room's pedestal (0.7 up; the pedestal is
   0.22 tall) -- floor + 0.45 would have sunk the crystals into the pedestal. No NavMesh snap: it
   would pull them off the pedestal.
-- **Crystal look v2** (the user, 2026-11-01: «яркие, светящиеся, сочные, слегка покачиваться ...
+- **Crystal look v2 -- APPROVED «мне нравится» 2026-11-01** (the user, 2026-11-01: «яркие, светящиеся, сочные, слегка покачиваться ...
   особенная вещь, платный контент»; v1 «a blue gem» rejected): model = a cut 8-sided gem 0.7 tall +
   3 shards circling it (106 tris). `Shaders/Crystal` (self-lit violet->cyan gradient, facets by
   the sun, white rim, a light band running up, facet flashes; no bloom), `Shaders/CrystalHalo` (a
