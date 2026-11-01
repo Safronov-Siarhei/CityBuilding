@@ -14,6 +14,8 @@ Shader "CityBuilder/DungeonDark"
         _DarkRect ("Mask rect: origin xz, 1/size xz", Vector) = (0, 0, 0.01, 0.01)
         _Soft ("Soft edge (mask texels)", Float) = 1.6
         _Wobble ("Edge wobble", Float) = 0.35
+        // the camp lies ~7 cells from the south edge: the band (with its wobble) must stop short of it
+        _MapEdge ("Darkness eating into the map's edge (cells)", Float) = 2
     }
 
     SubShader
@@ -44,6 +46,7 @@ Shader "CityBuilder/DungeonDark"
                 float4 _DarkRect;
                 float _Soft;
                 float _Wobble;
+                float _MapEdge;
             CBUFFER_END
 
             struct Attributes
@@ -113,6 +116,11 @@ Shader "CityBuilder/DungeonDark"
                     float lumps = Noise(world.xz * 0.45 + drift) * 0.65 + Noise(world.xz * 1.3 - drift) * 0.35;
                     float cover = 1.0 - blurred + (lumps - 0.5) * _Wobble;
                     open = 1.0 - smoothstep(0.3, 0.62, cover);
+                    // the map's own edge: the darkness eats a wobbling band into it, so the end of
+                    // the world is never a straight line (the user, 2026-11-01)
+                    float2 cells = min(uv, 1.0 - uv) * _DarkMask_TexelSize.zw;
+                    float inward = min(cells.x, cells.y) - _MapEdge + (lumps - 0.5) * _MapEdge * 1.2;
+                    open *= smoothstep(0.0, _MapEdge * 0.5, inward);
                 }
                 return half4(_DarkColor.rgb, saturate(1.0 - open) * _Strength);
             }

@@ -376,6 +376,9 @@ dungeon opens as a SEPARATE SCENE.
     - The edge is like the parchment's, after the user saw «темнота квадратами»: a 9-tap blur
       1.6 texels wide, then a two-octave value-noise wobble (`_Wobble` 0.35, drifting slowly)
       cut by a smoothstep. No cell steps show.
+    - The MAP's edge is never a straight line (the user, 2026-11-01): the darkness eats a
+      wobbling band `_MapEdge` (2) cells into it. It must stop short of the camp, ~7 cells
+      from the south edge; at 3 cells it ate the hire camp.
   - Needs the depth texture: `GetUniversalAdditionalCameraData(cam).requiresDepthTexture`, in a
     dungeon only. A test photo camera needs the same (`PlaytestCapture.Configure`).
   - The runtime asmdef now references URP (Universal + Core Runtime).
