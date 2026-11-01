@@ -27,6 +27,9 @@ namespace CityBuilder.Tests.PlayMode
         private const int Width = 1600;
         private const int Height = 900;
 
+        /// <summary>Set by a test for the length of its shots: what the photographing camera needs that the default lacks (a dungeon's darkness reads the depth texture).</summary>
+        public static System.Action<Camera> Configure;
+
         public static string OutputFolder => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "playtest_shots"));
 
         /// <summary>Looks at `focus` from `distance` metres away, down `pitch` degrees, turned `yaw` degrees -- the same over-the-shoulder angle the game's own camera uses when pointed at something. `fieldOfView` defaults to a tighter lens than the game's own 60; pass 60 when the shot has to show exactly what the player would see from that distance.</summary>
@@ -87,6 +90,7 @@ namespace CityBuilder.Tests.PlayMode
             camera.fieldOfView = fieldOfView;
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 500f;
+            Configure?.Invoke(camera);
 
             var texture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             camera.targetTexture = texture;

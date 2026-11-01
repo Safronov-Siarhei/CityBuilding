@@ -658,6 +658,11 @@ namespace CityBuilder.Tests.PlayMode
                 }
                 Assert.IsTrue(byLand, $"A shoal far from the shore at {shoal.At}.");
             }
+            // never two shoals side by side (the user, 2026-11-01)
+            var spacing = CityBuilder.Core.BalanceConfig.Instance.FishShoalMinSpacing;
+            foreach (var one in ships.Shoals)
+            foreach (var other in ships.Shoals)
+                if (one != other) Assert.GreaterOrEqual(Vector3.Distance(one.At, other.At), spacing - 0.01f, $"Two shoals side by side at {one.At}.");
             // a tap on a shoal finds it and rings it in gold
             Assert.AreSame(near, ships.ShoalAt(near.At + new Vector3(1f, 0f, 0.5f)), "A tap by the shoal does not find it.");
             Assert.IsNull(ships.ShoalAt(near.At + new Vector3(30f, 0f, 0f)), "A tap far off finds a shoal.");

@@ -87,10 +87,13 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsNotNull(monster.transform.Find(kind.ToString()), $"The {kind} is not drawn by its model.");
                 Assert.IsNotNull(monster.GetComponent<FigureAnimator>(), $"The {kind} has no animation.");
             }
+            // a sleeping bat folds its wings (the user, 2026-11-01: they sleep till a hero comes): a blow wakes it
+            First(OrcKind.Bat).TakeDamage(1);
             var bat = First(OrcKind.Bat).GetComponent<FigureAnimator>();
             var seen = new HashSet<int>();
-            Camera.main.transform.position = First(OrcKind.Bat).transform.position + new Vector3(0f, 6f, -4f);
-            Camera.main.transform.LookAt(First(OrcKind.Bat).transform.position);
+            // the rig, not the camera: the rig puts its camera back every frame, and with graphics a
+            // figure out of every camera's sight is not animated
+            Object.FindAnyObjectByType<RTSCameraController>().JumpTo(First(OrcKind.Bat).transform.position);
             for (var i = 0; i < 20; i++)
             {
                 yield return null;
@@ -108,6 +111,29 @@ namespace CityBuilder.Tests.PlayMode
             queen.TakeDamage(1);
             monsters.RefreshSleep();
             Assert.IsFalse(queen.Asleep, "A boss struck from afar sleeps on.");
+
+            // a lair in sight with no hero near sleeps, «Zzz» over it (the user, 2026-11-01); a hero
+            // walking up wakes it
+            DungeonMonsters.Lair sleepers = null;
+            var king = HeroRoster.Instance.HeroOf(SoldierType.King);
+            foreach (var lair in monsters.Lairs)
+                if (lair.Route == null && lair.BossId == null && lair.Monsters.Count > 0
+                    && Vector3.Distance(Flat(lair.Post), Flat(king.transform.position)) > 20f) { sleepers = lair; break; }
+            Assert.IsNotNull(sleepers, "No lair away from the King.");
+            Object.FindAnyObjectByType<RTSCameraController>().JumpTo(sleepers.Post);
+            for (var i = 0; i < 10; i++) yield return null;
+            monsters.RefreshSleep();
+            var sleeper = sleepers.Monsters.Find(m => m != null && m.CurrentHealth > 0);
+            Assert.IsTrue(sleeper.Asleep, "A monster in sight with no hero near is awake.");
+            Assert.IsTrue(monsters.ShowsSleep(sleeper), "A sleeping monster in sight shows no «Zzz».");
+            var agent = king.Unit.GetComponent<NavMeshAgent>();
+            var by = sleepers.Post + Vector3.right * 2f;
+            if (agent != null && agent.enabled) agent.Warp(by);
+            else king.Unit.transform.position = by;
+            yield return null;
+            monsters.RefreshSleep();
+            Assert.IsFalse(sleeper.Asleep, "A hero walking up does not wake the monster.");
+            Assert.IsFalse(monsters.ShowsSleep(sleeper), "An awake monster still shows «Zzz».");
         }
 
         /// <summary>
@@ -318,6 +344,22 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(exit.CanGo, "The way out's card does not let the party go.");
             card.Close();
 
+            // the hire camp and the shop on their own spots by the camp, not out in the lake hall (the user, 2026-11-01)
+            foreach (var (part, kind) in new[] { ("HireCamp", "hirecamp"), ("PotionShop", "potionshop") })
+            {
+                var spots = MeshMapApplier.Instance.CurrentMap.SpotsOf(kind);
+                Assert.Greater(spots.Count, 0, $"No {kind} spot.");
+                GameObject model = null;
+                foreach (var t in MeshMapApplier.Instance.GetComponentsInChildren<Transform>(true))
+                    if (t.parent == MeshMapApplier.Instance.transform && t.name.Contains(part)) model = t.gameObject;
+                Assert.IsNotNull(model, $"No {part} in the dungeon.");
+                var renderers = model.GetComponentsInChildren<Renderer>(true);
+                var b = renderers[0].bounds;
+                foreach (var r in renderers) b.Encapsulate(r.bounds);
+                Assert.Less(Vector2.Distance(new Vector2(b.center.x, b.center.z), spots[0].position), 1.5f, $"The {part} does not stand on its spot.");
+                Assert.Less(Vector3.Distance(Flat(b.center), Flat(mode.StartSpot)), 12f, $"The {part} is not by the camp.");
+            }
+
             // he rises at the way out
             Assert.Less(Vector3.Distance(Flat(king.Home), Flat(mode.ExitSpot)), 3.5f, "A fallen hero would not rise at the way out.");
 
@@ -329,18 +371,32 @@ namespace CityBuilder.Tests.PlayMode
             // the HUD: the citizens' button gone, the inventory in its place, no day
             Assert.IsNull(GameObject.Find("WorkforceButton"), "The citizens' button shows below.");
             Assert.IsNotNull(GameObject.Find("InventoryButton"), "No inventory button below.");
-            var status = Object.FindAnyObjectByType<CityBuilder.UI.SettlementStatusController>();
-            if (status != null)
-                foreach (var text in status.GetComponentsInChildren<UnityEngine.UI.Text>())
-                    Assert.AreEqual(string.Empty, text.text, "The day shows below.");
+            Assert.IsNull(GameObject.Find("SettlementStatus"), "The day's plaque shows below.");
 
             // the fog: the King's tunnel open, a far hall not; the minimap drawn from it
             var fogView = DungeonFog.Instance;
             Assert.IsNotNull(fogView, "No dungeon fog.");
             var grid = CityBuilder.Grid.GridManager.Instance;
-            var fog = FogOfWarManager.Instance;
-            Assert.IsTrue(fog.IsCellRevealed(grid.WorldToCell(king.transform.position)), "The King's own cell is fogged.");
-            Assert.IsFalse(fog.IsCellRevealed(grid.WorldToCell(Halls[1].at)), "The spiders' far hall is open from the camp.");
+            // for the user to see (only with -Graphics): the camp in the dark, as the game's camera sees it
+            PlaytestCapture.Configure = c =>
+            {
+                var data = c.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>()
+                    ?? c.gameObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+                data.requiresDepthTexture = true;
+                c.clearFlags = CameraClearFlags.SolidColor;
+                c.backgroundColor = Color.black;
+            };
+            var view = CityBuilder.Core.BalanceConfig.Instance;
+            yield return PlaytestCapture.Shoot("dungeon_dark_camp", king.transform.position, view.DungeonCameraDistance, view.DungeonCameraPitch, 0f, 60f);
+            yield return PlaytestCapture.Shoot("dungeon_dark_wide", king.transform.position, 40f, 55f, 0f, 60f);
+            PlaytestCapture.Configure = null;
+
+            // the darkness: the King's own cell lit, the far hall dark, and it is drawn over the screen
+            Assert.Greater(fogView.Lightness(grid.WorldToCell(king.transform.position)), 0.9f, "The King stands in the dark.");
+            Assert.AreEqual(0f, fogView.Lightness(grid.WorldToCell(Halls[1].at)), "The spiders' far hall is lit from the camp.");
+            Assert.IsNotNull(GameObject.Find("DungeonDarkness"), "No darkness drawn over the dungeon.");
+            Assert.IsTrue(UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(Camera.main).requiresDepthTexture,
+                "The darkness has no depth to read.");
             Assert.IsNotNull(fogView.Picture, "The minimap has no picture of the dungeon.");
             // nothing open through the rock: every open floor cell is within the flood's steps of the King
             var reach = CityBuilder.Core.BalanceConfig.Instance.DungeonRevealCells;

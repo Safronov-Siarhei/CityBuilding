@@ -121,6 +121,9 @@ namespace CityBuilder.EditorTools
             var portalHalo = CrystalMaterial("PortalHalo", "CityBuilder/CrystalHalo", new Color(0.55f, 0.18f, 0.95f, 1f));
             if (portalHalo != null) portalHalo.SetColor("_SparkColor", new Color(0.6f, 1f, 0.4f, 1f));
             so.FindProperty("portalHaloMaterial").objectReferenceValue = portalHalo;
+            // a dungeon's darkness (the user, 2026-11-01)
+            so.FindProperty("dungeonDarkMaterial").objectReferenceValue = CrystalMaterial("DungeonDark", "CityBuilder/DungeonDark", null);
+            so.FindProperty("sleepMaterial").objectReferenceValue = CrystalMaterial("SleepZ", "CityBuilder/SleepZ", null);
 
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();

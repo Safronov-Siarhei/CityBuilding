@@ -10,26 +10,33 @@ using UnityEngine.AI;
 namespace CityBuilder.Dungeon
 {
     /// <summary>
-    /// What the player sees of a dungeon (the user, 2026-11-01, screenshot 9): only the tunnels
-    /// the heroes have reached, never one behind the rock beside them, and a tunnel once walked
-    /// stays open with whatever is in it now; the rest lies under the map's fog.
+    /// What the player sees of a dungeon (the user, 2026-11-01): the whole dungeon lies in
+    /// DARKNESS, and it lifts only along the passages a hero walks -- never behind the rock beside
+    /// him; a passage once walked stays lit with whatever is in it now.
     ///
-    /// - The fog is the town's (FogOfWarManager, switched on here). The heroes' own round reveal
-    ///   is off below (Hero.RevealAround): a circle sees through rock.
-    /// - Instead every hero floods out over the FLOOR (the NavMesh, sampled once per cell) up to
-    ///   dungeon_reveal_cells steps, and each floor cell reached is opened for good with a ring
-    ///   round it, so the tunnel's walls show. A tunnel behind a wall is many steps away round it.
+    /// - Not the town's fog: its blanket lies 3.5 m over the highest rock and its holes slid off
+    ///   the floor (one playtest saw no fog, another nothing but parchment). It is switched off
+    ///   below. The heroes' own round reveal is off too (Hero.RevealAround): a circle sees through rock.
+    /// - Every hero floods out over the FLOOR (the NavMesh, sampled once per cell) up to
+    ///   dungeon_reveal_cells steps; each floor cell reached is opened for good with the walls
+    ///   round it. A passage behind a wall is many steps away round it.
+    /// - The darkness is drawn over the whole screen (Shaders/DungeonDark): each pixel's depth gives
+    ///   its world cell, the explored mask says how dark it is -- floor, rock and monsters alike, and
+    ///   the void past the map's edge black. It needs the depth texture, turned on for the main
+    ///   camera here, in a dungeon only. Cells lift gently (eased over LiftSeconds).
     /// - The minimap is a picture of the same thing (the user: «миникарта работает
     ///   неправильно» -- the town's minimap camera saw rock tops and the streamer's holes): one
-    ///   texel a cell, the explored floor light, its walls dark, the unknown parchment, the
+    ///   texel a cell, the explored floor light, its walls dark, the unknown black, the
     ///   heroes gold and the monsters in the open red. Redrawn a few times a second.
     /// </summary>
     public class DungeonFog : MonoBehaviour
     {
         private const float RevealEverySeconds = 0.25f;
         private const float DrawEverySeconds = 0.4f;
+        private const float LiftSeconds = 0.6f;
 
-        private static readonly Color32 Unknown = new Color32(118, 92, 60, 255);
+        // the unknown is the dungeon's darkness on the minimap too
+        private static readonly Color32 Unknown = new Color32(16, 14, 20, 255);
         private static readonly Color32 Floor = new Color32(222, 204, 160, 255);
         private static readonly Color32 Wall = new Color32(70, 60, 52, 255);
         private static readonly Color32 HeroDot = new Color32(255, 214, 64, 255);
@@ -46,6 +53,10 @@ namespace CityBuilder.Dungeon
         private int _reach = 7;
         private float _revealIn, _drawIn;
         private Texture2D _picture;
+        private Texture2D _mask;
+        private byte[] _shown;
+        private bool _easing;
+        private GameObject _darkness;
         private Color32[] _pixels;
         private readonly Queue<int> _queue = new Queue<int>();
         private int[] _steps;
@@ -60,6 +71,7 @@ namespace CityBuilder.Dungeon
         {
             if (Instance == this) Instance = null;
             if (_picture != null) Destroy(_picture);
+            if (_mask != null) Destroy(_mask);
         }
 
         /// <summary>Samples the floor, switches the fog on and puts the picture on the minimap. `half`: half the dungeon's side, world units, square round the origin.</summary>
@@ -85,15 +97,68 @@ namespace CityBuilder.Dungeon
                     && hit.position.y < ground + 0.6f;
             }
 
+            // the town's fog has no place below: the darkness is the dungeon's own
             var fog = FogOfWarManager.Instance;
-            if (fog != null) fog.Activate();
+            if (fog != null) fog.DisabledCheat = true;
+            _shown = new byte[_size * _size];
+            _mask = new Texture2D(_size, _size, TextureFormat.R8, false, true) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp, name = "DungeonDarkMask" };
+            _mask.SetPixelData(_shown, 0);
+            _mask.Apply(false);
+            var corner = grid.GetFootprintCenterWorld(_origin, Vector2Int.one) - new Vector3(_cell * 0.5f, 0f, _cell * 0.5f);
+            Darken(new Vector4(corner.x, corner.z, 1f / (_size * _cell), 1f / (_size * _cell)));
 
             _picture = new Texture2D(_size, _size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "DungeonMinimap" };
             _pixels = new Color32[_size * _size];
             var minimap = FindAnyObjectByType<MinimapCameraUpdater>();
             if (minimap != null) minimap.ShowPicture(_picture, Vector3.zero, half);
             Reveal();
+            // what is lit on arrival is lit at once, not faded in
+            for (var i = 0; i < _shown.Length; i++) if (_open[i]) _shown[i] = 255;
+            _easing = false;
+            _mask.SetPixelData(_shown, 0);
+            _mask.Apply(false);
             Draw();
+        }
+
+        /// <summary>The darkness over the screen: a quad on the main camera drawn last, and the camera's depth texture on.</summary>
+        private void Darken(Vector4 rect)
+        {
+            var cam = Camera.main;
+            var raids = OrcRaidManager.Instance;
+            var source = raids != null ? raids.DungeonDarkMaterial : null;
+            if (cam == null || source == null) return;
+            // the camera may not carry URP's data yet: this adds it when missing
+            UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).requiresDepthTexture = true;
+            // the void past the map's edge black too, whatever the darkness lets through
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            var material = new Material(source) { name = "DungeonDark (runtime)" };
+            material.SetTexture("_DarkMask", _mask);
+            material.SetVector("_DarkRect", rect);
+            material.SetFloat("_Strength", 1f);
+            _darkness = new GameObject("DungeonDarkness", typeof(MeshFilter), typeof(MeshRenderer));
+            _darkness.transform.SetParent(cam.transform, false);
+            _darkness.transform.localPosition = Vector3.forward * (cam.nearClipPlane + 0.5f);
+            var mesh = new Mesh
+            {
+                name = "DungeonDarkQuad",
+                vertices = new[] { new Vector3(-1f, -1f, 0f), new Vector3(1f, -1f, 0f), new Vector3(1f, 1f, 0f), new Vector3(-1f, 1f, 0f) },
+                triangles = new[] { 0, 1, 2, 0, 2, 3 },
+            };
+            // the shader puts it over the whole screen whatever the camera does: never cull it
+            mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
+            _darkness.GetComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = _darkness.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        /// <summary>How light a cell is drawn now, 0..1 (eased) -- for the tests.</summary>
+        public float Lightness(Vector2Int cell)
+        {
+            var i = Index(cell);
+            return i >= 0 && _shown != null ? _shown[i] / 255f : 0f;
         }
 
         /// <summary>Has a hero's flood reached this cell (or the ring round it)? -- for the tests.</summary>
@@ -127,6 +192,7 @@ namespace CityBuilder.Dungeon
                 _revealIn = RevealEverySeconds;
                 Reveal();
             }
+            if (_easing) Ease(Time.deltaTime);
             _drawIn -= Time.deltaTime;
             if (_drawIn <= 0f)
             {
@@ -168,16 +234,10 @@ namespace CityBuilder.Dungeon
             _steps[start] = 1;
             _touched.Add(start);
             _queue.Enqueue(start);
-            var fog = FogOfWarManager.Instance;
             while (_queue.Count > 0)
             {
                 var i = _queue.Dequeue();
-                if (!_open[i])
-                {
-                    Open(i);
-                    // the ring round it, so the walls of the tunnel show
-                    fog?.RevealPermanent(_origin + new Vector2Int(i % _size, i / _size), 1);
-                }
+                if (!_open[i]) Open(i);
                 if (_steps[i] > _reach) continue;
                 for (var k = 0; k < 4; k++)
                 {
@@ -194,12 +254,30 @@ namespace CityBuilder.Dungeon
         private void Open(int i)
         {
             _open[i] = true;
+            _easing = true;
             // the walls beside an opened floor cell are known too (the minimap draws them)
             for (var k = 0; k < 8; k++)
             {
                 var n = Neighbour(i, k);
                 if (n >= 0 && !_floor[n]) _open[n] = true;
             }
+        }
+
+        /// <summary>Opened cells lift out of the dark over LiftSeconds; the mask goes up only while some cell is still lifting.</summary>
+        private void Ease(float dt)
+        {
+            var step = Mathf.Max(1, Mathf.RoundToInt(255f * dt / LiftSeconds));
+            var any = false;
+            for (var i = 0; i < _shown.Length; i++)
+            {
+                if (!_open[i] || _shown[i] == 255) continue;
+                _shown[i] = (byte)Mathf.Min(255, _shown[i] + step);
+                any = true;
+            }
+            _easing = any;
+            if (_mask == null) return;
+            _mask.SetPixelData(_shown, 0);
+            _mask.Apply(false);
         }
 
         private int Neighbour(int i, int k)

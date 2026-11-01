@@ -78,8 +78,23 @@ namespace CityBuilder.Ships
                 var map = Maps.MeshMapApplier.Instance;
                 var grid = Grid.GridManager.Instance;
                 if (map != null && grid != null && !map.IsWaterPlacementZone(grid.WorldToCell(sea))) continue;
+                // never side by side with another shoal (the user, 2026-11-01: two lay in one ring)
+                if (TooNearAShoal(sea)) continue;
                 point = sea;
                 return true;
+            }
+            return false;
+        }
+
+        /// <summary>Another shoal (live or waiting to come back) within fish_shoal_min_spacing metres.</summary>
+        private bool TooNearAShoal(Vector3 at)
+        {
+            var spacing = BalanceConfig.Instance != null ? BalanceConfig.Instance.FishShoalMinSpacing : 14f;
+            foreach (var shoal in _shoals)
+            {
+                if (shoal == null) continue;
+                var d = new Vector2(at.x - shoal.At.x, at.z - shoal.At.z);
+                if (d.sqrMagnitude < spacing * spacing) return true;
             }
             return false;
         }

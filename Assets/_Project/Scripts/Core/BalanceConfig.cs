@@ -577,6 +577,7 @@ namespace CityBuilder.Core
         [SerializeField] private int fertilePatchesPerIsland = 2;
         [SerializeField] private int fertileMinCoastCells = 8;
         [SerializeField] private float fishShoalShoreMeters = 4f;
+        [SerializeField] private float fishShoalMinSpacing = 14f;
         [SerializeField] private float fertilePatchRadius = 5f;
         [SerializeField] private float fertileFarmBonus = 0.5f;
         [SerializeField] private int fishShoalCount = 12;
@@ -978,6 +979,7 @@ namespace CityBuilder.Core
         public int FertilePatchesPerIsland => fertilePatchesPerIsland;
         public int FertileMinCoastCells => fertileMinCoastCells;
         public float FishShoalShoreMeters => fishShoalShoreMeters;
+        public float FishShoalMinSpacing => fishShoalMinSpacing;
         public float FertilePatchRadius => fertilePatchRadius;
         public float FertileFarmBonus => fertileFarmBonus;
         /// <summary>The archipelago's fish shoals: how many, the fish in each, a Fisher's Hut's extra catch by one (1 = double), its reach, and the wait before a fished-out shoal turns up elsewhere.</summary>
@@ -1524,6 +1526,7 @@ namespace CityBuilder.Core
             fertilePatchesPerIsland = (int)Read(economy, "fertile_patches_per_island", fertilePatchesPerIsland);
             fertileMinCoastCells = (int)Read(economy, "fertile_min_coast_cells", fertileMinCoastCells);
             fishShoalShoreMeters = Read(economy, "fish_shoal_shore_meters", fishShoalShoreMeters);
+            fishShoalMinSpacing = Read(economy, "fish_shoal_min_spacing", fishShoalMinSpacing);
             fertilePatchRadius = Read(economy, "fertile_patch_radius", fertilePatchRadius);
             fertileFarmBonus = Read(economy, "fertile_farm_bonus", fertileFarmBonus);
             fishShoalCount = (int)Read(economy, "fish_shoal_count", fishShoalCount);

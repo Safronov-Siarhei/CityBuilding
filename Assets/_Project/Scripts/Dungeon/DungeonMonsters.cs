@@ -29,10 +29,12 @@ namespace CityBuilder.Dungeon
     ///   dungeon_patrol_pause_sec at each end; they fight whoever comes near the point they are at
     ///   and take up the route again after.
     /// - The monsters come back only with the next visit: each visit is a fresh scene.
-    /// - A monster SLEEPS (OrcUnit.Asleep: no thinking at all) while it is out of the camera's
-    ///   frame (with a quarter-screen border) and dungeon_monster_wake_margin cells from every hero; one in a
-    ///   fight, lying in pieces or hurt in the last seconds stays awake. For the phone's CPU: the
-    ///   labyrinth holds ~60 monsters and only a lair or two is ever in sight.
+    /// - A monster SLEEPS (OrcUnit.Asleep: no thinking at all) until a hero comes within
+    ///   dungeon_monster_wake_margin cells (the user, 2026-11-01: «просыпаются при подходе героя
+    ///   близко»), and a sleeper in sight shows «Zzz» rising from its head (Shaders/SleepZ). One in a
+    ///   fight, lying in pieces or hurt in the last seconds stays awake; a patrol in sight walks its
+    ///   route. With the heroes gone it dozes off again -- for the phone's CPU too: the labyrinth
+    ///   holds ~140 monsters and only a lair or two is ever near a hero.
     /// What was earned below goes home with the heroes (DungeonTravel.Leave).
     /// </summary>
     public class DungeonMonsters : MonoBehaviour
@@ -70,6 +72,11 @@ namespace CityBuilder.Dungeon
         private float _sleepTimer;
         private const float SleepCheckSeconds = 0.3f;
         private const float StayAwakeAfterHurtSeconds = 6f;
+        // the «Zzz» over a sleeper's head: its size (world) and how far above the model's top
+        private const float SleepMarkSize = 0.9f;
+        private const float SleepMarkLift = 0.15f;
+        private readonly Dictionary<OrcUnit, GameObject> _sleepMarks = new Dictionary<OrcUnit, GameObject>();
+        private static Mesh _markQuad;
 
         /// <summary>Monsters thinking now, out of all the living ones.</summary>
         public int AwakeCount { get; private set; }
@@ -106,14 +113,68 @@ namespace CityBuilder.Dungeon
                 foreach (var monster in lair.Monsters)
                 {
                     if (monster == null) continue;
+                    var seen = cam != null && InFrame(cam, monster.transform.position);
                     var on = cam == null || monster.Fighting != null || monster.BusyFor > 0f
                         || Time.time - monster.LastHurtAt < StayAwakeAfterHurtSeconds
-                        || InFrame(cam, monster.transform.position) || HeroNear(monster.transform.position, margin);
+                        || (lair.Route != null && seen) || HeroNear(monster.transform.position, margin);
                     monster.Asleep = !on;
                     if (on) awake++;
+                    ShowSleep(monster, !on && seen && monster.CurrentHealth > 0);
                 }
             }
             AwakeCount = awake;
+        }
+
+        /// <summary>Is the «Zzz» up over this monster? -- for the tests.</summary>
+        public bool ShowsSleep(OrcUnit monster) => monster != null && _sleepMarks.TryGetValue(monster, out var mark) && mark != null && mark.activeSelf;
+
+        /// <summary>Puts the «Zzz» up over a sleeper in sight, or takes it down; made once per monster, the first time it is wanted.</summary>
+        private void ShowSleep(OrcUnit monster, bool show)
+        {
+            _sleepMarks.TryGetValue(monster, out var mark);
+            if (!show)
+            {
+                if (mark != null && mark.activeSelf) mark.SetActive(false);
+                return;
+            }
+            if (mark == null)
+            {
+                var raids = OrcRaidManager.Instance;
+                var material = raids != null ? raids.SleepMaterial : null;
+                if (material == null) return;
+                var top = monster.transform.position.y;
+                foreach (var r in monster.GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
+                mark = new GameObject("Zzz", typeof(MeshFilter), typeof(MeshRenderer));
+                mark.transform.SetParent(monster.transform, false);
+                mark.transform.position = new Vector3(monster.transform.position.x, top + SleepMarkLift + SleepMarkSize * 0.35f, monster.transform.position.z);
+                mark.GetComponent<MeshFilter>().sharedMesh = MarkQuad();
+                var renderer = mark.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                var block = new MaterialPropertyBlock();
+                block.SetFloat("_Size", SleepMarkSize);
+                block.SetFloat("_Phase", _sleepMarks.Count * 0.77f);
+                renderer.SetPropertyBlock(block);
+                _sleepMarks[monster] = mark;
+            }
+            if (!mark.activeSelf) mark.SetActive(true);
+        }
+
+        /// <summary>The «Zzz» quad: the shader turns it to the camera, so its bounds hold it whichever way.</summary>
+        private static Mesh MarkQuad()
+        {
+            if (_markQuad != null) return _markQuad;
+            var h = 0.5f;
+            _markQuad = new Mesh
+            {
+                name = "SleepMarkQuad",
+                vertices = new[] { new Vector3(-h, -h, 0f), new Vector3(h, -h, 0f), new Vector3(h, h, 0f), new Vector3(-h, h, 0f) },
+                uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) },
+                triangles = new[] { 0, 1, 2, 0, 2, 3 },
+            };
+            _markQuad.bounds = new Bounds(Vector3.zero, Vector3.one * SleepMarkSize * 2f);
+            return _markQuad;
         }
 
         private const float FrameBorder = 0.25f;

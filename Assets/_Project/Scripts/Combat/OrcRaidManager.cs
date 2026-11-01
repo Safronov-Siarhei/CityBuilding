@@ -133,6 +133,10 @@ namespace CityBuilder.Combat
         [SerializeField] private Material portalVortexMaterial;
         [SerializeField] private Material portalRunesMaterial;
         [SerializeField] private Material portalHaloMaterial;
+        // a dungeon's darkness (Dungeon/DungeonFog)
+        [SerializeField] private Material dungeonDarkMaterial;
+        // the «Zzz» over a sleeping dungeon monster
+        [SerializeField] private Material sleepMaterial;
 
         /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
         public GameObject SpiderCocoonModel => spiderCocoonModel;
@@ -145,6 +149,8 @@ namespace CityBuilder.Combat
         public Material PortalVortexMaterial => portalVortexMaterial;
         public Material PortalRunesMaterial => portalRunesMaterial;
         public Material PortalHaloMaterial => portalHaloMaterial;
+        public Material DungeonDarkMaterial => dungeonDarkMaterial;
+        public Material SleepMaterial => sleepMaterial;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;

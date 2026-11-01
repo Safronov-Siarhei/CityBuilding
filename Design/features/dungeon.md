@@ -363,7 +363,30 @@ dungeon opens as a SEPARATE SCENE.
   - The «Выбран …» badge sits in the very corner (`SelectionBadgeController`).
   - `WorkforceButton` is hidden, and `InventoryButton` moves to its place. It still opens the
     town's «Запасы»; a hero inventory does not exist yet.
-- **Fog** (`Dungeon/DungeonFog.cs`):
+- **DARKNESS replaces the fog** (the user, 2026-11-01 round 2). The whole dungeon is dark, and
+  it lifts only along the passages a hero walks, never behind rock.
+  - The town's fog is OFF below (`DisabledCheat`). Its blanket sat 3.5 m over the highest rock,
+    and its holes slid off the floor.
+  - `Shaders/DungeonDark`: a full-screen quad on the main camera, drawn in the Overlay queue.
+    - Each pixel's depth → its world point → its cell in `DungeonFog`'s eased R8 mask, with a
+      5-tap soft edge.
+    - The void past the map's edge (sky depth) is dark, and the camera clears to black. That is
+      the answer to «край карты выглядит странно».
+    - Strength 1: in linear light, 0.97 still showed the map at about 20% brightness.
+  - Needs the depth texture: `GetUniversalAdditionalCameraData(cam).requiresDepthTexture`, in a
+    dungeon only. A test photo camera needs the same (`PlaytestCapture.Configure`).
+  - The runtime asmdef now references URP (Universal + Core Runtime).
+  - Material `DungeonDark` is made in `SetupProjectOrcs` and held by `OrcRaidManager`.
+- **Hire camp in the lake (fixed):** the HireCamp/PotionShop FBX carry their spot as a BUILD-unit
+  offset, so they landed in the lake hall. `MeshMapApplier.StandOnSpot` now moves each model's
+  bounds centre onto its `hirecamp`/`potionshop` spot.
+- **Tent:** the lake hall's tent was a 4-sided cone, which the user saw as a «pyramid». It is now a
+  ridge tent with a door, poles and guy ropes (`dungeon1.py tent`); the map was rebuilt and re-exported.
+- **Sleep:** a monster sleeps until a hero comes within `dungeon_monster_wake_margin` (6) cells.
+  - A sleeper in sight shows «Zzz» (`Shaders/SleepZ`, a camera-facing quad made once per monster).
+  - A patrol in sight still walks.
+  - With graphics, a figure seen by no camera is not animated (`FigureAnimator._visibility`).
+- **Fog (2026-11-01 round 1, its parts kept)** (`Dungeon/DungeonFog.cs`):
   - The floor is sampled from the NavMesh once per cell.
   - Every 0.25 s each hero floods `dungeon_reveal_cells` (7) steps over the floor. Each cell
     reached is revealed for good with a 1-cell ring (the walls).

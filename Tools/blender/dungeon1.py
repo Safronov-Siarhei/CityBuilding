@@ -911,10 +911,28 @@ def pedestal(b, x, y):
 
 
 def tent(b, x, y, a):
+    """A ridge tent of the abandoned camp (the user, 2026-11-01: the old four-sided cone read as a
+    «strange pyramid»): two canvas slopes on a ridge pole, a dark doorway in the front gable,
+    poles at both ends, guy ropes to pegs, a bedroll before the door."""
     cx, cy, _ = w(x, y)
-    b.pyramid(cx, cy, 0.0, 1.1, 1.1, 1.7, 'plaster', sides=4, rot_deg=math.degrees(a) + 45)
-    b.rod((cx, cy, 1.6), (cx, cy, 2.0), 0.05, WOOD_D)
-    b.zbox(cx + math.cos(a) * 1.4, cy + math.sin(a) * 1.4, 0.0, 0.12, 0.35, 0.8, math.degrees(a), 'banner_blue')
+    across = (math.cos(a), math.sin(a), 0.0)
+    along = (-math.sin(a), math.cos(a), 0.0)
+    length, half, height = 2.2, 0.95, 1.2
+
+    def at(s, t, z):
+        return (cx + along[0] * s + across[0] * t, cy + along[1] * s + across[1] * t, z)
+
+    # across x up points to -along: start at the front gable and run back
+    b.prism([(-half, 0.0), (half, 0.0), (0.0, height)], at(length / 2, 0, 0.0), across, (0, 0, 1), length,
+            'plaster', back_cap=True)
+    b.prism([(-0.36, 0.0), (0.36, 0.0), (0.0, 0.78)], at(length / 2 + 0.02, 0, 0.0), across, (0, 0, 1), 0.03,
+            WOOD_D, back_cap=True)
+    b.rod(at(length / 2 + 0.18, 0, height + 0.04), at(-length / 2 - 0.18, 0, height + 0.04), 0.035, WOOD_D)
+    for s in (length / 2 + 0.06, -length / 2 - 0.06):
+        b.rod(at(s, 0, 0.0), at(s, 0, height + 0.18), 0.035, WOOD_D)
+        b.rod(at(s, 0, height + 0.02), at(s + math.copysign(0.75, s), 0, 0.0), 0.012, WOOD_L)
+        b.box(*(lambda p: (p[0] - 0.04, p[0] + 0.04, p[1] - 0.04, p[1] + 0.04))(at(s + math.copysign(0.75, s), 0, 0)), 0.0, 0.12, WOOD_D)
+    b.zbox(*at(length / 2 + 0.75, 0.2, 0.0)[:2], 0.0, 0.1, 0.35, 0.8, math.degrees(a), 'banner_blue')
 
 
 def pier(b, x0, y0, x1, y1):

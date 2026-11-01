@@ -102,6 +102,10 @@ namespace CityBuilder.Dungeon
                 var go = GameObject.Find(name);
                 if (go != null) go.SetActive(false);
             }
+            // no days pass below: the day's plaque goes, not just its words (the user, 2026-11-01:
+            // «пустой прямоугольник, на котором ничего не написано»)
+            var day = GameObject.Find("SettlementStatus");
+            if (day != null) day.SetActive(false);
             // no citizens below: the inventory takes their button's place (the user, 2026-11-01)
             var citizens = GameObject.Find("WorkforceButton");
             var inventory = GameObject.Find("InventoryButton");

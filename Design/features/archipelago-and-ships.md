@@ -170,6 +170,8 @@
 - The orc shipyard now needs its WHOLE 3×4 m slipway on the light water (`TryNearestSea`
   shoreOnly). Before, only the middle was checked, so the far end stood in deep sea.
 - OPEN: «у горы кусок висит в воздухе» (screenshot 4). Not found yet; the user was asked where.
+- Round 2 (2026-11-01): shoals stay at least `fish_shoal_min_spacing` (14 m) apart, live or
+  waiting to return (`TooNearAShoal` in `TryShoreSea`).
 
 ## Forest, boulders and the dungeons (2026-10-31)
 - Denser forest: one tree per `archipelago_forest_cells_per_tree` (6) forest cells, clamped

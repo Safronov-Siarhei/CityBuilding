@@ -425,6 +425,27 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>
+        /// A camp building stood on its own spot ("HireCamp" on "hirecamp"): its FBX carries the
+        /// spot as an offset in BUILD units, which the 0.44 scale never touched, and that put the
+        /// hire camp out in the lake hall (the user, 2026-11-01: «лагерь наёмников стоит в озере»).
+        /// The model's middle is moved onto the spot the generator wrote down, which is scaled.
+        /// </summary>
+        private static void StandOnSpot(GameObject placed, MeshMapDefinition map)
+        {
+            var name = placed.name.Replace("(Clone)", string.Empty);
+            var dash = name.LastIndexOf('-');
+            var kind = (dash >= 0 ? name.Substring(dash + 1) : name).ToLowerInvariant();
+            var spots = map.SpotsOf(kind);
+            if (spots.Count == 0) return;
+            var renderers = placed.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return;
+            var bounds = renderers[0].bounds;
+            foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+            var spot = spots[0].position;
+            placed.transform.position += new Vector3(spot.x - bounds.center.x, 0f, spot.y - bounds.center.z);
+        }
+
+        /// <summary>
         /// A dungeon's own meshes on top of its land -- the props (in the same squares as the
         /// ground) and the camp's buildings -- and the streamer that draws only the squares near
         /// the camera (DungeonChunkStreamer).
@@ -434,7 +455,9 @@ namespace CityBuilder.Maps
             if (map.PropsPrefab != null) Instantiate(map.PropsPrefab, Vector3.zero, map.PropsPrefab.transform.rotation, transform);
             foreach (var building in map.BuildingPrefabs)
             {
-                if (building != null) Instantiate(building, Vector3.zero, building.transform.rotation, transform);
+                if (building == null) continue;
+                var placed = Instantiate(building, Vector3.zero, building.transform.rotation, transform);
+                StandOnSpot(placed, map);
             }
             // the squares: the ground comes cut 8 x 8 (dungeon1.py CHUNKS)
             var square = 11f;
