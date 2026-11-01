@@ -308,7 +308,16 @@ dungeon opens as a SEPARATE SCENE.
   takes it (a room's pair goes together). A reward spot carries its height (`MapSpot.height`, read
   from Points.csv z): it is the crystal's MIDDLE over the room's pedestal (0.7 up; the pedestal is
   0.22 tall) -- floor + 0.45 would have sunk the crystals into the pedestal. No NavMesh snap: it
-  would pull them off the pedestal: +1 `Wallet.UpgradeCrystals`, `#log_dungeon_crystal`, id
+  would pull them off the pedestal.
+- **Crystal look v2** (the user, 2026-11-01: «яркие, светящиеся, сочные, слегка покачиваться ...
+  особенная вещь, платный контент»; v1 «a blue gem» rejected): model = a cut 8-sided gem 0.7 tall +
+  3 shards circling it (106 tris). `Shaders/Crystal` (self-lit violet->cyan gradient, facets by
+  the sun, white rim, a light band running up, facet flashes; no bloom), `Shaders/CrystalHalo` (a
+  camera-facing breathing halo 1.6 cells with 6 rising twinkling sparkles), an `OreGlow` disc on
+  the floor / pedestal top. Materials Crystal/CrystalHalo/CrystalGroundGlow.mat made by
+  SetupProjectOrcs and held by OrcRaidManager. Motion: bob 0.07 cells, sway 6 deg, turn 35 deg/s;
+  taken, it flares up, rises and melts in 0.45 s. Photographed in the game (run.ps1 -Graphics, a
+  temporary PlaytestCapture test, not kept).: +1 `Wallet.UpgradeCrystals`, `#log_dungeon_crystal`, id
   `{dungeon}-L{level}-c{index}` into `DungeonRecord.CrystalsTaken` / save `dungeonCrystalsTaken`
   (also written on Leave) -- never comes back. No need to kill the guards first. Test
   `TheCrystals_FloatGuarded_AndAHeroTakesOne` (break-checked). Not seen in the game by the user.

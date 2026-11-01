@@ -176,6 +176,9 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsNotNull(c.Shown, "A crystal is not drawn.");
                 Assert.IsNotNull(c.Shown.GetComponentInChildren<Renderer>(), "A crystal has no model.");
                 Assert.Greater(c.Shown.position.y - c.At.y, 0.2f, "A crystal lies on the ground instead of floating.");
+                // a special thing (the user, 2026-11-01): its own glowing shader and a halo with sparkles
+                Assert.AreEqual("CityBuilder/Crystal", c.Gem.GetComponentInChildren<Renderer>().sharedMaterial.shader.name, "A crystal does not glow.");
+                Assert.IsNotNull(c.Shown.Find("Halo"), "A crystal has no halo.");
             }
 
             var king = HeroRoster.Instance.HeroOf(SoldierType.King);

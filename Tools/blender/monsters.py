@@ -15,8 +15,8 @@ Run in the models file:
   a gold crown of spikes, eight red eyes.
 - MonsterSpiderCocoon: the queen sealed in at half health -- a web-wrapped egg 1.2 tall.
 - MonsterRewardCrystal: an upgrade crystal the heroes pick up below (the user, 2026-10-31: it
-  FLOATS, so it reads at once as a reward, not as ore) -- a blue gem with two shards, 0.5 tall;
-  the game spins it and bobs it in the air.
+  FLOATS, so it reads at once as a reward, not as ore) -- a big cut gem 0.7 tall with three small
+  shards circling it; the game's shader makes it glow.
 - MonsterOreGolem: the boss, 2 tall -- dark rock veined with gold and copper, blue crystals
   on its shoulders, a glowing core.
 
@@ -227,12 +227,19 @@ def cocoon(b):
 
 
 def reward_crystal(b):
-    # one tall six-sided gem, point down and point up, two small shards at its waist
-    for (x, y, h, r, rot) in ((0.0, 0.0, 0.5, 0.11, 0.0), (0.1, 0.03, 0.26, 0.05, 20.0), (-0.09, -0.04, 0.22, 0.045, 40.0)):
-        z0 = 0.25 - h / 2
-        mid = z0 + h * 0.35
-        b.frustum(x, y, z0, mid, 0.004, r, 'water', sides=6, rot_deg=rot)
-        b.pyramid(x, y, mid, r, r, z0 + h, 'roof_blue' if r < 0.1 else 'water', sides=6, rot_deg=rot)
+    """The upgrade crystal (the user, 2026-11-01: «яркие, светящиеся, сочные ... особенная вещь,
+    платный контент»): a big cut gem, eight-sided, point down and point up, 0.7 tall, and three small
+    shards floating round its waist that circle as the game spins it. The colour, the glow and the
+    sparkle are the game's own shader (CityBuilder/Crystal): the palette here only fills the UVs."""
+    b.frustum(0.0, 0.0, 0.0, 0.26, 0.004, 0.16, 'water', sides=8, rot_deg=0.0)
+    b.frustum(0.0, 0.0, 0.26, 0.36, 0.16, 0.13, 'water', sides=8, rot_deg=0.0)       # the girdle
+    b.pyramid(0.0, 0.0, 0.36, 0.13, 0.13, 0.7, 'water', sides=8, rot_deg=0.0)
+    for k in range(3):
+        a = k * 2 * math.pi / 3
+        x, y = math.cos(a) * 0.27, math.sin(a) * 0.27
+        z = 0.24 + 0.05 * k
+        b.frustum(x, y, z, z + 0.05, 0.003, 0.035, 'water', sides=5, rot_deg=k * 20.0)
+        b.pyramid(x, y, z + 0.05, 0.035, 0.035, z + 0.14, 'water', sides=5, rot_deg=k * 20.0)
 
 
 # ---------------------------------------------------------------- bipeds: the skeleton, the kobold, the golems

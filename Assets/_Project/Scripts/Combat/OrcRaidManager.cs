@@ -125,12 +125,19 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject spiderCocoonModel;
         [SerializeField] private GameObject oreGolemModel;
         [SerializeField] private GameObject rewardCrystalModel;
+        // its look (Shaders/Crystal, CrystalHalo, OreGlow): the gem, the halo with sparkles, the glow on the floor
+        [SerializeField] private Material crystalMaterial;
+        [SerializeField] private Material crystalHaloMaterial;
+        [SerializeField] private Material crystalGroundMaterial;
 
         /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
         public GameObject SpiderCocoonModel => spiderCocoonModel;
 
         /// <summary>An upgrade crystal floating below (DungeonCrystals).</summary>
         public GameObject RewardCrystalModel => rewardCrystalModel;
+        public Material CrystalMaterial => crystalMaterial;
+        public Material CrystalHaloMaterial => crystalHaloMaterial;
+        public Material CrystalGroundMaterial => crystalGroundMaterial;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;

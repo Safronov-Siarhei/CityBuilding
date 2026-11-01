@@ -110,6 +110,11 @@ namespace CityBuilder.EditorTools
                 if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/monsters.py and export_fbx.py.");
                 so.FindProperty(field).objectReferenceValue = model;
             }
+            // the upgrade crystal's look (the user, 2026-11-01: bright, glowing, juicy -- it is paid content)
+            so.FindProperty("crystalMaterial").objectReferenceValue = CrystalMaterial("Crystal", "CityBuilder/Crystal", null);
+            so.FindProperty("crystalHaloMaterial").objectReferenceValue = CrystalMaterial("CrystalHalo", "CityBuilder/CrystalHalo", null);
+            so.FindProperty("crystalGroundMaterial").objectReferenceValue =
+                CrystalMaterial("CrystalGroundGlow", "CityBuilder/OreGlow", new Color(0.35f, 0.75f, 1f, 1f));
 
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();
@@ -141,6 +146,26 @@ namespace CityBuilder.EditorTools
                 }
             }
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>A material asset for the crystal on `shader` (made once; a material asset is what takes the shader into a build).</summary>
+        private static Material CrystalMaterial(string name, string shader, Color? colour)
+        {
+            var path = $"Assets/_Project/Materials/{name}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                var found = Shader.Find(shader);
+                if (found == null)
+                {
+                    Debug.LogWarning($"[SetupProject] Shader {shader} not found -- the crystals will not glow.");
+                    return null;
+                }
+                material = new Material(found) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            if (colour.HasValue) material.SetColor("_BaseColor", colour.Value);
+            return material;
         }
     }
 }
