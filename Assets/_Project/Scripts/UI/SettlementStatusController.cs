@@ -47,6 +47,12 @@ namespace CityBuilder.UI
                 statusText.text = WaveText(InvasionMode.Instance.Waves);
                 return;
             }
+            // no days pass below (the user, 2026-11-01: «вкладку День он тоже не должен видеть»)
+            if (Dungeon.DungeonMode.IsActive)
+            {
+                statusText.text = string.Empty;
+                return;
+            }
 
             var day = gameCalendar != null ? gameCalendar.CurrentDay : 1;
             statusText.text = Localization.Format("#hud_day", day);

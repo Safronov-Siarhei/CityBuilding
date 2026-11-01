@@ -281,6 +281,81 @@ namespace CityBuilder.Tests.PlayMode
                 "The game asks for a Town Hall below ground.");
         }
 
+        /// <summary>
+        /// The user's dungeon rules of 2026-11-01 (screenshot 9): the King comes down held and stands
+        /// where he is left; the way out has a card like the way in and walking past it does not
+        /// leave; a fallen hero rises at the way out; the camera is fixed; the top bar is the coins
+        /// and the crystals, the inventory where the citizens were; only the tunnels reached are
+        /// open, and the minimap is drawn from them.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheDungeonRules_HeroHeld_WayOutCard_Fog_FixedCamera_Hud()
+        {
+            var mode = DungeonMode.Instance;
+            var king = HeroRoster.Instance.HeroOf(SoldierType.King);
+            var army = ArmyManager.Instance;
+            Assert.AreSame(king.Unit.Group, army.SelectedGroup, "The King came down not held.");
+            // let go, he does not walk off home
+            army.SelectGroup(null);
+            Assert.Less(king.ReturnIn, 0f, "A King let go below starts the walk home.");
+            Assert.IsTrue(Hero.HoldWhereLeft);
+
+            // the way out: a mouth of its own, walking up to it does not leave, a hero sent there gets its card
+            var exit = mode.Exit;
+            Assert.IsNotNull(exit, "The way out is no mouth to tap.");
+            Assert.IsTrue(exit.IsExit);
+            var card = CityBuilder.UI.DungeonEntranceCard.Instance;
+            var at = exit.ApproachFrom(king.transform.position);
+            var agent = king.Unit.GetComponent<NavMeshAgent>();
+            if (agent != null && agent.enabled) agent.Warp(at);
+            else king.Unit.transform.position = at;
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsTrue(DungeonMode.IsActive, "Walking up to the way out left the dungeon.");
+            Assert.IsFalse(card.IsOpen, "Passing by the way out opened its card.");
+            exit.Await();
+            yield return new WaitForSeconds(0.8f);
+            Assert.IsTrue(card.IsOpen && card.Shown == exit, "A hero sent to the way out does not open its card.");
+            Assert.IsTrue(exit.CanGo, "The way out's card does not let the party go.");
+            card.Close();
+
+            // he rises at the way out
+            Assert.Less(Vector3.Distance(Flat(king.Home), Flat(mode.ExitSpot)), 3.5f, "A fallen hero would not rise at the way out.");
+
+            // the fixed camera: the sheet's distance, which a pinch cannot change
+            var rig = Object.FindAnyObjectByType<RTSCameraController>();
+            var distance = CityBuilder.Core.BalanceConfig.Instance.DungeonCameraDistance;
+            Assert.AreEqual(distance, Vector3.Distance(Camera.main.transform.position, rig.transform.position), 0.6f, "The camera is not at the dungeon's distance.");
+
+            // the HUD: the citizens' button gone, the inventory in its place, no day
+            Assert.IsNull(GameObject.Find("WorkforceButton"), "The citizens' button shows below.");
+            Assert.IsNotNull(GameObject.Find("InventoryButton"), "No inventory button below.");
+            var status = Object.FindAnyObjectByType<CityBuilder.UI.SettlementStatusController>();
+            if (status != null)
+                foreach (var text in status.GetComponentsInChildren<UnityEngine.UI.Text>())
+                    Assert.AreEqual(string.Empty, text.text, "The day shows below.");
+
+            // the fog: the King's tunnel open, a far hall not; the minimap drawn from it
+            var fogView = DungeonFog.Instance;
+            Assert.IsNotNull(fogView, "No dungeon fog.");
+            var grid = CityBuilder.Grid.GridManager.Instance;
+            var fog = FogOfWarManager.Instance;
+            Assert.IsTrue(fog.IsCellRevealed(grid.WorldToCell(king.transform.position)), "The King's own cell is fogged.");
+            Assert.IsFalse(fog.IsCellRevealed(grid.WorldToCell(Halls[1].at)), "The spiders' far hall is open from the camp.");
+            Assert.IsNotNull(fogView.Picture, "The minimap has no picture of the dungeon.");
+            // nothing open through the rock: every open floor cell is within the flood's steps of the King
+            var reach = CityBuilder.Core.BalanceConfig.Instance.DungeonRevealCells;
+            var kingCell = grid.WorldToCell(king.transform.position);
+            var startCell = grid.WorldToCell(mode.StartSpot);
+            for (var dz = -12; dz <= 12; dz++)
+            for (var dx = -12; dx <= 12; dx++)
+            {
+                var c = kingCell + new Vector2Int(dx, dz);
+                if (!fogView.IsFloor(c) || !fogView.IsOpen(c)) continue;
+                var steps = Mathf.Min(Mathf.Abs(dx) + Mathf.Abs(dz), Mathf.Abs(c.x - startCell.x) + Mathf.Abs(c.y - startCell.y));
+                Assert.LessOrEqual(steps, reach + 2, $"A floor cell {c} is open beyond the heroes' reach.");
+            }
+        }
+
         [Test]
         public void EveryHall_IsReachableOnFoot_FromTheCamp()
         {

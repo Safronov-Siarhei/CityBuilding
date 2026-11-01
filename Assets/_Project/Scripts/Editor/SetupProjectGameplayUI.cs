@@ -521,6 +521,7 @@ namespace CityBuilder.EditorTools
                 amountTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = amountTexts[i];
             }
             hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
+            hudSO.FindProperty("crystalSprite").objectReferenceValue = IconSprite("Res_UpgradeCrystal");
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
             hudSO.FindProperty("idleBadge").objectReferenceValue = idleBadge.gameObject;
             hudSO.FindProperty("idleText").objectReferenceValue = idleText;

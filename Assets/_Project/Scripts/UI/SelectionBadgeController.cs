@@ -33,7 +33,8 @@ namespace CityBuilder.UI
         /// </summary>
         private void Start()
         {
-            if (!Invasion.InvasionMode.IsActive || badgeRoot == null) return;
+            // a dungeon has no tax panel either: the very corner (the user, 2026-11-01)
+            if (!(Invasion.InvasionMode.IsActive || Dungeon.DungeonMode.IsActive) || badgeRoot == null) return;
             var rect = (RectTransform)badgeRoot.transform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0f);
             rect.anchoredPosition = RunCornerOffset;

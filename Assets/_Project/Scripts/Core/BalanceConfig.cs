@@ -525,6 +525,9 @@ namespace CityBuilder.Core
         [SerializeField] private float sceneryStreamSquare = 24f;
         [SerializeField] private int dungeonEntranceCount = 3;
         [SerializeField] private float dungeonEnterReach = 4f;
+        [SerializeField] private int dungeonRevealCells = 7;
+        [SerializeField] private float dungeonCameraDistance = 12f;
+        [SerializeField] private float dungeonCameraPitch = 50f;
         [SerializeField] private float dungeonGuardRadius = 4f;
         [SerializeField] private float dungeonBossGuardRadius = 7f;
         [SerializeField] private int dungeonMonsterLevel1 = 1;
@@ -921,6 +924,9 @@ namespace CityBuilder.Core
         /// <summary>Dungeon entrances on an archipelago, and how near a hero must be to go in (cells).</summary>
         public int DungeonEntranceCount => dungeonEntranceCount;
         public float DungeonEnterReach => dungeonEnterReach;
+        public int DungeonRevealCells => dungeonRevealCells;
+        public float DungeonCameraDistance => dungeonCameraDistance;
+        public float DungeonCameraPitch => dungeonCameraPitch;
         /// <summary>The dungeon (Dungeon/DungeonMonsters, DungeonMonsterPowers): lairs, levels, rewards and the monsters' and bosses' powers.</summary>
         public float DungeonGuardRadius => dungeonGuardRadius;
         public float DungeonBossGuardRadius => dungeonBossGuardRadius;
@@ -1466,6 +1472,9 @@ namespace CityBuilder.Core
             sceneryStreamSquare = Read(economy, "scenery_stream_square_cells", sceneryStreamSquare);
             dungeonEntranceCount = (int)Read(economy, "dungeon_entrance_count", dungeonEntranceCount);
             dungeonEnterReach = Read(economy, "dungeon_enter_reach_cells", dungeonEnterReach);
+            dungeonRevealCells = (int)Read(economy, "dungeon_reveal_cells", dungeonRevealCells);
+            dungeonCameraDistance = Read(economy, "dungeon_camera_distance", dungeonCameraDistance);
+            dungeonCameraPitch = Read(economy, "dungeon_camera_pitch", dungeonCameraPitch);
             dungeonGuardRadius = Read(economy, "dungeon_monster_guard_radius", dungeonGuardRadius);
             dungeonBossGuardRadius = Read(economy, "dungeon_boss_guard_radius", dungeonBossGuardRadius);
             dungeonMonsterLevel1 = (int)Read(economy, "dungeon_monster_level_1", dungeonMonsterLevel1);

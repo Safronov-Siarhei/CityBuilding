@@ -340,6 +340,42 @@ dungeon opens as a SEPARATE SCENE.
 - Option 2 (keep it a little darker, ~0.58-0.60, for a cave mood with glowing mushrooms and fires)
   was offered and set aside «пока что».
 
+## Dungeon-mode rules (the user, 2026-11-01, screenshot 9; BUILT, user not seen in game)
+- **Hero:**
+  - The King comes down HELD (`DungeonMode.SpawnHeroes` selects the first hero).
+  - A hero stands where he is left. `Hero.HoldWhereLeft`, set by DungeonMode, turns off the walk
+    home after an order (ReturnIn), castle guarding and the round fog reveal.
+  - A fallen hero rises at the way out: `Home` = `RiseSpot`, 2 cells in front of the exit.
+- **The way out** is a `DungeonEntrance` with `IsExit` (`DungeonMode.Exit`, a trigger box 5x4x5
+  at the exit spot).
+  - A tap selects it with a ring and the «!»; a hero sent to it (`Await`) opens the card
+    «Выход из подземелья», whose «Выйти» calls `DungeonTravel.Leave`.
+  - Passing by does nothing: the old walk-out-on-touch is gone.
+  - Keys: `#dungeon_exit_*`.
+- **Camera:** `RTSCameraController.LockView(dungeon_camera_distance 12, dungeon_camera_pitch 50)`;
+  min = max distance, so there is no zoom.
+- **HUD:**
+  - The top bar shows only Coins, and the people chip turns into the upgrade crystals
+    (`ResourceHUDController.ShowCrystals`, sprite `Res_UpgradeCrystal`).
+  - The coins are the TOWN's: DungeonMode sets them from the hidden town save, and Leave still
+    adds `CoinsEarned` to the saved amount.
+  - No «День» (`SettlementStatusController`).
+  - The «Выбран …» badge sits in the very corner (`SelectionBadgeController`).
+  - `WorkforceButton` is hidden, and `InventoryButton` moves to its place. It still opens the
+    town's «Запасы»; a hero inventory does not exist yet.
+- **Fog** (`Dungeon/DungeonFog.cs`):
+  - The floor is sampled from the NavMesh once per cell.
+  - Every 0.25 s each hero floods `dungeon_reveal_cells` (7) steps over the floor. Each cell
+    reached is revealed for good with a 1-cell ring (the walls).
+  - A tunnel behind rock is many steps away, so it stays hidden.
+  - Revealed cells stay open and live.
+- **Minimap:** `DungeonFog` draws one texel per cell into the minimap
+  (`MinimapCameraUpdater.ShowPicture`, which renders no camera).
+  - Colours: unknown = parchment brown, open floor = light, walls = dark, heroes = gold,
+    monsters in the open = red, exit = green.
+  - The view marker still works: the minimap camera is only placed, never rendered.
+- **Test:** `DungeonTests.TheDungeonRules_HeroHeld_WayOutCard_Fog_FixedCamera_Hud`.
+
 ## The way out (2026-10-31, redone)
 - The user: «выход ... должен быть развёрнут к игроку, ... дать ему стиль». The old one was a flat
   daylight pane in the camp's SOUTH wall, seen from behind by the camera (which looks north).
@@ -385,7 +421,7 @@ dungeon opens as a SEPARATE SCENE.
   - It hides `BuildingMenu`, `Hotbar` and `TaxRate`, sets the camera's pan bounds and jumps the
     camera to the camp.
   - It restores the heroes at the `start` spot (the King at level 1 if none came).
-  - A hero within 1.6 cells of `exit` takes the party home.
+  - (until 2026-11-01 a hero within 1.6 cells of `exit` took the party home -- now the exit's card does)
   - Autosave and `SaveGame` are blocked in a dungeon.
 - **Cheats:** the Мир tab has «Войти в подземелье 1» and «Выйти из подземелья».
 - **Tests:** PlayMode `DungeonTests`, 4/4, verified by breaking the streamer and the save guard.

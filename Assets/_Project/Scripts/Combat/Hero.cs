@@ -52,6 +52,13 @@ namespace CityBuilder.Combat
         public Vector3 Home { get; set; }
 
         /// <summary>
+        /// Below in a dungeon (DungeonMode): a hero stands where he was left -- no walk home after an
+        /// order, no guarding a castle there is none of (the user, 2026-11-01: «если герой не выделен
+        /// то он просто стоит на месте и никуда не уходит»). He still fights what comes at him.
+        /// </summary>
+        public static bool HoldWhereLeft { get; set; }
+
+        /// <summary>
         /// With no order from the player he defends the base (the user, 2026-10-21): goes for any
         /// enemy that comes within king_guard_radius of the castle and walks back home when it is
         /// clear. A player's order ends it -- he then does what he was told -- and being let go of
@@ -138,7 +145,7 @@ namespace CityBuilder.Combat
                 ReturnIn = -1f;
                 return;
             }
-            if (IsFallen || Guarding || ReturnIn >= 0f) return;
+            if (IsFallen || Guarding || ReturnIn >= 0f || HoldWhereLeft) return;
             ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
         }
 
@@ -152,6 +159,11 @@ namespace CityBuilder.Combat
             // got where the player sent him
             if (_onMoveOrder && _unit.Group != null && Flat(transform.position - _unit.Group.HoldPosition).sqrMagnitude < 2.25f) _onMoveOrder = false;
             if (ReturnIn < 0f) return;
+            if (HoldWhereLeft)
+            {
+                ReturnIn = -1f;
+                return;
+            }
             if (_unit.IsFighting || !still)
             {
                 ReturnIn = BalanceConfig.Instance.HeroReturnWaitSeconds;
@@ -321,7 +333,7 @@ namespace CityBuilder.Combat
             RevealAround();
             TickReturn();
             TickFlee();
-            if (!Guarding || _unit.Group == null) return;
+            if (!Guarding || _unit.Group == null || HoldWhereLeft) return;
 
             _guardScan -= Time.deltaTime;
             if (_guardScan > 0f) return;
@@ -401,7 +413,8 @@ namespace CityBuilder.Combat
         /// </summary>
         private void RevealAround()
         {
-            if (_revealing) return;
+            // below, a circle would see through rock: DungeonFog floods the tunnels instead
+            if (_revealing || HoldWhereLeft) return;
             var fog = CityBuilder.Maps.FogOfWarManager.Instance;
             if (fog == null) return;
             fog.AddWalker(transform, BalanceConfig.Instance.KingRevealRadius);
@@ -442,7 +455,7 @@ namespace CityBuilder.Combat
             RespawnRemaining = 0f;
             transform.position = Home;
             _unit.Group?.OrderMoveTo(Home);
-            Guarding = true;
+            Guarding = !HoldWhereLeft;
             _unit.Revive();
             if (_controller != null) _controller.enabled = true;
             _unit.enabled = true;

@@ -25,6 +25,10 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform[] icons;
         [SerializeField] private Text[] amountTexts;
         [SerializeField] private RectTransform populationIcon;
+        /// <summary>In a dungeon the people's chip shows the upgrade crystals instead, with this picture.</summary>
+        [SerializeField] private Sprite crystalSprite;
+        private Sprite _peopleSprite;
+        private int _crystals = -1;
         [SerializeField] private Text populationText;
         /// <summary>
         /// The free hands, a small disc on the people's icon -- shown only when there are any (the
@@ -104,11 +108,14 @@ namespace CityBuilder.UI
             // so this has to be known before anything is positioned.
             var visible = 0;
             var run = Invasion.InvasionMode.IsActive;
+            var below = Dungeon.DungeonMode.IsActive;
             for (var i = 0; i < count; i++)
             {
                 if (resources.GetAmount(resourceOrder[i]) > 0) _seen[i] = true;
                 // a run has wood, stone and gold (and people) and nothing else to show
                 if (run && !Invasion.InvasionRules.IsRunResource(resourceOrder[i])) _seen[i] = false;
+                // a dungeon: the coins and (in the people's chip) the crystals, nothing else (the user, 2026-11-01)
+                if (below) _seen[i] = resourceOrder[i] == ResourceType.Coins;
                 if (_seen[i]) visible++;
             }
 
@@ -146,6 +153,12 @@ namespace CityBuilder.UI
                 PlaceChip(icons[i], amountTexts[i], background, slot++, slotWidth);
             }
 
+            if (below)
+            {
+                ShowCrystals();
+                PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
+                return;
+            }
             if (populationText != null)
             {
                 var people = CitizenManager.Instance;
@@ -159,6 +172,32 @@ namespace CityBuilder.UI
                 }
             }
             PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
+        }
+
+        /// <summary>The people's chip turned into the upgrade crystals' (a dungeon has no people): the crystal picture and the count.</summary>
+        private void ShowCrystals()
+        {
+            var image = populationIcon != null ? populationIcon.GetComponent<Image>() : null;
+            if (image != null && crystalSprite != null && image.sprite != crystalSprite)
+            {
+                _peopleSprite = image.sprite;
+                image.sprite = crystalSprite;
+            }
+            if (idleBadge != null && idleBadge.activeSelf) idleBadge.SetActive(false);
+            // PlayerPrefs behind it: read when it changes, not every frame
+            if (_crystals < 0)
+            {
+                Core.Wallet.UpgradeCrystalsChanged += OnCrystalsChanged;
+                OnCrystalsChanged();
+            }
+            if (populationText != null) populationText.text = _crystals.ToString();
+        }
+
+        private void OnCrystalsChanged() => _crystals = Core.Wallet.UpgradeCrystals;
+
+        private void OnDestroy()
+        {
+            if (_crystals >= 0) Core.Wallet.UpgradeCrystalsChanged -= OnCrystalsChanged;
         }
 
         /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>

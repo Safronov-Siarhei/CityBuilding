@@ -52,9 +52,39 @@ namespace CityBuilder.UI
 
         public void SetCameraRig(RTSCameraController rig) => cameraRig = rig;
 
+        private bool _picture;
+
+        /// <summary>
+        /// A drawn picture instead of the camera's (a dungeon's, DungeonFog): it frames `halfSize`
+        /// round `centre`, never moves and is never rendered; the minimap camera is only placed so
+        /// that MinimapCameraIndicator maps the view marker onto the same square.
+        /// </summary>
+        public void ShowPicture(Texture picture, Vector3 centre, float halfSize)
+        {
+            _follow = false;
+            _picture = true;
+            if (view != null)
+            {
+                view.texture = picture;
+                view.uvRect = new Rect(0f, 0f, 1f, 1f);
+            }
+            var frame = minimapCamera != null ? minimapCamera : MinimapCameraOrNull();
+            if (frame != null)
+            {
+                frame.enabled = false;
+                frame.transform.position = new Vector3(centre.x, frame.transform.position.y, centre.z);
+                frame.orthographicSize = halfSize;
+            }
+        }
+
+        // batchmode drops the camera in Start; the indicator still reads its frame
+        private Camera frameCamera;
+        private Camera MinimapCameraOrNull() => frameCamera;
+
         private void Start()
         {
             if (minimapCamera != null) minimapCamera.enabled = false;
+            frameCamera = minimapCamera;
             // batchmode tests run without a graphics device: nothing to draw, and rendering into
             // the texture there has crashed the editor (2026-10-22)
             if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) minimapCamera = null;
@@ -78,7 +108,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            if (minimapCamera == null) return;
+            if (minimapCamera == null || _picture) return;
 
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;

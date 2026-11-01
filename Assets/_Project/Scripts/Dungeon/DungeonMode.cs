@@ -16,15 +16,20 @@ namespace CityBuilder.Dungeon
     /// the dungeon's map, not a town: what a town runs -- raids, illness, fires, food, taxes --
     /// is switched off, nothing may be built, the town's HUD pieces are hidden, and no save is
     /// written (the town waits in its own slot). Once the map is down the heroes who came step out
-    /// at the camp by the way in, and walking back out through it takes them home.
+    /// at the camp by the way in, the first of them held. The way out is a DungeonEntrance of its
+    /// own (IsExit): tapped it is held with a ring and the «!», a hero sent to it opens its card,
+    /// and the card's «Выйти» takes the party home -- walking past it no longer does (the user,
+    /// 2026-11-01: «такой принцип как при входе»). A hero stands where he is left (Hero.HoldWhereLeft)
+    /// and one who falls rises at the way out.
     ///
     /// Monsters, hirelings, the shop and the crystals come later; this is the walk.
     /// </summary>
     public class DungeonMode : MonoBehaviour
     {
-        /// <summary>A hero this close to the way out (cells) goes home -- once he has been further in than ExitArmCells.</summary>
-        public const float ExitCells = 1.6f;
-        private const float ExitArmCells = 4f;
+        // how far from the way out (cells, towards the camp) a fallen hero rises
+        private const float RiseFromExitCells = 2f;
+        // the box a tap on the way out's rock hits (cells): its foot round the exit spot
+        private static readonly Vector3 ExitTapBox = new Vector3(5f, 4f, 5f);
 
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInDungeon = new MonoBehaviour[0];
@@ -39,9 +44,9 @@ namespace CityBuilder.Dungeon
 
         private bool _active;
         private List<HeroEntry> _arriving;
-        private bool _armed;
 
         public string DungeonId { get; private set; }
+
 
         /// <summary>The level of the entrance the heroes came down by: the monsters' strength and the rewards.</summary>
         public int Level { get; private set; } = 1;
@@ -68,6 +73,7 @@ namespace CityBuilder.Dungeon
             GameSessionIntent.DungeonId = null;
             GameSessionIntent.DungeonHeroes = null;
             GameSessionIntent.DungeonReturnName = null;
+            Hero.HoldWhereLeft = _active;
             if (!_active) return;
 
             foreach (var behaviour in notInDungeon)
@@ -80,8 +86,13 @@ namespace CityBuilder.Dungeon
 
         private void OnDestroy()
         {
-            if (Instance == this) Instance = null;
+            if (Instance != this) return;
+            Instance = null;
+            Hero.HoldWhereLeft = false;
         }
+
+        /// <summary>The way out, as a mouth the heroes are sent to and its card opens from.</summary>
+        public DungeonEntrance Exit { get; private set; }
 
         private IEnumerator Start()
         {
@@ -90,6 +101,14 @@ namespace CityBuilder.Dungeon
             {
                 var go = GameObject.Find(name);
                 if (go != null) go.SetActive(false);
+            }
+            // no citizens below: the inventory takes their button's place (the user, 2026-11-01)
+            var citizens = GameObject.Find("WorkforceButton");
+            var inventory = GameObject.Find("InventoryButton");
+            if (citizens != null && inventory != null)
+            {
+                ((RectTransform)inventory.transform).anchoredPosition = ((RectTransform)citizens.transform).anchoredPosition;
+                citizens.SetActive(false);
             }
             // MeshMapApplier lays the map down in its own Start
             while (MeshMapApplier.Instance == null || MeshMapApplier.Instance.CurrentMap == null) yield return null;
@@ -103,11 +122,21 @@ namespace CityBuilder.Dungeon
             {
                 var half = MapHalf = HalfSize(map);
                 rig.SetPanBounds(new Vector2(-half, -half), new Vector2(half, half));
+                // one fixed view, no zoom (the user, 2026-11-01)
+                var balance = Core.BalanceConfig.Instance;
+                rig.LockView(balance != null ? balance.DungeonCameraDistance : 12f, balance != null ? balance.DungeonCameraPitch : 50f);
                 rig.JumpTo(StartSpot);
             }
+            Exit = MakeExit();
             SpawnHeroes();
+            // only the tunnels the heroes reach, and the minimap drawn from them
+            gameObject.AddComponent<DungeonFog>().Begin(MapHalf);
             // the monsters in their lairs and the bosses the town has not slain on this level yet
             var town = SaveSystem.Load(SaveSystem.HiddenTownSlot);
+            // the coins on the bar are the town's (what is earned below is added to them on the way up)
+            var coins = town?.resources?.Find(r => r.type == HeroRoster.Money);
+            if (Resources.ResourceManager.Instance != null)
+                Resources.ResourceManager.Instance.SetAmount(HeroRoster.Money, coins != null ? coins.amount : 0);
             gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, town?.dungeonBossesSlain);
             // the crystals the town has not taken yet, each by its guards
             gameObject.AddComponent<DungeonCrystals>().Begin(map, DungeonId, Level, town?.dungeonCrystalsTaken);
@@ -135,6 +164,30 @@ namespace CityBuilder.Dungeon
             return at;
         }
 
+        private DungeonEntrance MakeExit()
+        {
+            var go = new GameObject("DungeonExit");
+            go.transform.position = ExitSpot;
+            var box = go.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = ExitTapBox;
+            box.center = new Vector3(0f, ExitTapBox.y * 0.5f, 0f);
+            var exit = go.AddComponent<DungeonEntrance>();
+            exit.InitializeExit(DungeonId);
+            return exit;
+        }
+
+        /// <summary>Where a fallen hero rises: just in front of the way out, on the camp's side, on the NavMesh.</summary>
+        private Vector3 RiseSpot(int index)
+        {
+            var towardsCamp = StartSpot - ExitSpot;
+            towardsCamp.y = 0f;
+            var forward = towardsCamp.sqrMagnitude > 0.01f ? towardsCamp.normalized : Vector3.back;
+            var side = new Vector3(forward.z, 0f, -forward.x);
+            var at = ExitSpot + forward * RiseFromExitCells + side * ((index % 2 == 1 ? -1.2f : 1.2f) * ((index + 1) / 2));
+            return UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 3f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : at;
+        }
+
         private void SpawnHeroes()
         {
             var roster = HeroRoster.Instance;
@@ -147,25 +200,17 @@ namespace CityBuilder.Dungeon
                 var spot = StartSpot + new Vector3((i % 2 == 1 ? -1.2f : 1.2f) * ((i + 1) / 2), 0f, 0f);
                 var hero = roster.Restore(entry.type, spot, entry.level, entry.experience, entry.currentHealth, false, 0f);
                 if (hero == null) continue;
-                hero.Home = spot;
+                // he rises at the way out (the user, 2026-11-01), and stands where he stepped out:
+                // the roster gave him a home by a Town Hall there is none of down here
+                hero.Home = RiseSpot(i);
                 hero.GuardCentre = spot;
+                hero.Unit.Group?.OrderMoveTo(spot);
             }
+            // the first hero held, as he was when he went down (the user, 2026-11-01: the selection
+            // dropped on the way in)
+            var first = roster.Heroes.Count > 0 ? roster.Heroes[0] : null;
+            if (first != null && !first.IsFallen && ArmyManager.Instance != null) ArmyManager.Instance.SelectGroup(first.Unit.Group);
         }
 
-        private void Update()
-        {
-            if (!_active || !Arrived || HeroRoster.Instance == null) return;
-            var nearest = float.MaxValue;
-            foreach (var hero in HeroRoster.Instance.Heroes)
-            {
-                if (hero == null || hero.IsFallen) continue;
-                var p = hero.transform.position;
-                nearest = Mathf.Min(nearest, new Vector2(p.x - ExitSpot.x, p.z - ExitSpot.z).magnitude);
-            }
-            if (nearest == float.MaxValue) return;
-            // armed once the party has walked in, so arriving next to the way out does not send them back
-            if (nearest > ExitArmCells) _armed = true;
-            else if (_armed && nearest <= ExitCells) DungeonTravel.Leave();
-        }
     }
 }

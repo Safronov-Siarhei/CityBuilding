@@ -28,6 +28,9 @@ namespace CityBuilder.Dungeon
         public string DungeonId { get; private set; }
         public Vector2Int Cell { get; private set; }
 
+        /// <summary>The way OUT of a dungeon (DungeonMode.Exit): its card says «Выйти» and takes the party home; passing by says nothing.</summary>
+        public bool IsExit { get; private set; }
+
         private float _timer;
         private bool _heroWasNear;
 
@@ -37,6 +40,17 @@ namespace CityBuilder.Dungeon
             DungeonId = dungeonId;
             Cell = cell;
         }
+
+        /// <summary>Makes this the dungeon's way out.</summary>
+        public void InitializeExit(string dungeonId)
+        {
+            IsExit = true;
+            DungeonId = dungeonId;
+            Level = DungeonMode.Instance != null ? DungeonMode.Instance.Level : 1;
+        }
+
+        /// <summary>Its card's button works now: a hero by it, and the game not busy going somewhere.</summary>
+        public bool CanGo => HeroNear() && (IsExit ? DungeonMode.IsActive && !LoadingScreen.Busy : DungeonTravel.CanEnter);
 
         private void OnEnable() => _all.Add(this);
 
@@ -92,10 +106,10 @@ namespace CityBuilder.Dungeon
                 if (Awaited == this)
                 {
                     Awaited = null;
-                    if (DungeonTravel.CanEnter && DungeonEntranceCard.Instance != null && !DungeonEntranceCard.Instance.IsOpen)
+                    if (CanGo && DungeonEntranceCard.Instance != null && !DungeonEntranceCard.Instance.IsOpen)
                         DungeonEntranceCard.Instance.Show(this);
                 }
-                else
+                else if (!IsExit)
                 {
                     var entrance = this;
                     var notice = GameEvent.At(Localization.Get("#log_dungeon_near"), EventSeverity.Good, EventGlyph.Star, null, transform.position);

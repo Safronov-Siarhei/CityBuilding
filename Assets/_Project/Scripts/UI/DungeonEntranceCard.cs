@@ -8,7 +8,8 @@ namespace CityBuilder.UI
     /// <summary>
     /// The card of a dungeon's entrance (the user, 2026-10-31: the entrance shows its LEVEL when
     /// tapped): «Подземелье», «Уровень N», and «Войти» -- which takes the heroes down only when one
-    /// of them stands at the mouth; otherwise it asks for a hero to be brought there.
+    /// of them stands at the mouth; otherwise it asks for a hero to be brought there. The way out of
+    /// a dungeon (DungeonEntrance.IsExit) has the same card: «Выход», «Выйти» takes the party home.
     /// </summary>
     public class DungeonEntranceCard : MonoBehaviour
     {
@@ -23,6 +24,8 @@ namespace CityBuilder.UI
 
         /// <summary>The entrance the card is open on.</summary>
         public DungeonEntrance Shown { get; private set; }
+
+        private Text _label;
 
         private void Awake() => Instance = this;
 
@@ -48,11 +51,14 @@ namespace CityBuilder.UI
         /// <summary>The «Войти» button: down with the heroes, if one is at the mouth.</summary>
         public void Enter()
         {
-            if (Shown == null || !Shown.HeroNear() || !DungeonTravel.CanEnter) return;
+            if (Shown == null || !Shown.CanGo) return;
             var id = Shown.DungeonId;
             var level = Shown.Level;
+            var exit = Shown.IsExit;
             Close();
-            DungeonTravel.Enter(id, level);
+            if (BuildingFocus.Instance != null) BuildingFocus.Instance.Clear();
+            if (exit) DungeonTravel.Leave();
+            else DungeonTravel.Enter(id, level);
         }
 
         private void Update()
@@ -68,11 +74,18 @@ namespace CityBuilder.UI
                 return;
             }
             var near = Shown.HeroNear();
-            if (title != null) title.text = Localization.Get("#dungeon_entrance_title");
+            var key = Shown.IsExit ? "#dungeon_exit" : "#dungeon_entrance";
+            if (title != null) title.text = Localization.Get(key + "_title");
             if (body != null)
                 body.text = string.Format(Localization.Get("#dungeon_entrance_level"), Shown.Level) + "\n\n"
-                    + Localization.Get(near ? "#dungeon_entrance_ready" : "#dungeon_entrance_far");
-            if (enterButton != null) enterButton.interactable = near && DungeonTravel.CanEnter;
+                    + Localization.Get(key + (near ? "_ready" : "_far"));
+            if (enterButton != null)
+            {
+                enterButton.interactable = Shown.CanGo;
+                if (_label == null) _label = enterButton.GetComponentInChildren<Text>();
+                var word = Localization.Get(key + "_enter");
+                if (_label != null && _label.text != word) _label.text = word;
+            }
         }
     }
 }

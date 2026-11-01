@@ -153,6 +153,23 @@ namespace CityBuilder.CameraControl
         }
 
         /// <summary>Puts the view on this point at once, with no glide -- where a new game opens.</summary>
+        /// <summary>
+        /// A fixed view: this distance and this pitch, no zoom by wheel or pinch -- a dungeon's
+        /// (the user, 2026-11-01: «не должно быть возможности отдалить или приблизить камеры»).
+        /// </summary>
+        public void LockView(float distance, float pitch)
+        {
+            minDistance = maxDistance = Mathf.Max(1f, distance);
+            if (pivot != null) pivot.localRotation = Quaternion.Euler(pitch, pivot.localEulerAngles.y, 0f);
+            if (cameraTransform != null)
+            {
+                var local = cameraTransform.localPosition;
+                local.z = -minDistance;
+                cameraTransform.localPosition = local;
+            }
+            _goalDistance = _writtenDistance = minDistance;
+        }
+
         public void JumpTo(Vector3 worldPoint)
         {
             transform.position = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
