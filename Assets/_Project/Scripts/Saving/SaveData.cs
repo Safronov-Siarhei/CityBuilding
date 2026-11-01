@@ -48,6 +48,9 @@ namespace CityBuilder.Saving
         /// <summary>The dungeons' crystals the town has taken (Dungeon.DungeonRecord): they never come back.</summary>
         public List<string> dungeonCrystalsTaken = new List<string>();
 
+        /// <summary>The gnomes hired below and still alive (Dungeon.DungeonRecord): they wait at the way in for the next visit.</summary>
+        public List<HirelingEntry> dungeonHirelings = new List<HirelingEntry>();
+
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;
         /// <summary>The archipelago's fish shoals; shoalsSaved false in a save made before them (the map's own are kept).</summary>
@@ -360,6 +363,15 @@ namespace CityBuilder.Saving
     {
         public ResourceType type;
         public int amount;
+    }
+
+    /// <summary>A gnome hired in a dungeon (Dungeon.DungeonHirelings): who and how hurt; he never leaves it.</summary>
+    [Serializable]
+    public class HirelingEntry
+    {
+        public string dungeonId;
+        public SoldierType type;
+        public int currentHealth;
     }
 
     [Serializable]

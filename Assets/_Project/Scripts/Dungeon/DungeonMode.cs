@@ -30,6 +30,8 @@ namespace CityBuilder.Dungeon
         private const float RiseFromExitCells = 2f;
         // the box a tap on the way out's rock hits (cells): its foot round the exit spot
         private static readonly Vector3 ExitTapBox = new Vector3(5f, 4f, 5f);
+        // the box a tap on a camp building hits when it has no model to measure (cells)
+        private static readonly Vector3 CampTapBox = new Vector3(3f, 3f, 3f);
 
         [SerializeField] private BuildingPlacer buildingPlacer;
         [SerializeField] private MonoBehaviour[] notInDungeon = new MonoBehaviour[0];
@@ -60,6 +62,31 @@ namespace CityBuilder.Dungeon
 
         /// <summary>The heroes are down and standing at the camp.</summary>
         public bool Arrived { get; private set; }
+
+        /// <summary>The coins paid out below (gnomes, potions): taken off the town's treasury on the way up.</summary>
+        public int CoinsSpent { get; private set; }
+
+        /// <summary>The camp's hut and the potion shop, as places held and sent to like the way out.</summary>
+        public DungeonEntrance HireCamp { get; private set; }
+        public DungeonEntrance Shop { get; private set; }
+
+        /// <summary>The treasury on the bar holds `coins`.</summary>
+        public bool CanPay(int coins)
+        {
+            var resources = Resources.ResourceManager.Instance;
+            return resources != null && (resources.InfiniteResources || resources.GetAmount(HeroRoster.Money) >= coins);
+        }
+
+        /// <summary>Pays `coins` out of the treasury on the bar, noting it for the town; false when it is short.</summary>
+        public bool TrySpendCoins(int coins)
+        {
+            if (!CanPay(coins)) return false;
+            var resources = Resources.ResourceManager.Instance;
+            if (resources.InfiniteResources) return true;
+            resources.SetAmount(HeroRoster.Money, resources.GetAmount(HeroRoster.Money) - coins);
+            CoinsSpent += coins;
+            return true;
+        }
 
         private void Awake()
         {
@@ -132,6 +159,8 @@ namespace CityBuilder.Dungeon
                 rig.JumpTo(StartSpot);
             }
             Exit = MakeExit();
+            HireCamp = MakeCamp(map, "hirecamp", DungeonEntrance.Place.HireCamp);
+            Shop = MakeCamp(map, "potionshop", DungeonEntrance.Place.Shop);
             SpawnHeroes();
             // only the tunnels the heroes reach, and the minimap drawn from them
             gameObject.AddComponent<DungeonFog>().Begin(MapHalf);
@@ -144,6 +173,9 @@ namespace CityBuilder.Dungeon
             gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, town?.dungeonBossesSlain);
             // the crystals the town has not taken yet, each by its guards
             gameObject.AddComponent<DungeonCrystals>().Begin(map, DungeonId, Level, town?.dungeonCrystalsTaken);
+            // the gnomes hired last time, waiting by the way in
+            gameObject.AddComponent<DungeonHirelings>().Begin(DungeonId, StartSpot + Vector3.back * 1.5f,
+                HireCamp != null ? HireCamp.ApproachFrom(StartSpot) : StartSpot, town?.dungeonHirelings);
             Arrived = true;
         }
 
@@ -179,6 +211,36 @@ namespace CityBuilder.Dungeon
             var exit = go.AddComponent<DungeonEntrance>();
             exit.InitializeExit(DungeonId);
             return exit;
+        }
+
+        /// <summary>
+        /// A camp building (the gnomes' hut, the potion shop) made a place to tap: a box round the
+        /// model that stands on the `kind` spot (MeshMapApplier.StandOnSpot), or a plain one there.
+        /// </summary>
+        private DungeonEntrance MakeCamp(MeshMapDefinition map, string kind, DungeonEntrance.Place place)
+        {
+            if (map.SpotsOf(kind).Count == 0) return null;
+            var at = SpotOr(map, kind, StartSpot);
+            var size = CampTapBox;
+            var centre = at;
+            foreach (var renderer in MeshMapApplier.Instance.GetComponentsInChildren<Renderer>())
+            {
+                if (!renderer.name.ToLowerInvariant().Contains(kind) && !renderer.transform.root.name.ToLowerInvariant().Contains(kind)
+                    && (renderer.transform.parent == null || !renderer.transform.parent.name.ToLowerInvariant().Contains(kind))) continue;
+                var b = renderer.bounds;
+                size = new Vector3(b.size.x, Mathf.Max(b.size.y, CampTapBox.y), b.size.z);
+                centre = new Vector3(b.center.x, at.y, b.center.z);
+                break;
+            }
+            var go = new GameObject("Dungeon" + place);
+            go.transform.position = centre;
+            var box = go.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = size;
+            box.center = new Vector3(0f, size.y * 0.5f, 0f);
+            var camp = go.AddComponent<DungeonEntrance>();
+            camp.InitializeCamp(place, DungeonId, Mathf.Max(size.x, size.z) * 0.5f);
+            return camp;
         }
 
         /// <summary>Where a fallen hero rises: just in front of the way out, on the camp's side, on the NavMesh.</summary>

@@ -445,19 +445,23 @@ namespace CityBuilder.Dungeon
 
     /// <summary>
     /// What never comes back below, by id -- the bosses the town has slain and the crystals it has
-    /// taken -- kept in the town's save (dungeonBossesSlain, dungeonCrystalsTaken).
+    /// taken -- and the gnomes hired there, waiting for the heroes' next visit; kept in the town's
+    /// save (dungeonBossesSlain, dungeonCrystalsTaken, dungeonHirelings).
     /// </summary>
     public static class DungeonRecord
     {
         public static readonly HashSet<string> BossesSlain = new HashSet<string>();
         public static readonly HashSet<string> CrystalsTaken = new HashSet<string>();
+        public static readonly List<Saving.HirelingEntry> Hirelings = new List<Saving.HirelingEntry>();
 
-        public static void Load(IEnumerable<string> bosses, IEnumerable<string> crystals = null)
+        public static void Load(IEnumerable<string> bosses, IEnumerable<string> crystals = null, IEnumerable<Saving.HirelingEntry> hirelings = null)
         {
             BossesSlain.Clear();
             CrystalsTaken.Clear();
+            Hirelings.Clear();
             if (bosses != null) foreach (var id in bosses) BossesSlain.Add(id);
             if (crystals != null) foreach (var id in crystals) CrystalsTaken.Add(id);
+            if (hirelings != null) Hirelings.AddRange(hirelings);
         }
     }
 }

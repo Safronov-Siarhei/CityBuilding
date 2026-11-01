@@ -70,7 +70,7 @@ namespace CityBuilder.Research
             foreach (var unit in config.Units)
             {
                 if (string.IsNullOrEmpty(unit.id)) continue;
-                if (!SoldierStats.TryTypeFromSheetId(unit.id, out _)) continue;
+                if (!SoldierStats.TryTypeFromSheetId(unit.id, out var unitType) || SoldierStats.IsHireling(unitType)) continue;
                 AddUnitTopics(unit);
             }
 

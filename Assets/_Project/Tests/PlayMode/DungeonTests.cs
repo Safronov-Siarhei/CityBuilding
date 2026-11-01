@@ -412,6 +412,82 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// The gnomes' hire camp (the user, 2026-11-01): a place held like the way out, a hero sent
+        /// there gets its card; the three gnomes are hired for coins, each in his own jointed model,
+        /// no more than five alive; a dead one is hired again; they walk after the hero, and going
+        /// up they are written down to wait for the next visit.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheHireCamp_HiresUpToFiveGnomes_WhoFollowTheHero()
+        {
+            var mode = DungeonMode.Instance;
+            var king = HeroRoster.Instance.HeroOf(SoldierType.King);
+            var camp = mode.HireCamp;
+            Assert.IsNotNull(camp, "The hire camp is no place to tap.");
+            Assert.IsTrue(camp.IsCamp);
+            var card = CityBuilder.UI.DungeonHireCard.Instance;
+            Assert.IsNotNull(card, "No hire card.");
+            var agent = king.Unit.GetComponent<NavMeshAgent>();
+            void Put(Vector3 to)
+            {
+                if (agent != null && agent.enabled) agent.Warp(to);
+                else king.Unit.transform.position = to;
+                king.Unit.Group.OrderMoveTo(to);   // or he walks back to where he was left
+            }
+            Put(camp.ApproachFrom(mode.StartSpot));
+            camp.Await();
+            yield return new WaitForSeconds(0.8f);
+            Assert.IsTrue(card.IsOpen && card.Shown == camp, "A hero sent to the hire camp does not open its card.");
+
+            var resources = CityBuilder.Resources.ResourceManager.Instance;
+            resources.SetAmount(HeroRoster.Money, 1000);
+            var party = DungeonHirelings.Instance;
+            Assert.AreEqual(0, party.Count);
+            var paid = 0;
+            for (var i = 0; i < 3; i++)
+            {
+                card.Hire(i);
+                paid += DungeonHirelings.Price(DungeonHirelings.Offered[i]);
+                Assert.AreEqual(i + 1, party.Count, $"Hiring {DungeonHirelings.Offered[i]} did nothing.");
+                var gnome = party.Members[i];
+                Assert.AreEqual(DungeonHirelings.Offered[i], gnome.Type);
+                Assert.IsNotNull(gnome.transform.Find(gnome.Type.ToString()), $"{gnome.Type} is drawn in cubes, not his model.");
+                Assert.IsNotNull(gnome.GetComponent<FigureAnimator>(), $"{gnome.Type} is not animated.");
+            }
+            Assert.IsTrue(party.Members[1].IsRanged, "The crossbowman does not shoot.");
+            card.Hire(0);
+            card.Hire(0);
+            paid += 2 * DungeonHirelings.Price(SoldierType.GnomeMiner);
+            Assert.AreEqual(5, party.Count);
+            card.Hire(0);
+            Assert.AreEqual(5, party.Count, "A sixth gnome was hired.");
+            Assert.AreEqual(1000 - paid, resources.GetAmount(HeroRoster.Money), "The gnomes were not paid for.");
+            Assert.AreEqual(paid, mode.CoinsSpent, "The coins paid below are not noted for the town.");
+            Assert.AreEqual(0, ArmyManager.Instance.SoldierCount, "The gnomes count in the town's army.");
+
+            // a dead one is hired again
+            party.Members[4].TakeDamage(100000);
+            yield return null;
+            Assert.AreEqual(4, party.Count, "A dead gnome stays in the party.");
+            card.Hire(2);
+            Assert.AreEqual(5, party.Count, "A dead gnome's place cannot be hired again.");
+            card.Close();
+
+            // they walk after the hero
+            Assert.IsTrue(NavMesh.SamplePosition(mode.StartSpot + new Vector3(0f, 0f, 6f), out var ahead, 4f, NavMesh.AllAreas));
+            Put(ahead.position);
+            yield return new WaitForSeconds(5f);
+            var far = 0f;
+            foreach (var gnome in party.Members) far = Mathf.Max(far, Vector3.Distance(Flat(gnome.transform.position), Flat(king.Unit.transform.position)));
+            Assert.Less(far, 4f, "The gnomes did not follow the hero.");
+
+            // going up they are written down, to wait for the next visit
+            var survivors = party.Survivors();
+            Assert.AreEqual(5, survivors.Count);
+            Assert.IsTrue(survivors.TrueForAll(h => h.dungeonId == mode.DungeonId && h.currentHealth > 0));
+        }
+
         [Test]
         public void EveryHall_IsReachableOnFoot_FromTheCamp()
         {

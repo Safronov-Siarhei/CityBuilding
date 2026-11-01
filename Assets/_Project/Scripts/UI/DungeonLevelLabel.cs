@@ -33,7 +33,7 @@ namespace CityBuilder.UI
 
         public static void Follow(DungeonEntrance entrance)
         {
-            if (entrance == null || entrance.IsExit) return;
+            if (entrance == null || entrance.IsExit || entrance.IsCamp) return;
             if (_instance == null) _instance = Create();
             _instance.Attach(entrance);
         }

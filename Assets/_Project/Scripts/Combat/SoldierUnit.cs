@@ -58,7 +58,7 @@ namespace CityBuilder.Combat
         public event Action Struck;
 
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
-        public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Queen;
+        public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Queen || Type == SoldierType.GnomeCrossbow;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
 
         /// <summary>The level whose look the figure wears (ArmyManager: metal at 2, gold at 3).</summary>

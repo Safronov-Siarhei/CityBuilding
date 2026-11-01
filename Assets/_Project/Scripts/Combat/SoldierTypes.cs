@@ -48,6 +48,16 @@ namespace CityBuilder.Combat
 
         /// <summary>The Invasion mode's shield-and-sword hero, bought in the castle (the user, 2026-10-23).</summary>
         Captain = 6,
+
+        /// <summary>
+        /// The dungeon's gnome hirelings (the user, 2026-11-01), hired at the camp's hut for coins:
+        /// the melee miner, the crossbowman and the ore guardian, a stone golem tank. Never in the
+        /// town's army, never researched; they follow the hero below and never come up
+        /// (Dungeon/DungeonHirelings). Not in All.
+        /// </summary>
+        GnomeMiner = 7,
+        GnomeCrossbow = 8,
+        GnomeGuardian = 9,
     }
 
     /// <summary>
@@ -85,6 +95,9 @@ namespace CityBuilder.Combat
                 case SoldierType.King: return "king";
                 case SoldierType.Queen: return "queen";
                 case SoldierType.Captain: return "captain";
+                case SoldierType.GnomeMiner: return "gnome_miner";
+                case SoldierType.GnomeCrossbow: return "gnome_crossbow";
+                case SoldierType.GnomeGuardian: return "gnome_guardian";
                 case SoldierType.Militia:
                 default:
                     return "militia";
@@ -139,6 +152,9 @@ namespace CityBuilder.Combat
         /// <summary>A hero of the Invasion mode (Hero): no soldier the army counts, levels of his own.</summary>
         public static bool IsHero(SoldierType type) => type == SoldierType.King || type == SoldierType.Queen || type == SoldierType.Captain;
 
+        /// <summary>A dungeon hireling (a gnome): one level, no research, no Barracks.</summary>
+        public static bool IsHireling(SoldierType type) => type >= SoldierType.GnomeMiner && type <= SoldierType.GnomeGuardian;
+
         public static UnitBalance Row(SoldierType type) =>
             IsHero(type) ? BalanceConfig.Instance.HeroUnit(SheetIdOf(type)) : BalanceConfig.Instance.Unit(SheetIdOf(type));
 
@@ -149,7 +165,7 @@ namespace CityBuilder.Combat
         /// </summary>
         public static int CurrentLevel(SoldierType type)
         {
-            if (IsHero(type)) return 1;   // a hero's levels are his own (Hero)
+            if (IsHero(type) || IsHireling(type)) return 1;   // a hero's levels are his own (Hero), a gnome has one
             var research = Research.ResearchManager.Instance;
             return research != null ? research.UnitLevel(type) : 1;
         }

@@ -31,6 +31,9 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject queenModel;
         [SerializeField] private GameObject captainModel;
 
+        /// <summary>The dungeon's gnome hirelings (Tools/blender/gnomes.py, Models/Monsters): the miner, the crossbowman, the ore guardian.</summary>
+        [SerializeField] private GameObject[] hirelingModels = new GameObject[3];
+
         /// <summary>
         /// The soldiers' figures (Tools/blender/soldiers.py, Models/Soldiers), one per type and
         /// researched level: index type * SoldierLooks + level - 1 (metal at level 2, gold at 3).
@@ -397,6 +400,17 @@ namespace CityBuilder.Combat
         public Hero SpawnKing(Vector3 position) => SpawnHero(SoldierType.King, position);
 
         /// <summary>
+        /// A dungeon hireling (Dungeon.DungeonHirelings) into the party's own group, which is not
+        /// one of the army's: no citizen, no upkeep, no icon, not in the army's count.
+        /// </summary>
+        public SoldierUnit SpawnHireling(SoldierType type, Vector3 position, ArmyGroup party)
+        {
+            var unit = SpawnSoldier(type, position, party, scatter: false);
+            party.Add(unit);
+            return unit;
+        }
+
+        /// <summary>
         /// The Queen's Призыв (the user, 2026-10-23): `count` soldiers of `type` at `level` --
         /// whatever the Laboratory says -- in a group of their own holding where she stands; they
         /// fight there for `seconds` and are gone. No citizen, no upkeep, not in the army's count.
@@ -503,6 +517,16 @@ namespace CityBuilder.Combat
                 AddFigure(root, soldierModel, type);
                 return;
             }
+            if (SoldierStats.IsHireling(type))
+            {
+                var index = type - SoldierType.GnomeMiner;
+                var gnome = hirelingModels != null && index < hirelingModels.Length ? hirelingModels[index] : null;
+                if (gnome != null)
+                {
+                    AddFigure(root, gnome, type);
+                    return;
+                }
+            }
             switch (type)
             {
                 case SoldierType.King when kingModel != null:
@@ -567,7 +591,7 @@ namespace CityBuilder.Combat
         /// <summary>The figure a soldier of `type` wears at `level`, or the nearest level below that has one; null for cubes.</summary>
         private GameObject SoldierModel(SoldierType type, int level)
         {
-            if (SoldierStats.IsHero(type) || soldierModels == null) return null;
+            if (SoldierStats.IsHero(type) || SoldierStats.IsHireling(type) || soldierModels == null) return null;
             for (var l = Mathf.Clamp(level, 1, SoldierLooks); l >= 1; l--)
             {
                 var index = (int)type * SoldierLooks + l - 1;

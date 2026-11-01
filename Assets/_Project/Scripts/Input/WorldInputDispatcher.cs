@@ -112,7 +112,7 @@ namespace CityBuilder.InputControl
             if (entrance != null)
             {
                 if (UI.BuildingFocus.Instance != null) UI.BuildingFocus.Instance.SelectEntrance(entrance);
-                else if (UI.DungeonEntranceCard.Instance != null) UI.DungeonEntranceCard.Instance.Show(entrance);
+                else entrance.OpenCard();
                 return;
             }
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;

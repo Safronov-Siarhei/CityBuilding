@@ -84,15 +84,17 @@ namespace CityBuilder.Dungeon
                 }
             }
             // what the heroes earned below: the coins into the shared treasury, the slain bosses into the record
+            // and what they paid out there (gnomes, potions)
             var monsters = DungeonMonsters.Instance;
+            var coins = (monsters != null ? monsters.CoinsEarned : 0) - mode.CoinsSpent;
+            if (coins != 0)
+            {
+                var entry = town.resources.Find(r => r.type == HeroRoster.Money);
+                if (entry == null) town.resources.Add(entry = new ResourceEntry { type = HeroRoster.Money });
+                entry.amount = Mathf.Max(0, entry.amount + coins);
+            }
             if (monsters != null)
             {
-                if (monsters.CoinsEarned > 0)
-                {
-                    var entry = town.resources.Find(r => r.type == HeroRoster.Money);
-                    if (entry == null) town.resources.Add(entry = new ResourceEntry { type = HeroRoster.Money });
-                    entry.amount += monsters.CoinsEarned;
-                }
                 foreach (var id in monsters.BossesSlainNow)
                     if (!town.dungeonBossesSlain.Contains(id)) town.dungeonBossesSlain.Add(id);
             }
@@ -102,6 +104,14 @@ namespace CityBuilder.Dungeon
                 town.dungeonCrystalsTaken ??= new List<string>();
                 foreach (var id in crystals.TakenNow)
                     if (!town.dungeonCrystalsTaken.Contains(id)) town.dungeonCrystalsTaken.Add(id);
+            }
+            // the gnomes stay below and wait at the way in for the next visit (the user, 2026-10-31)
+            var party = DungeonHirelings.Instance;
+            if (party != null)
+            {
+                town.dungeonHirelings ??= new List<HirelingEntry>();
+                town.dungeonHirelings.RemoveAll(h => h == null || h.dungeonId == mode.DungeonId);
+                town.dungeonHirelings.AddRange(party.Survivors());
             }
             SaveSystem.Save(SaveSystem.HiddenTownSlot, town);
             GameSessionIntent.SaveNameToLoad = SaveSystem.HiddenTownSlot;

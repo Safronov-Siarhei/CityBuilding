@@ -578,6 +578,9 @@ namespace CityBuilder.Core
         [SerializeField] private int fertileMinCoastCells = 8;
         [SerializeField] private float fishShoalShoreMeters = 4f;
         [SerializeField] private float fishShoalMinSpacing = 14f;
+        [SerializeField] private int dungeonHirelingMax = 5;
+        [SerializeField] private float dungeonHirelingFollowCells = 2.5f;
+        [SerializeField] private float dungeonHirelingLeashCells = 9f;
         [SerializeField] private float fertilePatchRadius = 5f;
         [SerializeField] private float fertileFarmBonus = 0.5f;
         [SerializeField] private int fishShoalCount = 12;
@@ -980,6 +983,10 @@ namespace CityBuilder.Core
         public int FertileMinCoastCells => fertileMinCoastCells;
         public float FishShoalShoreMeters => fishShoalShoreMeters;
         public float FishShoalMinSpacing => fishShoalMinSpacing;
+        /// <summary>The dungeon's gnome hirelings: how many may be alive at once, how far the hero walks before they set off after him, and how far from him they break off a fight to catch up (cells).</summary>
+        public int DungeonHirelingMax => dungeonHirelingMax;
+        public float DungeonHirelingFollowCells => dungeonHirelingFollowCells;
+        public float DungeonHirelingLeashCells => dungeonHirelingLeashCells;
         public float FertilePatchRadius => fertilePatchRadius;
         public float FertileFarmBonus => fertileFarmBonus;
         /// <summary>The archipelago's fish shoals: how many, the fish in each, a Fisher's Hut's extra catch by one (1 = double), its reach, and the wait before a fished-out shoal turns up elsewhere.</summary>
@@ -1527,6 +1534,9 @@ namespace CityBuilder.Core
             fertileMinCoastCells = (int)Read(economy, "fertile_min_coast_cells", fertileMinCoastCells);
             fishShoalShoreMeters = Read(economy, "fish_shoal_shore_meters", fishShoalShoreMeters);
             fishShoalMinSpacing = Read(economy, "fish_shoal_min_spacing", fishShoalMinSpacing);
+            dungeonHirelingMax = (int)Read(economy, "dungeon_hireling_max", dungeonHirelingMax);
+            dungeonHirelingFollowCells = Read(economy, "dungeon_hireling_follow_cells", dungeonHirelingFollowCells);
+            dungeonHirelingLeashCells = Read(economy, "dungeon_hireling_leash_cells", dungeonHirelingLeashCells);
             fertilePatchRadius = Read(economy, "fertile_patch_radius", fertilePatchRadius);
             fertileFarmBonus = Read(economy, "fertile_farm_bonus", fertileFarmBonus);
             fishShoalCount = (int)Read(economy, "fish_shoal_count", fishShoalCount);

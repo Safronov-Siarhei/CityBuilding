@@ -156,8 +156,7 @@ namespace CityBuilder.UI
             EnsureBuilt();
             Paint(Gold, ReachColor);
             var cell = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-            var footprint = Maps.Archipelago.DungeonEntrances.Footprint;
-            _footRadius = Mathf.Max(footprint.x, footprint.y) * cell * 0.5f * 1.2f + RingMargin;
+            _footRadius = entrance.Half * cell * 1.2f + RingMargin;
             Circle(_ring, Ground(entrance.transform.position), _footRadius);
             _ring.gameObject.SetActive(true);
             _rippleClock = 0f;
@@ -183,7 +182,7 @@ namespace CityBuilder.UI
             if (infoPanel != null) infoPanel.Close();
             if (researchPanel != null) researchPanel.Close();
             if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Close();
-            if (heldEntrance && DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Close();
+            if (heldEntrance) Dungeon.DungeonEntrance.CloseCards();
         }
 
         private void Release()
@@ -213,7 +212,7 @@ namespace CityBuilder.UI
             }
             if (Entrance != null)
             {
-                if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Show(Entrance);
+                Entrance.OpenCard();
                 return;
             }
             if (Current == null) return;
@@ -244,7 +243,7 @@ namespace CityBuilder.UI
             // the «!» steps aside while the card it opened is up, and comes back when it closes
             var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen)
                 || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen)
-                || (DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen);
+                || Dungeon.DungeonEntrance.AnyCardOpen;
             if (detailsButton != null && detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
             // the camera taken away till the building is off the screen lets it go
             if (!cardUp && OffScreen(Held))

@@ -71,7 +71,7 @@ dungeon opens as a SEPARATE SCENE.
 - **The user's answers of 2026-11-01 on the camp:**
   - **Gnome hirelings:** the concept is approved.
     - They can be hired WITHOUT END (a dead one is hired again), but at most 5 at a time.
-    - MODELLED 2026-11-01, AWAITING APPROVAL. `Tools/blender/gnomes.py`, in the models file,
+    - MODELLED and APPROVED 2026-11-01 («устраивает»). `Tools/blender/gnomes.py`, in the models file,
       collection «Подземелье-гномы». Facing -y, jointed like the monsters.
       - GnomeMiner, 0.4 cells tall, 790 tris: a brass helmet with a lamp, a white beard, a blue
         jerkin, an apron, a pickaxe.
@@ -80,7 +80,7 @@ dungeon opens as a SEPARATE SCENE.
       - GnomeGuardian, ~0.6 cells tall, 555 tris: `monsters.golem` at s=0.78 in light stone with
         brass veins and a blue core.
       - Render: `render_figures.py`, next to the King and a skeleton.
-      - Not exported, not in the game yet.
+      - Exported to `Models/Monsters/Gnome*.fbx` (export_fbx.py routes `Gnome*` there).
       - `monsters.py` now builds only when run, so it can be imported.
   - **Potions** are NOT drunk on purchase.
     - A bought potion becomes an icon under the heroes' portrait in the top-right corner; tapping
@@ -95,7 +95,8 @@ dungeon opens as a SEPARATE SCENE.
   «after N minutes»). Bosses never come back.
 - **Bosses:** the spider queen and the ore golem are approved. They must be MUCH bigger than a hero.
 - **Hirelings:** gnomes approved — the miner (melee), the crossbowman (ranged), the ore guardian
-  (a stone golem tank), from «Лагерь гномов-старателей».
+  (a stone golem tank), from «Лагерь гномов-старателей». IN THE GAME 2026-11-01, see
+  «Hire camp in the game».
 - **Next step:** the user wants the test MAP (100 x 100) made in Blender to approve its style first;
   it will be redone if needed.
 - **Test map v1** (grid of cubes and crags) was REJECTED (the user, 2026-10-31):
@@ -521,6 +522,32 @@ dungeon opens as a SEPARATE SCENE.
     the build menu hidden, the «!» at the bottom; the «!» opens the card (2026-11-01).
 - The level is not passed down yet: every entrance opens the same Dungeon 1.
 - Test: `ArchipelagoTests.DungeonEntrances_AndTheForest_DrawnNearTheCameraOnly`.
+
+## Hire camp in the game (2026-11-01; user not seen it)
+- **Types:** `SoldierType.GnomeMiner/GnomeCrossbow/GnomeGuardian` (7-9), `SoldierStats.IsHireling`;
+  units sheet rows 17-19 `gnome_miner/gnome_crossbow/gnome_guardian` (health, damage, range, speed
+  2.2 like the King, `recruit_coins` = the price 40/60/100). Level 1 only: left out of the
+  Laboratory (ResearchCatalog, ResearchPanelController) and of `soldierModels`.
+  `ArmyManager.hirelingModels` (Setup loads `Models/Monsters/Gnome*.fbx`); the crossbowman is
+  ranged (`SoldierUnit.IsRanged`).
+- **Places:** `DungeonEntrance.Place` = Mouth / Exit / HireCamp / Shop. `DungeonMode.MakeCamp`
+  puts a tap box round the model standing on the `hirecamp` / `potionshop` spot; held with the
+  ring and «!» (`BuildingFocus` uses `entrance.Half`), a hero sent there opens its card
+  (`OpenCard`). No «Уровень N» plaque over camps. The shop's card is the next step.
+- **`Dungeon/DungeonHirelings`:** one party group of its own (`IsSummoned`, not in the army's
+  groups: no icon, no upkeep, not in `SoldierCount`). `Hire(type)` pays through
+  `DungeonMode.TrySpendCoins` and spawns at the camp; at most `dungeon_hireling_max` (5) alive; a
+  dead one frees his place. Every 0.25 s the party's hold moves to the leader (the held hero, else
+  the first standing) once he is `dungeon_hireling_follow_cells` (2.5) away; a gnome further than
+  `dungeon_hireling_leash_cells` (9) drops the fight and catches up (`Retreat`).
+- **Persistence:** `DungeonTravel.Leave` writes the living gnomes (`HirelingEntry`: dungeonId,
+  type, health) into `town.dungeonHirelings` (`DungeonRecord.Hirelings` round-trips them through
+  town saves); on the next visit they stand by the way in. The town's coins on the way up =
+  + earned − `DungeonMode.CoinsSpent` (never below 0).
+- **Card:** `UI/DungeonHireCard` (built in `SetupProjectPanels.BuildDungeonHireCard`): three rows
+  name / «Здоровье N, урон N» / «Нанять: N», the count «В отряде гномов: N/5» or «Приведите героя
+  к лагерю». Localization rows 514-521.
+- **Test:** `DungeonTests.TheHireCamp_HiresUpToFiveGnomes_WhoFollowTheHero`.
 
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,

@@ -479,6 +479,16 @@ namespace CityBuilder.EditorTools
             // the heroes bought in an Invasion run's castle (Tools/blender/heroes2.py)
             armyManagerSO.FindProperty("queenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroQueen.fbx");
             armyManagerSO.FindProperty("captainModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Heroes/HeroCaptain.fbx");
+            // the dungeon's gnome hirelings (Tools/blender/gnomes.py), in SoldierType order
+            var gnomes = armyManagerSO.FindProperty("hirelingModels");
+            var gnomeFiles = new[] { "GnomeMiner", "GnomeCrossbow", "GnomeGuardian" };
+            gnomes.arraySize = gnomeFiles.Length;
+            for (var i = 0; i < gnomeFiles.Length; i++)
+            {
+                var gnome = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Monsters/{gnomeFiles[i]}.fbx");
+                if (gnome == null) Debug.LogWarning($"[SetupProject] Models/Monsters/{gnomeFiles[i]}.fbx is missing -- run Tools/blender/export_fbx.py. That gnome falls back to cubes.");
+                gnomes.GetArrayElementAtIndex(i).objectReferenceValue = gnome;
+            }
             // the army (Tools/blender/soldiers.py), in SoldierType order, a look per researched level
             var soldierModels = armyManagerSO.FindProperty("soldierModels");
             var soldierNames = new[] { "SoldierMilitia", "SoldierSpearman", "SoldierArcher", "SoldierManAtArms" };

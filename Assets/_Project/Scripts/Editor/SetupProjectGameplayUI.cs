@@ -318,6 +318,7 @@ namespace CityBuilder.EditorTools
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
+            BuildDungeonHireCard(uiRoot, panelSprite);
             BuildArmyPanel(uiRoot, panelSprite);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 

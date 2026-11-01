@@ -412,7 +412,7 @@ namespace CityBuilder.UI
             var units = new List<(SoldierType type, string id)>();
             foreach (var unit in BalanceConfig.Instance.Units)
             {
-                if (string.IsNullOrEmpty(unit.id) || !SoldierStats.TryTypeFromSheetId(unit.id, out var type) || SoldierStats.IsHero(type)) continue;
+                if (string.IsNullOrEmpty(unit.id) || !SoldierStats.TryTypeFromSheetId(unit.id, out var type) || SoldierStats.IsHero(type) || SoldierStats.IsHireling(type)) continue;
                 units.Add((type, unit.id));
             }
             units.Sort((a, b) => ((int)a.type).CompareTo((int)b.type));

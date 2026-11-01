@@ -14,8 +14,20 @@ namespace CityBuilder.Dungeon
     /// подземелье» (a tap on it selects the mouth), never the card; the card opens by itself only
     /// for a hero SENT to this mouth (a tap on it with the hero held: Await), once he is there.
     /// </summary>
+    /// The dungeon's camp buildings are places of the same kind (the user, 2026-11-01: «такой
+    /// принцип как при входе»): the gnomes' hire camp and the potion shop, held with a ring and
+    /// the «!», their cards opening for a hero sent there.
     public class DungeonEntrance : MonoBehaviour
     {
+        /// <summary>What this place is: a mouth on the town's map, a dungeon's way out, or one of its camp buildings.</summary>
+        public enum Place
+        {
+            Mouth,
+            Exit,
+            HireCamp,
+            Shop,
+        }
+
         private const float CheckEverySeconds = 0.5f;
 
         private static readonly List<DungeonEntrance> _all = new List<DungeonEntrance>();
@@ -28,8 +40,19 @@ namespace CityBuilder.Dungeon
         public string DungeonId { get; private set; }
         public Vector2Int Cell { get; private set; }
 
+        public Place Kind { get; private set; } = Place.Mouth;
+
         /// <summary>The way OUT of a dungeon (DungeonMode.Exit): its card says «Выйти» and takes the party home; passing by says nothing.</summary>
-        public bool IsExit { get; private set; }
+        public bool IsExit => Kind == Place.Exit;
+
+        /// <summary>A camp building below (the hire camp, the shop), not a way anywhere.</summary>
+        public bool IsCamp => Kind == Place.HireCamp || Kind == Place.Shop;
+
+        // half its footprint, cells: where a walker stops and how near counts as «by it»
+        private float _half = Maps.Archipelago.DungeonEntrances.Footprint.x * 0.5f;
+
+        /// <summary>Half its footprint, cells (the selection ring's size).</summary>
+        public float Half => _half;
 
         private float _timer;
         private bool _heroWasNear;
@@ -44,13 +67,50 @@ namespace CityBuilder.Dungeon
         /// <summary>Makes this the dungeon's way out.</summary>
         public void InitializeExit(string dungeonId)
         {
-            IsExit = true;
+            Kind = Place.Exit;
             DungeonId = dungeonId;
             Level = DungeonMode.Instance != null ? DungeonMode.Instance.Level : 1;
         }
 
+        /// <summary>Makes this one of the dungeon's camp buildings, `half` cells across from its middle.</summary>
+        public void InitializeCamp(Place kind, string dungeonId, float half)
+        {
+            Kind = kind;
+            DungeonId = dungeonId;
+            _half = half;
+            Level = DungeonMode.Instance != null ? DungeonMode.Instance.Level : 1;
+        }
+
         /// <summary>Its card's button works now: a hero by it, and the game not busy going somewhere.</summary>
-        public bool CanGo => HeroNear() && (IsExit ? DungeonMode.IsActive && !LoadingScreen.Busy : DungeonTravel.CanEnter);
+        public bool CanGo => HeroNear() && (IsExit || IsCamp ? DungeonMode.IsActive && !LoadingScreen.Busy : DungeonTravel.CanEnter);
+
+        /// <summary>This place's card: the hire camp's, the shop's, or the way in/out's.</summary>
+        public void OpenCard()
+        {
+            switch (Kind)
+            {
+                case Place.HireCamp:
+                    if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Show(this);
+                    break;
+                case Place.Shop:
+                    break;   // the potion shop's card comes next
+                default:
+                    if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Show(this);
+                    break;
+            }
+        }
+
+        /// <summary>Any place's card is up.</summary>
+        public static bool AnyCardOpen =>
+            (DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen)
+            || (DungeonHireCard.Instance != null && DungeonHireCard.Instance.IsOpen);
+
+        /// <summary>Every place's card down.</summary>
+        public static void CloseCards()
+        {
+            if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Close();
+            if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Close();
+        }
 
         private void OnEnable() => _all.Add(this);
 
@@ -74,7 +134,7 @@ namespace CityBuilder.Dungeon
             var away = from - transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 0.01f) away = -transform.forward;
-            var stop = transform.position + away.normalized * (Maps.Archipelago.DungeonEntrances.Footprint.x * 0.5f + 0.7f);
+            var stop = transform.position + away.normalized * (_half + 0.7f);
             return UnityEngine.AI.NavMesh.SamplePosition(stop, out var hit, 4f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : stop;
         }
 
@@ -84,7 +144,7 @@ namespace CityBuilder.Dungeon
             var roster = HeroRoster.Instance;
             if (roster == null) return false;
             var balance = BalanceConfig.Instance;
-            var reach = (balance != null ? balance.DungeonEnterReach : 4f) + Maps.Archipelago.DungeonEntrances.Footprint.x * 0.5f;
+            var reach = (balance != null ? balance.DungeonEnterReach : 4f) + _half;
             foreach (var hero in roster.Heroes)
             {
                 if (hero == null || hero.IsFallen || hero.Unit == null) continue;
@@ -106,10 +166,9 @@ namespace CityBuilder.Dungeon
                 if (Awaited == this)
                 {
                     Awaited = null;
-                    if (CanGo && DungeonEntranceCard.Instance != null && !DungeonEntranceCard.Instance.IsOpen)
-                        DungeonEntranceCard.Instance.Show(this);
+                    if (CanGo && !AnyCardOpen) OpenCard();
                 }
-                else if (!IsExit)
+                else if (Kind == Place.Mouth)
                 {
                     var entrance = this;
                     var notice = GameEvent.At(Localization.Get("#log_dungeon_near"), EventSeverity.Good, EventGlyph.Star, null, transform.position);
