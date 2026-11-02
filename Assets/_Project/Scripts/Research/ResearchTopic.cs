@@ -73,7 +73,10 @@ namespace CityBuilder.Research
             get
             {
                 var config = BalanceConfig.Instance;
-                return config != null && Level >= config.ResearchCrystalsFromLevel ? config.ResearchCrystals : 0;
+                if (config == null) return 0;
+                // the Tax House is opened and levelled for crystals alone (the user, 2026-11-02)
+                if (IsBuildingTopic && TargetId == BuildingIds.TaxHouse) return config.TaxHouseResearchCrystals(Level);
+                return Level >= config.ResearchCrystalsFromLevel ? config.ResearchCrystals : 0;
             }
         }
 

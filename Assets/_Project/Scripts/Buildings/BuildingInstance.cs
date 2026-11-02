@@ -829,26 +829,13 @@ namespace CityBuilder.Buildings
             }
         }
 
-        /// <summary>Upgrade crystals the next level costs on top of GetUpgradeCost: the Tax House's levels (the user, 2026-11-02), 0 for the rest.</summary>
-        public int UpgradeCrystalCost
-        {
-            get
-            {
-                if (Data == null || Level >= MaxLevel || Data.buildingName != BuildingIds.TaxHouse) return 0;
-                return Core.BalanceConfig.Instance != null ? Core.BalanceConfig.Instance.TaxHouseUpCrystals(Level + 1) : 0;
-            }
-        }
-
         public bool TryUpgrade()
         {
             // Before the cost, so a player who cannot upgrade yet is never charged for finding out.
             if (!NextLevelResearched || !IsOperational) return false;
 
-            var crystals = UpgradeCrystalCost;
-            if (crystals > Core.Wallet.UpgradeCrystals) return false;
             var cost = GetUpgradeCost();
             if (cost == null || ResourceManager.Instance == null || !ResourceManager.Instance.TrySpend(cost)) return false;
-            if (crystals > 0) Core.Wallet.UpgradeCrystals -= crystals;
 
             // An upgrade takes time, and the building rests meanwhile (the user, 2026-10-22 for a
             // run, 2026-10-25 for the sandbox too); 0 seconds is at once.

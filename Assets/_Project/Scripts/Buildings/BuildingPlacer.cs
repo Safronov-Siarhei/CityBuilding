@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CityBuilder.CameraControl;
@@ -596,6 +596,7 @@ namespace CityBuilder.Buildings
 
             if (!canPlace)
             {
+                if (OnlyOneAlreadyStands()) return Localization.Get("#place_blocked_only_one");
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
@@ -779,9 +780,25 @@ namespace CityBuilder.Buildings
             return best != null ? best.Origin : origin;
         }
 
+        /// <summary>Whether the selected building is one a town has only one of, and it already stands (or is going up).</summary>
+        private bool OnlyOneAlreadyStands()
+        {
+            if (_selectedBuilding == null || !BuildingIds.OnlyOne.Contains(_selectedBuilding.buildingName)) return false;
+            if (Time.unscaledTime < _onlyOneCheckedAt + IslandsRecheckSeconds) return _onlyOneStands;
+            _onlyOneCheckedAt = Time.unscaledTime;
+            _onlyOneStands = false;
+            foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                if (building.Data != null && building.Data.buildingName == _selectedBuilding.buildingName) _onlyOneStands = true;
+            return _onlyOneStands;
+        }
+
+        private float _onlyOneCheckedAt = -100f;
+        private bool _onlyOneStands;
+
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint, bool wholeFootprintRules = true)
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !IsFreeFor(_selectedBuilding, cell, footprint)) return false;
+            if (OnlyOneAlreadyStands()) return false;
             // the start zone is a rule about the whole building, not about any one cell of it
             if (wholeFootprintRules && IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
             // the mandatory lighthouse goes in the same yellow zone, anywhere on its land -- not only

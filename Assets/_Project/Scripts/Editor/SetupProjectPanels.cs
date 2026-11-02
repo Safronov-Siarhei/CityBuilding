@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -798,7 +798,6 @@ namespace CityBuilder.EditorTools
 
             var panelSO = new SerializedObject(controller);
             panelSO.FindProperty("runCard").objectReferenceValue = runCard;
-            panelSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
             panelSO.ApplyModifiedPropertiesWithoutUndo();
             card.gameObject.SetActive(false);
         }

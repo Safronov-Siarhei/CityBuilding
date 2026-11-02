@@ -88,21 +88,6 @@ namespace CityBuilder.UI
             live.Refresh();
         }
 
-        /// <summary>A crystal chip after a price (the Tax House's upgrades): red while the purse is short.</summary>
-        public static void AddCrystals(Transform row, int count, Sprite icon)
-        {
-            if (row == null || count <= 0) return;
-            // a price of crystals alone is not "free"
-            for (var i = row.childCount - 1; i >= 0; i--)
-            {
-                var text = row.GetChild(i).GetComponent<Text>();
-                if (text != null && text.text == Localization.Get("#ui_free")) Object.Destroy(row.GetChild(i).gameObject);
-            }
-            CreateChipIcon(row, icon);
-            var label = CreateChipText(row, count.ToString());
-            label.color = Wallet.UpgradeCrystals < count ? UiTheme.Danger : UiTheme.Ink;
-        }
-
         private static void CreateChipIcon(Transform parent, Sprite sprite)
         {
             var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));

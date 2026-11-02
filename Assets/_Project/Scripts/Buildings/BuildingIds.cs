@@ -36,5 +36,8 @@ namespace CityBuilder.Buildings
         public const string Smokehouse = "Smokehouse";
         /// <summary>The Tax House (the user, 2026-11-02): each level raises what a citizen pays a day; its levels cost crystals.</summary>
         public const string TaxHouse = "TaxHouse";
+
+        /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House).</summary>
+        public static readonly System.Collections.Generic.HashSet<string> OnlyOne = new System.Collections.Generic.HashSet<string> { TaxHouse };
     }
 }

@@ -45,8 +45,6 @@ namespace CityBuilder.UI
         [Header("An Invasion run's card (the user's sketch, 2026-10-25) in place of the one above")]
         [SerializeField] private GameObject sandboxCard;
         [SerializeField] private RunBuildingCard runCard;
-        // the upgrade crystal's picture, for the Tax House's upgrade price
-        [SerializeField] private Sprite crystalIcon;
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
@@ -205,7 +203,6 @@ namespace CityBuilder.UI
             var data = _currentInstance.Data;
             if (RunCard)
             {
-                runCard.CrystalPrice = (row, count) => CostRowBuilder.AddCrystals(row, count, crystalIcon);
                 runCard.Refresh(_currentInstance, _currentProduction, BuildCostRow, Clock);
                 // the sandbox's band: what it makes, a bare reach, a Плавильня's metals (a run's card has none)
                 if (Invasion.InvasionMode.IsActive)
