@@ -33,6 +33,9 @@ namespace CityBuilder.Maps
         [SerializeField] private Material cloudMaterial;
         // the wildlife's models in Wildlife.Kind order (Tools/blender/fauna.py)
         [SerializeField] private GameObject[] wildlifeModels;
+        // the archipelago's guarded caches: the ruin and the chest (Tools/blender/treasures.py)
+        [SerializeField] private GameObject cacheRuinModel;
+        [SerializeField] private GameObject cacheChestModel;
 
         // Sized for a citizen, not Unity's default humanoid navmesh agent -- CitizenAgent's
         // CharacterController is radius 0.15/height 0.72 (see CitizenVisualsManager.SpawnAgent).
@@ -714,6 +717,8 @@ namespace CityBuilder.Maps
             streamer.Initialize(rig != null ? rig.transform : null);
             // the dungeons' mouths before the forest, so no tree grows in one
             if (fromLibrary) Archipelago.DungeonEntrances.Place(world, this, map.DungeonEntrancePrefab, _noBuildCells);
+            // a cache guarded by Стражи Глубин on every ordinary island, clear of the dungeons (the user, 2026-11-02)
+            if (fromLibrary) Archipelago.TideCaches.Place(world, this, IslandLabels, IslandRichesOf, cacheRuinModel, cacheChestModel, _noBuildCells);
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
             _fertileCells = Archipelago.FertileLand.Compute(world, IslandLabels, IslandRichesOf);

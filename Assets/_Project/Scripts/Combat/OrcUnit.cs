@@ -72,6 +72,20 @@ namespace CityBuilder.Combat
         SpiderQueen = 18,
         /// <summary>Boss: slams the ground round him, throws boulders, grows ore armour at half health.</summary>
         OreGolem = 19,
+
+        // Стражи Глубин, the sea folk guarding the archipelago's caches (Maps/Archipelago/TideCaches,
+        // Tools/blender/tide.py; the user, 2026-11-02). They only hold their cache; stats mon_tide_*.
+
+        /// <summary>The crab guard: slow, thick-shelled, melee.</summary>
+        TideCrab = 20,
+        /// <summary>The hammerhead: fast, hard-hitting, melee.</summary>
+        TideShark = 21,
+        /// <summary>The octopus-headed shaman: strikes from afar and heals the guards round it.</summary>
+        TideShaman = 22,
+        /// <summary>The pufferfish: throws sea urchins from afar.</summary>
+        TidePuffer = 23,
+        /// <summary>Boss: the deep serpent coiled round the gold island's hoard.</summary>
+        TideSerpent = 24,
     }
 
     /// <summary>
@@ -113,18 +127,26 @@ namespace CityBuilder.Combat
                 case OrcKind.StoneGolem: return "stone_golem";
                 case OrcKind.SpiderQueen: return "spider_queen";
                 case OrcKind.OreGolem: return "ore_golem";
+                case OrcKind.TideCrab: return "tide_crab";
+                case OrcKind.TideShark: return "tide_shark";
+                case OrcKind.TideShaman: return "tide_shaman";
+                case OrcKind.TidePuffer: return "tide_puffer";
+                case OrcKind.TideSerpent: return "tide_serpent";
                 default: return "orc";
             }
         }
 
         /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
-        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind);
+        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind) || IsTide(kind);
+
+        /// <summary>One of Стражи Глубин, the caches' guards.</summary>
+        public static bool IsTide(OrcKind kind) => kind >= OrcKind.TideCrab && kind <= OrcKind.TideSerpent;
 
         /// <summary>One of the dungeon's monsters.</summary>
         public static bool IsDungeonMonster(OrcKind kind) => kind >= OrcKind.Rat && kind <= OrcKind.OreGolem;
 
         /// <summary>A boss: the jungle's giant, the dungeon's queen and ore golem.</summary>
-        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem;
+        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.TideSerpent;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -948,10 +970,11 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
-        public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold;
+        public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman;
 
         /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>
-        private ProjectileKind Shot => Kind == OrcKind.Kobold ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
+        // (a pufferfish's urchin and a shaman's ball of water fly as balls too)
+        private ProjectileKind Shot => Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
 
         /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
         private void StrikeAt(Vector3 target)

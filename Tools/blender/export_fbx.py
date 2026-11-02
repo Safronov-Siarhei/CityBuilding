@@ -34,6 +34,7 @@ HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
 SOLDIERS = os.path.join(project, "Assets", "_Project", "Models", "Soldiers")
 WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
 FAUNA = os.path.join(project, "Assets", "_Project", "Models", "Fauna")
+TIDE = os.path.join(project, "Assets", "_Project", "Models", "Tide")
 CITIZENS = os.path.join(project, "Assets", "_Project", "Models", "Citizens")
 SHIPS = os.path.join(project, "Assets", "_Project", "Models", "Ships")
 MONSTERS = os.path.join(project, "Assets", "_Project", "Models", "Monsters")
@@ -44,7 +45,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna")):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna", "Tide", "Cache")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -65,6 +66,10 @@ def target(o):
     if o.name.startswith("Wild"):
         os.makedirs(WILD, exist_ok=True)
         return os.path.join(WILD, o.name + ".fbx")
+    # the island caches' guards, Стражи Глубин (tide.py), and the caches themselves (treasures.py)
+    if o.name.startswith(("Tide", "Cache")):
+        os.makedirs(TIDE, exist_ok=True)
+        return os.path.join(TIDE, o.name + ".fbx")
     # the main map's harmless wildlife (fauna.py)
     if o.name.startswith("Fauna"):
         os.makedirs(FAUNA, exist_ok=True)

@@ -93,7 +93,7 @@ namespace CityBuilder.Maps.Archipelago
         /// no beach flags, so their sand is only known by its colour (an entrance stood on the
         /// sand, the user's screenshot of 2026-10-31).
         /// </summary>
-        private static bool TryFindSpot(ArchipelagoMap world, Island island, MeshMapApplier applier, out Vector2Int origin, Vector2Int? awayFrom = null)
+        public static bool TryFindSpot(ArchipelagoMap world, Island island, MeshMapApplier applier, out Vector2Int origin, Vector2Int? awayFrom = null, bool freeOnGrid = false)
         {
             origin = default;
             var n = world.Size;
@@ -124,8 +124,11 @@ namespace CityBuilder.Maps.Archipelago
                 if (ok) candidates.Add((d, new Vector2Int(x, z)));
             }
             candidates.Sort((a, b) => a.d.CompareTo(b.d));
+            var grid = GridManager.Instance;
             foreach (var (_, at) in candidates)
             {
+                // (another's ground -- a dungeon's mouth -- with three cells round it, when asked: a cache)
+                if (freeOnGrid && grid != null && !grid.IsAreaFree(at - new Vector2Int(3, 3), Footprint + new Vector2Int(6, 6))) continue;
                 if (!AllGrass(at, applier)) continue;
                 origin = at;
                 return true;

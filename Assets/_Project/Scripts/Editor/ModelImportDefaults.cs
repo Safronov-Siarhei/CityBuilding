@@ -34,6 +34,7 @@ namespace CityBuilder.EditorTools
         private const string ShipsFolder = "Assets/_Project/Models/Ships/";
         private const string MonstersFolder = "Assets/_Project/Models/Monsters/";
         private const string FaunaFolder = "Assets/_Project/Models/Fauna/";
+        private const string TideFolder = "Assets/_Project/Models/Tide/";
 
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
         public const string PaletteMaterialPath = "Assets/_Project/Models/Palette/BuildingsPalette.mat";
@@ -77,7 +78,7 @@ namespace CityBuilder.EditorTools
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder)
                              || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder) || assetPath.StartsWith(SoldiersFolder)
                              || assetPath.StartsWith(WildFolder) || assetPath.StartsWith(CitizensFolder) || assetPath.StartsWith(ShipsFolder)
-                             || assetPath.StartsWith(MonstersFolder) || assetPath.StartsWith(FaunaFolder);
+                             || assetPath.StartsWith(MonstersFolder) || assetPath.StartsWith(FaunaFolder) || assetPath.StartsWith(TideFolder);
             if (!isSetPiece)
             {
                 // MeshMapApplier.BuildNavMesh (NavMeshBuilder.BuildNavMeshData) needs CPU access

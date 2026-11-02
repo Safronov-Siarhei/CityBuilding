@@ -614,6 +614,15 @@ namespace CityBuilder.Core
         [SerializeField] private int islandGoldVeins = 3;
         [SerializeField] private int islandStoneCoal = 2;
         [SerializeField] private int islandFertilePatches = 3;
+        // Стражи Глубин's caches (Maps/Archipelago/TideCaches): guards per tier (rows) and kind
+        // (crab, shark, puffer, shaman, serpent), the reward per tier (wood, stone, gold, crystals)
+        [SerializeField] private int[] tideGuards = { 2, 0, 0, 0, 0, 2, 1, 1, 0, 0, 2, 2, 1, 1, 0, 0, 2, 0, 1, 1 };
+        [SerializeField] private int[] tideRewards = { 60, 40, 15, 1, 120, 80, 30, 2, 200, 140, 60, 3, 400, 300, 150, 6 };
+        [SerializeField] private float tideGuardRadius = 6f;
+        [SerializeField] private float tideWakeRadius = 14f;
+        [SerializeField] private int tideShamanHeal = 12;
+        [SerializeField] private float tideShamanHealEverySeconds = 4f;
+        [SerializeField] private float tideShamanHealRadius = 5f;
         [SerializeField] private float kingXpRadius = 12f;
         [SerializeField] private float kingGuardRadius = 30f;
         [SerializeField] private int kingRevealRadius = 9;
@@ -710,6 +719,12 @@ namespace CityBuilder.Core
             new MonsterStats { id = "stone_golem", maxHealth = 180, attackDamage = 12, attackIntervalSeconds = 1.8f, attackRange = 1.0f, walkSpeed = 0.9f },
             new MonsterStats { id = "spider_queen", maxHealth = 1200, attackDamage = 22, attackIntervalSeconds = 1.6f, attackRange = 1.6f, walkSpeed = 1.4f },
             new MonsterStats { id = "ore_golem", maxHealth = 1600, attackDamage = 30, attackIntervalSeconds = 2.2f, attackRange = 1.8f, walkSpeed = 1.0f },
+            // Стражи Глубин (the archipelago's caches)
+            new MonsterStats { id = "tide_crab", maxHealth = 80, attackDamage = 5, attackIntervalSeconds = 1.4f, attackRange = 0.9f, walkSpeed = 1.2f },
+            new MonsterStats { id = "tide_shark", maxHealth = 60, attackDamage = 9, attackIntervalSeconds = 1.0f, attackRange = 0.9f, walkSpeed = 2.2f },
+            new MonsterStats { id = "tide_shaman", maxHealth = 50, attackDamage = 5, attackIntervalSeconds = 2.0f, attackRange = 4.5f, walkSpeed = 1.3f },
+            new MonsterStats { id = "tide_puffer", maxHealth = 40, attackDamage = 6, attackIntervalSeconds = 2.0f, attackRange = 4.0f, walkSpeed = 1.4f },
+            new MonsterStats { id = "tide_serpent", maxHealth = 1400, attackDamage = 26, attackIntervalSeconds = 2.0f, attackRange = 2.2f, walkSpeed = 1.0f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -1048,6 +1063,38 @@ namespace CityBuilder.Core
         public int IslandGoldVeins => islandGoldVeins;
         public int IslandStoneCoal => islandStoneCoal;
         public int IslandFertilePatches => islandFertilePatches;
+
+        private static readonly string[] TideKindIds = { "crab", "shark", "puffer", "shaman", "serpent" };
+        private static readonly string[] TideRewardIds = { "wood", "stone", "gold", "crystals" };
+
+        /// <summary>How many guards of `kind` a cache of `tier` (1..4) has (tide_t{tier}_{kind}).</summary>
+        public int TideGuards(int tier, Combat.OrcKind kind)
+        {
+            var k = kind == Combat.OrcKind.TideCrab ? 0 : kind == Combat.OrcKind.TideShark ? 1 : kind == Combat.OrcKind.TidePuffer ? 2
+                : kind == Combat.OrcKind.TideShaman ? 3 : kind == Combat.OrcKind.TideSerpent ? 4 : -1;
+            var i = (Mathf.Clamp(tier, 1, 4) - 1) * TideKindIds.Length + k;
+            return k < 0 || tideGuards == null || i >= tideGuards.Length ? 0 : tideGuards[i];
+        }
+
+        /// <summary>What a looted cache of `tier` pays in wood, stone or gold (tide_reward_*_{tier}).</summary>
+        public int TideReward(int tier, Resources.ResourceType type)
+        {
+            var k = type == Resources.ResourceType.Wood ? 0 : type == Resources.ResourceType.Stone ? 1 : type == Resources.ResourceType.Gold ? 2 : -1;
+            var i = (Mathf.Clamp(tier, 1, 4) - 1) * TideRewardIds.Length + k;
+            return k < 0 || tideRewards == null || i >= tideRewards.Length ? 0 : tideRewards[i];
+        }
+
+        public int TideRewardCrystals(int tier)
+        {
+            var i = (Mathf.Clamp(tier, 1, 4) - 1) * TideRewardIds.Length + 3;
+            return tideRewards == null || i >= tideRewards.Length ? 0 : tideRewards[i];
+        }
+
+        public float TideGuardRadius => tideGuardRadius;
+        public float TideWakeRadius => tideWakeRadius;
+        public int TideShamanHeal => tideShamanHeal;
+        public float TideShamanHealEverySeconds => tideShamanHealEverySeconds;
+        public float TideShamanHealRadius => tideShamanHealRadius;
         public float KingXpRadius => kingXpRadius;
         public float KingGuardRadius => kingGuardRadius;
         public int KingRevealRadius => kingRevealRadius;
@@ -1621,6 +1668,24 @@ namespace CityBuilder.Core
             islandGoldVeins = (int)Read(economy, "island_gold_veins", islandGoldVeins);
             islandStoneCoal = (int)Read(economy, "island_stone_coal", islandStoneCoal);
             islandFertilePatches = (int)Read(economy, "island_fertile_patches", islandFertilePatches);
+            for (var tier = 1; tier <= 4; tier++)
+            {
+                for (var k = 0; k < TideKindIds.Length; k++)
+                {
+                    var i = (tier - 1) * TideKindIds.Length + k;
+                    tideGuards[i] = (int)Read(economy, $"tide_t{tier}_{TideKindIds[k]}", tideGuards[i]);
+                }
+                for (var k = 0; k < TideRewardIds.Length; k++)
+                {
+                    var i = (tier - 1) * TideRewardIds.Length + k;
+                    tideRewards[i] = (int)Read(economy, $"tide_reward_{TideRewardIds[k]}_{tier}", tideRewards[i]);
+                }
+            }
+            tideGuardRadius = Read(economy, "tide_guard_radius", tideGuardRadius);
+            tideWakeRadius = Read(economy, "tide_wake_radius", tideWakeRadius);
+            tideShamanHeal = (int)Read(economy, "tide_shaman_heal", tideShamanHeal);
+            tideShamanHealEverySeconds = Read(economy, "tide_shaman_heal_every_sec", tideShamanHealEverySeconds);
+            tideShamanHealRadius = Read(economy, "tide_shaman_heal_radius", tideShamanHealRadius);
             kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);

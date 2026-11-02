@@ -124,6 +124,12 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject spiderQueenModel;
         [SerializeField] private GameObject spiderCocoonModel;
         [SerializeField] private GameObject oreGolemModel;
+        // Стражи Глубин, the caches' guards (Tools/blender/tide.py)
+        [SerializeField] private GameObject tideCrabModel;
+        [SerializeField] private GameObject tideSharkModel;
+        [SerializeField] private GameObject tideShamanModel;
+        [SerializeField] private GameObject tidePufferModel;
+        [SerializeField] private GameObject tideSerpentModel;
         [SerializeField] private GameObject rewardCrystalModel;
         // its look (Shaders/Crystal, CrystalHalo, OreGlow): the gem, the halo with sparkles, the glow on the floor
         [SerializeField] private Material crystalMaterial;
@@ -584,6 +590,11 @@ namespace CityBuilder.Combat
                 case OrcKind.StoneGolem: return stoneGolemModel;
                 case OrcKind.SpiderQueen: return spiderQueenModel;
                 case OrcKind.OreGolem: return oreGolemModel;
+                case OrcKind.TideCrab: return tideCrabModel;
+                case OrcKind.TideShark: return tideSharkModel;
+                case OrcKind.TideShaman: return tideShamanModel;
+                case OrcKind.TidePuffer: return tidePufferModel;
+                case OrcKind.TideSerpent: return tideSerpentModel;
                 default: return null;
             }
         }

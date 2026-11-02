@@ -633,6 +633,8 @@ namespace CityBuilder.EditorTools
             meshMapApplierSO.FindProperty("cloudMaterial").objectReferenceValue = CloudLayerMaterial();
             // the wildlife (Tools/blender/fauna.py), in Maps.Wildlife.Kind order
             var fauna = new[] { "FaunaGull", "FaunaBird", "FaunaDeer", "FaunaRabbit", "FaunaFish", "FaunaDolphin", "FaunaWhale" };
+            meshMapApplierSO.FindProperty("cacheRuinModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Tide/CacheRuin.fbx");
+            meshMapApplierSO.FindProperty("cacheChestModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Tide/CacheChest.fbx");
             var faunaProp = meshMapApplierSO.FindProperty("wildlifeModels");
             faunaProp.arraySize = fauna.Length;
             for (var i = 0; i < fauna.Length; i++)

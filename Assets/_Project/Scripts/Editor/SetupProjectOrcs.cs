@@ -110,6 +110,18 @@ namespace CityBuilder.EditorTools
                 if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/monsters.py and export_fbx.py.");
                 so.FindProperty(field).objectReferenceValue = model;
             }
+            // Стражи Глубин, the archipelago caches' guards (Tools/blender/tide.py)
+            foreach (var (field, file) in new[]
+                     {
+                         ("tideCrabModel", "TideCrab"), ("tideSharkModel", "TideShark"), ("tideShamanModel", "TideOctopus"),
+                         ("tidePufferModel", "TidePuffer"), ("tideSerpentModel", "TideSerpent"),
+                     })
+            {
+                var path = $"Assets/_Project/Models/Tide/{file}.fbx";
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/tide.py and export_fbx.py.");
+                so.FindProperty(field).objectReferenceValue = model;
+            }
             // the upgrade crystal's look (the user, 2026-11-01: bright, glowing, juicy -- it is paid content)
             so.FindProperty("crystalMaterial").objectReferenceValue = CrystalMaterial("Crystal", "CityBuilder/Crystal", null);
             so.FindProperty("crystalHaloMaterial").objectReferenceValue = CrystalMaterial("CrystalHalo", "CityBuilder/CrystalHalo", null);

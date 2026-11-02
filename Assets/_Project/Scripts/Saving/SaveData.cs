@@ -42,6 +42,9 @@ namespace CityBuilder.Saving
         /// <summary>The archipelago's ships; empty in a save made before ships existed.</summary>
         public List<ShipEntry> ships = new List<ShipEntry>();
 
+        /// <summary>The archipelago's caches already looted (Maps.Archipelago.TideCaches): they stay empty, unguarded.</summary>
+        public List<int> tideCachesLooted = new List<int>();
+
         /// <summary>The dungeons' bosses the town has slain (Dungeon.DungeonRecord): they never come back.</summary>
         public List<string> dungeonBossesSlain = new List<string>();
 

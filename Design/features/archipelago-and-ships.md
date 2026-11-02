@@ -277,17 +277,23 @@
   on every upgrade and on load. The old paid spot-lighting (LighthouseAim) is kept as it was.
 - Not seen in game; no tests (user: one general run later).
 
-## Guarded caches and the sea folk (2026-11-02, IN DESIGN)
-- Caches: `Tools/blender/treasures.py` CacheChest (lid part CacheChest-Lid, hinge) + CacheRuin
-  (STONE, the user: no corals, it is not the sea floor) -- APPROVED, not exported.
-- Guards: the sea faction «СТРАЖИ ГЛУБИН» (name chosen by the user 2026-11-02). TideCrab APPROVED;
-  the eel, the priestess and the hermit-crab-in-a-hull were REJECTED as dull. Round 2 for approval
-  (`Tools/blender/tide.py`): TideShark (hammerhead, sawfish-snout sword, turtle-shell shield; fast
-  melee), TideOctopus (round 3: a man's body in a sea-coat, an octopus head with a tentacle beard,
-  jellyfish lantern staff; ranged + heals), TidePuffer (pufferfish throwing sea urchins; replaced the
-  rejected anglerfish), TideSerpent (boss: teal sea serpent coiled round
-  a gold hoard). Jointed for FigureAnimator, not exported. Rule: they ONLY guard caches (no raids,
-  no attacks on ships). Strength by distance from the start; cleared caches stay empty.
+## Guarded caches and Стражи Глубин (2026-11-02, BUILT, not seen in game, no tests)
+- Models APPROVED and exported to `Models/Tide/` (export_fbx «Tide*»/«Cache*»): CacheChest (+Lid),
+  CacheRuin (stone), TideCrab, TideShark (hammerhead), TideOctopus (octopus-headed shaman), TidePuffer,
+  TideSerpent (boss). Eel/priestess/hermit-in-hull and the anglerfish were REJECTED.
+  `Tools/blender/tide.py`, `treasures.py`. Floating parts were checked by a BVH script (scratchpad).
+- Combat: `OrcKind.TideCrab..TideSerpent` (20-24), `OrcUnit.IsTide`, IsMonster/IsBossKind (serpent),
+  ranged = puffer + shaman (Cannonball shot); models on `OrcRaidManager.tide*Model` (SetupProjectOrcs).
+  Stats `mon_tide_{crab,shark,shaman,puffer,serpent}_*` (economy rows 313-337).
+- `Maps/Archipelago/TideCaches.cs`, placed by MeshMapApplier right after the dungeons: one cache per
+  ordinary island (not start/orc/bot/islet), spot via `DungeonEntrances.TryFindSpot(freeOnGrid)`,
+  5x5 occupied + no-build. Index = order nearest-first. Tier: nearest third 1, middle 2, far 3, gold
+  island 4. Guards `tide_t{tier}_{crab,shark,puffer,shaman,serpent}`, held at their posts
+  (`tide_guard_radius`), ASLEEP until a SoldierUnit is within `tide_wake_radius`; a shaman heals the most
+  hurt guard (`tide_shaman_heal*`). Last guard down -> lid swings open (sign tried at build), rewards
+  `tide_reward_{wood,stone,gold,crystals}_{tier}` + popups + `#log_tide_cache_looted`; `TideCaches.Looted`
+  saved as `tideCachesLooted`; guards are not saved (IsGuard) and are mustered again 1.5 s after load.
+- Rule: they ONLY guard caches (no raids, no attacks on ships). All numbers mine, unconfirmed.
 - Ore rule (asked 2026-11-02): one mine per vein -- already so (`BuildingPlacer`: footprint == vein,
   `vein.Mine == null`).
 - The Water build tab's icon is the Lighthouse picture (`CategoryIconBuilding`).
