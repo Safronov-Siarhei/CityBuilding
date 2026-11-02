@@ -164,12 +164,16 @@ namespace CityBuilder.UI
             if (demolishButton != null) demolishButton.SetActive(building.CanDemolish);
         }
 
+        /// <summary>The level's picture; a building drawn once for all its levels (the Lighthouse) shows the nearest level below that has one, else its own card picture.</summary>
         private Sprite LevelIcon(string buildingId, int level)
         {
-            var key = $"{buildingId}_L{level}";
-            for (var i = 0; i < levelIconKeys.Length && i < levelIcons.Length; i++)
+            for (var l = level; l >= 1; l--)
             {
-                if (levelIconKeys[i] == key) return levelIcons[i];
+                var key = l >= 2 ? $"{buildingId}_L{l}" : buildingId;
+                for (var i = 0; i < levelIconKeys.Length && i < levelIcons.Length; i++)
+                {
+                    if (levelIconKeys[i] == key) return levelIcons[i];
+                }
             }
             return null;
         }

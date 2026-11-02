@@ -35,7 +35,7 @@ namespace CityBuilder.Tests.PlayMode
             Object.FindAnyObjectByType<BuildingPlacer>().MarkMandatoryBuildingAlreadyPlaced();
             var church = PlaytestWorld.Place(PlaytestWorld.Building("Church"), origin);
             var cottage = PlaytestWorld.Place(PlaytestWorld.Building("Cottage"), origin + new Vector2Int(5, 0));
-            var barn = PlaytestWorld.Place(PlaytestWorld.Building("Barn"), origin + new Vector2Int(5, 4));
+            var barn = PlaytestWorld.Place(PlaytestWorld.Building("Warehouse"), origin + new Vector2Int(5, 4));
             Assert.IsNotNull(church);
             Assert.IsNotNull(cottage);
             Assert.IsNotNull(barn);
@@ -133,7 +133,8 @@ namespace CityBuilder.Tests.PlayMode
                 foreach (var building in placed)
                 {
                     var look = building.GetComponent<ConstructionLook>();
-                    var flat = building.Data.isRoad || building.Data.providesWalkableSurface;
+                    // walked on or laid into the ground: a road, a bridge, a drawbridge, a moat (no net)
+                    var flat = building.Data.IsGroundWork || building.Data.providesWalkableSurface;
                     if (flat) Assert.IsNull(look, $"{building.Data.buildingName} is walked on and got a net and scaffolding.");
                     if (flat) continue;
                     Assert.IsTrue(look != null && look.Site.transform.Find("Net") != null, $"{building.Data.buildingName} goes up without its net.");

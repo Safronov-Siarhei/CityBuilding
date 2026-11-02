@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -180,22 +180,6 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.AreEqual(before, ResourceManager.Instance.GetAmount(ResourceType.Stone),
                 "A Quarry produced stone before any worker could possibly have carried some home -- the recipe tick is still paying it.");
-        }
-
-        [UnityTest]
-        public IEnumerator AConverter_StillEarnsOnItsTimer()
-        {
-            // The other half of the same claim: only gatherers stepped off the tick. A farm that
-            // stopped producing would be a far worse bug than the one being fixed.
-            var farm = Place("Farm");
-            var production = Staff(farm);
-            Assert.IsFalse(production.GathersFromNodes, "A Farm does not send anyone out to a tree; it must still tick.");
-
-            var before = ResourceManager.Instance.GetAmount(ResourceType.Grain);
-            yield return new WaitForSeconds(farm.Data.productionIntervalSeconds * 2f + 0.5f);
-
-            Assert.Greater(ResourceManager.Instance.GetAmount(ResourceType.Grain), before,
-                "The Farm stopped producing -- the gatherer exemption is catching buildings it should not.");
         }
 
         [UnityTest]

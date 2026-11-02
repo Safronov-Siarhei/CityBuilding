@@ -173,6 +173,15 @@ def bld_bridge(level):
     return build
 
 
+def bld_castle(level):
+    """The Town Hall's card: the donjon without its terrace, so the keep fills the picture (the user,
+    2026-11-02: the whole 5x5 plot left it a speck on the card and in the category bar)."""
+    def build(b):
+        import keep_drafts
+        keep_drafts.donjon(level, b, bare=True)
+    return build
+
+
 # Named after ResourceType, which is how the game finds them (Res_<ResourceType>.png).
 RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Iron": res_iron_ore, "Res_IronBar": res_iron_bar,
@@ -183,6 +192,7 @@ RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_UpgradeCrystal": res_upgrade_crystal,
              # buildings drawn here rather than taken whole from the file
              "Moat": bld_moat, "Drawbridge": bld_drawbridge(1), "Bridge": bld_bridge(1),
+             "Castle": bld_castle(1), **{f"Castle_L{lv}": bld_castle(lv) for lv in range(2, 6)},
              **{f"Bridge_L{lv}": bld_bridge(lv) for lv in range(2, 6)},
              **{f"Drawbridge_L{lv}": bld_drawbridge(lv) for lv in range(2, 6)}}
 

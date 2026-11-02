@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -133,13 +133,14 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator AConverterRowNamesItsInput()
         {
-            PlaceWorkplaces("Windmill");
+            // the Smelter (the Windmill is put away since the food rework): its first recipe, ore and coal into a bar
+            PlaceWorkplaces("Smelter");
             yield return null;
 
             var description = WorkforcePanelController.DescribeWork(_placed[0].GetComponent<ProductionBuilding>());
 
-            StringAssert.Contains(ResourceNames.Of(ResourceType.Flour), description);
-            StringAssert.Contains(ResourceNames.Of(ResourceType.Grain), description);
+            StringAssert.Contains(ResourceNames.Of(ResourceType.IronBar), description);
+            StringAssert.Contains(ResourceNames.Of(ResourceType.Iron), description);
         }
 
         private void PlaceWorkplaces(params string[] ids)

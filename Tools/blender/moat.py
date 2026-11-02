@@ -1,6 +1,7 @@
 """The Moat (Ров, the user 2026-11-02): one cell of water, laid piece by piece like a fence.
 
-    Moat1-lvl1   the water of one cell: a dark wet bed showing at the rim, the water, two glints
+    Moat1-lvl1   the water of one cell: a dark wet bed showing at the rim and still water (the game
+                 lays its living water over it, Shaders/MoatWater.shader)
     Moat-Bank    the bank along one side (modelled on the south, -y): a stone lip with grass on
                  top; the game shows it on each side with no moat beside it (MoatAppearance)
 
@@ -30,8 +31,6 @@ def water(b=None):
     b = b or Builder()
     b.box(-0.5, 0.5, -0.5, 0.5, 0.0, 0.02, 'stone_dark')
     b.box(-0.5, 0.5, -0.5, 0.5, 0.02, WATER_Z, 'water')
-    for x, y, l in ((-0.18, 0.12, 0.16), (0.2, -0.16, 0.11)):          # glints on the water
-        b.box(x - l / 2, x + l / 2, y - 0.008, y + 0.008, WATER_Z, WATER_Z + 0.002, 'white')
     return b
 
 

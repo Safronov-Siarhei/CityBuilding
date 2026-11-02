@@ -32,7 +32,7 @@ namespace CityBuilder.Tests.PlayMode
             var placer = Object.FindAnyObjectByType<BuildingPlacer>();
             placer.MarkMandatoryBuildingAlreadyPlaced();
             placer.ClearSelection();
-            var barn = PlaytestWorld.Place(PlaytestWorld.Building("Barn"), origin);
+            var barn = PlaytestWorld.Place(PlaytestWorld.Building("Warehouse"), origin);
             var focus = BuildingFocus.Instance;
             focus.Select(barn);
             var rig = Object.FindAnyObjectByType<RTSCameraController>();

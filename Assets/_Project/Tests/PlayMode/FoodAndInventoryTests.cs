@@ -57,24 +57,24 @@ namespace CityBuilder.Tests.PlayMode
             var inventory = Object.FindAnyObjectByType<InventoryPanelController>(FindObjectsInactive.Include);
             Assert.IsNotNull(inventory, "No inventory in the scene.");
             Assert.IsNotNull(GameObject.Find("InventoryButton"), "No round inventory button.");
-            CollectionAssert.IsSubsetOf(new[] { ResourceType.Food, ResourceType.Grain, ResourceType.Flour, ResourceType.Meat, ResourceType.Wood, ResourceType.Coins }, inventory.Types);
+            // one Food since the food rework (the user, 2026-11-02): no grain, flour or meat in stock
+            CollectionAssert.IsSubsetOf(new[] { ResourceType.Food, ResourceType.Wood, ResourceType.Coins }, inventory.Types);
+            foreach (var gone in new[] { ResourceType.Grain, ResourceType.Flour, ResourceType.Meat })
+                CollectionAssert.DoesNotContain(inventory.Types, gone, $"The inventory lists {gone}, which the food rework took out.");
             CollectionAssert.DoesNotContain(inventory.Types, ResourceType.Bread, "The inventory lists bread, which nothing makes any more.");
 
             ResourceManager.Instance.SetAmount(ResourceType.Wood, 120);
             ResourceManager.Instance.SetAmount(ResourceType.Stone, 60);
             ResourceManager.Instance.SetAmount(ResourceType.Food, 45);
-            ResourceManager.Instance.SetAmount(ResourceType.Flour, 12);
-            ResourceManager.Instance.SetAmount(ResourceType.Meat, 4);
-            ResourceManager.Instance.SetAmount(ResourceType.Grain, 7);
             if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("inventory-closed", 1600, 900, Vector3.zero, 40f, 50f, 25f);
             inventory.OpenPanel();
             try
             {
                 if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("inventory-open", 1600, 900, Vector3.zero, 40f, 50f, 25f);
                 Assert.IsTrue(inventory.IsOpen);
-                var row = inventory.transform.GetComponentsInChildren<Transform>(true).First(t => t.name == "Row_Grain");
-                Assert.AreEqual("7", row.Find("Amount").GetComponent<UnityEngine.UI.Text>().text, "The wheat's row does not say how much there is.");
-                ResourceManager.Instance.SetAmount(ResourceType.Grain, 9);
+                var row = inventory.transform.GetComponentsInChildren<Transform>(true).First(t => t.name == "Row_Stone");
+                Assert.AreEqual("60", row.Find("Amount").GetComponent<UnityEngine.UI.Text>().text, "The stone's row does not say how much there is.");
+                ResourceManager.Instance.SetAmount(ResourceType.Stone, 9);
                 Assert.AreEqual("9", row.Find("Amount").GetComponent<UnityEngine.UI.Text>().text, "The open card did not follow the amount.");
             }
             finally

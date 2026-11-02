@@ -67,15 +67,18 @@ def round_turret(b, x, y, z0, z1, r, level, slits=True):
     return apex
 
 
-def donjon(level):
+def donjon(level, b=None, bare=False):
     """The Town Hall: a keep on a cobbled terrace, front -y. Each level a little taller and
     richer: banners from 2, a blue roof and corner flags from 3, gilded finials from 4, a gold
     roof ridge and a second banner pair at 5."""
-    b = Builder()
+    b = b or Builder()
     lift = (level - 1) * 0.12
     r = 1.3
     top = 2.25 + lift                                  # the keep's stone, above the walls' 1.3
-    # the ground: grass, a cobbled terrace with a low parapet, steps up to the gate
+    # the ground: grass, a cobbled terrace with a low parapet, steps up to the gate -- left out
+    # on the card (bare: the keep alone fills the picture, the user 2026-11-02)
+    if bare:
+        return _keep(b, level, lift, 0.0)
     b.box(-2.45, 2.45, -2.45, 2.45, 0, 0.02, 'grass')
     b.box(-2.05, 2.05, -2.05, 2.05, 0, 0.22, 'stone_dark', bevel=0.02)
     b.box(-1.98, 1.98, -1.98, 1.98, 0.22, 0.235, 'cobble')
@@ -85,7 +88,12 @@ def donjon(level):
         w.face_box(b, d, 1.98, 0, 0.22, 0.36, 3.9, 'stone_dark', out=0.05)
     for c in (-1.4, 1.4):
         w.face_box(b, 'S', 1.98, c, 0.22, 0.36, 1.0, 'stone_dark', out=0.05)
-    z0 = 0.235
+    return _keep(b, level, lift, 0.235)
+
+
+def _keep(b, level, lift, z0):
+    r = 1.3
+    top = 2.25 + lift
     # the keep: plinth course, the body, a string course, the machicolated top
     b.box(-r - 0.06, r + 0.06, -r - 0.06, r + 0.06, z0, z0 + 0.2, 'stone_dark')
     b.box(-r, r, -r, r, z0 + 0.2, top, 'stone_mid', bevel=0.02)
@@ -150,7 +158,7 @@ def donjon(level):
     if level >= 3:
         for (sx, sy), p in zip(((-1, -1), (-1, 1), (1, -1), (1, 1)), peaks):
             w.flag(b, sx * r, sy * r, p - 0.04, length=0.3, pole=0.35, colour='banner_red')
-    if level >= 4:
+    if level >= 4 and z0 > 0:
         for sx in (-1, 1):
             b.ball(sx * 0.42, -2.0, 0.36, 0.05, 0.1, 'gold', sides=6)
             b.cylinder(sx * 0.42, -2.0, 0.22, 0.36, 0.07, 'stone_light', sides=8)
@@ -312,4 +320,5 @@ def main():
     w.stage(os.path.join(out_dir, "barbican_levels.png"), (0, 84, 0.8), 12)
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CityBuilder.Buildings;
@@ -193,25 +193,29 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(king.DamageAt(3), king.DamageAt(1) + 2 * BalanceConfig.Instance.KingDamagePerLevel);
         }
 
-        /// <summary>As in Dota: an orc that falls near the King is his experience, whoever struck it; one far off is not.</summary>
+        /// <summary>
+        /// The King learns only from orcs he fells himself (the user, 2026-11-02: a tower's kill used
+        /// to teach every hero near it): one struck down beside him by someone else is worth nothing,
+        /// one his own blow fells is worth its health (OrcUnit.KilledBy).
+        /// </summary>
         [UnityTest]
-        public IEnumerator TheKing_GainsExperience_FromOrcsFallingNearHim()
+        public IEnumerator TheKing_GainsExperience_OnlyFromOrcsHeFells()
         {
             var king = InvasionMode.Instance.King;
             var near = king.transform.position + new Vector3(3f, 0f, 0f);
             Assert.IsTrue(NavMesh.SamplePosition(near, out var hit, 3f, NavMesh.AllAreas), "Nowhere by the King to stand an orc.");
-            var orc = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
-            var worth = orc.MaxHealth;
-
-            for (var t = 0f; t < 30f && orc != null && orc.CurrentHealth > 0; t += Time.deltaTime) yield return null;
-            Assert.IsTrue(orc == null || orc.CurrentHealth <= 0, "The orc beside the King never fell.");
-            Assert.AreEqual(worth, king.Experience + (king.Level - 1) * Hero.XpForLevel(1), "The orc that fell beside him was not worth its health in experience.");
 
             var before = king.Experience;
-            var far = OrcRaidManager.Instance.SpawnOrcs(new Vector3(0f, 0f, 60f), count: 1, level: 1);
-            far.TakeDamage(far.MaxHealth);
+            var others = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
+            others.TakeDamage(others.MaxHealth);
             yield return null;
-            Assert.AreEqual(before, king.Experience, "An orc that fell across the map taught the King something.");
+            Assert.AreEqual(before, king.Experience, "An orc felled beside the King by someone else taught him something.");
+
+            var his = OrcRaidManager.Instance.SpawnOrcs(hit.position, count: 1, level: 1);
+            var worth = his.MaxHealth;
+            his.TakeDamage(his.MaxHealth, king.Unit);
+            yield return null;
+            Assert.AreEqual(before + worth, king.Experience + (king.Level - 1) * Hero.XpForLevel(1), "The orc the King felled was not worth its health in experience.");
         }
 
         [UnityTest]

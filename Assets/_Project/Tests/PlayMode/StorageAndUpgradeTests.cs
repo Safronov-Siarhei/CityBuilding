@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -307,7 +307,8 @@ namespace CityBuilder.Tests.PlayMode
             var active = new List<GameObject>();
             foreach (Transform child in building.transform)
             {
-                if (child.gameObject.activeSelf && child.GetComponent<WorldIndicator>() == null
+                // the stone footing on a sloping plot (BuildingFooting) is no level model
+                if (child.gameObject.activeSelf && child.GetComponent<WorldIndicator>() == null && child.name != "Footing"
                     && child.GetComponentInChildren<MeshRenderer>() != null) active.Add(child.gameObject);
             }
             return active;

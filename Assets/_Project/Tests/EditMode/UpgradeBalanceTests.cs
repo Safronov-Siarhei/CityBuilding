@@ -107,6 +107,8 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in Config.Buildings)
             {
                 if (building.levels.Count != BuildingInstance.MaxLevel || building.levels[0].serviceRadius <= 0) continue;
+                // the Bakery's and the Smokehouse's levels raise their bonus, not their reach (the food rework, 2026-11-02)
+                if (building.id == BuildingIds.Baker || building.id == BuildingIds.Smokehouse) continue;
                 checkedAny = true;
 
                 for (var level = 1; level < BuildingInstance.MaxLevel; level++)

@@ -48,6 +48,8 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in config.Buildings)
             {
                 if (building.startsUnlocked) continue;
+                // put away (the Windmill, the Barns): off the menu and out of the Laboratory on purpose
+                if (CityBuilder.Buildings.BuildingIds.Hidden.Contains(building.id)) continue;
                 lockedCount++;
 
                 var topic = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId(building.id));

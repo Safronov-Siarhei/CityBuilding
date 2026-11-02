@@ -54,11 +54,13 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
-        public void TheMapLoads_AndIsTheDefaultInThePicker()
+        public void TheMapLoads_AndIsInThePicker()
         {
             Assert.AreEqual(MapId, MeshMapApplier.Instance.CurrentMapId, "Map 5 was not applied -- is it in Resources/MeshMaps?");
+            // the picker offers the Archipelago alone since 2026-10-29 (the user: «старые карты
+            // убираем»); Map 5 stays in the catalog for old saves and loads as above
             var choosable = MapSelector.Choosable().ConvertAll(m => m.MapId);
-            Assert.AreEqual(MapId, choosable.FirstOrDefault(), "The newest map heads the picker.");
+            CollectionAssert.DoesNotContain(choosable, MapId, "Map 5 is back in the picker, which offers the Archipelago alone.");
         }
 
         [Test]

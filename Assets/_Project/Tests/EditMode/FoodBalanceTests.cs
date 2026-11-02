@@ -73,45 +73,6 @@ namespace CityBuilder.Tests.EditMode
         }
 
         /// <summary>
-        /// The chain is three buildings, two researches and a barn; if it did not beat throwing the
-        /// same hands into fishing huts, there would be no reason to ever build it.
-        /// </summary>
-        [Test]
-        public void TheBreadChain_FeedsMorePeoplePerWorkerThanFishing()
-        {
-            var baker = Building("Baker");
-            var windmill = Building("Windmill");
-            var farm = Building("Farm");
-
-            // Workers a matched chain needs to keep one full bakery in flour, and that mill in grain.
-            var windmillsPerBakery = InputPerDay(baker) / OutputPerDay(windmill);
-            var farmsPerMill = InputPerDay(windmill) / OutputPerDay(farm);
-            var workers = baker.levels[0].maxWorkers
-                          + windmillsPerBakery * windmill.levels[0].maxWorkers
-                          + windmillsPerBakery * farmsPerMill * farm.levels[0].maxWorkers;
-
-            var breadPerWorker = MouthsFedBy(OutputPerDay(baker)) / workers;
-            var fishPerWorker = MouthsFedBy(OutputPerDay(Building("FisherHut"))) / Building("FisherHut").levels[0].maxWorkers;
-
-            Assert.Greater(breadPerWorker, fishPerWorker,
-                "Grain -> flour -> bread costs three buildings and two researches, so it has to feed more mouths per pair of hands than a fishing hut does.");
-        }
-
-        /// <summary>
-        /// One farm, one mill, one bakery: the chain is meant to be readable as a straight line,
-        /// not as a ratio the player has to work out on paper. Tolerant enough that a retune can
-        /// move all three together, tight enough to catch one of them drifting alone.
-        /// </summary>
-        [Test]
-        public void TheChain_IsOneFarmToOneMillToOneBakery()
-        {
-            Assert.AreEqual(1f, InputPerDay(Building("Windmill")) / OutputPerDay(Building("Farm")), 0.2f,
-                "A mill should eat about exactly what one farm grows.");
-            Assert.AreEqual(1f, InputPerDay(Building("Baker")) / OutputPerDay(Building("Windmill")), 0.2f,
-                "A bakery should eat about exactly what one mill grinds.");
-        }
-
-        /// <summary>
         /// Storage has to hold more than a single day's meal, or a village would starve the moment
         /// its stores filled and its farms started tipping the surplus on the floor.
         /// </summary>

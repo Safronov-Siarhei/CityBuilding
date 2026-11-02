@@ -77,8 +77,11 @@ namespace CityBuilder.Tests.PlayMode
 
                 // Measured on the frame it is placed, before anything can decay, catch fire or be
                 // upgraded: those add their own marker objects, and they are not what this counts.
+                // the stone footing (BuildingFooting) is not the model: it stands only where the plot
+                // falls away, and FindFreeArea's corner of the map is the sloping shore. A moat's
+                // living water is its own shader (MoatWater) over the one combined bank mesh.
                 var drawing = building.GetComponentsInChildren<Renderer>()
-                    .Where(r => r.enabled && r.gameObject.activeInHierarchy)
+                    .Where(r => r.enabled && r.gameObject.activeInHierarchy && r.gameObject.name != "Footing" && r.gameObject.name != "MoatWater")
                     .ToArray();
 
                 if (drawing.Length > 1)

@@ -754,7 +754,9 @@ namespace CityBuilder.EditorTools
             {
                 var file = AssetDatabase.GUIDToAssetPath(path);
                 var name = System.IO.Path.GetFileNameWithoutExtension(file);
-                if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$")) continue;
+                // the level pictures, and each building's own card picture for a level with none
+                // of its own (the Lighthouse has one model for all five)
+                if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$|^[A-Z][A-Za-z]+$")) continue;
                 keys.Add(name);
                 sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
             }

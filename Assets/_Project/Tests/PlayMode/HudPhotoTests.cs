@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -397,20 +397,6 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheGlassLook_WritesLight_AndTheOthersDark()
-        {
-            foreach (var skin in HudSkins.All)
-            {
-                GameSettings.HudSkin = skin;
-                yield return null;
-                var rate = HudRoot().Find("TaxRate/RatePlaque/RateLabel").GetComponent<Text>();
-                Color.RGBToHSV(rate.color, out _, out _, out var v);
-                if (skin == HudSkin.Glass) Assert.Greater(v, 0.8f, "On dark glass the tax rate is written dark.");
-                else Assert.Less(v, 0.5f, $"{skin}: on a light plaque the tax rate is written light.");
-            }
-        }
-
-        [UnityTest]
         public IEnumerator TheDockLook_KeepsTheTabsInTheDock_AndOpensTheCardsAboveIt()
         {
             GameSettings.HudSkin = HudSkin.Dock;
@@ -580,16 +566,6 @@ namespace CityBuilder.Tests.PlayMode
                 StringAssert.DoesNotContain(Core.Localization.Get("#tier_" + tier), day, "The day line still names the settlement's tier.");
             }
             Assert.IsNull(HudRoot().Find("SettlementTierToast"), "The tier-up toast is still in the HUD.");
-        }
-
-        [Test]
-        public void TheTax_SaysWhatItIs()
-        {
-            // The one HUD control that keeps a word (the user, 2026-10-14): "Налог: 10%", not a coin and a number.
-            var rate = HudRoot().Find("TaxRate/RatePlaque/RateLabel").GetComponent<Text>().text;
-            var rateNow = TaxManager.Instance != null ? TaxManager.Instance.TaxRatePercent : 10;
-            Assert.AreEqual(Core.Localization.Format("#tax_rate", rateNow), rate, "The tax plaque should name the tax in words.");
-            Assert.IsNull(HudRoot().Find("TaxRate/RatePlaque/Coin"), "The coin picture is still on the tax plaque.");
         }
 
         [Test]

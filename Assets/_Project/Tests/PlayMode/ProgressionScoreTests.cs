@@ -81,7 +81,7 @@ namespace CityBuilder.Tests.PlayMode
         {
             var before = PlayerProgression.Score();
 
-            Place("Barn");
+            Place("Warehouse");
             yield return null;
 
             Assert.Greater(PlayerProgression.Score(), before,
@@ -92,7 +92,7 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator UpgradingSomething_RaisesTheScoreWithoutBuildingMore()
         {
-            var instance = Place("Barn");
+            var instance = Place("Warehouse");
             yield return null;
 
             var beforeUpgrade = PlayerProgression.Score();
@@ -120,7 +120,7 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator ATower_CountsForMoreThanAStorehouse()
         {
-            var barn = Place("Barn");
+            var barn = Place("Warehouse");
             yield return null;
             var withBarn = PlayerProgression.Score();
 

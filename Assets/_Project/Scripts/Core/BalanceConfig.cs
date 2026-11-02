@@ -744,6 +744,7 @@ namespace CityBuilder.Core
         private static readonly string[] MonsterIds =
         {
             "wolf", "bear", "troll", "giant", "rat", "bat", "spider", "spiderling", "skeleton", "kobold", "stone_golem", "spider_queen", "ore_golem",
+            "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>

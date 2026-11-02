@@ -250,14 +250,30 @@ namespace CityBuilder.EditorTools
                 Debug.LogError("AddMoatBanks: Moat-Bank.fbx missing -- run Tools/blender/moat.py and export");
                 return;
             }
-            var banks = new GameObject[4];
-            for (var side = 0; side < 4; side++)
-            {
-                banks[side] = Object.Instantiate(bank, Vector3.zero, bank.transform.rotation, root.transform);
-                banks[side].name = $"Moat-Bank{side}";
-                banks[side].SetActive(false);
-            }
-            root.AddComponent<MoatAppearance>().Wire(banks, bank.transform.rotation);
+            // one renderer for whichever banks a cell shows (MoatAppearance combines them)
+            var bankFilter = bank.GetComponentInChildren<MeshFilter>();
+            var bankRenderer = bank.GetComponentInChildren<MeshRenderer>();
+            var holder = new GameObject("MoatBanks", typeof(MeshFilter), typeof(MeshRenderer));
+            holder.transform.SetParent(root.transform, false);
+            holder.GetComponent<MeshRenderer>().sharedMaterial = bankRenderer != null ? bankRenderer.sharedMaterial : null;
+            root.AddComponent<MoatAppearance>().Wire(holder.GetComponent<MeshFilter>(), bankFilter != null ? bankFilter.sharedMesh : null,
+                bankFilter != null ? bankFilter.transform.localToWorldMatrix : Matrix4x4.identity);
+            // the model's own still water and bed lie wholly under the living water: not drawn
+            foreach (var bed in root.GetComponentsInChildren<MeshRenderer>())
+                if (bed.gameObject != holder) bed.enabled = false;
+
+            // the living water over the model's still one (Shaders/MoatWater.shader): a flat quad a
+            // touch above it, under the banks' lip
+            var water = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            water.name = "MoatWater";
+            Object.DestroyImmediate(water.GetComponent<Collider>());
+            water.transform.SetParent(root.transform, false);
+            water.transform.localPosition = new Vector3(0f, 0.04f, 0f);
+            water.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            water.transform.localScale = new Vector3(CellSize, CellSize, 1f);
+            var renderer = water.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = CrystalMaterial("MoatWater", "CityBuilder/MoatWater", null);
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         private static void AddWallTowerLook(GameObject root, string id, Vector2Int footprint)

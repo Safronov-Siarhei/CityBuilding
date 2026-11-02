@@ -245,7 +245,9 @@ namespace CityBuilder.UI
             var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen)
                 || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen)
                 || Dungeon.DungeonEntrance.AnyCardOpen;
-            if (detailsButton != null && detailsButton.activeSelf == cardUp) detailsButton.SetActive(!cardUp);
+            // (and never on the hire camp, which has no card -- it used to come back here)
+            var wanted = !cardUp && (Entrance == null || Entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);
+            if (detailsButton != null && detailsButton.activeSelf != wanted) detailsButton.SetActive(wanted);
             // the camera taken away till the building is off the screen lets it go
             if (!cardUp && OffScreen(Held))
             {

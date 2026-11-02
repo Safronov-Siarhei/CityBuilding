@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
 namespace CityBuilder.EditorTools
@@ -96,7 +96,8 @@ namespace CityBuilder.EditorTools
 
             // Buildings and trees are only ever drawn and measured by their bounds: a second,
             // CPU-side copy of every mesh would be RAM for nothing, and they carry no animation.
-            modelImporter.isReadable = false;
+            // ...except the moat's bank, which MoatAppearance combines into one mesh a cell at runtime
+            modelImporter.isReadable = assetPath.EndsWith("/Moat-Bank.fbx");
             modelImporter.importAnimation = false;
             modelImporter.animationType = ModelImporterAnimationType.None;
             // Five levels of every building plus the orc bases made meshes 62% of the build and

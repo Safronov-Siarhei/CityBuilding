@@ -233,7 +233,7 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator AFireEatsTheBuildingAndThenGoesOut()
         {
-            var barn = Place("Barn");
+            var barn = Place("Warehouse");
             yield return null;
 
             var healthBefore = barn.CurrentHealth;
@@ -258,7 +258,7 @@ namespace CityBuilder.Tests.PlayMode
         [UnityTest]
         public IEnumerator AStaffedBrigadeShortensTheFireAndAnEmptyOneDoesNot()
         {
-            var barn = Place("Barn");
+            var barn = Place("Warehouse");
             var station = Place("FireBrigade", barn.OriginCell + Vector2Int.right * 3);
             var workplace = station.GetComponent<ProductionBuilding>();
             Assert.IsNotNull(workplace, "The Пожарная бригада has no worker slots, so nobody can man it.");

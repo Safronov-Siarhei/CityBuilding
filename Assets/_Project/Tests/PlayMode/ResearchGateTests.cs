@@ -324,7 +324,7 @@ namespace CityBuilder.Tests.PlayMode
 
             var first = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Smelter"));
             var second = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Treasury"));
-            var third = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Barn"));
+            var third = ResearchCatalog.ById(ResearchTopic.UnlockBuildingId("Drawbridge"));
             Assert.IsTrue(research.TryStart(first), research.DescribeBlocker(first));
             Assert.IsTrue(research.TryStart(second), research.DescribeBlocker(second));
             Assert.IsFalse(research.TryStart(third), "A third research started with two scientists.");

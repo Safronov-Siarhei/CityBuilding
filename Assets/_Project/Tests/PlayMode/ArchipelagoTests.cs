@@ -78,8 +78,10 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(hall, "No Town Hall in the start zone.");
             yield return null;
 
-            // the whole start island in view (the user, 2026-11-01): its land far past the Town Hall's own reveal
+            // the start island is noted but stays FOGGED past the Town Hall's own reveal until the
+            // lighthouse stands (the user, 2026-11-02, reversing 2026-11-01's whole island in view)
             applier.RevealStartIsland(world.StartCell);
+            Assert.IsTrue(applier.OnStartIsland(world.StartCell), "The Town Hall's island was not noted as the start island.");
             var fog = CityBuilder.Maps.FogOfWarManager.Instance;
             var far = 0;
             for (var dx = -60; dx <= 60; dx += 3)
@@ -89,7 +91,7 @@ namespace CityBuilder.Tests.PlayMode
                 if (dx * dx + dz * dz < 22 * 22 || applier.IsWaterCell(c)) continue;
                 if (fog.IsCellRevealed(c)) far++;
             }
-            Assert.Greater(far, 0, "The start island is not in view past the Town Hall.");
+            Assert.AreEqual(0, far, "The start island is in view past the Town Hall before any lighthouse.");
 
             // what the phone draws: the land, the relief, the sea
             var triangles = new System.Collections.Generic.Dictionary<string, int>();

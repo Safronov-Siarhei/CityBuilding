@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -58,11 +58,11 @@ namespace CityBuilder.Tests.EditMode
             Assert.AreEqual(4, ProductionBuilding.AffordableBatches(4, null, new int[0]));
         }
 
-        [TestCase("Farm", ResourceType.Grain)]
-        [TestCase("Windmill", ResourceType.Flour)]
+        // one Food since the food rework (the user, 2026-11-02): the farms and the pens make Food
+        [TestCase("Farm", ResourceType.Food)]
         [TestCase("Baker", ResourceType.Food)]
         [TestCase("Orchard", ResourceType.Food)]
-        [TestCase("PigFarm", ResourceType.Meat)]
+        [TestCase("PigFarm", ResourceType.Food)]
         [TestCase("Smokehouse", ResourceType.Food)]
         [TestCase("CopperMine", ResourceType.CopperOre)]
         public void TheChainsProduceWhatTheDesignSays(string id, ResourceType produces)
@@ -70,38 +70,6 @@ namespace CityBuilder.Tests.EditMode
             var recipes = Building(id).recipes;
             Assert.AreEqual(1, recipes.Count, $"{id} is expected to know exactly one recipe.");
             Assert.AreEqual(produces, recipes[0].output, $"{id} no longer produces {produces} -- check its row in the recipes tab.");
-        }
-
-        [TestCase("Windmill", ResourceType.Grain)]
-        [TestCase("Baker", ResourceType.Flour)]
-        [TestCase("Smokehouse", ResourceType.Meat)]
-        public void TheConvertersEatTheLinkBeforeThem(string id, ResourceType consumes)
-        {
-            var recipe = Building(id).recipes[0];
-
-            Assert.IsTrue(recipe.HasInputs, $"{id} has no inputs, which turns it back into a building that makes {recipe.output} out of nothing.");
-            Assert.AreEqual(consumes, recipe.inputs[0].type, $"{id} no longer consumes {consumes} -- check its row in the recipes tab.");
-            Assert.Greater(recipe.inputs[0].amount, 0);
-            Assert.Greater(recipe.outputAmount, 0, $"{id} produces nothing per batch, so its input would simply vanish.");
-        }
-
-        /// <summary>
-        /// One food counter (the user, 2026-10-25): the food buildings differ in how much Food they
-        /// make, and the longer the chain behind one, the more Food per worker it gives -- counted
-        /// over EVERY worker of the chain at level 1, balanced so no link starves or overflows.
-        /// Fish and fruit are one link, smoked pork two, bread three; each link must pay more.
-        /// </summary>
-        [Test]
-        public void ALongerFoodChain_FeedsMorePerWorker()
-        {
-            var fish = PerWorker("FisherHut");
-            var fruit = PerWorker("Orchard");
-            var pork = ChainPerWorker("PigFarm", "Smokehouse");
-            var bread = ChainPerWorker("Farm", "Windmill", "Baker");
-            Assert.Greater(fish, 0f, "The Fisher Hut makes no Food.");
-            Assert.AreEqual(fish, fruit, 0.01f, "The Orchard is a one-link food like the Fisher Hut and should pay like it.");
-            Assert.Greater(pork, fish, "Smoked pork (two links) pays no more per worker than fish.");
-            Assert.Greater(bread, pork, "Bread (three links) pays no more per worker than smoked pork.");
         }
 
         /// <summary>A gatherer's output per worker and tick, at level 1.</summary>
@@ -251,6 +219,8 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var building in config.Buildings)
             {
+                // a building put away (the Windmill) keeps its old recipe and is never built
+                if (Buildings.BuildingIds.Hidden.Contains(building.id)) continue;
                 foreach (var recipe in building.recipes)
                 {
                     foreach (var input in recipe.inputs)
