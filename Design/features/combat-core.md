@@ -7,7 +7,7 @@
 > it; 1 cell = 1 standing fighter, others pass through to free cells. Up only through a Tower/Fortified
 > Tower of level 3+ standing next to the wall: its model swaps to the WALL version (stair tower /
 > round tower), a doorway ("-Door" piece) ONLY on the sides a wall really joins; a tower of lvl1-2
-> stays as it is and is no way up. Towers keep shooting. Gate lvl3+ in a wall = gatehouse, the walk
+> stays as it is and is no way up. Towers keep shooting. NO round towers (the user, v3): the 2x2 Fortified wall tower is square so walls butt flat; it can take a doorway per cell of each side. Gate lvl3+ in a wall = gatehouse, the walk
 > runs over it. Orders: option A (select ranged units, tap a wall cell, they go via the nearest wall
 > tower); in a defence ranged units seek high ground on their own and climb walls if they can.
 > Proposed (not yet confirmed): melee orcs can't reach them, throwers can; +range on a wall; a fighter

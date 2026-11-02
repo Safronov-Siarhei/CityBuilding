@@ -14,7 +14,7 @@ A tower beside a walk wall changes into its WALL version, the stair up (only fro
                               doorway onto the walk only where a walk wall joins it
                               (the separate "-Door" piece, set by the game per side), a battlemented top
                               (lvl4 a blue spire, lvl5 a gold one)
-    WallFortTower-lvl3..5     the Fortified Tower (2x2): a round keep-tower, the same doorways
+    WallFortTower-lvl3..5     the Fortified Tower (2x2): a square tower, the same doorways
     WallGatehouse-lvl3..5     the Gate (1x1 on a road): an arch over the road with a raised
                               portcullis and the walk carried over it, two corner turrets
 
@@ -185,19 +185,30 @@ def wall_tower(level):
 
 
 def wall_fort_tower(level):
-    """The Fortified Tower beside a walk wall: a round tower on 2x2, the same doorways."""
+    """The Fortified Tower beside a walk wall: a square tower on 2x2 (the user, 2026-11-02: no round
+    towers -- walls must butt flat against it), corner buttresses, slits, a battlemented top; the
+    doorways onto the walk are "-Door" pieces, two possible on each side (one per cell)."""
     b = Builder()
     h = HEIGHT[level]
     top = h + 1.5 + (level - 3) * 0.3
-    r = 0.9
-    b.cylinder(0, 0, 0, 0.14, r + 0.06, 'stone_dark', sides=16)
-    b.cylinder(0, 0, 0.14, top, r, 'stone_dark', sides=16)
-    doorway(b, 'S', 0.14, 0.34, 0.5, r - 0.02)
-    for k in range(6):
-        a = (k + 0.5) * math.pi * 2 / 6
-        b.zbox(math.cos(a) * (r - 0.01), math.sin(a) * (r - 0.01), h + 0.75, h + 0.97, 0.025, 0.04, math.degrees(a), 'door')
-    crown(b, r, top, square=False)
-    spire(b, r * 0.8, top + 0.08, level, sides=8)
+    r = 0.95
+    b.box(-r - 0.04, r + 0.04, -r - 0.04, r + 0.04, 0, 0.14, 'stone_dark')
+    b.box(-r, r, -r, r, 0.14, top, 'stone_dark', bevel=0.02)
+    for sx in (-1, 1):                                                # corner buttresses
+        for sy in (-1, 1):
+            b.box(min(sx * (r - 0.12), sx * (r + 0.05)), max(sx * (r - 0.12), sx * (r + 0.05)),
+                  min(sy * (r - 0.12), sy * (r + 0.05)), max(sy * (r - 0.12), sy * (r + 0.05)), 0.14, top - 0.25, 'stone_dark')
+    doorway(b, 'S', 0.14, 0.34, 0.5, r)                               # the door at the foot
+    for d in 'NSEW':                                                  # slits up each face
+        for c in (-0.5, 0.5):
+            dx, dy = DIRS[d]
+            z0 = h + 0.62
+            if dx:
+                b.box(dx * r - 0.02, dx * r + 0.02, c - 0.03, c + 0.03, z0, z0 + 0.2, 'door')
+            else:
+                b.box(c - 0.03, c + 0.03, dy * r - 0.02, dy * r + 0.02, z0, z0 + 0.2, 'door')
+    crown(b, r, top)
+    spire(b, r * 0.8, top + 0.08, level)
     return b
 
 
@@ -239,14 +250,12 @@ def gatehouse(level):
 
 def tower_door(level, fort):
     """The doorway onto the walk, facing -y: the game sets one on each side a walk wall joins
-    (the user, 2026-11-02: only where a wall really meets the tower). On the round 2x2 tower the
-    wall meets it half a cell off its middle, so the door sits on the curve there."""
+    (the user, 2026-11-02: only where a wall really meets the tower). On the 2x2 tower a wall
+    meets a side half a cell off its middle: the game sets the piece there."""
     b = Builder()
     h = HEIGHT[level]
     if fort:
-        r = math.sqrt(0.9 ** 2 - 0.25) + 0.02
-        b.box(-0.15, 0.15, -r - 0.02, -r + 0.12, h, h + 0.44, 'door')
-        b.box(-0.2, 0.2, -r - 0.03, -r + 0.12, h + 0.44, h + 0.5, 'stone_dark')
+        doorway(b, 'S', h, 0.3, 0.44, 0.95)
     else:
         doorway(b, 'S', h, 0.3, 0.42, 0.47)
     return b
