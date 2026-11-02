@@ -69,6 +69,10 @@ namespace CityBuilder.Grid
         public static int RadiusOf(Buildings.BuildingData data, int level)
         {
             if (data == null) return 0;
+            // a Fisher's Hut fishes this far (the user, 2026-11-02: its radius shown) -- the same reach
+            // a fish shoal must lie within to double its catch
+            if (data.buildingName == Buildings.BuildingIds.FisherHut && Core.BalanceConfig.Instance != null)
+                return Mathf.RoundToInt(Core.BalanceConfig.Instance.FishHutReachMeters);
             var stats = data.LevelStats(level);
             return stats.harvestRadius > 0 ? stats.harvestRadius : Mathf.Max(0, stats.serviceRadius);
         }

@@ -149,6 +149,8 @@ namespace CityBuilder.Buildings
                 // the archipelago's start island in view whole -- on a load too (the return from a
                 // dungeon showed it fogged, 2026-11-02): the Town Hall's island, whenever it stands
                 if (data.buildingName == BuildingIds.TownHall) Maps.MeshMapApplier.Instance?.RevealStartIsland(centerCell);
+                // a stone footing where the plot falls away below it (a sloping shore)
+                BuildingFooting.Add(this);
 
                 SetupNavMeshObstacle(data);
                 // The mirror image of the obstacle above: a Bridge doesn't carve the NavMesh, it

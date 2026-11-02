@@ -45,7 +45,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna", "Tide", "Cache")):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna", "Tide", "Cache", "Tool")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -81,7 +81,8 @@ def target(o):
     if o.name.startswith(("Monster", "Gnome")):
         os.makedirs(MONSTERS, exist_ok=True)
         return os.path.join(MONSTERS, o.name + ".fbx")
-    if o.name.startswith("Villager"):
+    # the townsfolk's work tools (tools.py), laid over a villager by the game
+    if o.name.startswith(("Villager", "Tool")):
         os.makedirs(CITIZENS, exist_ok=True)
         return os.path.join(CITIZENS, o.name + ".fbx")
     folder = TERRAIN if o.name.startswith(("Tree", "Stone")) else BUILDINGS

@@ -62,7 +62,7 @@ namespace CityBuilder.Maps.Archipelago
             var side = rng.Next01() * Mathf.PI * 2f;
             var c = World / 2f;
             var flank = Mathf.PI / 2f * (rng.Next01() < 0.5f ? 1f : -1f);
-            foreach (var (kind, size, turn) in new[] { (Kind.Start, 130, 0f), (Kind.Orc, 125, Mathf.PI), (Kind.Bot, 120, flank) })
+            foreach (var (kind, size, turn) in new[] { (Kind.Start, 190, 0f), (Kind.Orc, 125, Mathf.PI), (Kind.Bot, 120, flank) })
             {
                 var done = false;
                 for (var attempt = 0; attempt < 25 && !done; attempt++)

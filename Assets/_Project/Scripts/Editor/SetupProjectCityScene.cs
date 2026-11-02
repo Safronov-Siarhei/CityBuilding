@@ -399,6 +399,7 @@ namespace CityBuilder.EditorTools
             var placerSO = new SerializedObject(placer);
             placerSO.FindProperty("targetCamera").objectReferenceValue = camera;
             placerSO.FindProperty("mandatoryFirstBuilding").objectReferenceValue = townHallData;
+            placerSO.FindProperty("footingStone").objectReferenceValue = rockMaterial;
             var availableProp = placerSO.FindProperty("availableBuildings");
             availableProp.arraySize = hotbarBuildingData.Count;
             for (var i = 0; i < hotbarBuildingData.Count; i++)
@@ -553,6 +554,15 @@ namespace CityBuilder.EditorTools
             }
             WriteArray(citizenVisualsManagerSO.FindProperty("villagerPortraits"), portraits.ToArray());
             WriteArray(citizenVisualsManagerSO.FindProperty("villagerModels"), villagers.ToArray());
+            // the work tools, in WorkKind order (Chop, Mine, Fish, Plough, Pick, Feed) -- Tools/blender/tools.py
+            var tools = new List<Object>();
+            foreach (var tool in new[] { "ToolAxe", "ToolPickaxe", "ToolRod", "ToolHoe", "ToolBasket", "ToolBucket" })
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Citizens/{tool}.fbx");
+                if (model == null) Debug.LogWarning($"[SetupProject] Models/Citizens/{tool}.fbx is missing -- run Tools/blender/export_fbx.py.");
+                tools.Add(model);
+            }
+            WriteArray(citizenVisualsManagerSO.FindProperty("toolModels"), tools.ToArray());
             citizenVisualsManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
             var fogOfWarManager = managers.AddComponent<FogOfWarManager>();

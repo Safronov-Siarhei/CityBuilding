@@ -207,8 +207,28 @@ namespace CityBuilder.Citizens
         }
 
         /// <summary>Switches (or keeps) the agent to ambient wandering from wherever it currently is.</summary>
+        /// <summary>A place to work at and the point to face there (a field's furrow, the water off a shore).</summary>
+        public struct WorkSpot
+        {
+            public Vector3 At;
+            public Vector3 Face;
+        }
+
+        // what he does at his tree/rock/spot (CitizenWaddle.Work), and, for a worker with no tree or
+        // rock, where he goes to do it -- a field, an orchard, a pen, the shore (the user, 2026-11-02)
+        private WorkKind _workKind;
+        private System.Func<WorkSpot> _spots;
+        private WorkSpot _spot;
+        private bool _headingToSpot;
+        private const float SpotWorkSeconds = 6f;
+        private CitizenWaddle _waddle;
+        private CitizenWaddle Waddle => _waddle != null ? _waddle : (_waddle = GetComponent<CitizenWaddle>());
+
         public void SetIdleWander(Vector3 townCenter)
         {
+            _spots = null;
+            _workKind = WorkKind.None;
+            Waddle?.StopWork();
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
             ReleaseGatherNode();
@@ -231,8 +251,12 @@ namespace CityBuilder.Citizens
         /// <summary>The tree or rock it is sent to work, or null (resting at its yard, or not a gatherer).</summary>
         public ResourceNode WorkNode => _workNode;
 
-        public void SetWorking(Vector3 buildingPos, ResourceNode node, float buildingReach = 0f)
+        public void SetWorking(Vector3 buildingPos, ResourceNode node, float buildingReach = 0f, WorkKind kind = WorkKind.None, System.Func<WorkSpot> spots = null)
         {
+            _workKind = kind;
+            _spots = node == null ? spots : null;
+            _headingToSpot = false;
+            Waddle?.StopWork();
             _buildingReach = buildingReach;
             _reassignedDuringCallback = true;
             _resumingAfterStuck = false;
@@ -243,7 +267,19 @@ namespace CityBuilder.Citizens
             _workNode = node;
             _nodePos = node != null ? node.transform.position : (Vector3?)null;
             _headingToNode = _nodePos.HasValue;
+            if (!_headingToNode && _spots != null)
+            {
+                GoToNextSpot();
+                return;
+            }
             WalkTo(_headingToNode ? _nodePos.Value : buildingPos);
+        }
+
+        private void GoToNextSpot()
+        {
+            _spot = _spots();
+            _headingToSpot = true;
+            WalkTo(_spot.At);
         }
 
         /// <summary>
@@ -576,6 +612,8 @@ namespace CityBuilder.Citizens
                 }
 
                 BeginPause(HarvestSeconds);
+                // by hand: an axe to a tree, a pick to a rock
+                Waddle?.Work(_gatherNode.ResourceType == Resources.ResourceType.Stone ? WorkKind.Mine : WorkKind.Chop, _gatherNode.transform.position);
                 return;
             }
 
@@ -601,8 +639,18 @@ namespace CityBuilder.Citizens
                 return;
             }
 
+            // Working at a spot of his own (a field, a shore): work there a while
+            if (!_nodePos.HasValue && _spots != null)
+            {
+                BeginPause(_headingToSpot ? SpotWorkSeconds : BuildingRestSeconds);
+                if (_headingToSpot) Waddle?.Work(_workKind, _spot.Face);
+                _headingToSpot = false;
+                return;
+            }
+
             // Working: pause at whichever end was just reached before looping to the other.
             BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
+            if (_headingToNode && _nodePos.HasValue) Waddle?.Work(_workKind, _nodePos.Value);
         }
 
         /// <summary>Starts a timed pause and remembers how long it was, which is the only way the harvest bar can report a fraction rather than a countdown.</summary>
@@ -628,7 +676,14 @@ namespace CityBuilder.Citizens
 
             if (!_nodePos.HasValue)
             {
-                // No node to commute to (Food-type building) — just keep resting at the building.
+                // a worker of a field, an orchard, a pen or a shore: on to the next spot
+                if (_spots != null)
+                {
+                    Waddle?.StopWork();
+                    GoToNextSpot();
+                    return;
+                }
+                // No node to commute to — just keep resting at the building.
                 BeginPause(BuildingRestSeconds);
                 return;
             }
@@ -725,6 +780,8 @@ namespace CityBuilder.Citizens
 
         private void WalkTo(Vector3 target)
         {
+            // the tool goes away as he sets off
+            Waddle?.StopWork();
             BuildRoute(transform.position, target);
             _target = _route[_routeIndex];
             _isWalking = true;

@@ -29,6 +29,8 @@ namespace CityBuilder.Citizens
         /// colourings), one picked at random per citizen; with none, the old two cubes.
         /// </summary>
         [SerializeField] private GameObject[] villagerModels = new GameObject[0];
+        /// <summary>The work tools by WorkKind - 1 (Tools/blender/tools.py: axe, pick, rod, hoe, basket, pail).</summary>
+        [SerializeField] private GameObject[] toolModels = new GameObject[0];
         /// <summary>Each model's main colour -- what most of it is -- measured at project setup, parallel to villagerModels.</summary>
         [SerializeField] private Color[] villagerClothes = new Color[0];
         /// <summary>Each model's face (render_portrait.py), parallel to villagerModels: the workforce panel's row.</summary>
@@ -80,6 +82,7 @@ namespace CityBuilder.Citizens
 
         private void Awake()
         {
+            CitizenWaddle.ToolModels = toolModels;
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -260,7 +263,9 @@ namespace CityBuilder.Citizens
                 var footprint = buildingInstance.RotatedFootprint();
                 reach = Mathf.Max(footprint.x, footprint.y) * gridManager.CellSize * 0.5f + 0.6f;
             }
-            agent.SetWorking(buildingPos, claimed, reach);
+            // his trade's tool and, with no tree or rock, his own spots to work at (field, orchard, pen, shore)
+            agent.SetWorking(buildingPos, claimed, reach,
+                resting ? WorkKind.None : WorkSpots.KindOf(building.BuildingId), resting ? null : WorkSpots.For(building));
             EnsureWorkVisitSubscription(agent, building);
         }
 
