@@ -279,6 +279,8 @@ namespace CityBuilder.EditorTools
             { BuildingCategory.Defence, "Tower" },
             { BuildingCategory.Production, "IronMine" },
             { BuildingCategory.Food, "Farm" },
+            // the water buildings (Shipyard, Lighthouse, ...): the lighthouse stands for them (the user, 2026-11-02)
+            { BuildingCategory.Water, "Lighthouse" },
         };
     }
 }

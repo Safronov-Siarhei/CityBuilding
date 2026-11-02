@@ -276,3 +276,15 @@
   (45/52/60/70/80 cells: a medium island at 1, a large one at 5) instead of fog_reveal_radius, again
   on every upgrade and on load. The old paid spot-lighting (LighthouseAim) is kept as it was.
 - Not seen in game; no tests (user: one general run later).
+
+## Guarded caches and the sea folk (2026-11-02, IN DESIGN)
+- Caches: `Tools/blender/treasures.py` CacheChest (lid part CacheChest-Lid, hinge) + CacheRuin
+  (STONE, the user: no corals, it is not the sea floor) -- APPROVED, not exported.
+- Guards: a new sea faction (name not chosen yet; working name «Дети Прилива»), composition
+  APPROVED: TideCrab (crab guard, melee tank), TideEel (eel spearman, trident), TidePriestess (ranged,
+  heals), TideKeeper (boss: hermit crab in a sunk ship's hull, the gold island). `Tools/blender/tide.py`,
+  jointed for FigureAnimator; models sent for approval, not exported. Rule: they ONLY guard caches
+  (no raids, no attacks on ships). Strength by distance from the start; cleared caches stay empty.
+- Ore rule (asked 2026-11-02): one mine per vein -- already so (`BuildingPlacer`: footprint == vein,
+  `vein.Mine == null`).
+- The Water build tab's icon is the Lighthouse picture (`CategoryIconBuilding`).
