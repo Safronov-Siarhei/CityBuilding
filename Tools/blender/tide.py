@@ -7,10 +7,10 @@ they only guard the caches). Facing -y, standing on the origin. Run in the model
 - TideCrab: the crab guard -- a broad shell on four legs, two great claws; slow, armoured, melee.
 - TideShark: the hammerhead -- a shark warrior with a sawfish-snout sword and a turtle-shell
   shield; fast, melee.
-- TideOctopus: the octopus shaman -- a great spotted mantle on curling tentacles, a jellyfish
-  lantern on a coral staff; strikes from afar and heals its own.
-- TideAngler: the anglerfish -- a second choice for the ranged fighter: a gaping toothy mouth on
-  fin-feet, shooting the light of its lure.
+- TideOctopus: the shaman -- a man's body in a ragged sea-coat with an octopus for a head, its
+  tentacles a beard; a jellyfish lantern on a coral staff; strikes from afar and heals its own.
+- TidePuffer: the pufferfish -- a blown-up spiny ball on stubby legs that throws sea urchins
+  (in place of the anglerfish, rejected).
 - TideSerpent: the boss on the gold island, the deep serpent coiled round its hoard.
 The faction is «Стражи Глубин» (the user, 2026-11-02); the eel, the priestess and the hermit crab
 in a hull were rejected as dull.
@@ -44,11 +44,14 @@ SHELL_GREEN, SHELL_GREEN_DARK = 'roof_green', 'grass_dark'
 OCTO, OCTO_SPOT, JELLY = 'roof_purple', 'roof_purple_dark', 'water'
 ANGLER, ANGLER_DARK, GLOW_DIM, MAW = 'roof_blue_dark', 'roof_slate_dark', 'fire', 'roof_red_dark'
 SERPENT, SERPENT_BELLY = 'water', 'plaster_yellow'
+COAT, COAT_DARK = 'roof_blue_dark', 'roof_slate_dark'
+PUFFER, PUFFER_SPOT, SPINE, URCHIN = 'plaster_yellow', 'wood_mid', 'sand', 'roof_purple_dark'
 
 detail.OVERRIDE.update({c: detail.PLAIN for c in (SHELL, SHELL_DARK, BELLY, SKIN, SKIN_DARK, FIN, PALE, ROBE, ROBE_DARK,
                                                    KELP, PEARL, CORAL, GLOW, EYE, SAIL, SHARK, SHARK_DARK, BONE, SHELL_GREEN,
                                                    SHELL_GREEN_DARK, OCTO, OCTO_SPOT, JELLY, ANGLER, GLOW_DIM,
-                                                   SERPENT, SERPENT_BELLY)})
+                                                   SERPENT, SERPENT_BELLY, COAT, COAT_DARK, PUFFER, PUFFER_SPOT,
+                                                   SPINE, URCHIN)})
 
 
 def ensure_collection():
@@ -177,93 +180,135 @@ SHARK_SPEC = ("TideShark", shark_body, [
 ])
 
 
-# ---------------------------------------------------------------- the octopus shaman (0.72 high)
+# ---------------------------------------------------------------- the octopus-headed shaman (0.8 high)
+# (the user, 2026-11-02: an ordinary body with an octopus for a head, its tentacles a beard)
 
 def octo_body(b):
-    # the great spotted mantle is the body and the head in one
-    oval(b, (0, 0.04, 0.48), 0.13, 0.13, 0.17, OCTO, 0.1)
-    oval(b, (0, 0.08, 0.62), 0.1, 0.1, 0.08, OCTO, 0.07)
-    for (x, y, z, r) in ((0.08, 0.12, 0.62, 0.025), (-0.06, 0.15, 0.55, 0.02), (0.1, 0.05, 0.45, 0.018),
-                         (-0.11, 0.06, 0.5, 0.022), (0.0, 0.17, 0.42, 0.02)):
-        b.ball(x, y, z, r, r * 0.6, OCTO_SPOT, sides=5)                                           # spots
-    for k in (-1, 1):                                                                            # big eyes
-        b.ball(k * 0.07, -0.08, 0.42, 0.04, 0.06, PEARL, sides=6)
-        b.box(k * 0.07 - 0.012, k * 0.07 + 0.012, -0.125, -0.115, 0.43, 0.47, EYE)
-    for i in range(7):                                                                           # pearl string
-        a = math.pi * (0.1 + 0.8 * i / 6)
-        b.ball(math.cos(a) * 0.11, -math.sin(a) * 0.08 + 0.02, 0.33, 0.016, 0.025, PEARL, sides=5)
+    # a long sea-coat, ragged at the hem, barnacles and coral grown on the shoulders
+    b.frustum(0, 0, 0.0, 0.46, 0.15, 0.1, COAT, sides=10)
+    for i in range(8):                                                                           # ragged hem
+        a = i * math.pi / 4 + 0.2
+        b.pyramid(math.cos(a) * 0.14, math.sin(a) * 0.14, 0.06, 0.03, 0.02, -0.0, COAT_DARK, sides=4)
+    oval(b, (0, 0.0, 0.52), 0.1, 0.07, 0.08, COAT, 0.04)                                        # shoulders
+    b.cylinder(0, 0, 0.38, 0.41, 0.115, HULL_DARK, sides=10)                                    # belt
+    b.box(-0.025, 0.025, -0.125, -0.11, 0.37, 0.42, GOLD)                                       # buckle
+    for k in (-1, 1):
+        b.ball(k * 0.1, 0.0, 0.58, 0.05, 0.05, CORAL, sides=6)                                  # coral pauldrons
+        o.tube(b, [(k * 0.11, 0.0, 0.6), (k * 0.15, 0.02, 0.68)], [0.015, 0.0], CORAL, sides=4)
+        b.ball(k * 0.08, 0.04, 0.6, 0.02, 0.02, PEARL, sides=5)                                  # barnacles
+    for i in range(5):                                                                           # pearl string
+        a = math.pi * (0.15 + 0.7 * i / 4)
+        b.ball(math.cos(a) * 0.08, -math.sin(a) * 0.075, 0.55, 0.014, 0.02, PEARL, sides=5)
 
 
-def octo_tentacles(b, k):
-    # two curling tentacles on the ground per side, front and back
-    for (a0, a1) in ((-0.6, -1.1), (0.4, 0.9)):
-        pts = []
-        for t in range(5):
-            f = t / 4
-            r = 0.06 + 0.2 * f
-            curl = a0 + (a1 - a0) * f
-            pts.append((k * 0.05 + math.sin(curl) * r * k, 0.04 - math.cos(curl) * r, 0.3 * (1 - f) ** 1.6 + 0.015))
-        o.tube(b, pts, [0.05, 0.042, 0.032, 0.02, 0.0], OCTO, sides=6)
+def octo_head(b):
+    # the octopus: a great mantle leaning back over the shoulders, two big eyes at its front
+    oval(b, (0, 0.03, 0.72), 0.085, 0.085, 0.085, OCTO, 0.06)
+    b.ball(0, 0.07, 0.74, 0.085, 0.13, OCTO, sides=8)                                            # the bulb, a little back
+    for (x, y, z, r) in ((0.04, 0.12, 0.82, 0.018), (-0.05, 0.08, 0.77, 0.016), (0.0, 0.1, 0.85, 0.014),
+                         (0.06, 0.04, 0.72, 0.014)):
+        b.ball(x, y, z, r, r * 0.6, OCTO_SPOT, sides=5)                                          # spots
+    for k in (-1, 1):
+        b.ball(k * 0.045, -0.035, 0.7, 0.026, 0.04, PEARL, sides=6)
+        b.box(k * 0.045 - 0.009, k * 0.045 + 0.009, -0.064, -0.058, 0.705, 0.73, GLOW)          # glowing pupils
+    # the beard: tentacles hanging over the chest, curling at the ends
+    for i in range(7):
+        x = -0.06 + i * 0.02
+        long = 0.18 + 0.06 * (1 - abs(i - 3) / 3)
+        curl = 0.03 if i % 2 else -0.03
+        o.tube(b, [(x, -0.05, 0.66), (x * 1.1, -0.08, 0.66 - long * 0.5), (x * 1.2 + curl, -0.06, 0.66 - long),
+                   (x * 1.2 + curl * 2, -0.09, 0.66 - long - 0.02)],
+               [0.016, 0.013, 0.008, 0.0], OCTO, sides=5)
+    for k in (-1, 1):                                                                            # two longer side tentacles
+        o.tube(b, [(k * 0.07, -0.02, 0.67), (k * 0.11, -0.03, 0.55), (k * 0.1, -0.06, 0.46), (k * 0.07, -0.08, 0.44)],
+               [0.016, 0.013, 0.008, 0.0], OCTO, sides=5)
+
+
+def octo_leg(b, k):
+    x = k * 0.05
+    b.rod((x, 0, 0.12), (x, 0.0, 0.03), 0.04, COAT_DARK)
+    b.box(x - 0.03, x + 0.03, -0.06, 0.03, 0.0, 0.04, HULL_DARK, bevel=0.01)                    # sea boots
 
 
 def octo_staff_arm(b):
-    o.tube(b, [(0.1, -0.02, 0.4), (0.16, -0.08, 0.38), (0.18, -0.1, 0.45)], [0.03, 0.025, 0.02], OCTO, sides=5, tip=False)
-    b.rod((0.18, -0.1, 0.05), (0.19, -0.11, 0.75), 0.014, CORAL)                                 # coral staff
+    b.rod((0.1, 0.0, 0.55), (0.2, -0.03, 0.42), 0.04, COAT)
+    b.ball(0.21, -0.04, 0.38, 0.025, 0.04, OCTO, sides=5)                                       # a hand with suckers
+    b.rod((0.22, -0.04, 0.03), (0.24, -0.05, 0.86), 0.014, CORAL)                               # coral staff, held out
     # a jellyfish lantern at its top: a glowing bell and trailing threads
-    b.dome(0.19, -0.11, 0.76, 0.06, 0.06, [GLOW, JELLY], sides=8)
+    b.dome(0.24, -0.05, 0.87, 0.06, 0.06, [GLOW, JELLY], sides=8)
     for i in range(5):
         a = i * 2 * math.pi / 5
-        o.tube(b, [(0.19 + math.cos(a) * 0.04, -0.11 + math.sin(a) * 0.04, 0.76),
-                   (0.19 + math.cos(a) * 0.05, -0.11 + math.sin(a) * 0.05, 0.66)], [0.006, 0.0], JELLY, sides=3)
+        o.tube(b, [(0.24 + math.cos(a) * 0.04, -0.05 + math.sin(a) * 0.04, 0.87),
+                   (0.24 + math.cos(a) * 0.05, -0.05 + math.sin(a) * 0.05, 0.77)], [0.006, 0.0], JELLY, sides=3)
 
 
 def octo_off_arm(b):
-    o.tube(b, [(-0.1, -0.02, 0.4), (-0.17, -0.1, 0.36), (-0.2, -0.14, 0.42), (-0.18, -0.16, 0.48)],
-           [0.03, 0.025, 0.02, 0.0], OCTO, sides=5)
+    b.rod((-0.1, 0.0, 0.55), (-0.15, -0.06, 0.43), 0.04, COAT)
+    # the other hand is a tentacle, held up, curling
+    o.tube(b, [(-0.15, -0.06, 0.43), (-0.19, -0.1, 0.47), (-0.2, -0.13, 0.54), (-0.17, -0.14, 0.57)],
+           [0.025, 0.02, 0.012, 0.0], OCTO, sides=5)
 
 
 OCTOPUS = ("TideOctopus", octo_body, [
-    ("LegFL", lambda b: octo_tentacles(b, -1), (-0.05, 0.0, 0.3)),
-    ("LegFR", lambda b: octo_tentacles(b, 1), (0.05, 0.0, 0.3)),
-    ("ArmStrike", octo_staff_arm, (0.1, -0.02, 0.4)),
-    ("ArmOff", octo_off_arm, (-0.1, -0.02, 0.4)),
+    ("LegL", lambda b: octo_leg(b, -1), (-0.05, 0.0, 0.12)),
+    ("LegR", lambda b: octo_leg(b, 1), (0.05, 0.0, 0.12)),
+    ("Head", octo_head, (0.0, 0.0, 0.64)),
+    ("ArmStrike", octo_staff_arm, (0.1, 0.0, 0.55)),
+    ("ArmOff", octo_off_arm, (-0.1, 0.0, 0.55)),
 ])
 
 
-# ---------------------------------------------------------------- the anglerfish (0.6 high) -- a second ranged choice
+# ---------------------------------------------------------------- the pufferfish (0.62 high) -- in place of the anglerfish
 
-def angler_body(b):
-    oval(b, (0, 0.03, 0.3), 0.16, 0.16, 0.15, ANGLER, 0.11)
-    oval(b, (0, -0.06, 0.22), 0.13, 0.08, 0.08, ANGLER_DARK, 0.06)                               # under the jaw
-    # the huge jaw, open, a row of needle teeth on each lip
-    for i in range(7):
-        x = -0.11 + i * 0.037
-        b.pyramid(x, -0.13, 0.27, 0.007, 0.007, 0.33, BONE, sides=3)
-        b.pyramid(x + 0.018, -0.12, 0.4, 0.007, 0.007, 0.34, BONE, sides=3)
-    b.box(-0.12, 0.12, -0.14, -0.11, 0.28, 0.39, MAW)                                            # the red maw
+def puffer_body(b):
+    # blown up into a spiny ball, yellow with brown spots, a pale belly
+    b.ball(0, 0.0, 0.14, 0.2, 0.36, PUFFER, sides=9)
+    b.ball(0, -0.05, 0.14, 0.15, 0.2, BELLY, sides=8)
+    for (x, y, z) in ((0.12, 0.1, 0.38), (-0.1, 0.12, 0.3), (0.15, -0.02, 0.26), (-0.14, 0.02, 0.42), (0.02, 0.16, 0.45)):
+        b.ball(x, y, z, 0.03, 0.02, PUFFER_SPOT, sides=5)
+    for ring, (z, r) in enumerate(((0.22, 0.2), (0.34, 0.19), (0.44, 0.13))):                   # the spines
+        n = 10 if ring < 2 else 7
+        for i in range(n):
+            a = i * 2 * math.pi / n + ring * 0.3
+            c = Vector((math.cos(a) * r, math.sin(a) * r, z))
+            d = Vector((math.cos(a), math.sin(a), 0.35 * (ring - 0.7))).normalized()
+            o.tube(b, [c, c + d * 0.07], [0.014, 0.0], SPINE, sides=4)
     for k in (-1, 1):
-        b.ball(k * 0.1, -0.08, 0.42, 0.03, 0.035, GLOW_DIM, sides=5)                             # small mean eyes
-        fin(b, [(0, 0), (0.1, 0.05), (0.06, 0.12)], (k * 0.15, 0.05, 0.3), (k, 0, 0), (0, 0, 1), 0.008, FIN)
-    fin(b, [(0, 0), (0.12, 0.06), (0.14, -0.06)], (0, 0.17, 0.3), (0, 1, 0), (0, 0, 1), 0.012, FIN)  # tail
+        b.ball(k * 0.08, -0.15, 0.36, 0.035, 0.045, PEARL, sides=6)                              # bulging eyes
+        b.box(k * 0.08 - 0.012, k * 0.08 + 0.012, -0.19, -0.18, 0.37, 0.4, EYE)
+        fin(b, [(0, 0), (0.08, 0.03), (0.05, 0.09)], (k * 0.19, 0.0, 0.28), (k, 0.3, 0), (0, 0, 1), 0.008, FIN)
+    oval(b, (0, -0.2, 0.27), 0.04, 0.025, 0.03, CORAL, 0.015)                                    # pouting lips
+    fin(b, [(0, 0), (0.1, 0.06), (0.1, -0.06)], (0, 0.19, 0.28), (0, 1, 0), (0, 0, 1), 0.012, FIN)  # tail
 
 
-def angler_leg(b, k):
-    # stubby fin-feet it waddles on
-    b.rod((k * 0.07, 0.02, 0.16), (k * 0.09, 0.0, 0.03), 0.04, ANGLER_DARK)
-    fin(b, [(0, 0), (0.08, 0), (0.04, 0.05)], (k * 0.05, -0.03, 0.005), (1, 0, 0), (0, 1, 0), 0.01, FIN)
+def puffer_leg(b, k):
+    b.rod((k * 0.08, 0.0, 0.1), (k * 0.09, 0.0, 0.03), 0.04, PUFFER_SPOT)
+    b.box(k * 0.09 - 0.035, k * 0.09 + 0.035, -0.06, 0.03, 0.0, 0.03, PUFFER_SPOT, bevel=0.01)
 
 
-def angler_lure_arm(b):
-    # the lure: a whip from the forehead with a glowing bulb -- its light is what it shoots
-    o.tube(b, [(0, -0.02, 0.44), (0, -0.05, 0.56), (0, -0.14, 0.62), (0, -0.22, 0.58)],
-           [0.012, 0.01, 0.008, 0.006], ANGLER_DARK, sides=4, tip=False)
-    b.ball(0, -0.22, 0.53, 0.035, 0.07, GLOW, sides=7)
+def puffer_throw_arm(b):
+    # a stubby fin-arm holding up a sea urchin to throw
+    b.rod((0.17, -0.02, 0.3), (0.24, -0.06, 0.42), 0.035, PUFFER)
+    b.ball(0.25, -0.07, 0.43, 0.05, 0.09, URCHIN, sides=7)
+    for i in range(8):
+        a = i * math.pi / 4
+        c = Vector((0.25 + math.cos(a) * 0.045, -0.07 + math.sin(a) * 0.045, 0.475))
+        d = Vector((math.cos(a), math.sin(a), 0.4)).normalized()
+        o.tube(b, [c, c + d * 0.05], [0.008, 0.0], URCHIN, sides=3)
 
 
-ANGLER_SPEC = ("TideAngler", angler_body, [
-    ("LegL", lambda b: angler_leg(b, -1), (-0.07, 0.02, 0.16)),
-    ("LegR", lambda b: angler_leg(b, 1), (0.07, 0.02, 0.16)),
-    ("ArmStrike", angler_lure_arm, (0.0, -0.02, 0.44)),
+def puffer_off_arm(b):
+    b.rod((-0.17, -0.02, 0.3), (-0.22, -0.05, 0.24), 0.035, PUFFER)
+    # a net bag of more urchins at its side
+    b.ball(-0.23, -0.02, 0.1, 0.06, 0.12, SAIL, sides=6)
+    b.ball(-0.23, -0.04, 0.2, 0.03, 0.04, URCHIN, sides=5)
+
+
+PUFFER_SPEC = ("TidePuffer", puffer_body, [
+    ("LegL", lambda b: puffer_leg(b, -1), (-0.08, 0.0, 0.1)),
+    ("LegR", lambda b: puffer_leg(b, 1), (0.08, 0.0, 0.1)),
+    ("ArmStrike", puffer_throw_arm, (0.17, -0.02, 0.3)),
+    ("ArmOff", puffer_off_arm, (-0.17, -0.02, 0.3)),
 ])
 
 
@@ -366,12 +411,12 @@ def main():
     detail.build_material_nodes(mat, img, atlas)
     wolf = bpy.data.objects.get("WildWolf")
     base = (wolf.location.copy() if wolf else Vector((0, 0, 0))) + Vector((0, 14.0, 0))
-    for old in ("TideEel", "TidePriestess", "TideKeeper"):
+    for old in ("TideEel", "TidePriestess", "TideKeeper", "TideAngler", "TideOctopus"):
         root = bpy.data.objects.get(old)
         if root is not None:
             for part in list(root.children_recursive) + [root]:
                 bpy.data.objects.remove(part)
-    for i, spec in enumerate((CRAB, SHARK_SPEC, OCTOPUS, ANGLER_SPEC, SERPENT_SPEC)):
+    for i, spec in enumerate((CRAB, SHARK_SPEC, OCTOPUS, PUFFER_SPEC, SERPENT_SPEC)):
         figure(spec, base + Vector((i * 2.5, 0, 0)), mat, coll)
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()

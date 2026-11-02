@@ -283,8 +283,9 @@
 - Guards: the sea faction «СТРАЖИ ГЛУБИН» (name chosen by the user 2026-11-02). TideCrab APPROVED;
   the eel, the priestess and the hermit-crab-in-a-hull were REJECTED as dull. Round 2 for approval
   (`Tools/blender/tide.py`): TideShark (hammerhead, sawfish-snout sword, turtle-shell shield; fast
-  melee), TideOctopus (shaman, jellyfish lantern staff; ranged + heals), TideAngler (anglerfish,
-  shoots its lure's light; a second ranged choice), TideSerpent (boss: teal sea serpent coiled round
+  melee), TideOctopus (round 3: a man's body in a sea-coat, an octopus head with a tentacle beard,
+  jellyfish lantern staff; ranged + heals), TidePuffer (pufferfish throwing sea urchins; replaced the
+  rejected anglerfish), TideSerpent (boss: teal sea serpent coiled round
   a gold hoard). Jointed for FigureAnimator, not exported. Rule: they ONLY guard caches (no raids,
   no attacks on ships). Strength by distance from the start; cleared caches stay empty.
 - Ore rule (asked 2026-11-02): one mine per vein -- already so (`BuildingPlacer`: footprint == vein,
