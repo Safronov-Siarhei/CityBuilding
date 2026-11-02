@@ -1,4 +1,4 @@
-﻿using CityBuilder.Combat;
+using CityBuilder.Combat;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using NUnit.Framework;
@@ -313,7 +313,7 @@ namespace CityBuilder.Tests.EditMode
                            + config.ProgressPerDefencePoint + config.ProgressPerProducedUnit, 0f,
                 "Every progression weight is zero, so the score is always zero and raids never grow at all.");
             Assert.Greater(config.DefenceAttackIntervalSeconds, 0f);
-            Assert.GreaterOrEqual(config.CoinsPerCitizenPerDayAtMaxTax, 0f);
+            Assert.GreaterOrEqual(config.CoinsPerCitizenPerDay, 0f);
             Assert.Greater(config.DecayPerDayAtLevel1, 0f, "Zero decay per day quietly disables the whole decay/repair loop.");
             Assert.That(config.DecayPenaltyThreshold, Is.InRange(0f, 1f), "Decay is a 0..1 fraction.");
             Assert.That(config.MinDecayProductionMultiplier, Is.InRange(0f, 1f), "A decayed building produces LESS, never more.");

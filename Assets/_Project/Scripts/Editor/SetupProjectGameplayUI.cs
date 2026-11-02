@@ -307,7 +307,6 @@ namespace CityBuilder.EditorTools
             var citizenSelector = BuildCitizenSelector(uiRoot, targetCamera);
             BuildBuildingFocus(uiRoot, buildingSelector, infoPanel, researchPanel, citizenSelector, placer, iconLibrary);
             BuildEventFeed(uiRoot, cameraRig);
-            BuildTaxControl(uiRoot);
             BuildDayLabel(uiRoot, gameCalendar);
             BuildHappiness(uiRoot);
             BuildKingPortrait(uiRoot);

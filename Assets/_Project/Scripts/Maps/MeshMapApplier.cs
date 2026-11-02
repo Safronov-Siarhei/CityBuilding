@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -117,11 +117,35 @@ namespace CityBuilder.Maps
 
         /// <summary>The archipelago's island under each cell (index into IslandRichesOf, -1 the sea), null on any other map.</summary>
         public int[] IslandLabels { get; private set; }
+        private Vector2Int _archipelagoStart;
 
         /// <summary>What each archipelago island is rich in (Archipelago.IslandRiches), null on any other map.</summary>
         public Archipelago.IslandRiches.Riches[] IslandRichesOf { get; private set; }
 
         /// <summary>The archipelago island's riches under `cell`; None off the archipelago or at sea.</summary>
+        /// <summary>
+        /// The start island's land for its extra boulders (the user, 2026-11-02: too little stone to
+        /// grow on): its own cells, away from the Town Hall's spot. Empty off
+        /// the archipelago.
+        /// </summary>
+        private List<Vector2Int> StartIslandRockCells()
+        {
+            var cells = new List<Vector2Int>();
+            var grid = GridManager.Instance;
+            if (IslandLabels == null || IslandRichesOf == null || grid == null) return cells;
+            var n = grid.GridSize.x;
+            var keep = Archipelago.ArchipelagoGenerator.StartZoneRadiusMeters + 4;
+            for (var i = 0; i < IslandLabels.Length; i++)
+            {
+                var k = IslandLabels[i];
+                if (k < 0 || k >= IslandRichesOf.Length || IslandRichesOf[k] != Archipelago.IslandRiches.Riches.Start) continue;
+                var cell = new Vector2Int(i % n, i / n);
+                if ((cell - _archipelagoStart).sqrMagnitude < keep * keep) continue;
+                cells.Add(cell);
+            }
+            return cells;
+        }
+
         /// <summary>The archipelago's island under a cell (index into IslandRichesOf), -1 for the sea or any other map.</summary>
         public int IslandAt(Vector2Int cell)
         {
@@ -627,6 +651,7 @@ namespace CityBuilder.Maps
             // every island its riches, before the veins and the soil are dealt (the user, 2026-11-02)
             IslandLabels = Archipelago.IslandRiches.Label(world);
             IslandRichesOf = Archipelago.IslandRiches.Assign(world);
+            _archipelagoStart = world.StartCell;
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);
             Vector2 At(Vector2Int cell) => new Vector2(origin.x + cell.x + 0.5f, origin.z + cell.y + 0.5f);
@@ -837,7 +862,7 @@ namespace CityBuilder.Maps
                 if (map.IsGenerated && balance != null)
                 {
                     var rocks = Mathf.Clamp(Mathf.RoundToInt(_rocksZoneCells.Count / Mathf.Max(1f, balance.StonyCellsPerRock)), balance.ArchipelagoRocksMin, balance.ArchipelagoRocksMax);
-                    RockSpawner.Instance?.Initialize(map.RockPrefabs, rocks, balance.RocksScatteredShare);
+                    RockSpawner.Instance?.Initialize(map.RockPrefabs, rocks, balance.RocksScatteredShare, StartIslandRockCells(), balance.IslandStartRocks);
                 }
                 else RockSpawner.Instance?.Initialize(map.RockPrefabs);
             }

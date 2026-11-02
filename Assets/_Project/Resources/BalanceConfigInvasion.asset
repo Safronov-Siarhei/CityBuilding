@@ -5981,6 +5981,89 @@ MonoBehaviour:
       seconds: 180
     - coins: 720
       seconds: 240
+  - id: TaxHouse
+    displayName: "\u041D\u0430\u043B\u043E\u0433\u043E\u0432\u044B\u0439 \u0434\u043E\u043C"
+    category: 0
+    cost:
+    - type: 0
+      amount: 30
+    - type: 1
+      amount: 20
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 256
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 400
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 576
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 800
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost: []
+    upgradeToLevel3Cost: []
+    upgradeToLevel4Cost: []
+    upgradeToLevel5Cost: []
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   armyMaxSize: 20
   raidIntervalSeconds: 90
   raidBaseSize: 2
@@ -6062,7 +6145,10 @@ MonoBehaviour:
   defenceAttackRangeMeters: 9
   castleAttackRangeMultiplier: 1.5
   dayLengthSeconds: 120
-  coinsPerCitizenPerDayAtMaxTax: 0.5
+  coinsPerCitizenPerDay: 1
+  taxHouseBonusPerLevel: 0.2
+  taxHouseUpCrystals: 01000000020000000300000004000000
+  islandStartRocks: 40
   decayPerDayAtLevel1: 0.02
   decayPenaltyThreshold: 0.7
   minDecayProductionMultiplier: 0.5

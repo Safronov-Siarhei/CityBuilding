@@ -154,7 +154,9 @@ namespace CityBuilder.Maps
 
         /// <summary>Called once from MeshMapApplier.Apply, after the map's water cells are known (boulders must not land in the lake) and its ground colliders exist (IsGroundAt raycasts against them).</summary>
         /// <summary>`count` 0 = the designed maps' own InitialRockCount; `scattered` the share of them laid over open land rather than in the stony clearings.</summary>
-        public void Initialize(GameObject[] rockPrefabs = null, int count = 0, float scattered = 0f)
+        /// <summary>`extraCells`/`extraCount`: boulders laid on top of those over this land (the archipelago's start island).</summary>
+        public void Initialize(GameObject[] rockPrefabs = null, int count = 0, float scattered = 0f,
+            List<Vector2Int> extraCells = null, int extraCount = 0)
         {
             if (_initialized) return;
             _initialized = true;
@@ -175,6 +177,8 @@ namespace CityBuilder.Maps
             {
                 SpawnOneRock(i < spread);
             }
+            if (extraCells != null && extraCells.Count > 0)
+                for (var i = 0; i < extraCount; i++) SpawnOneRockOn(extraCells);
 
             if (_rockCells.Count == 0)
             {
@@ -201,6 +205,26 @@ namespace CityBuilder.Maps
             }
 
             Destroy(rockInstance);
+        }
+
+        /// <summary>One boulder on a free dry cell of `cells`, spaced from the rest.</summary>
+        private void SpawnOneRockOn(List<Vector2Int> cells)
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+            var mapApplier = MeshMapApplier.Instance;
+            EnsureMaterials();
+            for (var attempt = 0; attempt < MaxPlacementAttempts; attempt++)
+            {
+                var cell = cells[Random.Range(0, cells.Count)];
+                if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
+                if (_rockCells.Contains(cell) || HasNearbyRock(cell, MinSpacingCells)) continue;
+                if (mapApplier != null && mapApplier.IsWaterCell(cell)) continue;
+                var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+                if (mapApplier != null && !mapApplier.IsGroundAt(position)) continue;
+                CreateRock(position, cell);
+                return;
+            }
         }
 
         private void SpawnOneRock(bool scatter = false)

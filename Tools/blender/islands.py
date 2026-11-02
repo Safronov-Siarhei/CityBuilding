@@ -35,7 +35,7 @@ if not os.path.exists(MODELS):     # the islands live in a folder of their own n
     MODELS = os.path.join(os.path.dirname(os.path.dirname(OUT)), "Buildings-Size1-Models.blend")
 PREFIX = f"Isl-{KIND}{VARIANT}"
 
-_SCALES = {'start': 190, 'orc': 125, 'bot': 120, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
+_SCALES = {'start': 130, 'orc': 125, 'bot': 120, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
            'crescent': 150, 'atoll': 150, 'islet': 70}
 N = int(round(_SCALES[KIND] * 1.4 / 2)) * 2
 HALF = N // 2
@@ -99,7 +99,7 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
 
 KINDS = {
     #          scale, base shape, relief, hills, beaches, rim height
-    'start':    (190, 'round', 'flat', 2, (2, 3), 1.4),   # 130 until 2026-11-02 (the user: too small to grow on)
+    'start':    (130, 'round', 'flat', 2, (2, 3), 1.4),
     'orc':      (125, 'round', 'rocky', 0, (2, 2), 2.6),
     'bot':      (120, 'round', 'flat', 2, (2, 3), 1.4),
     'flat':     (150, 'round', 'flat', 3, (2, 3), 1.4),

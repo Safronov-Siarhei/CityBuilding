@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
@@ -418,7 +418,14 @@ namespace CityBuilder.Core
 
         [Header("Economy (economy.csv)")]
         [SerializeField] private float dayLengthSeconds = 120f;
-        [SerializeField] private float coinsPerCitizenPerDayAtMaxTax = 0.5f;
+        // coins a citizen pays a day (the user, 2026-11-02: the tax slider is gone, every citizen
+        // pays this), and what each level of the Tax House adds to it
+        [SerializeField] private float coinsPerCitizenPerDay = 1f;
+        [SerializeField] private float taxHouseBonusPerLevel = 0.2f;
+        // the Tax House's levels 2..5 cost these crystals (tax_house_up_crystals_<level>), nothing else
+        [SerializeField] private int[] taxHouseUpCrystals = { 1, 2, 3, 4 };
+        // boulders laid on the archipelago's start island on top of its share (island_start_rocks)
+        [SerializeField] private int islandStartRocks = 40;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -913,7 +920,13 @@ namespace CityBuilder.Core
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
         public float CastleAttackRangeMultiplier => castleAttackRangeMultiplier;
         public float DayLengthSeconds => dayLengthSeconds;
-        public float CoinsPerCitizenPerDayAtMaxTax => coinsPerCitizenPerDayAtMaxTax;
+        public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
+        public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
+        public int IslandStartRocks => islandStartRocks;
+
+        /// <summary>The crystals the Tax House's upgrade to `level` (2..5) costs; 0 for any other level.</summary>
+        public int TaxHouseUpCrystals(int level) =>
+            taxHouseUpCrystals == null || level < 2 || level - 2 >= taxHouseUpCrystals.Length ? 0 : taxHouseUpCrystals[level - 2];
         public float DecayPerDayAtLevel1 => decayPerDayAtLevel1;
         public float DecayPenaltyThreshold => decayPenaltyThreshold;
         public float MinDecayProductionMultiplier => minDecayProductionMultiplier;
@@ -1557,7 +1570,10 @@ namespace CityBuilder.Core
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);
             castleAttackRangeMultiplier = Read(economy, "castle_attack_range_mult", castleAttackRangeMultiplier);
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);
-            coinsPerCitizenPerDayAtMaxTax = Read(economy, "coins_per_citizen_per_day_at_max_tax", coinsPerCitizenPerDayAtMaxTax);
+            coinsPerCitizenPerDay = Read(economy, "coins_per_citizen_per_day", coinsPerCitizenPerDay);
+            taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
+            for (var l = 0; l < taxHouseUpCrystals.Length; l++) taxHouseUpCrystals[l] = (int)Read(economy, $"tax_house_up_crystals_{l + 2}", taxHouseUpCrystals[l]);
+            islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             decayPerDayAtLevel1 = Read(economy, "decay_per_day_at_level1", decayPerDayAtLevel1);
             decayPenaltyThreshold = Read(economy, "decay_penalty_threshold", decayPenaltyThreshold);
             minDecayProductionMultiplier = Read(economy, "min_decay_production_multiplier", minDecayProductionMultiplier);

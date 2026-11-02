@@ -3,40 +3,26 @@ using NUnit.Framework;
 
 namespace CityBuilder.Tests.EditMode
 {
+    /// <summary>The tax (the user, 2026-11-02): 1 coin a citizen a day, +0.2 per Tax House level.</summary>
     public class TaxManagerTests
     {
         [Test]
         public void ComputeDailyIncome_ZeroPopulation_IsZero()
         {
-            Assert.AreEqual(0, TaxManager.ComputeDailyIncome(population: 0, taxRatePercent: 100));
+            Assert.AreEqual(0, TaxManager.ComputeDailyIncome(population: 0, taxHouseLevel: 5));
         }
 
         [Test]
-        public void ComputeDailyIncome_ZeroTaxRate_IsZero()
+        public void ComputeDailyIncome_NoTaxHouse_IsOneCoinPerCitizen()
         {
-            Assert.AreEqual(0, TaxManager.ComputeDailyIncome(population: 50, taxRatePercent: 0));
+            Assert.AreEqual(20, TaxManager.ComputeDailyIncome(population: 20, taxHouseLevel: 0));
         }
 
         [Test]
-        public void ComputeDailyIncome_MaxTaxRate_IsHalfCoinPerCitizen()
+        public void ComputeDailyIncome_EachTaxHouseLevel_AddsAFifthOfACoin()
         {
-            // 0.5 coins/citizen/day at 100% tax (first-pass constant) -- 20 citizens -> 10 coins.
-            Assert.AreEqual(10, TaxManager.ComputeDailyIncome(population: 20, taxRatePercent: 100));
-        }
-
-        [Test]
-        public void ComputeDailyIncome_ScalesWithTaxRate()
-        {
-            // Half the tax rate should roughly halve the income (rounded).
-            Assert.AreEqual(5, TaxManager.ComputeDailyIncome(population: 20, taxRatePercent: 50));
-        }
-
-        [Test]
-        public void ComputeDailyIncome_RoundsToNearestInt()
-        {
-            // 3 citizens * 0.5 * 1.0 = 1.5 -> rounds to 2 (Mathf.RoundToInt banker's-adjacent, but
-            // this exact case rounds up).
-            Assert.AreEqual(2, TaxManager.ComputeDailyIncome(population: 3, taxRatePercent: 100));
+            Assert.AreEqual(24, TaxManager.ComputeDailyIncome(population: 20, taxHouseLevel: 1));
+            Assert.AreEqual(40, TaxManager.ComputeDailyIncome(population: 20, taxHouseLevel: 5));
         }
     }
 }

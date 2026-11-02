@@ -100,6 +100,9 @@ namespace CityBuilder.UI
             if (bottom != null) bottom.anchoredPosition = new Vector2(0f, -half);
         }
 
+        /// <summary>Adds a crystal chip to a price row (the Tax House's upgrades), set by BuildingInfoPanelController.</summary>
+        public Action<Transform, int> CrystalPrice;
+
         /// <summary>Fills the card for `building`; `fillCostRow` lays a price out (BuildingInfoPanelController's chips).</summary>
         public void Refresh(BuildingInstance building, ProductionBuilding production, Action<Transform, List<ResourceAmount>> fillCostRow, Func<float, string> clock)
         {
@@ -135,6 +138,7 @@ namespace CityBuilder.UI
             if (upgradeButton != null) upgradeButton.SetActive(open);
             if (upgradeCostRow != null) upgradeCostRow.gameObject.SetActive(open);
             fillCostRow(upgradeCostRow, open ? upgradeCost : null);
+            if (open && building.UpgradeCrystalCost > 0) CrystalPrice?.Invoke(upgradeCostRow, building.UpgradeCrystalCost);
             if (upgradeLock != null)
             {
                 upgradeLock.gameObject.SetActive(!open && (site != null || hasNext));

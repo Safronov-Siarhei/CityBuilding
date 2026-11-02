@@ -37,7 +37,7 @@ namespace CityBuilder.Dungeon
         [SerializeField] private MonoBehaviour[] notInDungeon = new MonoBehaviour[0];
         // the town's HUD pieces that mean nothing below: building, the hotbar, taxes (by name: the
         // UI is built after the managers, see SetupProjectGameplayUI)
-        [SerializeField] private string[] hideInDungeon = { "BuildingMenu", "Hotbar", "TaxRate" };
+        [SerializeField] private string[] hideInDungeon = { "BuildingMenu", "Hotbar" };
 
         public static DungeonMode Instance { get; private set; }
 

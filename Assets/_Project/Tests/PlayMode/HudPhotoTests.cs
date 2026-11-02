@@ -126,7 +126,7 @@ namespace CityBuilder.Tests.PlayMode
         private static readonly string[] HudPieces =
         {
             "MenuButton", "WorkforceButton", "SettlementStatus",
-            "TaxRate", "EventFeed", "Happiness", "Army", "Migration", "Minimap",
+            "EventFeed", "Happiness", "Army", "Migration", "Minimap",
             "BuildingMenu/Hotbar", "BuildingMenu/CategoryBar",
         };
 
@@ -493,7 +493,7 @@ namespace CityBuilder.Tests.PlayMode
                 {
                     Assert.IsNotNull(HudRoot().Find("GameMenu/" + entry), $"The menu has no {entry}.");
                 }
-                foreach (var piece in new[] { "ResourceHUD", "TaxRate", "Happiness", "WorkforceButton", "BuildingMenu", "Minimap" })
+                foreach (var piece in new[] { "ResourceHUD", "Happiness", "WorkforceButton", "BuildingMenu", "Minimap" })
                 {
                     Assert.AreEqual(0f, Alpha(piece), $"'{piece}' still shows behind the open menu.");
                 }

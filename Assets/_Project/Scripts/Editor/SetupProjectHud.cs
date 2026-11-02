@@ -328,50 +328,6 @@ namespace CityBuilder.EditorTools
             return (cancel, rotate, confirm, rowRect);
         }
 
-        // ---------------------------------------------------------------- bottom-right: the tax
-
-        /// <summary>
-        /// Minus, "Налог: N%", plus -- on the bottom-right corner, where the thumb is. The one HUD
-        /// control that keeps a word: a coin and a number alone did not say what they were (the
-        /// user, 2026-10-14).
-        /// </summary>
-        private static void BuildTaxControl(Transform uiRoot)
-        {
-            const float sign = 76f, plaqueWidth = 232f, gap = 8f;
-            var root = new GameObject("TaxRate", typeof(RectTransform));
-            root.transform.SetParent(uiRoot, false);
-            Anchor((RectTransform)root.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-HudMargin, HudMargin), new Vector2(sign * 2f + gap * 2f + plaqueWidth, 84f));
-
-            var minus = CreateGlyphButton(root.transform, "MinusButton", "round_step", HudInk.Keep, "Minus", null, sign);
-            Anchor(minus.GetComponent<RectTransform>(), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(sign, sign));
-            var plus = CreateGlyphButton(root.transform, "PlusButton", "round_step", HudInk.Keep, "Plus", null, sign);
-            Anchor(plus.GetComponent<RectTransform>(), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(sign, sign));
-            foreach (var (button, glyph) in new[] { (minus, "–"), (plus, "+") })
-            {
-                // Signs, not words: the glyph files have no minus/plus, the font draws them crisply.
-                Object.DestroyImmediate(button.transform.Find("Icon").gameObject);
-                var label = CreateText(button.transform, "Sign", glyph, 44, new Vector2(0f, 4f), new Vector2(70f, 70f));
-                label.font = UiTheme.Heavy;
-                SkinInk(label, HudInk.OnStep);
-            }
-
-            var plaque = HudImage(root.transform, "RatePlaque", "plaque", new Vector2(plaqueWidth, 72f));
-            var rateLabel = CreateText(plaque.transform, "RateLabel", "Налог: 10%", 28, new Vector2(0f, 3f), new Vector2(plaqueWidth - 24f, 56f));
-            rateLabel.font = UiTheme.Heavy;
-            SkinInk(rateLabel, HudInk.OnPlaque);
-
-            var go = new GameObject("TaxRateController");
-            go.transform.SetParent(uiRoot, false);
-            var controller = go.AddComponent<TaxRateController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("rateLabel").objectReferenceValue = rateLabel;
-            so.FindProperty("widget").objectReferenceValue = root;
-            so.ApplyModifiedPropertiesWithoutUndo();
-
-            UnityEventTools.AddPersistentListener(minus.onClick, controller.Decrease);
-            UnityEventTools.AddPersistentListener(plus.onClick, controller.Increase);
-        }
-
         // ---------------------------------------------------------------- top-right: happiness
 
         /// <summary>The percentage on a round parchment button; a tap opens the factor breakdown under the corner.</summary>

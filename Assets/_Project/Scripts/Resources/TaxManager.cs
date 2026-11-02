@@ -6,11 +6,12 @@ using UnityEngine;
 namespace CityBuilder.Resources
 {
     /// <summary>
-    /// Player-adjustable tax rate (0-100%), collected as Coins income once per GameCalendar day,
-    /// proportional to population. Coins are a distinct currency from Gold (see the design
-    /// backlog): Gold is the raw metal a Mine produces, Coins are spending money -- a lower tax
-    /// rate is intended to raise happiness once that system exists; this only owns the economic
-    /// side of taxation for now.
+    /// The town's tax, collected as Coins once per GameCalendar day (the user, 2026-11-02): every
+    /// citizen pays coins_per_citizen_per_day, and the Tax House adds tax_house_bonus_per_level for
+    /// each of its levels (the best one standing counts). The old 0-100% slider is gone from the HUD
+    /// -- with contentment off in the sandbox it only ever cost the player money. The rate is kept
+    /// (saved, and contentment's tax score still reads it) but no longer changes the income.
+    /// Fractions of a coin carry over to the next day.
     /// </summary>
     public class TaxManager : MonoBehaviour
     {
@@ -23,6 +24,11 @@ namespace CityBuilder.Resources
         [SerializeField] private CitizenManager citizenManager;
 
         public int TaxRatePercent { get; private set; } = 10;
+
+        private float _carry;
+
+        /// <summary>Coins one citizen pays a day now: the base and the Tax House's bonus.</summary>
+        public static float PerCitizen => PerCitizenAt(TaxHouseLevel());
 
         public event Action OnTaxRateChanged;
 
@@ -55,14 +61,34 @@ namespace CityBuilder.Resources
         private void CollectTaxes()
         {
             var population = citizenManager != null ? citizenManager.TotalPopulation : 0;
-            var income = ComputeDailyIncome(population, TaxRatePercent);
+            var due = population * PerCitizen + _carry;
+            var income = Mathf.FloorToInt(due + 0.0001f);
+            _carry = Mathf.Max(0f, due - income);
             if (income > 0) ResourceManager.Instance?.Add(ResourceType.Coins, income);
         }
 
-        /// <summary>Pure formula extracted from CollectTaxes so it's covered by an EditMode test without needing a live scene/singletons.</summary>
-        public static int ComputeDailyIncome(int population, int taxRatePercent)
+        /// <summary>Coins a citizen pays a day with a Tax House at `taxHouseLevel` (0 = none).</summary>
+        public static float PerCitizenAt(int taxHouseLevel)
         {
-            return Mathf.RoundToInt(population * (taxRatePercent / 100f) * BalanceConfig.Instance.CoinsPerCitizenPerDayAtMaxTax);
+            var b = BalanceConfig.Instance;
+            return b == null ? 1f : b.CoinsPerCitizenPerDay + b.TaxHouseBonusPerLevel * Mathf.Max(0, taxHouseLevel);
+        }
+
+        /// <summary>The whole coins `population` pays a day with a Tax House at `taxHouseLevel` (rounded; the game carries the fraction).</summary>
+        public static int ComputeDailyIncome(int population, int taxHouseLevel) =>
+            Mathf.RoundToInt(population * PerCitizenAt(taxHouseLevel));
+
+        /// <summary>The level of the best finished Tax House standing, 0 for none.</summary>
+        public static int TaxHouseLevel()
+        {
+            var best = 0;
+            // once a day: a scan is cheap enough
+            foreach (var b in UnityEngine.Object.FindObjectsByType<Buildings.BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (b == null || b.Data == null || b.Data.buildingName != Buildings.BuildingIds.TaxHouse || !b.IsOperational) continue;
+                if (b.Level > best) best = b.Level;
+            }
+            return best;
         }
     }
 }

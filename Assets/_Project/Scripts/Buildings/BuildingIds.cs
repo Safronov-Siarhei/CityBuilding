@@ -34,5 +34,7 @@ namespace CityBuilder.Buildings
         public const string PigFarm = "PigFarm";
         public const string Baker = "Baker";
         public const string Smokehouse = "Smokehouse";
+        /// <summary>The Tax House (the user, 2026-11-02): each level raises what a citizen pays a day; its levels cost crystals.</summary>
+        public const string TaxHouse = "TaxHouse";
     }
 }
