@@ -190,6 +190,7 @@
   drawn by `Shaders/ShoreSurf.shader`: the water's edge runs up the beach and back (white crest, wet
   sheet), each stretch in its own phase, a broken foam line breathes ~1.6 m out. Material on
   OrcRaidManager `shoreSurfMaterial` (Materials/ShoreSurf.mat). GPU only, no per-frame CPU.
+  TRAP: it drew MAGENTA at first -- a variable named `line` (reserved in HLSL) broke the compile.
 - Orcs ashore on the Town Hall's island: blinking red «!» on the minimap, one per band of orcs
   (10 m clusters) -- `MinimapAttackAlerts.PlaceLandings` (sandbox; Invasion keeps its lanes), island
   land from `MeshMapApplier.OnStartIsland` (kept by RevealStartIsland).
