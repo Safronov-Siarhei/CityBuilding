@@ -330,6 +330,17 @@ namespace CityBuilder.EditorTools
                 SetRect(heroFaces[i].rectTransform, new Vector2(x, 20f), new Vector2(100f, 100f));
                 heroWords[i] = CreateText(heroFaces[i].transform, "Word", string.Empty, 22, new Vector2(0f, -66f), new Vector2(170f, 32f), ink);
             }
+            // «Можно найти:» and what is down there, as icons (the user, 2026-11-02: crystals)
+            var findRow = new GameObject("CanFind", typeof(RectTransform));
+            findRow.transform.SetParent(card.transform, false);
+            SetRect((RectTransform)findRow.transform, new Vector2(0f, -145f), new Vector2(560f, 56f));
+            var findWords = CreateText(findRow.transform, "Words", string.Empty, 26, new Vector2(-40f, 0f), new Vector2(300f, 50f), ink);
+            findWords.alignment = TextAnchor.MiddleRight;
+            var findCrystal = CreateImage(findRow.transform, "Crystal", Color.white);
+            findCrystal.sprite = IconSprite("Res_UpgradeCrystal");
+            findCrystal.preserveAspect = true;
+            findCrystal.raycastTarget = false;
+            SetRect(findCrystal.rectTransform, new Vector2(140f, 0f), new Vector2(52f, 52f));
             var enterButton = CreateButton(card.transform, panelSprite, "EnterButton", "#dungeon_entrance_enter", new Vector2(-150f, -220f), new Vector2(260f, 70f));
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(150f, -220f), new Vector2(260f, 70f));
 
@@ -340,6 +351,8 @@ namespace CityBuilder.EditorTools
             so.FindProperty("body").objectReferenceValue = body;
             so.FindProperty("enterButton").objectReferenceValue = enterButton;
             so.FindProperty("heroRow").objectReferenceValue = heroRow;
+            so.FindProperty("findRow").objectReferenceValue = findRow;
+            so.FindProperty("findWords").objectReferenceValue = findWords;
             for (var i = 0; i < 3; i++)
             {
                 so.FindProperty("heroFaces").GetArrayElementAtIndex(i).objectReferenceValue = heroFaces[i];

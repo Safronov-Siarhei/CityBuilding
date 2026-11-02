@@ -21,6 +21,9 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject heroRow;
         [SerializeField] private Image[] heroFaces = new Image[3];
         [SerializeField] private Text[] heroWords = new Text[3];
+        // «Можно найти:» and the icons of what lies below (the user, 2026-11-02: crystals); not on the way out
+        [SerializeField] private GameObject findRow;
+        [SerializeField] private Text findWords;
 
         private static readonly Combat.SoldierType[] HeroOrder = { Combat.SoldierType.King, Combat.SoldierType.Queen, Combat.SoldierType.Captain };
 
@@ -87,6 +90,8 @@ namespace CityBuilder.UI
                 body.text = string.Format(Localization.Get("#dungeon_entrance_level"), Shown.Level) + "\n\n"
                     + Localization.Get(key + (near ? "_ready" : "_far"));
             RefreshHeroes();
+            if (findRow != null && findRow.activeSelf == Shown.IsExit) findRow.SetActive(!Shown.IsExit);
+            if (findWords != null) findWords.text = Localization.Get("#dungeon_can_find");
             if (enterButton != null)
             {
                 enterButton.interactable = Shown.CanGo;

@@ -677,3 +677,4 @@ dungeon opens as a SEPARATE SCENE.
 - IDEA (the user, 2026-11-02): chests in the dungeon with ordinary resources, bonuses as the player goes through.
 
 - 2026-11-02: the «Уровень N» plaque hides while the dungeon's card is open (DungeonLevelLabel.LateUpdate checks DungeonEntranceCard.IsOpen) — the card says the level itself.
+- 2026-11-02: the entrance card shows «Можно найти:» + a crystal icon (row CanFind, hidden on the way out; key #dungeon_can_find, localization row 542).
