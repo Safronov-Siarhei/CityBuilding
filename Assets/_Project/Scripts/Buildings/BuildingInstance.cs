@@ -151,6 +151,7 @@ namespace CityBuilder.Buildings
                 if (data.buildingName == BuildingIds.TownHall) Maps.MeshMapApplier.Instance?.RevealStartIsland(centerCell);
                 // a stone footing where the plot falls away below it (a sloping shore)
                 BuildingFooting.Add(this);
+                if (WallWalk.Concerns(data.buildingName)) WallWalk.MarkDirty();
 
                 SetupNavMeshObstacle(data);
                 // The mirror image of the obstacle above: a Bridge doesn't carve the NavMesh, it
@@ -197,6 +198,9 @@ namespace CityBuilder.Buildings
             }
         }
 
+        /// <summary>The cells this building sits on (rotated as placed).</summary>
+        public IEnumerable<Vector2Int> Cells() => OccupiedCells();
+
         /// <summary>The cells this building sits on, with the footprint turned to match its placement rotation -- the same swap BuildingPlacer applies before it reserves them.</summary>
         private IEnumerable<Vector2Int> OccupiedCells()
         {
@@ -226,6 +230,7 @@ namespace CityBuilder.Buildings
                 // those may already be gone, and an exception further down used to leave this
                 // building counted -- the next game then believed its Town Hall already stood.
                 ChangeCount(Data.buildingName, -1);
+                if (WallWalk.Concerns(Data.buildingName)) WallWalk.MarkDirty();
                 _houses.Remove(this);
                 if (TownHall == this) TownHall = null;
                 if (Data.isGate) GatesStanding.Remove(this);
@@ -765,6 +770,7 @@ namespace CityBuilder.Buildings
             _levelAppearance?.Apply(Level);
             _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();
+            if (Data != null && WallWalk.Concerns(Data.buildingName)) WallWalk.MarkDirty();
         }
 
         /// <summary>Used by save/load to restore already-valid runtime condition directly. A save's decay is left behind: nothing ages any more (DecayEnabled).</summary>
@@ -867,6 +873,7 @@ namespace CityBuilder.Buildings
             _levelAppearance?.Apply(Level);
             _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();
+            if (WallWalk.Concerns(Data.buildingName)) WallWalk.MarkDirty();
             EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_upgraded", Data.LocalizedName, Level), EventSeverity.Good, EventGlyph.Upgrade));
         }
     }

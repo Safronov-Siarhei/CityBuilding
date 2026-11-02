@@ -18,7 +18,7 @@ namespace CityBuilder.Combat
     /// - Soldiers only ever damage IDamageTarget implementors (orcs, portals). They have no path at
     ///   all to a player BuildingInstance, so no targeting bug can turn the army on its own town.
     /// </summary>
-    public class SoldierUnit : MonoBehaviour
+    public partial class SoldierUnit : MonoBehaviour
     {
         /// <summary>Below this (horizontal) the soldier is close enough to its slot to stop shuffling.</summary>
         private const float SlotArrivalDistance = 0.25f;
@@ -81,9 +81,9 @@ namespace CityBuilder.Combat
         /// dungeon_ranged_range_factor -- its halls are narrow (the user, 2026-11-02: «у королевы
         /// слишком далёкое расстояние для атаки, нужно уменьшить где-то в два раза»).
         /// </summary>
-        private float UnitAttackRange => IsRanged && Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
+        private float UnitAttackRange => (IsRanged && Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
             ? _unitAttackRange * BalanceConfig.Instance.DungeonRangedRangeFactor
-            : _unitAttackRange;
+            : _unitAttackRange) + WallRangeBonus;
 
         /// <summary>How far off he picks a fight by himself: cut in a dungeon by dungeon_engage_factor.</summary>
         private float EngageRadius => Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
@@ -190,6 +190,7 @@ namespace CityBuilder.Combat
         private void OnDisable()
         {
             _all.Remove(this);
+            Buildings.WallWalk.Release(this);
         }
 
         /// <summary>Called by ArmyManager right after the GameObject is built, before the first Update.</summary>
@@ -304,6 +305,9 @@ namespace CityBuilder.Combat
                 return;
             }
             if (Group == null) return;
+
+            // up on a wall, on the way up or coming down (SoldierUnitWalls)
+            if (TickWall()) return;
 
             if (_retreatLeft > 0f)
             {

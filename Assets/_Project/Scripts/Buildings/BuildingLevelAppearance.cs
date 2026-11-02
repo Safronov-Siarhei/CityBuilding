@@ -30,12 +30,25 @@ namespace CityBuilder.Buildings
             levelHeights = heights;
         }
 
+        // set while another look stands in for the level models (a tower against a walk wall, WallTowerLook)
+        private bool _hidden;
+        private int _level = 1;
+
+        /// <summary>Hides every level model (true) or brings the level's back (false).</summary>
+        public void SetHidden(bool hidden)
+        {
+            if (_hidden == hidden) return;
+            _hidden = hidden;
+            Apply(_level);
+        }
+
         public void Apply(int level)
         {
+            _level = level;
             var index = Resolve(level);
             if (index < 0) return;
 
-            var chosen = levelModels[index];
+            var chosen = _hidden ? null : levelModels[index];
             foreach (var model in levelModels)
             {
                 if (model == null) continue;

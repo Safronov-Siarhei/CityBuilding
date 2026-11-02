@@ -167,6 +167,7 @@ namespace CityBuilder.EditorTools
             collider.center = new Vector3(0f, height * 0.5f, 0f);
 
             AddLevelModels(root, id, model, height, footprint);
+            if (id == WallWalk.TowerId || id == WallWalk.FortifiedTowerId) AddWallTowerLook(root, id, footprint);
 
             // Not merged: BuildingLevelAppearance switches these level models on and off at
             // runtime, so they have to stay separate objects.
@@ -193,6 +194,46 @@ namespace CityBuilder.EditorTools
         /// component would resolve every level back to the one model and cost a component on 45
         /// prefabs to do it. The day an FBX lands, this build wires it up.
         /// </summary>
+        /// <summary>
+        /// A tower's wall look (WallTowerLook, Tools/blender/walls_walk.py): the bodies of levels 3..5
+        /// and a doorway onto the walk for every slot -- each side of the 1x1 Tower, each cell of a
+        /// side of the 2x2 Fortified Tower -- all hidden until a walk wall meets the tower.
+        /// </summary>
+        private static void AddWallTowerLook(GameObject root, string id, Vector2Int footprint)
+        {
+            var name = id == WallWalk.TowerId ? "WallTower" : "WallFortTower";
+            var perSide = Mathf.Max(1, footprint.x);
+            var bodies = new GameObject[3];
+            var doors = new GameObject[3 * 4 * perSide];
+            // sides N, E, S, W: the yaw that turns the doorway (modelled facing south) to face it
+            var yaw = new[] { 180f, -90f, 0f, 90f };
+            for (var level = 3; level <= 5; level++)
+            {
+                var body = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{name}-lvl{level}.fbx");
+                var door = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{name}-lvl{level}-Door.fbx");
+                if (body == null || door == null)
+                {
+                    Debug.LogError($"AddWallTowerLook: {name}-lvl{level}(.fbx / -Door.fbx) missing -- run Tools/blender/walls_walk.py and export");
+                    return;
+                }
+                var b = Object.Instantiate(body, Vector3.zero, body.transform.rotation, root.transform);
+                b.name = $"{name}-lvl{level}";
+                b.SetActive(false);
+                bodies[level - 3] = b;
+                for (var side = 0; side < 4; side++)
+                for (var cell = 0; cell < perSide; cell++)
+                {
+                    var along = perSide > 1 ? (cell == 0 ? -0.5f : 0.5f) * CellSize : 0f;
+                    var offset = side % 2 == 0 ? new Vector3(along, 0f, 0f) : new Vector3(0f, 0f, along);
+                    var d = Object.Instantiate(door, offset, Quaternion.Euler(0f, yaw[side], 0f) * door.transform.rotation, root.transform);
+                    d.name = $"{name}-lvl{level}-Door{side}{cell}";
+                    d.SetActive(false);
+                    doors[(level - 3) * 4 * perSide + side * perSide + cell] = d;
+                }
+            }
+            root.AddComponent<WallTowerLook>().Wire(bodies, doors, perSide);
+        }
+
         private static void AddLevelModels(GameObject root, string id, GameObject levelOneModel, float levelOneHeight, Vector2Int footprint)
         {
             var models = new List<GameObject> { levelOneModel };

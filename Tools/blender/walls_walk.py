@@ -230,8 +230,27 @@ def flag(b, x, y, z, length=0.34, colour='banner_blue', pole=0.45):
             (x, y, 0), (1, 0, 0), (0, 0, 1), 0.012, colour, back_cap=True)
 
 
+def arch_window(b, d, r, c, z0, w, hgt):
+    """A lit window with a round head: a dark frame, the glass, a cross of glazing bars, a sill."""
+    def arch(cx, half, base, height, n=6):
+        pts = [(cx - half, base), (cx + half, base), (cx + half, base + height - half)]
+        for k in range(1, n):
+            a = math.pi * k / n
+            pts.append((cx + half * math.cos(a), base + height - half + half * math.sin(a)))
+        pts.append((cx - half, base + height - half))
+        return pts
+    on_face(b, d, r, arch(c, w + 0.025, z0 - 0.02, hgt + 0.045), 'wood_dark', out=0.004, depth=0.012)
+    on_face(b, d, r, arch(c, w, z0, hgt), 'window_light', out=0.012, depth=0.008)
+    on_face(b, d, r, [(c - 0.008, z0), (c + 0.008, z0), (c + 0.008, z0 + hgt - 0.01), (c - 0.008, z0 + hgt - 0.01)],
+            'wood_dark', out=0.02, depth=0.006)
+    on_face(b, d, r, [(c - w, z0 + hgt * 0.5), (c + w, z0 + hgt * 0.5), (c + w, z0 + hgt * 0.5 + 0.014), (c - w, z0 + hgt * 0.5 + 0.014)],
+            'wood_dark', out=0.02, depth=0.006)
+    on_face(b, d, r, [(c - w - 0.035, z0 - 0.035), (c + w + 0.035, z0 - 0.035), (c + w + 0.035, z0 - 0.01), (c - w - 0.035, z0 - 0.01)],
+            'wood_dark', out=0.004, depth=0.035)
+
+
 def timber_storey(b, r, z0, z1, windows, level):
-    """An overhanging timber storey: plaster panels between dark posts, lit windows with shutters,
+    """An overhanging timber storey: plaster panels between dark posts, lit arched windows,
     corbels underneath."""
     o = r + 0.06
     b.box(-o, o, -o, o, z0, z1, 'plaster')
@@ -241,13 +260,9 @@ def timber_storey(b, r, z0, z1, windows, level):
         for sy in (-1, 1):
             b.box(sx * o - 0.035, sx * o + 0.035, sy * o - 0.035, sy * o + 0.035, z0, z1, 'wood_dark')
     zc = (z0 + z1) / 2
-    shutter = 'roof_green' if level < 5 else 'roof_blue_dark'
     for d in 'NSEW':
         for c in windows:
-            face_box(b, d, o, c, zc - 0.1, zc + 0.11, 0.12, 'window_light', out=0.012)
-            face_box(b, d, o, c, zc - 0.125, zc - 0.1, 0.17, 'wood_dark', out=0.025)
-            for side in (-1, 1):
-                face_box(b, d, o, c + side * 0.095, zc - 0.1, zc + 0.11, 0.05, shutter, out=0.018)
+            arch_window(b, d, o, c, zc - 0.12, 0.07, 0.17)
         # posts between the windows
         for c in [w + 0.21 for w in windows] + [w - 0.21 for w in windows]:
             if abs(c) < o - 0.06:
@@ -351,7 +366,7 @@ def wall_fort_tower(level):
 def gatehouse(level):
     """The Gate on a road through a walk wall (road N-S, the wall E-W): the walk over an arch."""
     b = Builder()
-    h = HEIGHT[level] + 0.15
+    h = HEIGHT[level]
     t = WALK_T / 2 + 0.04
     # the two piers
     for sx in (-1, 1):
@@ -468,6 +483,52 @@ def stage(out_png, target, ortho, angle=(58, 0, 35)):
     bpy.data.objects.remove(cam)
 
 
+# What the game loads (export_fbx.py routes them all to Models/Buildings):
+#   Fence1-lvl3..5-<Straight|Corner|T|Cross>   the walk walls replace the old fence levels 3-5
+#   Gate1-lvl3..5                              the gatehouse (turned so its wall runs N-S, as Gate1's)
+#   WallTower-lvl3..5, WallTower-lvl3..5-Door  the Tower's wall look and its doorway piece
+#   WallFortTower-lvl3..5(-Door)               the Fortified Tower's
+EXPORTS = {}
+for _lv in (3, 4, 5):
+    for _shape in ('Straight', 'Corner', 'T', 'Cross'):
+        EXPORTS[f"Fence1-lvl{_lv}-{_shape}"] = (f"WallWalk-lvl{_lv}-{_shape}", 0)
+    EXPORTS[f"Gate1-lvl{_lv}"] = (f"WallGatehouse-lvl{_lv}", 1)
+    for _name in (f"WallTower-lvl{_lv}", f"WallTower-lvl{_lv}-Door", f"WallFortTower-lvl{_lv}", f"WallFortTower-lvl{_lv}-Door"):
+        EXPORTS[_name] = (_name, 0)
+
+
+def install(built):
+    """Puts each draft mesh into the object the game exports, keeping an existing object's place."""
+    coll = bpy.data.collections.get(COLLECTION)
+    if coll is None:
+        coll = bpy.data.collections.new(COLLECTION)
+        bpy.context.scene.collection.children.link(coll)
+    for i, (target, (source, quarter)) in enumerate(EXPORTS.items()):
+        me = built[source].data.copy()
+        me.name = target
+        if quarter:
+            for v in me.vertices:
+                v.co.x, v.co.y = -v.co.y, v.co.x
+        obj = bpy.data.objects.get(target)
+        if obj is None:
+            obj = bpy.data.objects.new(target, me)
+            coll.objects.link(obj)
+            obj.location = Vector((90.0 + (i % 12) * 3.0, -60.0 - (i // 12) * 4.0, 0.0))
+        else:
+            old = obj.data
+            obj.data = me
+            if old.users == 0:
+                bpy.data.meshes.remove(old)
+            if not obj.users_collection:
+                # a draft object of the same name (the towers, the doors): it becomes the model
+                coll.objects.link(obj)
+                obj.location = Vector((90.0 + (i % 12) * 3.0, -60.0 - (i // 12) * 4.0, 0.0))
+        print("INSTALLED", target)
+    for o in built.values():
+        if o.users == 0:
+            bpy.data.objects.remove(o)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out_dir = argv[0] if argv else None
@@ -484,6 +545,8 @@ def main():
         built[name] = bpy.data.objects.new(name, me)
         print(f"MODEL {name}: tris={sum(len(p.vertices) - 2 for p in me.polygons)}")
     if out_dir is None:
+        install(built)
+        bpy.ops.wm.save_mainfile()
         return
     sc = bpy.context.scene
     for o in sc.objects:

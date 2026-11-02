@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -575,6 +575,8 @@ namespace CityBuilder.Combat
         {
             if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0) return;
             if (_soldierTarget != null && _soldierTarget.CurrentHealth > 0) return;
+            // a melee orc cannot reach a fighter on the walls (the user, 2026-11-02); a thrower can
+            if (!CanReach(attacker)) return;
 
             _soldierTarget = attacker;
             _retaliating = true;
@@ -836,7 +838,7 @@ namespace CityBuilder.Combat
             var best = float.MaxValue;
             foreach (var soldier in SoldierUnit.All)
             {
-                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                if (soldier == null || soldier.CurrentHealth <= 0 || !CanReach(soldier)) continue;
                 if (!InGuardZone(soldier.transform.position, OrcCamp.ZoneMarginMeters)) continue;
                 var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
                 if (distSq >= best) continue;
@@ -859,7 +861,7 @@ namespace CityBuilder.Combat
         /// <summary>Whether the soldier it is chasing is alive and still inside the retaliation leash -- for a guard, measured from its post.</summary>
         private bool StillWorthChasing(SoldierUnit soldier)
         {
-            if (soldier == null || soldier.CurrentHealth <= 0) return false;
+            if (soldier == null || soldier.CurrentHealth <= 0 || !CanReach(soldier)) return false;
             if (_guarding) return InGuardZone(soldier.transform.position, OrcCamp.ZoneMarginMeters + GuardLeashMeters);
 
             var leash = _soldierAggroRadius * RetaliationLeashMultiplier;
@@ -957,7 +959,7 @@ namespace CityBuilder.Combat
 
             foreach (var soldier in SoldierUnit.All)
             {
-                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                if (soldier == null || soldier.CurrentHealth <= 0 || !CanReach(soldier)) continue;
 
                 var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
                 if (distSq > nearestDistSq) continue;
@@ -970,6 +972,9 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
+        /// <summary>Whether it can come at this soldier: a fighter up on the walls only to a thrower's javelin.</summary>
+        private bool CanReach(SoldierUnit soldier) => IsRanged || !soldier.OnWall;
+
         public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman;
 
         /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>

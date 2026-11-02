@@ -1,4 +1,4 @@
-﻿using CityBuilder.Buildings;
+using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -120,6 +120,9 @@ namespace CityBuilder.UI
                 return true;
             }
 
+            // a walk wall under the finger and shooters selected: up onto it (the user, 2026-11-02)
+            if (TryOrderOntoWall(army.SelectedGroup, hitCount)) return true;
+
             for (var i = 0; i < hitCount; i++)
             {
                 if (_hits[i].collider.GetComponentInParent<BuildingInstance>() == null) continue;
@@ -140,6 +143,37 @@ namespace CityBuilder.UI
             group.NotifyPlayerOrder();
             if (group.Count > 0) OrderMarker.ShowFlagFor(group.Members[0].transform, destination);
             return true;
+        }
+
+        /// <summary>
+        /// Ranged fighters selected and a walk wall (or its stair tower) tapped: each takes a free
+        /// wall cell nearest the tap and goes up by the nearest stair (Combat/SoldierUnitWalls).
+        /// </summary>
+        private bool TryOrderOntoWall(ArmyGroup group, int hitCount)
+        {
+            if (group == null || group.Count == 0 || !group.Members[0].IsRanged) return false;
+            var grid = Grid.GridManager.Instance;
+            if (grid == null) return false;
+            for (var i = 0; i < hitCount; i++)
+            {
+                var building = _hits[i].collider.GetComponentInParent<BuildingInstance>();
+                if (building == null || !WallWalk.IsWalkBuilding(building)) continue;
+                var cell = grid.WorldToCell(_hits[i].point);
+                if (!WallWalk.IsWalk(cell)) cell = building.OriginCell;
+                var sent = 0;
+                for (var k = 0; k < group.Count; k++)
+                    if (group.Members[k].GoToWall(cell)) sent++;
+                if (sent == 0)
+                {
+                    OrderMarker.HideOrder();
+                    OrderMarker.ShowRefused(_hits[i].point);
+                    return true;
+                }
+                group.NotifyPlayerOrder();
+                OrderMarker.ShowFlagFor(group.Members[0].transform, WallWalk.Top(cell));
+                return true;
+            }
+            return false;
         }
 
         /// <summary>A walk to another island across the sea is refused, with a word why (a ship takes them there).</summary>

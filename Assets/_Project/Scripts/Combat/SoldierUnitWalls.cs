@@ -1,0 +1,330 @@
+using System.Collections.Generic;
+using CityBuilder.Buildings;
+using CityBuilder.Core;
+using CityBuilder.Grid;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace CityBuilder.Combat
+{
+    /// <summary>
+    /// A ranged fighter -- an archer, the Queen, a gnome crossbowman -- up on the walls (the user,
+    /// 2026-11-02; Buildings/WallWalk):
+    /// - sent there (tap a wall with them selected) or going up by himself when orcs come near and a
+    ///   free wall cell is close (`wall_seek_radius_cells`);
+    /// - up only through a stair tower: he walks to its foot, climbs inside it
+    ///   (`wall_climb_sec`), then along the walk cell by cell to his post; one fighter a cell, the
+    ///   others pass through him to cells further on;
+    /// - up there he shoots `wall_range_bonus_cells` further and never leaves the wall to chase;
+    ///   melee orcs cannot reach him (OrcUnit), throwers can;
+    /// - an order on the ground brings him down through the nearest stair first;
+    /// - the wall cell under him destroyed: he falls and dies.
+    /// </summary>
+    public partial class SoldierUnit
+    {
+        private enum WallPhase { None, ToStair, Up, Walking, Posted, Down }
+
+        private WallPhase _wallPhase;
+        private Vector2Int _wallPost;
+        private Vector2Int _wallStair;
+        private Vector2Int _wallAt;
+        private readonly List<Vector2Int> _wallPath = new List<Vector2Int>();
+        private int _wallStep;
+        private float _climbT;
+        private Vector3 _climbFrom;
+        private Vector3 _climbTo;
+        private bool _wallLeaving;
+        private float _wallSeekIn;
+
+        /// <summary>On the walls or inside a stair tower: melee orcs leave him be.</summary>
+        public bool OnWall => _wallPhase == WallPhase.Up || _wallPhase == WallPhase.Walking
+                              || _wallPhase == WallPhase.Posted || _wallPhase == WallPhase.Down;
+
+        /// <summary>Has a wall to go to, is on it, or is coming down from it.</summary>
+        public bool WallBound => _wallPhase != WallPhase.None;
+
+        private static float CellMetres => GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+
+        private float WallRangeBonus => (_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted) && BalanceConfig.Instance != null
+            ? BalanceConfig.Instance.WallRangeBonusCells * CellMetres
+            : 0f;
+
+        /// <summary>Sends a ranged fighter up to the free wall cell nearest `cell`; false when there is no way up to it.</summary>
+        public bool GoToWall(Vector2Int cell)
+        {
+            if (!IsRanged || CurrentHealth <= 0 || Dungeon.DungeonMode.IsActive) return false;
+            if (!WallWalk.FreeCellNear(cell, this, out var post)) return false;
+            if (_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted)
+            {
+                // already up: along the walk, if this stretch reaches it
+                if (WallWalk.Path(_wallAt, post, _wallPath))
+                {
+                    WallWalk.Claim(post, this);
+                    _wallPost = post;
+                    _wallStep = 1;
+                    _wallLeaving = false;
+                    _wallPhase = WallPhase.Walking;
+                    return true;
+                }
+                return false;
+            }
+            if (!WallWalk.NearestStair(post, transform.position, out var stair)) return false;
+            WallWalk.Claim(post, this);
+            _wallPost = post;
+            _wallStair = stair;
+            _wallLeaving = false;
+            _wallPhase = WallPhase.ToStair;
+            _hasRoute = false;
+            _target = null;
+            Marching = false;
+            return true;
+        }
+
+        /// <summary>Comes down (by the nearest stair) or gives the way up up -- an order on the ground.</summary>
+        public void LeaveWall()
+        {
+            switch (_wallPhase)
+            {
+                case WallPhase.ToStair:
+                    _wallPhase = WallPhase.None;
+                    WallWalk.Release(this);
+                    return;
+                case WallPhase.Up:
+                    _wallLeaving = true;
+                    return;
+                case WallPhase.Walking:
+                case WallPhase.Posted:
+                    WallWalk.Release(this);
+                    if (!WallWalk.NearestStair(_wallAt, transform.position, out var stair) || !WallWalk.Path(_wallAt, stair, _wallPath))
+                    {
+                        DropToGround();
+                        return;
+                    }
+                    _wallStair = stair;
+                    _wallStep = 1;
+                    _wallLeaving = true;
+                    _wallPhase = WallPhase.Walking;
+                    return;
+            }
+        }
+
+        /// <summary>One frame of the wall's business; true when it took the frame (Update returns).</summary>
+        private bool TickWall()
+        {
+            if (_wallPhase == WallPhase.None) return TrySeekWall();
+            if (Dungeon.DungeonMode.IsActive)
+            {
+                DropToGround();
+                return false;
+            }
+            WallWalk.Ensure();
+            // the wall broken under him: he falls (the user: and dies)
+            if ((_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted) && !WallWalk.IsWalk(_wallAt))
+            {
+                Fall();
+                return true;
+            }
+
+            switch (_wallPhase)
+            {
+                case WallPhase.ToStair:
+                {
+                    if (!WallWalk.IsStair(_wallStair))
+                    {
+                        _wallPhase = WallPhase.None;
+                        WallWalk.Release(this);
+                        return false;
+                    }
+                    var foot = StairFoot(_wallStair);
+                    var distance = HorizontalDistance(foot, transform.position);
+                    if (distance <= CellMetres * 1.1f || (_hasRoute && _route.IsFinished && distance <= CellMetres * 2f))
+                    {
+                        BeginClimb(true);
+                        return true;
+                    }
+                    WalkTowards(foot);
+                    return true;
+                }
+                case WallPhase.Up:
+                case WallPhase.Down:
+                {
+                    var seconds = BalanceConfig.Instance != null ? Mathf.Max(0.1f, BalanceConfig.Instance.WallClimbSeconds) : 1.2f;
+                    _climbT += Time.deltaTime / seconds;
+                    transform.position = Vector3.Lerp(_climbFrom, _climbTo, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_climbT)));
+                    if (_climbT < 1f) return true;
+                    if (_wallPhase == WallPhase.Down)
+                    {
+                        _wallPhase = WallPhase.None;
+                        if (_controller != null) _controller.enabled = true;
+                        _hasRoute = false;
+                        return false;
+                    }
+                    _wallAt = _wallStair;
+                    if (_wallLeaving || !WallWalk.Path(_wallStair, _wallPost, _wallPath))
+                    {
+                        BeginClimb(false);
+                        return true;
+                    }
+                    _wallStep = 1;
+                    _wallPhase = WallPhase.Walking;
+                    return true;
+                }
+                case WallPhase.Walking:
+                {
+                    if (_wallStep >= _wallPath.Count)
+                    {
+                        if (_wallLeaving) BeginClimb(false);
+                        else _wallPhase = WallPhase.Posted;
+                        return true;
+                    }
+                    var next = _wallPath[_wallStep];
+                    if (!WallWalk.IsWalk(next))
+                    {
+                        // broken ahead: a new way, or a stand where he is
+                        var goal = _wallLeaving ? _wallStair : _wallPost;
+                        if (!WallWalk.IsWalk(goal) || !WallWalk.Path(_wallAt, goal, _wallPath))
+                        {
+                            if (_wallLeaving) DropToGround();
+                            else _wallPhase = WallPhase.Posted;
+                            return true;
+                        }
+                        _wallStep = 1;
+                        return true;
+                    }
+                    var to = WallWalk.Top(next);
+                    var step = _walkSpeed * Time.deltaTime;
+                    var way = to - transform.position;
+                    if (way.magnitude <= step)
+                    {
+                        transform.position = to;
+                        _wallAt = next;
+                        _wallStep++;
+                    }
+                    else
+                    {
+                        transform.position += way.normalized * step;
+                        FaceTowards(to);
+                    }
+                    return true;
+                }
+                case WallPhase.Posted:
+                    WallFight();
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>Shoots the nearest enemy in reach -- never leaves the wall to chase one.</summary>
+        private void WallFight()
+        {
+            _retargetTimer -= Time.deltaTime;
+            if (_target == null || !_target.IsAlive || _retargetTimer <= 0f)
+            {
+                _retargetTimer = RetargetIntervalSeconds;
+                _target = NearestEnemyInReach();
+            }
+            if (_target == null || !_target.IsAlive) return;
+            if (HorizontalDistance(_target.Transform.position, transform.position) > UnitAttackRange + BodyRadius(_target))
+            {
+                _target = null;
+                return;
+            }
+            FaceTowards(_target.Transform.position);
+            TickAttack();
+        }
+
+        private IDamageTarget NearestEnemyInReach()
+        {
+            IDamageTarget nearest = null;
+            var best = float.MaxValue;
+            foreach (var candidate in EnumerateEnemies())
+            {
+                if (candidate == null || !candidate.IsAlive) continue;
+                if (candidate is OrcPortal portal && portal.IsShielded) continue;
+                var d = HorizontalDistance(candidate.Transform.position, transform.position) - BodyRadius(candidate);
+                if (d > UnitAttackRange || d >= best) continue;
+                best = d;
+                nearest = candidate;
+            }
+            return nearest;
+        }
+
+        /// <summary>A ranged fighter left to himself goes up the nearest wall when orcs come near.</summary>
+        private bool TrySeekWall()
+        {
+            if (!IsRanged || Marching || IsRetreating || Group == null || Group.AttackTarget != null || Dungeon.DungeonMode.IsActive) return false;
+            _wallSeekIn -= Time.deltaTime;
+            if (_wallSeekIn > 0f) return false;
+            _wallSeekIn = 1f + Random.value * 0.5f;
+            if (!WallWalk.Any) return false;
+            var reach = (BalanceConfig.Instance != null ? BalanceConfig.Instance.WallSeekRadiusCells : 14f) * CellMetres;
+            OrcUnit nearest = null;
+            var best = reach * reach;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var d = orc.transform.position - transform.position;
+                d.y = 0f;
+                if (d.sqrMagnitude >= best) continue;
+                best = d.sqrMagnitude;
+                nearest = orc;
+            }
+            if (nearest == null) return false;
+            if (!WallWalk.BestPost(transform.position, nearest.transform.position, reach, this, out var post)) return false;
+            return GoToWall(post);
+        }
+
+        private void BeginClimb(bool up)
+        {
+            _climbT = 0f;
+            _climbFrom = transform.position;
+            if (_controller != null) _controller.enabled = false;
+            if (up)
+            {
+                _climbTo = WallWalk.Top(_wallStair);
+                _wallPhase = WallPhase.Up;
+                return;
+            }
+            WallWalk.Release(this);
+            var foot = StairFoot(_wallStair);
+            if (NavMesh.SamplePosition(foot, out var hit, CellMetres * 2.5f, NavMesh.AllAreas)) foot = hit.position;
+            foot.y = GridManager.Instance != null ? GridManager.Instance.GroundHeight : foot.y;
+            _climbTo = foot;
+            _wallPhase = WallPhase.Down;
+        }
+
+        private static Vector3 StairFoot(Vector2Int cell)
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return Vector3.zero;
+            var at = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+            at.y = grid.GroundHeight;
+            return at;
+        }
+
+        /// <summary>Down on the ground where he stands, alive (a dungeon, a way down that is gone).</summary>
+        private void DropToGround()
+        {
+            WallWalk.Release(this);
+            _wallPhase = WallPhase.None;
+            _wallLeaving = false;
+            if (GridManager.Instance != null)
+            {
+                var p = transform.position;
+                p.y = GridManager.Instance.GroundHeight;
+                transform.position = p;
+            }
+            if (_controller != null) _controller.enabled = true;
+            _hasRoute = false;
+        }
+
+        /// <summary>The wall cell under him is gone: he falls and dies (the user, 2026-11-02).</summary>
+        private void Fall()
+        {
+            DropToGround();
+            if (InvulnerableCheat || CurrentHealth <= 0) return;
+            CurrentHealth = 0;
+            ArmyManager.Instance?.NotifySoldierKilled(this);
+        }
+    }
+}

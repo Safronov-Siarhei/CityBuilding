@@ -425,6 +425,14 @@ namespace CityBuilder.Core
         // the Tax House's research in the Laboratory: its opening and levels 2..5 cost these upgrade
         // crystals (tax_house_research_crystals_<1..5>; the user, 2026-11-02)
         [SerializeField] private int[] taxHouseResearchCrystals = { 3, 5, 7, 9, 11 };
+        // the walk along the walls (the user, 2026-11-02): from which level a Fence/Gate/Tower takes
+        // part, the walk's height by level 3..5 (cells), the range a fighter up there gains (cells),
+        // how far an idle ranged fighter looks for orcs and a free wall cell, the climb's seconds
+        [SerializeField] private int wallWalkFromLevel = 3;
+        [SerializeField] private float[] wallWalkHeight = { 0.9f, 1.1f, 1.3f };
+        [SerializeField] private float wallRangeBonusCells = 2f;
+        [SerializeField] private float wallSeekRadiusCells = 14f;
+        [SerializeField] private float wallClimbSeconds = 1.2f;
         // boulders laid on the archipelago's start island on top of its share (island_start_rocks)
         [SerializeField] private int islandStartRocks = 40;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -924,6 +932,14 @@ namespace CityBuilder.Core
         public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public int IslandStartRocks => islandStartRocks;
+        public int WallWalkFromLevel => wallWalkFromLevel;
+        public float WallRangeBonusCells => wallRangeBonusCells;
+        public float WallSeekRadiusCells => wallSeekRadiusCells;
+        public float WallClimbSeconds => wallClimbSeconds;
+
+        /// <summary>The walk's height above the ground on a wall of `level` (3..5), in cells.</summary>
+        public float WallWalkHeight(int level) =>
+            wallWalkHeight == null || wallWalkHeight.Length == 0 ? 1f : wallWalkHeight[Mathf.Clamp(level - 3, 0, wallWalkHeight.Length - 1)];
 
         /// <summary>The crystals the Tax House's research costs: its opening (level 0 or 1) and levels 2..5.</summary>
         public int TaxHouseResearchCrystals(int level)
@@ -1578,6 +1594,11 @@ namespace CityBuilder.Core
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
+            wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
+            for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);
+            wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);
+            wallSeekRadiusCells = Read(economy, "wall_seek_radius_cells", wallSeekRadiusCells);
+            wallClimbSeconds = Read(economy, "wall_climb_sec", wallClimbSeconds);
             decayPerDayAtLevel1 = Read(economy, "decay_per_day_at_level1", decayPerDayAtLevel1);
             decayPenaltyThreshold = Read(economy, "decay_penalty_threshold", decayPenaltyThreshold);
             minDecayProductionMultiplier = Read(economy, "min_decay_production_multiplier", minDecayProductionMultiplier);

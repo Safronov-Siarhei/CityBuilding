@@ -73,6 +73,8 @@ namespace CityBuilder.Combat
         /// <summary>Walk there and hold. Clears any attack order -- a move order is the player overriding what the group was doing.</summary>
         public void OrderMoveTo(Vector3 destination)
         {
+            // an order on the ground brings whoever is on the walls down first
+            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall();
             HoldPosition = destination;
             AttackTarget = null;
             OnChanged?.Invoke();
@@ -86,6 +88,7 @@ namespace CityBuilder.Combat
         public void OrderAttack(IDamageTarget target)
         {
             if (target == null || !target.IsAlive) return;
+            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall();
             AttackTarget = target;
             HoldPosition = target.Transform.position;
             OnChanged?.Invoke();
