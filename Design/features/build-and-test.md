@@ -97,3 +97,9 @@ OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetC
 RELEASE: build scripts take `-release` -> extraScriptingDefines CB_RELEASE -> the panel compiles empty.
 Also `ResourceCheat`, `ResearchCheat`, `OrcSpawnCheat` (Inspector), `Editor/CheatInspectors.cs`.
 User has NOT checked the window in game yet.
+## General run 2026-11-02 (923e2c5f)
+EditMode 460/460, PlayMode 359/378 (18 skipped). 31 failures fixed: real bugs (tide monsters missing from
+`BalanceConfig.MonsterIds` -> fallback stats; the hire camp's «!» re-shown by BuildingFocus.Update; moat at 6
+draws a cell) and tests behind the user's design changes (food rework, hidden Barn/Windmill -> Warehouse/Smelter,
+own-kill hero XP, fogged start island, archipelago-only picker, tax plaque gone, stone Footing on slopes).
+FLAKY: `InvasionTests.AWaveOrc_KeepsToItsWay_...` -- the lane sometimes bends round scenery (14.9 > 14 m); passes alone.

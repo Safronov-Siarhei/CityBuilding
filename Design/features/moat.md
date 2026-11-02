@@ -49,3 +49,10 @@
   stand crossings on their lowest point (`FitModelToGround`), the legs go below the ground line.
 - Traps: raised leaves are only a look -- allies still walk the Gate area; the leaf hinge numbers are duplicated
   in `SetupProjectBuildings.AddDrawbridgeLeaves` (keep in step with crossings.py).
+
+## 2026-11-02 (923e2c5f): living water, two draws a cell
+- Water: `Shaders/MoatWater.shader` (Materials/MoatWater.mat) on a quad over each cell, world-space ripples +
+  glints so neighbouring cells read as one stream; the model's own bed/still water is not drawn.
+- Banks: `MoatAppearance` combines the shown banks into ONE mesh per side-mask (16 cached, shared); Moat-Bank.fbx
+  is imported Read/Write (`ModelImportDefaults`) for that. A cell = 2 draws (banks + water).
+  `BuildingDrawCountTests` allows the MoatWater renderer by name.
