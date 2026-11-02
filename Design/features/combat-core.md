@@ -17,7 +17,7 @@
 > Tower/FortifiedTower prefabs by `SetupProjectBuildings.AddWallTowerLook`; hides BuildingLevelAppearance via
 > SetHidden), `Combat/SoldierUnitWalls.cs` (partial SoldierUnit: phases ToStair/Up/Walking/Posted/Down).
 > Models: `Tools/blender/walls_walk.py` (no args = install into Fence1-lvl3..5-*, Gate1-lvl3..5 turned 90,
-> WallTower*/WallFortTower* + -Door; `-- <dir>` = render draft images). Traps: a save made with fighters on
+> WallTower*/WallFortTower* + -Door; `-- <dir>` = render draft images). Steps (ecc24d29): where walk walls of different levels meet, stone steps (WallSteps-3-4/3-5/4-5) stand on the LOWER cell half by the joint (WallWalk.PlaceSteps, parented to that wall, wired via BuildingPlacer.wallSteps); fighters follow them (SoldierUnitWalls.StepHeight); a tower doorway uses the JOINED WALL level, the stair node Top = highest joined wall. Traps: a save made with fighters on
 > the walls loads them on the ground; Gate lvl3-5 measures 1.17 cells (open leaves overhang).
 
 
