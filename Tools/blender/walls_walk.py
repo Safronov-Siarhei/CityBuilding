@@ -659,4 +659,5 @@ def main():
     stage(os.path.join(out_dir, "walls_levels.png"), (19.5, -12.6, 1.0), 17)
 
 
-main()
+if __name__ == "__main__":
+    main()

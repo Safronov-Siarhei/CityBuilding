@@ -516,7 +516,8 @@ namespace CityBuilder.Combat
             }
 
             var struck = _target;
-            struck.TakeDamage(StrikeDamage);
+            if (struck is OrcUnit felled) felled.TakeDamage(StrikeDamage, this);
+            else struck.TakeDamage(StrikeDamage);
             if (!struck.IsAlive)
             {
                 _target = null;

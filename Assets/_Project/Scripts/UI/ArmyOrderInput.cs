@@ -170,7 +170,7 @@ namespace CityBuilder.UI
                     return true;
                 }
                 group.NotifyPlayerOrder();
-                OrderMarker.ShowFlagFor(group.Members[0].transform, WallWalk.Top(cell));
+                OrderMarker.ShowFlagFor(group.Members[0].transform, WallWalk.Top(cell), true);
                 return true;
             }
             return false;

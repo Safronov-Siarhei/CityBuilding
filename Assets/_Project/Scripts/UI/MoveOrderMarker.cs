@@ -99,13 +99,14 @@ namespace CityBuilder.UI
         public bool IsShowingOrder => _citizen != null || _walker != null;
 
         /// <summary>An army order to march (the King's, a squad's): a ripple, the flag planted at `target`; it comes down when `walker` gets there, is gone, or another order replaces it.</summary>
-        public void ShowFlagFor(Transform walker, Vector3 target)
+        /// `onTop`: the target is already where it stands (the top of a walk wall), not on the land under it.
+        public void ShowFlagFor(Transform walker, Vector3 target, bool onTop = false)
         {
             EnsureBuilt();
             HideOrder();
             _walker = walker;
             _plantFlag = true;
-            _target = OnGround(target);
+            _target = onTop ? target + new Vector3(0f, LiftOffGround, 0f) : OnGround(target);
             _leaveClock = -1f;
             PlayRipple(_target, OkColor, RippleSeconds);
             if (_flag != null)

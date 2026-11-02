@@ -140,8 +140,9 @@ namespace CityBuilder.Combat
             var instance = Instance;
             if (instance == null)
             {
-                target.TakeDamage(damage);
-                if (attacker != null && target is OrcUnit orc) orc.NotifyAttackedBy(attacker);
+                if (target is OrcUnit struck) struck.TakeDamage(damage, attacker);
+                else target.TakeDamage(damage);
+                if (attacker != null && target is OrcUnit orc && orc != null && orc.CurrentHealth > 0) orc.NotifyAttackedBy(attacker);
                 return;
             }
             var shot = new Shot
@@ -374,7 +375,8 @@ namespace CityBuilder.Combat
             if (shot.Enemy != null)
             {
                 if (shot.Enemy.Transform == null || !shot.Enemy.IsAlive) return;
-                shot.Enemy.TakeDamage(shot.Damage);
+                if (shot.Enemy is OrcUnit struck) struck.TakeDamage(shot.Damage, shot.Attacker);
+                else shot.Enemy.TakeDamage(shot.Damage);
                 // An orc has to be able to come after whoever is shooting it (see SoldierUnit.TickAttack).
                 if (shot.Attacker != null && shot.Enemy is OrcUnit orc && orc != null && orc.CurrentHealth > 0) orc.NotifyAttackedBy(shot.Attacker);
                 return;

@@ -234,17 +234,13 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// As in Dota, the hero learns from every enemy that falls near him, not only from his own
-        /// blows: a tower's or a soldier's kill beside him counts (the small base island's towers
-        /// would otherwise take most of his kills).
+        /// The hero learns only from enemies he fells himself -- his blow, his arrow, his skill
+        /// (the user, 2026-11-02: a tower's kill used to teach every hero near it).
         /// </summary>
         private void OnOrcDied(OrcUnit orc)
         {
-            if (IsFallen || orc == null) return;
-            var offset = orc.transform.position - transform.position;
-            offset.y = 0f;
-            var radius = BalanceConfig.Instance.KingXpRadius;
-            if (offset.sqrMagnitude <= radius * radius) AddExperience(ExperienceFor(orc));
+            if (IsFallen || orc == null || _unit == null || orc.KilledBy != _unit) return;
+            AddExperience(ExperienceFor(orc));
         }
 
         /// <summary>Adds experience and takes every level it pays for. Public for the tests and for experience that does not come from a blow of his own.</summary>

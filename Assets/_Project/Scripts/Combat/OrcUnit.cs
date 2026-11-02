@@ -463,7 +463,13 @@ namespace CityBuilder.Combat
             CurrentHealth = _maxHealth;
         }
 
-        public void TakeDamage(int amount)
+        public void TakeDamage(int amount) => TakeDamage(amount, null);
+
+        /// <summary>The soldier or hero whose blow felled it; null for a tower's, a militia's, a spell's (Hero: only his own kills teach him).</summary>
+        public SoldierUnit KilledBy { get; private set; }
+
+        /// <summary>A blow, and who struck it (null: no fighter of the player's -- a tower, a trap).</summary>
+        public void TakeDamage(int amount, SoldierUnit by)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
             // a blow wakes it, whatever dealt it (a far shot, a test)
@@ -492,6 +498,7 @@ namespace CityBuilder.Combat
             }
             // the figure falls and sinks on its own, after the unit is gone
             OrcCorpse.Leave(transform, _healthBar != null ? _healthBar.transform : null);
+            KilledBy = by;
             Died?.Invoke(this);
             Destroy(gameObject);
         }
