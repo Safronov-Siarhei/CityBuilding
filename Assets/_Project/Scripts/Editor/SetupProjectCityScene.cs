@@ -318,6 +318,8 @@ namespace CityBuilder.EditorTools
             };
             hotbarBuildingData.AddRange(shellBuildings);
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
+            // the Windmill and the Barns are put away (BuildingIds.Hidden): kept as data, off the menu
+            hotbarBuildingData.RemoveAll(b => b != null && BuildingIds.Hidden.Contains(b.buildingName));
 
             ResolveBuildingRequirements(allBuildingData);
 
@@ -625,6 +627,25 @@ namespace CityBuilder.EditorTools
             shipSO.FindProperty("orderBuoyModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/OrderBuoy.fbx");
             shipSO.FindProperty("orcShipyardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcShipyard1.fbx");
             shipSO.ApplyModifiedPropertiesWithoutUndo();
+            // the worker-shortage mark over a building wanting hands (UI/Icons/NoWorker.png, Shaders/IconBillboard)
+            var shortageMarks = managers.AddComponent<WorkerShortageMarks>();
+            var shortageSO = new SerializedObject(shortageMarks);
+            var shortageMaterialPath = "Assets/_Project/Materials/NoWorkerMark.mat";
+            var shortageMaterial = AssetDatabase.LoadAssetAtPath<Material>(shortageMaterialPath);
+            var billboard = Shader.Find("CityBuilder/IconBillboard");
+            if (shortageMaterial == null && billboard != null)
+            {
+                shortageMaterial = new Material(billboard) { name = "NoWorkerMark" };
+                AssetDatabase.CreateAsset(shortageMaterial, shortageMaterialPath);
+            }
+            if (shortageMaterial != null)
+            {
+                shortageMaterial.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/UI/Icons/NoWorker.png"));
+                EditorUtility.SetDirty(shortageMaterial);
+            }
+            else Debug.LogWarning("[SetupProject] Shaders/IconBillboard is missing -- no worker-shortage marks.");
+            shortageSO.FindProperty("material").objectReferenceValue = shortageMaterial;
+            shortageSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();
             var meshMapApplierSO = new SerializedObject(meshMapApplier);
             meshMapApplierSO.FindProperty("saveController").objectReferenceValue = saveController;

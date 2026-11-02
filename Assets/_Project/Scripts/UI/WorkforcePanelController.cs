@@ -352,6 +352,12 @@ namespace CityBuilder.UI
             // would be true and useless, since scientists are the only reason it has worker slots.
             if (building.BuildingId == Research.ResearchManager.LaboratoryBuildingId) return Localization.Get("#workforce_research");
 
+            // the food rework: so much food a day, or the bonus a Bakery/Smokehouse gives round it
+            if (FoodOutput.IsProducer(building.BuildingId)) return Localization.Format("#food_card_per_day", FoodOutput.PerDay(building));
+            if (FoodOutput.IsBooster(building.BuildingId))
+                return Localization.Format(building.BuildingId == Buildings.BuildingIds.Baker ? "#food_card_boost_baker" : "#food_card_boost_smokehouse",
+                    FoodOutput.BoostGiven(building), building.Instance != null ? building.Instance.ServiceRadius : 0);
+
             var recipe = building.SelectedRecipe;
             if (recipe == null) return Localization.Get("#workforce_idle_building");
 

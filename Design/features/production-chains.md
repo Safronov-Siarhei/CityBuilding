@@ -1,5 +1,9 @@
 # Production chains and recipes
 
+> **2026-11-02: the food chains are replaced** by flat per-day food buildings and bakery/smokehouse
+> bonuses -- see [food-and-hunger](food-and-hunger.md). Windmill hidden; the grain/flour/meat links
+> are gone. Ore/bars/coins unchanged.
+
 > **2026-10-25:** the user's food design: ONE Food counter, chains pay more per worker the longer they are.
 > New: Orchard `fruit` -> Food 1; PigFarm `meat` -> Meat 1 (new `ResourceType.Meat`, kept in the
 > Кладовая like flour); Smokehouse `smoked` Meat 2 -> Food 3 (`requires` PigFarm); Baker `bread` Flour 1

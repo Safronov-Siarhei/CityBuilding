@@ -623,6 +623,19 @@ namespace CityBuilder.Core
         [SerializeField] private int[] tideGuards = { 2, 0, 0, 0, 0, 2, 1, 1, 0, 0, 2, 2, 1, 1, 0, 0, 2, 0, 1, 1 };
         [SerializeField] private int[] tideRewards = { 60, 40, 15, 1, 120, 80, 30, 2, 200, 140, 60, 3, 400, 300, 150, 6 };
         [SerializeField] private float tideGuardRadius = 6f;
+        // the food rework (the user, 2026-11-02): Food a day by building and level 1..5, the
+        // Bakery's/Smokehouse's bonus to each producer in reach by its level, and where they stand
+        // (food_day_<id>_<level>, food_boost_<id>_<level>, food_fertile_bonus, fisher_shore_cells,
+        // food_inland_cells)
+        [SerializeField] private int[] foodDayFisherHut = { 3, 4, 5, 6, 7 };
+        [SerializeField] private int[] foodDayFarm = { 3, 4, 5, 6, 7 };
+        [SerializeField] private int[] foodDayOrchard = { 5, 10, 15, 20, 25 };
+        [SerializeField] private int[] foodDayPigFarm = { 5, 10, 15, 20, 25 };
+        [SerializeField] private int[] foodBoostBaker = { 1, 2, 3, 4, 5 };
+        [SerializeField] private int[] foodBoostSmokehouse = { 1, 2, 3, 4, 5 };
+        [SerializeField] private int foodFertileBonus = 1;
+        [SerializeField] private int fisherShoreCells = 2;
+        [SerializeField] private int foodInlandCells = 2;
         [SerializeField] private float tideWakeRadius = 14f;
         [SerializeField] private int tideShamanHeal = 12;
         [SerializeField] private float tideShamanHealEverySeconds = 4f;
@@ -1099,6 +1112,31 @@ namespace CityBuilder.Core
         }
 
         public float TideGuardRadius => tideGuardRadius;
+
+        private int[] FoodDayArray(string id) =>
+            id == BuildingIds.FisherHut ? foodDayFisherHut : id == BuildingIds.Farm ? foodDayFarm
+            : id == BuildingIds.Orchard ? foodDayOrchard : id == BuildingIds.PigFarm ? foodDayPigFarm : null;
+
+        private int[] FoodBoostArray(string id) =>
+            id == BuildingIds.Baker ? foodBoostBaker : id == BuildingIds.Smokehouse ? foodBoostSmokehouse : null;
+
+        /// <summary>Food a day a producer makes at `level` before its bonuses (food_day_<id>_<level>); 0 for any other building.</summary>
+        public int FoodPerDay(string id, int level)
+        {
+            var a = FoodDayArray(id);
+            return a == null || a.Length == 0 ? 0 : a[Mathf.Clamp(level, 1, a.Length) - 1];
+        }
+
+        /// <summary>What a Bakery or Smokehouse at `level` adds to each producer in its reach (food_boost_<id>_<level>).</summary>
+        public int FoodBoost(string id, int level)
+        {
+            var a = FoodBoostArray(id);
+            return a == null || a.Length == 0 ? 0 : a[Mathf.Clamp(level, 1, a.Length) - 1];
+        }
+
+        public int FoodFertileBonus => foodFertileBonus;
+        public int FisherShoreCells => fisherShoreCells;
+        public int FoodInlandCells => foodInlandCells;
         public float TideWakeRadius => tideWakeRadius;
         public int TideShamanHeal => tideShamanHeal;
         public float TideShamanHealEverySeconds => tideShamanHealEverySeconds;
@@ -1694,6 +1732,19 @@ namespace CityBuilder.Core
                 }
             }
             tideGuardRadius = Read(economy, "tide_guard_radius", tideGuardRadius);
+            foreach (var id in new[] { BuildingIds.FisherHut, BuildingIds.Farm, BuildingIds.Orchard, BuildingIds.PigFarm })
+            {
+                var a = FoodDayArray(id);
+                for (var l = 0; l < a.Length; l++) a[l] = (int)Read(economy, $"food_day_{id.ToLowerInvariant()}_{l + 1}", a[l]);
+            }
+            foreach (var id in new[] { BuildingIds.Baker, BuildingIds.Smokehouse })
+            {
+                var a = FoodBoostArray(id);
+                for (var l = 0; l < a.Length; l++) a[l] = (int)Read(economy, $"food_boost_{id.ToLowerInvariant()}_{l + 1}", a[l]);
+            }
+            foodFertileBonus = (int)Read(economy, "food_fertile_bonus", foodFertileBonus);
+            fisherShoreCells = (int)Read(economy, "fisher_shore_cells", fisherShoreCells);
+            foodInlandCells = (int)Read(economy, "food_inland_cells", foodInlandCells);
             tideWakeRadius = Read(economy, "tide_wake_radius", tideWakeRadius);
             tideShamanHeal = (int)Read(economy, "tide_shaman_heal", tideShamanHeal);
             tideShamanHealEverySeconds = Read(economy, "tide_shaman_heal_every_sec", tideShamanHealEverySeconds);

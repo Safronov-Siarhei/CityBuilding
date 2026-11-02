@@ -1,5 +1,16 @@
 # Citizens and workforce
 
+> **2026-11-02 AUTO-STAFFING (the user):** every Production and Food building fills itself
+> (`ProductionBuilding.AutoStaffed`, `WantedWorkers` = all its places) from the free people, the OLDEST
+> building first (`ProductionBuilding.All`, creation order; `CitizenManager` refills once a second,
+> only built buildings). The player taking a worker off by hand caps it (`WorkersCapped`, saved as
+> `workersCapped`) -- it is no longer refilled until the player fills it to the top again. Not in an
+> Invasion run; the Laboratory/healer/fire brigade keep manual staffing. A built workplace short of
+> hands shows a mark over it (villager face + red «!», `Citizens/WorkerShortageMarks.cs`,
+> `UI/Icons/NoWorker.png`, `Shaders/IconBillboard`). Worker COUNTS of non-food buildings unchanged
+> (the user picked «только автоназначение»). **OPEN: keep or drop the workforce window's manual
+> distribution.**
+
 > **Status (2026-10-28):** shipped; townsfolk are villager MODELS now (see Looks). Since 2026-10-20 citizens have NAMES and the workforce panel has a
 > second tab: one row per citizen.
 > **Read with:** [happiness-and-migration](happiness-and-migration.md), [production-chains](production-chains.md),

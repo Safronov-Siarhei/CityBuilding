@@ -404,6 +404,8 @@ namespace CityBuilder.Saving
         public int cellX;
         public int cellY;
         public int assignedWorkers;
+        /// <summary>The player took workers off this self-staffing building (ProductionBuilding.WorkersCapped).</summary>
+        public bool workersCapped;
 
         /// <summary>
         /// Which recipe the building was set to, by its stable id -- empty for the great majority

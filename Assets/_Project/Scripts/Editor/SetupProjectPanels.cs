@@ -191,6 +191,8 @@ namespace CityBuilder.EditorTools
             {
                 // people are counted on their own button; bread is only an old save's
                 if (type == ResourceType.Population || type == ResourceType.Bread) continue;
+                // the food rework (2026-11-02): wheat, flour and pork are no longer made
+                if (type == ResourceType.Grain || type == ResourceType.Flour || type == ResourceType.Meat) continue;
                 types.Add(type);
             }
 

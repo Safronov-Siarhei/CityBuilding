@@ -297,7 +297,7 @@ namespace CityBuilder.Saving
                     // Before the workers: the recipe decides what those workers will be making on
                     // the very first tick after the load.
                     production.SelectRecipeById(entry.selectedRecipeId);
-                    if (entry.assignedWorkers > 0) production.SetAssignedWorkers(entry.assignedWorkers);
+                    if (entry.assignedWorkers > 0 || entry.workersCapped) production.SetAssignedWorkers(entry.assignedWorkers, entry.workersCapped);
                 }
             }
 
@@ -809,6 +809,7 @@ namespace CityBuilder.Saving
                     cellX = instance.OriginCell.x,
                     cellY = instance.OriginCell.y,
                     assignedWorkers = production != null ? production.AssignedWorkers : 0,
+                    workersCapped = production != null && production.WorkersCapped,
                     selectedRecipeId = production != null && production.SelectedRecipe != null ? production.SelectedRecipe.id : string.Empty,
                     level = instance.Level,
                     currentHealth = instance.CurrentHealth,

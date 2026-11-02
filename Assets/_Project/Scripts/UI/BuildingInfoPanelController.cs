@@ -242,7 +242,7 @@ namespace CityBuilder.UI
             else if (productionLabel != null)
             {
                 productionLabel.text = hasProduction
-                    ? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds)
+                    ? FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds)
                     : string.Empty;
             }
             RefreshRecipeControls();
@@ -292,8 +292,24 @@ namespace CityBuilder.UI
         {
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
             if (!hasProduction) return null;
-            var line = ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds);
+            var line = FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds);
             return string.IsNullOrEmpty(line) ? null : line;
+        }
+
+        /// <summary>
+        /// A food building's line (the food rework, 2026-11-02): «Еда: +N в день» with every bonus
+        /// counted, or what a Bakery/Smokehouse adds to its neighbours and how far it reaches; null
+        /// for any other building.
+        /// </summary>
+        private string FoodLine()
+        {
+            var id = _currentProduction != null ? _currentProduction.BuildingId : null;
+            if (id == null) return null;
+            if (Citizens.FoodOutput.IsProducer(id)) return Localization.Format("#food_card_per_day", Citizens.FoodOutput.PerDay(_currentProduction));
+            if (!Citizens.FoodOutput.IsBooster(id)) return null;
+            var reach = _currentInstance != null && _currentInstance.Data != null ? _currentInstance.Data.LevelStats(_currentInstance.Level).serviceRadius : 0;
+            return Localization.Format(id == BuildingIds.Baker ? "#food_card_boost_baker" : "#food_card_boost_smokehouse",
+                Citizens.FoodOutput.BoostGiven(_currentProduction), reach);
         }
 
         /// <summary>

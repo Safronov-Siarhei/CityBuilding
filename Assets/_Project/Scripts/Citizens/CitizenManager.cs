@@ -105,6 +105,19 @@ namespace CityBuilder.Citizens
             OnPopulationChanged?.Invoke();
         }
 
+        // free people look for a building that wants them about once a second: a building just
+        // finished, a worker home from sickness, a place the player filled again
+        private const float RefillEverySeconds = 1f;
+        private float _refillIn;
+
+        private void Update()
+        {
+            _refillIn -= Time.deltaTime;
+            if (_refillIn > 0f) return;
+            _refillIn = RefillEverySeconds;
+            RefillWantedJobs();
+        }
+
         public void AddCitizens(int amount)
         {
             if (amount == 0) return;
@@ -122,8 +135,10 @@ namespace CityBuilder.Citizens
         public void RefillWantedJobs()
         {
             if (IdlePopulation <= 0) return;
-            foreach (var building in FindObjectsByType<ProductionBuilding>(FindObjectsSortMode.None))
+            // the oldest building first (the user, 2026-11-02); one being built waits till it stands
+            foreach (var building in ProductionBuilding.All)
             {
+                if (building == null || building.Instance == null || !building.Instance.IsOperational) continue;
                 while (building.AssignedWorkers < building.WantedWorkers && IdlePopulation > 0)
                 {
                     if (!building.TryAssignWorker()) break;

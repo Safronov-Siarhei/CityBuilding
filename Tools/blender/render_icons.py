@@ -87,9 +87,22 @@ def res_coins(b):
 
 
 def res_food(b):
-    d.basket(b, 0, 0, 'roof_red', r=0.14)
-    for x, y in ((0.05, -0.03), (-0.04, 0.04), (0.0, -0.08)):
-        b.blob(x, y, 0.15, 0.04, 0.07, 'roof_red', sides=5)
+    """Food, the one counter for everything eaten (the user, 2026-11-02): an apple, a loaf and a
+    ham side by side -- fruit, bread and meat -- so the icon reads as "all food", not as one kind."""
+    # the loaf, at the back: a crusty block with three slashes
+    b.zbox(-0.02, 0.07, 0, 0.08, 0.11, 0.06, -12, 'roof_straw_dark', bevel=0.03)
+    for k in (-1, 0, 1):
+        b.zbox(-0.02 + k * 0.055, 0.07 - k * 0.012, 0.075, 0.087, 0.008, 0.04, -12, 'roof_straw')
+    # the ham, at the right: a roasted leg, fat at one end, narrowing to a big white bone
+    b.ball(0.08, -0.02, 0.0, 0.09, 0.12, 'wood_mid', sides=8)
+    b.rod((0.11, -0.03, 0.05), (0.2, -0.06, 0.06), 0.07, 'wood_mid')
+    b.rod((0.19, -0.055, 0.06), (0.29, -0.09, 0.07), 0.028, 'plaster_white')
+    b.ball(0.295, -0.095, 0.045, 0.03, 0.05, 'plaster_white', sides=6)
+    b.ball(0.28, -0.07, 0.045, 0.026, 0.045, 'plaster_white', sides=6)
+    # the apple, at the front left: red, a stalk and a leaf
+    b.ball(-0.1, -0.08, 0.0, 0.08, 0.14, 'banner_red', sides=9)
+    b.rod((-0.1, -0.08, 0.13), (-0.095, -0.08, 0.17), 0.012, 'wood_dark')
+    b.zbox(-0.075, -0.08, 0.15, 0.162, 0.035, 0.016, 30, 'grass_dark')
 
 
 def res_bread(b):

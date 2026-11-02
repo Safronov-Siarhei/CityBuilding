@@ -26,13 +26,38 @@ namespace CityBuilder.Citizens
 
         public int AssignedWorkers { get; private set; }
 
+        /// <summary>Every workplace, in the order they were made -- the order the free people go to them (CitizenManager.RefillWantedJobs).</summary>
+        public static readonly List<ProductionBuilding> All = new List<ProductionBuilding>();
+
         /// <summary>
-        /// How many the player put to work here. A worker lost without the player's say (killed, or
-        /// laid off because the town ran short of people) leaves AssignedWorkers below it, and in an
-        /// Invasion run the next idle islander steps back in (CitizenManager.RefillWantedJobs; the
-        /// user, 2026-10-25: the healer's house stayed empty after its man was killed).
+        /// How many should work here. A worker lost without the player's say (killed, or laid off
+        /// because the town ran short of people) leaves AssignedWorkers below it, and the next idle
+        /// person steps back in (CitizenManager.RefillWantedJobs; the user, 2026-10-25: the healer's
+        /// house stayed empty after its man was killed).
+        ///
+        /// A production or food building is staffed by itself (the user, 2026-11-02): it wants every
+        /// place it has, the oldest building first, until the player takes someone off by hand --
+        /// from then on it wants what the player left it (WorkersCapped), until it is filled again.
+        /// Any other workplace (the Laboratory, the healer) wants what the player gave it.
         /// </summary>
-        public int WantedWorkers { get; private set; }
+        public int WantedWorkers => AutoStaffed && !WorkersCapped ? MaxWorkers : _wanted;
+
+        private int _wanted;
+
+        /// <summary>The player took a worker off this self-staffing building: it is no longer filled by itself.</summary>
+        public bool WorkersCapped { get; private set; }
+
+        /// <summary>Production and food buildings fill themselves (not in an Invasion run, which keeps its own rules).</summary>
+        public bool AutoStaffed =>
+            Data != null && (Data.category == BuildingCategory.Production || Data.category == BuildingCategory.Food)
+            && !Invasion.InvasionMode.IsActive;
+
+        /// <summary>Wanting hands it does not have: the worker-shortage mark goes up over it (WorkerShortageMarks).</summary>
+        public bool ShortOfWorkers => Instance != null && Instance.IsOperational && AssignedWorkers < WantedWorkers;
+
+        public BuildingInstance Instance => _buildingInstance != null ? _buildingInstance : (_buildingInstance = GetComponent<BuildingInstance>());
+
+        public int Level => CurrentLevel;
 
         /// <summary>Fired whenever AssignedWorkers changes, so CitizenVisualsManager can keep visible workers in sync.</summary>
         public event Action OnAssignedWorkersChanged;
@@ -172,6 +197,8 @@ namespace CityBuilder.Citizens
             }
         }
 
+        private void Awake() => All.Add(this);
+
         private void Start()
         {
             CitizenVisualsManager.Instance?.RegisterProductionBuilding(this);
@@ -179,6 +206,7 @@ namespace CityBuilder.Citizens
 
         private void OnDestroy()
         {
+            All.Remove(this);
             CitizenVisualsManager.Instance?.UnregisterProductionBuilding(this);
 
             // The crew goes back into the idle pool. Until this existed they did not: a farm lost
@@ -203,6 +231,12 @@ namespace CityBuilder.Citizens
         private void Update()
         {
             var data = Data;
+            // the food rework: so much a day, one by one; a Bakery or Smokehouse makes nothing itself
+            if (data != null && FoodOutput.IsFood(data.buildingName))
+            {
+                if (FoodOutput.IsProducer(data.buildingName)) TickFood();
+                return;
+            }
             if (data == null || AssignedWorkers <= 0 || data.productionIntervalSeconds <= 0f) return;
             // not while it is being built or upgraded (ConstructionSite)
             if (_buildingInstance != null && !_buildingInstance.IsOperational) return;
@@ -256,6 +290,38 @@ namespace CityBuilder.Citizens
             var stored = resources != null ? resources.AddProduced(recipe.output, amount) : amount;
             ReportOverflow(data, amount - stored);
         }
+
+        private int _shoalShare;
+
+        /// <summary>
+        /// A food producer at work: its day's food comes in ones, evenly over the day -- five a day is
+        /// a «+1» every fifth of a day (the user, 2026-11-02: whole numbers, seen arriving).
+        /// </summary>
+        private void TickFood()
+        {
+            if (!FoodOutput.Working(this)) return;
+            var perDay = FoodOutput.PerDay(this);
+            var config = BalanceConfig.Instance;
+            if (perDay <= 0 || config == null) return;
+            var interval = config.DayLengthSeconds / perDay;
+            _timer = Mathf.Min(_timer + Time.deltaTime, interval * 2f);
+            if (_timer < interval) return;
+            _timer -= interval;
+
+            var resources = ResourceManager.Instance;
+            var stored = resources != null ? resources.AddProduced(ResourceType.Food, 1) : 1;
+            if (stored <= 0)
+            {
+                ReportOverflow(Data, 1);
+                return;
+            }
+            UI.ResourceGainPopups.Instance?.Show(transform.position + Vector3.up * PopupHeight, 1, ResourceType.Food);
+            // a hut by a shoal: every other fish comes out of the shoal (it doubles the catch)
+            if (BuildingId == Ships.ShipManager.FisherHutId && SiteMultiplier() > 1f && (++_shoalShare & 1) == 0)
+                Ships.ShipManager.Instance?.TakeFish(transform.position, 1);
+        }
+
+        private const float PopupHeight = 2.2f;
 
         /// <summary>What the settlement holds of each of this recipe's inputs, in the recipe's own order -- the shape AffordableBatches wants.</summary>
         private static int[] StocksFor(BuildingRecipe recipe, ResourceManager resources)
@@ -398,16 +464,19 @@ namespace CityBuilder.Citizens
             if (AssignedWorkers >= MaxWorkers) return false;
             if (CitizenManager.Instance == null || !CitizenManager.Instance.NotifyWorkerAssigned()) return false;
             AssignedWorkers++;
-            WantedWorkers = Mathf.Max(WantedWorkers, AssignedWorkers);
+            _wanted = Mathf.Max(_wanted, AssignedWorkers);
+            // filled to the top again (by the player's «+»): it staffs itself once more
+            if (AssignedWorkers >= MaxWorkers) WorkersCapped = false;
             OnAssignedWorkersChanged?.Invoke();
             return true;
         }
 
-        /// <summary>The player takes a worker off: this building wants one fewer.</summary>
+        /// <summary>The player takes a worker off: this building wants one fewer, and no longer fills itself.</summary>
         public bool TryUnassignWorker()
         {
             if (!LayOffWorker()) return false;
-            WantedWorkers = AssignedWorkers;
+            _wanted = AssignedWorkers;
+            if (AutoStaffed) WorkersCapped = true;
             return true;
         }
 
@@ -422,10 +491,11 @@ namespace CityBuilder.Citizens
         }
 
         /// <summary>Used by save/load to restore a worker count directly (already-valid state).</summary>
-        public void SetAssignedWorkers(int count)
+        public void SetAssignedWorkers(int count, bool capped = false)
         {
             AssignedWorkers = Mathf.Clamp(count, 0, MaxWorkers);
-            WantedWorkers = AssignedWorkers;
+            _wanted = AssignedWorkers;
+            WorkersCapped = capped;
             CitizenManager.Instance?.NotifyWorkersAssignedBulk(AssignedWorkers);
             OnAssignedWorkersChanged?.Invoke();
         }

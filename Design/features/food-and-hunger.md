@@ -1,5 +1,22 @@
 # Food, eating and starvation
 
+> **2026-11-02: FOOD REWORK (the user, «проще, для мобилок») -- BUILT, untested, not seen.** Supersedes
+> the chains below. One Food (new icon: apple + loaf + ham, `render_icons.py res_food`). Each food
+> building has ONE worker and makes a flat amount a day, delivered as «+1» popups evenly over the day
+> (`ProductionBuilding.TickFood`, `Citizens/FoodOutput.cs`):
+> - Рыбацкая хижина: `food_day_fisherhut_1..5` = 3..7; on land within `fisher_shore_cells` (2) of
+>   water; a shoal in reach doubles it (every other fish comes out of the shoal).
+> - Ферма: 3..7 (+`food_fertile_bonus` 1 with most of its plot fertile); starts unlocked.
+> - Фруктовый сад / Свиноферма: 5..25 (+5 a level), dearer (sandbox costs) and RESEARCHED (Orchard
+>   25 coins/60 s, PigFarm 30/60). Farm/Orchard/PigFarm not within `food_inland_cells` (2) of water.
+> - Пекарня: every working Farm within its service_radius (6) +`food_boost_baker_N` (= its level);
+>   Коптильня: the same for Fisher's Huts and Pig Farms. Bonuses STACK (an L1 + an L2 bakery = +3).
+>   Baker requires Farm, Smokehouse requires FisherHut.
+> - Windmill, Barn, BigBarn HIDDEN (`BuildingIds.Hidden`: off the build menu and the Laboratory);
+>   all food in the Pantries. Grain/Flour/Meat no longer made (off the inventory card).
+> - Card + workforce row: «Еда: +N в день» / the booster's «+N … в радиусе R клеток».
+> Numbers: economy rows 383-415; buildings max_workers 1, service_radius 6; recipes all -> Food.
+
 > **2026-10-25: ONE FOOD COUNTER** (the user): `ResourceDiet.Edible` = Food only. Bread is no longer made
 > or eaten -- the Пекарня makes Food (`ResourceType.Bread` kept only so an old save's bread becomes Food
 > at `GameSaveController.BreadToFood` = 1.5). Food buildings differ in how much Food they give: the

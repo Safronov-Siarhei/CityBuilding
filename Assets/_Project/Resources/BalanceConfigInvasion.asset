@@ -1213,7 +1213,7 @@ MonoBehaviour:
     - maxHealth: 90
       defense: 0
       housingCapacity: 0
-      maxWorkers: 2
+      maxWorkers: 1
       batchesPerWorkerPerTick: 1
       storageCapacity: 0
       harvestRadius: 0
@@ -1223,7 +1223,7 @@ MonoBehaviour:
     - maxHealth: 144
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
@@ -1233,7 +1233,7 @@ MonoBehaviour:
     - maxHealth: 225
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
@@ -1243,7 +1243,7 @@ MonoBehaviour:
     - maxHealth: 324
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
@@ -1253,7 +1253,7 @@ MonoBehaviour:
     - maxHealth: 450
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
@@ -1296,9 +1296,9 @@ MonoBehaviour:
       amount: 2
     recipes:
     - id: grain
-      displayName: "\u041F\u0448\u0435\u043D\u0438\u0446\u0430"
+      displayName: "\u0415\u0434\u0430"
       inputs: []
-      output: 8
+      output: 2
       outputAmount: 1
     productionIntervalSeconds: 24
     fogRevealRadius: 10
@@ -1309,7 +1309,7 @@ MonoBehaviour:
     - maxHealth: 70
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
@@ -1319,7 +1319,7 @@ MonoBehaviour:
     - maxHealth: 112
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 6
       storageCapacity: 0
       harvestRadius: 0
@@ -1329,7 +1329,7 @@ MonoBehaviour:
     - maxHealth: 175
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 8
       storageCapacity: 0
       harvestRadius: 0
@@ -1339,7 +1339,7 @@ MonoBehaviour:
     - maxHealth: 252
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 10
       storageCapacity: 0
       harvestRadius: 0
@@ -1349,7 +1349,7 @@ MonoBehaviour:
     - maxHealth: 350
       defense: 0
       housingCapacity: 0
-      maxWorkers: 7
+      maxWorkers: 1
       batchesPerWorkerPerTick: 12
       storageCapacity: 0
       harvestRadius: 0
@@ -1377,7 +1377,7 @@ MonoBehaviour:
       amount: 129
     - type: 1
       amount: 43
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 10
       seconds: 60
@@ -4326,12 +4326,10 @@ MonoBehaviour:
       amount: 10
     recipes:
     - id: bread
-      displayName: "\u0425\u043B\u0435\u0431"
-      inputs:
-      - type: 9
-        amount: 1
+      displayName: "\u0415\u0434\u0430"
+      inputs: []
       output: 2
-      outputAmount: 3
+      outputAmount: 1
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -4341,54 +4339,54 @@ MonoBehaviour:
     - maxHealth: 110
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 176
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 275
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 396
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 550
       defense: 0
       housingCapacity: 0
-      maxWorkers: 7
+      maxWorkers: 1
       batchesPerWorkerPerTick: 6
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: Windmill
+    requiredBuildingId: Farm
     upgradeToLevel2Cost:
     - type: 0
       amount: 48
@@ -4538,12 +4536,10 @@ MonoBehaviour:
       amount: 8
     recipes:
     - id: smoked
-      displayName: "\u041A\u043E\u043F\u0447\u0451\u043D\u043E\u0441\u0442\u0438"
-      inputs:
-      - type: 15
-        amount: 2
+      displayName: "\u0415\u0434\u0430"
+      inputs: []
       output: 2
-      outputAmount: 3
+      outputAmount: 1
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -4553,54 +4549,54 @@ MonoBehaviour:
     - maxHealth: 110
       defense: 0
       housingCapacity: 0
-      maxWorkers: 2
+      maxWorkers: 1
       batchesPerWorkerPerTick: 1
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 176
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 275
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 396
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
     - maxHealth: 550
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
-      serviceRadius: 0
+      serviceRadius: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: PigFarm
+    requiredBuildingId: FisherHut
     upgradeToLevel2Cost:
     - type: 0
       amount: 40
@@ -4644,9 +4640,9 @@ MonoBehaviour:
       amount: 5
     recipes:
     - id: meat
-      displayName: "\u041C\u044F\u0441\u043E"
+      displayName: "\u0415\u0434\u0430"
       inputs: []
-      output: 15
+      output: 2
       outputAmount: 1
     productionIntervalSeconds: 24
     fogRevealRadius: 10
@@ -4657,7 +4653,7 @@ MonoBehaviour:
     - maxHealth: 120
       defense: 0
       housingCapacity: 0
-      maxWorkers: 2
+      maxWorkers: 1
       batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
@@ -4667,7 +4663,7 @@ MonoBehaviour:
     - maxHealth: 192
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
@@ -4677,7 +4673,7 @@ MonoBehaviour:
     - maxHealth: 300
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
@@ -4687,7 +4683,7 @@ MonoBehaviour:
     - maxHealth: 432
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
@@ -4697,7 +4693,7 @@ MonoBehaviour:
     - maxHealth: 600
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 6
       storageCapacity: 0
       harvestRadius: 0
@@ -4727,7 +4723,7 @@ MonoBehaviour:
       amount: 43
     startsUnlocked: 0
     unlockResearch:
-      coins: 20
+      coins: 30
       seconds: 60
     levelResearch:
     - coins: 30
@@ -4759,7 +4755,7 @@ MonoBehaviour:
     - maxHealth: 80
       defense: 0
       housingCapacity: 0
-      maxWorkers: 2
+      maxWorkers: 1
       batchesPerWorkerPerTick: 1
       storageCapacity: 0
       harvestRadius: 0
@@ -4769,7 +4765,7 @@ MonoBehaviour:
     - maxHealth: 128
       defense: 0
       housingCapacity: 0
-      maxWorkers: 3
+      maxWorkers: 1
       batchesPerWorkerPerTick: 2
       storageCapacity: 0
       harvestRadius: 0
@@ -4779,7 +4775,7 @@ MonoBehaviour:
     - maxHealth: 200
       defense: 0
       housingCapacity: 0
-      maxWorkers: 4
+      maxWorkers: 1
       batchesPerWorkerPerTick: 3
       storageCapacity: 0
       harvestRadius: 0
@@ -4789,7 +4785,7 @@ MonoBehaviour:
     - maxHealth: 288
       defense: 0
       housingCapacity: 0
-      maxWorkers: 5
+      maxWorkers: 1
       batchesPerWorkerPerTick: 4
       storageCapacity: 0
       harvestRadius: 0
@@ -4799,7 +4795,7 @@ MonoBehaviour:
     - maxHealth: 400
       defense: 0
       housingCapacity: 0
-      maxWorkers: 6
+      maxWorkers: 1
       batchesPerWorkerPerTick: 5
       storageCapacity: 0
       harvestRadius: 0
@@ -4819,10 +4815,10 @@ MonoBehaviour:
     upgradeToLevel5Cost:
     - type: 0
       amount: 172
-    startsUnlocked: 1
+    startsUnlocked: 0
     unlockResearch:
-      coins: 0
-      seconds: 0
+      coins: 25
+      seconds: 60
     levelResearch:
     - coins: 20
       seconds: 60
@@ -6232,6 +6228,15 @@ MonoBehaviour:
   tideGuards: 0200000000000000000000000000000000000000020000000100000001000000000000000000000002000000020000000100000001000000000000000000000002000000000000000100000001000000
   tideRewards: 3c000000280000000f0000000100000078000000500000001e00000002000000c80000008c0000003c00000003000000900100002c0100009600000006000000
   tideGuardRadius: 6
+  foodDayFisherHut: 0300000004000000050000000600000007000000
+  foodDayFarm: 0300000004000000050000000600000007000000
+  foodDayOrchard: 050000000a0000000f0000001400000019000000
+  foodDayPigFarm: 050000000a0000000f0000001400000019000000
+  foodBoostBaker: 0100000002000000030000000400000005000000
+  foodBoostSmokehouse: 0100000002000000030000000400000005000000
+  foodFertileBonus: 1
+  fisherShoreCells: 2
+  foodInlandCells: 2
   tideWakeRadius: 14
   tideShamanHeal: 12
   tideShamanHealEverySeconds: 4

@@ -595,6 +595,8 @@ namespace CityBuilder.Buildings
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
                 if (mapApplier != null && !IslandOpenToBuild(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_no_hero");
+                if (mapApplier != null && !FoodSiteAllowed(mapApplier, cell, footprint))
+                    return Localization.Get(_selectedBuilding.buildingName == BuildingIds.FisherHut ? "#place_blocked_coast" : "#place_blocked_inland");
                 if (_lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
@@ -649,6 +651,30 @@ namespace CityBuilder.Buildings
         private float _islandsCheckedAt = -1f;
         private readonly HashSet<int> _islandsSettled = new HashSet<int>();
         private readonly HashSet<int> _islandsWithHero = new HashSet<int>();
+
+        /// <summary>
+        /// The food rework's sites (the user, 2026-11-02): a Fisher's Hut on the shore -- on land, with
+        /// water within fisher_shore_cells of it; a Farm, an Orchard or a Pig Farm off the shore -- no
+        /// water within food_inland_cells.
+        /// </summary>
+        private bool FoodSiteAllowed(MeshMapApplier map, Vector2Int cell, Vector2Int footprint)
+        {
+            var id = _selectedBuilding != null ? _selectedBuilding.buildingName : null;
+            var config = BalanceConfig.Instance;
+            if (id == BuildingIds.FisherHut) return WaterWithin(map, cell, footprint, config != null ? config.FisherShoreCells : 2);
+            if (id == BuildingIds.Farm || id == BuildingIds.Orchard || id == BuildingIds.PigFarm)
+                return !WaterWithin(map, cell, footprint, config != null ? config.FoodInlandCells : 2);
+            return true;
+        }
+
+        /// <summary>Water within `reach` cells of the footprint's edge.</summary>
+        private static bool WaterWithin(MeshMapApplier map, Vector2Int cell, Vector2Int footprint, int reach)
+        {
+            for (var x = -reach; x < footprint.x + reach; x++)
+            for (var z = -reach; z < footprint.y + reach; z++)
+                if (map.IsWaterCell(cell + new Vector2Int(x, z))) return true;
+            return false;
+        }
 
         private static bool IsTownHall(BuildingData data) => data != null && data.buildingName == BuildingIds.TownHall;
 
@@ -760,6 +786,7 @@ namespace CityBuilder.Buildings
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
             if (wholeFootprintRules && !IslandOpenToBuild(mapApplier, cell, footprint)) return false;
+            if (wholeFootprintRules && !FoodSiteAllowed(mapApplier, cell, footprint)) return false;
 
             var inWater = 0;
             for (var x = 0; x < footprint.x; x++)

@@ -85,6 +85,8 @@ namespace CityBuilder.Research
 
         private static void AddBuildingTopics(BuildingBalance building)
         {
+            // put away (the Windmill, the Barns): nothing to research
+            if (Buildings.BuildingIds.Hidden.Contains(building.id)) return;
             string unlockId = null;
 
             if (!building.startsUnlocked)

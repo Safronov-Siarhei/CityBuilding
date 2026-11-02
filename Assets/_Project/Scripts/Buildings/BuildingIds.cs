@@ -18,5 +18,21 @@ namespace CityBuilder.Buildings
 
         /// <summary>The Казарма: where soldiers are hired (in a run, by the buttons beside the «!», UI.FocusHireBar).</summary>
         public const string Barracks = "Barracks";
+
+        /// <summary>
+        /// Buildings put away for now (the user, 2026-11-02, the food rework): the Windmill is gone
+        /// from the food chain and the Barns from storage -- every food sits in the Pantries. They
+        /// keep their data and models; only the build menu and the Laboratory leave them out.
+        /// </summary>
+        public static readonly System.Collections.Generic.HashSet<string> Hidden =
+            new System.Collections.Generic.HashSet<string> { "Windmill", "Barn", "BigBarn" };
+
+        // the food rework's buildings (FoodOutput)
+        public const string FisherHut = "FisherHut";
+        public const string Farm = "Farm";
+        public const string Orchard = "Orchard";
+        public const string PigFarm = "PigFarm";
+        public const string Baker = "Baker";
+        public const string Smokehouse = "Smokehouse";
     }
 }
