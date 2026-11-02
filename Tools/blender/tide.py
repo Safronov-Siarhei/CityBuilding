@@ -119,13 +119,13 @@ CRAB = ("TideCrab", crab_body, [
 # (the eel, the priestess and the hermit crab were rejected as dull, 2026-11-02)
 
 def shark_body(b):
-    b.frustum(0, 0, 0.27, 0.38, 0.1, 0.09, SHELL_DARK, sides=8)                                  # hide kilt
-    b.cylinder(0, 0, 0.37, 0.4, 0.11, BONE, sides=8)                                             # bone belt
+    b.frustum(0, 0, 0.27, 0.4, 0.1, 0.1, SHELL_DARK, sides=8)                                    # hide kilt
+    b.cylinder(0, 0, 0.37, 0.43, 0.11, BONE, sides=8)                                            # bone belt
     oval(b, (0, 0.0, 0.53), 0.14, 0.09, 0.13, SHARK, 0.06)                                       # broad chest
     oval(b, (0, -0.06, 0.5), 0.1, 0.04, 0.1, BELLY, 0.04)
-    fin(b, [(0, 0), (0.16, 0.0), (0.02, 0.17)], (0, 0.0, 0.5), (0, 1, 0), (0, 0, 1), 0.02, SHARK_DARK)  # dorsal fin
+    fin(b, [(0, 0), (0.16, 0.0), (0.02, 0.17)], (0, 0.0, 0.47), (0, 1, 0), (0, 0, 1), 0.02, SHARK_DARK)  # dorsal fin
     o.tube(b, [(0, 0.08, 0.32), (0, 0.2, 0.2), (0, 0.3, 0.12)], [0.05, 0.035, 0.0], SHARK, sides=5)
-    fin(b, [(0, 0), (0.1, 0.08), (0.12, -0.04)], (0, 0.28, 0.12), (0, 1, 0), (0, 0, 1), 0.012, SHARK_DARK)  # tail fin
+    fin(b, [(0, 0), (0.1, 0.08), (0.12, -0.04)], (0, 0.26, 0.12), (0, 1, 0), (0, 0, 1), 0.012, SHARK_DARK)  # tail fin
     for k in (-1, 1):                                                                            # bone pauldrons
         b.ball(k * 0.14, 0.0, 0.6, 0.06, 0.06, BONE, sides=6)
         o.tube(b, [(k * 0.15, 0.0, 0.64), (k * 0.2, 0.02, 0.7)], [0.018, 0.0], BONE, sides=4)
@@ -166,9 +166,9 @@ def shark_off_arm(b):
     b.rod((-0.15, 0.0, 0.58), (-0.22, -0.04, 0.42), 0.05, SHARK)
     b.ball(-0.22, -0.06, 0.36, 0.035, 0.05, SHARK_DARK, sides=5)
     # a round shield: a turtle's shell
-    oval(b, (-0.27, -0.06, 0.45), 0.02, 0.1, 0.1, SHELL_GREEN, 0.03)
+    oval(b, (-0.255, -0.06, 0.42), 0.02, 0.1, 0.1, SHELL_GREEN, 0.03)
     for dy, dz in ((0, 0), (0.05, 0.05), (-0.05, 0.05), (0.05, -0.05), (-0.05, -0.05)):
-        b.box(-0.295, -0.285, -0.06 + dy - 0.02, -0.06 + dy + 0.02, 0.45 + dz - 0.02, 0.45 + dz + 0.02, SHELL_GREEN_DARK)
+        b.box(-0.28, -0.27, -0.06 + dy - 0.02, -0.06 + dy + 0.02, 0.42 + dz - 0.02, 0.42 + dz + 0.02, SHELL_GREEN_DARK)
 
 
 SHARK_SPEC = ("TideShark", shark_body, [
@@ -189,9 +189,10 @@ def octo_body(b):
     for i in range(8):                                                                           # ragged hem
         a = i * math.pi / 4 + 0.2
         b.pyramid(math.cos(a) * 0.14, math.sin(a) * 0.14, 0.06, 0.03, 0.02, -0.0, COAT_DARK, sides=4)
-    oval(b, (0, 0.0, 0.52), 0.1, 0.07, 0.08, COAT, 0.04)                                        # shoulders
+    oval(b, (0, 0.0, 0.52), 0.12, 0.08, 0.09, COAT, 0.04)                                        # shoulders
+    b.cylinder(0, 0.01, 0.56, 0.7, 0.05, OCTO, sides=8)                                         # the neck under the head
     b.cylinder(0, 0, 0.38, 0.41, 0.115, HULL_DARK, sides=10)                                    # belt
-    b.box(-0.025, 0.025, -0.125, -0.11, 0.37, 0.42, GOLD)                                       # buckle
+    b.box(-0.025, 0.025, -0.122, -0.105, 0.37, 0.42, GOLD)                                      # buckle
     for k in (-1, 1):
         b.ball(k * 0.1, 0.0, 0.58, 0.05, 0.05, CORAL, sides=6)                                  # coral pauldrons
         o.tube(b, [(k * 0.11, 0.0, 0.6), (k * 0.15, 0.02, 0.68)], [0.015, 0.0], CORAL, sides=4)
@@ -226,12 +227,12 @@ def octo_head(b):
 
 def octo_leg(b, k):
     x = k * 0.05
-    b.rod((x, 0, 0.12), (x, 0.0, 0.03), 0.04, COAT_DARK)
+    b.rod((x, 0, 0.16), (x, 0.0, 0.03), 0.04, COAT_DARK)
     b.box(x - 0.03, x + 0.03, -0.06, 0.03, 0.0, 0.04, HULL_DARK, bevel=0.01)                    # sea boots
 
 
 def octo_staff_arm(b):
-    b.rod((0.1, 0.0, 0.55), (0.2, -0.03, 0.42), 0.04, COAT)
+    b.rod((0.08, 0.0, 0.56), (0.2, -0.03, 0.42), 0.045, COAT)
     b.ball(0.21, -0.04, 0.38, 0.025, 0.04, OCTO, sides=5)                                       # a hand with suckers
     b.rod((0.22, -0.04, 0.03), (0.24, -0.05, 0.86), 0.014, CORAL)                               # coral staff, held out
     # a jellyfish lantern at its top: a glowing bell and trailing threads
@@ -243,7 +244,7 @@ def octo_staff_arm(b):
 
 
 def octo_off_arm(b):
-    b.rod((-0.1, 0.0, 0.55), (-0.15, -0.06, 0.43), 0.04, COAT)
+    b.rod((-0.08, 0.0, 0.56), (-0.15, -0.06, 0.43), 0.045, COAT)
     # the other hand is a tentacle, held up, curling
     o.tube(b, [(-0.15, -0.06, 0.43), (-0.19, -0.1, 0.47), (-0.2, -0.13, 0.54), (-0.17, -0.14, 0.57)],
            [0.025, 0.02, 0.012, 0.0], OCTO, sides=5)
@@ -253,8 +254,8 @@ OCTOPUS = ("TideOctopus", octo_body, [
     ("LegL", lambda b: octo_leg(b, -1), (-0.05, 0.0, 0.12)),
     ("LegR", lambda b: octo_leg(b, 1), (0.05, 0.0, 0.12)),
     ("Head", octo_head, (0.0, 0.0, 0.64)),
-    ("ArmStrike", octo_staff_arm, (0.1, 0.0, 0.55)),
-    ("ArmOff", octo_off_arm, (-0.1, 0.0, 0.55)),
+    ("ArmStrike", octo_staff_arm, (0.08, 0.0, 0.56)),
+    ("ArmOff", octo_off_arm, (-0.08, 0.0, 0.56)),
 ])
 
 
@@ -266,23 +267,23 @@ def puffer_body(b):
     b.ball(0, -0.05, 0.14, 0.15, 0.2, BELLY, sides=8)
     for (x, y, z) in ((0.12, 0.1, 0.38), (-0.1, 0.12, 0.3), (0.15, -0.02, 0.26), (-0.14, 0.02, 0.42), (0.02, 0.16, 0.45)):
         b.ball(x, y, z, 0.03, 0.02, PUFFER_SPOT, sides=5)
-    for ring, (z, r) in enumerate(((0.22, 0.2), (0.34, 0.19), (0.44, 0.13))):                   # the spines
+    for ring, (z, r) in enumerate(((0.22, 0.155), (0.34, 0.18), (0.44, 0.112))):                   # the spines
         n = 10 if ring < 2 else 7
         for i in range(n):
             a = i * 2 * math.pi / n + ring * 0.3
             c = Vector((math.cos(a) * r, math.sin(a) * r, z))
             d = Vector((math.cos(a), math.sin(a), 0.35 * (ring - 0.7))).normalized()
-            o.tube(b, [c, c + d * 0.07], [0.014, 0.0], SPINE, sides=4)
+            o.tube(b, [c - d * 0.015, c + d * 0.07], [0.014, 0.0], SPINE, sides=4)
     for k in (-1, 1):
         b.ball(k * 0.08, -0.15, 0.36, 0.035, 0.045, PEARL, sides=6)                              # bulging eyes
         b.box(k * 0.08 - 0.012, k * 0.08 + 0.012, -0.19, -0.18, 0.37, 0.4, EYE)
         fin(b, [(0, 0), (0.08, 0.03), (0.05, 0.09)], (k * 0.19, 0.0, 0.28), (k, 0.3, 0), (0, 0, 1), 0.008, FIN)
     oval(b, (0, -0.2, 0.27), 0.04, 0.025, 0.03, CORAL, 0.015)                                    # pouting lips
-    fin(b, [(0, 0), (0.1, 0.06), (0.1, -0.06)], (0, 0.19, 0.28), (0, 1, 0), (0, 0, 1), 0.012, FIN)  # tail
+    fin(b, [(0, 0), (0.1, 0.06), (0.1, -0.06)], (0, 0.17, 0.28), (0, 1, 0), (0, 0, 1), 0.012, FIN)  # tail
 
 
 def puffer_leg(b, k):
-    b.rod((k * 0.08, 0.0, 0.1), (k * 0.09, 0.0, 0.03), 0.04, PUFFER_SPOT)
+    b.rod((k * 0.08, 0.0, 0.2), (k * 0.09, 0.0, 0.03), 0.04, PUFFER_SPOT)
     b.box(k * 0.09 - 0.035, k * 0.09 + 0.035, -0.06, 0.03, 0.0, 0.03, PUFFER_SPOT, bevel=0.01)
 
 
@@ -298,15 +299,15 @@ def puffer_throw_arm(b):
 
 
 def puffer_off_arm(b):
-    b.rod((-0.17, -0.02, 0.3), (-0.22, -0.05, 0.24), 0.035, PUFFER)
+    b.rod((-0.17, -0.02, 0.3), (-0.23, -0.03, 0.2), 0.035, PUFFER)
     # a net bag of more urchins at its side
     b.ball(-0.23, -0.02, 0.1, 0.06, 0.12, SAIL, sides=6)
     b.ball(-0.23, -0.04, 0.2, 0.03, 0.04, URCHIN, sides=5)
 
 
 PUFFER_SPEC = ("TidePuffer", puffer_body, [
-    ("LegL", lambda b: puffer_leg(b, -1), (-0.08, 0.0, 0.1)),
-    ("LegR", lambda b: puffer_leg(b, 1), (0.08, 0.0, 0.1)),
+    ("LegL", lambda b: puffer_leg(b, -1), (-0.08, 0.0, 0.16)),
+    ("LegR", lambda b: puffer_leg(b, 1), (0.08, 0.0, 0.16)),
     ("ArmStrike", puffer_throw_arm, (0.17, -0.02, 0.3)),
     ("ArmOff", puffer_off_arm, (-0.17, -0.02, 0.3)),
 ])
@@ -338,10 +339,13 @@ def serpent_body(b):
         fin(b, [(0, 0), (0.12, 0.0), (0.03, 0.1)], (x, y, z + radii[i] * 0.85), (-math.sin(a), math.cos(a), 0), (0, 0, 1), 0.012, FIN)
     # the neck rising out of the coil
     x, y, z = pts[-1]
-    o.tube(b, [(x, y, z), (x * 0.5, y - 0.2, z + 0.4), (0.0, -0.35, 1.15), (0.0, -0.45, 1.45)],
-           [0.12, 0.12, 0.11, 0.1], SERPENT, sides=8, tip=False)
-    for zz in (0.75, 0.95, 1.15, 1.35):
-        fin(b, [(0, 0), (0.12, 0.0), (0.02, 0.13)], (0, -0.25 - (zz - 0.75) * 0.3, zz), (0, 1, 0.3), (0, 0, 1), 0.012, FIN)
+    neck = [Vector((x, y, z)), Vector((x * 0.5, y - 0.2, z + 0.4)), Vector((0.0, -0.35, 1.15)), Vector((0.0, -0.45, 1.45))]
+    o.tube(b, neck, [0.12, 0.12, 0.11, 0.1], SERPENT, sides=8, tip=False)
+    for seg in range(1, 3):                                                                      # the crest down its back
+        for f in (0.25, 0.75):
+            p = neck[seg].lerp(neck[seg + 1], f)
+            back = Vector((0, 1, 0.2)).normalized()
+            fin(b, [(0, 0), (0.1, 0.0), (0.02, 0.12)], p + back * 0.09, (0, -1, 0.3), (0, 0.3, 1), 0.012, FIN)
 
 
 def serpent_head(b):
