@@ -613,7 +613,7 @@ dungeon opens as a SEPARATE SCENE.
   by the spider queen not striking.
 - Queen's «Выстрел» outside Invasion = a strong shot, her blow x sandbox `skill_queen_shot_power` (4,
   +0.2/level); text `#skill_queen_shot_desc_sandbox` (HeroSkillBar.DescriptionKey). Invasion unchanged.
-- A boss pays RESOURCES too: `dungeon_boss_wood/stone/gold` (150/150/50) x level, «+N» popups over it
+- A boss pays RESOURCES too (crystals and coins as before): `dungeon_boss_wood/stone/gold` (150/150/50) x level, «+N» popups over it incl. the crystals (`ResourceGainPopups.ShowCrystals`)
   (and «+coins» over every monster), carried into the town on the way out (`DungeonMonsters.ResourcesEarned`).
 - Every creature shows its health bar once it fights (OrcUnit.StrikeAt / SoldierUnit.TickAttack), heroes too.
 - Hire camp: tapping it HOLDS it like the Barracks (gnome portraits + prices in the FocusHireBar); the

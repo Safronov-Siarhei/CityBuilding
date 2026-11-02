@@ -439,6 +439,8 @@ namespace CityBuilder.Dungeon
                     ResourcesEarned[type] = (ResourcesEarned.TryGetValue(type, out var had) ? had : 0) + paid;
                     if (popups != null) popups.Show(at + Vector3.up * (0.8f * (int)type % 3), paid, type);
                 }
+                // and the crystals, the highest of them (the user, 2026-11-02: «добавь и кристаллы»)
+                if (popups != null) popups.ShowCrystals(at + Vector3.up * 3.2f, crystals);
                 var name = Localization.Get(monster.Kind == OrcKind.SpiderQueen ? "#monster_spider_queen" : "#monster_ore_golem");
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_dungeon_boss_slain", name, coins, crystals),
                     EventSeverity.Good, EventGlyph.Star, null, monster.transform.position));

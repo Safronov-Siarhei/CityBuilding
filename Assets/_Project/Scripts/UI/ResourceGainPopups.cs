@@ -24,6 +24,8 @@ namespace CityBuilder.UI
         private static readonly Color CoinColor = new Color(1f, 0.82f, 0.25f);
 
         [SerializeField] private ResourceIconLibrary icons;
+        // the upgrade crystal's picture: it is no resource of the town's (Wallet)
+        [SerializeField] private Sprite crystalIcon;
 
         public static ResourceGainPopups Instance { get; private set; }
 
@@ -59,8 +61,13 @@ namespace CityBuilder.UI
         /// <summary>The gold an enemy paid as it fell, over where it stood.</summary>
         public void ShowCoins(Vector3 at, int amount) => Show(at + Vector3.up * HeightOverUnit, amount, ResourceType.Coins);
 
+        /// <summary>«+amount» upgrade crystals at `world` -- a dungeon boss's (the user, 2026-11-02).</summary>
+        public void ShowCrystals(Vector3 world, int amount) => Show(world, amount, ResourceType.Coins, crystalIcon);
+
         /// <summary>Shows «+amount» and the resource's icon at `world`.</summary>
-        public void Show(Vector3 world, int amount, ResourceType resource)
+        public void Show(Vector3 world, int amount, ResourceType resource) => Show(world, amount, resource, null);
+
+        private void Show(Vector3 world, int amount, ResourceType resource, Sprite picture)
         {
             if (amount <= 0) return;
             EnsurePool();
@@ -74,9 +81,9 @@ namespace CityBuilder.UI
             if (popup.Age >= Seconds) _live++;
             popup.World = world;
             popup.Age = 0f;
-            popup.Color = resource == ResourceType.Coins ? CoinColor : GainColor;
+            popup.Color = picture == null && resource == ResourceType.Coins ? CoinColor : GainColor;
             popup.Label.text = Localization.Format("#popup_gain", amount);
-            var sprite = icons != null ? icons.GetIcon(resource) : null;
+            var sprite = picture != null ? picture : icons != null ? icons.GetIcon(resource) : null;
             popup.Icon.sprite = sprite;
             popup.Icon.enabled = sprite != null;
             popup.Root.gameObject.SetActive(true);

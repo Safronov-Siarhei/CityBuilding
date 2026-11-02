@@ -341,6 +341,7 @@ namespace CityBuilder.EditorTools
             var popups = uiRoot.gameObject.AddComponent<ResourceGainPopups>();
             var popupsSO = new SerializedObject(popups);
             popupsSO.FindProperty("icons").objectReferenceValue = iconLibrary;
+            popupsSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
             popupsSO.ApplyModifiedPropertiesWithoutUndo();
             // a hammer and the time left over each building under construction (an Invasion run)
             var construction = uiRoot.gameObject.AddComponent<ConstructionLabels>();
