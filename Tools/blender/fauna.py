@@ -207,8 +207,6 @@ DOLPHIN = ("FaunaDolphin", 1.0, dolphin_body, [("Tail", dolphin_tail, (0.0, 0.26
 def whale_body(b):
     oval(b, (0, 0.0, 0.0), 0.32, 0.95, 0.3, SEA_DARK, 0.22)
     oval(b, (0, -0.15, -0.12), 0.26, 0.75, 0.17, FISH_BELLY, 0.12)
-    for i in range(5):                                                                            # throat grooves
-        b.box(-0.2 + i * 0.1 - 0.008, -0.2 + i * 0.1 + 0.008, -0.9, -0.3, -0.29, -0.28, SEA, skip=())
     fin(b, [(0, 0), (0.3, 0), (0.24, 0.16)], (0, 0.25, 0.27), (0, 1, 0), (0, 0, 1), 0.04, SEA_DARK)  # small dorsal fin
     for k in (-1, 1):
         b.box(k * 0.31 - 0.015, k * 0.31 + 0.015, -0.7, -0.66, -0.02, 0.03, EYE, skip=())
