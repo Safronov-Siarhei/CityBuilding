@@ -78,7 +78,25 @@ namespace CityBuilder.Buildings
         private Vector2 _offeredAtMouse;
         private readonly StringBuilder _costText = new StringBuilder();
 
-        public bool IsPlacingMandatoryBuilding => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
+        public bool IsPlacingMandatoryBuilding => IsPlacingTownHall || _lighthousePending;
+
+        /// <summary>The Town Hall still to be put down -- the first of the two mandatory buildings.</summary>
+        public bool IsPlacingTownHall => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
+
+        /// <summary>
+        /// The lighthouse in hand as the second mandatory building, right after the Town Hall (the
+        /// user, 2026-11-02, the archipelago only): free, standing at once, and it opens the island
+        /// round it (BuildingInstance.RevealRadius).
+        /// </summary>
+        public bool IsPlacingLighthouse => _lighthousePending;
+
+        // the lighthouse owed after the Town Hall; checked once the map and a loaded town stand
+        private BuildingData _lighthouse;
+        private bool _lighthousePending;
+        private bool _lighthouseChecked;
+        private static readonly List<ResourceAmount> Free = new List<ResourceAmount>();
+        // the building being put down for nothing (the mandatory lighthouse)
+        private static BuildingData _freeNow;
         public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
 
@@ -102,7 +120,8 @@ namespace CityBuilder.Buildings
 
         /// <summary>What putting a building down costs: the sheet's price, or an Invasion run's (wood, stone and gold).</summary>
         public static List<ResourceAmount> CostOf(BuildingData data) =>
-            Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
+            data != null && data == _freeNow ? Free
+            : Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
         public event Action<BuildingData> OnBuildingPlaced;
 
         /// <summary>
@@ -151,6 +170,32 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>
+        /// The lighthouse into the player's hand, once, if the map wants one and the town has none
+        /// (a game saved before the rule gets its free one too).
+        /// </summary>
+        private void TryBeginLighthouse()
+        {
+            _lighthouseChecked = true;
+            var map = Maps.MeshMapApplier.Instance;
+            if (map == null || !Maps.Archipelago.ArchipelagoMapId.IsArchipelago(map.CurrentMapId)) return;
+            if (Invasion.InvasionRules.Active || Dungeon.DungeonMode.IsActive) return;
+            if (BuildingInstance.HasAny(Ships.LighthouseAim.BuildingId)) return;
+            BuildingData lighthouse = null;
+            foreach (var data in availableBuildings)
+                if (data != null && data.buildingName == Ships.LighthouseAim.BuildingId) { lighthouse = Resolve(data); break; }
+            if (lighthouse == null) return;
+            _lighthouse = lighthouse;
+            _lighthousePending = true;
+            _freeNow = lighthouse;
+            SelectBuilding(lighthouse);
+        }
+
+        private void OnDestroy()
+        {
+            if (_freeNow == _lighthouse) _freeNow = null;
+        }
+
+        /// <summary>
         /// Called by save/load when restoring a game where the Town Hall was already placed,
         /// so Start() doesn't force-select it again for a fresh mandatory-placement flow.
         /// </summary>
@@ -161,6 +206,7 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
+            if (!_lighthouseChecked && !IsPlacingTownHall && Time.timeSinceLevelLoad > 1f) TryBeginLighthouse();
             if (ModalGate.IsBlocked) return;
 
             HandleKeyboard();
@@ -283,7 +329,7 @@ namespace CityBuilder.Buildings
             // already hides it (see BuildingCategoryPanel), so this catches the number keys and
             // anything else reaching in from outside.
             // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
-            if (data != null && data != mandatoryFirstBuilding
+            if (data != null && data != mandatoryFirstBuilding && !(_lighthousePending && data == _lighthouse)
                 && !(Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
                                                    : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
 
@@ -719,7 +765,12 @@ namespace CityBuilder.Buildings
             if (!PlaceAt(cell)) return;
 
             // Roads and fences stay in hand, and the next piece is offered right after this one.
-            if (!placedData.keepSelectedAfterPlacement) ClearSelection();
+            if (!placedData.keepSelectedAfterPlacement)
+            {
+                ClearSelection();
+                // the Town Hall down: the lighthouse is next
+                if (placedData == mandatoryFirstBuilding) TryBeginLighthouse();
+            }
             else
             {
                 OfferNextPiece(cell);
@@ -816,7 +867,7 @@ namespace CityBuilder.Buildings
             buildingInstance.Initialize(_selectedBuilding, cell, _rotationSteps);
             // A building takes time to put up and does nothing meanwhile (the user, 2026-10-22 for a
             // run, 2026-10-25 for the sandbox too) -- all but the Town Hall the game starts with.
-            if (_selectedBuilding != mandatoryFirstBuilding) buildingInstance.BuildOnTimer(_selectedBuilding.BuildSeconds(1));
+            if (_selectedBuilding != mandatoryFirstBuilding && _selectedBuilding != _freeNow) buildingInstance.BuildOnTimer(_selectedBuilding.BuildSeconds(1));
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
 
@@ -836,6 +887,12 @@ namespace CityBuilder.Buildings
             // Roads excluded -- laying a dozen tiles in a row would otherwise flood the log out
             // of usefulness (see EventLogManager).
             if (!placedData.isRoad) EventLogManager.Instance?.Log(Localization.Format("#log_built", placedData.LocalizedName));
+
+            if (_lighthousePending && placedData == _lighthouse)
+            {
+                _lighthousePending = false;
+                _freeNow = null;
+            }
 
             if (placedData == mandatoryFirstBuilding && !_mandatoryBuildingPlaced)
             {

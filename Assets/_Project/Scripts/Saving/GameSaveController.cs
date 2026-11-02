@@ -600,7 +600,7 @@ namespace CityBuilder.Saving
                     ? meshMapApplier.CurrentMapId
                     : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
                 season = (int)Maps.SeasonStyle.Session,
-                mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding,
+                mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingTownHall,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0,
                 currentDay = gameCalendar != null ? gameCalendar.CurrentDay : 1,
                 taxRatePercent = taxManager != null ? taxManager.TaxRatePercent : 10

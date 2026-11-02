@@ -112,6 +112,22 @@ namespace CityBuilder.Maps
         /// <summary>The mesh map in play, or null on a legacy map.</summary>
         public MeshMapDefinition CurrentMap { get; private set; }
 
+        /// <summary>The archipelago's island under each cell (index into IslandRichesOf, -1 the sea), null on any other map.</summary>
+        public int[] IslandLabels { get; private set; }
+
+        /// <summary>What each archipelago island is rich in (Archipelago.IslandRiches), null on any other map.</summary>
+        public Archipelago.IslandRiches.Riches[] IslandRichesOf { get; private set; }
+
+        /// <summary>The archipelago island's riches under `cell`; None off the archipelago or at sea.</summary>
+        public Archipelago.IslandRiches.Riches RichesAt(Vector2Int cell)
+        {
+            if (IslandLabels == null || GridManager.Instance == null) return Archipelago.IslandRiches.Riches.None;
+            var n = GridManager.Instance.GridSize.x;
+            var i = cell.y * n + cell.x;
+            if (cell.x < 0 || cell.y < 0 || cell.x >= n || i >= IslandLabels.Length || IslandLabels[i] < 0) return Archipelago.IslandRiches.Riches.None;
+            return IslandRichesOf[IslandLabels[i]];
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -597,6 +613,9 @@ namespace CityBuilder.Maps
             if (grid == null) return;
             Archipelago.ArchipelagoMapId.TryParse(mapId, out var seed, out _);
             var world = Archipelago.ArchipelagoGenerator.Generate(seed);
+            // every island its riches, before the veins and the soil are dealt (the user, 2026-11-02)
+            IslandLabels = Archipelago.IslandRiches.Label(world);
+            IslandRichesOf = Archipelago.IslandRiches.Assign(world);
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);
             Vector2 At(Vector2Int cell) => new Vector2(origin.x + cell.x + 0.5f, origin.z + cell.y + 0.5f);
@@ -697,7 +716,7 @@ namespace CityBuilder.Maps
             if (fromLibrary) Archipelago.DungeonEntrances.Place(world, this, map.DungeonEntrancePrefab, _noBuildCells);
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
-            _fertileCells = Archipelago.FertileLand.Compute(world);
+            _fertileCells = Archipelago.FertileLand.Compute(world, IslandLabels, IslandRichesOf);
             Archipelago.FertileLand.KeepGrass(_fertileCells, this);
             Archipelago.FertileLand.Build(_fertileCells, transform, this, map.TerrainMaterial);
             Ships.ShipManager.Instance?.BuildSea(world, origin);

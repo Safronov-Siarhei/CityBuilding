@@ -1,5 +1,7 @@
 ﻿using CityBuilder.Buildings;
+using CityBuilder.Core;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CityBuilder.UI
 {
@@ -22,8 +24,15 @@ namespace CityBuilder.UI
         private float _controlsY;
         private bool _lifted;
 
+        private Text _hint;
+        private string _townHallHint;
+        private bool _lighthouseHint;
+
         private void Awake()
         {
+            // the hint says the Town Hall (baked at setup), then the lighthouse (the user, 2026-11-02)
+            _hint = showWhilePlacingMandatory != null ? showWhilePlacingMandatory.GetComponentInChildren<Text>(true) : null;
+            if (_hint != null) _townHallHint = _hint.text;
             if (placementControls != null) _controlsY = placementControls.anchoredPosition.y;
         }
 
@@ -31,6 +40,11 @@ namespace CityBuilder.UI
         {
             if (buildingPlacer == null) return;
             var mandatory = buildingPlacer.IsPlacingMandatoryBuilding;
+            if (_hint != null && _lighthouseHint != buildingPlacer.IsPlacingLighthouse)
+            {
+                _lighthouseHint = buildingPlacer.IsPlacingLighthouse;
+                _hint.text = _lighthouseHint ? Localization.Get("#hud_place_lighthouse_hint") : _townHallHint;
+            }
             if (showWhilePlacingMandatory != null && showWhilePlacingMandatory.activeSelf != mandatory)
             {
                 showWhilePlacingMandatory.SetActive(mandatory);

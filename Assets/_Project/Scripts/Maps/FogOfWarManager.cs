@@ -277,7 +277,7 @@ namespace CityBuilder.Maps
             // A loaded save already has mandatoryFirstBuilding placed (see GameSaveController.
             // Awake -> MarkMandatoryBuildingAlreadyPlaced, guaranteed to run before this Start
             // since Unity runs every Awake before any Start) -- fog starts active immediately.
-            if (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) Activate();
+            if (buildingPlacer == null || !buildingPlacer.IsPlacingTownHall) Activate();
         }
 
         /// <summary>

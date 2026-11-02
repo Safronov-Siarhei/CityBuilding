@@ -21,14 +21,15 @@ namespace CityBuilder.Maps.Archipelago
         /// orcs' island; one always near the start, where the first farms go. None nearer the water
         /// than fertile_min_coast_cells (the user, 2026-11-01: soil by the shore looks bad).
         /// </summary>
-        public static HashSet<Vector2Int> Compute(ArchipelagoMap world)
+        public static HashSet<Vector2Int> Compute(ArchipelagoMap world, int[] islandOf = null, IslandRiches.Riches[] riches = null)
         {
             var cells = new HashSet<Vector2Int>();
             var n = world.Size;
             var balance = BalanceConfig.Instance;
             var perIsland = balance != null ? balance.FertilePatchesPerIsland : 2;
             var radius = balance != null ? balance.FertilePatchRadius : 5f;
-            if (perIsland <= 0 || radius <= 0f) return cells;
+            var onFertile = balance != null ? balance.IslandFertilePatches : 3;
+            if (radius <= 0f) return cells;
             var coast = CoastDistance(world, balance != null ? balance.FertileMinCoastCells : 8);
             var minCoast = balance != null ? balance.FertileMinCoastCells : 8;
 
@@ -58,11 +59,36 @@ namespace CityBuilder.Maps.Archipelago
             }
             Patch(world, cells, best % n, best / n, radius, rng, coast, minCoast);
 
-            var patches = world.Islands.Count * perIsland - 1;
-            for (var k = 0; k < patches; k++)
+            if (islandOf == null || riches == null)
             {
-                var i = plain[rng.RangeInt(0, plain.Count)];
-                Patch(world, cells, i % n, i / n, radius * rng.Range(0.7f, 1.2f), rng, coast, minCoast);
+                var patches = world.Islands.Count * perIsland - 1;
+                for (var k = 0; k < patches; k++)
+                {
+                    var i = plain[rng.RangeInt(0, plain.Count)];
+                    Patch(world, cells, i % n, i / n, radius * rng.Range(0.7f, 1.2f), rng, coast, minCoast);
+                }
+                return cells;
+            }
+
+            // island by island: the fertile islands get island_fertile_patches, the ordinary ones
+            // fertile_patches_per_island, the start island only its patch by the Town Hall (the user,
+            // 2026-11-02: every island its own riches)
+            var byIsland = new List<int>[riches.Length];
+            foreach (var i in plain)
+            {
+                var k = islandOf[i];
+                if (k < 0) continue;
+                (byIsland[k] ??= new List<int>()).Add(i);
+            }
+            for (var k = 0; k < riches.Length; k++)
+            {
+                if (byIsland[k] == null || riches[k] == IslandRiches.Riches.Start || riches[k] == IslandRiches.Riches.None) continue;
+                var count = riches[k] == IslandRiches.Riches.Fertile ? onFertile : perIsland;
+                for (var p = 0; p < count; p++)
+                {
+                    var i = byIsland[k][rng.RangeInt(0, byIsland[k].Count)];
+                    Patch(world, cells, i % n, i / n, radius * rng.Range(0.8f, 1.2f), rng, coast, minCoast);
+                }
             }
             return cells;
         }

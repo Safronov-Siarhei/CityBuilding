@@ -255,3 +255,24 @@
   no hint on the Farm/Fisher's Hut card of the bonus it gets. Fog with 3 states for 500 m on phones (no longer needed by
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.
+
+## Island riches and the mandatory lighthouse (2026-11-02, the user)
+- **Riches** (`Maps/Archipelago/IslandRiches.cs`, assigned at generation, deterministic): Start =
+  coal x`island_start_coal` + copper x`island_start_copper` + its one fertile patch by the Town Hall;
+  the nearest ordinary island IRON (`island_iron_veins` + `island_iron_coal`), the next COPPER
+  (`island_copper_veins`), the farthest GOLD (`island_gold_veins`); the rest by shape: Rocky/Atoll and
+  islets STONE (`island_stone_coal`), Hilly IRON, Long COPPER, Flat/Crescent FERTILE
+  (`island_fertile_patches`; ordinary islands `fertile_patches_per_island` = 0); orc and bot islands none.
+  `MeshMapApplier.IslandLabels/IslandRichesOf/RichesAt(cell)`; `OreDepositSpawner.PlaceByIsland`
+  (the old distance Plan is for designed maps only); `FertileLand.Compute(world, labels, riches)`.
+  Not shown to the player yet except by the veins' glow.
+- **Lighthouse = 2nd mandatory building** (archipelago only): `starts_unlocked` 1 (Laboratory only
+  raises its levels); right after the Town Hall `BuildingPlacer.TryBeginLighthouse` puts it in hand,
+  free (`CostOf` -> empty via `_freeNow`), no build timer, no cancel, hint `#hud_place_lighthouse_hint`
+  (BuildingPlacerUIVisibility swaps the baked Town Hall hint). `IsPlacingTownHall` (fog activation,
+  save flag) vs `IsPlacingMandatoryBuilding` (both). A town with no lighthouse is handed one a second
+  after load (not saved; a lost lighthouse is handed back on the next load).
+- **Light**: `BuildingInstance.RevealRadius` -- a lighthouse clears `lighthouse_light_cells_<level>`
+  (45/52/60/70/80 cells: a medium island at 1, a large one at 5) instead of fog_reveal_radius, again
+  on every upgrade and on load. The old paid spot-lighting (LighthouseAim) is kept as it was.
+- Not seen in game; no tests (user: one general run later).

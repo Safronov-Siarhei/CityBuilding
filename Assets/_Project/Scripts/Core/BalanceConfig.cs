@@ -603,6 +603,17 @@ namespace CityBuilder.Core
         [SerializeField] private int lighthouseRevealCoins = 30;
         [SerializeField] private float lighthouseCooldownSeconds = 90f;
         [SerializeField] private int lighthouseCoastCells = 2;
+        // the lighthouse's own light by level (cells): a medium island at 1, a large one at 5
+        [SerializeField] private int[] lighthouseLightCells = { 45, 52, 60, 70, 80 };
+        // the archipelago's islands each have their riches (the user, 2026-11-02): veins per island by its kind
+        [SerializeField] private int islandStartCoal = 2;
+        [SerializeField] private int islandStartCopper = 1;
+        [SerializeField] private int islandIronVeins = 4;
+        [SerializeField] private int islandIronCoal = 1;
+        [SerializeField] private int islandCopperVeins = 4;
+        [SerializeField] private int islandGoldVeins = 3;
+        [SerializeField] private int islandStoneCoal = 2;
+        [SerializeField] private int islandFertilePatches = 3;
         [SerializeField] private float kingXpRadius = 12f;
         [SerializeField] private float kingGuardRadius = 30f;
         [SerializeField] private int kingRevealRadius = 9;
@@ -1025,6 +1036,18 @@ namespace CityBuilder.Core
         public int LighthouseRevealCoins => lighthouseRevealCoins;
         public float LighthouseCooldownSeconds => lighthouseCooldownSeconds;
         public int LighthouseCoastCells => lighthouseCoastCells;
+        /// <summary>How far round itself (cells) a lighthouse of `level` clears the fog for good.</summary>
+        public int LighthouseLightCells(int level) =>
+            lighthouseLightCells == null || lighthouseLightCells.Length == 0 ? 45 : lighthouseLightCells[Mathf.Clamp(level, 1, lighthouseLightCells.Length) - 1];
+        /// <summary>The archipelago's island riches: ore veins per island of each kind, and fertile patches on a fertile island.</summary>
+        public int IslandStartCoal => islandStartCoal;
+        public int IslandStartCopper => islandStartCopper;
+        public int IslandIronVeins => islandIronVeins;
+        public int IslandIronCoal => islandIronCoal;
+        public int IslandCopperVeins => islandCopperVeins;
+        public int IslandGoldVeins => islandGoldVeins;
+        public int IslandStoneCoal => islandStoneCoal;
+        public int IslandFertilePatches => islandFertilePatches;
         public float KingXpRadius => kingXpRadius;
         public float KingGuardRadius => kingGuardRadius;
         public int KingRevealRadius => kingRevealRadius;
@@ -1587,6 +1610,17 @@ namespace CityBuilder.Core
             lighthouseRevealCoins = (int)Read(economy, "lighthouse_reveal_coins", lighthouseRevealCoins);
             lighthouseCooldownSeconds = Read(economy, "lighthouse_cooldown_seconds", lighthouseCooldownSeconds);
             lighthouseCoastCells = (int)Read(economy, "lighthouse_coast_cells", lighthouseCoastCells);
+            lighthouseLightCells = new int[5];
+            for (var level = 1; level <= 5; level++)
+                lighthouseLightCells[level - 1] = (int)Read(economy, "lighthouse_light_cells_" + level, 45 + (level - 1) * 9);
+            islandStartCoal = (int)Read(economy, "island_start_coal", islandStartCoal);
+            islandStartCopper = (int)Read(economy, "island_start_copper", islandStartCopper);
+            islandIronVeins = (int)Read(economy, "island_iron_veins", islandIronVeins);
+            islandIronCoal = (int)Read(economy, "island_iron_coal", islandIronCoal);
+            islandCopperVeins = (int)Read(economy, "island_copper_veins", islandCopperVeins);
+            islandGoldVeins = (int)Read(economy, "island_gold_veins", islandGoldVeins);
+            islandStoneCoal = (int)Read(economy, "island_stone_coal", islandStoneCoal);
+            islandFertilePatches = (int)Read(economy, "island_fertile_patches", islandFertilePatches);
             kingXpRadius = Read(economy, "king_xp_radius", kingXpRadius);
             kingGuardRadius = Read(economy, "king_guard_radius", kingGuardRadius);
             kingRevealRadius = (int)Read(economy, "king_reveal_radius", kingRevealRadius);

@@ -145,7 +145,7 @@ namespace CityBuilder.Buildings
                 // building out on a 4x2 one.
                 var footprint = RotatedFootprint();
                 var centerCell = originCell + new Vector2Int(footprint.x / 2, footprint.y / 2);
-                FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
+                FogOfWarManager.Instance?.RevealPermanent(centerCell, RevealRadius());
                 // the archipelago's start island in view whole -- on a load too (the return from a
                 // dungeon showed it fogged, 2026-11-02): the Town Hall's island, whenever it stands
                 if (data.buildingName == BuildingIds.TownHall) Maps.MeshMapApplier.Instance?.RevealStartIsland(centerCell);
@@ -716,6 +716,24 @@ namespace CityBuilder.Buildings
             }
         }
 
+        /// <summary>
+        /// How far round itself the building clears the fog for good: the sheet's fog_reveal_radius,
+        /// but the lighthouse's own light by its level (the user, 2026-11-02: a medium island's
+        /// worth at level 1, a large island's at the top -- lighthouse_light_cells_1..5).
+        /// </summary>
+        private int RevealRadius() =>
+            Data != null && Data.buildingName == Ships.LighthouseAim.BuildingId && BalanceConfig.Instance != null
+                ? BalanceConfig.Instance.LighthouseLightCells(Level)
+                : Data != null ? Data.fogRevealRadius : 0;
+
+        /// <summary>A lighthouse raised (or loaded) at a higher level lights its wider circle.</summary>
+        private void RevealAtLevel()
+        {
+            if (Data == null || Data.buildingName != Ships.LighthouseAim.BuildingId) return;
+            var footprint = RotatedFootprint();
+            FogOfWarManager.Instance?.RevealPermanent(OriginCell + new Vector2Int(footprint.x / 2, footprint.y / 2), RevealRadius());
+        }
+
         /// <summary>Used by save/load to restore an already-valid level directly, bypassing the resource-spend check.</summary>
         public void SetLevel(int level)
         {
@@ -733,6 +751,7 @@ namespace CityBuilder.Buildings
 
             // A loaded building has to look its level straight away -- nothing else will tell it to,
             // since it was never upgraded during this session.
+            RevealAtLevel();
             _levelAppearance?.Apply(Level);
             _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();
@@ -834,6 +853,7 @@ namespace CityBuilder.Buildings
 
             ChangeStoredCapacity(after.storageCapacity - before.storageCapacity);
 
+            RevealAtLevel();
             _levelAppearance?.Apply(Level);
             _fenceAppearance?.SetLevel(Level);
             UpdateLevelMarker();

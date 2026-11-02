@@ -100,6 +100,13 @@ namespace CityBuilder.Maps
             }
 
             var random = new System.Random(StableHash(map.MapId));
+            // the archipelago: each island's own veins by its riches (the user, 2026-11-02)
+            if (applier.IslandLabels != null)
+            {
+                PlaceByIsland(applier, candidates, random);
+                if (_placed.Count == 0) Debug.LogWarning($"OreDepositSpawner: no vein found room on {map.MapId} -- no mine can be built here.");
+                return;
+            }
             foreach (var (kind, count, near, far) in Plan)
             {
                 for (var n = 0; n < count; n++)
@@ -117,6 +124,66 @@ namespace CityBuilder.Maps
             }
 
             if (_placed.Count == 0) Debug.LogWarning($"OreDepositSpawner: no vein found room on {map.MapId} -- no mine can be built here.");
+        }
+
+        /// <summary>
+        /// The archipelago's veins, island by island (Archipelago.IslandRiches): the start island its
+        /// coal and a little copper, an iron island iron and some coal, a copper island copper, the
+        /// gold island gold, a stone island coal. Counts are the sheet's island_* rows.
+        /// </summary>
+        private void PlaceByIsland(MeshMapApplier applier, List<(Vector2Int origin, Vector3 centre, float distance)> candidates, System.Random random)
+        {
+            var labels = applier.IslandLabels;
+            var riches = applier.IslandRichesOf;
+            var n = GridManager.Instance.GridSize.x;
+            var byIsland = new List<(Vector2Int origin, Vector3 centre)>[riches.Length];
+            foreach (var c in candidates)
+            {
+                var i = c.origin.y * n + c.origin.x;
+                if (i < 0 || i >= labels.Length || labels[i] < 0) continue;
+                (byIsland[labels[i]] ??= new List<(Vector2Int, Vector3)>()).Add((c.origin, c.centre));
+            }
+            var b = BalanceConfig.Instance;
+            for (var k = 0; k < riches.Length; k++)
+            {
+                var spots = byIsland[k];
+                if (spots == null) continue;
+                switch (riches[k])
+                {
+                    case Archipelago.IslandRiches.Riches.Start:
+                        PlaceOn(spots, OreKind.Coal, b != null ? b.IslandStartCoal : 2, random);
+                        PlaceOn(spots, OreKind.Copper, b != null ? b.IslandStartCopper : 1, random);
+                        break;
+                    case Archipelago.IslandRiches.Riches.Iron:
+                        PlaceOn(spots, OreKind.Iron, b != null ? b.IslandIronVeins : 4, random);
+                        PlaceOn(spots, OreKind.Coal, b != null ? b.IslandIronCoal : 1, random);
+                        break;
+                    case Archipelago.IslandRiches.Riches.Copper:
+                        PlaceOn(spots, OreKind.Copper, b != null ? b.IslandCopperVeins : 4, random);
+                        break;
+                    case Archipelago.IslandRiches.Riches.Gold:
+                        PlaceOn(spots, OreKind.Gold, b != null ? b.IslandGoldVeins : 3, random);
+                        break;
+                    case Archipelago.IslandRiches.Riches.Stone:
+                        PlaceOn(spots, OreKind.Coal, b != null ? b.IslandStoneCoal : 2, random);
+                        break;
+                }
+            }
+        }
+
+        private void PlaceOn(List<(Vector2Int origin, Vector3 centre)> spots, OreKind kind, int count, System.Random random)
+        {
+            var grid = GridManager.Instance;
+            for (var v = 0; v < count; v++)
+            {
+                for (var attempt = 0; attempt < AttemptsPerVein; attempt++)
+                {
+                    var s = spots[random.Next(spots.Count)];
+                    if (!grid.IsAreaFree(s.origin, OreDeposit.Size) || TooClose(s.centre)) continue;
+                    Place(kind, s.origin, s.centre);
+                    break;
+                }
+            }
         }
 
         private void Place(OreKind kind, Vector2Int origin, Vector3 centre)
