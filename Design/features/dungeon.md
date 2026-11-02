@@ -631,9 +631,11 @@ dungeon opens as a SEPARATE SCENE.
 - Hire camp: NO «!» and NO card -- `DungeonHireCard` deleted; holding the camp shows only the gnome
   buttons (`FocusHireBar.CampHeld` no longer needs DetailsShown). Keys `#dungeon_hire_title/count/
   stats/buy` are unused now (left in the sheet).
-- The LAKE STATUE is a reward: a hero (or gnome) on its nearest shore (reach = statue->nearest NavMesh
-  + `dungeon_crystal_pick_reach` + 0.5) takes `dungeon_statue_crystals` (3) once per level; id
-  `<dungeon>-L<n>-statue<i>` saved with the crystals (`DungeonCrystals.MarkTaken`).
+- The LAKE STATUE is no reward and has no crystal (the user, 2026-11-02, reversing a first try):
+  `DungeonStatue` = a violet aura with green sparks breathing round the stone (CrystalHalo, its _Size
+  pulsed). A hero within 2 cells of a lake's water opens the WHOLE lake and 2 cells round it
+  (`DungeonFog.FindLakes/SeeLakesNear`; the lake = cells under the water mesh, rasterised -- its bed
+  is ground, so `IsWaterCell` cannot see it; `MeshMapApplier.WaterInstance`).
 - The crystal chip on the top bar redraws when the count changes (`ResourceHUDController.OnCrystalsChanged`);
   it used to wait for the coins to move.
 - Archipelago: the level-1 entrance stands on the START island, >= 22 cells from the Town Hall's spot

@@ -44,13 +44,6 @@ namespace CityBuilder.Dungeon
         /// <summary>Taken on this visit, by id.</summary>
         public IReadOnlyCollection<string> TakenNow => _takenNow;
 
-        /// <summary>A crystal taken by another hand (the lake statue's, DungeonStatue): saved with the rest on the way out.</summary>
-        public void MarkTaken(string id)
-        {
-            _takenNow.Add(id);
-            DungeonRecord.CrystalsTaken.Add(id);
-        }
-
         public int CrystalsTaken { get; private set; }
 
         private readonly List<Crystal> _lying = new List<Crystal>();

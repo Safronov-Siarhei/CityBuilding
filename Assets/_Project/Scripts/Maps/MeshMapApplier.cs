@@ -165,6 +165,9 @@ namespace CityBuilder.Maps
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
 
+        /// <summary>The map's drawn water (a designed map's or a dungeon's lake), null on the archipelago.</summary>
+        public GameObject WaterInstance { get; private set; }
+
         /// <summary>
         /// Whether the straight line from `a` to `b` crosses water: a walker's straight-line
         /// fallback must not (the user, 2026-11-02: a hero, then a woodcutter, sent to another
@@ -441,6 +444,7 @@ namespace CityBuilder.Maps
                     ? map.WaterPrefab.transform.rotation
                     : Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
                 var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
+                WaterInstance = waterInstance;
                 TerrainPhysicsLayer.Assign(waterInstance);
                 SceneryShadows.DisableCasting(waterInstance);
                 if (map.WaterMaterial != null)

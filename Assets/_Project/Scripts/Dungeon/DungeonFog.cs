@@ -61,6 +61,14 @@ namespace CityBuilder.Dungeon
         private readonly Queue<int> _queue = new Queue<int>();
         private int[] _steps;
         private readonly List<int> _touched = new List<int>();
+        // the lakes: each cell's lake (0 = none), each lake's cells, and whether it is in view yet
+        private int[] _lakeOf;
+        private readonly List<List<int>> _lakes = new List<List<int>> { null };
+        private readonly List<bool> _lakeOpen = new List<bool> { true };
+        // a hero this many cells from a lake's water sees the whole lake
+        private const int LakeSightCells = 2;
+        // and the rock this many cells round its water (the statue's islet, the shore)
+        private const int LakeRimCells = 2;
 
         /// <summary>The minimap's picture -- for the tests.</summary>
         public Texture2D Picture => _picture;
@@ -96,6 +104,8 @@ namespace CityBuilder.Dungeon
                 _floor[z * _size + x] = NavMesh.SamplePosition(at, out var hit, _cell * 0.45f, NavMesh.AllAreas)
                     && hit.position.y < ground + 0.6f;
             }
+
+            FindLakes();
 
             // the town's fog has no place below: the darkness is the dungeon's own
             var fog = FogOfWarManager.Instance;
@@ -210,7 +220,127 @@ namespace CityBuilder.Dungeon
             foreach (var hero in roster.Heroes)
             {
                 if (hero == null || hero.IsFallen) continue;
-                Flood(grid.WorldToCell(hero.transform.position));
+                var cell = grid.WorldToCell(hero.transform.position);
+                Flood(cell);
+                SeeLakesNear(cell);
+            }
+        }
+
+        /// <summary>
+        /// Every lake below: the cells under the map's water mesh (its bed is ground, so the
+        /// ground cannot tell), joined together.
+        /// </summary>
+        private void FindLakes()
+        {
+            _lakeOf = new int[_size * _size];
+            var wet = WaterCells();
+            if (wet == null) return;
+            var queue = new Queue<int>();
+            for (var start = 0; start < _lakeOf.Length; start++)
+            {
+                if (_lakeOf[start] != 0 || _floor[start] || !wet[start]) continue;
+                var id = _lakes.Count;
+                var cells = new List<int>();
+                var touchesEdge = false;
+                _lakeOf[start] = id;
+                queue.Enqueue(start);
+                while (queue.Count > 0)
+                {
+                    var i = queue.Dequeue();
+                    cells.Add(i);
+                    int x = i % _size, z = i / _size;
+                    if (x == 0 || z == 0 || x == _size - 1 || z == _size - 1) touchesEdge = true;
+                    for (var k = 0; k < 4; k++)
+                    {
+                        var n = Neighbour(i, k);
+                        if (n < 0 || _lakeOf[n] != 0 || _floor[n] || !wet[n]) continue;
+                        _lakeOf[n] = id;
+                        queue.Enqueue(n);
+                    }
+                }
+                _lakes.Add(cells);
+                // the void round the map is "water" too: never a lake
+                _lakeOpen.Add(touchesEdge);
+            }
+        }
+
+        /// <summary>The cells whose middles the water mesh covers (its triangles laid flat on the cells), or null with no water.</summary>
+        private bool[] WaterCells()
+        {
+            var water = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.WaterInstance : null;
+            if (water == null) return null;
+            var wet = new bool[_size * _size];
+            var grid = GridManager.Instance;
+            var corner = grid.GetFootprintCenterWorld(_origin, Vector2Int.one);
+            foreach (var filter in water.GetComponentsInChildren<MeshFilter>())
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null || !mesh.isReadable) continue;
+                var vertices = mesh.vertices;
+                var triangles = mesh.triangles;
+                var toWorld = filter.transform.localToWorldMatrix;
+                for (var t = 0; t < triangles.Length; t += 3)
+                {
+                    Vector2 a = Flat2(toWorld.MultiplyPoint3x4(vertices[triangles[t]])), b = Flat2(toWorld.MultiplyPoint3x4(vertices[triangles[t + 1]])),
+                        c = Flat2(toWorld.MultiplyPoint3x4(vertices[triangles[t + 2]]));
+                    // the cells whose middles fall in this triangle
+                    int x0 = Mathf.FloorToInt((Mathf.Min(a.x, Mathf.Min(b.x, c.x)) - corner.x) / _cell), x1 = Mathf.CeilToInt((Mathf.Max(a.x, Mathf.Max(b.x, c.x)) - corner.x) / _cell);
+                    int z0 = Mathf.FloorToInt((Mathf.Min(a.y, Mathf.Min(b.y, c.y)) - corner.z) / _cell), z1 = Mathf.CeilToInt((Mathf.Max(a.y, Mathf.Max(b.y, c.y)) - corner.z) / _cell);
+                    for (var z = Mathf.Max(0, z0); z <= Mathf.Min(_size - 1, z1); z++)
+                    for (var x = Mathf.Max(0, x0); x <= Mathf.Min(_size - 1, x1); x++)
+                    {
+                        var p = new Vector2(corner.x + x * _cell, corner.z + z * _cell);
+                        if (InTriangle(p, a, b, c)) wet[z * _size + x] = true;
+                    }
+                }
+            }
+            return wet;
+        }
+
+        private static Vector2 Flat2(Vector3 v) => new Vector2(v.x, v.z);
+
+        private static bool InTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        {
+            float Side(Vector2 u, Vector2 v, Vector2 w) => (u.x - w.x) * (v.y - w.y) - (v.x - w.x) * (u.y - w.y);
+            var d1 = Side(p, a, b);
+            var d2 = Side(p, b, c);
+            var d3 = Side(p, c, a);
+            var negative = d1 < 0f || d2 < 0f || d3 < 0f;
+            var positive = d1 > 0f || d2 > 0f || d3 > 0f;
+            return !(negative && positive);
+        }
+
+        /// <summary>
+        /// A hero come to a lake's shore sees all of it, the statue in its middle included (the
+        /// user, 2026-11-02: «открытие всего озера если игрок подошёл к какому-нибудь берегу,
+        /// чтобы статуя не была вечно сокрыта»).
+        /// </summary>
+        private void SeeLakesNear(Vector2Int cell)
+        {
+            if (_lakeOf == null || _lakes.Count <= 1) return;
+            var centre = Index(cell);
+            if (centre < 0) return;
+            int cx = centre % _size, cz = centre / _size;
+            for (var dz = -LakeSightCells; dz <= LakeSightCells; dz++)
+            for (var dx = -LakeSightCells; dx <= LakeSightCells; dx++)
+            {
+                int x = cx + dx, z = cz + dz;
+                if (x < 0 || z < 0 || x >= _size || z >= _size) continue;
+                var lake = _lakeOf[z * _size + x];
+                if (lake == 0 || _lakeOpen[lake]) continue;
+                _lakeOpen[lake] = true;
+                foreach (var i in _lakes[lake])
+                {
+                    int ix = i % _size, iz = i / _size;
+                    for (var rz = -LakeRimCells; rz <= LakeRimCells; rz++)
+                    for (var rx = -LakeRimCells; rx <= LakeRimCells; rx++)
+                    {
+                        int nx = ix + rx, nz = iz + rz;
+                        if (nx < 0 || nz < 0 || nx >= _size || nz >= _size) continue;
+                        var n = nz * _size + nx;
+                        if (!_open[n]) Open(n);
+                    }
+                }
             }
         }
 
