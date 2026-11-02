@@ -537,6 +537,11 @@ namespace CityBuilder.Core
         [SerializeField] private float dungeonXpShare = 0.25f;
         [SerializeField] private int dungeonBossCoins = 300;
         [SerializeField] private int dungeonBossCrystals = 5;
+        [SerializeField] private int dungeonBossWood = 150;
+        [SerializeField] private int dungeonBossStone = 150;
+        [SerializeField] private int dungeonBossGold = 50;
+        [SerializeField] private float dungeonEngageFactor = 0.6f;
+        [SerializeField] private float dungeonRangedRangeFactor = 0.5f;
         [SerializeField] private int lairRats = 8;
         [SerializeField] private int dungeonBossThemeLairs = 2;
         [SerializeField] private float dungeonMonsterWakeMargin = 6f;
@@ -948,6 +953,14 @@ namespace CityBuilder.Core
         public float DungeonXpShare => dungeonXpShare;
         public int DungeonBossCoins => dungeonBossCoins;
         public int DungeonBossCrystals => dungeonBossCrystals;
+        /// <summary>The resources a boss pays (times the dungeon's level), into the town on the way out.</summary>
+        public int DungeonBossWood => dungeonBossWood;
+        public int DungeonBossStone => dungeonBossStone;
+        public int DungeonBossGold => dungeonBossGold;
+        /// <summary>Below, how far off a hero or a hireling picks a fight by himself, as a share of his own.</summary>
+        public float DungeonEngageFactor => dungeonEngageFactor;
+        /// <summary>Below, a shooter's reach as a share of his own.</summary>
+        public float DungeonRangedRangeFactor => dungeonRangedRangeFactor;
         public int LairRats => lairRats;
         public int DungeonBossThemeLairs => dungeonBossThemeLairs;
         public float DungeonMonsterWakeMargin => dungeonMonsterWakeMargin;
@@ -1507,6 +1520,11 @@ namespace CityBuilder.Core
             dungeonXpShare = Read(economy, "dungeon_xp_share", dungeonXpShare);
             dungeonBossCoins = (int)Read(economy, "dungeon_boss_coins", dungeonBossCoins);
             dungeonBossCrystals = (int)Read(economy, "dungeon_boss_crystals", dungeonBossCrystals);
+            dungeonBossWood = (int)Read(economy, "dungeon_boss_wood", dungeonBossWood);
+            dungeonBossStone = (int)Read(economy, "dungeon_boss_stone", dungeonBossStone);
+            dungeonBossGold = (int)Read(economy, "dungeon_boss_gold", dungeonBossGold);
+            dungeonEngageFactor = Read(economy, "dungeon_engage_factor", dungeonEngageFactor);
+            dungeonRangedRangeFactor = Read(economy, "dungeon_ranged_range_factor", dungeonRangedRangeFactor);
             lairRats = (int)Read(economy, "dungeon_lair_rats", lairRats);
             dungeonBossThemeLairs = (int)Read(economy, "dungeon_boss_theme_lairs", dungeonBossThemeLairs);
             dungeonMonsterWakeMargin = Read(economy, "dungeon_monster_wake_margin", dungeonMonsterWakeMargin);

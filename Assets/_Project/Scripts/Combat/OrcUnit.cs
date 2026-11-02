@@ -959,6 +959,8 @@ namespace CityBuilder.Combat
             var to = target - transform.position;
             to.y = 0f;
             if (to.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(to);
+            // every creature in a fight shows its bar, hurt or not (the user, 2026-11-02)
+            ShowHealth();
             Struck?.Invoke();
         }
 

@@ -62,6 +62,9 @@ namespace CityBuilder.Dungeon
         public int CoinsEarned { get; private set; }
         public int CrystalsEarned { get; private set; }
 
+        /// <summary>The resources the bosses slain on this visit paid, carried up to the town (DungeonTravel.Leave).</summary>
+        public Dictionary<ResourceType, int> ResourcesEarned { get; } = new Dictionary<ResourceType, int>();
+
         /// <summary>Bosses slain on this visit, by id (dungeon, level, which).</summary>
         public IReadOnlyCollection<string> BossesSlainNow => _slainNow;
 
@@ -425,12 +428,25 @@ namespace CityBuilder.Dungeon
                 Wallet.UpgradeCrystals += crystals;
                 _slainNow.Add(lair.BossId);
                 DungeonRecord.BossesSlain.Add(lair.BossId);
+                // resources too (the user, 2026-11-02: «после убийства босса я ничего не получил»),
+                // each rising over the boss as it falls
+                var popups = UI.ResourceGainPopups.Instance;
+                var at = monster.transform.position + Vector3.up * 2.5f;
+                foreach (var (type, amount) in new[] { (ResourceType.Wood, config.DungeonBossWood), (ResourceType.Stone, config.DungeonBossStone), (ResourceType.Gold, config.DungeonBossGold) })
+                {
+                    var paid = amount * Level;
+                    if (paid <= 0) continue;
+                    ResourcesEarned[type] = (ResourcesEarned.TryGetValue(type, out var had) ? had : 0) + paid;
+                    if (popups != null) popups.Show(at + Vector3.up * (0.8f * (int)type % 3), paid, type);
+                }
                 var name = Localization.Get(monster.Kind == OrcKind.SpiderQueen ? "#monster_spider_queen" : "#monster_ore_golem");
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_dungeon_boss_slain", name, coins, crystals),
                     EventSeverity.Good, EventGlyph.Star, null, monster.transform.position));
             }
             CoinsEarned += coins;
             ResourceManager.Instance?.Add(HeroRoster.Money, coins);
+            // «+N» over every one that falls, as in a run: what it paid is seen
+            UI.ResourceGainPopups.Instance?.ShowCoins(monster.transform.position, coins);
         }
 
         private static Vector3 Ground(Vector2 spot)

@@ -161,6 +161,11 @@ namespace CityBuilder.Maps
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
 
+        private HashSet<Vector2Int> _startIsland;
+
+        /// <summary>The archipelago's Town Hall island's land (RevealStartIsland); false on any other map.</summary>
+        public bool OnStartIsland(Vector2Int cell) => _startIsland != null && _startIsland.Contains(cell);
+
         // how far out over the water round the start island the fog lifts too (cells): its beaches and shallows
         private const int StartIslandShoreCells = 3;
 
@@ -189,6 +194,7 @@ namespace CityBuilder.Maps
                     queue.Enqueue(n);
                 }
             }
+            _startIsland = seen;
             // the shore band: the sea next to the island
             var band = new HashSet<Vector2Int>(seen);
             foreach (var c in seen)
@@ -594,6 +600,9 @@ namespace CityBuilder.Maps
             SceneryShadows.DisableCasting(sea);
             // the edge: a ragged line of surf, the dark storm sea and its rocks beyond
             Archipelago.StormEdge.Build(world, origin, map.TerrainMaterial, transform);
+            // the surf running up every beach and back (the user, 2026-11-02)
+            var surf = Combat.OrcRaidManager.Instance != null ? Combat.OrcRaidManager.Instance.ShoreSurfMaterial : null;
+            Archipelago.ShoreSurf.Build(world, origin, surf, transform);
 
             // the cells: water where there is no plain; boats may stand within four metres of a
             // shore; the forest, the stony clearings; nothing built on the relief or a cliff

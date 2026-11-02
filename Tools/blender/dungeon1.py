@@ -545,10 +545,23 @@ def decor_variant(kind, x, y, count):
     return int(_hash(int(x * 7), int(y * 7), 151) * count) % count
 
 
-def decor_z(kind, x, y):
+# a stone's half-width at scale 1, metres (terrain.py crag: the Stone7-10 layouts x1.5)
+CRAG_FOOT_M = {"crag": 0.8, "pebbles": 0.25}
+
+
+def decor_z(kind, x, y, sc=1.0):
     if kind == "lily":
         return WATER_Z + 0.005
-    return max(height_at(x, y)[0], WATER_Z)
+    z = height_at(x, y)[0]
+    foot = CRAG_FOOT_M.get(kind)
+    if foot:
+        # a stone sits on the LOWEST ground under its foot, not its middle's: on a slope the
+        # downhill side hung in the air by more than half its size (the user, 2026-11-02)
+        r = foot * sc   # the prop is scaled by sc * SCALE, as the map by SCALE: x/y units
+        for k in range(8):
+            a = k * math.pi / 4
+            z = min(z, height_at(x + r * math.cos(a), y + r * math.sin(a))[0])
+    return max(z, WATER_Z)
 
 
 # -- the props (building palette) ----------------------------------------------------------------
@@ -724,6 +737,8 @@ def placed(b, origin, k):
     return _Placed()
 
 
+# the way out's stair: steps, each one's rise and run in the rock's own units
+EXIT_STEPS, EXIT_STAIR_RISE, EXIT_STAIR_RUN = 4, 0.12, 0.12
 EXIT_MOUTH = [(-0.45, 0.0), (0.45, 0.0), (0.52, 0.55), (0.32, 0.93), (0.0, 1.05), (-0.34, 0.9), (-0.52, 0.5)]
 
 
@@ -742,10 +757,26 @@ def mine_exit(b):
         b.crag(-0.85, -0.8, 0.42, 0.38, 1.25, STONE_D, top='grass', sides=6, seed=12)     # the cave's cheeks
         b.crag(0.9, -0.75, 0.4, 0.36, 1.05, STONE, top='grass', sides=6, seed=15)
         b.crag(0.0, -0.55, 0.85, 0.42, 1.55, STONE_D, top='grass', sides=7, taper=0.6, seed=18)  # the brow, rock not a slab
-        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, DARK, 0.03)):   # the rim, the black inside
-            b.prism([(px * scale, pz * scale) for px, pz in EXIT_MOUTH], (0.0, -1.0 - dy + 0.4, 0.0),
+        # the way up (the user, 2026-11-02, option 2 «каменная лестница»): dressed steps climb
+        # to an opening high in the face, full of daylight, a torch either side
+        lift = EXIT_STAIR_RISE * EXIT_STEPS
+        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, 'plaster_white', 0.03)):   # the rim, the day beyond
+            b.prism([(px * scale, pz * scale + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - dy + 0.4, 0.0),
                     (1, 0, 0), (0, 0, 1), 0.4, color, back_cap=True)
-    light('day', cx, cy + 0.6, 1.2)                                     # a breath of daylight in the dark
+        b.prism([(px * 0.7, pz * 0.55 + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - 0.05 + 0.4, 0.0),
+                (1, 0, 0), (0, 0, 1), 0.4, 'white', back_cap=True)                 # brightest at its heart
+        for i in range(EXIT_STEPS):
+            y0 = -1.0 - EXIT_STAIR_RUN * (EXIT_STEPS - i)
+            b.box(-0.42, 0.42, y0, -0.95, 0.0, EXIT_STAIR_RISE * (i + 1), STONE_L, bevel=0.015)
+        for side in (-1, 1):                                                       # the stair's low walls
+            b.box(side * 0.42, side * 0.52, -1.0 - EXIT_STAIR_RUN * EXIT_STEPS, -0.95, 0.0, lift + 0.08, STONE_D,
+                  bevel=0.015)
+    for side in (-1, 1):                                                           # the torches
+        tx, ty = cx + side * 0.72 * k, cy + 1.0 * k - 1.08 * k
+        b.rod((tx, ty, 0.0), (tx, ty, 1.0 * k * 0.55), 0.07, WOOD_D)
+        b.box(tx - 0.09, tx + 0.09, ty - 0.09, ty + 0.09, 1.0 * k * 0.55, 1.0 * k * 0.55 + 0.14, 'iron')
+        fire_spot(tx, ty, 1.0 * k * 0.55 + 0.2)
+    light('day', cx, cy + 0.6, (lift + 0.5) * k)                                    # daylight pouring down the steps
 
 
 def rough_exit_rock(me):
@@ -1322,14 +1353,14 @@ def main():
         for kind, x, y, rot, sc in items:
             v = decor_variant(kind, x, y, len(protos[kind]))
             decor_tris += sum(len(p.vertices) - 2 for p in protos[kind][v].polygons)
-            f.write(f"{kind},{v},{(x - HALF) * SCALE:.3f},{(y - HALF) * SCALE:.3f},{decor_z(kind, x, y) * SCALE:.3f},"
+            f.write(f"{kind},{v},{(x - HALF) * SCALE:.3f},{(y - HALF) * SCALE:.3f},{decor_z(kind, x, y, sc) * SCALE:.3f},"
                     f"{rot:.3f},{sc * SCALE:.3f}\n")
     if PREVIEW:
         dcoll = bpy.data.collections.new("Decor")
         bpy.context.scene.collection.children.link(dcoll)
         for kind, x, y, rot, sc in items:
             o = bpy.data.objects.new(f"d_{kind}", protos[kind][decor_variant(kind, x, y, len(protos[kind]))])
-            o.location = ((x - HALF) * SCALE, (y - HALF) * SCALE, decor_z(kind, x, y) * SCALE)
+            o.location = ((x - HALF) * SCALE, (y - HALF) * SCALE, decor_z(kind, x, y, sc) * SCALE)
             o.rotation_euler = (0, 0, rot)
             o.scale = (sc * SCALE,) * 3
             dcoll.objects.link(o)

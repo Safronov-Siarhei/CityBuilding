@@ -137,6 +137,8 @@ namespace CityBuilder.Combat
         [SerializeField] private Material dungeonDarkMaterial;
         // the «Zzz» over a sleeping dungeon monster
         [SerializeField] private Material sleepMaterial;
+        // the surf along the archipelago's coasts (Maps/Archipelago/ShoreSurf)
+        [SerializeField] private Material shoreSurfMaterial;
 
         /// <summary>The spider queen sealed in (DungeonMonsterPowers puts it over her for the cocoon).</summary>
         public GameObject SpiderCocoonModel => spiderCocoonModel;
@@ -151,6 +153,7 @@ namespace CityBuilder.Combat
         public Material PortalHaloMaterial => portalHaloMaterial;
         public Material DungeonDarkMaterial => dungeonDarkMaterial;
         public Material SleepMaterial => sleepMaterial;
+        public Material ShoreSurfMaterial => shoreSurfMaterial;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;

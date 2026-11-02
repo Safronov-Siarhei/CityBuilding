@@ -27,6 +27,13 @@
   the middle. The blocker it breaks is the building whose WALL is nearest (fence before tower). A soldier whose route is Blocked attacks
   the nearest orc wall within 2.5 m.
 
+- (2026-11-02) Every creature shows its health bar once it fights, not only once hurt -- heroes too
+  (OrcUnit.StrikeAt, SoldierUnit.TickAttack -> ShowHealth). Melee reach adds the target's half-width
+  (`SoldierUnit.BodyRadius`, collider extents - 0.3) so a boss is struck at its edge. A hero on the
+  player's move order picks up no new fight until he arrives (`SoldierUnit.Marching`). In a dungeon:
+  engage radius x `dungeon_engage_factor`, shooters' reach x `dungeon_ranged_range_factor`, no
+  target behind rock (NavMesh.Raycast).
+
 ## Code
 `Combat/IDamageTarget.cs`, `Combat/DefensiveBuilding.cs`, `Combat/CombatProjectiles.cs`
 (`ProjectileKind`), `Combat/NavRoute.cs`, `Core/RuntimeShaders.cs`; users in `SoldierUnit`, `OrcUnit`,

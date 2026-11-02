@@ -70,6 +70,36 @@ namespace CityBuilder.Combat
         // BalanceConfig every frame -- with twenty soldiers each running this Update, the numbers
         // have to cost what a const cost.
         private float _unitAttackRange = 1.4f;
+        // the held target's half-width (BodyRadius), added to the reach
+        private float _targetBody;
+
+        /// <summary>On the player's move order (Hero): no new fight is picked up until he gets there.</summary>
+        public bool Marching { get; set; }
+
+        /// <summary>
+        /// The reach against units: an archer's (the Queen's) cut in a dungeon by
+        /// dungeon_ranged_range_factor -- its halls are narrow (the user, 2026-11-02: «у королевы
+        /// слишком далёкое расстояние для атаки, нужно уменьшить где-то в два раза»).
+        /// </summary>
+        private float UnitAttackRange => IsRanged && Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
+            ? _unitAttackRange * BalanceConfig.Instance.DungeonRangedRangeFactor
+            : _unitAttackRange;
+
+        /// <summary>How far off he picks a fight by himself: cut in a dungeon by dungeon_engage_factor.</summary>
+        private float EngageRadius => Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
+            ? _engageRadius * BalanceConfig.Instance.DungeonEngageFactor
+            : _engageRadius;
+
+        /// <summary>A target's half-width on the ground: its collider's, or nothing.</summary>
+        private static float BodyRadius(IDamageTarget target)
+        {
+            if (target == null || target.IsStructure || target.Transform == null) return 0f;
+            var body = target.Transform.GetComponent<Collider>();
+            if (body == null) return 0f;
+            var e = body.bounds.extents;
+            // a soldier-sized body is in the reach already
+            return Mathf.Max(0f, Mathf.Max(e.x, e.z) - 0.3f);
+        }
         private float _structureAttackRange = 2.6f;
         private float _engageRadius = 7f;
         private float _walkSpeed = 1.5f;
@@ -294,10 +324,15 @@ namespace CityBuilder.Combat
                 _target = AcquireTarget();
                 // on the way to it, hemmed in by others: a melee fighter cuts down the one at hand
                 // instead of pushing past (the King in a crowd stood not striking, playtest 2026-10-25)
-                if (_target != null && !_target.IsStructure && HorizontalDistance(_target.Transform.position, transform.position) > _unitAttackRange)
+                _targetBody = BodyRadius(_target);
+                if (_target != null && !_target.IsStructure && HorizontalDistance(_target.Transform.position, transform.position) > UnitAttackRange + _targetBody)
                 {
                     var atHand = OrcAtHand();
-                    if (atHand != null) _target = atHand;
+                    if (atHand != null)
+                    {
+                        _target = atHand;
+                        _targetBody = BodyRadius(atHand);
+                    }
                 }
             }
 
@@ -318,7 +353,9 @@ namespace CityBuilder.Combat
             if (_target != null && _target.IsAlive)
             {
                 var targetPosition = _target.Transform.position;
-                var range = _target.IsStructure ? _structureAttackRange : _unitAttackRange;
+                // a big one (a boss) is reached at its edge, not its middle: the gnomes stood
+                // beside the spider queen not striking (the user, 2026-11-02)
+                var range = _target.IsStructure ? _structureAttackRange : UnitAttackRange + _targetBody;
 
                 if (HorizontalDistance(targetPosition, transform.position) <= range)
                 {
@@ -340,7 +377,7 @@ namespace CityBuilder.Combat
         {
             if (IsRanged) return null;
             OrcUnit nearest = null;
-            var best = _unitAttackRange;
+            var best = UnitAttackRange;
             foreach (var orc in OrcUnit.All)
             {
                 if (orc == null || orc.CurrentHealth <= 0) continue;
@@ -362,6 +399,9 @@ namespace CityBuilder.Combat
         private IDamageTarget AcquireTarget()
         {
             if (Group.AttackTarget != null && Group.AttackTarget.IsAlive) return Group.AttackTarget;
+            // sent somewhere by the player: he goes there first, fights after (the user, 2026-11-02)
+            if (Marching) return null;
+            var dungeon = Dungeon.DungeonMode.IsActive;
 
             var slot = Group.SlotPositionFor(this);
             IDamageTarget preferred = null;
@@ -377,7 +417,9 @@ namespace CityBuilder.Combat
                 if (candidate is OrcPortal portal && portal.IsShielded) continue;
 
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
-                if (distance > _engageRadius) continue;
+                if (distance > EngageRadius) continue;
+                // below, no shooting or running at what stands behind the rock (the Queen did)
+                if (dungeon && UnityEngine.AI.NavMesh.Raycast(transform.position, candidate.Transform.position, out _, UnityEngine.AI.NavMesh.AllAreas)) continue;
 
                 var prefersStructures = Group.Priority == TargetPriority.Structures;
                 var isPreferredBucket = candidate.IsStructure == prefersStructures;
@@ -423,6 +465,8 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = AttackInterval;
+            // every creature in a fight shows its bar, hurt or not (the user, 2026-11-02)
+            ShowHealth();
             Struck?.Invoke();
             if (IsRanged) CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), wall, StrikeDamage);
             else wall.TakeDamage(StrikeDamage);
@@ -455,6 +499,8 @@ namespace CityBuilder.Combat
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = AttackInterval;
+            // every creature in a fight shows its bar, hurt or not (the user, 2026-11-02)
+            ShowHealth();
             Struck?.Invoke();
 
             if (IsRanged)
@@ -569,10 +615,12 @@ namespace CityBuilder.Combat
 
         private Buildings.BuildingHealthBar _healthBar;
 
-        /// <summary>The bar over a soldier's head once he is hurt, as over an orc (the user, 2026-10-23). A hero's health is on his portrait.</summary>
+        /// <summary>
+        /// The bar over a soldier's head once he is hurt or fights, as over an orc (the user,
+        /// 2026-10-23); a hero's too since 2026-11-02 («все существа»), his portrait aside.
+        /// </summary>
         private void ShowHealth()
         {
-            if (SoldierStats.IsHero(Type)) return;
             if (_healthBar == null)
             {
                 var feet = transform.position.y;

@@ -286,8 +286,21 @@ namespace CityBuilder.Tests.PlayMode
             var monsters = DungeonMonsters.Instance;
             var crystals = CityBuilder.Core.Wallet.UpgradeCrystals;
             golem.Armour = 0f;
+            // the Queen's Выстрел below is a strong shot, not a kill (the user, 2026-11-02: bosses fell to one bolt)
+            var roster = HeroRoster.Instance;
+            var queenHero = roster.HeroOf(SoldierType.Queen) ?? roster.Restore(SoldierType.Queen, golem.transform.position, 1, 0, 0, false, 0f);
+            Assert.IsNotNull(queenHero, "No Queen to shoot.");
+            Teleport(queenHero, golem.transform.position + Vector3.right * 3f);
+            var before = golem.CurrentHealth;
+            Assert.IsTrue(queenHero.GetComponent<HeroSkills>().Use(0), "The Queen's shot was not fired.");
+            yield return new WaitForSeconds(1.5f);
+            Assert.Less(golem.CurrentHealth, before, "The Queen's shot did not hurt the golem.");
+            Assert.Greater(golem.CurrentHealth, 0, "The Queen's shot killed a boss outright.");
             golem.TakeDamage(golem.MaxHealth * 10);
             yield return null;
+            // and it pays resources besides, carried up to the town
+            Assert.Greater(monsters.ResourcesEarned.TryGetValue(CityBuilder.Resources.ResourceType.Wood, out var wood) ? wood : 0, 0,
+                "The golem slain paid no wood.");
             Assert.Greater(monsters.CoinsEarned, 0, "The golem slain paid no coins.");
             Assert.Greater(CityBuilder.Core.Wallet.UpgradeCrystals, crystals, "The golem slain paid no crystals.");
             Assert.Contains(DungeonMonsters.BossId(DungeonTravel.FirstDungeonId, 1, "golem"), new List<string>(monsters.BossesSlainNow),
@@ -448,7 +461,10 @@ namespace CityBuilder.Tests.PlayMode
             Put(camp.ApproachFrom(mode.StartSpot));
             camp.Await();
             yield return new WaitForSeconds(0.8f);
-            Assert.IsTrue(card.IsOpen && card.Shown == camp, "A hero sent to the hire camp does not open its card.");
+            // the camp is held like the Barracks: the gnomes' portraits along the bottom (the user, 2026-11-02)
+            Assert.AreSame(camp, CityBuilder.UI.BuildingFocus.Instance.Entrance, "A hero sent to the hire camp does not hold it.");
+            camp.OpenCard();   // its «!»: the card
+            Assert.IsTrue(card.IsOpen && card.Shown == camp, "The held camp's «!» does not open its card.");
 
             var resources = CityBuilder.Resources.ResourceManager.Instance;
             resources.SetAmount(HeroRoster.Money, 1000);

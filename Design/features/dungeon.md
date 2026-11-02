@@ -597,6 +597,28 @@ dungeon opens as a SEPARATE SCENE.
 - **Open:** the way-out look (options offered, awaiting choice); old box rocks (screen 9) not
   found -- Stone1-10 are crags; asked which map.
 
+## Playtest round 5 (2026-11-02)
+- WAY OUT = STONE STAIRS (the user's option 2): `dungeon1.py mine_exit` -- 4 dressed steps
+  (`EXIT_STEPS/EXIT_STAIR_RISE/RUN`) with low side walls climb to the mouth raised in the rock's face,
+  the mouth filled with daylight (plaster_white, a white heart), a torch either side (DungeonFire spots),
+  a `day` light. The map was regenerated and re-exported.
+- Decor stones on slopes sit on the LOWEST ground under their foot (`decor_z(kind, x, y, sc)`,
+  `CRAG_FOOT_M`) -- they hung by more than half their size. Stones now the Stone1-10 shapes (terrain.py).
+- Fighting below: heroes and gnomes pick a fight within `dungeon_engage_factor` (0.6) of their own
+  radius and never at what the NavMesh says is behind rock (`NavMesh.Raycast`); shooters' reach x
+  `dungeon_ranged_range_factor` (0.5) -- `SoldierUnit.EngageRadius/UnitAttackRange`.
+- A move order beats aggro: `SoldierUnit.Marching` (set by Hero from `_onMoveOrder`) -- no new fight
+  until he gets there.
+- Melee reach counts the target's body (`BodyRadius`, its collider's half-width - 0.3): gnomes stood
+  by the spider queen not striking.
+- Queen's «Выстрел» outside Invasion = a strong shot, her blow x sandbox `skill_queen_shot_power` (4,
+  +0.2/level); text `#skill_queen_shot_desc_sandbox` (HeroSkillBar.DescriptionKey). Invasion unchanged.
+- A boss pays RESOURCES too: `dungeon_boss_wood/stone/gold` (150/150/50) x level, «+N» popups over it
+  (and «+coins» over every monster), carried into the town on the way out (`DungeonMonsters.ResourcesEarned`).
+- Every creature shows its health bar once it fights (OrcUnit.StrikeAt / SoldierUnit.TickAttack), heroes too.
+- Hire camp: tapping it HOLDS it like the Barracks (gnome portraits + prices in the FocusHireBar); the
+  text card only from its «!». Shop buttons read «30 + coin».
+
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,
   `DungeonMonsterPowers.cs`; `Combat/OrcUnit.cs`, `OrcRaidManager.cs` (models, boss controller),
@@ -627,12 +649,8 @@ dungeon opens as a SEPARATE SCENE.
 - `stone_*` colours draw dressed courses (bricks) unless overridden.
 
 ## Open
-- The camp: hiring and the shop.
 - Monsters asleep off screen: measure the gain on a phone.
 - Per-level dungeons (each entrance its own map and bosses), the level label over the mine.
 - Elite monsters: an idea, not now.
-- Way out look: the user chose STONE STAIRS going up (torches, daylight at the top), 2026-11-02 — to build.
 - IDEA (the user, 2026-11-02): chests in the dungeon with ordinary resources, bonuses as the player goes through.
-- Playtest round 5 (2026-11-02, not started): Queen range halved + aggro radius smaller (no shooting through rocks),
-  a move order beats auto-aggro, melee reach counts the boss's size, Queen skill 1 = a strong shot (not one-shot kill),
-  a boss kill must pay a reward, floating crags sunk, after a wipe: grey cube rock + fogged start island on the main map.
+

@@ -124,6 +124,8 @@ namespace CityBuilder.EditorTools
             // a dungeon's darkness (the user, 2026-11-01)
             so.FindProperty("dungeonDarkMaterial").objectReferenceValue = CrystalMaterial("DungeonDark", "CityBuilder/DungeonDark", null);
             so.FindProperty("sleepMaterial").objectReferenceValue = CrystalMaterial("SleepZ", "CityBuilder/SleepZ", null);
+            // the living coasts of the archipelago (the user, 2026-11-02)
+            so.FindProperty("shoreSurfMaterial").objectReferenceValue = CrystalMaterial("ShoreSurf", "CityBuilder/ShoreSurf", null);
 
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();

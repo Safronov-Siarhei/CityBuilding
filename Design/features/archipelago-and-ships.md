@@ -184,6 +184,21 @@
   switched, never colliders or the grid.
 - Three dungeon entrances: see [dungeon](dungeon.md) «Entrances on the map».
 
+## Playtest round 5 (2026-11-02)
+- LIVING COASTS (the user's options 1 + 2): `Maps/Archipelago/ShoreSurf.cs` lays a band along every
+  coast (signed distance from the land cells, chamfer + marching squares, -0.6..2.4 m, 64-cell tiles)
+  drawn by `Shaders/ShoreSurf.shader`: the water's edge runs up the beach and back (white crest, wet
+  sheet), each stretch in its own phase, a broken foam line breathes ~1.6 m out. Material on
+  OrcRaidManager `shoreSurfMaterial` (Materials/ShoreSurf.mat). GPU only, no per-frame CPU.
+- Orcs ashore on the Town Hall's island: blinking red «!» on the minimap, one per band of orcs
+  (10 m clusters) -- `MinimapAttackAlerts.PlaceLandings` (sandbox; Invasion keeps its lanes), island
+  land from `MeshMapApplier.OnStartIsland` (kept by RevealStartIsland).
+- The start island's fog now lifts on EVERY Town Hall appearance, a load included
+  (`BuildingInstance` calls `RevealStartIsland`) -- it came back fogged after a dungeon.
+- Boulders restored from a save before the map handed the models over were grey cubes:
+  `RockSpawner.RestoreFromSave` now waits for `Initialize` (`_pendingRestore`).
+- Fertile land rarer: economy `fertile_patches_per_island` 2 -> 1, `fertile_patch_radius` 5 -> 3.
+
 ## Code
 - `Maps/Archipelago/ArchipelagoGenerator.cs` (layout, `Version = 2`, `FromLibrary`), `IslandShape.cs`,
   `IslandAsset.cs`, `ArchipelagoLibrary.cs`, `ArchipelagoMeshes.cs`, `ArchipelagoMapId.cs`

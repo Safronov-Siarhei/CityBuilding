@@ -136,13 +136,22 @@ namespace CityBuilder.UI
         /// cooldown, {3} power as a percent more (a multiplier), {4} power as a count, {5} the tier,
         /// {6} the reach in metres.
         /// </summary>
+        /// <summary>A skill's text: the sandbox's own where its rule differs from the run's (`_sandbox`, the Queen's shot).</summary>
+        private static string DescriptionKey(string id)
+        {
+            var key = $"#skill_{id}_desc";
+            if (Invasion.InvasionRules.Active) return key;
+            var sandbox = key + "_sandbox";
+            return Localization.GetOrDefault(sandbox, null) != null ? sandbox : key;
+        }
+
         public static string Describe(HeroSkills skills, int index)
         {
             var skill = skills.Slots[index].Balance;
             var level = skills.Level;
             var power = skill.PowerAt(level);
             var text = Localization.Get($"#skill_{skill.id}") + "\n" +
-                       Localization.Format($"#skill_{skill.id}_desc", Mathf.RoundToInt(power * 100f), Mathf.RoundToInt(skill.DurationAt(level)),
+                       Localization.Format(DescriptionKey(skill.id), Mathf.RoundToInt(power * 100f), Mathf.RoundToInt(skill.DurationAt(level)),
                            Mathf.RoundToInt(skill.cooldownSeconds), Mathf.RoundToInt((power - 1f) * 100f), Mathf.RoundToInt(power), skill.tier,
                            Mathf.RoundToInt(skill.radius));
             if (!skills.IsOpen(index)) text += "\n" + Localization.Format("#skill_locked", skill.unlockLevel);

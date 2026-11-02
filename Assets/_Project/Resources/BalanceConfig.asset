@@ -6020,6 +6020,11 @@ MonoBehaviour:
   dungeonXpShare: 0.25
   dungeonBossCoins: 300
   dungeonBossCrystals: 5
+  dungeonBossWood: 150
+  dungeonBossStone: 150
+  dungeonBossGold: 50
+  dungeonEngageFactor: 0.6
+  dungeonRangedRangeFactor: 0.5
   lairRats: 8
   dungeonBossThemeLairs: 2
   dungeonMonsterWakeMargin: 6
@@ -6057,7 +6062,7 @@ MonoBehaviour:
   golemBoulderEvery: 6
   golemBoulderRange: 9
   golemArmour: 0.4
-  fertilePatchesPerIsland: 2
+  fertilePatchesPerIsland: 1
   fertileMinCoastCells: 8
   fishShoalShoreMeters: 4
   fishShoalMinSpacing: 14
@@ -6075,7 +6080,7 @@ MonoBehaviour:
   - 1.5
   - 1.4
   - 0.5
-  fertilePatchRadius: 5
+  fertilePatchRadius: 3
   fertileFarmBonus: 0.5
   fishShoalCount: 12
   fishShoalStock: 60
@@ -6180,8 +6185,8 @@ MonoBehaviour:
     cooldownSeconds: 20
     durationSeconds: 0
     durationPerLevel: 0
-    power: 0.3
-    powerPerLevel: 0.01
+    power: 4
+    powerPerLevel: 0.2
     radius: 10
     tier: 0
   - id: queen_summon

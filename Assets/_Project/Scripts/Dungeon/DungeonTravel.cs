@@ -104,6 +104,13 @@ namespace CityBuilder.Dungeon
             }
             if (monsters != null)
             {
+                // a boss's resources into the town's stores
+                foreach (var pair in monsters.ResourcesEarned)
+                {
+                    var entry = town.resources.Find(r => r.type == pair.Key);
+                    if (entry == null) town.resources.Add(entry = new ResourceEntry { type = pair.Key });
+                    entry.amount += pair.Value;
+                }
                 foreach (var id in monsters.BossesSlainNow)
                     if (!town.dungeonBossesSlain.Contains(id)) town.dungeonBossesSlain.Add(id);
             }

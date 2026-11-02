@@ -438,7 +438,17 @@ namespace CityBuilder.EditorTools
                 names[i].alignment = TextAnchor.MiddleLeft;
                 descriptions[i] = CreateText(card.transform, "Description" + i, string.Empty, 21, new Vector2(-90f, y - 20f), new Vector2(420f, 52f), ink);
                 descriptions[i].alignment = TextAnchor.UpperLeft;
-                buttons[i] = CreateDynamicButton(card.transform, panelSprite, "BuyButton" + i, new Vector2(275f, y), new Vector2(240f, 76f), out _);
+                buttons[i] = CreateDynamicButton(card.transform, panelSprite, "BuyButton" + i, new Vector2(275f, y), new Vector2(240f, 76f), out var buyLabel);
+                // the price as «30 + a coin» (the user, 2026-11-02), not «Купить: 30»
+                buyLabel.fontSize = 30;
+                buyLabel.alignment = TextAnchor.MiddleRight;
+                buyLabel.rectTransform.anchoredPosition = new Vector2(-30f, 0f);
+                buyLabel.rectTransform.sizeDelta = new Vector2(100f, 56f);
+                var coin = CreateImage(buttons[i].transform, "Coin", Color.white);
+                coin.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_Coins.png");
+                coin.preserveAspect = true;
+                coin.raycastTarget = false;
+                SetRect(coin.rectTransform, new Vector2(46f, 0f), new Vector2(44f, 44f));
             }
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -300f), new Vector2(260f, 70f));
 

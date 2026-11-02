@@ -143,8 +143,12 @@ namespace CityBuilder.Combat
                 {
                     var target = StrongestEnemyWithin(Reach(skill));
                     if (target == null) return false;
-                    // a boss loses a share of its health; anything else dies
-                    var damage = IsBoss(target) ? Mathf.RoundToInt(target.MaxHealth * power) : target.CurrentHealth;
+                    // a run: a boss loses a share of its health, anything else dies; the sandbox
+                    // and its dungeons: a strong shot, her blow times `power` (the user,
+                    // 2026-11-02: the one-shot kill took the dungeon's bosses with one bolt)
+                    var damage = !Invasion.InvasionRules.Active
+                        ? Mathf.RoundToInt(unit.AttackDamage * power)
+                        : IsBoss(target) ? Mathf.RoundToInt(target.MaxHealth * power) : target.CurrentHealth;
                     CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), target, Mathf.Max(1, damage), unit);
                     break;
                 }

@@ -93,7 +93,7 @@ namespace CityBuilder.UI
                 if (button == null) continue;
                 button.interactable = potions != null && potions.CanBuy(kind);
                 if (_labels[i] == null) _labels[i] = button.GetComponentInChildren<Text>();
-                var word = string.Format(Localization.Get("#dungeon_shop_buy"), DungeonPotions.Price(kind));
+                var word = DungeonPotions.Price(kind).ToString(); // beside the button's coin
                 if (_labels[i] != null && _labels[i].text != word) _labels[i].text = word;
             }
         }

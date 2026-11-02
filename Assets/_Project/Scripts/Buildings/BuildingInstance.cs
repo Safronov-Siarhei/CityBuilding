@@ -146,6 +146,9 @@ namespace CityBuilder.Buildings
                 var footprint = RotatedFootprint();
                 var centerCell = originCell + new Vector2Int(footprint.x / 2, footprint.y / 2);
                 FogOfWarManager.Instance?.RevealPermanent(centerCell, data.fogRevealRadius);
+                // the archipelago's start island in view whole -- on a load too (the return from a
+                // dungeon showed it fogged, 2026-11-02): the Town Hall's island, whenever it stands
+                if (data.buildingName == BuildingIds.TownHall) Maps.MeshMapApplier.Instance?.RevealStartIsland(centerCell);
 
                 SetupNavMeshObstacle(data);
                 // The mirror image of the obstacle above: a Bridge doesn't carve the NavMesh, it

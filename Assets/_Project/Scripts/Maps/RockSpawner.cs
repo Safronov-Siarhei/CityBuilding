@@ -49,6 +49,7 @@ namespace CityBuilder.Maps
         private static readonly Color RockShadeColor = new Color(0.43f, 0.42f, 0.39f);
 
         private GameObject[] _rockPrefabs = new GameObject[0];
+        private IReadOnlyList<(Vector2Int cell, int remaining)> _pendingRestore;
         private readonly HashSet<Vector2Int> _rockCells = new HashSet<Vector2Int>();
         private readonly Dictionary<GameObject, Vector2Int> _rockCellByInstance = new Dictionary<GameObject, Vector2Int>();
 
@@ -85,6 +86,14 @@ namespace CityBuilder.Maps
         public void RestoreFromSave(IReadOnlyList<(Vector2Int cell, int remaining)> rocks)
         {
             if (rocks == null || rocks.Count == 0) return;
+            // the map hands over the boulder models in its own Start, which may come after the
+            // save's: restored before them, every boulder was the grey cube fallback (the user saw
+            // one by the Town Hall after a dungeon, 2026-11-02) -- wait for Initialize
+            if (!_initialized)
+            {
+                _pendingRestore = rocks;
+                return;
+            }
 
             foreach (var pair in new List<KeyValuePair<GameObject, Vector2Int>>(_rockCellByInstance))
             {
@@ -152,6 +161,14 @@ namespace CityBuilder.Maps
             if (count > 0) _count = count;
             _scattered = Mathf.Clamp01(scattered);
             _rockPrefabs = rockPrefabs ?? new GameObject[0];
+            if (_pendingRestore != null)
+            {
+                // a loaded game: its own boulders, not a fresh scatter
+                var saved = _pendingRestore;
+                _pendingRestore = null;
+                RestoreFromSave(saved);
+                return;
+            }
 
             var spread = Mathf.RoundToInt(_count * _scattered);
             for (var i = 0; i < _count; i++)

@@ -206,6 +206,7 @@ namespace CityBuilder.Combat
             var still = dt > 0f && moved < StillSpeed * dt;
             // got where the player sent him
             if (_onMoveOrder && _unit.Group != null && Flat(transform.position - _unit.Group.HoldPosition).sqrMagnitude < 2.25f) _onMoveOrder = false;
+            _unit.Marching = _onMoveOrder;
             if (ReturnIn < 0f) return;
             if (HoldWhereLeft)
             {

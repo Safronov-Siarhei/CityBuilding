@@ -26,7 +26,6 @@ namespace CityBuilder.UI
 
         private void Start()
         {
-            if (!InvasionMode.IsActive) enabled = false;
             Hide(0);
         }
 
@@ -47,8 +46,54 @@ namespace CityBuilder.UI
             Place();
         }
 
+        // orcs this close together share one «!» (metres)
+        private const float LandingClusterMeters = 10f;
+        private readonly System.Collections.Generic.List<Vector3> _landings = new System.Collections.Generic.List<Vector3>();
+
+        /// <summary>
+        /// The sandbox's archipelago: a «!» over each band of orcs come ashore on the Town Hall's
+        /// island (the user, 2026-11-02: «орки, которые высадились на берег острова с ратушей
+        /// должны помечаться восклицательными красными знаками как в Нашествии»).
+        /// </summary>
+        private void PlaceLandings()
+        {
+            var land = Maps.MeshMapApplier.Instance;
+            var grid = Grid.GridManager.Instance;
+            _landings.Clear();
+            if (land != null && grid != null && map != null && !Dungeon.DungeonMode.IsActive)
+            {
+                foreach (var orc in Combat.OrcUnit.All)
+                {
+                    if (orc == null || orc.CurrentHealth <= 0) continue;
+                    var p = orc.transform.position;
+                    if (!land.OnStartIsland(grid.WorldToCell(p))) continue;
+                    var near = false;
+                    foreach (var l in _landings)
+                    {
+                        if ((l - p).sqrMagnitude < LandingClusterMeters * LandingClusterMeters) { near = true; break; }
+                    }
+                    if (!near) _landings.Add(p);
+                    if (_landings.Count >= marks.Length) break;
+                }
+            }
+            var rim = map != null ? map.MapHalfExtent * RimShare : 0f;
+            for (var i = 0; i < _landings.Count; i++)
+            {
+                var at = map.ToMapUnclamped(_landings[i]);
+                if (at.magnitude > rim) at = at.normalized * rim;
+                marks[i].gameObject.SetActive(true);
+                ((RectTransform)marks[i].transform).anchoredPosition = at;
+            }
+            Hide(_landings.Count);
+        }
+
         private void Place()
         {
+            if (!InvasionMode.IsActive)
+            {
+                PlaceLandings();
+                return;
+            }
             var mode = InvasionMode.Instance;
             var waves = mode != null ? mode.Waves : null;
             PlaceParty(waves);
