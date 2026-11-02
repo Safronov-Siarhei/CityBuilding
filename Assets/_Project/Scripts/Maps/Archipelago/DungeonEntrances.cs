@@ -9,7 +9,8 @@ namespace CityBuilder.Maps.Archipelago
     /// <summary>
     /// The dungeons' entrances on the archipelago (the user, 2026-10-31: three dungeons a map, all
     /// leading to Dungeon 1 for now): an abandoned mine (MineAbandoned, 5 x 5 cells) on
-    /// dungeon_entrance_count islands that are neither the start's, the orcs' nor the bot's.
+    /// dungeon_entrance_count islands: level 1 on the START island, away from the Town Hall (the
+    /// user, 2026-11-02), the others on islands that are neither the start's, the orcs' nor the bot's.
     /// Nearer the start = lower level (1, 2, 3 -- the user: weaker monsters, smaller rewards near
     /// the Town Hall). Each stands on the plain nearest its island's middle, its mouth turned to
     /// the start. From the map's seed alone, so nothing is saved.
@@ -17,6 +18,8 @@ namespace CityBuilder.Maps.Archipelago
     public static class DungeonEntrances
     {
         public static readonly Vector2Int Footprint = new Vector2Int(5, 5);
+        // the start island's mine stands at least this far from the Town Hall's spot (cells)
+        private const float AwayFromHallCells = 22f;
 
         public static List<DungeonEntrance> Place(ArchipelagoMap world, MeshMapApplier applier, GameObject prefab, HashSet<Vector2Int> noBuild)
         {
@@ -38,13 +41,27 @@ namespace CityBuilder.Maps.Archipelago
             islands.Sort((a, b) => Vector2.Distance(a.Centre, start).CompareTo(Vector2.Distance(b.Centre, start)));
             if (islands.Count == 0) return placed;
 
-            // the nearest island, the farthest, and evenly between: level 1 nearest; an island with
-            // no grassy spot gives way to its neighbour in the list
-            var used = new HashSet<Island>();
             var level = 0;
-            for (var k = 0; k < want && k < islands.Count; k++)
+            // level 1 on the Town Hall's own island (the user, 2026-11-02: «подземелье 1-го уровня
+            // должно спавниться с ратушей игрока на одном острове»), clear of where the hall goes
+            foreach (var island in world.Islands)
             {
-                var index = want == 1 ? 0 : Mathf.RoundToInt(k * (islands.Count - 1) / (float)(want - 1));
+                if (island.Kind != ArchipelagoGenerator.Kind.Start) continue;
+                if (!TryFindSpot(world, island, applier, out var home, world.StartCell)) break;
+                level++;
+                var first = Build(world, grid, prefab, home, level, start);
+                foreach (var cell in Cells(home)) noBuild.Add(cell);
+                grid.SetAreaOccupied(home, Footprint, true);
+                placed.Add(first);
+                break;
+            }
+            var rest = want - level;
+            // the others: the nearest island, the farthest, and evenly between; an island with no
+            // grassy spot gives way to its neighbour in the list
+            var used = new HashSet<Island>();
+            for (var k = 0; k < rest && k < islands.Count; k++)
+            {
+                var index = rest == 1 ? 0 : Mathf.RoundToInt(k * (islands.Count - 1) / (float)(rest - 1));
                 Vector2Int origin = default;
                 Island chosen = null;
                 for (var step = 0; step < islands.Count && chosen == null; step++)
@@ -76,16 +93,25 @@ namespace CityBuilder.Maps.Archipelago
         /// no beach flags, so their sand is only known by its colour (an entrance stood on the
         /// sand, the user's screenshot of 2026-10-31).
         /// </summary>
-        private static bool TryFindSpot(ArchipelagoMap world, Island island, MeshMapApplier applier, out Vector2Int origin)
+        private static bool TryFindSpot(ArchipelagoMap world, Island island, MeshMapApplier applier, out Vector2Int origin, Vector2Int? awayFrom = null)
         {
             origin = default;
             var n = world.Size;
             var centre = island.Centre;
+            var hall = awayFrom.HasValue ? new Vector2(awayFrom.Value.x, awayFrom.Value.y) : Vector2.zero;
             var candidates = new List<(float d, Vector2Int at)>();
             for (var z = island.OffsetY; z < island.OffsetY + island.Frame - Footprint.y; z++)
             for (var x = island.OffsetX; x < island.OffsetX + island.Frame - Footprint.x; x++)
             {
-                var d = (new Vector2(x + Footprint.x * 0.5f, z + Footprint.y * 0.5f) - centre).sqrMagnitude;
+                var middle = new Vector2(x + Footprint.x * 0.5f, z + Footprint.y * 0.5f);
+                var d = (middle - centre).sqrMagnitude;
+                // on the start island: out of the Town Hall's ground, the nearest such spot
+                if (awayFrom.HasValue)
+                {
+                    var fromHall = Vector2.Distance(middle, hall);
+                    if (fromHall < AwayFromHallCells) continue;
+                    d = fromHall;
+                }
                 var ok = true;
                 for (var dz = -1; dz <= Footprint.y && ok; dz++)
                 for (var dx = -1; dx <= Footprint.x && ok; dx++)

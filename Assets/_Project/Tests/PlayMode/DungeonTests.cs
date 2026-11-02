@@ -449,8 +449,11 @@ namespace CityBuilder.Tests.PlayMode
             var camp = mode.HireCamp;
             Assert.IsNotNull(camp, "The hire camp is no place to tap.");
             Assert.IsTrue(camp.IsCamp);
-            var card = CityBuilder.UI.DungeonHireCard.Instance;
-            Assert.IsNotNull(card, "No hire card.");
+            // the camp's hiring buttons (no card: the user, 2026-11-02)
+            CityBuilder.UI.FocusHireBar bar = null;
+            foreach (var b in Object.FindObjectsByType<CityBuilder.UI.FocusHireBar>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (b.BarKind == CityBuilder.UI.FocusHireBar.Kind.HireCamp) bar = b;
+            Assert.IsNotNull(bar, "No hire camp buttons.");
             var agent = king.Unit.GetComponent<NavMeshAgent>();
             void Put(Vector3 to)
             {
@@ -463,8 +466,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return new WaitForSeconds(0.8f);
             // the camp is held like the Barracks: the gnomes' portraits along the bottom (the user, 2026-11-02)
             Assert.AreSame(camp, CityBuilder.UI.BuildingFocus.Instance.Entrance, "A hero sent to the hire camp does not hold it.");
-            camp.OpenCard();   // its «!»: the card
-            Assert.IsTrue(card.IsOpen && card.Shown == camp, "The held camp's «!» does not open its card.");
+            Assert.IsFalse(CityBuilder.UI.BuildingFocus.Instance.DetailsShown, "The hire camp shows a «!».");
 
             var resources = CityBuilder.Resources.ResourceManager.Instance;
             resources.SetAmount(HeroRoster.Money, 1000);
@@ -473,7 +475,7 @@ namespace CityBuilder.Tests.PlayMode
             var paid = 0;
             for (var i = 0; i < 3; i++)
             {
-                card.Hire(i);
+                bar.HireGnome(i);
                 paid += DungeonHirelings.Price(DungeonHirelings.Offered[i]);
                 Assert.AreEqual(i + 1, party.Count, $"Hiring {DungeonHirelings.Offered[i]} did nothing.");
                 var gnome = party.Members[i];
@@ -482,11 +484,11 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsNotNull(gnome.GetComponent<FigureAnimator>(), $"{gnome.Type} is not animated.");
             }
             Assert.IsTrue(party.Members[1].IsRanged, "The crossbowman does not shoot.");
-            card.Hire(0);
-            card.Hire(0);
+            bar.HireGnome(0);
+            bar.HireGnome(0);
             paid += 2 * DungeonHirelings.Price(SoldierType.GnomeMiner);
             Assert.AreEqual(5, party.Count);
-            card.Hire(0);
+            bar.HireGnome(0);
             Assert.AreEqual(5, party.Count, "A sixth gnome was hired.");
             Assert.AreEqual(1000 - paid, resources.GetAmount(HeroRoster.Money), "The gnomes were not paid for.");
             Assert.AreEqual(paid, mode.CoinsSpent, "The coins paid below are not noted for the town.");
@@ -496,9 +498,9 @@ namespace CityBuilder.Tests.PlayMode
             party.Members[4].TakeDamage(100000);
             yield return null;
             Assert.AreEqual(4, party.Count, "A dead gnome stays in the party.");
-            card.Hire(2);
+            bar.HireGnome(2);
             Assert.AreEqual(5, party.Count, "A dead gnome's place cannot be hired again.");
-            card.Close();
+            CityBuilder.UI.BuildingFocus.Instance.Clear();
 
             // they walk after the hero
             Assert.IsTrue(NavMesh.SamplePosition(mode.StartSpot + new Vector3(0f, 0f, 6f), out var ahead, 4f, NavMesh.AllAreas));

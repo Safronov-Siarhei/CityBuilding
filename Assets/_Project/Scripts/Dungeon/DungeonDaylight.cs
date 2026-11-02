@@ -12,13 +12,28 @@ namespace CityBuilder.Dungeon
     /// </summary>
     public class DungeonDaylight : MonoBehaviour
     {
-        private const float Size = 4.2f;
+        private const float Size = 5f;
         private const float Pull = 2.2f;
         private static readonly Color Warm = new Color(1f, 0.82f, 0.35f, 1f);
         private static readonly Color Motes = new Color(1f, 0.96f, 0.75f, 1f);
 
+        private static readonly Color Opening = new Color(1f, 0.86f, 0.42f, 1f);
+
         public static void LightAll(MeshMapDefinition map, Transform parent)
         {
+            // the opening itself, flat and bright: no light or shade on it, so it reads as light
+            if (map != null && map.ExitGlowPrefab != null)
+            {
+                var glow = Instantiate(map.ExitGlowPrefab, Vector3.zero, map.ExitGlowPrefab.transform.rotation, parent);
+                glow.name = "ExitGlow";
+                var flat = new Material(Core.RuntimeShaders.Unlit) { name = "ExitGlow", color = Opening };
+                foreach (var r in glow.GetComponentsInChildren<Renderer>())
+                {
+                    r.sharedMaterial = flat;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                }
+            }
             var halo = OrcRaidManager.Instance != null ? OrcRaidManager.Instance.CrystalHaloMaterial : null;
             if (map == null || halo == null) return;
             foreach (var spot in map.SpotsOf("light_day"))

@@ -538,6 +538,7 @@ namespace CityBuilder.Core
         [SerializeField] private int dungeonBossCoins = 300;
         [SerializeField] private int dungeonBossCrystals = 5;
         [SerializeField] private int dungeonBossWood = 150;
+        [SerializeField] private int dungeonStatueCrystals = 3;
         [SerializeField] private int dungeonBossStone = 150;
         [SerializeField] private int dungeonBossGold = 50;
         [SerializeField] private float dungeonEngageFactor = 0.6f;
@@ -955,6 +956,8 @@ namespace CityBuilder.Core
         public int DungeonBossCrystals => dungeonBossCrystals;
         /// <summary>The resources a boss pays (times the dungeon's level), into the town on the way out.</summary>
         public int DungeonBossWood => dungeonBossWood;
+        /// <summary>The upgrade crystals the lake statue's crystal is worth (DungeonStatue), once a dungeon level.</summary>
+        public int DungeonStatueCrystals => dungeonStatueCrystals;
         public int DungeonBossStone => dungeonBossStone;
         public int DungeonBossGold => dungeonBossGold;
         /// <summary>Below, how far off a hero or a hireling picks a fight by himself, as a share of his own.</summary>
@@ -1521,6 +1524,7 @@ namespace CityBuilder.Core
             dungeonBossCoins = (int)Read(economy, "dungeon_boss_coins", dungeonBossCoins);
             dungeonBossCrystals = (int)Read(economy, "dungeon_boss_crystals", dungeonBossCrystals);
             dungeonBossWood = (int)Read(economy, "dungeon_boss_wood", dungeonBossWood);
+            dungeonStatueCrystals = (int)Read(economy, "dungeon_statue_crystals", dungeonStatueCrystals);
             dungeonBossStone = (int)Read(economy, "dungeon_boss_stone", dungeonBossStone);
             dungeonBossGold = (int)Read(economy, "dungeon_boss_gold", dungeonBossGold);
             dungeonEngageFactor = Read(economy, "dungeon_engage_factor", dungeonEngageFactor);

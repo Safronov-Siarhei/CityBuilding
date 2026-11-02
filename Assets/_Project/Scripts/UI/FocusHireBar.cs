@@ -28,6 +28,9 @@ namespace CityBuilder.UI
         private static readonly Color Dimmed = new Color(0.45f, 0.45f, 0.45f, 1f);
 
         [SerializeField] private Kind kind;
+
+        /// <summary>Whose buttons these are.</summary>
+        public Kind BarKind => kind;
         [SerializeField] private SoldierType[] types = new SoldierType[0];
         [SerializeField] private GameObject[] buttons = new GameObject[0];
         [SerializeField] private Image[] faces = new Image[0];
@@ -56,13 +59,13 @@ namespace CityBuilder.UI
             }
         }
 
-        /// <summary>The dungeon's hire camp held, its «!» up.</summary>
+        /// <summary>The dungeon's hire camp held (it has no «!» -- its buttons are its card).</summary>
         private static bool CampHeld
         {
             get
             {
                 var focus = BuildingFocus.Instance;
-                return focus != null && focus.DetailsShown && focus.Entrance != null && focus.Entrance.Kind == Dungeon.DungeonEntrance.Place.HireCamp;
+                return focus != null && focus.Entrance != null && focus.Entrance.Kind == Dungeon.DungeonEntrance.Place.HireCamp;
             }
         }
 

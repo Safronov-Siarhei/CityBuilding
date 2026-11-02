@@ -352,57 +352,6 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The card of the dungeon's hire camp (DungeonHireCard): three gnome rows -- name, health
-        /// and damage, a «Нанять: N» button -- and the party's count «N/5».
-        /// </summary>
-        private static void BuildDungeonHireCard(Transform canvasParent, Sprite panelSprite)
-        {
-            var panelRoot = new GameObject("DungeonHireCard", typeof(RectTransform));
-            panelRoot.AddComponent<HudOverlay>();
-            panelRoot.transform.SetParent(canvasParent, false);
-            StretchFull(panelRoot.GetComponent<RectTransform>());
-            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
-
-            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
-            card.sprite = panelSprite;
-            card.type = Image.Type.Sliced;
-            SetRect(card.rectTransform, Vector2.zero, new Vector2(760f, 600f));
-            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
-            var title = CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 245f), new Vector2(700f, 56f), ink);
-            var count = CreateText(card.transform, "Count", string.Empty, 26, new Vector2(0f, 195f), new Vector2(700f, 40f), ink);
-            var names = new Text[3];
-            var stats = new Text[3];
-            var buttons = new Button[3];
-            for (var i = 0; i < 3; i++)
-            {
-                var y = 110f - i * 115f;
-                names[i] = CreateText(card.transform, "Name" + i, string.Empty, 30, new Vector2(-150f, y + 20f), new Vector2(400f, 44f), ink);
-                names[i].alignment = TextAnchor.MiddleLeft;
-                stats[i] = CreateText(card.transform, "Stats" + i, string.Empty, 24, new Vector2(-150f, y - 22f), new Vector2(400f, 36f), ink);
-                stats[i].alignment = TextAnchor.MiddleLeft;
-                buttons[i] = CreateDynamicButton(card.transform, panelSprite, "HireButton" + i, new Vector2(200f, y), new Vector2(260f, 76f), out _);
-            }
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -250f), new Vector2(260f, 70f));
-
-            var controller = canvasParent.gameObject.AddComponent<DungeonHireCard>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
-            so.FindProperty("title").objectReferenceValue = title;
-            so.FindProperty("count").objectReferenceValue = count;
-            for (var i = 0; i < 3; i++)
-            {
-                so.FindProperty("names").GetArrayElementAtIndex(i).objectReferenceValue = names[i];
-                so.FindProperty("stats").GetArrayElementAtIndex(i).objectReferenceValue = stats[i];
-                so.FindProperty("hireButtons").GetArrayElementAtIndex(i).objectReferenceValue = buttons[i];
-            }
-            so.ApplyModifiedPropertiesWithoutUndo();
-            for (var i = 0; i < 3; i++) UnityEventTools.AddIntPersistentListener(buttons[i].onClick, controller.Hire, i);
-            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
-            panelRoot.SetActive(false);
-        }
-
-        /// <summary>
         /// The card of the dungeon's potion shop (DungeonShopCard): four rows -- the potion's
         /// picture, its name and count in the bag, what it does, a «Купить: N» button.
         /// </summary>

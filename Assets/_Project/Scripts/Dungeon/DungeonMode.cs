@@ -159,8 +159,6 @@ namespace CityBuilder.Dungeon
                 rig.JumpTo(StartSpot);
             }
             Exit = MakeExit();
-            // the stone spider queen in the lake, a crystal turning over her
-            DungeonStatue.RaiseAll(map, transform);
             // the day shining in through the way out (the user, 2026-11-02)
             DungeonDaylight.LightAll(map, transform);
             HireCamp = MakeCamp(map, "hirecamp", DungeonEntrance.Place.HireCamp);
@@ -177,6 +175,8 @@ namespace CityBuilder.Dungeon
             gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, town?.dungeonBossesSlain);
             // the crystals the town has not taken yet, each by its guards
             gameObject.AddComponent<DungeonCrystals>().Begin(map, DungeonId, Level, town?.dungeonCrystalsTaken);
+            // the stone spider queen in the lake, a crystal turning over her -- taken from the shore
+            DungeonStatue.RaiseAll(map, transform, DungeonId, Level, town?.dungeonCrystalsTaken);
             // the gnomes hired last time, waiting by the way in
             gameObject.AddComponent<DungeonHirelings>().Begin(DungeonId, StartSpot + Vector3.back * 1.5f,
                 HireCamp != null ? HireCamp.ApproachFrom(StartSpot) : StartSpot, town?.dungeonHirelings);

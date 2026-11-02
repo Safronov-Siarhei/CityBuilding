@@ -91,15 +91,13 @@ namespace CityBuilder.Dungeon
             {
                 case Place.HireCamp:
                     // held like the Barracks: the gnomes' portraits with their prices along the
-                    // bottom (FocusHireBar, the user, 2026-11-02: «здесь должны были быть иконки
-                    // солдат для найма»); the text card only from its «!» once held
+                    // bottom (FocusHireBar) and nothing else -- no «!», no card (the user, 2026-11-02)
                     var focus = BuildingFocus.Instance;
                     if (focus != null && focus.Entrance != this)
                     {
                         Combat.ArmyManager.Instance?.SelectGroup(null);
                         focus.SelectEntrance(this);
                     }
-                    else if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Show(this);
                     break;
                 case Place.Shop:
                     if (DungeonShopCard.Instance != null) DungeonShopCard.Instance.Show(this);
@@ -113,14 +111,12 @@ namespace CityBuilder.Dungeon
         /// <summary>Any place's card is up.</summary>
         public static bool AnyCardOpen =>
             (DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen)
-            || (DungeonHireCard.Instance != null && DungeonHireCard.Instance.IsOpen)
             || (DungeonShopCard.Instance != null && DungeonShopCard.Instance.IsOpen);
 
         /// <summary>Every place's card down.</summary>
         public static void CloseCards()
         {
             if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Close();
-            if (DungeonHireCard.Instance != null) DungeonHireCard.Instance.Close();
             if (DungeonShopCard.Instance != null) DungeonShopCard.Instance.Close();
         }
 

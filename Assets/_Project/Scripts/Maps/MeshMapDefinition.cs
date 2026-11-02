@@ -70,6 +70,11 @@ namespace CityBuilder.Maps
         public bool NoRaids => noRaids || dungeon;
         public bool IsDungeon => dungeon;
         public GameObject PropsPrefab => propsPrefab;
+
+        [SerializeField] private GameObject exitGlowPrefab;
+
+        /// <summary>A dungeon's way-out opening, drawn unlit and bright (Dungeon/DungeonDaylight).</summary>
+        public GameObject ExitGlowPrefab => exitGlowPrefab;
         public GameObject[] BuildingPrefabs => buildingPrefabs ?? new GameObject[0];
         public GameObject GroundPrefab => groundPrefab;
         public GameObject WaterPrefab => waterPrefab;
@@ -141,10 +146,11 @@ namespace CityBuilder.Maps
             keepWaterRotation = keepWaterRot;
         }
 
-        public void EditorInitializeDungeon(GameObject props, GameObject[] buildings)
+        public void EditorInitializeDungeon(GameObject props, GameObject[] buildings, GameObject exitGlow = null)
         {
             dungeon = true;
             propsPrefab = props;
+            exitGlowPrefab = exitGlow;
             buildingPrefabs = buildings ?? new GameObject[0];
         }
 

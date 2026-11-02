@@ -165,6 +165,25 @@ namespace CityBuilder.Maps
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
 
+        /// <summary>
+        /// Whether the straight line from `a` to `b` crosses water: a walker's straight-line
+        /// fallback must not (the user, 2026-11-02: a hero, then a woodcutter, sent to another
+        /// island walked over the sea). Checked every half cell.
+        /// </summary>
+        public static bool LineCrossesWater(Vector3 a, Vector3 b)
+        {
+            var land = Instance;
+            var grid = GridManager.Instance;
+            if (land == null || grid == null || land._waterCells.Count == 0) return false;
+            var flat = new Vector3(b.x - a.x, 0f, b.z - a.z);
+            var steps = Mathf.CeilToInt(flat.magnitude / (grid.CellSize * 0.5f));
+            for (var i = 1; i <= steps; i++)
+            {
+                if (land._waterCells.Contains(grid.WorldToCell(a + flat * (i / (float)steps)))) return true;
+            }
+            return false;
+        }
+
         private System.Collections.IEnumerator RevealStartIslandOnceTheHallStands()
         {
             // a few seconds at most: a new game has no hall until the player puts it down (and

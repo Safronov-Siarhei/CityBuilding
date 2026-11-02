@@ -10,7 +10,7 @@ namespace CityBuilder.Dungeon
     /// <summary>
     /// The gnomes hired at the dungeon's camp (the user, 2026-10-31/11-01, card
     /// Design/features/dungeon.md): the miner, the crossbowman and the ore guardian, bought for
-    /// coins at the hire camp's card (DungeonHireCard) without end but no more than
+    /// coins at the hire camp's buttons (FocusHireBar) without end but no more than
     /// dungeon_hireling_max alive at once. Nobody orders them one by one: they are one party of
     /// their own -- not one of the army's groups, so no icon, no upkeep, no citizen -- that walks
     /// after the hero the player holds (or the first one standing) and fights what comes within

@@ -34,6 +34,11 @@
   engage radius x `dungeon_engage_factor`, shooters' reach x `dungeon_ranged_range_factor`, no
   target behind rock (NavMesh.Raycast).
 
+- (2026-11-02) No walking over water: when there is no path, the straight-line fallback is refused if
+  it crosses a water cell (`MeshMapApplier.LineCrossesWater`) -- `NavRoute` (heroes, soldiers, orcs)
+  stays put (Blocked), `CitizenAgent.BuildRoute` "arrives" at its own feet so a gatherer gives the tree
+  up. A target out at sea snaps to the nearest land within 40 m, so the partial path ends on the shore.
+
 ## Code
 `Combat/IDamageTarget.cs`, `Combat/DefensiveBuilding.cs`, `Combat/CombatProjectiles.cs`
 (`ProjectileKind`), `Combat/NavRoute.cs`, `Core/RuntimeShaders.cs`; users in `SoldierUnit`, `OrcUnit`,

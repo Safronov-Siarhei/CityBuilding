@@ -71,6 +71,8 @@ namespace CityBuilder.Combat
             // walled-off one then gives an honest partial path that stops at the wall.
             var target = to;
             if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, AreaMask)) target = onMesh.position;
+            // out at sea: the nearest land that way, so the path ends on this island's shore
+            else if (NavMesh.SamplePosition(to, out var shore, FarSnapMeters, AreaMask)) target = shore.position;
 
             if (NavMesh.CalculatePath(from, target, AreaMask, _sharedPath))
             {
@@ -92,8 +94,19 @@ namespace CityBuilder.Combat
                 }
             }
 
+            // no way there over land (another island, the open sea): he stays rather than walking
+            // the straight line over the water (the user, 2026-11-02: a hero sent to another island
+            // walked on the sea)
+            if (CityBuilder.Maps.MeshMapApplier.LineCrossesWater(from, to))
+            {
+                Blocked = true;
+                _corners = new Vector3[0];
+                return;
+            }
             _corners = new[] { to };
         }
+
+        private const float FarSnapMeters = 40f;
 
         /// <summary>
         /// Horizontal unit vector toward the next waypoint, advancing past waypoints as they're

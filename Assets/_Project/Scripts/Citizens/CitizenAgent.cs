@@ -812,6 +812,17 @@ namespace CityBuilder.Citizens
                 }
             }
 
+            // Never over the water (the user, 2026-11-02: one sent to fell a tree on another
+            // island must not walk the sea): he "arrives" where he stands, and a gatherer, out of
+            // reach of his tree, gives it up (OnArrived -> OnStuck).
+            if (Maps.MeshMapApplier.LineCrossesWater(from, to))
+            {
+                _fallbackRoute[0] = from;
+                _route = _fallbackRoute;
+                _routeIndex = 0;
+                return;
+            }
+
             // Straight at the target. Viable even through a thicket, because trees and boulders
             // carry trigger colliders only (see TreesAreaSpawner.AddClickCollider) -- they block
             // pathing, not movement -- and anything genuinely solid trips the stuck detector.

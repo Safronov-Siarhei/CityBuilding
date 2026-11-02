@@ -193,7 +193,14 @@ namespace CityBuilder.UI
             if (populationText != null) populationText.text = _crystals.ToString();
         }
 
-        private void OnCrystalsChanged() => _crystals = Core.Wallet.UpgradeCrystals;
+        // the chip redrawn as the count changes: it used to wait for the next coin to move, so a
+        // crystal taken did not always show (the user, 2026-11-02)
+        private void OnCrystalsChanged()
+        {
+            var was = _crystals;
+            _crystals = Core.Wallet.UpgradeCrystals;
+            if (was >= 0 && was != _crystals) Refresh();
+        }
 
         private void OnDestroy()
         {

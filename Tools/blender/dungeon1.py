@@ -742,6 +742,9 @@ EXIT_STEPS, EXIT_STAIR_RISE, EXIT_STAIR_RUN = 4, 0.12, 0.12
 EXIT_MOUTH = [(-0.45, 0.0), (0.45, 0.0), (0.52, 0.55), (0.32, 0.93), (0.0, 1.05), (-0.34, 0.9), (-0.52, 0.5)]
 
 
+exit_glow = Builder()
+
+
 def mine_exit(b):
     """The way out (the user, 2026-10-31: «сделай выход в полноценной скале ... без ненужной
     геометрии»): the surface entrance's mountain, whole and solid, 2.6x as big -- one big rock, a
@@ -760,16 +763,17 @@ def mine_exit(b):
         # the way up (the user, 2026-11-02, option 2 «каменная лестница»): dressed steps climb
         # to an opening high in the face, full of daylight, a torch either side
         lift = EXIT_STAIR_RISE * EXIT_STEPS
-        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, 'gold', 0.03)):   # the rim, the warm day beyond
-            b.prism([(px * scale, pz * scale + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - dy + 0.4, 0.0),
-                    (1, 0, 0), (0, 0, 1), 0.4, color, back_cap=True)
-        b.prism([(px * 0.7, pz * 0.55 + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - 0.05 + 0.4, 0.0),
-                (1, 0, 0), (0, 0, 1), 0.4, 'window_light', back_cap=True)          # brightest at its heart
-        # (no white wall: the user, 2026-11-02 -- a yellow glow, the light from the surface; the
-        # glow itself is DungeonDaylight's halo at the `light_day` spot)
+        b.prism([(px * 1.18, pz * 1.18 + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - 0.01 + 0.4, 0.0),
+                (1, 0, 0), (0, 0, 1), 0.4, STONE_D, back_cap=True)                  # the rim
         for i in range(EXIT_STEPS):
             y0 = -1.0 - EXIT_STAIR_RUN * (EXIT_STEPS - i)
             b.box(-0.42, 0.42, y0, -0.95, 0.0, EXIT_STAIR_RISE * (i + 1), STONE_L, bevel=0.015)
+    # the day beyond: its own object (ExitGlow), drawn unlit and bright by the game -- a lit
+    # yellow face read as a wall (the user, 2026-11-02)
+    with placed(exit_glow, (cx, cy + 1.0 * k, 0.0), k):
+        exit_glow.prism([(px * 1.0, pz * 1.0 + EXIT_STAIR_RISE * EXIT_STEPS) for px, pz in EXIT_MOUTH],
+                        (0.0, -1.0 - 0.03 + 0.4, 0.0), (1, 0, 0), (0, 0, 1), 0.4, 'window_light', back_cap=True)
+    with placed(b, (cx, cy + 1.0 * k, 0.0), k):
         for side in (-1, 1):                                                       # the stair's low walls
             b.box(side * 0.42, side * 0.52, -1.0 - EXIT_STAIR_RUN * EXIT_STEPS, -0.95, 0.0, lift + 0.08, STONE_D,
                   bevel=0.015)
@@ -1311,6 +1315,7 @@ def main():
     detail.add_layers(props.data, kit.NAMES, kit.COLS, kit.ROWS)
     rough_exit_rock(props.data)
     pchunks = split_by_chunk(props, coll)
+    make_object(f"{PREFIX}-ExitGlow", exit_glow, bmat, coll)   # the way out's daylight, drawn unlit
     import dungeon_camp                                       # the approved camp buildings, whole
     for name, build, (x, y) in (("HireCamp", dungeon_camp.hire_camp, HIRE_AT),
                                 ("PotionShop", dungeon_camp.potion_shop, SHOP_AT)):

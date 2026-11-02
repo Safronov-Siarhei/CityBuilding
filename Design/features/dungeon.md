@@ -624,6 +624,21 @@ dungeon opens as a SEPARATE SCENE.
 - Hire camp: tapping it HOLDS it like the Barracks (gnome portraits + prices in the FocusHireBar); the
   text card only from its «!». Shop buttons read «30 + coin».
 
+## Playtest round 6 (2026-11-02; no tests run -- the user asked for a general run later)
+- The way out's opening is its own Blender object `Dungeon-1-ExitGlow` (export_map OPTIONAL), loaded
+  as `MeshMapDefinition.ExitGlowPrefab` and drawn UNLIT flat warm yellow by `DungeonDaylight.LightAll`
+  (a lit yellow face read as a wall); the halo over it is 5 wide.
+- Hire camp: NO «!» and NO card -- `DungeonHireCard` deleted; holding the camp shows only the gnome
+  buttons (`FocusHireBar.CampHeld` no longer needs DetailsShown). Keys `#dungeon_hire_title/count/
+  stats/buy` are unused now (left in the sheet).
+- The LAKE STATUE is a reward: a hero (or gnome) on its nearest shore (reach = statue->nearest NavMesh
+  + `dungeon_crystal_pick_reach` + 0.5) takes `dungeon_statue_crystals` (3) once per level; id
+  `<dungeon>-L<n>-statue<i>` saved with the crystals (`DungeonCrystals.MarkTaken`).
+- The crystal chip on the top bar redraws when the count changes (`ResourceHUDController.OnCrystalsChanged`);
+  it used to wait for the coins to move.
+- Archipelago: the level-1 entrance stands on the START island, >= 22 cells from the Town Hall's spot
+  (`DungeonEntrances.Place`, `AwayFromHallCells`); the others on other islands as before.
+
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,
   `DungeonMonsterPowers.cs`; `Combat/OrcUnit.cs`, `OrcRaidManager.cs` (models, boss controller),
