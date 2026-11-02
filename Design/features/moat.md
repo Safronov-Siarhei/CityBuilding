@@ -28,3 +28,24 @@
 - Not in Invasion runs (the invasion tab has no Moat row).
 - The water uses the palette blue, not the map's living-water material.
 - A saved moat restores through BuildingInstance.Initialize like any building (not checked).
+
+## Crossings: Bridge and Drawbridge (BUILT e1d1d617, 2026-11-02, untested, not seen)
+- The user: a bridge laid over the moat and on shallow water, long legs into the water (ref: old stone bridge);
+  a DRAWBRIDGE 2x1, each cell a raising leaf, allies pass, enemies don't. Levels 1-2 timber, 3-5 stone.
+- `BuildingData.isCrossing` (Bridge, Drawbridge): every cell over a moat (`Moat.Has`, not yet spanned) or
+  shallow water (`IsWaterPlacementZone`); a land cell is allowed but at least one must be over moat/water
+  (a Drawbridge over a 1-wide moat rests a leaf on the bank). Otherwise `#place_blocked_crossing`.
+  Placed over a moat it is turned across the moat's line (`BuildingPlacer.TurnACrossingOverTheMoat`).
+- Over a moat: `Moat.Span` marks the cells -- no slowing (`Wading` false), the moat's Moat area dropped
+  (`MeshMapApplier.RegisterMoat` checks `Moat.IsSpanned`); `SharesCellWithAnother` keeps both occupying the cell.
+- Bridge: isRoad (road speed, nobody's target), walkable surface, collider made a trigger. Sandbox up3-5 cost stone.
+- Drawbridge: `isGate` with the whole footprint as passage (`RegisterGate` sizes it, no `CarveTheGateWalls`),
+  walkable surface too -- `_walkableSurfaces` now keyed by Object (instance + instance.transform).
+  `DrawbridgeLook`: per level two pivots at the hinges (+-0.78, deck 0.22), leaves rise to
+  `drawbridge_raise_degrees` in `drawbridge_raise_sec` while an orc is within `drawbridge_raise_radius_cells`.
+  Locked: research 30 coins/60 s; levels researched like the Gate. Rows: buildings 24, sandbox 57, economy 433-435,
+  localization 557-558.
+- Models `Tools/blender/crossings.py` (Bridge1-lvlN, Drawbridge1-lvlN, Drawbridge-Leaf-lvlN); SetupProject does NOT
+  stand crossings on their lowest point (`FitModelToGround`), the legs go below the ground line.
+- Traps: raised leaves are only a look -- allies still walk the Gate area; the leaf hinge numbers are duplicated
+  in `SetupProjectBuildings.AddDrawbridgeLeaves` (keep in step with crossings.py).
