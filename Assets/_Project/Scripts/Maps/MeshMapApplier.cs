@@ -31,6 +31,8 @@ namespace CityBuilder.Maps
         // the clouds over the land (CloudLayer): the fog's seamless noise and the sheet's material
         [SerializeField] private Texture2D cloudNoise;
         [SerializeField] private Material cloudMaterial;
+        // the wildlife's models in Wildlife.Kind order (Tools/blender/fauna.py)
+        [SerializeField] private GameObject[] wildlifeModels;
 
         // Sized for a citizen, not Unity's default humanoid navmesh agent -- CitizenAgent's
         // CharacterController is radius 0.15/height 0.72 (see CitizenVisualsManager.SpawnAgent).
@@ -152,6 +154,8 @@ namespace CityBuilder.Maps
             map = CurrentMap;
             // clouds drifting over the land, their shadows under them (not below ground)
             if (!map.IsDungeon) CloudLayer.Begin(transform, cloudNoise, cloudMaterial);
+            // deer, hares, gulls, songbirds, fish, dolphins, a whale (the user, 2026-11-02)
+            if (!map.IsDungeon && !CityBuilder.Invasion.InvasionRules.Active) Wildlife.Begin(transform, wildlifeModels);
             // the start island in view once the Town Hall stands -- a loaded game may put the hall
             // back before this map was built, and its own reveal then found no island (the user,
             // 2026-11-02: fogged again after a dungeon)

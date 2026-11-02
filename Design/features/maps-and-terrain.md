@@ -116,8 +116,17 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
   takes the cloud shadows.
 - **Not seen in game / on a phone; no tests run** (user: tests later, one general run).
 - **Marked, NOT to build:** sun glints on the sea; chickens/cows at farms.
-- **Next approved:** wildlife (gulls over coasts/ships, bird flocks off forests, deer/rabbits
-  fleeing, fish jumping at shoals, rare whale/dolphins) — models shown for approval first.
+- **Wildlife BUILT 2026-11-02** (models approved by the user): `Tools/blender/fauna.py` ->
+  `Models/Fauna/Fauna{Gull,Bird,Deer,Rabbit,Fish,Dolphin,Whale}.fbx` (export_fbx «Fauna*», jointed:
+  wings/legs/head via `FigureAnimator`, Tail turned by code). `Maps/Wildlife.cs`, started by
+  MeshMapApplier (not dungeon, not Invasion), models in `wildlifeModels` (Wildlife.Kind order, wired
+  in SetupProjectCityScene). Only round the camera's focus (reach = cam height x1.3, 10..28 m), only
+  on revealed cells, pooled: 2 deer + 3 hares graze/wander on free flat land and bolt (3.5 m) from
+  citizens/soldiers/orcs; 3 gulls circle coasts + 1 over each ship in view; a songbird flock rises
+  from a tree every 15-30 s; a fish leaps near a coast every 6-12 s; 2-3 dolphins arc through open
+  water every 35-70 s; a whale surfaces and dives far out every 80-150 s. Shoal fish untouched
+  (boxy by the user's wish). Visual-only constants live in Wildlife.cs (no gameplay numbers).
+  Not seen in game; no tests.
   Points of interest (wrecks, ruins, landmarks) liked but models need approval first. Island
   biomes and neutral ships: «пока что нет».
 

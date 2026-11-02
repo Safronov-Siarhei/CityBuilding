@@ -4,7 +4,7 @@
 
 One FBX per object, holding one mesh, named after the object -- the contract SetupProject reads
 by name: buildings (`<Id>1-lvl<N>`, fence pieces) go to Models/Buildings, trees (`Tree<n>`) and
-boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes, the army (`Soldier*`, soldiers.py) to Models/Soldiers, the Invasion jungle (`Wild*`, wild.py) to Models/Wild, the townsfolk (`Villager*`, villagers.py) to Models/Citizens. Each is written with its origin at the centre of its
+boulders (`Stone<n>`) to Models/Terrain, the orc faction (`Orc*`, orcs.py) to Models/Orcs, the heroes (`Hero*`) to Models/Heroes, the army (`Soldier*`, soldiers.py) to Models/Soldiers, the Invasion jungle (`Wild*`, wild.py) to Models/Wild, the wildlife (`Fauna*`, fauna.py) to Models/Fauna, the townsfolk (`Villager*`, villagers.py) to Models/Citizens. Each is written with its origin at the centre of its
 footprint on the ground (the object's placement in the scene is dropped), so the game can trust
 the origin instead of guessing it from the bounds. The palette image goes next to the buildings;
 every model's one material is named `Buildings` and the game swaps in its own palette material
@@ -33,6 +33,7 @@ ORCS = os.path.join(project, "Assets", "_Project", "Models", "Orcs")
 HEROES = os.path.join(project, "Assets", "_Project", "Models", "Heroes")
 SOLDIERS = os.path.join(project, "Assets", "_Project", "Models", "Soldiers")
 WILD = os.path.join(project, "Assets", "_Project", "Models", "Wild")
+FAUNA = os.path.join(project, "Assets", "_Project", "Models", "Fauna")
 CITIZENS = os.path.join(project, "Assets", "_Project", "Models", "Citizens")
 SHIPS = os.path.join(project, "Assets", "_Project", "Models", "Ships")
 MONSTERS = os.path.join(project, "Assets", "_Project", "Models", "Monsters")
@@ -43,7 +44,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome")):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -64,6 +65,10 @@ def target(o):
     if o.name.startswith("Wild"):
         os.makedirs(WILD, exist_ok=True)
         return os.path.join(WILD, o.name + ".fbx")
+    # the main map's harmless wildlife (fauna.py)
+    if o.name.startswith("Fauna"):
+        os.makedirs(FAUNA, exist_ok=True)
+        return os.path.join(FAUNA, o.name + ".fbx")
     if o.name.startswith("Ship") and not o.name.startswith("Shipyard"):
         os.makedirs(SHIPS, exist_ok=True)
         return os.path.join(SHIPS, o.name + ".fbx")

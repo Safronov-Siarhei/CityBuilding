@@ -631,6 +631,16 @@ namespace CityBuilder.EditorTools
             // the clouds (the user, 2026-11-02)
             meshMapApplierSO.FindProperty("cloudNoise").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(ShaderTextureImport.ShadersFolder + "/CloudNoise.png");
             meshMapApplierSO.FindProperty("cloudMaterial").objectReferenceValue = CloudLayerMaterial();
+            // the wildlife (Tools/blender/fauna.py), in Maps.Wildlife.Kind order
+            var fauna = new[] { "FaunaGull", "FaunaBird", "FaunaDeer", "FaunaRabbit", "FaunaFish", "FaunaDolphin", "FaunaWhale" };
+            var faunaProp = meshMapApplierSO.FindProperty("wildlifeModels");
+            faunaProp.arraySize = fauna.Length;
+            for (var i = 0; i < fauna.Length; i++)
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Fauna/{fauna[i]}.fbx");
+                if (model == null) Debug.LogWarning($"[SetupProject] Models/Fauna/{fauna[i]}.fbx is missing -- run Tools/blender/fauna.py and export_fbx.py.");
+                faunaProp.GetArrayElementAtIndex(i).objectReferenceValue = model;
+            }
             meshMapApplierSO.ApplyModifiedPropertiesWithoutUndo();
 
             managers.AddComponent<TreesAreaSpawner>();
