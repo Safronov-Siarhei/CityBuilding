@@ -116,12 +116,10 @@ def wall_piece(level, arms):
                 if abs(c) + MERLON_L / 2 <= t:
                     b.box(c - MERLON_L / 2, c + MERLON_L / 2, min(dy * t, dy * (t - MERLON_T)), max(dy * t, dy * (t - MERLON_T)),
                           h + RAIL_H, h + MERLON_H, 'stone_dark')
-    if arms == 'NS' and level in (3, 5):
-        for side in (-1, 1):
-            x = side * (t + 0.02)
-            b.box(min(x, x + side * 0.015), max(x, x + side * 0.015), -0.09, 0.09, h - 0.45, h - 0.02, 'banner_blue')
-            if level == 5:
-                b.box(min(x, x + side * 0.02), max(x, x + side * 0.02), -0.035, 0.035, h - 0.3, h - 0.18, 'gold')
+    if arms == 'NS':
+        for d in 'EW':
+            hanging_banner(b, d, t, 0, h - 0.02, 0.5 + (level - 3) * 0.1, 0.08,
+                           'banner_blue' if level != 4 else 'banner_red')
     return b
 
 
@@ -165,50 +163,188 @@ def spire(b, r, z, level, sides=4):
             (0, 0, 0), (1, 0, 0), (0, 0, 1), 0.01, 'banner_blue', back_cap=True)
 
 
+# ------------------------------------------------------------------ dressing (the user, 2026-11-02:
+# «башни унылые, у нас красочная и сочная игра»): tiled roofs in the level's colour, a timber storey
+# with lit windows, banners, shields, torches, flags, gold
+
+ROOF = {3: ('roof_red', 'roof_red_dark'), 4: ('roof_blue', 'roof_blue_dark'), 5: ('roof_blue', 'gold')}
+FACE = {'S': ((1, 0, 0), lambda r: (0, -r)), 'N': ((-1, 0, 0), lambda r: (0, r)),
+        'E': ((0, 1, 0), lambda r: (r, 0)), 'W': ((0, -1, 0), lambda r: (-r, 0))}
+
+
+def on_face(b, d, r, pts, colour, out=0.0, depth=0.015):
+    """A flat shape on face d of a square of half-size r, pts as (across, z), standing out `out`."""
+    u, at = FACE[d]
+    x, y = at(r + out)
+    b.prism(pts, (x, y, 0), u, (0, 0, 1), depth, colour, back_cap=True)
+
+
+def face_box(b, d, r, c, z0, z1, w, colour, out=0.02):
+    """A box set into face d at `c` across (in the face's own across direction): a window, a door."""
+    u, at = FACE[d]
+    x, y = at(r)
+    cx, cy = x + u[0] * c, y + u[1] * c
+    if u[0]:
+        b.box(cx - w / 2, cx + w / 2, cy - out, cy + out, z0, z1, colour)
+    else:
+        b.box(cx - out, cx + out, cy - w / 2, cy + w / 2, z0, z1, colour)
+
+
+def hanging_banner(b, d, r, c, top, length, w, colour='banner_red', emblem='gold'):
+    """A long banner with a swallow tail and a gold emblem, hung on a gold rod."""
+    pts = [(c - w, top), (c + w, top), (c + w, top - length), (c, top - length + w * 0.9), (c - w, top - length)]
+    on_face(b, d, r, pts, colour, out=0.01)
+    on_face(b, d, r, [(c - w - 0.03, top), (c + w + 0.03, top), (c + w + 0.03, top + 0.025), (c - w - 0.03, top + 0.025)],
+            'gold', out=0.03, depth=0.02)
+    e = w * 0.55
+    m = top - length * 0.42
+    on_face(b, d, r, [(c, m + e), (c + e, m), (c, m - e), (c - e, m)], emblem, out=0.025, depth=0.01)
+
+
+def shield(b, d, r, c, z, s=0.1, field='banner_blue', charge='gold'):
+    on_face(b, d, r, [(c - s, z + s), (c + s, z + s), (c + s, z - s * 0.2), (c, z - s * 1.1), (c - s, z - s * 0.2)],
+            field, out=0.01, depth=0.02)
+    on_face(b, d, r, [(c - s * 0.15, z + s * 0.8), (c + s * 0.15, z + s * 0.8), (c + s * 0.15, z - s * 0.7), (c - s * 0.15, z - s * 0.7)],
+            charge, out=0.03, depth=0.01)
+    on_face(b, d, r, [(c - s * 0.7, z + s * 0.25), (c + s * 0.7, z + s * 0.25), (c + s * 0.7, z - s * 0.05), (c - s * 0.7, z - s * 0.05)],
+            charge, out=0.03, depth=0.01)
+
+
+def torch(b, d, r, c, z):
+    """A wall torch: an iron bracket, a wooden haft, a flame."""
+    dx, dy = DIRS[d]
+    u, at = FACE[d]
+    x, y = at(r)
+    px, py = x + u[0] * c, y + u[1] * c
+    ox, oy = dx * 0.07, dy * 0.07
+    b.rod((px, py, z), (px + ox, py + oy, z + 0.05), 0.015, 'iron')
+    b.cylinder(px + ox, py + oy, z, z + 0.12, 0.018, 'wood_dark', sides=5)
+    b.ball(px + ox, py + oy, z + 0.1, 0.04, 0.11, 'fire', sides=6)
+
+
+def flag(b, x, y, z, length=0.34, colour='banner_blue', pole=0.45):
+    b.cylinder(x, y, z, z + pole, 0.016, 'wood_dark', sides=5)
+    b.ball(x, y, z + pole, 0.035, 0.06, 'gold', sides=6)
+    t = z + pole - 0.04
+    b.prism([(0, t), (length, t - 0.02), (length * 0.78, t - 0.09), (length, t - 0.17), (0, t - 0.15)],
+            (x, y, 0), (1, 0, 0), (0, 0, 1), 0.012, colour, back_cap=True)
+
+
+def timber_storey(b, r, z0, z1, windows, level):
+    """An overhanging timber storey: plaster panels between dark posts, lit windows with shutters,
+    corbels underneath."""
+    o = r + 0.06
+    b.box(-o, o, -o, o, z0, z1, 'plaster')
+    b.box(-o - 0.01, o + 0.01, -o - 0.01, o + 0.01, z0, z0 + 0.05, 'wood_dark')
+    b.box(-o - 0.01, o + 0.01, -o - 0.01, o + 0.01, z1 - 0.04, z1, 'wood_dark')
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            b.box(sx * o - 0.035, sx * o + 0.035, sy * o - 0.035, sy * o + 0.035, z0, z1, 'wood_dark')
+    zc = (z0 + z1) / 2
+    shutter = 'roof_green' if level < 5 else 'roof_blue_dark'
+    for d in 'NSEW':
+        for c in windows:
+            face_box(b, d, o, c, zc - 0.1, zc + 0.11, 0.12, 'window_light', out=0.012)
+            face_box(b, d, o, c, zc - 0.125, zc - 0.1, 0.17, 'wood_dark', out=0.025)
+            for side in (-1, 1):
+                face_box(b, d, o, c + side * 0.095, zc - 0.1, zc + 0.11, 0.05, shutter, out=0.018)
+        # posts between the windows
+        for c in [w + 0.21 for w in windows] + [w - 0.21 for w in windows]:
+            if abs(c) < o - 0.06:
+                face_box(b, d, o, c, z0, z1, 0.03, 'wood_dark', out=0.008)
+        for c in (-r * 0.6, 0.0, r * 0.6):                            # corbels under the overhang
+            face_box(b, d, r, c, z0 - 0.1, z0, 0.05, 'wood_dark', out=0.06)
+
+
+def tiled_roof(b, r, z, level, apex=1.0):
+    roof, rim = ROOF[level]
+    o = r + 0.14
+    b.box(-o, o, -o, o, z, z + 0.04, rim)
+    b.pyramid(0, 0, z + 0.04, o, o, z + apex, roof, sides=4)
+    if level >= 5:
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                b.rod((sx * o, sy * o, z + 0.04), (0, 0, z + apex), 0.02, 'gold')
+    # a lit dormer on the front slope
+    y = -o * 0.5
+    b.box(-0.08, 0.08, y - 0.1, y, z + 0.1, z + 0.3, 'plaster')
+    b.box(-0.045, 0.045, y - 0.105, y - 0.09, z + 0.13, z + 0.27, 'window_light')
+    b.pyramid(0, y - 0.05, z + 0.3, 0.11, 0.08, z + 0.42, roof, sides=4)
+    b.ball(0, 0, z + apex - 0.02, 0.05, 0.09, 'gold', sides=6)
+    return z + apex + 0.05
+
+
 def wall_tower(level):
-    """The Tower beside a walk wall: the stair up, 1x1."""
+    """The Tower beside a walk wall: the stair up, 1x1 -- a stone shaft with a studded door, a torch
+    and a shield, a timber storey with lit windows above the walk, a tiled roof in the level's
+    colour with a dormer, a flag. Its doorways onto the walk are the "-Door" pieces."""
     b = Builder()
     h = HEIGHT[level]
-    top = h + 1.0 + (level - 3) * 0.25
-    r = 0.47
-    b.box(-r - 0.03, r + 0.03, -r - 0.03, r + 0.03, 0, 0.1, 'stone_dark')
-    b.box(-r, r, -r, r, 0.1, top, 'stone_dark', bevel=0.02)
-    doorway(b, 'S', 0.1, 0.26, 0.4, r)                               # the foot of the stair
-    for d, (sx, sy) in (('N', (0, 1)), ('E', (1, 0)), ('W', (-1, 0))):
-        if sx:
-            b.box(sx * r - 0.02, sx * r + 0.02, -0.03, 0.03, h + 0.6, h + 0.8, 'door')
-        else:
-            b.box(-0.03, 0.03, sy * r - 0.02, sy * r + 0.02, h + 0.6, h + 0.8, 'door')
-    crown(b, r, top)
-    spire(b, r * 0.85, top + 0.08, level)
+    r = 0.42
+    stone_top = h + 0.6
+    b.box(-r - 0.05, r + 0.05, -r - 0.05, r + 0.05, 0, 0.1, 'stone_dark')
+    b.box(-r, r, -r, r, 0.1, stone_top, 'stone_dark', bevel=0.02)
+    face_box(b, 'S', r, 0, 0.1, 0.48, 0.22, 'door', out=0.025)       # the door, studded
+    face_box(b, 'S', r, 0, 0.48, 0.53, 0.28, 'wood_dark', out=0.03)
+    for c in (-0.06, 0.06):
+        for z in (0.2, 0.36):
+            face_box(b, 'S', r, c, z, z + 0.02, 0.02, 'iron', out=0.035)
+    torch(b, 'S', r, 0.2, 0.36)
+    shield(b, 'S', r, 0, h + 0.35, 0.09, 'banner_red' if level == 3 else 'banner_blue')
+    for d in 'NEW':
+        face_box(b, d, r, 0, h + 0.25, h + 0.45, 0.05, 'door', out=0.022)
+    timber_storey(b, r, stone_top, stone_top + 0.42, (0.0,), level)
+    peak = tiled_roof(b, r, stone_top + 0.42, level, apex=0.75 + (level - 3) * 0.1)
+    flag(b, 0, 0, peak - 0.05, colour='banner_blue' if level < 5 else 'banner_red')
+    if level >= 4:
+        for sx, sy in ((-1, -1), (1, 1)):
+            flag(b, sx * (r + 0.14), sy * (r + 0.14), stone_top + 0.46, length=0.18, pole=0.25,
+                 colour='banner_red')
     return b
 
 
+def bartizan(b, x, y, z0, z1, level):
+    """A little round turret on a corner, on a corbelled foot, under its own cone."""
+    roof, rim = ROOF[level]
+    b.frustum(x, y, z0 - 0.25, z0, 0.04, 0.17, 'stone_dark', sides=8)
+    b.cylinder(x, y, z0, z1, 0.17, 'stone_dark', sides=8)
+    b.cylinder(x, y, (z0 + z1) / 2 - 0.08, (z0 + z1) / 2 + 0.08, 0.172, 'window_light', sides=8)
+    b.cylinder(x, y, z1, z1 + 0.04, 0.21, rim, sides=8)
+    b.pyramid(x, y, z1 + 0.04, 0.21, 0.21, z1 + 0.5, roof, sides=8, rot_deg=22.5)
+    b.ball(x, y, z1 + 0.48, 0.03, 0.06, 'gold', sides=6)
+
+
 def wall_fort_tower(level):
-    """The Fortified Tower beside a walk wall: a square tower on 2x2 (the user, 2026-11-02: no round
-    towers -- walls must butt flat against it), corner buttresses, slits, a battlemented top; the
-    doorways onto the walk are "-Door" pieces, two possible on each side (one per cell)."""
+    """The Fortified Tower beside a walk wall: a square keep on 2x2 (the user, 2026-11-02: no round
+    towers -- walls butt flat against it). A great studded door between two torches, long banners,
+    a timber storey with lit windows, round bartizans on its corners, a tall tiled roof with
+    dormers and a flag. Doorways onto the walk: "-Door" pieces, one per cell of a side."""
     b = Builder()
     h = HEIGHT[level]
-    top = h + 1.5 + (level - 3) * 0.3
-    r = 0.95
-    b.box(-r - 0.04, r + 0.04, -r - 0.04, r + 0.04, 0, 0.14, 'stone_dark')
-    b.box(-r, r, -r, r, 0.14, top, 'stone_dark', bevel=0.02)
-    for sx in (-1, 1):                                                # corner buttresses
+    r = 0.9
+    stone_top = h + 0.85
+    b.box(-r - 0.06, r + 0.06, -r - 0.06, r + 0.06, 0, 0.14, 'stone_dark')
+    b.box(-r, r, -r, r, 0.14, stone_top, 'stone_dark', bevel=0.02)
+    # the great door: dressed stone round studded oak, torches either side, arms above
+    face_box(b, 'S', r, 0, 0.14, 0.7, 0.42, 'stone_mid', out=0.03)
+    face_box(b, 'S', r, 0, 0.14, 0.64, 0.32, 'door', out=0.04)
+    face_box(b, 'S', r, 0, 0.14, 0.64, 0.02, 'wood_dark', out=0.045)
+    for c in (-0.1, 0.1):
+        for z in (0.26, 0.42, 0.56):
+            face_box(b, 'S', r, c, z, z + 0.025, 0.025, 'iron', out=0.05)
+    for c in (-0.36, 0.36):
+        torch(b, 'S', r, c, 0.5)
+    shield(b, 'S', r, 0, 0.92, 0.13, 'banner_blue', 'gold')
+    for d in 'EWN':
+        hanging_banner(b, d, r, 0, stone_top - 0.08, 0.8, 0.13, 'banner_red' if d != 'N' else 'banner_blue')
+    for c in (-0.5, 0.5):
+        face_box(b, 'S', r, c, h + 0.3, h + 0.52, 0.06, 'door', out=0.022)
+    timber_storey(b, r, stone_top, stone_top + 0.55, (-0.45, 0.45), level)
+    for sx in (-1, 1):
         for sy in (-1, 1):
-            b.box(min(sx * (r - 0.12), sx * (r + 0.05)), max(sx * (r - 0.12), sx * (r + 0.05)),
-                  min(sy * (r - 0.12), sy * (r + 0.05)), max(sy * (r - 0.12), sy * (r + 0.05)), 0.14, top - 0.25, 'stone_dark')
-    doorway(b, 'S', 0.14, 0.34, 0.5, r)                               # the door at the foot
-    for d in 'NSEW':                                                  # slits up each face
-        for c in (-0.5, 0.5):
-            dx, dy = DIRS[d]
-            z0 = h + 0.62
-            if dx:
-                b.box(dx * r - 0.02, dx * r + 0.02, c - 0.03, c + 0.03, z0, z0 + 0.2, 'door')
-            else:
-                b.box(c - 0.03, c + 0.03, dy * r - 0.02, dy * r + 0.02, z0, z0 + 0.2, 'door')
-    crown(b, r, top)
-    spire(b, r * 0.8, top + 0.08, level)
+            bartizan(b, sx * (r + 0.06), sy * (r + 0.06), stone_top - 0.1, stone_top + 0.75, level)
+    peak = tiled_roof(b, r, stone_top + 0.55, level, apex=1.25 + (level - 3) * 0.15)
+    flag(b, 0, 0, peak - 0.05, length=0.5, pole=0.6, colour='banner_blue' if level < 5 else 'banner_red')
     return b
 
 
@@ -240,11 +376,19 @@ def gatehouse(level):
     for sx in (-1, 1):
         for sy in (-1, 1):
             b.cylinder(sx * 0.42, sy * (t - 0.02), h - 0.25, h + 0.45, 0.11, 'stone_dark', sides=8)
-            b.pyramid(sx * 0.42, sy * (t - 0.02), h + 0.45, 0.13, 0.13, h + 0.75,
-                      'gold' if level >= 5 else 'roof_blue', sides=8, rot_deg=22.5)
-    if level >= 4:
-        b.box(-0.12, 0.12, -t - 0.03, -t - 0.01, h - 0.3, h - 0.05, 'banner_blue')
-        b.box(-0.05, 0.05, -t - 0.035, -t - 0.02, h - 0.22, h - 0.12, 'gold')
+            b.cylinder(sx * 0.42, sy * (t - 0.02), h + 0.12, h + 0.24, 0.112, 'window_light', sides=8)
+            b.cylinder(sx * 0.42, sy * (t - 0.02), h + 0.45, h + 0.49, 0.14, ROOF[level][1], sides=8)
+            b.pyramid(sx * 0.42, sy * (t - 0.02), h + 0.49, 0.14, 0.14, h + 0.85, ROOF[level][0], sides=8, rot_deg=22.5)
+            b.ball(sx * 0.42, sy * (t - 0.02), h + 0.83, 0.025, 0.05, 'gold', sides=6)
+    # dressing: the gate's oak leaves stood open, torches, a coat of arms over the arch, banners
+    for sx in (-1, 1):
+        b.box(sx * 0.22 - 0.02, sx * 0.22 + 0.02, -t - 0.2, -t, 0.02, 0.56, 'door')
+    for d in 'SN':
+        torch(b, d, t, 0.36, 0.42)
+        torch(b, d, t, -0.36, 0.42)
+        shield(b, d, t, 0, 0.8, 0.09, 'banner_red' if level == 3 else 'banner_blue')
+        for c in (-0.36, 0.36):
+            hanging_banner(b, d, t, c, h - 0.02, 0.36, 0.07, 'banner_blue' if level < 5 else 'banner_red')
     return b
 
 
@@ -255,9 +399,9 @@ def tower_door(level, fort):
     b = Builder()
     h = HEIGHT[level]
     if fort:
-        doorway(b, 'S', h, 0.3, 0.44, 0.95)
+        doorway(b, 'S', h, 0.28, 0.42, 0.9)
     else:
-        doorway(b, 'S', h, 0.3, 0.42, 0.47)
+        doorway(b, 'S', h, 0.26, 0.4, 0.42)
     return b
 
 
