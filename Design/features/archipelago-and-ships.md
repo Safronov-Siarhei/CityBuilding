@@ -1,5 +1,10 @@
 # Archipelago sandbox map and ships
 
+> **2026-11-02 round 9:** the START island is bigger: 130 -> 190 (`islands.py` _SCALES/KINDS 'start',
+> `ArchipelagoGenerator` `(Kind.Start, 190, 0f)`); Isl-start1/2 regenerated and exported (≈10-11k
+> buildable cells). Reverses the earlier «start ~25% smaller» pick for the start island only. Not seen.
+
+
 > **Status (2026-10-29):** the sandbox plays ONLY on the archipelago (Map3/4/5 removed from the
 > picker; Map3 stays as the test fixture). A seed builds a 500×500 sea with 12–20 islands taken
 > from a Blender LIBRARY; the map code («2-482915») is in the pause menu and the sandbox screen.

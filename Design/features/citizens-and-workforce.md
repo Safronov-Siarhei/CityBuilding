@@ -1,5 +1,17 @@
 # Citizens and workforce
 
+> **2026-11-02 WORK LOOPS (round 9, the user) -- BUILT 9cd796d3, untested, not seen.** Workers act out
+> their trade: woodcutter axe at the tree, quarryman pick at the rock, ploughman hoe on the Farm's plot,
+> picker basket in the Orchard, swineherd pail in the Pig Farm (faces the pen centre), fisherman casts a
+> rod from a shore cell inside the hut's fishing radius and pulls a fish out (5 s cycle). Tools are
+> models in the villager's space (`Tools/blender/tools.py` -> `Models/Citizens/Tool*.fbx`, the moving
+> part "<Name>-Swing" pivots at the right shoulder, the rod's fish "-Catch"), wired by
+> SetupProjectCityScene into `CitizenVisualsManager.toolModels` -> `CitizenWaddle.ToolModels`.
+> `CitizenWaddle.Work(kind, faceTo)/StopWork()` + `TickWork` curves; `CitizenAgent.SetWorking(..., kind,
+> spots)` walks spot to spot (`Citizens/WorkSpots.cs`: KindOf by building id, For = plot points / cached
+> shore cells; 6 s per spot). A tool is instantiated on first use per citizen and hidden while walking.
+
+
 > **2026-11-02 AUTO-STAFFING (the user):** every Production and Food building fills itself
 > (`ProductionBuilding.AutoStaffed`, `WantedWorkers` = all its places) from the free people, the OLDEST
 > building first (`ProductionBuilding.All`, creation order; `CitizenManager` refills once a second,

@@ -1,5 +1,12 @@
 # Building placement, roads, fences, gates, demolition
 
+> **2026-11-02 FOOTING (round 9):** every building stands at the grid's one ground height, so on a
+> sloping shore it floated. `Buildings/BuildingFooting.cs` (called from `BuildingInstance.Initialize`)
+> samples 9 ground points under the plot and, if the land drops >= 0.08, puts a stone block (Rock
+> material, `BuildingPlacer.footingStone`) from 0.15 below the lowest point up to the base. Not for
+> water-category buildings nor roads/fences (keepSelectedAfterPlacement). Untested, not seen.
+
+
 > **Status (2026-10-21):** the PEN look is the only placement look (user's pick 2026-10-20, after six
 > were photographed): an ink drawing hovering over a pen sketch of its plot. Roads and fences are laid
 > ONE PIECE AT A TIME (the drag-to-draw line is gone). Gates are 1×1 and stand on roads.

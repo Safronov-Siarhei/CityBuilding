@@ -1,5 +1,11 @@
 # Food, eating and starvation
 
+> **2026-11-02 round 9:** every citizen eats 1 food a day (`food_per_mouth_per_day` = 1, confirmed to the
+> user). Fisher's hut fishing radius = `fish_hut_reach_meters` 8 (was 16), shown as the hut's radius
+> ring (`HarvestRadiusOverlay.RadiusOf`); the fisherman fishes from shore cells inside it, and a shoal
+> inside it doubles the hut.
+
+
 > **2026-11-02: FOOD REWORK (the user, «проще, для мобилок») -- BUILT, untested, not seen.** Supersedes
 > the chains below. One Food (new icon: apple + loaf + ham, `render_icons.py res_food`). Each food
 > building has ONE worker and makes a flat amount a day, delivered as «+1» popups evenly over the day
