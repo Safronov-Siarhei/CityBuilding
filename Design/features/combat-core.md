@@ -1,5 +1,18 @@
 # Combat core: damage, towers, projectiles, routes
 
+> **2026-11-02 WALKABLE WALLS -- DECIDED, models in DRAFT (`Tools/blender/walls_walk.py`, not exported), no code yet.**
+> The user's rules: wall stays 1x1; lvl1 palisade, lvl2 low stone (as now); from lvl3 a thick wall
+> (WALK_T 0.78) with merlons on BOTH faces and a paved walk; height 0.9/1.1/1.3 cells for lvl3/4/5
+> (approved), dark stone, no light bands, merlons every 0.2. Ranged soldiers AND ranged heroes walk on
+> it; 1 cell = 1 standing fighter, others pass through to free cells. Up only through a Tower/Fortified
+> Tower of level 3+ standing next to the wall: its model swaps to the WALL version (stair tower /
+> round tower), a doorway ("-Door" piece) ONLY on the sides a wall really joins; a tower of lvl1-2
+> stays as it is and is no way up. Towers keep shooting. Gate lvl3+ in a wall = gatehouse, the walk
+> runs over it. Orders: option A (select ranged units, tap a wall cell, they go via the nearest wall
+> tower); in a defence ranged units seek high ground on their own and climb walls if they can.
+> Proposed (not yet confirmed): melee orcs can't reach them, throwers can; +range on a wall; a fighter
+> falls when his wall cell is destroyed. Movement: a graph of wall cells, not a NavMesh on top.
+
 > **Status (2026-10-21):** ranged shots are DRAWN since 2026-10-20 (`050f61a8`) and damage lands on
 > IMPACT. Not seen on a phone.
 > **Read with:** [army-and-soldiers](army-and-soldiers.md), [orc-raids-and-portals](orc-raids-and-portals.md).
