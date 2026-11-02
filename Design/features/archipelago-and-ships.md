@@ -1,5 +1,11 @@
 # Archipelago sandbox map and ships
 
+> **2026-11-02 (correction):** the user meant «too little STONE», not land: the start island is back to
+> 130 (round 9's 190 reverted, same assets), and `island_start_rocks` (40) extra boulders are laid on its
+> own land away from the Town Hall spot (`MeshMapApplier.StartIslandRockCells` ->
+> `RockSpawner.Initialize(..., extraCells, extraCount)`, fresh games only). Not seen.
+
+
 > **2026-11-02 round 9:** the START island is bigger: 130 -> 190 (`islands.py` _SCALES/KINDS 'start',
 > `ArchipelagoGenerator` `(Kind.Start, 190, 0f)`); Isl-start1/2 regenerated and exported (≈10-11k
 > buildable cells). Reverses the earlier «start ~25% smaller» pick for the start island only. Not seen.

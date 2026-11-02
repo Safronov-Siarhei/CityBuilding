@@ -1,5 +1,16 @@
 # Resources, storage, coins and taxes
 
+> **2026-11-02 TAX REWORK (the user) -- BUILT bdacd8a6, untested, not seen.** The tax slider is GONE from the
+> HUD (with contentment off in the sandbox it only cost money). Every citizen pays `coins_per_citizen_per_day`
+> (1) once a day, + `tax_house_bonus_per_level` (0.2) per level of the best finished **Tax House**
+> (`BuildingIds.TaxHouse`, City tab, 2x2, `Tools/blender/taxhouse.py` -> TaxHouse1-lvl1..5, starts unlocked,
+> no research). Its upgrades cost ONLY upgrade crystals (`tax_house_up_crystals_2..5` = 1,2,3,4;
+> `BuildingInstance.UpgradeCrystalCost`, paid from `Wallet.UpgradeCrystals` in TryUpgrade; the card adds a
+> crystal chip via `CostRowBuilder.AddCrystals`). `TaxManager` keeps TaxRatePercent (save, contentment's
+> TaxScore) but it no longer changes income; fractions carry to the next day. `TaxRateController` deleted.
+> Open: one Tax House only? (not enforced -- the best one counts, extra ones add nothing).
+
+
 > **2026-10-25:** the bar along the top shows Food but no longer Grain/Flour/Bread; EVERY resource is in
 > the INVENTORY -- a round sack button under the citizens button (`UI/InventoryPanelController`, built
 > by `SetupProject.BuildInventoryPanel`; glyph `Hud_Bag` from make_hud_glyphs.py): picture, name,
