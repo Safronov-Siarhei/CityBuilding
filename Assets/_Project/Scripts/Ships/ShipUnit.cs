@@ -83,6 +83,12 @@ namespace CityBuilder.Ships
         public int OrcLevel { get; set; } = 1;
         public Vector3 OrcDestination { get; set; }
         public bool OrcHomeward { get; set; }
+        /// <summary>
+        /// The research ship the player is given with the Town Hall: the orcs leave it alone until it
+        /// has sailed this many more cells (the user, 2026-11-02: «пока игрок не проплывёт на нём 50 клеток»).
+        /// </summary>
+        public float GraceCells { get; set; }
+        private Vector3 _graceFrom;
         /// <summary>Going down: out of the fight, the selection and the save; gone in a few seconds.</summary>
         public bool Sinking { get; private set; }
 
@@ -232,6 +238,14 @@ namespace CityBuilder.Ships
                 return;
             }
             TickCannons(t);
+            if (GraceCells > 0f)
+            {
+                var moved = transform.position - _graceFrom;
+                moved.y = 0f;
+                var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f;
+                GraceCells = Mathf.Max(0f, GraceCells - moved.magnitude / cell);
+            }
+            _graceFrom = transform.position;
             if (_corners.Count > 0)
             {
                 var target = _corners[0];

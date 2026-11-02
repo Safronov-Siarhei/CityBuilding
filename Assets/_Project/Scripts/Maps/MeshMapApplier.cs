@@ -236,13 +236,9 @@ namespace CityBuilder.Maps
         /// <summary>The archipelago's Town Hall island's land (RevealStartIsland); false on any other map.</summary>
         public bool OnStartIsland(Vector2Int cell) => _startIsland != null && _startIsland.Contains(cell);
 
-        // how far out over the water round the start island the fog lifts too (cells): its beaches and shallows
-        private const int StartIslandShoreCells = 3;
-
         /// <summary>
-        /// The archipelago's start island all in view from the start (the user, 2026-11-01: «у игрока
-        /// должен быть виден весь начальный остров»): every land cell joined to `from` (the Town
-        /// Hall's), and a band of sea round it. Other maps are one island already -- nothing to do.
+        /// Notes the archipelago's start island: every land cell joined to `from` (the Town Hall's),
+        /// for OnStartIsland. Other maps are one island already -- nothing to do.
         /// </summary>
         public void RevealStartIsland(Vector2Int from)
         {
@@ -265,18 +261,8 @@ namespace CityBuilder.Maps
                 }
             }
             _startIsland = seen;
-            // the shore band: the sea next to the island
-            var band = new HashSet<Vector2Int>(seen);
-            foreach (var c in seen)
-            {
-                for (var dz = -StartIslandShoreCells; dz <= StartIslandShoreCells; dz++)
-                for (var dx = -StartIslandShoreCells; dx <= StartIslandShoreCells; dx++)
-                {
-                    if (dx * dx + dz * dz > StartIslandShoreCells * StartIslandShoreCells) continue;
-                    band.Add(new Vector2Int(c.x + dx, c.y + dz));
-                }
-            }
-            fog.RevealCells(band);
+            // the island is NOT revealed any more: it stays fogged until the lighthouse stands, and the
+            // lighthouse clears its own circle (the user, 2026-11-02, reversing 2026-11-01)
         }
         public bool IsWaterPlacementZone(Vector2Int cell) => _waterPlacementZoneCells.Contains(cell);
 

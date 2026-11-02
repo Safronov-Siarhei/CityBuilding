@@ -365,6 +365,26 @@ namespace CityBuilder.Ships
             return ship;
         }
 
+        /// <summary>
+        /// The research ship given with the Town Hall (the user, 2026-11-02): a Scout on the sea
+        /// nearest the hall, bow out, left alone by the orcs for start_scout_grace_cells of sailing.
+        /// </summary>
+        public ShipUnit GiveStartScout(Vector3 hall)
+        {
+            if (!_hasSea) return null;
+            for (var radius = 10f; radius <= 80f; radius += 10f)
+            {
+                if (!TrySampleSea(hall, radius, out var at)) continue;
+                var away = at - hall;
+                away.y = 0f;
+                var ship = Spawn(ShipKind.Scout, at, Quaternion.LookRotation(away.sqrMagnitude > 0.01f ? away.normalized : Vector3.forward), ShipStats.MaxHealth(ShipKind.Scout));
+                ship.GraceCells = BalanceConfig.Instance != null ? BalanceConfig.Instance.StartScoutGraceCells : 50;
+                EventLogManager.Instance?.Log(Localization.Format("#ship_built", ShipStats.DisplayName(ShipKind.Scout)));
+                return ship;
+            }
+            return null;
+        }
+
         public ShipUnit Spawn(ShipKind kind, Vector3 at, Quaternion facing, int health)
         {
             var root = new GameObject($"Ship_{kind}_{_ships.Count}");

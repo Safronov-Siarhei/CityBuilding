@@ -64,6 +64,26 @@ namespace CityBuilder.Maps.Archipelago
 
         public IReadOnlyList<Cache> Caches => _caches;
 
+        /// <summary>The cache whose ruin and chest stand at this ground point (within its 5x5 plot), or null.</summary>
+        public static Cache At(Vector3 point)
+        {
+            if (Instance == null) return null;
+            foreach (var cache in Instance._caches)
+            {
+                var d = point - cache.Centre;
+                if (Mathf.Abs(d.x) <= 2.6f && Mathf.Abs(d.z) <= 2.6f) return cache;
+            }
+            return null;
+        }
+
+        /// <summary>A tap on a cache says so in the event feed (the user, 2026-11-02: «Найден сундук с сокровищами»).</summary>
+        public static void Report(Cache cache)
+        {
+            var key = Looted.Contains(cache.Index) ? "#log_tide_cache_empty" : "#log_tide_cache_found";
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get(key),
+                EventSeverity.Good, EventGlyph.Star, null, cache.Centre));
+        }
+
         private void Awake() => Instance = this;
         private void OnEnable() => OrcUnit.Died += OnDied;
         private void OnDisable() => OrcUnit.Died -= OnDied;
@@ -189,12 +209,20 @@ namespace CityBuilder.Maps.Archipelago
             var roster = new List<OrcKind>();
             foreach (var kind in GuardKinds)
                 for (var i = config.TideGuards(cache.Tier, kind); i > 0; i--) roster.Add(kind);
+            var withBoss = roster.Exists(OrcUnit.IsBossKind);
+            var ringCount = roster.Count - (withBoss ? 1 : 0);
+            var ringSlot = 0;
             for (var i = 0; i < roster.Count; i++)
             {
-                // the boss on the chest's far side, the rest in a ring round it
+                // the boss well out on the chest's far side (its coil is wide: the hammerhead once stood
+                // inside it, 2026-11-02), the rest in a ring round the chest -- with a boss, on the near
+                // side only, clear of it
                 var boss = OrcUnit.IsBossKind(roster[i]);
-                var angle = i * Mathf.PI * 2f / roster.Count;
-                var post = cache.Centre + (boss ? Vector3.forward * 2.2f : new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2.4f);
+                var angle = withBoss
+                    ? Mathf.PI * (1.15f + 0.7f * (ringSlot + 0.5f) / Mathf.Max(1, ringCount))
+                    : ringSlot * Mathf.PI * 2f / Mathf.Max(1, ringCount);
+                if (!boss) ringSlot++;
+                var post = cache.Centre + (boss ? Vector3.forward * 4f : new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2.6f);
                 if (NavMesh.SamplePosition(post, out var hit, 3f, NavMesh.AllAreas)) post = hit.position;
                 var guard = raids.SpawnOrcOfKind(post, 1, roster[i]);
                 if (guard == null) continue;

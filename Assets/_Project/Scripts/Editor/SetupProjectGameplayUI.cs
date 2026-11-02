@@ -428,17 +428,13 @@ namespace CityBuilder.EditorTools
             var chipSprite = HudSprite("chip") ?? HudSprite("bar");
             var barPlaque = HudImage(root.transform, "ResourceBar", "bar", new Vector2(400f, chipHeight + 18f));
 
-            // Reading order: raw materials, then the ore and the metal it becomes side by side,
-            // then money, then Food -- the one food counter (the user, 2026-10-25); the food
-            // chain's middle links (wheat, flour, pork) are in the inventory window only. A chip is
-            // only on screen once its resource has existed -- ResourceHUDController lays the
-            // visible ones out, which is why nothing here is positioned.
+            // Wood, stone, coins, (the crystals' own chip), food, people -- nothing else (the user,
+            // 2026-11-02): the ores, bars, coal and the food chain's links are in the inventory
+            // window only. A chip is only on screen once its resource has existed --
+            // ResourceHUDController lays the visible ones out, which is why nothing here is positioned.
             var resourceTypes = new[]
             {
-                ResourceType.Wood, ResourceType.Stone, ResourceType.Coal,
-                ResourceType.Iron, ResourceType.IronBar,
-                ResourceType.CopperOre, ResourceType.CopperBar,
-                ResourceType.Gold, ResourceType.GoldBar,
+                ResourceType.Wood, ResourceType.Stone,
                 ResourceType.Coins,
                 ResourceType.Food,
             };
@@ -479,6 +475,15 @@ namespace CityBuilder.EditorTools
                 icons[i] = iconRect;
                 amountTexts[i] = Amount(resourceTypes[i].ToString());
             }
+
+            var crystalBackground = Chip("Crystals");
+            var crystalIcon = CreateImage(root.transform, "Icon_Crystals", Color.white);
+            crystalIcon.sprite = IconSprite("Res_UpgradeCrystal");
+            crystalIcon.preserveAspect = true;
+            var crystalIconRect = crystalIcon.rectTransform;
+            crystalIconRect.anchorMin = crystalIconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            crystalIconRect.sizeDelta = new Vector2(48f, 48f);
+            var crystalText = Amount("Crystals");
 
             var populationBackground = Chip("Population");
             var popIcon = CreateImage(root.transform, "Icon_Population", Color.white);
@@ -524,7 +529,9 @@ namespace CityBuilder.EditorTools
                 amountTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = amountTexts[i];
             }
             hudSO.FindProperty("populationIcon").objectReferenceValue = popIconRect;
-            hudSO.FindProperty("crystalSprite").objectReferenceValue = IconSprite("Res_UpgradeCrystal");
+            hudSO.FindProperty("crystalIcon").objectReferenceValue = crystalIconRect;
+            hudSO.FindProperty("crystalText").objectReferenceValue = crystalText;
+            hudSO.FindProperty("crystalBackground").objectReferenceValue = crystalBackground;
             hudSO.FindProperty("populationText").objectReferenceValue = populationText;
             hudSO.FindProperty("idleBadge").objectReferenceValue = idleBadge.gameObject;
             hudSO.FindProperty("idleText").objectReferenceValue = idleText;

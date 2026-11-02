@@ -25,9 +25,13 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform[] icons;
         [SerializeField] private Text[] amountTexts;
         [SerializeField] private RectTransform populationIcon;
-        /// <summary>In a dungeon the people's chip shows the upgrade crystals instead, with this picture.</summary>
-        [SerializeField] private Sprite crystalSprite;
-        private Sprite _peopleSprite;
+        /// <summary>
+        /// The upgrade crystals' own chip, right after the coins (the user, 2026-11-02: the top bar
+        /// is wood, stone, coins, crystals, food, people -- the rest only in the inventory).
+        /// </summary>
+        [SerializeField] private RectTransform crystalIcon;
+        [SerializeField] private Text crystalText;
+        [SerializeField] private RectTransform crystalBackground;
         private int _crystals = -1;
         [SerializeField] private Text populationText;
         /// <summary>
@@ -71,6 +75,9 @@ namespace CityBuilder.UI
                 ResourceManager.Instance.OnCapacityChanged += Refresh;
             }
             if (CitizenManager.Instance != null) CitizenManager.Instance.OnPopulationChanged += Refresh;
+            // PlayerPrefs behind it: read when it changes, not every frame
+            Core.Wallet.UpgradeCrystalsChanged += OnCrystalsChanged;
+            _crystals = Core.Wallet.UpgradeCrystals;
             Refresh();
         }
 
@@ -114,12 +121,16 @@ namespace CityBuilder.UI
                 if (resources.GetAmount(resourceOrder[i]) > 0) _seen[i] = true;
                 // a run has wood, stone and gold (and people) and nothing else to show
                 if (run && !Invasion.InvasionRules.IsRunResource(resourceOrder[i])) _seen[i] = false;
-                // a dungeon: the coins and (in the people's chip) the crystals, nothing else (the user, 2026-11-01)
+                // a dungeon: the coins and the crystals, nothing else (the user, 2026-11-01)
                 if (below) _seen[i] = resourceOrder[i] == ResourceType.Coins;
                 if (_seen[i]) visible++;
             }
+            // the crystals always (a run has none); the people everywhere but a dungeon (no people there)
+            var crystals = !run && crystalIcon != null;
+            if (crystals) visible++;
+            if (!below) visible++;
 
-            var slots = visible + 1; // + the population chip, which is always there
+            var slots = Mathf.Max(1, visible);
             var packed = HasBackgrounds;
             var slotWidth = packed
                 ? Mathf.Min(chipWidth + chipGap, barWidth / slots)
@@ -141,6 +152,8 @@ namespace CityBuilder.UI
                 var background = Background(i);
                 if (background != null) background.gameObject.SetActive(shown);
                 if (!shown) continue;
+                // the crystals before the food when there are no coins yet to follow
+                if (crystals && !_crystalsPlaced && resourceOrder[i] == ResourceType.Food) PlaceCrystals(ref slot, slotWidth);
 
                 // the text first: the chip centres the icon and the number together by its width
                 if (amountTexts[i] != null)
@@ -151,14 +164,18 @@ namespace CityBuilder.UI
                         infinite);
                 }
                 PlaceChip(icons[i], amountTexts[i], background, slot++, slotWidth);
+                if (crystals && resourceOrder[i] == ResourceType.Coins) PlaceCrystals(ref slot, slotWidth);
             }
+            if (crystals && !_crystalsPlaced) PlaceCrystals(ref slot, slotWidth);
+            if (crystalIcon != null) crystalIcon.gameObject.SetActive(crystals);
+            if (crystalText != null) crystalText.gameObject.SetActive(crystals);
+            if (crystalBackground != null) crystalBackground.gameObject.SetActive(crystals);
+            _crystalsPlaced = false;
 
-            if (below)
-            {
-                ShowCrystals();
-                PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
-                return;
-            }
+            if (populationIcon != null) populationIcon.gameObject.SetActive(!below);
+            if (populationText != null) populationText.gameObject.SetActive(!below);
+            if (populationBackground != null) populationBackground.gameObject.SetActive(!below);
+            if (below) return;
             if (populationText != null)
             {
                 var people = CitizenManager.Instance;
@@ -174,23 +191,13 @@ namespace CityBuilder.UI
             PlaceChip(populationIcon, populationText, populationBackground, slot, slotWidth);
         }
 
-        /// <summary>The people's chip turned into the upgrade crystals' (a dungeon has no people): the crystal picture and the count.</summary>
-        private void ShowCrystals()
+        private bool _crystalsPlaced;
+
+        private void PlaceCrystals(ref int slot, float slotWidth)
         {
-            var image = populationIcon != null ? populationIcon.GetComponent<Image>() : null;
-            if (image != null && crystalSprite != null && image.sprite != crystalSprite)
-            {
-                _peopleSprite = image.sprite;
-                image.sprite = crystalSprite;
-            }
-            if (idleBadge != null && idleBadge.activeSelf) idleBadge.SetActive(false);
-            // PlayerPrefs behind it: read when it changes, not every frame
-            if (_crystals < 0)
-            {
-                Core.Wallet.UpgradeCrystalsChanged += OnCrystalsChanged;
-                OnCrystalsChanged();
-            }
-            if (populationText != null) populationText.text = _crystals.ToString();
+            if (crystalText != null) crystalText.text = _crystals.ToString();
+            PlaceChip(crystalIcon, crystalText, crystalBackground, slot++, slotWidth);
+            _crystalsPlaced = true;
         }
 
         // the chip redrawn as the count changes: it used to wait for the next coin to move, so a
@@ -204,7 +211,7 @@ namespace CityBuilder.UI
 
         private void OnDestroy()
         {
-            if (_crystals >= 0) Core.Wallet.UpgradeCrystalsChanged -= OnCrystalsChanged;
+            Core.Wallet.UpgradeCrystalsChanged -= OnCrystalsChanged;
         }
 
         /// <summary>Icon then number, centred in the slot -- the same proportions the bar was built with, now applied to however many chips are on screen.</summary>

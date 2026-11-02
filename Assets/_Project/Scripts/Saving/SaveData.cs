@@ -223,6 +223,8 @@ namespace CityBuilder.Saving
         public int orcRaid, orcCargo, orcLevel;
         public float destX, destZ;
         public bool homeward;
+        /// <summary>The start's research ship: cells left before the orcs notice it (ShipUnit.GraceCells).</summary>
+        public float graceCells;
     }
 
     [Serializable]

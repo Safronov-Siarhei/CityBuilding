@@ -16,6 +16,7 @@ namespace CityBuilder.Maps
         private const float Height = 0.06f;
         private const float RimWidth = 0.5f;
         private const float CheckSeconds = 0.5f;
+        private BuildingPlacer _placer;
 
         private float _timer;
 
@@ -95,7 +96,9 @@ namespace CityBuilder.Maps
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;
             _timer = CheckSeconds;
-            if (BuildingInstance.HasAny(BuildingIds.TownHall)) Destroy(gameObject);
+            // kept while the archipelago's mandatory lighthouse is in hand: it goes in the same zone
+            if (BuildingInstance.HasAny(BuildingIds.TownHall)
+                && ((_placer ??= FindAnyObjectByType<BuildingPlacer>()) == null || !_placer.IsPlacingLighthouse)) Destroy(gameObject);
         }
     }
 }

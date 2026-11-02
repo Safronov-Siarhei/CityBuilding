@@ -173,6 +173,16 @@ namespace CityBuilder.Buildings
         /// The lighthouse into the player's hand, once, if the map wants one and the town has none
         /// (a game saved before the rule gets its free one too).
         /// </summary>
+        private static void GiveStartingParty()
+        {
+            if (Invasion.InvasionMode.IsActive) return;
+            var hall = BuildingInstance.TownHall;
+            if (hall == null) return;
+            var roster = Combat.HeroRoster.Instance;
+            if (roster != null && roster.HeroOf(Combat.SoldierType.King) == null) roster.Spawn(Combat.SoldierType.King);
+            Ships.ShipManager.Instance?.GiveStartScout(hall.transform.position);
+        }
+
         private void TryBeginLighthouse()
         {
             _lighthouseChecked = true;
@@ -584,7 +594,7 @@ namespace CityBuilder.Buildings
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
-                if (mapApplier != null && IsLighthouse(_selectedBuilding) && !NearWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_coast");
+                if (_lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
                 return Localization.Get("#place_blocked_occupied");
@@ -598,16 +608,6 @@ namespace CityBuilder.Buildings
         private static bool IsTownHall(BuildingData data) => data != null && data.buildingName == BuildingIds.TownHall;
 
         private static bool IsLighthouse(BuildingData data) => data != null && data.buildingName == Ships.LighthouseAim.BuildingId;
-
-        /// <summary>Water within lighthouse_coast_cells of the footprint's edge.</summary>
-        private static bool NearWater(MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
-        {
-            var reach = BalanceConfig.Instance != null ? BalanceConfig.Instance.LighthouseCoastCells : 2;
-            for (var x = -reach; x < footprint.x + reach; x++)
-            for (var z = -reach; z < footprint.y + reach; z++)
-                if (mapApplier.IsWaterCell(cell + new Vector2Int(x, z))) return true;
-            return false;
-        }
 
         private static bool FootprintTouchesWater(MeshMapApplier mapApplier, Vector2Int cell, Vector2Int footprint)
         {
@@ -708,6 +708,9 @@ namespace CityBuilder.Buildings
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !IsFreeFor(_selectedBuilding, cell, footprint)) return false;
             // the start zone is a rule about the whole building, not about any one cell of it
             if (wholeFootprintRules && IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
+            // the mandatory lighthouse goes in the same yellow zone, anywhere on its land -- not only
+            // at the shore (the user, 2026-11-02)
+            if (wholeFootprintRules && _lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
@@ -741,8 +744,6 @@ namespace CityBuilder.Buildings
             }
             // ...as long as at least half of it stands in the water
             if (_selectedBuilding.isWaterCategory && wholeFootprintRules && inWater * 2 < footprint.x * footprint.y) return false;
-            // a lighthouse stands at the shore (the archipelago)
-            if (wholeFootprintRules && IsLighthouse(_selectedBuilding) && !NearWater(mapApplier, cell, footprint)) return false;
             return true;
         }
 
@@ -768,8 +769,13 @@ namespace CityBuilder.Buildings
             if (!placedData.keepSelectedAfterPlacement)
             {
                 ClearSelection();
-                // the Town Hall down: the lighthouse is next
-                if (placedData == mandatoryFirstBuilding) TryBeginLighthouse();
+                // the Town Hall down: the King steps out before it, a research ship waits at the
+                // shore (the user, 2026-11-02), and the lighthouse is next
+                if (placedData == mandatoryFirstBuilding)
+                {
+                    GiveStartingParty();
+                    TryBeginLighthouse();
+                }
             }
             else
             {

@@ -256,6 +256,22 @@
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.
 
+## Start of an archipelago game (playtest round 7, 2026-11-02, the user) -- BUILT, not seen, untested
+- Town Hall down -> the KING steps out before it for free (`BuildingPlacer.GiveStartingParty`,
+  HeroRoster.Spawn; not in an Invasion run) and a RESEARCH SHIP (Scout) appears on the sea nearest
+  the hall (`ShipManager.GiveStartScout`). The orcs ignore it (`ShipUnit.GraceCells`, skipped in
+  `NearestShip`) until it has sailed `start_scout_grace_cells` (50) cells; saved as `ShipEntry.graceCells`.
+- The mandatory LIGHTHOUSE goes anywhere inside the same yellow start zone (StartZone.Allows), NOT
+  only at the shore (the coast rule is gone for every lighthouse); the zone overlay stays while it is
+  in hand. The start island is NO LONGER revealed whole (reverses 2026-11-01): only the hall's and
+  the lighthouse's own circles clear the fog.
+- Dungeon mouths and caches: a spot must lie on the island's OWN land (its frame overlaps the
+  neighbours' -- two mouths once stood on the start island).
+- Veins: `island_vein_shore_gap` (4) cells of the island's own land round each vein (none at the coast).
+- Cache tap -> «Найден сундук с сокровищами» (`#log_tide_cache_found`; looted: `#log_tide_cache_empty`).
+  With a boss the serpent stands 4 cells behind the chest, the rest in a half-ring in front (they
+  overlapped). The gold heap in the serpent's coil is part of its model (its hoard).
+
 ## Island riches and the mandatory lighthouse (2026-11-02, the user)
 - **Riches** (`Maps/Archipelago/IslandRiches.cs`, assigned at generation, deterministic): Start =
   coal x`island_start_coal` + copper x`island_start_copper` + its one fertile patch by the Town Hall;

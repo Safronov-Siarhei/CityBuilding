@@ -613,6 +613,8 @@ namespace CityBuilder.Core
         [SerializeField] private int islandCopperVeins = 4;
         [SerializeField] private int islandGoldVeins = 3;
         [SerializeField] private int islandStoneCoal = 2;
+        [SerializeField] private int islandVeinShoreGap = 4;
+        [SerializeField] private int startScoutGraceCells = 50;
         [SerializeField] private int islandFertilePatches = 3;
         // Стражи Глубин's caches (Maps/Archipelago/TideCaches): guards per tier (rows) and kind
         // (crab, shark, puffer, shaman, serpent), the reward per tier (wood, stone, gold, crystals)
@@ -1062,6 +1064,8 @@ namespace CityBuilder.Core
         public int IslandCopperVeins => islandCopperVeins;
         public int IslandGoldVeins => islandGoldVeins;
         public int IslandStoneCoal => islandStoneCoal;
+        public int IslandVeinShoreGap => islandVeinShoreGap;
+        public int StartScoutGraceCells => startScoutGraceCells;
         public int IslandFertilePatches => islandFertilePatches;
 
         private static readonly string[] TideKindIds = { "crab", "shark", "puffer", "shaman", "serpent" };
@@ -1667,6 +1671,8 @@ namespace CityBuilder.Core
             islandCopperVeins = (int)Read(economy, "island_copper_veins", islandCopperVeins);
             islandGoldVeins = (int)Read(economy, "island_gold_veins", islandGoldVeins);
             islandStoneCoal = (int)Read(economy, "island_stone_coal", islandStoneCoal);
+            islandVeinShoreGap = (int)Read(economy, "island_vein_shore_gap", islandVeinShoreGap);
+            startScoutGraceCells = (int)Read(economy, "start_scout_grace_cells", startScoutGraceCells);
             islandFertilePatches = (int)Read(economy, "island_fertile_patches", islandFertilePatches);
             for (var tier = 1; tier <= 4; tier++)
             {

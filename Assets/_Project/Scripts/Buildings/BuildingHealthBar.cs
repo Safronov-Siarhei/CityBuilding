@@ -29,6 +29,7 @@ namespace CityBuilder.Buildings
         // Above the decay marker (3f) so a decaying building under attack shows both without
         // them overlapping.
         private const float HeightAboveBuilding = 3.9f;
+        private const float TopClearance = 0.6f;
 
         private static readonly Color FrameColor = new Color(0.16f, 0.1f, 0.06f, 0.92f);
         private static readonly Color TrackColor = new Color(0.05f, 0.04f, 0.03f, 0.85f);
@@ -46,7 +47,16 @@ namespace CityBuilder.Buildings
         private float _fraction = 1f;
 
         /// <summary>Creates the bar over a building, hidden until the first Report or Pin.</summary>
-        public static BuildingHealthBar CreateFor(Transform building) => Create(building, HeightAboveBuilding, Icon.Shield);
+        public static BuildingHealthBar CreateFor(Transform building)
+        {
+            // over the model's top when that is higher than the usual height (the lighthouse's bar sat
+            // half-way up its tower, 2026-11-02)
+            var height = HeightAboveBuilding;
+            var scale = Mathf.Max(0.0001f, building.lossyScale.y);
+            foreach (var r in building.GetComponentsInChildren<MeshRenderer>())
+                height = Mathf.Max(height, (r.bounds.max.y - building.position.y) / scale + TopClearance);
+            return Create(building, height, Icon.Shield);
+        }
 
         /// <summary>
         /// The bar over a unit (an orc, a beast): `height` metres over its feet and `width` metres

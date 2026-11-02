@@ -86,6 +86,13 @@ prices beside the bottom «!» in one centred row (`BuildingFocusBar`): Barracks
 (`Portrait<Type>.png`), castle = the three heroes (was CastleHeroCards on the castle's card, deleted).
 Hidden while the card is up (`BuildingFocus.DetailsShown`).
 
+## Top resource bar (the user, 2026-11-02)
+- ONLY wood, stone, coins, CRYSTALS (own chip after the coins, always shown outside a run), food,
+  people; ores/bars/coal/gold and the food chain only in the inventory window, which ends with an
+  «Кристаллы улучшения» row (`#inventory_crystals`). In a dungeon: coins + crystals, no people chip.
+- Building hp bars sit over the model's top when it is taller than 3.9 (the lighthouse).
+- Dungeon card «Можно найти: [crystal]» is a centred HorizontalLayoutGroup.
+
 ## Event feed
 Round temporary icons at the left edge whose rim drains; tap = camera glides to the source; hold =
 one-line caption. Player's own actions (built, demolished, research started, recruited) are LogOnly

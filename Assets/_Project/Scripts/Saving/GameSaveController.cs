@@ -236,6 +236,7 @@ namespace CityBuilder.Saving
                 foreach (var ship in data.ships)
                 {
                     var unit = shipManager.Spawn((Ships.ShipKind)ship.kind, new Vector3(ship.x, 0f, ship.z), Quaternion.Euler(0f, ship.yaw, 0f), ship.health);
+                    unit.GraceCells = ship.graceCells;
                     if (!unit.IsOrc) continue;
                     unit.OrcRaid = ship.orcRaid;
                     unit.OrcCargo = ship.orcCargo;
@@ -640,6 +641,7 @@ namespace CityBuilder.Saving
                         kind = (int)ship.Kind, x = ship.transform.position.x, z = ship.transform.position.z, yaw = ship.transform.eulerAngles.y, health = ship.Health,
                         orcRaid = ship.OrcRaid, orcCargo = ship.OrcCargo, orcLevel = ship.OrcLevel,
                         destX = ship.OrcDestination.x, destZ = ship.OrcDestination.z, homeward = ship.OrcHomeward,
+                        graceCells = ship.GraceCells,
                     });
                 }
                 var orcShips = Ships.ShipManager.Instance;

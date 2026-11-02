@@ -119,6 +119,11 @@ namespace CityBuilder.Maps.Archipelago
                     int cx = x + dx, cz = z + dz;
                     if (cx < 0 || cz < 0 || cx >= n || cz >= n) { ok = false; break; }
                     var i = cz * n + cx;
+                    // the island's OWN land: its frame overlaps the neighbours' (two mouths once stood
+                    // on the start island, 2026-11-02)
+                    int fx = cx - island.OffsetX, fz = cz - island.OffsetY;
+                    if (island.Land != null && (fx < 0 || fz < 0 || fx >= island.Frame || fz >= island.Frame
+                        || !island.Land[fz * island.Frame + fx])) { ok = false; break; }
                     ok = world.Land[i] && !world.IsRelief(i) && !world.Cliff[i] && !world.Beach[i] && !world.Shore[i];
                 }
                 if (ok) candidates.Add((d, new Vector2Int(x, z)));

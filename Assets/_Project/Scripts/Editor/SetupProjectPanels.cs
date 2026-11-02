@@ -197,7 +197,8 @@ namespace CityBuilder.EditorTools
             const int perRow = 3;
             const float rowHeight = 84f;
             const float columnWidth = 300f;
-            var rows = (types.Count + perRow - 1) / perRow;
+            // + the upgrade crystals' row at the end (a wallet count, not a ResourceType; the user, 2026-11-02)
+            var rows = (types.Count + 1 + perRow - 1) / perRow;
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
             card.type = Image.Type.Sliced;
@@ -206,22 +207,23 @@ namespace CityBuilder.EditorTools
 
             Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, cardHeight * 0.5f - 50f), new Vector2(880f, 56f)), "#inventory_title");
 
-            var icons = new Image[types.Count];
-            var names = new Text[types.Count];
-            var amounts = new Text[types.Count];
+            var icons = new Image[types.Count + 1];
+            var names = new Text[types.Count + 1];
+            var amounts = new Text[types.Count + 1];
             var top = cardHeight * 0.5f - 120f;
-            for (var i = 0; i < types.Count; i++)
+            for (var i = 0; i <= types.Count; i++)
             {
+                var crystals = i == types.Count;
                 var column = i % perRow;
                 var row = i / perRow;
                 var centre = new Vector2((column - (perRow - 1) * 0.5f) * columnWidth, top - row * rowHeight);
-                var cell = CreateImage(card.transform, "Row_" + types[i], new Color(0.35f, 0.2f, 0.08f, 0.08f));
+                var cell = CreateImage(card.transform, "Row_" + (crystals ? "Crystals" : types[i].ToString()), new Color(0.35f, 0.2f, 0.08f, 0.08f));
                 SetRect(cell.rectTransform, centre, new Vector2(columnWidth - 12f, rowHeight - 10f));
                 cell.raycastTarget = false;
                 icons[i] = CreateImage(cell.transform, "Icon", Color.white);
                 icons[i].preserveAspect = true;
                 icons[i].raycastTarget = false;
-                icons[i].sprite = iconLibrary != null ? iconLibrary.GetIcon(types[i]) : null;
+                icons[i].sprite = crystals ? IconSprite("Res_UpgradeCrystal") : iconLibrary != null ? iconLibrary.GetIcon(types[i]) : null;
                 SetRect(icons[i].rectTransform, new Vector2(-columnWidth * 0.5f + 46f, 0f), new Vector2(56f, 56f));
                 names[i] = CreateText(cell.transform, "Name", string.Empty, 22, new Vector2(10f, 12f), new Vector2(170f, 30f), new Color(1f, 1f, 1f, 0.8f));
                 names[i].alignment = TextAnchor.MiddleLeft;
@@ -240,9 +242,12 @@ namespace CityBuilder.EditorTools
             var typesProp = so.FindProperty("types");
             typesProp.arraySize = types.Count;
             for (var i = 0; i < types.Count; i++) typesProp.GetArrayElementAtIndex(i).enumValueIndex = (int)types[i];
-            WriteObjects(so.FindProperty("icons"), icons);
-            WriteObjects(so.FindProperty("names"), names);
-            WriteObjects(so.FindProperty("amounts"), amounts);
+            WriteObjects(so.FindProperty("icons"), System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Take(icons, types.Count)));
+            WriteObjects(so.FindProperty("names"), System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Take(names, types.Count)));
+            WriteObjects(so.FindProperty("amounts"), System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Take(amounts, types.Count)));
+            so.FindProperty("crystalIcon").objectReferenceValue = icons[types.Count];
+            so.FindProperty("crystalName").objectReferenceValue = names[types.Count];
+            so.FindProperty("crystalAmount").objectReferenceValue = amounts[types.Count];
             so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             so.FindProperty("hud").objectReferenceValue = hud;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -335,12 +340,24 @@ namespace CityBuilder.EditorTools
             findRow.transform.SetParent(card.transform, false);
             SetRect((RectTransform)findRow.transform, new Vector2(0f, -145f), new Vector2(560f, 56f));
             var findWords = CreateText(findRow.transform, "Words", string.Empty, 26, new Vector2(-40f, 0f), new Vector2(300f, 50f), ink);
-            findWords.alignment = TextAnchor.MiddleRight;
+            findWords.alignment = TextAnchor.MiddleCenter;
             var findCrystal = CreateImage(findRow.transform, "Crystal", Color.white);
             findCrystal.sprite = IconSprite("Res_UpgradeCrystal");
             findCrystal.preserveAspect = true;
             findCrystal.raycastTarget = false;
             SetRect(findCrystal.rectTransform, new Vector2(140f, 0f), new Vector2(52f, 52f));
+            // the words and the crystal as one group in the card's middle, however long the words
+            // (the user, 2026-11-02: «надпись не по центру»)
+            var findLayout = findRow.AddComponent<HorizontalLayoutGroup>();
+            findLayout.childAlignment = TextAnchor.MiddleCenter;
+            findLayout.spacing = 10f;
+            findLayout.childControlWidth = true;
+            findLayout.childControlHeight = false;
+            findLayout.childForceExpandWidth = false;
+            findLayout.childForceExpandHeight = false;
+            var crystalSize = findCrystal.gameObject.AddComponent<LayoutElement>();
+            crystalSize.preferredWidth = 52f;
+            crystalSize.minWidth = 52f;
             var enterButton = CreateButton(card.transform, panelSprite, "EnterButton", "#dungeon_entrance_enter", new Vector2(-150f, -220f), new Vector2(260f, 70f));
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(150f, -220f), new Vector2(260f, 70f));
 

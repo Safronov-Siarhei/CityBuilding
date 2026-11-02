@@ -32,6 +32,10 @@ namespace CityBuilder.UI
         [SerializeField] private Text[] names = new Text[0];
         [SerializeField] private Text[] amounts = new Text[0];
         [SerializeField] private ResourceIconLibrary iconLibrary;
+        /// <summary>The upgrade crystals' row, last on the card (a wallet count, not a ResourceType; the user, 2026-11-02).</summary>
+        [SerializeField] private Image crystalIcon;
+        [SerializeField] private Text crystalName;
+        [SerializeField] private Text crystalAmount;
         [SerializeField] private HudHider hud;
 
         public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
@@ -96,6 +100,23 @@ namespace CityBuilder.UI
                     amounts[i].text = amount.ToString();
                     amounts[i].color = amount > 0 ? Ink : InkDimmed;
                 }
+            }
+            ShowCrystals();
+        }
+
+        private void ShowCrystals()
+        {
+            var crystals = Wallet.UpgradeCrystals;
+            if (crystalIcon != null) crystalIcon.color = crystals > 0 ? Color.white : Dimmed;
+            if (crystalName != null)
+            {
+                crystalName.text = Localization.Get("#inventory_crystals");
+                crystalName.color = crystals > 0 ? Ink : InkDimmed;
+            }
+            if (crystalAmount != null)
+            {
+                crystalAmount.text = crystals.ToString();
+                crystalAmount.color = crystals > 0 ? Ink : InkDimmed;
             }
         }
 

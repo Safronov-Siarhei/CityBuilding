@@ -68,6 +68,8 @@ namespace CityBuilder.Ships
             foreach (var ship in _ships)
             {
                 if (ship == null || ship.IsOrc != orc || !ship.IsAlive) continue;
+                // the start's research ship, not yet far enough out to be noticed
+                if (!orc && ship.GraceCells > 0f) continue;
                 var d = ship.transform.position - at;
                 var sq = d.x * d.x + d.z * d.z;
                 if (sq >= bestSq) continue;

@@ -256,9 +256,11 @@ namespace CityBuilder.Maps
                 Gull(spot, null, rng);
             foreach (var spot in Spread(coast, Mathf.Clamp(coast.Count / 80, 2, 24), 10f, rng))
                 Pod(Kind.Fish, spot, 1, rng);
-            foreach (var spot in Spread(open, Mathf.Clamp(open.Count / 300, 0, 6), 30f, rng))
+            // many more of both, shown more often (the user, 2026-11-02: «не нашёл никаких дельфинов и китов»)
+            open.AddRange(deep);
+            foreach (var spot in Spread(open, Mathf.Clamp(open.Count / 90, 2, 18), 22f, rng))
                 Pod(Kind.Dolphin, spot, 2 + rng.Next(2), rng);
-            foreach (var spot in Spread(deep, Mathf.Clamp(deep.Count / 600, 0, 2), 60f, rng))
+            foreach (var spot in Spread(deep, Mathf.Clamp(deep.Count / 200, 1, 8), 40f, rng))
                 Pod(Kind.Whale, spot, 1, rng);
         }
 
@@ -331,7 +333,7 @@ namespace CityBuilder.Maps
         }
 
         private static float Pause(Kind kind, System.Random rng) =>
-            kind == Kind.Fish ? Range(rng, 4f, 10f) : kind == Kind.Dolphin ? Range(rng, 20f, 45f) : Range(rng, 40f, 90f);
+            kind == Kind.Fish ? Range(rng, 4f, 10f) : kind == Kind.Dolphin ? Range(rng, 5f, 12f) : Range(rng, 10f, 22f);
 
         // ------------------------------------------------------------------ on and off with the view
 

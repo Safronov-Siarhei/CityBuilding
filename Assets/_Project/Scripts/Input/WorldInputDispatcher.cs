@@ -115,10 +115,23 @@ namespace CityBuilder.InputControl
                 else entrance.OpenCard();
                 return;
             }
+            if (TryReportCache(screenPosition, tapCamera)) return;
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryReportDeposit(screenPosition, tapCamera)) return;
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryShowFertileLand(screenPosition, tapCamera)) return;
             if ((buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)) && TryShowShoal(screenPosition, tapCamera)) return;
             if (buildingSelector != null) buildingSelector.HandleWorldTap(screenPosition);
+        }
+
+        /// <summary>A tap on a guarded cache's ruin or chest on the archipelago: «Найден сундук с сокровищами».</summary>
+        private static bool TryReportCache(Vector2 screenPosition, Camera tapCamera)
+        {
+            var map = Maps.MeshMapApplier.Instance;
+            if (map == null || tapCamera == null || Maps.Archipelago.TideCaches.Instance == null) return false;
+            if (!map.TryRaycastGround(tapCamera.ScreenPointToRay(screenPosition), out var hit)) return false;
+            var cache = Maps.Archipelago.TideCaches.At(hit.point);
+            if (cache == null) return false;
+            Maps.Archipelago.TideCaches.Report(cache);
+            return true;
         }
 
         /// <summary>

@@ -137,10 +137,13 @@ namespace CityBuilder.Maps
             var riches = applier.IslandRichesOf;
             var n = GridManager.Instance.GridSize.x;
             var byIsland = new List<(Vector2Int origin, Vector3 centre)>[riches.Length];
+            // veins stay off the coast (the user, 2026-11-02): this many cells of the island's own land round the plot
+            var gap = BalanceConfig.Instance != null ? BalanceConfig.Instance.IslandVeinShoreGap : 4;
             foreach (var c in candidates)
             {
                 var i = c.origin.y * n + c.origin.x;
                 if (i < 0 || i >= labels.Length || labels[i] < 0) continue;
+                if (!Inland(labels, n, c.origin, labels[i], gap)) continue;
                 (byIsland[labels[i]] ??= new List<(Vector2Int, Vector3)>()).Add((c.origin, c.centre));
             }
             var b = BalanceConfig.Instance;
@@ -169,6 +172,17 @@ namespace CityBuilder.Maps
                         break;
                 }
             }
+        }
+
+        private static bool Inland(int[] labels, int n, Vector2Int origin, int island, int gap)
+        {
+            for (var z = origin.y - gap; z < origin.y + OreDeposit.Size.y + gap; z++)
+            for (var x = origin.x - gap; x < origin.x + OreDeposit.Size.x + gap; x++)
+            {
+                if (x < 0 || z < 0 || x >= n || z * n + x >= labels.Length) return false;
+                if (labels[z * n + x] != island) return false;
+            }
+            return true;
         }
 
         private void PlaceOn(List<(Vector2Int origin, Vector3 centre)> spots, OreKind kind, int count, System.Random random)
