@@ -97,8 +97,9 @@ namespace CityBuilder.UI
             if (!_plaque.gameObject.activeSelf) return;
             var focus = BuildingFocus.Instance;
             var camera = Camera.main;
-            // let go, or its card over it: the plaque goes
-            if (_target == null || focus == null || focus.Entrance != _target || camera == null || ModalGate.IsBlocked)
+            // let go, or its card open (the card says the level itself -- the user, 2026-11-02): the plaque goes
+            if (_target == null || focus == null || focus.Entrance != _target || camera == null || ModalGate.IsBlocked
+                || DungeonEntranceCard.Instance != null && DungeonEntranceCard.Instance.IsOpen)
             {
                 _plaque.gameObject.SetActive(false);
                 _target = null;

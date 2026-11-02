@@ -112,6 +112,8 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
   surface is darkened under it (forward pass, along the sun ray); the sheet itself
   (`CloudLayer.shader`, `Materials/CloudLayer.mat`) at 10 m fades in only when the camera is
   15.5–18.5 m over the ground (max zoom). Not in a dungeon; globals zeroed in OnDestroy.
+  Fix 2026-11-02: the fog blanket (Transparent+50) covered the clouds in a rectangle -> clouds now
+  Transparent+80 and the sheet fades out round its rim; shadow strength 0.28 -> 0.12 («как дым»).
 - The terrain palette material is now `CityBuilder/BuildingDetail` (was Simple Lit) so the land
   takes the cloud shadows.
 - **Not seen in game / on a phone; no tests run** (user: tests later, one general run).
@@ -120,13 +122,17 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
   `Models/Fauna/Fauna{Gull,Bird,Deer,Rabbit,Fish,Dolphin,Whale}.fbx` (export_fbx «Fauna*», jointed:
   wings/legs/head via `FigureAnimator`, Tail turned by code). `Maps/Wildlife.cs`, started by
   MeshMapApplier (not dungeon, not Invasion), models in `wildlifeModels` (Wildlife.Kind order, wired
-  in SetupProjectCityScene). Only round the camera's focus (reach = cam height x1.3, 10..28 m), only
-  on revealed cells, pooled: 2 deer + 3 hares graze/wander on free flat land and bolt (3.5 m) from
-  citizens/soldiers/orcs; 3 gulls circle coasts + 1 over each ship in view; a songbird flock rises
-  from a tree every 15-30 s; a fish leaps near a coast every 6-12 s; 2-3 dolphins arc through open
-  water every 35-70 s; a whale surfaces and dives far out every 80-150 s. Shoal fish untouched
-  (boxy by the user's wish). Visual-only constants live in Wildlife.cs (no gameplay numbers).
-  Not seen in game; no tests.
+  in SetupProjectCityScene). **User rule (same day): animals have FIXED places, never vanish and
+  reappear elsewhere as the camera moves.** `LayOut()` once, 2 s after start: walks the grid on a
+  3-cell stride into land / coast / open / deep water, seeds from the layout, spreads homes apart:
+  deer pairs and hares walk a loop of up to 5 waypoints round their home (graze, walk, bolt 3.5 m from
+  citizens/soldiers/orcs, then back to the round); gulls circle fixed coast spots (+1 per ship in view,
+  kept with it); fish leap / dolphin pods arc / whale surfaces at fixed spots along a fixed line,
+  alternating direction, under water between showings. Off-view (> 1.5 x reach, reach = cam height
+  x1.3, 10..28 m) or unrevealed animals are SetActive(false) and resume where they were; models made
+  on first sight. Songbird flocks still rise from a random tree in view (pooled). Shoal fish
+  untouched (boxy by the user's wish). Visual-only constants in Wildlife.cs. LayOut's raycast
+  cost on a big map not measured on a phone. Not seen in game; no tests.
   Points of interest (wrecks, ruins, landmarks) liked but models need approval first. Island
   biomes and neutral ships: «пока что нет».
 

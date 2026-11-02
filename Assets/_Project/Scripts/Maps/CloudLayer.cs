@@ -19,7 +19,8 @@ namespace CityBuilder.Maps
         private const float TileMeters = 70f;
         private const float Cover = 0.56f;
         private const float Softness = 0.16f;
-        private const float ShadowStrength = 0.28f;
+        // only a light dimming: the user, 2026-11-02 -- at 0.28 it read as smoke
+        private const float ShadowStrength = 0.12f;
         private const float DriftMetersPerSecond = 1.1f;
         private static readonly Vector2 WindDirection = new Vector2(0.94f, 0.34f);
         // the camera's height over the ground at which the clouds start to show, and are whole
