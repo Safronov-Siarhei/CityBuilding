@@ -621,6 +621,8 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipOrcTransport.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Ships/ShipOrcWar.fbx"),
             });
+            // a ship's move order shows a buoy on the water (Tools/blender/orderbuoy.py)
+            shipSO.FindProperty("orderBuoyModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/OrderBuoy.fbx");
             shipSO.FindProperty("orcShipyardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcShipyard1.fbx");
             shipSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();

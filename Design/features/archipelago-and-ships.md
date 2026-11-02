@@ -265,7 +265,10 @@
 - A player ship not held and not sailing for `ship_idle_return_sec` (30) sails home: the sea by the
   Town Hall or by a working Shipyard, whichever is nearer, unless within `ship_home_reach_cells` (12)
   (`ShipUnit.TickIdle` -> `ShipManager.SendHome`).
-- OPEN: the ship's move marker -- the user asked for a format proposal (a flag in the water looks poor).
+- The ship's move marker is a BUOY (the user's pick of 4, 2026-11-02): `Models/Buildings/OrderBuoy.fbx`
+  (`Tools/blender/orderbuoy.py`, white/red float, lamp on legs), set where the voyage ends
+  (`ShipUnit.Destination`), dropped in with a bounce, bobbing; it sinks when the ship arrives, sinks,
+  or is sent elsewhere (`Ships/ShipManagerBuoy.cs`, one buoy for the latest order; only player taps).
 
 ## Start of an archipelago game (playtest round 7, 2026-11-02, the user) -- BUILT, not seen, untested
 - Town Hall down -> the KING steps out before it for free (`BuildingPlacer.GiveStartingParty`,

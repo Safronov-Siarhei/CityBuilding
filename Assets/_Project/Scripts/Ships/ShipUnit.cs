@@ -75,6 +75,8 @@ namespace CityBuilder.Ships
         public int MaxHealth => ShipStats.MaxHealth(Kind);
         public bool Selected { get; private set; }
         public bool IsMoving => _corners.Count > 0;
+        /// <summary>Where the current voyage ends (its last corner); where it stands when not sailing.</summary>
+        public Vector3 Destination => _corners.Count > 0 ? _corners[_corners.Count - 1] : transform.position;
         public bool IsOrc => ShipStats.IsOrc(Kind);
 
         /// <summary>An orc ship's voyage (ShipManager runs it): the raid it sails in, the orcs it carries and at what level, where it lands them, and whether it is on its way home.</summary>

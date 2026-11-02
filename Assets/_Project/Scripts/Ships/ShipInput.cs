@@ -74,7 +74,7 @@ namespace CityBuilder.Ships
                 Select(null);
                 return false;
             }
-            Selected.SailTo(point);
+            if (Selected.SailTo(point)) ShipManager.Instance?.ShowBuoy(Selected);
             return true;
         }
     }

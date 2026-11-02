@@ -336,6 +336,7 @@ namespace CityBuilder.Ships
         {
             TickOrcs();
             TickShoals();
+            TickBuoy();
             for (var i = _boarding.Count - 1; i >= 0; i--)
             {
                 var b = _boarding[i];
