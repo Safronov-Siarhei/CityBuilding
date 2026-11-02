@@ -1,17 +1,25 @@
 # Combat core: damage, towers, projectiles, routes
 
-> **2026-11-02 WALKABLE WALLS -- DECIDED, models in DRAFT (`Tools/blender/walls_walk.py`, not exported), no code yet.**
-> The user's rules: wall stays 1x1; lvl1 palisade, lvl2 low stone (as now); from lvl3 a thick wall
-> (WALK_T 0.78) with merlons on BOTH faces and a paved walk; height 0.9/1.1/1.3 cells for lvl3/4/5
-> (approved), dark stone, no light bands, merlons every 0.2. Ranged soldiers AND ranged heroes walk on
-> it; 1 cell = 1 standing fighter, others pass through to free cells. Up only through a Tower/Fortified
-> Tower of level 3+ standing next to the wall: its model swaps to the WALL version (stair tower /
-> round tower), a doorway ("-Door" piece) ONLY on the sides a wall really joins; a tower of lvl1-2
-> stays as it is and is no way up. Towers keep shooting. NO round towers (the user, v3): the 2x2 Fortified wall tower is square so walls butt flat; it can take a doorway per cell of each side. v4: towers must be JUICY like the rest of the game (the user: «унылые, нудятина»): tiled roof in the level colour (lvl3 red, lvl4 blue, lvl5 blue+gold), timber storey with lit windows and shutters, banners, shields, torches, flags, corner bartizans on the 2x2. Gate lvl3+ in a wall = gatehouse, the walk
-> runs over it. Orders: option A (select ranged units, tap a wall cell, they go via the nearest wall
-> tower); in a defence ranged units seek high ground on their own and climb walls if they can.
-> Proposed (not yet confirmed): melee orcs can't reach them, throwers can; +range on a wall; a fighter
-> falls when his wall cell is destroyed. Movement: a graph of wall cells, not a NavMesh on top.
+> **2026-11-02 WALKABLE WALLS -- BUILT 704b1803, untested, not seen in game.**
+> Rules (the user): Fence/Gate from `wall_walk_from_level` (3) are thick walls (WALK_T 0.78) with merlons on
+> both faces and a walk at `wall_walk_height_3..5` (0.9/1.1/1.3 cells); dark stone, juicy towers (tiled roof
+> by level, timber storey, arched lit windows, banners, torches, flags). Tower/Fortified Tower lvl3+ against
+> such a wall = the stair up (WallTower / square WallFortTower), doorways only where a wall joins; lvl1-2
+> tower is no way up; towers keep shooting. Gate lvl3+ = gatehouse, the walk runs over it (FortifiedGate is
+> NOT walkable). Ranged soldiers + ranged heroes only; one per cell, others pass through. Order: select
+> ranged, tap a wall/stair tower (ArmyOrderInput.TryOrderOntoWall); idle ranged ones go up on their own
+> when an orc is within `wall_seek_radius_cells` (14) and a free reachable wall cell too. On the wall:
+> +`wall_range_bonus_cells` (2) range, never chase; melee orcs can't reach them (OrcUnit.CanReach), throwers
+> can; the wall cell destroyed under one -> he falls and dies. A ground move/attack order brings them
+> down by the nearest stair first (ArmyGroup.OrderMoveTo/OrderAttack -> LeaveWall). Climb `wall_climb_sec`.
+> Code: `Buildings/WallWalk.cs` (cell graph rebuilt on MarkDirty from BuildingInstance init/destroy/level;
+> posts; BFS paths; stairs), `Buildings/WallTowerLook.cs` (hidden bodies + per-slot doors built into the
+> Tower/FortifiedTower prefabs by `SetupProjectBuildings.AddWallTowerLook`; hides BuildingLevelAppearance via
+> SetHidden), `Combat/SoldierUnitWalls.cs` (partial SoldierUnit: phases ToStair/Up/Walking/Posted/Down).
+> Models: `Tools/blender/walls_walk.py` (no args = install into Fence1-lvl3..5-*, Gate1-lvl3..5 turned 90,
+> WallTower*/WallFortTower* + -Door; `-- <dir>` = render draft images). Traps: a save made with fighters on
+> the walls loads them on the ground; Gate lvl3-5 measures 1.17 cells (open leaves overhang).
+
 
 > **Status (2026-10-21):** ranged shots are DRAWN since 2026-10-20 (`050f61a8`) and damage lands on
 > IMPACT. Not seen on a phone.
