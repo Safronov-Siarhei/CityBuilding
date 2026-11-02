@@ -487,7 +487,10 @@ namespace CityBuilder.Maps
             if (_permanent == null) return;
             System.Array.Clear(_permanent, 0, _permanent.Length);
             System.Array.Clear(_citizenRevealed, 0, _citizenRevealed.Length);
-            _walkers.Clear();
+            // the walkers (ships, heroes) keep clearing round themselves, and every building clears
+            // its own circle again -- the lighthouse's too (the user, 2026-11-02: after the cheat put
+            // the fog back, only the walking citizens cleared it)
+            foreach (var building in FindObjectsByType<Buildings.BuildingInstance>(FindObjectsSortMode.None)) building.RevealOwnFog();
             _active = true;
             _needsSnap = true;
         }

@@ -631,6 +631,11 @@ namespace CityBuilder.EditorTools
             clockSO.ApplyModifiedPropertiesWithoutUndo();
             clockPlaque.gameObject.SetActive(false);
 
+            var homeTap = viewGO.AddComponent<MinimapHomeTap>();
+            var homeTapSO = new SerializedObject(homeTap);
+            homeTapSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;
+            homeTapSO.ApplyModifiedPropertiesWithoutUndo();
+
             var indicator = viewGO.AddComponent<MinimapCameraIndicator>();
             var indicatorSO = new SerializedObject(indicator);
             indicatorSO.FindProperty("cameraRig").objectReferenceValue = cameraRig;

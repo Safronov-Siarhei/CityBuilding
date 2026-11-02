@@ -90,6 +90,7 @@ Hidden while the card is up (`BuildingFocus.DetailsShown`).
 - ONLY wood, stone, coins, CRYSTALS (own chip after the coins, always shown outside a run), food,
   people; ores/bars/coal/gold and the food chain only in the inventory window, which ends with an
   «Кристаллы улучшения» row (`#inventory_crystals`). In a dungeon: coins + crystals, no people chip.
+- A tap on the minimap jumps the camera to the Town Hall (`UI/MinimapHomeTap`; nothing in a dungeon).
 - Building hp bars sit over the model's top when it is taller than 3.9 (the lighthouse).
 - Dungeon card «Можно найти: [crystal]» is a centred HorizontalLayoutGroup.
 

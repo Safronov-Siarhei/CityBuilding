@@ -256,6 +256,17 @@
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.
 
+## Rules of round 8 (the user, 2026-11-02) -- BUILT, not seen, untested
+- An island with NONE of the player's buildings takes a building only while a living hero stands on
+  it (`BuildingPlacer.IslandOpenToBuild`, rechecked twice a second while placing; the Town Hall and
+  its lighthouse exempt; `#place_blocked_no_hero`). Other maps unaffected.
+- A move order (or a walk to a dungeon mouth) to ANOTHER island is refused with
+  `#order_other_island` (`MeshMapApplier.SameIsland` / `IslandAt`, ArmyOrderInput.OnFoot).
+- A player ship not held and not sailing for `ship_idle_return_sec` (30) sails home: the sea by the
+  Town Hall or by a working Shipyard, whichever is nearer, unless within `ship_home_reach_cells` (12)
+  (`ShipUnit.TickIdle` -> `ShipManager.SendHome`).
+- OPEN: the ship's move marker -- the user asked for a format proposal (a flag in the water looks poor).
+
 ## Start of an archipelago game (playtest round 7, 2026-11-02, the user) -- BUILT, not seen, untested
 - Town Hall down -> the KING steps out before it for free (`BuildingPlacer.GiveStartingParty`,
   HeroRoster.Spawn; not in an Invasion run) and a RESEARCH SHIP (Scout) appears on the sea nearest

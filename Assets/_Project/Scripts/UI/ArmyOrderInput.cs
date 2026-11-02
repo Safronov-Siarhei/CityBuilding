@@ -94,6 +94,7 @@ namespace CityBuilder.UI
                 entrance.OpenCard();
                 return true;
             }
+            if (entrance != null && !OnFoot(army.SelectedGroup, entrance.transform.position)) return true;
             if (entrance != null)
             {
                 var walking = army.SelectedGroup;
@@ -134,10 +135,22 @@ namespace CityBuilder.UI
             }
 
             var group = army.SelectedGroup;
+            if (!OnFoot(group, destination)) return true;
             group.OrderMoveTo(destination);
             group.NotifyPlayerOrder();
             if (group.Count > 0) OrderMarker.ShowFlagFor(group.Members[0].transform, destination);
             return true;
+        }
+
+        /// <summary>A walk to another island across the sea is refused, with a word why (a ship takes them there).</summary>
+        private bool OnFoot(ArmyGroup group, Vector3 destination)
+        {
+            var map = MeshMapApplier.Instance;
+            if (map == null || group == null || group.Count == 0 || map.SameIsland(group.Members[0].transform.position, destination)) return true;
+            OrderMarker.HideOrder();
+            OrderMarker.ShowRefused(destination);
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Get("#order_other_island"), EventSeverity.Warning, EventGlyph.Alert, null));
+            return false;
         }
 
         /// <summary>Nearest attackable thing under the finger. Scans every hit, not just the closest collider, so a tree standing in front of an orc doesn't swallow the order.</summary>

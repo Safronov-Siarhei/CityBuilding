@@ -235,6 +235,55 @@ namespace CityBuilder.Ships
             return new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Wood, amount = wood } };
         }
 
+        /// <summary>
+        /// Sails a ship home: to the sea by the Town Hall's island or by a Shipyard, whichever is
+        /// nearer -- unless it is already within ship_home_reach_cells of it.
+        /// </summary>
+        public void SendHome(ShipUnit ship)
+        {
+            if (ship == null || !ship.IsAlive) return;
+            var here = ship.transform.position;
+            var hall = BuildingInstance.TownHall;
+            var found = false;
+            var home = Vector3.zero;
+            var best = float.MaxValue;
+            void Consider(Vector3 point)
+            {
+                var d = Flat(point - here);
+                if (d >= best) return;
+                best = d;
+                home = point;
+                found = true;
+            }
+            if (hall != null)
+            {
+                if (_hallSeaFor != hall)
+                {
+                    _hallSeaFor = hall;
+                    _hasHallSea = false;
+                    for (var radius = 10f; radius <= 80f && !_hasHallSea; radius += 10f)
+                        _hasHallSea = TrySampleSea(hall.transform.position, radius, out _hallSea);
+                }
+                if (_hasHallSea) Consider(_hallSea);
+            }
+            if (BuildingInstance.HasAny(ShipyardId))
+            {
+                foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                {
+                    if (building.Data == null || building.Data.buildingName != ShipyardId || !building.IsOperational) continue;
+                    if (TrySampleSea(building.transform.position, 12f, out var sea)) Consider(sea);
+                }
+            }
+            if (!found) return;
+            var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f;
+            var reach = (BalanceConfig.Instance != null ? BalanceConfig.Instance.ShipHomeReachCells : 12f) * cell;
+            if (best > reach) ship.SailTo(home);
+        }
+
+        private BuildingInstance _hallSeaFor;
+        private bool _hasHallSea;
+        private Vector3 _hallSea;
+
         /// <summary>A working Shipyard within ship_repair_reach_meters of the ship, or null.</summary>
         public static BuildingInstance ShipyardNear(ShipUnit ship)
         {

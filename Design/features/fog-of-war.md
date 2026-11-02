@@ -22,3 +22,7 @@ PlayMode `FogTests` (Map 3; photos `fog-*.png`), `SettingsPanelTests`; EditMode 
 ## Watch
 Transparent overdraw when zoomed out over lots of fog; at 5 m min zoom over hills the camera can sit
 under the blanket; grass tufts show through the thin edge.
+
+- 2026-11-02: the cheat «Вернуть туман» (ConcealAll) no longer drops the walkers (ships, heroes) and
+  every building (`BuildingInstance.RevealOwnFog`) clears its own circle again -- after it, only the
+  citizens used to clear the fog.

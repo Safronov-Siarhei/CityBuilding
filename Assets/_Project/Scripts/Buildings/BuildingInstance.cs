@@ -726,6 +726,14 @@ namespace CityBuilder.Buildings
                 ? BalanceConfig.Instance.LighthouseLightCells(Level)
                 : Data != null ? Data.fogRevealRadius : 0;
 
+        /// <summary>Clears this building's own circle of fog again (the cheat that puts the fog back).</summary>
+        public void RevealOwnFog()
+        {
+            if (Data == null) return;
+            var footprint = RotatedFootprint();
+            FogOfWarManager.Instance?.RevealPermanent(OriginCell + new Vector2Int(footprint.x / 2, footprint.y / 2), RevealRadius());
+        }
+
         /// <summary>A lighthouse raised (or loaded) at a higher level lights its wider circle.</summary>
         private void RevealAtLevel()
         {

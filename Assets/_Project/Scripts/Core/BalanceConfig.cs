@@ -510,6 +510,8 @@ namespace CityBuilder.Core
         [SerializeField] private float kingRespawnPerLevelSeconds = 2f;
         [SerializeField] private float shipRepairWoodPerHp = 0.5f;
         [SerializeField] private float shipRepairReachMeters = 14f;
+        [SerializeField] private float shipIdleReturnSeconds = 30f;
+        [SerializeField] private float shipHomeReachCells = 12f;
         [SerializeField] private int orcShipyardHealth = 900;
         [SerializeField] private int orcShipyardDamage = 10;
         [SerializeField] private float orcShipyardRangeMeters = 12f;
@@ -948,6 +950,8 @@ namespace CityBuilder.Core
         public float ShipRepairWoodPerHp => shipRepairWoodPerHp;
         /// <summary>How near a working Shipyard a ship must be to be repaired, metres.</summary>
         public float ShipRepairReachMeters => shipRepairReachMeters;
+        public float ShipIdleReturnSeconds => shipIdleReturnSeconds;
+        public float ShipHomeReachCells => shipHomeReachCells;
         /// <summary>The orcs' shipyard on the archipelago (phase 4b): its health, its gun, and how long the orcs take to raise it again once broken.</summary>
         public int OrcShipyardHealth => orcShipyardHealth;
         public int OrcShipyardDamage => orcShipyardDamage;
@@ -1567,6 +1571,8 @@ namespace CityBuilder.Core
             kingRespawnPerLevelSeconds = Read(economy, "king_respawn_per_level_sec", kingRespawnPerLevelSeconds);
             shipRepairWoodPerHp = Read(economy, "ship_repair_wood_per_hp", shipRepairWoodPerHp);
             shipRepairReachMeters = Read(economy, "ship_repair_reach_meters", shipRepairReachMeters);
+            shipIdleReturnSeconds = Read(economy, "ship_idle_return_sec", shipIdleReturnSeconds);
+            shipHomeReachCells = Read(economy, "ship_home_reach_cells", shipHomeReachCells);
             orcShipyardHealth = (int)Read(economy, "orc_shipyard_health", orcShipyardHealth);
             orcShipyardDamage = (int)Read(economy, "orc_shipyard_damage", orcShipyardDamage);
             orcShipyardRangeMeters = Read(economy, "orc_shipyard_range_meters", orcShipyardRangeMeters);

@@ -122,6 +122,28 @@ namespace CityBuilder.Maps
         public Archipelago.IslandRiches.Riches[] IslandRichesOf { get; private set; }
 
         /// <summary>The archipelago island's riches under `cell`; None off the archipelago or at sea.</summary>
+        /// <summary>The archipelago's island under a cell (index into IslandRichesOf), -1 for the sea or any other map.</summary>
+        public int IslandAt(Vector2Int cell)
+        {
+            if (IslandLabels == null || GridManager.Instance == null) return -1;
+            var n = GridManager.Instance.GridSize.x;
+            var i = cell.y * n + cell.x;
+            return cell.x < 0 || cell.y < 0 || cell.x >= n || i >= IslandLabels.Length ? -1 : IslandLabels[i];
+        }
+
+        /// <summary>
+        /// Whether a walker can get from `a` to `b` on foot: always off the archipelago; there, both on
+        /// the same island (the user, 2026-11-02: the King was sent to another island across the sea).
+        /// A point on no island (a beach's edge) is let through.
+        /// </summary>
+        public bool SameIsland(Vector3 a, Vector3 b)
+        {
+            var grid = GridManager.Instance;
+            if (IslandLabels == null || grid == null) return true;
+            int from = IslandAt(grid.WorldToCell(a)), to = IslandAt(grid.WorldToCell(b));
+            return from < 0 || to < 0 || from == to;
+        }
+
         public Archipelago.IslandRiches.Riches RichesAt(Vector2Int cell)
         {
             if (IslandLabels == null || GridManager.Instance == null) return Archipelago.IslandRiches.Riches.None;

@@ -89,6 +89,8 @@ namespace CityBuilder.Ships
         /// </summary>
         public float GraceCells { get; set; }
         private Vector3 _graceFrom;
+        // seconds with no order and not in the player's hand: at ship_idle_return_sec it sails home
+        private float _idle;
         /// <summary>Going down: out of the fight, the selection and the save; gone in a few seconds.</summary>
         public bool Sinking { get; private set; }
 
@@ -225,6 +227,24 @@ namespace CityBuilder.Ships
 
         public void Stop() => _corners.Clear();
 
+        /// <summary>
+        /// A ship the player has let go of (not held, not sailing) for ship_idle_return_sec sails back
+        /// to the main island or the nearer Shipyard (the user, 2026-11-02).
+        /// </summary>
+        private void TickIdle(float t)
+        {
+            if (Selected || IsMoving)
+            {
+                _idle = 0f;
+                return;
+            }
+            _idle += t;
+            var wait = BalanceConfig.Instance != null ? BalanceConfig.Instance.ShipIdleReturnSeconds : 30f;
+            if (_idle < wait) return;
+            _idle = 0f;
+            ShipManager.Instance?.SendHome(this);
+        }
+
         private void Update()
         {
             var t = Time.deltaTime;
@@ -238,6 +258,7 @@ namespace CityBuilder.Ships
                 return;
             }
             TickCannons(t);
+            if (!IsOrc) TickIdle(t);
             if (GraceCells > 0f)
             {
                 var moved = transform.position - _graceFrom;

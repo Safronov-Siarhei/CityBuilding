@@ -594,6 +594,7 @@ namespace CityBuilder.Buildings
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
+                if (mapApplier != null && !IslandOpenToBuild(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_no_hero");
                 if (_lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
@@ -604,6 +605,50 @@ namespace CityBuilder.Buildings
 
             return string.Empty;
         }
+
+        /// <summary>
+        /// The archipelago: an island with none of the player's buildings yet takes one only while a
+        /// hero stands on it (the user, 2026-11-02: otherwise anything goes up anywhere and the ships
+        /// are worth nothing). The Town Hall and its lighthouse are exempt; so is every other map.
+        /// </summary>
+        private bool IslandOpenToBuild(MeshMapApplier map, Vector2Int cell, Vector2Int footprint)
+        {
+            if (map.IslandLabels == null || IsPlacingMandatoryBuilding) return true;
+            var island = -1;
+            for (var x = 0; x < footprint.x && island < 0; x++)
+            for (var z = 0; z < footprint.y && island < 0; z++)
+                island = map.IslandAt(cell + new Vector2Int(x, z));
+            if (island < 0) return true;
+            if (Time.unscaledTime >= _islandsCheckedAt + IslandsRecheckSeconds)
+            {
+                // who stands where and what is built where, at most twice a second while placing
+                _islandsCheckedAt = Time.unscaledTime;
+                _islandsSettled.Clear();
+                _islandsWithHero.Clear();
+                var grid = GridManager.Instance;
+                foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                {
+                    var at = map.IslandAt(building.OriginCell);
+                    if (at >= 0) _islandsSettled.Add(at);
+                }
+                var roster = Combat.HeroRoster.Instance;
+                if (roster != null && grid != null)
+                {
+                    foreach (var hero in roster.Heroes)
+                    {
+                        if (hero == null || hero.IsFallen || hero.Unit == null || !hero.Unit.gameObject.activeInHierarchy) continue;
+                        var at = map.IslandAt(grid.WorldToCell(hero.Unit.transform.position));
+                        if (at >= 0) _islandsWithHero.Add(at);
+                    }
+                }
+            }
+            return _islandsSettled.Contains(island) || _islandsWithHero.Contains(island);
+        }
+
+        private const float IslandsRecheckSeconds = 0.5f;
+        private float _islandsCheckedAt = -1f;
+        private readonly HashSet<int> _islandsSettled = new HashSet<int>();
+        private readonly HashSet<int> _islandsWithHero = new HashSet<int>();
 
         private static bool IsTownHall(BuildingData data) => data != null && data.buildingName == BuildingIds.TownHall;
 
@@ -714,6 +759,7 @@ namespace CityBuilder.Buildings
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
+            if (wholeFootprintRules && !IslandOpenToBuild(mapApplier, cell, footprint)) return false;
 
             var inWater = 0;
             for (var x = 0; x < footprint.x; x++)
