@@ -565,6 +565,7 @@ namespace CityBuilder.Combat
             var speed = _walkSpeed * Weather.SpeedMultiplier;   // the New Year's blizzard slows everyone
             if (SlowedFor > 0f) speed *= _slowFactor;
             if (_hasteLeft > 0f) speed *= _hasteFactor;
+            speed *= Buildings.Moat.SpeedAt(transform.position);   // wading a moat
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(direction * speed * Time.deltaTime);

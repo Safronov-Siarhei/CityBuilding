@@ -764,6 +764,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("level").objectReferenceValue = level;
             so.FindProperty("health").objectReferenceValue = health;
             so.FindProperty("defense").objectReferenceValue = defense;
+            WriteObjects(so.FindProperty("statParts"), new Object[] { heart.gameObject, health.gameObject, shield.gameObject, defense.gameObject });
             so.FindProperty("workerRow").objectReferenceValue = workerRow;
             so.FindProperty("workers").objectReferenceValue = workers;
             so.FindProperty("free").objectReferenceValue = free;

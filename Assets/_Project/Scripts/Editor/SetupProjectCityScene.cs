@@ -231,6 +231,13 @@ namespace CityBuilder.EditorTools
             // on the neighbours it finds (see FenceShape), and neither is a separate building.
             var fenceData = CreateFenceBuildingData("Fence", trimMaterial);
 
+            // the Moat (Tools/blender/moat.py, the user 2026-11-02): water laid cell by cell like a fence
+            var moatData = CreateBuildingData(
+                Moat.Id, new Vector2Int(1, 1), height: 0.1f,
+                wallColor: new Color(0.3f, 0.55f, 0.75f), roofColor: new Color(0.4f, 0.4f, 0.4f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                keepSelectedAfterPlacement: true);
+
             var roadData = CreateBuildingData(
                 "Road", new Vector2Int(1, 1), height: 0.05f,
                 wallColor: new Color(0.32f, 0.32f, 0.34f), roofColor: new Color(0.85f, 0.75f, 0.3f),
@@ -314,7 +321,7 @@ namespace CityBuilder.EditorTools
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
-                fortifiedTowerData, fortifiedGateData,
+                fortifiedTowerData, fortifiedGateData, moatData,
                 bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData
             };

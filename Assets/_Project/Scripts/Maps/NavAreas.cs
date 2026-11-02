@@ -14,6 +14,9 @@ namespace CityBuilder.Maps
     {
         public const int Gate = 3;
 
+        /// <summary>A moat's water (the user, 2026-11-02): open to all, but dear to path over (moat_path_cost), so a road or dry land round it is taken when there is one.</summary>
+        public const int Moat = 4;
+
         public static int WithoutGates => NavMesh.AllAreas & ~(1 << Gate);
     }
 }

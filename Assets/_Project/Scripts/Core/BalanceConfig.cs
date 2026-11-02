@@ -433,6 +433,11 @@ namespace CityBuilder.Core
         [SerializeField] private float wallRangeBonusCells = 2f;
         [SerializeField] private float wallSeekRadiusCells = 14f;
         [SerializeField] private float wallClimbSeconds = 1.2f;
+        // the Moat (the user, 2026-11-02): the crystals its research costs, the speed in its water,
+        // and how dear its cells are to a route (NavMesh area cost; dry land is 1)
+        [SerializeField] private int moatResearchCrystals = 10;
+        [SerializeField] private float moatSpeedMultiplier = 0.4f;
+        [SerializeField] private float moatPathCost = 6f;
         // boulders laid on the archipelago's start island on top of its share (island_start_rocks)
         [SerializeField] private int islandStartRocks = 40;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -936,6 +941,9 @@ namespace CityBuilder.Core
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
         public float WallClimbSeconds => wallClimbSeconds;
+        public int MoatResearchCrystals => moatResearchCrystals;
+        public float MoatSpeedMultiplier => moatSpeedMultiplier;
+        public float MoatPathCost => moatPathCost;
 
         /// <summary>The walk's height above the ground on a wall of `level` (3..5), in cells.</summary>
         public float WallWalkHeight(int level) =>
@@ -1599,6 +1607,9 @@ namespace CityBuilder.Core
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);
             wallSeekRadiusCells = Read(economy, "wall_seek_radius_cells", wallSeekRadiusCells);
             wallClimbSeconds = Read(economy, "wall_climb_sec", wallClimbSeconds);
+            moatResearchCrystals = (int)Read(economy, "moat_research_crystals", moatResearchCrystals);
+            moatSpeedMultiplier = Read(economy, "moat_speed_multiplier", moatSpeedMultiplier);
+            moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             decayPerDayAtLevel1 = Read(economy, "decay_per_day_at_level1", decayPerDayAtLevel1);
             decayPenaltyThreshold = Read(economy, "decay_penalty_threshold", decayPenaltyThreshold);
             minDecayProductionMultiplier = Read(economy, "min_decay_production_multiplier", minDecayProductionMultiplier);

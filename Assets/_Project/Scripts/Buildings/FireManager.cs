@@ -113,7 +113,7 @@ namespace CityBuilder.Buildings
 
                 foreach (var neighbour in standing)
                 {
-                    if (neighbour == null || neighbour == source || neighbour.Data == null) continue;
+                    if (neighbour == null || neighbour == source || neighbour.Data == null || neighbour.Data.isMoat) continue;
                     if (neighbour.GetComponent<BuildingFire>() != null) continue;
 
                     var offset = neighbour.transform.position - source.transform.position;

@@ -1066,6 +1066,25 @@ namespace CityBuilder.Maps
             ScheduleNavMeshRebuild();
         }
 
+        /// <summary>
+        /// Marks a moat cell as the Moat area (NavAreas): walkable for everyone, at the cost the
+        /// sheet gives it, so routes keep to the dry land and the roads while they can.
+        /// </summary>
+        public void RegisterMoat(BuildingInstance instance)
+        {
+            if (instance == null || instance.Data == null) return;
+            if (BalanceConfig.Instance != null) NavMesh.SetAreaCost(NavAreas.Moat, BalanceConfig.Instance.MoatPathCost);
+            var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+            _walkableSurfaces[instance] = new NavMeshBuildSource
+            {
+                shape = NavMeshBuildSourceShape.ModifierBox,
+                size = new Vector3(cellSize, 4f, cellSize),
+                transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
+                area = NavAreas.Moat
+            };
+            ScheduleNavMeshRebuild();
+        }
+
         /// <summary>Drops a destroyed bridge's contribution (decay, combat damage) so the water underneath goes back to being uncrossable.</summary>
         public void UnregisterWalkableSurface(BuildingInstance instance)
         {

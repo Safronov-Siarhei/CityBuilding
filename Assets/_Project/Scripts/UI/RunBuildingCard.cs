@@ -33,6 +33,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text level;
         [SerializeField] private Text health;
         [SerializeField] private Text defense;
+        // the heart and shield glyphs with their numbers: hidden on a bare card (the Moat)
+        [SerializeField] private GameObject[] statParts = new GameObject[0];
         [SerializeField] private GameObject workerRow;
         [SerializeField] private Text workers;
         [SerializeField] private Text free;
@@ -105,6 +107,19 @@ namespace CityBuilder.UI
         {
             var data = building.Data;
             if (title != null) title.text = data.LocalizedName;
+            // the Moat's card is its name and Demolish, nothing else (the user, 2026-11-02)
+            var bare = data.isMoat;
+            if (level != null) level.gameObject.SetActive(!bare);
+            foreach (var part in statParts) if (part != null) part.SetActive(!bare);
+            if (bare)
+            {
+                if (workerRow != null) workerRow.SetActive(false);
+                if (nextLevel != null) nextLevel.SetActive(false);
+                if (upgradeBlock != null) upgradeBlock.SetActive(false);
+                if (repairBlock != null) repairBlock.SetActive(false);
+                if (demolishButton != null) demolishButton.SetActive(building.CanDemolish);
+                return;
+            }
             if (level != null) level.text = Localization.Format("#building_level_run", building.Level);
             if (health != null) health.text = $"{building.CurrentHealth}/{building.MaxHealth}";
             if (defense != null) defense.text = building.Defense.ToString();

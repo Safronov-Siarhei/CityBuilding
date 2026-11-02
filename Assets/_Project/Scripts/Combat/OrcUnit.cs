@@ -771,7 +771,7 @@ namespace CityBuilder.Combat
             var nearestDistance = radius;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (instance.Data == null || instance.Data.isRoad) continue;
+                if (instance.Data == null || instance.Data.IsGroundWork) continue;
                 var distance = DistanceToWall(instance);
                 if (distance > nearestDistance) continue;
                 nearestDistance = distance;
@@ -795,7 +795,7 @@ namespace CityBuilder.Combat
             var nearestDistance = targetWall - 0.05f;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (instance == target || instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                if (instance == target || instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 var distance = DistanceToWall(instance);
                 if (distance >= nearestDistance) continue;
                 if (distance > 0.15f && toTarget.sqrMagnitude > 0.0001f)
@@ -980,7 +980,8 @@ namespace CityBuilder.Combat
 
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
         /// <summary>Whether it can come at this soldier: a fighter up on the walls only to a thrower's javelin.</summary>
-        private bool CanReach(SoldierUnit soldier) => IsRanged || !soldier.OnWall;
+        // in a moat's water it fights no one (the user, 2026-11-02) -- a wall it stands against it still breaks
+        private bool CanReach(SoldierUnit soldier) => !Buildings.Moat.Wading(transform.position) && (IsRanged || !soldier.OnWall);
 
         public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman;
 
@@ -1115,7 +1116,7 @@ namespace CityBuilder.Combat
                 // Roads/bridges are technically BuildingInstances too but not real targets -- a
                 // raid beelining for the nearest stray road tile instead of an actual building
                 // would make combat feel broken rather than threatening.
-                if (instance.Data == null || instance.Data.isRoad) continue;
+                if (instance.Data == null || instance.Data.IsGroundWork) continue;
                 // A run's walls and gates are obstacles (the user, 2026-10-22): broken only where
                 // they stand in the way (AttackWhateverIsBlockingTheWay), never gone after; once
                 // one is down the orc walks on through the gap.
@@ -1213,7 +1214,7 @@ namespace CityBuilder.Combat
             var best = float.MaxValue;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                if (instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 if (Invasion.InvasionRules.IsBarrier(instance.Data)) continue;
                 var fromCastle = instance.transform.position - castle;
                 fromCastle.y = 0f;
@@ -1394,7 +1395,7 @@ namespace CityBuilder.Combat
             var firstAt = float.MaxValue;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (instance.Data == null || instance.Data.isRoad || instance.CurrentHealth <= 0) continue;
+                if (instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 var body = instance.GetComponent<Collider>();
                 if (body == null) continue;
                 for (var d = 0f; d <= length + 0.5f && d < firstAt; d += 0.25f)
@@ -1444,7 +1445,7 @@ namespace CityBuilder.Combat
             // wedged inside something (a building put up round it): through it to free ground first
             if (_escape.Step(transform, _controller, _walkSpeed)) return;
             // the New Year's blizzard slows everyone (Weather)
-            var step = direction * _walkSpeed * Weather.SpeedMultiplier * Time.deltaTime;
+            var step = direction * _walkSpeed * Weather.SpeedMultiplier * Buildings.Moat.SpeedAt(transform.position) * Time.deltaTime;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);

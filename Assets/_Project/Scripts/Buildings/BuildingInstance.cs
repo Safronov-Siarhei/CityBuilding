@@ -160,6 +160,7 @@ namespace CityBuilder.Buildings
                 if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
                 if (data.connectsToFences) RegisterFenceCells();
                 if (data.isGate && !GatesStanding.Contains(this)) GatesStanding.Add(this);
+                if (data.isMoat) Moat.Add(this);
                 // A mine stands on its vein, which gives way to it (and comes back when it goes).
                 if (OreDeposit.KindForBuilding(data.buildingName).HasValue) OreDeposit.At(originCell)?.Attach(this);
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
@@ -235,7 +236,8 @@ namespace CityBuilder.Buildings
                 if (TownHall == this) TownHall = null;
                 if (Data.isGate) GatesStanding.Remove(this);
                 if (OreDeposit.KindForBuilding(Data.buildingName).HasValue) OreDeposit.At(OriginCell)?.Detach(this);
-                if (Data.providesWalkableSurface || Data.isGate) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                if (Data.providesWalkableSurface || Data.isGate || Data.isMoat) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
+                if (Data.isMoat) Moat.Remove(this);
                 if (!_storageHeld) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
@@ -277,7 +279,7 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>Also read by HappinessManager to decide which instances count toward the settlement's decay-based happiness score -- roads/Town Hall never decay, so including them would just dilute the average with artificial zeros.</summary>
-        public bool DecaysOverTime => Data != null && !Data.isRoad && Data.buildingName != BuildingIds.TownHall;
+        public bool DecaysOverTime => Data != null && !Data.IsGroundWork && Data.buildingName != BuildingIds.TownHall;
 
         /// <summary>Whether buildings age at all: not since 2026-10-25 (the user: no decay in the sandbox either; mending is for damage).</summary>
         public static readonly bool DecayEnabled = false;
@@ -575,7 +577,7 @@ namespace CityBuilder.Buildings
         {
             // Roads are laid by the dozen; a disc floating over every tile of a road network would
             // bury the town it is supposed to describe.
-            var shouldShow = Level > 1 && Data != null && !Data.isRoad
+            var shouldShow = Level > 1 && Data != null && !Data.IsGroundWork
                              && (_levelAppearance == null || !_levelAppearance.HasOwnModel(Level))
                              && (_fenceAppearance == null || !_fenceAppearance.HasOwnModel(Level));
 
@@ -664,6 +666,14 @@ namespace CityBuilder.Buildings
         private void SetupNavMeshObstacle(BuildingData data)
         {
             if (data.isRoad) return;
+            if (data.isMoat)
+            {
+                // water to wade, not a hole: the Moat area (dearer to path over, NavAreas), and
+                // a collider that answers taps but stops nobody
+                foreach (var box in GetComponents<BoxCollider>()) box.isTrigger = true;
+                MeshMapApplier.Instance?.RegisterMoat(this);
+                return;
+            }
             if (data.isGate)
             {
                 // Not carved: marked as the Gate area, which citizens walk through and orcs treat

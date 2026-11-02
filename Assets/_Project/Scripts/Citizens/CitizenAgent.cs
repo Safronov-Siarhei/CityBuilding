@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
@@ -592,7 +592,8 @@ namespace CityBuilder.Citizens
             {
                 return WalkSpeed * RoadSpeedMultiplier;
             }
-            return WalkSpeed;
+            // wading a moat (Buildings.Moat)
+            return WalkSpeed * Moat.SpeedAt(transform.position);
         }
 
         private void OnArrived()

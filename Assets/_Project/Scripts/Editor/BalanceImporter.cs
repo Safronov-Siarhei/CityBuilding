@@ -780,6 +780,8 @@ namespace CityBuilder.EditorTools
             // Smelted iron, so the Плавильня's output has somewhere to go: the three buildings that
             // used to be paid for in raw ore are what the furnace is for.
             ResourceType.IronBar,
+            // coins (cost_coins; the Moat, 2026-11-02 -- 25 coins a cell)
+            ResourceType.Coins,
         };
 
         /// <summary>Quiet about an absent column or an empty cell (that is simply a cost this building doesn't have), loud about a cell holding something that isn't a number.</summary>

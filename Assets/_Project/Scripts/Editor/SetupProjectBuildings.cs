@@ -111,6 +111,7 @@ namespace CityBuilder.EditorTools
             data.isWaterCategory = isWaterCategory;
             data.connectsToFences = connectsToFences;
             data.isGate = id == "Gate" || id == "FortifiedGate";
+            data.isMoat = id == Moat.Id;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -168,6 +169,7 @@ namespace CityBuilder.EditorTools
 
             AddLevelModels(root, id, model, height, footprint);
             if (id == WallWalk.TowerId || id == WallWalk.FortifiedTowerId) AddWallTowerLook(root, id, footprint);
+            if (id == Moat.Id) AddMoatBanks(root);
 
             // Not merged: BuildingLevelAppearance switches these level models on and off at
             // runtime, so they have to stay separate objects.
@@ -199,6 +201,25 @@ namespace CityBuilder.EditorTools
         /// and a doorway onto the walk for every slot -- each side of the 1x1 Tower, each cell of a
         /// side of the 2x2 Fortified Tower -- all hidden until a walk wall meets the tower.
         /// </summary>
+        /// <summary>A moat cell's four banks (Moat-Bank.fbx, Tools/blender/moat.py), hidden; MoatAppearance shows each where no moat lies beside.</summary>
+        private static void AddMoatBanks(GameObject root)
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Moat-Bank.fbx");
+            if (bank == null)
+            {
+                Debug.LogError("AddMoatBanks: Moat-Bank.fbx missing -- run Tools/blender/moat.py and export");
+                return;
+            }
+            var banks = new GameObject[4];
+            for (var side = 0; side < 4; side++)
+            {
+                banks[side] = Object.Instantiate(bank, Vector3.zero, bank.transform.rotation, root.transform);
+                banks[side].name = $"Moat-Bank{side}";
+                banks[side].SetActive(false);
+            }
+            root.AddComponent<MoatAppearance>().Wire(banks, bank.transform.rotation);
+        }
+
         private static void AddWallTowerLook(GameObject root, string id, Vector2Int footprint)
         {
             var name = id == WallWalk.TowerId ? "WallTower" : "WallFortTower";

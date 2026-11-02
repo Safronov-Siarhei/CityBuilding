@@ -205,7 +205,7 @@ namespace CityBuilder.UI
             {
                 runCard.Refresh(_currentInstance, _currentProduction, BuildCostRow, Clock);
                 // the sandbox's band: what it makes, a bare reach, a Плавильня's metals (a run's card has none)
-                if (Invasion.InvasionMode.IsActive)
+                if (Invasion.InvasionMode.IsActive || data.isMoat)
                 {
                     runCard.ShowBand(null, false, false);
                     return;

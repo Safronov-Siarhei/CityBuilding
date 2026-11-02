@@ -58,7 +58,7 @@ namespace CityBuilder.Buildings
         /// is walked on -- a road, a bridge -- which a net and scaffolding would stand over as a box.
         /// </summary>
         public static bool Wraps(BuildingInstance building) =>
-            building != null && building.Data != null && !building.Data.isRoad && !building.Data.providesWalkableSurface;
+            building != null && building.Data != null && !building.Data.IsGroundWork && !building.Data.providesWalkableSurface;
 
         private void Build()
         {

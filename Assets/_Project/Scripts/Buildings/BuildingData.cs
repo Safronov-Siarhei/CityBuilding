@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -120,6 +120,13 @@ namespace CityBuilder.Buildings
         // is open to citizens and soldiers but a wall to orcs -- it marks its cells as the Gate
         // NavMesh area instead of carving them out (see NavAreas, MeshMapApplier.RegisterGate).
         public bool isGate = false;
+
+        // The Moat (the user, 2026-11-02): water anyone may wade, slowly -- no NavMesh hole, the
+        // Moat area instead (NavAreas, Buildings/Moat); nobody's target, never decays or burns.
+        public bool isMoat = false;
+
+        /// <summary>Laid into the ground rather than standing on it (a road, a moat): no target for orcs, no decay, no scaffolding.</summary>
+        public bool IsGroundWork => isRoad || isMoat;
 
         /// <summary>
         /// The one cell of a gate that is the way through: the middle of its footprint (a 1x3

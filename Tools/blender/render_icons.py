@@ -139,6 +139,14 @@ def res_upgrade_crystal(b):
     b.pyramid(-0.025, -0.06, 0.3, 0.012, 0.012, 0.33, 'white', sides=4)
 
 
+def bld_moat(b):
+    """The Moat's card (the user, 2026-11-02): a stretch of water between its two banks."""
+    import moat
+    moat.water(b)
+    moat.bank(b)
+    moat.bank(b, north=True)
+
+
 # Named after ResourceType, which is how the game finds them (Res_<ResourceType>.png).
 RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Iron": res_iron_ore, "Res_IronBar": res_iron_bar,
@@ -146,7 +154,9 @@ RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Gold": res_gold_ore, "Res_GoldBar": res_gold_bar, "Res_Coins": res_coins,
              "Res_Grain": res_grain, "Res_Flour": res_flour, "Res_Bread": res_bread,
              "Res_Food": res_food, "Res_Population": res_people,
-             "Res_UpgradeCrystal": res_upgrade_crystal}
+             "Res_UpgradeCrystal": res_upgrade_crystal,
+             # buildings drawn here rather than taken whole from the file
+             "Moat": bld_moat}
 
 
 # -- staging ---------------------------------------------------------------------------------------
