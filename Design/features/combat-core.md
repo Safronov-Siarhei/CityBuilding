@@ -6,16 +6,18 @@
 > `TakeDamage(amount, by)`; towers/militia/spells pass null), `Hero.OnOrcDied` checks it (`king_xp_radius` now unread);
 > level icons `UI/Icons/{Fence,Gate,Tower,FortifiedTower,FortifiedGate}_L2..5` re-rendered by `render_icons.py`
 > from current models (Tower/Bastion 3-5 = their WALL look, Fence 3-5 = the Straight walk piece).
-> DRAFTS for approval (`Tools/blender/keep_drafts.py`, renders only, nothing installed): the Town Hall as a
-> DONJON (5x5, keep 2.25+ high + corner turrets + slate->blue roof by level) and the walk-wall BARBICAN
-> (FortifiedGate 3-5: passage + portcullis between two end towers, walk over the passage). Open: what the
-> user meant by "bastion not made"; a moat (discussed, not built).
+> **51e5cefd, APPROVED + INSTALLED**: `Tools/blender/keep_drafts.py` (no args = install into Castle1-lvl1..5 and
+> FortifiedGate1-lvl3..5 + save; `-- <dir>` = renders): the Town Hall is a DONJON (5x5, keep 2.25+ high, corner
+> turrets, slate roof -> blue from 3, gold 4-5); the BARBICAN 3-5 = passage + portcullis between two end towers,
+> WALKABLE (`WallWalk.BarbicanId`: middle cell a Wall node, end cells Tower nodes = stairs at the walk's height).
+> The BASTION wears WallFortTower from level 3 even away from walls (`WallTowerLook.lookAlways`, doorways per join).
+> Moat: discussed, not built (user asked what "a blocking moat" means).
 > Rules (the user): Fence/Gate from `wall_walk_from_level` (3) are thick walls (WALK_T 0.78) with merlons on
 > both faces and a walk at `wall_walk_height_3..5` (0.9/1.1/1.3 cells); dark stone, juicy towers (tiled roof
 > by level, timber storey, arched lit windows, banners, torches, flags). Tower/Fortified Tower lvl3+ against
 > such a wall = the stair up (WallTower / square WallFortTower), doorways only where a wall joins; lvl1-2
-> tower is no way up; towers keep shooting. Gate lvl3+ = gatehouse, the walk runs over it (FortifiedGate is
-> NOT walkable). Ranged soldiers + ranged heroes only; one per cell, others pass through. Order: select
+> tower is no way up; towers keep shooting. Gate lvl3+ = gatehouse, the walk runs over it (FortifiedGate 3+
+> walkable since 51e5cefd). Ranged soldiers + ranged heroes only; one per cell, others pass through. Order: select
 > ranged, tap a wall/stair tower (ArmyOrderInput.TryOrderOntoWall); idle ranged ones go up on their own
 > when an orc is within `wall_seek_radius_cells` (14) and a free reachable wall cell too. On the wall:
 > +`wall_range_bonus_cells` (2) range, never chase; melee orcs can't reach them (OrcUnit.CanReach), throwers
