@@ -1,6 +1,15 @@
 # Combat core: damage, towers, projectiles, routes
 
 > **2026-11-02 WALKABLE WALLS -- BUILT 704b1803, untested, not seen in game.**
+> **2026-11-02 (3252ff6f)**: a wall order's flag/rings stand ON the walk (`MoveOrderMarker.ShowFlagFor(..., onTop)`);
+> HERO XP only from his own kills -- `OrcUnit.KilledBy` (the SoldierUnit whose blow/arrow felled it, via
+> `TakeDamage(amount, by)`; towers/militia/spells pass null), `Hero.OnOrcDied` checks it (`king_xp_radius` now unread);
+> level icons `UI/Icons/{Fence,Gate,Tower,FortifiedTower,FortifiedGate}_L2..5` re-rendered by `render_icons.py`
+> from current models (Tower/Bastion 3-5 = their WALL look, Fence 3-5 = the Straight walk piece).
+> DRAFTS for approval (`Tools/blender/keep_drafts.py`, renders only, nothing installed): the Town Hall as a
+> DONJON (5x5, keep 2.25+ high + corner turrets + slate->blue roof by level) and the walk-wall BARBICAN
+> (FortifiedGate 3-5: passage + portcullis between two end towers, walk over the passage). Open: what the
+> user meant by "bastion not made"; a moat (discussed, not built).
 > Rules (the user): Fence/Gate from `wall_walk_from_level` (3) are thick walls (WALK_T 0.78) with merlons on
 > both faces and a walk at `wall_walk_height_3..5` (0.9/1.1/1.3 cells); dark stone, juicy towers (tiled roof
 > by level, timber storey, arched lit windows, banners, torches, flags). Tower/Fortified Tower lvl3+ against
