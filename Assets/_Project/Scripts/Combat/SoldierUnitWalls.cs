@@ -192,17 +192,23 @@ namespace CityBuilder.Combat
                         return true;
                     }
                     var to = WallWalk.Top(next);
+                    var from = WallWalk.Top(_wallAt);
                     var step = _walkSpeed * Time.deltaTime;
                     var way = to - transform.position;
+                    way.y = 0f;
                     if (way.magnitude <= step)
                     {
-                        transform.position = to;
+                        transform.position = new Vector3(to.x, StepHeight(_wallAt, next, from.y, to.y, 1f), to.z);
                         _wallAt = next;
                         _wallStep++;
                     }
                     else
                     {
-                        transform.position += way.normalized * step;
+                        var p = transform.position + way.normalized * step;
+                        var span = new Vector2(to.x - from.x, to.z - from.z).magnitude;
+                        var done = span > 0.001f ? 1f - new Vector2(to.x - p.x, to.z - p.z).magnitude / span : 1f;
+                        p.y = StepHeight(_wallAt, next, from.y, to.y, done);
+                        transform.position = p;
                         FaceTowards(to);
                     }
                     return true;
@@ -212,6 +218,25 @@ namespace CityBuilder.Combat
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// The height on the way from one walk cell to the next, `done` 0..1 along it: level
+        /// between walls of the same level; up or down the steps between walls of different levels
+        /// -- they stand on the lower cell's half by the joint (WallWalk.PlaceSteps); in and out of a
+        /// stair tower at the wall's own height (inside, where nobody sees, it is the stair's).
+        /// </summary>
+        private static float StepHeight(Vector2Int a, Vector2Int b, float ya, float yb, float done)
+        {
+            var aStair = WallWalk.IsStair(a);
+            var bStair = WallWalk.IsStair(b);
+            if (aStair && !bStair) return yb;
+            if (bStair && !aStair) return done < 0.5f ? ya : yb;
+            if (Mathf.Approximately(ya, yb)) return yb;
+            // rising: the steps are on a's half, ahead of him; falling: on b's half, after the joint
+            return yb > ya
+                ? Mathf.Lerp(ya, yb, Mathf.Clamp01((done - 0.04f) / 0.46f))
+                : Mathf.Lerp(ya, yb, Mathf.Clamp01((done - 0.5f) / 0.46f));
         }
 
         /// <summary>Shoots the nearest enemy in reach -- never leaves the wall to chase one.</summary>

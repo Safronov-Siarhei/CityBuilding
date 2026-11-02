@@ -43,6 +43,8 @@ namespace CityBuilder.Buildings
         [SerializeField] private BuildingData mandatoryFirstBuilding;
         /// <summary>The stone of a footing under a building on falling ground (BuildingFooting).</summary>
         [SerializeField] private Material footingStone;
+        // the steps between walk walls of different levels (WallSteps-3-4, -3-5, -4-5; WallWalk)
+        [SerializeField] private GameObject[] wallSteps = new GameObject[0];
 
         /// <summary>Height of the aim point as a fraction of the screen, measured from the bottom. Above the hotbar and the confirm row, and high enough that the hand holding the phone is not over it.</summary>
         [SerializeField] private float aimScreenHeightFraction = 0.58f;
@@ -164,7 +166,11 @@ namespace CityBuilder.Buildings
             data != null && _replaced != null && _replaced.TryGetValue(data, out var replacement) ? replacement : data;
 
         // before any Start: a loaded game puts its buildings back from a Start
-        private void Awake() => BuildingFooting.Stone = footingStone;
+        private void Awake()
+        {
+            BuildingFooting.Stone = footingStone;
+            WallWalk.StepModels = wallSteps;
+        }
 
         private void Start()
         {

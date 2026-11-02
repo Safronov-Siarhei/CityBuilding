@@ -80,7 +80,9 @@ namespace CityBuilder.Buildings
                     along = local.z;
                 }
                 var cell = slotsPerSide > 1 && along > 0f ? 1 : 0;
-                var i = (level - 3) * perLevel + side * slotsPerSide + cell;
+                // the doorway at the height of the wall it opens onto, whatever the tower's own level
+                var wallLevel = Mathf.Clamp(WallWalk.LevelAt(wall), 3, 5);
+                var i = (wallLevel - 3) * perLevel + side * slotsPerSide + cell;
                 if (i < doors.Length && doors[i] != null) doors[i].SetActive(true);
             }
         }

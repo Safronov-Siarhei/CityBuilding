@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -402,6 +402,11 @@ namespace CityBuilder.EditorTools
             placerSO.FindProperty("targetCamera").objectReferenceValue = camera;
             placerSO.FindProperty("mandatoryFirstBuilding").objectReferenceValue = townHallData;
             placerSO.FindProperty("footingStone").objectReferenceValue = rockMaterial;
+            var steps = placerSO.FindProperty("wallSteps");
+            var stepNames = new[] { "WallSteps-3-4", "WallSteps-3-5", "WallSteps-4-5" };
+            steps.arraySize = stepNames.Length;
+            for (var i = 0; i < stepNames.Length; i++)
+                steps.GetArrayElementAtIndex(i).objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/{stepNames[i]}.fbx");
             var availableProp = placerSO.FindProperty("availableBuildings");
             availableProp.arraySize = hotbarBuildingData.Count;
             for (var i = 0; i < hotbarBuildingData.Count; i++)

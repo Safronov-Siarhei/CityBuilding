@@ -30,7 +30,15 @@ namespace CityBuilder.Buildings
             public Kind Kind;
             public BuildingInstance Building;
             public float Top;
+            public int Level;
         }
+
+        /// <summary>The steps' models (WallSteps-3-4, -3-5, -4-5), set by BuildingPlacer.</summary>
+        public static GameObject[] StepModels;
+
+        // the steps standing now: on the lower cell, turned toward the higher neighbour
+        private static readonly Dictionary<(Vector2Int, Vector2Int), GameObject> StepsShown = new Dictionary<(Vector2Int, Vector2Int), GameObject>();
+        private static readonly HashSet<(Vector2Int, Vector2Int)> StepsWanted = new HashSet<(Vector2Int, Vector2Int)>();
 
         private static readonly Dictionary<Vector2Int, Node> Nodes = new Dictionary<Vector2Int, Node>();
         private static readonly Dictionary<Vector2Int, Combat.SoldierUnit> Posts = new Dictionary<Vector2Int, Combat.SoldierUnit>();
@@ -92,7 +100,7 @@ namespace CityBuilder.Buildings
                     }
                     if (id != FenceId && id != GateId) continue;
                     foreach (var cell in b.Cells())
-                        Nodes[cell] = new Node { Kind = Kind.Wall, Building = b, Top = ground + HeightFor(b.Level) };
+                        Nodes[cell] = new Node { Kind = Kind.Wall, Building = b, Top = ground + HeightFor(b.Level), Level = b.Level };
                 }
                 // a tower is the stair up only where a walk wall meets it
                 foreach (var t in towers)
@@ -108,8 +116,11 @@ namespace CityBuilder.Buildings
                     }
                     if (joins == null) continue;
                     TowerJoins[t] = joins;
+                    // inside, the stair reaches the highest wall it opens onto
+                    var top = 0f;
+                    foreach (var j in joins) top = Mathf.Max(top, Nodes[j].Top);
                     foreach (var cell in own)
-                        Nodes[cell] = new Node { Kind = Kind.Tower, Building = t, Top = ground + HeightFor(t.Level) };
+                        Nodes[cell] = new Node { Kind = Kind.Tower, Building = t, Top = top, Level = t.Level };
                 }
             }
             Reachable.Clear();
@@ -122,6 +133,7 @@ namespace CityBuilder.Buildings
                     return false;
                 });
             }
+            PlaceSteps();
             // posts on cells that are gone are no posts
             var lost = new List<Vector2Int>();
             foreach (var post in Posts)
@@ -129,6 +141,62 @@ namespace CityBuilder.Buildings
             foreach (var cell in lost) Posts.Remove(cell);
             Version++;
             WallTowerLook.RefreshAll();
+        }
+
+        /// <summary>
+        /// Steps wherever two walk walls of different levels meet (the user, 2026-11-02: fighters
+        /// must not float through the stone): on the lower cell, rising to the higher one's edge.
+        /// Made and removed as walls change, parented to the lower wall so they go with it.
+        /// </summary>
+        private static void PlaceSteps()
+        {
+            StepsWanted.Clear();
+            foreach (var pair in Nodes)
+            {
+                if (pair.Value.Kind != Kind.Wall) continue;
+                foreach (var step in Steps)
+                {
+                    if (!Nodes.TryGetValue(pair.Key + step, out var next) || next.Kind != Kind.Wall) continue;
+                    if (next.Level > pair.Value.Level && StepModel(pair.Value.Level, next.Level) != null) StepsWanted.Add((pair.Key, step));
+                }
+            }
+            var gone = new List<(Vector2Int, Vector2Int)>();
+            foreach (var shown in StepsShown)
+            {
+                if (StepsWanted.Contains(shown.Key) && shown.Value != null) continue;
+                if (shown.Value != null) Object.Destroy(shown.Value);
+                gone.Add(shown.Key);
+            }
+            foreach (var key in gone) StepsShown.Remove(key);
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+            foreach (var key in StepsWanted)
+            {
+                if (StepsShown.ContainsKey(key)) continue;
+                var low = Nodes[key.Item1];
+                var model = StepModel(low.Level, Nodes[key.Item1 + key.Item2].Level);
+                var at = grid.GetFootprintCenterWorld(key.Item1, Vector2Int.one);
+                at.y = grid.GroundHeight;
+                // modelled rising north; a step of +90 turns north to east
+                var yaw = key.Item2 == Vector2Int.up ? 0f : key.Item2 == Vector2Int.right ? 90f : key.Item2 == Vector2Int.down ? 180f : -90f;
+                var piece = Object.Instantiate(model, at, Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation, low.Building.transform);
+                piece.name = "WallSteps";
+                StepsShown[key] = piece;
+            }
+        }
+
+        private static GameObject StepModel(int low, int high)
+        {
+            if (StepModels == null) return null;
+            var i = low == 3 && high == 4 ? 0 : low == 3 && high >= 5 ? 1 : low == 4 && high >= 5 ? 2 : -1;
+            return i >= 0 && i < StepModels.Length ? StepModels[i] : null;
+        }
+
+        /// <summary>The level of the wall on a walk cell (a stair: its tower's), 0 off the walk.</summary>
+        public static int LevelAt(Vector2Int cell)
+        {
+            Ensure();
+            return Nodes.TryGetValue(cell, out var n) ? n.Level : 0;
         }
 
         /// <summary>The wall cells a tower joins (its doorways onto the walk), or null when it is no stair.</summary>

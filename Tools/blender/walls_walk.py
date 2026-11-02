@@ -420,8 +420,31 @@ def tower_door(level, fort):
     return b
 
 
+def wall_steps(low, high):
+    """Steps up from a lower walk to a higher one (the user, 2026-11-02: fighters must not float
+    through the stone between walls of different levels). They stand on the LOWER wall's walk, in
+    the half next to the higher neighbour, rising north (+y) to its height at the cell's edge, with
+    a stepped stone cheek over each parapet. The game turns the piece toward the higher wall."""
+    b = Builder()
+    hl, hh = HEIGHT[low], HEIGHT[high]
+    n = max(2, int(round((hh - hl) / 0.05)))
+    y0, y1 = 0.04, 0.5
+    w = WALK_T / 2 - MERLON_T
+    for k in range(n):
+        ya = y0 + (y1 - y0) * k / n
+        top = hl + (hh - hl) * (k + 1) / n
+        b.box(-w, w, ya, y1, hl, top, 'stone_dark')
+        b.box(-w, w, ya, ya + 0.012, top - 0.012, top + 0.004, 'stone_mid')       # the tread's nosing
+        for side in (-1, 1):
+            x0, x1 = (w, WALK_T / 2) if side > 0 else (-WALK_T / 2, -w)
+            b.box(x0, x1, ya, y1, hl, top + RAIL_H, 'stone_dark')
+    return b
+
+
 def models():
     out = {}
+    for low, high in ((3, 4), (3, 5), (4, 5)):
+        out[f"WallSteps-{low}-{high}"] = (lambda low=low, high=high: wall_steps(low, high))
     for lv in (3, 4, 5):
         for shape, arms in SHAPES.items():
             out[f"WallWalk-lvl{lv}-{shape}"] = (lambda lv=lv, arms=arms: wall_piece(lv, arms))
@@ -488,7 +511,10 @@ def stage(out_png, target, ortho, angle=(58, 0, 35)):
 #   Gate1-lvl3..5                              the gatehouse (turned so its wall runs N-S, as Gate1's)
 #   WallTower-lvl3..5, WallTower-lvl3..5-Door  the Tower's wall look and its doorway piece
 #   WallFortTower-lvl3..5(-Door)               the Fortified Tower's
+#   WallSteps-<low>-<high>                     steps up from a lower walk to a higher one
 EXPORTS = {}
+for _low, _high in ((3, 4), (3, 5), (4, 5)):
+    EXPORTS[f"WallSteps-{_low}-{_high}"] = (f"WallSteps-{_low}-{_high}", 0)
 for _lv in (3, 4, 5):
     for _shape in ('Straight', 'Corner', 'T', 'Cross'):
         EXPORTS[f"Fence1-lvl{_lv}-{_shape}"] = (f"WallWalk-lvl{_lv}-{_shape}", 0)
