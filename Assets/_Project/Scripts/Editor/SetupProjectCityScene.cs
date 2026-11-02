@@ -253,6 +253,14 @@ namespace CityBuilder.EditorTools
                 // uncrossable terrain walkable (see BuildingData.providesWalkableSurface).
                 providesWalkableSurface: true);
 
+            // the Drawbridge (Tools/blender/crossings.py, the user 2026-11-02): 1x2 over a moat or
+            // shallow water, a gate -- allies through, enemies break it -- its leaves rise at orcs
+            var drawbridgeData = CreateBuildingData(
+                "Drawbridge", new Vector2Int(1, 2), height: 0.6f,
+                wallColor: new Color(0.5f, 0.35f, 0.2f), roofColor: new Color(0.36f, 0.24f, 0.13f),
+                style: BuildingStyle.Plot, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                isWaterCategory: true, providesWalkableSurface: true);
+
             var waterMillData = CreateWaterBuildingData(
                 "WaterMill", new Vector2Int(2, 2),
                 deckColor: new Color(0.5f, 0.4f, 0.28f), accentColor: new Color(0.35f, 0.24f, 0.14f),
@@ -321,7 +329,7 @@ namespace CityBuilder.EditorTools
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
                 roadData, fenceData, towerData, barracksData, gateData,
-                fortifiedTowerData, fortifiedGateData, moatData,
+                fortifiedTowerData, fortifiedGateData, moatData, drawbridgeData,
                 bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData
             };

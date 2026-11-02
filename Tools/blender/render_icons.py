@@ -147,6 +147,32 @@ def bld_moat(b):
     moat.bank(b, north=True)
 
 
+def bld_drawbridge(level):
+    """The Drawbridge's card: its abutments and both leaves down, as it stands with no enemy near."""
+    def build(b):
+        import crossings
+        crossings.LEG_Z = -0.2          # the card shows the crossing, not its legs under the water
+        crossings.drawbridge(level, b)
+        for s in (-1, 1):
+            n0 = len(b.bm.verts)
+            crossings.leaf(level, b)
+            b.bm.verts.ensure_lookup_table()
+            for v in b.bm.verts[n0:]:
+                v.co.y = s * (v.co.y - crossings.HINGE_Y)
+                v.co.x = s * v.co.x
+                v.co.z += crossings.DECK
+    return build
+
+
+def bld_bridge(level):
+    """The Bridge's card: its legs cut short, as it shows above the water."""
+    def build(b):
+        import crossings
+        crossings.LEG_Z = -0.2
+        crossings.bridge(level, b)
+    return build
+
+
 # Named after ResourceType, which is how the game finds them (Res_<ResourceType>.png).
 RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Iron": res_iron_ore, "Res_IronBar": res_iron_bar,
@@ -156,7 +182,9 @@ RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Food": res_food, "Res_Population": res_people,
              "Res_UpgradeCrystal": res_upgrade_crystal,
              # buildings drawn here rather than taken whole from the file
-             "Moat": bld_moat}
+             "Moat": bld_moat, "Drawbridge": bld_drawbridge(1), "Bridge": bld_bridge(1),
+             **{f"Bridge_L{lv}": bld_bridge(lv) for lv in range(2, 6)},
+             **{f"Drawbridge_L{lv}": bld_drawbridge(lv) for lv in range(2, 6)}}
 
 
 # -- staging ---------------------------------------------------------------------------------------

@@ -110,8 +110,9 @@ namespace CityBuilder.EditorTools
             data.keepSelectedAfterPlacement = keepSelectedAfterPlacement;
             data.isWaterCategory = isWaterCategory;
             data.connectsToFences = connectsToFences;
-            data.isGate = id == "Gate" || id == "FortifiedGate";
+            data.isGate = id == "Gate" || id == "FortifiedGate" || id == DrawbridgeId;
             data.isMoat = id == Moat.Id;
+            data.isCrossing = id == "Bridge" || id == DrawbridgeId;
 
             Directory.CreateDirectory(BuildingDataFolder);
             var dataPath = $"{BuildingDataFolder}/{id}.asset";
@@ -170,6 +171,7 @@ namespace CityBuilder.EditorTools
             AddLevelModels(root, id, model, height, footprint);
             if (id == WallWalk.TowerId || id == WallWalk.FortifiedTowerId) AddWallTowerLook(root, id, footprint);
             if (id == Moat.Id) AddMoatBanks(root);
+            if (id == DrawbridgeId) AddDrawbridgeLeaves(root);
 
             // Not merged: BuildingLevelAppearance switches these level models on and off at
             // runtime, so they have to stay separate objects.
@@ -201,6 +203,44 @@ namespace CityBuilder.EditorTools
         /// and a doorway onto the walk for every slot -- each side of the 1x1 Tower, each cell of a
         /// side of the 2x2 Fortified Tower -- all hidden until a walk wall meets the tower.
         /// </summary>
+        private const string DrawbridgeId = "Drawbridge";
+
+        /// <summary>
+        /// The Drawbridge's leaves (Drawbridge-Leaf-lvl1..5.fbx, Tools/blender/crossings.py): for each
+        /// level two pivots at the outer hinges, at the deck's height, the far one turned to face
+        /// back; the leaf hangs from each. DrawbridgeLook shows the level's pair and raises them.
+        /// </summary>
+        private static void AddDrawbridgeLeaves(GameObject root)
+        {
+            const float hingeFromMiddle = 0.78f;   // crossings.py HINGE_Y
+            const float deck = 0.22f;              // crossings.py DECK
+            var pivots = new Transform[10];
+            var rest = new Quaternion[10];
+            for (var level = 1; level <= 5; level++)
+            {
+                var leaf = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/Drawbridge-Leaf-lvl{level}.fbx");
+                if (leaf == null)
+                {
+                    Debug.LogError($"AddDrawbridgeLeaves: Drawbridge-Leaf-lvl{level}.fbx missing -- run Tools/blender/crossings.py and export");
+                    return;
+                }
+                for (var side = 0; side < 2; side++)
+                {
+                    var pivot = new GameObject($"Leaf{level}-{side}").transform;
+                    pivot.SetParent(root.transform, false);
+                    pivot.localPosition = new Vector3(0f, deck, side == 0 ? -hingeFromMiddle : hingeFromMiddle);
+                    pivot.localRotation = Quaternion.Euler(0f, side == 0 ? 0f : 180f, 0f);
+                    var model = Object.Instantiate(leaf, pivot);
+                    model.transform.localPosition = Vector3.zero;
+                    model.transform.localRotation = leaf.transform.rotation;
+                    pivot.gameObject.SetActive(level == 1);
+                    pivots[(level - 1) * 2 + side] = pivot;
+                    rest[(level - 1) * 2 + side] = pivot.localRotation;
+                }
+            }
+            root.AddComponent<DrawbridgeLook>().Wire(pivots, rest);
+        }
+
         /// <summary>A moat cell's four banks (Moat-Bank.fbx, Tools/blender/moat.py), hidden; MoatAppearance shows each where no moat lies beside.</summary>
         private static void AddMoatBanks(GameObject root)
         {
@@ -323,6 +363,10 @@ namespace CityBuilder.EditorTools
             {
                 Debug.LogWarning($"FitModelToGround: '{id}' has its geometry {off.magnitude:0.##} m from its origin -- was it exported with the origin at its plot's centre (Tools/blender/export_fbx.py)?");
             }
+            // a crossing's legs run down into the water: it stands at its own origin, its click box
+            // the deck and what stands on it (crossings.py)
+            if (id.StartsWith("Bridge") || id.StartsWith(DrawbridgeId))
+                return new Vector3(bounds.size.x, bounds.max.y - model.transform.position.y, bounds.size.z);
             model.transform.position -= new Vector3(0f, bounds.min.y, 0f);
             return bounds.size;
         }

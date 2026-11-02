@@ -539,6 +539,11 @@ namespace CityBuilder.Buildings
         /// </summary>
         private void TurnAGateAcrossTheRoad(Vector2Int cell)
         {
+            if (_selectedBuilding != null && _selectedBuilding.isCrossing)
+            {
+                TurnACrossingOverTheMoat(cell);
+                return;
+            }
             if (_selectedBuilding == null || !_selectedBuilding.isGate) return;
             var roads = RoadNetwork.Instance;
             if (roads == null) return;
@@ -552,6 +557,21 @@ namespace CityBuilder.Buildings
             var alongX = roads.IsRoad(cell + Vector2Int.left) || roads.IsRoad(cell + Vector2Int.right);
             var alongZ = roads.IsRoad(cell + Vector2Int.down) || roads.IsRoad(cell + Vector2Int.up);
             if (alongX == alongZ) return; // a lone cell or a crossing: no one answer
+            var steps = alongX ? 0 : 1;
+            if (_rotationSteps % 2 != steps) _rotationSteps = steps;
+        }
+
+        /// <summary>
+        /// A crossing held over a moat runs across it (the user, 2026-11-02): a moat lying east-west
+        /// under the cursor wants the deck north-south (no turn), a moat lying north-south a quarter
+        /// turn. A lone moat cell or a crossing of moats leaves the player's own turn.
+        /// </summary>
+        private void TurnACrossingOverTheMoat(Vector2Int cell)
+        {
+            if (!Moat.Has(cell)) return;
+            var alongX = Moat.Has(cell + Vector2Int.left) || Moat.Has(cell + Vector2Int.right);
+            var alongZ = Moat.Has(cell + Vector2Int.down) || Moat.Has(cell + Vector2Int.up);
+            if (alongX == alongZ) return;
             var steps = alongX ? 0 : 1;
             if (_rotationSteps % 2 != steps) _rotationSteps = steps;
         }
@@ -610,6 +630,7 @@ namespace CityBuilder.Buildings
                 if (mapApplier != null && !FoodSiteAllowed(mapApplier, cell, footprint))
                     return Localization.Get(_selectedBuilding.buildingName == BuildingIds.FisherHut ? "#place_blocked_coast" : "#place_blocked_inland");
                 if (_lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
+                if (_selectedBuilding.isCrossing) return Localization.Get("#place_blocked_crossing");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
                 return Localization.Get("#place_blocked_occupied");
@@ -737,6 +758,18 @@ namespace CityBuilder.Buildings
             var grid = GridManager.Instance;
             var ore = data != null ? OreDeposit.KindForBuilding(data.buildingName) : null;
             if (ore.HasValue) return IsFreeVein(ore.Value, cell, footprint);
+            if (data != null && data.isCrossing)
+            {
+                // free ground (water, which the grid does not hold) or a moat no crossing spans yet
+                for (var x = 0; x < footprint.x; x++)
+                for (var z = 0; z < footprint.y; z++)
+                {
+                    var c = cell + new Vector2Int(x, z);
+                    if (grid.IsAreaFree(c, Vector2Int.one) || (Moat.Has(c) && !Moat.IsSpanned(c))) continue;
+                    return false;
+                }
+                return true;
+            }
             if (data == null || !data.isGate) return grid.IsAreaFree(cell, footprint);
 
             // Only the way through may sit on the road; the walls either side need clear ground.
@@ -826,6 +859,19 @@ namespace CityBuilder.Buildings
                     if (mapApplier.IsNoBuildCell(c)) return false;
                     var isWater = mapApplier.IsWaterCell(c);
 
+                    // a crossing: over a moat or shallow water (the user, 2026-11-02); a Drawbridge
+                    // over a one-cell moat may rest its other leaf on the bank
+                    if (_selectedBuilding.isCrossing)
+                    {
+                        if (Moat.Has(c) || (isWater && mapApplier.IsWaterPlacementZone(c)))
+                        {
+                            inWater++;
+                            continue;
+                        }
+                        if (!isWater) continue;
+                        return false;
+                    }
+
                     if (_selectedBuilding.isWaterCategory)
                     {
                         if (isWater && mapApplier.IsWaterPlacementZone(c))
@@ -844,7 +890,9 @@ namespace CityBuilder.Buildings
                 }
             }
             // ...as long as at least half of it stands in the water
-            if (_selectedBuilding.isWaterCategory && wholeFootprintRules && inWater * 2 < footprint.x * footprint.y) return false;
+            // a crossing crosses something: at least one cell over the moat or the water
+            if (_selectedBuilding.isCrossing && inWater == 0) return false;
+            if (_selectedBuilding.isWaterCategory && !_selectedBuilding.isCrossing && wholeFootprintRules && inWater * 2 < footprint.x * footprint.y) return false;
             return true;
         }
 

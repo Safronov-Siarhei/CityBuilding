@@ -161,6 +161,7 @@ namespace CityBuilder.Buildings
                 if (data.connectsToFences) RegisterFenceCells();
                 if (data.isGate && !GatesStanding.Contains(this)) GatesStanding.Add(this);
                 if (data.isMoat) Moat.Add(this);
+                if (data.isCrossing) Moat.Span(this, true);
                 // A mine stands on its vein, which gives way to it (and comes back when it goes).
                 if (OreDeposit.KindForBuilding(data.buildingName).HasValue) OreDeposit.At(originCell)?.Attach(this);
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
@@ -238,6 +239,7 @@ namespace CityBuilder.Buildings
                 if (OreDeposit.KindForBuilding(Data.buildingName).HasValue) OreDeposit.At(OriginCell)?.Detach(this);
                 if (Data.providesWalkableSurface || Data.isGate || Data.isMoat) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 if (Data.isMoat) Moat.Remove(this);
+                if (Data.isCrossing) Moat.Span(this, false);
                 if (!_storageHeld) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
@@ -376,6 +378,9 @@ namespace CityBuilder.Buildings
         private bool SharesCellWithAnother(Vector2Int cell)
         {
             if (Data == null) return false;
+            // a crossing over a moat leaves the moat; a moat under a crossing leaves the crossing
+            if (Data.isCrossing) return Moat.Has(cell);
+            if (Data.isMoat) return Moat.IsSpanned(cell);
             if (Data.isGate) return RoadNetwork.Instance != null && RoadNetwork.Instance.IsRoad(cell);
             // a mine goes, its vein stays
             if (OreDeposit.KindForBuilding(Data.buildingName).HasValue && OreDeposit.At(cell) != null) return true;
@@ -665,7 +670,12 @@ namespace CityBuilder.Buildings
         /// </summary>
         private void SetupNavMeshObstacle(BuildingData data)
         {
-            if (data.isRoad) return;
+            if (data.isRoad)
+            {
+                // a Bridge's model carries a solid box: walkers must cross it, not bump into it
+                if (data.isCrossing) foreach (var box in GetComponents<BoxCollider>()) box.isTrigger = true;
+                return;
+            }
             if (data.isMoat)
             {
                 // water to wade, not a hole: the Moat area (dearer to path over, NavAreas), and
@@ -681,7 +691,8 @@ namespace CityBuilder.Buildings
                 // clicks still find it, since a trigger answers raycasts.
                 foreach (var box in GetComponents<BoxCollider>()) box.isTrigger = true;
                 MeshMapApplier.Instance?.RegisterGate(this);
-                CarveTheGateWalls(data);
+                // the Drawbridge is passage end to end: no walls to carve
+                if (!data.isCrossing) CarveTheGateWalls(data);
                 return;
             }
 

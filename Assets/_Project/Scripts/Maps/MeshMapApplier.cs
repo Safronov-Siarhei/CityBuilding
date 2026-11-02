@@ -106,7 +106,9 @@ namespace CityBuilder.Maps
         private NavMeshData _navMeshData;
         private Bounds _navMeshBounds;
         private readonly List<NavMeshBuildSource> _groundSources = new List<NavMeshBuildSource>();
-        private readonly Dictionary<BuildingInstance, NavMeshBuildSource> _walkableSurfaces = new Dictionary<BuildingInstance, NavMeshBuildSource>();
+        // keyed by the building, and by its transform for a second source of the same building (a
+        // Drawbridge over water: the surface to walk on AND its Gate mark)
+        private readonly Dictionary<UnityEngine.Object, NavMeshBuildSource> _walkableSurfaces = new Dictionary<UnityEngine.Object, NavMeshBuildSource>();
         private readonly List<NavMeshBuildSource> _rebuildSources = new List<NavMeshBuildSource>();
         private float _rebuildTimer = -1f;
 
@@ -1053,12 +1055,14 @@ namespace CityBuilder.Maps
         {
             if (instance == null || instance.Data == null) return;
 
-            // Only the passage: the middle cell, which is where an odd footprint's centre lies.
+            // Only the passage: the middle cell, which is where an odd footprint's centre lies --
+            // the whole of a Drawbridge, which is passage end to end
             var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-            _walkableSurfaces[instance] = new NavMeshBuildSource
+            var span = instance.Data.isCrossing ? instance.Data.footprintSize : Vector2Int.one;
+            _walkableSurfaces[instance.Data.isCrossing ? (UnityEngine.Object)instance.transform : instance] = new NavMeshBuildSource
             {
                 shape = NavMeshBuildSourceShape.ModifierBox,
-                size = new Vector3(cellSize, 4f, cellSize),
+                size = new Vector3(span.x * cellSize, 4f, span.y * cellSize),
                 transform = Matrix4x4.TRS(instance.transform.position, instance.transform.rotation, Vector3.one),
                 area = NavAreas.Gate
             };
@@ -1074,6 +1078,12 @@ namespace CityBuilder.Maps
         {
             if (instance == null || instance.Data == null) return;
             if (BalanceConfig.Instance != null) NavMesh.SetAreaCost(NavAreas.Moat, BalanceConfig.Instance.MoatPathCost);
+            // a crossing over it: dry going, no Moat area
+            if (Moat.IsSpanned(instance))
+            {
+                if (_walkableSurfaces.Remove(instance)) ScheduleNavMeshRebuild();
+                return;
+            }
             var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
             _walkableSurfaces[instance] = new NavMeshBuildSource
             {
@@ -1089,7 +1099,9 @@ namespace CityBuilder.Maps
         public void UnregisterWalkableSurface(BuildingInstance instance)
         {
             if (instance == null) return;
-            if (_walkableSurfaces.Remove(instance)) ScheduleNavMeshRebuild();
+            var gone = _walkableSurfaces.Remove(instance);
+            gone |= _walkableSurfaces.Remove(instance.transform);
+            if (gone) ScheduleNavMeshRebuild();
         }
 
         private void ScheduleNavMeshRebuild()

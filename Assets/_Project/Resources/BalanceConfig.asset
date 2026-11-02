@@ -2944,6 +2944,101 @@ MonoBehaviour:
       seconds: 0
     - coins: 0
       seconds: 0
+  - id: Drawbridge
+    displayName: "\u0420\u0430\u0437\u0432\u043E\u0434\u043D\u043E\u0439 \u043C\u043E\u0441\u0442"
+    category: 3
+    cost:
+    - type: 0
+      amount: 20
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 4
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 200
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 10
+    - maxHealth: 320
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 12
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 18
+    - maxHealth: 720
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 25
+    - maxHealth: 1000
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 40
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 30
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 10
+    - type: 1
+      amount: 40
+    upgradeToLevel4Cost:
+    - type: 1
+      amount: 60
+    - type: 5
+      amount: 20
+    upgradeToLevel5Cost:
+    - type: 1
+      amount: 100
+    - type: 5
+      amount: 40
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 30
+      seconds: 60
+    levelResearch:
+    - coins: 15
+      seconds: 60
+    - coins: 25
+      seconds: 120
+    - coins: 40
+      seconds: 180
+    - coins: 70
+      seconds: 240
   - id: Fence
     displayName: "\u0417\u0430\u0431\u043E\u0440"
     category: 3
@@ -3190,13 +3285,13 @@ MonoBehaviour:
     - type: 0
       amount: 13
     upgradeToLevel3Cost:
-    - type: 0
+    - type: 1
       amount: 22
     upgradeToLevel4Cost:
-    - type: 0
+    - type: 1
       amount: 38
     upgradeToLevel5Cost:
-    - type: 0
+    - type: 1
       amount: 67
     startsUnlocked: 0
     unlockResearch:
@@ -6126,6 +6221,9 @@ MonoBehaviour:
   moatResearchCrystals: 10
   moatSpeedMultiplier: 0.4
   moatPathCost: 6
+  drawbridgeRaiseRadiusCells: 6
+  drawbridgeRaiseDegrees: 75
+  drawbridgeRaiseSeconds: 1.5
   islandStartRocks: 40
   decayPerDayAtLevel1: 0.02
   decayPenaltyThreshold: 0.7

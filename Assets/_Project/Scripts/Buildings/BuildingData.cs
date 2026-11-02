@@ -125,6 +125,10 @@ namespace CityBuilder.Buildings
         // Moat area instead (NavAreas, Buildings/Moat); nobody's target, never decays or burns.
         public bool isMoat = false;
 
+        // A crossing (the user, 2026-11-02): the Bridge and the Drawbridge go over a moat (the moat
+        // stays under them, unslowed there) or over shallow water -- never on dry land.
+        public bool isCrossing = false;
+
         /// <summary>Laid into the ground rather than standing on it (a road, a moat): no target for orcs, no decay, no scaffolding.</summary>
         public bool IsGroundWork => isRoad || isMoat;
 
