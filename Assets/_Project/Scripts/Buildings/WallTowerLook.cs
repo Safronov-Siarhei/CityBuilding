@@ -20,13 +20,17 @@ namespace CityBuilder.Buildings
         // per level, `slots` doorways in slot order: side N, E, S, W, each side's cells west->east / south->north
         [SerializeField] private GameObject[] doors = new GameObject[0];
         [SerializeField] private int slotsPerSide = 1;
+        // the Bastion wears its new look from level 3 wherever it stands, not only against a wall
+        // (the user, 2026-11-02: the old white model was still showing); doorways stay per join
+        [SerializeField] private bool lookAlways;
 
         private static readonly List<WallTowerLook> All = new List<WallTowerLook>();
         private BuildingInstance _building;
         private BuildingLevelAppearance _appearance;
 
-        public void Wire(GameObject[] levelBodies, GameObject[] levelDoors, int cellsPerSide)
+        public void Wire(GameObject[] levelBodies, GameObject[] levelDoors, int cellsPerSide, bool always)
         {
+            lookAlways = always;
             bodies = levelBodies;
             doors = levelDoors;
             slotsPerSide = cellsPerSide;
@@ -53,14 +57,14 @@ namespace CityBuilder.Buildings
             if (_building == null) return;
             var joins = WallWalk.JoinsOf(_building);
             var level = Mathf.Clamp(_building.Level, 3, 5);
-            OnTheWall = joins != null && bodies.Length > 0;
+            OnTheWall = bodies.Length > 0 && (joins != null || (lookAlways && _building.Level >= 3));
             _appearance?.SetHidden(OnTheWall);
             for (var i = 0; i < bodies.Length; i++)
                 if (bodies[i] != null) bodies[i].SetActive(OnTheWall && i == level - 3);
             var perLevel = slotsPerSide * 4;
             for (var i = 0; i < doors.Length; i++)
                 if (doors[i] != null) doors[i].SetActive(false);
-            if (!OnTheWall) return;
+            if (!OnTheWall || joins == null) return;
             var grid = Grid.GridManager.Instance;
             if (grid == null) return;
             foreach (var wall in joins)

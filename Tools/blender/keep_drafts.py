@@ -8,9 +8,12 @@ walk-wall levels 3-5.
                         portcullis and machicolations between two square towers; the walk runs
                         over the passage and into the towers
 
-Nothing is installed or saved: with `-- <out_dir>` it renders a lineup for the user to judge.
+APPROVED 2026-11-02. With no args it installs them into the objects the game exports and saves:
+Castle1-lvl1..5 (the donjon as is, front -y) and FortifiedGate1-lvl3..5 (the barbican turned a
+quarter so its wall runs N-S, as FortifiedGate1's 1x3 does). With `-- <out_dir>` it only renders.
 
-    blender --background Buildings-Size1-Models.blend --python keep_drafts.py -- <out_dir>
+    blender --background Buildings-Size1-Models.blend --python keep_drafts.py [-- <out_dir>]
+    then export_fbx.py -- G:/Fork/CityBuilding Castle1-lvl1 ... FortifiedGate1-lvl5
 """
 import math
 import os
@@ -201,6 +204,9 @@ def barbican(level):
         peak = w.tiled_roof(b, tr, stone_top + 0.4, level, apex=0.8 + (level - 3) * 0.1)
         w.flag(b, 0, 0, peak - 0.05, colour='banner_blue' if level < 5 else 'banner_red')
         w.hanging_banner(b, 'S', tr, 0, stone_top - 0.05, 0.42, 0.08, 'banner_red' if level == 3 else 'banner_blue')
+        # doorways onto the walk: toward the passage and toward the wall beyond (the game's stair)
+        for d in 'EW':
+            w.doorway(b, d, h, 0.26, 0.4, tr)
         b.bm.verts.ensure_lookup_table()
         for v in b.bm.verts[n0:]:
             v.co.x += cx
@@ -213,14 +219,41 @@ def barbican(level):
     return b
 
 
+def install(mat):
+    """Swaps each target object's mesh for the new one, keeping the object (its place, its name)."""
+    wanted = {f"Castle1-lvl{lv}": (lambda lv=lv: donjon(lv), False) for lv in range(1, 6)}
+    for lv in (3, 4, 5):
+        wanted[f"FortifiedGate1-lvl{lv}"] = (lambda lv=lv: barbican(lv), True)
+    for target, (build, quarter) in wanted.items():
+        me = build().to_mesh(target)
+        me.materials.append(mat)
+        detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+        if quarter:
+            for v in me.vertices:
+                v.co.x, v.co.y = -v.co.y, v.co.x
+        obj = bpy.data.objects.get(target)
+        if obj is None:
+            print("MISSING", target)
+            continue
+        old = obj.data
+        obj.data = me
+        if old.users == 0:
+            bpy.data.meshes.remove(old)
+        print("INSTALLED", target, sum(len(p.vertices) - 2 for p in me.polygons), "tris")
+    bpy.ops.wm.save_mainfile()
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out_dir = argv[0]
     folder = os.path.dirname(bpy.data.filepath)
     img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
     mat = kit.ensure_material(img)
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
+    if not argv:
+        install(mat)
+        return
+    out_dir = argv[0]
     sc = bpy.context.scene
     for o in sc.objects:
         o.hide_render = True

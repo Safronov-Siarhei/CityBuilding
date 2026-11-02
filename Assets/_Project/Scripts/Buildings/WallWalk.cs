@@ -22,6 +22,7 @@ namespace CityBuilder.Buildings
         public const string GateId = "Gate";
         public const string TowerId = "Tower";
         public const string FortifiedTowerId = "FortifiedTower";
+        public const string BarbicanId = "FortifiedGate";
 
         private enum Kind { Wall, Tower }
 
@@ -54,7 +55,7 @@ namespace CityBuilder.Buildings
         public static int Version { get; private set; }
 
         /// <summary>Whether a building of this id takes part in the walk at all.</summary>
-        public static bool Concerns(string id) => id == FenceId || id == GateId || id == TowerId || id == FortifiedTowerId;
+        public static bool Concerns(string id) => id == FenceId || id == GateId || id == TowerId || id == FortifiedTowerId || id == BarbicanId;
 
         public static void MarkDirty() => _dirty = true;
 
@@ -96,6 +97,19 @@ namespace CityBuilder.Buildings
                     if (id == TowerId || id == FortifiedTowerId)
                     {
                         towers.Add(b);
+                        continue;
+                    }
+                    if (id == BarbicanId)
+                    {
+                        // the Barbican (the user, 2026-11-02): the walk over its passage, and a stair
+                        // in each end tower -- a way up of its own, doorways at the walk's height
+                        var cells = new HashSet<Vector2Int>(b.Cells());
+                        foreach (var cell in cells)
+                        {
+                            var inner = 0;
+                            foreach (var step in Steps) if (cells.Contains(cell + step)) inner++;
+                            Nodes[cell] = new Node { Kind = inner >= 2 ? Kind.Wall : Kind.Tower, Building = b, Top = ground + HeightFor(b.Level), Level = b.Level };
+                        }
                         continue;
                     }
                     if (id != FenceId && id != GateId) continue;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -231,7 +231,7 @@ namespace CityBuilder.EditorTools
                     doors[(level - 3) * 4 * perSide + side * perSide + cell] = d;
                 }
             }
-            root.AddComponent<WallTowerLook>().Wire(bodies, doors, perSide);
+            root.AddComponent<WallTowerLook>().Wire(bodies, doors, perSide, id == WallWalk.FortifiedTowerId);
         }
 
         private static void AddLevelModels(GameObject root, string id, GameObject levelOneModel, float levelOneHeight, Vector2Int footprint)
