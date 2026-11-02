@@ -676,3 +676,4 @@ dungeon opens as a SEPARATE SCENE.
 - Elite monsters: an idea, not now.
 - IDEA (the user, 2026-11-02): chests in the dungeon with ordinary resources, bonuses as the player goes through.
 
+- 2026-11-02: the «Уровень N» plaque hides while the dungeon's card is open (DungeonLevelLabel.LateUpdate checks DungeonEntranceCard.IsOpen) — the card says the level itself.
