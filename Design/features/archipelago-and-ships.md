@@ -280,11 +280,13 @@
 ## Guarded caches and the sea folk (2026-11-02, IN DESIGN)
 - Caches: `Tools/blender/treasures.py` CacheChest (lid part CacheChest-Lid, hinge) + CacheRuin
   (STONE, the user: no corals, it is not the sea floor) -- APPROVED, not exported.
-- Guards: a new sea faction (name not chosen yet; working name «Дети Прилива»), composition
-  APPROVED: TideCrab (crab guard, melee tank), TideEel (eel spearman, trident), TidePriestess (ranged,
-  heals), TideKeeper (boss: hermit crab in a sunk ship's hull, the gold island). `Tools/blender/tide.py`,
-  jointed for FigureAnimator; models sent for approval, not exported. Rule: they ONLY guard caches
-  (no raids, no attacks on ships). Strength by distance from the start; cleared caches stay empty.
+- Guards: the sea faction «СТРАЖИ ГЛУБИН» (name chosen by the user 2026-11-02). TideCrab APPROVED;
+  the eel, the priestess and the hermit-crab-in-a-hull were REJECTED as dull. Round 2 for approval
+  (`Tools/blender/tide.py`): TideShark (hammerhead, sawfish-snout sword, turtle-shell shield; fast
+  melee), TideOctopus (shaman, jellyfish lantern staff; ranged + heals), TideAngler (anglerfish,
+  shoots its lure's light; a second ranged choice), TideSerpent (boss: teal sea serpent coiled round
+  a gold hoard). Jointed for FigureAnimator, not exported. Rule: they ONLY guard caches (no raids,
+  no attacks on ships). Strength by distance from the start; cleared caches stay empty.
 - Ore rule (asked 2026-11-02): one mine per vein -- already so (`BuildingPlacer`: footprint == vein,
   `vein.Mine == null`).
 - The Water build tab's icon is the Lighthouse picture (`CategoryIconBuilding`).

@@ -5,11 +5,15 @@ they only guard the caches). Facing -y, standing on the origin. Run in the model
     blender --background Buildings-Size1-Models.blend --python tide.py
 
 - TideCrab: the crab guard -- a broad shell on four legs, two great claws; slow, armoured, melee.
-- TideEel: the eel spearman -- an eel-headed fighter with a fin crest and a trident; fast, melee.
-- TidePriestess: the tide priestess -- a pale sea-woman in a shell crown with a staff of living
-  water; she strikes from afar and heals her own.
-- TideKeeper: the boss on the gold island -- a giant hermit crab whose shell is the broken hull of a
-  sunk ship, mast and torn sail still on it.
+- TideShark: the hammerhead -- a shark warrior with a sawfish-snout sword and a turtle-shell
+  shield; fast, melee.
+- TideOctopus: the octopus shaman -- a great spotted mantle on curling tentacles, a jellyfish
+  lantern on a coral staff; strikes from afar and heals its own.
+- TideAngler: the anglerfish -- a second choice for the ranged fighter: a gaping toothy mouth on
+  fin-feet, shooting the light of its lure.
+- TideSerpent: the boss on the gold island, the deep serpent coiled round its hoard.
+The faction is «Стражи Глубин» (the user, 2026-11-02); the eel, the priestess and the hermit crab
+in a hull were rejected as dull.
 
 Teal, coral and pearl, with shells and kelp: never mistaken for the green orcs. Jointed like the
 jungle's beasts (wild.py): LegFL/LegFR/LegBL/LegBR or LegL/LegR, ArmStrike, ArmOff, Head, moved by
@@ -35,9 +39,16 @@ PALE, ROBE, ROBE_DARK = 'plaster_white', 'roof_blue_dark', 'roof_slate_dark'
 KELP, PEARL, CORAL = 'leaf', 'white', 'plaster_pink'
 METAL, GOLD, GLOW, EYE = 'iron', 'gold', 'window_light', 'window'
 HULL, HULL_DARK, SAIL = 'wood_mid', 'wood_dark', 'burlap'
+SHARK, SHARK_DARK, BONE = 'roof_slate', 'roof_slate_dark', 'sand'
+SHELL_GREEN, SHELL_GREEN_DARK = 'roof_green', 'grass_dark'
+OCTO, OCTO_SPOT, JELLY = 'roof_purple', 'roof_purple_dark', 'water'
+ANGLER, ANGLER_DARK, GLOW_DIM, MAW = 'roof_blue_dark', 'roof_slate_dark', 'fire', 'roof_red_dark'
+SERPENT, SERPENT_BELLY = 'water', 'plaster_yellow'
 
 detail.OVERRIDE.update({c: detail.PLAIN for c in (SHELL, SHELL_DARK, BELLY, SKIN, SKIN_DARK, FIN, PALE, ROBE, ROBE_DARK,
-                                                   KELP, PEARL, CORAL, GLOW, EYE, SAIL)})
+                                                   KELP, PEARL, CORAL, GLOW, EYE, SAIL, SHARK, SHARK_DARK, BONE, SHELL_GREEN,
+                                                   SHELL_GREEN_DARK, OCTO, OCTO_SPOT, JELLY, ANGLER, GLOW_DIM,
+                                                   SERPENT, SERPENT_BELLY)})
 
 
 def ensure_collection():
@@ -101,154 +112,208 @@ CRAB = ("TideCrab", crab_body, [
 ])
 
 
-# ---------------------------------------------------------------- the eel spearman (0.72 high)
+# ---------------------------------------------------------------- the hammerhead (0.78 high)
+# (the eel, the priestess and the hermit crab were rejected as dull, 2026-11-02)
 
-def eel_body(b):
-    b.frustum(0, 0, 0.28, 0.4, 0.1, 0.09, KELP, sides=8)                                         # kelp skirt
+def shark_body(b):
+    b.frustum(0, 0, 0.27, 0.38, 0.1, 0.09, SHELL_DARK, sides=8)                                  # hide kilt
+    b.cylinder(0, 0, 0.37, 0.4, 0.11, BONE, sides=8)                                             # bone belt
+    oval(b, (0, 0.0, 0.53), 0.14, 0.09, 0.13, SHARK, 0.06)                                       # broad chest
+    oval(b, (0, -0.06, 0.5), 0.1, 0.04, 0.1, BELLY, 0.04)
+    fin(b, [(0, 0), (0.16, 0.0), (0.02, 0.17)], (0, 0.0, 0.5), (0, 1, 0), (0, 0, 1), 0.02, SHARK_DARK)  # dorsal fin
+    o.tube(b, [(0, 0.08, 0.32), (0, 0.2, 0.2), (0, 0.3, 0.12)], [0.05, 0.035, 0.0], SHARK, sides=5)
+    fin(b, [(0, 0), (0.1, 0.08), (0.12, -0.04)], (0, 0.28, 0.12), (0, 1, 0), (0, 0, 1), 0.012, SHARK_DARK)  # tail fin
+    for k in (-1, 1):                                                                            # bone pauldrons
+        b.ball(k * 0.14, 0.0, 0.6, 0.06, 0.06, BONE, sides=6)
+        o.tube(b, [(k * 0.15, 0.0, 0.64), (k * 0.2, 0.02, 0.7)], [0.018, 0.0], BONE, sides=4)
+
+
+def shark_leg(b, k):
+    x = k * 0.06
+    b.rod((x, 0, 0.3), (x, 0.01, 0.03), 0.055, SHARK)
+    b.box(x - 0.04, x + 0.04, -0.08, 0.03, 0.0, 0.05, SHARK_DARK, bevel=0.012)
+
+
+def shark_head(b):
+    o.tube(b, [(0, 0.0, 0.64), (0, -0.05, 0.71)], [0.06, 0.05], SHARK, sides=6, tip=False)
+    # the hammer: a wide flat bar with an eye at each end
+    b.obox((0, -0.08, 0.74), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.17, 0.045, 0.025, SHARK, bevel=0.02)
+    for k in (-1, 1):
+        b.ball(k * 0.17, -0.08, 0.73, 0.025, 0.035, GLOW, sides=5)
+    oval(b, (0, -0.1, 0.66), 0.05, 0.035, 0.03, BELLY, 0.012)                                    # jaw
+    for i in range(5):                                                                           # teeth
+        x = -0.04 + i * 0.02
+        b.pyramid(x, -0.135, 0.645, 0.006, 0.004, 0.67, BONE, sides=4)
+
+
+def shark_saw_arm(b):
+    b.rod((0.15, 0.0, 0.58), (0.22, -0.05, 0.42), 0.05, SHARK)
+    b.ball(0.22, -0.07, 0.36, 0.035, 0.05, SHARK_DARK, sides=5)
+    # a sword from a sawfish's snout: a long flat blade with teeth down both edges
+    b.rod((0.22, -0.05, 0.37), (0.22, -0.09, 0.44), 0.02, HULL_DARK)
+    b.obox((0.22, -0.19, 0.6), (1, 0, 0), (0, -0.5, 0.86), (0, -0.86, -0.5), 0.006, 0.2, 0.025, BONE, bevel=0.004)
     for i in range(6):
-        a = i * math.pi / 3
-        o.tube(b, [(math.cos(a) * 0.09, math.sin(a) * 0.09, 0.3), (math.cos(a) * 0.12, math.sin(a) * 0.12, 0.2)],
-               [0.02, 0.0], KELP, sides=4)
-    b.cylinder(0, 0, 0.39, 0.42, 0.1, CORAL, sides=8)                                            # coral belt
-    oval(b, (0, 0.0, 0.52), 0.11, 0.08, 0.11, SKIN, 0.05)                                        # chest
-    oval(b, (0, -0.04, 0.5), 0.08, 0.05, 0.08, BELLY, 0.03)
-    fin(b, [(0, 0), (0.22, 0.0), (0.05, 0.1)], (0, 0.07, 0.4), (0, 0, 1), (0, 1, 0), 0.012, FIN)  # back fin
-    o.tube(b, [(0, 0.08, 0.3), (0, 0.18, 0.15), (0.03, 0.26, 0.04)], [0.04, 0.03, 0.0], SKIN_DARK, sides=5)  # tail
+        t = -0.15 + i * 0.06
+        for k in (-1, 1):
+            c = Vector((0.22, -0.19 - 0.5 * t + k * 0.86 * 0.028, 0.6 + 0.86 * t - k * 0.5 * 0.028))
+            b.pyramid(c.x, c.y, c.z - 0.004, 0.008, 0.006, c.z + 0.012, PEARL, sides=4)
 
 
-def eel_leg(b, k):
-    x = k * 0.05
-    b.rod((x, 0, 0.3), (x, 0.0, 0.1), 0.045, SKIN_DARK)
-    b.box(x - 0.035, x + 0.035, -0.07, 0.03, 0.0, 0.05, SKIN_DARK, bevel=0.012)
-    fin(b, [(0, 0), (0.06, 0), (0.0, 0.05)], (x, 0.03, 0.02), (0, -1, 0), (0, 0, 1), 0.006, FIN)  # heel fin
+def shark_off_arm(b):
+    b.rod((-0.15, 0.0, 0.58), (-0.22, -0.04, 0.42), 0.05, SHARK)
+    b.ball(-0.22, -0.06, 0.36, 0.035, 0.05, SHARK_DARK, sides=5)
+    # a round shield: a turtle's shell
+    oval(b, (-0.27, -0.06, 0.45), 0.02, 0.1, 0.1, SHELL_GREEN, 0.03)
+    for dy, dz in ((0, 0), (0.05, 0.05), (-0.05, 0.05), (0.05, -0.05), (-0.05, -0.05)):
+        b.box(-0.295, -0.285, -0.06 + dy - 0.02, -0.06 + dy + 0.02, 0.45 + dz - 0.02, 0.45 + dz + 0.02, SHELL_GREEN_DARK)
 
 
-def eel_head(b):
-    o.tube(b, [(0, -0.02, 0.6), (0, -0.06, 0.66), (0, -0.12, 0.68)], [0.055, 0.05, 0.035], SKIN, sides=6, tip=False)
-    oval(b, (0, -0.15, 0.665), 0.03, 0.03, 0.022, SKIN_DARK, 0.01)                              # jaw
-    for k in (-1, 1):
-        b.box(k * 0.04 - 0.008, k * 0.04 + 0.008, -0.11, -0.09, 0.68, 0.695, GLOW)              # eyes
-    fin(b, [(0, 0), (0.16, 0.02), (0.08, 0.08)], (0, -0.1, 0.7), (0, 1, 0), (0, 0, 1), 0.01, FIN)  # crest
-
-
-def eel_trident_arm(b):
-    b.rod((0.12, 0.0, 0.58), (0.17, -0.04, 0.42), 0.04, SKIN)
-    b.ball(0.17, -0.06, 0.36, 0.03, 0.05, SKIN_DARK, sides=5)
-    b.rod((0.17, 0.05, 0.25), (0.17, -0.18, 0.78), 0.018, HULL_DARK)                             # shaft
-    for dx in (-0.035, 0.0, 0.035):                                                              # three prongs
-        b.rod((0.17 + dx, -0.17, 0.76), (0.17 + dx * 1.2, -0.2, 0.86), 0.012, GOLD)
-    b.box(0.13, 0.21, -0.18, -0.16, 0.75, 0.77, GOLD)
-
-
-def eel_off_arm(b):
-    b.rod((-0.12, 0.0, 0.58), (-0.17, -0.03, 0.42), 0.04, SKIN)
-    b.ball(-0.17, -0.05, 0.36, 0.03, 0.05, SKIN_DARK, sides=5)
-
-
-EEL = ("TideEel", eel_body, [
-    ("LegL", lambda b: eel_leg(b, -1), (-0.05, 0.0, 0.3)),
-    ("LegR", lambda b: eel_leg(b, 1), (0.05, 0.0, 0.3)),
-    ("Head", eel_head, (0.0, -0.02, 0.6)),
-    ("ArmStrike", eel_trident_arm, (0.12, 0.0, 0.58)),
-    ("ArmOff", eel_off_arm, (-0.12, 0.0, 0.58)),
+SHARK_SPEC = ("TideShark", shark_body, [
+    ("LegL", lambda b: shark_leg(b, -1), (-0.06, 0.0, 0.3)),
+    ("LegR", lambda b: shark_leg(b, 1), (0.06, 0.0, 0.3)),
+    ("Head", shark_head, (0.0, 0.0, 0.64)),
+    ("ArmStrike", shark_saw_arm, (0.15, 0.0, 0.58)),
+    ("ArmOff", shark_off_arm, (-0.15, 0.0, 0.58)),
 ])
 
 
-# ---------------------------------------------------------------- the tide priestess (0.7 high)
+# ---------------------------------------------------------------- the octopus shaman (0.72 high)
 
-def priestess_body(b):
-    b.frustum(0, 0, 0.0, 0.42, 0.15, 0.08, ROBE, sides=10)                                       # robe to the ground
-    b.frustum(0, -0.01, 0.0, 0.14, 0.155, 0.13, ROBE_DARK, sides=10)                            # wet hem
-    oval(b, (0, 0.0, 0.48), 0.08, 0.06, 0.08, PALE, 0.04)                                        # bodice
-    b.cylinder(0, 0, 0.4, 0.43, 0.085, PEARL, sides=10)                                          # pearl girdle
-    for i in range(5):                                                                           # shell collar
-        a = math.pi * (0.15 + 0.7 * i / 4)
-        b.ball(math.cos(a) * 0.075, -math.sin(a) * 0.05, 0.55, 0.022, 0.025, CORAL, sides=5)
-
-
-def priestess_head(b):
-    oval(b, (0, -0.01, 0.62), 0.045, 0.045, 0.05, PALE, 0.025)
-    for k in (-1, 1):
-        b.box(k * 0.02 - 0.007, k * 0.02 + 0.007, -0.058, -0.05, 0.625, 0.638, GLOW)
-        fin(b, [(0, 0), (0.06, 0.03), (0.0, 0.05)], (k * 0.045, 0.0, 0.62), (k, 0, 0), (0, 0, 1), 0.006, FIN)  # fin ears
-    o.tube(b, [(0, 0.02, 0.66), (0, 0.08, 0.55), (0, 0.09, 0.42)], [0.04, 0.035, 0.0], SKIN, sides=5)  # hair like kelp
-    for i in range(5):                                                                           # the shell crown
-        a = math.pi * (0.1 + 0.8 * i / 4)
-        b.pyramid(math.cos(a) * 0.035, -math.sin(a) * 0.035, 0.66, 0.012, 0.012, 0.71 + (0.02 if i == 2 else 0.0), PEARL)
+def octo_body(b):
+    # the great spotted mantle is the body and the head in one
+    oval(b, (0, 0.04, 0.48), 0.13, 0.13, 0.17, OCTO, 0.1)
+    oval(b, (0, 0.08, 0.62), 0.1, 0.1, 0.08, OCTO, 0.07)
+    for (x, y, z, r) in ((0.08, 0.12, 0.62, 0.025), (-0.06, 0.15, 0.55, 0.02), (0.1, 0.05, 0.45, 0.018),
+                         (-0.11, 0.06, 0.5, 0.022), (0.0, 0.17, 0.42, 0.02)):
+        b.ball(x, y, z, r, r * 0.6, OCTO_SPOT, sides=5)                                           # spots
+    for k in (-1, 1):                                                                            # big eyes
+        b.ball(k * 0.07, -0.08, 0.42, 0.04, 0.06, PEARL, sides=6)
+        b.box(k * 0.07 - 0.012, k * 0.07 + 0.012, -0.125, -0.115, 0.43, 0.47, EYE)
+    for i in range(7):                                                                           # pearl string
+        a = math.pi * (0.1 + 0.8 * i / 6)
+        b.ball(math.cos(a) * 0.11, -math.sin(a) * 0.08 + 0.02, 0.33, 0.016, 0.025, PEARL, sides=5)
 
 
-def priestess_staff_arm(b):
-    b.rod((0.09, 0.0, 0.52), (0.14, -0.04, 0.4), 0.032, ROBE)
-    b.ball(0.14, -0.06, 0.36, 0.022, 0.04, PALE, sides=5)
-    b.rod((0.14, -0.06, 0.05), (0.14, -0.07, 0.72), 0.014, CORAL)                                # coral staff
-    b.ball(0.14, -0.07, 0.72, 0.04, 0.07, SKIN, sides=7)                                          # a ball of water
-    b.ball(0.14, -0.07, 0.74, 0.02, 0.035, GLOW, sides=5)
+def octo_tentacles(b, k):
+    # two curling tentacles on the ground per side, front and back
+    for (a0, a1) in ((-0.6, -1.1), (0.4, 0.9)):
+        pts = []
+        for t in range(5):
+            f = t / 4
+            r = 0.06 + 0.2 * f
+            curl = a0 + (a1 - a0) * f
+            pts.append((k * 0.05 + math.sin(curl) * r * k, 0.04 - math.cos(curl) * r, 0.3 * (1 - f) ** 1.6 + 0.015))
+        o.tube(b, pts, [0.05, 0.042, 0.032, 0.02, 0.0], OCTO, sides=6)
 
 
-def priestess_off_arm(b):
-    b.rod((-0.09, 0.0, 0.52), (-0.15, -0.06, 0.42), 0.03, ROBE)
-    b.ball(-0.16, -0.08, 0.4, 0.022, 0.035, PALE, sides=5)
+def octo_staff_arm(b):
+    o.tube(b, [(0.1, -0.02, 0.4), (0.16, -0.08, 0.38), (0.18, -0.1, 0.45)], [0.03, 0.025, 0.02], OCTO, sides=5, tip=False)
+    b.rod((0.18, -0.1, 0.05), (0.19, -0.11, 0.75), 0.014, CORAL)                                 # coral staff
+    # a jellyfish lantern at its top: a glowing bell and trailing threads
+    b.dome(0.19, -0.11, 0.76, 0.06, 0.06, [GLOW, JELLY], sides=8)
+    for i in range(5):
+        a = i * 2 * math.pi / 5
+        o.tube(b, [(0.19 + math.cos(a) * 0.04, -0.11 + math.sin(a) * 0.04, 0.76),
+                   (0.19 + math.cos(a) * 0.05, -0.11 + math.sin(a) * 0.05, 0.66)], [0.006, 0.0], JELLY, sides=3)
 
 
-PRIESTESS = ("TidePriestess", priestess_body, [
-    ("Head", priestess_head, (0.0, 0.0, 0.58)),
-    ("ArmStrike", priestess_staff_arm, (0.09, 0.0, 0.52)),
-    ("ArmOff", priestess_off_arm, (-0.09, 0.0, 0.52)),
+def octo_off_arm(b):
+    o.tube(b, [(-0.1, -0.02, 0.4), (-0.17, -0.1, 0.36), (-0.2, -0.14, 0.42), (-0.18, -0.16, 0.48)],
+           [0.03, 0.025, 0.02, 0.0], OCTO, sides=5)
+
+
+OCTOPUS = ("TideOctopus", octo_body, [
+    ("LegFL", lambda b: octo_tentacles(b, -1), (-0.05, 0.0, 0.3)),
+    ("LegFR", lambda b: octo_tentacles(b, 1), (0.05, 0.0, 0.3)),
+    ("ArmStrike", octo_staff_arm, (0.1, -0.02, 0.4)),
+    ("ArmOff", octo_off_arm, (-0.1, -0.02, 0.4)),
 ])
 
 
-# ---------------------------------------------------------------- the Keeper of the Deep (2.2 long, 1.6 high)
+# ---------------------------------------------------------------- the anglerfish (0.6 high) -- a second ranged choice
 
-def keeper_body(b):
-    # the soft crab body sticking out of the hull, and its face
-    oval(b, (0, -0.45, 0.42), 0.38, 0.3, 0.28, SHELL, 0.2)
-    oval(b, (0, -0.55, 0.32), 0.3, 0.22, 0.14, BELLY, 0.1)
+def angler_body(b):
+    oval(b, (0, 0.03, 0.3), 0.16, 0.16, 0.15, ANGLER, 0.11)
+    oval(b, (0, -0.06, 0.22), 0.13, 0.08, 0.08, ANGLER_DARK, 0.06)                               # under the jaw
+    # the huge jaw, open, a row of needle teeth on each lip
+    for i in range(7):
+        x = -0.11 + i * 0.037
+        b.pyramid(x, -0.13, 0.27, 0.007, 0.007, 0.33, BONE, sides=3)
+        b.pyramid(x + 0.018, -0.12, 0.4, 0.007, 0.007, 0.34, BONE, sides=3)
+    b.box(-0.12, 0.12, -0.14, -0.11, 0.28, 0.39, MAW)                                            # the red maw
     for k in (-1, 1):
-        o.tube(b, [(k * 0.14, -0.62, 0.62), (k * 0.2, -0.7, 0.88)], [0.04, 0.03], SHELL, sides=5, tip=False)
-        b.ball(k * 0.2, -0.7, 0.86, 0.06, 0.09, EYE, sides=6)
-        b.ball(k * 0.2, -0.75, 0.9, 0.022, 0.03, GLOW, sides=5)
-        o.tube(b, [(k * 0.08, -0.72, 0.38), (k * 0.25, -1.05, 0.5), (k * 0.4, -1.25, 0.8)], [0.012, 0.01, 0.0], SHELL_DARK, sides=4)  # feelers
-    # the shell: a ship's broken hull lying on its side, keel up and back
-    # (profile across the ship: up the hull, then across it; extruded backwards along +y)
-    hull = [(0.0, -0.55), (0.0, 0.55), (0.55, 0.7), (1.05, 0.45), (1.05, -0.45), (0.55, -0.7)]
-    b.prism(hull, (0, -0.25, 0.25), (0, 0, 1), (1, 0, 0), 1.25, HULL, back_cap=True)
-    b.box(-0.06, 0.06, -0.3, 1.0, 1.29, 1.38, HULL_DARK, bevel=0.02)                            # keel
-    stern = [(z * 1.05, x * 1.05) for z, x in hull]
-    b.prism(stern, (0, 0.95, 0.22), (0, 0, 1), (1, 0, 0), 0.12, HULL_DARK, back_cap=True)        # broken stern
-    for x in (-0.3, 0.25):                                                                      # holes stove in
-        b.box(x - 0.08, x + 0.08, 0.2, 0.36, 1.29, 1.31, EYE)
-    for (x, y, z) in ((0.5, 0.3, 0.6), (-0.6, 0.6, 0.9), (0.3, 0.8, 1.25)):                       # barnacles and weed
-        b.ball(x, y, z, 0.07, 0.06, PEARL, sides=5)
-    b.ball(-0.3, 0.2, 1.3, 0.12, 0.08, KELP, sides=6)
-    # the mast stub and a torn sail
-    b.rod((0.15, 0.4, 1.3), (0.35, 0.55, 2.0), 0.06, HULL_DARK)
-    fin(b, [(0, 0), (0.45, 0.05), (0.35, 0.4), (0.05, 0.3)], (0.2, 0.47, 1.45), (0.94, 0.34, 0), (0, 0, 1), 0.015, SAIL)
-    b.box(0.08, 0.5, 0.42, 0.5, 1.9, 1.95, HULL_DARK)                                            # yard
-    # a lantern still hanging on it, lit
-    b.rod((0.42, 0.52, 1.9), (0.42, 0.52, 1.78), 0.01, METAL)
-    b.ball(0.42, 0.52, 1.7, 0.04, 0.08, GLOW, sides=6)
+        b.ball(k * 0.1, -0.08, 0.42, 0.03, 0.035, GLOW_DIM, sides=5)                             # small mean eyes
+        fin(b, [(0, 0), (0.1, 0.05), (0.06, 0.12)], (k * 0.15, 0.05, 0.3), (k, 0, 0), (0, 0, 1), 0.008, FIN)
+    fin(b, [(0, 0), (0.12, 0.06), (0.14, -0.06)], (0, 0.17, 0.3), (0, 1, 0), (0, 0, 1), 0.012, FIN)  # tail
 
 
-def keeper_leg(b, x, y):
-    k = 1 if x > 0 else -1
-    b.rod((x, y, 0.4), (x + k * 0.6, y, 0.55), 0.09, SHELL)
-    b.rod((x + k * 0.6, y, 0.55), (x + k * 0.8, y - 0.05, 0.0), 0.07, SHELL_DARK)
+def angler_leg(b, k):
+    # stubby fin-feet it waddles on
+    b.rod((k * 0.07, 0.02, 0.16), (k * 0.09, 0.0, 0.03), 0.04, ANGLER_DARK)
+    fin(b, [(0, 0), (0.08, 0), (0.04, 0.05)], (k * 0.05, -0.03, 0.005), (1, 0, 0), (0, 1, 0), 0.01, FIN)
 
 
-def keeper_claw_arm(b, k, big):
-    size = 0.32 if big else 0.22
-    b.rod((k * 0.3, -0.55, 0.4), (k * 0.5, -0.85, 0.45), 0.1, SHELL)
-    claw(b, k * 0.55, -0.95 - size * 0.4, 0.5, size, SHELL, SHELL_DARK)
+def angler_lure_arm(b):
+    # the lure: a whip from the forehead with a glowing bulb -- its light is what it shoots
+    o.tube(b, [(0, -0.02, 0.44), (0, -0.05, 0.56), (0, -0.14, 0.62), (0, -0.22, 0.58)],
+           [0.012, 0.01, 0.008, 0.006], ANGLER_DARK, sides=4, tip=False)
+    b.ball(0, -0.22, 0.53, 0.035, 0.07, GLOW, sides=7)
 
 
-KEEPER = ("TideKeeper", keeper_body, [
-    ("LegFL", lambda b: keeper_leg(b, -0.3, -0.25), (-0.3, -0.25, 0.4)),
-    ("LegFR", lambda b: keeper_leg(b, 0.3, -0.25), (0.3, -0.25, 0.4)),
-    ("LegBL", lambda b: keeper_leg(b, -0.35, 0.1), (-0.35, 0.1, 0.4)),
-    ("LegBR", lambda b: keeper_leg(b, 0.35, 0.1), (0.35, 0.1, 0.4)),
-    ("ArmStrike", lambda b: keeper_claw_arm(b, 1, True), (0.3, -0.55, 0.4)),
-    ("ArmOff", lambda b: keeper_claw_arm(b, -1, False), (-0.3, -0.55, 0.4)),
+ANGLER_SPEC = ("TideAngler", angler_body, [
+    ("LegL", lambda b: angler_leg(b, -1), (-0.07, 0.02, 0.16)),
+    ("LegR", lambda b: angler_leg(b, 1), (0.07, 0.02, 0.16)),
+    ("ArmStrike", angler_lure_arm, (0.0, -0.02, 0.44)),
 ])
+
+
+# ---------------------------------------------------------------- the deep serpent, the boss (2.0 high)
+
+def serpent_body(b):
+    # coiled round a heap of gold, rising into the neck
+    b.cylinder(0, 0.1, 0.0, 0.18, 0.42, GOLD, sides=9)                                            # the hoard
+    b.dome(0, 0.1, 0.18, 0.4, 0.22, [GOLD, GOLD], sides=9)
+    pts, radii = [], []
+    turns, steps = 2.2, 40
+    for i in range(steps + 1):
+        t = i / steps
+        a = t * turns * 2 * math.pi + math.pi * 0.5
+        r = 0.72 - 0.22 * t
+        pts.append((math.cos(a) * r, 0.1 + math.sin(a) * r, 0.14 + 0.32 * t))
+        radii.append(0.15 - 0.03 * t)
+    # the tail end tapers off on the ground at the start of the coil
+    tail = [(math.cos(-0.6) * 0.95, 0.1 + math.sin(-0.6) * 0.95, 0.06), (math.cos(0.4) * 0.85, 0.1 + math.sin(0.4) * 0.85, 0.1)]
+    o.tube(b, tail + [pts[0]], [0.0, 0.08, radii[0]], SERPENT, sides=7, tip=False)
+    o.tube(b, pts, radii, SERPENT, sides=8, tip=False)
+    # belly scales on the lower side and a crest of spines down the back
+    for i in range(0, steps, 3):
+        x, y, z = pts[i]
+        b.ball(x, y, z - radii[i] * 0.9, radii[i] * 0.5, radii[i] * 0.4, SERPENT_BELLY, sides=5)
+        a = i / steps * turns * 2 * math.pi + math.pi * 0.5
+        fin(b, [(0, 0), (0.12, 0.0), (0.03, 0.1)], (x, y, z + radii[i] * 0.85), (-math.sin(a), math.cos(a), 0), (0, 0, 1), 0.012, FIN)
+    # the neck rising out of the coil
+    x, y, z = pts[-1]
+    o.tube(b, [(x, y, z), (x * 0.5, y - 0.2, z + 0.4), (0.0, -0.35, 1.15), (0.0, -0.45, 1.45)],
+           [0.12, 0.12, 0.11, 0.1], SERPENT, sides=8, tip=False)
+    for zz in (0.75, 0.95, 1.15, 1.35):
+        fin(b, [(0, 0), (0.12, 0.0), (0.02, 0.13)], (0, -0.25 - (zz - 0.75) * 0.3, zz), (0, 1, 0.3), (0, 0, 1), 0.012, FIN)
+
+
+def serpent_head(b):
+    oval(b, (0, -0.55, 1.52), 0.11, 0.16, 0.08, SERPENT, 0.05)                                    # upper jaw
+    oval(b, (0, -0.58, 1.4), 0.09, 0.14, 0.04, SERPENT_BELLY, 0.03)                              # lower jaw, open
+    for i in range(4):
+        y = -0.66 + i * 0.05
+        for k in (-1, 1):
+            b.pyramid(k * 0.07, y, 1.47, 0.008, 0.008, 1.42, BONE, sides=3)
+    for k in (-1, 1):
+        b.ball(k * 0.08, -0.5, 1.56, 0.03, 0.04, GLOW, sides=5)                                   # eyes
+        o.tube(b, [(k * 0.07, -0.45, 1.58), (k * 0.14, -0.35, 1.72), (k * 0.16, -0.25, 1.8)],
+               [0.025, 0.018, 0.0], BONE, sides=5)                                                # horns
+        fin(b, [(0, 0), (0.14, 0.06), (0.04, 0.12)], (k * 0.1, -0.45, 1.5), (k, 0.4, 0), (0, 0, 1), 0.01, FIN)  # gill frills
+
+
+SERPENT_SPEC = ("TideSerpent", serpent_body, [("Head", serpent_head, (0.0, -0.45, 1.45))])
 
 
 # ---------------------------------------------------------------- building and installing
@@ -301,7 +366,12 @@ def main():
     detail.build_material_nodes(mat, img, atlas)
     wolf = bpy.data.objects.get("WildWolf")
     base = (wolf.location.copy() if wolf else Vector((0, 0, 0))) + Vector((0, 14.0, 0))
-    for i, spec in enumerate((CRAB, EEL, PRIESTESS, KEEPER)):
+    for old in ("TideEel", "TidePriestess", "TideKeeper"):
+        root = bpy.data.objects.get(old)
+        if root is not None:
+            for part in list(root.children_recursive) + [root]:
+                bpy.data.objects.remove(part)
+    for i, spec in enumerate((CRAB, SHARK_SPEC, OCTOPUS, ANGLER_SPEC, SERPENT_SPEC)):
         figure(spec, base + Vector((i * 2.5, 0, 0)), mat, coll)
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()
