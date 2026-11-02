@@ -182,7 +182,9 @@ namespace CityBuilder.EditorTools
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelImportDefaults.TerrainPaletteTexturePath);
             if (texture == null) return;
 
-            var shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+            // the buildings' shader (lit the same as Simple Lit) so the land takes the clouds'
+            // shadows (CloudField.hlsl, the user 2026-11-02); no pattern, no winter snow on it
+            var shader = Shader.Find("CityBuilder/BuildingDetail") ?? Shader.Find("Universal Render Pipeline/Simple Lit");
             var material = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
             if (material == null)
             {
@@ -197,6 +199,8 @@ namespace CityBuilder.EditorTools
             material.SetTexture("_BaseMap", texture);
             material.SetColor("_BaseColor", Color.white);
             material.SetFloat("_Smoothness", 0.1f);
+            material.SetFloat("_DetailStrength", 0f);
+            material.SetFloat("_SnowMask", 0f);
             material.DisableKeyword("_SPECULAR_COLOR");
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);

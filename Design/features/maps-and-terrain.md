@@ -99,6 +99,28 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
 - Not done: building greens (castle lawn, gardens) stay summer-green in autumn; water is its own
   material (unchanged); the main menu's live background is always summer; not seen on a phone.
 
+## Liveliness: wind and clouds (2026-11-02, user: «карта безжизненная»)
+- **Wind** (approved): `BuildingDetail.shader` keyword `_WIND` (+ `_WindStrength`, `_WindHeight`,
+  `_WindByUV3`) sways vertices in all three passes (`WindOffset`: one direction 0.94/0.34, rolling
+  gusts + sway + flutter). Trees: every season's tree material made `Windy()` in
+  `SetupProjectSeasons` (summer now has its own `Trees-Summer.mat`, not the buildings' palette);
+  weight = (world height over the pivot / `_WindHeight`)². Map props: `MapDecorRenderer` writes
+  uv3.x (tuft/flowers/bush/fern/reeds, (y/top)²; stones 0) and `SeasonStyle.DecorWind` gives them a
+  wind copy on the terrain palette. Dungeons stay still. Buildings never take the keyword.
+- **Clouds** (user rule: a cloud shadow only with the cloud itself visible): `Maps/CloudLayer.cs`
+  + `Shaders/CloudField.hlsl` (one global drifting field from CloudNoise.png) — every BuildingDetail
+  surface is darkened under it (forward pass, along the sun ray); the sheet itself
+  (`CloudLayer.shader`, `Materials/CloudLayer.mat`) at 10 m fades in only when the camera is
+  15.5–18.5 m over the ground (max zoom). Not in a dungeon; globals zeroed in OnDestroy.
+- The terrain palette material is now `CityBuilder/BuildingDetail` (was Simple Lit) so the land
+  takes the cloud shadows.
+- **Not seen in game / on a phone; no tests run** (user: tests later, one general run).
+- **Marked, NOT to build:** sun glints on the sea; chickens/cows at farms.
+- **Next approved:** wildlife (gulls over coasts/ships, bird flocks off forests, deer/rabbits
+  fleeing, fish jumping at shoals, rare whale/dolphins) — models shown for approval first.
+  Points of interest (wrecks, ruins, landmarks) liked but models need approval first. Island
+  biomes and neutral ships: «пока что нет».
+
 ## Open / ideas
 Vikings by sea (free mode); dungeons in ruins (squad walks a labyrinth for treasure); islands of
 resources across a river; Map 3 decor ~12.8k props / ~240k tris is the first thing to watch on a phone.

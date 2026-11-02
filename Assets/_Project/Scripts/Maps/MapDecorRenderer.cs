@@ -50,6 +50,9 @@ namespace CityBuilder.Maps
         private readonly List<Vector3> _vertices = new List<Vector3>();
         private readonly List<Vector3> _normals = new List<Vector3>();
         private readonly List<Vector2> _uvs = new List<Vector2>();
+        // uv3.x: how much the wind moves each vertex (0 at a plant's foot, 1 at its top; a stone 0)
+        private readonly List<Vector2> _sway = new List<Vector2>();
+        private float[][] _protoSway;
         private readonly List<int> _triangles = new List<int>();
 
         /// <summary>How many props are drawn right now (all chunks) -- for the tests; counted on demand.</summary>
@@ -131,6 +134,7 @@ namespace CityBuilder.Maps
         {
             var count = _data.Prototypes.Length;
             _protoVertices = new Vector3[count][];
+            _protoSway = new float[count][];
             _protoNormals = new Vector3[count][];
             _protoUvs = new Vector2[count][];
             _protoTriangles = new int[count][];
@@ -146,10 +150,33 @@ namespace CityBuilder.Maps
                     continue;
                 }
                 _protoVertices[p] = mesh.vertices;
+                _protoSway[p] = SwayOf(mesh, _protoVertices[p]);
                 _protoNormals[p] = mesh.normals;
                 _protoUvs[p] = mesh.uv;
                 _protoTriangles[p] = mesh.triangles;
             }
+        }
+
+        // the props the wind moves (tufts, flowers, bushes, ferns, reeds); stones, logs, stumps,
+        // mushrooms and lily pads stand still
+        private static readonly string[] Swaying = { "tuft", "flowers", "bush", "fern", "reeds" };
+
+        /// <summary>Each vertex's sway weight: its height over the prototype's tallest point, squared; 0 for a prop that does not sway.</summary>
+        private static float[] SwayOf(Mesh mesh, Vector3[] vertices)
+        {
+            var name = mesh.name;
+            var sways = false;
+            foreach (var kind in Swaying) if (name.Contains(kind)) { sways = true; break; }
+            var weights = new float[vertices.Length];
+            if (!sways || vertices.Length == 0) return weights;
+            var top = 0.01f;
+            foreach (var v in vertices) top = Mathf.Max(top, v.y);
+            for (var i = 0; i < vertices.Length; i++)
+            {
+                var h = Mathf.Clamp01(vertices[i].y / top);
+                weights[i] = h * h;
+            }
+            return weights;
         }
 
         private void AssignPropsToChunks()
@@ -246,6 +273,7 @@ namespace CityBuilder.Maps
             _vertices.Clear();
             _normals.Clear();
             _uvs.Clear();
+            _sway.Clear();
             _triangles.Clear();
 
             foreach (var i in _chunkProps[chunk])
@@ -257,6 +285,7 @@ namespace CityBuilder.Maps
                 if (verts.Length == 0) continue;
                 var normals = _protoNormals[p];
                 var uvs = _protoUvs[p];
+                var sway = _protoSway[p];
                 var tris = _protoTriangles[p];
 
                 var rotation = Quaternion.Euler(0f, _data.YawOf(i), 0f);
@@ -269,6 +298,7 @@ namespace CityBuilder.Maps
                     _vertices.Add(position + rotation * (verts[v] * scale));
                     _normals.Add(v < normals.Length ? rotation * normals[v] : Vector3.up);
                     _uvs.Add(v < uvs.Length ? uvs[v] : Vector2.zero);
+                    _sway.Add(new Vector2(sway != null && v < sway.Length ? sway[v] : 0f, 0f));
                 }
                 for (var t = 0; t < tris.Length; t++) _triangles.Add(start + tris[t]);
             }
@@ -278,6 +308,7 @@ namespace CityBuilder.Maps
             mesh.SetVertices(_vertices);
             mesh.SetNormals(_normals);
             mesh.SetUVs(0, _uvs);
+            mesh.SetUVs(3, _sway);
             mesh.SetTriangles(_triangles, 0, true);
         }
     }

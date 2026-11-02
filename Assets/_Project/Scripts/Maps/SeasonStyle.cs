@@ -84,6 +84,36 @@ namespace CityBuilder.Maps
             return look.terrain;
         }
 
+        /// <summary>
+        /// The map's grass, bushes and flowers swaying in the wind (the user, 2026-11-02): the
+        /// summer trees' wind material (BuildingDetail with _WIND) on the season's terrain palette,
+        /// its sway weighed by uv3.x (MapDecorRenderer). Null when there is none -- the props then
+        /// keep the plain terrain material.
+        /// </summary>
+        public static Material DecorWind(Material terrain)
+        {
+            var looks = Looks;
+            if (looks == null || looks.looks == null || terrain == null) return null;
+            var trees = looks.looks[(int)Core.MapSeason.Summer].conifer;
+            if (trees == null || !trees.IsKeywordEnabled("_WIND")) return null;
+            var palette = TerrainMaterial(terrain).GetTexture("_BaseMap");
+            if (_decorWind == null || _decorWindPalette != palette)
+            {
+                _decorWind = new Material(trees) { name = "DecorWind" };
+                _decorWind.SetTexture("_BaseMap", palette);
+                _decorWind.SetFloat("_WindByUV3", 1f);
+                _decorWind.SetFloat("_WindStrength", 0.07f);
+                _decorWind.SetFloat("_SnowMask", 0f);
+                _decorWind.SetFloat("_DetailStrength", 0f);
+                _decorWind.SetFloat("_Smoothness", 0.1f);
+                _decorWindPalette = palette;
+            }
+            return _decorWind;
+        }
+
+        private static Material _decorWind;
+        private static Texture _decorWindPalette;
+
         /// <summary>Puts the season's terrain palette on every renderer under `root` that draws with the map's own.</summary>
         public static void DressTerrain(GameObject root)
         {

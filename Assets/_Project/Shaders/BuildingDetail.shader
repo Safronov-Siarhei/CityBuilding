@@ -16,6 +16,11 @@
 // helmet stays steel).
 //
 // [MainColor] _BaseColor is what BuildingPlacer's ghost tints (Material.color).
+//
+// Wind (the user, 2026-11-02: the map looked lifeless): with _WIND on, the vertices sway -- trees by
+// their height over their foot (Trees-<season>.mat: _WindHeight), the map's grass, bushes and flowers by the
+// weight MapDecorRenderer writes into uv3.x (DecorWind.mat, _WindByUV3). Gusts roll across the land
+// in one direction, each plant flutters in its own time. Buildings never take the keyword.
 Shader "CityBuilder/BuildingDetail"
 {
     Properties
@@ -27,6 +32,10 @@ Shader "CityBuilder/BuildingDetail"
         _ShadeStrength ("Ground darkening strength", Range(0, 1)) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.15
         _SnowMask ("Takes snow in winter", Range(0, 1)) = 1
+        [Toggle(_WIND)] _Wind ("Sways in the wind", Float) = 0
+        _WindStrength ("Wind: sway at full weight, metres", Float) = 0.08
+        _WindHeight ("Wind: model height of full weight (trees)", Float) = 2
+        _WindByUV3 ("Wind: weight from uv3.x (the map's props)", Float) = 0
     }
 
     SubShader
@@ -45,6 +54,9 @@ Shader "CityBuilder/BuildingDetail"
             half _ShadeStrength;
             half _Smoothness;
             half _SnowMask;
+            float _WindStrength;
+            float _WindHeight;
+            float _WindByUV3;
         CBUFFER_END
 
         // set by SeasonStyle for the whole scene: 0 outside winter
@@ -52,6 +64,36 @@ Shader "CityBuilder/BuildingDetail"
 
         TEXTURE2D(_BaseMap);      SAMPLER(sampler_BaseMap);
         TEXTURE2D(_DetailAtlas);  SAMPLER(sampler_DetailAtlas);
+
+        // How far the wind moves a vertex: gusts rolling across the map one way, a sway, a flutter.
+        // `weight` 0 at the root, 1 at the top.
+        float3 WindOffset(float3 positionWS, float weight)
+        {
+            const float2 dir = float2(0.94, 0.34);
+            float t = _Time.y;
+            float along = dot(positionWS.xz, dir);
+            float gust = 0.5 + 0.5 * sin(t * 0.9 - along * 0.12);
+            gust *= gust;
+            float sway = sin(t * 2.1 - along * 0.35 + positionWS.x * 0.21);
+            float flutter = sin(t * 5.3 + positionWS.x * 1.7 + positionWS.z * 1.3) * 0.25;
+            float amount = _WindStrength * weight * (0.35 + 0.65 * gust) * (0.6 + 0.4 * sway + flutter);
+            return float3(dir.x, 0.0, dir.y) * amount;
+        }
+
+        // the vertex's world position, swayed when the material has the wind
+        float3 WindedWorld(float3 positionOS, float windUV)
+        {
+            float3 positionWS = TransformObjectToWorld(positionOS);
+            #if defined(_WIND)
+                // the height over the model's own foot, in the world: a tree's root keeps the
+                // import's corrective turn, so its model axes need not point up
+                float foot = UNITY_MATRIX_M._m13;
+                float byHeight = saturate((positionWS.y - foot) / max(_WindHeight, 0.01));
+                float weight = _WindByUV3 > 0.5 ? windUV : byHeight * byHeight;
+                positionWS += WindOffset(positionWS, weight);
+            #endif
+            return positionWS;
+        }
         ENDHLSL
 
         Pass
@@ -68,8 +110,10 @@ Shader "CityBuilder/BuildingDetail"
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile_instancing
+            #pragma shader_feature_local_vertex _WIND
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "CloudField.hlsl"
 
             struct Attributes
             {
@@ -78,6 +122,7 @@ Shader "CityBuilder/BuildingDetail"
                 float2 uv0        : TEXCOORD0;
                 float2 uv1        : TEXCOORD1;
                 float2 uv2        : TEXCOORD2;
+                float2 uv3        : TEXCOORD3;
                 half4 color       : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -100,9 +145,9 @@ Shader "CityBuilder/BuildingDetail"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-                VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
-                output.positionCS = pos.positionCS;
-                output.positionWS = pos.positionWS;
+                float3 positionWS = WindedWorld(input.positionOS.xyz, input.uv3.x);
+                output.positionCS = TransformWorldToHClip(positionWS);
+                output.positionWS = positionWS;
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.uv0 = TRANSFORM_TEX(input.uv0, _BaseMap);
                 output.uv1 = input.uv1;
@@ -162,7 +207,10 @@ Shader "CityBuilder/BuildingDetail"
                 surface.smoothness = _Smoothness;
                 surface.occlusion = 1;
 
-                return UniversalFragmentBlinnPhong(inputData, surface);
+                half4 lit = UniversalFragmentBlinnPhong(inputData, surface);
+                // a passing cloud's shadow (CloudLayer; none below ground or in the menu)
+                lit.rgb *= 1.0h - (half)CloudShadow(input.positionWS, _MainLightPosition.xyz);
+                return lit;
             }
             ENDHLSL
         }
@@ -181,6 +229,7 @@ Shader "CityBuilder/BuildingDetail"
             #pragma fragment ShadowFrag
             #pragma multi_compile_instancing
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #pragma shader_feature_local_vertex _WIND
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
@@ -191,13 +240,14 @@ Shader "CityBuilder/BuildingDetail"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
+                float2 uv3        : TEXCOORD3;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             float4 ShadowVert(Attributes input) : SV_POSITION
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 positionWS = WindedWorld(input.positionOS.xyz, input.uv3.x);
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
                 #if _CASTING_PUNCTUAL_LIGHT_SHADOW
                     float3 lightDirectionWS = normalize(_LightPosition - positionWS);
@@ -224,17 +274,19 @@ Shader "CityBuilder/BuildingDetail"
             #pragma vertex DepthVert
             #pragma fragment DepthFrag
             #pragma multi_compile_instancing
+            #pragma shader_feature_local_vertex _WIND
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                float2 uv3        : TEXCOORD3;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             float4 DepthVert(Attributes input) : SV_POSITION
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                return TransformObjectToHClip(input.positionOS.xyz);
+                return TransformWorldToHClip(WindedWorld(input.positionOS.xyz, input.uv3.x));
             }
 
             half DepthFrag() : SV_Target { return 0; }

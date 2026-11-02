@@ -42,8 +42,10 @@ namespace CityBuilder.EditorTools
             looks.figures.SetFloat("_SnowMask", 0f);
 
             looks.looks = new SeasonLooks.Look[4];
-            // Summer is the look every map is imported with: nothing swapped, no snow.
-            looks.looks[(int)MapSeason.Summer] = new SeasonLooks.Look { terrain = terrain, conifer = buildings, broadleaf = new[] { buildings } };
+            // Summer is the look every map is imported with: no snow, nothing swapped but the
+            // trees, onto the buildings' palette WITH the wind (the user, 2026-11-02)
+            var summerTrees = Windy(MaterialCopy(buildings, SeasonsFolder + "Trees-Summer.mat", null));
+            looks.looks[(int)MapSeason.Summer] = new SeasonLooks.Look { terrain = terrain, conifer = summerTrees, broadleaf = new[] { summerTrees } };
             looks.looks[(int)MapSeason.Autumn] = SeasonLook("Autumn", terrain, buildings, 0f, new Color(1f, 0.9f, 0.78f));
             looks.looks[(int)MapSeason.Winter] = SeasonLook("Winter", terrain, buildings, 1f, new Color(0.88f, 0.93f, 1f));
             looks.looks[(int)MapSeason.Spring] = SeasonLook("Spring", terrain, buildings, 0f, new Color(1f, 0.98f, 0.94f));
@@ -55,13 +57,26 @@ namespace CityBuilder.EditorTools
         {
             var look = new SeasonLooks.Look { snow = snow, sunTint = sunTint };
             look.terrain = MaterialCopy(terrain, $"{SeasonsFolder}Terrain-{season}.mat", $"{SeasonsFolder}Terrain-{season}.png");
-            look.conifer = MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-Conifer.mat", $"{SeasonsFolder}Trees-{season}-Conifer.png");
+            look.conifer = Windy(MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-Conifer.mat", $"{SeasonsFolder}Trees-{season}-Conifer.png"));
             var broadleaf = new System.Collections.Generic.List<Material>();
             for (var n = 1; AssetDatabase.LoadAssetAtPath<Texture2D>($"{SeasonsFolder}Trees-{season}-{n}.png") != null; n++)
-                broadleaf.Add(MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-{n}.mat", $"{SeasonsFolder}Trees-{season}-{n}.png"));
+                broadleaf.Add(Windy(MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-{n}.mat", $"{SeasonsFolder}Trees-{season}-{n}.png")));
             look.broadleaf = broadleaf.ToArray();
             if (look.terrain == terrain) Debug.LogWarning($"[SetupProject] {season} has no palette: run Tools/blender/seasons.py.");
             return look;
+        }
+
+        /// <summary>A trees' material swaying in the wind (BuildingDetail's _WIND, by the model's height); the buildings' own is never passed here.</summary>
+        private static Material Windy(Material trees)
+        {
+            if (trees == null || trees == AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.PaletteMaterialPath)) return trees;
+            trees.EnableKeyword("_WIND");
+            trees.SetFloat("_Wind", 1f);
+            trees.SetFloat("_WindStrength", 0.09f);
+            trees.SetFloat("_WindHeight", 2f);
+            trees.SetFloat("_WindByUV3", 0f);
+            EditorUtility.SetDirty(trees);
+            return trees;
         }
 
         /// <summary>`source` copied to `path` (kept if it is there, so its GUID holds), with `palette` as its base map; `source` itself when the palette is missing.</summary>

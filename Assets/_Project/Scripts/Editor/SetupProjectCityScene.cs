@@ -628,6 +628,9 @@ namespace CityBuilder.EditorTools
             meshMapApplierSO.FindProperty("saveController").objectReferenceValue = saveController;
             meshMapApplierSO.FindProperty("baseGroundToHide").objectReferenceValue = ground;
             meshMapApplierSO.FindProperty("baseForestBorderToHide").objectReferenceValue = GameObject.Find("Forest");
+            // the clouds (the user, 2026-11-02)
+            meshMapApplierSO.FindProperty("cloudNoise").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(ShaderTextureImport.ShadersFolder + "/CloudNoise.png");
+            meshMapApplierSO.FindProperty("cloudMaterial").objectReferenceValue = CloudLayerMaterial();
             meshMapApplierSO.ApplyModifiedPropertiesWithoutUndo();
 
             managers.AddComponent<TreesAreaSpawner>();
@@ -829,6 +832,23 @@ namespace CityBuilder.EditorTools
             so.FindProperty("material").objectReferenceValue = material;
             so.FindProperty("icons").objectReferenceValue = icons;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>The clouds' sheet material (Shaders/CloudLayer), made once.</summary>
+        private static Material CloudLayerMaterial()
+        {
+            const string path = "Assets/_Project/Materials/CloudLayer.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null) return material;
+            var shader = Shader.Find("CityBuilder/CloudLayer");
+            if (shader == null)
+            {
+                Debug.LogWarning("[SetupProject] Shader CityBuilder/CloudLayer not found -- no clouds.");
+                return null;
+            }
+            material = new Material(shader) { name = "CloudLayer" };
+            AssetDatabase.CreateAsset(material, path);
+            return material;
         }
     }
 }

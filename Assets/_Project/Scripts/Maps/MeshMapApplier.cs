@@ -28,6 +28,9 @@ namespace CityBuilder.Maps
         [SerializeField] private GameSaveController saveController;
         [SerializeField] private GameObject baseGroundToHide;
         [SerializeField] private GameObject baseForestBorderToHide;
+        // the clouds over the land (CloudLayer): the fog's seamless noise and the sheet's material
+        [SerializeField] private Texture2D cloudNoise;
+        [SerializeField] private Material cloudMaterial;
 
         // Sized for a citizen, not Unity's default humanoid navmesh agent -- CitizenAgent's
         // CharacterController is radius 0.15/height 0.72 (see CitizenVisualsManager.SpawnAgent).
@@ -147,6 +150,8 @@ namespace CityBuilder.Maps
                 Apply(map);
             }
             map = CurrentMap;
+            // clouds drifting over the land, their shadows under them (not below ground)
+            if (!map.IsDungeon) CloudLayer.Begin(transform, cloudNoise, cloudMaterial);
             // the start island in view once the Town Hall stands -- a loaded game may put the hall
             // back before this map was built, and its own reveal then found no island (the user,
             // 2026-11-02: fogged again after a dungeon)
@@ -750,7 +755,7 @@ namespace CityBuilder.Maps
             if (parts.Count == 0 || map.TerrainMaterial == null) return;
             var decor = GetComponent<MapDecorRenderer>();
             if (decor == null) decor = gameObject.AddComponent<MapDecorRenderer>();
-            decor.Initialize(MapDecorData.Combine(parts), SeasonStyle.TerrainMaterial(map.TerrainMaterial));
+            decor.Initialize(MapDecorData.Combine(parts), SeasonStyle.DecorWind(map.TerrainMaterial) ?? SeasonStyle.TerrainMaterial(map.TerrainMaterial));
         }
 
         private static bool LandWithin(Archipelago.ArchipelagoMap world, int x, int z, int reach)
@@ -806,7 +811,9 @@ namespace CityBuilder.Maps
             {
                 var decor = GetComponent<MapDecorRenderer>();
                 if (decor == null) decor = gameObject.AddComponent<MapDecorRenderer>();
-                decor.Initialize(map.DecorData, SeasonStyle.TerrainMaterial(map.DecorMaterial));
+                // the wind sways the land's grass, not a dungeon's
+                var still = SeasonStyle.TerrainMaterial(map.DecorMaterial);
+                decor.Initialize(map.DecorData, map.IsDungeon ? still : SeasonStyle.DecorWind(map.DecorMaterial) ?? still);
             }
         }
 
