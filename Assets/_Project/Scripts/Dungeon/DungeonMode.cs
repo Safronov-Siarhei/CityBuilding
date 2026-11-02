@@ -161,6 +161,8 @@ namespace CityBuilder.Dungeon
             Exit = MakeExit();
             // the stone spider queen in the lake, a crystal turning over her
             DungeonStatue.RaiseAll(map, transform);
+            // the day shining in through the way out (the user, 2026-11-02)
+            DungeonDaylight.LightAll(map, transform);
             HireCamp = MakeCamp(map, "hirecamp", DungeonEntrance.Place.HireCamp);
             Shop = MakeCamp(map, "potionshop", DungeonEntrance.Place.Shop);
             SpawnHeroes();

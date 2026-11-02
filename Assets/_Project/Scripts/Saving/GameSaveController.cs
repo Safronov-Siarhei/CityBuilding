@@ -118,6 +118,10 @@ namespace CityBuilder.Saving
             for (var frame = 0; frame < 3; frame++) yield return null;
             var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
             if (rig != null) rig.JumpTo(at);
+            // and once more when the loading screen is gone and the land has settled: something
+            // still took the view to the Town Hall after a dungeon (the user, 2026-11-02)
+            yield return new WaitForSecondsRealtime(0.5f);
+            if (rig != null) rig.JumpTo(at);
         }
 
         private void Update()

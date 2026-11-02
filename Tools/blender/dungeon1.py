@@ -760,11 +760,13 @@ def mine_exit(b):
         # the way up (the user, 2026-11-02, option 2 «каменная лестница»): dressed steps climb
         # to an opening high in the face, full of daylight, a torch either side
         lift = EXIT_STAIR_RISE * EXIT_STEPS
-        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, 'plaster_white', 0.03)):   # the rim, the day beyond
+        for scale, color, dy in ((1.18, STONE_D, 0.01), (1.0, 'gold', 0.03)):   # the rim, the warm day beyond
             b.prism([(px * scale, pz * scale + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - dy + 0.4, 0.0),
                     (1, 0, 0), (0, 0, 1), 0.4, color, back_cap=True)
         b.prism([(px * 0.7, pz * 0.55 + lift) for px, pz in EXIT_MOUTH], (0.0, -1.0 - 0.05 + 0.4, 0.0),
-                (1, 0, 0), (0, 0, 1), 0.4, 'white', back_cap=True)                 # brightest at its heart
+                (1, 0, 0), (0, 0, 1), 0.4, 'window_light', back_cap=True)          # brightest at its heart
+        # (no white wall: the user, 2026-11-02 -- a yellow glow, the light from the surface; the
+        # glow itself is DungeonDaylight's halo at the `light_day` spot)
         for i in range(EXIT_STEPS):
             y0 = -1.0 - EXIT_STAIR_RUN * (EXIT_STEPS - i)
             b.box(-0.42, 0.42, y0, -0.95, 0.0, EXIT_STAIR_RISE * (i + 1), STONE_L, bevel=0.015)

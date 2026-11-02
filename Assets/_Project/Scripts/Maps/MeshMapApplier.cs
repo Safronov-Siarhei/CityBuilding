@@ -147,6 +147,10 @@ namespace CityBuilder.Maps
                 Apply(map);
             }
             map = CurrentMap;
+            // the start island in view once the Town Hall stands -- a loaded game may put the hall
+            // back before this map was built, and its own reveal then found no island (the user,
+            // 2026-11-02: fogged again after a dungeon)
+            if (map.IsGenerated) StartCoroutine(RevealStartIslandOnceTheHallStands());
             // A designed map shows where the Town Hall may go until it stands (see StartZone).
             if (map.TownHallZone.Length >= 3 && !CityBuilder.Buildings.BuildingInstance.HasAny(CityBuilder.Buildings.BuildingIds.TownHall))
             {
@@ -160,6 +164,22 @@ namespace CityBuilder.Maps
         }
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);
+
+        private System.Collections.IEnumerator RevealStartIslandOnceTheHallStands()
+        {
+            // a few seconds at most: a new game has no hall until the player puts it down (and
+            // BuildingPlacer reveals then)
+            for (var frame = 0; frame < 300; frame++)
+            {
+                var hall = CityBuilder.Buildings.BuildingInstance.TownHall;
+                if (hall != null && GridManager.Instance != null)
+                {
+                    RevealStartIsland(GridManager.Instance.WorldToCell(hall.transform.position));
+                    yield break;
+                }
+                yield return null;
+            }
+        }
 
         private HashSet<Vector2Int> _startIsland;
 

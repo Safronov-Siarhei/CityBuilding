@@ -159,11 +159,16 @@ namespace CityBuilder.UI
             ShownRows = row;
         }
 
+        // the first seconds of a loaded game, when a hero rising does not move the camera
+        private const float LoadQuietSeconds = 8f;
+
         /// <summary>He is back (the user, 2026-10-22: the player must see it): the camera goes to him, a column of light, a line in the log.</summary>
         private static void ShowReturn(Hero hero)
         {
+            // not in the first seconds of a loaded game: heroes fallen below rise at once on the
+            // way back, and the camera must stay on the dungeon's mouth (the user, 2026-11-02)
             var rig = FindAnyObjectByType<RTSCameraController>();
-            if (rig != null) rig.JumpTo(hero.transform.position);
+            if (rig != null && Time.timeSinceLevelLoad > LoadQuietSeconds) rig.JumpTo(hero.transform.position);
             RespawnFlash.Play(hero.transform.position);
             var line = hero.Type == SoldierType.King
                 ? Localization.Get("#log_inv_king_back")

@@ -601,7 +601,9 @@ dungeon opens as a SEPARATE SCENE.
 - WAY OUT = STONE STAIRS (the user's option 2): `dungeon1.py mine_exit` -- 4 dressed steps
   (`EXIT_STEPS/EXIT_STAIR_RISE/RUN`) with low side walls climb to the mouth raised in the rock's face,
   the mouth filled with daylight (plaster_white, a white heart), a torch either side (DungeonFire spots),
-  a `day` light. The map was regenerated and re-exported.
+  a `day` light. The map was regenerated and re-exported. The opening is no white wall (the user,
+  2026-11-02): gold rim fill, window_light heart, and `Dungeon/DungeonDaylight` -- a warm yellow halo
+  (CrystalHalo material, pulled to the camera) at the `light_day` spot.
 - Decor stones on slopes sit on the LOWEST ground under their foot (`decor_z(kind, x, y, sc)`,
   `CRAG_FOOT_M`) -- they hung by more than half their size. Stones now the Stone1-10 shapes (terrain.py).
 - Fighting below: heroes and gnomes pick a fight within `dungeon_engage_factor` (0.6) of their own
@@ -616,6 +618,9 @@ dungeon opens as a SEPARATE SCENE.
 - A boss pays RESOURCES too (crystals and coins as before): `dungeon_boss_wood/stone/gold` (150/150/50) x level, «+N» popups over it incl. the crystals (`ResourceGainPopups.ShowCrystals`)
   (and «+coins» over every monster), carried into the town on the way out (`DungeonMonsters.ResourcesEarned`).
 - Every creature shows its health bar once it fights (OrcUnit.StrikeAt / SoldierUnit.TickAttack), heroes too.
+- Back from below: the start island is revealed again once the map is built and the hall stands
+  (`MeshMapApplier.RevealStartIslandOnceTheHallStands`); a hero rising in the first 8 s of a load does
+  not take the camera (`HeroPortraitController.ShowReturn`), and LookAfterLoad jumps to the mouth again at 0.5 s.
 - Hire camp: tapping it HOLDS it like the Barracks (gnome portraits + prices in the FocusHireBar); the
   text card only from its «!». Shop buttons read «30 + coin».
 
