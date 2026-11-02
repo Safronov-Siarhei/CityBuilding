@@ -85,9 +85,9 @@ Shader "CityBuilder/ShoreSurf"
                     colour = lerp(_WetColor.rgb, _FoamColor.rgb, crest);
                 }
                 // the broken foam line out in the shallows, breathing in and out
-                float line = _OuterLine + 0.25 * sin(t * 0.7 + phase * 1.3);
+                float foamAt = _OuterLine + 0.25 * sin(t * 0.7 + phase * 1.3);
                 float broken = saturate(sin(p.x * 0.83 + p.y * 0.61 + _Time.y * 0.35) * 2.2 + sin(p.x * 0.29 - p.y * 0.37) * 1.4 - 0.6);
-                float far = (1.0 - saturate(abs(d - line) / 0.11)) * broken * 0.75;
+                float far = (1.0 - saturate(abs(d - foamAt) / 0.11)) * broken * 0.75;
                 if (far > alpha)
                 {
                     alpha = far;
