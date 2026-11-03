@@ -65,3 +65,4 @@
 - Wading: every figure (soldier, hero, orc, citizen) is pinned `moat_wade_depth` (economy, 0.25) below the ground while `Moat.Wading` (`Moat.WadeDepthAt`, used in each `PinToGroundHeight`).
 - An army order tapped on a moat, road or crossing sets the destination; it no longer selects the building (`ArmyOrderInput.HandleWorldTap` skips `IsGroundWork || isCrossing`).
 - Not seen in game yet.
+- Figures on a crossing's cells (`Moat.Spans`: Bridge, Drawbridge) stand on the deck, `bridge_deck_height` (economy, 0.22 = crossings.py DECK) above the ground. They used to walk under it. `Moat.StandHeightAt` replaces WadeDepthAt: +deck on a span, -wade in the moat. The step onto the deck is abrupt; no smoothing.

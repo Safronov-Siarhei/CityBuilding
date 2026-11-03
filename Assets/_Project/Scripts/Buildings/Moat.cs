@@ -73,9 +73,20 @@ namespace CityBuilder.Buildings
         public static float SpeedAt(Vector3 position) =>
             BalanceConfig.Instance != null && Wading(position) ? BalanceConfig.Instance.MoatSpeedMultiplier : 1f;
 
-        /// <summary>How far below the ground a figure standing here is drawn: sunk to the knee in the moat's water, 0 elsewhere.</summary>
-        public static float WadeDepthAt(Vector3 position) =>
-            BalanceConfig.Instance != null && Wading(position) ? BalanceConfig.Instance.MoatWadeDepth : 0f;
+        /// <summary>
+        /// How far above the ground a figure standing here is drawn: up on a bridge's deck (the user,
+        /// 2026-11-03: they walked under it), sunk to the knee in the moat's water, 0 elsewhere.
+        /// </summary>
+        public static float StandHeightAt(Vector3 position)
+        {
+            var config = BalanceConfig.Instance;
+            if (config == null || (Cells.Count == 0 && Spans.Count == 0)) return 0f;
+            var grid = GridManager.Instance;
+            if (grid == null) return 0f;
+            var cell = grid.WorldToCell(position);
+            if (Spans.ContainsKey(cell)) return config.BridgeDeckHeight;
+            return Cells.ContainsKey(cell) ? -config.MoatWadeDepth : 0f;
+        }
 
         // the cell's own banks and its neighbours' change with every piece laid or lost
         private static void RefreshAround(BuildingInstance moat)

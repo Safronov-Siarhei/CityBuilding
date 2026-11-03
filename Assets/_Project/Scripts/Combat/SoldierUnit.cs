@@ -595,8 +595,8 @@ namespace CityBuilder.Combat
             if (grid == null) return;
 
             var position = transform.position;
-            // in the moat's water to the knee (the user, 2026-11-03: not a puddle)
-            position.y = grid.GroundHeight - Buildings.Moat.WadeDepthAt(position);
+            // up on a bridge's deck, or in the moat's water to the knee (the user, 2026-11-03)
+            position.y = grid.GroundHeight + Buildings.Moat.StandHeightAt(position);
             transform.position = position;
         }
 
