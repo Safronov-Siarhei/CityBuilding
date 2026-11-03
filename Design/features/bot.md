@@ -72,3 +72,28 @@ Proposed, not agreed:
 
 ## Related
 - The Water Tower: placed in the shallows, shoots ships and soldiers at sea (user 2026-11-03, to add).
+
+## Built (2026-11-03)
+- **Diplomacy Hall.**
+  - Tools/blender/diplomacyhall1.py, levels 1-5. 4x4, City category, one a town, opened in the Lab.
+  - Sheet rows: buildings 57, sandbox 57, `#building_diplomacyhall`.
+- **Relations skeleton:** `Scripts/Diplomacy/BotRelations.cs`.
+  - The scale and the stance are saved (`botRelationsSaved`).
+  - The scale drifts to 0, ticked from GameCalendar. Reset on a new game: GameCalendar.Awake.
+  - Economy keys: `bot_relations_start`, `bot_trade_min_score`, `bot_war_declare_score_loss`, `bot_relations_drift_per_day`.
+- **The window:** `UI/DiplomacyWindow.cs`, opened by the Hall's «!» (BuildingFocus.OpenDetails); built in SetupProjectPanels.BuildDiplomacyWindow.
+  - Shows the scale, the stance, and the Мир/Торговля/Война buttons; a refused one says why.
+  - «Здание» opens the Hall's ordinary card.
+- `BuildingInstance.IsBot` is reserved; nothing sets it yet.
+- **The base editor:** `Tools/base_editor/base_editor.html`, published as artifact https://claude.ai/artifact/AuMAkdzSMwuHrQxof6i8Sg.
+  - Its building catalogue is the game's real footprints.
+  - Export format `citybuilder-base/1`: `{name, width, height, buildings:[{id,x,y,w,h,rot,level}], terrain:{"x,y":kind}}`; x right, y down, north up.
+  - Example: `Design/bot_castle_v2.json`, made by `Design/bot_castle_v2_blueprint.py`.
+  - To refresh the catalogue, regenerate it from ScriptableObjects/Buildings footprints and buildings.csv names.
+
+## Next (skeleton)
+- Place the bot castle from the blueprint JSON on the bot island. The bot zone is now half 14 and must grow to fit 37x44 with the harbour on the coast.
+  - Bot buildings: BuildingInstance with IsBot. Skip them in the town's sums (counts, storage, housing, houses, TownHall, fog reveal, happiness, research, save, OnlyOne, progression score), and give them a foreign card on tap.
+- Rebuild after an orc raid while the bot's hall stands.
+- The garrison: King, ranged on the walls, melee patrols; respawn while the hall stands.
+- Orc raids on the bot: massive, for show (user 2026-11-03); what they destroy is rebuilt after the raid.

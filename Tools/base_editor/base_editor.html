@@ -1,0 +1,481 @@
+<title>Чертёжная баз</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Fira+Sans:wght@400;500;600&family=Fira+Mono&display=swap">
+<style>
+/* Layout: a drafting table -- the catalogue of buildings on the left, the sheet in the middle, the tools above it, the selection and counts on the right. */
+:root {
+  --paper: #f3eee2; --sheet: #fbf8f0; --ink: #2d2318; --ink-soft: #6f6250; --line: #d9cfba;
+  --grid: #e4dccb; --axis: #c9a75c; --accent: #9a5a1c; --accent-ink: #fff8ec; --bad: #c0392b; --good: #3d8b4a;
+  --panel: #ece5d4; --chip: #e2d8c2;
+  --display: "Marcellus SC", "Trajan Pro", Georgia, serif;
+  --body: "Fira Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "Fira Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #18202c; --sheet: #1d2735; --ink: #e8e1d2; --ink-soft: #a59b88; --line: #33404f;
+  --grid: #2a3646; --axis: #b8954e; --accent: #d9954a; --accent-ink: #1a1208; --bad: #e0675a; --good: #6cbf78;
+  --panel: #212c3b; --chip: #2c394b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #18202c; --sheet: #1d2735; --ink: #e8e1d2; --ink-soft: #a59b88; --line: #33404f;
+  --grid: #2a3646; --axis: #b8954e; --accent: #d9954a; --accent-ink: #1a1208; --bad: #e0675a; --good: #6cbf78;
+  --panel: #212c3b; --chip: #2c394b; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 14px/1.4 var(--body); }
+.app { display: grid; grid-template-columns: 250px minmax(0, 1fr) 250px; grid-template-rows: auto minmax(0, 1fr);
+  height: 100%; gap: 0; padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); background: var(--panel); }
+h1 { font: 22px/1 var(--display); margin: 0; letter-spacing: .02em; white-space: nowrap; }
+.group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.group > .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-right: 2px; }
+button, select, input { font: inherit; color: var(--ink); }
+button { background: var(--chip); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+button:hover { border-color: var(--axis); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+input[type=number], input[type=text], select { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+input[type=number] { width: 56px; }
+aside { overflow: auto; border-right: 1px solid var(--line); background: var(--panel); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+aside.right { border-right: 0; border-left: 1px solid var(--line); }
+aside h2 { font: 15px/1.2 var(--display); margin: 4px 0 0; letter-spacing: .04em; }
+.search { width: 100%; }
+.cat { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-top: 6px; }
+.pal { display: flex; flex-direction: column; gap: 2px; }
+.pal button { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; text-align: left; padding: 4px 6px; background: transparent; border-color: transparent; }
+.pal button:hover { background: var(--chip); }
+.pal button.on { background: var(--chip); border-color: var(--accent); color: var(--ink); }
+.foot { width: 34px; height: 26px; display: grid; place-items: center; }
+.foot i { display: block; border: 1px solid rgba(0,0,0,.35); border-radius: 2px; }
+.size { font: 12px var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+main { position: relative; overflow: auto; min-width: 0; min-height: 0; background: var(--paper); touch-action: none; }
+canvas { display: block; margin: 16px; cursor: crosshair; }
+.status { position: sticky; left: 0; bottom: 0; display: flex; gap: 16px; padding: 6px 16px; font: 12px var(--mono); color: var(--ink-soft); background: var(--panel); border-top: 1px solid var(--line); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13px; }
+.kv span:nth-child(odd) { color: var(--ink-soft); }
+.counts { font: 12px var(--mono); display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; font-variant-numeric: tabular-nums; }
+.hint { font-size: 12px; color: var(--ink-soft); }
+.saved { display: flex; flex-direction: column; gap: 4px; }
+.saved div { display: flex; gap: 4px; align-items: center; }
+.saved div span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+dialog { background: var(--sheet); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; max-width: min(900px, 94vw); width: 94vw; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog textarea { width: 100%; height: 300px; font: 12px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; }
+dialog img { max-width: 100%; border: 1px solid var(--line); }
+dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap; }
+.msg { font-size: 12px; color: var(--good); min-height: 1.2em; }
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(60vh, 1fr) auto; height: auto; }
+  aside { max-height: 34vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  aside.right { max-height: none; border-left: 0; }
+  main { height: 70vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Чертёжная баз</h1>
+    <div class="group" role="group" aria-label="Инструмент">
+      <span class="lbl">Инструмент</span>
+      <button id="t-place" class="on" title="Поставить здание (P)">Поставить</button>
+      <button id="t-select" title="Выбрать здание (V)">Выбрать</button>
+      <button id="t-erase" title="Стереть (E)">Стереть</button>
+      <button id="t-terrain" title="Рисовать местность (T)">Местность</button>
+      <select id="terrain-kind" aria-label="Вид местности">
+        <option value="sand">песок</option><option value="shallow">мелководье</option><option value="sea">море</option>
+        <option value="rock">скала</option><option value="land">трава (стереть)</option>
+      </select>
+    </div>
+    <div class="group">
+      <span class="lbl">Поворот</span><button id="rot" title="Повернуть (R)">⟳ 0°</button>
+      <span class="lbl">Уровень</span>
+      <select id="level" aria-label="Уровень"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select>
+    </div>
+    <div class="group" role="group" aria-label="Симметрия">
+      <span class="lbl">Симметрия</span>
+      <button id="s-none" class="on">нет</button><button id="s-x" title="Зеркало слева-направо">↔</button>
+      <button id="s-y" title="Зеркало сверху-вниз">↕</button><button id="s-xy" title="Четыре четверти">✛</button>
+    </div>
+    <div class="group">
+      <span class="lbl">Сетка</span>
+      <input id="gw" type="number" min="5" max="200" aria-label="Ширина в клетках"> × <input id="gh" type="number" min="5" max="200" aria-label="Высота в клетках">
+      <button id="resize">Применить</button>
+      <button id="zout" title="Мельче">−</button><button id="zin" title="Крупнее">+</button>
+    </div>
+    <div class="group">
+      <button id="undo" title="Отменить (Ctrl+Z)">↶</button><button id="redo" title="Вернуть (Ctrl+Y)">↷</button>
+      <button id="new">Новая</button><button id="example">Пример: замок бота</button>
+      <button id="export" class="primary">Экспорт</button><button id="import">Импорт</button><button id="picture">Картинка</button>
+    </div>
+  </header>
+
+  <aside aria-label="Здания">
+    <input id="search" class="search" type="text" placeholder="Найти здание…" aria-label="Найти здание">
+    <div id="palette"></div>
+  </aside>
+
+  <main id="stage">
+    <canvas id="cv"></canvas>
+    <div class="status"><span id="st-cell">клетка —</span><span id="st-tool"></span><span id="st-msg"></span></div>
+  </main>
+
+  <aside class="right" aria-label="Сведения">
+    <h2>Схема</h2>
+    <input id="name" type="text" aria-label="Название схемы">
+    <div class="group"><button id="save">Сохранить в браузере</button></div>
+    <div id="saved" class="saved"></div>
+    <h2>Выбрано</h2>
+    <div id="sel" class="hint">Инструментом «Выбрать» нажмите на здание.</div>
+    <h2>Состав</h2>
+    <div id="counts" class="counts"></div>
+    <h2>Клавиши</h2>
+    <div class="hint">R — повернуть · 1–5 — уровень · P/V/E/T — инструменты · Del — удалить выбранное · Ctrl+Z / Ctrl+Y · колесо + Ctrl — масштаб. Протяните мышью, чтобы ставить подряд (стены, дороги, ров).</div>
+  </aside>
+</div>
+
+<dialog id="dlg">
+  <h2 id="dlg-title" style="font-family: var(--display); margin-top: 0"></h2>
+  <p id="dlg-hint" class="hint"></p>
+  <textarea id="dlg-text" spellcheck="false"></textarea>
+  <img id="dlg-img" alt="Картинка схемы" hidden>
+  <div class="msg" id="dlg-msg"></div>
+  <div class="row">
+    <button id="dlg-copy">Копировать</button>
+    <button id="dlg-load" class="primary" hidden>Загрузить</button>
+    <button id="dlg-close">Закрыть</button>
+  </div>
+</dialog>
+
+<script>
+const CATALOG = [{"id":"Castle","name":"Ратуша","cat":"City","w":5,"h":5},{"id":"Cottage","name":"Коттедж","cat":"City","w":2,"h":2},{"id":"DiplomacyHall","name":"Зал дипломатии","cat":"City","w":4,"h":4},{"id":"FireBrigade","name":"Пожарная бригада","cat":"City","w":2,"h":2},{"id":"HealerHouse","name":"Лечебница","cat":"City","w":2,"h":4},{"id":"Hovel","name":"Лачуга","cat":"City","w":2,"h":2},{"id":"Laboratory","name":"Лаборатория","cat":"City","w":4,"h":4},{"id":"Manor","name":"Особняк","cat":"City","w":3,"h":3},{"id":"Road","name":"Дорога","cat":"City","w":1,"h":1},{"id":"TaxHouse","name":"Налоговый дом","cat":"City","w":2,"h":2},{"id":"Well","name":"Колодец","cat":"City","w":1,"h":1},{"id":"Barracks","name":"Казарма","cat":"Defence","w":3,"h":3},{"id":"Drawbridge","name":"Разводной мост","cat":"Defence","w":1,"h":2},{"id":"Fence","name":"Забор","cat":"Defence","w":1,"h":1},{"id":"FortifiedGate","name":"Барбакан","cat":"Defence","w":1,"h":3},{"id":"FortifiedTower","name":"Бастион","cat":"Defence","w":2,"h":2},{"id":"Gate","name":"Ворота","cat":"Defence","w":1,"h":1},{"id":"Moat","name":"Ров","cat":"Defence","w":1,"h":1},{"id":"Tower","name":"Башня","cat":"Defence","w":1,"h":1},{"id":"Church","name":"Церковь","cat":"Entertainment","w":3,"h":3},{"id":"Colosseum","name":"Коллизей","cat":"Entertainment","w":4,"h":6},{"id":"DecBush","name":"Декоративный куст","cat":"Entertainment","w":1,"h":1},{"id":"DecGarden","name":"Декоративный сад","cat":"Entertainment","w":3,"h":1},{"id":"DecTree","name":"Декоративное дерево","cat":"Entertainment","w":1,"h":1},{"id":"Flag","name":"Флаг","cat":"Entertainment","w":1,"h":1},{"id":"Square","name":"Площадь","cat":"Entertainment","w":2,"h":2},{"id":"Tavern","name":"Таверна","cat":"Entertainment","w":2,"h":1},{"id":"Theater","name":"Театр","cat":"Entertainment","w":4,"h":4},{"id":"TownSquare","name":"Городская площадь","cat":"Entertainment","w":2,"h":2},{"id":"Baker","name":"Пекарня","cat":"Food","w":1,"h":2},{"id":"Farm","name":"Ферма","cat":"Food","w":1,"h":1},{"id":"FisherHut","name":"Рыбацкая хижина","cat":"Food","w":1,"h":1},{"id":"Orchard","name":"Фруктовый сад","cat":"Food","w":3,"h":3},{"id":"PigFarm","name":"Свиноферма","cat":"Food","w":3,"h":4},{"id":"Smokehouse","name":"Коптильня","cat":"Food","w":1,"h":2},{"id":"CoalMine","name":"Угольный рудник","cat":"Production","w":2,"h":2},{"id":"CopperMine","name":"Медный рудник","cat":"Production","w":2,"h":2},{"id":"GoldMine","name":"Золотой рудник","cat":"Production","w":2,"h":2},{"id":"IronMine","name":"Железный рудник","cat":"Production","w":2,"h":2},{"id":"Quarry","name":"Каменоломня","cat":"Production","w":2,"h":2},{"id":"Sawmill","name":"Лесопилка","cat":"Production","w":2,"h":2},{"id":"Smelter","name":"Плавильня","cat":"Production","w":2,"h":3},{"id":"BigGranary","name":"Большая кладовая","cat":"Storage","w":3,"h":2},{"id":"BigTreasury","name":"Большая сокровищница","cat":"Storage","w":4,"h":3},{"id":"BigWarehouse","name":"Большой склад","cat":"Storage","w":3,"h":3},{"id":"Granary","name":"Кладовая","cat":"Storage","w":2,"h":1},{"id":"Treasury","name":"Сокровищница","cat":"Storage","w":3,"h":2},{"id":"Warehouse","name":"Склад","cat":"Storage","w":2,"h":2},{"id":"Bridge","name":"Мост","cat":"Water","w":1,"h":1},{"id":"Lighthouse","name":"Маяк","cat":"Water","w":2,"h":2},{"id":"Shipyard","name":"Верфь","cat":"Water","w":3,"h":4},{"id":"WaterTower","name":"Водная башня (будущая)","cat":"Water","w":1,"h":1}];
+const EXAMPLE = {"format":"citybuilder-base/1","name":"Замок бота v2","width":37,"height":44,"buildings":[{"id":"Castle","x":16,"y":16,"w":5,"h":5,"rot":0,"level":5},{"id":"FortifiedTower","x":13,"y":13,"w":2,"h":2,"rot":0,"level":5},{"id":"FortifiedTower","x":13,"y":22,"w":2,"h":2,"rot":0,"level":5},{"id":"FortifiedTower","x":22,"y":13,"w":2,"h":2,"rot":0,"level":5},{"id":"FortifiedTower","x":22,"y":22,"w":2,"h":2,"rot":0,"level":5},{"id":"FortifiedGate","x":17,"y":12,"w":3,"h":1,"rot":1,"level":5},{"id":"FortifiedGate","x":17,"y":24,"w":3,"h":1,"rot":1,"level":5},{"id":"FortifiedGate","x":12,"y":17,"w":1,"h":3,"rot":0,"level":5},{"id":"FortifiedGate","x":24,"y":17,"w":1,"h":3,"rot":0,"level":5},{"id":"Fence","x":12,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":13,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":13,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":14,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":14,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":15,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":15,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":16,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":16,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":20,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":20,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":21,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":21,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":22,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":22,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":23,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":23,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":12,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Fence","x":24,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":16,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":16,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":17,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":17,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":19,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":19,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":20,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":20,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":15,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":21,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":14,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":22,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":13,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":23,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":16,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":20,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":16,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":20,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":13,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":13,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":23,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":23,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":17,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":19,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":17,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":19,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":13,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":13,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":23,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":23,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":16,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":20,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":16,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":20,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":14,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":14,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":22,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":22,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Drawbridge","x":18,"y":10,"w":1,"h":2,"rot":0,"level":5},{"id":"Drawbridge","x":18,"y":25,"w":1,"h":2,"rot":0,"level":5},{"id":"Drawbridge","x":10,"y":18,"w":2,"h":1,"rot":1,"level":5},{"id":"Drawbridge","x":25,"y":18,"w":2,"h":1,"rot":1,"level":5},{"id":"Moat","x":10,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":10,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":11,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":12,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":12,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":12,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":12,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":13,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":13,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":13,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":13,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":14,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":14,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":14,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":14,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":15,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":15,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":15,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":15,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":16,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":16,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":16,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":16,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":17,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":17,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":17,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":17,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":19,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":19,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":19,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":19,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":20,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":20,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":20,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":20,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":21,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":21,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":21,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":21,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":22,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":22,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":22,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":22,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":23,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":23,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":23,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":23,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":24,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":24,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":24,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":24,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":25,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":10,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":11,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":12,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":13,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":14,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":15,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":16,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":17,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":19,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":20,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":21,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":22,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":23,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":24,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":25,"w":1,"h":1,"rot":0,"level":5},{"id":"Moat","x":26,"y":26,"w":1,"h":1,"rot":0,"level":5},{"id":"Square","x":10,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":10,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":10,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":10,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":12,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":12,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":12,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":12,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":14,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":14,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":14,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":14,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":21,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":21,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":21,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":21,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":23,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":23,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":23,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":23,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":25,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":25,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":25,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":25,"w":2,"h":2,"rot":0,"level":5},{"id":"Road","x":18,"y":8,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":9,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":27,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":28,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":8,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":9,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":27,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":28,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":8,"y":8,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":9,"y":8,"w":1,"h":1,"rot":0,"level":5},{"id":"Well","x":8,"y":9,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":9,"y":9,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":27,"y":8,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":28,"y":8,"w":1,"h":1,"rot":0,"level":5},{"id":"Well","x":27,"y":9,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":28,"y":9,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":8,"y":27,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":9,"y":27,"w":1,"h":1,"rot":0,"level":5},{"id":"Well","x":8,"y":28,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":9,"y":28,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":27,"y":27,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":28,"y":27,"w":1,"h":1,"rot":0,"level":5},{"id":"Well","x":27,"y":28,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":28,"y":28,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":29,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":7,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":29,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":6,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":30,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":6,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":30,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":5,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":31,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":5,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":31,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":4,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":32,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":4,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":32,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":3,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":33,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":3,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":33,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":2,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":18,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":2,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Road","x":34,"y":18,"w":1,"h":1,"rot":0,"level":5},{"id":"Square","x":16,"y":6,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":29,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":6,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":29,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":6,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":29,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":6,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":29,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":6,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":6,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":29,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":29,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":6,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":6,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":29,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":29,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":4,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":31,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":4,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":31,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":4,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":31,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":4,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":31,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":4,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":4,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":31,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":31,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":4,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":4,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":31,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":31,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":2,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":16,"y":33,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":2,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":33,"y":16,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":2,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":19,"y":33,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":2,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":33,"y":19,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":2,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":2,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":8,"y":33,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":27,"y":33,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":2,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":2,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":33,"y":8,"w":2,"h":2,"rot":0,"level":5},{"id":"Square","x":33,"y":27,"w":2,"h":2,"rot":0,"level":5},{"id":"Manor","x":10,"y":2,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":10,"y":5,"w":3,"h":3,"rot":0,"level":5},{"id":"Church","x":13,"y":2,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":13,"y":5,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":10,"y":29,"w":3,"h":3,"rot":0,"level":5},{"id":"Barracks","x":10,"y":32,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":13,"y":29,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":13,"y":32,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":21,"y":2,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":21,"y":5,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":24,"y":2,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":24,"y":5,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":21,"y":29,"w":3,"h":3,"rot":0,"level":5},{"id":"Barracks","x":21,"y":32,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":24,"y":29,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":24,"y":32,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":2,"y":10,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":2,"y":13,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":5,"y":10,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":5,"y":13,"w":3,"h":3,"rot":0,"level":5},{"id":"Barracks","x":2,"y":21,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":2,"y":24,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":5,"y":21,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":5,"y":24,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":29,"y":10,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":29,"y":13,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":32,"y":10,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":32,"y":13,"w":3,"h":3,"rot":0,"level":5},{"id":"Barracks","x":29,"y":21,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":29,"y":24,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":32,"y":21,"w":3,"h":3,"rot":0,"level":5},{"id":"Manor","x":32,"y":24,"w":3,"h":3,"rot":0,"level":5},{"id":"DiplomacyHall","x":3,"y":3,"w":4,"h":4,"rot":0,"level":5},{"id":"Flag","x":2,"y":2,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":7,"y":2,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":2,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"Flag","x":7,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":4,"y":2,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":5,"y":2,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":2,"y":4,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":2,"y":5,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":4,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":5,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":7,"y":4,"w":1,"h":1,"rot":0,"level":5},{"id":"DecTree","x":7,"y":5,"w":1,"h":1,"rot":0,"level":5},{"id":"HealerHouse","x":29,"y":2,"w":2,"h":4,"rot":0,"level":5},{"id":"HealerHouse","x":32,"y":2,"w":2,"h":4,"rot":0,"level":5},{"id":"DecBush","x":29,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":30,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":31,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":32,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":33,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":34,"y":7,"w":1,"h":1,"rot":0,"level":5},{"id":"Barracks","x":3,"y":30,"w":3,"h":3,"rot":0,"level":5},{"id":"Well","x":6,"y":30,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":2,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":3,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":4,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":5,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":6,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":7,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"Barracks","x":30,"y":30,"w":3,"h":3,"rot":0,"level":5},{"id":"Well","x":33,"y":30,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":29,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":30,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":31,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":32,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":33,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"DecBush","x":34,"y":34,"w":1,"h":1,"rot":0,"level":5},{"id":"FortifiedGate","x":17,"y":1,"w":3,"h":1,"rot":1,"level":4},{"id":"FortifiedGate","x":17,"y":35,"w":3,"h":1,"rot":1,"level":4},{"id":"FortifiedGate","x":1,"y":17,"w":1,"h":3,"rot":0,"level":4},{"id":"FortifiedGate","x":35,"y":17,"w":1,"h":3,"rot":0,"level":4},{"id":"Tower","x":1,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":1,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":7,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":7,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":1,"y":7,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":7,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":12,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":12,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":1,"y":12,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":12,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":24,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":24,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":1,"y":24,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":24,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":29,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":29,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":1,"y":29,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":29,"w":1,"h":1,"rot":0,"level":4},{"id":"Tower","x":35,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":2,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":2,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":2,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":2,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":3,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":3,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":3,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":3,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":4,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":4,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":4,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":4,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":5,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":5,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":5,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":5,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":6,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":6,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":6,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":6,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":8,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":8,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":8,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":8,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":9,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":9,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":9,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":9,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":10,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":10,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":10,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":10,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":11,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":11,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":11,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":11,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":13,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":13,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":13,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":13,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":14,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":14,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":14,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":14,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":15,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":15,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":15,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":15,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":16,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":16,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":16,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":16,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":20,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":20,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":20,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":20,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":21,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":21,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":21,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":21,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":22,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":22,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":22,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":22,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":23,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":23,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":23,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":23,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":25,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":25,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":25,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":25,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":26,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":26,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":26,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":26,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":27,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":27,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":27,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":27,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":28,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":28,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":28,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":28,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":30,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":30,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":30,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":30,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":31,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":31,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":31,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":31,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":32,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":32,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":32,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":32,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":33,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":33,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":33,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":33,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":34,"y":1,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":34,"y":35,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":1,"y":34,"w":1,"h":1,"rot":0,"level":4},{"id":"Fence","x":35,"y":34,"w":1,"h":1,"rot":0,"level":4},{"id":"Road","x":18,"y":36,"w":1,"h":1,"rot":0,"level":5},{"id":"Shipyard","x":17,"y":37,"w":3,"h":4,"rot":0,"level":5},{"id":"Lighthouse","x":32,"y":36,"w":2,"h":2,"rot":0,"level":5},{"id":"WaterTower","x":11,"y":39,"w":1,"h":1,"rot":0,"level":5},{"id":"WaterTower","x":25,"y":39,"w":1,"h":1,"rot":0,"level":5}],"terrain":{"0,36":"sand","0,37":"sand","0,38":"shallow","0,39":"shallow","0,40":"shallow","0,41":"sea","0,42":"sea","0,43":"sea","1,36":"sand","1,37":"sand","1,38":"shallow","1,39":"shallow","1,40":"shallow","1,41":"sea","1,42":"sea","1,43":"sea","2,36":"sand","2,37":"sand","2,38":"shallow","2,39":"shallow","2,40":"shallow","2,41":"sea","2,42":"sea","2,43":"sea","3,36":"sand","3,37":"sand","3,38":"shallow","3,39":"shallow","3,40":"shallow","3,41":"sea","3,42":"sea","3,43":"sea","4,36":"sand","4,37":"sand","4,38":"shallow","4,39":"shallow","4,40":"shallow","4,41":"sea","4,42":"sea","4,43":"sea","5,36":"sand","5,37":"sand","5,38":"shallow","5,39":"shallow","5,40":"shallow","5,41":"sea","5,42":"sea","5,43":"sea","6,36":"sand","6,37":"sand","6,38":"shallow","6,39":"shallow","6,40":"shallow","6,41":"sea","6,42":"sea","6,43":"sea","7,36":"sand","7,37":"sand","7,38":"shallow","7,39":"shallow","7,40":"shallow","7,41":"sea","7,42":"sea","7,43":"sea","8,36":"sand","8,37":"sand","8,38":"shallow","8,39":"shallow","8,40":"shallow","8,41":"sea","8,42":"sea","8,43":"sea","9,36":"sand","9,37":"sand","9,38":"shallow","9,39":"shallow","9,40":"shallow","9,41":"sea","9,42":"sea","9,43":"sea","10,36":"sand","10,37":"sand","10,38":"shallow","10,39":"shallow","10,40":"shallow","10,41":"sea","10,42":"sea","10,43":"sea","11,36":"sand","11,37":"sand","11,38":"shallow","11,39":"shallow","11,40":"shallow","11,41":"sea","11,42":"sea","11,43":"sea","12,36":"sand","12,37":"sand","12,38":"shallow","12,39":"shallow","12,40":"shallow","12,41":"sea","12,42":"sea","12,43":"sea","13,36":"sand","13,37":"sand","13,38":"shallow","13,39":"shallow","13,40":"shallow","13,41":"sea","13,42":"sea","13,43":"sea","14,36":"sand","14,37":"sand","14,38":"shallow","14,39":"shallow","14,40":"shallow","14,41":"sea","14,42":"sea","14,43":"sea","15,36":"sand","15,37":"sand","15,38":"shallow","15,39":"shallow","15,40":"shallow","15,41":"sea","15,42":"sea","15,43":"sea","16,36":"sand","16,37":"sand","16,38":"shallow","16,39":"shallow","16,40":"shallow","16,41":"sea","16,42":"sea","16,43":"sea","17,36":"sand","17,37":"sand","17,38":"shallow","17,39":"shallow","17,40":"shallow","17,41":"sea","17,42":"sea","17,43":"sea","18,36":"sand","18,37":"sand","18,38":"shallow","18,39":"shallow","18,40":"shallow","18,41":"sea","18,42":"sea","18,43":"sea","19,36":"sand","19,37":"sand","19,38":"shallow","19,39":"shallow","19,40":"shallow","19,41":"sea","19,42":"sea","19,43":"sea","20,36":"sand","20,37":"sand","20,38":"shallow","20,39":"shallow","20,40":"shallow","20,41":"sea","20,42":"sea","20,43":"sea","21,36":"sand","21,37":"sand","21,38":"shallow","21,39":"shallow","21,40":"shallow","21,41":"sea","21,42":"sea","21,43":"sea","22,36":"sand","22,37":"sand","22,38":"shallow","22,39":"shallow","22,40":"shallow","22,41":"sea","22,42":"sea","22,43":"sea","23,36":"sand","23,37":"sand","23,38":"shallow","23,39":"shallow","23,40":"shallow","23,41":"sea","23,42":"sea","23,43":"sea","24,36":"sand","24,37":"sand","24,38":"shallow","24,39":"shallow","24,40":"shallow","24,41":"sea","24,42":"sea","24,43":"sea","25,36":"sand","25,37":"sand","25,38":"shallow","25,39":"shallow","25,40":"shallow","25,41":"sea","25,42":"sea","25,43":"sea","26,36":"sand","26,37":"sand","26,38":"shallow","26,39":"shallow","26,40":"shallow","26,41":"sea","26,42":"sea","26,43":"sea","27,36":"sand","27,37":"sand","27,38":"shallow","27,39":"shallow","27,40":"shallow","27,41":"sea","27,42":"sea","27,43":"sea","28,36":"sand","28,37":"sand","28,38":"shallow","28,39":"shallow","28,40":"shallow","28,41":"sea","28,42":"sea","28,43":"sea","29,36":"sand","29,37":"sand","29,38":"shallow","29,39":"shallow","29,40":"shallow","29,41":"sea","29,42":"sea","29,43":"sea","30,36":"sand","30,37":"sand","30,38":"shallow","30,39":"shallow","30,40":"shallow","30,41":"sea","30,42":"sea","30,43":"sea","31,36":"sand","31,37":"sand","31,38":"shallow","31,39":"shallow","31,40":"shallow","31,41":"sea","31,42":"sea","31,43":"sea","32,36":"sand","32,37":"sand","32,38":"shallow","32,39":"shallow","32,40":"shallow","32,41":"sea","32,42":"sea","32,43":"sea","33,36":"sand","33,37":"sand","33,38":"shallow","33,39":"shallow","33,40":"shallow","33,41":"sea","33,42":"sea","33,43":"sea","34,36":"sand","34,37":"sand","34,38":"shallow","34,39":"shallow","34,40":"shallow","34,41":"sea","34,42":"sea","34,43":"sea","35,36":"sand","35,37":"sand","35,38":"shallow","35,39":"shallow","35,40":"shallow","35,41":"sea","35,42":"sea","35,43":"sea","36,36":"sand","36,37":"sand","36,38":"shallow","36,39":"shallow","36,40":"shallow","36,41":"sea","36,42":"sea","36,43":"sea"}};
+const CATS = { City: "Город", Storage: "Склады", Entertainment: "Декорации и развлечения", Defence: "Оборона", Production: "Производство", Food: "Еда", Water: "Водные" };
+const CAT_COLOR = { City: "#8fb8e8", Storage: "#d98d78", Entertainment: "#e6d36e", Defence: "#a9a9a9", Production: "#c49a6c", Food: "#9fd17f", Water: "#6fb3d9" };
+const OWN_COLOR = { Castle: "#8fdcaa", Manor: "#f3a35a", Cottage: "#f6bd7f", Hovel: "#f7cf9f", Square: "#fff0a8", Road: "#f2cfa4", Moat: "#5f9ae8",
+  Fence: "#cfcfcf", Tower: "#9c9c9c", FortifiedTower: "#8d8d8d", FortifiedGate: "#7d7d7d", Gate: "#b0a090", Drawbridge: "#d8d0c0",
+  Barracks: "#d26b6b", DiplomacyHall: "#b08ee6", Shipyard: "#9a6d45", Lighthouse: "#f5f5f5", WaterTower: "#4f6a9e",
+  DecTree: "#6cc070", DecBush: "#8fd68f", Flag: "#ee6b6b", Well: "#bfe0ff", Church: "#e9e9ff", HealerHouse: "#ffd0dc" };
+const ABBR = { Fence: "ст", Tower: "Б", Road: "", Moat: "", Flag: "ф", Well: "к", DecTree: "дд", DecBush: "дк", Gate: "в", Farm: "п", FisherHut: "р", Bridge: "м", WaterTower: "вб" };
+const TERRAIN = { sand: "#ecd9a0", shallow: "#a8d6f2", sea: "#5f9fe0", rock: "#9b9389" };
+const BY_ID = Object.fromEntries(CATALOG.map(b => [b.id, b]));
+
+const S = { bp: null, cell: 18, tool: "place", pick: "Manor", rot: 0, level: 5, sym: "none", sel: -1, hover: null, undo: [], redo: [] };
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+const RULER = 22;
+
+function store(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+function blank(w, h) { return { format: "citybuilder-base/1", name: "Новая база", width: w, height: h, buildings: [], terrain: {} }; }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function snapshot() { S.undo.push(JSON.stringify(S.bp)); if (S.undo.length > 150) S.undo.shift(); S.redo.length = 0; }
+function changed() { store("cb-base-autosave", JSON.stringify(S.bp)); draw(); counts(); showSel(); }
+
+function occupancy() {
+  const occ = new Map();
+  S.bp.buildings.forEach((b, i) => { for (let x = 0; x < b.w; x++) for (let y = 0; y < b.h; y++) occ.set((b.x + x) + "," + (b.y + y), i); });
+  return occ;
+}
+function footprint(id, rot) { const b = BY_ID[id]; if (!b) return [1, 1]; return rot % 2 ? [b.h, b.w] : [b.w, b.h]; }
+function fits(x, y, w, h, occ) {
+  if (x < 0 || y < 0 || x + w > S.bp.width || y + h > S.bp.height) return false;
+  for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) if (occ.has((x + i) + "," + (y + j))) return false;
+  return true;
+}
+// the mirrored copies of a w x h rect at x,y under the current symmetry (the original first)
+function mirrors(x, y, w, h) {
+  const W = S.bp.width, H = S.bp.height, out = [[x, y]];
+  const mx = W - x - w, my = H - y - h;
+  if (S.sym === "x" || S.sym === "xy") out.push([mx, y]);
+  if (S.sym === "y" || S.sym === "xy") out.push([x, my]);
+  if (S.sym === "xy") out.push([mx, my]);
+  const seen = new Set();
+  return out.filter(([a, b]) => { const k = a + "," + b; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+function place(cx, cy) {
+  const [w, h] = footprint(S.pick, S.rot);
+  const x = cx - Math.floor((w - 1) / 2), y = cy - Math.floor((h - 1) / 2);
+  const occ = occupancy();
+  let any = false;
+  for (const [px, py] of mirrors(x, y, w, h)) {
+    if (!fits(px, py, w, h, occ)) continue;
+    const idx = S.bp.buildings.push({ id: S.pick, x: px, y: py, w, h, rot: S.rot, level: S.level }) - 1;
+    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) occ.set((px + i) + "," + (py + j), idx);
+    any = true;
+  }
+  return any;
+}
+function eraseAt(cx, cy) {
+  const occ = occupancy(), kill = new Set();
+  for (const [px, py] of mirrors(cx, cy, 1, 1)) { const i = occ.get(px + "," + py); if (i !== undefined) kill.add(i); }
+  if (!kill.size) return false;
+  S.bp.buildings = S.bp.buildings.filter((_, i) => !kill.has(i));
+  S.sel = -1;
+  return true;
+}
+function paintTerrain(cx, cy) {
+  const kind = $("terrain-kind").value; let any = false;
+  for (const [px, py] of mirrors(cx, cy, 1, 1)) {
+    if (px < 0 || py < 0 || px >= S.bp.width || py >= S.bp.height) continue;
+    const k = px + "," + py;
+    if (kind === "land") { if (S.bp.terrain[k]) { delete S.bp.terrain[k]; any = true; } }
+    else if (S.bp.terrain[k] !== kind) { S.bp.terrain[k] = kind; any = true; }
+  }
+  return any;
+}
+
+// ---------- drawing ----------
+function draw() {
+  const W = S.bp.width, H = S.bp.height, c = S.cell, dpr = window.devicePixelRatio || 1;
+  const pw = RULER + W * c + 1, ph = RULER + H * c + 1;
+  cv.width = pw * dpr; cv.height = ph * dpr; cv.style.width = pw + "px"; cv.style.height = ph + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = css("--sheet"); ctx.fillRect(0, 0, pw, ph);
+  ctx.save(); ctx.translate(RULER, RULER);
+  // terrain
+  for (const [k, kind] of Object.entries(S.bp.terrain)) { const [x, y] = k.split(",").map(Number); ctx.fillStyle = TERRAIN[kind] || "#ccc"; ctx.fillRect(x * c, y * c, c, c); }
+  // grid, every 5th and the centre axes stronger
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x++) { ctx.strokeStyle = x % 5 === 0 ? css("--line") : css("--grid"); line(x * c + .5, 0, x * c + .5, H * c); }
+  for (let y = 0; y <= H; y++) { ctx.strokeStyle = y % 5 === 0 ? css("--line") : css("--grid"); line(0, y * c + .5, W * c, y * c + .5); }
+  ctx.strokeStyle = css("--axis"); ctx.setLineDash([4, 4]);
+  line(W * c / 2, 0, W * c / 2, H * c); line(0, H * c / 2, W * c, H * c / 2); ctx.setLineDash([]);
+  // buildings
+  S.bp.buildings.forEach((b, i) => drawBuilding(b, i === S.sel ? "sel" : ""));
+  // ghost
+  if (S.hover && S.tool === "place") {
+    const [w, h] = footprint(S.pick, S.rot);
+    const x = S.hover[0] - Math.floor((w - 1) / 2), y = S.hover[1] - Math.floor((h - 1) / 2);
+    const occ = occupancy();
+    for (const [px, py] of mirrors(x, y, w, h)) {
+      const ok = fits(px, py, w, h, occ);
+      ctx.globalAlpha = .55; drawBuilding({ id: S.pick, x: px, y: py, w, h, rot: S.rot, level: S.level }, ok ? "" : "bad"); ctx.globalAlpha = 1;
+    }
+  }
+  if (S.hover && S.tool !== "place") {
+    ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2;
+    for (const [px, py] of mirrors(S.hover[0], S.hover[1], 1, 1)) ctx.strokeRect(px * c + 1, py * c + 1, c - 2, c - 2);
+  }
+  ctx.restore();
+  // rulers
+  ctx.fillStyle = css("--ink-soft"); ctx.font = "10px " + css("--mono"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let x = 0; x < W; x += 5) ctx.fillText(x, RULER + x * c + c / 2, RULER / 2);
+  ctx.textAlign = "right";
+  for (let y = 0; y < H; y += 5) ctx.fillText(y, RULER - 4, RULER + y * c + c / 2);
+}
+function line(a, b, cc, d) { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(cc, d); ctx.stroke(); }
+function colourOf(id) { const b = BY_ID[id]; return OWN_COLOR[id] || (b ? CAT_COLOR[b.cat] : "#ccc"); }
+function drawBuilding(b, mode) {
+  const c = S.cell, x = b.x * c, y = b.y * c, w = b.w * c, h = b.h * c;
+  ctx.fillStyle = mode === "bad" ? css("--bad") : colourOf(b.id);
+  ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.strokeStyle = mode === "sel" ? css("--accent") : "rgba(40,30,20,.55)"; ctx.lineWidth = mode === "sel" ? 3 : 1;
+  ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  const info = BY_ID[b.id];
+  const big = b.w * b.h > 1;
+  let label = big ? (info ? info.name : b.id) : (ABBR[b.id] !== undefined ? ABBR[b.id] : (info ? info.name.slice(0, 2) : "?"));
+  if (label && c >= 10) {
+    ctx.fillStyle = "#2b2116"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const size = Math.max(8, Math.min(13, c * 0.55));
+    ctx.font = size + "px " + css("--body");
+    if (big) wrapText(label, x + w / 2, y + h / 2, w - 4, size + 1, h - 4);
+    else ctx.fillText(label, x + w / 2, y + h / 2 + .5);
+  }
+  if (big && c >= 12) {   // level badge
+    ctx.fillStyle = "rgba(40,30,20,.75)"; ctx.fillRect(x + w - 15, y + 3, 12, 12);
+    ctx.fillStyle = "#fff"; ctx.font = "9px " + css("--mono"); ctx.textAlign = "center"; ctx.fillText(b.level, x + w - 9, y + 9.5);
+  }
+}
+function wrapText(text, cx, cy, maxW, lh, maxH) {
+  const words = text.split(" "), lines = []; let cur = "";
+  for (const wd of words) { const t = cur ? cur + " " + wd : wd; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = wd; } else cur = t; }
+  if (cur) lines.push(cur);
+  const n = Math.min(lines.length, Math.max(1, Math.floor(maxH / lh)));
+  for (let i = 0; i < n; i++) ctx.fillText(lines[i], cx, cy + (i - (n - 1) / 2) * lh, maxW);
+}
+
+// ---------- panels ----------
+function palette() {
+  const q = $("search").value.trim().toLowerCase(), root = $("palette"); root.innerHTML = "";
+  for (const [cat, title] of Object.entries(CATS)) {
+    const list = CATALOG.filter(b => b.cat === cat && (!q || b.name.toLowerCase().includes(q) || b.id.toLowerCase().includes(q)));
+    if (!list.length) continue;
+    const h = document.createElement("div"); h.className = "cat"; h.textContent = title; root.appendChild(h);
+    const box = document.createElement("div"); box.className = "pal"; root.appendChild(box);
+    for (const b of list) {
+      const btn = document.createElement("button"); btn.className = b.id === S.pick ? "on" : "";
+      const s = 24 / Math.max(b.w, b.h, 1);
+      btn.innerHTML = `<span class="foot"><i style="width:${b.w * s}px;height:${b.h * s}px;background:${colourOf(b.id)}"></i></span><span>${b.name}</span><span class="size">${b.w}×${b.h}</span>`;
+      btn.onclick = () => { S.pick = b.id; setTool("place"); palette(); draw(); };
+      box.appendChild(btn);
+    }
+  }
+}
+function counts() {
+  const m = {}; for (const b of S.bp.buildings) m[b.id] = (m[b.id] || 0) + 1;
+  const rows = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  $("counts").innerHTML = rows.map(([id, n]) => `<span>${BY_ID[id] ? BY_ID[id].name : id}</span><span>${n}</span>`).join("")
+    + `<span><b>Всего</b></span><span><b>${S.bp.buildings.length}</b></span><span>Размер</span><span>${S.bp.width}×${S.bp.height}</span>`;
+}
+function showSel() {
+  const b = S.bp.buildings[S.sel], el = $("sel");
+  if (!b) { el.className = "hint"; el.textContent = "Инструментом «Выбрать» нажмите на здание."; return; }
+  el.className = "";
+  const info = BY_ID[b.id];
+  el.innerHTML = `<div class="kv"><span>Здание</span><span>${info ? info.name : b.id}</span><span>Клетка</span><span>${b.x}, ${b.y}</span>
+    <span>Размер</span><span>${b.w}×${b.h}</span><span>Уровень</span><span><select id="sel-level">${[1,2,3,4,5].map(l => `<option ${l === b.level ? "selected" : ""}>${l}</option>`).join("")}</select></span></div>
+    <div class="group" style="margin-top:8px"><button id="sel-del">Удалить</button></div>`;
+  $("sel-level").onchange = e => { snapshot(); b.level = +e.target.value; changed(); };
+  $("sel-del").onclick = () => { snapshot(); S.bp.buildings.splice(S.sel, 1); S.sel = -1; changed(); };
+}
+function savedList() {
+  let all = {}; try { all = JSON.parse(load("cb-base-saved") || "{}"); } catch (e) {}
+  const root = $("saved"); root.innerHTML = "";
+  for (const name of Object.keys(all)) {
+    const row = document.createElement("div");
+    row.innerHTML = `<span title="${name}">${name}</span>`;
+    const open = document.createElement("button"); open.textContent = "Открыть"; open.onclick = () => { snapshot(); S.bp = clone(all[name]); afterLoad(); };
+    const del = document.createElement("button"); del.textContent = "✕"; del.title = "Удалить из браузера";
+    del.onclick = () => { delete all[name]; store("cb-base-saved", JSON.stringify(all)); savedList(); };
+    row.append(open, del); root.appendChild(row);
+  }
+}
+function afterLoad() { S.sel = -1; $("name").value = S.bp.name || ""; $("gw").value = S.bp.width; $("gh").value = S.bp.height; changed(); }
+function setTool(t) {
+  S.tool = t;
+  for (const k of ["place", "select", "erase", "terrain"]) $("t-" + k).classList.toggle("on", k === t);
+  $("st-tool").textContent = { place: "ставлю: " + (BY_ID[S.pick] ? BY_ID[S.pick].name : S.pick), select: "выбор", erase: "стираю", terrain: "местность" }[t];
+}
+function setSym(s) { S.sym = s; for (const k of ["none", "x", "y", "xy"]) $("s-" + k).classList.toggle("on", k === s); draw(); }
+function msg(t) { $("st-msg").textContent = t; clearTimeout(msg.t); msg.t = setTimeout(() => $("st-msg").textContent = "", 2500); }
+
+// ---------- pointer ----------
+function cellAt(e) {
+  const r = cv.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left - RULER) / S.cell), y = Math.floor((e.clientY - r.top - RULER) / S.cell);
+  return x >= 0 && y >= 0 && x < S.bp.width && y < S.bp.height ? [x, y] : null;
+}
+let dragging = false, lastCell = null;
+function act(cell, first) {
+  if (!cell) return;
+  if (S.tool === "select") {
+    if (!first) return;
+    const i = occupancy().get(cell.join(",")); S.sel = i === undefined ? -1 : i; draw(); showSel(); return;
+  }
+  if (first) snapshot();
+  const did = S.tool === "place" ? place(cell[0], cell[1]) : S.tool === "erase" ? eraseAt(cell[0], cell[1]) : paintTerrain(cell[0], cell[1]);
+  if (did) changed(); else if (first && S.tool === "place") { S.undo.pop(); msg("Не помещается: занято или за краем"); }
+}
+cv.addEventListener("pointerdown", e => { if (e.button === 2) return; cv.setPointerCapture(e.pointerId); dragging = true; lastCell = cellAt(e); act(lastCell, true); });
+cv.addEventListener("pointermove", e => {
+  const cell = cellAt(e); S.hover = cell;
+  $("st-cell").textContent = cell ? `клетка ${cell[0]}, ${cell[1]}` : "клетка —";
+  if (dragging && cell && (!lastCell || cell[0] !== lastCell[0] || cell[1] !== lastCell[1])) { lastCell = cell; act(cell, false); }
+  else draw();
+});
+cv.addEventListener("pointerup", () => { dragging = false; });
+cv.addEventListener("pointerleave", () => { S.hover = null; draw(); });
+cv.addEventListener("contextmenu", e => { e.preventDefault(); const cell = cellAt(e); if (cell) { snapshot(); if (eraseAt(cell[0], cell[1])) changed(); else S.undo.pop(); } });
+$("stage").addEventListener("wheel", e => { if (!e.ctrlKey) return; e.preventDefault(); zoom(e.deltaY < 0 ? 2 : -2); }, { passive: false });
+function zoom(d) { S.cell = Math.max(6, Math.min(48, S.cell + d)); store("cb-base-cell", S.cell); draw(); }
+
+// ---------- keys & buttons ----------
+function rotate() { S.rot = (S.rot + 1) % 4; $("rot").textContent = "⟳ " + S.rot * 90 + "°"; draw(); }
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === "y") { e.preventDefault(); redo(); return; }
+  if (k === "r" || k === "к") rotate();
+  else if (k >= "1" && k <= "5") { S.level = +k; $("level").value = k; }
+  else if (k === "p" || k === "з") setTool("place");
+  else if (k === "v" || k === "м") setTool("select");
+  else if (k === "e" || k === "у") setTool("erase");
+  else if (k === "t" || k === "е") setTool("terrain");
+  else if ((k === "delete" || k === "backspace") && S.sel >= 0) { snapshot(); S.bp.buildings.splice(S.sel, 1); S.sel = -1; changed(); }
+  else if (k === "escape") { S.sel = -1; showSel(); draw(); }
+});
+function undo() { if (!S.undo.length) return; S.redo.push(JSON.stringify(S.bp)); S.bp = JSON.parse(S.undo.pop()); S.sel = -1; afterLoad(); }
+function redo() { if (!S.redo.length) return; S.undo.push(JSON.stringify(S.bp)); S.bp = JSON.parse(S.redo.pop()); S.sel = -1; afterLoad(); }
+$("undo").onclick = undo; $("redo").onclick = redo;
+$("rot").onclick = rotate;
+$("level").onchange = e => S.level = +e.target.value;
+for (const t of ["place", "select", "erase", "terrain"]) $("t-" + t).onclick = () => setTool(t);
+for (const s of ["none", "x", "y", "xy"]) $("s-" + s).onclick = () => setSym(s);
+$("search").oninput = palette;
+$("zin").onclick = () => zoom(2); $("zout").onclick = () => zoom(-2);
+$("name").oninput = e => { S.bp.name = e.target.value; store("cb-base-autosave", JSON.stringify(S.bp)); };
+$("resize").onclick = () => {
+  const w = Math.max(5, Math.min(200, +$("gw").value || S.bp.width)), h = Math.max(5, Math.min(200, +$("gh").value || S.bp.height));
+  snapshot(); S.bp.width = w; S.bp.height = h;
+  const before = S.bp.buildings.length;
+  S.bp.buildings = S.bp.buildings.filter(b => b.x + b.w <= w && b.y + b.h <= h);
+  for (const k of Object.keys(S.bp.terrain)) { const [x, y] = k.split(",").map(Number); if (x >= w || y >= h) delete S.bp.terrain[k]; }
+  afterLoad(); if (before !== S.bp.buildings.length) msg(`За краем убрано: ${before - S.bp.buildings.length}`);
+};
+$("new").onclick = () => { snapshot(); S.bp = blank(S.bp.width, S.bp.height); afterLoad(); msg("Новая схема. «↶» вернёт прежнюю."); };
+$("example").onclick = () => { snapshot(); S.bp = clone(EXAMPLE); afterLoad(); };
+$("save").onclick = () => {
+  let all = {}; try { all = JSON.parse(load("cb-base-saved") || "{}"); } catch (e) {}
+  const name = (S.bp.name || "Без названия").trim(); all[name] = S.bp; store("cb-base-saved", JSON.stringify(all)); savedList(); msg("Сохранено: " + name);
+};
+
+// ---------- dialog: export / import / picture ----------
+function openDlg(mode) {
+  const d = $("dlg"); $("dlg-msg").textContent = "";
+  $("dlg-text").hidden = mode === "picture"; $("dlg-img").hidden = mode !== "picture";
+  $("dlg-load").hidden = mode !== "import"; $("dlg-copy").hidden = mode !== "export";
+  if (mode === "export") {
+    $("dlg-title").textContent = "Экспорт схемы";
+    $("dlg-hint").textContent = "Скопируйте текст и пришлите его мне в чат (или сохраните в файл .json) — игра будет читать схему в этом виде.";
+    $("dlg-text").value = JSON.stringify(S.bp);
+  } else if (mode === "import") {
+    $("dlg-title").textContent = "Импорт схемы";
+    $("dlg-hint").textContent = "Вставьте сюда текст схемы (JSON) и нажмите «Загрузить».";
+    $("dlg-text").value = "";
+  } else {
+    $("dlg-title").textContent = "Картинка схемы";
+    $("dlg-hint").textContent = "Правой кнопкой по картинке → «Сохранить изображение как…» или «Копировать изображение».";
+    const keep = { cell: S.cell, sel: S.sel, hover: S.hover };
+    S.cell = 22; S.sel = -1; S.hover = null; draw();
+    $("dlg-img").src = cv.toDataURL("image/png");
+    Object.assign(S, keep); draw();
+  }
+  d.showModal();
+}
+$("export").onclick = () => openDlg("export");
+$("import").onclick = () => openDlg("import");
+$("picture").onclick = () => openDlg("picture");
+$("dlg-close").onclick = () => $("dlg").close();
+$("dlg-copy").onclick = () => {
+  const t = $("dlg-text");
+  navigator.clipboard.writeText(t.value).then(() => $("dlg-msg").textContent = "Скопировано.")
+    .catch(() => { t.focus(); t.select(); $("dlg-msg").textContent = "Текст выделен — нажмите Ctrl+C."; });
+};
+$("dlg-load").onclick = () => {
+  try {
+    const bp = JSON.parse($("dlg-text").value);
+    if (!bp || !Array.isArray(bp.buildings) || !bp.width || !bp.height) throw new Error("нет полей width, height, buildings");
+    bp.terrain = bp.terrain || {};
+    snapshot(); S.bp = bp; afterLoad(); $("dlg").close(); msg("Схема загружена");
+  } catch (e) { $("dlg-msg").style.color = "var(--bad)"; $("dlg-msg").textContent = "Не читается: " + e.message; }
+};
+
+// ---------- start ----------
+(function start() {
+  const c = +load("cb-base-cell"); if (c >= 6 && c <= 48) S.cell = c;
+  let saved = null; try { saved = JSON.parse(load("cb-base-autosave") || "null"); } catch (e) {}
+  S.bp = saved && Array.isArray(saved.buildings) ? saved : clone(EXAMPLE);
+  S.bp.terrain = S.bp.terrain || {};
+  palette(); savedList(); setTool("place"); afterLoad();
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
