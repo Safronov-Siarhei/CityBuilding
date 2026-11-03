@@ -52,6 +52,8 @@ namespace CityBuilder.EditorTools
             EditorUtility.SetDirty(looks);
             // the bot kingdom's buildings draw through a copy with its own roof colour (Bot.BotKingdom)
             MaterialCopy(buildings, ModelImportDefaults.BotPaletteMaterialPath, ModelImportDefaults.BotPaletteTexturePath);
+            var botKing = MaterialCopy(looks.figures, ModelImportDefaults.BotKingPaletteMaterialPath, ModelImportDefaults.BotKingPaletteTexturePath);
+            if (botKing != looks.figures) botKing.SetFloat("_SnowMask", 0f);
             AssetDatabase.SaveAssets();
         }
 

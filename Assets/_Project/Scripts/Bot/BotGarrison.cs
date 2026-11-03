@@ -125,6 +125,7 @@ namespace CityBuilder.Bot
             unit.SetCurrentHealth(stats.maxHealth);
             post.unit = unit;
             post.downFor = 0f;
+            if (post.duty == Duty.King) kingdom.DressKing(unit.gameObject);
             if (post.duty == Duty.Wall) post.onWall = unit.GoToWall(post.wallCell);
             else if (post.duty == Duty.Patrol) group.OrderMoveTo(kingdom.WorldAt(Avenues[post.route][_patrolLeg[post.route]]));
             else group.OrderMoveTo(kingdom.WorldAt(KingRing[_kingLeg]));

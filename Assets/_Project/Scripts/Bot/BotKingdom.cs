@@ -26,10 +26,13 @@ namespace CityBuilder.Bot
     public class BotKingdom : MonoBehaviour
     {
         [SerializeField] private TextAsset blueprint;
-        // the bot's roofs, gold and banners in its own turquoise, so the player sees at a glance
+        // the bot's roofs, gold and banners in its own neutral straw, so the player sees at a glance
         // whose they are (the user, 2026-11-03): every renderer on the town's palette swapped onto the bot's copy
         [SerializeField] private Material buildingsPalette;
         [SerializeField] private Material botPalette;
+        // its King's figure (on the figures' material) with the cape in the bot's straw
+        [SerializeField] private Material figures;
+        [SerializeField] private Material botKingPalette;
 
         public static BotKingdom Instance { get; private set; }
 
@@ -313,9 +316,18 @@ namespace CityBuilder.Bot
         private static readonly List<Renderer> DressRenderers = new List<Renderer>();
 
         /// <summary>Every renderer under `root` (the level models it keeps hidden too) on the town's palette moved onto the bot's.</summary>
-        private void Dress(GameObject root)
+        private void Dress(GameObject root) => Swap(root, buildingsPalette, botPalette);
+
+        /// <summary>The bot's King in his own cape (BotGarrison): the figure's material swapped for the bot King's.</summary>
+        public void DressKing(GameObject king)
         {
-            if (buildingsPalette == null || botPalette == null) return;
+            Swap(king, figures, botKingPalette);
+            Swap(king, buildingsPalette, botKingPalette);
+        }
+
+        private static void Swap(GameObject root, Material from, Material to)
+        {
+            if (root == null || from == null || to == null) return;
             root.GetComponentsInChildren(true, DressRenderers);
             foreach (var renderer in DressRenderers)
             {
@@ -323,8 +335,8 @@ namespace CityBuilder.Bot
                 var changed = false;
                 for (var i = 0; i < materials.Length; i++)
                 {
-                    if (materials[i] != buildingsPalette) continue;
-                    materials[i] = botPalette;
+                    if (materials[i] != from) continue;
+                    materials[i] = to;
                     changed = true;
                 }
                 if (changed) renderer.sharedMaterials = materials;

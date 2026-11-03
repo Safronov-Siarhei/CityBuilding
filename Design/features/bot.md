@@ -121,11 +121,15 @@ Proposed, not agreed:
   - OrcUnit and WallWalk deliberately see bot buildings.
 - **UI:** a tap on a bot building opens `ForeignBuildingCard.Show(BuildingInstance)` (`#foreign_owner_bot`). An army order onto a bot building walks there.
 - **Test:** ArchipelagoTests.TheBotKingdom_StandsOnItsIsland_OutsideTheTownsSums_AndRebuilds checks placement over 500, none of it counted, the garrison over 20 with archers on the walls and none in the army, a raid at the castle, and the rebuild.
-- **Bot colour (2026-11-03, user: the player must see the buildings are not theirs):** every bot building draws through `Models/Palette/BotPalette.mat`. It is a copy of the buildings' palette with all roof cells, the gold (level 5 roofs are gilded) and the banners in turquoise #22B8A8 / #148076.
+- **Bot colour (2026-11-03, user: the player must see the buildings are not theirs):** every bot building draws through `Models/Palette/BotPalette.mat`. It is a copy of the buildings' palette with all roof cells, the gold (level 5 roofs are gilded) and the banners in neutral straw #D9BC74 / #A6874A (turquoise first, the user swapped it the same day).
   - `Tools/palette/bot_palette.py` writes `BotPalette.png` from `BuildingsPalette.png`.
   - The material is made in `BuildSeasonLooks`.
   - `BotKingdom.Dress` swaps the renderers (hidden level models too) right after `InitializeAsBot`.
   - The colour is a picture, not balance, so it is not in the sheet.
+  - **The bot's King's cape (user, 2026-11-03):** it is red on the player's King. On the bot's King it is in the bot's straw.
+    - `BotKingPalette.png` is written by the same script (cells banner_red and roof_red_dark only).
+    - `BotKingPalette.mat` is a copy of Figures.mat, so it has no snow.
+    - `BotGarrison.Raise` calls `BotKingdom.DressKing`.
 
 ## Traps
 - A colour added to `kit.PALETTE` that is a roof must also go into `bot_palette.py` CELLS, then rerun the script. Wall-walk steps (WallWalk) are instantiated later and keep the town's palette.
