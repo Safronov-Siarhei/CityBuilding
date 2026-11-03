@@ -9,7 +9,12 @@ units on a 21 x 21 grid of ~14.3 m cells (level 1's cell size), so the passages 
   opens once the hero has pulled the levers in the two LEVER halls, far from the camp and from
   each other (the user's chosen new mechanic);
 - the WATER SERPENT's hall on the main CANAL, one way in;
-- CANALS of water across the halls: a passage that crosses one does so on a BRIDGE;
+- CANALS of water across the halls, and FLOODED passages the heroes wade (the user, 2026-11-03:
+  «больше воды, пусть по некоторым проходам игрок ходит по воде»): every passage near a canal or
+  inside a flooded quarter runs under shallow water; a dry passage crosses a canal on a BRIDGE, a
+  flooded one wades through it (a ford);
+- halls are LIVING SHAPES, never rectangles (the user, again): each is a union of overlapping blobs
+  round its cells, corners left out at random -- the json carries the blobs for the 3D build;
 - the great flooded hall and two ruined forges are monster arenas;
 - the farthest dead ends hold crystals, the other dead ends are empty, to mislead; junctions hold
   monster halls.
@@ -52,7 +57,14 @@ ARENAS = {"great", "forge_w", "forge_n"}
 CANALS = [
     [(-0.5, 10.0), (3.0, 10.4), (6.0, 9.6), (10.5, 9.9), (14.0, 10.6), (18.5, 10.5)],
     [(5.0, 20.5), (5.6, 17.0), (4.8, 14.0), (6.0, 11.5), (8.5, 10.0)],
+    # out of the serpent's pool northwards past the north forge to the north wall
+    [(18.5, 11.5), (19.2, 14.0), (17.2, 16.0), (16.0, 18.5), (16.4, 20.5)],
+    # out of the great hall southwards, spreading towards the east lever
+    [(10.5, 8.5), (11.4, 6.2), (13.6, 4.6), (16.4, 3.8)],
 ]
+# flooded quarters (cells: x, y, radius): every passage in them runs under shallow water
+FLOOD_ZONES = [(4.0, 12.5, 3.0), (14.0, 5.0, 2.6), (17.0, 15.0, 2.4), (2.5, 3.0, 2.2)]
+FLOOD_NEAR = 1.0            # a passage this near a canal (in cells) is flooded too
 JITTER = 0.32
 BEND = 0.35
 
@@ -161,17 +173,59 @@ def build(seed):
         j = 0.0 if hall_of((x, y)) else JITTER * CELL
         pos[(x, y)] = ((x + 0.5) * CELL + rnd.uniform(-j, j), (y + 0.5) * CELL + rnd.uniform(-j, j))
     bends = [rnd.uniform(-BEND, BEND) for _ in links]
-    # bridges: where a passage (straight between its nodes, near enough for a plan) crosses a canal
-    bridges = []
-    for a, b in links:
+    canals = canal_metres()
+    flooded = [_flooded(pos[a], pos[b], canals) and (a, b) != door for a, b in links]
+    # crossings, where a passage (straight between its nodes, near enough for a plan) meets a
+    # canal: a dry passage crosses on a bridge, a flooded one wades it (a ford)
+    bridges, fords = [], []
+    for (a, b), wet in zip(links, flooded):
         if hall_of(a) and hall_of(a) == hall_of(b):
             continue
-        for canal in canal_metres():
+        for canal in canals:
             for p, q in zip(canal, canal[1:]):
                 hit = _cross(pos[a], pos[b], p, q)
                 if hit and not hall_of((int(hit[0] // CELL), int(hit[1] // CELL))):
-                    bridges.append((hit[0], hit[1], a, b))
-    return links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges
+                    (fords if wet else bridges).append((hit[0], hit[1], a, b))
+    blobs = hall_blobs(rnd, links)
+    return links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges, fords, flooded, blobs
+
+
+def _seg_dist(p, a, b):
+    l2 = (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
+    t = 0.0 if l2 == 0 else max(0.0, min(1.0, ((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / l2))
+    return ((p[0] - a[0] - t * (b[0] - a[0])) ** 2 + (p[1] - a[1] - t * (b[1] - a[1])) ** 2) ** 0.5
+
+
+def _flooded(pa, pb, canals):
+    mid = ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)
+    for zx, zy, zr in FLOOD_ZONES:
+        if ((mid[0] - (zx + 0.5) * CELL) ** 2 + (mid[1] - (zy + 0.5) * CELL) ** 2) ** 0.5 < zr * CELL:
+            return True
+    # along a canal, not across it: a passage that crosses one keeps dry on a bridge
+    segs = [(p, q) for canal in canals for p, q in zip(canal, canal[1:])]
+    if any(_cross(pa, pb, p, q) for p, q in segs):
+        return False
+    return any(_seg_dist(mid, p, q) < FLOOD_NEAR * CELL for p, q in segs)
+
+
+def hall_blobs(rnd, links):
+    """Each hall as overlapping blobs round its cells: a big one in the middle, one per cell
+    jittered and sized at random, CORNER cells left out now and then -- never one a passage comes
+    into. (x, y, r) in build units."""
+    entries = {c for a, b in links for c in (a, b) if hall_of(c)}
+    out = {}
+    for name, (x0, y0, w, h) in BIG.items():
+        blobs = [((x0 + w / 2 + rnd.uniform(-0.3, 0.3)) * CELL, (y0 + h / 2 + rnd.uniform(-0.3, 0.3)) * CELL,
+                  CELL * min(w, h) * rnd.uniform(0.38, 0.48))]
+        for x in range(x0, x0 + w):
+            for y in range(y0, y0 + h):
+                corner = x in (x0, x0 + w - 1) and y in (y0, y0 + h - 1)
+                if corner and (x, y) not in entries and rnd.random() < 0.7:
+                    continue
+                blobs.append(((x + 0.5 + rnd.uniform(-0.25, 0.25)) * CELL, (y + 0.5 + rnd.uniform(-0.25, 0.25)) * CELL,
+                              CELL * rnd.uniform(0.58, 0.85)))
+        out[name] = blobs
+    return out
 
 
 def curve(pa, pb, bend, steps=6):
@@ -185,7 +239,7 @@ def curve(pa, pb, bend, steps=6):
     return out
 
 
-def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges):
+def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges, fords, flooded, blobs):
     px = 4
     pad = 40
     side = round(SIZE * px)
@@ -212,23 +266,34 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
     water = (60, 130, 200)
     for canal in canal_metres():               # canals ~7 m wide, under everything
         d.line([m(p) for p in canal], fill=water, width=7 * px, joint="curve")
-    for (a, b), bend in zip(links, bends):
-        d.line([m(p) for p in curve(pos[a], pos[b], bend)], fill=floor, width=4 * px, joint="curve")
+    shallow = (95, 160, 205)
+    wet_nodes = set()
+    for (a, b), bend, wet in zip(links, bends, flooded):
+        d.line([m(p) for p in curve(pos[a], pos[b], bend)], fill=shallow if wet else floor, width=4 * px, joint="curve")
+        if wet:
+            wet_nodes.update((a, b))
     for c in set(sum(([a, b] for a, b in links), [])):
         if hall_of(c) is None:
             x, y = m(pos[c])
-            d.ellipse([x - 2 * px, y - 2 * px, x + 2 * px, y + 2 * px], fill=floor)
+            d.ellipse([x - 2 * px, y - 2 * px, x + 2 * px, y + 2 * px], fill=shallow if c in wet_nodes else floor)
     colours = {"camp": (214, 190, 120), "throne": (170, 110, 220), "serpent": (60, 170, 200), "great": (230, 80, 60),
                "lever_w": (240, 200, 60), "lever_e": (240, 200, 60), "forge_w": (230, 80, 60), "forge_n": (230, 80, 60)}
     labels = {"camp": "ЛАГЕРЬ\nнайм, лавка", "throne": "БОСС 1\nПроклятый\nкороль", "serpent": "БОСС 2\nВодный змей",
               "great": "ЗАТОПЛЕННЫЙ\nЗАЛ", "lever_w": "РЫЧАГ", "lever_e": "РЫЧАГ", "forge_w": "КУЗНЯ", "forge_n": "КУЗНЯ"}
     for name, (x0, y0, w, h) in BIG.items():
-        ax, ay = centre((x0, y0 + h - 1))
-        bx, by = centre((x0 + w - 1, y0))
-        r = 3.5 * px
-        fill = (110, 150, 190) if name in ("serpent", "great") else floor
-        d.rounded_rectangle([ax - r, ay - r, bx + r, by + r], radius=9 * px, fill=fill, outline=colours[name], width=5)
-        d.multiline_text(((ax + bx) / 2, (ay + by) / 2), labels[name], fill=(255, 255, 255), font=font, anchor="mm", align="center")
+        fill = shallow if name in ("serpent", "great") else floor
+        for bx_, by_, r in blobs[name]:         # the rim: every blob a little bigger, in the hall's colour
+            x, y = m((bx_, by_))
+            rr = (r + 1.3) * px
+            d.ellipse([x - rr, y - rr, x + rr, y + rr], fill=colours[name])
+        for bx_, by_, r in blobs[name]:         # then the floor over them: only the union's rim stays
+            x, y = m((bx_, by_))
+            d.ellipse([x - r * px, y - r * px, x + r * px, y + r * px], fill=fill)
+        cx, cy = centre((x0 + (w - 1) / 2, y0 + (h - 1) / 2))
+        d.multiline_text((cx, cy), labels[name], fill=(255, 255, 255), font=font, anchor="mm", align="center")
+    for bx_, by_, a, b in fords:               # fords: the flooded passage wades the canal
+        x, y = m((bx_, by_))
+        d.ellipse([x - 3 * px, y - 3 * px, x + 3 * px, y + 3 * px], outline=(220, 240, 255), width=3)
     for bx_, by_, a, b in bridges:             # bridges: brown planks across the canal
         x, y = m((bx_, by_))
         d.rectangle([x - 5 * px, y - 3 * px, x + 5 * px, y + 3 * px], fill=(150, 100, 60), outline=(90, 60, 30), width=2)
@@ -256,7 +321,8 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
     rows = [((190, 110, 255), "комната с кристаллами"), ((110, 110, 100), "пустой тупик (обманка)"),
             ((230, 80, 60), "монстры / кузни / затопленный зал"), ((240, 200, 60), "зал с рычагом (2 шт.)"),
             ((200, 40, 40), "дверь к королю: открывают оба рычага"), (water, "каналы (вода)"),
-            ((150, 100, 60), "мост через канал"), ((214, 190, 120), "лагерь: гномы, лавка"),
+            ((150, 100, 60), "мост через канал"), (shallow, "затопленный проход: идут по воде"),
+            ((220, 240, 255), "брод через канал"), ((214, 190, 120), "лагерь: гномы, лавка"),
             ((170, 110, 220), "логово босса: один вход")]
     for k, (col, text) in enumerate(rows):
         y = pad + 20 + k * 38
@@ -267,7 +333,8 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
     d.multiline_text((lx, pad + 20 + len(rows) * 38 + 20),
                      f"размер: 300 × 300 (≈132 × 132 клетки)\nкомнат с кристаллами: {len(crystal_rooms)}\n"
                      f"пустых тупиков: {empty}\nзалов с монстрами: {len(monster_halls) + len(ARENAS)}\n"
-                     f"мостов: {len(bridges)}\nпуть до рычагов: ~{lever_far[0]} и ~{lever_far[1]} м\n"
+                     f"мостов: {len(bridges)}, бродов: {len(fords)}\n"
+                     f"проходов по воде: {sum(flooded)} из {len(flooded)} ({round(100 * sum(flooded) / len(flooded))}%)\nпуть до рычагов: ~{lever_far[0]} и ~{lever_far[1]} м\n"
                      f"путь до короля: ~{round(dist.get('throne', 0))} м\nпуть до змея: ~{round(dist.get('serpent', 0))} м",
                      fill=(240, 240, 240), font=small, spacing=8)
     img.save(path)
@@ -275,15 +342,17 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
 
 def main():
     out = sys.argv[1]
-    links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges = build(SEED)
-    draw(out, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges)
+    links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges, fords, flooded, blobs = build(SEED)
+    draw(out, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends, door, bridges, fords, flooded, blobs)
     with open(out.rsplit(".", 1)[0] + ".json", "w", encoding="utf-8") as f:
         json.dump({"cell": CELL, "grid": G, "size": SIZE, "big": BIG, "links": links, "crystal_rooms": crystal_rooms,
                    "monster_halls": monster_halls, "dead_ends": dead_ends, "door": door, "levers": list(LEVERS),
                    "canals": canal_metres(), "bridges": [[x, y] for x, y, _, _ in bridges],
+                   "fords": [[x, y] for x, y, _, _ in fords], "flooded": flooded, "flood_zones": FLOOD_ZONES,
+                   "hall_blobs": blobs,
                    "pos": [[c[0], c[1], p[0], p[1]] for c, p in pos.items()], "bends": bends}, f)
     print("PLAN2 seed", SEED, "links", len(links), "crystal", len(crystal_rooms), "dead", len(dead_ends),
-          "bridges", len(bridges), "levers", [round(dist.get(l, 0)) for l in LEVERS],
+          "bridges", len(bridges), "fords", len(fords), "wet", sum(flooded), "of", len(flooded), "levers", [round(dist.get(l, 0)) for l in LEVERS],
           "throne", round(dist.get("throne", 0)), "serpent", round(dist.get("serpent", 0)))
 
 

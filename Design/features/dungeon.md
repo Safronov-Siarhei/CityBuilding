@@ -259,6 +259,17 @@ dungeon opens as a SEPARATE SCENE.
 - **Camp:** the same gnome hire camp and potion shop.
 - Order of work (as for level 1): the PLAN first for approval, then the Blender map, then the new
   monster/boss models for approval, then the game.
+- **More water, wading passages** (the user, 2026-11-03 «пусть по некоторым проходам игрок ходит по
+  воде»): 4 canals; ~1/3 of passages are FLOODED, i.e. shallow water the heroes walk through -- those
+  running along a canal and all inside the flooded quarters (`FLOOD_ZONES`). A dry passage crosses a
+  canal on a bridge, a flooded one by a ford. The game will need a walkable shallow-water floor (and
+  maybe a slow-down) -- not decided.
+- **Halls are LIVING SHAPES, never rectangles** (the user, a standing rule for every dungeon): each
+  big hall is a union of overlapping blobs; the plan json carries them (`hall_blobs`, plus
+  `flooded`, `fords`, `flood_zones`) for the Blender build.
+- Plan: `Tools/blender/dungeon2_plan.py <png> [seed]`, seed 92: 343 passages, 115 flooded, 17
+  bridges, 12 fords, 10 crystal rooms, levers ~1129/629 m, king ~1157 m, serpent ~1186 m. Sent to
+  the user 2026-11-03, awaiting approval.
 
 ## Proposed, NOT agreed yet (ask, don't build)
 - (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
