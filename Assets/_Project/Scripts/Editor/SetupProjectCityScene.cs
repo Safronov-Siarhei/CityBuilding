@@ -244,6 +244,13 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 isRoad: true, keepSelectedAfterPlacement: true);
 
+            // the Square (Tools/blender/square.py, the user 2026-11-03): a 2x2 road in the Decorations
+            var squareData = CreateBuildingData(
+                "Square", new Vector2Int(2, 2), height: 0.05f,
+                wallColor: new Color(0.32f, 0.32f, 0.34f), roofColor: new Color(0.85f, 0.75f, 0.3f),
+                style: BuildingStyle.Road, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                isRoad: true);
+
             var bridgeData = CreateBuildingData(
                 "Bridge", new Vector2Int(1, 1), height: 0.05f,
                 wallColor: new Color(0.5f, 0.35f, 0.2f), roofColor: new Color(0.36f, 0.24f, 0.13f),
@@ -331,7 +338,7 @@ namespace CityBuilder.EditorTools
                 roadData, fenceData, towerData, barracksData, gateData,
                 fortifiedTowerData, fortifiedGateData, moatData, drawbridgeData,
                 bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
-                townSquareData, flagData, decTreeData, decBushData, decGardenData
+                townSquareData, flagData, decTreeData, decBushData, decGardenData, squareData
             };
             hotbarBuildingData.AddRange(shellBuildings);
             var allBuildingData = new List<BuildingData>(hotbarBuildingData) { townHallData };
