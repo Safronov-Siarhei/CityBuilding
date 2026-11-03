@@ -50,7 +50,8 @@ aside h2 { font: 15px/1.2 var(--display); margin: 4px 0 0; letter-spacing: .04em
 .foot { width: 34px; height: 26px; display: grid; place-items: center; }
 .foot i { display: block; border: 1px solid rgba(0,0,0,.35); border-radius: 2px; }
 .size { font: 12px var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-main { position: relative; overflow: auto; min-width: 0; min-height: 0; background: var(--paper); touch-action: none; }
+main { position: relative; overflow: auto; min-width: 0; min-height: 0; background: var(--paper); }
+canvas { touch-action: none; }
 canvas { display: block; margin: 16px; cursor: crosshair; }
 .status { position: sticky; left: 0; bottom: 0; display: flex; gap: 16px; padding: 6px 16px; font: 12px var(--mono); color: var(--ink-soft); background: var(--panel); border-top: 1px solid var(--line); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13px; }
@@ -65,6 +66,9 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 dialog textarea { width: 100%; height: 300px; font: 12px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; }
 dialog img { max-width: 100%; border: 1px solid var(--line); }
 dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap; }
+.toast { position: sticky; top: 8px; left: 8px; z-index: 5; display: inline-block; margin: 8px 0 0 16px; padding: 6px 12px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.toast[hidden] { display: none; }
+.help ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
 .msg { font-size: 12px; color: var(--good); min-height: 1.2em; }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(60vh, 1fr) auto; height: auto; }
@@ -118,11 +122,23 @@ dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10
   </aside>
 
   <main id="stage">
+    <div id="toast" class="toast" role="status" hidden></div>
     <canvas id="cv"></canvas>
     <div class="status"><span id="st-cell">клетка —</span><span id="st-tool"></span><span id="st-msg"></span></div>
   </main>
 
   <aside class="right" aria-label="Сведения">
+    <h2>Как пользоваться</h2>
+    <div class="help"><ol>
+      <li>Слева выберите здание — оно подсветится.</li>
+      <li>Наведите на сетку: появится его силуэт (красный — занято или за краем).</li>
+      <li>Нажмите — здание встанет. Протяните мышью — встанет цепочка (стены, дороги, ров).</li>
+      <li>R — повернуть, 1–5 — уровень. Симметрия ✛ повторит постройку в четырёх четвертях.</li>
+      <li>Правая кнопка или «Стереть» — убрать. «Выбрать» — нажать на здание, сменить уровень.</li>
+      <li>«Местность» — песок, мелководье, море.</li>
+      <li>Готово — «Экспорт», скопируйте текст и пришлите мне в чат.</li>
+    </ol>
+    <p class="hint">«Пример: замок бота» загружает готовую схему (вся сетка там уже занята — сначала сотрите или начните «Новую»).</p></div>
     <h2>Схема</h2>
     <input id="name" type="text" aria-label="Название схемы">
     <div class="group"><button id="save">Сохранить в браузере</button></div>
@@ -175,7 +191,7 @@ function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
 function snapshot() { S.undo.push(JSON.stringify(S.bp)); if (S.undo.length > 150) S.undo.shift(); S.redo.length = 0; }
-function changed() { store("cb-base-autosave", JSON.stringify(S.bp)); draw(); counts(); showSel(); }
+function changed() { store("cb-base-autosave-v2", JSON.stringify(S.bp)); draw(); counts(); showSel(); }
 
 function occupancy() {
   const occ = new Map();
@@ -354,7 +370,7 @@ function setTool(t) {
   $("st-tool").textContent = { place: "ставлю: " + (BY_ID[S.pick] ? BY_ID[S.pick].name : S.pick), select: "выбор", erase: "стираю", terrain: "местность" }[t];
 }
 function setSym(s) { S.sym = s; for (const k of ["none", "x", "y", "xy"]) $("s-" + k).classList.toggle("on", k === s); draw(); }
-function msg(t) { $("st-msg").textContent = t; clearTimeout(msg.t); msg.t = setTimeout(() => $("st-msg").textContent = "", 2500); }
+function msg(t) { $("st-msg").textContent = t; const toast = $("toast"); toast.textContent = t; toast.hidden = false; clearTimeout(msg.t); msg.t = setTimeout(() => { $("st-msg").textContent = ""; toast.hidden = true; }, 2500); }
 
 // ---------- pointer ----------
 function cellAt(e) {
@@ -373,7 +389,7 @@ function act(cell, first) {
   const did = S.tool === "place" ? place(cell[0], cell[1]) : S.tool === "erase" ? eraseAt(cell[0], cell[1]) : paintTerrain(cell[0], cell[1]);
   if (did) changed(); else if (first && S.tool === "place") { S.undo.pop(); msg("Не помещается: занято или за краем"); }
 }
-cv.addEventListener("pointerdown", e => { if (e.button === 2) return; cv.setPointerCapture(e.pointerId); dragging = true; lastCell = cellAt(e); act(lastCell, true); });
+cv.addEventListener("pointerdown", e => { if (e.button === 2) return; try { cv.setPointerCapture(e.pointerId); } catch (err) {} dragging = true; lastCell = cellAt(e); act(lastCell, true); });
 cv.addEventListener("pointermove", e => {
   const cell = cellAt(e); S.hover = cell;
   $("st-cell").textContent = cell ? `клетка ${cell[0]}, ${cell[1]}` : "клетка —";
@@ -411,7 +427,7 @@ for (const t of ["place", "select", "erase", "terrain"]) $("t-" + t).onclick = (
 for (const s of ["none", "x", "y", "xy"]) $("s-" + s).onclick = () => setSym(s);
 $("search").oninput = palette;
 $("zin").onclick = () => zoom(2); $("zout").onclick = () => zoom(-2);
-$("name").oninput = e => { S.bp.name = e.target.value; store("cb-base-autosave", JSON.stringify(S.bp)); };
+$("name").oninput = e => { S.bp.name = e.target.value; store("cb-base-autosave-v2", JSON.stringify(S.bp)); };
 $("resize").onclick = () => {
   const w = Math.max(5, Math.min(200, +$("gw").value || S.bp.width)), h = Math.max(5, Math.min(200, +$("gh").value || S.bp.height));
   snapshot(); S.bp.width = w; S.bp.height = h;
@@ -471,8 +487,9 @@ $("dlg-load").onclick = () => {
 // ---------- start ----------
 (function start() {
   const c = +load("cb-base-cell"); if (c >= 6 && c <= 48) S.cell = c;
-  let saved = null; try { saved = JSON.parse(load("cb-base-autosave") || "null"); } catch (e) {}
-  S.bp = saved && Array.isArray(saved.buildings) ? saved : clone(EXAMPLE);
+  let saved = null; try { saved = JSON.parse(load("cb-base-autosave-v2") || "null"); } catch (e) {}
+  S.bp = saved && Array.isArray(saved.buildings) ? saved : blank(40, 40);
+  if (!saved) msg("Пустой лист 40×40. Выберите здание слева и нажмите по сетке.");
   S.bp.terrain = S.bp.terrain || {};
   palette(); savedList(); setTool("place"); afterLoad();
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
