@@ -29,6 +29,7 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in Config.Buildings)
             {
                 if (building.category != BuildingCategory.Entertainment) continue;
+                if (building.id == "Square") continue;   // a 2x2 road in the Decorations, not entertainment (the user, 2026-11-03)
 
                 counted++;
                 Assert.Greater(building.levels[0].happiness, 0,
@@ -59,6 +60,7 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in Config.Buildings)
             {
                 if (building.category != BuildingCategory.Entertainment) continue;
+                if (building.id == "Square") continue;   // a 2x2 road in the Decorations, not entertainment (the user, 2026-11-03)
 
                 for (var level = 2; level <= building.levels.Count; level++)
                 {

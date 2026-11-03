@@ -91,9 +91,36 @@ Proposed, not agreed:
   - Example: `Design/bot_castle_v2.json`, made by `Design/bot_castle_v2_blueprint.py`.
   - To refresh the catalogue, regenerate it from ScriptableObjects/Buildings footprints and buildings.csv names.
 
-## Next (skeleton)
-- Place the bot castle from the blueprint JSON on the bot island. The bot zone is now half 14 and must grow to fit 37x44 with the harbour on the coast.
-  - Bot buildings: BuildingInstance with IsBot. Skip them in the town's sums (counts, storage, housing, houses, TownHall, fog reveal, happiness, research, save, OnlyOne, progression score), and give them a foreign card on tap.
-- Rebuild after an orc raid while the bot's hall stands.
-- The garrison: King, ranged on the walls, melee patrols; respawn while the hall stands.
-- Orc raids on the bot: massive, for show (user 2026-11-03); what they destroy is rebuilt after the raid.
+## Built 2026-11-03, part 2: the castle, the garrison, the raids (not seen in game)
+- **The bot islands.** islands.py `BOT_PAD` (-20..20, -27..20): a flat, wood-free pad. Its -y side sits 19-23 m from the coast; a beach is put there. Scale 120 -> 160.
+  - Isl-bot1/2 regenerated and exported.
+  - ArchipelagoGenerator: `BotHalf` 20, island size 160.
+  - `MeshMapApplier.ArchipelagoBotCell`.
+- **`Bot/BotKingdom.cs`.** Reads `Assets/_Project/Bot/BotCastle.json` (copied from `Design/bot_castle_v2.json`; the base editor's format). The anchor is the Town Hall's middle cell.
+  - The castle is turned so the blueprint's south (the harbour) faces the nearest water along 4 axes (`HarbourTurns`).
+  - Each piece goes through `BuildingInstance.InitializeAsBot`. A land piece never stands on water. WaterTower is skipped: it is not in the game.
+  - Rebuild: after `bot_rebuild_calm_sec` with no orc within `bot_calm_radius_cells` of the hall, while the hall stands.
+  - Hall razed: `HallRazed`, `BotRelations.EndWar`, no more rebuilds or respawns.
+  - Saved: `botCastleSaved`, `botHallRazed`, `botMissing` slot indices.
+  - Raids: `RaidNow` / public `Raid(count, level)`. Keys `bot_raid_first_sec` 300, `bot_raid_interval_sec` 600, `bot_raid_size` 30 (0 = off), `bot_raid_level` 3. The orcs come up 21 cells out on the north, east or west side (SpawnOrcs) and go for the nearest building.
+- **`Bot/BotGarrison.cs`** (added by BotKingdom). Hireling-style soldiers (`ArmyManager.SpawnHireling` into groups of their own): not the army, not selectable, no upkeep. Stats come from `bot_garrison_level`.
+  - The King (SoldierType.King, a plain soldier and not a Hero, so no fog reveal) walks the ring of squares.
+  - `bot_garrison_patrols` x `bot_garrison_patrol_size` ManAtArms patrol the avenues.
+  - `bot_garrison_archers` Archers hold walk-wall cells (GoToWall).
+  - A fallen soldier respawns at the hall after `bot_garrison_respawn_sec`. The garrison is not saved: it is manned fresh on load.
+- **IsBot filters:** BuildingPlacer (island check, OnlyOne), FireManager, CheatsPanelEconomy, CitizenVisualsManager, SicknessManager, FreedPrisoner, OrcRaidManagerPlacement, PlayerProgression, GameEvent, HappinessManager, InvasionHealing, ResearchManager, GameSaveController (save and lookup), ShipManager (shipyard).
+  - GameOverManager ignores a bot Town Hall.
+  - No event-log line for bot losses.
+  - OrcUnit and WallWalk deliberately see bot buildings.
+- **UI:** a tap on a bot building opens `ForeignBuildingCard.Show(BuildingInstance)` (`#foreign_owner_bot`). An army order onto a bot building walks there.
+- **Test:** ArchipelagoTests.TheBotKingdom_StandsOnItsIsland_OutsideTheTownsSums_AndRebuilds checks placement over 500, none of it counted, the garrison over 20 with archers on the walls and none in the army, a raid at the castle, and the rebuild.
+
+## Traps
+- A new bot island must keep a pad like BOT_PAD, or the castle is cut by the coast.
+- The harbour is found by the nearest water along the axes from the hall.
+- The blueprint's buildings must exist in the placer's catalogue (hotbar + mandatory). A Hidden building is skipped.
+- Performance: about 550 buildings + about 29 soldiers + raid orcs far from the camera. Not measured on a phone.
+
+## Next
+- War: the bot attacks (shipyard, barracks); its towers and garrison fight the player's units at war.
+- Trade window, contribution, gifts, the reward for razing the hall (all later, per the user).

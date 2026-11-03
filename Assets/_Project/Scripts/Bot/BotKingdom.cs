@@ -60,7 +60,10 @@ namespace CityBuilder.Bot
         }
 
         private readonly List<Slot> _slots = new List<Slot>();
+        private Vector2Int _centre;
+        private int _turns;
         private float _calmFor;
+        private float _raidIn = -1f;
         private bool _pendingRestore;
         private bool _pendingRazed;
         private List<int> _pendingMissing;
@@ -106,6 +109,8 @@ namespace CityBuilder.Bot
             foreach (var piece in plan.buildings)
                 if (piece.id == BuildingIds.TownHall) anchor = new Vector2Int(piece.x + piece.w / 2, piece.y + piece.h / 2);
             var turns = HarbourTurns(centre, map);
+            _centre = centre;
+            _turns = turns;
 
             foreach (var piece in plan.buildings)
             {
@@ -119,6 +124,22 @@ namespace CityBuilder.Bot
                 Raise(slot, map);
             }
             Placed = true;
+            gameObject.AddComponent<BotGarrison>();
+        }
+
+        /// <summary>The map cell of a blueprint offset from its Town Hall (x right, y down = south), turned as the castle is.</summary>
+        public Vector2Int CellAt(Vector2Int blueprintOffset) => _centre + Turn(new Vector2Int(blueprintOffset.x, -blueprintOffset.y), _turns);
+
+        /// <summary>The world point in the middle of that cell.</summary>
+        public Vector3 WorldAt(Vector2Int blueprintOffset) =>
+            GridManager.Instance != null ? GridManager.Instance.GetFootprintCenterWorld(CellAt(blueprintOffset), Vector2Int.one) : Vector3.zero;
+
+        /// <summary>The bot's standing walk-wall cells (fence of level 3 and up): where its archers keep watch.</summary>
+        public void WallCells(List<Vector2Int> into)
+        {
+            foreach (var slot in _slots)
+                if (slot.instance != null && slot.data.connectsToFences && !slot.data.isGate && slot.level >= 3 && slot.data.footprintSize == Vector2Int.one)
+                    into.Add(slot.origin);
         }
 
         /// <summary>The quarter turns that bring the blueprint's south (its harbour) round to the nearest water.</summary>
@@ -186,6 +207,7 @@ namespace CityBuilder.Bot
             if (!Placed || HallRazed || Hall == null) return;
             var config = BalanceConfig.Instance;
             if (config == null) return;
+            RaidNow(config);
             var reach = config.BotCalmRadiusCells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
             var at = Hall.transform.position;
             foreach (var orc in OrcUnit.All)
@@ -201,6 +223,35 @@ namespace CityBuilder.Bot
             if (_calmFor < config.BotRebuildCalmSeconds) return;
             _calmFor = 0f;
             Rebuild();
+        }
+
+        /// <summary>
+        /// The orcs raid the bot too (the user, 2026-11-03: massive, for show): every
+        /// bot_raid_interval_sec (the first after bot_raid_first_sec) bot_raid_size orcs of
+        /// bot_raid_level come out of the ground on one of the castle's three landward sides and go
+        /// for its nearest building; its walls, towers and garrison meet them, and what they
+        /// destroy is rebuilt once they are gone. None while bot_raid_size is 0.
+        /// </summary>
+        private void RaidNow(BalanceConfig config)
+        {
+            if (config.BotRaidSize <= 0) return;
+            if (_raidIn < 0f) _raidIn = config.BotRaidFirstSeconds;
+            _raidIn -= Time.deltaTime;
+            if (_raidIn > 0f) return;
+            _raidIn = config.BotRaidIntervalSeconds;
+            Raid(config.BotRaidSize, config.BotRaidLevel);
+        }
+
+        /// <summary>One raid on the castle now: `count` orcs of `level` out on a landward side (also the cheats' and tests' way in).</summary>
+        public void Raid(int count, int level)
+        {
+            var raids = OrcRaidManager.Instance;
+            if (raids == null || !Placed) return;
+            // the blueprint's north, east or west, beyond the outer wall (its south is the harbour)
+            var sides = new[] { new Vector2Int(0, -21), new Vector2Int(21, 0), new Vector2Int(-21, 0) };
+            var at = WorldAt(sides[UnityEngine.Random.Range(0, sides.Length)]);
+            if (!UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 6f, UnityEngine.AI.NavMesh.AllAreas)) return;
+            raids.SpawnOrcs(hit.position, count, level);
         }
 
         /// <summary>Raises every slot whose building is gone (a beaten-off raid's damage).</summary>

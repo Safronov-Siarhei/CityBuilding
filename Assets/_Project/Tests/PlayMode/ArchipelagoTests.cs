@@ -154,6 +154,32 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0, BuildingInstance.CountOf(BuildingIds.TownHall), "The bot's Town Hall counts as the town's.");
             Assert.IsNull(BuildingInstance.TownHall, "The bot's Town Hall became the town's.");
 
+            // the garrison: its King, archers up on the walls, patrols -- none of them the player's army
+            yield return new WaitForSeconds(10f);
+            var garrison = 0;
+            var onWalls = 0;
+            foreach (var s in Combat.SoldierUnit.All)
+            {
+                if (s == null || (s.transform.position - kingdom.Hall.transform.position).magnitude > 30f) continue;
+                garrison++;
+                if (s.OnWall) onWalls++;
+                foreach (var g in Combat.ArmyManager.Instance.Groups) foreach (var m in g.Members) Assert.AreNotSame(m, s, "A bot soldier is in the player's army.");
+            }
+            Assert.Greater(garrison, 20, "The bot's castle has no garrison.");
+            Assert.Greater(onWalls, 5, "No bot archer went up on the walls.");
+
+            // the orcs raid the bot too (the user, 2026-11-03): a wave comes up beside its castle
+            var old = new System.Collections.Generic.HashSet<Combat.OrcUnit>(Combat.OrcUnit.All);
+            kingdom.Raid(10, 1);
+            var came = 0;
+            foreach (var orc in Combat.OrcUnit.All)
+            {
+                if (orc == null || old.Contains(orc)) continue;
+                came++;
+                Assert.LessOrEqual((orc.transform.position - kingdom.Hall.transform.position).magnitude, 40f, "A raid on the bot came up away from its castle.");
+            }
+            Assert.AreEqual(10, came, "No raid came for the bot's castle.");
+
             // a raid knocks a manor down; the bot raises it again
             Assert.IsNotNull(manor);
             var at = manor.OriginCell;

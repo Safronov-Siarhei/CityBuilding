@@ -445,6 +445,15 @@ namespace CityBuilder.Core
         [SerializeField] private float botRelationsDriftPerDay = 2f;
         [SerializeField] private float botRebuildCalmSeconds = 60f;
         [SerializeField] private float botCalmRadiusCells = 45f;
+        [SerializeField] private float botGarrisonRespawnSeconds = 90f;
+        [SerializeField] private int botGarrisonPatrols = 4;
+        [SerializeField] private int botGarrisonPatrolSize = 3;
+        [SerializeField] private int botGarrisonArchers = 16;
+        [SerializeField] private int botGarrisonLevel = 5;
+        [SerializeField] private float botRaidFirstSeconds = 300f;
+        [SerializeField] private float botRaidIntervalSeconds = 600f;
+        [SerializeField] private int botRaidSize = 30;
+        [SerializeField] private int botRaidLevel = 3;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -972,6 +981,20 @@ namespace CityBuilder.Core
         public float BotRebuildCalmSeconds => botRebuildCalmSeconds;
         /// <summary>How far round the bot's castle an orc still counts as its raid.</summary>
         public float BotCalmRadiusCells => botCalmRadiusCells;
+        /// <summary>The bot's garrison (the user, 2026-11-03): how long a fallen soldier takes to come back while its Town Hall stands.</summary>
+        public float BotGarrisonRespawnSeconds => botGarrisonRespawnSeconds;
+        /// <summary>Patrols on the avenues (up to 4), and men in each.</summary>
+        public int BotGarrisonPatrols => botGarrisonPatrols;
+        public int BotGarrisonPatrolSize => botGarrisonPatrolSize;
+        /// <summary>Archers on the walls.</summary>
+        public int BotGarrisonArchers => botGarrisonArchers;
+        /// <summary>The level whose stats the garrison fights with.</summary>
+        public int BotGarrisonLevel => botGarrisonLevel;
+        /// <summary>The orcs' raids on the bot's castle (the user, 2026-11-03: massive, for show): the first after this long, then every interval; how many orcs, of which level (0 orcs: none).</summary>
+        public float BotRaidFirstSeconds => botRaidFirstSeconds;
+        public float BotRaidIntervalSeconds => botRaidIntervalSeconds;
+        public int BotRaidSize => botRaidSize;
+        public int BotRaidLevel => botRaidLevel;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1649,6 +1672,15 @@ namespace CityBuilder.Core
             botRelationsDriftPerDay = Read(economy, "bot_relations_drift_per_day", botRelationsDriftPerDay);
             botRebuildCalmSeconds = Read(economy, "bot_rebuild_calm_sec", botRebuildCalmSeconds);
             botCalmRadiusCells = Read(economy, "bot_calm_radius_cells", botCalmRadiusCells);
+            botGarrisonRespawnSeconds = Read(economy, "bot_garrison_respawn_sec", botGarrisonRespawnSeconds);
+            botGarrisonPatrols = Mathf.RoundToInt(Read(economy, "bot_garrison_patrols", botGarrisonPatrols));
+            botGarrisonPatrolSize = Mathf.RoundToInt(Read(economy, "bot_garrison_patrol_size", botGarrisonPatrolSize));
+            botGarrisonArchers = Mathf.RoundToInt(Read(economy, "bot_garrison_archers", botGarrisonArchers));
+            botGarrisonLevel = Mathf.RoundToInt(Read(economy, "bot_garrison_level", botGarrisonLevel));
+            botRaidFirstSeconds = Read(economy, "bot_raid_first_sec", botRaidFirstSeconds);
+            botRaidIntervalSeconds = Read(economy, "bot_raid_interval_sec", botRaidIntervalSeconds);
+            botRaidSize = Mathf.RoundToInt(Read(economy, "bot_raid_size", botRaidSize));
+            botRaidLevel = Mathf.RoundToInt(Read(economy, "bot_raid_level", botRaidLevel));
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);
