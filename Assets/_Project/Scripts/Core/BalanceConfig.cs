@@ -437,6 +437,7 @@ namespace CityBuilder.Core
         // and how dear its cells are to a route (NavMesh area cost; dry land is 1)
         [SerializeField] private int moatResearchCrystals = 10;
         [SerializeField] private float moatSpeedMultiplier = 0.4f;
+        [SerializeField] private float moatWadeDepth = 0.25f;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -948,6 +949,8 @@ namespace CityBuilder.Core
         public float WallClimbSeconds => wallClimbSeconds;
         public int MoatResearchCrystals => moatResearchCrystals;
         public float MoatSpeedMultiplier => moatSpeedMultiplier;
+        /// <summary>How deep (world units) a figure wading the moat sinks: at least to the knee (the user, 2026-11-03).</summary>
+        public float MoatWadeDepth => moatWadeDepth;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1617,6 +1620,7 @@ namespace CityBuilder.Core
             wallClimbSeconds = Read(economy, "wall_climb_sec", wallClimbSeconds);
             moatResearchCrystals = (int)Read(economy, "moat_research_crystals", moatResearchCrystals);
             moatSpeedMultiplier = Read(economy, "moat_speed_multiplier", moatSpeedMultiplier);
+            moatWadeDepth = Read(economy, "moat_wade_depth", moatWadeDepth);
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);

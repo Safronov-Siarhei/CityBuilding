@@ -125,7 +125,11 @@ namespace CityBuilder.UI
 
             for (var i = 0; i < hitCount; i++)
             {
-                if (_hits[i].collider.GetComponentInParent<BuildingInstance>() == null) continue;
+                var tapped = _hits[i].collider.GetComponentInParent<BuildingInstance>();
+                if (tapped == null) continue;
+                // ground you walk on is a destination, not a building to open: a moat, a road, a bridge
+                // (the user, 2026-11-03: an order onto the moat selected the moat)
+                if (tapped.Data != null && (tapped.Data.IsGroundWork || tapped.Data.isCrossing)) continue;
                 army.SelectGroup(null);
                 return false;
             }

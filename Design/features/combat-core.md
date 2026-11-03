@@ -10,7 +10,7 @@
 > FortifiedGate1-lvl3..5 + save; `-- <dir>` = renders): the Town Hall is a DONJON (5x5, keep 2.25+ high, corner
 > turrets, slate roof -> blue from 3, gold 4-5); the BARBICAN 3-5 = passage + portcullis between two end towers,
 > WALKABLE (`WallWalk.BarbicanId`: middle cell a Wall node, end cells Tower nodes = stairs at the walk's height).
-> The BASTION wears WallFortTower from level 3 even away from walls (`WallTowerLook.lookAlways`, doorways per join).
+> The BASTION and (since 2026-11-03) the plain TOWER wear their wall-tower body from level 3 even away from walls or beside a lvl1-2 fence (`WallTowerLook.lookAlways`, doorways per join).
 > Moat: discussed, not built (user asked what "a blocking moat" means).
 > Rules (the user): Fence/Gate from `wall_walk_from_level` (3) are thick walls (WALK_T 0.78) with merlons on
 > both faces and a walk at `wall_walk_height_3..5` (0.9/1.1/1.3 cells); dark stone, juicy towers (tiled roof

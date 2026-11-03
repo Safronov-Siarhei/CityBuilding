@@ -256,24 +256,22 @@ namespace CityBuilder.EditorTools
             var holder = new GameObject("MoatBanks", typeof(MeshFilter), typeof(MeshRenderer));
             holder.transform.SetParent(root.transform, false);
             holder.GetComponent<MeshRenderer>().sharedMaterial = bankRenderer != null ? bankRenderer.sharedMaterial : null;
-            root.AddComponent<MoatAppearance>().Wire(holder.GetComponent<MeshFilter>(), bankFilter != null ? bankFilter.sharedMesh : null,
-                bankFilter != null ? bankFilter.transform.localToWorldMatrix : Matrix4x4.identity);
             // the model's own still water and bed lie wholly under the living water: not drawn
             foreach (var bed in root.GetComponentsInChildren<MeshRenderer>())
                 if (bed.gameObject != holder) bed.enabled = false;
 
-            // the living water over the model's still one (Shaders/MoatWater.shader): a flat quad a
-            // touch above it, under the banks' lip
-            var water = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            water.name = "MoatWater";
-            Object.DestroyImmediate(water.GetComponent<Collider>());
+            // the water over the model's (Shaders/MoatWater.shader): a flat cell a touch above it,
+            // under the banks' lip; its mesh (which sides are banks) is MoatAppearance's to give
+            var water = new GameObject("MoatWater", typeof(MeshFilter), typeof(MeshRenderer));
             water.transform.SetParent(root.transform, false);
             water.transform.localPosition = new Vector3(0f, 0.04f, 0f);
-            water.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            water.transform.localScale = new Vector3(CellSize, CellSize, 1f);
+            water.transform.localScale = new Vector3(CellSize, 1f, CellSize);
             var renderer = water.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = CrystalMaterial("MoatWater", "CityBuilder/MoatWater", null);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            root.AddComponent<MoatAppearance>().Wire(holder.GetComponent<MeshFilter>(), bankFilter != null ? bankFilter.sharedMesh : null,
+                bankFilter != null ? bankFilter.transform.localToWorldMatrix : Matrix4x4.identity, water.GetComponent<MeshFilter>());
         }
 
         private static void AddWallTowerLook(GameObject root, string id, Vector2Int footprint)
@@ -308,7 +306,8 @@ namespace CityBuilder.EditorTools
                     doors[(level - 3) * 4 * perSide + side * perSide + cell] = d;
                 }
             }
-            root.AddComponent<WallTowerLook>().Wire(bodies, doors, perSide, id == WallWalk.FortifiedTowerId);
+            // a tower of level 3+ always wears its new body, whatever the fence beside it (the user, 2026-11-03)
+            root.AddComponent<WallTowerLook>().Wire(bodies, doors, perSide, true);
         }
 
         private static void AddLevelModels(GameObject root, string id, GameObject levelOneModel, float levelOneHeight, Vector2Int footprint)

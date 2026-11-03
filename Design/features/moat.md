@@ -56,3 +56,12 @@
 - Banks: `MoatAppearance` combines the shown banks into ONE mesh per side-mask (16 cached, shared); Moat-Bank.fbx
   is imported Read/Write (`ModelImportDefaults`) for that. A cell = 2 draws (banks + water).
   `BuildingDrawCountTests` allows the MoatWater renderer by name.
+
+## 2026-11-03: sea-like water, wading to the knee, orders onto the moat
+- The living ripples were rejected («как море»). `Shaders/MoatWater.shader` now draws:
+  - dark still water;
+  - along each BANKED side only: a white foam line at the stone lip, then the shallows' turquoise fading into the deep (TerrainPalette sea colours).
+- The banked sides reach the shader through UV1.x of a per-side-mask quad. `MoatAppearance.Water(mask)` holds 16 cached meshes, laid in world axes like the banks. The quad is a plain MeshFilter (`MoatWater`) wired by `MoatAppearance.Wire(..., water)`.
+- Wading: every figure (soldier, hero, orc, citizen) is pinned `moat_wade_depth` (economy, 0.25) below the ground while `Moat.Wading` (`Moat.WadeDepthAt`, used in each `PinToGroundHeight`).
+- An army order tapped on a moat, road or crossing sets the destination; it no longer selects the building (`ArmyOrderInput.HandleWorldTap` skips `IsGroundWork || isCrossing`).
+- Not seen in game yet.

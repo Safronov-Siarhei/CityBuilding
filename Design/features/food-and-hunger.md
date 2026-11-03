@@ -18,7 +18,7 @@
 > - Пекарня: every working Farm within its service_radius (6) +`food_boost_baker_N` (= its level);
 >   Коптильня: the same for Fisher's Huts and Pig Farms. Bonuses STACK (an L1 + an L2 bakery = +3).
 >   Baker requires Farm, Smokehouse requires FisherHut.
-> - Windmill, Barn, BigBarn HIDDEN (`BuildingIds.Hidden`: off the build menu and the Laboratory);
+> - Windmill, Barn, BigBarn (and WaterMill + Dock, 2026-11-03, «не нужны») HIDDEN (`BuildingIds.Hidden`: off the build menu and the Laboratory);
 >   all food in the Pantries. Grain/Flour/Meat no longer made (off the inventory card).
 > - Card + workforce row: «Еда: +N в день» / the booster's «+N … в радиусе R клеток».
 > Numbers: economy rows 383-415; buildings max_workers 1, service_radius 6; recipes all -> Food.

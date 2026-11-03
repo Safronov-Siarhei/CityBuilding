@@ -73,6 +73,10 @@ namespace CityBuilder.Buildings
         public static float SpeedAt(Vector3 position) =>
             BalanceConfig.Instance != null && Wading(position) ? BalanceConfig.Instance.MoatSpeedMultiplier : 1f;
 
+        /// <summary>How far below the ground a figure standing here is drawn: sunk to the knee in the moat's water, 0 elsewhere.</summary>
+        public static float WadeDepthAt(Vector3 position) =>
+            BalanceConfig.Instance != null && Wading(position) ? BalanceConfig.Instance.MoatWadeDepth : 0f;
+
         // the cell's own banks and its neighbours' change with every piece laid or lost
         private static void RefreshAround(BuildingInstance moat)
         {

@@ -22,10 +22,11 @@ namespace CityBuilder.Buildings
         /// <summary>
         /// Buildings put away for now (the user, 2026-11-02, the food rework): the Windmill is gone
         /// from the food chain and the Barns from storage -- every food sits in the Pantries. They
-        /// keep their data and models; only the build menu and the Laboratory leave them out.
+        /// keep their data and models; only the build menu and the Laboratory leave them out. The Water
+        /// Mill and the Dock went the same way (the user, 2026-11-03: "they are not needed").
         /// </summary>
         public static readonly System.Collections.Generic.HashSet<string> Hidden =
-            new System.Collections.Generic.HashSet<string> { "Windmill", "Barn", "BigBarn" };
+            new System.Collections.Generic.HashSet<string> { "Windmill", "Barn", "BigBarn", "WaterMill", "Dock" };
 
         // the food rework's buildings (FoodOutput)
         public const string FisherHut = "FisherHut";

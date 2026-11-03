@@ -314,61 +314,6 @@ namespace CityBuilder.Tests.PlayMode
             return active;
         }
 
-        /// <summary>
-        /// An upgrade the player can SEE on a building with no level models of its own (the
-        /// Dock; the fence has been stone above level 1 since 2026-10-23): upgraded, it is pixel-for-pixel the fence that was not, and the only trace of
-        /// the resources is a number on a card. The disc is its whole feedback loop, so it is worth
-        /// a test that it appears at all, that it appears nowhere at level 1, and that it never
-        /// becomes something the player can tap by accident.
-        /// </summary>
-        [Test]
-        public void UpgradingAnUndrawnBuilding_HangsALevelDiscOverIt()
-        {
-            ResourceManager.Instance.SetInfiniteResources(true);
-
-            var house = Place(PlaytestWorld.Building("Dock"));
-            Assert.IsNull(LevelMarker(house), "A freshly placed building is already wearing a level marker -- level 1 is not an achievement.");
-
-            Assert.IsTrue(PlaytestWorld.UpgradeNow(house), "The Dock refused to upgrade with infinite resources.");
-            var marker = LevelMarker(house);
-            Assert.IsNotNull(marker, "An upgraded building shows nothing at all: the player has no way to tell it apart from one they never paid for.");
-            Assert.IsTrue(marker.activeInHierarchy, "The level marker exists but is switched off.");
-
-            // Not IsNull: Destroy only takes effect at the end of the frame, and the frame that
-            // matters is this one -- the player's finger is on the building they just upgraded.
-            var markerCollider = marker.GetComponent<Collider>();
-            Assert.IsTrue(markerCollider == null || !markerCollider.enabled,
-                "The level marker is still catching taps: it floats over the roof, so it swallows the ones meant for the building underneath it.");
-
-            var box = house.GetComponent<BoxCollider>();
-            Assert.Greater(marker.transform.localPosition.y, box.size.y,
-                "The level marker is sunk into the building instead of floating over its roof.");
-        }
-
-        /// <summary>The top level has to be legible as the top level on an undrawn building -- otherwise the last upgrade is the invisible one.</summary>
-        [Test]
-        public void TheTopLevel_LooksDifferentFromTheOneBelowIt()
-        {
-            ResourceManager.Instance.SetInfiniteResources(true);
-
-            var house = Place(PlaytestWorld.Building("Dock"));
-            Assert.IsTrue(PlaytestWorld.UpgradeNow(house), "The Dock refused to upgrade with infinite resources.");
-
-            var marker = LevelMarker(house);
-            var atLevelTwo = marker.transform.localScale.x;
-            var colorAtLevelTwo = marker.GetComponent<Renderer>().sharedMaterial.color;
-
-            while (house.Level < BuildingInstance.MaxLevel)
-            {
-                Assert.IsTrue(PlaytestWorld.UpgradeNow(house), $"The Dock refused to upgrade past level {house.Level} with infinite resources.");
-            }
-
-            Assert.AreEqual(BuildingInstance.MaxLevel, house.Level);
-            Assert.AreNotEqual(colorAtLevelTwo, marker.GetComponent<Renderer>().sharedMaterial.color,
-                "Level 2 and the top level wear the same marker -- the last upgrade changes nothing the player can see.");
-            Assert.Greater(marker.transform.localScale.x, atLevelTwo, "The top level's marker is no bigger than the one below it.");
-        }
-
         /// <summary>A building whose every level is modelled needs no disc: the model is the feedback, and a disc over it is clutter.</summary>
         [Test]
         public void AModelledBuilding_WearsNoMarkerAtAnyLevel()
