@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: DiplomacyHall
   displayName: "\u0417\u0430\u043B \u0434\u0438\u043F\u043B\u043E\u043C\u0430\u0442\u0438\u0438"
-  prefab: {fileID: 7931486286130602933, guid: 2f0c222abf7d98041afb2690c9bdf40e, type: 3}
+  prefab: {fileID: 7716029577737730721, guid: 2f0c222abf7d98041afb2690c9bdf40e, type: 3}
   footprintSize: {x: 4, y: 4}
   cost:
   - type: 0
     amount: 40
   - type: 1
     amount: 30
-  category: 4
+  category: 0
   isWaterCategory: 0
   isRoad: 0
   providesWalkableSurface: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
   isCrossing: 0
   keepSelectedAfterPlacement: 0
   levels:
-  - maxHealth: 0
+  - maxHealth: 200
     defense: 0
     housingCapacity: 0
     maxWorkers: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
     serviceRadius: 0
     happiness: 0
     buildSeconds: 22
-  - maxHealth: 0
+  - maxHealth: 320
     defense: 0
     housingCapacity: 0
     maxWorkers: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
     serviceRadius: 0
     happiness: 0
     buildSeconds: 25
-  - maxHealth: 0
+  - maxHealth: 500
     defense: 0
     housingCapacity: 0
     maxWorkers: 0
@@ -61,7 +61,7 @@ MonoBehaviour:
     serviceRadius: 0
     happiness: 0
     buildSeconds: 40
-  - maxHealth: 0
+  - maxHealth: 720
     defense: 0
     housingCapacity: 0
     maxWorkers: 0
@@ -71,7 +71,7 @@ MonoBehaviour:
     serviceRadius: 0
     happiness: 0
     buildSeconds: 65
-  - maxHealth: 0
+  - maxHealth: 1000
     defense: 0
     housingCapacity: 0
     maxWorkers: 0
@@ -82,7 +82,7 @@ MonoBehaviour:
     happiness: 0
     buildSeconds: 109
   recipes: []
-  productionIntervalSeconds: 0
+  productionIntervalSeconds: 6
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
@@ -112,7 +112,7 @@ MonoBehaviour:
     amount: 257
   - type: 5
     amount: 86
-  fogRevealRadius: 0
+  fogRevealRadius: 10
   citizensOnBuild: 0
   maxCount: 0
   requiredBuilding: {fileID: 0}
