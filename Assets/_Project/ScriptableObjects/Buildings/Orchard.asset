@@ -14,10 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Orchard
   displayName: "\u0424\u0440\u0443\u043A\u0442\u043E\u0432\u044B\u0439 \u0441\u0430\u0434"
-  prefab: {fileID: 6302178675279410797, guid: 56f19227af19d2b4f93e0886f3132d53, type: 3}
+  prefab: {fileID: 5908656941497362596, guid: 56f19227af19d2b4f93e0886f3132d53, type: 3}
   footprintSize: {x: 3, y: 3}
   cost:
   - type: 0
+    amount: 40
+  - type: 1
     amount: 12
   category: 5
   isWaterCategory: 0
@@ -25,6 +27,8 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   isGate: 0
+  isMoat: 0
+  isCrossing: 0
   keepSelectedAfterPlacement: 0
   levels:
   - maxHealth: 80
@@ -87,16 +91,24 @@ MonoBehaviour:
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 32
+    amount: 64
+  - type: 1
+    amount: 19
   upgradeToLevel3Cost:
   - type: 0
-    amount: 56
+    amount: 112
+  - type: 1
+    amount: 34
   upgradeToLevel4Cost:
   - type: 0
-    amount: 98
+    amount: 196
+  - type: 1
+    amount: 59
   upgradeToLevel5Cost:
   - type: 0
-    amount: 172
+    amount: 343
+  - type: 1
+    amount: 103
   fogRevealRadius: 10
   citizensOnBuild: 0
   maxCount: 0

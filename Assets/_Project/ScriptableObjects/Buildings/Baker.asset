@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Baker
   displayName: "\u041F\u0435\u043A\u0430\u0440\u043D\u044F"
-  prefab: {fileID: 5800766573681006363, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
+  prefab: {fileID: 7662879908061460343, guid: 0115da277642f054a93d7c6b984dacff, type: 3}
   footprintSize: {x: 1, y: 2}
   cost:
   - type: 0
@@ -27,6 +27,8 @@ MonoBehaviour:
   providesWalkableSurface: 0
   connectsToFences: 0
   isGate: 0
+  isMoat: 0
+  isCrossing: 0
   keepSelectedAfterPlacement: 0
   levels:
   - maxHealth: 110
@@ -81,12 +83,10 @@ MonoBehaviour:
     buildSeconds: 57
   recipes:
   - id: bread
-    displayName: "\u0425\u043B\u0435\u0431"
-    inputs:
-    - type: 9
-      amount: 1
+    displayName: "\u0415\u0434\u0430"
+    inputs: []
     output: 2
-    outputAmount: 3
+    outputAmount: 1
   productionIntervalSeconds: 24
   storageGroup: 0
   upgradeToLevel2Cost:

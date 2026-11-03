@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Bridge
   displayName: "\u041C\u043E\u0441\u0442"
-  prefab: {fileID: 3143534302570377286, guid: 7c92491e78e130547b5ad47a727e6358, type: 3}
+  prefab: {fileID: 4714714843212483251, guid: 7c92491e78e130547b5ad47a727e6358, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -25,6 +25,8 @@ MonoBehaviour:
   providesWalkableSurface: 1
   connectsToFences: 0
   isGate: 0
+  isMoat: 0
+  isCrossing: 1
   keepSelectedAfterPlacement: 1
   levels:
   - maxHealth: 40
@@ -84,13 +86,13 @@ MonoBehaviour:
   - type: 0
     amount: 13
   upgradeToLevel3Cost:
-  - type: 0
+  - type: 1
     amount: 22
   upgradeToLevel4Cost:
-  - type: 0
+  - type: 1
     amount: 38
   upgradeToLevel5Cost:
-  - type: 0
+  - type: 1
     amount: 67
   fogRevealRadius: 4
   citizensOnBuild: 0
