@@ -97,6 +97,7 @@ Proposed, not agreed:
     - The orc example is `Design/orc_main_base.json` from `Design/orc_main_base_blueprint.py`, a port of OrcBaseLayout.Main.
     - Its frame: x+19, y = 8 - top cell, so the gate is at the bottom.
     - Nothing in the game reads orc blueprints yet.
+  - **Joined walls (2026-11-03, user):** 1x1 walls (Fence, OrcPalisade) are drawn as a thick line joined to their neighbours (walls, towers, gates). A 2x2 block is a closed square, then L, T and +. Two passes, all outlines then all fills, so there is no seam.
 
 ## Built 2026-11-03, part 2: the castle, the garrison, the raids (not seen in game)
 - **The bot islands.** islands.py `BOT_PAD` (-20..20, -27..20): a flat, wood-free pad. Its -y side sits 19-23 m from the coast; a beach is put there. Scale 120 -> 160.
