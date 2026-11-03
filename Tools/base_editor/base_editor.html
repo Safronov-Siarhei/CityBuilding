@@ -302,18 +302,20 @@ function colourOf(id) { const b = BY_ID[id]; return OWN_COLOR[id] || (b ? CAT_CO
 // wall pieces join their neighbours into one line, as in the game: a 2x2 of walls is a closed
 // square, an L a corner, three in a row with one beside a T, a plus a cross
 const WALLS = new Set(["Fence", "OrcPalisade"]);
-const JOINS = new Set(["Fence", "Tower", "FortifiedTower", "Gate", "FortifiedGate", "OrcPalisade", "OrcGate", "OrcGateTower", "OrcWatchtower"]);
-function joinsAt(x, y) {
+// what each wall joins, as the game does: the town's fence its towers and gates (connectsToFences),
+// the orcs' palisade only its gates (OrcCamp.IsWallCell) -- not the watchtowers
+const JOINS = { Fence: new Set(["Fence", "Tower", "FortifiedTower", "Gate", "FortifiedGate"]), OrcPalisade: new Set(["OrcPalisade", "OrcGate", "OrcGateTower"]) };
+function joinsAt(x, y, wall) {
   const i = S.occ ? S.occ.get(x + "," + y) : undefined;
-  return i !== undefined && JOINS.has(S.bp.buildings[i].id);
+  return i !== undefined && JOINS[wall].has(S.bp.buildings[i].id);
 }
 function wallParts(b) {
   const c = S.cell, x = b.x * c, y = b.y * c, t = Math.max(4, Math.round(c * 0.5)), o = (c - t) / 2;
   const parts = [[x + o, y + o, t, t]];
-  if (joinsAt(b.x, b.y - 1)) parts.push([x + o, y, t, o]);
-  if (joinsAt(b.x, b.y + 1)) parts.push([x + o, y + o + t, t, o]);
-  if (joinsAt(b.x - 1, b.y)) parts.push([x, y + o, o, t]);
-  if (joinsAt(b.x + 1, b.y)) parts.push([x + o + t, y + o, o, t]);
+  if (joinsAt(b.x, b.y - 1, b.id)) parts.push([x + o, y, t, o]);
+  if (joinsAt(b.x, b.y + 1, b.id)) parts.push([x + o, y + o + t, t, o]);
+  if (joinsAt(b.x - 1, b.y, b.id)) parts.push([x, y + o, o, t]);
+  if (joinsAt(b.x + 1, b.y, b.id)) parts.push([x + o + t, y + o, o, t]);
   return parts;
 }
 // pass "edge" paints the dark outline under every wall first, pass "fill" the colour over it, so
