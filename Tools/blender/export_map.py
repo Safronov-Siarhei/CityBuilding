@@ -25,7 +25,7 @@ project, map_id, prefix = argv[0], argv[1], argv[2]
 folder = os.path.join(project, "Assets", "_Project", "Models", map_id)
 DUNGEON = prefix.startswith("Dungeon-")   # a dungeon (dungeon1.py): no forest, no water zone
 PARTS = ("Ground", "Water") if DUNGEON else ("Ground", "Water", "TreesArea", "PlaceForWaterObjects")
-OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit", "Props", "HireCamp", "PotionShop", "ExitGlow")
+OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit", "Props", "HireCamp", "PotionShop", "ExitGlow", "Door")
 
 
 def objects_of(part):

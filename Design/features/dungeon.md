@@ -262,14 +262,35 @@ dungeon opens as a SEPARATE SCENE.
 - **More water, wading passages** (the user, 2026-11-03 «пусть по некоторым проходам игрок ходит по
   воде»): 4 canals; ~1/3 of passages are FLOODED, i.e. shallow water the heroes walk through -- those
   running along a canal and all inside the flooded quarters (`FLOOD_ZONES`). A dry passage crosses a
-  canal on a bridge, a flooded one by a ford. The game will need a walkable shallow-water floor (and
-  maybe a slow-down) -- not decided.
+  canal on a bridge, a flooded one by a ford. **No slow-down in the water** (the user, 2026-11-03):
+  wading is only a look -- the shallow floor is ordinary walkable ground under the water surface.
 - **Halls are LIVING SHAPES, never rectangles** (the user, a standing rule for every dungeon): each
   big hall is a union of overlapping blobs; the plan json carries them (`hall_blobs`, plus
   `flooded`, `fords`, `flood_zones`) for the Blender build.
 - Plan: `Tools/blender/dungeon2_plan.py <png> [seed]`, seed 92: 343 passages, 115 flooded, 17
-  bridges, 12 fords, 10 crystal rooms, levers ~1129/629 m, king ~1157 m, serpent ~1186 m. Sent to
-  the user 2026-11-03, awaiting approval.
+  bridges, 12 fords, 10 crystal rooms, levers ~1129/629 m, king ~1157 m, serpent ~1186 m. Approved
+  2026-11-03 («делай в блендере»).
+- **Blender map: `Tools/blender/dungeon2.py`** (a copy of dungeon1.py reworked; ~2.5 min) ->
+  `D:/blender projects/Buildings3D/Dungeon-2.blend`, preview via dungeon_preview.py. Sent to the user
+  2026-11-03, **awaiting approval; not exported, not in the game yet**.
+  - Water: ONE surface at WATER_Z -0.12; the wading floor at SHALLOW_Z -0.42 is still ground
+    (above CLIP_Z -0.47 -> walkable, a land cell); deep beds fall below CLIP_Z -> no ground -> a
+    water cell. Deep = canals between halls (never inside a hall rect, at a ford) + the serpent's
+    pool; shallow = flooded passages, the great and serpent halls, canal banks, fords.
+  - Bridges: the deck is GROUND (`bridge_at` in height_at, kept out of relief), the stone bridge
+    prop sits on it; banks near a bridge kept dry.
+  - Halls: the plan's blobs x0.66 with wobble 0.6 (at full size they merged back into the
+    rectangle -- the first build looked square); the hall floor colour and the wet halls follow
+    `hall_sd`, never the rect.
+  - Props: dwarven columns, throne, levers, forges, bridges, fords; `on_floor` drops a prop onto
+    the wading floor. The lever door's bars are their own object `Dungeon-2-Door` (export_map
+    exports it) so the game can raise them.
+  - Points csv adds `lever` x2, `door`, `throne`, `boss_king`, `boss_serpent`; lairs/crystals/
+    patrols via dungeon_lairs' helpers.
+  - Budget to watch (mobile): ground 144k, relief 152k, water 45k, props 65k tris, decor 27k
+    items (~1M tris) -- ~2.3x level 1's area; check in the game step.
+  - Game step still to do: export, CreateDungeonDefinition for Dungeon2, entrance level 2 -> it,
+    lever/door logic, the new monsters and both bosses (models first, for approval).
 
 ## Proposed, NOT agreed yet (ask, don't build)
 - (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
