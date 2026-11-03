@@ -173,6 +173,7 @@ namespace CityBuilder.Combat
                 var any = BuildingInstance.HasAny(BuildingIds.TownHall);
                 foreach (var instance in any ? FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None) : new BuildingInstance[0])
                 {
+                    if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                     if (instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) continue;
                     var footprint = instance.RotatedFootprint();
                     _hall = grid != null ? grid.GetFootprintCenterWorld(instance.OriginCell, footprint) : instance.transform.position;

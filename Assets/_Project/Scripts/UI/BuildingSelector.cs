@@ -51,6 +51,15 @@ namespace CityBuilder.UI
                 else focus.SelectForeign(foreign);
                 return;
             }
+            if (nearest != null && nearest.IsBot)
+            {
+                // the bot kingdom's building: its card, read only (the user, 2026-11-03)
+                if (focus != null) focus.Clear();
+                if (infoPanel != null) infoPanel.Close();
+                if (researchPanel != null) researchPanel.Close();
+                ForeignBuildingCard.Instance?.Show(nearest);
+                return;
+            }
             if (nearest == null)
             {
                 if (focus != null) focus.Clear();

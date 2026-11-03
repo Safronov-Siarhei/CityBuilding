@@ -88,6 +88,7 @@ namespace CityBuilder.Combat
 
             foreach (var instance in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null) continue;
                 buildingLevels += instance.Level;
                 defence += instance.Defense;

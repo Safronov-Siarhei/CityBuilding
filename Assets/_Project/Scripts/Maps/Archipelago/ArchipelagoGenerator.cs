@@ -62,7 +62,7 @@ namespace CityBuilder.Maps.Archipelago
             var side = rng.Next01() * Mathf.PI * 2f;
             var c = World / 2f;
             var flank = Mathf.PI / 2f * (rng.Next01() < 0.5f ? 1f : -1f);
-            foreach (var (kind, size, turn) in new[] { (Kind.Start, 130, 0f), (Kind.Orc, 125, Mathf.PI), (Kind.Bot, 120, flank) })
+            foreach (var (kind, size, turn) in new[] { (Kind.Start, 130, 0f), (Kind.Orc, 125, Mathf.PI), (Kind.Bot, 160, flank) })
             {
                 var done = false;
                 for (var attempt = 0; attempt < 25 && !done; attempt++)
@@ -264,7 +264,7 @@ namespace CityBuilder.Maps.Archipelago
 
             Clear(map, map.StartCell, new Vector2Int(StartZoneRadius + 6, StartZoneRadius + 6), flatten: true);
             Clear(map, map.OrcBaseCell, MainBaseHalf, flatten: true);
-            Clear(map, map.BotCell, new Vector2Int(14, 14), flatten: true);
+            Clear(map, map.BotCell, new Vector2Int(BotHalf, BotHalf), flatten: true);
         }
 
         private static void Clear(ArchipelagoMap map, Vector2Int centre, Vector2Int half, bool flatten)
@@ -286,11 +286,14 @@ namespace CityBuilder.Maps.Archipelago
         {
             Kind.Start => new Vector2Int(StartZoneRadius + 4, StartZoneRadius + 4),
             Kind.Orc => MainBaseHalf,
-            Kind.Bot => new Vector2Int(14, 14),
+            Kind.Bot => new Vector2Int(BotHalf, BotHalf),
             _ => Vector2Int.zero,
         };
 
         public static int StartZoneRadiusMeters => StartZoneRadius;
+
+        /// <summary>The bot kingdom's castle ground round its spot (Design/bot_castle_v2.json: a 35x35 body, islands.py BOT_PAD).</summary>
+        private const int BotHalf = 20;
     }
 
     /// <summary>One island in its own square frame before and after it is placed.</summary>

@@ -270,6 +270,7 @@ namespace CityBuilder.Ships
             {
                 foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                 {
+                    if (building.IsBot) continue;   // the bot kingdom's, not the town's
                     if (building.Data == null || building.Data.buildingName != ShipyardId || !building.IsOperational) continue;
                     if (TrySampleSea(building.transform.position, 12f, out var sea)) Consider(sea);
                 }

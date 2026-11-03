@@ -67,6 +67,7 @@ namespace CityBuilder.Invasion
             var config = BalanceConfig.Instance;
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null || instance.Data.buildingName != HealerBuildingName || !instance.IsOperational) continue;
                 var radius = instance.ServiceRadius;
                 if (radius <= 0) continue;

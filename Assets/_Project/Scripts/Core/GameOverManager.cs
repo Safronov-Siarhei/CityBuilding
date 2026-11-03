@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -90,7 +90,7 @@ namespace CityBuilder.Core
 
         private void HandleBuildingDestroyed(BuildingInstance instance)
         {
-            if (IsGameOver || instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) return;
+            if (IsGameOver || instance.IsBot || instance.Data == null || instance.Data.buildingName != BuildingIds.TownHall) return;
 
             EndGame(victory: false, Localization.Get("#log_defeat_townhall"));
         }

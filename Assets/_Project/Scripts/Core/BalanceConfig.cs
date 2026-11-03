@@ -443,6 +443,8 @@ namespace CityBuilder.Core
         [SerializeField] private float botTradeMinScore = 30f;
         [SerializeField] private float botWarDeclareScoreLoss = 40f;
         [SerializeField] private float botRelationsDriftPerDay = 2f;
+        [SerializeField] private float botRebuildCalmSeconds = 60f;
+        [SerializeField] private float botCalmRadiusCells = 45f;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -966,6 +968,10 @@ namespace CityBuilder.Core
         public float BotWarDeclareScoreLoss => botWarDeclareScoreLoss;
         /// <summary>How far the scale creeps back towards 0 in a day.</summary>
         public float BotRelationsDriftPerDay => botRelationsDriftPerDay;
+        /// <summary>How long the bot's castle must be clear of orcs before it rebuilds what a raid destroyed (the user, 2026-11-03).</summary>
+        public float BotRebuildCalmSeconds => botRebuildCalmSeconds;
+        /// <summary>How far round the bot's castle an orc still counts as its raid.</summary>
+        public float BotCalmRadiusCells => botCalmRadiusCells;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1641,6 +1647,8 @@ namespace CityBuilder.Core
             botTradeMinScore = Read(economy, "bot_trade_min_score", botTradeMinScore);
             botWarDeclareScoreLoss = Read(economy, "bot_war_declare_score_loss", botWarDeclareScoreLoss);
             botRelationsDriftPerDay = Read(economy, "bot_relations_drift_per_day", botRelationsDriftPerDay);
+            botRebuildCalmSeconds = Read(economy, "bot_rebuild_calm_sec", botRebuildCalmSeconds);
+            botCalmRadiusCells = Read(economy, "bot_calm_radius_cells", botCalmRadiusCells);
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);

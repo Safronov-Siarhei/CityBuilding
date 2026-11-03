@@ -104,6 +104,7 @@ namespace CityBuilder.Core
 
             foreach (var instance in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data != null && instance.Data.buildingName == buildingName) return instance;
             }
             return null;

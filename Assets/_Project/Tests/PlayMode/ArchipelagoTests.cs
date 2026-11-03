@@ -121,6 +121,53 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>A save on the archipelago brings back its own islands: the same seed, the 500 m world, the Town Hall where it stood.</summary>
+        /// <summary>
+        /// The bot kingdom (the user, 2026-11-03): its castle stands whole on the bot island from
+        /// the start -- none of it counted as the town's -- and what a raid destroys comes back.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheBotKingdom_StandsOnItsIsland_OutsideTheTownsSums_AndRebuilds()
+        {
+            var kingdom = Bot.BotKingdom.Instance;
+            Assert.IsNotNull(kingdom, "No BotKingdom in the scene.");
+            for (var i = 0; i < 120 && !kingdom.Placed; i++) yield return null;
+            Assert.IsTrue(kingdom.Placed, "The bot's castle was never placed on the archipelago.");
+            Assert.IsNotNull(kingdom.Hall, "The bot's castle has no Town Hall.");
+            Assert.IsTrue(kingdom.Hall.IsBot);
+
+            var bot = MeshMapApplier.Instance.ArchipelagoBotCell.Value;
+            var standing = 0;
+            BuildingInstance manor = null;
+            foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (!b.IsBot) continue;
+                standing++;
+                Assert.LessOrEqual((b.OriginCell - bot).magnitude, 30f, $"A bot {b.Data.buildingName} stands off its island at {b.OriginCell}.");
+                if (manor == null && b.Data.buildingName == "Manor") manor = b;
+            }
+            Assert.Greater(standing, 500, "The bot's castle stands only in part.");
+            // revealed for the photograph only (the fog keeps it until a scout gets there)
+            Maps.FogOfWarManager.Instance?.RevealPermanent(bot, 40);
+            for (var i = 0; i < 5; i++) yield return null;
+            yield return PlaytestCapture.Shoot("bot_castle", kingdom.Hall.transform.position, 70f, 55f, 20f);
+            Assert.AreEqual(0, BuildingInstance.CountOf("Manor"), "The bot's manors count as the town's.");
+            Assert.AreEqual(0, BuildingInstance.CountOf(BuildingIds.TownHall), "The bot's Town Hall counts as the town's.");
+            Assert.IsNull(BuildingInstance.TownHall, "The bot's Town Hall became the town's.");
+
+            // a raid knocks a manor down; the bot raises it again
+            Assert.IsNotNull(manor);
+            var at = manor.OriginCell;
+            manor.TryDamage(100000);
+            yield return null;
+            Assert.IsTrue(manor == null, "The manor stood through the damage.");
+            Assert.IsFalse(kingdom.HallRazed);
+            kingdom.Rebuild();
+            var back = false;
+            foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                if (b.IsBot && b.OriginCell == at && b.Data.buildingName == "Manor") back = true;
+            Assert.IsTrue(back, "The bot did not rebuild its manor.");
+        }
+
         [UnityTest]
         public IEnumerator ASave_BringsBackItsArchipelago()
         {

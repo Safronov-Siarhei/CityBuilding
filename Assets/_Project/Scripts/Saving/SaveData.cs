@@ -61,6 +61,10 @@ namespace CityBuilder.Saving
         public bool botRelationsSaved;
         public float botRelations;
         public int botStance;
+        /// <summary>The bot kingdom's castle (Bot.BotKingdom): its Town Hall razed, and which of its blueprint's buildings are down.</summary>
+        public bool botCastleSaved;
+        public bool botHallRazed;
+        public List<int> botMissing = new List<int>();
 
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;

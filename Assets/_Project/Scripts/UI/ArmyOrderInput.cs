@@ -129,7 +129,7 @@ namespace CityBuilder.UI
                 if (tapped == null) continue;
                 // ground you walk on is a destination, not a building to open: a moat, a road, a bridge
                 // (the user, 2026-11-03: an order onto the moat selected the moat)
-                if (tapped.Data != null && (tapped.Data.IsGroundWork || tapped.Data.isCrossing)) continue;
+                if (tapped.IsBot || (tapped.Data != null && (tapped.Data.IsGroundWork || tapped.Data.isCrossing))) continue;
                 army.SelectGroup(null);
                 return false;
             }

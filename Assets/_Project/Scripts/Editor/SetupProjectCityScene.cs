@@ -474,6 +474,11 @@ namespace CityBuilder.EditorTools
             sicknessManagerSO.FindProperty("citizenManager").objectReferenceValue = citizenManager;
             sicknessManagerSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // the bot kingdom's castle on the archipelago's bot island, from the base editor's blueprint (the user, 2026-11-03)
+            var botKingdom = managers.AddComponent<Bot.BotKingdom>();
+            var botSo = new SerializedObject(botKingdom);
+            botSo.FindProperty("blueprint").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Bot/BotCastle.json");
+            botSo.ApplyModifiedPropertiesWithoutUndo();
             // Fires. No wiring: it finds what is standing, what is burning and who can reach it by
             // scanning, once a game day, and every number it needs is in the sheet.
             var fireManager = managers.AddComponent<FireManager>();

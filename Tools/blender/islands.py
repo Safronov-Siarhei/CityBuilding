@@ -35,7 +35,7 @@ if not os.path.exists(MODELS):     # the islands live in a folder of their own n
     MODELS = os.path.join(os.path.dirname(os.path.dirname(OUT)), "Buildings-Size1-Models.blend")
 PREFIX = f"Isl-{KIND}{VARIANT}"
 
-_SCALES = {'start': 130, 'orc': 125, 'bot': 120, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
+_SCALES = {'start': 130, 'orc': 125, 'bot': 160, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
            'crescent': 150, 'atoll': 150, 'islet': 70}
 N = int(round(_SCALES[KIND] * 1.4 / 2)) * 2
 HALF = N // 2
@@ -101,7 +101,7 @@ KINDS = {
     #          scale, base shape, relief, hills, beaches, rim height
     'start':    (130, 'round', 'flat', 2, (2, 3), 1.4),
     'orc':      (125, 'round', 'rocky', 0, (2, 2), 2.6),
-    'bot':      (120, 'round', 'flat', 2, (2, 3), 1.4),
+    'bot':      (160, 'round', 'flat', 2, (2, 3), 1.4),
     'flat':     (150, 'round', 'flat', 3, (2, 3), 1.4),
     'hilly':    (150, 'round', 'hill', 1, (2, 3), 1.8),
     'rocky':    (150, 'round', 'rocky', 0, (1, 1), 2.8),
@@ -266,11 +266,23 @@ if KIND == 'orc':
         # near the coast: the orcs' shipyard stands by their base
         return -worst - total * 0.3
     MAIN_BASE = _search(_orc_score)
+# the bot kingdom's castle (the user's scheme, 2026-11-03: Design/bot_castle_v2.json): a body of
+# 35x35 cells round the spot, its harbour on the -y side -- the coast 19-23 m below the spot, where
+# the shipyard stands out over the water; flat, no relief and no wood on it all (camp_pad)
+BOT_PAD = (-20.0, 20.0, -27.0, 20.0)
 if KIND == 'bot':
     def _bot_score(x, y):
-        m = _clear(x, y, 16.0, 6.0)
-        return None if m is None else -m * 5 - math.hypot(x, y) * 0.02
-    BOT = _search(_bot_score)
+        total = 0.0
+        for dx in (-19.0, -10.0, 0.0, 10.0, 19.0):
+            for dy in (-17.0, -8.0, 0.0, 10.0, 19.0):
+                if coast_sd(x + dx, y + dy) < 3.0:
+                    return None
+                total += raw_mountains(x + dx, y + dy)
+        shore = coast_sd(x, y - 21.0)
+        if shore < -2.5 or shore > 2.0 or coast_sd(x, y - 27.0) > -1.0:
+            return None
+        return -total * 0.3 - abs(shore) * 2.0 - math.hypot(x, y) * 0.01
+    BOT = _search(_bot_score, step=2.0)
 
 
 def camp_pad(x, y):
@@ -279,7 +291,9 @@ def camp_pad(x, y):
     if KIND == 'start':
         best = smoothstep(ZONE_R + 10.0, ZONE_R + 4.0, math.hypot(x - START[0], y - START[1]))
     if KIND == 'bot' and BOT:
-        best = smoothstep(22.0, 16.0, math.hypot(x - BOT[0], y - BOT[1]))
+        x0, x1, y0, y1 = BOT_PAD
+        d = max(x0 + BOT[0] - x, x - x1 - BOT[0], y0 + BOT[1] - y, y - y1 - BOT[1])
+        best = smoothstep(4.0, 0.0, d)
     if KIND == 'orc':
         x0, x1, y0, y1 = MAIN_PAD
         mx, my = MAIN_BASE
@@ -311,6 +325,9 @@ def _beaches():
         p = _coast_point(a)
         if p:
             out.append(p)
+    if KIND == 'bot' and BOT:
+        # one at the bot's harbour, below its castle
+        out.append((BOT[0], BOT[1] - 21.0))
     tries = 0
     while len(out) < want and tries < 200:
         tries += 1

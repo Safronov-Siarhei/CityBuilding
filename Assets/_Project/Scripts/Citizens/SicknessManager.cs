@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Resources;
@@ -169,6 +169,7 @@ namespace CityBuilder.Citizens
             var healers = 0;
             foreach (var instance in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null || instance.Data.buildingName != HealerBuildingName) continue;
 
                 var workplace = instance.GetComponent<ProductionBuilding>();
@@ -227,6 +228,7 @@ namespace CityBuilder.Citizens
 
             foreach (var instance in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null) continue;
 
                 if (instance.Data.buildingName == WellBuildingName)
@@ -264,6 +266,7 @@ namespace CityBuilder.Citizens
             var all = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
             foreach (var instance in all)
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null || instance.Data.buildingName != WellBuildingName) continue;
                 var radius = instance.ServiceRadius;
                 if (radius > 0) wells.Add((instance.transform.position, radius * (float)radius));

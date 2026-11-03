@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -233,6 +233,7 @@ namespace CityBuilder.Combat
         {
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data != null && instance.Data.buildingName == TownHallBuildingName)
                 {
                     position = instance.transform.position;

@@ -183,6 +183,41 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>
+        /// The bot kingdom's building (Bot.BotKingdom, the user 2026-11-03), standing whole at `level`:
+        /// it walls, shoots, spans and slows like the town's own -- fence joins, walk walls, gates,
+        /// moat, crossings, NavMesh -- and touches none of the town's sums: no count, storage,
+        /// housing, house list, Town Hall, fog reveal, nor workers (its ProductionBuilding goes).
+        /// </summary>
+        public void InitializeAsBot(BuildingData data, Vector2Int originCell, int rotationSteps, int level)
+        {
+            IsBot = true;
+            Data = data;
+            OriginCell = originCell;
+            _levelAppearance = GetComponent<BuildingLevelAppearance>();
+            _fenceAppearance = GetComponent<FenceAppearance>();
+            RotationSteps = ((rotationSteps % 4) + 4) % 4;
+            Level = Mathf.Clamp(level, 1, MaxLevel);
+            CurrentHealth = HealthAt(Level);
+            Decay = 0f;
+            var production = GetComponent<ProductionBuilding>();
+            if (production != null)
+            {
+                production.enabled = false;
+                Destroy(production);
+            }
+            if (data == null) return;
+            if (WallWalk.Concerns(data.buildingName)) WallWalk.MarkDirty();
+            SetupNavMeshObstacle(data);
+            if (data.providesWalkableSurface) MeshMapApplier.Instance?.RegisterWalkableSurface(this);
+            if (data.connectsToFences) RegisterFenceCells();
+            if (data.isGate && !GatesStanding.Contains(this)) GatesStanding.Add(this);
+            if (data.isMoat) Moat.Add(this);
+            if (data.isCrossing) Moat.Span(this, true);
+            _levelAppearance?.Apply(Level);
+            _fenceAppearance?.SetLevel(Level);
+        }
+
+        /// <summary>
         /// Every cell this building covers joins the fence line, so a two-cell gate connects on
         /// both of its tiles rather than only where its origin happens to sit. Registering the
         /// segment's own FenceAppearance (null for anything that just connects) is what lets
@@ -234,7 +269,7 @@ namespace CityBuilder.Buildings
                 // First, before anything that reaches into other objects: when a scene unloads
                 // those may already be gone, and an exception further down used to leave this
                 // building counted -- the next game then believed its Town Hall already stood.
-                ChangeCount(Data.buildingName, -1);
+                if (!IsBot) ChangeCount(Data.buildingName, -1);
                 if (WallWalk.Concerns(Data.buildingName)) WallWalk.MarkDirty();
                 _houses.Remove(this);
                 if (TownHall == this) TownHall = null;
@@ -243,8 +278,8 @@ namespace CityBuilder.Buildings
                 if (Data.providesWalkableSurface || Data.isGate || Data.isMoat) MeshMapApplier.Instance?.UnregisterWalkableSurface(this);
                 if (Data.isMoat) Moat.Remove(this);
                 if (Data.isCrossing) Moat.Span(this, false);
-                if (!_storageHeld) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
-                ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
+                if (!_storageHeld && !IsBot) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
+                if (!IsBot) ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
                 {
                     // Leaves a real gap: the segments either side re-shape into dead ends, which is
@@ -336,7 +371,8 @@ namespace CityBuilder.Buildings
             ShowHealthBar();
             if (CurrentHealth > 0) return;
 
-            EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_combat", Data.LocalizedName), EventSeverity.Danger, EventGlyph.Ruin));
+            // (the bot kingdom's losses are not the town's news)
+            if (!IsBot) EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_combat", Data.LocalizedName), EventSeverity.Danger, EventGlyph.Ruin));
             OnDestroyedInCombat?.Invoke(this);
             FreeCellsAndDestroy();
         }

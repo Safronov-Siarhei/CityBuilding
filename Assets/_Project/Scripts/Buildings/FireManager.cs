@@ -67,7 +67,7 @@ namespace CityBuilder.Buildings
             // Collected first. Igniting inside the enumeration would let a building that caught
             // fire this very morning spread it the same morning, which reads as two fires rather
             // than one.
-            var standing = Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None);
+            var standing = System.Array.FindAll(Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None), b => !b.IsBot);
 
             var burning = new List<BuildingInstance>();
             foreach (var instance in standing)
@@ -157,6 +157,7 @@ namespace CityBuilder.Buildings
             _brigades.Clear();
             foreach (var instance in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null || instance.Data.buildingName != FireBrigadeBuildingName) continue;
 
                 var radius = instance.ServiceRadius;

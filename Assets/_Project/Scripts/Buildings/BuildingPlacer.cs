@@ -663,6 +663,7 @@ namespace CityBuilder.Buildings
                 var grid = GridManager.Instance;
                 foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                 {
+                    if (building.IsBot) continue;   // the bot kingdom's, not the town's
                     var at = map.IslandAt(building.OriginCell);
                     if (at >= 0) _islandsSettled.Add(at);
                 }
@@ -827,7 +828,7 @@ namespace CityBuilder.Buildings
             _onlyOneCheckedAt = Time.unscaledTime;
             _onlyOneStands = false;
             foreach (var building in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
-                if (building.Data != null && building.Data.buildingName == _selectedBuilding.buildingName) _onlyOneStands = true;
+                if (!building.IsBot && building.Data != null && building.Data.buildingName == _selectedBuilding.buildingName) _onlyOneStands = true;
             return _onlyOneStands;
         }
 

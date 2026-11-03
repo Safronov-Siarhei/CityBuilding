@@ -103,6 +103,7 @@ namespace CityBuilder.Cheats
                 var mended = 0;
                 foreach (var b in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                 {
+                    if (b.IsBot) continue;   // the bot kingdom's, not the town's
                     if (b.Data == null || b.CurrentHealth >= b.MaxHealth) continue;
                     b.SetCondition(b.MaxHealth, 0f);
                     mended++;
@@ -132,6 +133,7 @@ namespace CityBuilder.Cheats
                     {
                         foreach (var b in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                         {
+                            if (b.IsBot) continue;   // the bot kingdom's, not the town's
                             if (b.Data != null && b.Data.buildingName == focus.Data.buildingName) { SetBuildingLevel(b, level); count++; }
                         }
                     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
@@ -561,6 +561,7 @@ namespace CityBuilder.Citizens
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data != null && instance.Data.buildingName == BuildingIds.TownHall)
                 {
                     var footprint = instance.RotatedFootprint();

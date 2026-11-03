@@ -22,6 +22,7 @@ namespace CityBuilder.UI
         public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
 
         private OrcCampBuilding _shown;
+        private Buildings.BuildingInstance _bot;
 
         private void Awake() => Instance = this;
 
@@ -33,7 +34,18 @@ namespace CityBuilder.UI
         public void Show(OrcCampBuilding building)
         {
             if (building == null || panelRoot == null) return;
+            _bot = null;
             _shown = building;
+            panelRoot.SetActive(true);
+            Refresh();
+        }
+
+        /// <summary>A building of the bot kingdom (BuildingInstance.IsBot): whose, its level and health.</summary>
+        public void Show(Buildings.BuildingInstance building)
+        {
+            if (building == null || panelRoot == null) return;
+            _shown = null;
+            _bot = building;
             panelRoot.SetActive(true);
             Refresh();
         }
@@ -41,12 +53,18 @@ namespace CityBuilder.UI
         public void Close()
         {
             _shown = null;
+            _bot = null;
             if (panelRoot != null) panelRoot.SetActive(false);
         }
 
         private void Update()
         {
             if (!IsOpen) return;
+            if (_bot != null)
+            {
+                Refresh();
+                return;
+            }
             if (_shown == null || _shown.CurrentHealth <= 0)
             {
                 Close();
@@ -57,6 +75,15 @@ namespace CityBuilder.UI
 
         private void Refresh()
         {
+            if (_bot != null)
+            {
+                if (title != null) title.text = _bot.Data != null ? _bot.Data.LocalizedName : string.Empty;
+                if (body != null)
+                    body.text = $"{Localization.Get("#foreign_owner")}: {Localization.Get("#foreign_owner_bot")}\n"
+                        + $"{Localization.Get("#foreign_level")}: {_bot.Level}\n"
+                        + $"{Localization.Get("#foreign_health")}: {_bot.CurrentHealth} / {_bot.MaxHealth}";
+                return;
+            }
             if (title != null) title.text = NameOf(_shown);
             if (body == null) return;
             var text = $"{Localization.Get("#foreign_owner")}: {Localization.Get("#foreign_owner_orcs")}\n"

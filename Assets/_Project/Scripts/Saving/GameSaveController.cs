@@ -190,6 +190,7 @@ namespace CityBuilder.Saving
             {
                 gameCalendar.SetCurrentDay(data.currentDay);
                 if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance);
+                if (data.botCastleSaved && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.Restore(data.botHallRazed, data.botMissing);
             }
 
             if (taxManager != null)
@@ -348,6 +349,7 @@ namespace CityBuilder.Saving
         {
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.OriginCell == cell) return instance;
             }
             return null;
@@ -648,6 +650,11 @@ namespace CityBuilder.Saving
                 data.botRelationsSaved = true;
                 data.botRelations = Diplomacy.BotRelations.Score;
                 data.botStance = (int)Diplomacy.BotRelations.Stance;
+                if (Bot.BotKingdom.Instance != null && Bot.BotKingdom.Instance.Placed)
+                {
+                    data.botCastleSaved = true;
+                    Bot.BotKingdom.Instance.Capture(out data.botHallRazed, data.botMissing);
+                }
                 var orcShips = Ships.ShipManager.Instance;
                 if (orcShips != null)
                 {
@@ -793,6 +800,7 @@ namespace CityBuilder.Saving
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null) continue;
 
                 var fire = instance.GetComponent<Buildings.BuildingFire>();

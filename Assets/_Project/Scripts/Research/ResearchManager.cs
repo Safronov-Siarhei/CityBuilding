@@ -168,6 +168,7 @@ namespace CityBuilder.Research
                 ProductionBuilding bestWorkplace = null;
                 foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                 {
+                    if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                     if (instance.Data == null || instance.Data.buildingName != LaboratoryBuildingId) continue;
 
                     var workplace = instance.GetComponent<ProductionBuilding>();

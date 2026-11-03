@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Resources;
@@ -208,6 +208,7 @@ namespace CityBuilder.Core
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
+                if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.DecaysOverTime)
                 {
                     totalDecay += instance.Decay;
