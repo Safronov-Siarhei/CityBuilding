@@ -4,6 +4,18 @@
 > the darkness, the GNOME HIRE CAMP and the POTION SHOP (both 2026-11-01, user not seen them yet).
 > Not done: dungeons of levels 2-3 (own maps). Not measured on a phone.
 > Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes), orc-faction (OrcUnit).
+> **2026-11-03: FOUR level-1 dungeons** (the user: «разные генерации для подземелья уровня 1 ... как с
+> островами»). `dungeon_plan.py <png> <seed> <layout>`: hall LAYOUTS A-D (camp always south by the way out;
+> bosses, lake, arenas elsewhere; A = the approved plan, reproduced exactly). Plans `dungeon1b/c/d-plan.json`
+> = layout B seed 31, C seed 8, D seed 5 (seeds picked so each boss is 650-830 m from the camp, 8 crystal
+> rooms; A is ~700). `dungeon1.py -- <blend> variant=b` builds `Dungeon-1B` (blends next to Dungeon-1.blend),
+> exported to Models/Dungeon1B..D, maps `Dungeon1B..D` (SetupProjectCityScene loops `DungeonTravel.LevelOneIds`).
+> A mouth's dungeon: `DungeonTravel.LevelOneFor(seed, version, k)` -- a v3 map's three mouths lead to three
+> different variants, the first by the seed; a v2 map (old save) keeps Dungeon1 (bosses slain / crystals
+> taken are kept per dungeon id). Tests: PlayMode `DungeonVariantTests` (each variant loads, both bosses
+> reachable along a winding way, no two with bosses in the same halls; mouths differ per map). The
+> variants' looks were not reviewed by the user; `DungeonTests` still run on Dungeon1 only.
+
 
 ## What the player sees
 On the map: an abandoned mine in a small grassy mountain. The player's HERO walks into it, and the

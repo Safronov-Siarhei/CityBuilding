@@ -20,8 +20,27 @@ namespace CityBuilder.Dungeon
     /// </summary>
     public static class DungeonTravel
     {
-        /// <summary>The one dungeon so far (Tools/blender/dungeon1.py).</summary>
+        /// <summary>The approved first dungeon (Tools/blender/dungeon1.py on dungeon1-plan.json).</summary>
         public const string FirstDungeonId = "Dungeon1";
+
+        /// <summary>
+        /// The level-1 dungeons, so players do not see one labyrinth on every map (the user,
+        /// 2026-11-03): the approved one and its variants -- other hall layouts and mazes
+        /// (dungeon_plan.py layouts B-D, dungeon1.py variant=b..d), each its own map Dungeon-1&lt;V&gt;.
+        /// </summary>
+        public static readonly string[] LevelOneIds = { FirstDungeonId, "Dungeon1B", "Dungeon1C", "Dungeon1D" };
+
+        /// <summary>
+        /// The dungeon behind a map's `entrance`-th mouth (0 = level 1, nearest the Town Hall): from
+        /// the map's seed, the mouths of one map all different. A version-2 map keeps Dungeon 1, as
+        /// it was saved with it (bosses slain and crystals taken are kept per dungeon id).
+        /// </summary>
+        public static string LevelOneFor(int seed, int version, int entrance)
+        {
+            if (version <= 2) return FirstDungeonId;
+            var first = (int)((uint)(seed * 2654435761u) % (uint)LevelOneIds.Length);
+            return LevelOneIds[(first + entrance) % LevelOneIds.Length];
+        }
 
         /// <summary>A sandbox town may send its heroes down; a run and a dungeon may not.</summary>
         public static bool CanEnter => !Invasion.InvasionMode.IsActive && !DungeonMode.IsActive && !LoadingScreen.Busy;

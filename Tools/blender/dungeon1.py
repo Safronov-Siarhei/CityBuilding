@@ -27,7 +27,11 @@ style -- its geometry and forms»): built the way the island maps are (map5.py) 
 - the props (building palette): the camp's gnome hut, the potion stall, the fire, mine supports
   and rails, the bridge, crystals, giant glowing mushrooms, the spider lair, the golem's hall.
 
-    blender --background --factory-startup --python dungeon1.py -- <out.blend> [preview]
+    blender --background --factory-startup --python dungeon1.py -- <out.blend> [preview] [variant=b]
+
+`variant=b|c|d` (the user, 2026-11-03: level-1 dungeons in several generations, like the islands)
+builds from dungeon1<v>-plan.json (dungeon_plan.py, another hall layout and seed) as Dungeon-1<V>;
+no variant is the approved Dungeon 1 (dungeon1-plan.json).
 
 Light points are Empties DungeonLight_<kind>_<n> (lanterns, fires, crystals, mushrooms) for the
 preview (dungeon_preview.py) and, later, the game.
@@ -51,7 +55,8 @@ from terrain import TerrainBuilder  # noqa: E402
 argv = sys.argv[sys.argv.index("--") + 1:]
 OUT = argv[0]
 PREVIEW = "preview" in argv[1:]
-PREFIX = "Dungeon-1"
+VARIANT = next((a.split("=", 1)[1].lower() for a in argv[1:] if a.startswith("variant=")), "")
+PREFIX = "Dungeon-1" + VARIANT.upper()
 # Built in "metres" for a 1.8 m person, then shrunk to the GAME's units (one map cell; a hero is
 # 0.6-0.8 tall): the 200 x 200 build comes out 88 x 88 cells (the user chose this, 2026-10-31).
 SCALE = 0.44
@@ -101,7 +106,7 @@ def smoothstep(e0, e1, x):
 
 import json  # noqa: E402
 
-PLAN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon1-plan.json"), encoding="utf-8"))
+PLAN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), f"dungeon1{VARIANT}-plan.json"), encoding="utf-8"))
 CELL = PLAN["cell"]
 BIG = {k: tuple(v) for k, v in PLAN["big"].items()}
 POS = {(c[0], c[1]): (c[2], c[3]) for c in PLAN["pos"]}

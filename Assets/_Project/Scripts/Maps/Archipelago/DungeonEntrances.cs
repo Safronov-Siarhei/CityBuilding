@@ -13,7 +13,8 @@ namespace CityBuilder.Maps.Archipelago
     /// user, 2026-11-02), the others on islands that are neither the start's, the orcs' nor the bot's.
     /// Nearer the start = lower level (1, 2, 3 -- the user: weaker monsters, smaller rewards near
     /// the Town Hall). Each stands on the plain nearest its island's middle, its mouth turned to
-    /// the start. From the map's seed alone, so nothing is saved.
+    /// the start. From the map's seed alone, so nothing is saved; so is which level-1 dungeon each
+    /// mouth leads to (DungeonTravel.LevelOneFor).
     /// </summary>
     public static class DungeonEntrances
     {
@@ -179,7 +180,8 @@ namespace CityBuilder.Maps.Archipelago
             box.size = new Vector3(Footprint.x - 0.6f, 3f, Footprint.y - 0.6f);
             box.center = new Vector3(0f, 1.5f, 0f);
             var entrance = root.AddComponent<DungeonEntrance>();
-            entrance.Initialize(level, DungeonTravel.FirstDungeonId, origin);
+            // which labyrinth: from the map's seed, the mouths of a map all different (2026-11-03)
+            entrance.Initialize(level, DungeonTravel.LevelOneFor(world.Seed, world.Version, level - 1), origin);
             return entrance;
         }
     }

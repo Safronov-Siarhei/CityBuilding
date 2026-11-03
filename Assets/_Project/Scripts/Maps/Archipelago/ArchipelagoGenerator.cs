@@ -58,7 +58,7 @@ namespace CityBuilder.Maps.Archipelago
         public static ArchipelagoMap Generate(int seed, int version = Version)
         {
             var rng = new SeedRandom(seed);
-            var map = new ArchipelagoMap(seed, World);
+            var map = new ArchipelagoMap(seed, World) { Version = version };
             var library = ArchipelagoLibrary.Load();
             var used = new HashSet<IslandAsset>();
             Island Make(Kind kind, int size, int shapeSeed)
@@ -353,6 +353,8 @@ namespace CityBuilder.Maps.Archipelago
         public Vector2Int OrcBaseCell;
         public Vector2Int BotCell;
         public readonly List<Island> Islands = new List<Island>();
+        /// <summary>The generator version that drew it (a version-2 map keeps its old dungeon).</summary>
+        public int Version = ArchipelagoGenerator.Version;
 
         public ArchipelagoMap(int seed, int size)
         {

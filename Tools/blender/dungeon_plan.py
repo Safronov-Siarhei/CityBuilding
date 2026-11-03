@@ -13,7 +13,11 @@ Plan v3 (the user, 2026-10-31: «the right angles and cubic rooms -- give it a l
 passages but more detail»): a coarser 14 x 14 grid (~14 m cells), every cell's node nudged off
 its centre and every passage bent, so nothing runs on a ruler.
 
-    python dungeon_plan.py <out.png> [seed]
+    python dungeon_plan.py <out.png> [seed] [layout]
+
+Layouts (the user, 2026-11-03: «разные генерации для подземелья уровня 1»): where the halls lie.
+The camp always stays at the south edge (the way out faces the camera, which looks north); the
+bosses, the lake and the arenas move. Layout A is the approved Dungeon 1's.
 
 Writes the picture and, next to it, <out>.json (cells, links, rooms) for the 3D build to follow.
 """
@@ -26,19 +30,26 @@ from PIL import Image, ImageDraw, ImageFont
 G = 14                      # cells a side
 CELL = 200 / G              # metres (~14.3)
 SEED = int(sys.argv[2]) if len(sys.argv) > 2 else 7
+LAYOUT = sys.argv[3] if len(sys.argv) > 3 else "A"
 LOOPS = 4                   # extra links: few, so most wrong turns stay wrong
 CRYSTAL_ROOMS = 8           # the farthest dead ends hold crystals; the rest are empty, to mislead
 
 # halls: name -> (x0, y0, w, h) in cells; y = 0 is the south edge, where the way in is
-BIG = {
-    "camp": (5, 0, 4, 2),
-    "lake": (5, 5, 4, 4),
-    "golem": (0, 10, 4, 4),
-    "spiders": (10, 10, 4, 4),
-    "west": (1, 4, 2, 2),
-    "east": (11, 4, 2, 2),
-    "deep": (6, 11, 2, 2),
+LAYOUTS = {
+    # the approved Dungeon 1: lake in the middle, a boss in each far corner
+    "A": {"camp": (5, 0, 4, 2), "lake": (5, 5, 4, 4), "golem": (0, 10, 4, 4), "spiders": (10, 10, 4, 4),
+          "west": (1, 4, 2, 2), "east": (11, 4, 2, 2), "deep": (6, 11, 2, 2)},
+    # mirrored: the bosses swap corners, the lake leans west
+    "B": {"camp": (5, 0, 4, 2), "lake": (4, 4, 4, 4), "golem": (10, 10, 4, 4), "spiders": (0, 10, 4, 4),
+          "west": (1, 3, 2, 2), "east": (10, 5, 2, 2), "deep": (6, 10, 2, 2)},
+    # the lake off to the east, the golem halfway up the west side, the spiders far north
+    "C": {"camp": (5, 0, 4, 2), "lake": (8, 4, 4, 3), "golem": (0, 6, 4, 4), "spiders": (6, 10, 4, 4),
+          "west": (2, 2, 2, 2), "east": (11, 9, 2, 2), "deep": (1, 12, 2, 2)},
+    # the lake west, the spiders halfway up the east side, the golem far north-west
+    "D": {"camp": (5, 0, 4, 2), "lake": (2, 4, 4, 3), "golem": (3, 10, 4, 4), "spiders": (10, 6, 4, 4),
+          "west": (10, 2, 2, 2), "east": (0, 8, 2, 2), "deep": (10, 12, 2, 2)},
 }
+BIG = LAYOUTS[LAYOUT]
 JITTER = 0.32               # how far a passage's node strays from its cell's centre (of a cell)
 BEND = 0.35                 # how far a passage bows sideways (of its length)
 ONE_WAY = {"golem", "spiders"}     # a boss lair is entered by one passage only
@@ -236,7 +247,7 @@ def main():
         json.dump({"cell": CELL, "grid": G, "big": BIG, "links": links, "crystal_rooms": crystal_rooms,
                    "monster_halls": monster_halls, "dead_ends": dead_ends,
                    "pos": [[c[0], c[1], p[0], p[1]] for c, p in pos.items()], "bends": bends}, f)
-    print("PLAN seed", SEED, "links", len(links), "crystal rooms", len(crystal_rooms), "dead ends", len(dead_ends),
+    print("PLAN layout", LAYOUT, "seed", SEED, "links", len(links), "crystal rooms", len(crystal_rooms), "dead ends", len(dead_ends),
           "to spiders", dist.get("spiders"), "to golem", dist.get("golem"))
 
 

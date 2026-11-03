@@ -653,9 +653,13 @@ namespace CityBuilder.EditorTools
             // always winter, a fir forest only (the conifers of trees1.py), its own New Year rules.
             CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.NewYearMapId, "Inv-2", null,
                 MapSeason.Winter, new[] { "Tree2", "Tree5", "Tree6", "Tree9" });
-            // The first dungeon (Tools/blender/dungeon1.py): the labyrinth the heroes walk while the
-            // town waits (Dungeon/DungeonMode). Not in any picker -- DungeonTravel opens it.
-            CreateDungeonDefinition(CityBuilder.Dungeon.DungeonTravel.FirstDungeonId, "Dungeon-1");
+            // The level-1 dungeons (Tools/blender/dungeon1.py, the approved plan and variants b-d):
+            // the labyrinths the heroes walk while the town waits (Dungeon/DungeonMode). Not in any
+            // picker -- a mouth on the map opens one (DungeonTravel.LevelOneFor).
+            foreach (var dungeonId in CityBuilder.Dungeon.DungeonTravel.LevelOneIds)
+            {
+                CreateDungeonDefinition(dungeonId, "Dungeon-1" + dungeonId.Substring("Dungeon1".Length));
+            }
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
