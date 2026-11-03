@@ -245,6 +245,21 @@ dungeon opens as a SEPARATE SCENE.
     (`research_crystals_from_level`).
   - 46 buildings x levels 3/4/5 = 138, plus unit levels 3 ≈ 142 crystals for everything.
 
+## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
+- **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,
+  ruined forges. Continues the gnome hirelings' story. Not the overgrown mine of level 1.
+- **Bosses:** the CURSED DWARF KING (raises stone guards) and the WATER SERPENT in the main canal
+  (dives and surfaces).
+- **Monsters:** about half new, half the known ones made stronger (rats -> drowned ones, skeletons ->
+  armoured dwarf skeletons), to save models and phone budget.
+- **New mechanic: LEVER DOORS.** The way to a boss opens once the hero has pulled the levers in two
+  far halls -- the labyrinth gets a goal, not just «walk to the end».
+- **Size: 1.5x level 1** (the user) -- build 300 x 300 units -> ~132 x 132 cells at SCALE 0.44.
+- **Variants:** ONE first, tested, then the others (unlike level 1's four at once).
+- **Camp:** the same gnome hire camp and potion shop.
+- Order of work (as for level 1): the PLAN first for approval, then the Blender map, then the new
+  monster/boss models for approval, then the game.
+
 ## Proposed, NOT agreed yet (ask, don't build)
 - (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
 - Room content:
