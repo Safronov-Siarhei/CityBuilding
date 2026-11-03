@@ -17,6 +17,8 @@
 > island has its spot, v2 takes only 1-2, orc island unturned on 40 seeds). Bot castles on turned bot
 > islands checked only on seed 1 (bot test). TRAP: anything that changes the picks for a seed needs a
 > version bump AND the old version reproduced, or old saves wake up on different islands.
+> FLAKY: `AnOrcFleet_SailsFromTheirShipyard_AndLandsItsRaid` failed once in the full PlayMode run
+> («An orc was landed in the sea», line 450) and passed alone twice right after (2026-11-03).
 
 
 > **2026-11-02 (correction):** the user meant «too little STONE», not land: the start island is back to
