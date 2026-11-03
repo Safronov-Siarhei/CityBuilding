@@ -26,6 +26,10 @@ namespace CityBuilder.Bot
     public class BotKingdom : MonoBehaviour
     {
         [SerializeField] private TextAsset blueprint;
+        // the bot's roofs, gold and banners in its own turquoise, so the player sees at a glance
+        // whose they are (the user, 2026-11-03): every renderer on the town's palette swapped onto the bot's copy
+        [SerializeField] private Material buildingsPalette;
+        [SerializeField] private Material botPalette;
 
         public static BotKingdom Instance { get; private set; }
 
@@ -184,6 +188,7 @@ namespace CityBuilder.Bot
             var instance = go.GetComponent<BuildingInstance>();
             if (instance == null) instance = go.AddComponent<BuildingInstance>();
             instance.InitializeAsBot(slot.data, slot.origin, slot.steps, slot.level);
+            Dress(go);
             grid.SetAreaOccupied(slot.origin, footprint, true);
             if (slot.data.isRoad && RoadNetwork.Instance != null)
             {
@@ -303,6 +308,28 @@ namespace CityBuilder.Bot
                 slot.instance = null;
             }
             if (razed) Hall = null;
+        }
+
+        private static readonly List<Renderer> DressRenderers = new List<Renderer>();
+
+        /// <summary>Every renderer under `root` (the level models it keeps hidden too) on the town's palette moved onto the bot's.</summary>
+        private void Dress(GameObject root)
+        {
+            if (buildingsPalette == null || botPalette == null) return;
+            root.GetComponentsInChildren(true, DressRenderers);
+            foreach (var renderer in DressRenderers)
+            {
+                var materials = renderer.sharedMaterials;
+                var changed = false;
+                for (var i = 0; i < materials.Length; i++)
+                {
+                    if (materials[i] != buildingsPalette) continue;
+                    materials[i] = botPalette;
+                    changed = true;
+                }
+                if (changed) renderer.sharedMaterials = materials;
+            }
+            DressRenderers.Clear();
         }
     }
 }

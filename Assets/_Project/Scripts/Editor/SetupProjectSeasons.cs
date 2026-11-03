@@ -50,6 +50,8 @@ namespace CityBuilder.EditorTools
             looks.looks[(int)MapSeason.Winter] = SeasonLook("Winter", terrain, buildings, 1f, new Color(0.88f, 0.93f, 1f));
             looks.looks[(int)MapSeason.Spring] = SeasonLook("Spring", terrain, buildings, 0f, new Color(1f, 0.98f, 0.94f));
             EditorUtility.SetDirty(looks);
+            // the bot kingdom's buildings draw through a copy with its own roof colour (Bot.BotKingdom)
+            MaterialCopy(buildings, ModelImportDefaults.BotPaletteMaterialPath, ModelImportDefaults.BotPaletteTexturePath);
             AssetDatabase.SaveAssets();
         }
 

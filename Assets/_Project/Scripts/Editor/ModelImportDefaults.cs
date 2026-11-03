@@ -52,6 +52,10 @@ namespace CityBuilder.EditorTools
 
         /// <summary>The seasons' palettes (Tools/blender/seasons.py): imported exactly as the two above.</summary>
         public const string SeasonPalettesFolder = "Assets/_Project/Models/Palette/Seasons/";
+
+        /// <summary>The bot kingdom's palette: roofs, gold and banners in its turquoise (Tools/palette/bot_palette.py), imported as the buildings' own.</summary>
+        public const string BotPaletteTexturePath = "Assets/_Project/Models/Palette/BotPalette.png";
+        public const string BotPaletteMaterialPath = "Assets/_Project/Models/Palette/BotPalette.mat";
         public const string ExportedTerrainMaterialName = "Terrain";
 
         private void OnPreprocessModel()
@@ -129,7 +133,7 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != BotPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would

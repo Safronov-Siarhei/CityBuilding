@@ -478,6 +478,8 @@ namespace CityBuilder.EditorTools
             var botKingdom = managers.AddComponent<Bot.BotKingdom>();
             var botSo = new SerializedObject(botKingdom);
             botSo.FindProperty("blueprint").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Bot/BotCastle.json");
+            botSo.FindProperty("buildingsPalette").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.PaletteMaterialPath);
+            botSo.FindProperty("botPalette").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.BotPaletteMaterialPath);
             botSo.ApplyModifiedPropertiesWithoutUndo();
             // Fires. No wiring: it finds what is standing, what is burning and who can reach it by
             // scanning, once a game day, and every number it needs is in the sheet.
