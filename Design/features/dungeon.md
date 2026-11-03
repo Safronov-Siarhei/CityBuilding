@@ -289,8 +289,18 @@ dungeon opens as a SEPARATE SCENE.
     patrols via dungeon_lairs' helpers.
   - Budget to watch (mobile): ground 144k, relief 152k, water 45k, props 65k tris, decor 27k
     items (~1M tris) -- ~2.3x level 1's area; check in the game step.
-  - Game step still to do: export, CreateDungeonDefinition for Dungeon2, entrance level 2 -> it,
-    lever/door logic, the new monsters and both bosses (models first, for approval).
+- **IN THE GAME as an EMPTY walk-through** (the user, 2026-11-03: «подключи эту карту в
+  подземелье 2 ... пока что не добавляй монстров и ресурсы, я хочу просто пройтись»):
+  - exported to `Models/Dungeon2/Dungeon-2-*` (`export_map.py -- <project> Dungeon2 Dungeon-2`),
+    `CreateDungeonDefinition("Dungeon2", "Dungeon-2")` in SetupProjectCityScene;
+  - `DungeonTravel.LevelTwoId` + `DungeonFor(seed, version, level)`: level 2 -> Dungeon2, levels
+    1 and 3 -> a level-1 labyrinth (no level-3 map yet);
+  - `dungeon2.py POPULATED = False`: no lair/boss/reward/crystal/patrol points, so no monsters and
+    no crystals. Set it True (and give the game king/serpent bosses) when they are made;
+  - the lever door's bars (`Dungeon-2-Door.fbx`) are exported but NOT loaded by the game yet, so
+    the way to the throne is open; levers do nothing yet;
+  - test `DungeonVariantTests.TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot`.
+  - Still to do: lever/door logic, the new monsters and both bosses (models first, for approval).
 
 ## Proposed, NOT agreed yet (ask, don't build)
 - (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
@@ -698,7 +708,9 @@ dungeon opens as a SEPARATE SCENE.
 - The crystal chip on the top bar redraws when the count changes (`ResourceHUDController.OnCrystalsChanged`);
   it used to wait for the coins to move.
 - Archipelago: the level-1 entrance stands on the START island, >= 22 cells from the Town Hall's spot
-  (`DungeonEntrances.Place`, `AwayFromHallCells`); the others on other islands as before.
+  (`DungeonEntrances.Place`, `AwayFromHallCells`). Since 2026-11-03 (the user: «поставь здание
+  подземелья 2 и 3 уровня на стартовом острове») levels 2 and 3 stand there too, each further from
+  the hall (`freeOnGrid` keeps 3 cells between mouths); what finds no room goes to other islands.
 
 ## Files
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,

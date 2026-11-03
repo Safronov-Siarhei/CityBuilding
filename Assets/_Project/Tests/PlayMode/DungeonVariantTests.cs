@@ -81,6 +81,60 @@ namespace CityBuilder.Tests.PlayMode
             DungeonMode.LeaveWhenAllFall = true;
         }
 
+        /// <summary>
+        /// The level-2 dungeon, the drowned dwarven halls (the user, 2026-11-03: «подключи эту карту
+        /// в подземелье 2 ... пока что не добавляй монстров и ресурсы, я хочу просто пройтись»): the
+        /// heroes come down at its camp, nothing lives there and no crystal lies there yet, and the
+        /// throne and both levers are reached on foot -- through the wading passages and over the
+        /// bridges, as the water is laid.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            Time.timeScale = 1f;
+            DungeonMode.LeaveWhenAllFall = false;
+            var id = DungeonTravel.LevelTwoId;
+            SaveSystem.Delete(SaveSystem.HiddenTownSlot);
+            GameSessionIntent.DungeonId = id;
+            GameSessionIntent.DungeonLevel = 2;
+            GameSessionIntent.DungeonHeroes = new List<HeroEntry> { new HeroEntry { type = SoldierType.King, level = 3 } };
+            GameSessionIntent.DungeonReturnName = "town";
+            GameSessionIntent.NewGameMapId = id;
+            var before = DungeonMode.Instance;
+            SceneManager.LoadScene("CityBuilder", LoadSceneMode.Single);
+            for (var frame = 0; frame < 900; frame++)
+            {
+                if (DungeonMode.Instance != null && DungeonMode.Instance != before && DungeonMode.Instance.Arrived) break;
+                yield return null;
+            }
+            yield return new WaitForFixedUpdate();
+            Physics.SyncTransforms();
+
+            Assert.IsNotNull(DungeonMode.Instance, "No dungeon came up.");
+            Assert.IsTrue(DungeonMode.Instance.Arrived, "The heroes never arrived.");
+            Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId, "Another map came up.");
+            var map = MeshMapApplier.Instance.CurrentMap;
+            foreach (var kind in new[] { "lair", "reward", "crystal", "patrol_0", "boss_golem", "boss_spiders" })
+                Assert.AreEqual(0, map.SpotsOf(kind).Count, $"The walk-through dungeon has {kind} spots.");
+            Assert.AreEqual(0, Object.FindObjectsByType<CityBuilder.Combat.OrcUnit>(FindObjectsSortMode.None).Length, "Monsters live in the walk-through dungeon.");
+
+            var start = DungeonMode.Instance.StartSpot;
+            Assert.IsTrue(NavMesh.SamplePosition(start, out var from, 1f, NavMesh.AllAreas), "The camp has no NavMesh.");
+            var goals = new List<MapSpot>(map.SpotsOf("throne"));
+            goals.AddRange(map.SpotsOf("lever"));
+            Assert.AreEqual(3, goals.Count, "The throne and two levers are not all on the map.");
+            foreach (var goal in goals)
+            {
+                var at = new Vector3(goal.position.x, 0f, goal.position.y);
+                Assert.IsTrue(NavMesh.SamplePosition(at, out var to, 4f, NavMesh.AllAreas), $"The {goal.kind} at {goal.position} has no floor.");
+                var path = new NavMeshPath();
+                NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path);
+                Assert.AreEqual(NavMeshPathStatus.PathComplete, path.status, $"The {goal.kind} at {goal.position} cannot be reached from the camp.");
+            }
+            DungeonMode.LeaveWhenAllFall = true;
+        }
+
         /// <summary>The mouths of one map lead to different labyrinths, and the pick changes from map to map; an old (version-2) map keeps Dungeon 1.</summary>
         [Test]
         public void TheMouthsOfAMap_LeadToDifferentDungeons()

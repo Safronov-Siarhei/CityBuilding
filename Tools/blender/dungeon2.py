@@ -36,6 +36,9 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 OUT = argv[0]
 PREVIEW = "preview" in argv[1:]
 PREFIX = "Dungeon-2"
+# no monsters, crystals or patrols yet (the user, 2026-11-03: «пока что не добавляй монстров и
+# ресурсы, я хочу просто пройтись и осмотреть его в игре») -- True writes them into the points
+POPULATED = False
 # Built in "metres" for a 1.8 m person, then shrunk to the GAME's units as Dungeon 1: the 300 x 300
 # build comes out 132 x 132 cells.
 SCALE = 0.44
@@ -1415,7 +1418,8 @@ def build_props(b):
     for i, c in enumerate(PLAN["crystal_rooms"]):
         x, y = cell_centre(c)
         cx, cy, _ = w(x, y)
-        rewards.append((cx, cy, 1.6 + min(0.0, height_at(x, y)[0])))
+        if POPULATED:
+            rewards.append((cx, cy, 1.6 + min(0.0, height_at(x, y)[0])))
 
 
 # -- scene -----------------------------------------------------------------------------------
@@ -1612,7 +1616,7 @@ def main():
         for kind, pts in (("lever", levers), ("door", doors), ("throne", thrones)):
             for x, y, z in pts:
                 f.write(f"{kind},{x * SCALE:.3f},{y * SCALE:.3f},0.000\n")
-        for lk, lx, ly in lair_rows():
+        for lk, lx, ly in (lair_rows() if POPULATED else ()):
             f.write(f"{lk},{lx:.3f},{ly:.3f},0.000\n")
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()

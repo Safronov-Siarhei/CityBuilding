@@ -578,11 +578,12 @@ namespace CityBuilder.Tests.PlayMode
             {
                 var e = entrances[k];
                 Assert.AreEqual(k + 1, e.Level, "The levels are not 1, 2, 3.");
-                Assert.AreEqual(CityBuilder.Dungeon.DungeonTravel.LevelOneFor(Seed, ArchipelagoGenerator.Version, k), e.DungeonId);
+                Assert.AreEqual(CityBuilder.Dungeon.DungeonTravel.DungeonFor(Seed, ArchipelagoGenerator.Version, k + 1), e.DungeonId);
                 Assert.IsNotNull(MeshMapCatalog.GetById(e.DungeonId), $"No map behind the mouth's {e.DungeonId}.");
                 Assert.IsNotNull(e.transform.Find("Model"), "An entrance has no mine model.");
-                var d = Vector2.Distance(new Vector2(e.Cell.x, e.Cell.y), start);
-                Assert.Greater(d, last, "A deeper dungeon is nearer the start than a shallower one.");
+                // its middle, as DungeonEntrances.TryFindSpot orders them (three share the start island)
+                var d = Vector2.Distance(new Vector2(e.Cell.x + DungeonEntrances.Footprint.x * 0.5f, e.Cell.y + DungeonEntrances.Footprint.y * 0.5f), start);
+                Assert.GreaterOrEqual(d, last, "A deeper dungeon is nearer the start than a shallower one.");
                 last = d;
                 for (var x = 0; x < DungeonEntrances.Footprint.x; x++)
                 for (var z = 0; z < DungeonEntrances.Footprint.y; z++)

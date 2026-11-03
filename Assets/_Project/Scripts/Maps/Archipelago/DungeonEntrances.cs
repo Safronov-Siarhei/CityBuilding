@@ -43,17 +43,21 @@ namespace CityBuilder.Maps.Archipelago
             if (islands.Count == 0) return placed;
 
             var level = 0;
-            // level 1 on the Town Hall's own island (the user, 2026-11-02: «подземелье 1-го уровня
-            // должно спавниться с ратушей игрока на одном острове»), clear of where the hall goes
+            // levels 1, 2 and 3 on the Town Hall's own island (the user, 2026-11-02: «подземелье
+            // 1-го уровня должно спавниться с ратушей игрока на одном острове»; 2026-11-03: «поставь
+            // здание подземелья 2 и 3 уровня на стартовом острове»), clear of where the hall goes,
+            // each further off than the last; what finds no room there goes to the other islands
             foreach (var island in world.Islands)
             {
                 if (island.Kind != ArchipelagoGenerator.Kind.Start) continue;
-                if (!TryFindSpot(world, island, applier, out var home, world.StartCell)) break;
-                level++;
-                var first = Build(world, grid, prefab, home, level, start);
-                foreach (var cell in Cells(home)) noBuild.Add(cell);
-                grid.SetAreaOccupied(home, Footprint, true);
-                placed.Add(first);
+                while (level < want && TryFindSpot(world, island, applier, out var home, world.StartCell, freeOnGrid: level > 0))
+                {
+                    level++;
+                    var mouth = Build(world, grid, prefab, home, level, start);
+                    foreach (var cell in Cells(home)) noBuild.Add(cell);
+                    grid.SetAreaOccupied(home, Footprint, true);
+                    placed.Add(mouth);
+                }
                 break;
             }
             var rest = want - level;
@@ -181,7 +185,7 @@ namespace CityBuilder.Maps.Archipelago
             box.center = new Vector3(0f, 1.5f, 0f);
             var entrance = root.AddComponent<DungeonEntrance>();
             // which labyrinth: from the map's seed, the mouths of a map all different (2026-11-03)
-            entrance.Initialize(level, DungeonTravel.LevelOneFor(world.Seed, world.Version, level - 1), origin);
+            entrance.Initialize(level, DungeonTravel.DungeonFor(world.Seed, world.Version, level), origin);
             return entrance;
         }
     }

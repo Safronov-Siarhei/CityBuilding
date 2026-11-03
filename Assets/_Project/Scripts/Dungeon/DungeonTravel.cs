@@ -31,6 +31,20 @@ namespace CityBuilder.Dungeon
         public static readonly string[] LevelOneIds = { FirstDungeonId, "Dungeon1B", "Dungeon1C", "Dungeon1D" };
 
         /// <summary>
+        /// The level-2 dungeon, «Затопленные гномьи чертоги» (Tools/blender/dungeon2.py on
+        /// dungeon2-plan.json): one variant for now (the user, 2026-11-03: one first, tested, then
+        /// the others), and empty -- no monsters or crystals -- for a first walk through it.
+        /// </summary>
+        public const string LevelTwoId = "Dungeon2";
+
+        /// <summary>
+        /// The dungeon behind a map's level-`level` mouth: level 2 is the drowned halls; levels 1
+        /// and 3 (no level-3 map yet) a level-1 labyrinth, as LevelOneFor picks.
+        /// </summary>
+        public static string DungeonFor(int seed, int version, int level)
+            => level == 2 ? LevelTwoId : LevelOneFor(seed, version, level - 1);
+
+        /// <summary>
         /// The dungeon behind a map's `entrance`-th mouth (0 = level 1, nearest the Town Hall): from
         /// the map's seed, the mouths of one map all different. A version-2 map keeps Dungeon 1, as
         /// it was saved with it (bosses slain and crystals taken are kept per dungeon id).
