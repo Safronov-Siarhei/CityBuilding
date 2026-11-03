@@ -211,6 +211,18 @@ namespace CityBuilder.Dungeon
             }
         }
 
+        /// <summary>
+        /// The cheat window's «Снять туман подземелья» (the user, 2026-11-04: not to run the whole
+        /// map to see it): every cell open, faded in as a reveal is.
+        /// </summary>
+        public void RevealAll()
+        {
+            if (_open == null) return;
+            for (var i = 0; i < _open.Length; i++) _open[i] = true;
+            _easing = true;
+            Draw();
+        }
+
         /// <summary>Each standing hero floods the floor round him, _reach steps out.</summary>
         private void Reveal()
         {

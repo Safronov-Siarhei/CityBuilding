@@ -576,9 +576,12 @@ namespace CityBuilder.Combat
             }
 
             PinToGroundHeight();
+            Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);   // rings round a wading walker
             FaceTowards(transform.position + direction);
             _escape.Watch(transform, direction, _walkSpeed);
         }
+
+        private float _wakeClock;
 
         private void FaceTowards(Vector3 worldPosition)
         {

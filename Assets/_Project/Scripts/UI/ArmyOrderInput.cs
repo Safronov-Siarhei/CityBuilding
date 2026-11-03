@@ -28,6 +28,8 @@ namespace CityBuilder.UI
 
         [SerializeField] private Camera targetCamera;
         [SerializeField] private GameObject orderFlagPrefab;
+        // the ships' buoy, for an order into a dungeon's water (the user, 2026-11-04)
+        [SerializeField] private GameObject orderBuoyPrefab;
 
         // Same sizing rationale as CitizenSelector: a shallow camera ray crosses a lot of forest,
         // and RaycastNonAlloc drops hits arbitrarily once the buffer is full.
@@ -264,7 +266,7 @@ namespace CityBuilder.UI
                 if (_orderMarker != null) return _orderMarker;
                 // its own object: this input lives under the UI canvas
                 _orderMarker = new GameObject("ArmyOrderMarker").AddComponent<MoveOrderMarker>();
-                _orderMarker.Configure(orderFlagPrefab);
+                _orderMarker.Configure(orderFlagPrefab, orderBuoyPrefab);
                 return _orderMarker;
             }
         }

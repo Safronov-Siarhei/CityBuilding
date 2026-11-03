@@ -91,6 +91,8 @@ namespace CityBuilder.Dungeon
         private void Awake()
         {
             Instance = this;
+            DungeonFloor.Clear();
+            DungeonWaypoints.Clear();
             _active = !string.IsNullOrEmpty(GameSessionIntent.DungeonId);
             DungeonId = GameSessionIntent.DungeonId;
             Level = GameSessionIntent.DungeonLevel;
@@ -116,6 +118,8 @@ namespace CityBuilder.Dungeon
             if (Instance != this) return;
             Instance = null;
             Hero.HoldWhereLeft = false;
+            DungeonFloor.Clear();
+            DungeonWaypoints.Clear();
         }
 
         /// <summary>The way out, as a mouth the heroes are sent to and its card opens from.</summary>
@@ -165,6 +169,16 @@ namespace CityBuilder.Dungeon
             DungeonDaylight.LightAll(map, transform);
             HireCamp = MakeCamp(map, "hirecamp", DungeonEntrance.Place.HireCamp);
             Shop = MakeCamp(map, "potionshop", DungeonEntrance.Place.Shop);
+            // the floor under the water: everyone wades knee-deep and slower, and stands up on a
+            // bridge's deck (the user, 2026-11-04)
+            var water = MeshMapApplier.Instance.WaterInstance;
+            var surface = float.NegativeInfinity;
+            if (water != null)
+                foreach (var r in water.GetComponentsInChildren<Renderer>()) surface = Mathf.Max(surface, r.bounds.max.y);
+            DungeonFloor.Build(MeshMapApplier.Instance, MapHalf, surface);
+            // the road map for the long ways round, then the levers and the door they open (Dungeon 2)
+            DungeonWaypoints.Build(MapHalf);
+            gameObject.AddComponent<DungeonLevers>().Begin(map, DungeonId);
             SpawnHeroes();
             // only the tunnels the heroes reach, and the minimap drawn from them
             gameObject.AddComponent<DungeonFog>().Begin(MapHalf);

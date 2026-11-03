@@ -72,6 +72,13 @@ namespace CityBuilder.Maps
         public GameObject PropsPrefab => propsPrefab;
 
         [SerializeField] private GameObject exitGlowPrefab;
+        // Dungeon 2's lever door: its bars (raised when every lever is pulled) and a lever's arm
+        // (one placed on each `lever` spot), Tools/blender/dungeon2.py
+        [SerializeField] private GameObject doorPrefab;
+        [SerializeField] private GameObject leverArmPrefab;
+
+        public GameObject DoorPrefab => doorPrefab;
+        public GameObject LeverArmPrefab => leverArmPrefab;
 
         /// <summary>A dungeon's way-out opening, drawn unlit and bright (Dungeon/DungeonDaylight).</summary>
         public GameObject ExitGlowPrefab => exitGlowPrefab;
@@ -146,9 +153,12 @@ namespace CityBuilder.Maps
             keepWaterRotation = keepWaterRot;
         }
 
-        public void EditorInitializeDungeon(GameObject props, GameObject[] buildings, GameObject exitGlow = null)
+        public void EditorInitializeDungeon(GameObject props, GameObject[] buildings, GameObject exitGlow = null,
+            GameObject door = null, GameObject leverArm = null)
         {
             dungeon = true;
+            doorPrefab = door;
+            leverArmPrefab = leverArm;
             propsPrefab = props;
             exitGlowPrefab = exitGlow;
             buildingPrefabs = buildings ?? new GameObject[0];

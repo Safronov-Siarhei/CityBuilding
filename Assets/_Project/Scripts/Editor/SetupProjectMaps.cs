@@ -171,7 +171,9 @@ namespace CityBuilder.EditorTools
                 if (building != null) buildings.Add(building);
             }
             map.EditorInitializeDungeon(AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Props.fbx"), buildings.ToArray(),
-                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-ExitGlow.fbx"));
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-ExitGlow.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Door.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-LeverArm.fbx"));
 
             var spots = new List<MapSpot>();
             var culture = System.Globalization.CultureInfo.InvariantCulture;

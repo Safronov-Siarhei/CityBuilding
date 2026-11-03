@@ -62,7 +62,15 @@ namespace CityBuilder.UI
         private const int MaxRoutePoints = 64;
 
         private GameObject _flagPrefab;
+        private GameObject _buoyPrefab;
+        // the marker on show: the flag on land, the buoy where the target is in a dungeon's water
+        // (the user, 2026-11-04: «поставь буй как для кораблей»)
         private Transform _flag;
+        private Transform _flagModel;
+        private Transform _buoyModel;
+        private bool _floating;
+        private const float BuoyBob = 0.05f;
+        private const float BuoyBobSpeed = 2.2f;
         private Ring _targetRing;
         private Ripple[] _ripples;
         private Transform[] _dots;
@@ -90,9 +98,19 @@ namespace CityBuilder.UI
         private static Mesh _ringMesh;
 
         /// <summary>The flag model comes from the scene (SetupProject wires it), so it travels into the build with it.</summary>
-        public void Configure(GameObject flagPrefab)
+        public void Configure(GameObject flagPrefab, GameObject buoyPrefab = null)
         {
             _flagPrefab = flagPrefab;
+            if (buoyPrefab != null) _buoyPrefab = buoyPrefab;
+        }
+
+        /// <summary>The flag, or the buoy when `target` is in a dungeon's water and there is a buoy.</summary>
+        private void PickMarker(Vector3 target)
+        {
+            _floating = _buoyModel != null && DungeonFloor.Wading(target);
+            var next = _floating ? _buoyModel : _flagModel;
+            if (_flag != null && _flag != next) _flag.gameObject.SetActive(false);
+            _flag = next;
         }
 
         /// <summary>True while an order is on show: the flag (or the gather ring) and the trail.</summary>
@@ -107,6 +125,8 @@ namespace CityBuilder.UI
             _walker = walker;
             _plantFlag = true;
             _target = onTop ? target + new Vector3(0f, LiftOffGround, 0f) : OnGround(target);
+            PickMarker(_target);
+            if (_floating) _target.y = DungeonFloor.WaterLevel;
             _leaveClock = -1f;
             PlayRipple(_target, OkColor, RippleSeconds);
             if (_flag != null)
@@ -129,6 +149,7 @@ namespace CityBuilder.UI
             _citizen = citizen;
             _plantFlag = plantFlag;
             _target = OnGround(target);
+            PickMarker(_target);
             _builtRouteVersion = -1;
             _leaveClock = -1f;
 
@@ -239,6 +260,16 @@ namespace CityBuilder.UI
 
         private void PoseFlag()
         {
+            if (_floating)
+            {
+                // the buoy: set down on the water, then bobbing on it
+                var settle = Mathf.Clamp01(_flagClock / PlantSeconds);
+                var bob = Mathf.Sin(_flagClock * BuoyBobSpeed) * BuoyBob * settle;
+                _flag.position = _target + new Vector3(0f, (1f - settle) * (1f - settle) * PlantDrop + bob, 0f);
+                _flag.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, EaseOutBack(settle));
+                _flag.rotation = Quaternion.Euler(Mathf.Sin(_flagClock * 1.3f) * 4f * settle, 0f, Mathf.Sin(_flagClock * 1.7f + 1f) * 4f * settle);
+                return;
+            }
             // Planting: drops in from above and settles with a small overshoot.
             var plant = Mathf.Clamp01(_flagClock / PlantSeconds);
             var eased = EaseOutBack(plant);
@@ -405,11 +436,20 @@ namespace CityBuilder.UI
 
             if (_flagPrefab != null)
             {
-                _flag = Instantiate(_flagPrefab, transform).transform;
-                _flag.name = "OrderFlag";
-                foreach (var collider in _flag.GetComponentsInChildren<Collider>()) Destroy(collider);
-                _flag.gameObject.SetActive(false);
+                _flagModel = Instantiate(_flagPrefab, transform).transform;
+                _flagModel.name = "OrderFlag";
+                foreach (var collider in _flagModel.GetComponentsInChildren<Collider>()) Destroy(collider);
+                _flagModel.gameObject.SetActive(false);
             }
+            if (_buoyPrefab != null)
+            {
+                _buoyModel = Instantiate(_buoyPrefab, transform).transform;
+                _buoyModel.name = "OrderBuoy";
+                foreach (var collider in _buoyModel.GetComponentsInChildren<Collider>()) Destroy(collider);
+                foreach (var r in _buoyModel.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
+                _buoyModel.gameObject.SetActive(false);
+            }
+            _flag = _flagModel;
         }
 
         private static Transform CreateFlatPiece(Transform parent, string name, Mesh mesh, Material material)

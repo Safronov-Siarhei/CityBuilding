@@ -1441,12 +1441,15 @@ namespace CityBuilder.Combat
             Step(to / distance);
         }
 
+        private float _wakeClock;
+
         private void Step(Vector3 direction)
         {
             // wedged inside something (a building put up round it): through it to free ground first
             if (_escape.Step(transform, _controller, _walkSpeed)) return;
             // the New Year's blizzard slows everyone (Weather)
             var step = direction * _walkSpeed * Weather.SpeedMultiplier * Buildings.Moat.SpeedAt(transform.position) * Time.deltaTime;
+            Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);   // rings round a wading walker
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);

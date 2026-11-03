@@ -46,8 +46,10 @@ SCALE = 0.44
 N = 300
 HALF = N // 2
 WATER_Z = -0.12             # the one water surface: over the shallow floor and the deep canals
-SHALLOW_Z = -0.42           # the wading floor: ~0.3 m of water over it, still ground (> CLIP_Z)
-CLIP_Z = -0.47              # below this there is no ground: deep water, a water cell in the game
+# the wading floor, still ground (> CLIP_Z): knee-deep on a hero (the user, 2026-11-04: «погружался
+# в неё где-то по колено») -- 0.48 m of water is 0.21 cells, a 0.7-cell hero's knee
+SHALLOW_Z = -0.60
+CLIP_Z = -0.70              # below this there is no ground: deep water, a water cell in the game
 DEEP_DROP = 1.6             # how far the deep beds fall under CLIP_Z
 CANAL_W = 3.6               # a canal's half width
 WALL_RISE = 1.8             # metres from the passage's edge over which the rock climbs
@@ -180,19 +182,22 @@ for k, (pa, pb) in enumerate(WET_SEGMENTS):
     for p in (pa, pb, ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)):
         WET_BUCKET.setdefault((int(p[0] // CELL), int(p[1] // CELL)), set()).add(k)
 CANAL_SEGMENTS = [(c[k], c[k + 1]) for c in PLAN["canals"] for k in range(len(c) - 1)]
-FORDS = [tuple(f) for f in PLAN["fords"]]
-BRIDGES = []                # (x, y, ux, uy): the middle of the span and the passage's direction
-for (bx, by) in PLAN["bridges"]:
-    best = None
-    for (pa, pb) in SEGMENTS:
-        dx, dy = pb[0] - pa[0], pb[1] - pa[1]
-        t = max(0.0, min(1.0, ((bx - pa[0]) * dx + (by - pa[1]) * dy) / max(1e-9, dx * dx + dy * dy)))
-        d = math.hypot(bx - pa[0] - dx * t, by - pa[1] - dy * t)
-        if best is None or d < best[0]:
-            ln = math.hypot(dx, dy) or 1.0
-            best = (d, pa[0] + dx * t, pa[1] + dy * t, dx / ln, dy / ln)
-    BRIDGES.append(best[1:])
-BRIDGE_LEN, BRIDGE_HW = 2 * CANAL_W * 1.15 + 3.0, 1.7
+# the passages between halls (a hall's own links run across its open floor): deep water never
+# lies across one -- where no bridge spans it, the canal is waded there (the user, 2026-11-04: a
+# corner of the map could not be reached)
+EXT_SEGMENTS = [(pl[k], pl[k + 1]) for (pl, _h), (ca, cb) in zip(CURVES, PLAN["links"])
+                if not (hall_of(ca) and hall_of(ca) == hall_of(cb)) for k in range(len(pl) - 1)]
+EXT_BUCKET = {}
+for k, (pa, pb) in enumerate(EXT_SEGMENTS):
+    for p in (pa, pb, ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)):
+        EXT_BUCKET.setdefault((int(p[0] // CELL), int(p[1] // CELL)), set()).add(k)
+PASS_CLEAR = 4.2            # no deep water this near a passage's centre line, but under a bridge
+FORDS = []                  # (x, y): where a passage wades a canal -- set by plan_bridges()
+BRIDGES = []                # (x, y, ux, uy, half): the span's middle, its axis (across the canal), half its length
+BRIDGE_HW = 1.7
+BRIDGE_RAMP = 0.7           # the deck slopes down to the floor over the outer 30% of each half
+BRIDGE_DRY = 2.4            # a bridge's ends land this far from the canal: past its shallow bank (ankle-deep at most)
+BRIDGE_APART = 18.0         # no two bridges nearer than this (two crossed each other, the user's screenshots)
 WET_HALLS = ("great", "serpent")    # floors under shallow water from wall to wall
 SERPENT_POOL = (*((lambda r: ((r[0] + r[2]) / 2, (r[1] + r[3]) / 2))((BIG["serpent"][0] * CELL, BIG["serpent"][1] * CELL,
                 (BIG["serpent"][0] + BIG["serpent"][2]) * CELL, (BIG["serpent"][1] + BIG["serpent"][3]) * CELL))), 13.0, 10.0)
@@ -229,8 +234,58 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
 EXIT_AT = None
 
 
+# the king's hall is shut off but for its lever door (the user, 2026-11-04: the hero must pull the
+# levers first): the hall and its door passage are one compartment, and every other passage keeps
+# THRONE_WALL of rock from it -- the plan's passages run along the hall's very edge, and the hall's
+# living shape flowed into them, a second way in past the door
+THRONE_WALL = 3.0
+_DOOR = tuple(tuple(c) for c in PLAN["door"])
+_DOOR_LINK = next(k for k, (ca, cb) in enumerate(PLAN["links"]) if {tuple(ca), tuple(cb)} == set(_DOOR))
+_DOOR_PL = CURVES[_DOOR_LINK][0]
+_THRONE_I = list(BIG).index("throne")
+_TX0, _TY0, _TX1, _TY1 = hall_rect("throne")
+
+
+def door_gate():
+    """(x, y, ux, uy): the lever door's bars, across its passage just before the king's hall."""
+    (da, db) = _DOOR
+    pa, pb = cell_centre(da), cell_centre(db)
+    if hall_of(da):
+        pa, pb = pb, pa
+    t = 0.0                                      # from outside towards the hall, to where the hall begins
+    ux, uy = (pb[0] - pa[0]), (pb[1] - pa[1])
+    ln = math.hypot(ux, uy)
+    ux, uy = ux / ln, uy / ln
+    hall = HALL_BLOBS["throne"]
+    while t < ln and min(_ellipse_sd(pa[0] + ux * t, pa[1] + uy * t, cx, cy, rx, ry, 0.0, 0) for cx, cy, rx, ry in hall) > 2.0:
+        t += 0.25
+    return pa[0] + ux * max(0.0, t - 1.5), pa[1] + uy * max(0.0, t - 1.5), ux, uy
+
+
+def throne_sd(x, y):
+    """Signed distance to the king's compartment: his hall and the door passage into it."""
+    best = 1e9
+    for k in range(len(_DOOR_PL) - 1):
+        (ax, ay), (bx, by) = _DOOR_PL[k], _DOOR_PL[k + 1]
+        best = min(best, _seg(x, y, ax, ay, bx, by))
+    best -= 1.5 + 1.7 * fbm(x / 14, y / 14, 47)
+    for j, (cx, cy, rx, ry) in enumerate(HALL_BLOBS["throne"]):
+        best = smin(best, _ellipse_sd(x, y, cx, cy, rx, ry, 0.6, 11 + _THRONE_I * 7 + j), 5.0)
+    return best
+
+
 def pass_sd(x, y):
     """Signed distance to the walkable ground: negative inside, positive in the rock."""
+    o = _open_sd(x, y)
+    if not (_TX0 - 25 < x < _TX1 + 25 and _TY0 - 25 < y < _TY1 + 25):
+        return o
+    # the rock wall keeps every other passage off the HALL; the door passage itself is left alone
+    o = max(o, THRONE_WALL - hall_sd(x, y, names=("throne",)))
+    return min(o, throne_sd(x, y))
+
+
+def _open_sd(x, y):
+    """pass_sd for everything but the king's hall."""
     d, hw = route_dist(x, y)
     best = d - hw * (0.85 + 0.3 * fbm(x / 5, y / 5, 41))
     ix, iy = int(x // CELL), int(y // CELL)
@@ -241,6 +296,8 @@ def pass_sd(x, y):
                 if abs(x - cx) < r + 6 and abs(y - cy) < r + 6:
                     best = smin(best, math.hypot(x - cx, y - cy) - r * (0.8 + 0.4 * fbm(x / 3, y / 3, 43 + k % 7)))
     for i, name in enumerate(BIG):
+        if name == "throne":
+            continue
         x0, y0, x1, y1 = hall_rect(name)
         if x0 - 10 < x < x1 + 10 and y0 - 10 < y < y1 + 10:
             for j, (cx, cy, rx, ry) in enumerate(HALL_BLOBS[name]):
@@ -276,15 +333,34 @@ def canal_sd(x, y):
     return best - CANAL_W * (0.85 + 0.3 * fbm(x / 6, y / 6, 71))
 
 
+def ext_route_dist(x, y):
+    ix, iy = int(x // CELL), int(y // CELL)
+    best = 1e9
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for k in EXT_BUCKET.get((ix + dx, iy + dy), ()):
+                (ax, ay), (bx, by) = EXT_SEGMENTS[k]
+                best = min(best, _seg(x, y, ax, ay, bx, by))
+    return best
+
+
+def _span(x, y, b, grow=0.0, grow_across=0.0):
+    """(along, across) of (x, y) from bridge b's middle, less its half length and half width."""
+    bx, by, ux, uy, half = b
+    along = abs((x - bx) * ux + (y - by) * uy) - half - grow
+    across = abs(-(x - bx) * uy + (y - by) * ux) - BRIDGE_HW - grow_across
+    return along, across
+
+
 def deep_sd(x, y):
     """Negative where the water is DEEP (no ground: nobody walks): the canals between the halls --
-    never in a hall, at a ford or under a bridge -- and the serpent's pool."""
+    never in a hall, nor across a passage but under its bridge -- and the serpent's pool."""
     d = canal_sd(x, y)
     if d < 6:
         for name in BIG:
             d = max(d, 2.5 - _rect_sd(x, y, *hall_rect(name, 0.0)))
-        for fx, fy in FORDS:
-            d = max(d, 4.5 - math.hypot(x - fx, y - fy))
+        if not any(max(_span(x, y, b, 0.5, 1.0)) < 0 for b in BRIDGES):
+            d = max(d, PASS_CLEAR - ext_route_dist(x, y))
     pool = _ellipse_sd(x, y, *SERPENT_POOL, 0.35, 9)
     return min(d, pool)
 
@@ -304,21 +380,125 @@ def wet_sd(x, y):
     best = min(best, hall_sd(x, y, WET_HALLS) + 1.0)
     for fx, fy in FORDS:
         best = min(best, math.hypot(x - fx, y - fy) - 6.0)
-    for bx, by, ux, uy in BRIDGES:              # a dry passage keeps dry up to its bridge
-        along = abs((x - bx) * ux + (y - by) * uy) - BRIDGE_LEN / 2 - 4.0
-        across = abs(-(x - bx) * uy + (y - by) * ux) - BRIDGE_HW - 3.0
-        best = max(best, -max(along, across))
+    for b in BRIDGES:                           # a dry passage keeps dry up to its bridge
+        best = max(best, -max(_span(x, y, b, 3.0, 2.5)))
     return best
+
+
+def deck_height(along, half):
+    """A bridge's deck: humped over the canal, sloping down to the dry floor (z 0) at both ends --
+    a deck that ended a step above the bank stopped the hero (the user, 2026-11-04, screenshot 6)."""
+    u = min(1.0, abs(along) / half)
+    return (0.18 + 0.25 * (1 - u * u)) * smoothstep(1.0, BRIDGE_RAMP, u)
 
 
 def bridge_at(x, y):
     """The deck's height if (x, y) is on a bridge's span, else None."""
-    for bx, by, ux, uy in BRIDGES:
+    for bx, by, ux, uy, half in BRIDGES:
         along = (x - bx) * ux + (y - by) * uy
         across = -(x - bx) * uy + (y - by) * ux
-        if abs(along) < BRIDGE_LEN / 2 and abs(across) < BRIDGE_HW:
-            return 0.18 + 0.25 * (1 - (2 * along / BRIDGE_LEN) ** 2)
+        if abs(along) < half and abs(across) < BRIDGE_HW:
+            return deck_height(along, half)
     return None
+
+
+def _cross(p1, p2, p3, p4):
+    d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0])
+    if abs(d) < 1e-9:
+        return None
+    t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d
+    u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d
+    return (p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])) if 0 <= t <= 1 and 0 <= u <= 1 else None
+
+
+def plan_bridges():
+    """Where every passage between halls meets a canal: a dry one gets a BRIDGE straight across the
+    canal when both its ends land on the passage's dry floor (not rock), it crosses squarely enough
+    and no other bridge is near; every other crossing is a FORD (deep_sd keeps the water shallow
+    across a passage, so a ford needs nothing more than its stepping stones)."""
+    crossings = []
+    for (pl, _h), (ca, cb), wet in zip(CURVES, PLAN["links"], PLAN["flooded"]):
+        if hall_of(ca) and hall_of(ca) == hall_of(cb):
+            continue
+        for k in range(len(pl) - 1):
+            for p, q in CANAL_SEGMENTS:
+                hit = _cross(pl[k], pl[k + 1], p, q)
+                if hit and not hall_of((int(hit[0] // CELL), int(hit[1] // CELL))):
+                    crossings.append((hit, wet, pl[k], pl[k + 1], p, q))
+    for (x, y), wet, a, b, p, q in crossings:
+        if wet or any(math.hypot(x - o[0], y - o[1]) < BRIDGE_APART for o in BRIDGES):
+            FORDS.append((x, y))
+            continue
+        cl = math.hypot(q[0] - p[0], q[1] - p[1]) or 1.0
+        ax, ay = -(q[1] - p[1]) / cl, (q[0] - p[0]) / cl              # across the canal
+        tx, ty = b[0] - a[0], b[1] - a[1]
+        tl = math.hypot(tx, ty) or 1.0
+        square = (ax * tx + ay * ty) / tl
+        if square < 0:
+            ax, ay, square = -ax, -ay, -square
+        ends = []
+        for side in (1, -1):
+            t = 2.0
+            while t < 14.0:
+                ex, ey = x + ax * side * t, y + ay * side * t
+                if pass_sd(ex, ey) > -0.3:
+                    break                                               # rock before the far bank
+                if canal_sd(ex, ey) > BRIDGE_DRY:
+                    ends.append(t)
+                    break
+                t += 0.25
+        if square < 0.8 or len(ends) < 2:
+            FORDS.append((x, y))
+            continue
+        BRIDGES.append((x, y, ax, ay, max(ends) + 0.8))
+    print(f"BRIDGES {len(BRIDGES)} FORDS {len(FORDS)} (of {len(crossings)} crossings)")
+
+
+MAX_STEP = 0.55            # metres up per metre across that the game's NavMesh still walks (agentSlope 40, agentClimb 0.3 cells)
+
+
+def reachability(verts):
+    """Every passage node and hall reached on foot from the camp: walks the built floor (ground
+    between the deep beds and the rock, decks included) on the 1 m vertex grid."""
+    walk = {k for k, v in verts.items() if CLIP_Z < v[2] < 0.5}
+    # a hero is ~1.5 m wide: a neck one vertex wide is no way through (the NavMesh closes it)
+    walk = {k for k in walk if all((k[0] + di, k[1] + dj) in walk for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)))}
+    sx, sy = int(CAMP[0]), int(CAMP[1] + 1)
+    start = min(walk, key=lambda k: (k[0] - sx) ** 2 + (k[1] - sy) ** 2)
+    seen, stack = {start}, [start]
+    while stack:
+        i, j = stack.pop()
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                n = (i + di, j + dj)
+                if n in walk and n not in seen and abs(verts[n][2] - verts[(i, j)][2]) < MAX_STEP * math.hypot(di, dj):
+                    seen.add(n)
+                    stack.append(n)
+    goals = [(c, cell_centre(c)) for c in NODES] + [(name, hall_centre(name)) for name in BIG]
+    lost = []
+    for name, (x, y) in goals:
+        if not any((int(x) + di, int(y) + dj) in seen for di in range(-2, 3) for dj in range(-2, 3)):
+            lost.append(name)
+    print(f"REACH {len(goals) - len(lost)}/{len(goals)} unreachable: {lost}")
+    # the door shut: its passage beyond the outer end is barred -- the throne must be cut off
+    gx, gy, ux, uy = door_gate()
+    shut = {k for k in walk if abs((k[0] - gx) * ux + (k[1] - gy) * uy) < 1.0 and abs(-(k[0] - gx) * uy + (k[1] - gy) * ux) < 6.0}
+    seen, stack = {start}, [start]
+    while stack:
+        i, j = stack.pop()
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                n = (i + di, j + dj)
+                if n in walk and n not in shut and n not in seen and abs(verts[n][2] - verts[(i, j)][2]) < MAX_STEP * math.hypot(di, dj):
+                    seen.add(n)
+                    stack.append(n)
+    tx, ty = hall_centre("throne")
+    leak = any((int(tx) + di, int(ty) + dj) in seen for di in range(-2, 3) for dj in range(-2, 3))
+    print(f"DOOR SHUT: barred {len(shut)} vertices, throne {'REACHED -- A WAY ROUND THE DOOR' if leak else 'cut off'}")
+    cut = [c for c, (x, y) in goals if c != "throne" and (isinstance(c, str) or hall_of(c) != "throne")
+           and not any((int(x) + di, int(y) + dj) in seen for di in range(-2, 3) for dj in range(-2, 3))]
+    print(f"DOOR SHUT: cut off besides the throne: {cut}")
+    return lost
 
 
 def pillar(x, y):
@@ -335,7 +515,7 @@ def height_at(x, y):
     if dp < 1.0:
         base = min(base, SHALLOW_Z * smoothstep(3.0, 1.0, dp) - DEEP_DROP * smoothstep(1.0, -2.0, dp))
     deck = bridge_at(x, y)
-    if deck is not None:
+    if deck is not None and sd < 0.6:           # a deck only over the passage, never a tunnel in the rock
         return deck, dp
     rock = smoothstep(-0.2, WALL_RISE, sd) * (WALL_H + 1.4 * fbm(x / 7, y / 7, 53))
     rock += smoothstep(WALL_RISE, WALL_RISE + 5, sd) * 2.2 * fbm(x / 3.5, y / 3.5, 57)   # a broken, craggy top
@@ -1115,26 +1295,29 @@ def free_spot(r, x0, y0, x1, y1, clear=-1.2, tries=30):
 
 # -- the drowned halls' own pieces ---------------------------------------------------------------
 
-def stone_bridge(b, x, y, ux, uy):
+def stone_bridge(b, x, y, ux, uy, half):
     """A dwarven stone bridge over a canal: a humped deck of slabs (the walkable deck is the
     ground's, height_at -> bridge_at; this sits a hair above it), low parapets, piers in the water."""
     deg = math.degrees(math.atan2(uy, ux))
-    n = int(BRIDGE_LEN / 0.8)
+
+    def deck(t):
+        return deck_height(t, half)
+    n = int(2 * half / 0.8)
     for k in range(n + 1):
-        t = -BRIDGE_LEN / 2 + k * BRIDGE_LEN / n
+        t = -half + k * 2 * half / n
         px, py = x + ux * t, y + uy * t
-        z = bridge_at(px, py) if abs(t) < BRIDGE_LEN / 2 - 0.01 else 0.18
+        z = deck(t)
         cx, cy, _ = w(px, py)
         b.zbox(cx, cy, z - 0.35, z + 0.04, 0.46, BRIDGE_HW + 0.05, deg, STONE_L if k % 2 else STONE)
         for side in (-1, 1):
             qx, qy, _ = w(px - uy * side * (BRIDGE_HW + 0.12), py + ux * side * (BRIDGE_HW + 0.12))
             b.zbox(qx, qy, z, z + 0.55, 0.46, 0.14, deg, STONE_D if k % 2 else STONE)
-    for t in (-CANAL_W * 0.9, 0.0, CANAL_W * 0.9):           # the piers, down into the water
+    for t in (-min(CANAL_W * 0.9, half - 1.2), 0.0, min(CANAL_W * 0.9, half - 1.2)):   # the piers, down into the water
         px, py = x + ux * t, y + uy * t
         cx, cy, _ = w(px, py)
-        b.zbox(cx, cy, -2.0, bridge_at(px, py) - 0.3, 0.45, BRIDGE_HW + 0.2, deg, STONE_D)
+        b.zbox(cx, cy, -2.4, deck(t) - 0.3, 0.45, BRIDGE_HW + 0.2, deg, STONE_D)
     for side in (-1, 1):                                     # a lantern post at each end
-        px, py = x + ux * side * BRIDGE_LEN / 2, y + uy * side * BRIDGE_LEN / 2
+        px, py = x + ux * side * half, y + uy * side * half
         qx, qy, _ = w(px - uy * (BRIDGE_HW + 0.12), py + ux * (BRIDGE_HW + 0.12))
         b.box(qx - 0.12, qx + 0.12, qy - 0.12, qy + 0.12, 0.0, 1.3, STONE_D)
         b.box(qx - 0.1, qx + 0.1, qy - 0.1, qy + 0.1, 1.3, 1.5, 'window_light')
@@ -1201,18 +1384,47 @@ def throne(b, x, y):
     thrones.append((cx, cy - 2.6, 0.0))           # where the king stands, before his seat
 
 
+LEVER_PIVOT = 1.05           # the arm's axle over the floor (build units)
+
+
 def lever(b, x, y):
-    """A great lever on a stone block: an iron arm, a gold grip, gears beside it."""
+    """A dwarven lever (the user, 2026-11-04: the first one's shape read as strange): a dressed
+    stone block with a slot, two cheeks carrying the axle, an upright cog wheel behind it, a chain
+    from the wheel into the floor. The ARM is its own object (lever_arm), so the game can pull it."""
     cx, cy, _ = w(x, y)
-    b.box(cx - 0.9, cx + 0.9, cy - 0.6, cy + 0.6, -0.1, 0.9, STONE_D, bevel=0.05)
-    b.box(cx - 0.12, cx + 0.12, cy - 0.5, cy + 0.5, 0.9, 1.05, 'iron')
-    b.rod((cx, cy, 0.95), (cx, cy - 0.9, 2.2), 0.14, 'iron')
-    b.ball(cx, cy - 0.95, 2.15, 0.2, 0.32, 'gold', sides=6)
-    for k, (ox, r) in enumerate(((1.25, 0.55), (1.6, 0.35))):
-        b.hcylinder('y', (cx + ox, cy, 0.4 + r), 0.1, r, 'iron', sides=10)
-        b.hcylinder('y', (cx + ox, cy, 0.4 + r), 0.14, 0.12, 'gold', sides=6)
-    light('lantern', cx, cy - 0.6, 1.6)
-    levers.append((cx, cy, 0.0))
+    b.box(cx - 0.85, cx + 0.85, cy - 0.65, cy + 0.65, -0.6, 0.55, STONE_D, bevel=0.05)
+    b.box(cx - 0.7, cx + 0.7, cy - 0.5, cy + 0.5, 0.55, 0.7, STONE, bevel=0.03)
+    b.box(cx - 0.12, cx + 0.12, cy - 0.42, cy + 0.42, 0.7, 0.71, DARK)            # the slot the arm swings in
+    for side in (-1, 1):                                                          # the cheeks and the axle's caps
+        b.box(cx + side * 0.2 - 0.09, cx + side * 0.2 + 0.09, cy - 0.22, cy + 0.22, 0.7, LEVER_PIVOT + 0.22, STONE_L, bevel=0.02)
+        b.hcylinder('x', (cx + side * 0.3, cy, LEVER_PIVOT), 0.03, 0.12, 'gold', sides=8)
+    gx, gy, gz = cx, cy + 0.95, 1.25                                              # the cog wheel, upright, facing the camera
+    b.box(gx - 0.12, gx + 0.12, gy - 0.12, gy + 0.12, -0.6, gz, STONE_D)
+    b.hcylinder('y', (gx, gy, gz), 0.12, 0.8, STONE, sides=14)
+    b.hcylinder('y', (gx, gy, gz), 0.16, 0.25, 'gold', sides=8)
+    for k in range(12):
+        a = k * 2 * math.pi / 12
+        tx, tz = gx + math.cos(a) * 0.88, gz + math.sin(a) * 0.88
+        b.obox((tx, gy, tz), (math.cos(a), 0, math.sin(a)), (0, 1, 0), (-math.sin(a), 0, math.cos(a)), 0.1, 0.13, 0.09, 'gold')
+    for k in range(5):                                                            # the chain down into the floor
+        b.box(gx + 0.75 - 0.05, gx + 0.75 + 0.05, gy - 0.05, gy + 0.05, gz - 0.25 * k - 0.2, gz - 0.25 * k - 0.05, 'iron')
+    light('lantern', cx, cy - 0.7, 1.7)
+    levers.append((cx, cy, LEVER_PIVOT + min(0.0, height_at(x, y)[0])))
+
+
+lever_arm = Builder()
+
+
+def build_lever_arm(b):
+    """The lever's arm round its axle at the origin, standing UP and leaning to the camera (-y);
+    the game turns it about x to pull it over."""
+    b.ball(0.0, 0.0, -0.18, 0.18, 0.36, 'gold', sides=8)
+    b.rod((0.0, 0.0, 0.0), (0.0, -0.45, 1.35), 0.13, WOOD_D)
+    for t in (0.25, 0.65):
+        b.rod((0.0, -0.45 * t + 0.02, 1.35 * t - 0.06), (0.0, -0.45 * t - 0.02, 1.35 * t + 0.06), 0.16, 'iron')
+    b.rod((-0.28, -0.47, 1.4), (0.28, -0.47, 1.4), 0.1, WOOD_L)                 # the grip across the top
+    for side in (-1, 1):
+        b.ball(side * 0.3, -0.47, 1.33, 0.08, 0.14, 'gold', sides=6)
 
 
 def gate(b, bars, x, y, ux, uy):
@@ -1373,24 +1585,12 @@ def build_props(b):
             with on_floor(b, ex, ey):
                 stalagmite(b, ex, ey, rnd.uniform(0.9, 2.2))
     # the canals: bridges for the dry passages, stepping stones at the fords
-    for x, y, ux, uy in BRIDGES:
-        stone_bridge(b, x, y, ux, uy)
+    for x, y, ux, uy, half in BRIDGES:
+        stone_bridge(b, x, y, ux, uy, half)
     for x, y in FORDS:
         ford_marks(b, x, y)
     # the lever door before the king's hall
-    (da, db) = (tuple(c) for c in PLAN["door"])
-    pa, pb = cell_centre(da), cell_centre(db)
-    if hall_of(da):
-        pa, pb = pb, pa
-    t = 0.0                                      # from outside towards the hall, to where the hall begins
-    ux, uy = (pb[0] - pa[0]), (pb[1] - pa[1])
-    ln = math.hypot(ux, uy)
-    ux, uy = ux / ln, uy / ln
-    hall = HALL_BLOBS["throne"]
-    while t < ln and min(_ellipse_sd(pa[0] + ux * t, pa[1] + uy * t, cx, cy, rx, ry, 0.0, 0) for cx, cy, rx, ry in hall) > 2.0:
-        t += 0.25
-    gx, gy = pa[0] + ux * max(0.0, t - 1.5), pa[1] + uy * max(0.0, t - 1.5)
-    gate(b, door_bars, gx, gy, ux, uy)
+    gate(b, door_bars, *door_gate())
     # mushroom groves and stalagmites in the halls
     k = 100
     for name in BIG:
@@ -1507,7 +1707,9 @@ def main():
     detail.build_material_nodes(bmat, bimg, atlas)
 
     find_exit()
+    plan_bridges()
     verts = build_vertices()
+    reachability(verts)
     ground, relief = build_surface(verts)
     coll = bpy.data.collections.new("Dungeon")
     bpy.context.scene.collection.children.link(coll)
@@ -1526,6 +1728,9 @@ def main():
     rough_exit_rock(props.data)
     pchunks = split_by_chunk(props, coll)
     make_object(f"{PREFIX}-ExitGlow", exit_glow, bmat, coll)   # the way out's daylight, drawn unlit
+    build_lever_arm(lever_arm)                                # the lever's arm at the origin: the game places one per lever
+    arm = make_object(f"{PREFIX}-LeverArm", lever_arm, bmat, coll)
+    detail.add_layers(arm.data, kit.NAMES, kit.COLS, kit.ROWS)
     bars = make_object(f"{PREFIX}-Door", door_bars, bmat, coll)  # the lever door's bars: the game raises them
     detail.add_layers(bars.data, kit.NAMES, kit.COLS, kit.ROWS)
     import dungeon_camp                                       # the approved camp buildings, whole
@@ -1615,7 +1820,7 @@ def main():
         f.write(f"start,{sx * SCALE:.3f},{sy * SCALE:.3f},0.000\n")
         for kind, pts in (("lever", levers), ("door", doors), ("throne", thrones)):
             for x, y, z in pts:
-                f.write(f"{kind},{x * SCALE:.3f},{y * SCALE:.3f},0.000\n")
+                f.write(f"{kind},{x * SCALE:.3f},{y * SCALE:.3f},{z * SCALE:.3f}\n")
         for lk, lx, ly in (lair_rows() if POPULATED else ()):
             f.write(f"{lk},{lx:.3f},{ly:.3f},0.000\n")
     kit.file_display_settings()

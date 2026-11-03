@@ -1,5 +1,7 @@
 # Dungeon (подземелье)
 
+> 2026-11-04: level 2 playtest round 1 fixed (bridges, knee-deep wading, levers + door, buoy,
+> road map for long routes, fog cheat) -- see «Dungeon level 2». User not seen it yet.
 > Status 2026-11-01: IN THE GAME: the walk, 3 entrances, monsters + bosses, crystals and patrols,
 > the darkness, the GNOME HIRE CAMP and the POTION SHOP (both 2026-11-01, user not seen them yet).
 > Not done: dungeons of levels 2-3 (own maps). Not measured on a phone.
@@ -300,7 +302,52 @@ dungeon opens as a SEPARATE SCENE.
   - the lever door's bars (`Dungeon-2-Door.fbx`) are exported but NOT loaded by the game yet, so
     the way to the throne is open; levers do nothing yet;
   - test `DungeonVariantTests.TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot`.
-  - Still to do: lever/door logic, the new monsters and both bosses (models first, for approval).
+  - Still to do: the new monsters and both bosses (models first, for approval).
+- **Playtest round 1 of level 2 (the user walked it in the editor, 2026-11-04; 11 screenshots).**
+  Done; the user has not seen the result yet:
+  - **Bridges from the BUILT geometry** (`plan_bridges()`): every crossing of a passage between
+    halls with a canal; a dry one gets a bridge straight ACROSS the canal if it crosses squarely
+    (>=0.8), both ends land on the passage's floor `BRIDGE_DRY` (2.4) past the canal (before any
+    rock) and no other bridge is within 18; every other crossing is a FORD. Deep water never lies
+    across a passage (`PASS_CLEAR` 4.2) except under its bridge. Was: bridges from the plan's
+    straight links -- to nowhere, through rock, crossing each other. Now 4 bridges, 25 fords.
+  - The deck (`deck_height`) slopes down to the floor over the outer 30% of each half
+    (`BRIDGE_RAMP`): a deck ending a step above a wet bank stopped the hero (screenshot 6).
+    A deck only where `pass_sd < 0.6` -- never a tunnel in the rock (screenshot 11).
+  - **Knee-deep water:** `SHALLOW_Z = -0.60` (0.48 m = 0.21 cells under the surface), `CLIP_Z
+    -0.70`. In the game every walker used to be pinned to the plain's one height (on the water,
+    through the decks): `Maps.DungeonFloor` samples the dungeon's floor once a cell at load
+    (`MeshMapApplier.TryGetFloorHeight`, ground colliders only), `Moat.StandHeightAt/SpeedAt` ask
+    it first. Wading is slower: `dungeon_wade_speed_multiplier` 0.7 (economy). Rings spread round a
+    wading walker (`Dungeon/DungeonWake`, one pool of 24, hooked in SoldierUnit/OrcUnit moves).
+  - A move order into the water shows the ships' BUOY instead of the flag (`MoveOrderMarker`
+    `PickMarker`, `ArmyOrderInput.orderBuoyPrefab` = OrderBuoy.fbx).
+  - **Levers and the door** (`Dungeon/DungeonLevers`): new lever model (block, slot, cog wheel,
+    chain) + its swinging arm exported alone (`Dungeon-2-LeverArm`), `MeshMapDefinition.LeverArmPrefab`
+    / `DoorPrefab`. A lever is a `DungeonEntrance.Place.Lever`: a tap without a hero near posts
+    «Отправьте героя к рычагу»; a hero sent to it pulls it (arm swings 60°, «Рычаг опущен: N из 2»);
+    both down -> the bars rise 1.6 cells in 2.5 s and the carving NavMeshObstacle goes
+    («Решётка поднята: путь к трону открыт»). Not saved: leaving the dungeon resets them.
+  - **The king's hall is walled off but for the door** (`throne_sd`, `THRONE_WALL` 3): the plan's
+    passages run along the hall's edge and its living shape flowed into them -- a way in past the
+    door. Every other passage keeps 3 m of rock from the HALL (not from the door passage -- that
+    cut the way up to the door). The build prints `DOOR SHUT: ... throne cut off` and what else
+    the shut door cuts off (must be only the serpent's pool centre).
+  - The build's reachability walk (`reachability`) now needs a hero's width (4-neighbours walkable)
+    and no step steeper than `MAX_STEP` 0.55 m/m -- a 1-vertex neck or a deck's lip passed before.
+  - **Long ways round: `Maps.DungeonWaypoints`.** NavMesh.CalculatePath's search runs out of nodes
+    on a long detour in a labyrinth this big (thousands of polygons): it returns PARTIAL, ending in
+    a dead end near the target, and re-planning finds the same -- the «can't reach the upper-left
+    corner». A road map: nodes every 6 cells snapped onto the NavMesh, linked to neighbours by short
+    complete paths at load; `NavRoute` asks it when a path comes back partial (Dijkstra, the legs'
+    corners strung). The door gates the links through its bars (`Gate`/`Ungate`). The dungeon's
+    NavMesh voxel is 0.11 (town 0.073; 0.2 closed narrow passages): ~8k triangles instead of 12k.
+  - Cheat «Снять туман подземелья» (CheatsPanelForces, `DungeonFog.RevealAll`).
+  - The town's time stays PAUSED while the heroes are below (the user chose «Оставить паузу»).
+  - Test `TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot` now also checks: >200 wading
+    points knee-deep and slower, decks above the water, both levers reached the way a hero walks
+    (NavRoute), the throne NOT reached while the door is shut, both levers pulled by a hero ->
+    door open -> throne reached. Broken twice to prove it (door never opening; no road map).
 
 ## Proposed, NOT agreed yet (ask, don't build)
 - (superseded by the user's concept above: layout from Blender, rewards = coins/XP/crystals/resources)
@@ -713,6 +760,9 @@ dungeon opens as a SEPARATE SCENE.
   the hall (`freeOnGrid` keeps 3 cells between mouths); what finds no room goes to other islands.
 
 ## Files
+- Level 2: `Tools/blender/dungeon2_plan.py` (+ `dungeon2-plan.json`), `dungeon2.py` (build + checks);
+  `Scripts/Dungeon/DungeonLevers.cs`, `DungeonWake.cs`; `Scripts/Maps/DungeonFloor.cs`,
+  `DungeonWaypoints.cs`; `Combat/NavRoute.cs` (asks DungeonWaypoints on a partial path).
 - Monsters: `Tools/blender/monsters.py`, `dungeon_lairs.py`; `Scripts/Dungeon/DungeonMonsters.cs`,
   `DungeonMonsterPowers.cs`; `Combat/OrcUnit.cs`, `OrcRaidManager.cs` (models, boss controller),
   `FigureAnimator.cs`, `SoldierUnit.cs` (Stun/Slow); `Editor/SetupProjectOrcs.cs` (model wiring).
@@ -722,6 +772,10 @@ dungeon opens as a SEPARATE SCENE.
 - All are in collection «Подземелье» of Buildings-Size1-Models.blend. None are exported.
 
 ## Traps
+- **A long NavMesh path in a big dungeon comes back PARTIAL though the way exists** (the search's
+  node budget; proven: camp->A complete, A->B complete, camp->B partial). Never read a partial path
+  as "walled off" there -- route through `NavRoute` (DungeonWaypoints) or chain legs.
+- A NavMeshObstacle carves a few frames after it is made: wait before asserting a door blocks.
 - A monster needs THREE places or it silently falls back: the `mon_*` sheet rows, `BalanceConfig`
   `MonsterIds`, and `OrcRaidManager.MonsterModel` + `SetupProjectOrcs` wiring.
 - **SCALE:** the game's unit is one MAP CELL. A hero is 0.6-0.8 cells tall; a level-1 building is

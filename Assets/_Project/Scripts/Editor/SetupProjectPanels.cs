@@ -87,6 +87,8 @@ namespace CityBuilder.EditorTools
             so.FindProperty("targetCamera").objectReferenceValue = targetCamera;
             // the same flag a citizen's move order plants
             so.FindProperty("orderFlagPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/OrderFlag.fbx");
+            // the ships' buoy marks an order into a dungeon's water
+            so.FindProperty("orderBuoyPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelsBuildingsFolder}/OrderBuoy.fbx");
             so.ApplyModifiedPropertiesWithoutUndo();
             return input;
         }

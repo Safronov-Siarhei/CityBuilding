@@ -45,6 +45,9 @@ namespace CityBuilder.Cheats
         private void DrawArmy()
         {
             SoldierUnit.InvulnerableCheat = Switch("Свои не получают урона (и герои)", SoldierUnit.InvulnerableCheat);
+            // in a dungeon: the whole map seen at once (the user, 2026-11-04)
+            if (CityBuilder.Dungeon.DungeonFog.Instance != null && Button("Снять туман подземелья"))
+                CityBuilder.Dungeon.DungeonFog.Instance.RevealAll();
 
             Header("Отряд в центр экрана");
             GUILayout.BeginHorizontal();

@@ -119,20 +119,69 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.AreEqual(0, map.SpotsOf(kind).Count, $"The walk-through dungeon has {kind} spots.");
             Assert.AreEqual(0, Object.FindObjectsByType<CityBuilder.Combat.OrcUnit>(FindObjectsSortMode.None).Length, "Monsters live in the walk-through dungeon.");
 
+            // the water is waded knee-deep and slower, and a bridge's deck stands up out of it
+            Assert.IsTrue(DungeonFloor.Active, "The dungeon's floor was not read.");
+            var wades = 0;
+            var decks = 0;
+            var half = DungeonMode.Instance.MapHalf;
+            var ground = CityBuilder.Grid.GridManager.Instance.GroundHeight;
+            for (var x = -half; x < half; x += 1f)
+            for (var z = -half; z < half; z += 1f)
+            {
+                var at = new Vector3(x, 0f, z);
+                if (!NavMesh.SamplePosition(at, out var on, 0.3f, NavMesh.AllAreas)) continue;
+                if (DungeonFloor.Wading(at))
+                {
+                    wades++;
+                    var depth = DungeonFloor.WaterLevel - (ground + DungeonFloor.StandHeightAt(at));
+                    Assert.Less(depth, 0.4f, $"The water at {at} is deeper than a knee and still walked.");
+                    Assert.Less(CityBuilder.Buildings.Moat.SpeedAt(at), 1f, "Wading is not slower.");
+                }
+                else if (DungeonFloor.StandHeightAt(at) > 0.06f) decks++;   // a deck: 0.18-0.43 m up, 0.08-0.19 cells
+            }
+            Assert.Greater(wades, 200, "Nowhere is the water waded.");
+            Assert.Greater(decks, 10, "No bridge's deck stands up out of the water.");
+
             var start = DungeonMode.Instance.StartSpot;
             Assert.IsTrue(NavMesh.SamplePosition(start, out var from, 1f, NavMesh.AllAreas), "The camp has no NavMesh.");
-            var goals = new List<MapSpot>(map.SpotsOf("throne"));
-            goals.AddRange(map.SpotsOf("lever"));
-            Assert.AreEqual(3, goals.Count, "The throne and two levers are not all on the map.");
-            foreach (var goal in goals)
+            var throne = map.SpotsOf("throne");
+            var levers = map.SpotsOf("lever");
+            Assert.AreEqual(1, throne.Count, "The throne is not on the map.");
+            Assert.AreEqual(2, levers.Count, "The two levers are not on the map.");
+            var doors = DungeonLevers.Instance;
+            Assert.IsNotNull(doors, "No levers and door were made.");
+            Assert.AreEqual(2, doors.LeverCount, "The levers were not all made.");
+            Assert.IsFalse(doors.DoorOpen, "The door stands open before a lever is pulled.");
+            // the bars' NavMeshObstacle carves the NavMesh a few frames after it is made
+            for (var frame = 0; frame < 10; frame++) yield return null;
+            // the way a hero walks (NavRoute: the NavMesh, and the dungeon's road map for the long ways round)
+            Assert.Greater(DungeonWaypoints.NodeCount, 50, "The dungeon's road map was not laid.");
+            foreach (var goal in levers)
+                Assert.IsTrue(Reaches(from.position, goal), $"The lever at {goal.position} cannot be reached from the camp.");
+            Assert.IsFalse(Reaches(from.position, throne[0]), "The throne is reached through the shut door.");
+
+            // a hero by each lever pulls it; with both down the door is up and the throne reached
+            var hero = HeroRoster.Instance.Heroes[0].Unit;
+            foreach (var place in Object.FindObjectsByType<DungeonEntrance>(FindObjectsSortMode.None))
             {
-                var at = new Vector3(goal.position.x, 0f, goal.position.y);
-                Assert.IsTrue(NavMesh.SamplePosition(at, out var to, 4f, NavMesh.AllAreas), $"The {goal.kind} at {goal.position} has no floor.");
-                var path = new NavMeshPath();
-                NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path);
-                Assert.AreEqual(NavMeshPathStatus.PathComplete, path.status, $"The {goal.kind} at {goal.position} cannot be reached from the camp.");
+                if (place.Kind != DungeonEntrance.Place.Lever) continue;
+                hero.transform.position = place.ApproachFrom(start);
+                place.OpenCard();
             }
+            Assert.AreEqual(2, doors.PulledCount, "A hero by a lever did not pull it.");
+            Assert.IsTrue(doors.DoorOpen, "Both levers are down and the door is shut.");
+            for (var frame = 0; frame < 10; frame++) yield return null;
+            Assert.IsTrue(Reaches(from.position, throne[0]), "The door is up and the throne still cannot be reached.");
             DungeonMode.LeaveWhenAllFall = true;
+        }
+
+        private static bool Reaches(Vector3 from, MapSpot goal)
+        {
+            var at = new Vector3(goal.position.x, 0f, goal.position.y);
+            Assert.IsTrue(NavMesh.SamplePosition(at, out var to, 4f, NavMesh.AllAreas), $"The {goal.kind} at {goal.position} has no floor.");
+            var route = new NavRoute();
+            route.SetDestination(from, to.position, straightLineFallback: false);
+            return !route.Blocked && route.RemainingLength(from) > 1f;
         }
 
         /// <summary>The mouths of one map lead to different labyrinths, and the pick changes from map to map; an old (version-2) map keeps Dungeon 1.</summary>

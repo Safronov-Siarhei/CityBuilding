@@ -26,6 +26,7 @@ namespace CityBuilder.Dungeon
             Exit,
             HireCamp,
             Shop,
+            Lever,
         }
 
         private const float CheckEverySeconds = 0.5f;
@@ -81,8 +82,17 @@ namespace CityBuilder.Dungeon
             Level = DungeonMode.Instance != null ? DungeonMode.Instance.Level : 1;
         }
 
+        /// <summary>Makes this one of the dungeon's levers (DungeonLevers): a hero sent to it pulls it.</summary>
+        public void InitializeLever(string dungeonId, float half)
+        {
+            Kind = Place.Lever;
+            DungeonId = dungeonId;
+            _half = half;
+            Level = DungeonMode.Instance != null ? DungeonMode.Instance.Level : 1;
+        }
+
         /// <summary>Its card's button works now: a hero by it, and the game not busy going somewhere.</summary>
-        public bool CanGo => HeroNear() && (IsExit || IsCamp ? DungeonMode.IsActive && !LoadingScreen.Busy : DungeonTravel.CanEnter);
+        public bool CanGo => HeroNear() && (IsExit || IsCamp || Kind == Place.Lever ? DungeonMode.IsActive && !LoadingScreen.Busy : DungeonTravel.CanEnter);
 
         /// <summary>This place's card: the hire camp's, the shop's, or the way in/out's.</summary>
         public void OpenCard()
@@ -101,6 +111,10 @@ namespace CityBuilder.Dungeon
                     break;
                 case Place.Shop:
                     if (DungeonShopCard.Instance != null) DungeonShopCard.Instance.Show(this);
+                    break;
+                case Place.Lever:
+                    // no card: a hero by it pulls it; else the player is told to bring one
+                    if (DungeonLevers.Instance != null) DungeonLevers.Instance.Use(this);
                     break;
                 default:
                     if (DungeonEntranceCard.Instance != null) DungeonEntranceCard.Instance.Show(this);

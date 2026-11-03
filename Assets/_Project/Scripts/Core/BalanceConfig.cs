@@ -569,6 +569,7 @@ namespace CityBuilder.Core
         [SerializeField] private float sceneryStreamSquare = 24f;
         [SerializeField] private int dungeonEntranceCount = 3;
         [SerializeField] private float dungeonEnterReach = 4f;
+        [SerializeField] private float dungeonWadeSpeedMultiplier = 0.7f;
         [SerializeField] private int dungeonRevealCells = 7;
         [SerializeField] private float dungeonCameraDistance = 12f;
         [SerializeField] private float dungeonCameraPitch = 50f;
@@ -1081,6 +1082,8 @@ namespace CityBuilder.Core
         /// <summary>Dungeon entrances on an archipelago, and how near a hero must be to go in (cells).</summary>
         public int DungeonEntranceCount => dungeonEntranceCount;
         public float DungeonEnterReach => dungeonEnterReach;
+        /// <summary>A dungeon's shallow water: how much slower everyone wades it (the user, 2026-11-04).</summary>
+        public float DungeonWadeSpeedMultiplier => dungeonWadeSpeedMultiplier;
         public int DungeonRevealCells => dungeonRevealCells;
         public float DungeonCameraDistance => dungeonCameraDistance;
         public float DungeonCameraPitch => dungeonCameraPitch;
@@ -1753,6 +1756,7 @@ namespace CityBuilder.Core
             sceneryStreamSquare = Read(economy, "scenery_stream_square_cells", sceneryStreamSquare);
             dungeonEntranceCount = (int)Read(economy, "dungeon_entrance_count", dungeonEntranceCount);
             dungeonEnterReach = Read(economy, "dungeon_enter_reach_cells", dungeonEnterReach);
+            dungeonWadeSpeedMultiplier = Read(economy, "dungeon_wade_speed_multiplier", dungeonWadeSpeedMultiplier);
             dungeonRevealCells = (int)Read(economy, "dungeon_reveal_cells", dungeonRevealCells);
             dungeonCameraDistance = Read(economy, "dungeon_camera_distance", dungeonCameraDistance);
             dungeonCameraPitch = Read(economy, "dungeon_camera_pitch", dungeonCameraPitch);

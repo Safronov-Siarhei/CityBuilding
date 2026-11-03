@@ -69,9 +69,14 @@ namespace CityBuilder.Buildings
             return Cells.ContainsKey(cell) && !Spans.ContainsKey(cell);
         }
 
-        /// <summary>The walking speed factor at a point: the moat's in its water, 1 elsewhere.</summary>
-        public static float SpeedAt(Vector3 position) =>
-            BalanceConfig.Instance != null && Wading(position) ? BalanceConfig.Instance.MoatSpeedMultiplier : 1f;
+        /// <summary>The walking speed factor at a point: the moat's in its water, a dungeon's in its own (the user, 2026-11-04), 1 elsewhere.</summary>
+        public static float SpeedAt(Vector3 position)
+        {
+            var config = BalanceConfig.Instance;
+            if (config == null) return 1f;
+            if (Maps.DungeonFloor.Active) return Maps.DungeonFloor.Wading(position) ? config.DungeonWadeSpeedMultiplier : 1f;
+            return Wading(position) ? config.MoatSpeedMultiplier : 1f;
+        }
 
         /// <summary>
         /// How far above the ground a figure standing here is drawn: up on a bridge's deck (the user,
@@ -79,6 +84,8 @@ namespace CityBuilder.Buildings
         /// </summary>
         public static float StandHeightAt(Vector3 position)
         {
+            // a dungeon's own floor: knee-deep in its water, up on its bridges (Maps.DungeonFloor)
+            if (Maps.DungeonFloor.Active) return Maps.DungeonFloor.StandHeightAt(position);
             var config = BalanceConfig.Instance;
             if (config == null || (Cells.Count == 0 && Spans.Count == 0)) return 0f;
             var grid = GridManager.Instance;

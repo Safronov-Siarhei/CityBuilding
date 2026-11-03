@@ -109,6 +109,12 @@ namespace CityBuilder.InputControl
             }
             // a dungeon's mouth: held like a town building, its «!» opens the card (the user, 2026-11-01)
             var entrance = Dungeon.DungeonEntrance.At(screenPosition, tapCamera);
+            // a lever is used, not held: a hero by it pulls it, else the player is told to bring one
+            if (entrance != null && entrance.Kind == Dungeon.DungeonEntrance.Place.Lever)
+            {
+                entrance.OpenCard();
+                return;
+            }
             if (entrance != null)
             {
                 if (UI.BuildingFocus.Instance != null) UI.BuildingFocus.Instance.SelectEntrance(entrance);

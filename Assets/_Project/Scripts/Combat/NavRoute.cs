@@ -77,6 +77,14 @@ namespace CityBuilder.Combat
             if (NavMesh.CalculatePath(from, target, AreaMask, _sharedPath))
             {
                 Blocked = _sharedPath.status != NavMeshPathStatus.PathComplete;
+                // a dungeon's long way round: the search ran out before it got there (DungeonWaypoints)
+                if (Blocked && CityBuilder.Maps.DungeonWaypoints.TryRoute(from, target, AreaMask, out var around))
+                {
+                    Blocked = false;
+                    _corners = around;
+                    SkipCornersAlreadyReached(from);
+                    return;
+                }
                 var corners = _sharedPath.corners;
                 var reachesSomewhere = corners.Length > 0 &&
                                        HorizontalDistance(corners[corners.Length - 1], from) > MinProgressDistance;

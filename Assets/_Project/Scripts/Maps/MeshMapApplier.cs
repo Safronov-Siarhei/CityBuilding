@@ -53,6 +53,26 @@ namespace CityBuilder.Maps
             minRegionArea = 0.5f,
         };
 
+        // A dungeon's NavMesh, coarser (the user, 2026-11-04, Dungeon 2: «нельзя пройти в левый
+        // угол»): a 132-cell labyrinth of noisy rock edges baked at the town's fine voxel made
+        // ~12k triangles, and NavMesh.CalculatePath's search ran out of nodes on a long detour --
+        // a PARTIAL path, the hero stopping short. A 1.5x voxel cuts that to ~8k (0.2 closed narrow
+        // passages); the rest of the long ways go over Maps.DungeonWaypoints. The town keeps its
+        // fine bake (a citizen squeezes between buildings).
+        private static readonly NavMeshBuildSettings DungeonNavMeshSettings = new NavMeshBuildSettings
+        {
+            agentTypeID = 0,
+            agentRadius = 0.22f,
+            agentHeight = 0.8f,
+            agentSlope = 40f,
+            agentClimb = 0.3f,
+            minRegionArea = 0.5f,
+            overrideVoxelSize = true,
+            voxelSize = 0.11f,
+        };
+
+        private NavMeshBuildSettings NavSettings => CurrentMap != null && CurrentMap.IsDungeon ? DungeonNavMeshSettings : CitizenNavMeshSettings;
+
         // Vertical size of the box a walkable-surface building (a Bridge) contributes to the
         // NavMesh. Thin, and centred on the building's own origin, so its walkable top face lands
         // within agentClimb of the surrounding ground and the two connect into one region.
@@ -419,6 +439,35 @@ namespace CityBuilder.Maps
                 if (instance != null) into.AddRange(instance.GetComponentsInChildren<MeshFilter>());
             }
         }
+
+        /// <summary>
+        /// The GROUND's height straight under `worldPos` -- never the relief's, a deck's included
+        /// (a dungeon's bridge deck is ground): one physics ray on the terrain layer, its hits
+        /// filtered to the ground's own colliders (DungeonFloor samples the whole dungeon at load).
+        /// </summary>
+        public bool TryGetFloorHeight(Vector3 worldPos, out float height)
+        {
+            height = 0f;
+            if (_groundColliders == null) return false;
+            if (_groundSet == null)
+            {
+                _groundSet = new HashSet<Collider>();
+                foreach (var c in _groundColliders) if (c != null) _groundSet.Add(c);
+            }
+            var ray = new Ray(new Vector3(worldPos.x, 500f, worldPos.z), Vector3.down);
+            var count = Physics.RaycastNonAlloc(ray, _floorHits, 1000f, 1 << TerrainPhysicsLayer.Layer, QueryTriggerInteraction.Ignore);
+            var best = float.MaxValue;
+            for (var i = 0; i < count; i++)
+            {
+                if (!_groundSet.Contains(_floorHits[i].collider) || _floorHits[i].distance >= best) continue;
+                best = _floorHits[i].distance;
+                height = _floorHits[i].point.y;
+            }
+            return best < float.MaxValue;
+        }
+
+        private HashSet<Collider> _groundSet;
+        private readonly RaycastHit[] _floorHits = new RaycastHit[8];
 
         public bool TryRaycastGround(Ray ray, out RaycastHit hit)
         {
@@ -1002,7 +1051,7 @@ namespace CityBuilder.Maps
                 var worldDepth = grid != null ? grid.GridSize.y * grid.CellSize : 200f;
                 _navMeshBounds = new Bounds(Vector3.zero, new Vector3(worldWidth + 20f, 40f, worldDepth + 20f));
 
-                _navMeshData = NavMeshBuilder.BuildNavMeshData(CitizenNavMeshSettings, sources, _navMeshBounds, Vector3.zero, Quaternion.identity);
+                _navMeshData = NavMeshBuilder.BuildNavMeshData(NavSettings, sources, _navMeshBounds, Vector3.zero, Quaternion.identity);
                 _navMeshDataInstance = NavMesh.AddNavMeshData(_navMeshData);
                 Debug.Log($"MeshMapApplier.BuildNavMesh: baked NavMesh from {sources.Count} ground source(s).");
 
@@ -1143,7 +1192,7 @@ namespace CityBuilder.Maps
                     _rebuildSources.Add(surface);
                 }
 
-                NavMeshBuilder.UpdateNavMeshDataAsync(_navMeshData, CitizenNavMeshSettings, _rebuildSources, _navMeshBounds);
+                NavMeshBuilder.UpdateNavMeshDataAsync(_navMeshData, NavSettings, _rebuildSources, _navMeshBounds);
             }
             catch (Exception e)
             {
