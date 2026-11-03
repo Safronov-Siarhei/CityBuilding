@@ -301,6 +301,69 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// The Diplomacy Hall's window (DiplomacyWindow, the user 2026-11-03): the relations scale
+        /// with the bot kingdom, the stance, Мир / Торговля / Война, a note line, «Здание» (the
+        /// Hall's own card) and close.
+        /// </summary>
+        private static void BuildDiplomacyWindow(Transform canvasParent, Sprite panelSprite, BuildingInfoPanelController infoPanel)
+        {
+            var panelRoot = new GameObject("DiplomacyWindow", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(700f, 600f));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+            var title = CreateText(card.transform, "Title", string.Empty, 36, new Vector2(0f, 240f), new Vector2(620f, 56f), ink);
+            var scaleText = CreateText(card.transform, "ScaleText", string.Empty, 28, new Vector2(0f, 170f), new Vector2(620f, 40f), ink);
+            var track = CreateImage(card.transform, "ScaleTrack", new Color(0.3f, 0.22f, 0.14f, 0.6f));
+            SetRect(track.rectTransform, new Vector2(0f, 120f), new Vector2(560f, 34f));
+            var fill = CreateImage(track.transform, "Fill", Color.white);
+            StretchFull(fill.rectTransform);
+            fill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.raycastTarget = false;
+            var middle = CreateImage(track.transform, "Zero", ink);
+            SetRect(middle.rectTransform, Vector2.zero, new Vector2(4f, 44f));
+            middle.raycastTarget = false;
+            var stance = CreateText(card.transform, "Stance", string.Empty, 30, new Vector2(0f, 60f), new Vector2(620f, 44f), ink);
+
+            var keys = new[] { "#diplomacy_peace", "#diplomacy_trade", "#diplomacy_war" };
+            var buttons = new Button[3];
+            for (var i = 0; i < 3; i++)
+                buttons[i] = CreateButton(card.transform, panelSprite, "Stance" + i, keys[i], new Vector2((i - 1) * 205f, -20f), new Vector2(190f, 72f));
+            var note = CreateText(card.transform, "Note", string.Empty, 24, new Vector2(0f, -115f), new Vector2(620f, 80f), ink);
+            var hallButton = CreateButton(card.transform, panelSprite, "HallButton", "#diplomacy_building", new Vector2(-160f, -225f), new Vector2(280f, 64f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(160f, -225f), new Vector2(280f, 64f));
+
+            var controller = canvasParent.gameObject.AddComponent<DiplomacyWindow>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("scaleFill").objectReferenceValue = fill;
+            so.FindProperty("scaleText").objectReferenceValue = scaleText;
+            so.FindProperty("stanceText").objectReferenceValue = stance;
+            so.FindProperty("note").objectReferenceValue = note;
+            so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
+            var list = so.FindProperty("stanceButtons");
+            list.arraySize = 3;
+            for (var i = 0; i < 3; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(buttons[0].onClick, controller.ChoosePeace);
+            UnityEventTools.AddPersistentListener(buttons[1].onClick, controller.ChooseTrade);
+            UnityEventTools.AddPersistentListener(buttons[2].onClick, controller.ChooseWar);
+            UnityEventTools.AddPersistentListener(hallButton.onClick, controller.OpenBuildingCard);
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+            panelRoot.SetActive(false);
+        }
+
+        /// <summary>
         /// The card of a dungeon's entrance (DungeonEntranceCard): «Подземелье», its level, and
         /// «Войти» (live only with a hero at the mouth).
         /// </summary>

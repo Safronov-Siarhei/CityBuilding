@@ -38,7 +38,10 @@ namespace CityBuilder.Buildings
         /// <summary>The Tax House (the user, 2026-11-02): each level raises what a citizen pays a day; its levels cost crystals.</summary>
         public const string TaxHouse = "TaxHouse";
 
-        /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House).</summary>
-        public static readonly System.Collections.Generic.HashSet<string> OnlyOne = new System.Collections.Generic.HashSet<string> { TaxHouse };
+        /// <summary>The Diplomacy Hall (the user, 2026-11-03): built, it opens relations with the bot kingdom.</summary>
+        public const string DiplomacyHall = "DiplomacyHall";
+
+        /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House; 2026-11-03: one Diplomacy Hall).</summary>
+        public static readonly System.Collections.Generic.HashSet<string> OnlyOne = new System.Collections.Generic.HashSet<string> { TaxHouse, DiplomacyHall };
     }
 }

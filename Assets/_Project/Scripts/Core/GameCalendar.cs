@@ -32,10 +32,13 @@ namespace CityBuilder.Core
             }
             Instance = this;
             _dayLengthSeconds = BalanceConfig.Instance.DayLengthSeconds;
+            // a new game's relations with the bot kingdom; a load restores its own (GameSaveController)
+            Diplomacy.BotRelations.Reset();
         }
 
         private void Update()
         {
+            Diplomacy.BotRelations.Tick(Time.deltaTime);
             _timer += Time.deltaTime;
             if (_timer < _dayLengthSeconds) return;
             _timer -= _dayLengthSeconds;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -317,6 +317,7 @@ namespace CityBuilder.EditorTools
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
+            BuildDiplomacyWindow(uiRoot, panelSprite, infoPanel);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonShopCard(uiRoot, panelSprite);
             BuildArmyPanel(uiRoot, panelSprite);

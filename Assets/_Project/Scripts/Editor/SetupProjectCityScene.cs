@@ -306,6 +306,8 @@ namespace CityBuilder.EditorTools
                 ("Theater", new Vector2Int(4, 4), 3.2f, new Color(0.78f, 0.74f, 0.66f), new Color(0.5f, 0.34f, 0.3f), BuildingStyle.Hut, BuildingMotif.Colonnade),
                 // the Tax House (Tools/blender/taxhouse.py, the user 2026-11-02): +tax a citizen per level, levels for crystals
                 ("TaxHouse", new Vector2Int(2, 2), 3f, new Color(0.8f, 0.74f, 0.6f), new Color(0.75f, 0.3f, 0.24f), BuildingStyle.Hut, BuildingMotif.Vault),
+                // the Diplomacy Hall (Tools/blender/diplomacyhall1.py, the user 2026-11-03): relations with the bot
+                ("DiplomacyHall", new Vector2Int(4, 4), 2.8f, new Color(0.95f, 0.94f, 0.9f), new Color(0.25f, 0.43f, 0.85f), BuildingStyle.Hut, BuildingMotif.Colonnade),
                 ("Colosseum", new Vector2Int(4, 6), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Plot, BuildingMotif.Arena),
             })
             {

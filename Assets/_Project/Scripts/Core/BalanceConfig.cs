@@ -439,6 +439,10 @@ namespace CityBuilder.Core
         [SerializeField] private float moatSpeedMultiplier = 0.4f;
         [SerializeField] private float moatWadeDepth = 0.25f;
         [SerializeField] private float bridgeDeckHeight = 0.22f;
+        [SerializeField] private float botRelationsStart = 0f;
+        [SerializeField] private float botTradeMinScore = 30f;
+        [SerializeField] private float botWarDeclareScoreLoss = 40f;
+        [SerializeField] private float botRelationsDriftPerDay = 2f;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -954,6 +958,14 @@ namespace CityBuilder.Core
         public float MoatWadeDepth => moatWadeDepth;
         /// <summary>How high (world units) a bridge's or drawbridge's deck stands: the figures crossing walk on it.</summary>
         public float BridgeDeckHeight => bridgeDeckHeight;
+        /// <summary>The bot kingdom's relations scale (-100..100, the user 2026-11-03): where a new game starts it.</summary>
+        public float BotRelationsStart => botRelationsStart;
+        /// <summary>The relations Trade needs.</summary>
+        public float BotTradeMinScore => botTradeMinScore;
+        /// <summary>What declaring war costs on the scale.</summary>
+        public float BotWarDeclareScoreLoss => botWarDeclareScoreLoss;
+        /// <summary>How far the scale creeps back towards 0 in a day.</summary>
+        public float BotRelationsDriftPerDay => botRelationsDriftPerDay;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1625,6 +1637,10 @@ namespace CityBuilder.Core
             moatSpeedMultiplier = Read(economy, "moat_speed_multiplier", moatSpeedMultiplier);
             moatWadeDepth = Read(economy, "moat_wade_depth", moatWadeDepth);
             bridgeDeckHeight = Read(economy, "bridge_deck_height", bridgeDeckHeight);
+            botRelationsStart = Read(economy, "bot_relations_start", botRelationsStart);
+            botTradeMinScore = Read(economy, "bot_trade_min_score", botTradeMinScore);
+            botWarDeclareScoreLoss = Read(economy, "bot_war_declare_score_loss", botWarDeclareScoreLoss);
+            botRelationsDriftPerDay = Read(economy, "bot_relations_drift_per_day", botRelationsDriftPerDay);
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);

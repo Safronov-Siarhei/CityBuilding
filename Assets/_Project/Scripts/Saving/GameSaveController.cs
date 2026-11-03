@@ -189,6 +189,7 @@ namespace CityBuilder.Saving
             if (gameCalendar != null)
             {
                 gameCalendar.SetCurrentDay(data.currentDay);
+                if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance);
             }
 
             if (taxManager != null)
@@ -644,6 +645,9 @@ namespace CityBuilder.Saving
                         graceCells = ship.GraceCells,
                     });
                 }
+                data.botRelationsSaved = true;
+                data.botRelations = Diplomacy.BotRelations.Score;
+                data.botStance = (int)Diplomacy.BotRelations.Stance;
                 var orcShips = Ships.ShipManager.Instance;
                 if (orcShips != null)
                 {

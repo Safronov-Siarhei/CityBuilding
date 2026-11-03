@@ -60,6 +60,9 @@ namespace CityBuilder.Buildings
         /// <summary>A building going up for the first time keeps its storage room back until it stands (BuildOnTimer).</summary>
         private bool _storageHeld;
 
+        /// <summary>The bot kingdom's building, not the town's (the user, 2026-11-03): none of the town's sums, cards or orders reach it.</summary>
+        public bool IsBot { get; private set; }
+
         /// <summary>Works: not being built or upgraded (ConstructionSite). A tower shoots, a yard gathers, a barracks hires only then.</summary>
         public bool IsOperational => Site == null;
 
