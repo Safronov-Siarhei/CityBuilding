@@ -3,7 +3,7 @@ at the designed maps' quality, which the game's seed picks, turns and lays out).
 
     blender --background --factory-startup --python islands.py -- <out.blend> <kind> <variant> [preview]
 
-kind: start, orc, bot, flat, hilly, rocky, long, crescent, atoll, islet; variant: 1, 2 ...
+kind: start, orc, bot, flat, hilly, rocky, long, crescent, atoll, islet; variant: 1..4 (4 per kind, the user 2026-11-03)
 
 Map 5's generator (the faceted surface, the colour zones, the water bands, the decor, the zones the
 game reads) with the island's own layout: see the island section. The frame is square, 40 % wider
@@ -111,10 +111,14 @@ KINDS = {
     'islet':    (70, 'islet', 'flat', 0, (1, 1), 0.8),
 }
 _spec = KINDS[KIND]
-SCALE = _spec[0] if VARIANT == 1 or KIND in ('start', 'orc', 'bot', 'islet') else int(_spec[0] * 0.86)
+# odd variants full size, even ones a little smaller (start/orc/bot/islet always full)
+SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet') else int(_spec[0] * 0.86)
 SHAPE, RELIEF_KIND, HILL_COUNT, BEACH_COUNT, RIM = _spec[1], _spec[2], _spec[3], _spec[4], _spec[5]
+# a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
+# for the castle (2026-11-03)
+_ROLL = {('bot', 4): 6, ('bot', 6): 8}
 SEED = {'start': 11, 'orc': 23, 'bot': 37, 'flat': 41, 'hilly': 53, 'rocky': 67, 'long': 71,
-        'crescent': 83, 'atoll': 97, 'islet': 101}[KIND] * 10 + VARIANT
+        'crescent': 83, 'atoll': 97, 'islet': 101}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
 _rnd = random.Random(SEED)
 ANGLE = _rnd.uniform(0, 2 * math.pi)
 SQUASH = 1.0 + _rnd.random() * 0.35
@@ -250,6 +254,8 @@ if KIND == 'start':
         m = _clear(x, y, ZONE_R + 6, 8.0)
         return None if m is None else -m * 5 - math.hypot(x, y) * 0.02
     START = _search(_start_score)
+    if START is None:
+        raise SystemExit(f"Isl-start{VARIANT}: no room for the Town Hall's zone -- give the variant another roll in _ROLL")
     START_ZONE = [(START[0] + math.cos(math.pi / 8 + k * math.pi / 4) * ZONE_R,
                    START[1] + math.sin(math.pi / 8 + k * math.pi / 4) * ZONE_R) for k in range(8)]
 if KIND == 'orc':
@@ -266,6 +272,8 @@ if KIND == 'orc':
         # near the coast: the orcs' shipyard stands by their base
         return -worst - total * 0.3
     MAIN_BASE = _search(_orc_score)
+    if MAIN_BASE is None:
+        raise SystemExit(f"Isl-orc{VARIANT}: no room for the main base -- give the variant another roll in _ROLL")
 # the bot kingdom's castle (the user's scheme, 2026-11-03: Design/bot_castle_v2.json): a body of
 # 35x35 cells round the spot, its harbour on the -y side -- the coast 19-23 m below the spot, where
 # the shipyard stands out over the water; flat, no relief and no wood on it all (camp_pad)
@@ -283,6 +291,8 @@ if KIND == 'bot':
             return None
         return -total * 0.3 - abs(shore) * 2.0 - math.hypot(x, y) * 0.01
     BOT = _search(_bot_score, step=2.0)
+    if BOT is None:
+        raise SystemExit(f"Isl-bot{VARIANT}: no room for the bot's castle -- give the variant another roll in _ROLL")
 
 
 def camp_pad(x, y):

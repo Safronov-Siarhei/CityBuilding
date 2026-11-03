@@ -30,6 +30,18 @@ namespace CityBuilder.Maps.Archipelago
 
         public string IslandName => islandName;
         public ArchipelagoGenerator.Kind Kind => kind;
+
+        /// <summary>The variant number its name ends in ("Isl-flat3" -> 3); 1 when it has none.</summary>
+        public int Variant
+        {
+            get
+            {
+                var end = islandName != null ? islandName.Length : 0;
+                var start = end;
+                while (start > 0 && char.IsDigit(islandName[start - 1])) start--;
+                return start < end && int.TryParse(islandName.Substring(start), out var n) ? n : 1;
+            }
+        }
         /// <summary>The square frame's side in metres (cells); even, so a quarter turn keeps every cell on a cell.</summary>
         public int Frame => frame;
         public GameObject Ground => ground;

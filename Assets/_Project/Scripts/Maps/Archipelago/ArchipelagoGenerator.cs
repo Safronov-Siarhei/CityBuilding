@@ -22,7 +22,14 @@ namespace CityBuilder.Maps.Archipelago
     {
         /// <summary>Bumped whenever a seed would come out as a different map; it is part of the map's code.</summary>
         // 2: the islands come from the Blender library (2026-10-29)
-        public const int Version = 2;
+        // 3: four library variants of every kind, not two (the user, 2026-11-03)
+        public const int Version = 3;
+
+        /// <summary>The oldest version a seed can still be drawn as: a version-2 map takes only variants 1-2 of the library.</summary>
+        public const int OldestVersion = 2;
+
+        /// <summary>How many library variants of a kind a map of this version may take.</summary>
+        public static int VariantsOf(int version) => version <= 2 ? 2 : int.MaxValue;
 
         public const int World = 500;
         public const int Storm = 24;
@@ -44,7 +51,11 @@ namespace CityBuilder.Maps.Archipelago
         private static readonly Vector2Int MainBaseHalf = new Vector2Int(23, 20);
         private const int StartZoneRadius = 18;
 
-        public static ArchipelagoMap Generate(int seed)
+        /// <summary>
+        /// The map of a seed as the generator of `version` drew it (a save keeps its version, so an
+        /// old save gets back its own islands after the library grows).
+        /// </summary>
+        public static ArchipelagoMap Generate(int seed, int version = Version)
         {
             var rng = new SeedRandom(seed);
             var map = new ArchipelagoMap(seed, World);
@@ -52,7 +63,7 @@ namespace CityBuilder.Maps.Archipelago
             var used = new HashSet<IslandAsset>();
             Island Make(Kind kind, int size, int shapeSeed)
             {
-                return library != null ? FromLibrary(library, kind, rng, used) ?? IslandShape.Make(kind, size, shapeSeed)
+                return library != null ? FromLibrary(library, kind, rng, used, version) ?? IslandShape.Make(kind, size, shapeSeed)
                     : IslandShape.Make(kind, size, shapeSeed);
             }
             var claimed = new bool[World * World];
@@ -125,15 +136,18 @@ namespace CityBuilder.Maps.Archipelago
         /// <summary>
         /// A library island of the kind, turned a random quarter (0-3): one not yet on this map when
         /// there is one, so two islands of a map are rarely the same. Null when the library has none
-        /// of the kind.
+        /// of the kind. From version 3 the orcs' island is never turned: their main base is laid out
+        /// unturned (gate to the south) on the pad islands.py flattened for it, and on a turned
+        /// island it did not fit -- three maps in four had no main base.
         /// </summary>
-        private static Island FromLibrary(ArchipelagoLibrary library, Kind kind, SeedRandom rng, HashSet<IslandAsset> used)
+        private static Island FromLibrary(ArchipelagoLibrary library, Kind kind, SeedRandom rng, HashSet<IslandAsset> used, int version)
         {
+            var variants = VariantsOf(version);
             var fresh = new List<IslandAsset>();
             var any = new List<IslandAsset>();
             foreach (var asset in library.Islands)
             {
-                if (asset == null || asset.Kind != kind) continue;
+                if (asset == null || asset.Kind != kind || asset.Variant > variants) continue;
                 any.Add(asset);
                 if (!used.Contains(asset)) fresh.Add(asset);
             }
@@ -141,7 +155,8 @@ namespace CityBuilder.Maps.Archipelago
             if (pool.Count == 0) return null;
             var chosen = pool[rng.RangeInt(0, pool.Count)];
             used.Add(chosen);
-            return IslandShape.FromAsset(chosen, rng.RangeInt(0, 4));
+            var turns = rng.RangeInt(0, 4);    // drawn either way, so the rest of the map stays the seed's
+            return IslandShape.FromAsset(chosen, kind == Kind.Orc && version >= 3 ? 0 : turns);
         }
 
         private static List<Vector2> RandomSpots(SeedRandom rng, int count)

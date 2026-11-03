@@ -42,6 +42,57 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsTrue(old, "A code from another version is not told apart from a bad one.");
         }
 
+        /// <summary>
+        /// At least four library variants of every kind (the user, 2026-11-03); a new map takes the
+        /// new ones, while a version-2 map (an old save, an old code) is still drawn from variants 1-2
+        /// only -- the islands it was saved on.
+        /// </summary>
+        [Test]
+        public void EveryKind_HasFourVariants_AndAnOldMapKeepsItsIslands()
+        {
+            var library = ArchipelagoLibrary.Load();
+            Assert.IsNotNull(library, "No island library.");
+            foreach (ArchipelagoGenerator.Kind kind in System.Enum.GetValues(typeof(ArchipelagoGenerator.Kind)))
+            {
+                var count = 0;
+                foreach (var asset in library.Islands)
+                {
+                    if (asset == null || asset.Kind != kind) continue;
+                    count++;
+                    // islands.py found no room for its zone: the island would carry no base / no castle
+                    if (kind == ArchipelagoGenerator.Kind.Orc) Assert.IsTrue(asset.HasMainBase, $"{asset.IslandName} has no main base spot.");
+                    if (kind == ArchipelagoGenerator.Kind.Bot) Assert.IsTrue(asset.HasBot, $"{asset.IslandName} has no spot for the bot's castle.");
+                }
+                Assert.GreaterOrEqual(count, 4, $"Only {count} library variants of the {kind} island.");
+            }
+
+            Assert.IsTrue(ArchipelagoMapId.TryParseCode("2-482915", out var oldId, out _), "A version-2 code is refused though it can still be drawn.");
+            Assert.AreEqual("Archipelago-v2-482915", oldId);
+
+            var newVariantSeen = false;
+            foreach (var seed in Seeds)
+            {
+                foreach (var island in ArchipelagoGenerator.Generate(seed, 2).Islands)
+                {
+                    if (island.Asset != null) Assert.LessOrEqual(island.Asset.Variant, 2, $"Seed {seed}: a version-2 map took {island.Asset.IslandName}.");
+                }
+                foreach (var island in ArchipelagoGenerator.Generate(seed).Islands)
+                {
+                    if (island.Asset != null && island.Asset.Variant > 2) newVariantSeen = true;
+                }
+            }
+            Assert.IsTrue(newVariantSeen, "No new map took a variant 3 or 4.");
+
+            // the orcs' main base is laid out unturned: on a turned orc island it did not fit
+            for (var seed = 1; seed <= 40; seed++)
+            {
+                foreach (var island in ArchipelagoGenerator.Generate(seed).Islands)
+                {
+                    if (island.Kind == ArchipelagoGenerator.Kind.Orc) Assert.AreEqual(0, island.Turns, $"Seed {seed}: the orcs' island is turned.");
+                }
+            }
+        }
+
         [Test]
         public void EverySeed_KeepsTheRules()
         {

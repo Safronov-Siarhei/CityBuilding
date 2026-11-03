@@ -1,5 +1,24 @@
 # Archipelago sandbox map and ships
 
+> **2026-11-03: SIX variants of every island kind** (the user: «минимум по 4 варианта», then «добавь ещё
+> островов»). `islands.py` variants 3-6 for all ten kinds (odd = full size, even = ×0.86 for the medium
+> kinds); a variant whose roll gave an unusable island takes another roll (`_ROLL`: bot 4 -> 6, bot 6 -> 8),
+> and the script now STOPS when the start zone / main base / bot castle finds no room. Blends in
+> `D:/blender projects/Buildings3D/Islands/`, 60 islands in Models/Islands. Generator `Version` 3;
+> `Generate(seed, version)`: a version-2 map (old save, old «2-…» code) takes only variants 1-2
+> (`VariantsOf`, `IslandAsset.Variant` from the name), so it keeps its islands; «2-…» codes are accepted
+> again (`OldestVersion`).
+> **Bug found and fixed (v3 only):** the orcs' island was turned a random quarter, but the main base is
+> laid out unturned (`OpenAtMapSpots`, `quartersOverride: 0`) on the pad islands.py flattened for it --
+> on 12 of 16 seeds there was NO main base (no orc shipyard, no main-portal win). From v3 the orc island
+> is never turned (`FromLibrary`, the quarter still drawn so the rest of the seed is unchanged). v2 maps
+> keep the bug so old saves keep their islands.
+> Tests: EditMode `EveryKind_HasFourVariants_AndAnOldMapKeepsItsIslands` (≥4 per kind, every orc/bot
+> island has its spot, v2 takes only 1-2, orc island unturned on 40 seeds). Bot castles on turned bot
+> islands checked only on seed 1 (bot test). TRAP: anything that changes the picks for a seed needs a
+> version bump AND the old version reproduced, or old saves wake up on different islands.
+
+
 > **2026-11-02 (correction):** the user meant «too little STONE», not land: the start island is back to
 > 130 (round 9's 190 reverted, same assets), and `island_start_rocks` (40) extra boulders are laid on its
 > own land away from the Town Hall spot (`MeshMapApplier.StartIslandRockCells` ->
@@ -35,7 +54,7 @@
   the bot settlement. Islands keep the season themes. No island per ore.
 - Orcs: NO raids until orc ships exist; NO small camps on other islands, only the main island.
   The orc base will be redone later — leave it.
-- Islands are made in BLENDER at old-map quality, 2 per kind; the seed picks and turns them.
+- Islands are made in BLENDER at old-map quality, 6 per kind (2 until 2026-11-03; the user's minimum is 4); the seed picks and turns them.
 - Map rule 1: no trees on beaches (every map, see maps-and-terrain).
 - Edge = «Бурное море» band ships stop at.
 - Ships: the Shipyard stands in shore water and must be RESEARCHED; its LEVEL opens ship types

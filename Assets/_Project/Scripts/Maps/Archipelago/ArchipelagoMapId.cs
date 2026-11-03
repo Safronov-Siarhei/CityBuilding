@@ -37,7 +37,8 @@ namespace CityBuilder.Maps.Archipelago
 
         /// <summary>
         /// A typed code back to a map id: "2-482915" (spaces round it forgiven) for this version of
-        /// the generator. False for anything else -- a bad code, or one from another version, which
+        /// the generator, or for an older one it can still draw the same (version 2: the library's
+        /// first two variants). False for anything else -- a bad code, or one from a version that
         /// would draw a different map than the friend's.
         /// </summary>
         public static bool TryParseCode(string code, out string mapId, out bool otherVersion)
@@ -47,12 +48,12 @@ namespace CityBuilder.Maps.Archipelago
             if (string.IsNullOrWhiteSpace(code)) return false;
             var parts = code.Trim().Split('-');
             if (parts.Length != 2 || !int.TryParse(parts[0], out var version) || !int.TryParse(parts[1], out var seed) || seed <= 0) return false;
-            if (version != ArchipelagoGenerator.Version)
+            if (version < ArchipelagoGenerator.OldestVersion || version > ArchipelagoGenerator.Version)
             {
                 otherVersion = true;
                 return false;
             }
-            mapId = For(seed);
+            mapId = $"{TemplateId}-v{version}-{seed}";
             return true;
         }
 

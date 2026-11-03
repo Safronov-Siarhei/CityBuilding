@@ -651,8 +651,8 @@ namespace CityBuilder.Maps
         {
             var grid = GridManager.Instance;
             if (grid == null) return;
-            Archipelago.ArchipelagoMapId.TryParse(mapId, out var seed, out _);
-            var world = Archipelago.ArchipelagoGenerator.Generate(seed);
+            Archipelago.ArchipelagoMapId.TryParse(mapId, out var seed, out var version);
+            var world = Archipelago.ArchipelagoGenerator.Generate(seed, version > 0 ? version : Archipelago.ArchipelagoGenerator.Version);
             // every island its riches, before the veins and the soil are dealt (the user, 2026-11-02)
             IslandLabels = Archipelago.IslandRiches.Label(world);
             IslandRichesOf = Archipelago.IslandRiches.Assign(world);
