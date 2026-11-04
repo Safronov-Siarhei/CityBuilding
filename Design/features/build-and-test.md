@@ -34,7 +34,8 @@ methods in the file of their feature, or a new `SetupProject<Feature>.cs`.
    Find the real Editor by command line (`-useHub -hubIPC`), never kill Unity blindly.
 2. Edit .cs / CSV.
 3. Run `Tools/research/run.ps1 -Steps setup,setup,editmode,playmode [-Filter X] [-Graphics]` in the
-   background. Iterate with `-Filter` on the feature's tests; full run before committing. (The older
+   background -- but only as CLAUDE.md's rule allows: no build or test for a small edit; build after
+   a batch of edits; ONE general test run after a substantial body of changes (the user, 2026-11-04). (The older
    `rebuild_twice_and_test.ps1`, `retest_fresh.ps1`, `playmode_only.ps1` still work but print no report.)
 4. **Read the script's REPORT, not the logs** (it STOPS after a step with compile errors): per step exit code + time, compile errors and exceptions
    (distinct, capped), test counts, and each failed test with 4 lines of message and its first
