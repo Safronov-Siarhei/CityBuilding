@@ -860,6 +860,13 @@ dungeon opens as a SEPARATE SCENE.
   - a dark/cave look (lit like the surface).
 
 ## Entrances on the map (phase 2a, 2026-10-31)
+- **2026-11-04 (the user: «поставь подземелья 2-го и 3-го уровня как раньше (на отдалении от
+  острова)»):** only LEVEL 1 stays on the start island (`OnStartIsland` = 1 in
+  `DungeonEntrances.Place`); levels 2 and 3 go back to the far islands (nearest + farthest of the
+  rest). 2026-11-03 had put all three on the start island.
+- **Cheat** (Читы → Мир → «Подземелье»): a button per mouth on the map, «Войти: уровень N (id)»,
+  takes every standing hero down from wherever he is (`DungeonTravel.Enter(..., fromAfar: true)`);
+  the camera comes back to that mouth.
 - The user: «размести три подземелья, пока что все ведут к одной карте».
 - `Maps/Archipelago/DungeonEntrances.Place` (called in `MeshMapApplier.ApplyGenerated` before the
   forest, library maps only):

@@ -254,9 +254,21 @@ namespace CityBuilder.Cheats
             {
                 if (Button("Выйти из подземелья")) Dungeon.DungeonTravel.Leave();
             }
-            else if (Dungeon.DungeonTravel.CanEnter && Button("Войти в подземелье 1 (герои города)"))
+            else if (Dungeon.DungeonTravel.CanEnter)
             {
-                Dungeon.DungeonTravel.Enter(Dungeon.DungeonTravel.FirstDungeonId);
+                // every mouth on the map, entered from wherever the heroes stand (the user, 2026-11-04:
+                // «добавь в кнопку читов возможность зайти в них на расстоянии»)
+                var mouths = new List<Dungeon.DungeonEntrance>();
+                foreach (var e in Dungeon.DungeonEntrance.All)
+                    if (e != null && e.Kind == Dungeon.DungeonEntrance.Place.Mouth) mouths.Add(e);
+                mouths.Sort((a, b) => a.Level.CompareTo(b.Level));
+                foreach (var mouth in mouths)
+                {
+                    if (Button($"Войти: уровень {mouth.Level} ({mouth.DungeonId})"))
+                        Dungeon.DungeonTravel.Enter(mouth.DungeonId, mouth.Level, mouth, fromAfar: true);
+                }
+                if (mouths.Count == 0 && Button("Войти в подземелье 1 (герои города)"))
+                    Dungeon.DungeonTravel.Enter(Dungeon.DungeonTravel.FirstDungeonId);
             }
             GUILayout.EndHorizontal();
 

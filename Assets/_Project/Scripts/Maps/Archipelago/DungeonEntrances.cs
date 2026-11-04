@@ -10,7 +10,7 @@ namespace CityBuilder.Maps.Archipelago
     /// The dungeons' entrances on the archipelago (the user, 2026-10-31: three dungeons a map, all
     /// leading to Dungeon 1 for now): an abandoned mine (MineAbandoned, 5 x 5 cells) on
     /// dungeon_entrance_count islands: level 1 on the START island, away from the Town Hall (the
-    /// user, 2026-11-02), the others on islands that are neither the start's, the orcs' nor the bot's.
+    /// user, 2026-11-02), levels 2 and 3 (2026-11-04: «как раньше») on islands that are neither the start's, the orcs' nor the bot's.
     /// Nearer the start = lower level (1, 2, 3 -- the user: weaker monsters, smaller rewards near
     /// the Town Hall). Each stands on the plain nearest its island's middle, its mouth turned to
     /// the start. From the map's seed alone, so nothing is saved; so is which level-1 dungeon each
@@ -43,14 +43,16 @@ namespace CityBuilder.Maps.Archipelago
             if (islands.Count == 0) return placed;
 
             var level = 0;
-            // levels 1, 2 and 3 on the Town Hall's own island (the user, 2026-11-02: «подземелье
-            // 1-го уровня должно спавниться с ратушей игрока на одном острове»; 2026-11-03: «поставь
-            // здание подземелья 2 и 3 уровня на стартовом острове»), clear of where the hall goes,
-            // each further off than the last; what finds no room there goes to the other islands
+            // level 1 on the Town Hall's own island (the user, 2026-11-02: «подземелье 1-го уровня
+            // должно спавниться с ратушей игрока на одном острове»), clear of where the hall goes;
+            // levels 2 and 3 back out on the far islands (the user, 2026-11-04: «поставь подземелья
+            // 2-го и 3-го уровня как раньше (на отдалении от острова)» -- 2026-11-03 had put them on the
+            // start island too). What finds no room there goes to the other islands.
+            const int OnStartIsland = 1;
             foreach (var island in world.Islands)
             {
                 if (island.Kind != ArchipelagoGenerator.Kind.Start) continue;
-                while (level < want && TryFindSpot(world, island, applier, out var home, world.StartCell, freeOnGrid: level > 0))
+                while (level < Mathf.Min(want, OnStartIsland) && TryFindSpot(world, island, applier, out var home, world.StartCell, freeOnGrid: level > 0))
                 {
                     level++;
                     var mouth = Build(world, grid, prefab, home, level, start);

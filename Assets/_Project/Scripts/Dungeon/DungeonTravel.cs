@@ -84,9 +84,11 @@ namespace CityBuilder.Dungeon
 
         /// <summary>
         /// Down with the heroes standing by `from` (the user, 2026-11-01: only those near the
-        /// mouth go; with no mouth given -- a cheat -- every hero standing does).
+        /// mouth go; with no mouth given -- a cheat -- every hero standing does). `fromAfar` (the
+        /// cheats, 2026-11-04: «зайти в них на расстоянии»): every hero standing goes, wherever he is,
+        /// and the camera still comes back to `from`.
         /// </summary>
-        public static void Enter(string dungeonId, int level = 1, DungeonEntrance from = null)
+        public static void Enter(string dungeonId, int level = 1, DungeonEntrance from = null, bool fromAfar = false)
         {
             if (!CanEnter) return;
             var save = Object.FindAnyObjectByType<GameSaveController>();
@@ -100,7 +102,7 @@ namespace CityBuilder.Dungeon
                 foreach (var hero in HeroRoster.Instance.Heroes)
                 {
                     if (hero == null || hero.IsFallen || hero.Unit == null) continue;
-                    if (from != null && !from.IsNear(hero)) continue;
+                    if (from != null && !fromAfar && !from.IsNear(hero)) continue;
                     heroes.Add(new HeroEntry
                     {
                         type = hero.Type,
