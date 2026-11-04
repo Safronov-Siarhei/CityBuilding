@@ -6560,6 +6560,29 @@ MonoBehaviour:
   golemBoulderEvery: 6
   golemBoulderRange: 9
   golemArmour: 0.4
+  lair2DrownedRats: 8
+  lair2DwarfSkeletons: 3
+  lair2ForgeSpirits: 3
+  lair2DrownedDwarfs: 4
+  lair2Eels: 3
+  lair2StoneGuards: 2
+  dungeon2LoneEels: 12
+  dungeon2EelSpacing: 10
+  dwarfSkeletonArmour: 0.4
+  ambushReach: 3
+  ambushRiseSeconds: 1.2
+  kingSlamEvery: 8
+  kingSlamRadius: 2.4
+  kingSlamDamage: 1.5
+  kingGuardsEvery: 20
+  kingGuardsCount: 2
+  kingThroneGuards: 3
+  kingThroneSeconds: 10
+  kingThroneHeal: 0.012
+  serpentDiveEvery: 10
+  serpentDiveSeconds: 3
+  serpentSurfaceReach: 6
+  serpentSpitStun: 0.8
   fertilePatchesPerIsland: 0
   fertileMinCoastCells: 8
   fishShoalShoreMeters: 4
@@ -6938,6 +6961,54 @@ MonoBehaviour:
     attackIntervalSeconds: 2
     attackRange: 2.2
     walkSpeed: 1
+  - id: drowned_rat
+    maxHealth: 20
+    attackDamage: 3
+    attackIntervalSeconds: 0.8
+    attackRange: 0.7
+    walkSpeed: 2.2
+  - id: dwarf_skeleton
+    maxHealth: 90
+    attackDamage: 8
+    attackIntervalSeconds: 1.4
+    attackRange: 0.8
+    walkSpeed: 1.1
+  - id: stone_guard
+    maxHealth: 220
+    attackDamage: 13
+    attackIntervalSeconds: 1.8
+    attackRange: 1
+    walkSpeed: 0.9
+  - id: drowned_dwarf
+    maxHealth: 60
+    attackDamage: 7
+    attackIntervalSeconds: 1.3
+    attackRange: 0.8
+    walkSpeed: 1.3
+  - id: eel
+    maxHealth: 40
+    attackDamage: 7
+    attackIntervalSeconds: 1.2
+    attackRange: 1.2
+    walkSpeed: 1.5
+  - id: forge_spirit
+    maxHealth: 40
+    attackDamage: 7
+    attackIntervalSeconds: 2.2
+    attackRange: 4
+    walkSpeed: 1.3
+  - id: dwarf_king
+    maxHealth: 2000
+    attackDamage: 32
+    attackIntervalSeconds: 2
+    attackRange: 1.8
+    walkSpeed: 1
+  - id: canal_serpent
+    maxHealth: 1800
+    attackDamage: 28
+    attackIntervalSeconds: 2.4
+    attackRange: 5
+    walkSpeed: 0.6
   invasionCamp1Monsters: 3
   invasionCamp2Monsters: 2
   invasionCamp3Monsters: 2

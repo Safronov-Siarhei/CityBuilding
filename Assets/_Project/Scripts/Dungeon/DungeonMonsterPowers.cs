@@ -17,6 +17,17 @@ namespace CityBuilder.Dungeon
     ///   boulders at a hero who keeps his distance, and at half health grows ore armour that turns
     ///   aside a share of every blow.
     /// A skeleton's getting up is OrcUnit's own (GetsUpOnce).
+    /// Level 2 (the user's roster, 2026-11-04):
+    /// - A dwarf skeleton's rusted armour turns aside a share of every blow until half health, then
+    ///   falls off (it still gets up once, as the miner does).
+    /// - A drowned dwarf lies unseen under the water (no blow reaches it, nothing targets it) until a
+    ///   hero comes within dungeon_ambush_reach, then rises out of it.
+    /// - The dwarf king slams his hammer round him, raises stone guards now and then, and at half
+    ///   health, once, sits on his throne: he neither moves nor strikes, guards stand up round him and
+    ///   every one of them left alive heals him until they fall or the time runs out.
+    /// - The canal serpent spits water (a ranged blow that knocks the hero off his feet a moment) and
+    ///   every so often in a fight dives: under the water nothing reaches it, and it comes up at
+    ///   another wading spot within dungeon_serpent_surface_reach of where it was.
     /// </summary>
     public class DungeonMonsterPowers : MonoBehaviour
     {
@@ -37,6 +48,31 @@ namespace CityBuilder.Dungeon
         /// <summary>The golem has grown his ore armour.</summary>
         public bool Armoured { get; private set; }
 
+        // level 2
+        private float _kingGuards, _throneLeft, _throneCarry, _dive, _diveLeft, _riseLeft, _ambushCheck;
+        private bool _waiting, _moved;
+        private readonly List<OrcUnit> _throneGuards = new List<OrcUnit>();
+        private GameObject _throneGlow;
+        private List<Vector3> _surface;
+        private Transform _figure;
+        private Vector3 _figureHome;
+        private const float SinkSeconds = 0.5f;
+
+        /// <summary>The king has sat on his throne (once a fight).</summary>
+        public bool HasThroned { get; private set; }
+
+        /// <summary>The king is on his throne now.</summary>
+        public bool OnThrone => _throneLeft > 0f;
+
+        /// <summary>A drowned dwarf still lying in wait under the water.</summary>
+        public bool InAmbush => _waiting;
+
+        /// <summary>The serpent is under the water now.</summary>
+        public bool Dived => _diveLeft > 0f;
+
+        /// <summary>A dwarf skeleton has lost its armour.</summary>
+        public bool ArmourDropped { get; private set; }
+
         public void Bind(OrcUnit unit, DungeonMonsters owner)
         {
             _unit = unit;
@@ -45,10 +81,40 @@ namespace CityBuilder.Dungeon
             var c = BalanceConfig.Instance;
             _web = c.QueenWebEvery * 0.5f;
             _brood = c.QueenBroodEvery;
-            _slam = c.GolemSlamEvery * 0.5f;
+            _slam = (unit.Kind == OrcKind.DwarfKing ? c.KingSlamEvery : c.GolemSlamEvery) * 0.5f;
             _boulder = c.GolemBoulderEvery;
+            _kingGuards = c.KingGuardsEvery * 0.5f;
+            _dive = c.SerpentDiveEvery;
+            _figure = transform.Find(unit.Kind.ToString());
+            if (_figure != null) _figureHome = _figure.localPosition;
             unit.HitSoldier += OnHit;
             unit.Hurt += OnHurt;
+            if (unit.Kind == OrcKind.DrownedDwarf)
+            {
+                _waiting = true;
+                Submerge(true);
+                ShowFigure(false);
+            }
+            if (unit.Kind == OrcKind.CanalSerpent)
+                _surface = DungeonMonsters.WadingSpots(transform.position, c.SerpentSurfaceReach, 1.5f);
+        }
+
+        /// <summary>Under the water or up out of it: a submerged one is out of every fight (OrcUnit.All, blows, its own thinking).</summary>
+        private void Submerge(bool under)
+        {
+            _unit.Submerged = under;
+            var controller = GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = !under;
+            _unit.enabled = !under;
+            if (!under) _unit.Asleep = false;
+        }
+
+        /// <summary>Lowers the figure by `depth` world units under its place (0: home).</summary>
+        private void Lower(float depth)
+        {
+            if (_figure == null) return;
+            var scale = Mathf.Max(0.01f, transform.lossyScale.y);
+            _figure.localPosition = _figureHome + Vector3.down * (depth / scale);
         }
 
         private void OnDestroy()
@@ -59,13 +125,16 @@ namespace CityBuilder.Dungeon
                 _unit.Hurt -= OnHurt;
             }
             if (_cocoon != null) Destroy(_cocoon);
+            if (_throneGlow != null) Destroy(_throneGlow);
         }
 
         private void OnHit(SoldierUnit soldier)
         {
-            if (_unit.Kind != OrcKind.Spider || soldier == null) return;
+            if (soldier == null) return;
             var c = BalanceConfig.Instance;
-            soldier.Slow(c.SpiderPoisonSeconds, c.SpiderPoisonKeep);
+            if (_unit.Kind == OrcKind.Spider) soldier.Slow(c.SpiderPoisonSeconds, c.SpiderPoisonKeep);
+            // the serpent's spit knocks the hero off his feet a moment
+            if (_unit.Kind == OrcKind.CanalSerpent) soldier.Stun(c.SerpentSpitStun);
         }
 
         private void OnHurt(OrcUnit unit)
@@ -73,6 +142,12 @@ namespace CityBuilder.Dungeon
             var c = BalanceConfig.Instance;
             var half = unit.CurrentHealth * 2 <= unit.MaxHealth;
             if (!half) return;
+            if (unit.Kind == OrcKind.DwarfSkeleton && !ArmourDropped)
+            {
+                ArmourDropped = true;
+                unit.Armour = 0f;
+            }
+            if (unit.Kind == OrcKind.DwarfKing && !HasThroned) StartThrone();
             if (unit.Kind == OrcKind.SpiderQueen && !HasCocooned) StartCocoon();
             if (unit.Kind == OrcKind.OreGolem && !Armoured)
             {
@@ -86,11 +161,209 @@ namespace CityBuilder.Dungeon
 
         private void Update()
         {
-            if (_unit == null || _unit.CurrentHealth <= 0 || _unit.Asleep) return;
+            if (_unit == null || _unit.CurrentHealth <= 0) return;
             var dt = Time.deltaTime;
             var c = BalanceConfig.Instance;
+            // these run under the water too, where the unit itself is switched off
+            if (_waiting || _riseLeft > 0f)
+            {
+                AmbushUpdate(dt, c);
+                return;
+            }
+            if (_diveLeft > 0f)
+            {
+                DiveUpdate(dt, c);
+                return;
+            }
+            if (_unit.Asleep) return;
             if (_unit.Kind == OrcKind.SpiderQueen) QueenUpdate(dt, c);
             else if (_unit.Kind == OrcKind.OreGolem) GolemUpdate(dt, c);
+            else if (_unit.Kind == OrcKind.DwarfKing) KingUpdate(dt, c);
+            else if (_unit.Kind == OrcKind.CanalSerpent) SerpentUpdate(dt, c);
+        }
+
+        // ---------------------------------------------------------------- the drowned dwarf's ambush
+
+        private void AmbushUpdate(float dt, BalanceConfig c)
+        {
+            if (_waiting)
+            {
+                _ambushCheck -= dt;
+                if (_ambushCheck > 0f) return;
+                _ambushCheck = 0.25f;
+                if (NearestHero(c.AmbushReach) == null) return;
+                _waiting = false;
+                _riseLeft = Mathf.Max(0.05f, c.AmbushRiseSeconds);
+                ShowFigure(true);
+                Lower(RiseDepth);
+                return;
+            }
+            _riseLeft -= dt;
+            var t = 1f - Mathf.Clamp01(_riseLeft / Mathf.Max(0.05f, c.AmbushRiseSeconds));
+            Lower(RiseDepth * (1f - t));
+            if (_riseLeft > 0f) return;
+            _riseLeft = 0f;
+            Lower(0f);
+            Submerge(false);
+        }
+
+        private const float RiseDepth = 0.5f;
+
+        /// <summary>Wakes a drowned dwarf at once -- for the tests.</summary>
+        public void RiseNow()
+        {
+            if (!_waiting) return;
+            _waiting = false;
+            _riseLeft = 0f;
+            ShowFigure(true);
+            Lower(0f);
+            Submerge(false);
+        }
+
+        // ---------------------------------------------------------------- the dwarf king
+
+        private void KingUpdate(float dt, BalanceConfig c)
+        {
+            if (_throneLeft > 0f)
+            {
+                _throneLeft -= dt;
+                _throneGuards.RemoveAll(s => s == null || s.CurrentHealth <= 0);
+                _throneCarry += _throneGuards.Count * c.KingThroneHeal * _unit.MaxHealth * dt;
+                var whole = Mathf.FloorToInt(_throneCarry);
+                if (whole > 0)
+                {
+                    _unit.Heal(whole);
+                    _throneCarry -= whole;
+                }
+                if (_throneGlow != null) _throneGlow.transform.localScale = new Vector3(2.6f, 0.01f, 2.6f) * (1f + 0.06f * Mathf.Sin(Time.time * 5f));
+                if (_throneLeft <= 0f || _throneGuards.Count == 0) EndThrone();
+                return;
+            }
+            if (_unit.BusyFor > 0f) return;
+            if (_unit.Fighting == null) return;
+            _slam -= dt;
+            _kingGuards -= dt;
+            if (_kingGuards <= 0f)
+            {
+                _kingGuards = c.KingGuardsEvery;
+                for (var k = 0; k < c.KingGuardsCount; k++) CallGuard(k, c.KingGuardsCount);
+            }
+            if (_slam <= 0f && NearestHero(c.KingSlamRadius) != null)
+            {
+                _slam = c.KingSlamEvery;
+                if (_animator != null) _animator.OnStruck();
+                SlamRound(c.KingSlamRadius, c.KingSlamDamage);
+            }
+        }
+
+        private void StartThrone()
+        {
+            var c = BalanceConfig.Instance;
+            HasThroned = true;
+            _throneLeft = c.KingThroneSeconds;
+            _unit.BusyFor = c.KingThroneSeconds;
+            _throneGuards.Clear();
+            for (var k = 0; k < c.KingThroneGuards; k++)
+            {
+                var g = CallGuard(k, c.KingThroneGuards);
+                if (g != null) _throneGuards.Add(g);
+            }
+            // the curse's cyan light under him while he draws on his guards
+            _throneGlow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(_throneGlow.GetComponent<Collider>());
+            _throneGlow.name = "ThroneGlow";
+            _throneGlow.transform.position = transform.position + Vector3.up * 0.03f;
+            _throneGlow.transform.localScale = new Vector3(2.6f, 0.01f, 2.6f);
+            var renderer = _throneGlow.GetComponent<Renderer>();
+            renderer.sharedMaterial = new Material(RuntimeShaders.Unlit) { color = new Color(0.3f, 0.85f, 1f) };
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_dungeon_king_throne"), EventSeverity.Warning,
+                EventGlyph.Skull, null, transform.position));
+        }
+
+        private void EndThrone()
+        {
+            _throneLeft = 0f;
+            _unit.BusyFor = 0f;
+            if (_throneGlow != null) Destroy(_throneGlow);
+        }
+
+        private OrcUnit CallGuard(int k, int of)
+        {
+            if (_owner == null) return null;
+            var angle = k * Mathf.PI * 2f / Mathf.Max(1, of) + 0.4f;
+            var at = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2.4f;
+            return _owner.Summon(_unit, OrcKind.StoneGuard, at);
+        }
+
+        // ---------------------------------------------------------------- the canal serpent
+
+        private void SerpentUpdate(float dt, BalanceConfig c)
+        {
+            if (_unit.Fighting == null || _surface == null || _surface.Count == 0) return;
+            _dive -= dt;
+            if (_dive > 0f) return;
+            DiveNow();
+        }
+
+        /// <summary>The serpent goes under -- the fight's timer, or a test.</summary>
+        public void DiveNow()
+        {
+            var c = BalanceConfig.Instance;
+            _diveLeft = Mathf.Max(SinkSeconds * 2f + 0.1f, c.SerpentDiveSeconds);
+            _moved = false;
+            Submerge(true);
+        }
+
+        private void DiveUpdate(float dt, BalanceConfig c)
+        {
+            var total = Mathf.Max(SinkSeconds * 2f + 0.1f, c.SerpentDiveSeconds);
+            _diveLeft -= dt;
+            var gone = total - _diveLeft;
+            const float depth = 2.2f;
+            if (gone < SinkSeconds) Lower(depth * gone / SinkSeconds);
+            else if (_diveLeft > SinkSeconds) Lower(depth);
+            else
+            {
+                if (!_moved) Resurface();
+                Lower(depth * Mathf.Clamp01(_diveLeft / SinkSeconds));
+            }
+            if (_diveLeft > 0f) return;
+            _diveLeft = 0f;
+            Lower(0f);
+            Submerge(false);
+            _dive = c.SerpentDiveEvery;
+        }
+
+        /// <summary>Picks where it comes up: another wading spot near its pool, a couple of cells from here at least.</summary>
+        private void Resurface()
+        {
+            _moved = true;
+            if (_surface == null || _surface.Count == 0) return;
+            var here = transform.position;
+            for (var tries = 0; tries < 8; tries++)
+            {
+                var at = _surface[Random.Range(0, _surface.Count)];
+                var d = at - here;
+                d.y = 0f;
+                if (d.magnitude < 2f && tries < 7) continue;
+                transform.position = at;
+                _unit.MovePost(at);
+                return;
+            }
+        }
+
+        /// <summary>A blow to every hero within `radius`, `mult` times its own.</summary>
+        private void SlamRound(float radius, float mult)
+        {
+            var damage = Mathf.Max(1, Mathf.RoundToInt(_unit.AttackDamage * mult));
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                var d = soldier.transform.position - transform.position;
+                d.y = 0f;
+                if (d.magnitude <= radius) soldier.TakeDamage(damage);
+            }
         }
 
         // ---------------------------------------------------------------- the spider queen

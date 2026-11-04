@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -124,6 +124,15 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject spiderQueenModel;
         [SerializeField] private GameObject spiderCocoonModel;
         [SerializeField] private GameObject oreGolemModel;
+        // the level-2 dungeon's (Tools/blender/monsters2.py)
+        [SerializeField] private GameObject drownedRatModel;
+        [SerializeField] private GameObject dwarfSkeletonModel;
+        [SerializeField] private GameObject stoneGuardModel;
+        [SerializeField] private GameObject drownedDwarfModel;
+        [SerializeField] private GameObject eelModel;
+        [SerializeField] private GameObject forgeSpiritModel;
+        [SerializeField] private GameObject dwarfKingModel;
+        [SerializeField] private GameObject canalSerpentModel;
         // Стражи Глубин, the caches' guards (Tools/blender/tide.py)
         [SerializeField] private GameObject tideCrabModel;
         [SerializeField] private GameObject tideSharkModel;
@@ -561,7 +570,7 @@ namespace CityBuilder.Combat
             controller.minMoveDistance = 0f;
 
             // the dungeon's bosses are two cells across: a body to match, or the heroes stand inside them
-            if (kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem)
+            if (kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent)
             {
                 controller.radius = 0.7f / UnitSize.Scale;
                 controller.height = 1.8f / UnitSize.Scale;
@@ -590,6 +599,14 @@ namespace CityBuilder.Combat
                 case OrcKind.StoneGolem: return stoneGolemModel;
                 case OrcKind.SpiderQueen: return spiderQueenModel;
                 case OrcKind.OreGolem: return oreGolemModel;
+                case OrcKind.DrownedRat: return drownedRatModel;
+                case OrcKind.DwarfSkeleton: return dwarfSkeletonModel;
+                case OrcKind.StoneGuard: return stoneGuardModel;
+                case OrcKind.DrownedDwarf: return drownedDwarfModel;
+                case OrcKind.Eel: return eelModel;
+                case OrcKind.ForgeSpirit: return forgeSpiritModel;
+                case OrcKind.DwarfKing: return dwarfKingModel;
+                case OrcKind.CanalSerpent: return canalSerpentModel;
                 case OrcKind.TideCrab: return tideCrabModel;
                 case OrcKind.TideShark: return tideSharkModel;
                 case OrcKind.TideShaman: return tideShamanModel;

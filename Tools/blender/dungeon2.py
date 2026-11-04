@@ -38,7 +38,7 @@ PREVIEW = "preview" in argv[1:]
 PREFIX = "Dungeon-2"
 # no monsters, crystals or patrols yet (the user, 2026-11-03: «пока что не добавляй монстров и
 # ресурсы, я хочу просто пройтись и осмотреть его в игре») -- True writes them into the points
-POPULATED = False
+POPULATED = True
 # Built in "metres" for a 1.8 m person, then shrunk to the GAME's units as Dungeon 1: the 300 x 300
 # build comes out 132 x 132 cells.
 SCALE = 0.44

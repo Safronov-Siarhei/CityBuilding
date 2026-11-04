@@ -86,6 +86,26 @@ namespace CityBuilder.Combat
         TidePuffer = 23,
         /// <summary>Boss: the deep serpent coiled round the gold island's hoard.</summary>
         TideSerpent = 24,
+
+        // The level-2 dungeon's, «Затопленные гномьи чертоги» (Tools/blender/monsters2.py; the user,
+        // 2026-11-04). Stats mon_<id>_*, powers in Dungeon/DungeonMonsterPowers.
+
+        /// <summary>The rat, drowned: a pack from the flooded halls.</summary>
+        DrownedRat = 25,
+        /// <summary>A dwarf's skeleton in rusted armour: the armour holds to half health, then it falls once and gets up.</summary>
+        DwarfSkeleton = 26,
+        /// <summary>The dwarf king's raised stone guard: slow, a lot of health.</summary>
+        StoneGuard = 27,
+        /// <summary>Lies unseen under the water and rises when a hero comes near.</summary>
+        DrownedDwarf = 28,
+        /// <summary>Lives in the water: bites only a hero wading in it.</summary>
+        Eel = 29,
+        /// <summary>A living flame from the ruined forges: keeps its distance and throws fire.</summary>
+        ForgeSpirit = 30,
+        /// <summary>Boss: slams his hammer round him, raises stone guards, heals on his throne while they stand.</summary>
+        DwarfKing = 31,
+        /// <summary>Boss: spits water from the canal, dives and surfaces elsewhere; hit only while up.</summary>
+        CanalSerpent = 32,
     }
 
     /// <summary>
@@ -132,6 +152,14 @@ namespace CityBuilder.Combat
                 case OrcKind.TideShaman: return "tide_shaman";
                 case OrcKind.TidePuffer: return "tide_puffer";
                 case OrcKind.TideSerpent: return "tide_serpent";
+                case OrcKind.DrownedRat: return "drowned_rat";
+                case OrcKind.DwarfSkeleton: return "dwarf_skeleton";
+                case OrcKind.StoneGuard: return "stone_guard";
+                case OrcKind.DrownedDwarf: return "drowned_dwarf";
+                case OrcKind.Eel: return "eel";
+                case OrcKind.ForgeSpirit: return "forge_spirit";
+                case OrcKind.DwarfKing: return "dwarf_king";
+                case OrcKind.CanalSerpent: return "canal_serpent";
                 default: return "orc";
             }
         }
@@ -143,10 +171,10 @@ namespace CityBuilder.Combat
         public static bool IsTide(OrcKind kind) => kind >= OrcKind.TideCrab && kind <= OrcKind.TideSerpent;
 
         /// <summary>One of the dungeon's monsters.</summary>
-        public static bool IsDungeonMonster(OrcKind kind) => kind >= OrcKind.Rat && kind <= OrcKind.OreGolem;
+        public static bool IsDungeonMonster(OrcKind kind) => (kind >= OrcKind.Rat && kind <= OrcKind.OreGolem) || (kind >= OrcKind.DrownedRat && kind <= OrcKind.CanalSerpent);
 
         /// <summary>A boss: the jungle's giant, the dungeon's queen and ore golem.</summary>
-        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.TideSerpent;
+        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.TideSerpent || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -471,7 +499,7 @@ namespace CityBuilder.Combat
         /// <summary>A blow, and who struck it (null: no fighter of the player's -- a tower, a trap).</summary>
         public void TakeDamage(int amount, SoldierUnit by)
         {
-            if (amount <= 0 || CurrentHealth <= 0) return;
+            if (amount <= 0 || CurrentHealth <= 0 || Submerged) return;
             // a blow wakes it, whatever dealt it (a far shot, a test)
             Asleep = false;
             LastHurtAt = Time.time;
@@ -540,6 +568,9 @@ namespace CityBuilder.Combat
         /// (DungeonMonsters). It stays where it stands; a blow wakes it.
         /// </summary>
         public bool Asleep { get; set; }
+
+        /// <summary>Under the dungeon's water (a drowned dwarf lying in wait, the serpent dived): no blow reaches it.</summary>
+        public bool Submerged { get; set; }
 
         /// <summary>When it was last hurt (Time.time), so whatever lays it to sleep leaves a fight alone.</summary>
         public float LastHurtAt { get; private set; } = float.NegativeInfinity;
@@ -981,13 +1012,17 @@ namespace CityBuilder.Combat
         /// <summary>A thrower's hit is a javelin seen flying (see CombatProjectiles), landing its damage on impact; every other orc's is a blow, landed at once.</summary>
         /// <summary>Whether it can come at this soldier: a fighter up on the walls only to a thrower's javelin.</summary>
         // in a moat's water it fights no one (the user, 2026-11-02) -- a wall it stands against it still breaks
-        private bool CanReach(SoldierUnit soldier) => !Buildings.Moat.Wading(transform.position) && (IsRanged || !soldier.OnWall);
+        // an eel bites only a hero wading in its water (the user, 2026-11-04: «на сушу не выходит»)
+        private bool CanReach(SoldierUnit soldier) => !Buildings.Moat.Wading(transform.position) && (IsRanged || !soldier.OnWall)
+            && (Kind != OrcKind.Eel || Maps.DungeonFloor.Wading(soldier.transform.position));
 
-        public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman;
+        public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
+            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent;
 
         /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>
         // (a pufferfish's urchin and a shaman's ball of water fly as balls too)
-        private ProjectileKind Shot => Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
+        private ProjectileKind Shot => Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
+            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
 
         /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
         private void StrikeAt(Vector3 target)

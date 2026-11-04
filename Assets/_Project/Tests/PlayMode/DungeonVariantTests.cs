@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.Combat;
+using CityBuilder.Core;
 using CityBuilder.Dungeon;
 using CityBuilder.Maps;
 using CityBuilder.Saving;
@@ -84,12 +85,14 @@ namespace CityBuilder.Tests.PlayMode
         /// <summary>
         /// The level-2 dungeon, the drowned dwarven halls (the user, 2026-11-03: «подключи эту карту
         /// в подземелье 2 ... пока что не добавляй монстров и ресурсы, я хочу просто пройтись»): the
-        /// heroes come down at its camp, nothing lives there and no crystal lies there yet, and the
-        /// throne and both levers are reached on foot -- through the wading passages and over the
-        /// bridges, as the water is laid.
+        /// heroes come down at its camp, and the throne and both levers are reached on foot -- through
+        /// the wading passages and over the bridges, as the water is laid. Since 2026-11-04 its own
+        /// monsters live there (none of the old mine's): eels only in the water, drowned dwarfs lying
+        /// in wait until a hero is near, the serpent out of reach while dived, the king healed by his
+        /// guards on his throne.
         /// </summary>
         [UnityTest]
-        public IEnumerator TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot()
+        public IEnumerator TheLevelTwoDungeon_HasItsMonsters_AndItsHallsAreReachedOnFoot()
         {
             LogAssert.ignoreFailingMessages = true;
             Time.timeScale = 1f;
@@ -115,9 +118,34 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(DungeonMode.Instance.Arrived, "The heroes never arrived.");
             Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId, "Another map came up.");
             var map = MeshMapApplier.Instance.CurrentMap;
-            foreach (var kind in new[] { "lair", "reward", "crystal", "patrol_0", "boss_golem", "boss_spiders" })
-                Assert.AreEqual(0, map.SpotsOf(kind).Count, $"The walk-through dungeon has {kind} spots.");
-            Assert.AreEqual(0, Object.FindObjectsByType<CityBuilder.Combat.OrcUnit>(FindObjectsSortMode.None).Length, "Monsters live in the walk-through dungeon.");
+            foreach (var kind in new[] { "boss_golem", "boss_spiders" })
+                Assert.AreEqual(0, map.SpotsOf(kind).Count, $"The level-2 dungeon has a level-1 {kind} spot.");
+            foreach (var kind in new[] { "lair", "reward", "crystal", "patrol_0", "boss_king", "boss_serpent" })
+                Assert.Greater(map.SpotsOf(kind).Count, 0, $"The level-2 dungeon has no {kind} spot.");
+            // its own roster, none of the old mine's (the user, 2026-11-04)
+            var monsters = Object.FindObjectsByType<OrcUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var counts = new Dictionary<OrcKind, int>();
+            foreach (var m in monsters) counts[m.Kind] = (counts.TryGetValue(m.Kind, out var n) ? n : 0) + 1;
+            foreach (var kind in new[] { OrcKind.DrownedRat, OrcKind.DwarfSkeleton, OrcKind.StoneGuard, OrcKind.DrownedDwarf, OrcKind.Eel, OrcKind.ForgeSpirit })
+                Assert.IsTrue(counts.ContainsKey(kind), $"No {kind} lives in the level-2 dungeon.");
+            Assert.AreEqual(1, counts.TryGetValue(OrcKind.DwarfKing, out var kings) ? kings : 0, "Not one dwarf king.");
+            Assert.AreEqual(1, counts.TryGetValue(OrcKind.CanalSerpent, out var serpents) ? serpents : 0, "Not one canal serpent.");
+            foreach (var kind in new[] { OrcKind.Rat, OrcKind.Bat, OrcKind.Spider, OrcKind.Skeleton, OrcKind.Kobold, OrcKind.StoneGolem, OrcKind.SpiderQueen, OrcKind.OreGolem })
+                Assert.IsFalse(counts.ContainsKey(kind), $"A level-1 {kind} lives in the level-2 dungeon.");
+            Assert.Greater(counts[OrcKind.Eel], 8, "Too few eels in the flooded passages.");
+            OrcUnit king = null, serpent = null, dwarf = null;
+            foreach (var m in monsters)
+            {
+                if (m.Kind == OrcKind.Eel) Assert.IsTrue(DungeonFloor.Wading(m.transform.position), $"An eel at {m.transform.position} is out of the water.");
+                if (m.Kind == OrcKind.DrownedDwarf)
+                {
+                    Assert.IsTrue(m.Submerged, "A drowned dwarf is not lying in wait.");
+                    CollectionAssert.DoesNotContain(OrcUnit.All, m, "A drowned dwarf in wait can be fought.");
+                    if (dwarf == null) dwarf = m;
+                }
+                if (m.Kind == OrcKind.DwarfKing) king = m;
+                if (m.Kind == OrcKind.CanalSerpent) serpent = m;
+            }
 
             // the water is waded knee-deep and slower, and a bridge's deck stands up out of it
             Assert.IsTrue(DungeonFloor.Active, "The dungeon's floor was not read.");
@@ -172,7 +200,44 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(doors.DoorOpen, "Both levers are down and the door is shut.");
             for (var frame = 0; frame < 10; frame++) yield return null;
             Assert.IsTrue(Reaches(from.position, throne[0]), "The door is up and the throne still cannot be reached.");
+
+            // a drowned dwarf rises out of the water as a hero comes near, and can be fought then
+            hero.transform.position = dwarf.transform.position + Vector3.right * 1.2f;
+            yield return new WaitForSeconds(BalanceConfig.Instance.AmbushRiseSeconds + 0.6f);
+            Assert.IsFalse(dwarf.Submerged, "The drowned dwarf never rose with a hero beside it.");
+            CollectionAssert.Contains(OrcUnit.All, dwarf, "A risen drowned dwarf cannot be fought.");
+            hero.transform.position = start;
+
+            // the serpent dives: no blow reaches it under the water, and it comes up on a wading spot
+            var powers = serpent.GetComponent<DungeonMonsterPowers>();
+            powers.DiveNow();
+            var health = serpent.CurrentHealth;
+            serpent.TakeDamage(100);
+            Assert.AreEqual(health, serpent.CurrentHealth, "A blow reached the serpent under the water.");
+            yield return new WaitForSeconds(BalanceConfig.Instance.SerpentDiveSeconds + 0.5f);
+            Assert.IsFalse(powers.Dived, "The serpent never came up.");
+            Assert.IsFalse(serpent.Submerged, "The serpent is up and still out of reach.");
+            Assert.IsTrue(DungeonFloor.Wading(serpent.transform.position), "The serpent came up out of the water.");
+            serpent.TakeDamage(100);
+            Assert.Less(serpent.CurrentHealth, health, "A blow does not reach the serpent once it is up.");
+
+            // the king at half health sits on his throne: guards rise round him and heal him
+            var kingPowers = king.GetComponent<DungeonMonsterPowers>();
+            var guardsBefore = CountOf(OrcKind.StoneGuard);
+            king.TakeDamage(king.CurrentHealth - king.MaxHealth / 2 + 1);
+            Assert.IsTrue(kingPowers.OnThrone, "The king at half health is not on his throne.");
+            Assert.AreEqual(guardsBefore + BalanceConfig.Instance.KingThroneGuards, CountOf(OrcKind.StoneGuard), "The king's guards did not rise.");
+            var low = king.CurrentHealth;
+            yield return new WaitForSeconds(1.5f);
+            Assert.Greater(king.CurrentHealth, low, "The king's guards do not heal him on his throne.");
             DungeonMode.LeaveWhenAllFall = true;
+        }
+
+        private static int CountOf(OrcKind kind)
+        {
+            var n = 0;
+            foreach (var m in OrcUnit.All) if (m != null && m.Kind == kind && m.CurrentHealth > 0) n++;
+            return n;
         }
 
         private static bool Reaches(Vector3 from, MapSpot goal)

@@ -36,10 +36,30 @@ namespace CityBuilder.Dungeon
     ///   route. With the heroes gone it dozes off again -- for the phone's CPU too: the labyrinth
     ///   holds ~140 monsters and only a lair or two is ever near a hero.
     /// What was earned below goes home with the heroes (DungeonTravel.Leave).
+    /// LEVEL 2, «Затопленные гномьи чертоги» (a map with a "boss_king" spot; the user's roster,
+    /// 2026-11-04): the bosses are the cursed dwarf king (by his throne) and the canal serpent; the
+    /// lairs nearest the king hold stone guards and dwarf skeletons, those nearest the serpent eels
+    /// and drowned dwarfs; the rest take turns: drowned rats; dwarf skeletons with forge spirits;
+    /// an ambush of drowned dwarfs with drowned rats; forge spirits with dwarf skeletons. An eel
+    /// lives only in the water (a lair's eel is put on the nearest wading spot, a drowned rat
+    /// instead where there is none) and dungeon2_lone_eels more lie alone in the flooded passages.
     /// </summary>
     public class DungeonMonsters : MonoBehaviour
     {
-        public enum Theme { Rats, Undead, Bats, Pack, Spiders, Golems, BossQueen, BossGolem }
+        public enum Theme
+        {
+            Rats, Undead, Bats, Pack, Spiders, Golems, BossQueen, BossGolem,
+            // level 2
+            Drowned, DwarfUndead, Ambush, Forge, Guards, Deep, BossKing, BossSerpent, LoneEel,
+        }
+
+        /// <summary>One boss of a map: its spot, the theme of the lairs round it, its own theme, its id's tail.</summary>
+        private struct BossSlot
+        {
+            public Vector3? At;
+            public Theme Near, Own;
+            public string Which;
+        }
 
         public class Lair
         {
@@ -72,6 +92,12 @@ namespace CityBuilder.Dungeon
         private readonly Dictionary<OrcUnit, Lair> _lairOf = new Dictionary<OrcUnit, Lair>();
         private readonly HashSet<string> _slainNow = new HashSet<string>();
         private int _monsterLevel = 1;
+        // this map's two bosses and its lairs' cycle (level 1: queen and ore golem; level 2: king and serpent)
+        private BossSlot _bossA, _bossB;
+        private Theme[] _cycle = { Theme.Rats, Theme.Undead, Theme.Bats, Theme.Pack };
+
+        /// <summary>The level-2 king's throne, where he sits at half health (null elsewhere).</summary>
+        public Vector3? ThroneAt { get; private set; }
         private float _sleepTimer;
         private const float SleepCheckSeconds = 0.3f;
         private const float StayAwakeAfterHurtSeconds = 6f;
@@ -116,6 +142,12 @@ namespace CityBuilder.Dungeon
                 foreach (var monster in lair.Monsters)
                 {
                     if (monster == null) continue;
+                    // under the water (a drowned dwarf's ambush, the serpent's dive): its powers wake it
+                    if (!monster.enabled)
+                    {
+                        ShowSleep(monster, false);
+                        continue;
+                    }
                     var seen = cam != null && InFrame(cam, monster.transform.position);
                     var on = cam == null || monster.Fighting != null || monster.BusyFor > 0f
                         || Time.time - monster.LastHurtAt < StayAwakeAfterHurtSeconds
@@ -211,31 +243,41 @@ namespace CityBuilder.Dungeon
 
             var lairs = new List<Vector3>();
             foreach (var spot in map.SpotsOf("lair")) lairs.Add(Ground(spot.position));
-            var queen = map.SpotsOf("boss_spiders");
-            var golem = map.SpotsOf("boss_golem");
-            Vector3? queenAt = queen.Count > 0 ? Ground(queen[0].position) : (Vector3?)null;
-            Vector3? golemAt = golem.Count > 0 ? Ground(golem[0].position) : (Vector3?)null;
+            var levelTwo = map.SpotsOf("boss_king").Count > 0 || map.SpotsOf("boss_serpent").Count > 0;
+            if (levelTwo)
+            {
+                // the king stands by his throne; his hall's spot is where he holds
+                var throne = map.SpotsOf("throne");
+                ThroneAt = throne.Count > 0 ? Ground(throne[0].position) : (Vector3?)null;
+                _bossA = new BossSlot { At = ThroneAt ?? SpotAt(map, "boss_king"), Near = Theme.Guards, Own = Theme.BossKing, Which = "king" };
+                _bossB = new BossSlot { At = SpotAt(map, "boss_serpent"), Near = Theme.Deep, Own = Theme.BossSerpent, Which = "serpent" };
+                _cycle = new[] { Theme.Drowned, Theme.DwarfUndead, Theme.Ambush, Theme.Forge };
+            }
+            else
+            {
+                _bossA = new BossSlot { At = SpotAt(map, "boss_spiders"), Near = Theme.Spiders, Own = Theme.BossQueen, Which = "spiders" };
+                _bossB = new BossSlot { At = SpotAt(map, "boss_golem"), Near = Theme.Golems, Own = Theme.BossGolem, Which = "golem" };
+            }
 
             // the lairs nearest each boss's hall take its theme
             var themes = new Theme?[lairs.Count];
-            ThemeNearest(lairs, themes, queenAt, Theme.Spiders, config.DungeonBossThemeLairs);
-            ThemeNearest(lairs, themes, golemAt, Theme.Golems, config.DungeonBossThemeLairs);
-            var cycle = new[] { Theme.Rats, Theme.Undead, Theme.Bats, Theme.Pack };
+            ThemeNearest(lairs, themes, _bossA.At, _bossA.Near, config.DungeonBossThemeLairs);
+            ThemeNearest(lairs, themes, _bossB.At, _bossB.Near, config.DungeonBossThemeLairs);
             var next = 0;
             for (var i = 0; i < lairs.Count; i++)
             {
-                var lair = new Lair { Post = lairs[i], Theme = themes[i] ?? cycle[next++ % cycle.Length] };
+                var lair = new Lair { Post = lairs[i], Theme = themes[i] ?? _cycle[next++ % _cycle.Length] };
                 _lairs.Add(lair);
                 Fill(lair);
             }
 
-            if (queenAt.HasValue) AddBoss(queenAt.Value, Theme.BossQueen, BossId(dungeonId, Level, "spiders"), slainBefore);
-            if (golemAt.HasValue) AddBoss(golemAt.Value, Theme.BossGolem, BossId(dungeonId, Level, "golem"), slainBefore);
+            foreach (var boss in new[] { _bossA, _bossB })
+                if (boss.At.HasValue) AddBoss(boss.At.Value, boss.Own, BossId(dungeonId, Level, boss.Which), slainBefore);
 
             // a band at every crystal: the rooms' and the lone ones'
             var k = 0;
-            foreach (var spot in map.SpotsOf("reward")) AddGuard(Ground(spot.position), config.DungeonGuardRoomShare, queenAt, golemAt, k++);
-            foreach (var spot in map.SpotsOf("crystal")) AddGuard(Ground(spot.position), config.DungeonGuardSingleShare, queenAt, golemAt, k++);
+            foreach (var spot in map.SpotsOf("reward")) AddGuard(Ground(spot.position), config.DungeonGuardRoomShare, k++);
+            foreach (var spot in map.SpotsOf("crystal")) AddGuard(Ground(spot.position), config.DungeonGuardSingleShare, k++);
 
             // the patrols, route by route
             for (var r = 0; ; r++)
@@ -244,28 +286,92 @@ namespace CityBuilder.Dungeon
                 if (spots.Count < 2) break;
                 var route = new List<Vector3>(spots.Count);
                 foreach (var spot in spots) route.Add(Ground(spot.position));
-                AddPatrol(route, ThemeAt(route[route.Count / 2], queenAt, golemAt, k++));
+                AddPatrol(route, ThemeAt(route[route.Count / 2], k++));
             }
+
+            // level 2: eels alone in the flooded passages, far from the way in and from each other
+            if (levelTwo) ScatterEels(config.Dungeon2LoneEels, config.Dungeon2EelSpacing);
         }
 
-        private static readonly Theme[] Cycle = { Theme.Rats, Theme.Undead, Theme.Bats, Theme.Pack };
+        private static Vector3? SpotAt(MeshMapDefinition map, string kind)
+        {
+            var spots = map.SpotsOf(kind);
+            return spots.Count > 0 ? Ground(spots[0].position) : (Vector3?)null;
+        }
 
         /// <summary>Who guards a place: the nearer boss's own kind when one is near, else the lairs' cycle.</summary>
-        private static Theme ThemeAt(Vector3 at, Vector3? queen, Vector3? golem, int k)
+        private Theme ThemeAt(Vector3 at, int k)
         {
             var reach = BalanceConfig.Instance.DungeonGuardBossReach;
-            var dq = queen.HasValue ? Flat(at - queen.Value) : float.MaxValue;
-            var dg = golem.HasValue ? Flat(at - golem.Value) : float.MaxValue;
-            if (dq < reach && dq <= dg) return Theme.Spiders;
-            if (dg < reach) return Theme.Golems;
-            return Cycle[k % Cycle.Length];
+            var da = _bossA.At.HasValue ? Flat(at - _bossA.At.Value) : float.MaxValue;
+            var db = _bossB.At.HasValue ? Flat(at - _bossB.At.Value) : float.MaxValue;
+            if (da < reach && da <= db) return _bossA.Near;
+            if (db < reach) return _bossB.Near;
+            return _cycle[k % _cycle.Length];
+        }
+
+        /// <summary>Every walkable spot under the dungeon's water within `reach` of `at`, a cell apart (nearest first).</summary>
+        public static List<Vector3> WadingSpots(Vector3 at, float reach, float step = 1f)
+        {
+            var found = new List<Vector3>();
+            if (!DungeonFloor.Active) return found;
+            var n = Mathf.CeilToInt(reach / step);
+            for (var x = -n; x <= n; x++)
+            for (var z = -n; z <= n; z++)
+            {
+                var p = at + new Vector3(x * step, 0f, z * step);
+                if (Flat(p - at) > reach) continue;
+                if (!NavMesh.SamplePosition(p, out var hit, step * 0.6f, NavMesh.AllAreas)) continue;
+                if (!DungeonFloor.Wading(hit.position)) continue;
+                found.Add(hit.position);
+            }
+            found.Sort((a, b) => Flat(a - at).CompareTo(Flat(b - at)));
+            return found;
+        }
+
+        /// <summary>Lone eels: wading spots on a coarse grid over the map, taken in a fixed scattered order, each `spacing` from the others and from the heroes' way in.</summary>
+        private void ScatterEels(int count, float spacing)
+        {
+            if (count <= 0 || !DungeonFloor.Active) return;
+            var mode = DungeonMode.Instance;
+            var half = mode != null ? mode.MapHalf : 70f;
+            var start = mode != null ? mode.StartSpot : Vector3.zero;
+            var taken = new List<Vector3> { start };
+            var candidates = new List<(int key, Vector3 at)>();
+            const float step = 3f;
+            for (var x = -half; x <= half; x += step)
+            for (var z = -half; z <= half; z += step)
+            {
+                var p = new Vector3(x, 0f, z);
+                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryGetGroundHeight(p, out var y)) p.y = y;
+                if (!NavMesh.SamplePosition(p, out var hit, 1.2f, NavMesh.AllAreas) || !DungeonFloor.Wading(hit.position)) continue;
+                candidates.Add((((int)(x * 73.1f) * 31 + (int)(z * 41.7f) * 17) & 0x7fffffff, hit.position));
+            }
+            candidates.Sort((a, b) => a.key.CompareTo(b.key));
+            var placed = 0;
+            foreach (var (_, at) in candidates)
+            {
+                if (placed >= count) break;
+                var clear = true;
+                foreach (var t in taken)
+                    if (Flat(at - t) < spacing) { clear = false; break; }
+                if (!clear) continue;
+                foreach (var lair in _lairs)
+                    if (Flat(at - lair.Post) < spacing * 0.5f) { clear = false; break; }
+                if (!clear) continue;
+                taken.Add(at);
+                var eel = new Lair { Post = at, Theme = Theme.LoneEel, Guard = true };
+                _lairs.Add(eel);
+                SpawnAt(eel, OrcKind.Eel, at, BalanceConfig.Instance.DungeonGuardRadius);
+                placed++;
+            }
         }
 
         private static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;
 
-        private void AddGuard(Vector3 at, float share, Vector3? queen, Vector3? golem, int k)
+        private void AddGuard(Vector3 at, float share, int k)
         {
-            var lair = new Lair { Post = at, Theme = ThemeAt(at, queen, golem, k), Guard = true };
+            var lair = new Lair { Post = at, Theme = ThemeAt(at, k), Guard = true };
             _lairs.Add(lair);
             Fill(lair, share);
         }
@@ -336,7 +442,9 @@ namespace CityBuilder.Dungeon
             if (slainBefore != null && slainBefore.Contains(id)) return;
             var lair = new Lair { Post = at, Theme = theme, BossId = id };
             _lairs.Add(lair);
-            Spawn(lair, theme == Theme.BossQueen ? OrcKind.SpiderQueen : OrcKind.OreGolem, 1, BalanceConfig.Instance.DungeonBossGuardRadius);
+            var kind = theme == Theme.BossQueen ? OrcKind.SpiderQueen : theme == Theme.BossGolem ? OrcKind.OreGolem
+                : theme == Theme.BossKing ? OrcKind.DwarfKing : OrcKind.CanalSerpent;
+            Spawn(lair, kind, 1, BalanceConfig.Instance.DungeonBossGuardRadius);
         }
 
         /// <summary>Who lives in a lair of this theme, from the sheet's counts.</summary>
@@ -356,6 +464,20 @@ namespace CityBuilder.Dungeon
                     };
                 case Theme.Spiders: return new List<(OrcKind, int)> { (OrcKind.Spider, c.LairSpiders), (OrcKind.Spiderling, c.LairSpiderlings) };
                 case Theme.Golems: return new List<(OrcKind, int)> { (OrcKind.StoneGolem, c.LairStoneGolems), (OrcKind.Skeleton, c.LairSkeletons) };
+                // level 2
+                case Theme.Drowned: return new List<(OrcKind, int)> { (OrcKind.DrownedRat, c.Lair2DrownedRats) };
+                case Theme.DwarfUndead:
+                    return new List<(OrcKind, int)> { (OrcKind.DwarfSkeleton, c.Lair2DwarfSkeletons), (OrcKind.ForgeSpirit, Mathf.Max(1, c.Lair2ForgeSpirits - 1)) };
+                case Theme.Ambush:
+                    return new List<(OrcKind, int)>
+                    {
+                        (OrcKind.DrownedDwarf, c.Lair2DrownedDwarfs),
+                        (OrcKind.DrownedRat, Mathf.CeilToInt(c.Lair2DrownedRats * c.DungeonLairPackShare * 0.5f - 0.001f)),
+                    };
+                case Theme.Forge:
+                    return new List<(OrcKind, int)> { (OrcKind.ForgeSpirit, c.Lair2ForgeSpirits), (OrcKind.DwarfSkeleton, Mathf.Max(1, c.Lair2DwarfSkeletons - 1)) };
+                case Theme.Guards: return new List<(OrcKind, int)> { (OrcKind.StoneGuard, c.Lair2StoneGuards), (OrcKind.DwarfSkeleton, c.Lair2DwarfSkeletons) };
+                case Theme.Deep: return new List<(OrcKind, int)> { (OrcKind.Eel, c.Lair2Eels), (OrcKind.DrownedDwarf, Mathf.Max(1, c.Lair2DrownedDwarfs - 1)) };
                 default: return new List<(OrcKind, int)>();
             }
         }
@@ -388,6 +510,13 @@ namespace CityBuilder.Dungeon
             var raids = OrcRaidManager.Instance;
             if (raids == null) return null;
             if (NavMesh.SamplePosition(post, out var hit, 2f, NavMesh.AllAreas)) post = hit.position;
+            // an eel lives in the water: the nearest wading spot, else a drowned rat in its place
+            if (kind == OrcKind.Eel && !DungeonFloor.Wading(post))
+            {
+                var wet = WadingSpots(post, 5f);
+                if (wet.Count > 0) post = wet[0];
+                else kind = OrcKind.DrownedRat;
+            }
             var monster = raids.SpawnOrcOfKind(post, _monsterLevel, kind);
             if (monster == null) return null;
             monster.transform.position = post;
@@ -401,7 +530,16 @@ namespace CityBuilder.Dungeon
                 monster.GetUpSeconds = config.SkeletonGetUpSeconds;
                 monster.GetUpHealthShare = config.SkeletonGetUpHealth;
             }
-            if (kind == OrcKind.Spider || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem)
+            if (kind == OrcKind.DwarfSkeleton)
+            {
+                // the rusted armour holds to half health (DungeonMonsterPowers drops it), then it falls once
+                monster.GetsUpOnce = true;
+                monster.GetUpSeconds = config.SkeletonGetUpSeconds;
+                monster.GetUpHealthShare = config.SkeletonGetUpHealth;
+                monster.Armour = config.DwarfSkeletonArmour;
+            }
+            if (kind == OrcKind.Spider || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.DwarfSkeleton
+                || kind == OrcKind.DrownedDwarf || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent)
                 monster.gameObject.AddComponent<DungeonMonsterPowers>().Bind(monster, this);
             return monster;
         }
@@ -441,7 +579,7 @@ namespace CityBuilder.Dungeon
                 }
                 // and the crystals, the highest of them (the user, 2026-11-02: «добавь и кристаллы»)
                 if (popups != null) popups.ShowCrystals(at + Vector3.up * 3.2f, crystals);
-                var name = Localization.Get(monster.Kind == OrcKind.SpiderQueen ? "#monster_spider_queen" : "#monster_ore_golem");
+                var name = Localization.Get("#monster_" + OrcUnit.SheetIdOf(monster.Kind));
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_dungeon_boss_slain", name, coins, crystals),
                     EventSeverity.Good, EventGlyph.Star, null, monster.transform.position));
             }

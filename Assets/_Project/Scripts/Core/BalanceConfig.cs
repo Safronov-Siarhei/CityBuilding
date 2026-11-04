@@ -624,6 +624,30 @@ namespace CityBuilder.Core
         [SerializeField] private float golemBoulderEvery = 6f;
         [SerializeField] private float golemBoulderRange = 9f;
         [SerializeField] private float golemArmour = 0.4f;
+        // the level-2 dungeon (Затопленные гномьи чертоги): its lairs and its monsters' powers
+        [SerializeField] private int lair2DrownedRats = 8;
+        [SerializeField] private int lair2DwarfSkeletons = 3;
+        [SerializeField] private int lair2ForgeSpirits = 3;
+        [SerializeField] private int lair2DrownedDwarfs = 4;
+        [SerializeField] private int lair2Eels = 3;
+        [SerializeField] private int lair2StoneGuards = 2;
+        [SerializeField] private int dungeon2LoneEels = 12;
+        [SerializeField] private float dungeon2EelSpacing = 10f;
+        [SerializeField] private float dwarfSkeletonArmour = 0.4f;
+        [SerializeField] private float ambushReach = 3f;
+        [SerializeField] private float ambushRiseSeconds = 1.2f;
+        [SerializeField] private float kingSlamEvery = 8f;
+        [SerializeField] private float kingSlamRadius = 2.4f;
+        [SerializeField] private float kingSlamDamage = 1.5f;
+        [SerializeField] private float kingGuardsEvery = 20f;
+        [SerializeField] private int kingGuardsCount = 2;
+        [SerializeField] private int kingThroneGuards = 3;
+        [SerializeField] private float kingThroneSeconds = 10f;
+        [SerializeField] private float kingThroneHeal = 0.012f;
+        [SerializeField] private float serpentDiveEvery = 10f;
+        [SerializeField] private float serpentDiveSeconds = 3f;
+        [SerializeField] private float serpentSurfaceReach = 6f;
+        [SerializeField] private float serpentSpitStun = 0.8f;
         [SerializeField] private int fertilePatchesPerIsland = 2;
         [SerializeField] private int fertileMinCoastCells = 8;
         [SerializeField] private float fishShoalShoreMeters = 4f;
@@ -763,6 +787,7 @@ namespace CityBuilder.Core
         {
             "wolf", "bear", "troll", "giant", "rat", "bat", "spider", "spiderling", "skeleton", "kobold", "stone_golem", "spider_queen", "ore_golem",
             "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
+            "drowned_rat", "dwarf_skeleton", "stone_guard", "drowned_dwarf", "eel", "forge_spirit", "dwarf_king", "canal_serpent",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -786,6 +811,15 @@ namespace CityBuilder.Core
             new MonsterStats { id = "tide_shaman", maxHealth = 50, attackDamage = 5, attackIntervalSeconds = 2.0f, attackRange = 4.5f, walkSpeed = 1.3f },
             new MonsterStats { id = "tide_puffer", maxHealth = 40, attackDamage = 6, attackIntervalSeconds = 2.0f, attackRange = 4.0f, walkSpeed = 1.4f },
             new MonsterStats { id = "tide_serpent", maxHealth = 1400, attackDamage = 26, attackIntervalSeconds = 2.0f, attackRange = 2.2f, walkSpeed = 1.0f },
+            // the level-2 dungeon's (monsters2.py)
+            new MonsterStats { id = "drowned_rat", maxHealth = 20, attackDamage = 3, attackIntervalSeconds = 0.8f, attackRange = 0.7f, walkSpeed = 2.2f },
+            new MonsterStats { id = "dwarf_skeleton", maxHealth = 90, attackDamage = 8, attackIntervalSeconds = 1.4f, attackRange = 0.8f, walkSpeed = 1.1f },
+            new MonsterStats { id = "stone_guard", maxHealth = 220, attackDamage = 13, attackIntervalSeconds = 1.8f, attackRange = 1f, walkSpeed = 0.9f },
+            new MonsterStats { id = "drowned_dwarf", maxHealth = 60, attackDamage = 7, attackIntervalSeconds = 1.3f, attackRange = 0.8f, walkSpeed = 1.3f },
+            new MonsterStats { id = "eel", maxHealth = 40, attackDamage = 7, attackIntervalSeconds = 1.2f, attackRange = 1.2f, walkSpeed = 1.5f },
+            new MonsterStats { id = "forge_spirit", maxHealth = 40, attackDamage = 7, attackIntervalSeconds = 2.2f, attackRange = 4f, walkSpeed = 1.3f },
+            new MonsterStats { id = "dwarf_king", maxHealth = 2000, attackDamage = 32, attackIntervalSeconds = 2f, attackRange = 1.8f, walkSpeed = 1f },
+            new MonsterStats { id = "canal_serpent", maxHealth = 1800, attackDamage = 28, attackIntervalSeconds = 2.4f, attackRange = 5f, walkSpeed = 0.6f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -1142,6 +1176,29 @@ namespace CityBuilder.Core
         public float GolemBoulderEvery => golemBoulderEvery;
         public float GolemBoulderRange => golemBoulderRange;
         public float GolemArmour => golemArmour;
+        public int Lair2DrownedRats => lair2DrownedRats;
+        public int Lair2DwarfSkeletons => lair2DwarfSkeletons;
+        public int Lair2ForgeSpirits => lair2ForgeSpirits;
+        public int Lair2DrownedDwarfs => lair2DrownedDwarfs;
+        public int Lair2Eels => lair2Eels;
+        public int Lair2StoneGuards => lair2StoneGuards;
+        public int Dungeon2LoneEels => dungeon2LoneEels;
+        public float Dungeon2EelSpacing => dungeon2EelSpacing;
+        public float DwarfSkeletonArmour => dwarfSkeletonArmour;
+        public float AmbushReach => ambushReach;
+        public float AmbushRiseSeconds => ambushRiseSeconds;
+        public float KingSlamEvery => kingSlamEvery;
+        public float KingSlamRadius => kingSlamRadius;
+        public float KingSlamDamage => kingSlamDamage;
+        public float KingGuardsEvery => kingGuardsEvery;
+        public int KingGuardsCount => kingGuardsCount;
+        public int KingThroneGuards => kingThroneGuards;
+        public float KingThroneSeconds => kingThroneSeconds;
+        public float KingThroneHeal => kingThroneHeal;
+        public float SerpentDiveEvery => serpentDiveEvery;
+        public float SerpentDiveSeconds => serpentDiveSeconds;
+        public float SerpentSurfaceReach => serpentSurfaceReach;
+        public float SerpentSpitStun => serpentSpitStun;
         /// <summary>The archipelago's fertile soil: patches per island, their radius in cells, and a Farm's extra yield on it (0.5 = +50% with its whole plot fertile).</summary>
         public int FertilePatchesPerIsland => fertilePatchesPerIsland;
         public int FertileMinCoastCells => fertileMinCoastCells;
@@ -1811,6 +1868,29 @@ namespace CityBuilder.Core
             golemBoulderEvery = Read(economy, "dungeon_golem_boulder_every_sec", golemBoulderEvery);
             golemBoulderRange = Read(economy, "dungeon_golem_boulder_range", golemBoulderRange);
             golemArmour = Read(economy, "dungeon_golem_armour", golemArmour);
+            lair2DrownedRats = (int)Read(economy, "dungeon2_lair_drowned_rats", lair2DrownedRats);
+            lair2DwarfSkeletons = (int)Read(economy, "dungeon2_lair_dwarf_skeletons", lair2DwarfSkeletons);
+            lair2ForgeSpirits = (int)Read(economy, "dungeon2_lair_forge_spirits", lair2ForgeSpirits);
+            lair2DrownedDwarfs = (int)Read(economy, "dungeon2_lair_drowned_dwarfs", lair2DrownedDwarfs);
+            lair2Eels = (int)Read(economy, "dungeon2_lair_eels", lair2Eels);
+            lair2StoneGuards = (int)Read(economy, "dungeon2_lair_stone_guards", lair2StoneGuards);
+            dungeon2LoneEels = (int)Read(economy, "dungeon2_lone_eels", dungeon2LoneEels);
+            dungeon2EelSpacing = Read(economy, "dungeon2_eel_spacing", dungeon2EelSpacing);
+            dwarfSkeletonArmour = Read(economy, "dungeon_dwarf_skeleton_armour", dwarfSkeletonArmour);
+            ambushReach = Read(economy, "dungeon_ambush_reach", ambushReach);
+            ambushRiseSeconds = Read(economy, "dungeon_ambush_rise_sec", ambushRiseSeconds);
+            kingSlamEvery = Read(economy, "dungeon_king_slam_every_sec", kingSlamEvery);
+            kingSlamRadius = Read(economy, "dungeon_king_slam_radius", kingSlamRadius);
+            kingSlamDamage = Read(economy, "dungeon_king_slam_damage_mult", kingSlamDamage);
+            kingGuardsEvery = Read(economy, "dungeon_king_guards_every_sec", kingGuardsEvery);
+            kingGuardsCount = (int)Read(economy, "dungeon_king_guards_count", kingGuardsCount);
+            kingThroneGuards = (int)Read(economy, "dungeon_king_throne_guards", kingThroneGuards);
+            kingThroneSeconds = Read(economy, "dungeon_king_throne_sec", kingThroneSeconds);
+            kingThroneHeal = Read(economy, "dungeon_king_throne_heal", kingThroneHeal);
+            serpentDiveEvery = Read(economy, "dungeon_serpent_dive_every_sec", serpentDiveEvery);
+            serpentDiveSeconds = Read(economy, "dungeon_serpent_dive_sec", serpentDiveSeconds);
+            serpentSurfaceReach = Read(economy, "dungeon_serpent_surface_reach", serpentSurfaceReach);
+            serpentSpitStun = Read(economy, "dungeon_serpent_spit_stun_sec", serpentSpitStun);
             fertilePatchesPerIsland = (int)Read(economy, "fertile_patches_per_island", fertilePatchesPerIsland);
             fertileMinCoastCells = (int)Read(economy, "fertile_min_coast_cells", fertileMinCoastCells);
             fishShoalShoreMeters = Read(economy, "fish_shoal_shore_meters", fishShoalShoreMeters);

@@ -1,5 +1,7 @@
 # Dungeon (подземелье)
 
+> 2026-11-04 (later): LEVEL-2 MONSTERS + both bosses IN THE GAME (dwarf king, canal serpent; 8 models
+> from monsters2.py) -- see «Level-2 monsters IN THE GAME». User not seen them.
 > 2026-11-04: level 2 playtest round 1 fixed (bridges, knee-deep wading, levers + door, buoy,
 > road map for long routes, fog cheat) -- see «Dungeon level 2». User not seen it yet.
 > Status 2026-11-01: IN THE GAME: the walk, 3 entrances, monsters + bosses, crystals and patrols,
@@ -301,7 +303,7 @@ dungeon opens as a SEPARATE SCENE.
     no crystals. Set it True (and give the game king/serpent bosses) when they are made;
   - the lever door's bars (`Dungeon-2-Door.fbx`) are exported but NOT loaded by the game yet, so
     the way to the throne is open; levers do nothing yet;
-  - test `DungeonVariantTests.TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot`.
+  - test `DungeonVariantTests.TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot` (renamed ..._HasItsMonsters_... 2026-11-04).
   - Still to do: the new monsters and both bosses (models first, for approval).
 - **Level-2 monster roster (the user agreed 2026-11-04 «делай модели»):** 3 known ones made
   stronger (same joints, new look), 3 new, 2 bosses. Sizes in cells (hero ~0.8).
@@ -325,6 +327,36 @@ dungeon opens as a SEPARATE SCENE.
   gnome grown x4.2 via `scaled()`; ~1.7 model units = the ore golem's scale). Cyan (`water`) = the
   drowned curse's colour throughout. Previews: `Design/previews/dungeon2/` (3/4-angle lineup renderer
   kept in the session scratchpad: framed to the tallest figure).
+  APPROVED 2026-11-04 («Одобряю, в игру»).
+- **Level-2 monsters IN THE GAME (2026-11-04; the user has not seen them):**
+  - exported to `Models/Monsters/Monster*.fbx`, wired in SetupProjectOrcs -> OrcRaidManager fields;
+    `OrcKind` DrownedRat=25 .. CanalSerpent=32 (`IsDungeonMonster` covers both ranges, the two
+    bosses in `IsBossKind`, ForgeSpirit + CanalSerpent ranged with a ball shot); stats `mon_<id>_*`.
+  - `dungeon2.py POPULATED = True`, Dungeon2 rebuilt + re-exported: 13 lairs, 10 reward rooms + 6
+    lone crystals, 5 patrols, boss_king, boss_serpent, throne.
+  - `DungeonMonsters`: a map with `boss_king` is level 2 -> bosses = king (spawned at the THRONE
+    spot) + serpent; boss-near themes Guards (stone guards + dwarf skeletons) / Deep (eels + drowned
+    dwarfs); cycle Drowned, DwarfUndead (skeletons + forge spirits), Ambush (drowned dwarfs + rats),
+    Forge (spirits + skeletons). Counts `dungeon2_lair_*`. An eel is moved to the nearest wading spot
+    (`WadingSpots`), a drowned rat where none; `dungeon2_lone_eels` (12) more scattered over the
+    flooded passages `dungeon2_eel_spacing` apart (`ScatterEels`). Boss ids `-king` / `-serpent`;
+    the slain-boss log names any boss by `#monster_<sheet id>`.
+  - Powers (`DungeonMonsterPowers`, numbers `dungeon_*`): dwarf skeleton armour
+    (`dungeon_dwarf_skeleton_armour`) until half health, then gets up once; drowned dwarf AMBUSH:
+    `OrcUnit.Submerged` + the unit and its controller switched off (out of `OrcUnit.All`, no blow
+    lands) until a hero is within `dungeon_ambush_reach`, rises `dungeon_ambush_rise_sec`; eel bites
+    only a WADING hero (`OrcUnit.CanReach`); king: hammer slam round him, stone guards every
+    `dungeon_king_guards_every_sec`, at half health once the THRONE: busy, `dungeon_king_throne_guards`
+    guards rise, each alive heals him `dungeon_king_throne_heal` of max a second, cyan glow
+    disc, `#log_dungeon_king_throne` (he heals where he stands -- he was put down by the throne;
+    no walk to it); serpent: spit stuns `dungeon_serpent_spit_stun_sec`, dives every
+    `dungeon_serpent_dive_every_sec` in a fight (submerged, figure sinks), comes up at another
+    wading spot within `dungeon_serpent_surface_reach`.
+  - Test `DungeonVariantTests.TheLevelTwoDungeon_HasItsMonsters_AndItsHallsAreReachedOnFoot`
+    (was ..._LoadsEmpty_...): every new kind present, no level-1 kind, eels wading, drowned dwarfs
+    submerged then rise by a hero, serpent immune dived and up on a wading spot, king on the throne
+    with guards and healing; plus the old walk/levers checks.
+  - Open: the user to play it; the king's walk to the throne; the serpent's swimming between dives.
 - **Playtest round 1 of level 2 (the user walked it in the editor, 2026-11-04; 11 screenshots).**
   Done; the user has not seen the result yet:
   - **Bridges from the BUILT geometry** (`plan_bridges()`): every crossing of a passage between

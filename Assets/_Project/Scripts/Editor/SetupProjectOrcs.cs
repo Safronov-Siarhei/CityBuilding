@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -103,6 +103,11 @@ namespace CityBuilder.EditorTools
                          ("stoneGolemModel", "MonsterStoneGolem"), ("spiderQueenModel", "MonsterSpiderQueen"),
                          ("spiderCocoonModel", "MonsterSpiderCocoon"), ("oreGolemModel", "MonsterOreGolem"),
                          ("rewardCrystalModel", "MonsterRewardCrystal"),
+                         // the level-2 dungeon's (Tools/blender/monsters2.py)
+                         ("drownedRatModel", "MonsterDrownedRat"), ("dwarfSkeletonModel", "MonsterDwarfSkeleton"),
+                         ("stoneGuardModel", "MonsterStoneGuard"), ("drownedDwarfModel", "MonsterDrownedDwarf"),
+                         ("eelModel", "MonsterEel"), ("forgeSpiritModel", "MonsterForgeSpirit"),
+                         ("dwarfKingModel", "MonsterDwarfKing"), ("canalSerpentModel", "MonsterCanalSerpent"),
                      })
             {
                 var path = $"Assets/_Project/Models/Monsters/{file}.fbx";
