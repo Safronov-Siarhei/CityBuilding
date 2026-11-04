@@ -303,6 +303,28 @@ dungeon opens as a SEPARATE SCENE.
     the way to the throne is open; levers do nothing yet;
   - test `DungeonVariantTests.TheLevelTwoDungeon_LoadsEmpty_AndItsHallsAreReachedOnFoot`.
   - Still to do: the new monsters and both bosses (models first, for approval).
+- **Level-2 monster roster (the user agreed 2026-11-04 «делай модели»):** 3 known ones made
+  stronger (same joints, new look), 3 new, 2 bosses. Sizes in cells (hero ~0.8).
+  - Drowned rats 0.3, pack 4-6, attack waders from the water (the rat's joints).
+  - Armoured dwarf skeleton 0.6: horned helm, axe, round shield; gets up once + armour to half health.
+  - Stone guard 1.2: the king raises them; stand by the lever halls (the small golem's joints).
+  - Drowned dwarf 0.6: lies unseen under the water in flooded passages, rises when a hero is near.
+  - Cave eel 0.5: only in water, bites waders, never on land.
+  - Forge spirit 0.5: from ruined forges, keeps its distance, fire over an area (the kobold's role).
+  - Boss CURSED DWARF KING ~2.5: hammer slam, raises 2-3 stone guards, at half health sits on the
+    throne and heals while the guards live.
+  - Boss CANAL SERPENT ~4 long: dives and surfaces elsewhere in the canal, a water spit knocks back,
+    can be hit only while surfaced.
+- **Models v1 (2026-11-04, sent, AWAITING APPROVAL; not exported):** `Tools/blender/monsters2.py`,
+  collection «Подземелье-2-монстры» in Buildings-Size1-Models.blend (beside the level-1 monsters,
+  y=20). Built from monsters.py/gnomes.py parts with colours swapped (`colours()` context) where they
+  are kin: MonsterDrownedRat 369 tris, MonsterDwarfSkeleton 829, MonsterStoneGuard 687 (dark slate +
+  stone beard + cyan runes, unlike the gnomes' light guardian), MonsterDrownedDwarf 833, MonsterEel 804
+  and MonsterCanalSerpent 1596 (origin = WATER SURFACE, foam rings where they break it, only `Head`
+  jointed), MonsterForgeSpirit 676 (hovers in an iron brazier, no legs), MonsterDwarfKing 1106 (a
+  gnome grown x4.2 via `scaled()`; ~1.7 model units = the ore golem's scale). Cyan (`water`) = the
+  drowned curse's colour throughout. Previews: `Design/previews/dungeon2/` (3/4-angle lineup renderer
+  kept in the session scratchpad: framed to the tallest figure).
 - **Playtest round 1 of level 2 (the user walked it in the editor, 2026-11-04; 11 screenshots).**
   Done; the user has not seen the result yet:
   - **Bridges from the BUILT geometry** (`plan_bridges()`): every crossing of a passage between
