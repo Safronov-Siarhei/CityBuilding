@@ -385,6 +385,21 @@ dungeon opens as a SEPARATE SCENE.
     asserts no deck.
   - A pack member spawned behind the rock: `DungeonMonsters.SpawnAt` pulls a post the floor does not run
     to straight from the lair's middle (NavMesh.Raycast) back onto the lair's side.
+- **Playtest round 3 of level 2 (the user, 2026-11-04) -- BUILT, built once, no tests, not seen:**
+  - The QUEEN does not back off at all below (`Hero.TickFlee` returns in a dungeon): she keeps her
+    distance like any archer.
+  - Heroes ANSWER whoever strikes the group from further off (`SoldierUnit.StrikesGroup`: up to 2.5x
+    the engage radius -- the serpent spitting from its canal), and one MARCHING answers whoever hits him
+    from close by (`Assailant`) -- a follower pinned by monsters stood and took it.
+  - The King's heal (`SetCurrentHealth`) now reports to his health bar at once.
+  - Monsters WADE like heroes: `OrcUnit.GuardWalk` and `Chase` (the dungeon's moves) slow by
+    `Moat.SpeedAt` and spread `DungeonWake` rings.
+  - The king's throne: NO blue disc; his stone guards CLIMB OUT OF THE FLOOR (`RiseFromFloor`, 1.1 s,
+    busy till up).
+  - ROOT CAUSE of «the serpent just vanishes»: `FigureAnimator` writes the figure's localPosition every
+    frame (the bob), so every sink/rise moved by hand was overwritten. It now has `Offset`, and the
+    serpent's dive, the drowned dwarf's rise and the guards' climb go through it.
+  - Potions: nothing level-specific in DungeonPotions -- not reproduced; ask the user what he saw.
 - **Potion shop was INSIDE THE ROCK on level 2** (the user's screenshot, 2026-11-04): level 1's
   "camp + (14, 3)" falls in the rock of this narrower camp hall. `dungeon2.py clear_spot()` now picks
   the dry floor nearest that point where the shop's whole round (4.5) is clear of rock and water and

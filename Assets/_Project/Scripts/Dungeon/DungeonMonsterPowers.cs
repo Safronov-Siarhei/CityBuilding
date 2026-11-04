@@ -115,9 +115,11 @@ namespace CityBuilder.Dungeon
         /// <summary>Lowers the figure by `depth` world units under its place (0: home).</summary>
         private void Lower(float depth)
         {
-            if (_figure == null) return;
             var scale = Mathf.Max(0.01f, transform.lossyScale.y);
-            _figure.localPosition = _figureHome + Vector3.down * (depth / scale);
+            var shift = Vector3.down * (depth / scale);
+            // the animator writes the figure's position every frame: the sink goes through it
+            if (_animator != null) _animator.Offset = shift;
+            else if (_figure != null) _figure.localPosition = _figureHome + shift;
         }
 
         private void OnDestroy()
@@ -238,7 +240,6 @@ namespace CityBuilder.Dungeon
                     _unit.Heal(whole);
                     _throneCarry -= whole;
                 }
-                if (_throneGlow != null) _throneGlow.transform.localScale = new Vector3(2.6f, 0.01f, 2.6f) * (1f + 0.06f * Mathf.Sin(Time.time * 5f));
                 if (_throneLeft <= 0f || _throneGuards.Count == 0) EndThrone();
                 return;
             }
@@ -271,15 +272,6 @@ namespace CityBuilder.Dungeon
                 var g = CallGuard(k, c.KingThroneGuards);
                 if (g != null) _throneGuards.Add(g);
             }
-            // the curse's cyan light under him while he draws on his guards
-            _throneGlow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(_throneGlow.GetComponent<Collider>());
-            _throneGlow.name = "ThroneGlow";
-            _throneGlow.transform.position = transform.position + Vector3.up * 0.03f;
-            _throneGlow.transform.localScale = new Vector3(2.6f, 0.01f, 2.6f);
-            var renderer = _throneGlow.GetComponent<Renderer>();
-            renderer.sharedMaterial = new Material(RuntimeShaders.Unlit) { color = new Color(0.3f, 0.85f, 1f) };
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_dungeon_king_throne"), EventSeverity.Warning,
                 EventGlyph.Skull, null, transform.position));
         }
@@ -296,7 +288,10 @@ namespace CityBuilder.Dungeon
             if (_owner == null) return null;
             var angle = k * Mathf.PI * 2f / Mathf.Max(1, of) + 0.4f;
             var at = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2.4f;
-            return _owner.Summon(_unit, OrcKind.StoneGuard, at);
+            var guard = _owner.Summon(_unit, OrcKind.StoneGuard, at);
+            // the guard climbs up out of the floor (the user, 2026-11-04: the blue disc «выглядит странно и нелепо»)
+            if (guard != null) guard.gameObject.AddComponent<RiseFromFloor>();
+            return guard;
         }
 
         // ---------------------------------------------------------------- the canal serpent
@@ -591,6 +586,58 @@ namespace CityBuilder.Dungeon
                 nearest = soldier;
             }
             return nearest;
+        }
+    }
+
+    /// <summary>
+    /// A summoned stone guard climbing up out of the floor: its figure starts sunk a body's height
+    /// down and rises over RiseSeconds, shaking a little; it does nothing until it is up.
+    /// </summary>
+    public class RiseFromFloor : MonoBehaviour
+    {
+        private const float RiseSeconds = 1.1f;
+        private Transform _figure;
+        private Vector3 _home;
+        private float _depth, _age;
+        private OrcUnit _unit;
+        private FigureAnimator _animator;
+
+        private void Start()
+        {
+            _unit = GetComponent<OrcUnit>();
+            if (_unit == null) { Destroy(this); return; }
+            _figure = transform.Find(_unit.Kind.ToString());
+            if (_figure == null) { Destroy(this); return; }
+            _home = _figure.localPosition;
+            _animator = GetComponent<FigureAnimator>();
+            var top = transform.position.y;
+            foreach (var r in _figure.GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
+            _depth = Mathf.Max(0.3f, top - transform.position.y) / Mathf.Max(0.01f, transform.lossyScale.y);
+            _unit.BusyFor = RiseSeconds;
+            Place(0f);
+        }
+
+        private void Update()
+        {
+            if (_figure == null) { Destroy(this); return; }
+            _age += Time.deltaTime;
+            var t = Mathf.Clamp01(_age / RiseSeconds);
+            Place(t);
+            if (t >= 1f)
+            {
+                if (_animator != null) _animator.Offset = Vector3.zero;
+                else _figure.localPosition = _home;
+                Destroy(this);
+            }
+        }
+
+        private void Place(float t)
+        {
+            var eased = 1f - (1f - t) * (1f - t);
+            var shake = (1f - t) * 0.04f * Mathf.Sin(_age * 60f);
+            var shift = new Vector3(shake, -_depth * (1f - eased), 0f);
+            if (_animator != null) _animator.Offset = shift;
+            else _figure.localPosition = _home + shift;
         }
     }
 }

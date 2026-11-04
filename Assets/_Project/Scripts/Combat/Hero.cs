@@ -418,6 +418,9 @@ namespace CityBuilder.Combat
         {
             var balance = Balance;
             if (balance == null || balance.fleeRadius <= 0f || _unit.IsRetreating || _onMoveOrder) return;
+            // below she keeps her distance like any archer -- no backing off at all (the user,
+            // 2026-11-04: «слишком далеко пытается отойти в подземелье, чтобы сделать выстрел»)
+            if (Dungeon.DungeonMode.IsActive) return;
             _fleeScan -= Time.deltaTime;
             if (_fleeScan > 0f) return;
             _fleeScan = FleeScanSeconds;

@@ -733,7 +733,9 @@ namespace CityBuilder.Combat
             }
             if (!_guardRoute.TryGetDirection(transform.position, out var direction)) return;
 
-            var step = direction * _walkSpeed * Time.deltaTime;
+            // wading slower, rings round it (the user, 2026-11-04: monsters had no water effect)
+            var step = direction * _walkSpeed * Buildings.Moat.SpeedAt(transform.position) * Time.deltaTime;
+            Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);
@@ -766,14 +768,16 @@ namespace CityBuilder.Combat
                 if (_guardRoute.Blocked && _guardRoute.IsFinished) BreakThrough();
                 return;
             }
+            var speed = _walkSpeed * Buildings.Moat.SpeedAt(transform.position);
+            Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * _walkSpeed * Time.deltaTime);
+                _controller.Move(direction * speed * Time.deltaTime);
                 PinToGroundHeight();
             }
             else
             {
-                transform.position += direction * _walkSpeed * Time.deltaTime;
+                transform.position += direction * speed * Time.deltaTime;
             }
         }
 

@@ -212,6 +212,8 @@ namespace CityBuilder.Combat
         public void SetCurrentHealth(int health)
         {
             CurrentHealth = Mathf.Clamp(health, 1, MaxHealth);
+            // the bar over him follows at once (the King's heal left it stale until it hid, the user 2026-11-04)
+            if (_healthBar != null && _healthBar.IsShown) _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
         }
 
         /// <summary>
@@ -403,8 +405,10 @@ namespace CityBuilder.Combat
         private IDamageTarget AcquireTarget()
         {
             if (Group.AttackTarget != null && Group.AttackTarget.IsAlive) return Group.AttackTarget;
-            // sent somewhere by the player: he goes there first, fights after (the user, 2026-11-02)
-            if (Marching) return null;
+            // sent somewhere by the player: he goes there first, fights after (the user, 2026-11-02) --
+            // unless he is caught on the way: one pinned by monsters striking him stood and took it
+            // (the user, 2026-11-04), so he answers whoever hits him from close by
+            if (Marching) return Assailant(UnitAttackRange + 0.6f);
             var dungeon = Dungeon.DungeonMode.IsActive;
 
             var slot = Group.SlotPositionFor(this);
@@ -421,7 +425,9 @@ namespace CityBuilder.Combat
                 if (candidate is OrcPortal portal && portal.IsShielded) continue;
 
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
-                if (distance > EngageRadius) continue;
+                // one striking at the group from further off (the serpent spitting from its canal,
+                // the user 2026-11-04: «не реагирует на змея на таком расстоянии») is answered too
+                if (distance > EngageRadius && !(candidate is OrcUnit striker && StrikesGroup(striker) && distance <= EngageRadius * 2.5f)) continue;
                 // below, no shooting or running at what stands behind the rock (the Queen did)
                 if (dungeon && UnityEngine.AI.NavMesh.Raycast(transform.position, candidate.Transform.position, out _, UnityEngine.AI.NavMesh.AllAreas)) continue;
 
@@ -442,6 +448,29 @@ namespace CityBuilder.Combat
             }
 
             return preferred ?? fallback;
+        }
+
+        /// <summary>This orc is fighting someone of this soldier's group.</summary>
+        private bool StrikesGroup(OrcUnit orc)
+        {
+            var foe = orc.Fighting;
+            return foe != null && (foe == this || (Group != null && foe.Group == Group));
+        }
+
+        /// <summary>The nearest live orc within `reach` that is fighting this soldier, or null.</summary>
+        private OrcUnit Assailant(float reach)
+        {
+            OrcUnit nearest = null;
+            var best = reach;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0 || orc.Fighting != this) continue;
+                var d = HorizontalDistance(orc.transform.position, transform.position);
+                if (d > best) continue;
+                best = d;
+                nearest = orc;
+            }
+            return nearest;
         }
 
         /// <summary>Every hostile thing currently in the world. Both registries are self-maintaining lists, so this allocates nothing per scan beyond the iterator.</summary>

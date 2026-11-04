@@ -153,6 +153,9 @@ namespace CityBuilder.Combat
         /// <summary>A golem's slam: both fists up and down. Public for the dungeon's powers and the tests.</summary>
         public void Slam() => _slam = 0f;
 
+        /// <summary>A shift of the figure in its root's space on top of the walk's bob: sunk under the water, rising out of the floor (DungeonMonsterPowers). The animator owns the figure's position, so this is the only way to move it.</summary>
+        public Vector3 Offset { get; set; }
+
         /// <summary>A slam is being shown.</summary>
         public bool IsSlamming => _slam >= 0f;
 
@@ -263,7 +266,7 @@ namespace CityBuilder.Combat
                     bob -= 0.12f * fall;
                 }
             }
-            _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale);
+            _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale) + Offset;
             // about the figure's OWN side axis: the model may stand turned on its root
             _figure.localRotation = _figureRot * Quaternion.AngleAxis(pitch, Vector3.right);
         }
