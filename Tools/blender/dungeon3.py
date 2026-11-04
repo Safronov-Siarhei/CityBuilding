@@ -215,7 +215,7 @@ def _hall_mid(name):
 # magma POOL he rises from -- (x, y, rx, ry), deep (no ground)
 DRAGON_LAKE = (*_hall_mid("dragon"), 16.0, 11.0)
 TITAN_POOL = (*_hall_mid("titan"), 8.0, 7.0)
-CRUMBLE_SHARE = 0.5         # of the bridges on a loop of the maze, this share crumbles once crossed
+
 CRUMBLING = []              # indices into BRIDGES -- set by plan_bridges()
 BRIDGE_LINKS = []           # the plan link each bridge belongs to
 PILLARS = []
@@ -409,7 +409,7 @@ def plan_bridges():
     floor -- level 2's square-to-the-canal bridges led «в никуда»), when both ends are clear floor
     and no other bridge is near; a tide passage, or a crossing no bridge fits, is a LAVA FORD (tide
     floor across the river: deep_sd keeps the lava off every passage but under a bridge). Then the
-    bridges on a loop crumble, CRUMBLE_SHARE of them, while the rest still join everything."""
+    bridges with a detour of their own crumble (and re-form in the game)."""
     crossings = []
     for li, ((pl, _h), (ca, cb), wet) in enumerate(zip(CURVES, PLAN["links"], PLAN["tide"])):
         if hall_of(ca) and hall_of(ca) == hall_of(cb):
@@ -455,18 +455,10 @@ def plan_bridges():
         shift = (ends[0] - ends[1]) / 2
         BRIDGES.append((x + ux * shift, y + uy * shift, ux, uy, (ends[0] + ends[1]) / 2 + 0.8))
         BRIDGE_LINKS.append(li)
-    rnd = random.Random(17)
-    gone = set()
-    for i in sorted(range(len(BRIDGES)), key=lambda i: rnd.random()):
-        li = BRIDGE_LINKS[i]
-        if li in gone or len(CRUMBLING) >= math.ceil(len(BRIDGES) * CRUMBLE_SHARE):
-            continue
-        if _on_loop(li, gone):
-            gone.add(li)
-            CRUMBLING.append(i)
-    CRUMBLING.sort()
-    if "bridges_only" in argv:
-        print("ON A LOOP ONE BY ONE:", sum(1 for li in BRIDGE_LINKS if _on_loop(li, set())), "of", len(BRIDGES))
+    # every bridge with a detour of its own crumbles (the user, 2026-11-04: «8, восстанавливаются»):
+    # a fallen bridge RE-FORMS after a while (the lava cools -- the game's rule), so two down at
+    # once can only hold the heroes up, never shut them in for good
+    CRUMBLING.extend(i for i, li in enumerate(BRIDGE_LINKS) if _on_loop(li, set()))
     print(f"BRIDGES {len(BRIDGES)} (crumbling {len(CRUMBLING)}) LAVA FORDS {len(FORDS)} (of {len(crossings)} crossings)")
 
 

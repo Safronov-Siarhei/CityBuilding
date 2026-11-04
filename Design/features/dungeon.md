@@ -292,18 +292,19 @@ dungeon opens as a SEPARATE SCENE.
     lava is 1.0 behind (`BRIDGE_DRY`), asymmetric halves; the lava runs open 5 either side of a deck
     and the rock is cut back there (a gorge). 10 bridges + 12 lava fords (plan: 14 + 8 -- curves
     made 4 straight decks hit rock, those became fords).
-  - CRUMBLING: only bridges whose loss TOGETHER still joins every hall and node (`_on_loop` with
-    the others gone): 2 of 10. 8 of 10 have a detour one by one -- the plan counted them that way.
-    Asked the user: keep 2, or more that RE-FORM after a while.
+  - CRUMBLING: every bridge with a detour of its own (`_on_loop`, one by one) -- 8 of 10 -- and a
+    fallen bridge RE-FORMS after a while (the user, 2026-11-04: «8, восстанавливаются»; the lava
+    cools). Two down at once may cut a part off, but only until one re-forms. The re-form time is a
+    sheet number for the game step (economy `dungeon3_bridge_reform_seconds`, to add).
   - A crumbling bridge = `<prefix>-Bridges-f<i>` (stones) + `-Bridges-f<i>-deck` (its walkable deck,
-    terrain, out of the Ground) + a `bridge_fall` point. export_map's OPTIONAL needs "Bridges" and
+    terrain, out of the Ground) + a `bridge_fall` point (8). export_map's OPTIONAL needs "Bridges" and
     "Tide" added; the game needs the deck walkable and a carve when it falls.
   - FIRE PALETTE: `FIRE_PALETTE` recolours the shared terrain palette's slots (water -> lava, rock
     -> basalt, rock_deep -> obsidian, grass -> ash, clay/mud -> crust/embers) into
     `Terrain-Palette-Fire.png` -- the game needs a per-map palette for Dungeon3 (export_map copies
     only Terrain-Palette.png, untouched).
   - Points: 13 lairs, `boss_dragon` (the hoard, south shore of the lake), `boss_titan` (the pool's
-    south rim), 20 crystals (9 lone + 11 in passages), 6 chests, 10 patrols, 2 bridge_fall.
+    south rim), 20 crystals (9 lone + 11 in passages), 6 chests, 10 patrols, 8 bridge_fall.
   - Budget: ground 135k, relief 161k, lava 8k, tide 11k, props 49k tris, decor 13.7k items (~780k).
   - `bridges_only` arg: stops after plan_bridges, prints why a crossing got no bridge.
 
