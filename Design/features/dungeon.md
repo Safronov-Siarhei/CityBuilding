@@ -357,6 +357,11 @@ dungeon opens as a SEPARATE SCENE.
     submerged then rise by a hero, serpent immune dived and up on a wading spot, king on the throne
     with guards and healing; plus the old walk/levers checks.
   - Open: the user to play it; the king's walk to the throne; the serpent's swimming between dives.
+- **Potion shop was INSIDE THE ROCK on level 2** (the user's screenshot, 2026-11-04): level 1's
+  "camp + (14, 3)" falls in the rock of this narrower camp hall. `dungeon2.py clear_spot()` now picks
+  the dry floor nearest that point where the shop's whole round (4.5) is clear of rock and water and
+  11 from the hire camp and the campfire: SHOP_AT (166, 21.3), game spot (7.04, -56.63). Checked in
+  Blender (0 relief verts over its floor, 42 before); not seen in the game yet.
 - **Playtest round 1 of level 2 (the user walked it in the editor, 2026-11-04; 11 screenshots).**
   Done; the user has not seen the result yet:
   - **Bridges from the BUILT geometry** (`plan_bridges()`): every crossing of a passage between

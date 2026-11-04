@@ -714,7 +714,32 @@ CAMP = (hall_centre("camp")[0], hall_centre("camp")[1] - 2.0, 6)   # kept tidy: 
 
 
 HIRE_AT = (CAMP[0] - 14.0, CAMP[1] + 4.0)      # the approved camp buildings (dungeon_camp.py), west
-SHOP_AT = (CAMP[0] + 14.0, CAMP[1] + 3.0)      # and east of the campfire, facing the way in
+def clear_spot(want, radius, away, gap):
+    """The dry floor nearest `want` where a building of `radius` stands clear of the rock (its
+    whole round inside the passages by a margin) and `gap` from every point in `away`. Level 1's
+    "east of the campfire" put the shop INTO the rock here: this camp hall is narrower on the east
+    (the user's screenshot, 2026-11-04: «почему в подземелье 2-го уровня нет лавки?»)."""
+    best, best_d = want, 1e9
+    for dx in range(-24, 25):
+        for dy in range(-24, 25):
+            x, y = want[0] + dx, want[1] + dy
+            d = math.hypot(dx, dy)
+            if d >= best_d or any(math.hypot(x - ax, y - ay) < gap for ax, ay in away):
+                continue
+            ok = pass_sd(x, y) < -1.0 and wet_sd(x, y) > 1.5
+            for k in range(12):
+                if not ok:
+                    break
+                a = k * math.pi / 6
+                px, py = x + math.cos(a) * radius, y + math.sin(a) * radius
+                ok = pass_sd(px, py) < -0.8 and wet_sd(px, py) > 1.5
+            if ok:
+                best, best_d = (float(x), float(y)), d
+    return best
+
+
+SHOP_AT = clear_spot((CAMP[0] + 14.0, CAMP[1] + 3.0), 4.5, [HIRE_AT, CAMP[:2]], 11.0)
+print("SHOP_AT", SHOP_AT, "camp", CAMP[:2], "hire", HIRE_AT)
 CAMP_SPOTS = [(*HIRE_AT, 5.0), (*SHOP_AT, 3.6)]   # + the way out's forecourt (find_exit)
 
 
