@@ -40,13 +40,15 @@ namespace CityBuilder.Dungeon
         /// <summary>The approved level-2 dungeon (the tests' fixture).</summary>
         public const string LevelTwoId = "Dungeon2";
 
+        /// <summary>The level-3 dungeon, «Огненные глубины» (Tools/blender/dungeon3.py): one map for now.</summary>
+        public const string LevelThreeId = "Dungeon3";
+
         /// <summary>
         /// The dungeon behind a map's level-`level` mouth: level 2 a drowned-halls variant by the
-        /// map's seed (LevelTwoFor); levels 1 and 3 (no level-3 map yet) a level-1 labyrinth, as
-        /// LevelOneFor picks.
+        /// map's seed (LevelTwoFor), level 3 the fire depths, level 1 a labyrinth as LevelOneFor picks.
         /// </summary>
         public static string DungeonFor(int seed, int version, int level)
-            => level == 2 ? LevelTwoFor(seed) : LevelOneFor(seed, version, level - 1);
+            => level == 2 ? LevelTwoFor(seed) : level == 3 ? LevelThreeId : LevelOneFor(seed, version, level - 1);
 
         /// <summary>A map's level-2 dungeon, from its seed (another hash than the level-1 pick).</summary>
         public static string LevelTwoFor(int seed)

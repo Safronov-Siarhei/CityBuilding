@@ -44,7 +44,9 @@ PREVIEW = "preview" in argv[1:]
 # `variant=b|c|d`: other layouts of the plan (dungeon3<v>-plan.json), none yet
 VARIANT = next((a.split("=", 1)[1].lower() for a in argv[1:] if a.startswith("variant=")), "")
 PREFIX = "Dungeon-3" + VARIANT.upper()
-POPULATED = True
+# EMPTY for the first walk-through (the user, 2026-11-04: «добавь в игру карту, я осмотрю её
+# детальнее»; no level-3 monsters exist yet) -- True writes lairs, crystals, chests, patrols
+POPULATED = False
 # Built in "metres" for a 1.8 m person, then shrunk to the GAME's units as Dungeon 1: the 300 x 300
 # build comes out 132 x 132 cells.
 SCALE = 0.44

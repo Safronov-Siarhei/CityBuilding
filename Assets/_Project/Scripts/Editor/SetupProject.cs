@@ -205,6 +205,33 @@ namespace CityBuilder.EditorTools
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
             AssetDatabase.SaveAssets();
+            EnsureFirePaletteMaterial(material);
+        }
+
+        /// <summary>
+        /// Dungeon 3's FIRE palette (Tools/blender/dungeon3.py FIRE_PALETTE, copied by export_map):
+        /// the terrain material with the recoloured texture -- lava for water, basalt for rock, ash
+        /// for grass. MeshMapApplier.DressOwnPalette puts it on that map only.
+        /// </summary>
+        private static void EnsureFirePaletteMaterial(Material terrain)
+        {
+            AssetDatabase.ImportAsset(ModelImportDefaults.FirePaletteTexturePath, ImportAssetOptions.ForceUpdate);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelImportDefaults.FirePaletteTexturePath);
+            if (texture == null) return;
+            var fire = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.FirePaletteMaterialPath);
+            if (fire == null)
+            {
+                fire = new Material(terrain);
+                AssetDatabase.CreateAsset(fire, ModelImportDefaults.FirePaletteMaterialPath);
+            }
+            else
+            {
+                fire.CopyPropertiesFromMaterial(terrain);
+                fire.shader = terrain.shader;
+            }
+            fire.SetTexture("_BaseMap", texture);
+            EditorUtility.SetDirty(fire);
+            AssetDatabase.SaveAssets();
         }
 
         private static void ConfigureMobileLandscape()

@@ -80,6 +80,11 @@ namespace CityBuilder.Maps
         public GameObject DoorPrefab => doorPrefab;
         public GameObject LeverArmPrefab => leverArmPrefab;
 
+        // Dungeon 3's crumbling bridges (Tools/blender/dungeon3.py): each one's stones and its
+        // walkable deck (`-Bridges-f<i>-deck`), out of the Ground so the game can drop them
+        [SerializeField] private GameObject bridgesPrefab;
+        public GameObject BridgesPrefab => bridgesPrefab;
+
         /// <summary>A dungeon's way-out opening, drawn unlit and bright (Dungeon/DungeonDaylight).</summary>
         public GameObject ExitGlowPrefab => exitGlowPrefab;
         public GameObject[] BuildingPrefabs => buildingPrefabs ?? new GameObject[0];
@@ -154,9 +159,10 @@ namespace CityBuilder.Maps
         }
 
         public void EditorInitializeDungeon(GameObject props, GameObject[] buildings, GameObject exitGlow = null,
-            GameObject door = null, GameObject leverArm = null)
+            GameObject door = null, GameObject leverArm = null, GameObject bridges = null)
         {
             dungeon = true;
+            bridgesPrefab = bridges;
             doorPrefab = door;
             leverArmPrefab = leverArm;
             propsPrefab = props;

@@ -49,6 +49,9 @@ namespace CityBuilder.EditorTools
         // (Tools/blender/terrain.py): the buildings' one is full, and the land needs many greens.
         public const string TerrainPaletteTexturePath = "Assets/_Project/Models/Palette/TerrainPalette.png";
         public const string TerrainPaletteMaterialPath = "Assets/_Project/Models/Palette/TerrainPalette.mat";
+        // Dungeon 3's fire palette (Tools/blender/dungeon3.py), the same layout recoloured
+        public const string FirePaletteTexturePath = "Assets/_Project/Models/Palette/TerrainPaletteFire.png";
+        public const string FirePaletteMaterialPath = "Assets/_Project/Models/Palette/TerrainPaletteFire.mat";
 
         /// <summary>The seasons' palettes (Tools/blender/seasons.py): imported exactly as the two above.</summary>
         public const string SeasonPalettesFolder = "Assets/_Project/Models/Palette/Seasons/";
@@ -136,7 +139,7 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != FirePaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would

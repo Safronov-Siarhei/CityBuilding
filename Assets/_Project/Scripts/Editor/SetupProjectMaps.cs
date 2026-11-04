@@ -163,6 +163,9 @@ namespace CityBuilder.EditorTools
             var relief = AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Relief.fbx");
             var decor = CreateMapDecorData(mapId, folder, prefix);
             var terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.TerrainPaletteMaterialPath);
+            // the fire depths draw with their own palette (dungeon3.py FIRE_PALETTE)
+            if (prefix.StartsWith("Dungeon-3"))
+                terrainMaterial = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.FirePaletteMaterialPath) ?? terrainMaterial;
             map.EditorInitializeExtras(relief, null, null, decor, terrainMaterial, keepWaterRot: true);
             var buildings = new List<GameObject>();
             foreach (var part in new[] { "HireCamp", "PotionShop" })
@@ -173,7 +176,8 @@ namespace CityBuilder.EditorTools
             map.EditorInitializeDungeon(AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Props.fbx"), buildings.ToArray(),
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-ExitGlow.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Door.fbx"),
-                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-LeverArm.fbx"));
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-LeverArm.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Bridges.fbx"));
 
             var spots = new List<MapSpot>();
             var culture = System.Globalization.CultureInfo.InvariantCulture;

@@ -529,6 +529,8 @@ namespace CityBuilder.Maps
                 // on it. Worth 35 728 triangles a frame on this map -- see SceneryShadows.
                 SceneryShadows.DisableCasting(groundInstance);
                 _groundColliders = groundInstance.GetComponentsInChildren<Collider>();
+                DressOwnPalette(groundInstance, map);
+                AddBridgeDecks(map);
                 BuildNavMesh();
             }
 
@@ -537,6 +539,7 @@ namespace CityBuilder.Maps
                 var reliefInstance = Instantiate(map.ReliefPrefab, Vector3.zero, map.ReliefPrefab.transform.rotation, transform);
                 _reliefInstance = reliefInstance;
                 SeasonStyle.DressTerrain(reliefInstance);
+                DressOwnPalette(reliefInstance, map);
                 AddMeshCollidersToAll(reliefInstance);
                 TerrainPhysicsLayer.Assign(reliefInstance);
                 SceneryShadows.DisableCasting(reliefInstance);
@@ -562,6 +565,7 @@ namespace CityBuilder.Maps
                     : Quaternion.Euler(sourceEuler.x, -90f, sourceEuler.z);
                 var waterInstance = Instantiate(map.WaterPrefab, Vector3.zero, waterRotation, transform);
                 WaterInstance = waterInstance;
+                DressOwnPalette(waterInstance, map);
                 TerrainPhysicsLayer.Assign(waterInstance);
                 SceneryShadows.DisableCasting(waterInstance);
                 if (map.WaterMaterial != null)
@@ -659,6 +663,49 @@ namespace CityBuilder.Maps
             foreach (var r in renderers) bounds.Encapsulate(r.bounds);
             var spot = spots[0].position;
             placed.transform.position += new Vector3(spot.x - bounds.center.x, 0f, spot.y - bounds.center.z);
+        }
+
+        /// <summary>
+        /// A map drawn with a palette of its own (Dungeon 3's fire palette: the shared terrain
+        /// palette's slots recoloured, dungeon3.py FIRE_PALETTE): every renderer still on the
+        /// shared terrain palette takes the map's DecorMaterial instead. A no-op for every map
+        /// whose DecorMaterial is the shared one.
+        /// </summary>
+        private static void DressOwnPalette(GameObject root, MeshMapDefinition map)
+        {
+            var own = map.DecorMaterial;
+            if (root == null || own == null || !map.IsDungeon || own.name == SharedTerrainPalette) return;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var material = renderer.sharedMaterial;
+                if (material != null && material.name.StartsWith(SharedTerrainPalette)) renderer.sharedMaterial = own;
+            }
+        }
+
+        private const string SharedTerrainPalette = "TerrainPalette";
+
+        /// <summary>
+        /// Dungeon 3's crumbling bridges (dungeon3.py): their stones and their decks, whose
+        /// `-deck` meshes are walkable -- ground for the NavMesh like the Ground's own. They do not
+        /// fall yet (the first walk-through, 2026-11-04).
+        /// </summary>
+        private void AddBridgeDecks(MeshMapDefinition map)
+        {
+            if (map.BridgesPrefab == null) return;
+            var bridges = Instantiate(map.BridgesPrefab, Vector3.zero, map.BridgesPrefab.transform.rotation, transform);
+            bridges.name = "Bridges";
+            DressOwnPalette(bridges, map);
+            SceneryShadows.DisableCasting(bridges);
+            var decks = new List<Collider>(_groundColliders);
+            foreach (var filter in bridges.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (!filter.name.EndsWith("-deck")) continue;
+                var collider = filter.gameObject.AddComponent<MeshCollider>();
+                collider.sharedMesh = filter.sharedMesh;
+                decks.Add(collider);
+            }
+            TerrainPhysicsLayer.Assign(bridges);
+            _groundColliders = decks.ToArray();
         }
 
         /// <summary>

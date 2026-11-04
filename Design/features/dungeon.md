@@ -307,6 +307,19 @@ dungeon opens as a SEPARATE SCENE.
     south rim), 20 crystals (9 lone + 11 in passages), 6 chests, 10 patrols, 8 bridge_fall.
   - Budget: ground 135k, relief 161k, lava 8k, tide 11k, props 49k tris, decor 13.7k items (~780k).
   - `bridges_only` arg: stops after plan_bridges, prints why a crossing got no bridge.
+- **IN THE GAME as an EMPTY walk-through** (the user, 2026-11-04: «добавь в игру карту, я осмотрю её
+  детальнее в игре»): `POPULATED = False` (no lairs, crystals, chests, patrols: no level-3 monsters
+  exist); exported to `Models/Dungeon3/Dungeon-3-*` (export_map's OPTIONAL now has Bridges, Tide; it
+  copies `Terrain-Palette-Fire.png` -> `Models/Palette/TerrainPaletteFire.png` for a Dungeon-3 prefix).
+  - `DungeonTravel.LevelThreeId` "Dungeon3"; `DungeonFor(level 3)` -> it (was a level-1 labyrinth).
+  - FIRE palette in the game: `SetupProject.EnsureFirePaletteMaterial` (a copy of TerrainPalette.mat
+    on the fire texture, `ModelImportDefaults.FirePalette*`); `CreateDungeonDefinition` gives a
+    Dungeon-3 prefix that material; `MeshMapApplier.DressOwnPalette` swaps the shared terrain palette
+    for it on the ground, relief, lava, bridges (the decor takes map.TerrainMaterial already).
+  - BRIDGES: `MeshMapDefinition.BridgesPrefab` (`-Bridges.fbx`); `MeshMapApplier.AddBridgeDecks`
+    gives each `-deck` a MeshCollider in the ground's colliders, so the NavMesh walks them. They do
+    NOT fall yet; the TIDE is exported but not loaded (always low tide).
+  - Next: the tide and the falling/re-forming bridges in the game, lava damage, the monster models.
 
 ## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
 - **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,

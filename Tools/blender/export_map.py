@@ -25,7 +25,8 @@ project, map_id, prefix = argv[0], argv[1], argv[2]
 folder = os.path.join(project, "Assets", "_Project", "Models", map_id)
 DUNGEON = prefix.startswith("Dungeon-")   # a dungeon (dungeon1.py): no forest, no water zone
 PARTS = ("Ground", "Water") if DUNGEON else ("Ground", "Water", "TreesArea", "PlaceForWaterObjects")
-OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit", "Props", "HireCamp", "PotionShop", "ExitGlow", "Door", "LeverArm")
+OPTIONAL = ("Relief", "RocksArea", "NoBuildArea", "DecorKit", "Props", "HireCamp", "PotionShop", "ExitGlow", "Door", "LeverArm",
+            "Bridges", "Tide")
 
 
 def objects_of(part):
@@ -81,6 +82,11 @@ def main():
     if objects_of("Relief") and os.path.isfile(palette):
         dst = os.path.join(project, "Assets", "_Project", "Models", "Palette", "TerrainPalette.png")
         shutil.copyfile(palette, dst)
+        print("COPIED", dst)
+    fire = os.path.join(blend_dir, "Terrain-Palette-Fire.png")
+    if prefix.startswith("Dungeon-3") and os.path.isfile(fire):   # dungeon3.py's own palette
+        dst = os.path.join(project, "Assets", "_Project", "Models", "Palette", "TerrainPaletteFire.png")
+        shutil.copyfile(fire, dst)
         print("COPIED", dst)
     spots = os.path.splitext(bpy.data.filepath)[0] + "-spots.csv"
     if os.path.isfile(spots):
