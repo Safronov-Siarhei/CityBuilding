@@ -9,7 +9,7 @@ monsters.py (LegL/LegR or LegFL..BR, Head, ArmStrike/ArmOff, WingL/WingR). Run i
   of flame, yellow eyes.
 - MonsterSalamander: a low fire lizard, 0.48 long -- orange with yellow spots, a crest of flame along its
   back; it spits fire (ranged).
-- MonsterObsidianGolem: black-violet glass piled into a giant, 0.75 tall -- fire in its cracks, violet
+- MonsterObsidianGolem: (own figure since 2026-11-04) a hunched giant of black volcanic glass, 0.75 tall -- fire in its cracks, violet
   shards on its back.
 - MonsterEmberCultist: a robed fire priest, 0.5 -- a deep red robe with gold trim, a dark hood with
   burning eyes, a staff with a fireball (ranged).
@@ -216,7 +216,105 @@ SALAMANDER = ("MonsterSalamander", sal_body, [
 
 # ---------------------------------------------------------------- golems: obsidian, the magma spawn
 
-OBSIDIAN_GOLEM = m.golem("MonsterObsidianGolem", 1.25, OBS, OBS_DARK, MAGMA, OBS_SHARD, MAGMA, MAGMA)
+def shard(b, base, direction, length, r, color):
+    """A four-sided glass spike from `base` along `direction` (any tilt), `r` its base half-width."""
+    base = Vector(base)
+    d = Vector(direction).normalized()
+    helper = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
+    u = helper.cross(d).normalized()
+    v = d.cross(u)
+    ring = [b.bm.verts.new(base + (u * math.cos(a) + v * math.sin(a)) * r)
+            for a in (0.3, 0.3 + math.pi / 2, 0.3 + math.pi, 0.3 + 1.5 * math.pi)]
+    tip = b.bm.verts.new(base + d * length)
+    for i in range(4):
+        b._face([ring[i], ring[(i + 1) % 4], tip], color)
+    b._face(list(reversed(ring)), color)
+
+
+# The obsidian golem, its own figure (the user, 2026-11-04: the recoloured stone golem «не очень
+# нравится»): a hunched giant of BLACK volcanic glass -- tilted slabs, not boulders -- with lava
+# glowing in the seams between them, a forest of violet glass spikes out of the back and
+# shoulders, a slit of fire for eyes, and a glass BLADE for the striking arm, a shard club for the other.
+OS = 1.25
+GLASS, GLASS_EDGE, GLASS_TIP = OBS_DARK, OBS, OBS_SHARD
+
+
+def obs_body(b):
+    s = OS
+    b.obox((0, 0.0, 0.27 * s), (1, 0, 0.1), (0, 1, 0), (0, 0, 1), 0.12 * s, 0.085 * s, 0.06 * s, GLASS, bevel=0.01 * s)
+    # the hunched torso: a big slab leaning forward, two chest plates cut at angles over it
+    b.obox((0, 0.01 * s, 0.43 * s), (1, 0, 0), (0, 1, -0.35), (0, 0.35, 1), 0.18 * s, 0.12 * s, 0.13 * s, GLASS,
+           bevel=0.012 * s)
+    for k in (-1, 1):
+        b.obox((k * 0.085 * s, -0.115 * s, 0.45 * s), (1, k * 0.35, 0), (-k * 0.35, 1, -0.3), (0, 0.3, 1),
+               0.085 * s, 0.02 * s, 0.1 * s, CHAR, bevel=0.006 * s)
+        b.obox((k * 0.1 * s, -0.1 * s, 0.31 * s), (1, k * 0.2, 0.15 * k), (0, 1, 0), (0, 0, 1),
+               0.07 * s, 0.02 * s, 0.045 * s, GLASS, bevel=0.005 * s)
+    # lava in the seams: down the middle, under the plates, across the belly
+    b.rod((0, -0.14 * s, 0.56 * s), (0, -0.13 * s, 0.34 * s), 0.018 * s, MAGMA)
+    b.rod((-0.15 * s, -0.12 * s, 0.37 * s), (0.15 * s, -0.12 * s, 0.37 * s), 0.014 * s, MAGMA)
+    b.rod((-0.08 * s, -0.11 * s, 0.27 * s), (0.09 * s, -0.11 * s, 0.25 * s), 0.012 * s, MAGMA)
+    # the heart: a glowing diamond where the seams cross
+    shard(b, (0, -0.14 * s, 0.45 * s), (0, -0.2, 1), 0.06 * s, 0.03 * s, MAGMA_HOT)
+    shard(b, (0, -0.14 * s, 0.45 * s), (0, -0.2, -1), 0.05 * s, 0.03 * s, MAGMA_HOT)
+    # the spikes out of the back: long, leaning back and out, violet tips over black
+    for x, z, lean, ln in ((-0.11, 0.52, -0.5, 0.3), (0.0, 0.56, 0.0, 0.36), (0.12, 0.53, 0.45, 0.28),
+                           (-0.06, 0.44, -0.25, 0.22), (0.07, 0.42, 0.3, 0.24), (0.15, 0.4, 0.8, 0.16),
+                           (-0.15, 0.38, -0.8, 0.17)):
+        shard(b, (x * s, 0.08 * s, z * s), (lean, 0.75, 1.0), ln * s, 0.035 * s, GLASS_TIP if ln > 0.2 else GLASS_EDGE)
+        shard(b, (x * s * 1.1, 0.1 * s, (z - 0.06) * s), (lean * 1.4, 1.0, 0.5), ln * 0.45 * s, 0.022 * s, GLASS)
+
+
+def obs_leg(b, k):
+    s = OS
+    x = k * 0.1 * s
+    b.obox((x, 0.0, 0.15 * s), (1, 0, 0), (0, 1, 0.1), (0, -0.1, 1), 0.06 * s, 0.06 * s, 0.12 * s, GLASS, bevel=0.01 * s)
+    b.obox((x + k * 0.01 * s, -0.04 * s, 0.03 * s), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.075 * s, 0.1 * s, 0.03 * s,
+           CHAR, bevel=0.01 * s)                                                                     # a wedge foot
+    b.rod((x, -0.062 * s, 0.22 * s), (x + k * 0.01 * s, -0.062 * s, 0.1 * s), 0.01 * s, MAGMA)      # a seam down the shin
+    shard(b, (x + k * 0.04 * s, -0.02 * s, 0.2 * s), (k * 1.0, -0.4, 0.5), 0.08 * s, 0.02 * s, GLASS_TIP)  # knee spur
+
+
+def obs_head(b):
+    s = OS
+    b.obox((0, -0.07 * s, 0.6 * s), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.06 * s, 0.06 * s, 0.045 * s, GLASS, bevel=0.012 * s)
+    b.obox((0, -0.12 * s, 0.6 * s), (1, 0, 0), (0, 1, 0.5), (0, -0.5, 1), 0.07 * s, 0.015 * s, 0.03 * s, CHAR)  # brow wedge
+    b.box(-0.045 * s, 0.045 * s, -0.137 * s, -0.128 * s, 0.585 * s, 0.598 * s, MAGMA_HOT)          # the slit of fire
+    for k, ln in ((-1, 0.12), (0, 0.16), (1, 0.12)):                                               # a crown of glass
+        shard(b, (k * 0.04 * s, -0.06 * s, 0.63 * s), (k * 0.35, 0.4, 1.0), ln * s, 0.02 * s, GLASS_TIP)
+
+
+def obs_arm(k, strike):
+    def build(b):
+        s = OS
+        x = k * 0.22 * s
+        b.obox((x, 0.0, 0.5 * s), (1, 0, -0.3 * k), (0, 1, 0), (0.3 * k, 0, 1), 0.08 * s, 0.075 * s, 0.06 * s, GLASS,
+               bevel=0.01 * s)                                                                       # the shoulder slab
+        for dx, ln in ((0.0, 0.17), (0.05, 0.12), (-0.04, 0.1)):                                     # shoulder spikes
+            shard(b, (x + k * dx * s, 0.01 * s, 0.54 * s), (k * 0.8, 0.2, 1.0), ln * s, 0.025 * s, GLASS_TIP)
+        elbow = (x + k * 0.05 * s, -0.03 * s, 0.33 * s)
+        b.rod((x, 0.0, 0.48 * s), elbow, 0.075 * s, GLASS)
+        b.rod((x + k * 0.04 * s, -0.04 * s, 0.4 * s), elbow, 0.012 * s, MAGMA)
+        if strike:
+            # a glass blade where the hand should be
+            b.rod(elbow, (x + k * 0.06 * s, -0.08 * s, 0.22 * s), 0.065 * s, GLASS)
+            shard(b, (x + k * 0.06 * s, -0.09 * s, 0.22 * s), (k * 0.05, -0.45, -1.0), 0.26 * s, 0.045 * s, GLASS_EDGE)
+            shard(b, (x + k * 0.06 * s, -0.09 * s, 0.22 * s), (k * 0.05, -0.45, -1.0), 0.18 * s, 0.03 * s, GLASS_TIP)
+        else:
+            # a club of shards
+            b.rod(elbow, (x + k * 0.06 * s, -0.06 * s, 0.2 * s), 0.065 * s, GLASS)
+            for d in ((0, -0.3, -1), (k * 0.6, -0.4, -0.7), (-k * 0.4, -0.6, -0.6), (k * 0.3, 0.3, -0.8)):
+                shard(b, (x + k * 0.06 * s, -0.07 * s, 0.19 * s), d, 0.11 * s, 0.035 * s, GLASS_EDGE)
+    return build
+
+
+OBSIDIAN_GOLEM = ("MonsterObsidianGolem", obs_body, [
+    ("LegL", lambda b: obs_leg(b, -1), (-0.1 * OS, 0.0, 0.27 * OS)),
+    ("LegR", lambda b: obs_leg(b, 1), (0.1 * OS, 0.0, 0.27 * OS)),
+    ("Head", obs_head, (0.0, -0.03 * OS, 0.56 * OS)),
+    ("ArmStrike", obs_arm(1, True), (0.22 * OS, 0.0, 0.5 * OS)),
+    ("ArmOff", obs_arm(-1, False), (-0.22 * OS, 0.0, 0.5 * OS)),
+])
 MAGMA_SPAWN = m.golem("MonsterMagmaSpawn", 0.6, EMBER, CRUST, MAGMA_HOT, MAGMA, MAGMA_HOT, MAGMA_HOT)
 
 

@@ -51,11 +51,18 @@ sc.view_settings.look = 'None'
 
 cam_data = bpy.data.cameras.new("FiguresCam")
 cam_data.type = 'ORTHO'
-cam_data.ortho_scale = total + STEP
+top = 0.72
+for n in names:
+    ob = bpy.data.objects[n]
+    for part in [ob] + list(ob.children_recursive):
+        if part.type == 'MESH':
+            top = max(top, max((part.matrix_world @ Vector(c)).z for c in part.bound_box))
+# wide enough for the row, tall enough for the tallest (the bosses)
+cam_data.ortho_scale = max(total + STEP, top * 1.25 * 2400 / 900)
 cam = bpy.data.objects.new("FiguresCam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
-target = Vector((total / 2, 0, 0.36))
+target = Vector((total / 2, 0, top / 2))
 pitch = math.radians(18)
 cam.location = target + Vector((0, -math.cos(pitch), math.sin(pitch))) * 30
 cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()

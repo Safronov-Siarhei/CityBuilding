@@ -365,6 +365,14 @@ dungeon opens as a SEPARATE SCENE.
     stones sink 2.5 shaking; log `#log_dungeon_bridge_falls`), re-forms after
     `dungeon3_bridge_reform_seconds`. Test hooks: `DropAllNow`, `FloodNow`, `FlyNow`, `Fallen`.
   - Sheet: 65 economy + 12 localization rows added via Chrome, verify_sheet clean.
+  - MODELS APPROVED by the user 2026-11-04 (after renders; they should have come first -- see memory
+    feedback_approve_models_first). The obsidian golem was REDONE as its own figure (monsters3.py
+    `obs_body/obs_leg/obs_head/obs_arm`, `shard()` helper): black glass slabs, lava seams, violet
+    spikes, a glass blade arm + shard club; the old one was a recoloured stone golem. Renders in
+    Design/previews/monsters3/ (`render_figures.py` now fits the camera to the tallest figure; FIG_STEP env).
+  - General test run after it: EditMode 461/461, PlayMode 361 passed / 1 failed / 18 skipped:
+    `DungeonTests.TheHeroes_FollowTheOneLed_AndAFallCostsALevel` (the King 12.98 cells off his
+    target, line 672) -- not looked into yet.
   - Open: no tests of the new rules yet; the user to look; dragon has no shadow in the air;
     the bridge gap carve not checked in the game.
 
