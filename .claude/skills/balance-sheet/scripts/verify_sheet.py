@@ -49,6 +49,8 @@ TABS = {
     # three tables one under another (building / unit / key headers): compared by first cell, cell by cell
     "invasion": {"gid": "1941808734", "stacked": True},
     "sandbox": {"gid": "291742027", "stacked": True},
+    # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
+    "botwaves": {"gid": "1680852949", "key": ["wave", "unit"]},
 }
 
 # Differences that are correct and permanent. Reported as a note, not as a failure.

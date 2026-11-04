@@ -440,7 +440,8 @@ namespace CityBuilder.Ships
         {
             var root = new GameObject($"Ship_{kind}_{_ships.Count}");
             root.transform.SetPositionAndRotation(new Vector3(at.x, WaterLevel, at.z), Quaternion.Euler(0f, facing.eulerAngles.y, 0f));
-            var model = (int)kind < models.Length ? models[(int)kind] : null;
+            var look = ShipStats.LookOf(kind);
+            var model = (int)look < models.Length ? models[(int)look] : null;
             if (model != null)
             {
                 // modelled facing Blender -y, as every figure: turned to face the way it sails
@@ -449,6 +450,8 @@ namespace CityBuilder.Ships
                 figure.transform.localPosition = Vector3.zero;
                 figure.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * model.transform.rotation;
                 foreach (var r in figure.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.On;
+                // the bot's ships in its straw, so they are not taken for the player's
+                if (ShipStats.IsBot(kind) && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.DressAsBot(figure);
             }
             var box = root.AddComponent<BoxCollider>();
             var len = kind == ShipKind.Scout ? 3f : kind == ShipKind.Battleship ? 7f : 5f;

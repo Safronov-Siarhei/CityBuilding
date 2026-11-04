@@ -340,7 +340,10 @@ namespace CityBuilder.EditorTools
             var buttons = new Button[3];
             for (var i = 0; i < 3; i++)
                 buttons[i] = CreateButton(card.transform, panelSprite, "Stance" + i, keys[i], new Vector2((i - 1) * 205f, -20f), new Vector2(190f, 72f));
-            var note = CreateText(card.transform, "Note", string.Empty, 24, new Vector2(0f, -115f), new Vector2(620f, 80f), ink);
+            // the ransom at war (shown only then): coins, or crystals for a town short of coins
+            var payCoins = CreateButton(card.transform, panelSprite, "PayCoins", "#diplomacy_pay_coins", new Vector2(-160f, -100f), new Vector2(300f, 60f));
+            var payCrystals = CreateButton(card.transform, panelSprite, "PayCrystals", "#diplomacy_pay_crystals", new Vector2(160f, -100f), new Vector2(300f, 60f));
+            var note = CreateText(card.transform, "Note", string.Empty, 22, new Vector2(0f, -160f), new Vector2(620f, 50f), ink);
             var hallButton = CreateButton(card.transform, panelSprite, "HallButton", "#diplomacy_building", new Vector2(-160f, -225f), new Vector2(280f, 64f));
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(160f, -225f), new Vector2(280f, 64f));
 
@@ -352,6 +355,8 @@ namespace CityBuilder.EditorTools
             so.FindProperty("scaleText").objectReferenceValue = scaleText;
             so.FindProperty("stanceText").objectReferenceValue = stance;
             so.FindProperty("note").objectReferenceValue = note;
+            so.FindProperty("payCoinsButton").objectReferenceValue = payCoins;
+            so.FindProperty("payCrystalsButton").objectReferenceValue = payCrystals;
             so.FindProperty("infoPanel").objectReferenceValue = infoPanel;
             var list = so.FindProperty("stanceButtons");
             list.arraySize = 3;
@@ -360,6 +365,8 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(buttons[0].onClick, controller.ChoosePeace);
             UnityEventTools.AddPersistentListener(buttons[1].onClick, controller.ChooseTrade);
             UnityEventTools.AddPersistentListener(buttons[2].onClick, controller.ChooseWar);
+            UnityEventTools.AddPersistentListener(payCoins.onClick, controller.PayCoins);
+            UnityEventTools.AddPersistentListener(payCrystals.onClick, controller.PayCrystals);
             UnityEventTools.AddPersistentListener(hallButton.onClick, controller.OpenBuildingCard);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
             panelRoot.SetActive(false);

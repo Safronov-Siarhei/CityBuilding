@@ -60,6 +60,8 @@ namespace CityBuilder.Saving
         /// <summary>Relations with the bot kingdom (Diplomacy.BotRelations): written = true from 2026-11-03; the scale and the stance.</summary>
         public bool botRelationsSaved;
         public float botRelations;
+        /// <summary>Seconds of the war with the bot so far (BotRelations.WarSeconds).</summary>
+        public float botWarSeconds;
         public int botStance;
         /// <summary>The bot kingdom's castle (Bot.BotKingdom): its Town Hall razed, and which of its blueprint's buildings are down.</summary>
         public bool botCastleSaved;

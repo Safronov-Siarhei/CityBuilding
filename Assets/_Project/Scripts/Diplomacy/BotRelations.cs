@@ -23,6 +23,9 @@ namespace CityBuilder.Diplomacy
         public static float Score { get; private set; }
         public static BotStance Stance { get; private set; } = BotStance.Peace;
 
+        /// <summary>Seconds of the war so far (0 at peace): the ransom and the raids grow with it.</summary>
+        public static float WarSeconds { get; private set; }
+
         /// <summary>Anything on the scale or the stance changed: the Diplomacy window redraws.</summary>
         public static event Action Changed;
 
@@ -31,14 +34,57 @@ namespace CityBuilder.Diplomacy
         {
             Score = BalanceConfig.Instance != null ? Mathf.Clamp(BalanceConfig.Instance.BotRelationsStart, Min, Max) : 0f;
             Stance = BotStance.Peace;
+            WarSeconds = 0f;
             Changed?.Invoke();
         }
 
-        public static void Restore(float score, int stance)
+        public static void Restore(float score, int stance, float warSeconds = 0f)
         {
             Score = Mathf.Clamp(score, Min, Max);
             Stance = Enum.IsDefined(typeof(BotStance), stance) ? (BotStance)stance : BotStance.Peace;
+            WarSeconds = Stance == BotStance.War ? Mathf.Max(0f, warSeconds) : 0f;
             Changed?.Invoke();
+        }
+
+        /// <summary>The war's clock runs (BotWar, every frame at war).</summary>
+        public static void TickWar(float deltaSeconds)
+        {
+            if (Stance != BotStance.War) return;
+            var before = Mathf.FloorToInt(WarSeconds / 60f);
+            WarSeconds += deltaSeconds;
+            // the ransom grows a step a minute: the window redraws its price
+            if (Mathf.FloorToInt(WarSeconds / 60f) != before) Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// The ransom that ends the war (the user, 2026-11-04): bot_war_contribution_base coins plus
+        /// bot_war_contribution_per_min for every whole minute of war, less
+        /// bot_war_contribution_hall_discount for every Diplomacy Hall level above the first.
+        /// </summary>
+        public static int RansomCoins(int hallLevel)
+        {
+            var c = BalanceConfig.Instance;
+            if (c == null) return 0;
+            var coins = c.BotWarContributionBase + c.BotWarContributionPerMinute * Mathf.FloorToInt(WarSeconds / 60f);
+            var discount = Mathf.Clamp01(c.BotWarContributionHallDiscount * Mathf.Max(0, hallLevel - 1));
+            return Mathf.Max(0, Mathf.RoundToInt(coins * (1f - discount)));
+        }
+
+        /// <summary>The same ransom in crystals, for a town short of coins: one per bot_war_coins_per_crystal, rounded up.</summary>
+        public static int RansomCrystals(int hallLevel)
+        {
+            var c = BalanceConfig.Instance;
+            var per = c != null ? Mathf.Max(1, c.BotWarCoinsPerCrystal) : 100;
+            return Mathf.Max(1, Mathf.CeilToInt(RansomCoins(hallLevel) / (float)per));
+        }
+
+        /// <summary>The highest level of the town's Diplomacy Halls standing (1 when none -- the ransom's discount starts above it).</summary>
+        public static int HallLevel()
+        {
+            var best = 1;
+            foreach (var hall in UnityEngine.Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                if (!hall.IsBot && hall.Data != null && hall.Data.buildingName == BuildingIds.DiplomacyHall) best = Mathf.Max(best, hall.Level);
+            return best;
         }
 
         /// <summary>Relations are open at all: the town has a Diplomacy Hall standing and finished.</summary>
@@ -61,7 +107,7 @@ namespace CityBuilder.Diplomacy
             if (wanted == Stance) return false;
             if (Stance == BotStance.War)
             {
-                // the user's rule: a war ends with a contribution (later) or the bot's Town Hall razed
+                // the user's rule: a war ends with the ransom paid (PayRansom) or the bot's Town Hall razed
                 why = "#diplomacy_war_ends";
                 return false;
             }
@@ -79,15 +125,17 @@ namespace CityBuilder.Diplomacy
             if (wanted == BotStance.War && BalanceConfig.Instance != null)
                 Score = Mathf.Clamp(Score - BalanceConfig.Instance.BotWarDeclareScoreLoss, Min, Max);
             Stance = wanted;
+            WarSeconds = 0f;
             Changed?.Invoke();
             return true;
         }
 
-        /// <summary>The war is over (the bot's Town Hall razed; later, a contribution paid): back to peace.</summary>
+        /// <summary>The war is over (the bot's Town Hall razed, or the ransom paid): back to peace.</summary>
         public static void EndWar()
         {
             if (Stance != BotStance.War) return;
             Stance = BotStance.Peace;
+            WarSeconds = 0f;
             Changed?.Invoke();
         }
 

@@ -7,7 +7,7 @@ using UnityEngine.AI;
 namespace CityBuilder.Ships
 {
     /// <summary>The ships (the user, 2026-10-28): what each is for, by its row in the units tab.</summary>
-    public enum ShipKind { Scout = 0, Transport = 1, War = 2, Battleship = 3, OrcTransport = 4, OrcWar = 5 }
+    public enum ShipKind { Scout = 0, Transport = 1, War = 2, Battleship = 3, OrcTransport = 4, OrcWar = 5, BotTransport = 6, BotWar = 7 }
 
     /// <summary>A ship's numbers, read from its units-tab row (`ship_scout`, `ship_transport`).</summary>
     public static class ShipStats
@@ -18,6 +18,18 @@ namespace CityBuilder.Ships
         /// <summary>The orcs' ships (phase 4b): sailed by the orcs from their shipyard, never the player's.</summary>
         public static bool IsOrc(ShipKind kind) => kind >= ShipKind.OrcTransport;
 
+        /// <summary>The bot kingdom's ships at war (Bot/BotWar, 2026-11-04): hostile like the orcs', the player's own models and numbers in the bot's straw.</summary>
+        public static bool IsBot(ShipKind kind) => kind == ShipKind.BotTransport || kind == ShipKind.BotWar;
+
+        /// <summary>A hostile fleet's transport (the orcs' or the bot's): it carries the landing.</summary>
+        public static bool IsRaidTransport(ShipKind kind) => kind == ShipKind.OrcTransport || kind == ShipKind.BotTransport;
+
+        /// <summary>A hostile fleet's war ship: it guards the transports and shells the shore.</summary>
+        public static bool IsRaidWarship(ShipKind kind) => kind == ShipKind.OrcWar || kind == ShipKind.BotWar;
+
+        /// <summary>The model a kind is drawn with: the bot's ships are the player's own.</summary>
+        public static ShipKind LookOf(ShipKind kind) => kind == ShipKind.BotTransport ? ShipKind.Transport : kind == ShipKind.BotWar ? ShipKind.War : kind;
+
         public static string SheetId(ShipKind kind) => kind switch
         {
             ShipKind.Scout => "ship_scout",
@@ -25,6 +37,9 @@ namespace CityBuilder.Ships
             ShipKind.War => "ship_war",
             ShipKind.OrcTransport => "ship_orc_transport",
             ShipKind.OrcWar => "ship_orc_war",
+            // the bot's ships are the player's own, with the same numbers
+            ShipKind.BotTransport => "ship_transport",
+            ShipKind.BotWar => "ship_war",
             _ => "ship_battleship",
         };
 
@@ -78,6 +93,7 @@ namespace CityBuilder.Ships
         /// <summary>Where the current voyage ends (its last corner); where it stands when not sailing.</summary>
         public Vector3 Destination => _corners.Count > 0 ? _corners[_corners.Count - 1] : transform.position;
         public bool IsOrc => ShipStats.IsOrc(Kind);
+        public bool IsBotShip => ShipStats.IsBot(Kind);
 
         /// <summary>An orc ship's voyage (ShipManager runs it): the raid it sails in, the orcs it carries and at what level, where it lands them, and whether it is on its way home.</summary>
         public int OrcRaid { get; set; }
@@ -364,6 +380,8 @@ namespace CityBuilder.Ships
             {
                 var building = Near[i].GetComponentInParent<Buildings.BuildingInstance>();
                 if (building == null || building.CurrentHealth <= 0) continue;
+                // the bot's ships shell the town, never their own kingdom
+                if (IsBotShip && building.IsBot) continue;
                 var d = FlatSq(building.transform.position - transform.position);
                 if (d >= bestSq) continue;
                 bestSq = d;

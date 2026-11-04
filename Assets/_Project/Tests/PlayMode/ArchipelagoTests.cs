@@ -192,6 +192,44 @@ namespace CityBuilder.Tests.PlayMode
             foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
                 if (b.IsBot && b.OriginCell == at && b.Data.buildingName == "Manor") back = true;
             Assert.IsTrue(back, "The bot did not rebuild its manor.");
+
+            // war (the user, 2026-11-04): the hireling garrison goes, hostile guards hold the castle,
+            // a wave sails from the sheet's botwaves table, and a ransom ends it all
+            Diplomacy.BotRelations.Restore(0f, (int)Diplomacy.BotStance.War);
+            for (var i = 0; i < 5; i++) yield return null;
+            var guards = 0;
+            foreach (var orc in Combat.OrcUnit.All)
+                if (orc != null && orc.BotSide && (orc.transform.position - kingdom.Hall.transform.position).magnitude < 40f) guards++;
+            Assert.Greater(guards, 5, "No hostile guards hold the bot's castle at war.");
+            foreach (var s in Combat.SoldierUnit.All)
+                Assert.IsFalse(s != null && s.CurrentHealth > 0 && (s.transform.position - kingdom.Hall.transform.position).magnitude < 30f,
+                    "The bot's hireling garrison still stands at war.");
+
+            // the fleet sails for the player's Town Hall: the town needs one
+            var townHallData = PlaytestWorld.Building(BuildingIds.TownHall);
+            PlaytestWorld.Place(townHallData, ArchipelagoGenerator.Generate(Seed).StartCell - townHallData.footprintSize / 2);
+            yield return null;
+            var ships = Ships.ShipManager.Instance;
+            var fleetBefore = 0;
+            foreach (var sh in ships.Ships) if (sh != null && sh.IsBotShip) fleetBefore++;
+            Bot.BotWar.Instance.RaidNow(0, Core.BalanceConfig.Instance);
+            var transports = 0;
+            var fleet = 0;
+            foreach (var sh in ships.Ships)
+            {
+                if (sh == null || !sh.IsBotShip) continue;
+                fleet++;
+                if (sh.Kind == Ships.ShipKind.BotTransport) transports++;
+            }
+            Assert.Greater(transports, 0, "The bot's wave set sail without a transport.");
+            Assert.Greater(fleet - fleetBefore, transports - 1, "The bot's raid launched no ships.");
+            Assert.Greater(Diplomacy.BotRelations.RansomCoins(1), 0, "The war has no ransom.");
+            Assert.GreaterOrEqual(Diplomacy.BotRelations.RansomCrystals(1), 1);
+
+            Diplomacy.BotRelations.EndWar();
+            for (var i = 0; i < 3; i++) yield return null;
+            foreach (var orc in Combat.OrcUnit.All)
+                Assert.IsFalse(orc != null && orc.BotSide, "A bot war soldier outlived the peace.");
         }
 
         [UnityTest]

@@ -86,6 +86,16 @@ namespace CityBuilder.Combat
             // the Data is set after Awake, so the range is asked here
             _attackRangeMeters = RangeOf(_buildingInstance);
 
+            // the bot kingdom's towers at war (the user, 2026-11-04): at the town's soldiers
+            if (_buildingInstance.IsBot && Diplomacy.BotRelations.Stance == Diplomacy.BotStance.War)
+            {
+                var soldier = FindNearestSoldierInRange();
+                if (soldier != null)
+                {
+                    CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOf(this, soldier.transform.position), soldier, _buildingInstance.Defense);
+                    return;
+                }
+            }
             var target = FindNearestOrcInRange();
             if (target == null)
             {
@@ -108,6 +118,21 @@ namespace CityBuilder.Combat
             return range;
         }
 
+        private SoldierUnit FindNearestSoldierInRange()
+        {
+            SoldierUnit nearest = null;
+            var nearestDistSq = _attackRangeMeters * _attackRangeMeters;
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                var distSq = (soldier.transform.position - transform.position).sqrMagnitude;
+                if (distSq > nearestDistSq) continue;
+                nearestDistSq = distSq;
+                nearest = soldier;
+            }
+            return nearest;
+        }
+
         private OrcUnit FindNearestOrcInRange()
         {
             OrcUnit nearest = null;
@@ -116,6 +141,8 @@ namespace CityBuilder.Combat
             foreach (var orc in OrcUnit.All)
             {
                 if (orc == null) continue;
+                // the bot's towers never shoot its own soldiers
+                if (orc.BotSide && _buildingInstance != null && _buildingInstance.IsBot) continue;
                 var distSq = (orc.transform.position - transform.position).sqrMagnitude;
                 if (distSq > nearestDistSq) continue;
 

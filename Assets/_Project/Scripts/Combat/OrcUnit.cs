@@ -123,6 +123,12 @@ namespace CityBuilder.Combat
         Dragon = 39,
         /// <summary>Boss: rises out of his magma pool, sheds magma spawn when struck.</summary>
         LavaTitan = 40,
+        // the bot kingdom's soldiers at war (Bot/BotWar; the user, 2026-11-04): the player's soldiers'
+        // figures in the bot's straw, fighting as the town's enemies
+        /// <summary>Солдат королевства: a man-at-arms of the bot kingdom.</summary>
+        BotSoldier = 41,
+        /// <summary>Лучник королевства: an archer of the bot kingdom.</summary>
+        BotArcher = 42,
     }
 
     /// <summary>
@@ -185,12 +191,20 @@ namespace CityBuilder.Combat
                 case OrcKind.MagmaSpawn: return "magma_spawn";
                 case OrcKind.Dragon: return "dragon";
                 case OrcKind.LavaTitan: return "lava_titan";
+                case OrcKind.BotSoldier: return "bot_soldier";
+                case OrcKind.BotArcher: return "bot_archer";
                 default: return "orc";
             }
         }
 
         /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
-        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind) || IsTide(kind);
+        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind) || IsTide(kind) || IsBotSide(kind);
+
+        /// <summary>The bot kingdom's soldiers at war (the user, 2026-11-04): the town's enemies, never the bot's.</summary>
+        public static bool IsBotSide(OrcKind kind) => kind == OrcKind.BotSoldier || kind == OrcKind.BotArcher;
+
+        /// <summary>One of the bot kingdom's soldiers: it leaves the bot's own buildings alone.</summary>
+        public bool BotSide => IsBotSide(Kind);
 
         /// <summary>One of Стражи Глубин, the caches' guards.</summary>
         public static bool IsTide(OrcKind kind) => kind >= OrcKind.TideCrab && kind <= OrcKind.TideSerpent;
@@ -833,6 +847,7 @@ namespace CityBuilder.Combat
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
                 if (instance.Data == null || instance.Data.IsGroundWork) continue;
+                if (BotSide && instance.IsBot) continue;
                 var distance = DistanceToWall(instance);
                 if (distance > nearestDistance) continue;
                 nearestDistance = distance;
@@ -857,6 +872,7 @@ namespace CityBuilder.Combat
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
                 if (instance == target || instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
+                if (BotSide && instance.IsBot) continue;
                 var distance = DistanceToWall(instance);
                 if (distance >= nearestDistance) continue;
                 if (distance > 0.15f && toTarget.sqrMagnitude > 0.0001f)
@@ -1047,13 +1063,14 @@ namespace CityBuilder.Combat
             && (Kind != OrcKind.Eel || Maps.DungeonFloor.Wading(soldier.transform.position));
 
         public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
-            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent || Kind == OrcKind.Salamander || Kind == OrcKind.EmberCultist;
+            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent || Kind == OrcKind.Salamander || Kind == OrcKind.EmberCultist
+            || Kind == OrcKind.BotArcher;
 
         /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>
         // (a pufferfish's urchin and a shaman's ball of water fly as balls too)
         private ProjectileKind Shot => Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
             || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent || Kind == OrcKind.Salamander || Kind == OrcKind.EmberCultist
-            ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
+            ? ProjectileKind.Cannonball : Kind == OrcKind.BotArcher ? ProjectileKind.Arrow : ProjectileKind.Javelin;
 
         /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
         private void StrikeAt(Vector3 target)
@@ -1184,6 +1201,7 @@ namespace CityBuilder.Combat
                 // raid beelining for the nearest stray road tile instead of an actual building
                 // would make combat feel broken rather than threatening.
                 if (instance.Data == null || instance.Data.IsGroundWork) continue;
+                if (BotSide && instance.IsBot) continue;
                 // A run's walls and gates are obstacles (the user, 2026-10-22): broken only where
                 // they stand in the way (AttackWhateverIsBlockingTheWay), never gone after; once
                 // one is down the orc walks on through the gap.

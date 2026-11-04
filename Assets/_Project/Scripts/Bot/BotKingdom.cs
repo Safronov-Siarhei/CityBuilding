@@ -132,6 +132,7 @@ namespace CityBuilder.Bot
             }
             Placed = true;
             gameObject.AddComponent<BotGarrison>();
+            gameObject.AddComponent<BotWar>();
         }
 
         /// <summary>The map cell of a blueprint offset from its Town Hall (x right, y down = south), turned as the castle is.</summary>
@@ -201,6 +202,8 @@ namespace CityBuilder.Bot
             }
             slot.instance = instance;
             if (slot.data.buildingName == BuildingIds.TownHall) Hall = instance;
+            // struck by the town's soldiers at war (BotWarTarget)
+            if (instance.GetComponent<BotWarTarget>() == null) instance.gameObject.AddComponent<BotWarTarget>();
         }
 
         private void HandleDestroyed(BuildingInstance building)
@@ -220,12 +223,25 @@ namespace CityBuilder.Bot
             var at = Hall.transform.position;
             foreach (var orc in OrcUnit.All)
             {
-                if (orc == null || orc.CurrentHealth <= 0) continue;
+                if (orc == null || orc.CurrentHealth <= 0 || orc.BotSide) continue;
                 var d = orc.transform.position - at;
                 d.y = 0f;
                 if (d.sqrMagnitude > reach * reach) continue;
                 _calmFor = 0f;
                 return;
+            }
+            // at war, the town's soldiers by the castle keep it from rebuilding too
+            if (BotRelations.Stance == BotStance.War)
+            {
+                foreach (var soldier in SoldierUnit.All)
+                {
+                    if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                    var d = soldier.transform.position - at;
+                    d.y = 0f;
+                    if (d.sqrMagnitude > reach * reach) continue;
+                    _calmFor = 0f;
+                    return;
+                }
             }
             _calmFor += Time.deltaTime;
             if (_calmFor < config.BotRebuildCalmSeconds) return;
@@ -319,6 +335,24 @@ namespace CityBuilder.Bot
         private void Dress(GameObject root) => Swap(root, buildingsPalette, botPalette);
 
         /// <summary>The bot's King in his own cape (BotGarrison): the figure's material swapped for the bot King's.</summary>
+        /// <summary>The bot's Shipyard while it stands: its war fleet sails from the sea by it.</summary>
+        public BuildingInstance Shipyard
+        {
+            get
+            {
+                foreach (var slot in _slots)
+                    if (slot.instance != null && slot.instance.CurrentHealth > 0 && slot.data.buildingName == Ships.ShipManager.ShipyardId) return slot.instance;
+                return null;
+            }
+        }
+
+        /// <summary>A unit or a ship of the kingdom in its straw: figures' capes and the buildings' palette both.</summary>
+        public void DressAsBot(GameObject root)
+        {
+            Swap(root, figures, botKingPalette);
+            Swap(root, buildingsPalette, botPalette);
+        }
+
         public void DressKing(GameObject king)
         {
             Swap(king, figures, botKingPalette);

@@ -1,5 +1,5 @@
 # Bot kingdom (Бот)
-Status: CONCEPT (2026-11-03). Nothing is built.
+Status: BUILT up to WAR (2026-11-04): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
 
 The user's decisions are marked "user"; the rest are my proposals.
 
@@ -64,8 +64,6 @@ Proposed, not agreed:
 ## Open
 - The Diplomacy Hall's size and model.
 - The trade window: what is traded and the rates.
-- The contribution formula.
-- How often the bot raids at war, and the size of a raid.
 - What the player gains from razing the Town Hall: loot? the island?
 - The orcs raiding the bot.
 - Performance: the bot's citizens are NOT simulated, only a few walkers. The garrison needs a cap.
@@ -139,6 +137,33 @@ Proposed, not agreed:
 - The blueprint's buildings must exist in the placer's catalogue (hotbar + mandatory). A Hidden building is skipped.
 - Performance: about 550 buildings + about 29 soldiers + raid orcs far from the camera. Not measured on a phone.
 
+## Built 2026-11-04, part 3: the war (not seen in game, test green)
+User decisions:
+- attack = **landing and shelling together**: transports land soldiers, war ships shell soldiers and buildings;
+- strength **grows over time** — the waves get bigger;
+- ransom in **coins**; a town without enough coins can pay in **crystals**;
+- the garrison **defends the castle**: it does not go raiding;
+- the waves live in a **sheet tab `botwaves`** (user): wave number, unit, count, level. Transports = ceil(units / transport capacity), counted automatically. Past the last row, the last wave repeats.
+
+How it works:
+- The war's units are hostile OrcKinds `BotSoldier` / `BotArcher` (IsMonster; stats `mon_bot_*`; the player's soldier models in the bot's straw via `BotKingdom.DressAsBot`).
+- `Bot/BotWar.cs`:
+  - `Begin`: the hireling garrison stands down (`BotGarrison.StandDown`), and hostile guards stand on `BotGarrison.WarPosts`. They respawn while the hall stands.
+  - `RaidOnTheClock`: first raid at `bot_war_raid_first_sec`, then one every `bot_war_raid_interval_sec`, both counted on `BotRelations.WarSeconds` (saved as `botWarSeconds`).
+  - `RaidNow(i)` reads `config.BotWave(i+1)` into a manifest, then calls `ShipManager.LaunchBotFleet`. Ships are `ShipKind.BotTransport` / `BotWar`, with the player's models in straw. `Land` dequeues the manifest.
+  - `End` removes the BotSide units and the garrison stands back up.
+- Ransom: `BotRelations.RansomCoins(hallLevel)` = `bot_war_contribution_base` + `per_min` × whole minutes, less `hall_discount` per Diplomacy Hall level above 1. Crystals = coins / `bot_war_coins_per_crystal`, rounded up.
+  - Shown in `DiplomacyWindow` only at war: the PayCoins / PayCrystals buttons.
+- At war, the bot's towers shoot the player's soldiers. The player's soldiers hit the bot's buildings through `Bot/BotWarTarget.cs`, which is alive only at war; its Reach is half the footprint.
+- The bot's buildings take no blessing or shield.
+- Sheet: economy `bot_war_*` keys + `mon_bot_*`; tab `botwaves` gid 1680852949 (BalanceImporter `ReadBotWaves`, `BalanceSheetSettings.botWavesCsvUrl`, `verify_sheet.py`).
+- Test: `ArchipelagoTests.TheBotKingdom_...` covers war guards, no hirelings, a wave with a transport, the ransom, and peace clearing the units.
+
+## Traps (war)
+- The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.
+- BotSide units and the orcs **do not fight each other** (both are the hostile side); the bot's towers skip BotSide.
+- The war's manifest (`Aboard`) is not saved. A transport loaded from a save lands soldiers of `bot_war_level`.
+
 ## Next
-- War: the bot attacks (shipyard, barracks); its towers and garrison fight the player's units at war.
-- Trade window, contribution, gifts, the reward for razing the hall (all later, per the user).
+- Trade window, gifts, the reward for razing the hall (later, per the user).
+- Playtest the war: raid size against the town, the ransom price.

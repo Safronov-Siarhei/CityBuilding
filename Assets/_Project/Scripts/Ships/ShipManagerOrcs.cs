@@ -253,6 +253,37 @@ namespace CityBuilder.Ships
             return true;
         }
 
+        /// <summary>
+        /// The bot kingdom's raid at war (the user, 2026-11-04: «десант и обстрел вместе»): `size`
+        /// soldiers in as many transports as they need (the user, 2026-11-04), with `escorts` war ships
+        /// that shell the shore, out of the sea by `harbour` for the beach nearest the player's Town
+        /// Hall. The raid's number (its transports' OrcRaid, what BotWar.Land unloads), or 0 when
+        /// nothing sails.
+        /// </summary>
+        public int LaunchBotFleet(Vector3 harbour, int size, int level, int escorts)
+        {
+            if (size <= 0 || !TryFindOrcLanding(out var landing)) return 0;
+            if (!TryNearestSea(harbour, 30f, out var home)) return 0;
+            var raid = _nextOrcRaid++;
+            var seats = Mathf.Max(1, ShipStats.Capacity(ShipKind.BotTransport));
+            var facing = Quaternion.LookRotation((landing - home).sqrMagnitude > 0.01f ? (landing - home).normalized : Vector3.forward);
+            ShipUnit first = null;
+            var n = 0;
+            for (var left = size; left > 0; left -= seats, n++)
+            {
+                var ship = SpawnOrcShip(ShipKind.BotTransport, home, n, facing, raid, Mathf.Min(seats, left), level, landing);
+                if (first == null) first = ship;
+            }
+            for (var k = 0; k < escorts; k++, n++)
+            {
+                var side = (k % 2 == 0 ? 1f : -1f) * EscortSpread * (1 + k / 2);
+                SpawnOrcShip(ShipKind.BotWar, home, n, facing, raid, 0, level, landing + facing * Vector3.right * side);
+            }
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_bot_fleet", size), EventSeverity.Danger, EventGlyph.Swords, null,
+                home, first != null ? first.transform : null));
+            return raid;
+        }
+
         private ShipUnit SpawnOrcShip(ShipKind kind, Vector3 home, int index, Quaternion facing, int raid, int cargo, int level, Vector3 destination)
         {
             var at = home + facing * new Vector3((index % 3 - 1) * 3.5f, 0f, -(index / 3) * 5f);
@@ -272,8 +303,17 @@ namespace CityBuilder.Ships
             var here = ship.transform.position;
             if (ship.OrcHomeward)
             {
-                var shipyard = OrcShipyard;
-                var home = shipyard != null && TryNearestSea(shipyard.transform.position, 20f, out var h) ? h : ship.OrcDestination;
+                Vector3 home;
+                if (ship.IsBotShip)
+                {
+                    var harbour = Bot.BotWar.Harbour;
+                    home = harbour.HasValue && TryNearestSea(harbour.Value, 30f, out var bh) ? bh : ship.OrcDestination;
+                }
+                else
+                {
+                    var shipyard = OrcShipyard;
+                    home = shipyard != null && TryNearestSea(shipyard.transform.position, 20f, out var h) ? h : ship.OrcDestination;
+                }
                 if (Flat(here - home) <= OrcHomeMeters)
                 {
                     Remove(ship);
@@ -283,7 +323,7 @@ namespace CityBuilder.Ships
                 return;
             }
 
-            if (ship.Kind == ShipKind.OrcWar)
+            if (ShipStats.IsRaidWarship(ship.Kind))
             {
                 var prey = NearestShip(here, EscortHuntMeters, orc: false);
                 if (prey != null)
@@ -303,7 +343,7 @@ namespace CityBuilder.Ships
                 if (!ship.IsMoving && !ship.SailTo(ship.OrcDestination)) ship.OrcHomeward = true;
                 return;
             }
-            if (ship.Kind != ShipKind.OrcTransport) return;    // an escort waits off the beach
+            if (!ShipStats.IsRaidTransport(ship.Kind)) return;    // an escort waits off the beach (shelling it)
 
             ship.Stop();
             if (ship.OrcCargo > 0 && TryFindLandingAt(here, out var beach))
@@ -313,9 +353,10 @@ namespace CityBuilder.Ships
                 var inland = beach - here;
                 inland.y = 0f;
                 if (inland.sqrMagnitude > 0.01f && TrySampleLand(beach + inland.normalized * InlandSteps, 2f, out var up)) beach = up;
-                var leader = OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
-                EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_landing", ship.OrcCargo), EventSeverity.Danger, EventGlyph.Swords, null,
-                    beach, leader != null ? leader.transform : null));
+                var leader = ship.IsBotShip ? Bot.BotWar.Land(ship.OrcRaid, beach, ship.OrcCargo)
+                    : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
+                EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
+                    EventSeverity.Danger, EventGlyph.Swords, null, beach, leader != null ? leader.transform : null));
             }
             ship.OrcCargo = 0;
             ship.OrcHomeward = true;
@@ -325,7 +366,7 @@ namespace CityBuilder.Ships
         {
             foreach (var other in _ships)
             {
-                if (other != null && other.IsAlive && other.Kind == ShipKind.OrcTransport && other.OrcRaid == raid && !other.OrcHomeward) return true;
+                if (other != null && other.IsAlive && ShipStats.IsRaidTransport(other.Kind) && other.OrcRaid == raid && !other.OrcHomeward) return true;
             }
             return false;
         }

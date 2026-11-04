@@ -117,6 +117,14 @@ namespace CityBuilder.EditorTools
                 if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/monsters.py and export_fbx.py.");
                 so.FindProperty(field).objectReferenceValue = model;
             }
+            // the bot kingdom's soldiers at war: the player's soldiers' level-2 figures (Bot/BotWar)
+            foreach (var (field, file) in new[] { ("botSoldierModel", "SoldierManAtArms-lvl2"), ("botArcherModel", "SoldierArcher-lvl2") })
+            {
+                var path = $"Assets/_Project/Models/Soldiers/{file}.fbx";
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing.");
+                so.FindProperty(field).objectReferenceValue = model;
+            }
             // Стражи Глубин, the archipelago caches' guards (Tools/blender/tide.py)
             foreach (var (field, file) in new[]
                      {

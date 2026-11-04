@@ -21,6 +21,9 @@ namespace CityBuilder.UI
         [SerializeField] private Text stanceText;
         [SerializeField] private Button[] stanceButtons = new Button[3];
         [SerializeField] private Text note;
+        // the ransom at war (the user, 2026-11-04): in coins, or in crystals for a town short of coins
+        [SerializeField] private Button payCoinsButton;
+        [SerializeField] private Button payCrystalsButton;
         [SerializeField] private BuildingInfoPanelController infoPanel;
 
         public static DiplomacyWindow Instance { get; private set; }
@@ -59,6 +62,37 @@ namespace CityBuilder.UI
         public void ChooseWar() => Choose(BotStance.War);
 
         /// <summary>«Здание»: the Hall's own card, for its upgrade and repair.</summary>
+        /// <summary>The war ends for the ransom in coins.</summary>
+        public void PayCoins()
+        {
+            if (BotRelations.Stance != BotStance.War) return;
+            var price = BotRelations.RansomCoins(BotRelations.HallLevel());
+            var resources = CityBuilder.Resources.ResourceManager.Instance;
+            var cost = new[] { new CityBuilder.Resources.ResourceAmount { type = CityBuilder.Resources.ResourceType.Coins, amount = price } };
+            if (resources == null || !resources.TrySpend(cost))
+            {
+                if (note != null) note.text = Localization.Get("#diplomacy_pay_short");
+                return;
+            }
+            BotRelations.EndWar();
+            if (note != null) note.text = Localization.Get("#diplomacy_paid");
+        }
+
+        /// <summary>The war ends for the ransom in crystals (the upgrade crystals' purse).</summary>
+        public void PayCrystals()
+        {
+            if (BotRelations.Stance != BotStance.War) return;
+            var price = BotRelations.RansomCrystals(BotRelations.HallLevel());
+            if (Wallet.UpgradeCrystals < price)
+            {
+                if (note != null) note.text = Localization.Get("#diplomacy_pay_short");
+                return;
+            }
+            Wallet.UpgradeCrystals -= price;
+            BotRelations.EndWar();
+            if (note != null) note.text = Localization.Get("#diplomacy_paid");
+        }
+
         public void OpenBuildingCard()
         {
             var hall = _hall;
@@ -94,6 +128,20 @@ namespace CityBuilder.UI
             }
             if (scaleText != null) scaleText.text = Localization.Format("#diplomacy_relations", Mathf.RoundToInt(score).ToString("+0;-0;0"));
             if (stanceText != null) stanceText.text = Localization.Format("#diplomacy_stance", Localization.Get(StanceKey(BotRelations.Stance)));
+            var war = BotRelations.Stance == BotStance.War;
+            var hallLevel = war ? BotRelations.HallLevel() : 1;
+            if (payCoinsButton != null)
+            {
+                payCoinsButton.gameObject.SetActive(war);
+                var label = payCoinsButton.GetComponentInChildren<Text>();
+                if (war && label != null) label.text = Localization.Format("#diplomacy_pay_coins", BotRelations.RansomCoins(hallLevel));
+            }
+            if (payCrystalsButton != null)
+            {
+                payCrystalsButton.gameObject.SetActive(war);
+                var label = payCrystalsButton.GetComponentInChildren<Text>();
+                if (war && label != null) label.text = Localization.Format("#diplomacy_pay_crystals", BotRelations.RansomCrystals(hallLevel));
+            }
             for (var i = 0; i < stanceButtons.Length; i++)
             {
                 var button = stanceButtons[i];

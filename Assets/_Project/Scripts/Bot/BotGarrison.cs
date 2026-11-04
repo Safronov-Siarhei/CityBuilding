@@ -48,6 +48,44 @@ namespace CityBuilder.Bot
         private int _kingLeg;
         private float _tick;
         private bool _manned;
+        private bool _standDown;
+
+        /// <summary>
+        /// At war the town's-side garrison goes (BotWar puts the kingdom's hostile guards on the same
+        /// posts); at peace it comes back, manned afresh.
+        /// </summary>
+        public void StandDown(bool down)
+        {
+            if (_standDown == down) return;
+            _standDown = down;
+            if (!down) return;
+            var army = ArmyManager.Instance;
+            foreach (var post in _posts)
+            {
+                if (post.unit != null && army != null) army.Dismiss(post.unit);
+                post.unit = null;
+                post.onWall = false;
+                post.downFor = 0f;
+            }
+        }
+
+        /// <summary>Where the garrison stands, for the hostile guards at war: the King's ring, the avenues' ends, the walls' cells.</summary>
+        public static void WarPosts(BotKingdom kingdom, List<Vector3> melee, List<Vector3> ranged)
+        {
+            foreach (var at in KingRing) melee.Add(kingdom.WorldAt(at));
+            foreach (var avenue in Avenues)
+                foreach (var at in avenue) melee.Add(kingdom.WorldAt(at));
+            // the archers behind the gates and the drawbridges: inside each avenue, a cell off its axis
+            foreach (var avenue in Avenues)
+            {
+                var inner = avenue[0];
+                var side = inner.x == 0 ? new Vector2Int(2, 0) : new Vector2Int(0, 2);
+                ranged.Add(kingdom.WorldAt(inner + side));
+                ranged.Add(kingdom.WorldAt(inner - side));
+                ranged.Add(kingdom.WorldAt(avenue[1] + side));
+                ranged.Add(kingdom.WorldAt(avenue[1] - side));
+            }
+        }
 
         private void Update()
         {
@@ -55,6 +93,7 @@ namespace CityBuilder.Bot
             var army = ArmyManager.Instance;
             var config = BalanceConfig.Instance;
             if (kingdom == null || !kingdom.Placed || army == null || config == null) return;
+            if (_standDown) return;
             if (!_manned)
             {
                 Man(kingdom, config);

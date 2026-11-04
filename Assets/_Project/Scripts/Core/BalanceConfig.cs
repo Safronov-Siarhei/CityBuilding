@@ -454,6 +454,16 @@ namespace CityBuilder.Core
         [SerializeField] private float botRaidIntervalSeconds = 600f;
         [SerializeField] private int botRaidSize = 30;
         [SerializeField] private int botRaidLevel = 3;
+        // the war with the bot (Bot/BotWar, the user 2026-11-04)
+        [SerializeField] private float botWarRaidFirstSeconds = 180.0f;
+        [SerializeField] private float botWarRaidIntervalSeconds = 300.0f;
+        [SerializeField] private int botWarLevel = 2;
+        [SerializeField] private int botWarEscorts = 2;
+        [SerializeField] private float botWarGuardRadiusCells = 6.0f;
+        [SerializeField] private int botWarContributionBase = 200;
+        [SerializeField] private int botWarContributionPerMinute = 20;
+        [SerializeField] private float botWarContributionHallDiscount = 0.1f;
+        [SerializeField] private int botWarCoinsPerCrystal = 100;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -823,6 +833,7 @@ namespace CityBuilder.Core
             "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
             "drowned_rat", "dwarf_skeleton", "stone_guard", "drowned_dwarf", "eel", "forge_spirit", "dwarf_king", "canal_serpent",
             "fire_imp", "lava_hound", "salamander", "obsidian_golem", "ember_cultist", "magma_spawn", "dragon", "lava_titan",
+            "bot_soldier", "bot_archer",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -864,6 +875,9 @@ namespace CityBuilder.Core
             new MonsterStats { id = "magma_spawn", maxHealth = 45, attackDamage = 6, attackIntervalSeconds = 1.0f, attackRange = 0.8f, walkSpeed = 1.6f },
             new MonsterStats { id = "dragon", maxHealth = 3200, attackDamage = 45, attackIntervalSeconds = 2.2f, attackRange = 2.6f, walkSpeed = 1.2f },
             new MonsterStats { id = "lava_titan", maxHealth = 3000, attackDamage = 42, attackIntervalSeconds = 2.4f, attackRange = 2.2f, walkSpeed = 0.8f },
+            // the bot kingdom's soldiers at war (Bot/BotWar)
+            new MonsterStats { id = "bot_soldier", maxHealth = 90, attackDamage = 9, attackIntervalSeconds = 1.2f, attackRange = 0.8f, walkSpeed = 1.6f },
+            new MonsterStats { id = "bot_archer", maxHealth = 60, attackDamage = 7, attackIntervalSeconds = 1.6f, attackRange = 5f, walkSpeed = 1.5f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -1074,6 +1088,50 @@ namespace CityBuilder.Core
         public float BotRaidIntervalSeconds => botRaidIntervalSeconds;
         public int BotRaidSize => botRaidSize;
         public int BotRaidLevel => botRaidLevel;
+        public float BotWarRaidFirstSeconds => botWarRaidFirstSeconds;
+        public float BotWarRaidIntervalSeconds => botWarRaidIntervalSeconds;
+        public int BotWarLevel => botWarLevel;
+
+        /// <summary>One row of the bot's raid waves (the botwaves tab): `count` units of `unit` (an OrcKind sheet id) at `level` in wave `wave`.</summary>
+        [System.Serializable]
+        public class BotWaveRow
+        {
+            public int wave;
+            public string unit;
+            public int count;
+            public int level;
+        }
+
+        [SerializeField] private List<BotWaveRow> botWaves = new List<BotWaveRow>();
+
+        /// <summary>The waves' rows as the sheet has them.</summary>
+        public IReadOnlyList<BotWaveRow> BotWaves => botWaves;
+
+        /// <summary>
+        /// The rows of the raid number `wave` (1 = the first); past the last wave in the table, the
+        /// last one again (the user, 2026-11-04). Empty when the table is.
+        /// </summary>
+        public List<BotWaveRow> BotWave(int wave)
+        {
+            var last = 0;
+            foreach (var row in botWaves) last = Mathf.Max(last, row.wave);
+            var pick = Mathf.Min(Mathf.Max(1, wave), last);
+            var rows = new List<BotWaveRow>();
+            foreach (var row in botWaves)
+                if (row.wave == pick && row.count > 0) rows.Add(row);
+            return rows;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>The importer's way in (BalanceImporter, the botwaves tab).</summary>
+        public void EditorSetBotWaves(List<BotWaveRow> rows) => botWaves = rows ?? new List<BotWaveRow>();
+#endif
+        public int BotWarEscorts => botWarEscorts;
+        public float BotWarGuardRadiusCells => botWarGuardRadiusCells;
+        public int BotWarContributionBase => botWarContributionBase;
+        public int BotWarContributionPerMinute => botWarContributionPerMinute;
+        public float BotWarContributionHallDiscount => botWarContributionHallDiscount;
+        public int BotWarCoinsPerCrystal => botWarCoinsPerCrystal;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1817,6 +1875,15 @@ namespace CityBuilder.Core
             botRaidIntervalSeconds = Read(economy, "bot_raid_interval_sec", botRaidIntervalSeconds);
             botRaidSize = Mathf.RoundToInt(Read(economy, "bot_raid_size", botRaidSize));
             botRaidLevel = Mathf.RoundToInt(Read(economy, "bot_raid_level", botRaidLevel));
+            botWarRaidFirstSeconds = Read(economy, "bot_war_raid_first_sec", botWarRaidFirstSeconds);
+            botWarRaidIntervalSeconds = Read(economy, "bot_war_raid_interval_sec", botWarRaidIntervalSeconds);
+            botWarLevel = Mathf.RoundToInt(Read(economy, "bot_war_level", botWarLevel));
+            botWarEscorts = Mathf.RoundToInt(Read(economy, "bot_war_escorts", botWarEscorts));
+            botWarGuardRadiusCells = Read(economy, "bot_war_guard_radius_cells", botWarGuardRadiusCells);
+            botWarContributionBase = Mathf.RoundToInt(Read(economy, "bot_war_contribution_base", botWarContributionBase));
+            botWarContributionPerMinute = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_min", botWarContributionPerMinute));
+            botWarContributionHallDiscount = Read(economy, "bot_war_contribution_hall_discount", botWarContributionHallDiscount);
+            botWarCoinsPerCrystal = Mathf.RoundToInt(Read(economy, "bot_war_coins_per_crystal", botWarCoinsPerCrystal));
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);

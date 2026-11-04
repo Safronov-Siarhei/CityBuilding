@@ -6433,6 +6433,15 @@ MonoBehaviour:
   botRaidIntervalSeconds: 600
   botRaidSize: 30
   botRaidLevel: 3
+  botWarRaidFirstSeconds: 180
+  botWarRaidIntervalSeconds: 300
+  botWarLevel: 2
+  botWarEscorts: 2
+  botWarGuardRadiusCells: 6
+  botWarContributionBase: 200
+  botWarContributionPerMinute: 20
+  botWarContributionHallDiscount: 0.1
+  botWarCoinsPerCrystal: 100
   moatPathCost: 6
   drawbridgeRaiseRadiusCells: 6
   drawbridgeRaiseDegrees: 75
@@ -7089,6 +7098,18 @@ MonoBehaviour:
     attackIntervalSeconds: 2.4
     attackRange: 2.2
     walkSpeed: 0.8
+  - id: bot_soldier
+    maxHealth: 90
+    attackDamage: 9
+    attackIntervalSeconds: 1.2
+    attackRange: 0.8
+    walkSpeed: 1.6
+  - id: bot_archer
+    maxHealth: 60
+    attackDamage: 7
+    attackIntervalSeconds: 1.6
+    attackRange: 5
+    walkSpeed: 1.5
   invasionCamp1Monsters: 3
   invasionCamp2Monsters: 2
   invasionCamp3Monsters: 2
@@ -7141,3 +7162,44 @@ MonoBehaviour:
   baseCapacityFood: 100
   baseCapacityValuables: 300
   baseCapacityGrain: 150
+  botWaves:
+  - wave: 1
+    unit: bot_soldier
+    count: 4
+    level: 2
+  - wave: 1
+    unit: bot_archer
+    count: 2
+    level: 2
+  - wave: 2
+    unit: bot_soldier
+    count: 6
+    level: 2
+  - wave: 2
+    unit: bot_archer
+    count: 2
+    level: 2
+  - wave: 3
+    unit: bot_soldier
+    count: 6
+    level: 2
+  - wave: 3
+    unit: bot_archer
+    count: 3
+    level: 2
+  - wave: 4
+    unit: bot_soldier
+    count: 8
+    level: 3
+  - wave: 4
+    unit: bot_archer
+    count: 4
+    level: 2
+  - wave: 5
+    unit: bot_soldier
+    count: 10
+    level: 3
+  - wave: 5
+    unit: bot_archer
+    count: 5
+    level: 3

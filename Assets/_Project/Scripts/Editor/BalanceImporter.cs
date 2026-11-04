@@ -38,6 +38,9 @@ namespace CityBuilder.EditorTools
         public const string InvasionCsvPath = BalanceFolder + "/invasion.csv";
         /// <summary>The sheet's sandbox tab (the user, 2026-10-25): the sandbox's building, people and hero numbers, laid over the other tabs for the sandbox.</summary>
         public const string SandboxCsvPath = BalanceFolder + "/sandbox.csv";
+
+        /// <summary>The sheet's botwaves tab (the user, 2026-11-04): the bot's raid waves at war, a row per unit type in a wave.</summary>
+        public const string BotWavesCsvPath = BalanceFolder + "/botwaves.csv";
         public const string RunConfigAssetPath = "Assets/_Project/Resources/" + BalanceConfig.RunResourcePath + ".asset";
 
         [MenuItem("CityBuilder/Balance/Rebuild Config From CSV")]
@@ -81,6 +84,8 @@ namespace CityBuilder.EditorTools
                 AttachRecipes(sandboxBuildings, recipes);
             }
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
+            config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
+            EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
             var runUnits = ReadUnits(invasion.LayOver(unitRows, invasion.Units, InvasionCsvPath), InvasionCsvPath);
@@ -99,6 +104,34 @@ namespace CityBuilder.EditorTools
                       $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}; the sandbox tab's " +
                       $"{Math.Max(0, sandbox.Buildings.Count - 1)} buildings and {sandbox.Keys.Count} keys over {ConfigAssetPath}");
             return config;
+        }
+
+        /// <summary>The botwaves tab: wave, unit (an OrcKind sheet id: bot_soldier, bot_archer), count, level, comment.</summary>
+        private static List<BalanceConfig.BotWaveRow> ReadBotWaves(string path)
+        {
+            var result = new List<BalanceConfig.BotWaveRow>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int wave = Col("wave"), unit = Col("unit"), count = Col("count"), level = Col("level");
+            if (wave < 0 || unit < 0 || count < 0 || level < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the columns wave, unit, count, level.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c < row.Count ? row[c].Trim() : string.Empty;
+                if (!int.TryParse(Cell(wave), System.Globalization.NumberStyles.Integer, culture, out var w) || string.IsNullOrEmpty(Cell(unit))) continue;
+                int.TryParse(Cell(count), System.Globalization.NumberStyles.Integer, culture, out var n);
+                int.TryParse(Cell(level), System.Globalization.NumberStyles.Integer, culture, out var l);
+                result.Add(new BalanceConfig.BotWaveRow { wave = w, unit = Cell(unit), count = Mathf.Max(0, n), level = Mathf.Max(1, l) });
+            }
+            return result;
         }
 
         private static BalanceConfig WriteConfig(string assetPath, List<UnitBalance> units, List<BuildingBalance> buildings, Dictionary<string, float> economy)
@@ -289,6 +322,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.localizationCsvUrl, LocalizationCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.invasionCsvUrl, InvasionCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.sandboxCsvUrl, SandboxCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.botWavesCsvUrl, BotWavesCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)

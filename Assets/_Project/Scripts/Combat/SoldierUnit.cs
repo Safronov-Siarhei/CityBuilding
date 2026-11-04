@@ -361,7 +361,7 @@ namespace CityBuilder.Combat
                 var targetPosition = _target.Transform.position;
                 // a big one (a boss) is reached at its edge, not its middle: the gnomes stood
                 // beside the spider queen not striking (the user, 2026-11-02)
-                var range = _target.IsStructure ? _structureAttackRange : UnitAttackRange + _targetBody;
+                var range = _target.IsStructure ? _structureAttackRange + StructureReach(_target) : UnitAttackRange + _targetBody;
 
                 if (HorizontalDistance(targetPosition, transform.position) <= range)
                 {
@@ -491,6 +491,9 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A gate's centre is a cell further off than a palisade cell's; reach it from the wall's face.</summary>
+        /// <summary>How far past its middle a structure's walls stand: a bot building at war is struck at its walls (Bot/BotWarTarget).</summary>
+        private static float StructureReach(IDamageTarget target) => target is Bot.BotWarTarget bot ? bot.Reach : 0f;
+
         private static float BreachSlack(OrcCampBuilding wall) => Mathf.Max(wall.Footprint.x, wall.Footprint.y) * 0.5f;
 
         private void TickAttackOn(OrcCampBuilding wall)

@@ -142,6 +142,9 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject magmaSpawnModel;
         [SerializeField] private GameObject dragonModel;
         [SerializeField] private GameObject lavaTitanModel;
+        // the bot kingdom's soldiers at war: the player's own soldiers' figures (BotWar dresses them in straw)
+        [SerializeField] private GameObject botSoldierModel;
+        [SerializeField] private GameObject botArcherModel;
         // Стражи Глубин, the caches' guards (Tools/blender/tide.py)
         [SerializeField] private GameObject tideCrabModel;
         [SerializeField] private GameObject tideSharkModel;
@@ -625,6 +628,8 @@ namespace CityBuilder.Combat
                 case OrcKind.MagmaSpawn: return magmaSpawnModel;
                 case OrcKind.Dragon: return dragonModel;
                 case OrcKind.LavaTitan: return lavaTitanModel;
+                case OrcKind.BotSoldier: return botSoldierModel;
+                case OrcKind.BotArcher: return botArcherModel;
                 case OrcKind.TideCrab: return tideCrabModel;
                 case OrcKind.TideShark: return tideSharkModel;
                 case OrcKind.TideShaman: return tideShamanModel;

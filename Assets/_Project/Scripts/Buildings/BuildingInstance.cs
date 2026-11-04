@@ -365,7 +365,7 @@ namespace CityBuilder.Buildings
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
             // the King's Blessing: nothing of the player's takes damage while it lasts; the Captain's Спасение: this one
-            if (Combat.HeroBlessing.Active || IsShielded) return;
+            if (!IsBot && (Combat.HeroBlessing.Active || IsShielded)) return;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             ShowHealthBar();
