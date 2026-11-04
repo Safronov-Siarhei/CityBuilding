@@ -1,5 +1,7 @@
 # Dungeon (подземелье)
 
+> 2026-11-04 (last): LEVEL 3 has FOUR variants (Dungeon3, 3B/C/D; plans approved «Правок нет, строй»)
+> -- see «Level-3 variants». User not seen them in the game.
 > 2026-11-04 (latest): LEVEL 3 «Огненные глубины» COMPLETE in the game (monsters, dragon + titan,
 > tide, crumbling bridges, resources) -- see «Level 3 COMPLETE». User not seen.
 > 2026-11-04 (later): LEVEL-2 MONSTERS + both bosses IN THE GAME (dwarf king, canal serpent; 8 models
@@ -595,6 +597,23 @@ dungeon opens as a SEPARATE SCENE.
   - one entrance per map, or several.
 - Enemy ideas for an old mine: skeleton miners, bats, rats, spiders, kobolds. Boss ideas: an ore
   golem, a spider queen, a cave troll.
+
+## Level-3 variants (the user, 2026-11-04: «сделай вариации»; plans approved «Правок нет, строй»)
+- `dungeon3_plan.py <png> <seed> <layout>` LAYOUTS A-D (camp + way out always south):
+  - A (seed 15) the approved one;
+  - B (seed 30): dragon NW (0,14,6,5), titan E (16,9,5,5), the main river across the map;
+  - C (seed 62): dragon N middle (7,15,6,5), titan E (16,5,5,5), obsidian hall W, two rivers out of the lake;
+  - D (seed 60): dragon E (15,9,6,5), titan NW (1,15,5,5), the main river joins the pool to the lake.
+  Plans `Tools/blender/dungeon3{b,c,d}-plan.json`, pictures `Design/previews/dungeon3{b,c,d}-plan.png`.
+- `dungeon3.py -- <Dungeon-3V.blend> variant=v` -> `export_map.py -- <project> Dungeon3V Dungeon-3V`
+  (Models/Dungeon3B..D; the fire palette is shared). The 3D build picks its own bridges and crumbles
+  every bridge with a detour, as for A. 3D result: B 13 bridges (6 crumble), C 8 (8), D 8 (4); all 344/344
+  reachable. TRAP: the seeds first approved (41/41/15, then 36/27/2) built with 0-2 crumbling bridges
+  or a quarter cut off (C: the open lava 5 m beside a bridge cut the detour) -- pick seeds by the
+  3D build: `dungeon3.py -- <x.blend> variant=v reach_only [reachmap=<file.ppm>]` (stops after the
+  reach check; the ppm paints walk green, cut-off red, lava orange, bridges white).
+- Code: `DungeonTravel.LevelThreeIds`, `LevelThreeFor(seed)` (its own hash), `IsLevelThree(id)`
+  (DungeonMode's lava/tide/bridges switch); SetupProjectCityScene builds a definition per id.
 
 ## Monsters (agreed with the user 2026-10-31; in the game, see below)
 - Roster «пока что подходит» (sizes in cells, hero ~0.8):

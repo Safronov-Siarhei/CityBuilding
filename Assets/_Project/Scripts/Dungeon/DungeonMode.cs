@@ -186,7 +186,7 @@ namespace CityBuilder.Dungeon
                 foreach (var r in water.GetComponentsInChildren<Renderer>()) surface = Mathf.Max(surface, r.bounds.max.y);
             DungeonFloor.Build(MeshMapApplier.Instance, MapHalf, surface);
             // Dungeon 3: that surface is LAVA -- it burns, and nothing splashes in it
-            DungeonFloor.Lava = DungeonId == DungeonTravel.LevelThreeId;
+            DungeonFloor.Lava = DungeonTravel.IsLevelThree(DungeonId);
             if (DungeonFloor.Lava)
             {
                 gameObject.AddComponent<DungeonLava>().Begin(map);

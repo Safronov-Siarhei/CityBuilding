@@ -40,15 +40,28 @@ namespace CityBuilder.Dungeon
         /// <summary>The approved level-2 dungeon (the tests' fixture).</summary>
         public const string LevelTwoId = "Dungeon2";
 
-        /// <summary>The level-3 dungeon, «Огненные глубины» (Tools/blender/dungeon3.py): one map for now.</summary>
+        /// <summary>The approved level-3 dungeon, «Огненные глубины» (Tools/blender/dungeon3.py; the tests' fixture).</summary>
         public const string LevelThreeId = "Dungeon3";
 
         /// <summary>
+        /// The level-3 dungeons: the approved one and its variants (the user, 2026-11-04: «сделай
+        /// вариации») -- dungeon3_plan.py layouts B-D, dungeon3.py variant=b..d, each its own map Dungeon-3&lt;V&gt;.
+        /// </summary>
+        public static readonly string[] LevelThreeIds = { LevelThreeId, "Dungeon3B", "Dungeon3C", "Dungeon3D" };
+
+        /// <summary>A level-3 map id (the fire depths: lava burns, the tide, the crumbling bridges).</summary>
+        public static bool IsLevelThree(string id) => System.Array.IndexOf(LevelThreeIds, id) >= 0;
+
+        /// <summary>
         /// The dungeon behind a map's level-`level` mouth: level 2 a drowned-halls variant by the
-        /// map's seed (LevelTwoFor), level 3 the fire depths, level 1 a labyrinth as LevelOneFor picks.
+        /// map's seed (LevelTwoFor), level 3 a fire-depths variant (LevelThreeFor), level 1 a labyrinth as LevelOneFor picks.
         /// </summary>
         public static string DungeonFor(int seed, int version, int level)
-            => level == 2 ? LevelTwoFor(seed) : level == 3 ? LevelThreeId : LevelOneFor(seed, version, level - 1);
+            => level == 2 ? LevelTwoFor(seed) : level == 3 ? LevelThreeFor(seed) : LevelOneFor(seed, version, level - 1);
+
+        /// <summary>A map's level-3 dungeon, from its seed (a third hash, so it does not follow the level-2 pick).</summary>
+        public static string LevelThreeFor(int seed)
+            => LevelThreeIds[(int)((uint)(seed * 3266489917u + 668265263u) >> 9) % LevelThreeIds.Length];
 
         /// <summary>A map's level-2 dungeon, from its seed (another hash than the level-1 pick).</summary>
         public static string LevelTwoFor(int seed)

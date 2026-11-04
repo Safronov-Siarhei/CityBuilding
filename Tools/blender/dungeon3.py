@@ -492,6 +492,34 @@ def reachability(verts):
         if not any((int(x) + di, int(y) + dj) in seen for di in range(-2, 3) for dj in range(-2, 3)):
             lost.append(name)
     print(f"REACH {len(goals) - len(lost)}/{len(goals)} unreachable: {lost}")
+    dump = next((x.split("=", 1)[1] for x in argv if x.startswith("reachmap=")), None)
+    if dump:                                                    # a diagnostic picture: P6 ppm, north up
+        ks = list(verts)
+        i0, i1 = min(k[0] for k in ks), max(k[0] for k in ks)
+        j0, j1 = min(k[1] for k in ks), max(k[1] for k in ks)
+        w, h = i1 - i0 + 1, j1 - j0 + 1
+        px = bytearray(w * h * 3)
+        for (i, j), v in verts.items():
+            c = (40, 40, 40)
+            if v[2] <= CLIP_Z:
+                c = (230, 90, 0)
+            elif (i, j) in seen:
+                c = (60, 170, 60)
+            elif (i, j) in walk:
+                c = (220, 30, 30)
+            elif v[2] >= 0.5:
+                c = (90, 90, 120)
+            o = ((j1 - j) * w + (i - i0)) * 3
+            px[o:o + 3] = bytes(c)
+        for b in BRIDGES:
+            i, j = int(b[0]) , int(b[1])
+            for di in range(-2, 3):
+                for dj in range(-2, 3):
+                    if i0 <= i + di <= i1 and j0 <= j + dj <= j1:
+                        o = ((j1 - j - dj) * w + (i + di - i0)) * 3
+                        px[o:o + 3] = bytes((255, 255, 255))
+        with open(dump, "wb") as f:
+            f.write(b"P6 %d %d 255" % (w, h) + bytes([10]) + bytes(px))
     return lost
 
 
@@ -1628,6 +1656,8 @@ def main():
         return
     verts = build_vertices()
     reachability(verts)
+    if "reach_only" in argv:                                   # a diagnostic: the walk map only
+        return
     ground, relief = build_surface(verts)
     coll = bpy.data.collections.new("Dungeon")
     bpy.context.scene.collection.children.link(coll)

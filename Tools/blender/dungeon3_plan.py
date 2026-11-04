@@ -34,7 +34,7 @@ CRYSTAL_ROOMS = 12
 MONSTER_HALLS = 10
 
 LAYOUT = sys.argv[3].upper() if len(sys.argv) > 3 else "A"
-# ONE layout first (the user, 2026-11-04: «сначала один»), the dict ready for more
+# A = the approved plan (seed 15); B-D the variants (the user, 2026-11-04: «сделай вариации»)
 LAYOUTS = {
     "A": dict(
         big={
@@ -55,6 +55,61 @@ LAYOUTS = {
         ],
         # tide quarters (cells: x, y, radius): every passage in them is flooded by the lava tide
         floods=[(5.0, 6.0, 2.6), (12.0, 15.5, 2.4), (18.0, 12.5, 2.0), (3.5, 19.0, 1.8)],
+    ),
+    # B (the user, 2026-11-04: «сделай вариации»): the dragon in the NORTH-WEST, the titan EAST,
+    # the main river running across from the dragon's lake through the obsidian hall into the titan's pool
+    "B": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "dragon": (0, 14, 6, 5),
+            "titan": (16, 9, 5, 5),
+            "great": (8, 9, 5, 4),
+            "crater_w": (1, 4, 3, 3),
+            "crater_e": (15, 16, 3, 3),
+        },
+        canals=[
+            [(3.0, 16.5), (5.0, 13.0), (8.0, 11.5), (12.0, 10.8), (16.0, 11.0), (20.5, 11.5)],
+            [(11.0, 20.5), (10.5, 17.0), (10.0, 13.0), (10.5, 11.0)],
+            [(13.5, 9.0), (13.0, 6.0), (10.5, 4.5), (6.0, 4.0), (4.5, 5.5)],
+            [(20.5, 4.0), (18.0, 5.5), (17.5, 9.5)],
+        ],
+        floods=[(15.0, 4.0, 2.4), (5.0, 9.0, 2.4), (14.5, 17.5, 2.0), (19.0, 18.5, 1.8)],
+    ),
+    # C: the dragon NORTH in the middle, the titan EAST, the obsidian hall WEST
+    "C": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "dragon": (7, 15, 6, 5),
+            "titan": (16, 5, 5, 5),
+            "great": (1, 8, 5, 4),
+            "crater_w": (11, 7, 3, 3),
+            "crater_e": (16, 15, 3, 3),
+        },
+        canals=[
+            [(10.0, 17.5), (9.5, 14.0), (6.0, 11.5), (3.5, 10.0), (-0.5, 9.5)],
+            [(9.5, 14.0), (12.5, 11.5), (15.0, 9.0), (18.5, 7.5)],
+            [(20.5, 13.0), (18.0, 12.5), (17.5, 10.0)],
+            [(4.0, 20.5), (4.5, 17.0), (3.5, 13.5)],
+        ],
+        floods=[(6.0, 5.0, 2.4), (14.0, 13.0, 2.2), (2.5, 17.0, 2.0), (19.0, 2.5, 1.8)],
+    ),
+    # D: the dragon EAST, the titan NORTH-WEST, the obsidian hall north of the middle
+    "D": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "dragon": (15, 9, 6, 5),
+            "titan": (1, 15, 5, 5),
+            "great": (8, 14, 5, 4),
+            "crater_w": (2, 6, 3, 3),
+            "crater_e": (16, 17, 3, 3),
+        },
+        canals=[
+            [(3.5, 17.5), (6.5, 16.0), (10.5, 15.5), (14.0, 14.0), (18.0, 11.5)],
+            [(18.0, 11.5), (19.0, 7.0), (20.5, 4.0)],
+            [(10.5, 14.0), (10.0, 10.5), (7.0, 8.5), (3.5, 7.5)],
+            [(12.0, 20.5), (12.0, 18.0)],
+        ],
+        floods=[(13.0, 6.0, 2.6), (5.0, 11.5, 2.4), (17.5, 4.0, 2.0), (19.5, 18.5, 1.8)],
     ),
 }
 BIG = LAYOUTS[LAYOUT]["big"]

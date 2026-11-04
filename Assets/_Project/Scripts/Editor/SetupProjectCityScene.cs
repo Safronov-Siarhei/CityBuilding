@@ -666,8 +666,12 @@ namespace CityBuilder.EditorTools
             {
                 CreateDungeonDefinition(dungeonId, "Dungeon-2" + dungeonId.Substring("Dungeon2".Length));
             }
-            // the level-3 dungeon, the fire depths (Tools/blender/dungeon3.py)
-            CreateDungeonDefinition(CityBuilder.Dungeon.DungeonTravel.LevelThreeId, "Dungeon-3");
+            // the level-3 dungeons, the fire depths (Tools/blender/dungeon3.py, the approved plan and
+            // variants b-d; a map's level-3 mouth picks one, DungeonTravel.LevelThreeFor)
+            foreach (var dungeonId in CityBuilder.Dungeon.DungeonTravel.LevelThreeIds)
+            {
+                CreateDungeonDefinition(dungeonId, "Dungeon-3" + dungeonId.Substring("Dungeon3".Length));
+            }
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
