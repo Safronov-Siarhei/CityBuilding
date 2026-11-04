@@ -580,7 +580,7 @@ def relief_colour(z, nz, x, y):
 # the FIRE palette: the shared terrain palette's slots recoloured, so the layout (and every UV) stays
 FIRE_PALETTE = {
     "water_shallow": "FFB43C", "water": "FF7A1E", "water_deep": "E2491A", "foam": "FFE27A",   # lava
-    "clay": "4E3530", "mud": "E4612C",                                    # tide crust, ember seams
+    "clay": "4E3530", "mud": "8A3A28",                                    # tide crust, dim ember seams (bright ones read as lava)
     "rock_light": "A89D96", "rock": "8E827C", "rock_mid": "766B67", "rock_dark": "5D5452",
     "rock_deep": "463E52",                                                # obsidian
     "pebble": "B3A49A", "stony": "9C8D84", "dirt": "6E5A50", "dirt_dark": "56463F",
@@ -862,7 +862,9 @@ def decor_z(kind, x, y, sc=1.0):
 
 # -- the props (building palette) ----------------------------------------------------------------
 
-DARK, STONE, STONE_D, STONE_L = 'window', 'stone_mid', 'stone_dark', 'stone_light'
+ASH = 'roof_red_dark'   # scorched tops (the building palette has no ash; a dark red-brown reads as burnt)
+# basalt: darker than the other dungeons' stone (the user, 2026-11-04: the light stones looked strange here)
+DARK, STONE, STONE_D, STONE_L = 'window', 'stone_dark', 'roof_slate_dark', 'stone_mid'
 WOOD, WOOD_D, WOOD_L = 'wood_mid', 'wood_dark', 'wood_light'
 lights = []
 
@@ -972,13 +974,13 @@ def mine_exit(b):
     k = 2.6
     cx, cy, _ = w(x, y)
     with placed(b, (cx, cy + 1.0 * k, 0.0), k):                          # local y -1.0 = the face
-        b.crag(0.0, 0.55, 1.75, 1.3, 1.9, STONE, top='grass', sides=8, taper=0.5, seed=1)
-        b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE, top='grass', sides=6, taper=0.4, seed=4)
-        b.crag(-1.25, 0.85, 0.75, 0.9, 1.25, STONE_D, top='grass', sides=6, seed=7)
-        b.crag(1.3, 0.65, 0.7, 0.85, 1.05, STONE, top='grass', sides=6, seed=9)
-        b.crag(-0.85, -0.8, 0.42, 0.38, 1.25, STONE_D, top='grass', sides=6, seed=12)     # the cave's cheeks
-        b.crag(0.9, -0.75, 0.4, 0.36, 1.05, STONE, top='grass', sides=6, seed=15)
-        b.crag(0.0, -0.55, 0.85, 0.42, 1.55, STONE_D, top='grass', sides=7, taper=0.6, seed=18)  # the brow, rock not a slab
+        b.crag(0.0, 0.55, 1.75, 1.3, 1.9, STONE, top=ASH, sides=8, taper=0.5, seed=1)
+        b.crag(0.35, 1.0, 0.95, 0.8, 2.7, STONE, top=ASH, sides=6, taper=0.4, seed=4)
+        b.crag(-1.25, 0.85, 0.75, 0.9, 1.25, STONE_D, top=ASH, sides=6, seed=7)
+        b.crag(1.3, 0.65, 0.7, 0.85, 1.05, STONE, top=ASH, sides=6, seed=9)
+        b.crag(-0.85, -0.8, 0.42, 0.38, 1.25, STONE_D, top=ASH, sides=6, seed=12)     # the cave's cheeks
+        b.crag(0.9, -0.75, 0.4, 0.36, 1.05, STONE, top=ASH, sides=6, seed=15)
+        b.crag(0.0, -0.55, 0.85, 0.42, 1.55, STONE_D, top=ASH, sides=7, taper=0.6, seed=18)  # the brow, rock not a slab
         # the way up (the user, 2026-11-02, option 2 «каменная лестница»): dressed steps climb
         # to an opening high in the face, full of daylight, a torch either side
         lift = EXIT_STAIR_RISE * EXIT_STEPS
@@ -1141,8 +1143,9 @@ def stalagmite(b, x, y, h):
 
 
 def boulder(b, x, y, r):
+    """A basalt lump: dark, faceted, not a white ball (the user, 2026-11-04)."""
     cx, cy, _ = w(x, y)
-    b.ball(cx, cy, -0.5, r, r * 1.3 + 0.35, STONE if int(x * 7) % 2 else STONE_D, sides=6, top=STONE_L)
+    b.crag(cx, cy, r * 1.1, r * 0.9, r * 1.2, STONE_D, top=STONE, sides=6, seed=int(x * 7))
 
 
 def free_spot(r, x0, y0, x1, y1, clear=-1.2, tries=30):
@@ -1207,15 +1210,6 @@ def basalt_bridge(b, x, y, ux, uy, half):
         fire_spot(qx, qy, 1.2)
 
 
-def crack_marks(b, x, y, ux, uy, half):
-    """The crumbling bridge's warning: red-glowing cracks across its middle slabs."""
-    for t in (-half * 0.3, 0.0, half * 0.25):
-        px, py = x + ux * t, y + uy * t
-        z = deck_height(t, half)
-        cx, cy, _ = w(px, py)
-        b.zbox(cx, cy, z + 0.04, z + 0.06, 0.07, BRIDGE_HW * 0.8, math.degrees(math.atan2(uy, ux)) + 12, 'fire')
-
-
 def lava_ford(b, x, y):
     """Where a tide passage crosses a river: crust slabs over the crossing and two warning posts
     with a red rag -- the way is open only at low tide."""
@@ -1249,6 +1243,9 @@ def spires(b, x, y, rnd):
         spire(b, x + math.cos(a) * d, y + math.sin(a) * d, rnd.uniform(1.2, 3.2))
 
 
+vents = []                  # (x, y, radius) in w() units: the fire vents' hot rounds
+
+
 def vent(b, x, y, big=1.0):
     """A fire vent: a ring of scorched rock round a glowing mouth, a flame over it."""
     cx, cy, _ = w(x, y)
@@ -1257,29 +1254,55 @@ def vent(b, x, y, big=1.0):
         b.crag(cx + math.cos(a) * 0.8 * big, cy + math.sin(a) * 0.8 * big, 0.35 * big, 0.3 * big, 0.45 * big,
                STONE_D, top='window', sides=5, seed=k + int(x))
     b.cylinder(cx, cy, -0.05, 0.12, 0.6 * big, 'fire', sides=8)
+    vents.append((cx, cy, 0.6 * big + 0.5))
     fire_spot(cx, cy, 0.5 * big)
     light('fire', cx, cy, 0.8 * big)
 
 
-def gold_pile(b, x, y, s=1.0):
+def coin_heap(b, x, y, s, rnd):
+    """A heap of coins: low, wide and stepped like poured coin, a scatter of single coins round
+    its foot -- never a lump (round gold balls read as ore, the user 2026-11-04)."""
     cx, cy, _ = w(x, y)
-    b.ball(cx, cy, -0.2, 0.9 * s, 0.75 * s, 'gold', sides=8, top='gold')
-    for k in range(5):
-        a = k * 1.3 + x
-        b.ball(cx + math.cos(a) * 0.9 * s, cy + math.sin(a) * 0.9 * s, -0.1, 0.35 * s, 0.35 * s, 'gold', sides=6)
+    b.frustum(cx, cy, -0.05, 0.35 * s, 1.5 * s, 1.0 * s, 'gold', sides=10)
+    b.frustum(cx, cy, 0.35 * s, 0.6 * s, 1.0 * s, 0.5 * s, 'gold', sides=9)
+    b.frustum(cx, cy, 0.6 * s, 0.72 * s, 0.5 * s, 0.15 * s, 'gold', sides=8)
+    for k in range(int(10 * s) + 4):
+        a = rnd.uniform(0, 6.283)
+        d = rnd.uniform(1.2, 2.2) * s
+        b.cylinder(cx + math.cos(a) * d, cy + math.sin(a) * d, 0.0, 0.04, 0.12, 'gold', sides=6)
 
 
 def hoard(b, x, y, rnd):
-    """The dragon's bed on the lake's shore: heaps of gold, a few chests, a crown, bones."""
-    gold_pile(b, x, y, 1.8)
-    for k in range(5):
-        a = k * 1.25 + 0.4
-        gold_pile(b, x + math.cos(a) * 3.0, y + math.sin(a) * 2.2, rnd.uniform(0.6, 1.1))
-    for k in range(3):
-        a = k * 2.0 + 1.0
-        crate(b, x + math.cos(a) * 4.2, y + math.sin(a) * 3.0, 0.7)
-    cx, cy, _ = w(x + 0.6, y - 0.4)
-    b.cylinder(cx, cy, 1.25, 1.45, 0.3, 'gold', sides=8)
+    """The dragon's bed on the lake's shore: one great heap of coins with smaller ones round it,
+    gold bars, open chests spilling coin, a goblet, a crown on top, a sword stuck in the heap."""
+    top = 2.2 * 0.72
+    coin_heap(b, x, y, 2.2, rnd)
+    for k in range(4):
+        a = k * 1.6 + 0.4
+        coin_heap(b, x + math.cos(a) * 3.6, y + math.sin(a) * 2.6, rnd.uniform(0.6, 0.9), rnd)
+    for k in range(5):                                           # gold bars in little stacks
+        a = k * 1.25 + 2.0
+        px, py, _ = w(x + math.cos(a) * 2.4, y + math.sin(a) * 2.0)
+        for h in range(1 + k % 2):
+            b.zbox(px, py, h * 0.12, h * 0.12 + 0.12, 0.28, 0.12, a * 57.3 + h * 90, 'gold')
+    for k in range(2):                                           # open chests, coin heaped in them
+        a = k * 2.6 + 1.0
+        ox, oy = x + math.cos(a) * 4.6, y + math.sin(a) * 3.2
+        crate(b, ox, oy, 0.75)
+        px, py, _ = w(ox, oy)
+        b.box(px - 0.32, px + 0.32, py - 0.32, py + 0.32, 0.75, 0.82, 'gold')
+    cx, cy, _ = w(x + 0.5, y - 0.6)                              # the goblet
+    b.frustum(cx, cy, 0.0, 0.05, 0.14, 0.14, 'gold', sides=8)
+    b.rod((cx, cy, 0.05), (cx, cy, 0.3), 0.04, 'gold')
+    b.frustum(cx, cy, 0.3, 0.5, 0.06, 0.16, 'gold', sides=8)
+    tx, ty, _ = w(x, y)                                          # a crown on the heap's top
+    b.frustum(tx, ty, top, top + 0.2, 0.26, 0.28, 'gold', sides=8)
+    for k in range(6):
+        a = k * math.pi / 3
+        b.pyramid(tx + math.cos(a) * 0.24, ty + math.sin(a) * 0.24, top + 0.2, 0.06, 0.06, top + 0.36, 'gold', sides=4)
+    sx, sy, _ = w(x - 0.9, y + 0.5)                              # a hero's sword, stuck in the coin
+    b.rod((sx, sy, 0.6), (sx + 0.1, sy, 1.9), 0.05, 'iron')
+    b.rod((sx - 0.22, sy, 1.65), (sx + 0.32, sy, 1.67), 0.05, 'gold')
     for k in range(4):
         bones(b, x + rnd.uniform(-5, 5), y + rnd.uniform(-4, 3))
     light('fire', *w(x, y)[:2], 1.5)
@@ -1293,6 +1316,24 @@ def place_on_shore(cx, cy, ry, dy=-1):
             return cx, y
         y += dy * 0.5
     return cx, cy + dy * (ry + 4.0)
+
+
+def solid_spot(x, y, clear=-1.5):
+    """(x, y) if it is clear floor -- not on or by a bridge, not by the lava, not in the rock --
+    else the nearest spot that is (a crystal room's middle fell on a bridge, the user's screenshot
+    2026-11-04)."""
+    def ok(px, py):
+        return (bridge_at(px, py) is None and deep_sd(px, py) > 3.0 and pass_sd(px, py) < clear
+                and all(max(_span(px, py, br, 2.0, 2.0)) > 0 for br in BRIDGES))
+    if ok(x, y):
+        return x, y
+    for r in range(1, 16):
+        for k in range(16):
+            a = k * math.pi / 8
+            px, py = x + math.cos(a) * r, y + math.sin(a) * r
+            if ok(px, py):
+                return px, py
+    return x, y
 
 
 HOARD_AT = place_on_shore(DRAGON_LAKE[0], DRAGON_LAKE[1], DRAGON_LAKE[3])
@@ -1349,7 +1390,7 @@ def build_halls(b, r):
         with on_floor(b, cx + 2.0, cy + 1.5):
             totem(b, cx + 2.0, cy + 1.5)
     for i, c in enumerate(PLAN["crystal_rooms"]):
-        cx, cy = cell_centre(c)
+        cx, cy = solid_spot(*cell_centre(c))
         with on_floor(b, cx, cy):
             pedestal(b, cx, cy)
             crystal(b, cx + 2.6, cy - 1.4, 1.2, 'roof_red', 'fire')
@@ -1399,7 +1440,6 @@ def build_props(b):
         if i in CRUMBLING:
             falling[i] = Builder()
             basalt_bridge(falling[i], x, y, ux, uy, half)
-            crack_marks(falling[i], x, y, ux, uy, half)
         else:
             basalt_bridge(b, x, y, ux, uy, half)
     for x, y in FORDS:
@@ -1442,7 +1482,7 @@ def build_props(b):
     build_halls(b, random.Random(9))
     # the crystal rooms: nothing on the ground -- the reward floats in the air
     for i, c in enumerate(PLAN["crystal_rooms"]):
-        x, y = cell_centre(c)
+        x, y = solid_spot(*cell_centre(c))
         cx, cy, _ = w(x, y)
         if POPULATED:
             rewards.append((cx, cy, 1.6 + min(0.0, height_at(x, y)[0])))
@@ -1521,11 +1561,11 @@ def lair_rows():
     empty = sorted((tuple(c) for c in PLAN["dead_ends"] if tuple(c) not in rooms),
                    key=lambda c: -math.dist(game(*POS[c]), camp))
     for c in empty[:LONE_CRYSTALS]:
-        out.append(("crystal",) + game(*POS[c]))
+        out.append(("crystal",) + game(*solid_spot(*POS[c])))
     for c in empty[LONE_CRYSTALS:]:
-        out.append(("chest",) + game(*POS[c]))
+        out.append(("chest",) + game(*solid_spot(*POS[c])))
     for c in passage_crystals(game, camp, [(x, y) for _, x, y in out]):
-        out.append(("crystal",) + game(*POS[c]))
+        out.append(("crystal",) + game(*solid_spot(*POS[c])))
     lairs = [(x, y) for k, x, y in out if k == "lair" or k.startswith("boss_")]
     dungeon_lairs.PATROLS = PATROLS
     for k, route in enumerate(dungeon_lairs.patrols(PLAN, POS, game, camp, lairs)):
@@ -1701,6 +1741,8 @@ def main():
             bx, by, _ux, _uy, _half = BRIDGES[i]
             px, py, _ = w(bx, by)
             f.write(f"bridge_fall,{px * SCALE:.3f},{py * SCALE:.3f},{deck_height(0.0, _half) * SCALE:.3f}\n")
+        for vx, vy, vr in vents:                                # vent: its hot round's radius in the z column
+            f.write(f"vent,{vx * SCALE:.3f},{vy * SCALE:.3f},{vr * SCALE:.3f}\n")
         for lk, lx, ly in (lair_rows() if POPULATED else ()):
             f.write(f"{lk},{lx:.3f},{ly:.3f},0.000\n")
     kit.file_display_settings()

@@ -32,6 +32,9 @@ namespace CityBuilder.Maps
 
         public static bool Active => _heights != null;
 
+        /// <summary>The surface is lava (Dungeon 3): it burns (Dungeon.DungeonLava), no water rings.</summary>
+        public static bool Lava { get; set; }
+
         /// <summary>Samples the dungeon's floor, `half` cells round the map's middle, under `waterLevel`.</summary>
         public static void Build(MeshMapApplier applier, float half, float waterLevel)
         {
@@ -57,6 +60,7 @@ namespace CityBuilder.Maps
         {
             _heights = null;
             WaterLevel = 0f;
+            Lava = false;
         }
 
         /// <summary>How far above (+) or below (-) the plain's height a walker at `position` stands.</summary>

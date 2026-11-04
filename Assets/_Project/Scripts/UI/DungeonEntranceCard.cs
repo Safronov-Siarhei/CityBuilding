@@ -25,7 +25,9 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject findRow;
         [SerializeField] private Text findWords;
 
-        private static readonly Combat.SoldierType[] HeroOrder = { Combat.SoldierType.King, Combat.SoldierType.Queen, Combat.SoldierType.Captain };
+        // the gap between two faces' middles (SetupProjectPanels lays the three out this far apart)
+        private const float FaceSpacing = 175f;
+        private static readonly Combat.SoldierType[] HeroOrder ={ Combat.SoldierType.King, Combat.SoldierType.Queen, Combat.SoldierType.Captain };
 
         public static DungeonEntranceCard Instance { get; private set; }
 
@@ -109,12 +111,21 @@ namespace CityBuilder.UI
             var show = !Shown.IsExit && roster != null && roster.Heroes.Count > 0;
             if (heroRow.activeSelf != show) heroRow.SetActive(show);
             if (!show) return;
+            // the faces the player has, centred as a row (the user, 2026-11-04: one hero stands in
+            // the middle, not in the first of three slots)
+            var count = 0;
+            for (var i = 0; i < HeroOrder.Length && i < heroFaces.Length; i++)
+                if (heroFaces[i] != null && roster.HeroOf(HeroOrder[i]) != null) count++;
+            var slot = 0;
             for (var i = 0; i < HeroOrder.Length && i < heroFaces.Length; i++)
             {
                 var hero = roster.HeroOf(HeroOrder[i]);
                 if (heroFaces[i] == null) continue;
                 heroFaces[i].gameObject.SetActive(hero != null);
                 if (hero == null) continue;
+                var at = heroFaces[i].rectTransform.anchoredPosition;
+                heroFaces[i].rectTransform.anchoredPosition = new Vector2((slot - (count - 1) * 0.5f) * FaceSpacing, at.y);
+                slot++;
                 var near = Shown.IsNear(hero);
                 heroFaces[i].color = near ? Color.white : new Color(0.55f, 0.55f, 0.55f, 1f);
                 if (i < heroWords.Length && heroWords[i] != null)

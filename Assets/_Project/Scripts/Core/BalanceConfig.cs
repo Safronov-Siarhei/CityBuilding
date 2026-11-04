@@ -650,6 +650,8 @@ namespace CityBuilder.Core
         [SerializeField] private float serpentSpitStun = 0.8f;
         [SerializeField] private int dungeon2CrystalsPerRoom = 1;
         [SerializeField] private float dungeonChestReach = 1f;
+        // Dungeon 3 (the user, 2026-11-04): a hero standing in lava, or by a fire vent, burns
+        [SerializeField] private float dungeonLavaDamagePerSecond = 25f;
         [SerializeField] private int dungeonChestWood = 20;
         [SerializeField] private int dungeonChestStone = 20;
         [SerializeField] private int dungeonChestGold = 6;
@@ -1207,6 +1209,7 @@ namespace CityBuilder.Core
         public float SerpentSpitStun => serpentSpitStun;
         public int Dungeon2CrystalsPerRoom => dungeon2CrystalsPerRoom;
         public float DungeonChestReach => dungeonChestReach;
+        public float DungeonLavaDamagePerSecond => dungeonLavaDamagePerSecond;
         public int DungeonChestWood => dungeonChestWood;
         public int DungeonChestStone => dungeonChestStone;
         public int DungeonChestGold => dungeonChestGold;
@@ -1905,6 +1908,7 @@ namespace CityBuilder.Core
             serpentSpitStun = Read(economy, "dungeon_serpent_spit_stun_sec", serpentSpitStun);
             dungeon2CrystalsPerRoom = (int)Read(economy, "dungeon2_crystals_per_room", dungeon2CrystalsPerRoom);
             dungeonChestReach = Read(economy, "dungeon_chest_reach", dungeonChestReach);
+            dungeonLavaDamagePerSecond = Read(economy, "dungeon_lava_damage_per_second", dungeonLavaDamagePerSecond);
             dungeonChestWood = (int)Read(economy, "dungeon_chest_wood", dungeonChestWood);
             dungeonChestStone = (int)Read(economy, "dungeon_chest_stone", dungeonChestStone);
             dungeonChestGold = (int)Read(economy, "dungeon_chest_gold", dungeonChestGold);

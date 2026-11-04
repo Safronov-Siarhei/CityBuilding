@@ -319,7 +319,24 @@ dungeon opens as a SEPARATE SCENE.
   - BRIDGES: `MeshMapDefinition.BridgesPrefab` (`-Bridges.fbx`); `MeshMapApplier.AddBridgeDecks`
     gives each `-deck` a MeshCollider in the ground's colliders, so the NavMesh walks them. They do
     NOT fall yet; the TIDE is exported but not loaded (always low tide).
-  - Next: the tide and the falling/re-forming bridges in the game, lava damage, the monster models.
+  - Next: the tide and the falling/re-forming bridges in the game, the monster models.
+- **Playtest round 1 of level 3 (the user, 2026-11-04, 7 screenshots) -- DONE, NOT BUILT (the user's
+  Unity had the project open), not seen:**
+  - The entrance card's hero faces are CENTRED by how many heroes the player has
+    (`DungeonEntranceCard.RefreshHeroes`, `FaceSpacing` 175) -- every dungeon level.
+  - LAVA BURNS: `DungeonLava` (added by DungeonMode on Dungeon3, `DungeonFloor.Lava`): a hero whose
+    feet are under the lava surface (`DungeonFloor.Wading` -- the "water" there is lava: the thin
+    strips over a crossing, river banks) or inside a fire vent's round (`vent` points, radius in the
+    z column, 40 of them) takes economy `dungeon_lava_damage_per_second` (25; in the sheet). No
+    water rings in lava (`DungeonWake.Step`).
+  - The way out's rock: scorched tops (`ASH` = roof_red_dark) instead of turf.
+  - No orange stripes on the bridges (`crack_marks` removed -- a crumbling bridge needs another tell).
+  - The hoard: coin heaps (stepped low mounds + loose coins), gold bars, open chests, a goblet, a crown,
+    a sword stuck in it -- the gold balls read as ore.
+  - Crystals / pedestals never on a bridge or by the lava: `solid_spot()` moves a crystal room's middle
+    (and every lone/passage crystal and chest) to the nearest clear floor.
+  - Basalt: STONE/STONE_D/STONE_L = stone_dark / roof_slate_dark / stone_mid (the white boulders);
+    `boulder` is a dark crag. The tide floor's seams dimmed (`mud` 8A3A28) so they do not read as lava.
 
 ## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
 - **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,

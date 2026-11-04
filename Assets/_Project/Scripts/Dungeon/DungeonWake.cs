@@ -36,7 +36,7 @@ namespace CityBuilder.Dungeon
         /// <summary>A walker at `position` took a step: a ring round it when it wades and its clock ran out.</summary>
         public static void Step(Vector3 position, ref float clock)
         {
-            if (!DungeonFloor.Active) return;
+            if (!DungeonFloor.Active || DungeonFloor.Lava) return;
             clock -= Time.deltaTime;
             if (clock > 0f) return;
             clock = RingEverySeconds;
