@@ -278,7 +278,34 @@ dungeon opens as a SEPARATE SCENE.
 - Plan: `Tools/blender/dungeon3_plan.py <png> [seed] [layout]` (dungeon2_plan.py reworked; LAYOUTS
   holds A only), seed 15 -> `dungeon3-plan.json`: 349 passages, 108 under the tide, 14 bridges (8
   crumbling), 8 lava fords, 12 crystal rooms, 15 chest dead ends, dragon ~1414 m, titan ~1043 m.
-  Picture sent 2026-11-04, **awaiting approval**.
+  Approved 2026-11-04 («Да, строй в 3D»).
+- **Blender map: `Tools/blender/dungeon3.py`** (dungeon2.py reworked) -> `Dungeon-3.blend` next to
+  Dungeon-2.blend; previews via dungeon_preview.py. Sent 2026-11-04, **awaiting approval; not
+  exported, not in the game**.
+  - LAVA = level 2's deep water renamed in spirit: the `-Water` object is the lava surface at
+    WATER_Z -0.45 over beds below CLIP_Z (a "water" cell: nobody walks); the dragon's LAKE and the
+    titan's POOL are deep ellipses in their halls (`DRAGON_LAKE`, `TITAN_POOL`).
+  - TIDE: the tide passages, river banks and lava fords are floor at SHALLOW_Z -0.30 (crust colour
+    with ember seams); `<prefix>-Tide` is a lava skin at TIDE_Z -0.08 over it -- THE GAME must
+    raise/lower it (and block the floor at high tide). The previews show it up.
+  - BRIDGES laid ALONG the passage (axis = the passage's direction at the crossing), ends where the
+    lava is 1.0 behind (`BRIDGE_DRY`), asymmetric halves; the lava runs open 5 either side of a deck
+    and the rock is cut back there (a gorge). 10 bridges + 12 lava fords (plan: 14 + 8 -- curves
+    made 4 straight decks hit rock, those became fords).
+  - CRUMBLING: only bridges whose loss TOGETHER still joins every hall and node (`_on_loop` with
+    the others gone): 2 of 10. 8 of 10 have a detour one by one -- the plan counted them that way.
+    Asked the user: keep 2, or more that RE-FORM after a while.
+  - A crumbling bridge = `<prefix>-Bridges-f<i>` (stones) + `-Bridges-f<i>-deck` (its walkable deck,
+    terrain, out of the Ground) + a `bridge_fall` point. export_map's OPTIONAL needs "Bridges" and
+    "Tide" added; the game needs the deck walkable and a carve when it falls.
+  - FIRE PALETTE: `FIRE_PALETTE` recolours the shared terrain palette's slots (water -> lava, rock
+    -> basalt, rock_deep -> obsidian, grass -> ash, clay/mud -> crust/embers) into
+    `Terrain-Palette-Fire.png` -- the game needs a per-map palette for Dungeon3 (export_map copies
+    only Terrain-Palette.png, untouched).
+  - Points: 13 lairs, `boss_dragon` (the hoard, south shore of the lake), `boss_titan` (the pool's
+    south rim), 20 crystals (9 lone + 11 in passages), 6 chests, 10 patrols, 2 bridge_fall.
+  - Budget: ground 135k, relief 161k, lava 8k, tide 11k, props 49k tris, decor 13.7k items (~780k).
+  - `bridges_only` arg: stops after plan_bridges, prints why a crossing got no bridge.
 
 ## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
 - **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,
