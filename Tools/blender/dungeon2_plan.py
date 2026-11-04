@@ -362,12 +362,11 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
             d.ellipse([x - r * px, y - r * px, x + r * px, y + r * px], fill=fill)
         cx, cy = centre((x0 + (w - 1) / 2, y0 + (h - 1) / 2))
         d.multiline_text((cx, cy), labels[name], fill=(255, 255, 255), font=font, anchor="mm", align="center")
-    for bx_, by_, a, b in fords:               # fords: the flooded passage wades the canal
+    # no bridges any more (2026-11-04, dungeon2.py USE_BRIDGES = False): every crossing is drawn as
+    # the ford the 3D build makes of it
+    for bx_, by_, a, b in fords + bridges:     # fords: the passage wades the canal
         x, y = m((bx_, by_))
         d.ellipse([x - 3 * px, y - 3 * px, x + 3 * px, y + 3 * px], outline=(220, 240, 255), width=3)
-    for bx_, by_, a, b in bridges:             # bridges: brown planks across the canal
-        x, y = m((bx_, by_))
-        d.rectangle([x - 5 * px, y - 3 * px, x + 5 * px, y + 3 * px], fill=(150, 100, 60), outline=(90, 60, 30), width=2)
     if door:                                    # the lever door: a red bar with a lock
         x, y = m(((pos[door[0]][0] + pos[door[1]][0]) / 2, (pos[door[0]][1] + pos[door[1]][1]) / 2))
         d.rectangle([x - 6 * px, y - 2 * px, x + 6 * px, y + 2 * px], fill=(200, 40, 40), outline=(255, 220, 120), width=2)
@@ -392,7 +391,7 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
     rows = [((190, 110, 255), "комната с кристаллами"), ((110, 110, 100), "пустой тупик (обманка)"),
             ((230, 80, 60), "монстры / кузни / затопленный зал"), ((240, 200, 60), "зал с рычагом (2 шт.)"),
             ((200, 40, 40), "дверь к королю: открывают оба рычага"), (water, "каналы (вода)"),
-            ((150, 100, 60), "мост через канал"), (shallow, "затопленный проход: идут по воде"),
+            (shallow, "затопленный проход: идут по воде"),
             ((220, 240, 255), "брод через канал"), ((214, 190, 120), "лагерь: гномы, лавка"),
             ((170, 110, 220), "логово босса: один вход")]
     for k, (col, text) in enumerate(rows):
@@ -404,7 +403,7 @@ def draw(path, links, crystal_rooms, monster_halls, dead_ends, dist, pos, bends,
     d.multiline_text((lx, pad + 20 + len(rows) * 38 + 20),
                      f"размер: 300 × 300 (≈132 × 132 клетки)\nкомнат с кристаллами: {len(crystal_rooms)}\n"
                      f"пустых тупиков: {empty}\nзалов с монстрами: {len(monster_halls) + len(ARENAS)}\n"
-                     f"мостов: {len(bridges)}, бродов: {len(fords)}\n"
+                     f"бродов через каналы: {len(fords) + len(bridges)} (мостов нет)\n"
                      f"проходов по воде: {sum(flooded)} из {len(flooded)} ({round(100 * sum(flooded) / len(flooded))}%)\nпуть до рычагов: ~{lever_far[0]} и ~{lever_far[1]} м\n"
                      f"путь до короля: ~{round(dist.get('throne', 0))} м\nпуть до змея: ~{round(dist.get('serpent', 0))} м",
                      fill=(240, 240, 240), font=small, spacing=8)
