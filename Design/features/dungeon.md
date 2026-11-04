@@ -8,13 +8,17 @@
 > the darkness, the GNOME HIRE CAMP and the POTION SHOP (both 2026-11-01, user not seen them yet).
 > Not done: dungeons of levels 2-3 (own maps). Not measured on a phone.
 > Read with: maps-and-terrain (map spots), sandbox-run-systems (heroes), orc-faction (OrcUnit).
-> **2026-11-04: level-2 VARIANTS, plan stage** (the user: «добавить разные вариации карт»).
-> `dungeon2_plan.py <png> <seed> <layout>`: LAYOUTS A-D (A = the approved seed-92 plan, reproduced
-> byte-for-byte; camp always south; hall names kept -- lever_w/forge_n are just "first lever"/"second
-> forge"). Plans `dungeon2b/c/d-plan.json` = B seed 9, C seed 9, D seed 16 (levers 750-1200 m, king and
-> serpent 990-1290 m from the camp, as A's ~1160). Pictures sent to the user, NOT approved yet; no 3D,
-> dungeon2.py still reads only dungeon2-plan.json (next: variant=b|c|d as dungeon1.py, Dungeon2B..D,
-> DungeonTravel level 2 per mouth).
+> **2026-11-04: FOUR level-2 dungeons** (the user: «добавить разные вариации карт»; plans approved
+> «Правок нет, строй»). `dungeon2_plan.py <png> <seed> <layout>`: LAYOUTS A-D (A = the approved seed-92
+> plan, reproduced byte-for-byte; camp always south; hall names kept -- lever_w/forge_n are just "first
+> lever"/"second forge"). Plans `dungeon2b/c/d-plan.json` = B seed 9, C seed 9, D seed 16 (levers
+> 750-1200 m, king and serpent 990-1290 m from the camp, as A's ~1160). The plan PICTURE draws every
+> canal crossing as a ford (the 3D has no bridges, USE_BRIDGES = False). `dungeon2.py -- <blend>
+> variant=b` builds `Dungeon-2B` (blends next to Dungeon-2.blend), exported to Models/Dungeon2B..D:
+> each 13 lairs, 20 crystals, 10-15 chests, 10 patrols, door shuts the throne off. A map's level-2
+> mouth: `DungeonTravel.LevelTwoFor(seed)` over `LevelTwoIds` (SetupProjectCityScene loops them);
+> old saves may now lead to another variant than Dungeon2. Not seen by the user; DungeonVariantTests
+> still checks Dungeon2 only (the next general run should cover it).
 > **2026-11-03: FOUR level-1 dungeons** (the user: «разные генерации для подземелья уровня 1 ... как с
 > островами»). `dungeon_plan.py <png> <seed> <layout>`: hall LAYOUTS A-D (camp always south by the way out;
 > bosses, lake, arenas elsewhere; A = the approved plan, reproduced exactly). Plans `dungeon1b/c/d-plan.json`

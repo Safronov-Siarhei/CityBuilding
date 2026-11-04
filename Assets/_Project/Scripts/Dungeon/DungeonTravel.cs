@@ -31,18 +31,26 @@ namespace CityBuilder.Dungeon
         public static readonly string[] LevelOneIds = { FirstDungeonId, "Dungeon1B", "Dungeon1C", "Dungeon1D" };
 
         /// <summary>
-        /// The level-2 dungeon, «Затопленные гномьи чертоги» (Tools/blender/dungeon2.py on
-        /// dungeon2-plan.json): one variant for now (the user, 2026-11-03: one first, tested, then
-        /// the others), and empty -- no monsters or crystals -- for a first walk through it.
+        /// The level-2 dungeons, «Затопленные гномьи чертоги» (Tools/blender/dungeon2.py): the
+        /// approved one and its variants (the user, 2026-11-04: «добавить разные вариации карт») --
+        /// dungeon2_plan.py layouts B-D, dungeon2.py variant=b..d, each its own map Dungeon-2&lt;V&gt;.
         /// </summary>
+        public static readonly string[] LevelTwoIds = { "Dungeon2", "Dungeon2B", "Dungeon2C", "Dungeon2D" };
+
+        /// <summary>The approved level-2 dungeon (the tests' fixture).</summary>
         public const string LevelTwoId = "Dungeon2";
 
         /// <summary>
-        /// The dungeon behind a map's level-`level` mouth: level 2 is the drowned halls; levels 1
-        /// and 3 (no level-3 map yet) a level-1 labyrinth, as LevelOneFor picks.
+        /// The dungeon behind a map's level-`level` mouth: level 2 a drowned-halls variant by the
+        /// map's seed (LevelTwoFor); levels 1 and 3 (no level-3 map yet) a level-1 labyrinth, as
+        /// LevelOneFor picks.
         /// </summary>
         public static string DungeonFor(int seed, int version, int level)
-            => level == 2 ? LevelTwoId : LevelOneFor(seed, version, level - 1);
+            => level == 2 ? LevelTwoFor(seed) : LevelOneFor(seed, version, level - 1);
+
+        /// <summary>A map's level-2 dungeon, from its seed (another hash than the level-1 pick).</summary>
+        public static string LevelTwoFor(int seed)
+            => LevelTwoIds[(int)((uint)(seed * 2246822519u + 374761393u) >> 7) % LevelTwoIds.Length];
 
         /// <summary>
         /// The dungeon behind a map's `entrance`-th mouth (0 = level 1, nearest the Town Hall): from

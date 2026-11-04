@@ -12,7 +12,7 @@ the building palette) on the APPROVED level-2 plan (dungeon2_plan.py, seed 92, d
 - halls are LIVING SHAPES (the plan's `hall_blobs`), dressed stone underfoot, dwarven columns;
 - the lever door before the cursed king's throne, a lever in each lever hall, the forges.
 
-    blender --background --factory-startup --python dungeon2.py -- <out.blend> [preview]
+    blender --background --factory-startup --python dungeon2.py -- <out.blend> [preview] [variant=b]
 
 Light points are Empties DungeonLight_<kind>_<n>, as in Dungeon 1 (dungeon_preview.py renders it).
 """
@@ -35,7 +35,10 @@ from terrain import TerrainBuilder  # noqa: E402
 argv = sys.argv[sys.argv.index("--") + 1:]
 OUT = argv[0]
 PREVIEW = "preview" in argv[1:]
-PREFIX = "Dungeon-2"
+# `variant=b|c|d` (the user, 2026-11-04: «добавить разные вариации карт», as level 1's) builds from
+# dungeon2<v>-plan.json (dungeon2_plan.py layouts B-D) as Dungeon-2<V>; none is the approved Dungeon 2
+VARIANT = next((a.split("=", 1)[1].lower() for a in argv[1:] if a.startswith("variant=")), "")
+PREFIX = "Dungeon-2" + VARIANT.upper()
 # no monsters, crystals or patrols yet (the user, 2026-11-03: «пока что не добавляй монстров и
 # ресурсы, я хочу просто пройтись и осмотреть его в игре») -- True writes them into the points
 POPULATED = True
@@ -91,7 +94,7 @@ def smoothstep(e0, e1, x):
 
 import json  # noqa: E402
 
-PLAN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon2-plan.json"), encoding="utf-8"))
+PLAN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), f"dungeon2{VARIANT}-plan.json"), encoding="utf-8"))
 CELL = PLAN["cell"]
 BIG = {k: tuple(v) for k, v in PLAN["big"].items()}
 POS = {(c[0], c[1]): (c[2], c[3]) for c in PLAN["pos"]}

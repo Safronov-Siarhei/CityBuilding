@@ -660,8 +660,12 @@ namespace CityBuilder.EditorTools
             {
                 CreateDungeonDefinition(dungeonId, "Dungeon-1" + dungeonId.Substring("Dungeon1".Length));
             }
-            // the level-2 dungeon, the drowned dwarven halls (Tools/blender/dungeon2.py)
-            CreateDungeonDefinition(CityBuilder.Dungeon.DungeonTravel.LevelTwoId, "Dungeon-2");
+            // the level-2 dungeons, the drowned dwarven halls (Tools/blender/dungeon2.py, the
+            // approved plan and variants b-d; a map's level-2 mouth picks one, DungeonTravel.LevelTwoFor)
+            foreach (var dungeonId in CityBuilder.Dungeon.DungeonTravel.LevelTwoIds)
+            {
+                CreateDungeonDefinition(dungeonId, "Dungeon-2" + dungeonId.Substring("Dungeon2".Length));
+            }
 
             // Added BEFORE MapTerrainGenerator (Unity runs Start() in add-order on the same
             // GameObject) so it consumes GameSessionIntent.NewGameMapId first for a mesh-map new
