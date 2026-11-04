@@ -19,7 +19,7 @@ units on a 21 x 21 grid of ~14.3 m cells (level 1's cell size), so the passages 
 - the farthest dead ends hold crystals, the other dead ends are empty, to mislead; junctions hold
   monster halls.
 
-    python dungeon2_plan.py <out.png> [seed]
+    python dungeon2_plan.py <out.png> [seed] [layout A-D]
 
 Writes the picture and, next to it, <out>.json for the 3D build to follow.
 """
@@ -37,33 +37,104 @@ LOOPS = 6
 CRYSTAL_ROOMS = 10
 MONSTER_HALLS = 10
 
-# halls: name -> (x0, y0, w, h) in cells; y = 0 is the south edge, where the way in is
-BIG = {
-    "camp": (8, 0, 5, 2),
-    "throne": (8, 17, 5, 4),       # the cursed king: one way in, through the lever door
-    "serpent": (16, 8, 5, 5),      # the serpent's pool on the main canal: one way in
-    "great": (8, 8, 5, 4),         # the great flooded hall, pillars standing in the water
-    "lever_w": (0, 16, 3, 3),      # the levers: far from the camp and from each other
-    "lever_e": (18, 1, 3, 3),
-    "forge_w": (1, 6, 3, 3),       # ruined forges: monster arenas
-    "forge_n": (14, 15, 3, 3),
+LAYOUT = sys.argv[3].upper() if len(sys.argv) > 3 else "A"
+# halls: name -> (x0, y0, w, h) in cells; y = 0 is the south edge, where the way in is. LAYOUTS
+# (2026-11-04, the user: «добавить разные вариации карт», as level 1's A-D): the camp always south
+# by the way out; the throne, the serpent's pool, the levers, the forges and the canals elsewhere.
+# The hall NAMES stay (lever_w is just "the first lever"), the 3D build keys on them.
+# A = the approved plan (seed 92), reproduced exactly.
+LAYOUTS = {
+    "A": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "throne": (8, 17, 5, 4),       # the cursed king: one way in, through the lever door
+            "serpent": (16, 8, 5, 5),      # the serpent's pool on the main canal: one way in
+            "great": (8, 8, 5, 4),         # the great flooded hall, pillars standing in the water
+            "lever_w": (0, 16, 3, 3),      # the levers: far from the camp and from each other
+            "lever_e": (18, 1, 3, 3),
+            "forge_w": (1, 6, 3, 3),       # ruined forges: monster arenas
+            "forge_n": (14, 15, 3, 3),
+        },
+        # the canals: polylines through cell coordinates (centres); the main one runs from the west
+        # wall through the great hall into the serpent's pool, a second one falls from the north-west
+        canals=[
+            [(-0.5, 10.0), (3.0, 10.4), (6.0, 9.6), (10.5, 9.9), (14.0, 10.6), (18.5, 10.5)],
+            [(5.0, 20.5), (5.6, 17.0), (4.8, 14.0), (6.0, 11.5), (8.5, 10.0)],
+            # out of the serpent's pool northwards past the north forge to the north wall
+            [(18.5, 11.5), (19.2, 14.0), (17.2, 16.0), (16.0, 18.5), (16.4, 20.5)],
+            # out of the great hall southwards, spreading towards the east lever
+            [(10.5, 8.5), (11.4, 6.2), (13.6, 4.6), (16.4, 3.8)],
+        ],
+        # flooded quarters (cells: x, y, radius): every passage in them runs under shallow water
+        floods=[(4.0, 12.5, 3.0), (14.0, 5.0, 2.6), (17.0, 15.0, 2.4), (2.5, 3.0, 2.2)],
+    ),
+    # B: the king in the WEST, the serpent's pool in the north-east corner, the great hall east of middle
+    "B": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "throne": (0, 13, 4, 5),
+            "serpent": (15, 16, 5, 5),
+            "great": (11, 7, 5, 4),
+            "lever_w": (6, 18, 3, 3),
+            "lever_e": (17, 2, 3, 3),
+            "forge_w": (3, 7, 3, 3),
+            "forge_n": (15, 11, 3, 3),
+        },
+        canals=[
+            [(20.5, 18.5), (17.5, 18.0), (15.4, 14.6), (13.6, 11.5), (13.2, 8.5), (10.0, 5.6), (5.0, 4.6), (-0.5, 5.2)],
+            [(8.5, 20.5), (9.2, 16.0), (11.6, 13.2), (13.6, 11.0)],
+            [(20.5, 8.8), (17.6, 8.6), (15.2, 8.8)],
+        ],
+        floods=[(10.0, 14.0, 3.0), (5.0, 4.5, 2.5), (18.0, 8.0, 2.4), (3.0, 19.0, 2.2)],
+    ),
+    # C: the king in the north-east corner, the serpent's pool on the WEST wall, the main canal
+    # falling from the north wall through the great hall into the pool
+    "C": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "throne": (16, 16, 5, 5),
+            "serpent": (0, 9, 5, 5),
+            "great": (9, 10, 5, 4),
+            "lever_w": (1, 18, 3, 3),
+            "lever_e": (18, 4, 3, 3),
+            "forge_w": (4, 3, 3, 3),
+            "forge_n": (11, 16, 3, 3),
+        },
+        canals=[
+            [(10.6, 20.5), (10.4, 17.0), (11.4, 12.0), (8.0, 11.2), (4.5, 11.5), (-0.5, 11.0)],
+            [(20.5, 10.4), (17.0, 9.6), (13.6, 11.2)],
+            [(11.0, 10.0), (13.0, 6.6), (16.0, 5.2), (18.6, 5.6)],
+        ],
+        floods=[(6.0, 16.0, 2.8), (15.0, 7.0, 2.5), (2.5, 3.0, 2.2), (17.5, 13.0, 2.0)],
+    ),
+    # D: the king in the north-WEST corner, the serpent's pool on the west wall low down, the great
+    # hall east; the levers in the north-east and south-east corners
+    "D": dict(
+        big={
+            "camp": (8, 0, 5, 2),
+            "throne": (2, 16, 5, 5),
+            "serpent": (0, 5, 5, 5),
+            "great": (12, 9, 5, 4),
+            "lever_w": (18, 17, 3, 3),
+            "lever_e": (17, 2, 3, 3),
+            "forge_w": (7, 10, 3, 3),
+            "forge_n": (10, 16, 3, 3),
+        },
+        canals=[
+            [(-0.5, 7.4), (2.5, 7.5), (6.0, 8.2), (10.0, 9.6), (14.5, 11.0), (20.5, 12.2)],
+            [(14.0, 20.5), (14.6, 16.0), (14.5, 11.5)],
+            [(14.0, 9.2), (14.6, 5.6), (12.6, 3.0)],
+        ],
+        floods=[(8.0, 6.0, 2.5), (17.0, 14.5, 2.4), (5.0, 13.0, 2.2), (19.0, 6.0, 2.0)],
+    ),
 }
+BIG = LAYOUTS[LAYOUT]["big"]
 ONE_WAY = {"throne", "serpent"}
 DOOR = "throne"                    # its one passage is the lever door
 LEVERS = ("lever_w", "lever_e")
 ARENAS = {"great", "forge_w", "forge_n"}
-# the canals: polylines through cell coordinates (centres); the main one runs from the west wall
-# through the great hall into the serpent's pool, a second one falls from the north-west
-CANALS = [
-    [(-0.5, 10.0), (3.0, 10.4), (6.0, 9.6), (10.5, 9.9), (14.0, 10.6), (18.5, 10.5)],
-    [(5.0, 20.5), (5.6, 17.0), (4.8, 14.0), (6.0, 11.5), (8.5, 10.0)],
-    # out of the serpent's pool northwards past the north forge to the north wall
-    [(18.5, 11.5), (19.2, 14.0), (17.2, 16.0), (16.0, 18.5), (16.4, 20.5)],
-    # out of the great hall southwards, spreading towards the east lever
-    [(10.5, 8.5), (11.4, 6.2), (13.6, 4.6), (16.4, 3.8)],
-]
-# flooded quarters (cells: x, y, radius): every passage in them runs under shallow water
-FLOOD_ZONES = [(4.0, 12.5, 3.0), (14.0, 5.0, 2.6), (17.0, 15.0, 2.4), (2.5, 3.0, 2.2)]
+CANALS = LAYOUTS[LAYOUT]["canals"]
+FLOOD_ZONES = LAYOUTS[LAYOUT]["floods"]
 FLOOD_NEAR = 1.0            # a passage this near a canal (in cells) is flooded too
 JITTER = 0.32
 BEND = 0.35
@@ -351,7 +422,7 @@ def main():
                    "fords": [[x, y] for x, y, _, _ in fords], "flooded": flooded, "flood_zones": FLOOD_ZONES,
                    "hall_blobs": blobs,
                    "pos": [[c[0], c[1], p[0], p[1]] for c, p in pos.items()], "bends": bends}, f)
-    print("PLAN2 seed", SEED, "links", len(links), "crystal", len(crystal_rooms), "dead", len(dead_ends),
+    print("PLAN2 layout", LAYOUT, "seed", SEED, "links", len(links), "crystal", len(crystal_rooms), "dead", len(dead_ends),
           "bridges", len(bridges), "fords", len(fords), "wet", sum(flooded), "of", len(flooded), "levers", [round(dist.get(l, 0)) for l in LEVERS],
           "throne", round(dist.get("throne", 0)), "serpent", round(dist.get("serpent", 0)))
 
