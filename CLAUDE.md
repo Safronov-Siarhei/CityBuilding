@@ -12,7 +12,9 @@
   `Tools/research/run.ps1` and read its short report; open `RunLogs/` only with Grep, never whole.
 - **Builds and tests: fewer checks than edits** (the user, 2026-11-04). A small code edit gets
   NO build and NO test. Build (`run.ps1 -Steps setup`) only once a fair batch of edits has piled up
-  or a task is done; twice only if a CSV changed. Run tests once, after a substantial body of
+  or a task is done. A CSV/sheet change never gets a build of its own: it rides along with the
+  next code build (one setup reads it). `setup` twice only when Editor code changed
+  (`Scripts/Editor/`: SetupProject*, BalanceImporter) -- Unity's first pass compiles it but runs the old. Run tests once, after a substantial body of
   changes (a whole feature or several tasks), as one general run in the background -- not per edit,
   not per small task. Never: tests for models/colours/sizes/texts/UI layout/balance numbers
   (verify_sheet covers the sheet), photo tests, a re-run after a green, tests after a `git pull`,
