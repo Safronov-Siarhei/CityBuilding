@@ -91,7 +91,7 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 window with 8 tabs -- Ресурсы (exact amounts, step/typed, crystals, ∞), Здания (research per building/level,
 focused building or all of its kind to any level, finish all, repair all, instant build), Жители, Армия
 (squad at screen centre, unit research, invulnerable), Герои (free, level, heal, raise, no cooldown), Орки
-(raid now size/level, end wait, kill all, camps, Invasion next wave), Мир (speed x0-x10, end day, fog, lighthouses,
+(raid now size/level, end wait, kill all, camps, Invasion next wave), Мир (speed x0-x10, end day, fog, lighthouses, dungeons: «Войти: уровень N» for every mouth on the map, from afar (2026-11-04),
 ships on the archipelago; «Туман выключен» switch = FogOfWarManager.DisabledCheat hides the cloud, keeps what the fog knew), Служебное (FPS, draw calls/tris via ProfilerRecorder, save/load slot «cheat», restart).
 Hooks: ConstructionSite.InstantCheat, SoldierUnit.InvulnerableCheat, HeroSkills.NoCooldownCheat,
 OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetCooldowns.
