@@ -652,6 +652,32 @@ namespace CityBuilder.Core
         [SerializeField] private float dungeonChestReach = 1f;
         // Dungeon 3 (the user, 2026-11-04): a hero standing in lava, or by a fire vent, burns
         [SerializeField] private float dungeonLavaDamagePerSecond = 25f;
+        // Dungeon 3, «Огненные глубины»: lairs, crystals, the bosses' powers, the tide, the bridges
+        [SerializeField] private int lair3FireImps = 5;
+        [SerializeField] private int lair3LavaHounds = 3;
+        [SerializeField] private int lair3Salamanders = 3;
+        [SerializeField] private int lair3EmberCultists = 2;
+        [SerializeField] private int lair3ObsidianGolems = 2;
+        [SerializeField] private int lair3MagmaSpawn = 3;
+        [SerializeField] private int dungeon3CrystalsPerRoom = 4;
+        [SerializeField] private float dragonBreathEvery = 6.0f;
+        [SerializeField] private float dragonBreathRange = 4.5f;
+        [SerializeField] private float dragonBreathAngle = 60.0f;
+        [SerializeField] private float dragonBreathDamage = 1.4f;
+        [SerializeField] private float dragonFlightEvery = 14.0f;
+        [SerializeField] private float dragonFlightSeconds = 3.0f;
+        [SerializeField] private float dragonFlightReach = 7.0f;
+        [SerializeField] private float dragonLandingRadius = 2.2f;
+        [SerializeField] private float dragonLandingDamage = 1.0f;
+        [SerializeField] private float titanRiseReach = 6.0f;
+        [SerializeField] private float titanRiseSeconds = 2.5f;
+        [SerializeField] private float titanShedEvery = 0.2f;
+        [SerializeField] private int titanShedCount = 3;
+        [SerializeField] private float tideLowSeconds = 25.0f;
+        [SerializeField] private float tideWarnSeconds = 4.0f;
+        [SerializeField] private float tideHighSeconds = 12.0f;
+        [SerializeField] private float bridgeFallDelay = 1.5f;
+        [SerializeField] private float bridgeReformSeconds = 40.0f;
         [SerializeField] private int dungeonChestWood = 20;
         [SerializeField] private int dungeonChestStone = 20;
         [SerializeField] private int dungeonChestGold = 6;
@@ -796,6 +822,7 @@ namespace CityBuilder.Core
             "wolf", "bear", "troll", "giant", "rat", "bat", "spider", "spiderling", "skeleton", "kobold", "stone_golem", "spider_queen", "ore_golem",
             "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
             "drowned_rat", "dwarf_skeleton", "stone_guard", "drowned_dwarf", "eel", "forge_spirit", "dwarf_king", "canal_serpent",
+            "fire_imp", "lava_hound", "salamander", "obsidian_golem", "ember_cultist", "magma_spawn", "dragon", "lava_titan",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -828,6 +855,15 @@ namespace CityBuilder.Core
             new MonsterStats { id = "forge_spirit", maxHealth = 40, attackDamage = 7, attackIntervalSeconds = 2.2f, attackRange = 4f, walkSpeed = 1.3f },
             new MonsterStats { id = "dwarf_king", maxHealth = 2000, attackDamage = 32, attackIntervalSeconds = 2f, attackRange = 1.8f, walkSpeed = 1f },
             new MonsterStats { id = "canal_serpent", maxHealth = 1800, attackDamage = 28, attackIntervalSeconds = 2.4f, attackRange = 5f, walkSpeed = 0.6f },
+            // the level-3 dungeon's (monsters3.py)
+            new MonsterStats { id = "fire_imp", maxHealth = 35, attackDamage = 5, attackIntervalSeconds = 0.8f, attackRange = 0.7f, walkSpeed = 2.4f },
+            new MonsterStats { id = "lava_hound", maxHealth = 110, attackDamage = 10, attackIntervalSeconds = 1.1f, attackRange = 0.9f, walkSpeed = 2.3f },
+            new MonsterStats { id = "salamander", maxHealth = 70, attackDamage = 9, attackIntervalSeconds = 2.2f, attackRange = 4.5f, walkSpeed = 1.3f },
+            new MonsterStats { id = "obsidian_golem", maxHealth = 380, attackDamage = 18, attackIntervalSeconds = 1.9f, attackRange = 1.1f, walkSpeed = 0.85f },
+            new MonsterStats { id = "ember_cultist", maxHealth = 65, attackDamage = 11, attackIntervalSeconds = 2.4f, attackRange = 5.0f, walkSpeed = 1.2f },
+            new MonsterStats { id = "magma_spawn", maxHealth = 45, attackDamage = 6, attackIntervalSeconds = 1.0f, attackRange = 0.8f, walkSpeed = 1.6f },
+            new MonsterStats { id = "dragon", maxHealth = 3200, attackDamage = 45, attackIntervalSeconds = 2.2f, attackRange = 2.6f, walkSpeed = 1.2f },
+            new MonsterStats { id = "lava_titan", maxHealth = 3000, attackDamage = 42, attackIntervalSeconds = 2.4f, attackRange = 2.2f, walkSpeed = 0.8f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -1210,6 +1246,31 @@ namespace CityBuilder.Core
         public int Dungeon2CrystalsPerRoom => dungeon2CrystalsPerRoom;
         public float DungeonChestReach => dungeonChestReach;
         public float DungeonLavaDamagePerSecond => dungeonLavaDamagePerSecond;
+        public int Lair3FireImps => lair3FireImps;
+        public int Lair3LavaHounds => lair3LavaHounds;
+        public int Lair3Salamanders => lair3Salamanders;
+        public int Lair3EmberCultists => lair3EmberCultists;
+        public int Lair3ObsidianGolems => lair3ObsidianGolems;
+        public int Lair3MagmaSpawn => lair3MagmaSpawn;
+        public int Dungeon3CrystalsPerRoom => dungeon3CrystalsPerRoom;
+        public float DragonBreathEvery => dragonBreathEvery;
+        public float DragonBreathRange => dragonBreathRange;
+        public float DragonBreathAngle => dragonBreathAngle;
+        public float DragonBreathDamage => dragonBreathDamage;
+        public float DragonFlightEvery => dragonFlightEvery;
+        public float DragonFlightSeconds => dragonFlightSeconds;
+        public float DragonFlightReach => dragonFlightReach;
+        public float DragonLandingRadius => dragonLandingRadius;
+        public float DragonLandingDamage => dragonLandingDamage;
+        public float TitanRiseReach => titanRiseReach;
+        public float TitanRiseSeconds => titanRiseSeconds;
+        public float TitanShedEvery => titanShedEvery;
+        public int TitanShedCount => titanShedCount;
+        public float TideLowSeconds => tideLowSeconds;
+        public float TideWarnSeconds => tideWarnSeconds;
+        public float TideHighSeconds => tideHighSeconds;
+        public float BridgeFallDelay => bridgeFallDelay;
+        public float BridgeReformSeconds => bridgeReformSeconds;
         public int DungeonChestWood => dungeonChestWood;
         public int DungeonChestStone => dungeonChestStone;
         public int DungeonChestGold => dungeonChestGold;
@@ -1909,6 +1970,31 @@ namespace CityBuilder.Core
             dungeon2CrystalsPerRoom = (int)Read(economy, "dungeon2_crystals_per_room", dungeon2CrystalsPerRoom);
             dungeonChestReach = Read(economy, "dungeon_chest_reach", dungeonChestReach);
             dungeonLavaDamagePerSecond = Read(economy, "dungeon_lava_damage_per_second", dungeonLavaDamagePerSecond);
+            lair3FireImps = (int)Read(economy, "dungeon3_lair_fire_imps", lair3FireImps);
+            lair3LavaHounds = (int)Read(economy, "dungeon3_lair_lava_hounds", lair3LavaHounds);
+            lair3Salamanders = (int)Read(economy, "dungeon3_lair_salamanders", lair3Salamanders);
+            lair3EmberCultists = (int)Read(economy, "dungeon3_lair_ember_cultists", lair3EmberCultists);
+            lair3ObsidianGolems = (int)Read(economy, "dungeon3_lair_obsidian_golems", lair3ObsidianGolems);
+            lair3MagmaSpawn = (int)Read(economy, "dungeon3_lair_magma_spawn", lair3MagmaSpawn);
+            dungeon3CrystalsPerRoom = (int)Read(economy, "dungeon3_crystals_per_room", dungeon3CrystalsPerRoom);
+            dragonBreathEvery = Read(economy, "dragon_breath_every", dragonBreathEvery);
+            dragonBreathRange = Read(economy, "dragon_breath_range", dragonBreathRange);
+            dragonBreathAngle = Read(economy, "dragon_breath_angle", dragonBreathAngle);
+            dragonBreathDamage = Read(economy, "dragon_breath_damage", dragonBreathDamage);
+            dragonFlightEvery = Read(economy, "dragon_flight_every", dragonFlightEvery);
+            dragonFlightSeconds = Read(economy, "dragon_flight_seconds", dragonFlightSeconds);
+            dragonFlightReach = Read(economy, "dragon_flight_reach", dragonFlightReach);
+            dragonLandingRadius = Read(economy, "dragon_landing_radius", dragonLandingRadius);
+            dragonLandingDamage = Read(economy, "dragon_landing_damage", dragonLandingDamage);
+            titanRiseReach = Read(economy, "titan_rise_reach", titanRiseReach);
+            titanRiseSeconds = Read(economy, "titan_rise_seconds", titanRiseSeconds);
+            titanShedEvery = Read(economy, "titan_shed_every", titanShedEvery);
+            titanShedCount = (int)Read(economy, "titan_shed_count", titanShedCount);
+            tideLowSeconds = Read(economy, "dungeon3_tide_low_seconds", tideLowSeconds);
+            tideWarnSeconds = Read(economy, "dungeon3_tide_warn_seconds", tideWarnSeconds);
+            tideHighSeconds = Read(economy, "dungeon3_tide_high_seconds", tideHighSeconds);
+            bridgeFallDelay = Read(economy, "dungeon3_bridge_fall_delay", bridgeFallDelay);
+            bridgeReformSeconds = Read(economy, "dungeon3_bridge_reform_seconds", bridgeReformSeconds);
             dungeonChestWood = (int)Read(economy, "dungeon_chest_wood", dungeonChestWood);
             dungeonChestStone = (int)Read(economy, "dungeon_chest_stone", dungeonChestStone);
             dungeonChestGold = (int)Read(economy, "dungeon_chest_gold", dungeonChestGold);

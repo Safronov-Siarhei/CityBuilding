@@ -187,7 +187,13 @@ namespace CityBuilder.Dungeon
             DungeonFloor.Build(MeshMapApplier.Instance, MapHalf, surface);
             // Dungeon 3: that surface is LAVA -- it burns, and nothing splashes in it
             DungeonFloor.Lava = DungeonId == DungeonTravel.LevelThreeId;
-            if (DungeonFloor.Lava) gameObject.AddComponent<DungeonLava>().Begin(map);
+            if (DungeonFloor.Lava)
+            {
+                gameObject.AddComponent<DungeonLava>().Begin(map);
+                // the tide that floods the low passages, and the bridges that fall behind the heroes
+                gameObject.AddComponent<DungeonTide>().Begin(MeshMapApplier.Instance.DungeonTideInstance);
+                gameObject.AddComponent<DungeonBridges>().Begin(MeshMapApplier.Instance.DungeonBridgesInstance);
+            }
             // the road map for the long ways round, then the levers and the door they open (Dungeon 2)
             DungeonWaypoints.Build(MapHalf);
             gameObject.AddComponent<DungeonLevers>().Begin(map, DungeonId);

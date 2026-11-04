@@ -6585,6 +6585,32 @@ MonoBehaviour:
   serpentSpitStun: 0.8
   dungeon2CrystalsPerRoom: 1
   dungeonChestReach: 1
+  dungeonLavaDamagePerSecond: 25
+  lair3FireImps: 5
+  lair3LavaHounds: 3
+  lair3Salamanders: 3
+  lair3EmberCultists: 2
+  lair3ObsidianGolems: 2
+  lair3MagmaSpawn: 3
+  dungeon3CrystalsPerRoom: 4
+  dragonBreathEvery: 6
+  dragonBreathRange: 4.5
+  dragonBreathAngle: 60
+  dragonBreathDamage: 1.4
+  dragonFlightEvery: 14
+  dragonFlightSeconds: 3
+  dragonFlightReach: 7
+  dragonLandingRadius: 2.2
+  dragonLandingDamage: 1
+  titanRiseReach: 6
+  titanRiseSeconds: 2.5
+  titanShedEvery: 0.2
+  titanShedCount: 3
+  tideLowSeconds: 25
+  tideWarnSeconds: 4
+  tideHighSeconds: 12
+  bridgeFallDelay: 1.5
+  bridgeReformSeconds: 40
   dungeonChestWood: 20
   dungeonChestStone: 20
   dungeonChestGold: 6
@@ -7015,6 +7041,54 @@ MonoBehaviour:
     attackIntervalSeconds: 2.4
     attackRange: 5
     walkSpeed: 0.6
+  - id: fire_imp
+    maxHealth: 35
+    attackDamage: 5
+    attackIntervalSeconds: 0.8
+    attackRange: 0.7
+    walkSpeed: 2.4
+  - id: lava_hound
+    maxHealth: 110
+    attackDamage: 10
+    attackIntervalSeconds: 1.1
+    attackRange: 0.9
+    walkSpeed: 2.3
+  - id: salamander
+    maxHealth: 70
+    attackDamage: 9
+    attackIntervalSeconds: 2.2
+    attackRange: 4.5
+    walkSpeed: 1.3
+  - id: obsidian_golem
+    maxHealth: 380
+    attackDamage: 18
+    attackIntervalSeconds: 1.9
+    attackRange: 1.1
+    walkSpeed: 0.85
+  - id: ember_cultist
+    maxHealth: 65
+    attackDamage: 11
+    attackIntervalSeconds: 2.4
+    attackRange: 5
+    walkSpeed: 1.2
+  - id: magma_spawn
+    maxHealth: 45
+    attackDamage: 6
+    attackIntervalSeconds: 1
+    attackRange: 0.8
+    walkSpeed: 1.6
+  - id: dragon
+    maxHealth: 3200
+    attackDamage: 45
+    attackIntervalSeconds: 2.2
+    attackRange: 2.6
+    walkSpeed: 1.2
+  - id: lava_titan
+    maxHealth: 3000
+    attackDamage: 42
+    attackIntervalSeconds: 2.4
+    attackRange: 2.2
+    walkSpeed: 0.8
   invasionCamp1Monsters: 3
   invasionCamp2Monsters: 2
   invasionCamp3Monsters: 2

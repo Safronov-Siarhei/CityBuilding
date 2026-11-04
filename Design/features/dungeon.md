@@ -1,5 +1,7 @@
 # Dungeon (подземелье)
 
+> 2026-11-04 (latest): LEVEL 3 «Огненные глубины» COMPLETE in the game (monsters, dragon + titan,
+> tide, crumbling bridges, resources) -- see «Level 3 COMPLETE». User not seen.
 > 2026-11-04 (later): LEVEL-2 MONSTERS + both bosses IN THE GAME (dwarf king, canal serpent; 8 models
 > from monsters2.py) -- see «Level-2 monsters IN THE GAME». User not seen them.
 > 2026-11-04: level 2 playtest round 1 fixed (bridges, knee-deep wading, levers + door, buoy,
@@ -337,6 +339,34 @@ dungeon opens as a SEPARATE SCENE.
     (and every lone/passage crystal and chest) to the nearest clear floor.
   - Basalt: STONE/STONE_D/STONE_L = stone_dark / roof_slate_dark / stone_mid (the white boulders);
     `boulder` is a dark crag. The tide floor's seams dimmed (`mud` 8A3A28) so they do not read as lava.
+- **Level 3 COMPLETE (the user: «доделаем всё остальное: ресурсы и монстров», 2026-11-04) -- BUILT
+  (setup x2 clean), user not seen; general test run started after it.** The user reviews it all at once.
+  - MONSTERS (Tools/blender/monsters3.py, collection «Подземелье-3-монстры»; all new): FireImp,
+    LavaHound, Salamander (ranged), ObsidianGolem, EmberCultist (ranged), MagmaSpawn, and bosses
+    Dragon + LavaTitan. OrcKind 33-40, stats economy `mon_<id>_*`, names `#monster_<id>`.
+  - LAIRS (DungeonMonsters, a map with `boss_dragon`): near the dragon «Brood» (salamanders + hounds),
+    near the titan «Obsidian» (golems + magma spawn), the rest cycle Imps / Hounds(+imps) /
+    Cult(cultists+imps) / Lizards(salamanders+hound); counts `dungeon3_lair_*`; crystals per room
+    `dungeon3_crystals_per_room` 4. Map POPULATED: 13 lairs, 20 crystals, 6 chests, 10 patrols.
+  - DRAGON (DungeonMonsterPowers): fire cone every `dragon_breath_every` (range/angle/damage keys;
+    look = `FireBreath`, a fan of unlit balls); every `dragon_flight_every` seconds of a fight he
+    takes off (Submerged = untouchable, `dragon_flight_seconds`), lands near a hero within
+    `dragon_flight_reach` of his hoard, landing blow `dragon_landing_*`; log `#log_dungeon_dragon_flight`.
+  - TITAN: lies sunk in his pool (hidden) until a hero is within `titan_rise_reach`, rises over
+    `titan_rise_seconds` (the drowned-dwarf ambush, parametrised); every `titan_shed_every` of health
+    lost sheds `titan_shed_count` magma spawn (climb out of the floor); log `#log_dungeon_titan_rise`.
+  - TIDE (`DungeonTide`, the `-Tide` skin now loaded: MeshMapDefinition.tidePrefab, SetupProjectMaps,
+    MeshMapApplier.DungeonTideInstance): low `dungeon3_tide_low_seconds` (skin hidden under the crust),
+    warn `..._warn_seconds` (rises, log `#log_dungeon_tide_rising`), high `..._high_seconds` -- a hero
+    on the tide floor burns (DungeonLava asks `DungeonTide.Floods`: cells under the skin's triangles,
+    0.5 grid, and below its top + 0.35), sinks over 2 s.
+  - BRIDGES (`DungeonBridges`): each `-Bridges-f<i>` (+ `-deck`) falls `dungeon3_bridge_fall_delay`
+    after the last hero stepped off it (deck collider off, a carving NavMeshObstacle over its bounds,
+    stones sink 2.5 shaking; log `#log_dungeon_bridge_falls`), re-forms after
+    `dungeon3_bridge_reform_seconds`. Test hooks: `DropAllNow`, `FloodNow`, `FlyNow`, `Fallen`.
+  - Sheet: 65 economy + 12 localization rows added via Chrome, verify_sheet clean.
+  - Open: no tests of the new rules yet; the user to look; dragon has no shadow in the air;
+    the bridge gap carve not checked in the game.
 
 ## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
 - **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,

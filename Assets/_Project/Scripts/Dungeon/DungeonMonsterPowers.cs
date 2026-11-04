@@ -60,6 +60,11 @@ namespace CityBuilder.Dungeon
         private const float WakeEverySeconds = 0.22f;
         private Vector3 _diveFrom, _diveTo;
         private float _wakeClock;
+        // level 3: the dragon's breath and flight, the titan's rise and his shed spawn
+        private float _breath, _flight, _flyLeft, _shedNext = 1f;
+        private Vector3 _home, _flyFrom, _flyTo;
+        private const float FlightHeight = 3f;
+        private const float TitanDepth = 3f;
 
         /// <summary>The king has sat on his throne (once a fight).</summary>
         public bool HasThroned { get; private set; }
@@ -100,6 +105,17 @@ namespace CityBuilder.Dungeon
             }
             if (unit.Kind == OrcKind.CanalSerpent)
                 _surface = DungeonMonsters.WadingSpots(transform.position, c.SerpentSurfaceReach, 1.5f);
+            _home = transform.position;
+            _breath = c.DragonBreathEvery * 0.5f;
+            _flight = c.DragonFlightEvery;
+            _shedNext = 1f - c.TitanShedEvery;
+            // the lava titan lies under his magma until a hero comes near
+            if (unit.Kind == OrcKind.LavaTitan)
+            {
+                _waiting = true;
+                Submerge(true);
+                ShowFigure(false);
+            }
         }
 
         /// <summary>Under the water or up out of it: a submerged one is out of every fight (OrcUnit.All, blows, its own thinking).</summary>
@@ -145,6 +161,16 @@ namespace CityBuilder.Dungeon
         private void OnHurt(OrcUnit unit)
         {
             var c = BalanceConfig.Instance;
+            // the titan sheds magma spawn every TitanShedEvery of his health he loses
+            if (unit.Kind == OrcKind.LavaTitan && c.TitanShedEvery > 0f)
+            {
+                var share = unit.CurrentHealth / (float)Mathf.Max(1, unit.MaxHealth);
+                while (share <= _shedNext && _shedNext > 0f)
+                {
+                    _shedNext -= c.TitanShedEvery;
+                    for (var k = 0; k < c.TitanShedCount; k++) CallSpawn(k, c.TitanShedCount);
+                }
+            }
             var half = unit.CurrentHealth * 2 <= unit.MaxHealth;
             if (!half) return;
             if (unit.Kind == OrcKind.DwarfSkeleton && !ArmourDropped)
@@ -180,7 +206,13 @@ namespace CityBuilder.Dungeon
                 DiveUpdate(dt, c);
                 return;
             }
+            if (_flyLeft > 0f)
+            {
+                FlightUpdate(dt, c);
+                return;
+            }
             if (_unit.Asleep) return;
+            if (_unit.Kind == OrcKind.Dragon) DragonUpdate(dt, c);
             if (_unit.Kind == OrcKind.SpiderQueen) QueenUpdate(dt, c);
             else if (_unit.Kind == OrcKind.OreGolem) GolemUpdate(dt, c);
             else if (_unit.Kind == OrcKind.DwarfKing) KingUpdate(dt, c);
@@ -196,16 +228,19 @@ namespace CityBuilder.Dungeon
                 _ambushCheck -= dt;
                 if (_ambushCheck > 0f) return;
                 _ambushCheck = 0.25f;
-                if (NearestHero(c.AmbushReach) == null) return;
+                if (NearestHero(Titan ? c.TitanRiseReach : c.AmbushReach) == null) return;
                 _waiting = false;
-                _riseLeft = Mathf.Max(0.05f, c.AmbushRiseSeconds);
+                _riseLeft = Mathf.Max(0.05f, RiseSeconds(c));
                 ShowFigure(true);
-                Lower(RiseDepth);
+                Lower(Depth);
+                if (Titan)
+                    EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_dungeon_titan_rise"), EventSeverity.Warning,
+                        EventGlyph.Skull, null, transform.position));
                 return;
             }
             _riseLeft -= dt;
-            var t = 1f - Mathf.Clamp01(_riseLeft / Mathf.Max(0.05f, c.AmbushRiseSeconds));
-            Lower(RiseDepth * (1f - t));
+            var t = 1f - Mathf.Clamp01(_riseLeft / Mathf.Max(0.05f, RiseSeconds(c)));
+            Lower(Depth * (1f - t));
             if (_riseLeft > 0f) return;
             _riseLeft = 0f;
             Lower(0f);
@@ -213,6 +248,9 @@ namespace CityBuilder.Dungeon
         }
 
         private const float RiseDepth = 0.5f;
+        private bool Titan => _unit != null && _unit.Kind == OrcKind.LavaTitan;
+        private float Depth => Titan ? TitanDepth : RiseDepth;
+        private float RiseSeconds(BalanceConfig c) => Titan ? c.TitanRiseSeconds : c.AmbushRiseSeconds;
 
         /// <summary>Wakes a drowned dwarf at once -- for the tests.</summary>
         public void RiseNow()
@@ -293,6 +331,117 @@ namespace CityBuilder.Dungeon
             if (guard != null) guard.gameObject.AddComponent<RiseFromFloor>();
             return guard;
         }
+
+        /// <summary>A magma spawn breaking off the titan and climbing out of the floor beside him.</summary>
+        private void CallSpawn(int k, int of)
+        {
+            if (_owner == null) return;
+            var angle = k * Mathf.PI * 2f / Mathf.Max(1, of) + Random.Range(0f, 1f);
+            var at = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2f;
+            if (UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 2f, UnityEngine.AI.NavMesh.AllAreas)) at = hit.position;
+            var spawn = _owner.Summon(_unit, OrcKind.MagmaSpawn, at);
+            if (spawn != null) spawn.gameObject.AddComponent<RiseFromFloor>();
+        }
+
+        // ---------------------------------------------------------------- the dragon
+
+        private void DragonUpdate(float dt, BalanceConfig c)
+        {
+            if (_unit.BusyFor > 0f) return;
+            var foe = _unit.Fighting;
+            if (foe == null) return;
+            _breath -= dt;
+            _flight -= dt;
+            if (_flight <= 0f)
+            {
+                TakeOff(c);
+                return;
+            }
+            if (_breath > 0f) return;
+            var to = foe.transform.position - transform.position;
+            to.y = 0f;
+            if (to.magnitude > c.DragonBreathRange) return;
+            _breath = c.DragonBreathEvery;
+            Breathe(to, c);
+        }
+
+        /// <summary>A cone of fire towards `ahead`: every hero inside it is burnt.</summary>
+        private void Breathe(Vector3 ahead, BalanceConfig c)
+        {
+            if (ahead.sqrMagnitude < 0.01f) ahead = transform.forward;
+            ahead.y = 0f;
+            ahead.Normalize();
+            transform.rotation = Quaternion.LookRotation(ahead);
+            if (_animator != null) _animator.OnStruck();
+            var damage = Mathf.Max(1, Mathf.RoundToInt(_unit.AttackDamage * c.DragonBreathDamage));
+            foreach (var soldier in SoldierUnit.All)
+            {
+                if (soldier == null || soldier.CurrentHealth <= 0) continue;
+                var d = soldier.transform.position - transform.position;
+                d.y = 0f;
+                if (d.magnitude > c.DragonBreathRange) continue;
+                if (Vector3.Angle(ahead, d) > c.DragonBreathAngle * 0.5f) continue;
+                soldier.TakeDamage(damage);
+            }
+            FireBreath.Spawn(transform.position + Vector3.up * 0.8f + ahead * 0.9f, ahead, c.DragonBreathRange, c.DragonBreathAngle);
+        }
+
+        /// <summary>Up into the air: out of the fight a while, then down near a hero inside his hall.</summary>
+        private void TakeOff(BalanceConfig c)
+        {
+            _flyLeft = Mathf.Max(1f, c.DragonFlightSeconds);
+            _flyFrom = transform.position;
+            _flyTo = LandingSpot(c);
+            Submerge(true);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_dungeon_dragon_flight"), EventSeverity.Warning,
+                EventGlyph.Skull, null, transform.position));
+        }
+
+        private Vector3 LandingSpot(BalanceConfig c)
+        {
+            var target = _home;
+            var hero = NearestHero(c.DragonFlightReach * 2f);
+            if (hero != null) target = hero.transform.position;
+            var off = target - _home;
+            off.y = 0f;
+            if (off.magnitude > c.DragonFlightReach) target = _home + off.normalized * c.DragonFlightReach;
+            // not on the hero's head: a little short of him
+            var from = target - transform.position;
+            from.y = 0f;
+            if (from.magnitude > 1.5f) target -= from.normalized * 1.2f;
+            return UnityEngine.AI.NavMesh.SamplePosition(target, out var hit, 3f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : _flyFrom;
+        }
+
+        private void FlightUpdate(float dt, BalanceConfig c)
+        {
+            var total = Mathf.Max(1f, c.DragonFlightSeconds);
+            _flyLeft -= dt;
+            var t = Mathf.Clamp01(1f - _flyLeft / total);
+            // up in the first quarter, across, down in the last quarter
+            var up = t < 0.25f ? t / 0.25f : t > 0.75f ? (1f - t) / 0.25f : 1f;
+            var across = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.15f, 0.85f, t));
+            var at = Vector3.Lerp(_flyFrom, _flyTo, across);
+            var dir = _flyTo - _flyFrom;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(dir);
+            transform.position = at;
+            Lower(-FlightHeight * Mathf.Sin(up * Mathf.PI * 0.5f));
+            if (_flyLeft > 0f) return;
+            _flyLeft = 0f;
+            transform.position = _flyTo;
+            Lower(0f);
+            Submerge(false);
+            _unit.MovePost(_flyTo);
+            _flight = c.DragonFlightEvery;
+            if (_animator != null) _animator.Slam();
+            SlamRound(c.DragonLandingRadius, c.DragonLandingDamage);
+        }
+
+        /// <summary>Takes off at once -- for the tests.</summary>
+        public void FlyNow() => TakeOff(BalanceConfig.Instance);
+
+        /// <summary>The dragon is in the air now.</summary>
+        public bool Flying => _flyLeft > 0f;
 
         // ---------------------------------------------------------------- the canal serpent
 
@@ -638,6 +787,61 @@ namespace CityBuilder.Dungeon
             var shift = new Vector3(shake, -_depth * (1f - eased), 0f);
             if (_animator != null) _animator.Offset = shift;
             else _figure.localPosition = _home + shift;
+        }
+    }
+
+    /// <summary>
+    /// The dragon's fire: a fan of glowing balls flying out along the cone, growing and fading out
+    /// in under a second. Plain primitives with one shared unlit material (no particle system).
+    /// </summary>
+    public class FireBreath : MonoBehaviour
+    {
+        private const float Seconds = 0.7f;
+        private const int Balls = 14;
+        private static Material _flame, _core;
+        private Vector3[] _from, _to;
+        private Transform[] _balls;
+        private float _age;
+
+        public static void Spawn(Vector3 at, Vector3 ahead, float range, float angle)
+        {
+            var go = new GameObject("FireBreath");
+            go.transform.position = at;
+            go.AddComponent<FireBreath>().Build(ahead, range, angle);
+        }
+
+        private void Build(Vector3 ahead, float range, float angle)
+        {
+            if (_flame == null) _flame = new Material(RuntimeShaders.Unlit) { color = new Color(1f, 0.45f, 0.08f) };
+            if (_core == null) _core = new Material(RuntimeShaders.Unlit) { color = new Color(1f, 0.85f, 0.3f) };
+            _from = new Vector3[Balls];
+            _to = new Vector3[Balls];
+            _balls = new Transform[Balls];
+            for (var k = 0; k < Balls; k++)
+            {
+                var ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Destroy(ball.GetComponent<Collider>());
+                var r = ball.GetComponent<Renderer>();
+                r.sharedMaterial = k % 3 == 0 ? _core : _flame;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ball.transform.SetParent(transform, false);
+                var turn = Quaternion.Euler(0f, Random.Range(-0.5f, 0.5f) * angle, 0f);
+                _from[k] = Vector3.zero;
+                _to[k] = turn * ahead * (range * Random.Range(0.55f, 1f)) + Vector3.down * Random.Range(0.3f, 0.8f);
+                _balls[k] = ball.transform;
+            }
+            Destroy(gameObject, Seconds);
+        }
+
+        private void Update()
+        {
+            _age += Time.deltaTime;
+            for (var k = 0; k < Balls; k++)
+            {
+                var t = Mathf.Clamp01(_age / Seconds - k * 0.02f);
+                _balls[k].localPosition = Vector3.Lerp(_from[k], _to[k], t);
+                _balls[k].localScale = Vector3.one * (0.25f + 0.9f * t) * (1f - t * t * 0.85f);
+            }
         }
     }
 }

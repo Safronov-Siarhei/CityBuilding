@@ -106,6 +106,23 @@ namespace CityBuilder.Combat
         DwarfKing = 31,
         /// <summary>Boss: spits water from the canal, dives and surfaces elsewhere; hit only while up.</summary>
         CanalSerpent = 32,
+        // the level-3 dungeon's, «Огненные глубины» (Tools/blender/monsters3.py)
+        /// <summary>A small fire devil: fast, in packs.</summary>
+        FireImp = 33,
+        /// <summary>A hound of cooled lava: fast and hard-biting.</summary>
+        LavaHound = 34,
+        /// <summary>A fire lizard: keeps its distance and spits fire.</summary>
+        Salamander = 35,
+        /// <summary>Black glass piled into a giant: slow, a lot of health.</summary>
+        ObsidianGolem = 36,
+        /// <summary>A fire priest: throws fireballs from afar.</summary>
+        EmberCultist = 37,
+        /// <summary>A small magma golem; the titan sheds them when struck.</summary>
+        MagmaSpawn = 38,
+        /// <summary>Boss: breathes fire in a cone, takes off and lands elsewhere in his hall.</summary>
+        Dragon = 39,
+        /// <summary>Boss: rises out of his magma pool, sheds magma spawn when struck.</summary>
+        LavaTitan = 40,
     }
 
     /// <summary>
@@ -160,6 +177,14 @@ namespace CityBuilder.Combat
                 case OrcKind.ForgeSpirit: return "forge_spirit";
                 case OrcKind.DwarfKing: return "dwarf_king";
                 case OrcKind.CanalSerpent: return "canal_serpent";
+                case OrcKind.FireImp: return "fire_imp";
+                case OrcKind.LavaHound: return "lava_hound";
+                case OrcKind.Salamander: return "salamander";
+                case OrcKind.ObsidianGolem: return "obsidian_golem";
+                case OrcKind.EmberCultist: return "ember_cultist";
+                case OrcKind.MagmaSpawn: return "magma_spawn";
+                case OrcKind.Dragon: return "dragon";
+                case OrcKind.LavaTitan: return "lava_titan";
                 default: return "orc";
             }
         }
@@ -171,10 +196,11 @@ namespace CityBuilder.Combat
         public static bool IsTide(OrcKind kind) => kind >= OrcKind.TideCrab && kind <= OrcKind.TideSerpent;
 
         /// <summary>One of the dungeon's monsters.</summary>
-        public static bool IsDungeonMonster(OrcKind kind) => (kind >= OrcKind.Rat && kind <= OrcKind.OreGolem) || (kind >= OrcKind.DrownedRat && kind <= OrcKind.CanalSerpent);
+        public static bool IsDungeonMonster(OrcKind kind) => (kind >= OrcKind.Rat && kind <= OrcKind.OreGolem) || (kind >= OrcKind.DrownedRat && kind <= OrcKind.LavaTitan);
 
         /// <summary>A boss: the jungle's giant, the dungeon's queen and ore golem.</summary>
-        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.TideSerpent || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent;
+        public static bool IsBossKind(OrcKind kind) => kind == OrcKind.Giant || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.TideSerpent || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent
+            || kind == OrcKind.Dragon || kind == OrcKind.LavaTitan;
 
         private const float ArrivalThreshold = 0.1f;
         private const float RetargetIntervalSeconds = 5f;
@@ -1021,12 +1047,13 @@ namespace CityBuilder.Combat
             && (Kind != OrcKind.Eel || Maps.DungeonFloor.Wading(soldier.transform.position));
 
         public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
-            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent;
+            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent || Kind == OrcKind.Salamander || Kind == OrcKind.EmberCultist;
 
         /// <summary>What a ranged one throws: a thrower's javelin, a kobold's stick of dynamite (a ball in flight).</summary>
         // (a pufferfish's urchin and a shaman's ball of water fly as balls too)
         private ProjectileKind Shot => Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman
-            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
+            || Kind == OrcKind.ForgeSpirit || Kind == OrcKind.CanalSerpent || Kind == OrcKind.Salamander || Kind == OrcKind.EmberCultist
+            ? ProjectileKind.Cannonball : ProjectileKind.Javelin;
 
         /// <summary>Turns to face the blow's target and swings (the figure's animators hear Struck).</summary>
         private void StrikeAt(Vector3 target)

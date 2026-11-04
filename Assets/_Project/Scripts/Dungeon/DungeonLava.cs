@@ -11,7 +11,8 @@ namespace CityBuilder.Dungeon
     /// и при касании других кусков лавы тоже»): a hero whose feet are under the lava's surface
     /// (DungeonFloor.Wading -- on this map the "water" is the lava: a river's bank, a crossing the
     /// floor dips under) or within a fire vent's round (the map's `vent` spots, their radius in
-    /// the height column) takes dungeon_lava_damage_per_second.
+    /// the height column) or on the tide floor at high tide (DungeonTide) takes
+    /// dungeon_lava_damage_per_second.
     /// </summary>
     public class DungeonLava : MonoBehaviour
     {
@@ -50,6 +51,7 @@ namespace CityBuilder.Dungeon
         public bool Burns(Vector3 position)
         {
             if (DungeonFloor.Wading(position)) return true;
+            if (DungeonTide.Floods(position)) return true;
             foreach (var vent in _vents)
             {
                 var dx = position.x - vent.x;

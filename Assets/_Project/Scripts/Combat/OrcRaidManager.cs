@@ -133,6 +133,15 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject forgeSpiritModel;
         [SerializeField] private GameObject dwarfKingModel;
         [SerializeField] private GameObject canalSerpentModel;
+        // the level-3 dungeon's (monsters3.py)
+        [SerializeField] private GameObject fireImpModel;
+        [SerializeField] private GameObject lavaHoundModel;
+        [SerializeField] private GameObject salamanderModel;
+        [SerializeField] private GameObject obsidianGolemModel;
+        [SerializeField] private GameObject emberCultistModel;
+        [SerializeField] private GameObject magmaSpawnModel;
+        [SerializeField] private GameObject dragonModel;
+        [SerializeField] private GameObject lavaTitanModel;
         // Стражи Глубин, the caches' guards (Tools/blender/tide.py)
         [SerializeField] private GameObject tideCrabModel;
         [SerializeField] private GameObject tideSharkModel;
@@ -570,7 +579,8 @@ namespace CityBuilder.Combat
             controller.minMoveDistance = 0f;
 
             // the dungeon's bosses are two cells across: a body to match, or the heroes stand inside them
-            if (kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent)
+            if (kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent
+                || kind == OrcKind.Dragon || kind == OrcKind.LavaTitan)
             {
                 controller.radius = 0.7f / UnitSize.Scale;
                 controller.height = 1.8f / UnitSize.Scale;
@@ -607,6 +617,14 @@ namespace CityBuilder.Combat
                 case OrcKind.ForgeSpirit: return forgeSpiritModel;
                 case OrcKind.DwarfKing: return dwarfKingModel;
                 case OrcKind.CanalSerpent: return canalSerpentModel;
+                case OrcKind.FireImp: return fireImpModel;
+                case OrcKind.LavaHound: return lavaHoundModel;
+                case OrcKind.Salamander: return salamanderModel;
+                case OrcKind.ObsidianGolem: return obsidianGolemModel;
+                case OrcKind.EmberCultist: return emberCultistModel;
+                case OrcKind.MagmaSpawn: return magmaSpawnModel;
+                case OrcKind.Dragon: return dragonModel;
+                case OrcKind.LavaTitan: return lavaTitanModel;
                 case OrcKind.TideCrab: return tideCrabModel;
                 case OrcKind.TideShark: return tideSharkModel;
                 case OrcKind.TideShaman: return tideShamanModel;

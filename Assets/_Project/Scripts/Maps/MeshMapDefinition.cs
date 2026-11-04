@@ -85,6 +85,10 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject bridgesPrefab;
         public GameObject BridgesPrefab => bridgesPrefab;
 
+        // Dungeon 3's lava tide (`-Tide`): a lava skin over the tide floor the game raises now and then
+        [SerializeField] private GameObject tidePrefab;
+        public GameObject TidePrefab => tidePrefab;
+
         /// <summary>A dungeon's way-out opening, drawn unlit and bright (Dungeon/DungeonDaylight).</summary>
         public GameObject ExitGlowPrefab => exitGlowPrefab;
         public GameObject[] BuildingPrefabs => buildingPrefabs ?? new GameObject[0];
@@ -159,10 +163,11 @@ namespace CityBuilder.Maps
         }
 
         public void EditorInitializeDungeon(GameObject props, GameObject[] buildings, GameObject exitGlow = null,
-            GameObject door = null, GameObject leverArm = null, GameObject bridges = null)
+            GameObject door = null, GameObject leverArm = null, GameObject bridges = null, GameObject tide = null)
         {
             dungeon = true;
             bridgesPrefab = bridges;
+            tidePrefab = tide;
             doorPrefab = door;
             leverArmPrefab = leverArm;
             propsPrefab = props;

@@ -108,6 +108,8 @@ namespace CityBuilder.EditorTools
                          ("stoneGuardModel", "MonsterStoneGuard"), ("drownedDwarfModel", "MonsterDrownedDwarf"),
                          ("eelModel", "MonsterEel"), ("forgeSpiritModel", "MonsterForgeSpirit"),
                          ("dwarfKingModel", "MonsterDwarfKing"), ("canalSerpentModel", "MonsterCanalSerpent"),
+                         // the level-3 dungeon's (Tools/blender/monsters3.py)
+                         ("fireImpModel", "MonsterFireImp"), ("lavaHoundModel", "MonsterLavaHound"), ("salamanderModel", "MonsterSalamander"), ("obsidianGolemModel", "MonsterObsidianGolem"), ("emberCultistModel", "MonsterEmberCultist"), ("magmaSpawnModel", "MonsterMagmaSpawn"), ("dragonModel", "MonsterDragon"), ("lavaTitanModel", "MonsterLavaTitan"),
                      })
             {
                 var path = $"Assets/_Project/Models/Monsters/{file}.fbx";

@@ -684,16 +684,32 @@ namespace CityBuilder.Maps
 
         private const string SharedTerrainPalette = "TerrainPalette";
 
+        /// <summary>Dungeon 3's lava tide skin and crumbling bridges, as placed (null on other maps).</summary>
+        public GameObject DungeonTideInstance { get; private set; }
+        public GameObject DungeonBridgesInstance { get; private set; }
+
         /// <summary>
         /// Dungeon 3's crumbling bridges (dungeon3.py): their stones and their decks, whose
-        /// `-deck` meshes are walkable -- ground for the NavMesh like the Ground's own. They do not
-        /// fall yet (the first walk-through, 2026-11-04).
+        /// `-deck` meshes are walkable -- ground for the NavMesh like the Ground's own. They fall and
+        /// re-form in the game (Dungeon/DungeonBridges). The lava tide's skin comes in here too
+        /// (Dungeon/DungeonTide raises it).
         /// </summary>
         private void AddBridgeDecks(MeshMapDefinition map)
         {
+            DungeonTideInstance = null;
+            DungeonBridgesInstance = null;
+            if (map.TidePrefab != null)
+            {
+                var tide = Instantiate(map.TidePrefab, Vector3.zero, map.TidePrefab.transform.rotation, transform);
+                tide.name = "Tide";
+                DressOwnPalette(tide, map);
+                SceneryShadows.DisableCasting(tide);
+                DungeonTideInstance = tide;
+            }
             if (map.BridgesPrefab == null) return;
             var bridges = Instantiate(map.BridgesPrefab, Vector3.zero, map.BridgesPrefab.transform.rotation, transform);
             bridges.name = "Bridges";
+            DungeonBridgesInstance = bridges;
             DressOwnPalette(bridges, map);
             SceneryShadows.DisableCasting(bridges);
             var decks = new List<Collider>(_groundColliders);

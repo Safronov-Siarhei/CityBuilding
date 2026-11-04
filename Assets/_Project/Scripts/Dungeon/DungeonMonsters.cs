@@ -43,6 +43,11 @@ namespace CityBuilder.Dungeon
     /// an ambush of drowned dwarfs with drowned rats; forge spirits with dwarf skeletons. An eel
     /// lives only in the water (a lair's eel is put on the nearest wading spot, a drowned rat
     /// instead where there is none) and dungeon2_lone_eels more lie alone in the flooded passages.
+    /// LEVEL 3, «Огненные глубины» (a map with a "boss_dragon" spot; all-new monsters, 2026-11-04):
+    /// the bosses are the dragon on his hoard and the lava titan in his magma pool; the lairs nearest
+    /// the dragon hold his brood (salamanders, lava hounds), those nearest the titan obsidian golems
+    /// and magma spawn; the rest take turns: fire imps; lava hounds with imps; ember cultists with
+    /// imps; salamanders with a hound.
     /// </summary>
     public class DungeonMonsters : MonoBehaviour
     {
@@ -51,6 +56,8 @@ namespace CityBuilder.Dungeon
             Rats, Undead, Bats, Pack, Spiders, Golems, BossQueen, BossGolem,
             // level 2
             Drowned, DwarfUndead, Ambush, Forge, Guards, Deep, BossKing, BossSerpent, LoneEel,
+            // level 3
+            Imps, Hounds, Cult, Lizards, Obsidian, Brood, BossDragon, BossTitan,
         }
 
         /// <summary>One boss of a map: its spot, the theme of the lairs round it, its own theme, its id's tail.</summary>
@@ -244,7 +251,14 @@ namespace CityBuilder.Dungeon
             var lairs = new List<Vector3>();
             foreach (var spot in map.SpotsOf("lair")) lairs.Add(Ground(spot.position));
             var levelTwo = map.SpotsOf("boss_king").Count > 0 || map.SpotsOf("boss_serpent").Count > 0;
-            if (levelTwo)
+            var levelThree = map.SpotsOf("boss_dragon").Count > 0 || map.SpotsOf("boss_titan").Count > 0;
+            if (levelThree)
+            {
+                _bossA = new BossSlot { At = SpotAt(map, "boss_dragon"), Near = Theme.Brood, Own = Theme.BossDragon, Which = "dragon" };
+                _bossB = new BossSlot { At = SpotAt(map, "boss_titan"), Near = Theme.Obsidian, Own = Theme.BossTitan, Which = "titan" };
+                _cycle = new[] { Theme.Imps, Theme.Hounds, Theme.Cult, Theme.Lizards };
+            }
+            else if (levelTwo)
             {
                 // the king stands by his throne; his hall's spot is where he holds
                 var throne = map.SpotsOf("throne");
@@ -443,7 +457,8 @@ namespace CityBuilder.Dungeon
             var lair = new Lair { Post = at, Theme = theme, BossId = id };
             _lairs.Add(lair);
             var kind = theme == Theme.BossQueen ? OrcKind.SpiderQueen : theme == Theme.BossGolem ? OrcKind.OreGolem
-                : theme == Theme.BossKing ? OrcKind.DwarfKing : OrcKind.CanalSerpent;
+                : theme == Theme.BossKing ? OrcKind.DwarfKing : theme == Theme.BossDragon ? OrcKind.Dragon
+                : theme == Theme.BossTitan ? OrcKind.LavaTitan : OrcKind.CanalSerpent;
             Spawn(lair, kind, 1, BalanceConfig.Instance.DungeonBossGuardRadius);
         }
 
@@ -478,6 +493,18 @@ namespace CityBuilder.Dungeon
                     return new List<(OrcKind, int)> { (OrcKind.ForgeSpirit, c.Lair2ForgeSpirits), (OrcKind.DwarfSkeleton, Mathf.Max(1, c.Lair2DwarfSkeletons - 1)) };
                 case Theme.Guards: return new List<(OrcKind, int)> { (OrcKind.StoneGuard, c.Lair2StoneGuards), (OrcKind.DwarfSkeleton, c.Lair2DwarfSkeletons) };
                 case Theme.Deep: return new List<(OrcKind, int)> { (OrcKind.Eel, c.Lair2Eels), (OrcKind.DrownedDwarf, Mathf.Max(1, c.Lair2DrownedDwarfs - 1)) };
+                // level 3
+                case Theme.Imps: return new List<(OrcKind, int)> { (OrcKind.FireImp, c.Lair3FireImps) };
+                case Theme.Hounds:
+                    return new List<(OrcKind, int)> { (OrcKind.LavaHound, c.Lair3LavaHounds), (OrcKind.FireImp, Mathf.Max(1, c.Lair3FireImps / 2)) };
+                case Theme.Cult:
+                    return new List<(OrcKind, int)> { (OrcKind.EmberCultist, c.Lair3EmberCultists), (OrcKind.FireImp, Mathf.Max(1, c.Lair3FireImps - 2)) };
+                case Theme.Lizards:
+                    return new List<(OrcKind, int)> { (OrcKind.Salamander, c.Lair3Salamanders), (OrcKind.LavaHound, 1) };
+                case Theme.Obsidian:
+                    return new List<(OrcKind, int)> { (OrcKind.ObsidianGolem, c.Lair3ObsidianGolems), (OrcKind.MagmaSpawn, c.Lair3MagmaSpawn) };
+                case Theme.Brood:
+                    return new List<(OrcKind, int)> { (OrcKind.Salamander, c.Lair3Salamanders), (OrcKind.LavaHound, c.Lair3LavaHounds) };
                 default: return new List<(OrcKind, int)>();
             }
         }
@@ -545,7 +572,8 @@ namespace CityBuilder.Dungeon
                 monster.Armour = config.DwarfSkeletonArmour;
             }
             if (kind == OrcKind.Spider || kind == OrcKind.SpiderQueen || kind == OrcKind.OreGolem || kind == OrcKind.DwarfSkeleton
-                || kind == OrcKind.DrownedDwarf || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent)
+                || kind == OrcKind.DrownedDwarf || kind == OrcKind.DwarfKing || kind == OrcKind.CanalSerpent
+                || kind == OrcKind.Dragon || kind == OrcKind.LavaTitan)
                 monster.gameObject.AddComponent<DungeonMonsterPowers>().Bind(monster, this);
             return monster;
         }

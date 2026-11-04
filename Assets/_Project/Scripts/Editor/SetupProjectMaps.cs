@@ -177,7 +177,8 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-ExitGlow.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Door.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-LeverArm.fbx"),
-                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Bridges.fbx"));
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Bridges.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{folder}/{prefix}-Tide.fbx"));
 
             var spots = new List<MapSpot>();
             var culture = System.Globalization.CultureInfo.InvariantCulture;
