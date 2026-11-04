@@ -79,7 +79,9 @@ namespace CityBuilder.Dungeon
         {
             var config = BalanceConfig.Instance;
             var index = 0;
-            foreach (var spot in map.SpotsOf("reward")) Put(spot, config.DungeonCrystalsPerRoom, dungeonId, level, ref index, takenBefore);
+            // level 2: one a room and many more places with one (the user, 2026-11-04)
+            var perRoom = map.SpotsOf("boss_king").Count > 0 ? config.Dungeon2CrystalsPerRoom : config.DungeonCrystalsPerRoom;
+            foreach (var spot in map.SpotsOf("reward")) Put(spot, perRoom, dungeonId, level, ref index, takenBefore);
             foreach (var spot in map.SpotsOf("crystal")) Put(spot, config.DungeonCrystalsLone, dungeonId, level, ref index, takenBefore);
         }
 

@@ -111,6 +111,14 @@ namespace CityBuilder.Dungeon
         }
 
         /// <summary>A tap on a lever (or a hero sent to it arrived): a hero by it pulls it, else the player is told to bring one.</summary>
+        /// <summary>A tapped lever is held like a thing to use: a gold ring round it (the user, 2026-11-04: «рычаг выделялся при нажатии как объект взаимодействия»).</summary>
+        public static void Highlight(DungeonEntrance place)
+        {
+            if (place == null || UI.BuildingFocus.Instance == null) return;
+            if (Instance != null && Instance._levers.Exists(l => l.Place == place && l.Pulled)) return;
+            UI.BuildingFocus.Instance.SelectEntrance(place);
+        }
+
         public void Use(DungeonEntrance place)
         {
             var lever = _levers.Find(l => l.Place == place);
@@ -127,6 +135,9 @@ namespace CityBuilder.Dungeon
         private void Pull(Lever lever)
         {
             lever.Pulled = true;
+            // pulled: let go of it
+            var focus = UI.BuildingFocus.Instance;
+            if (focus != null && focus.Entrance == lever.Place) focus.Clear();
             if (lever.Arm != null) StartCoroutine(Swing(lever));
             var pulled = PulledCount;
             if (pulled < _levers.Count)

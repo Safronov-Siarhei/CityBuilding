@@ -56,7 +56,10 @@ namespace CityBuilder.Dungeon
         private List<Vector3> _surface;
         private Transform _figure;
         private Vector3 _figureHome;
-        private const float SinkSeconds = 0.5f;
+        private const float SinkSeconds = 0.9f;
+        private const float WakeEverySeconds = 0.22f;
+        private Vector3 _diveFrom, _diveTo;
+        private float _wakeClock;
 
         /// <summary>The king has sat on his throne (once a fight).</summary>
         public bool HasThroned { get; private set; }
@@ -312,7 +315,13 @@ namespace CityBuilder.Dungeon
             var c = BalanceConfig.Instance;
             _diveLeft = Mathf.Max(SinkSeconds * 2f + 0.1f, c.SerpentDiveSeconds);
             _moved = false;
+            _diveFrom = transform.position;
+            _diveTo = PickSurface();
             Submerge(true);
+            // it goes down in a splash (the user, 2026-11-04: «просто исчезает и появляется в другом месте»)
+            DungeonWake.Splash(_diveFrom, 3f);
+            DungeonWake.Splash(_diveFrom + Vector3.forward * 0.3f, 2f);
+            if (_animator != null) _animator.OnStruck();
         }
 
         private void DiveUpdate(float dt, BalanceConfig c)
@@ -321,12 +330,36 @@ namespace CityBuilder.Dungeon
             _diveLeft -= dt;
             var gone = total - _diveLeft;
             const float depth = 2.2f;
-            if (gone < SinkSeconds) Lower(depth * gone / SinkSeconds);
-            else if (_diveLeft > SinkSeconds) Lower(depth);
+            if (gone < SinkSeconds)
+            {
+                // down slowly, head last
+                var k = gone / SinkSeconds;
+                Lower(depth * k * k);
+            }
+            else if (_diveLeft > SinkSeconds)
+            {
+                // under the water: a wake of rings runs from where it went down to where it comes up
+                Lower(depth);
+                ShowFigure(false);
+                _wakeClock -= dt;
+                if (_wakeClock <= 0f)
+                {
+                    _wakeClock = WakeEverySeconds;
+                    var span = Mathf.Max(0.01f, total - SinkSeconds * 2f);
+                    var along = Mathf.Clamp01((gone - SinkSeconds) / span);
+                    DungeonWake.Splash(Vector3.Lerp(_diveFrom, _diveTo, along), 1.6f);
+                }
+            }
             else
             {
-                if (!_moved) Resurface();
-                Lower(depth * Mathf.Clamp01(_diveLeft / SinkSeconds));
+                if (!_moved)
+                {
+                    Resurface();
+                    ShowFigure(true);
+                    DungeonWake.Splash(transform.position, 3f);
+                }
+                var k = Mathf.Clamp01(_diveLeft / SinkSeconds);
+                Lower(depth * k * k);
             }
             if (_diveLeft > 0f) return;
             _diveLeft = 0f;
@@ -339,18 +372,24 @@ namespace CityBuilder.Dungeon
         private void Resurface()
         {
             _moved = true;
-            if (_surface == null || _surface.Count == 0) return;
+            transform.position = _diveTo;
+            _unit.MovePost(_diveTo);
+        }
+
+        /// <summary>Another wading spot near its pool, a couple of cells from here at least.</summary>
+        private Vector3 PickSurface()
+        {
             var here = transform.position;
+            if (_surface == null || _surface.Count == 0) return here;
             for (var tries = 0; tries < 8; tries++)
             {
                 var at = _surface[Random.Range(0, _surface.Count)];
                 var d = at - here;
                 d.y = 0f;
                 if (d.magnitude < 2f && tries < 7) continue;
-                transform.position = at;
-                _unit.MovePost(at);
-                return;
+                return at;
             }
+            return here;
         }
 
         /// <summary>A blow to every hero within `radius`, `mult` times its own.</summary>

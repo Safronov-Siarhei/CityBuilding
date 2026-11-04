@@ -29,6 +29,7 @@ namespace CityBuilder.Dungeon
         private Transform[] _rings;
         private Renderer[] _renderers;
         private float[] _age;
+        private float[] _size;
         private int _next;
         private MaterialPropertyBlock _block;
 
@@ -48,6 +49,18 @@ namespace CityBuilder.Dungeon
             _instance.Spawn(position);
         }
 
+        /// <summary>A splash: a ring `size` times a step's, wherever the water is (a serpent diving or coming up).</summary>
+        public static void Splash(Vector3 position, float size)
+        {
+            if (!DungeonFloor.Active) return;
+            if (_instance == null)
+            {
+                if (DungeonMode.Instance == null) return;
+                _instance = DungeonMode.Instance.gameObject.AddComponent<DungeonWake>();
+            }
+            _instance.Spawn(position, size);
+        }
+
         private void OnDestroy()
         {
             if (_instance == this) _instance = null;
@@ -58,6 +71,7 @@ namespace CityBuilder.Dungeon
             _rings = new Transform[PoolSize];
             _renderers = new Renderer[PoolSize];
             _age = new float[PoolSize];
+            _size = new float[PoolSize];
             _block = new MaterialPropertyBlock();
             var mesh = RingMesh(28, 0.82f);
             var material = UI.MoveOrderMarker.CreateTransparentMaterial(new Color(Foam.r, Foam.g, Foam.b, Alpha));
@@ -77,14 +91,15 @@ namespace CityBuilder.Dungeon
             }
         }
 
-        private void Spawn(Vector3 at)
+        private void Spawn(Vector3 at, float size = 1f)
         {
             if (_rings == null) Build();
             var i = _next;
             _next = (_next + 1) % PoolSize;
             _age[i] = 0f;
+            _size[i] = size;
             _rings[i].position = new Vector3(at.x, DungeonFloor.WaterLevel + AboveWater, at.z);
-            _rings[i].localScale = Vector3.one * StartRadius;
+            _rings[i].localScale = Vector3.one * (StartRadius * size);
             _rings[i].gameObject.SetActive(true);
             Paint(i, Alpha);
         }
@@ -105,7 +120,7 @@ namespace CityBuilder.Dungeon
                     continue;
                 }
                 var eased = 1f - (1f - t) * (1f - t);
-                _rings[i].localScale = Vector3.one * Mathf.Lerp(StartRadius, EndRadius, eased);
+                _rings[i].localScale = Vector3.one * (Mathf.Lerp(StartRadius, EndRadius, eased) * _size[i]);
                 Paint(i, Alpha * (1f - t));
             }
         }

@@ -37,6 +37,9 @@ namespace CityBuilder.Maps
         [SerializeField] private GameObject cacheRuinModel;
         [SerializeField] private GameObject cacheChestModel;
 
+        /// <summary>The caches' chest (Tools/blender/treasures.py): the dungeon's dead-end chests use it too.</summary>
+        public GameObject CacheChestModel => cacheChestModel;
+
         // Sized for a citizen, not Unity's default humanoid navmesh agent -- CitizenAgent's
         // CharacterController is radius 0.15/height 0.72 (see CitizenVisualsManager.SpawnAgent).
         // agentSlope deliberately excludes Map-1-Ground.fbx's decorative relief (hills/cliffs

@@ -411,6 +411,9 @@ def _cross(p1, p2, p3, p4):
     return (p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])) if 0 <= t <= 1 and 0 <= u <= 1 else None
 
 
+USE_BRIDGES = False
+
+
 def plan_bridges():
     """Where every passage between halls meets a canal: a dry one gets a BRIDGE straight across the
     canal when both its ends land on the passage's dry floor (not rock), it crosses squarely enough
@@ -426,7 +429,10 @@ def plan_bridges():
                 if hit and not hall_of((int(hit[0] // CELL), int(hit[1] // CELL))):
                     crossings.append((hit, wet, pl[k], pl[k + 1], p, q))
     for (x, y), wet, a, b, p, q in crossings:
-        if wet or any(math.hypot(x - o[0], y - o[1]) < BRIDGE_APART for o in BRIDGES):
+        # the user, 2026-11-04 (round 2 of the playtest): «мосты всё ещё ведут в никуда, если не можешь
+        # сделать нормально, то надо что-то поменять в концепции» -- the concept changed: NO bridges,
+        # every passage crosses a canal by a FORD (waded, stepping stones), so nothing can lead nowhere
+        if not USE_BRIDGES or wet or any(math.hypot(x - o[0], y - o[1]) < BRIDGE_APART for o in BRIDGES):
             FORDS.append((x, y))
             continue
         cl = math.hypot(q[0] - p[0], q[1] - p[1]) or 1.0
@@ -1712,12 +1718,60 @@ def lair_rows():
     out.append(("boss_king",) + game(*hall_centre("throne")))
     out.append(("boss_serpent",) + game(SERPENT_POOL[0], SERPENT_POOL[1]))
     camp = game(*hall_centre("camp"))
-    for c in dungeon_lairs.lone_crystals(PLAN, POS, game, camp):
+    # the user, 2026-11-04: «слишком мало противников ... больше мест с 1 кристаллом» and chests
+    # in the dead ends: the farthest empty dead ends take a lone crystal each, the rest a chest;
+    # more lone crystals out in the passages (each guarded, so the corridors are not empty), and
+    # twice the patrols
+    rooms = {tuple(c) for c in PLAN["crystal_rooms"]}
+    empty = sorted((tuple(c) for c in PLAN["dead_ends"] if tuple(c) not in rooms),
+                   key=lambda c: -math.dist(game(*POS[c]), camp))
+    for c in empty[:LONE_CRYSTALS]:
+        out.append(("crystal",) + game(*POS[c]))
+    for c in empty[LONE_CRYSTALS:]:
+        out.append(("chest",) + game(*POS[c]))
+    for c in passage_crystals(game, camp, [(x, y) for _, x, y in out]):
         out.append(("crystal",) + game(*POS[c]))
     lairs = [(x, y) for k, x, y in out if k == "lair" or k.startswith("boss_")]
+    dungeon_lairs.PATROLS = PATROLS
     for k, route in enumerate(dungeon_lairs.patrols(PLAN, POS, game, camp, lairs)):
         out += [(f"patrol_{k}", x, y) for x, y in route]
+    print("POINTS", {k: sum(1 for o in out if o[0] == k) for k in ("lair", "crystal", "chest")},
+          "patrols", len({o[0] for o in out if o[0].startswith("patrol_")}))
     return out
+
+
+LONE_CRYSTALS = 12        # in the farthest empty dead ends (level 1 has 6)
+PASSAGE_CRYSTALS = 8      # out in the passages, spread apart
+PATROLS = 10              # level 1 has 5
+
+
+def passage_crystals(game, camp, taken):
+    """Passage nodes (two links, not in a hall, not a lair or a room), each as far as can be from
+    the camp, every spot already placed and the others chosen -- so they spread over the map."""
+    adj = {}
+    for a, b in PLAN["links"]:
+        adj.setdefault(tuple(a), set()).add(tuple(b))
+        adj.setdefault(tuple(b), set()).add(tuple(a))
+    special = {tuple(c) for c in PLAN["monster_halls"] + PLAN["crystal_rooms"] + PLAN["dead_ends"]}
+
+    def in_hall(c):
+        return any(x0 <= c[0] < x0 + w and y0 <= c[1] < y0 + h for x0, y0, w, h in PLAN["big"].values())
+    nodes = [c for c, n in adj.items() if len(n) == 2 and c not in special and not in_hall(c)]
+    points = [camp] + list(taken)
+    chosen = []
+    for _ in range(PASSAGE_CRYSTALS):
+        best, best_d = None, 0.0
+        for c in nodes:
+            if c in chosen:
+                continue
+            d = min(math.dist(game(*POS[c]), p) for p in points)
+            if d > best_d:
+                best, best_d = c, d
+        if best is None:
+            break
+        chosen.append(best)
+        points.append(game(*POS[best]))
+    return chosen
 
 
 def main():

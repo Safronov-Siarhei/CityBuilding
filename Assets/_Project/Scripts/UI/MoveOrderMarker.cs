@@ -70,6 +70,8 @@ namespace CityBuilder.UI
         private Transform _buoyModel;
         private bool _floating;
         private const float BuoyBob = 0.05f;
+        // the ships' buoy model is a ship's size; a hero's is about a third of it
+        private const float BuoyScale = 0.35f;
         private const float BuoyBobSpeed = 2.2f;
         private Ring _targetRing;
         private Ripple[] _ripples;
@@ -443,8 +445,12 @@ namespace CityBuilder.UI
             }
             if (_buoyPrefab != null)
             {
-                _buoyModel = Instantiate(_buoyPrefab, transform).transform;
-                _buoyModel.name = "OrderBuoy";
+                // the ships' buoy, shrunk to a hero's order (the user, 2026-11-04: «буй слишком
+                // большой, он должен быть маленьким»): a holder the marker scales, the model inside it smaller
+                _buoyModel = new GameObject("OrderBuoy").transform;
+                _buoyModel.SetParent(transform, false);
+                var model = Instantiate(_buoyPrefab, _buoyModel).transform;
+                model.localScale *= BuoyScale;
                 foreach (var collider in _buoyModel.GetComponentsInChildren<Collider>()) Destroy(collider);
                 foreach (var r in _buoyModel.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
                 _buoyModel.gameObject.SetActive(false);

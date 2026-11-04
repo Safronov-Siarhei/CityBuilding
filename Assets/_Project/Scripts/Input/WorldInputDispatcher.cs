@@ -1,4 +1,4 @@
-﻿using CityBuilder.Buildings;
+using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.UI;
 using UnityEngine;
@@ -112,6 +112,7 @@ namespace CityBuilder.InputControl
             // a lever is used, not held: a hero by it pulls it, else the player is told to bring one
             if (entrance != null && entrance.Kind == Dungeon.DungeonEntrance.Place.Lever)
             {
+                Dungeon.DungeonLevers.Highlight(entrance);
                 entrance.OpenCard();
                 return;
             }

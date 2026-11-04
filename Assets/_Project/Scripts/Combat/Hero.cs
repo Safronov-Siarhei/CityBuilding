@@ -445,7 +445,16 @@ namespace CityBuilder.Combat
                 goal = at + Flat(Home - at).normalized * balance.fleeDistance;
                 if (!NavMesh.SamplePosition(goal, out hit, 3f, NavMesh.AllAreas)) return;
             }
-            _unit.Retreat(hit.position, balance.fleeDistance / Mathf.Max(0.5f, balance.walkSpeed) + 1f);
+            var to = hit.position;
+            // below, the point "that way" is often behind the rock: the route there ran her off
+            // round the corridors while the others fought (the user, 2026-11-04, the Queen). In a
+            // dungeon she steps back only as far as the floor runs straight, and stays if that is next to nothing.
+            if (Dungeon.DungeonMode.IsActive && NavMesh.Raycast(at, to, out var edge, NavMesh.AllAreas))
+            {
+                to = Vector3.Lerp(at, edge.position, 0.85f);
+                if (Flat(to - at).magnitude < 1f) return;
+            }
+            _unit.Retreat(to, balance.fleeDistance / Mathf.Max(0.5f, balance.walkSpeed) + 1f);
         }
 
         /// <summary>The nearest of her own -- another soldier or hero standing -- or the castle.</summary>

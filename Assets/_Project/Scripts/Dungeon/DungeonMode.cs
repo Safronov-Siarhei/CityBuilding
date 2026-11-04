@@ -29,6 +29,9 @@ namespace CityBuilder.Dungeon
         // how far from the way out (cells, towards the camp) a fallen hero rises
         private const float RiseFromExitCells = 2f;
         // the box a tap on the way out's rock hits (cells): its foot round the exit spot
+        // the way out's rock, from the exit spot (0.44 in front of its face): 1.05 to 3.7 behind it, 4.4 across
+        private const float ExitRockCentre = 2.4f;
+        private static readonly Vector3 ExitRockSize = new Vector3(4.4f, 2f, 2.6f);
         private static readonly Vector3 ExitTapBox = new Vector3(3f, 2.5f, 2.5f);   // just the cave's mouth (the user, 2026-11-01: was too wide)
         // the box a tap on a camp building hits when it has no model to measure (cells)
         private static readonly Vector3 CampTapBox = new Vector3(3f, 3f, 3f);
@@ -142,8 +145,14 @@ namespace CityBuilder.Dungeon
             var inventory = GameObject.Find("InventoryButton");
             if (citizens != null && inventory != null)
             {
-                ((RectTransform)inventory.transform).anchoredPosition = ((RectTransform)citizens.transform).anchoredPosition;
+                var inventoryRect = (RectTransform)inventory.transform;
+                var freed = ((RectTransform)citizens.transform).anchoredPosition.y - inventoryRect.anchoredPosition.y;
+                inventoryRect.anchoredPosition = ((RectTransform)citizens.transform).anchoredPosition;
                 citizens.SetActive(false);
+                // and the notices start a button higher, in the place the citizens' button left
+                // (the user, 2026-11-04: «уведомления должны начинаться выше, чем на обычной карте»)
+                var feed = GameObject.Find("EventFeed");
+                if (feed != null) ((RectTransform)feed.transform).anchoredPosition += new Vector2(0f, freed);
             }
             // MeshMapApplier lays the map down in its own Start
             while (MeshMapApplier.Instance == null || MeshMapApplier.Instance.CurrentMap == null) yield return null;
@@ -191,6 +200,8 @@ namespace CityBuilder.Dungeon
             gameObject.AddComponent<DungeonMonsters>().Begin(map, DungeonId, Level, town?.dungeonBossesSlain);
             // the crystals the town has not taken yet, each by its guards
             gameObject.AddComponent<DungeonCrystals>().Begin(map, DungeonId, Level, town?.dungeonCrystalsTaken);
+            // and the small chests in the dead ends (the user, 2026-11-04: a consolation prize)
+            gameObject.AddComponent<DungeonChests>().Begin(map, Level);
             // the gnomes hired last time, waiting by the way in
             gameObject.AddComponent<DungeonHirelings>().Begin(DungeonId, StartSpot + Vector3.back * 1.5f,
                 HireCamp != null ? HireCamp.ApproachFrom(StartSpot) : StartSpot, town?.dungeonHirelings);
@@ -249,6 +260,17 @@ namespace CityBuilder.Dungeon
             box.center = new Vector3(0f, ExitTapBox.y * 0.5f, 0f);
             var exit = go.AddComponent<DungeonEntrance>();
             exit.InitializeExit(DungeonId);
+            // the rock the way out is cut into stands on the camp's floor, and the floor's NavMesh ran
+            // on under it: heroes walked through it (the user, 2026-11-04). Its body (dungeon2.py
+            // mine_exit: 2.6x crags, the face facing the camp) carves the floor away, the steps left open.
+            var rock = new GameObject("ExitRock");
+            rock.transform.SetParent(go.transform, false);
+            var carve = rock.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            carve.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            carve.center = new Vector3(0f, 1f, ExitRockCentre);
+            carve.size = ExitRockSize;
+            carve.carving = true;
+            carve.carveOnlyStationary = true;
             return exit;
         }
 

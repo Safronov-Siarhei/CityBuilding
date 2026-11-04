@@ -163,7 +163,9 @@ namespace CityBuilder.UI
             HarvestRadiusOverlay.HideIfShown();
             _reach.gameObject.SetActive(false);
             // the hire camp has no card: its hiring buttons are all there is (the user, 2026-11-02)
-            if (detailsButton != null) detailsButton.SetActive(entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);
+            // nor a lever: it is pulled, not read (the user, 2026-11-04)
+            if (detailsButton != null) detailsButton.SetActive(entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp
+                && entrance.Kind != Dungeon.DungeonEntrance.Place.Lever);
             // «Уровень N» over the mine while it is held (the user, 2026-11-01)
             DungeonLevelLabel.Follow(entrance);
         }

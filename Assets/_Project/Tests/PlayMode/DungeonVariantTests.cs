@@ -120,7 +120,7 @@ namespace CityBuilder.Tests.PlayMode
             var map = MeshMapApplier.Instance.CurrentMap;
             foreach (var kind in new[] { "boss_golem", "boss_spiders" })
                 Assert.AreEqual(0, map.SpotsOf(kind).Count, $"The level-2 dungeon has a level-1 {kind} spot.");
-            foreach (var kind in new[] { "lair", "reward", "crystal", "patrol_0", "boss_king", "boss_serpent" })
+            foreach (var kind in new[] { "lair", "reward", "crystal", "chest", "patrol_0", "boss_king", "boss_serpent" })
                 Assert.Greater(map.SpotsOf(kind).Count, 0, $"The level-2 dungeon has no {kind} spot.");
             // its own roster, none of the old mine's (the user, 2026-11-04)
             var monsters = Object.FindObjectsByType<OrcUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -168,7 +168,8 @@ namespace CityBuilder.Tests.PlayMode
                 else if (DungeonFloor.StandHeightAt(at) > 0.06f) decks++;   // a deck: 0.18-0.43 m up, 0.08-0.19 cells
             }
             Assert.Greater(wades, 200, "Nowhere is the water waded.");
-            Assert.Greater(decks, 10, "No bridge's deck stands up out of the water.");
+            // no bridges since 2026-11-04 (the user: they led nowhere): every canal is crossed by a ford
+            Assert.AreEqual(0, decks, "A bridge's deck still stands in the level-2 dungeon.");
 
             var start = DungeonMode.Instance.StartSpot;
             Assert.IsTrue(NavMesh.SamplePosition(start, out var from, 1f, NavMesh.AllAreas), "The camp has no NavMesh.");

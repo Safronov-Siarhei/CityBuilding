@@ -357,6 +357,34 @@ dungeon opens as a SEPARATE SCENE.
     submerged then rise by a hero, serpent immune dived and up on a wading spot, king on the throne
     with guards and healing; plus the old walk/levers checks.
   - Open: the user to play it; the king's walk to the throne; the serpent's swimming between dives.
+- **Playtest round 2 of level 2 (the user, 2026-11-04, 6 screenshots) -- BUILT, not seen, no tests run (the user: «тесты не делай»):**
+  - The order BUOY a third of the ships' (MoveOrderMarker `BuoyScale` 0.35, a holder the marker scales).
+  - More enemies and more crystal places: `dungeon2.py lair_rows` -- the 12 farthest empty dead ends
+    a lone crystal (`LONE_CRYSTALS`), the rest of the dead ends a CHEST, 8 more lone crystals out in
+    the passages (`passage_crystals`, farthest-point spread), 10 patrols (`PATROLS`, level 1 has 5);
+    every crystal guarded as before. Crystal rooms hold `dungeon2_crystals_per_room` (1) on level 2.
+    Floating crystals ~30 + 20 from the bosses = the ~50 agreed.
+  - CHESTS (`Dungeon/DungeonChests`, "chest" spots): the caches' chest model (MeshMapApplier
+    `CacheChestModel`), a GOLD glint (the crystals' CrystalHalo, `_BaseColor` gold); a hero within
+    `dungeon_chest_reach` opens it -- the lid swings up, ONE resource in turn (wood 20 / stone 20 /
+    gold 6 / coins 25, `dungeon_chest_*`, times the level) via DungeonMonsters.ResourcesEarned (coins at
+    once), `#log_dungeon_chest`. Not guarded, not saved: full again next visit.
+  - The EXIT ROCK was walked through: `DungeonMode.MakeExit` adds a carving NavMeshObstacle box
+    (`ExitRockCentre` 2.4 behind the exit spot, `ExitRockSize` 4.4 x 2.6) -- both levels.
+  - The QUEEN ran off round the corridors: `Hero` flee in a dungeon goes only as far as the floor runs
+    straight (NavMesh.Raycast), and not at all if that is under a cell.
+  - LEVERS: a tap holds the lever (BuildingFocus ring, no «!»; `DungeonLevers.Highlight`), no order flag
+    for it; a hero already by it pulls at once; let go when pulled. Notice reworded
+    «Найден рычаг потайного прохода: {0} из {1}». The event feed starts a button higher below
+    (DungeonMode: by the citizens' button's freed slot).
+  - The SERPENT's dive: a splash going down (`DungeonWake.Splash`, rings x3), sinks over 0.9 s, under
+    water a WAKE of rings runs from where it went down to where it comes up (the spot picked at the dive),
+    a splash and a 0.9 s rise. Its spit is still the shared ball projectile.
+  - BRIDGES REMOVED (concept change; the user: «если не можешь сделать нормально, то надо что-то
+    поменять в концепции»): `USE_BRIDGES = False` -- every canal crossing is a FORD. The test now
+    asserts no deck.
+  - A pack member spawned behind the rock: `DungeonMonsters.SpawnAt` pulls a post the floor does not run
+    to straight from the lair's middle (NavMesh.Raycast) back onto the lair's side.
 - **Potion shop was INSIDE THE ROCK on level 2** (the user's screenshot, 2026-11-04): level 1's
   "camp + (14, 3)" falls in the rock of this narrower camp hall. `dungeon2.py clear_spot()` now picks
   the dry floor nearest that point where the shop's whole round (4.5) is clear of rock and water and

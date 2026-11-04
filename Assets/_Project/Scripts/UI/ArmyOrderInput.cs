@@ -96,6 +96,17 @@ namespace CityBuilder.UI
                 entrance.OpenCard();
                 return true;
             }
+            // a lever is held as the thing to use (a ring round it, no flag); a hero already by it pulls it now
+            var lever = entrance != null && entrance.Kind == Dungeon.DungeonEntrance.Place.Lever;
+            if (lever)
+            {
+                Dungeon.DungeonLevers.Highlight(entrance);
+                if (entrance.HeroNear())
+                {
+                    entrance.OpenCard();
+                    return true;
+                }
+            }
             if (entrance != null && !OnFoot(army.SelectedGroup, entrance.transform.position)) return true;
             if (entrance != null)
             {
@@ -104,7 +115,7 @@ namespace CityBuilder.UI
                 walking.OrderMoveTo(mouth);
                 walking.NotifyPlayerOrder();
                 if (SoldierStats.IsHero(walking.Type)) entrance.Await();
-                if (walking.Count > 0) OrderMarker.ShowFlagFor(walking.Members[0].transform, mouth);
+                if (walking.Count > 0 && !lever) OrderMarker.ShowFlagFor(walking.Members[0].transform, mouth);
                 return true;
             }
             Dungeon.DungeonEntrance.Awaited = null;

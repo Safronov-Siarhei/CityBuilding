@@ -510,6 +510,12 @@ namespace CityBuilder.Dungeon
             var raids = OrcRaidManager.Instance;
             if (raids == null) return null;
             if (NavMesh.SamplePosition(post, out var hit, 2f, NavMesh.AllAreas)) post = hit.position;
+            // a pack keeps together (the user, 2026-11-04: one of them came up behind the rock, far
+            // from the rest): a post round the lair's middle the floor does not run to straight is
+            // pulled back to where the floor ends, on the lair's side
+            if (NavMesh.SamplePosition(lair.Post, out var middle, 2f, NavMesh.AllAreas)
+                && NavMesh.Raycast(middle.position, post, out var edge, NavMesh.AllAreas))
+                post = Vector3.Lerp(middle.position, edge.position, 0.8f);
             // an eel lives in the water: the nearest wading spot, else a drowned rat in its place
             if (kind == OrcKind.Eel && !DungeonFloor.Wading(post))
             {
