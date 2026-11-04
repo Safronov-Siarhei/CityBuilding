@@ -666,7 +666,25 @@ namespace CityBuilder.Tests.PlayMode
             var queen = roster.Restore(SoldierType.Queen, mode.StartSpot + Vector3.right * 1.5f, 1, 0, 0, false, 0f);
             Assert.IsNotNull(queen, "No Queen to lead.");
             ArmyManager.Instance.SelectGroup(king.Unit.Group);
-            Assert.IsTrue(NavMesh.SamplePosition(mode.StartSpot + new Vector3(0f, 0f, 7f), out var ahead, 4f, NavMesh.AllAreas));
+            // somewhere a few cells off with a SHORT way there: straight north of the start is behind the
+            // way out's rock now (the stone-stairs exit, 2026-11-02): 38.8 cells round it, longer than the wait
+            var ahead = default(NavMeshHit);
+            var found = false;
+            var way = new NavMeshPath();
+            for (var k = 0; k < 16 && !found; k++)
+            {
+                var angle = k * Mathf.PI / 8f;
+                var at = mode.StartSpot + new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) * 6f;
+                if (!NavMesh.SamplePosition(at, out var hit, 1.5f, NavMesh.AllAreas)) continue;
+                if (!NavMesh.CalculatePath(king.Unit.transform.position, hit.position, NavMesh.AllAreas, way)
+                    || way.status != NavMeshPathStatus.PathComplete) continue;
+                var length = 0f;
+                for (var c = 1; c < way.corners.Length; c++) length += Vector3.Distance(way.corners[c - 1], way.corners[c]);
+                if (length > 8f || Flat(hit.position - mode.StartSpot).magnitude < 4f) continue;
+                ahead = hit;
+                found = true;
+            }
+            Assert.IsTrue(found, "No open floor a few cells from the start.");
             king.Unit.Group.OrderMoveTo(ahead.position);
             yield return new WaitForSeconds(6f);
             Assert.Less(Vector3.Distance(Flat(king.Unit.transform.position), Flat(ahead.position)), 1.5f, "The King did not go where he was sent.");

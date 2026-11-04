@@ -372,7 +372,9 @@ dungeon opens as a SEPARATE SCENE.
     Design/previews/monsters3/ (`render_figures.py` now fits the camera to the tallest figure; FIG_STEP env).
   - General test run after it: EditMode 461/461, PlayMode 361 passed / 1 failed / 18 skipped:
     `DungeonTests.TheHeroes_FollowTheOneLed_AndAFallCostsALevel` (the King 12.98 cells off his
-    target, line 672) -- not looked into yet.
+    target) -- FIXED in the test: 7 cells north of the start is behind the way-out rock since the
+    stone-stairs exit (2026-11-02), a 38.8-cell walk round; the test now picks an open spot ~6
+    cells off with a short path. Not a game bug.
   - Open: no tests of the new rules yet; the user to look; dragon has no shadow in the air;
     the bridge gap carve not checked in the game.
 
