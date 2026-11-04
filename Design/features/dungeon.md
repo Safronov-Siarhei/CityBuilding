@@ -260,6 +260,26 @@ dungeon opens as a SEPARATE SCENE.
     (`research_crystals_from_level`).
   - 46 buildings x levels 3/4/5 = 138, plus unit levels 3 ≈ 142 crystals for everything.
 
+## Dungeon level 3 «Огненные глубины» (the user's answers, 2026-11-04)
+- **Theme:** fire depths -- lava rivers and lakes, obsidian, basalt pillars, the glow from below.
+- **Bosses:** the DRAGON asleep on a hoard by a lava lake (fire breath in a cone, takes off and
+  lands) and the LAVA TITAN who rises out of a magma pool and sheds small golems when struck.
+- **Monsters: ALL NEW models** (the user chose this over level 2's half-and-half).
+- **New mechanic «меняющийся путь», BOTH forms** (the user):
+  - LAVA TIDE: some passages (along a river, inside the tide quarters) are flooded by lava now and
+    then, with a warning (glow, smoke) first; a hero in it burns. A tide passage crossing a river
+    is a LAVA FORD, open at low tide only.
+  - CRUMBLING BRIDGES: a dry passage crosses a river on a basalt bridge; some fall into the lava once
+    crossed -- only bridges on a LOOP, so the heroes are never cut off.
+- **Size:** as level 2 (300 x 300 build units, ~132 x 132 cells).
+- **Variants:** ONE first, then the others (the user).
+- **Camp:** the same gnome hire camp and potion shop.
+- Order of work as before: PLAN -> Blender map -> monster/boss models -> game.
+- Plan: `Tools/blender/dungeon3_plan.py <png> [seed] [layout]` (dungeon2_plan.py reworked; LAYOUTS
+  holds A only), seed 15 -> `dungeon3-plan.json`: 349 passages, 108 under the tide, 14 bridges (8
+  crumbling), 8 lava fords, 12 crystal rooms, 15 chest dead ends, dragon ~1414 m, titan ~1043 m.
+  Picture sent 2026-11-04, **awaiting approval**.
+
 ## Dungeon level 2 «Затопленные гномьи чертоги» (the user's answers, 2026-11-03)
 - **Theme:** drowned dwarven halls -- dressed stone halls and pillars, water CANALS with bridges,
   ruined forges. Continues the gnome hirelings' story. Not the overgrown mine of level 1.
