@@ -367,7 +367,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(panel.RowCount, 20, "The buildings tab has hardly any rows.");
             yield return PlaytestCapture.ShootWithUi("lab-window-buildings", lab.transform.position);
             panel.SelectUnitsTab();
-            Assert.AreEqual(4, panel.RowCount, "The army tab is not the four soldier tiers.");
+            Assert.AreEqual(CityBuilder.Combat.SoldierStats.Hireable.Length, panel.RowCount, "The army tab is not every hired type (the Barracks' five, the knight, the monk, the four machines).");
             yield return PlaytestCapture.ShootWithUi("lab-window-army", lab.transform.position);
             panel.ToggleHint();
             yield return PlaytestCapture.ShootWithUi("lab-window-hint", lab.transform.position);
