@@ -285,6 +285,134 @@ def knight_lance_arm(b):
             GOLD, back_cap=True)
 
 
+# ---------------------------------------------------------------------------------- the levels
+# As soldiers.py's TRIMS (the user, 2026-10-24): level 2 adds metal, level 3 a gold edge and a
+# plume; each piece rides on the part it moves with, level 3 keeps level 2's.
+FEATHER = S['FEATHER']
+
+
+def crossbow2_body(b):
+    for k in (-1, 1):
+        b.ball(k * 0.1, 0.0, 0.365, 0.048, 0.05, STEEL, sides=7)                                     # pauldrons
+    b.cylinder(0, 0, 0.405, 0.42, 0.056, STEEL_DARK, sides=8)                                        # gorget
+    b.obox((0, 0.097, 0.31), (1, 0, 0), (0, 0, 1), (0, -1, 0), 0.1, 0.165, 0.004, STEEL)             # the pavise's steel rim
+
+
+def crossbow2_head(b):
+    b.box(-0.05, 0.05, -0.008, 0.05, 0.425, 0.49, MAIL, bevel=0.01)                                  # mail aventail
+
+
+def crossbow2_support(b):
+    b.rod((-0.11, -0.05, 0.32), (-0.03, -0.15, 0.3), 0.044, STEEL)                                   # steel vambrace
+
+
+def crossbow3_head(b):
+    b.cylinder(0, 0.0, 0.497, 0.503, 0.102, GOLD, sides=12)                                          # gold brim edge
+    b.prism([(0.0, 0.0), (0.05, 0.02), (0.085, 0.06), (0.07, 0.095), (0.02, 0.06)], (-0.01, 0.0, 0.53),
+            (0, 1, 0), (0, 0, 1), 0.02, FEATHER, back_cap=True)                                       # plume
+
+
+def crossbow3_body(b):
+    b.obox((0, 0.099, 0.31), (1, 0, 0), (0, 0, 1), (0, -1, 0), 0.03, 0.168, 0.004, GOLD)            # gold bands on the pavise
+    b.obox((0, 0.099, 0.4), (1, 0, 0), (0, 0, 1), (0, -1, 0), 0.1, 0.012, 0.004, GOLD)
+
+
+def crossbow3_bow(b):
+    nose = Vector((0.02, -0.3, 0.31))
+    for k in (-1, 1):
+        tip = nose + Vector((k * 0.14, 0.05, 0.0))
+        b.box(tip.x - 0.014, tip.x + 0.014, tip.y - 0.014, tip.y + 0.014, tip.z - 0.014, tip.z + 0.014, GOLD)
+
+
+def monk2_body(b):
+    # a short blue mantle over the shoulders, a silver chain, a book at the belt
+    b.frustum(0, 0, 0.372, 0.405, 0.1, 0.075, KINGDOM, sides=10)                                     # shoulders only:
+    b.frustum(0, 0, 0.367, 0.375, 0.102, 0.1, BLUE_DARK, sides=10, cap=False)                        # the sun stays seen
+    b.rod((-0.045, -0.06, 0.4), (0.0, -0.073, 0.36), 0.008, STEEL)
+    b.rod((0.045, -0.06, 0.4), (0.0, -0.073, 0.36), 0.008, STEEL)
+    b.box(0.065, 0.1, -0.03, 0.03, 0.17, 0.235, 'roof_red_dark', bevel=0.006)
+    b.box(0.07, 0.102, -0.025, 0.025, 0.2, 0.205, GOLD)
+
+
+def monk2_lantern(b):
+    b.box(-0.14, -0.08, -0.17, -0.11, 0.185, 0.2, STEEL)                                             # a steel frame
+    b.box(-0.14, -0.08, -0.17, -0.11, 0.11, 0.125, STEEL)
+
+
+def monk3_head(b):
+    b.frustum(0, 0.02, 0.5, 0.515, 0.064, 0.062, GOLD, sides=10, cap=False)                          # a gold circlet
+
+
+def monk3_body(b):
+    for k in (-1, 1):
+        b.obox((k * 0.04, -0.067, 0.335), (1, 0, 0), (0, 0, 1), (0, -1, 0), 0.004, 0.07, 0.004, GOLD)  # gold edges
+    b.frustum(0, 0, 0.03, 0.05, 0.112, 0.109, GOLD, sides=10, cap=False)                             # a gold hem
+
+
+def monk3_staff(b):
+    fx, fy = 0.115, -0.08
+    for k in range(14):                                                                              # a halo ring behind the sun
+        a0, a1 = 2 * math.pi * k / 14, 2 * math.pi * (k + 1) / 14
+        b.rod((fx + math.cos(a0) * 0.08, fy + 0.012, 0.75 + math.sin(a0) * 0.08),
+              (fx + math.cos(a1) * 0.08, fy + 0.012, 0.75 + math.sin(a1) * 0.08), 0.01, GOLD)
+
+
+def knight2_body(b):
+    lifted(S['manatarms2_body'], SEAT)(b)                                                            # cape and tassets
+    for k in (-1, 1):
+        b.box(k * 0.12 - 0.004, k * 0.12 + 0.004, -0.245, 0.265, 0.36 + LIFT, 0.375 + LIFT, STEEL)  # steel edge
+
+
+def knight2_horse_head(b):
+    for t in (0.2, 0.45, 0.7):                                                                        # crinet plates
+        p = Vector((0, -0.19, 0.3 + LIFT)).lerp(Vector((0, -0.33, 0.56 + LIFT)), t) + Vector((0, 0.03, 0.03))
+        b.obox(p, (1, 0, 0), (0, -0.48, 0.88), (0, 0.88, 0.48), 0.04, 0.04, 0.015, STEEL)
+
+
+def knight3_head(b):
+    lifted(S['manatarms3_head'], SEAT)(b)
+
+
+def knight3_shield(b):
+    lifted(S['manatarms3_shield'], SEAT)(b)
+
+
+def knight3_body(b):
+    b.box(-0.124, 0.124, -0.246, 0.266, 0.18 + LIFT, 0.215 + LIFT, GOLD)                             # a broad gold hem
+
+
+def knight3_horse_head(b):
+    c = Vector((0, -0.4, 0.56 + LIFT))
+    b.pyramid(c.x, c.y + 0.04, c.z + 0.06, 0.016, 0.016, c.z + 0.14, GOLD, sides=4)                  # a gold horn
+
+
+TRIMS = {
+    ("SoldierCrossbow", "Torso"): {2: crossbow2_body, 3: crossbow3_body},
+    ("SoldierCrossbow", "Head"): {2: crossbow2_head, 3: crossbow3_head},
+    ("SoldierCrossbow", "ArmShield"): {2: crossbow2_support},
+    ("SoldierCrossbow", "ArmSword"): {3: crossbow3_bow},
+    ("SoldierMonk", "Torso"): {2: monk2_body, 3: monk3_body},
+    ("SoldierMonk", "ArmShield"): {2: monk2_lantern},
+    ("SoldierMonk", "Head"): {3: monk3_head},
+    ("SoldierMonk", "ArmSword"): {3: monk3_staff},
+    ("SoldierKnight", "Torso"): {2: knight2_body, 3: knight3_body},
+    ("SoldierKnight", "HorseHead"): {2: knight2_horse_head, 3: knight3_horse_head},
+    ("SoldierKnight", "Head"): {3: knight3_head},
+    ("SoldierKnight", "ArmShield"): {3: knight3_shield},
+}
+
+
+def at_level(fig, part, fn, level):
+    trims = TRIMS.get((fig, part), {})
+
+    def build(b):
+        fn(b)
+        for lvl in range(2, level + 1):
+            if lvl in trims:
+                trims[lvl](b)
+    return build
+
+
 FIGURES = {
     "SoldierCrossbow": dict(scale=1.0, torso=crossbow_body, parts=legs(BLUE_DARK) + [
         ("Head", crossbow_head, (0.0, 0.0, 0.41)),
@@ -311,13 +439,15 @@ FIGURES = {
 }
 
 
-def build_figure(name, spec, mat):
+def build_figure(fig, spec, mat, level=1):
+    name = fig if level == 1 else f"{fig}-lvl{level}"
     coll = S['ensure_collection']()
-    root = S['install'](name, S['part_mesh'](name, spec['torso'], (0, 0, 0), mat, spec['scale']), None, Vector((0, 0, 0)), coll)
+    root = S['install'](name, S['part_mesh'](name, at_level(fig, "Torso", spec['torso'], level), (0, 0, 0), mat,
+                                             spec['scale']), None, Vector((0, 0, 0)), coll)
     tris = sum(len(p.vertices) - 2 for p in root.data.polygons)
     for part, fn, pivot in spec['parts']:
-        o = S['install'](f"{name}-{part}", S['part_mesh'](f"{name}-{part}", fn, pivot, mat, spec['scale']), root,
-                         Vector(pivot) * spec['scale'], coll)
+        o = S['install'](f"{name}-{part}", S['part_mesh'](f"{name}-{part}", at_level(fig, part, fn, level), pivot, mat,
+                                                          spec['scale']), root, Vector(pivot) * spec['scale'], coll)
         tris += sum(len(p.vertices) - 2 for p in o.data.polygons)
     print(f"MODEL {name}: {len(spec['parts']) + 1} parts, tris={tris}")
     return root
@@ -396,13 +526,17 @@ def main():
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
     for name, spec in FIGURES.items():
-        build_figure(name, spec, mat)
+        for level in (1, 2, 3):
+            build_figure(name, spec, mat, level)
     stage()
     row = ["SoldierSpearman", "SoldierArcher", "SoldierCrossbow", "SoldierManAtArms", "SoldierKnight", "SoldierMonk"]
     row = [n for n in row if n in bpy.data.objects]
     render_row(row, os.path.join(OUT, "0-lineup.png"), step=0.55)
     for i, n in enumerate(FIGURES):
         render_row([n], os.path.join(OUT, f"{i + 1}-{n}.png"), pitch_deg=38, yaw_deg=-30, w=800, h=800)
+    for n in FIGURES:
+        render_row([n, f"{n}-lvl2", f"{n}-lvl3"], os.path.join(OUT, f"5-levels-{n}.png"), pitch_deg=30, step=0.6,
+                   w=1500, h=800)
 
 
 main()
