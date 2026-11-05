@@ -170,6 +170,32 @@ User decisions:
 - **Widen the barracks' unit list for the player and for the bot** (new unit types). To discuss later; the botwaves tab then gets the new `unit` ids.
 - The Diplomacy window does not show how many buildings were razed; only the price drops.
 
+## Town templates (user, 2026-11-05) — IN DESIGN
+User decisions:
+- Each map seed gets a **random base template** from a set of ready ones, so the bot's town differs from map to map.
+- A **living town** instead of a fortress template: residential, food, craft, armoury and other districts. Not everything at max level: some districts are weaker, others stronger, so the player can raze the town **stage by stage**.
+- Razing a district changes **nothing but the ransom** (no district effects).
+- The ransom falls **by building level** (planned: per_building × level). Not built yet.
+- The bot island grows to about 55×55 cells.
+- Order: one template's scheme first, then B, C and D on the same pattern.
+
+Proposed templates:
+- **A «Кольцевой город»** — concentric rings of strength;
+- **B «Приморский»** — stretched along the shore, citadel at the far end;
+- **C «Город кварталов»** — districts walled separately;
+- **D «Цитадель и посад»** — small strong keep, big open posad.
+
+**Template A, draft v1:**
+- Files: `Design/bot_town_a.py` makes `bot_town_a.json` (editor format, with levels) and `bot_town_a.png`.
+- Rings:
+  - posad lvl 1-2, no wall;
+  - middle town lvl 2-3, wall lvl 3 at d=20;
+  - upper town lvl 3-4, wall lvl 4 at d=14;
+  - citadel lvl 5 with moat and FortifiedGates.
+- Districts by 8 sectors per ring (PLAN table), plus fillers (FILL).
+- About 940 pieces against 547 in v2: a mobile concern, to measure.
+- Not in the game yet; waiting for the user's review.
+
 ## Traps (war)
 - The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.
 - BotSide units and the orcs **do not fight each other** (both are the hostile side); the bot's towers skip BotSide.
