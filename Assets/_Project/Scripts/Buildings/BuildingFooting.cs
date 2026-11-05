@@ -28,6 +28,11 @@ namespace CityBuilder.Buildings
             var grid = GridManager.Instance;
             var map = MeshMapApplier.Instance;
             if (data == null || grid == null || map == null || Stone == null) return;
+            if (data.buildingName == Ships.ShipManager.ShipyardId)
+            {
+                SettleOnShore(building, grid, map);
+                return;
+            }
             if (data.isWaterCategory || data.keepSelectedAfterPlacement) return;
             var size = building.RotatedFootprint();
             var origin = grid.CellToWorld(building.OriginCell);
@@ -53,6 +58,31 @@ namespace CityBuilder.Buildings
             footing.transform.localScale = new Vector3(size.x * cell * Inset / parentScale.x, (top - bottom) / parentScale.y, size.y * cell * Inset / parentScale.z);
             var renderer = footing.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = Stone;
+        }
+
+        /// <summary>
+        /// The Shipyard stood in the air over a low beach (the user, 2026-11-05: it must stand in the
+        /// ground and the water): it comes down to the HIGHEST land under its plot, never below the sea.
+        /// A plot with no land above the sea keeps the town's height.
+        /// </summary>
+        private static void SettleOnShore(BuildingInstance building, GridManager grid, MeshMapApplier map)
+        {
+            var size = building.RotatedFootprint();
+            var origin = grid.CellToWorld(building.OriginCell);
+            var top = building.transform.position.y;
+            var sea = Ships.ShipManager.WaterLevel;
+            var highest = float.NegativeInfinity;
+            var cell = grid.CellSize;
+            for (var ix = 0; ix <= 4; ix++)
+            for (var iz = 0; iz <= 4; iz++)
+            {
+                var p = new Vector3(origin.x + size.x * cell * (0.05f + 0.225f * ix), top + RayFrom, origin.z + size.y * cell * (0.05f + 0.225f * iz));
+                if (map.TryRaycastGround(new Ray(p, Vector3.down), out var hit) && hit.point.y > sea) highest = Mathf.Max(highest, hit.point.y);
+            }
+            if (float.IsNegativeInfinity(highest) || top - highest < MinDrop) return;
+            var at = building.transform.position;
+            at.y = highest;
+            building.transform.position = at;
         }
     }
 }

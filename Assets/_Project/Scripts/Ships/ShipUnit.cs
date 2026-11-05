@@ -192,7 +192,20 @@ namespace CityBuilder.Ships
             if (unit == null || FreeSeats < ShipStats.PlacesOf(unit) || Aboard.Contains(unit)) return false;
             Aboard.Add(unit);
             unit.gameObject.SetActive(false);
+            DeselectIfAllAboard(unit.Group);
             return true;
+        }
+
+        /// <summary>
+        /// A selected group whose last member went aboard is no longer selected (the user, 2026-11-05):
+        /// it left its gold ring on the beach and kept the next unit from being picked.
+        /// </summary>
+        private static void DeselectIfAllAboard(Combat.ArmyGroup group)
+        {
+            var army = Combat.ArmyManager.Instance;
+            if (group == null || army == null || army.SelectedGroup != group) return;
+            foreach (var member in group.Members) if (member != null && member.gameObject.activeSelf) return;
+            army.SelectGroup(null);
         }
 
         /// <summary>Everyone aboard back on land at this point, in their groups' rings, the groups told to hold there.</summary>

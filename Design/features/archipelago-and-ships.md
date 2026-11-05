@@ -69,6 +69,11 @@
 - Orcs get ONE shipyard at the main base; destroyed, it is rebuilt after a sheet-set time.
 
 ## Placing the Shipyard (fixed 2026-10-29)
+- 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the
+  grid's one height; water buildings get no footing). `BuildingFooting.SettleOnShore` lowers it to the
+  HIGHEST land under its plot (never below the sea; a plot with no land keeps the height). And a selected
+  group whose last member boards a ship is deselected (`ShipUnit.DeselectIfAllAboard`) -- its gold ring
+  stayed on the beach and the next unit could not be picked. Not played yet.
 - The user could not put it down at all: a water building had to have EVERY cell in the shore-water
   zone (6 cells off land), and a 3x4 slipway in a band that narrow nearly always touched the beach.
   Now (`BuildingPlacer.CanPlaceSelectedBuilding`, every Water building): cells may be shore water OR

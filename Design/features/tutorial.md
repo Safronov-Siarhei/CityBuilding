@@ -34,6 +34,49 @@ attack -> destroy the portal -> victory.
 - **Camera focus steps** (gathering, boarding): the camera centres on the unit; the player follows
   it until he taps it; once picked, the camera centres on the target.
 
+## Rules from the user's first playtest (2026-11-05) -- NOT BUILT YET
+**HUD**
+- While the Town Hall is being placed: NOTHING but the hint panel and «Выберите место для Ратуши».
+  Hidden: resource bar, Day, army button, rotate and cancel buttons, people/inventory buttons, minimap.
+- After the hall: the top bar shows ONLY the people counter; the menu (exit) button stays. No Day, no
+  army button, no people/inventory buttons -- for the whole tutorial.
+- No rotate and no cancel button when placing ANY tutorial building.
+- No «!» (info) button on any building: buildings can be selected, their info is never shown.
+- The Shipyard's info panel is gone; only its ship icons stay.
+- No game notifications (e.g. «поселению нужен колодец»).
+- The King's portrait in the hint panel must stay inside its round frame (now it sticks out).
+**Guidance (highlight = yellow outline + blinking)**
+- Every build step: the build button (bottom centre) blinks; once opened, an ARROW points at the card
+  to build; the other cards are LOCKED. Same for Лачуга, Казарма, Верфь.
+- After the Лачуга: the camera zooms in 50% on a citizen and highlights him until tapped, then moves
+  to the tree and highlights it. Same for the boulder.
+- Wood and stone are gathered in 5 s.
+- After the stone: the camera returns to the normal height over the Town Hall (most of the island seen).
+- Shipyard built: the camera moves to it and it blinks until tapped.
+- Ship bought: highlight + focus the King, then the soldier, then the ship (highlighted) to tap.
+- The King wanders over the whole island (now he walks to the edge and stands there).
+**Orcs**
+- Their ship stands by the orcs' island from the start; 2 orcs walk out of the portal, board it, it
+  carries them to the player's island and sails off into the open sea.
+- Orcs are too weak (one Town Hall shot kills one): more HP.
+**Bugs seen**
+- A unit ordered onto a ship stays selected and leaves its yellow circle behind -> deselect on boarding
+  (blocks picking the soldier).
+- A school of fish takes the tap meant for the soldier; too many fish schools on the map.
+- The Shipyard floats above the ground: it must sit in the ground and the water.
+**Sheet:** every tutorial number goes to its OWN sheet tab `tutorial` (like `sandbox`) for the user to edit.
+**Answers (2026-11-05):**
+- After the hall the screen holds EXACTLY: the King's portrait top right, the main-menu button top left,
+  the people counter top centre, the build button bottom centre (+ the hint panel). No minimap.
+- «5 s» = the chopping/mining itself; walking stays normal.
+- Fish: fewer schools and not tappable -- in the TUTORIAL only.
+- Orc HP: a multiplier on the `tutorial` tab, starting at x3.
+**My assumptions (not asked):** the Barracks gets the same treatment as the Shipyard (camera + blink until
+tapped); the orc ship sails past the map edge and is gone; rotate/cancel/«!»/notifications are
+removed in the tutorial only.
+**The user (2026-11-05): EVERY change from this playtest is tutorial-only -- other modes are not touched**
+EXCEPT two bugs the user said to fix for the whole game: the deselect-on-boarding and the floating Shipyard.
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».
