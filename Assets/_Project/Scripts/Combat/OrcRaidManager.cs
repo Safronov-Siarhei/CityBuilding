@@ -310,6 +310,8 @@ namespace CityBuilder.Combat
             // portal to aim at, it just doesn't want the automatic waves interleaving with the
             // squads it spawns deliberately.
             if (RaidsSuspended) return;
+            // the tutorial's orcs are its script's (Tutorial.TutorialDirector): no raid clock
+            if (Tutorial.TutorialMode.IsActive) return;
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;

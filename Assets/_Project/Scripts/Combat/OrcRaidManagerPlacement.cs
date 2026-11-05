@@ -32,6 +32,7 @@ namespace CityBuilder.Combat
             if (Tutorial.TutorialMode.IsActive)
             {
                 _portalsPlaced = true;
+                SpawnTutorialIsland(grid);
                 return;
             }
 
@@ -392,6 +393,39 @@ namespace CityBuilder.Combat
 
         /// <summary>Builds one portal on a cell already known to be standable, and hands it back so the caller can set the health a save left it on.</summary>
         /// <param name="rotation">A fixed facing (a designed map's main base faces south); otherwise the portal faces the Town Hall.</param>
+        /// <summary>
+        /// The tutorial's orc island (the user, 2026-11-05): a portal, a level-1 watchtower and one orc on
+        /// guard, at the frame's spots (portal, orc_tower, orc_guard). The tower shoots softly
+        /// (tutorial_orc_damage_mult); the portal is the map's only one, so breaking it wins (GameOverManager).
+        /// </summary>
+        private void SpawnTutorialIsland(GridManager grid)
+        {
+            var map = Maps.MeshMapApplier.Instance;
+            if (map == null) return;
+            var soft = BalanceConfig.Instance.TutorialOrcDamageMult;
+            if (map.TryTutorialSpot("portal", out var portalAt))
+            {
+                var portal = SpawnPortal(grid, grid.WorldToCell(portalAt) - new Vector2Int(PortalFootprint.x / 2, PortalFootprint.y / 2));
+                portal.ShowActive(true);
+            }
+            if (map.TryTutorialSpot("orc_tower", out var towerAt))
+            {
+                towerAt.y = map.TryGetGroundHeight(towerAt, out var th) ? th : 0f;
+                var tower = SpawnLooseCampBuilding(OrcCampBuildingKind.Watchtower, 1, towerAt, 90f, new Vector2(2f, 2f));
+                tower.SoftenShots(soft);
+            }
+            if (map.TryTutorialSpot("orc_guard", out var guardAt))
+            {
+                guardAt.y = map.TryGetGroundHeight(guardAt, out var gh) ? gh : 0f;
+                var guard = SpawnOrcOfKind(guardAt, 1, OrcKind.Raider);
+                if (guard != null)
+                {
+                    guard.Toughen(1f, soft);
+                    guard.SetGuardPost(null, guardAt, 6f);
+                }
+            }
+        }
+
         private OrcPortal SpawnPortal(GridManager grid, Vector2Int cell, bool isMain = false, Quaternion? rotation = null)
         {
             var footprint = isMain ? MainPortalFootprint : PortalFootprint;

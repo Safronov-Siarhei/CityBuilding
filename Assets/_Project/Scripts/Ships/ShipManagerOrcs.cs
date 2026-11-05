@@ -222,6 +222,21 @@ namespace CityBuilder.Ships
         }
 
         /// <summary>
+        /// The tutorial's raid (the user, 2026-11-05): one orc barge with `count` orcs out of the sea at
+        /// `from` for the sea nearest `beach`; it puts them ashore there and is gone. Null when there is
+        /// no sea by either point.
+        /// </summary>
+        public ShipUnit LaunchTutorialBarge(Vector3 from, Vector3 beach, int count)
+        {
+            if (count <= 0 || !TrySampleSea(from, 12f, out var home) || !TryNearestSea(beach, 20f, out var landing)) return null;
+            var facing = Quaternion.LookRotation((landing - home).sqrMagnitude > 0.01f ? (landing - home).normalized : Vector3.forward);
+            var ship = SpawnOrcShip(ShipKind.OrcTransport, home, 0, facing, _nextOrcRaid++, count, 1, landing);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_fleet", count), EventSeverity.Danger, EventGlyph.Swords, null,
+                home, ship != null ? ship.transform : null));
+            return ship;
+        }
+
+        /// <summary>
         /// A raid by sea: `size` orcs of `level` in as many transports as they need, with
         /// orc_fleet_escorts war ships, out of the shipyard for the beach nearest the Town Hall.
         /// False (nothing sails) while the shipyard is broken or there is nowhere to land.

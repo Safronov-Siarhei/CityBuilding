@@ -48,7 +48,9 @@ namespace CityBuilder.UI
                     : "#over_victory_reason";
                 reasonLabel.text = Localization.Get(victory ? won : "#over_defeat_reason");
             }
-            if (continueButton != null) continueButton.SetActive(victory);
+            if (continueButton != null) continueButton.SetActive(victory && !Tutorial.TutorialMode.IsActive);
+            if (victory && Tutorial.TutorialMode.IsActive && reasonLabel != null)
+                reasonLabel.text = Localization.Format("#over_tutorial_reason", BalanceConfig.Instance.TutorialRewardCrystals);
 
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);

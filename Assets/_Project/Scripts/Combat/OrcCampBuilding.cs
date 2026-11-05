@@ -73,6 +73,9 @@ namespace CityBuilder.Combat
 
         /// <summary>What one of its shots does and how far it reaches; 0 for a building that does not shoot (ForeignBuildingCard).</summary>
         public int ShotDamage => _shotDamage;
+
+        /// <summary>Its shots times `factor` (the tutorial's soft tower, tutorial_orc_damage_mult).</summary>
+        public void SoftenShots(float factor) => _shotDamage = Mathf.Max(1, Mathf.RoundToInt(_shotDamage * factor));
         public float ShotRange => _shotRange;
 
         private GameObject _ruinModel;

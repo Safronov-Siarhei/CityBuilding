@@ -21,17 +21,19 @@ namespace CityBuilder.Tutorial
     /// on that unit until the player taps it, then on what it should be sent to.
     ///
     /// Built by SetupProjectHud (sprites only), the UI made here at run time; off outside the tutorial.
-    /// Stage 3: the steps up to the ship reaching the orcs' island. The orc landing, the fight on
-    /// their island, the portal and the reward come with stage 4 (the steps marked so).
+    /// The orcs (stage 4): after the soldier is hired an orc barge lands tutorial_raid_orcs orcs (just
+    /// «Отбейте набег»); their island (portal, level-1 tower, one guard) is laid by OrcRaidManager when
+    /// the Town Hall stands. Every orc hits at tutorial_orc_damage_mult. Breaking the portal wins the
+    /// map (GameOverManager: it is the only one); the win pays tutorial_reward_crystals once.
     /// </summary>
     public class TutorialDirector : MonoBehaviour
     {
         public enum Step
         {
             TownHall, Hovel, People, WoodPick, WoodSend, StonePick, StoneSend, Barracks, Soldier,
-            // stage 4: the orc landing (Raid) goes here
+            Raid,
             Shipyard, Ship, KingPick, KingBoard, SoldierPick, SoldierBoard, Sail,
-            // stage 4: landing, the guards, the tower, the portal, victory
+            Land, Guard, Tower, Portal,
             Done,
         }
 
@@ -60,6 +62,10 @@ namespace CityBuilder.Tutorial
         private bool _sent;                        // he took the order (then the step waits for him to finish)
         private SoldierUnit _unit;                 // the King / the soldier being boarded
         private ShipUnit _ship;
+        private ShipUnit _barge;                   // the orcs' raid
+        private float _raidAt = -1f;
+        private readonly HashSet<OrcUnit> _softened = new HashSet<OrcUnit>();
+        private const string RewardedKey = "tutorial.rewarded";
 
         private void Awake()
         {
@@ -73,6 +79,7 @@ namespace CityBuilder.Tutorial
 
         private void OnDestroy()
         {
+            if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded -= OnGameEnded;
             if (Instance == this) Instance = null;
         }
 
@@ -83,6 +90,17 @@ namespace CityBuilder.Tutorial
             _citizens = FindAnyObjectByType<CitizenSelector>();
             BuildPanel();
             Enter(Step.TownHall);
+            if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded += OnGameEnded;
+        }
+
+        /// <summary>The portal broken: the tutorial is won -- its crystals, once (the menu tag stays for the replays).</summary>
+        private void OnGameEnded(bool victory)
+        {
+            if (!victory) return;
+            Enter(Step.Done);
+            if (PlayerPrefs.GetInt(RewardedKey, 0) != 0) return;
+            PlayerPrefs.SetInt(RewardedKey, 1);
+            Wallet.Crystals += BalanceConfig.Instance.TutorialRewardCrystals;
         }
 
         private void Update()
@@ -97,7 +115,8 @@ namespace CityBuilder.Tutorial
             _checkIn -= Time.deltaTime;
             if (_checkIn > 0f) return;
             _checkIn = CheckEvery;
-            if (StepDone()) Enter(Current + 1);
+            Soften();
+            if (Current != Step.Done && StepDone()) Enter(Current + 1);
         }
 
         // ------------------------------------------------------------ the steps
@@ -113,6 +132,7 @@ namespace CityBuilder.Tutorial
                 _node = null;
             }
             if (step == Step.KingPick || step == Step.SoldierPick) _unit = null;
+            if (step == Step.Raid) LaunchRaid();
             Say("#tutorial_hint_" + step.ToString().ToLowerInvariant());
         }
 
@@ -135,7 +155,12 @@ namespace CityBuilder.Tutorial
                 case Step.KingBoard: return Aboard();
                 case Step.SoldierPick: return Held(TutorialRules.Soldier);
                 case Step.SoldierBoard: return Aboard();
+                case Step.Raid: return RaidBeaten();
                 case Step.Sail: return Arrived();
+                case Step.Land: return _ship == null || !_ship || _ship.Aboard.Count == 0;
+                case Step.Guard: return !AnyOrcAlive();
+                case Step.Tower: return !AnyTowerStanding();
+                case Step.Portal: return OrcPortal.All.Count == 0;
                 default: return false;
             }
         }
@@ -195,6 +220,54 @@ namespace CityBuilder.Tutorial
             var at = _ship.transform.position;
             at.y = 0f;
             return Vector3.Distance(at, landing) <= SailReach;
+        }
+
+        // ------------------------------------------------------------ the orcs
+
+        private void LaunchRaid()
+        {
+            var map = MeshMapApplier.Instance;
+            var ships = ShipManager.Instance;
+            if (map == null || ships == null || !map.TryTutorialSpot("orc_barge", out var from) || !map.TryTutorialSpot("orc_landing", out var beach)) return;
+            _barge = ships.LaunchTutorialBarge(from, beach, BalanceConfig.Instance.TutorialRaidOrcs);
+            _raidAt = Time.time;
+        }
+
+        /// <summary>The barge has landed its orcs and every one of them is down (a barge that never sailed: no raid to wait for).</summary>
+        private bool RaidBeaten()
+        {
+            if (_raidAt < 0f) return true;
+            if (_barge != null && _barge && _barge.OrcCargo > 0) return false;
+            foreach (var orc in OrcUnit.All)
+                if (orc != null && orc.CurrentHealth > 0 && !orc.IsGuard) return false;
+            return Time.time - _raidAt > 3f;
+        }
+
+        private static bool AnyOrcAlive()
+        {
+            foreach (var orc in OrcUnit.All)
+                if (orc != null && orc.CurrentHealth > 0) return true;
+            return false;
+        }
+
+        private static bool AnyTowerStanding()
+        {
+            foreach (var b in OrcCampBuilding.All)
+                if (b != null && b.Kind == OrcCampBuildingKind.Watchtower && b.CurrentHealth > 0) return true;
+            return false;
+        }
+
+        /// <summary>Every orc of the tutorial hits softly: visible, never deadly (the user, 2026-11-05).</summary>
+        private void Soften()
+        {
+            var mult = BalanceConfig.Instance.TutorialOrcDamageMult;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || _softened.Contains(orc)) continue;
+                _softened.Add(orc);
+                // the guard was softened when it was laid
+                if (!orc.IsGuard) orc.Toughen(1f, mult);
+            }
         }
 
         // ------------------------------------------------------------ the camera

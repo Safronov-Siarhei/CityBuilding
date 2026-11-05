@@ -572,6 +572,9 @@ namespace CityBuilder.Core
         [SerializeField] private float tutorialBuildSeconds = 5f;
         [SerializeField] private int tutorialStartPeople = 3;
         [SerializeField] private float tutorialKingHealBelow = 0.25f;
+        // the tutorial's orcs: their blows and the tower's shots times this; the barge's orcs
+        [SerializeField] private float tutorialOrcDamageMult = 0.2f;
+        [SerializeField] private int tutorialRaidOrcs = 2;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -1167,6 +1170,8 @@ namespace CityBuilder.Core
         public float TutorialBuildSeconds => tutorialBuildSeconds;
         public int TutorialStartPeople => tutorialStartPeople;
         public float TutorialKingHealBelow => tutorialKingHealBelow;
+        public float TutorialOrcDamageMult => tutorialOrcDamageMult;
+        public int TutorialRaidOrcs => tutorialRaidOrcs;
         public int WallWalkFromLevel => wallWalkFromLevel;
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
@@ -1996,6 +2001,8 @@ namespace CityBuilder.Core
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);
+            tutorialOrcDamageMult = Read(economy, "tutorial_orc_damage_mult", tutorialOrcDamageMult);
+            tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);
             wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
             for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);

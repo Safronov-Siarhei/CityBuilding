@@ -1,7 +1,7 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGES 1-3 BUILT (menu button,
-> the map, systems off; rules; step script + King's hints + camera focus), not seen, no tests; stages 4-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode ALL STAGES BUILT (menu button,
+> the map, systems off; rules; step script + King's hints + camera focus; orcs, portal win, +25 once), NOT PLAYED by the user; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -123,9 +123,22 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
    `MeshMapApplier.TryTutorialSpot(name)` gives the frame's spots in the world.
    Not yet: the step order skips the orc landing (stage 4 adds Raid after Soldier); no arrow/highlight on
    the build menu; the camera fights a player who pans during a focus step (by design: it re-centres).
-4. Orcs: the landing barge with 2 orcs (soft hits), their island: portal, level-1 tower, 1 orc; win
-   on the portal; victory screen pays the crystals (`Wallet.Crystals`).
-5. Texts (`#tutorial_*`), the numbers (a `tutorial` sheet tab or economy keys), tests.
+4. **BUILT 2026-11-05, not seen.** The orc island is laid when the Town Hall stands
+   (`OrcRaidManager.SpawnTutorialIsland`, from `TrySpawnPortalsNearTownHall`): a portal (not main) at the
+   `portal` spot, a level-1 `Watchtower` (`SpawnLooseCampBuilding`) at `orc_tower` with its shots
+   `SoftenShots(tutorial_orc_damage_mult 0.2)`, one Raider on guard (`SetGuardPost(null, spot, 6)`) at
+   `orc_guard`. The raid clock never runs in the tutorial. Step Raid (after Soldier):
+   `ShipManager.LaunchTutorialBarge` -- one orc transport from the `orc_barge` sea to the sea by
+   `orc_landing` with `tutorial_raid_orcs` 2 orcs; it lands them and is removed (no orc shipyard = its
+   home is its landing). Every orc's blows x0.2 (`TutorialDirector.Soften` -> `OrcUnit.Toughen(1, mult)`).
+   After Sail: Land (the transport empty) -> Guard (no orc alive) -> Tower (no watchtower) -> Portal ->
+   Done. Breaking the portal is the map's win (`GameOverManager`, the only portal); the victory panel
+   says `#over_tutorial_reason` with the reward and has no «play on»; the reward
+   (`Wallet.Crystals += tutorial_reward_crystals`) is paid ONCE (`PlayerPrefs tutorial.rewarded`), replays
+   pay nothing. Test: PlayMode `TutorialTests` (map, no bot/main base/fog, the rules, the orc island:
+   1 portal, 1 tower, 1 guard; the script past TownHall).
+5. Texts and numbers are in (economy `tutorial_*`, localization `#tutorial_hint_*`, `#mode_tutorial`,
+   `#over_tutorial_reason`). Left: whatever the user finds playing it; a skip button; first-launch start.
 
 ## Open
 - The soldier: the user said «гвардеец или что-то такое» -- read as ЛАТНИК (ManAtArms, the armoured
