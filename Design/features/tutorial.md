@@ -66,7 +66,8 @@ player_landing / shipyard / orc_barge, forest + stones from the plan's points (3
 round the Town Hall zone (r 4.5) and the portal/tower/guard; `-spots.csv` carries every plan spot. ~504 land cells.
 **More sea (the user, 2026-11-05):** the plan got a 10-cell margin (map 84 x 64, frame 90), 10 small
 grassy islets (`islets`) and 12 bare sea rocks (`sea_rocks`: stone spires up to ~2.5 m, all stony
-ground) on the open water, clear of the ship routes. Now ~508 buildable cells, 89% water.
+ground) on the open water, clear of the ship routes. The sea is SOLID here (deep water drawn as `water_deep`;
+library islands leave it to the game's Sea layer) -- the user saw holes otherwise. Now ~508 buildable cells, 89% water.
 Not exported yet (export + the game's tutorial mode are the next step).
 
 ## To build (plan)

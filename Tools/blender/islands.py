@@ -771,6 +771,8 @@ def build_water(verts):
                         col = "water_shallow"
                     elif c[6] < 0:
                         col = "water"
+                    elif TPLAN:
+                        col = "water_deep"           # the tutorial is a whole map: its sea is solid
                     else:
                         # the deep sea is the game's own layer under every island (ArchipelagoMeshes.Sea):
                         # an island brings only its coastal bands, so two islands' frames may overlap
