@@ -264,9 +264,16 @@ def knight_lance_arm(b):
     b.rod(butt, tip, 0.024, WOOD_LIGHT)
     b.pyramid(tip.x, tip.y, tip.z - 0.015, 0.014, 0.014, tip.z + 0.015, STEEL, sides=4)
     b.rod(tip, tip + Vector((0, -0.06, 0.005)), 0.02, STEEL)
-    p0 = tip + Vector((0, 0.08, 0.0))
-    b.obox(p0 + Vector((0, 0.07, -0.03)), (0, 1, 0), (0, 0, 1), (1, 0, 0), 0.07, 0.03, 0.004, KINGDOM)
-    b.obox(p0 + Vector((0, 0.07, -0.03)), (0, 1, 0), (0, 0, 1), (1, 0, 0), 0.07, 0.006, 0.005, GOLD)
+    # the pennant: a blue triangle hanging from the shaft just behind the point, lying along the
+    # lance (not across it), a gold edge where it is laced to the shaft
+    back = (butt - tip).normalized()
+    up = (Vector((0, 0, 1)) - back * back.z).normalized()
+    side = back.cross(up)
+    root = tip + back * 0.07 - up * 0.012
+    pts = [(0.0, 0.0), (0.2, 0.0), (0.13, -0.085)]
+    b.prism(pts, root - side * 0.003, back, up, 0.006, KINGDOM, back_cap=True)
+    b.prism([(0.0, 0.0), (0.2, 0.0), (0.2, -0.012), (0.0, -0.012)], root + up * 0.004 - side * 0.0035, back, up, 0.007,
+            GOLD, back_cap=True)
 
 
 FIGURES = {
