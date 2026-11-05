@@ -42,6 +42,21 @@ SPOTS = {
 FOREST = [(10.5, 23), (10, 26), (9.5, 28.5), (11.5, 30.5), (10.5, 19.5), (11, 17), (12.5, 33)]   # trees (west)
 ROCKS = [(14, 12), (12, 13.5), (16, 12.5), (18, 13)]                                       # stones (south-west)
 
+# turned 180 degrees (the user, 2026-11-05): the player's island EAST, the orcs' WEST, the orc landing
+# north-west of the player's island -- the layout above is kept as drawn first and turned here
+def _turn(x, y):
+    return W - x, H - y
+
+
+PLAYER_BLOBS = [(*_turn(x, y), r) for x, y, r in PLAYER_BLOBS]
+ORC_BLOBS = [(*_turn(x, y), r) for x, y, r in ORC_BLOBS]
+for _s in SPOTS.values():
+    _s["at"] = _turn(*_s["at"])
+FOREST = [_turn(x, y) for x, y in FOREST]
+ROCKS = [_turn(x, y) for x, y in ROCKS]
+ROUTES = [((46, 15), (31, 9.5), "orc"), ((31, 9.5), (27, 11.5), "orc"), ((34, 21), (42, 22), "ours")]
+ROUTES = [(_turn(*a), _turn(*b), k) for a, b, k in ROUTES]
+
 
 def wobble(x, y, seed):
     return 0.6 * math.sin(x * 0.7 + seed) * math.cos(y * 0.6 - seed)
@@ -104,11 +119,10 @@ def main():
         for s in (-0.5, 0.5):
             d.line([bx, by, bx - 14 * math.cos(ang + s), by - 14 * math.sin(ang + s)], fill=colour, width=3)
 
-    arrow((46, 15), (31, 9.5), (220, 70, 60))
-    arrow((31, 9.5), (27, 11.5), (220, 70, 60))
-    arrow((34, 21), (42, 22), (60, 90, 200))
+    for a, b, kind in ROUTES:
+        arrow(a, b, (220, 70, 60) if kind == "orc" else (60, 90, 200))
 
-    d.text((8, 8), "Обучение: остров игрока (запад) и остров орков (восток). Карта 64 x 44 клетки, сетка 4 клетки.",
+    d.text((8, 8), "Обучение: остров игрока (восток) и остров орков (запад). Карта 64 x 44 клетки, сетка 4 клетки.",
            font=font, fill=(255, 255, 255))
     d.text((8, 28), "Красное — путь орочьего баркаса к высадке; синее — наш корабль от Верфи к острову орков.",
            font=small, fill=(255, 255, 255))

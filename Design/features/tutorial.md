@@ -54,9 +54,9 @@ attack -> destroy the portal -> victory.
 
 ## The map (scheme for approval, 2026-11-05)
 `Tools/blender/tutorial_plan.py` -> `tutorial-plan.json` (shapes + spots, for the Blender build) and
-`tutorial-plan.png`. 64 x 44 cells: the player's island west (~26 x 26, Town Hall zone 9x9 in the
-middle, forest west, stones south-west, the Shipyard on the east shore facing the strait, the orc
-landing beach south-east), the orcs' island east (~16 x 16: landing beach west, tower, guard,
+`tutorial-plan.png`. 64 x 44 cells: TURNED 180° at the user's word: the player's island EAST (~26 x 26, Town Hall zone 9x9 in the
+middle, forest east, stones north-east, the Shipyard on the west shore facing the strait, the orc
+landing beach north-west), the orcs' island WEST (~16 x 16: landing beach east, tower, guard,
 portal). Strait ~10 cells. NOT approved yet.
 
 ## To build (plan)
