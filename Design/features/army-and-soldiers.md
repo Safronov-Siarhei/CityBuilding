@@ -115,7 +115,7 @@ brim, breastplate over the blue gambeson, blue pavise on the back, crossbow at t
 blue scapular and hood, gold sun on the chest and on the staff, a lit lantern; 1034) and SoldierKnight (the man-at-arms seated
 on a white horse in a blue caparison with gold crosses, steel chanfron, couched lance with a pennant, feather plume; parts
 HorseHead + LegFL/FR/BL/BR for the gallop; 1566), and a lineup with the spearman, archer and man-at-arms.
-Level 2-3 looks (2026-11-05, drafts for approval; TRIMS in the same script, `<Name>-lvl2/-lvl3`): crossbowman +pauldrons,
+Level 2-3 looks (2026-11-05, APPROVED by the user; TRIMS in the same script, `<Name>-lvl2/-lvl3`): crossbowman +pauldrons,
 gorget, mail aventail, steel vambrace, steel pavise rim / +gold brim, red plume, gold pavise bands, gold bow tips (1142/1232);
 monk +blue shoulder mantle (shoulders only, the sun stays seen), silver chain, red book, steel lantern / +gold circlet, gold
 scapular edges and hem, a gold halo ring behind the staff's sun (1206/1434); knight +rider's cape and tassets, steel caparison
