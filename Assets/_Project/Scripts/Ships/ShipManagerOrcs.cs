@@ -279,14 +279,15 @@ namespace CityBuilder.Ships
                 var side = (k % 2 == 0 ? 1f : -1f) * EscortSpread * (1 + k / 2);
                 SpawnOrcShip(ShipKind.BotWar, home, n, facing, raid, 0, level, landing + facing * Vector3.right * side);
             }
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_bot_fleet", size), EventSeverity.Danger, EventGlyph.Swords, null,
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_bot_fleet", size), EventSeverity.Danger, EventGlyph.Swords, ShipyardId,
                 home, first != null ? first.transform : null));
             return raid;
         }
 
         private ShipUnit SpawnOrcShip(ShipKind kind, Vector3 home, int index, Quaternion facing, int raid, int cargo, int level, Vector3 destination)
         {
-            var at = home + facing * new Vector3((index % 3 - 1) * 3.5f, 0f, -(index / 3) * 5f);
+            // in rows three abreast, far enough apart that the hulls do not overlap (the user, 2026-11-05)
+            var at = home + facing * new Vector3((index % 3 - 1) * 6f, 0f, -(index / 3) * 9f);
             if (!TrySampleSea(at, 6f, out at)) at = home;
             var ship = Spawn(kind, at, facing, ShipStats.MaxHealth(kind));
             ship.OrcRaid = raid;
@@ -356,7 +357,7 @@ namespace CityBuilder.Ships
                 var leader = ship.IsBotShip ? Bot.BotWar.Land(ship.OrcRaid, beach, ship.OrcCargo)
                     : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
-                    EventSeverity.Danger, EventGlyph.Swords, null, beach, leader != null ? leader.transform : null));
+                    EventSeverity.Danger, EventGlyph.Swords, ship.IsBotShip ? ShipyardId : null, beach, leader != null ? leader.transform : null));
             }
             ship.OrcCargo = 0;
             ship.OrcHomeward = true;

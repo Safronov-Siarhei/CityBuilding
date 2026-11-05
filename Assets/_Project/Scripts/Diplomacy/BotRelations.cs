@@ -32,6 +32,14 @@ namespace CityBuilder.Diplomacy
         /// <summary>Wars declared on the bot so far, this one counted: each new war starts its raids bot_war_start_wave_step waves further on (the user, 2026-11-05).</summary>
         public static int WarsFought { get; private set; }
 
+        /// <summary>The waves the bot has sent in this war: read off the war's clock as BotWar raids by it (first at bot_war_raid_first_sec, then every bot_war_raid_interval_sec).</summary>
+        public static int WavesSent()
+        {
+            var c = BalanceConfig.Instance;
+            if (c == null || Stance != BotStance.War || WarSeconds < c.BotWarRaidFirstSeconds) return 0;
+            return 1 + Mathf.FloorToInt((WarSeconds - c.BotWarRaidFirstSeconds) / Mathf.Max(30f, c.BotWarRaidIntervalSeconds));
+        }
+
         /// <summary>The town's army razed a bot building of `level` at war (BotWarTarget).</summary>
         public static void NoteRazed(int level)
         {
@@ -76,15 +84,15 @@ namespace CityBuilder.Diplomacy
         public static void TickWar(float deltaSeconds)
         {
             if (Stance != BotStance.War) return;
-            var before = Mathf.FloorToInt(WarSeconds / 60f);
+            var before = WavesSent();
             WarSeconds += deltaSeconds;
-            // the ransom grows a step a minute: the window redraws its price
-            if (Mathf.FloorToInt(WarSeconds / 60f) != before) Changed?.Invoke();
+            // the ransom grows a step a wave: the window redraws its price
+            if (WavesSent() != before) Changed?.Invoke();
         }
 
         /// <summary>
         /// The ransom that ends the war (the user, 2026-11-04): bot_war_contribution_base coins plus
-        /// bot_war_contribution_per_min for every whole minute of war, less
+        /// bot_war_contribution_per_wave for every wave the bot has sent (the user, 2026-11-05: per wave, not per minute), less
         /// bot_war_contribution_per_building for every bot building the army razed (never below
         /// bot_war_contribution_min, the user 2026-11-05), less
         /// bot_war_contribution_hall_discount for every Diplomacy Hall level above the first.
@@ -93,7 +101,7 @@ namespace CityBuilder.Diplomacy
         {
             var c = BalanceConfig.Instance;
             if (c == null) return 0;
-            var coins = c.BotWarContributionBase + c.BotWarContributionPerMinute * Mathf.FloorToInt(WarSeconds / 60f)
+            var coins = c.BotWarContributionBase + c.BotWarContributionPerWave * WavesSent()
                         - c.BotWarContributionPerBuilding * WarRazed;
             coins = Mathf.Max(c.BotWarContributionMin, coins);
             var discount = Mathf.Clamp01(c.BotWarContributionHallDiscount * Mathf.Max(0, hallLevel - 1));

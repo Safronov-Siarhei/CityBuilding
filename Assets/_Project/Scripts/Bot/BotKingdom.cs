@@ -147,23 +147,25 @@ namespace CityBuilder.Bot
         /// <summary>The template standing on this map (its asset's name), for the cheats and the tests.</summary>
         public string TemplateName { get; private set; }
 
-        /// <summary>The King's round: four points about the Town Hall, offsets from the town's centre (blueprint cells, y south).</summary>
+        /// <summary>The King's round: a loop of points about the Town Hall, offsets from the town's centre (blueprint cells, y south).</summary>
         public Vector2Int[] KingRing { get; private set; } = new Vector2Int[0];
 
-        /// <summary>The patrols' avenues: each a pair of points along a street out of the hall, offsets from the town's centre.</summary>
-        public Vector2Int[][] Avenues { get; private set; } = new Vector2Int[0][];
+        /// <summary>
+        /// The patrols' rounds (the user, 2026-11-05: natural routes through the town, not back and
+        /// forth): loops round the town at three depths -- the inner town, the middle town, the
+        /// outskirts -- each walked one way and the other, so the patrols cross and meet.
+        /// </summary>
+        public Vector2Int[][] PatrolRoutes { get; private set; } = new Vector2Int[0][];
 
         private int _half = 17;
+        private readonly HashSet<Vector2Int> _blocked = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> _roads = new HashSet<Vector2Int>();
 
-        /// <summary>
-        /// The garrison's routes, read off the template: the King round four open points 9-14 cells
-        /// from the hall; a patrol along each of the four ways out of it that has open ground 11+
-        /// cells out (preferring the street), up to 8 cells long.
-        /// </summary>
+        /// <summary>The garrison's rounds, read off the template (Routes): the King's loop, then the patrols' loops.</summary>
         private void Routes(Blueprint plan, Vector2Int anchor)
         {
-            var blocked = new HashSet<Vector2Int>();
-            var roads = new HashSet<Vector2Int>();
+            _blocked.Clear();
+            _roads.Clear();
             var hall = Vector2Int.zero;
             foreach (var piece in plan.buildings)
             {
@@ -172,43 +174,78 @@ namespace CityBuilder.Bot
                 for (var y = 0; y < piece.h; y++)
                 {
                     var c = new Vector2Int(piece.x + x - anchor.x, piece.y + y - anchor.y);
-                    if (open) roads.Add(c);
-                    else blocked.Add(c);
+                    if (open) _roads.Add(c);
+                    else _blocked.Add(c);
                 }
                 if (piece.id == BuildingIds.TownHall) hall = new Vector2Int(piece.x + piece.w / 2 - anchor.x, piece.y + piece.h / 2 - anchor.y);
             }
-            var limit = _half - 1;
-            bool Open(Vector2Int c) => Mathf.Abs(c.x) <= limit && Mathf.Abs(c.y) <= limit && !blocked.Contains(c);
-            var dirs = new[] { new Vector2Int(0, -1), new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(-1, 0) };
-            var ring = new List<Vector2Int>();
-            foreach (var d in dirs)
-                for (var k = 9; k <= 14; k++)
-                    if (Open(hall + d * k)) { ring.Add(hall + d * k); break; }
-            if (ring.Count == 0) ring.Add(hall + new Vector2Int(0, 4));
-            KingRing = ring.ToArray();
-            var avenues = new List<Vector2Int[]>();
-            foreach (var d in dirs)
+            var king = Loop(hall, 10, 5);
+            KingRing = king.Length > 0 ? king : new[] { hall + new Vector2Int(0, 4) };
+            var loops = new List<Vector2Int[]>();
+            foreach (var depth in new[] { 0.37f, 0.63f, 0.89f })
             {
-                Vector2Int? first = null;
-                for (var k = 11; k <= 2 * _half; k++)
-                {
-                    var c = hall + d * k;
-                    if (Mathf.Abs(c.x) > limit || Mathf.Abs(c.y) > limit) break;
-                    if (!Open(c)) continue;
-                    if (first == null) first = c;
-                    if (roads.Contains(c)) { first = c; break; }
-                }
-                if (!first.HasValue) continue;
-                var end = first.Value;
-                for (var k = 1; k <= 8; k++)
-                {
-                    var c = first.Value + d * k;
-                    if (!Open(c)) break;
-                    end = c;
-                }
-                if (end != first.Value) avenues.Add(new[] { first.Value, end });
+                var loop = Loop(Vector2Int.zero, Mathf.RoundToInt(_half * depth), 5);
+                if (loop.Length >= 4) loops.Add(loop);
             }
-            Avenues = avenues.ToArray();
+            var routes = new List<Vector2Int[]>();
+            foreach (var loop in loops) routes.Add(loop);
+            foreach (var loop in loops)
+            {
+                // the other way round, from the far side
+                var back = new Vector2Int[loop.Length];
+                for (var k = 0; k < loop.Length; k++) back[k] = loop[(loop.Length / 2 - k + loop.Length * 2) % loop.Length];
+                routes.Add(back);
+            }
+            PatrolRoutes = routes.ToArray();
+        }
+
+        private bool OpenCell(Vector2Int c) => Mathf.Abs(c.x) <= _half - 1 && Mathf.Abs(c.y) <= _half - 1 && !_blocked.Contains(c);
+
+        /// <summary>Points every `step` cells round the square of `radius` about `centre`, clockwise, each moved to open ground (a street first) within 2 cells; the unreachable ones left out.</summary>
+        private Vector2Int[] Loop(Vector2Int centre, int radius, int step)
+        {
+            var points = new List<Vector2Int>();
+            if (radius < 2) return points.ToArray();
+            var ring = new List<Vector2Int>();
+            for (var x = -radius; x < radius; x++) ring.Add(new Vector2Int(x, -radius));
+            for (var y = -radius; y < radius; y++) ring.Add(new Vector2Int(radius, y));
+            for (var x = radius; x > -radius; x--) ring.Add(new Vector2Int(x, radius));
+            for (var y = radius; y > -radius; y--) ring.Add(new Vector2Int(-radius, y));
+            for (var k = 0; k < ring.Count; k += step)
+            {
+                if (!Snap(centre + ring[k], out var at)) continue;
+                if (points.Count > 0 && (at - points[points.Count - 1]).sqrMagnitude < 9) continue;
+                points.Add(at);
+            }
+            return points.ToArray();
+        }
+
+        private bool Snap(Vector2Int c, out Vector2Int at)
+        {
+            at = c;
+            for (var r = 0; r <= 2; r++)
+            {
+                Vector2Int? open = null;
+                for (var dx = -r; dx <= r; dx++)
+                for (var dy = -r; dy <= r; dy++)
+                {
+                    if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) != r) continue;
+                    var p = c + new Vector2Int(dx, dy);
+                    if (!OpenCell(p)) continue;
+                    if (_roads.Contains(p)) { at = p; return true; }
+                    open ??= p;
+                }
+                if (open.HasValue) { at = open.Value; return true; }
+            }
+            return false;
+        }
+
+        /// <summary>The tops of the bot's standing walk-walls (lvl 3+ fence), in the world: where its archers stand at war.</summary>
+        public void WallTops(List<Vector3> into)
+        {
+            foreach (var slot in _slots)
+                if (slot.instance != null && slot.data.connectsToFences && !slot.data.isGate && slot.level >= 3 && slot.data.footprintSize == Vector2Int.one)
+                    into.Add(slot.instance.transform.position + Vector3.up * WallWalk.HeightFor(slot.level));
         }
 
         /// <summary>The map cell of a blueprint offset from the town's centre (x right, y down = south), turned as the castle is.</summary>

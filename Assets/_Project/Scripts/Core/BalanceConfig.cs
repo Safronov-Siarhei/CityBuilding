@@ -461,7 +461,7 @@ namespace CityBuilder.Core
         [SerializeField] private int botWarEscorts = 2;
         [SerializeField] private float botWarGuardRadiusCells = 6.0f;
         [SerializeField] private int botWarContributionBase = 200;
-        [SerializeField] private int botWarContributionPerMinute = 20;
+        [SerializeField] private int botWarContributionPerWave = 100;
         [SerializeField] private float botWarContributionHallDiscount = 0.1f;
         [SerializeField] private int botWarCoinsPerCrystal = 100;
         [SerializeField] private int botWarContributionPerBuilding = 5;
@@ -836,7 +836,6 @@ namespace CityBuilder.Core
             "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
             "drowned_rat", "dwarf_skeleton", "stone_guard", "drowned_dwarf", "eel", "forge_spirit", "dwarf_king", "canal_serpent",
             "fire_imp", "lava_hound", "salamander", "obsidian_golem", "ember_cultist", "magma_spawn", "dragon", "lava_titan",
-            "bot_soldier", "bot_archer",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -879,8 +878,6 @@ namespace CityBuilder.Core
             new MonsterStats { id = "dragon", maxHealth = 3200, attackDamage = 45, attackIntervalSeconds = 2.2f, attackRange = 2.6f, walkSpeed = 1.2f },
             new MonsterStats { id = "lava_titan", maxHealth = 3000, attackDamage = 42, attackIntervalSeconds = 2.4f, attackRange = 2.2f, walkSpeed = 0.8f },
             // the bot kingdom's soldiers at war (Bot/BotWar)
-            new MonsterStats { id = "bot_soldier", maxHealth = 90, attackDamage = 9, attackIntervalSeconds = 1.2f, attackRange = 0.8f, walkSpeed = 1.6f },
-            new MonsterStats { id = "bot_archer", maxHealth = 60, attackDamage = 7, attackIntervalSeconds = 1.6f, attackRange = 5f, walkSpeed = 1.5f },
         };
         [SerializeField] private int invasionCamp1Monsters = 3;
         [SerializeField] private int invasionCamp2Monsters = 2;
@@ -1132,7 +1129,7 @@ namespace CityBuilder.Core
         public int BotWarEscorts => botWarEscorts;
         public float BotWarGuardRadiusCells => botWarGuardRadiusCells;
         public int BotWarContributionBase => botWarContributionBase;
-        public int BotWarContributionPerMinute => botWarContributionPerMinute;
+        public int BotWarContributionPerWave => botWarContributionPerWave;
         public float BotWarContributionHallDiscount => botWarContributionHallDiscount;
         public int BotWarCoinsPerCrystal => botWarCoinsPerCrystal;
         public int BotWarContributionPerBuilding => botWarContributionPerBuilding;
@@ -1887,7 +1884,7 @@ namespace CityBuilder.Core
             botWarEscorts = Mathf.RoundToInt(Read(economy, "bot_war_escorts", botWarEscorts));
             botWarGuardRadiusCells = Read(economy, "bot_war_guard_radius_cells", botWarGuardRadiusCells);
             botWarContributionBase = Mathf.RoundToInt(Read(economy, "bot_war_contribution_base", botWarContributionBase));
-            botWarContributionPerMinute = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_min", botWarContributionPerMinute));
+            botWarContributionPerWave = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_wave", botWarContributionPerWave));
             botWarContributionHallDiscount = Read(economy, "bot_war_contribution_hall_discount", botWarContributionHallDiscount);
             botWarCoinsPerCrystal = Mathf.RoundToInt(Read(economy, "bot_war_coins_per_crystal", botWarCoinsPerCrystal));
             botWarContributionPerBuilding = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_building", botWarContributionPerBuilding));

@@ -226,6 +226,25 @@ Proposed templates:
 - **Ransom by level:** `BotRelations.WarRazed` counts LEVELS (`NoteRazed(level)`). The key comment was updated in the CSV and the sheet.
 - Trap: the bot test's numbers (>500 standing, a Manor) were written for v2; check them in the next general run.
 
+## Playtest 2026-11-05 fixes (built, untested, not seen)
+- **Patrols on loops:** `BotKingdom.PatrolRoutes` holds loops round the town at 37/63/89 % of its half-width, each walked both ways (6 routes). Points come every 5 cells, snapped to open ground or a street. The King gets a loop of radius 10 round the hall.
+  - Garrison: 6 patrols × 4 men and 24 archers (sheet).
+- **War guards:** they walk the same loops (BotWar ticks `MovePost` to the next point). The archers are PERCHED on wall tops (`OrcUnit.Perch`: never walks, shoots soldiers within range + `wall_range_bonus_cells`; `BotKingdom.WallTops`).
+- **Bot unit strength (user's question):** a bot soldier of level N now has the PLAYER's level-N stats (`OrcUnit.PlayerTwinOf`: man-at-arms / archer rows of the units tab). Before, a lvl-2 bot soldier was mon_bot ×2, 4× a player's lvl-1. The mon_bot_* rows were deleted from the CSV and the sheet.
+- **Ransom per wave:** `bot_war_contribution_per_wave` 100 replaces per_min. `BotRelations.WavesSent()` is read off the war clock, so nothing new is saved.
+- **Ships:**
+  - `ShipUnit.KeepApart`: ships closer than 2.2 × the sum of their beams push apart, onto sea only.
+  - Fleet spawn spacing is 6/9 m.
+  - Wake: `Ships/ShipWake.cs`, a pooled V of foam ovals from the bow.
+- **Fleet notice:** the bot fleet and landing notices carry the Shipyard picture, so they no longer merge into the orcs' swords icon in the feed.
+- **Tap any fighter:**
+  - `BuildingSelector.TryShowFighter` finds the nearest soldier or orc within a finger's width on screen and opens `ForeignBuildingCard.Show(SoldierUnit/OrcUnit)`;
+  - the card shows owner, level, health and damage;
+  - `BotGarrison.Owns` tells the bot's garrison soldiers from the player's;
+  - new keys: #foreign_owner_player, #foreign_owner_monsters, #unit_card_health.
+- **Fallen hero's bar:** `Hero.Fall` hides it.
+- **Tax House icon:** rendered with `render_icons.py TaxHouse1-lvl1`.
+
 ## Traps (war)
 - The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.
 - BotSide units and the orcs **do not fight each other** (both are the hostile side); the bot's towers skip BotSide.

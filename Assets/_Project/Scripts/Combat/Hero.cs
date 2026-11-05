@@ -342,6 +342,8 @@ namespace CityBuilder.Combat
             // (the user, 2026-10-23: the Queen gave her life and just vanished on her feet)
             if (!drowned) OrcCorpse.LeaveCopy(transform, null);
             SetVisible(false);
+            // his bar goes with him (the user, 2026-11-05: the King died and his bar hung in the air)
+            if (_unit.HealthBar != null) _unit.HealthBar.gameObject.SetActive(false);
             StopRevealing();
             Changed?.Invoke();
         }

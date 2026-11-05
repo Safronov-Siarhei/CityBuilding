@@ -203,6 +203,9 @@ namespace CityBuilder.Combat
         /// <summary>The bot kingdom's soldiers at war (the user, 2026-11-04): the town's enemies, never the bot's.</summary>
         public static bool IsBotSide(OrcKind kind) => kind == OrcKind.BotSoldier || kind == OrcKind.BotArcher;
 
+        /// <summary>The player's unit a bot soldier is (its units-tab row): the man-at-arms, the archer.</summary>
+        public static string PlayerTwinOf(OrcKind kind) => kind == OrcKind.BotArcher ? "archer" : "manatarms";
+
         /// <summary>One of the bot kingdom's soldiers: it leaves the bot's own buildings alone.</summary>
         public bool BotSide => IsBotSide(Kind);
 
@@ -312,7 +315,10 @@ namespace CityBuilder.Combat
         private void LoadStats(OrcKind kind)
         {
             Kind = kind;
-            var stats = IsMonster(kind) ? BalanceConfig.Instance.MonsterUnit(SheetIdOf(kind)) : BalanceConfig.Instance.Unit(SheetIdOf(kind));
+            // the bot kingdom's soldiers ARE the player's soldiers in straw (the user, 2026-11-05: a bot
+            // lvl-2 man was far stronger than the player's): the units tab's rows and per-level columns
+            var stats = IsBotSide(kind) ? BalanceConfig.Instance.Unit(PlayerTwinOf(kind))
+                : IsMonster(kind) ? BalanceConfig.Instance.MonsterUnit(SheetIdOf(kind)) : BalanceConfig.Instance.Unit(SheetIdOf(kind));
             _buildingAttackRange = stats.attackRangeStructures;
             _soldierAttackRange = stats.attackRangeUnits;
             _soldierAggroRadius = stats.engageRadius;
@@ -336,6 +342,17 @@ namespace CityBuilder.Combat
         {
             if (kind != Kind) LoadStats(kind);
             Level = Mathf.Max(1, level);
+            if (IsBotSide(Kind))
+            {
+                // a bot soldier of level N is the player's soldier of level N, not N times the first
+                var at = BalanceConfig.Instance.Unit(PlayerTwinOf(Kind)).LevelStats(Level);
+                _maxHealth = Mathf.Max(1, at.maxHealth);
+                _attackDamage = at.attackDamage;
+                _attackIntervalSeconds = at.attackIntervalSeconds;
+                _walkSpeed = at.walkSpeed;
+                CurrentHealth = _maxHealth;
+                return;
+            }
             _maxHealth = _baseMaxHealth * Level;
             _attackDamage = _baseAttackDamage * Level;
             CurrentHealth = _maxHealth;
@@ -402,6 +419,23 @@ namespace CityBuilder.Combat
 
         /// <summary>Moves the post it holds without ending a fight: a dungeon patrol walking its route.</summary>
         public void MovePost(Vector3 post) => _guardPost = post;
+
+        private bool _perched;
+        private float _perchBonus;
+
+        /// <summary>Up on a wall (the bot's archers at war, the user 2026-11-05): shoots soldiers within its reach plus `bonus`, never comes down or walks.</summary>
+        public bool Perched => _perched;
+
+        /// <summary>Stands it on the wall top `top` for good: a guard whose post is there and whose zone is its reach.</summary>
+        public void Perch(Vector3 top, float bonus)
+        {
+            _perched = true;
+            _perchBonus = Mathf.Max(0f, bonus);
+            if (_controller != null) _controller.enabled = false;
+            transform.position = top;
+            _guardPost = top;
+            _guardRadius = _soldierAttackRange + _perchBonus;
+        }
 
         /// <summary>
         /// Moved by something else (the New Year's thief, InvasionNewYear): no target of its own, no
@@ -678,7 +712,7 @@ namespace CityBuilder.Combat
             {
                 var toSoldier = _soldierTarget.transform.position - transform.position;
                 toSoldier.y = 0f;
-                if (toSoldier.magnitude <= _soldierAttackRange)
+                if (toSoldier.magnitude <= _soldierAttackRange + (_perched ? _perchBonus : 0f))
                 {
                     _attackTimer -= Time.deltaTime;
                     if (_attackTimer > 0f) return;
@@ -687,10 +721,12 @@ namespace CityBuilder.Combat
                     if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
                     return;
                 }
+                if (_perched) return;
                 GuardWalk(_soldierTarget.transform.position);
                 return;
             }
 
+            if (_perched) return;
             if (HuntPrisoner()) return;
 
             var toPost = _guardPost - transform.position;

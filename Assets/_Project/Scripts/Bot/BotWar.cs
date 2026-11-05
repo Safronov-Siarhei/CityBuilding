@@ -33,6 +33,11 @@ namespace CityBuilder.Bot
             public OrcKind kind;
             public OrcUnit unit;
             public float downFor;
+            // a patrol's round (offsets from the town's centre) and the point it is walking to; null = posted
+            public Vector2Int[] route;
+            public int leg;
+            // an archer up on a wall top
+            public bool perched;
         }
 
         private readonly List<Guard> _guards = new List<Guard>();
@@ -92,7 +97,18 @@ namespace CityBuilder.Bot
             if (kingdom.Hall == null) return;
             foreach (var guard in _guards)
             {
-                if (guard.unit != null && guard.unit.CurrentHealth > 0) continue;
+                if (guard.unit != null && guard.unit.CurrentHealth > 0)
+                {
+                    // on round its loop, as the garrison walks at peace (the user, 2026-11-05: at war they stood still)
+                    if (guard.route == null || guard.route.Length < 2) continue;
+                    var to = guard.unit.GuardPost - guard.unit.transform.position;
+                    to.y = 0f;
+                    if (to.magnitude > 1.5f) continue;
+                    guard.leg = (guard.leg + 1) % guard.route.Length;
+                    guard.post = kingdom.WorldAt(guard.route[guard.leg]);
+                    guard.unit.MovePost(guard.post);
+                    continue;
+                }
                 guard.unit = null;
                 guard.downFor += dt;
                 if (guard.downFor < config.BotGarrisonRespawnSeconds) continue;
@@ -106,13 +122,23 @@ namespace CityBuilder.Bot
             var garrison = kingdom.GetComponent<BotGarrison>();
             if (garrison != null) garrison.StandDown(true);
             _guards.Clear();
-            var melee = new List<Vector3>();
-            var ranged = new List<Vector3>();
-            BotGarrison.WarPosts(kingdom, melee, ranged);
-            var soldiers = Mathf.Max(1, config.BotGarrisonPatrols * config.BotGarrisonPatrolSize + 1);
-            for (var k = 0; k < soldiers; k++) _guards.Add(new Guard { post = melee[k % melee.Count], kind = OrcKind.BotSoldier });
-            var archers = Mathf.Min(ranged.Count, config.BotGarrisonArchers);
-            for (var k = 0; k < archers; k++) _guards.Add(new Guard { post = ranged[k * ranged.Count / Mathf.Max(1, archers)], kind = OrcKind.BotArcher });
+            // the same rounds as the garrison at peace: a guard of the King's size round the hall, the
+            // patrols round the town's loops, the archers up on the walls (the user, 2026-11-05)
+            var size = Mathf.Max(1, config.BotGarrisonPatrolSize);
+            for (var k = 0; k < size; k++)
+                _guards.Add(new Guard { route = kingdom.KingRing, leg = k * kingdom.KingRing.Length / size, kind = OrcKind.BotSoldier });
+            var routes = kingdom.PatrolRoutes;
+            var patrols = Mathf.Min(routes.Length, config.BotGarrisonPatrols);
+            for (var r = 0; r < patrols; r++)
+                for (var k = 0; k < size; k++)
+                    _guards.Add(new Guard { route = routes[r], leg = 0, kind = OrcKind.BotSoldier });
+            var tops = new List<Vector3>();
+            kingdom.WallTops(tops);
+            var archers = Mathf.Min(tops.Count, config.BotGarrisonArchers);
+            for (var k = 0; k < archers; k++)
+                _guards.Add(new Guard { post = tops[k * tops.Count / Mathf.Max(1, archers)], kind = OrcKind.BotArcher, perched = true });
+            foreach (var guard in _guards)
+                if (guard.route != null && guard.route.Length > 0) guard.post = kingdom.WorldAt(guard.route[guard.leg]);
             foreach (var guard in _guards) Raise(guard, kingdom, config);
             // a war loaded half-way through: the next raid is the one its clock is on
             _lastRaidAt = -1f;
@@ -141,6 +167,9 @@ namespace CityBuilder.Bot
             var unit = raids.SpawnRingGuard(post, config.BotWarLevel, guard.kind, config.BotWarGuardRadiusCells * cell);
             if (unit == null) return;
             kingdom.DressAsBot(unit.gameObject);
+            if (guard.perched) unit.Perch(guard.post, config.WallRangeBonusCells * cell);
+            // a patrol starts where its round is: spawned on its point, it moves on from there
+            if (guard.route != null && guard.route.Length > 0) unit.MovePost(guard.post);
             guard.unit = unit;
         }
 

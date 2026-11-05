@@ -40,6 +40,15 @@ namespace CityBuilder.UI
         {
             if (targetCamera == null) return;
 
+            // a fighter under the finger, of any side: his card (the user, 2026-11-05)
+            if (TryShowFighter(screenPosition))
+            {
+                if (focus != null) focus.Clear();
+                if (infoPanel != null) infoPanel.Close();
+                if (researchPanel != null) researchPanel.Close();
+                return;
+            }
+
             var nearest = FindBuilding(screenPosition);
             var foreign = nearest == null && focus != null ? FindForeign(screenPosition) : null;
             if (foreign != null)
@@ -96,6 +105,49 @@ namespace CityBuilder.UI
         /// the closest collider: a tree's click box is a box around its whole canopy, so one
         /// standing between the camera and a building would otherwise swallow the tap entirely.
         /// </summary>
+        /// <summary>
+        /// The fighter nearest the tap on screen within a finger's width -- a soldier, a hero, an orc,
+        /// a monster, the bot's men -- gets the read-only card. Screen distance, not a ray: units
+        /// carry no colliders of their own to hit, and a small figure needs a forgiving target.
+        /// </summary>
+        private bool TryShowFighter(Vector2 screenPosition)
+        {
+            var card = ForeignBuildingCard.Instance;
+            if (card == null) return false;
+            var reach = 34f * Mathf.Clamp(Screen.dpi / 160f, 1f, 3f);
+            var best = reach * reach;
+            Combat.SoldierUnit soldier = null;
+            Combat.OrcUnit orc = null;
+            foreach (var s in Combat.SoldierUnit.All)
+            {
+                if (s == null || !s.enabled || s.CurrentHealth <= 0) continue;
+                var d = ScreenDistanceSq(s.transform.position, screenPosition);
+                if (d >= best) continue;
+                best = d;
+                soldier = s;
+            }
+            foreach (var o in Combat.OrcUnit.All)
+            {
+                if (o == null || o.CurrentHealth <= 0 || !o.gameObject.activeInHierarchy) continue;
+                var d = ScreenDistanceSq(o.transform.position, screenPosition);
+                if (d >= best) continue;
+                best = d;
+                orc = o;
+                soldier = null;
+            }
+            if (orc != null) card.Show(orc);
+            else if (soldier != null) card.Show(soldier);
+            else return false;
+            return true;
+        }
+
+        private float ScreenDistanceSq(Vector3 world, Vector2 screen)
+        {
+            var p = targetCamera.WorldToScreenPoint(world + Vector3.up * 0.4f);
+            if (p.z <= 0f) return float.MaxValue;
+            return ((Vector2)p - screen).sqrMagnitude;
+        }
+
         /// <summary>Whether a tap here would open a building's card.</summary>
         public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && FindBuilding(screenPosition) != null;
 

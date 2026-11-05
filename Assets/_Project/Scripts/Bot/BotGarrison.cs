@@ -34,7 +34,7 @@ namespace CityBuilder.Bot
         // ring of squares, each patrol up and down an avenue between its drawbridge and its gate
         // (read off the town template by BotKingdom.Routes, the user 2026-11-05: four templates)
         private static Vector2Int[] KingRing => BotKingdom.Instance != null ? BotKingdom.Instance.KingRing : new Vector2Int[0];
-        private static Vector2Int[][] Avenues => BotKingdom.Instance != null ? BotKingdom.Instance.Avenues : new Vector2Int[0][];
+        private static Vector2Int[][] Avenues => BotKingdom.Instance != null ? BotKingdom.Instance.PatrolRoutes : new Vector2Int[0][];
 
         private readonly List<Post> _posts = new List<Post>();
         private ArmyGroup _kingGroup;
@@ -61,24 +61,6 @@ namespace CityBuilder.Bot
                 post.unit = null;
                 post.onWall = false;
                 post.downFor = 0f;
-            }
-        }
-
-        /// <summary>Where the garrison stands, for the hostile guards at war: the King's ring, the avenues' ends, the walls' cells.</summary>
-        public static void WarPosts(BotKingdom kingdom, List<Vector3> melee, List<Vector3> ranged)
-        {
-            foreach (var at in KingRing) melee.Add(kingdom.WorldAt(at));
-            foreach (var avenue in Avenues)
-                foreach (var at in avenue) melee.Add(kingdom.WorldAt(at));
-            // the archers behind the gates and the drawbridges: inside each avenue, a cell off its axis
-            foreach (var avenue in Avenues)
-            {
-                var inner = avenue[0];
-                var side = inner.x == 0 ? new Vector2Int(2, 0) : new Vector2Int(0, 2);
-                ranged.Add(kingdom.WorldAt(inner + side));
-                ranged.Add(kingdom.WorldAt(inner - side));
-                ranged.Add(kingdom.WorldAt(avenue[1] + side));
-                ranged.Add(kingdom.WorldAt(avenue[1] - side));
             }
         }
 
@@ -143,6 +125,11 @@ namespace CityBuilder.Bot
             foreach (var post in _posts) Raise(post, kingdom, config);
         }
 
+        private static readonly HashSet<SoldierUnit> Mine = new HashSet<SoldierUnit>();
+
+        /// <summary>A soldier of the bot's garrison (not the player's, for all he is a SoldierUnit): the unit card's owner.</summary>
+        public static bool Owns(SoldierUnit unit) => unit != null && Mine.Contains(unit);
+
         private void Raise(Post post, BotKingdom kingdom, BalanceConfig config)
         {
             var army = ArmyManager.Instance;
@@ -154,6 +141,8 @@ namespace CityBuilder.Bot
                 : new ArmyGroup(post.type, from);
             var unit = army.SpawnHireling(post.type, from, group);
             if (unit == null) return;
+            Mine.RemoveWhere(u => u == null);
+            Mine.Add(unit);
             var stats = SoldierStats.StatsAt(post.type, config.BotGarrisonLevel);
             unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
             unit.SetCurrentHealth(stats.maxHealth);
@@ -165,7 +154,7 @@ namespace CityBuilder.Bot
             else if (KingRing.Length > 0) group.OrderMoveTo(kingdom.WorldAt(KingRing[_kingLeg % KingRing.Length]));
         }
 
-        /// <summary>Each patrol on to the other end of its avenue once its first man is there; the King on round the ring.</summary>
+        /// <summary>Each patrol on round its loop once its first man reaches the next point; the King on round his.</summary>
         private void Walk(BotKingdom kingdom)
         {
             for (var r = 0; r < _patrols.Length; r++)
@@ -174,7 +163,7 @@ namespace CityBuilder.Bot
                 if (group == null || group.Count == 0) continue;
                 var target = kingdom.WorldAt(Avenues[r][_patrolLeg[r]]);
                 if (Flat(group.Members[0].transform.position - target) > 2.5f) continue;
-                _patrolLeg[r] = 1 - _patrolLeg[r];
+                _patrolLeg[r] = (_patrolLeg[r] + 1) % Avenues[r].Length;
                 group.OrderMoveTo(kingdom.WorldAt(Avenues[r][_patrolLeg[r]]));
             }
             if (_kingGroup != null && _kingGroup.Count > 0 && KingRing.Length > 0)

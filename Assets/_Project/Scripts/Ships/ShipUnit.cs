@@ -188,6 +188,53 @@ namespace CityBuilder.Ships
         private NavMeshPath _path;
         private LineRenderer _ring;
         private float _bobPhase;
+        private float _wakeClock;
+        private float _beam = -1f;
+        private float _sailShare;
+
+        /// <summary>Half the hull's width in metres, from its model (once): the wake's and the spacing's measure.</summary>
+        private float Beam
+        {
+            get
+            {
+                if (_beam > 0f) return _beam;
+                var bounds = new Bounds(transform.position, Vector3.zero);
+                foreach (var r in GetComponentsInChildren<MeshRenderer>()) bounds.Encapsulate(r.bounds);
+                _beam = Mathf.Clamp(Mathf.Min(bounds.extents.x, bounds.extents.z), 0.4f, 2.5f);
+                return _beam;
+            }
+        }
+
+        /// <summary>
+        /// Keeps clear of the other ships (the user, 2026-11-05: a fleet sailed inside itself): a
+        /// ship closer than the two hulls' length is pushed away from it, sideways more than back,
+        /// and only onto open sea.
+        /// </summary>
+        private void KeepApart(float t)
+        {
+            var manager = ShipManager.Instance;
+            if (manager == null) return;
+            var push = Vector3.zero;
+            var here = transform.position;
+            foreach (var other in manager.Ships)
+            {
+                if (other == null || other == this || other.Sinking) continue;
+                var away = here - other.transform.position;
+                away.y = 0f;
+                var keep = (Beam + other.Beam) * 2.2f;
+                var d = away.magnitude;
+                if (d >= keep) continue;
+                if (d < 0.01f) away = transform.right * 0.01f;
+                push += away.normalized * (keep - d) / keep;
+            }
+            if (push.sqrMagnitude < 0.0001f) return;
+            var step = Vector3.ClampMagnitude(push, 1f) * (ShipStats.Speed(Kind) * 0.8f * t);
+            if (manager.TrySampleSea(here + step, 0.6f, out var onSea))
+            {
+                onSea.y = here.y;
+                transform.position = onSea;
+            }
+        }
         private float _reload;
         private float _sunkFor;
 
@@ -302,8 +349,15 @@ namespace CityBuilder.Ships
                     var facing = Mathf.Clamp01(Vector3.Dot(transform.forward, to.normalized));
                     var step = ShipStats.Speed(Kind) * Mathf.Lerp(0.25f, 1f, facing) * t;
                     transform.position += transform.forward * Mathf.Min(step, to.magnitude);
+                    _sailShare = Mathf.Lerp(0.25f, 1f, facing);
                 }
             }
+            else
+            {
+                _sailShare = 0f;
+            }
+            KeepApart(t);
+            ShipWake.Sail(transform, _sailShare, Beam, ref _wakeClock);
             // the swell
             _bobPhase += t;
             var p = transform.position;
