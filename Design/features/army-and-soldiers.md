@@ -75,6 +75,20 @@ gather = ring; refused = red ripple.
 - Big units (cavalry, siege) take 2 of the 20 army slots.
 - Models: jointed figures in the soldiers' style, 3 looks per level; a horse rig is the costliest part. Renders go to the user first.
 
+**Мастерская (the user, 2026-11-05): four machines** -- катапульта, баллиста, осадная башня, таран.
+- **A machine is ONE unit with its crew in the model** (user picked): takes 2 citizens and 2-3 of the 20 army slots; cheap on the phone.
+- My roles (not agreed): катапульта = slow, long, area, a dead zone close in, vs buildings/towers/crowds;
+  баллиста = one heavy bolt, longer than an archer, vs big targets (man-at-arms, brutes, knights, machines, ships near shore);
+  таран = slow, roofed (arrows barely hurt it), huge damage to GATES only, weak to melee.
+- **Осадная башня:** rolls to a chosen wall piece and docks; while docked it is a temporary stair (a node in `WallWalk`),
+  fighters climb it one by one; it has health and can be broken or burnt. **Works against ANY fence** (user): on a lvl1-2
+  fence (not walkable today) it throws a gangway over and the fighters climb across to the other side.
+- **Walls for all but cavalry** (user): every soldier and melee hero may walk the walls (today only ranged).
+  Mine: enemies on a wall do not pass through each other -- they meet and fight in the narrow way.
+- **Getting down inside** by the defender's stair towers; **where there is none, they JUMP DOWN and lose some health** (user).
+- **Orcs get no siege and no wall walking for now** (user); the bot, as a full mirror, gets the machines and storms the
+  player's walls (machines ride transports, taking more room than a footman).
+
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
 
 ## Code
