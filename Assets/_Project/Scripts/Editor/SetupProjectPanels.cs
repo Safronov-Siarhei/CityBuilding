@@ -303,6 +303,47 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
+        /// The card of a ruin of the player's (RuinCard, the user 2026-11-05): title, a line of
+        /// explanation, «Восстановление:» over the price, and Восстановить / Снести / Закрыть.
+        /// </summary>
+        private static void BuildRuinCard(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
+        {
+            var panelRoot = new GameObject("RuinCard", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(660f, 520f));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 205f), new Vector2(600f, 56f), ink);
+            var body = CreateText(card.transform, "Body", string.Empty, 26, new Vector2(0f, 120f), new Vector2(580f, 100f), ink);
+            Localize(CreateText(card.transform, "PriceLabel", string.Empty, 26, new Vector2(0f, 40f), new Vector2(580f, 40f), ink), "#ruin_restore_price");
+            var costRow = CreateCostRow(card.transform, "RestoreCostRow", new Vector2(0f, -10f));
+            var restoreButton = CreateButton(card.transform, panelSprite, "RestoreButton", "#ruin_restore", new Vector2(0f, -85f), new Vector2(360f, 64f));
+            var clearButton = CreateButton(card.transform, panelSprite, "ClearButton", "#ruin_demolish", new Vector2(-160f, -185f), new Vector2(280f, 64f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(160f, -185f), new Vector2(280f, 64f));
+
+            var controller = canvasParent.gameObject.AddComponent<RuinCard>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("body").objectReferenceValue = body;
+            so.FindProperty("costRow").objectReferenceValue = costRow;
+            so.FindProperty("restoreButton").objectReferenceValue = restoreButton;
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(restoreButton.onClick, controller.Restore);
+            UnityEventTools.AddPersistentListener(clearButton.onClick, controller.Clear);
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+            panelRoot.SetActive(false);
+        }
+
+        /// <summary>
         /// The Diplomacy Hall's window (DiplomacyWindow, the user 2026-11-03): the relations scale
         /// with the bot kingdom, the stance, Мир / Торговля / Война, a note line, «Здание» (the
         /// Hall's own card) and close.

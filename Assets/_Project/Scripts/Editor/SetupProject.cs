@@ -166,8 +166,27 @@ namespace CityBuilder.EditorTools
             material.SetFloat("_ShadeStrength", 1f);
             material.enableInstancing = true;
             EditorUtility.SetDirty(material);
+
+            // the ruins' material (BuildingRuin): the same palette and pattern, burnt and broken
+            // off by its own shader; in Resources, so the game finds it and the build keeps the shader
+            var ruinShader = Shader.Find(Buildings.BuildingRuin.ShaderName);
+            var ruin = AssetDatabase.LoadAssetAtPath<Material>(RuinMaterialPath);
+            if (ruin == null)
+            {
+                ruin = new Material(ruinShader);
+                AssetDatabase.CreateAsset(ruin, RuinMaterialPath);
+            }
+            else if (ruin.shader != ruinShader)
+            {
+                ruin.shader = ruinShader;
+            }
+            ruin.SetTexture("_BaseMap", texture);
+            ruin.SetTexture("_DetailAtlas", atlas);
+            EditorUtility.SetDirty(ruin);
             AssetDatabase.SaveAssets();
         }
+
+        private const string RuinMaterialPath = "Assets/_Project/Resources/" + Buildings.BuildingRuin.MaterialResource + ".mat";
 
         public const string BuildingDetailShaderName = "CityBuilder/BuildingDetail";
 

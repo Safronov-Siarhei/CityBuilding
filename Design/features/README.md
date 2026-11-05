@@ -41,7 +41,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [combat-core](combat-core.md) | damage targets, towers, projectiles, NavRoute, wall breaching | бой, башня, стрелы, урон |
 | [moat](moat.md) | the Moat: wadeable water that slows, orcs in it don't fight units, lab-opened for crystals | ров, вода, замедление |
 | [bot](bot.md) | the bot kingdom: castle scheme v2, garrison, Diplomacy Hall relations (peace/trade/war), WAR built 2026-11-04 (guards, botwaves sea raids, ransom) | бот, дипломатия, война, торговля |
-| [ruins](ruins.md) | ruins of the player's destroyed buildings: restore for a share of the price / demolish / later; sandbox only; DESIGN | руины, восстановить, снести, обломки |
+| [ruins](ruins.md) | ruins of the player's destroyed buildings: restore for a share of the price / demolish / later; sandbox only; burnt-shell shader; BUILT 2026-11-05, untested | руины, восстановить, снести, обломки |
 | [orc-raids-and-portals](orc-raids-and-portals.md) | raids, progression score, portals, orc kinds, win/lose | орки, набег, портал, победа, поражение |
 | [orc-camps-and-main-base](orc-camps-and-main-base.md) | walled camps L1–3, spawners, totems, cages, treasury, main base, boss | лагерь, база орков, вождь, клетки, сокровищница |
 | **World** | | |

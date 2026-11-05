@@ -317,6 +317,7 @@ namespace CityBuilder.EditorTools
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
+            BuildRuinCard(uiRoot, panelSprite, iconLibrary);
             BuildDiplomacyWindow(uiRoot, panelSprite, infoPanel);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonShopCard(uiRoot, panelSprite);

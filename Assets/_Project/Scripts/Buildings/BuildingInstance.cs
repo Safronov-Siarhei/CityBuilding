@@ -374,6 +374,22 @@ namespace CityBuilder.Buildings
             // (the bot kingdom's losses are not the town's news)
             if (!IsBot) EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_combat", Data.LocalizedName), EventSeverity.Danger, EventGlyph.Ruin));
             OnDestroyedInCombat?.Invoke(this);
+            // the sandbox keeps a burnt shell where it stood (BuildingRuin; the user, 2026-11-05)
+            if (BuildingRuin.LeavesRuin(this))
+            {
+                var held = new List<Vector2Int>();
+                foreach (var cell in OccupiedCells())
+                {
+                    if (!SharesCellWithAnother(cell)) held.Add(cell);
+                }
+                if (Data.isRoad && RoadNetwork.Instance != null)
+                {
+                    foreach (var cell in held) RoadNetwork.Instance.UnregisterRoad(cell);
+                }
+                FreeCellsAndDestroy();
+                BuildingRuin.LeaveOf(this, held);
+                return;
+            }
             FreeCellsAndDestroy();
         }
 

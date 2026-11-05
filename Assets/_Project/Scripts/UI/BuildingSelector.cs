@@ -71,6 +71,16 @@ namespace CityBuilder.UI
             }
             if (nearest == null)
             {
+                // a ruin of the player's: its card (restore / clear / close)
+                var ruin = FindRuin(screenPosition);
+                if (ruin != null && RuinCard.Instance != null)
+                {
+                    if (focus != null) focus.Clear();
+                    if (infoPanel != null) infoPanel.Close();
+                    if (researchPanel != null) researchPanel.Close();
+                    RuinCard.Instance.Show(ruin);
+                    return;
+                }
                 if (focus != null) focus.Clear();
                 if (infoPanel != null) infoPanel.Close();
                 if (researchPanel != null) researchPanel.Close();
@@ -164,6 +174,24 @@ namespace CityBuilder.UI
                 var building = _hits[i].collider.GetComponentInParent<Combat.OrcCampBuilding>();
                 if (building == null || building.CurrentHealth <= 0) continue;
                 nearest = building;
+                nearestDistance = _hits[i].distance;
+            }
+            return nearest;
+        }
+
+        private BuildingRuin FindRuin(Vector2 screenPosition)
+        {
+            if (BuildingRuin.All.Count == 0) return null;
+            var ray = targetCamera.ScreenPointToRay(screenPosition);
+            var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, raycastMask);
+            BuildingRuin nearest = null;
+            var nearestDistance = float.MaxValue;
+            for (var i = 0; i < hitCount; i++)
+            {
+                if (_hits[i].distance >= nearestDistance) continue;
+                var ruin = _hits[i].collider.GetComponent<BuildingRuin>();
+                if (ruin == null) continue;
+                nearest = ruin;
                 nearestDistance = _hits[i].distance;
             }
             return nearest;

@@ -27,6 +27,8 @@ namespace CityBuilder.Saving
         /// </summary>
         public int lifetimeProduced;
         public List<BuildingEntry> buildings = new List<BuildingEntry>();
+        /// <summary>The ruins of the player's buildings (Buildings.BuildingRuin, sandbox). Empty in saves from before ruins.</summary>
+        public List<RuinEntry> ruins = new List<RuinEntry>();
 
         /// <summary>
         /// Ids of everything researched in the Laboratory (see CityBuilder.Research.ResearchTopic),
@@ -409,6 +411,20 @@ namespace CityBuilder.Saving
 
         /// <summary>The ship he sails on, 1-based into GameSaveData.ships; 0 = on land.</summary>
         public int aboardShip;
+    }
+
+    [Serializable]
+    public class RuinEntry
+    {
+        public string buildingName;
+        public int cellX;
+        public int cellY;
+        public int rotationSteps;
+        public int level = 1;
+        /// <summary>The building's meshes as they stood, by their paths in its prefab.</summary>
+        public List<Buildings.BuildingRuin.Piece> pieces = new List<Buildings.BuildingRuin.Piece>();
+        /// <summary>The cells the ruin holds.</summary>
+        public List<Vector2Int> cells = new List<Vector2Int>();
     }
 
     [Serializable]

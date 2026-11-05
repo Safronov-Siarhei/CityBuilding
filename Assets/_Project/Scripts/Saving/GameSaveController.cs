@@ -303,6 +303,20 @@ namespace CityBuilder.Saving
                 }
             }
 
+            // the ruins of what the orcs or the bot burnt down (sandbox)
+            for (var i = BuildingRuin.All.Count - 1; i >= 0; i--)
+            {
+                if (BuildingRuin.All[i] != null) Destroy(BuildingRuin.All[i].gameObject);
+            }
+            if (data.ruins != null)
+            {
+                foreach (var entry in data.ruins)
+                {
+                    if (!_catalog.TryGetValue(entry.buildingName, out var ruinData)) continue;
+                    BuildingRuin.Restore(ruinData, new Vector2Int(entry.cellX, entry.cellY), entry.rotationSteps, entry.level, entry.pieces, entry.cells);
+                }
+            }
+
             var restoredGroups = RestoreArmy(data);
             RestoreHeroes(data);
             var restoredOrcs = RestoreRaids(data);
@@ -833,6 +847,21 @@ namespace CityBuilder.Saving
                     siteRemaining = instance.Site != null ? instance.Site.Remaining : 0f,
                     siteTotal = instance.Site != null ? instance.Site.Total : 0f,
                     siteUpgrade = instance.Site != null && instance.Site.IsUpgrade,
+                });
+            }
+
+            foreach (var ruin in BuildingRuin.All)
+            {
+                if (ruin == null || ruin.Data == null) continue;
+                data.ruins.Add(new RuinEntry
+                {
+                    buildingName = ruin.Data.buildingName,
+                    cellX = ruin.OriginCell.x,
+                    cellY = ruin.OriginCell.y,
+                    rotationSteps = ruin.RotationSteps,
+                    level = ruin.Level,
+                    pieces = new List<BuildingRuin.Piece>(ruin.Pieces),
+                    cells = new List<Vector2Int>(ruin.Cells)
                 });
             }
 
