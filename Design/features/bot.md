@@ -194,6 +194,7 @@ Proposed templates:
   - citadel lvl 5 with moat and FortifiedGates.
 - Districts by 8 sectors per ring (PLAN table), plus fillers (FILL).
 - About 940 pieces against 547 in v2: a mobile concern, to measure.
+- The Laboratory stands on the shore in the port (user, 2026-11-05).
 - Not in the game yet; waiting for the user's review.
 
 ## Traps (war)
