@@ -149,10 +149,12 @@ def monk_body(b):
 
 def monk_head(b):
     """A kind old face with a grey beard inside a blue hood."""
-    face(b, 0.42, beard=False)
+    face(b, 0.42, hair='stone_light', beard=False)                                                  # grey brows
     b.box(-0.036, 0.036, -0.054, -0.04, 0.4, 0.45, 'stone_light', bevel=0.008)                       # the beard
-    b.dome(0, 0.008, 0.465, 0.064, 0.085, [KINGDOM, KINGDOM], sides=8)
-    b.box(-0.064, 0.064, -0.0, 0.06, 0.42, 0.5, KINGDOM, bevel=0.018)
+    # the hood sits back off the brow (it cut through the eyebrows), its edge a clean band over the forehead
+    b.dome(0, 0.03, 0.47, 0.062, 0.085, [KINGDOM, KINGDOM], sides=8)
+    b.box(-0.064, 0.064, 0.0, 0.06, 0.42, 0.5, KINGDOM, bevel=0.018)
+    b.box(-0.06, 0.06, -0.052, -0.02, 0.494, 0.52, KINGDOM, bevel=0.008)
     b.box(-0.058, -0.046, -0.05, 0.0, 0.42, 0.51, BLUE_DARK)
     b.box(0.046, 0.058, -0.05, 0.0, 0.42, 0.51, BLUE_DARK)
 
