@@ -4,8 +4,9 @@ Workshop (no placeholder of its own yet: borrows the Barracks' box and stands be
 is -Y. Defence, so the castle's blue roof.
 
 A long stable along the back -- stone below, timber hayloft above under the blue roof -- its
-blue double doors in the middle, two stalls each side with horses looking out over the half
-doors (no dark holes: the user does not want them), a hay door in the loft with a pulley beam
+blue double doors in the middle, and along its front four open loose boxes under a blue lean-to --
+plank partitions, half doors, straw -- a horse standing in each, its head out over the door (the
+user: horses out of the wall did not read as stalls), a hay door in the loft with a pulley beam
 and a bale on the rope, a gold horseshoe on a blue sign. The yard in front: a quintain to tilt
 at with a lance, a rack of lances, a water trough, hay bales, a rail fence.
 
@@ -20,49 +21,61 @@ import details as d  # noqa: E402
 import kit  # noqa: E402
 from details import FOOTING, G_TOP, L_TOP  # noqa: E402
 from kit import Builder, Facade  # noqa: E402
+from mathutils import Vector  # noqa: E402
 
 OBJ = "Stable1-lvl1"
 COATS = ('white', 'wood_light', 'wood_dark', 'stone_mid')     # white, chestnut, bay, grey
 
 
-def horse_head(b, x, y_wall, z, coat, turn=0.0):
-    """A horse looking out over a stall's half door: its neck out of the opening, the head
-    turned a little, ears, a dark mane, a blue halter with a gold buckle."""
+def horse(b, x, y_door, coat, turn=0.0):
+    """A horse standing in its stall, facing the half door: its back above the door, the neck and
+    head out over it, turned a little; ears, a dark mane, a blue halter. Every box closed (the
+    user: open boxes read as faces missing)."""
     mane = 'wood_dark' if coat != 'wood_dark' else 'iron'
+    # the body inside the stall, its back showing over the door
+    b.obox((x, y_door + 0.25, 0.3), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.085, 0.17, 0.09, coat, bevel=0.03, skip=())
     t = math.radians(turn)
-    fwd = (math.sin(t), -math.cos(t), 0.0)
-    nx, ny = x + fwd[0] * 0.13, y_wall + fwd[1] * 0.13
-    b.rod((x, y_wall + 0.03, z - 0.04), (nx, ny, z + 0.08), 0.12, coat)                                # neck
-    b.rod((x, y_wall + 0.05, z + 0.04), (nx, ny + 0.03, z + 0.15), 0.04, mane)                         # mane
-    hx, hy = nx + fwd[0] * 0.09, ny + fwd[1] * 0.09
-    down = (fwd[0] * 0.8, fwd[1] * 0.8, -0.6)
-    n = math.sqrt(sum(c * c for c in down))
-    down = tuple(c / n for c in down)
-    side = (math.cos(t), math.sin(t), 0.0)
-    up = (side[1] * down[2] - side[2] * down[1], side[2] * down[0] - side[0] * down[2], side[0] * down[1] - side[1] * down[0])
-    c = (hx, hy, z + 0.06)
-    b.obox(c, side, down, up, 0.055, 0.11, 0.06, coat, bevel=0.022)
-    muzzle = (c[0] + down[0] * 0.09, c[1] + down[1] * 0.09, c[2] + down[2] * 0.09)
-    b.obox(muzzle, side, down, up, 0.048, 0.035, 0.054, 'stone_light' if coat != 'white' else 'stone_mid', bevel=0.014)
-    b.obox(c, side, down, up, 0.058, 0.016, 0.064, 'banner_blue')                                     # halter
+    fwd = Vector((math.sin(t), -math.cos(t), 0.0))
+    side = Vector((math.cos(t), math.sin(t), 0.0))
+    root = Vector((x, y_door + 0.12, 0.34))
+    top = Vector((x, y_door, 0.5)) + fwd * 0.04
+    b.rod(root, top, 0.11, coat)                                                                        # neck
+    b.rod(root + Vector((0, 0.03, 0.07)), top + Vector((0, 0.03, 0.06)), 0.035, mane)                   # mane
+    down = (fwd * 0.8 + Vector((0, 0, -0.6))).normalized()
+    up = side.cross(down)
+    c = top + fwd * 0.08 + Vector((0, 0, -0.01))
+    b.obox(c, side, down, up, 0.05, 0.1, 0.055, coat, bevel=0.02, skip=())
+    muzzle = c + down * 0.085
+    b.obox(muzzle, side, down, up, 0.044, 0.032, 0.05, 'stone_light' if coat != 'white' else 'stone_mid', bevel=0.012, skip=())
+    b.obox(c - down * 0.01, side, down, up, 0.053, 0.014, 0.058, 'banner_blue', skip=())                 # halter
     for k in (-1, 1):
-        ex, ey = hx - fwd[0] * 0.05 + side[0] * k * 0.03, hy - fwd[1] * 0.05 + side[1] * k * 0.03
-        b.pyramid(ex, ey, z + 0.13, 0.014, 0.014, z + 0.19, coat, sides=4)                             # ears
-        b.box(c[0] + side[0] * k * 0.056 - 0.005, c[0] + side[0] * k * 0.056 + 0.005,
-              c[1] - 0.008, c[1] + 0.008, c[2] + 0.015, c[2] + 0.03, 'window')                        # eyes
+        ear = top + side * (k * 0.028) + Vector((0, 0, 0.04))
+        b.pyramid(ear.x, ear.y, ear.z, 0.013, 0.013, ear.z + 0.06, coat, sides=4)
+        eye = c + side * (k * 0.052) - down * 0.02 + up * 0.015
+        b.obox(eye, side, down, up, 0.004, 0.009, 0.009, 'window', skip=())
 
 
-def stall(f, b, s, coat, turn):
-    """A stall's half door: the frame, the lower door with a white X brace, the opening above it
-    filled by a horse."""
-    w = 0.3
-    f.rect(s - w / 2 - 0.03, s + w / 2 + 0.03, FOOTING, G_TOP - 0.06, 0.012, 'wood_dark')
-    f.rect(s - w / 2, s + w / 2, FOOTING + 0.3, G_TOP - 0.09, 0.006, 'wood_dark')                      # the stall inside, brown
-    f.rect(s - w / 2, s + w / 2, FOOTING, FOOTING + 0.3, 0.03, 'wood_mid')
-    f.beam(s - w / 2 + 0.02, FOOTING + 0.02, s + w / 2 - 0.02, FOOTING + 0.28, 0.022, 0.04, 'plaster_white')
-    f.beam(s - w / 2 + 0.02, FOOTING + 0.28, s + w / 2 - 0.02, FOOTING + 0.02, 0.022, 0.04, 'plaster_white')
-    f.rect(s - w / 2 - 0.02, s + w / 2 + 0.02, FOOTING + 0.3, FOOTING + 0.33, 0.045, 'wood_dark')        # the door's top rail
-    horse_head(b, s, f.origin.y, FOOTING + 0.36, coat, turn)
+def stall_row(b, xa, xb, n, y_front, y_back, coats):
+    """Open-fronted loose boxes along the stable's front wall: plank partitions, half doors with
+    white X braces, straw on the floor, a blue lean-to roof from the wall -- a horse in each."""
+    w = (xb - xa) / n
+    for k in range(n + 1):
+        px = xa + k * w
+        b.box(px - 0.02, px + 0.02, y_front, y_back, 0, 0.44, 'wood_mid', bevel=0.004)                # partition
+        b.box(px - 0.025, px + 0.025, y_front - 0.01, y_back, 0.44, 0.47, 'wood_dark')
+        b.box(px - 0.03, px + 0.03, y_front - 0.03, y_front + 0.03, 0, 0.66, 'wood_dark', bevel=0.006)  # post
+    b.box(xa - 0.03, xb + 0.03, y_front - 0.035, y_front + 0.035, 0.62, 0.67, 'wood_dark')              # head beam
+    f = Facade(b, '-y', y_front)
+    for k in range(n):
+        a, c = xa + k * w + 0.025, xa + (k + 1) * w - 0.025
+        b.box(a, c, y_front + 0.01, y_back, 0, 0.022, 'hay')                                            # straw
+        f.rect(a, c, 0.02, 0.3, 0.03, 'wood_mid')                                                       # half door
+        f.rect(a, c, 0.28, 0.31, 0.045, 'wood_dark')
+        f.beam(a + 0.02, 0.04, c - 0.02, 0.27, 0.022, 0.04, 'plaster_white')
+        f.beam(a + 0.02, 0.27, c - 0.02, 0.04, 0.022, 0.04, 'plaster_white')
+        coat, turn = coats[k]
+        horse(b, (a + c) / 2, y_front, coat, turn)
+    d.shed_roof(b, 'x', xa - 0.04, xb + 0.04, y_back, y_front - 0.06, G_TOP + 0.08, 0.66, **d.DEFENCE)
 
 
 def quintain(b, x, y):
@@ -106,8 +119,9 @@ def build(lo, hi):
     f = Facade(b, '-y', y0)
     d.barn_door(f, 0, base=FOOTING, w=0.46, h=0.5, color='roof_blue')
     f.rect(-0.27, 0.27, FOOTING + 0.5, FOOTING + 0.55, 0.04, 'wood_dark')
-    for s, coat, turn in ((-1.05, COATS[1], 20), (-0.6, COATS[0], -10), (0.6, COATS[2], 15), (1.05, COATS[3], -20)):
-        stall(f, b, s, coat, turn)
+    # the loose boxes along the front, two each side of the doors
+    stall_row(b, x0 + 0.02, -0.32, 2, -0.16, y0, ((COATS[1], 15), (COATS[0], -10)))
+    stall_row(b, 0.32, x1 - 0.02, 2, -0.16, y0, ((COATS[2], 10), (COATS[3], -15)))
     d.timber(f, x0, x1, G_TOP, L_TOP, (x0 + 0.025, -0.8, -0.3, 0.3, 0.8, x1 - 0.025))
     # the hay door in the loft, hay in it, the pulley beam, a bale on the rope
     f.rect(-0.16, 0.16, G_TOP + 0.02, L_TOP - 0.04, 0.012, 'wood_dark')
@@ -136,15 +150,15 @@ def build(lo, hi):
 
     # the yard
     b.box(-1.44, 1.44, -1.44, y0 - 0.1, 0, 0.012, 'sand')
-    quintain(b, -0.75, -0.75)
-    lance_rack(b, 0.95, -0.5)
-    d.trough(b, 0.55, 1.1, -0.85, w=0.14, h=0.12)
+    quintain(b, -0.75, -0.85)
+    lance_rack(b, 0.2, -0.75)
+    d.trough(b, 0.62, 1.17, -0.62, w=0.14, h=0.12)
     d.hay_bale(b, 1.15, -1.2, angle=10)
     d.hay_bale(b, 0.92, -1.25, angle=-5)
     d.hay_bale(b, 1.05, -1.18, angle=0, z0=0.15)
     d.rail_fence(b, [(-1.42, -1.42), (-0.3, -1.42)], h=0.24)
     d.rail_fence(b, [(0.3, -1.42), (1.42, -1.42)], h=0.24)
-    d.bucket(b, 0.45, -0.75, 0)
+    d.bucket(b, 0.5, -0.9, 0)
     # a saddle and a blue saddle cloth over the fence rail
     b.box(-1.0, -0.78, -1.47, -1.37, 0.2, 0.3, 'banner_blue', bevel=0.01)
     b.box(-0.96, -0.82, -1.46, -1.38, 0.28, 0.33, 'wood_dark', bevel=0.012)
