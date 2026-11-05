@@ -1,6 +1,6 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map scheme sent for approval; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -26,6 +26,7 @@ attack -> destroy the portal -> victory.
   starts filling its birth bar (the mechanic is shown, nobody waits on it).
 - **No squads / Garrison:** the hired soldier is selected by hand like the hero.
 - **Barracks: only a level-3 soldier** is offered.
+- **Reward: +25 crystals.** The main-menu tutorial card shows a «кристаллы +25» badge.
 - **Damage:** orcs and the orc tower deal minimal damage -- visible, never critical. The King never
   dies: at low health he heals himself. The soldier CAN die (shows the player that units die).
 - **Shipyard:** the player builds it and hires the ship himself.
@@ -51,6 +52,13 @@ attack -> destroy the portal -> victory.
     falls: «Солдаты гибнут -- нанимайте новых». The King cannot die.
 13. «Уничтожьте портал» -> victory screen -> on to the sandbox.
 
+## The map (scheme for approval, 2026-11-05)
+`Tools/blender/tutorial_plan.py` -> `tutorial-plan.json` (shapes + spots, for the Blender build) and
+`tutorial-plan.png`. 64 x 44 cells: the player's island west (~26 x 26, Town Hall zone 9x9 in the
+middle, forest west, stones south-west, the Shipyard on the east shore facing the strait, the orc
+landing beach south-east), the orcs' island east (~16 x 16: landing beach west, tower, guard,
+portal). Strait ~10 cells. NOT approved yet.
+
 ## To build (plan)
 - Two islands drawn in Blender, with spots: Town Hall area, trees, rocks, shipyard shore, orc
   landing, portal, tower, orc guard.
@@ -61,6 +69,6 @@ attack -> destroy the portal -> victory.
 - Main-menu card «Обучение».
 
 ## Open
-- Which soldier type is the «level-3 soldier» (militia? spearman?) -- ask.
-- What the victory gives in the sandbox (a starting bonus?) -- ask.
+- The soldier: the user said «гвардеец или что-то такое» -- read as ЛАТНИК (ManAtArms, the armoured
+  one) at level 3; confirm when the Barracks step is built.
 - Skip button inside the tutorial; first-launch auto-start -- later.
