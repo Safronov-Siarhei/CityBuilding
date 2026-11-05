@@ -1060,3 +1060,6 @@ dungeon opens as a SEPARATE SCENE.
 
 - 2026-11-02: the «Уровень N» plaque hides while the dungeon's card is open (DungeonLevelLabel.LateUpdate checks DungeonEntranceCard.IsOpen) — the card says the level itself.
 - 2026-11-02: the entrance card shows «Можно найти:» + a crystal icon (row CanFind, hidden on the way out; key #dungeon_can_find, localization row 542).
+
+Trap (2026-11-05): `DungeonVariantTests.TheLevelTwoDungeon_HasItsMonsters_AndItsHallsAreReachedOnFoot` failed once in a
+full run («The drowned dwarf never rose with a hero beside it») and passed 3/3 alone -- order-dependent, not chased.

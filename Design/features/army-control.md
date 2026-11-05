@@ -3,7 +3,8 @@
 > **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
 > not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. STAGE 3 (behaviours + formations) BUILT 2026-11-05,
-> user not seen. Stages 4 (ships/machines aboard) and 5 (crest art) to do.
+> user not seen. General run after stage 3: EditMode 461/461, PlayMode 365/384 (18 skipped, 1 flaky
+> dungeon test, green alone). Stages 4 (ships/machines aboard) and 5 (crest art) to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
