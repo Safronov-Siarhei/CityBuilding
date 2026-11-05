@@ -1,8 +1,8 @@
 # Army and soldiers
 
-> **Status (2026-11-05):** the crossbowman, the knight (Stable) and the monk (Church) are IN THE CODE
-> (models exported, rules, hire bars, sheet columns) -- built, not seen by the user; the siege machines and
-> the Workshop are next. Earlier: four tiers, groups, orders, saving — shipped. Every tier is now a jointed
+> **Status (2026-11-05):** the crossbowman, the knight (Stable), the monk (Church), the Workshop with its four
+> machines and the siege rules (tower docking, everyone but cavalry on walls, the jump) are IN THE CODE -- built,
+> tests green, not seen by the user; the bot's mirror is next. Earlier: four tiers, groups, orders, saving — shipped. Every tier is now a jointed
 > Blender figure in the heroes' style (stand / run / strike / limp death). Army upkeep in coins is GONE
 > (2026-11-05): a soldier is paid once, at hiring.
 > **Read with:** [combat-core](combat-core.md), [orc-camps-and-main-base](orc-camps-and-main-base.md),
@@ -193,8 +193,20 @@ spearman 20/7 for 45, archer 14/6 range 8 for 60, man-at-arms 45/9 for 90):
   parts Arm / Head / Log / Bridge (siege_drafts.py `--install`), real size (no UnitSize), animated by
   `Combat/SiegeMachine.cs` on Struck (the tower's Bridge drops when `Docked`). Machines climb no wall stair
   (SoldierUnitWalls). Test `ArmyCombatTests.AMachineTakesItsCrew_AndTheWorkshopLevelOpensIt`.
-- Not yet: the siege tower docking at a wall + everyone but cavalry walking walls + the jump-down damage (the
-  siege-rules phase), the knight walks walls (cavalry must not -- wall walking is the siege phase), the bot's mirror of the
+- **Siege rules (2026-11-05, built, not seen):** `Combat/SoldierUnitSiege.cs` + `WallWalk.Dock/Undock`. Siege
+  towers selected + a Fence/Gate/Barbican tapped (`ArmyOrderInput.TryDockTowers`, before the enemy check, so a foe's
+  wall too): `DockAt` picks the free cell beside the wall cell nearest the tap, rolls there, `IsDocked`, bridge down
+  (`SiegeMachine.Docked`); WallWalk then has a stair node at the tower's cell and, over a lvl1-2 fence, a gangway node
+  (Level 0, top `siege_gangway_height` 0.6). A tap on a wall a dock leads to sends fighters UP instead of striking it
+  (`DockedWallUnder`). `GoToWall` is for every fighter but cavalry and machines (was ranged only); the auto wall-seek
+  stays ranged only. `LeaveWall(toward)` (ArmyGroup orders pass the destination): when the stair nearest the
+  destination is a DOCK and lies behind him (dot <= 0) he JUMPS to the cell beside his wall on that side and loses
+  `wall_jump_health_share` (0.3) of max health (can die); stair towers of the wall's own are walked as before, so
+  archers on the town's own walls never jump. A wall razed under a dock undocks it. Test
+  `ArmyCombatTests.TheSiegeTowerDocks_AFootmanGoesUp_AndJumpsOffTheFarSide` (dock, gangway, knight refused, spearman
+  up, jump costs health).
+- Not yet: orc camps' palisades (OrcCampBuilding, not BuildingInstances) take no dock; fighters ride the tower one by one
+  only in the sense of the stair's climb; the bot's mirror of the new units/machines; machine looks for levels 2-3 (cavalry must not -- wall walking is the siege phase), the bot's mirror of the
   three, upkeep columns filled (5/7/3) only so the old tests' relationships hold -- upkeep is off.
 
 ## Code

@@ -484,6 +484,8 @@ namespace CityBuilder.Core
         [SerializeField] private float wallRangeBonusCells = 2f;
         [SerializeField] private float wallSeekRadiusCells = 14f;
         [SerializeField] private float wallClimbSeconds = 1.2f;
+        [SerializeField] private float wallJumpHealthShare = 0.3f;
+        [SerializeField] private float siegeGangwayHeight = 0.6f;
         // the Moat (the user, 2026-11-02): the crystals its research costs, the speed in its water,
         // and how dear its cells are to a route (NavMesh area cost; dry land is 1)
         [SerializeField] private int moatResearchCrystals = 10;
@@ -1109,6 +1111,12 @@ namespace CityBuilder.Core
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
         public float WallClimbSeconds => wallClimbSeconds;
+
+        /// <summary>The share of his health a fighter loses jumping off a wall with no stair (economy `wall_jump_health_share`; the user, 2026-11-05: 30%).</summary>
+        public float WallJumpHealthShare => wallJumpHealthShare;
+
+        /// <summary>How high a docked siege tower's gangway runs over a low fence (economy `siege_gangway_height`, world units above the ground).</summary>
+        public float SiegeGangwayHeight => siegeGangwayHeight;
         public int MoatResearchCrystals => moatResearchCrystals;
         public float MoatSpeedMultiplier => moatSpeedMultiplier;
         /// <summary>How deep (world units) a figure wading the moat sinks: at least to the knee (the user, 2026-11-03).</summary>
@@ -1916,6 +1924,8 @@ namespace CityBuilder.Core
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);
             wallSeekRadiusCells = Read(economy, "wall_seek_radius_cells", wallSeekRadiusCells);
             wallClimbSeconds = Read(economy, "wall_climb_sec", wallClimbSeconds);
+            wallJumpHealthShare = Read(economy, "wall_jump_health_share", wallJumpHealthShare);
+            siegeGangwayHeight = Read(economy, "siege_gangway_height", siegeGangwayHeight);
             moatResearchCrystals = (int)Read(economy, "moat_research_crystals", moatResearchCrystals);
             moatSpeedMultiplier = Read(economy, "moat_speed_multiplier", moatSpeedMultiplier);
             moatWadeDepth = Read(economy, "moat_wade_depth", moatWadeDepth);

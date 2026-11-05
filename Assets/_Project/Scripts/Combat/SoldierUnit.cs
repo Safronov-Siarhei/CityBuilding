@@ -330,6 +330,7 @@ namespace CityBuilder.Combat
             if (IsHealer || IsCarrier)
             {
                 if (IsHealer && TickHealer()) return;
+                if (IsCarrier && TickSiegeTower()) return;
                 var place = Group.SlotPositionFor(this);
                 if (HorizontalDistance(place, transform.position) > SlotArrivalDistance) WalkTowards(place);
                 return;

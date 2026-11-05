@@ -169,6 +169,65 @@ namespace CityBuilder.Tests.PlayMode
         /// him his health back.
         /// </summary>
         /// <summary>
+        /// The siege rules (the user, 2026-11-05): a siege tower sent at a low fence rolls up and
+        /// docks, its gangway making the fence a walk; a spearman goes up by it; sent on past the
+        /// fence he jumps off and loses a share of his health; a knight is never let up.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheSiegeTowerDocks_AFootmanGoesUp_AndJumpsOffTheFarSide()
+        {
+            var army = ArmyManager.Instance;
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 50);
+            ResourceManager.Instance.SetAmount(ResourceType.Wood, 500);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 5000);
+            var origin = PlaytestWorld.FindFreeAreaNearTheMiddle(new Vector2Int(8, 6));
+            var fenceCell = origin + new Vector2Int(2, 2);
+            var fence = PlaytestWorld.Place(PlaytestWorld.Building("Fence"), fenceCell);
+            Assert.IsNotNull(fence, "No fence could be set down for the siege.");
+            yield return new WaitForSeconds(1f);
+            var near = PlaytestWorld.CellCenter(fenceCell + new Vector2Int(-2, 0));
+            var far = PlaytestWorld.CellCenter(fenceCell + new Vector2Int(3, 0));
+
+            Assert.IsTrue(army.TryRecruit(SoldierType.SiegeTower, near, 4), army.DescribeRecruitBlocker(SoldierType.SiegeTower, 4));
+            SoldierUnit tower = null, footman = null, knight = null;
+            foreach (var u in SoldierUnit.All) if (u != null && u.Type == SoldierType.SiegeTower) tower = u;
+            Assert.IsTrue(tower.DockAt(fence, fence.transform.position), "The siege tower found no cell beside the fence.");
+            var waited = 0f;
+            while (!tower.IsDocked && waited < 20f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(tower.IsDocked, "The siege tower never docked at the fence.");
+            Assert.IsTrue(CityBuilder.Buildings.WallWalk.IsWalk(fenceCell), "A docked tower made no gangway over the low fence.");
+
+            Assert.IsTrue(army.TryRecruit(SoldierType.Spearman, near, 5));
+            Assert.IsTrue(army.TryRecruit(SoldierType.Knight, near, 5));
+            foreach (var u in SoldierUnit.All)
+            {
+                if (u == null) continue;
+                if (u.Type == SoldierType.Spearman) footman = u;
+                if (u.Type == SoldierType.Knight) knight = u;
+            }
+            Assert.IsFalse(knight.GoToWall(fenceCell), "A knight was let up a wall.");
+            Assert.IsTrue(footman.GoToWall(fenceCell), "A spearman was not let up the docked tower.");
+            waited = 0f;
+            while (!(footman.OnWall && !footman.IsClimbing) && waited < 25f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(footman.OnWall, "The spearman never got up onto the fence.");
+            var before = footman.CurrentHealth;
+            footman.Group.OrderMoveTo(far);
+            yield return null;
+            Assert.IsFalse(footman.OnWall, "Sent past the fence, the spearman stayed up.");
+            Assert.Less(footman.CurrentHealth, before, "Jumping off the wall cost the spearman nothing.");
+            Assert.Greater(Vector3.Distance(footman.transform.position, far), 0f);
+            tower.Undock();
+        }
+
+        /// <summary>
         /// The Workshop (the user, 2026-11-05): a machine takes its crew of two citizens and gives
         /// them back when sent home; each Workshop level opens the next machine; the ram knows a
         /// gate from a wall.

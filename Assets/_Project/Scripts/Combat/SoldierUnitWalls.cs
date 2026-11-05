@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -52,7 +52,8 @@ namespace CityBuilder.Combat
         /// <summary>Sends a ranged fighter up to the free wall cell nearest `cell`; false when there is no way up to it.</summary>
         public bool GoToWall(Vector2Int cell)
         {
-            if (!IsRanged || SoldierStats.IsMachine(Type) || CurrentHealth <= 0 || Dungeon.DungeonMode.IsActive) return false;   // a machine climbs no stair
+            // every fighter but the cavalry and the machines (the user, 2026-11-05)
+            if (IsCavalry || SoldierStats.IsMachine(Type) || CurrentHealth <= 0 || Dungeon.DungeonMode.IsActive) return false;
             if (!WallWalk.FreeCellNear(cell, this, out var post)) return false;
             if (_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted)
             {
@@ -81,8 +82,35 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Comes down (by the nearest stair) or gives the way up up -- an order on the ground.</summary>
-        public void LeaveWall()
+        public void LeaveWall() => LeaveWall(null);
+
+        /// <summary>
+        /// An order on the ground toward `toward`: down by the stair nearest it -- or, where he
+        /// stands nearer to it than any stair does, a jump off the wall (SoldierUnitSiege). A
+        /// siege tower sent elsewhere leaves its wall.
+        /// </summary>
+        public void LeaveWall(Vector3? toward)
         {
+            if (IsCarrier)
+            {
+                Undock();
+                return;
+            }
+            if (toward.HasValue && (_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted))
+            {
+                var there = toward.Value;
+                // the stair nearest where he is going lies behind him (the siege tower on the near
+                // side of the wall, the order beyond it): no way down on that side, he jumps
+                var stairFound = WallWalk.NearestStair(_wallAt, there, out var near);
+                var toStair = stairFound ? WallWalk.Top(near) - transform.position : Vector3.zero;
+                var toThere = there - transform.position;
+                toStair.y = toThere.y = 0f;
+                if (stairFound && WallWalk.IsDockStair(near) && Vector3.Dot(toStair, toThere) <= 0f)
+                {
+                    JumpDown(there);
+                    return;
+                }
+            }
             switch (_wallPhase)
             {
                 case WallPhase.ToStair:
@@ -95,7 +123,7 @@ namespace CityBuilder.Combat
                 case WallPhase.Walking:
                 case WallPhase.Posted:
                     WallWalk.Release(this);
-                    if (!WallWalk.NearestStair(_wallAt, transform.position, out var stair) || !WallWalk.Path(_wallAt, stair, _wallPath))
+                    if (!WallWalk.NearestStair(_wallAt, toward ?? transform.position, out var stair) || !WallWalk.Path(_wallAt, stair, _wallPath))
                     {
                         DropToGround();
                         return;

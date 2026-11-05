@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -123,6 +123,12 @@ namespace CityBuilder.UI
             var ray = targetCamera.ScreenPointToRay(screenPosition);
             var hitCount = Physics.RaycastNonAlloc(ray, _hits, 500f, ~0);
 
+            // the siege towers go at the wall, friend's or foe's; fighters tapped onto a wall a docked
+            // tower leads up to go up it rather than strike it (the user, 2026-11-05)
+            var selected = army.SelectedGroup;
+            if (selected != null && selected.Count > 0 && selected.Members[0].IsCarrier && TryDockTowers(selected, hitCount)) return true;
+            if (DockedWallUnder(hitCount) && TryOrderOntoWall(selected, hitCount)) return true;
+
             var enemy = FindNearestEnemy(hitCount);
             if (enemy != null)
             {
@@ -168,9 +174,12 @@ namespace CityBuilder.UI
         /// </summary>
         private bool TryOrderOntoWall(ArmyGroup group, int hitCount)
         {
-            if (group == null || group.Count == 0 || !group.Members[0].IsRanged) return false;
+            // every fighter but the cavalry and the machines may go up (the user, 2026-11-05)
+            if (group == null || group.Count == 0 || group.Members[0].IsCavalry) return false;
             var grid = Grid.GridManager.Instance;
             if (grid == null) return false;
+            if (group.Members[0].IsCarrier) return TryDockTowers(group, hitCount);
+            if (SoldierStats.IsMachine(group.Type)) return false;
             for (var i = 0; i < hitCount; i++)
             {
                 var building = _hits[i].collider.GetComponentInParent<BuildingInstance>();
@@ -188,6 +197,41 @@ namespace CityBuilder.UI
                 }
                 group.NotifyPlayerOrder();
                 OrderMarker.ShowFlagFor(group.Members[0].transform, WallWalk.Top(cell), true);
+                return true;
+            }
+            return false;
+        }
+
+        private bool DockedWallUnder(int hitCount)
+        {
+            for (var i = 0; i < hitCount; i++)
+            {
+                var building = _hits[i].collider.GetComponentInParent<BuildingInstance>();
+                if (building != null && WallWalk.ReachedByDock(building)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Siege towers selected and a fence or gate tapped: each rolls to the wall beside the tap and docks (SoldierUnitSiege).</summary>
+        private bool TryDockTowers(ArmyGroup group, int hitCount)
+        {
+            for (var i = 0; i < hitCount; i++)
+            {
+                var building = _hits[i].collider.GetComponentInParent<BuildingInstance>();
+                if (building == null || building.Data == null) continue;
+                var id = building.Data.buildingName;
+                if (id != WallWalk.FenceId && id != WallWalk.GateId && id != WallWalk.BarbicanId) continue;
+                var sent = 0;
+                for (var k = 0; k < group.Count; k++)
+                    if (group.Members[k].DockAt(building, _hits[i].point)) sent++;
+                if (sent == 0)
+                {
+                    OrderMarker.HideOrder();
+                    OrderMarker.ShowRefused(_hits[i].point);
+                    return true;
+                }
+                group.NotifyPlayerOrder();
+                OrderMarker.ShowFlagFor(group.Members[0].transform, _hits[i].point, true);
                 return true;
             }
             return false;

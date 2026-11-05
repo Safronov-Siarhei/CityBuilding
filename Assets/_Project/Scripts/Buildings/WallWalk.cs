@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using UnityEngine;
@@ -50,6 +50,75 @@ namespace CityBuilder.Buildings
         // the walk cells a stair leads to (stretches without a tower are no use to anyone)
         private static readonly HashSet<Vector2Int> Reachable = new HashSet<Vector2Int>();
         private static bool _dirty = true;
+
+        // the siege towers standing at walls (the user, 2026-11-05): each a stair onto its wall cell,
+        // over a low fence a gangway of its own
+        private struct DockInfo
+        {
+            public Vector2Int Tower;
+            public Vector2Int Wall;
+            public float Top;
+        }
+
+        private static readonly Dictionary<Combat.SoldierUnit, DockInfo> Docks = new Dictionary<Combat.SoldierUnit, DockInfo>();
+
+        /// <summary>A siege tower docked at `wall` from `tower` (cells); `top` the gangway's height over a low fence.</summary>
+        public static void Dock(Combat.SoldierUnit who, Vector2Int tower, Vector2Int wall, float top)
+        {
+            Docks[who] = new DockInfo { Tower = tower, Wall = wall, Top = top };
+            _dirty = true;
+        }
+
+        public static void Undock(Combat.SoldierUnit who)
+        {
+            if (Docks.Remove(who)) _dirty = true;
+        }
+
+        /// <summary>That cell is where a siege tower stands docked (another than `except`), or `except`'s own dock still stands at a wall.</summary>
+        public static bool IsDockCell(Vector2Int cell, Combat.SoldierUnit except)
+        {
+            foreach (var pair in Docks)
+            {
+                if (pair.Key == null || pair.Value.Tower != cell) continue;
+                if (pair.Key != except) return true;
+                // its own: alive while the wall it leans on stands
+                return Nodes.ContainsKey(pair.Value.Wall) || WallStandsAt(pair.Value.Wall);
+            }
+            return false;
+        }
+
+        /// <summary>That stair cell is a docked siege tower, not a stair tower of the wall's own.</summary>
+        public static bool IsDockStair(Vector2Int cell)
+        {
+            foreach (var pair in Docks) if (pair.Key != null && pair.Value.Tower == cell) return true;
+            return false;
+        }
+
+        /// <summary>A docked siege tower's stair leads onto this building's walk: a tap on it sends fighters up rather than at it.</summary>
+        public static bool ReachedByDock(BuildingInstance b)
+        {
+            if (b == null || Docks.Count == 0) return false;
+            Ensure();
+            var cells = new HashSet<Vector2Int>(b.Cells());
+            foreach (var pair in Docks)
+            {
+                if (pair.Key == null || !Nodes.ContainsKey(pair.Value.Tower)) continue;
+                if (Walk(pair.Value.Tower, c => cells.Contains(c))) return true;
+            }
+            return false;
+        }
+
+        private static bool WallStandsAt(Vector2Int cell)
+        {
+            foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            {
+                if (b == null || b.Data == null || b.CurrentHealth <= 0) continue;
+                var id = b.Data.buildingName;
+                if (id != FenceId && id != GateId && id != BarbicanId) continue;
+                foreach (var c in b.Cells()) if (c == cell) return true;
+            }
+            return false;
+        }
 
         /// <summary>Counts the rebuilds, so a walker can tell its plan is stale.</summary>
         public static int Version { get; private set; }
@@ -135,6 +204,29 @@ namespace CityBuilder.Buildings
                     foreach (var j in joins) top = Mathf.Max(top, Nodes[j].Top);
                     foreach (var cell in own)
                         Nodes[cell] = new Node { Kind = Kind.Tower, Building = t, Top = top, Level = t.Level };
+                }
+            }
+            // the docked siege towers: a stair, and over a low fence the gangway onto it
+            if (grid != null && Docks.Count > 0)
+            {
+                var standing = new HashSet<Vector2Int>();
+                foreach (var b in Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                {
+                    if (b == null || b.Data == null || b.CurrentHealth <= 0) continue;
+                    var id = b.Data.buildingName;
+                    if (id == FenceId || id == GateId || id == BarbicanId) foreach (var c in b.Cells()) standing.Add(c);
+                }
+                foreach (var pair in Docks)
+                {
+                    if (pair.Key == null) continue;
+                    var dock = pair.Value;
+                    if (!Nodes.TryGetValue(dock.Wall, out var wallNode))
+                    {
+                        if (!standing.Contains(dock.Wall)) continue;
+                        wallNode = new Node { Kind = Kind.Wall, Top = dock.Top, Level = 0 };
+                        Nodes[dock.Wall] = wallNode;
+                    }
+                    if (!Nodes.ContainsKey(dock.Tower)) Nodes[dock.Tower] = new Node { Kind = Kind.Tower, Top = wallNode.Top, Level = 0 };
                 }
             }
             Reachable.Clear();

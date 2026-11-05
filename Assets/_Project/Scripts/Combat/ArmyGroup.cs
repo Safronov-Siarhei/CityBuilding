@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -74,7 +74,7 @@ namespace CityBuilder.Combat
         public void OrderMoveTo(Vector3 destination)
         {
             // an order on the ground brings whoever is on the walls down first
-            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall();
+            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall(destination);
             HoldPosition = destination;
             AttackTarget = null;
             OnChanged?.Invoke();
@@ -88,7 +88,7 @@ namespace CityBuilder.Combat
         public void OrderAttack(IDamageTarget target)
         {
             if (target == null || !target.IsAlive) return;
-            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall();
+            for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall(target.Transform.position);
             AttackTarget = target;
             HoldPosition = target.Transform.position;
             OnChanged?.Invoke();
