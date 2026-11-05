@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Resources;
@@ -22,7 +22,8 @@ namespace CityBuilder.UI
     {
         // the Shipyard (the user, 2026-10-28): a ship per button, the shipyard's level opens them
         // the dungeon's hire camp (the user, 2026-11-01): a gnome per button, held like the Barracks
-        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3 }
+        // the Stable and the Church (the user, 2026-11-05): the knight, the monk -- hired like the Barracks' soldiers
+        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3, Stable = 4, Church = 5 }
 
         private const float RefreshSeconds = 0.25f;
         private static readonly Color Dimmed = new Color(0.45f, 0.45f, 0.45f, 1f);
@@ -55,7 +56,8 @@ namespace CityBuilder.UI
                 if (focus == null || focus.Data == null) return null;
                 if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
                 if (kind == Kind.Shipyard) return focus.Data.buildingName == Ships.ShipManager.ShipyardId && focus.IsOperational ? focus : null;
-                return focus.Data.buildingName == BuildingIds.Barracks && focus.IsOperational ? focus : null;
+                var hall = kind == Kind.Stable ? BuildingIds.Stable : kind == Kind.Church ? BuildingIds.Church : BuildingIds.Barracks;
+                return focus.Data.buildingName == hall && focus.IsOperational ? focus : null;
             }
         }
 
@@ -226,7 +228,9 @@ namespace CityBuilder.UI
                 var need = SoldierStats.BarracksLevel(types[i]);
                 var tooLow = barracks.Level < need;
                 if (i < locks.Length && locks[i] != null) locks[i].SetActive(tooLow);
-                if (tooLow && i < lockTexts.Length && lockTexts[i] != null) lockTexts[i].text = Localization.Format("#army_card_barracks", need);
+                if (tooLow && i < lockTexts.Length && lockTexts[i] != null)
+                    lockTexts[i].text = kind == Kind.Barracks ? Localization.Format("#army_card_barracks", need)
+                        : Localization.Format("#army_card_building", Localization.Get("#building_" + SoldierStats.HiredAt(types[i]).ToLowerInvariant()), need);
                 if (tooLow)
                 {
                     prices[i].SetActive(false);

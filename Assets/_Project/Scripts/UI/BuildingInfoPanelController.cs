@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -528,7 +528,7 @@ namespace CityBuilder.UI
         {
             // Narrower than the recipe buttons because there are four of them rather than three:
             // 4 x 155 plus the gaps is 644, which fits the row's 660.
-            const float width = 155f;
+            const float width = 124f;   // five since the crossbowman (2026-11-05): 5 x 124 plus the gaps fits 660
             const float spacing = 8f;
             var count = SoldierStats.All.Length;
 

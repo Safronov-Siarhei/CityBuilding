@@ -58,6 +58,16 @@ namespace CityBuilder.Combat
         GnomeMiner = 7,
         GnomeCrossbow = 8,
         GnomeGuardian = 9,
+
+        /// <summary>
+        /// The roster widening (the user, 2026-11-05): roles and counters, not a ladder. The
+        /// crossbowman (Barracks level 5) pierces armour; the knight (the Stable) charges and takes
+        /// two places in the army; the monk (the Church) heals and never strikes. Their rules are
+        /// the units tab's `hired_at`, `army_slots`, `cap_per_level`, `vs_*`, `charge_*`, `healer`.
+        /// </summary>
+        Crossbowman = 10,
+        Knight = 11,
+        Monk = 12,
     }
 
     /// <summary>
@@ -98,6 +108,9 @@ namespace CityBuilder.Combat
                 case SoldierType.GnomeMiner: return "gnome_miner";
                 case SoldierType.GnomeCrossbow: return "gnome_crossbow";
                 case SoldierType.GnomeGuardian: return "gnome_guardian";
+                case SoldierType.Crossbowman: return "crossbowman";
+                case SoldierType.Knight: return "knight";
+                case SoldierType.Monk: return "monk";
                 case SoldierType.Militia:
                 default:
                     return "militia";
@@ -117,7 +130,34 @@ namespace CityBuilder.Combat
             SoldierType.Spearman,
             SoldierType.Archer,
             SoldierType.ManAtArms,
+            SoldierType.Crossbowman,
         };
+
+        /// <summary>Every type a building of the town hires (the Barracks' tiers, the Stable's knight, the Church's monk) -- for the save, the models, the Laboratory.</summary>
+        public static readonly SoldierType[] Hireable =
+        {
+            SoldierType.Militia,
+            SoldierType.Spearman,
+            SoldierType.Archer,
+            SoldierType.ManAtArms,
+            SoldierType.Crossbowman,
+            SoldierType.Knight,
+            SoldierType.Monk,
+        };
+
+        /// <summary>The building id that hires this type (units tab `hired_at`): the Barracks unless the sheet says the Stable or the Church.</summary>
+        public static string HiredAt(SoldierType type)
+        {
+            if (IsHero(type) || IsHireling(type)) return string.Empty;
+            var row = BalanceConfig.Instance.Unit(SheetIdOf(type));
+            return string.IsNullOrEmpty(row.hiredAt) ? Buildings.BuildingIds.Barracks : row.hiredAt;
+        }
+
+        /// <summary>How many of this type per level of its hiring building (the knight 4, the monk 2); 0 = no cap of its own.</summary>
+        public static int CapPerLevel(SoldierType type) => IsHero(type) || IsHireling(type) ? 0 : BalanceConfig.Instance.Unit(SheetIdOf(type)).capPerLevel;
+
+        /// <summary>Places in the army cap one soldier of this type takes (the knight 2).</summary>
+        public static int ArmySlots(SoldierType type) => IsHero(type) || IsHireling(type) ? 1 : System.Math.Max(1, BalanceConfig.Instance.Unit(SheetIdOf(type)).armySlots);
 
         /// <summary>
         /// Whether the Laboratory has opened this tier for recruitment.

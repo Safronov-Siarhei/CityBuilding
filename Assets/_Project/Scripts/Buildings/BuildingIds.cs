@@ -1,4 +1,4 @@
-namespace CityBuilder.Buildings
+﻿namespace CityBuilder.Buildings
 {
     /// <summary>
     /// The handful of building ids the game's rules name directly -- the ones where losing the
@@ -18,6 +18,11 @@ namespace CityBuilder.Buildings
 
         /// <summary>The Казарма: where soldiers are hired (in a run, by the buttons beside the «!», UI.FocusHireBar).</summary>
         public const string Barracks = "Barracks";
+
+        /// <summary>The roster widening (the user, 2026-11-05): the Конюшня hires the knight, the Мастерская builds the siege machines, the Church the monk.</summary>
+        public const string Stable = "Stable";
+        public const string Workshop = "Workshop";
+        public const string Church = "Church";
 
         /// <summary>
         /// Buildings put away for now (the user, 2026-11-02, the food rework): the Windmill is gone

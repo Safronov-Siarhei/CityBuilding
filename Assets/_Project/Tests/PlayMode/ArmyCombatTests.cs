@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using CityBuilder.Citizens;
 using CityBuilder.Combat;
@@ -161,6 +161,44 @@ namespace CityBuilder.Tests.PlayMode
 
             Assert.AreEqual(0, army.DailyUpkeep, "The army costs nothing by the day.");
             Assert.AreEqual(3, army.SoldierCount, "Nobody is let go for lack of pay.");
+        }
+
+        /// <summary>
+        /// The roster widening (the user, 2026-11-05): a knight takes two places in the army and
+        /// the Stable allows four a level; a monk strikes nobody and gives a wounded soldier beside
+        /// him his health back.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheKnightTakesTwoPlaces_AndTheMonkHeals()
+        {
+            var army = ArmyManager.Instance;
+            var spot = WalkablePoint();
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 50);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 5000);
+
+            var cap = SoldierStats.CapPerLevel(SoldierType.Knight);
+            Assert.Greater(cap, 0, "The Stable sets no cap on its knights.");
+            for (var i = 0; i < cap; i++) Assert.IsTrue(army.TryRecruit(SoldierType.Knight, spot, 1), $"Knight {i + 1} of {cap} refused: {army.DescribeRecruitBlocker(SoldierType.Knight, 1)}");
+            Assert.AreEqual(cap * 2, army.SoldierCount, "A knight is not counted as two places in the army.");
+            Assert.IsFalse(army.TryRecruit(SoldierType.Knight, spot, 1), "A level-1 Stable hired past its cap.");
+            Assert.IsTrue(army.TryRecruit(SoldierType.Knight, spot, 2), "A level-2 Stable is held to the level-1 cap.");
+            ClearArmy();
+
+            Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
+            Assert.IsTrue(army.TryRecruit(SoldierType.Monk, spot, 1));
+            SoldierUnit wounded = null;
+            foreach (var unit in SoldierUnit.All) if (unit != null && unit.Type == SoldierType.Militia) wounded = unit;
+            Assert.IsNotNull(wounded);
+            wounded.TakeDamage(wounded.MaxHealth / 2);
+            var hurt = wounded.CurrentHealth;
+            var waited = 0f;
+            while (wounded != null && wounded.CurrentHealth <= hurt && waited < 6f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(wounded, "The wounded militiaman died beside a monk.");
+            Assert.Greater(wounded.CurrentHealth, hurt, "The monk stood beside a wounded soldier and did not heal him.");
         }
 
         /// <summary>

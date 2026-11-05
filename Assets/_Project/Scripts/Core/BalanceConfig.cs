@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Resources;
@@ -145,6 +145,39 @@ namespace CityBuilder.Core
         /// man-at-arms 4. Both modes; in the sandbox the Laboratory still has to open the tier too.
         /// </summary>
         public int barracksLevel = 1;
+
+        /// <summary>
+        /// The roster widening (the user, 2026-11-05): the building that hires this type -- units tab
+        /// `hired_at`, a building id: the Barracks (default), the Stable (the knight), the Church (the
+        /// monk). `barracks_level` is then that building's level.
+        /// </summary>
+        public string hiredAt = "Barracks";
+
+        /// <summary>Places in the army cap one of these takes (`army_slots`; the knight 2, a soldier 1).</summary>
+        public int armySlots = 1;
+
+        /// <summary>How many of this type the army may hold per level of the hiring building (`cap_per_level`; the knight 4, the monk 2; 0 = no cap of its own).</summary>
+        public int capPerLevel;
+
+        /// <summary>Wears armour (`armoured`): a crossbow bolt does `vs_armoured` times its damage to it.</summary>
+        public bool armoured;
+
+        /// <summary>A horseman (`cavalry`): a spear does `vs_cavalry` times its damage to it; walks no walls.</summary>
+        public bool cavalry;
+
+        /// <summary>Damage multipliers of this type's blows against armoured / cavalry targets (`vs_armoured`, `vs_cavalry`; 1 = none).</summary>
+        public float vsArmoured = 1f;
+        public float vsCavalry = 1f;
+
+        /// <summary>The knight's charge: the first blow after a run of `charge_run` cells does `charge_mult` times its damage (0 run = no charge).</summary>
+        public float chargeMultiplier = 1f;
+        public float chargeRun;
+
+        /// <summary>
+        /// A healer (`healer`, the monk): never strikes; every attack interval he gives his attack
+        /// damage back as health to the most wounded soldier within his unit reach.
+        /// </summary>
+        public bool healer;
 
         /// <summary>A ship's row (ship_*): how many it carries, the Shipyard level that builds it, how many may sail (0 = no limit).</summary>
         public int capacity;

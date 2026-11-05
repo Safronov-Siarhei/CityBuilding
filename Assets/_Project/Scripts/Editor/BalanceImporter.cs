@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -403,6 +403,16 @@ namespace CityBuilder.EditorTools
                     levels = ReadUnitLevels(header, row, path),
                     startsUnlocked = Flag(header, row, "starts_unlocked", true, path),
                     barracksLevel = Mathf.Max(1, (int)OptionalNumber(header, row, "barracks_level", 1f, path)),
+                    hiredAt = Text(header, row, "hired_at").Length > 0 ? Text(header, row, "hired_at") : "Barracks",
+                    armySlots = Mathf.Max(1, (int)OptionalNumber(header, row, "army_slots", 1f, path)),
+                    capPerLevel = (int)OptionalNumber(header, row, "cap_per_level", 0f, path),
+                    armoured = Flag(header, row, "armoured", false, path),
+                    cavalry = Flag(header, row, "cavalry", false, path),
+                    vsArmoured = OptionalNumber(header, row, "vs_armoured", 1f, path),
+                    vsCavalry = OptionalNumber(header, row, "vs_cavalry", 1f, path),
+                    chargeMultiplier = OptionalNumber(header, row, "charge_mult", 1f, path),
+                    chargeRun = OptionalNumber(header, row, "charge_run", 0f, path),
+                    healer = Flag(header, row, "healer", false, path),
                     capacity = (int)OptionalNumber(header, row, "capacity", 0f, path),
                     shipyardLevel = Mathf.Max(1, (int)OptionalNumber(header, row, "shipyard_level", 1f, path)),
                     maxCount = (int)OptionalNumber(header, row, "max_count", 0f, path),

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CityBuilder.Buildings;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
 using CityBuilder.Resources;
@@ -39,7 +40,7 @@ namespace CityBuilder.Combat
         /// researched level: index type * SoldierLooks + level - 1 (metal at level 2, gold at 3).
         /// A missing level wears the one below; a type with none is drawn in cubes.
         /// </summary>
-        [SerializeField] private GameObject[] soldierModels = new GameObject[4 * SoldierLooks];
+        [SerializeField] private GameObject[] soldierModels = new GameObject[13 * SoldierLooks];
 
         public const int SoldierLooks = 3;
 
@@ -96,6 +97,17 @@ namespace CityBuilder.Combat
             SelectGroup(SelectedGroup == group ? null : group);
         }
 
+        /// <summary>How many soldiers of this type the army holds (the summoned ones aside).</summary>
+        public int CountOf(SoldierType type)
+        {
+            var total = 0;
+            foreach (var group in _groups)
+            {
+                if (group.Type == type && !group.IsSummoned) total += group.Count;
+            }
+            return total;
+        }
+
         public int SoldierCount
         {
             get
@@ -104,7 +116,7 @@ namespace CityBuilder.Combat
                 foreach (var group in _groups)
                 {
                     if (SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;   // heroes and the Queen's summons are no soldiers the army cap counts
-                    total += group.Count;
+                    total += group.Count * SoldierStats.ArmySlots(group.Type);   // a knight takes two places (the user, 2026-11-05)
                 }
                 return total;
             }
@@ -166,11 +178,21 @@ namespace CityBuilder.Combat
             // minute: the others say "wait" and this one says "go and research it".
             if (!SoldierStats.IsUnlocked(type)) return Localization.Get("#army_not_researched");
 
-            // then the Barracks' own level: each level opens the next tier (the user, 2026-10-28)
+            // then the hiring building's own level: each Barracks level opens the next tier (the user,
+            // 2026-10-28); the Stable and the Church say it in their own words
             var need = SoldierStats.BarracksLevel(type);
-            if (barracksLevel < need) return Localization.Format("#army_need_barracks", SoldierStats.DisplayName(type), need);
+            var hall = SoldierStats.HiredAt(type);
+            if (barracksLevel < need)
+                return hall == BuildingIds.Barracks
+                    ? Localization.Format("#army_need_barracks", SoldierStats.DisplayName(type), need)
+                    : Localization.Format("#army_need_building", SoldierStats.DisplayName(type), Localization.Get("#building_" + hall.ToLowerInvariant()), need);
 
-            if (SoldierCount >= SoldierStats.MaxArmySize) return Localization.Format("#army_full", SoldierStats.MaxArmySize);
+            if (SoldierCount + SoldierStats.ArmySlots(type) > SoldierStats.MaxArmySize) return Localization.Format("#army_full", SoldierStats.MaxArmySize);
+
+            // a type of its own cap per level of its building: the knights 4, the monks 2 a level (the user, 2026-11-05)
+            var cap = SoldierStats.CapPerLevel(type);
+            if (cap > 0 && barracksLevel != int.MaxValue && CountOf(type) >= cap * barracksLevel)
+                return Localization.Format("#army_type_cap", SoldierStats.DisplayName(type), cap * barracksLevel);
 
             var citizens = CitizenManager.Instance;
             if (citizens == null || citizens.IdlePopulation <= 0) return Localization.Get("#army_no_citizens");

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using CityBuilder.Buildings;
 using CityBuilder.CameraControl;
@@ -154,6 +154,13 @@ namespace CityBuilder.EditorTools
             var barracksData = CreateBuildingData(
                 "Barracks", new Vector2Int(3, 3), height: 2.8f,
                 wallColor: new Color(0.5f, 0.48f, 0.44f), roofColor: new Color(0.42f, 0.24f, 0.22f),
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Banner);
+
+            // the Конюшня (the user, 2026-11-05): hires the knights; 3x3 like the Barracks, model Tools/blender/stable1*.py
+            var stableData = CreateBuildingData(
+                BuildingIds.Stable, new Vector2Int(3, 3), height: 2.2f,
+                wallColor: new Color(0.6f, 0.52f, 0.4f), roofColor: new Color(0.24f, 0.36f, 0.62f),
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 motif: BuildingMotif.Banner);
 
@@ -337,7 +344,7 @@ namespace CityBuilder.EditorTools
                 lumberjackData, quarryData, mineData, coalMineData,
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
-                roadData, fenceData, towerData, barracksData, gateData,
+                roadData, fenceData, towerData, barracksData, stableData, gateData,
                 fortifiedTowerData, fortifiedGateData, moatData, drawbridgeData,
                 bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData, squareData
@@ -539,11 +546,15 @@ namespace CityBuilder.EditorTools
             }
             // the army (Tools/blender/soldiers.py), in SoldierType order, a look per researched level
             var soldierModels = armyManagerSO.FindProperty("soldierModels");
-            var soldierNames = new[] { "SoldierMilitia", "SoldierSpearman", "SoldierArcher", "SoldierManAtArms" };
+            // indexed by SoldierType; the heroes and the gnomes (4-9) have models of their own -- null here.
+            // The roster widening's crossbowman, knight, monk (10-12): Tools/blender/soldiers_new_drafts.py
+            var soldierNames = new[] { "SoldierMilitia", "SoldierSpearman", "SoldierArcher", "SoldierManAtArms", null, null, null, null, null, null,
+                "SoldierCrossbow", "SoldierKnight", "SoldierMonk" };
             soldierModels.arraySize = soldierNames.Length * ArmyManager.SoldierLooks;
             for (var i = 0; i < soldierNames.Length; i++)
             for (var level = 1; level <= ArmyManager.SoldierLooks; level++)
             {
+                if (soldierNames[i] == null) continue;
                 var file = level == 1 ? soldierNames[i] : $"{soldierNames[i]}-lvl{level}";
                 soldierModels.GetArrayElementAtIndex(i * ArmyManager.SoldierLooks + level - 1).objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Soldiers/{file}.fbx");

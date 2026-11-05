@@ -12,7 +12,7 @@
   `Barn1`, and Big… of each
 - **Развлечения:** Городская площадь `TownSquare1`, Таверна `Tavern1`, Театр `Theater1`, Церковь
   `Church1`, Коллизей `Colosseum1`, Декор. сад `DecGarden1`, Декор. дерево `DecTree1`, Декор. куст `DecBush1`, Флаг `Flag1`, Площадь `Square1` (2026-11-03: дорога 2x2, isRoad, Tools/blender/square.py, ур.1 песок / ур.2 брусчатка с каменным кругом, ур.3 плиты, ур.4 кирпич плетёнкой + роза ветров, ур.5 мрамор на золотых швах + золотая звезда (road_levels.py, у дороги те же 3-5); цены = 4 клетки дороги; не путать с TownSquare)
-- **Оборонительные:** Забор `Fence1`, Ворота `Gate1`, Башня `Tower1`, Казарма `Barracks1`,
+- **Оборонительные:** Забор `Fence1`, Ворота `Gate1`, Башня `Tower1`, Казарма `Barracks1`, Конюшня `Stable1` (2026-11-05, hires knights),
   Укреплённые ворота `FortifiedGate1`, Укреплённая башня `FortifiedTower1` (Укреплённый забор: models only, not a building)
 - **Производственные:** Лесопилка `Sawmill1`, Каменоломня `Quarry1`, Железный/Золотой/Медный/Угольный
   рудник `Iron/Gold/Copper/CoalMine1`, Плавильня `Smelter1`

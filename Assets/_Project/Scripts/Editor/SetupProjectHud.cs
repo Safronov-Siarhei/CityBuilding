@@ -172,8 +172,11 @@ namespace CityBuilder.EditorTools
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = layout.childControlHeight = false;
             layout.childForceExpandWidth = layout.childForceExpandHeight = false;
-            BuildHireBar(row.transform, FocusHireBar.Kind.Barracks, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms },
-                new[] { "PortraitMilitia", "PortraitSpearman", "PortraitArcher", "PortraitManAtArms" }, iconLibrary);
+            BuildHireBar(row.transform, FocusHireBar.Kind.Barracks, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer, SoldierType.ManAtArms, SoldierType.Crossbowman },
+                new[] { "PortraitMilitia", "PortraitSpearman", "PortraitArcher", "PortraitManAtArms", "PortraitCrossbowman" }, iconLibrary);
+            // the roster widening (the user, 2026-11-05): the Stable hires the knight, the Church the monk
+            BuildHireBar(row.transform, FocusHireBar.Kind.Stable, new[] { SoldierType.Knight }, new[] { "PortraitKnight" }, iconLibrary);
+            BuildHireBar(row.transform, FocusHireBar.Kind.Church, new[] { SoldierType.Monk }, new[] { "PortraitMonk" }, iconLibrary);
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
             // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers

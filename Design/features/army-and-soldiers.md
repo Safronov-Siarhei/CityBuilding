@@ -1,6 +1,8 @@
 # Army and soldiers
 
-> **Status (2026-10-24):** four tiers, groups, orders, saving — shipped. Every tier is now a jointed
+> **Status (2026-11-05):** the crossbowman, the knight (Stable) and the monk (Church) are IN THE CODE
+> (models exported, rules, hire bars, sheet columns) -- built, not seen by the user; the siege machines and
+> the Workshop are next. Earlier: four tiers, groups, orders, saving — shipped. Every tier is now a jointed
 > Blender figure in the heroes' style (stand / run / strike / limp death). Army upkeep in coins is GONE
 > (2026-11-05): a soldier is paid once, at hiring.
 > **Read with:** [combat-core](combat-core.md), [orc-camps-and-main-base](orc-camps-and-main-base.md),
@@ -159,6 +161,30 @@ spearman 20/7 for 45, archer 14/6 range 8 for 60, man-at-arms 45/9 for 90):
 
 **Open questions:** the bot's unit counts per wave; whether orcs get answers too.
 
+## The new fighters in the game (2026-11-05)
+- `SoldierType.Crossbowman = 10, Knight = 11, Monk = 12` (pinned ints, saved). `SoldierStats.All` = the Barracks'
+  five (crossbowman at Barracks lvl 5); `Hireable` = all seven; `HiredAt(type)` reads units `hired_at`
+  (Barracks / Stable / Church), and `barracks_level` is then THAT building's level.
+- `ArmySlots(type)` (units `army_slots`; knight 2): `ArmyManager.SoldierCount` counts places, the cap check is
+  count + slots > max. `CapPerLevel(type)` (units `cap_per_level`; knight 4, monk 2) x the hiring building's level,
+  `#army_type_cap`; skipped when no level is passed (int.MaxValue, the old callers).
+- `Combat/SoldierUnitRoles.cs`: `StrikeDamageOn(target)` = `vs_armoured` vs an `armoured` row, `vs_cavalry` vs a
+  `cavalry` row (read through `OrcUnit.Row`; the bot's soldiers use their player twin's row), then the CHARGE
+  (`charge_run` cells run since the last blow -> x`charge_mult`; a second standing spends the run-up). The monk
+  (`healer`): no target, no blows; every attack interval heals `attack_damage` to the most wounded soldier within
+  `attack_range_units`, walks to one hurt within `engage_radius`, else keeps his slot.
+- Hiring: `FocusHireBar.Kind.Stable` / `Kind.Church` (one button each, `#army_card_building`); the Barracks bar
+  has five. Portraits `UI/Icons/Portrait{Crossbowman,Knight,Monk}.png` (render_portrait.py); the Laboratory finds
+  them by `Portrait<Type>`.
+- Models: `soldiers_new_drafts.py -- <out> --install` puts the approved figures in the models file; exported to
+  `Models/Soldiers/Soldier{Crossbow,Knight,Monk}[-lvl2|3].fbx`; `soldierModels` is indexed by SoldierType (13 x 3,
+  nulls for heroes/gnomes). The knight's horse legs trot via FigureAnimator's four-legged path.
+- The Stable: building `Stable` (`BuildingIds.Stable`), 3x3, Defence, models `Stable1-lvl1..5.fbx`, icons
+  `Stable.png`/`Stable_L2..5.png`; buildings + sandbox rows by the Barracks' formula (40 wood 20 stone 5 iron,
+  hp 220/350/550/790/1100). Not in the Invasion tab (a run has no Stable -- not decided).
+- Not yet: the knight walks walls (cavalry must not -- wall walking is the siege phase), the bot's mirror of the
+  three, upkeep columns filled (5/7/3) only so the old tests' relationships hold -- upkeep is off.
+
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,
 `TargetPriority`, `SheetIdOf`), `Combat/ArmyGroup.cs` (`RestoreAttackOrder`), `Combat/ArmyManager.cs`,
@@ -170,7 +196,8 @@ units tab rows `militia`, `spearman`, `archer`, `manatarms` (hp, damage, interva
 `recruit_*`, upkeep, levels `_2/_3`, research); economy `army_max_size`.
 
 ## Tests
-EditMode `ArmyBalanceTests` (relationships, not numbers), `SoldierTierTests`; PlayMode `ArmyCombatTests`,
+EditMode `ArmyBalanceTests` (relationships, not numbers), `SoldierTierTests`; PlayMode `ArmyCombatTests`
+(`TheKnightTakesTwoPlaces_AndTheMonkHeals`: 2 slots, the Stable's cap per level, a monk heals),
 `MoveOrderMarkerTests`.
 
 ## Traps

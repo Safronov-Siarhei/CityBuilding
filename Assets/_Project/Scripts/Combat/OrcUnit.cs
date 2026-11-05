@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -312,6 +312,9 @@ namespace CityBuilder.Combat
             LoadStats(OrcKind.Raider);
         }
 
+        /// <summary>Its units-tab row (the bot's soldiers: their player twin's): what a soldier's counters read -- `armoured`, `cavalry`.</summary>
+        public UnitBalance Row { get; private set; }
+
         private void LoadStats(OrcKind kind)
         {
             Kind = kind;
@@ -319,6 +322,7 @@ namespace CityBuilder.Combat
             // lvl-2 man was far stronger than the player's): the units tab's rows and per-level columns
             var stats = IsBotSide(kind) ? BalanceConfig.Instance.Unit(PlayerTwinOf(kind))
                 : IsMonster(kind) ? BalanceConfig.Instance.MonsterUnit(SheetIdOf(kind)) : BalanceConfig.Instance.Unit(SheetIdOf(kind));
+            Row = stats;
             _buildingAttackRange = stats.attackRangeStructures;
             _soldierAttackRange = stats.attackRangeUnits;
             _soldierAggroRadius = stats.engageRadius;
