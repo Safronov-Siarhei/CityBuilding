@@ -106,6 +106,20 @@ lvl3 gold finials on the gable ends, a weathervane on the louvre, a stone gatewa
 lvl4 glazed roof + glazed lean-to (5248); lvl5 gilded roofs (5248). Each level 3.6 m +X of the one before, 6 m -y of the Barracks.
 Heavy for the budget: trim (quoins, wheels, the crane) if the phone needs it.
 
+**Numbers AGREED by the user (2026-11-05)** -- go into the sheet when the code is built (no columns yet):
+- Workshop: 40 wood, 30 stone, 10 iron; health 220, levels by the Barracks' formula. Opens: lvl1 Ram, lvl2 Ballista,
+  lvl3 Catapult, lvl4 Siege tower, lvl5 nothing new (look only).
+- Level 1 machines (hp / damage / every s / range cells / speed / army slots / crew citizens / coins + kit / upkeep a day):
+  - Ram: 160 / 60 to GATES only / 3 / touch / 0.7 / 2 / 2 / 120 + 20 wood, 2 iron bars / 4. Arrows do 25% to it.
+  - Ballista: 40 / 30 / 3.5 / 11 / 0.8 / 2 / 2 / 140 + 1 iron bar, 1 copper bar / 5. x1.5 vs big targets (man-at-arms, brute,
+    chief, machines, ships), x0.3 vs buildings.
+  - Catapult: 60 / 25 splash r 1.2 cells / 5 / 14, min 4 / 0.6 / 3 / 2 / 180 + 30 wood, 2 iron bars / 6. x2 vs buildings.
+  - Siege tower: 300 / -- / -- / -- / 0.5 / 3 / 2 / 150 + 60 wood / 5. Arrows do 50%; climb one by one, wall_climb_sec each.
+- Jump down from a wall with no stair inside: loses 30% of max health.
+- Machine levels 2-3 by Laboratory research like soldiers: hp and damage about x1.45 a level; research 250 / 450 coins.
+- New sheet columns: units `army_slots` (soldiers 1), `crew`, damage multipliers vs gates / buildings / big targets;
+  economy: wall jump damage share, arrow-damage shares for the ram and the tower. The bot (full mirror) uses the same numbers.
+
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
 
 ## Code
