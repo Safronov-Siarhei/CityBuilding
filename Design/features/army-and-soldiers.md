@@ -96,6 +96,12 @@ blue gambeson, leather cap) plus a lineup with a spearman, a lvl-5 wall and a lv
 0.94x1.27x0.86 (2.5k tris), ballista 0.88x1.27x0.60 (2.2k), tower 1.06x1.20x1.97 with the deck at 1.35 (2.7k), ram
 0.78x1.61x0.89 (2.6k). The bot needs no models of its own: its units draw through BotPalette.mat, which turns roof_blue/banner_blue (the crew, pennants) to straw. Not yet: splitting into animated parts (catapult arm, ballista string+bolt, ram log, tower drawbridge), install into the .blend, export, the Workshop building's model.
 
+**Workshop building draft (2026-11-05, waiting for the user's approval):** `Tools/blender/workshop1.py` builds
+Workshop1-lvl1 (3x3 like the Barracks, borrowing its box -- no placeholder of its own; stands 6 m in -y of it in the Models
+.blend): a tall half-timbered carpenters' hall gable-on with its doors open, blue Defence roof, lean-to timber store, forge
+chimney, yard with a treadwheel crane, a catapult half built on trestles, stone shot. 2935 tris (over the 1000-1500 services
+budget; the crane wheel and the trestle catapult are the place to trim). Levels 2-5 not made.
+
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
 
 ## Code
