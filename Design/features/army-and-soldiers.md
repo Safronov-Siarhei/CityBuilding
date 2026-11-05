@@ -109,7 +109,7 @@ lvl3 gold finials on the gable ends, a weathervane on the louvre, a stone gatewa
 lvl4 glazed roof + glazed lean-to (5248); lvl5 gilded roofs (5248). Each level 3.6 m +X of the one before, 6 m -y of the Barracks.
 Heavy for the budget: trim (quoins, wheels, the crane) if the phone needs it.
 
-**New fighters' drafts (2026-11-05, waiting for the user's approval):** `Tools/blender/soldiers_new_drafts.py -- <out_dir>`
+**New fighters' drafts (2026-11-05, APPROVED by the user after fixes: knight's pennant along the lance, monk's sun on the scapular, hood off the brows, scapular lying on the habit):** `Tools/blender/soldiers_new_drafts.py -- <out_dir>`
 (borrows soldiers.py's helpers by exec without its main(); never saves) builds jointed SoldierCrossbow (kettle hat with a wide
 brim, breastplate over the blue gambeson, blue pavise on the back, crossbow at the hip; 960 tris), SoldierMonk (white habit,
 blue scapular and hood, gold sun on the chest and on the staff, a lit lantern; 1034) and SoldierKnight (the man-at-arms seated
