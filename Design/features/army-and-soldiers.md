@@ -79,7 +79,8 @@ gather = ring; refused = red ripple.
 - **A machine is ONE unit with its crew in the model** (user picked): takes 2 citizens and 2-3 of the 20 army slots; cheap on the phone.
 - My roles (not agreed): катапульта = slow, long, area, a dead zone close in, vs buildings/towers/crowds;
   баллиста = one heavy bolt, longer than an archer, vs big targets (man-at-arms, brutes, knights, machines, ships near shore);
-  таран = slow, roofed (arrows barely hurt it), huge damage to GATES only, weak to melee.
+  таран = slow, roofed (arrows barely hurt it), weak to melee.
+- **The ram damages ONLY gates** (user, 2026-11-05): zero to every other building, wall, unit.
 - **Осадная башня:** rolls to a chosen wall piece and docks; while docked it is a temporary stair (a node in `WallWalk`),
   fighters climb it one by one; it has health and can be broken or burnt. **Works against ANY fence** (user): on a lvl1-2
   fence (not walkable today) it throws a gangway over and the fighters climb across to the other side.
