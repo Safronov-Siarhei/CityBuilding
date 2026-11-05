@@ -51,6 +51,8 @@ TABS = {
     "sandbox": {"gid": "291742027", "stacked": True},
     # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
     "botwaves": {"gid": "1680852949", "key": ["wave", "unit"]},
+    # every number of the tutorial (2026-11-05): key/value like economy
+    "tutorial": {"gid": "1105001", "key": ["key"]},
 }
 
 # Differences that are correct and permanent. Reported as a note, not as a failure.

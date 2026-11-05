@@ -36,5 +36,8 @@ namespace CityBuilder.EditorTools
 
         [Tooltip("Опубликованная как CSV вкладка botwaves (волны набегов бота на войне)")]
         public string botWavesCsvUrl = string.Empty;
+
+        [Tooltip("Опубликованная как CSV вкладка tutorial (все числа обучения)")]
+        public string tutorialCsvUrl = string.Empty;
     }
 }

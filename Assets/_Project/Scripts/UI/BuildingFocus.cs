@@ -104,7 +104,7 @@ namespace CityBuilder.UI
             else _reach.gameObject.SetActive(false);
 
             building.PinHealthBar(true);
-            if (detailsButton != null) detailsButton.SetActive(true);
+            if (detailsButton != null) detailsButton.SetActive(!NoDetails);
         }
 
         /// <summary>Holds a building of another side: a red ring round it, its reach if it shoots, the «!» for its card.</summary>
@@ -136,8 +136,11 @@ namespace CityBuilder.UI
                 _reach.gameObject.SetActive(true);
             }
             else _reach.gameObject.SetActive(false);
-            if (detailsButton != null) detailsButton.SetActive(true);
+            if (detailsButton != null) detailsButton.SetActive(!NoDetails);
         }
+
+        /// <summary>The tutorial: a building can be held, its card is never shown -- no «!» (the user, 2026-11-05).</summary>
+        private static bool NoDetails => Tutorial.TutorialMode.IsActive;
 
         /// <summary>Holds a dungeon's mouth: a gold ring round it and the «!» for its card -- the card no longer opens at the tap.</summary>
         public void SelectEntrance(Dungeon.DungeonEntrance entrance)
@@ -254,7 +257,7 @@ namespace CityBuilder.UI
                 || (DiplomacyWindow.Instance != null && DiplomacyWindow.Instance.IsOpen)
                 || Dungeon.DungeonEntrance.AnyCardOpen;
             // (and never on the hire camp, which has no card -- it used to come back here)
-            var wanted = !cardUp && (Entrance == null || Entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);
+            var wanted = !cardUp && !NoDetails && (Entrance == null || Entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);
             if (detailsButton != null && detailsButton.activeSelf != wanted) detailsButton.SetActive(wanted);
             // the camera taken away till the building is off the screen lets it go
             if (!cardUp && OffScreen(Held))

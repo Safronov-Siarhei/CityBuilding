@@ -1,4 +1,5 @@
-﻿using CityBuilder.Buildings;
+﻿using System.Collections.Generic;
+using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using UnityEngine;
@@ -221,19 +222,58 @@ namespace CityBuilder.Ships
             return false;
         }
 
+        /// <summary>The tutorial's barge while it waits by the orcs' island (no Steer: it holds there).</summary>
+        private readonly HashSet<ShipUnit> _moored = new HashSet<ShipUnit>();
+
+        /// <summary>Where the tutorial's barge sails off to once its orcs are ashore -- the open sea, where it is gone.</summary>
+        private Vector3? _tutorialExit;
+
         /// <summary>
-        /// The tutorial's raid (the user, 2026-11-05): one orc barge with `count` orcs out of the sea at
-        /// `from` for the sea nearest `beach`; it puts them ashore there and is gone. Null when there is
-        /// no sea by either point.
+        /// The tutorial's barge (the user, 2026-11-05): it stands empty in the shore water by `island`
+        /// (the orcs' portal) from the start, until SailTutorialBarge sends it. Null with no sea near.
         /// </summary>
-        public ShipUnit LaunchTutorialBarge(Vector3 from, Vector3 beach, int count)
+        public ShipUnit MoorTutorialBarge(Vector3 island, Vector3 facingTo)
         {
-            if (count <= 0 || !TrySampleSea(from, 12f, out var home) || !TryNearestSea(beach, 20f, out var landing)) return null;
-            var facing = Quaternion.LookRotation((landing - home).sqrMagnitude > 0.01f ? (landing - home).normalized : Vector3.forward);
-            var ship = SpawnOrcShip(ShipKind.OrcTransport, home, 0, facing, _nextOrcRaid++, count, 1, landing);
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_fleet", count), EventSeverity.Danger, EventGlyph.Swords, null,
-                home, ship != null ? ship.transform : null));
+            if (!TryNearestSea(island, 60f, out var at, shoreOnly: true) && !TryNearestSea(island, 60f, out at)) return null;
+            var to = facingTo - at;
+            to.y = 0f;
+            var ship = Spawn(ShipKind.OrcTransport, at, Quaternion.LookRotation(to.sqrMagnitude > 0.01f ? to.normalized : Vector3.forward), ShipStats.MaxHealth(ShipKind.OrcTransport));
+            ship.OrcRaid = _nextOrcRaid++;
+            ship.OrcLevel = 1;
+            ship.OrcDestination = at;
+            _moored.Add(ship);
             return ship;
+        }
+
+        /// <summary>The land by the moored barge, where its orcs walk to go aboard.</summary>
+        public static bool TryBargeBeach(ShipUnit ship, out Vector3 beach)
+        {
+            beach = default;
+            return ship != null && TrySampleLand(ship.transform.position, 10f, out beach);
+        }
+
+        /// <summary>
+        /// The orcs are aboard: the barge carries `count` of them to the sea nearest `beach`, puts them
+        /// ashore and sails off into the open sea, away across the map from both islands, and is gone.
+        /// </summary>
+        public bool SailTutorialBarge(ShipUnit ship, Vector3 beach, int count)
+        {
+            if (ship == null || !TryNearestSea(beach, 20f, out var landing)) return false;
+            _moored.Remove(ship);
+            var from = ship.transform.position;
+            var across = landing - from;
+            across.y = 0f;
+            var side = across.sqrMagnitude > 0.01f ? Vector3.Cross(Vector3.up, across.normalized) : Vector3.right;
+            var middle = (from + landing) * 0.5f;
+            _tutorialExit = null;
+            for (var far = 60f; far >= 20f && !_tutorialExit.HasValue; far -= 10f)
+                if (TrySampleSea(middle + side * far, 10f, out var exit)) _tutorialExit = exit;
+            ship.OrcCargo = count;
+            ship.OrcDestination = landing;
+            ship.SailTo(landing);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_fleet", count), EventSeverity.Danger, EventGlyph.Swords, null,
+                from, ship.transform));
+            return true;
         }
 
         /// <summary>
@@ -316,11 +356,13 @@ namespace CityBuilder.Ships
         /// <summary>An orc ship's next move: out to its beach, the orcs ashore, home again; a war ship hunts the player's ships on the way.</summary>
         private void Steer(ShipUnit ship)
         {
+            if (_moored.Contains(ship)) return;
             var here = ship.transform.position;
             if (ship.OrcHomeward)
             {
                 Vector3 home;
-                if (ship.IsBotShip)
+                if (_tutorialExit.HasValue && Tutorial.TutorialMode.IsActive) home = _tutorialExit.Value;
+                else if (ship.IsBotShip)
                 {
                     var harbour = Bot.BotWar.Harbour;
                     home = harbour.HasValue && TryNearestSea(harbour.Value, 30f, out var bh) ? bh : ship.OrcDestination;

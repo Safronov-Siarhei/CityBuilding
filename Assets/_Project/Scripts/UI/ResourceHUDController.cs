@@ -123,10 +123,12 @@ namespace CityBuilder.UI
                 if (run && !Invasion.InvasionRules.IsRunResource(resourceOrder[i])) _seen[i] = false;
                 // a dungeon: the coins and the crystals, nothing else (the user, 2026-11-01)
                 if (below) _seen[i] = resourceOrder[i] == ResourceType.Coins;
+                // the tutorial: the people alone (the user, 2026-11-05)
+                if (Tutorial.TutorialMode.IsActive) _seen[i] = false;
                 if (_seen[i]) visible++;
             }
             // the crystals always (a run has none); the people everywhere but a dungeon (no people there)
-            var crystals = !run && crystalIcon != null;
+            var crystals = !run && !Tutorial.TutorialMode.IsActive && crystalIcon != null;
             if (crystals) visible++;
             if (!below) visible++;
 

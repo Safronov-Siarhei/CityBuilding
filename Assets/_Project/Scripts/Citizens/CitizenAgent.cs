@@ -62,7 +62,7 @@ namespace CityBuilder.Citizens
         /// (harvest_seconds), because it is now the tempo of the whole wood and stone economy
         /// rather than a cosmetic pause.
         /// </summary>
-        private static float HarvestSeconds => Core.BalanceConfig.Instance.HarvestSeconds;
+        private static float HarvestSeconds => Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.GatherSeconds : Core.BalanceConfig.Instance.HarvestSeconds;
         // Close enough to work a resource node, instead of demanding its exact center: trees carve
         // themselves out of the NavMesh (see TreesAreaSpawner's NavMeshObstacle), so a route to a
         // tree's center can never fully complete -- the agent would grind against the carve until

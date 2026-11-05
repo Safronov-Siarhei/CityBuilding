@@ -45,6 +45,8 @@ namespace CityBuilder.Ships
         {
             ClearShoals();
             var count = BalanceConfig.Instance != null ? BalanceConfig.Instance.FishShoalCount : 12;
+            // the tutorial: a few, for the look (the user, 2026-11-05: too many)
+            if (Tutorial.TutorialMode.IsActive && BalanceConfig.Instance != null) count = Mathf.Min(count, BalanceConfig.Instance.TutorialFishShoals);
             var rng = new SeedRandom(world.Seed * 31 + 7);
             var start = origin + new Vector3(world.StartCell.x + 0.5f, 0f, world.StartCell.y + 0.5f);
             for (var k = 0; k < count; k++)
@@ -102,6 +104,8 @@ namespace CityBuilder.Ships
         /// <summary>The live shoal under a point on the water, within its fish's circle and a little more; null if none.</summary>
         public Shoal ShoalAt(Vector3 point)
         {
+            // the tutorial's fish take no taps: one stole the tap meant for the soldier (the user, 2026-11-05)
+            if (Tutorial.TutorialMode.IsActive) return null;
             Shoal best = null;
             var bestD = ShoalTapRadius;
             foreach (var shoal in _shoals)

@@ -83,6 +83,20 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(TutorialDirector.Instance, "No tutorial script.");
             for (var t = 0f; t < 2f && TutorialDirector.Instance.Current == TutorialDirector.Step.TownHall; t += Time.deltaTime) yield return null;
             Assert.AreNotEqual(TutorialDirector.Step.TownHall, TutorialDirector.Instance.Current, "The script did not move past the Town Hall.");
+
+            // the orcs' barge waits by their island from the start, empty (the user, 2026-11-05)
+            ShipUnit barge = null;
+            for (var t = 0f; t < 2f && barge == null; t += Time.deltaTime)
+            {
+                foreach (var ship in ShipManager.Instance.Ships)
+                    if (ship != null && ship.IsOrc) barge = ship;
+                yield return null;
+            }
+            Assert.IsNotNull(barge, "No orc barge waiting by the orcs' island.");
+            Assert.AreEqual(0, barge.OrcCargo, "The waiting barge already carries orcs.");
+            var portalAt = OrcPortal.All[0].transform.position;
+            Assert.Less(Vector3.Distance(new Vector3(barge.transform.position.x, 0f, barge.transform.position.z), new Vector3(portalAt.x, 0f, portalAt.z)), 60f,
+                "The barge does not wait by the orcs' island.");
         }
     }
 }

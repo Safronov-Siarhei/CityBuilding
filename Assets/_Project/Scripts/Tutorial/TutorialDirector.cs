@@ -49,8 +49,10 @@ namespace CityBuilder.Tutorial
 
         private const float FocusEvery = 0.3f;     // the camera re-centred on a moving unit this often
         private const float CheckEvery = 0.25f;
-        private const float PeopleHintSeconds = 6f;
         private const float SailReach = 12f;       // metres from our landing beach that count as «there»
+        private const float BoardingGiveUp = 30f;  // the raid's orcs not at their barge by then: aboard anyway
+        private const float WanderEvery = 9f;      // the King strolls to a new spot this often
+        private const float WanderReach = 14f;     // that far from the Town Hall at most
 
         private GameObject _panel;
         private Text _line;
@@ -65,6 +67,13 @@ namespace CityBuilder.Tutorial
         private ShipUnit _barge;                   // the orcs' raid
         private float _raidAt = -1f;
         private readonly HashSet<OrcUnit> _softened = new HashSet<OrcUnit>();
+        private readonly List<OrcUnit> _walkers = new List<OrcUnit>();   // the raid's orcs on their way from the portal to the barge
+        private Vector3 _walkBeach;
+        private TutorialHud _hud;
+        private BuildingCategoryPanel _buildMenu;
+        private BuildingPlacer _placer;
+        private float _normalDistance = -1f;       // the camera's distance before it zoomed in on a person
+        private float _wanderIn;
         private const string RewardedKey = "tutorial.rewarded";
 
         // Not in Awake: TutorialMode is decided in MeshMapApplier.Awake, and the order of two objects'
@@ -75,6 +84,8 @@ namespace CityBuilder.Tutorial
         {
             if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded -= OnGameEnded;
             if (Instance == this) Instance = null;
+            _hud?.Dispose();
+            TutorialRules.Wanted = null;
         }
 
         private void Start()
@@ -87,7 +98,11 @@ namespace CityBuilder.Tutorial
             Instance = this;
             _camera = FindAnyObjectByType<RTSCameraController>();
             _citizens = FindAnyObjectByType<CitizenSelector>();
+            _buildMenu = FindAnyObjectByType<BuildingCategoryPanel>();
+            _placer = FindAnyObjectByType<BuildingPlacer>();
             BuildPanel();
+            _hud = new TutorialHud(uiRoot != null ? uiRoot : transform);
+            _hud.ApplyHidden(false);
             Enter(Step.TownHall);
             if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded += OnGameEnded;
         }
@@ -105,6 +120,8 @@ namespace CityBuilder.Tutorial
         private void Update()
         {
             _stepTime += Time.deltaTime;
+            WalkToBarge();
+            ShowTheWay();
             _focusIn -= Time.unscaledDeltaTime;
             if (_focusIn <= 0f)
             {
@@ -114,6 +131,9 @@ namespace CityBuilder.Tutorial
             _checkIn -= Time.deltaTime;
             if (_checkIn > 0f) return;
             _checkIn = CheckEvery;
+            _hud.ApplyHidden(BuildingInstance.TownHall != null);
+            MoorBarge();
+            Wander();
             Soften();
             if (Current != Step.Done && StepDone()) Enter(Current + 1);
         }
@@ -132,6 +152,19 @@ namespace CityBuilder.Tutorial
             }
             if (step == Step.KingPick || step == Step.SoldierPick) _unit = null;
             if (step == Step.Raid) LaunchRaid();
+            TutorialRules.Wanted = WantedAt(step);
+            // the first person shown close up (the user: zoomed in 50%, easy to tap) ...
+            if (step == Step.WoodPick && _camera != null && _normalDistance < 0f)
+            {
+                _normalDistance = _camera.GoalDistance;
+                _camera.ZoomTo(_normalDistance * BalanceConfig.Instance.TutorialPersonZoom);
+            }
+            // ... and once the stone is in, the usual height over the Town Hall: most of the island in view
+            if (step == Step.Barracks && _camera != null)
+            {
+                if (_normalDistance > 0f) _camera.ZoomTo(_normalDistance);
+                if (BuildingInstance.TownHall != null) _camera.FocusOn(BuildingInstance.TownHall.transform.position);
+            }
             Say("#tutorial_hint_" + step.ToString().ToLowerInvariant());
         }
 
@@ -141,7 +174,7 @@ namespace CityBuilder.Tutorial
             {
                 case Step.TownHall: return BuildingInstance.TownHall != null;
                 case Step.Hovel: return Standing("Hovel");
-                case Step.People: return _stepTime >= PeopleHintSeconds;
+                case Step.People: return _stepTime >= BalanceConfig.Instance.TutorialPeopleHintSeconds;
                 case Step.WoodPick: return Picked();
                 case Step.WoodSend: return Gathered(ResourceType.Wood);
                 case Step.StonePick: return Picked();
@@ -223,19 +256,71 @@ namespace CityBuilder.Tutorial
 
         // ------------------------------------------------------------ the orcs
 
+        /// <summary>
+        /// The orcs' barge waits by their island from the moment it is laid (the user, 2026-11-05: it
+        /// stands there; the orcs come out of the portal and board it when the raid starts).
+        /// </summary>
+        private void MoorBarge()
+        {
+            if (_barge != null || _raidAt >= 0f || OrcPortal.All.Count == 0 || ShipManager.Instance == null) return;
+            var map = MeshMapApplier.Instance;
+            var towards = map != null && map.TryTutorialSpot("orc_landing", out var landing) ? landing : Vector3.zero;
+            _barge = ShipManager.Instance.MoorTutorialBarge(OrcPortal.All[0].transform.position, towards);
+        }
+
+        /// <summary>The raid: tutorial_raid_orcs orcs step out of the portal and walk to the barge (WalkToBarge).</summary>
         private void LaunchRaid()
         {
-            var map = MeshMapApplier.Instance;
-            var ships = ShipManager.Instance;
-            if (map == null || ships == null || !map.TryTutorialSpot("orc_barge", out var from) || !map.TryTutorialSpot("orc_landing", out var beach)) return;
-            _barge = ships.LaunchTutorialBarge(from, beach, BalanceConfig.Instance.TutorialRaidOrcs);
             _raidAt = Time.time;
+            var orcs = OrcRaidManager.Instance;
+            if (orcs == null || OrcPortal.All.Count == 0) return;
+            var portal = OrcPortal.All[0].transform.position;
+            if (_barge == null || !_barge || !ShipManager.TryBargeBeach(_barge, out _walkBeach))
+            {
+                // no barge (no sea by their island): the raid lands as it used to, at our beach
+                if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryTutorialSpot("orc_landing", out var beach))
+                    orcs.SpawnLanding(beach, BalanceConfig.Instance.TutorialRaidOrcs, 1);
+                return;
+            }
+            var toBeach = _walkBeach - portal;
+            toBeach.y = 0f;
+            var step = toBeach.sqrMagnitude > 0.01f ? toBeach.normalized * 3f : Vector3.forward * 3f;
+            for (var i = 0; i < BalanceConfig.Instance.TutorialRaidOrcs; i++)
+            {
+                var orc = orcs.SpawnOrcOfKind(portal + step + Vector3.right * (i - 0.5f), 1, OrcKind.Raider);
+                if (orc == null) continue;
+                orc.Steered = true;
+                _softened.Add(orc);
+                _walkers.Add(orc);
+            }
+        }
+
+        /// <summary>Every frame while they walk: on to the barge's beach; all there (or too long) -- aboard, and it sails.</summary>
+        private void WalkToBarge()
+        {
+            if (_walkers.Count == 0) return;
+            var waiting = false;
+            foreach (var orc in _walkers)
+                if (orc != null && orc.SteerTo(_walkBeach)) waiting = true;
+            if (waiting && Time.time - _raidAt < BoardingGiveUp) return;
+            var count = 0;
+            foreach (var orc in _walkers)
+            {
+                if (orc == null) continue;
+                count++;
+                Destroy(orc.gameObject);
+            }
+            _walkers.Clear();
+            var map = MeshMapApplier.Instance;
+            if (count > 0 && _barge != null && _barge && map != null && map.TryTutorialSpot("orc_landing", out var landing))
+                ShipManager.Instance.SailTutorialBarge(_barge, landing, count);
         }
 
         /// <summary>The barge has landed its orcs and every one of them is down (a barge that never sailed: no raid to wait for).</summary>
         private bool RaidBeaten()
         {
             if (_raidAt < 0f) return true;
+            if (_walkers.Count > 0) return false;
             if (_barge != null && _barge && _barge.OrcCargo > 0) return false;
             foreach (var orc in OrcUnit.All)
                 if (orc != null && orc.CurrentHealth > 0 && !orc.IsGuard) return false;
@@ -264,9 +349,117 @@ namespace CityBuilder.Tutorial
             {
                 if (orc == null || _softened.Contains(orc)) continue;
                 _softened.Add(orc);
-                // the guard was softened when it was laid
-                if (!orc.IsGuard) orc.Toughen(1f, mult);
+                // the guard was softened when it was laid; tougher, they last more than one shot (the user)
+                if (!orc.IsGuard) orc.Toughen(BalanceConfig.Instance.TutorialOrcHealthMult, mult);
             }
+        }
+
+        // ------------------------------------------------------------ showing the way
+
+        /// <summary>The building the step asks for: its card unlocked, the arrow on it.</summary>
+        private static string WantedAt(Step step)
+        {
+            switch (step)
+            {
+                case Step.TownHall: return BuildingIds.TownHall;
+                case Step.Hovel: return "Hovel";
+                case Step.Barracks: return BuildingIds.Barracks;
+                case Step.Shipyard: return ShipManager.ShipyardId;
+                default: return null;
+            }
+        }
+
+        /// <summary>Every frame: the blinking build button, the arrow over the card, the gold ring on what to tap.</summary>
+        private void ShowTheWay()
+        {
+            var building = Current == Step.Hovel || Current == Step.Barracks || Current == Step.Shipyard;
+            var placing = _placer != null && _placer.IsSelecting;
+            var open = _buildMenu != null && _buildMenu.IsOpen;
+            var tab = _buildMenu != null ? _buildMenu.FirstTab : null;
+            var card = building && open && !placing && _buildMenu != null ? _buildMenu.CardOf(TutorialRules.Wanted) : null;
+            Highlight(out var at, out var radius);
+            _hud.Tick(tab, building && !open && !placing, card, at, radius);
+        }
+
+        /// <summary>What the player should tap now, in the world: a ring round it (radius 0: nothing).</summary>
+        private void Highlight(out Vector3 at, out float radius)
+        {
+            at = Vector3.zero;
+            radius = 0f;
+            switch (Current)
+            {
+                case Step.WoodPick:
+                case Step.StonePick:
+                    if (_person != null && _person.isActiveAndEnabled) Ring(_person.transform.position, 0.7f, out at, out radius);
+                    break;
+                case Step.WoodSend:
+                case Step.StoneSend:
+                    if (!_sent && _node != null && _node) Ring(_node.transform.position, 1.1f, out at, out radius);
+                    break;
+                case Step.Soldier:
+                    RingUnlessHeld(Built(BuildingIds.Barracks), out at, out radius);
+                    break;
+                case Step.Ship:
+                    RingUnlessHeld(Built(ShipManager.ShipyardId), out at, out radius);
+                    break;
+                case Step.KingPick:
+                case Step.SoldierPick:
+                    if (_unit != null && _unit && _unit.isActiveAndEnabled) Ring(_unit.transform.position, 0.8f, out at, out radius);
+                    break;
+                case Step.KingBoard:
+                case Step.SoldierBoard:
+                    if (_ship != null && _ship) Ring(_ship.transform.position, 3f, out at, out radius);
+                    break;
+            }
+        }
+
+        private static void Ring(Vector3 position, float size, out Vector3 at, out float radius)
+        {
+            at = position;
+            radius = size;
+        }
+
+        /// <summary>A building the player must tap (the Barracks to hire, the Shipyard to buy): ringed until he holds it.</summary>
+        private static void RingUnlessHeld(BuildingInstance building, out Vector3 at, out float radius)
+        {
+            at = Vector3.zero;
+            radius = 0f;
+            if (building == null || Holding(building)) return;
+            var grid = Grid.GridManager.Instance;
+            var cell = grid != null ? grid.CellSize : 1f;
+            var size = building.RotatedFootprint();
+            at = grid != null ? grid.GetFootprintCenterWorld(building.OriginCell, size) : building.transform.position;
+            at.y = building.transform.position.y;
+            radius = Mathf.Max(size.x, size.y) * cell * 0.65f;
+        }
+
+        private static bool Holding(BuildingInstance building) => BuildingFocus.Instance != null && BuildingFocus.Instance.Current == building;
+
+        /// <summary>The built (working) one of these, or null.</summary>
+        private static BuildingInstance Built(string id)
+        {
+            if (!BuildingInstance.HasAny(id)) return null;
+            foreach (var b in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+                if (b != null && b.Data != null && b.Data.buildingName == id && b.IsOperational) return b;
+            return null;
+        }
+
+        /// <summary>
+        /// The King strolls about the island while the player builds (the user, 2026-11-05: he walked
+        /// to its edge and stood there) -- until the steps that put him in the player's hands.
+        /// </summary>
+        private void Wander()
+        {
+            if (Current >= Step.KingPick || BuildingInstance.TownHall == null) return;
+            _wanderIn -= CheckEvery;
+            if (_wanderIn > 0f) return;
+            _wanderIn = WanderEvery;
+            var king = FindUnit(SoldierType.King);
+            if (king == null || king.Group == null || !king.isActiveAndEnabled) return;
+            if (ArmyManager.Instance != null && ArmyManager.Instance.SelectedGroup == king.Group) return;
+            var hall = BuildingInstance.TownHall.transform.position;
+            var offset = Random.insideUnitCircle * WanderReach;
+            if (ShipManager.TrySampleLand(hall + new Vector3(offset.x, 0f, offset.y), 3f, out var spot)) king.Group.OrderMoveTo(spot);
         }
 
         // ------------------------------------------------------------ the camera
@@ -296,6 +489,12 @@ namespace CityBuilder.Tutorial
                 case Step.SoldierBoard:
                     if (_ship == null || !_ship) _ship = OurShip();
                     if (_ship != null) _camera.FocusOn(_ship.transform.position);
+                    break;
+                case Step.Soldier:
+                case Step.Ship:
+                    // the Barracks to hire at, the Shipyard to buy at: on it until the player taps it
+                    var place = Built(Current == Step.Soldier ? BuildingIds.Barracks : ShipManager.ShipyardId);
+                    if (place != null && !Holding(place)) _camera.FocusOn(place.transform.position);
                     break;
             }
         }
@@ -370,6 +569,8 @@ namespace CityBuilder.Tutorial
             card.raycastTarget = false;
 
             var ring = Img(_panel.transform, "Portrait", new Color(0.66f, 0.92f, 0.76f), circleSprite, new Vector2(-410f, 0f), new Vector2(140f, 140f));
+            // the face kept inside its round frame (the crown stuck out of it, the user 2026-11-05)
+            ring.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             Img(ring.transform, "Face", Color.white, kingPortrait, Vector2.zero, new Vector2(126f, 126f)).preserveAspect = true;
 
             var go = new GameObject("Line", typeof(RectTransform), typeof(Text));

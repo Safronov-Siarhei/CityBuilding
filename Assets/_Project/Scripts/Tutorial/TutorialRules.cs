@@ -31,7 +31,19 @@ namespace CityBuilder.Tutorial
 
         public static bool AtLimit(BuildingData data) => LimitOf(data) > 0 && BuildingInstance.CountOf(data.buildingName) >= LimitOf(data);
 
+        /// <summary>
+        /// The one building the script asks for now (TutorialDirector sets it; null between the build
+        /// steps): its card is the one not locked, the arrow points at it (the user, 2026-11-05).
+        /// </summary>
+        public static string Wanted { get; set; }
+
+        /// <summary>This card may be tapped now: the step's own building, not yet built.</summary>
+        public static bool IsWanted(BuildingData data) => data != null && data.buildingName == Wanted && !AtLimit(data);
+
         public static float BuildSeconds => BalanceConfig.Instance.TutorialBuildSeconds;
+
+        /// <summary>The chop at a tree, the dig at a boulder (the walk is the usual one).</summary>
+        public static float GatherSeconds => BalanceConfig.Instance.TutorialGatherSeconds;
 
         public static int StartPeople => BalanceConfig.Instance.TutorialStartPeople;
 

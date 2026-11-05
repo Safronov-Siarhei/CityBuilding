@@ -575,6 +575,15 @@ namespace CityBuilder.Core
         // the tutorial's orcs: their blows and the tower's shots times this; the barge's orcs
         [SerializeField] private float tutorialOrcDamageMult = 0.2f;
         [SerializeField] private int tutorialRaidOrcs = 2;
+        // the tutorial's own tab (the user, 2026-11-05): orcs' health times this; the chop/dig;
+        // the camera's distance on a person (share of its distance); fish shoals kept; the
+        // «people came» line; one blink of a highlight
+        [SerializeField] private float tutorialOrcHealthMult = 3f;
+        [SerializeField] private float tutorialGatherSeconds = 5f;
+        [SerializeField] private float tutorialPersonZoom = 0.5f;
+        [SerializeField] private int tutorialFishShoals = 2;
+        [SerializeField] private float tutorialPeopleHintSeconds = 6f;
+        [SerializeField] private float tutorialBlinkSeconds = 0.5f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -1172,6 +1181,12 @@ namespace CityBuilder.Core
         public float TutorialKingHealBelow => tutorialKingHealBelow;
         public float TutorialOrcDamageMult => tutorialOrcDamageMult;
         public int TutorialRaidOrcs => tutorialRaidOrcs;
+        public float TutorialOrcHealthMult => tutorialOrcHealthMult;
+        public float TutorialGatherSeconds => tutorialGatherSeconds;
+        public float TutorialPersonZoom => tutorialPersonZoom;
+        public int TutorialFishShoals => tutorialFishShoals;
+        public float TutorialPeopleHintSeconds => tutorialPeopleHintSeconds;
+        public float TutorialBlinkSeconds => tutorialBlinkSeconds;
         public int WallWalkFromLevel => wallWalkFromLevel;
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
@@ -2002,6 +2017,12 @@ namespace CityBuilder.Core
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);
             tutorialOrcDamageMult = Read(economy, "tutorial_orc_damage_mult", tutorialOrcDamageMult);
+            tutorialOrcHealthMult = Read(economy, "tutorial_orc_health_mult", tutorialOrcHealthMult);
+            tutorialGatherSeconds = Read(economy, "tutorial_gather_sec", tutorialGatherSeconds);
+            tutorialPersonZoom = Read(economy, "tutorial_person_zoom", tutorialPersonZoom);
+            tutorialFishShoals = (int)Read(economy, "tutorial_fish_shoals", tutorialFishShoals);
+            tutorialPeopleHintSeconds = Read(economy, "tutorial_people_hint_sec", tutorialPeopleHintSeconds);
+            tutorialBlinkSeconds = Read(economy, "tutorial_blink_sec", tutorialBlinkSeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);
             wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
             for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);

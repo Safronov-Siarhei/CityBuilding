@@ -224,6 +224,18 @@ namespace CityBuilder.UI
             Close();
         }
 
+        /// <summary>The first tab -- the tutorial's only one, which it makes blink.</summary>
+        public RectTransform FirstTab => _categoryButtons != null && _categoryButtons.Length > 0 && _categoryButtons[0] != null ? (RectTransform)_categoryButtons[0].transform : null;
+
+        /// <summary>The card of this building, when it is showing.</summary>
+        public RectTransform CardOf(string buildingId)
+        {
+            if (!_open || _buildingButtons == null) return null;
+            foreach (var card in _buildingButtons)
+                if (card != null && card.gameObject.activeInHierarchy && card.Building != null && card.Building.buildingName == buildingId) return (RectTransform)card.transform;
+            return null;
+        }
+
         public void Open(BuildingCategory category, bool instant = false)
         {
             _category = category;
@@ -302,8 +314,10 @@ namespace CityBuilder.UI
             }
             if (shade == null) shade = BuildShade(card.transform);
             var built = BuildingInstance.CountOf(card.Building.buildingName);
-            shade.gameObject.SetActive(built >= max);
-            shade.GetComponentInChildren<Text>().text = Localization.Format("#card_limit", built, max);
+            // the tutorial: every card but the step's own is locked under the same shade (the user, 2026-11-05)
+            var locked = Tutorial.TutorialMode.IsActive && built < max && !Tutorial.TutorialRules.IsWanted(card.Building);
+            shade.gameObject.SetActive(built >= max || locked);
+            shade.GetComponentInChildren<Text>().text = locked ? string.Empty : Localization.Format("#card_limit", built, max);
         }
 
         private static Transform BuildShade(Transform card)

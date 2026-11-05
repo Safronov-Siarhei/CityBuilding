@@ -45,8 +45,11 @@ Tab gids — the same ones in `Assets/_Project/Balance/BalanceSheetSettings.asse
 | localization | 304072291 |
 | invasion | 1941808734 |
 | sandbox | 291742027 |
+| tutorial | 1105001 |
 | botwaves | 1680852949 |
 
+`tutorial` (2026-11-05) is key/value like economy: EVERY number of the tutorial (`tutorial_*`), laid over
+the economy keys of the sandbox config. A tutorial key goes HERE, never into economy.
 `sandbox` (2026-10-25) has the same stacked shape (`building`, `key`): the SANDBOX's building prices,
 build times, housing and its hero/people/repair/minimap keys, laid over the other tabs for the sandbox.
 `invasion` (2026-10-23) is three tables stacked in one tab (`building`, `unit`, `key` header rows): the

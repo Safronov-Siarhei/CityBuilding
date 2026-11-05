@@ -41,6 +41,9 @@ namespace CityBuilder.EditorTools
 
         /// <summary>The sheet's botwaves tab (the user, 2026-11-04): the bot's raid waves at war, a row per unit type in a wave.</summary>
         public const string BotWavesCsvPath = BalanceFolder + "/botwaves.csv";
+
+        /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
+        public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
         public const string RunConfigAssetPath = "Assets/_Project/Resources/" + BalanceConfig.RunResourcePath + ".asset";
 
         [MenuItem("CityBuilder/Balance/Rebuild Config From CSV")]
@@ -76,6 +79,9 @@ namespace CityBuilder.EditorTools
                 if (!sandboxEconomy.ContainsKey(pair.Key)) sandboxEconomy[pair.Key] = pair.Value;
             }
             foreach (var pair in sandbox.Keys) sandboxEconomy[pair.Key] = pair.Value;
+            // the tutorial's own tab: its keys (tutorial_*) are the tutorial's alone, read from the sandbox config
+            if (System.IO.File.Exists(TutorialCsvPath))
+                foreach (var pair in ReadEconomy(ReadCsv(TutorialCsvPath), TutorialCsvPath)) sandboxEconomy[pair.Key] = pair.Value;
             var sandboxUnits = sandbox.Units.Count > 0 ? ReadUnits(sandbox.LayOver(unitRows, sandbox.Units, SandboxCsvPath), SandboxCsvPath) : units;
             var sandboxBuildings = buildings;
             if (sandbox.Buildings.Count > 0)
@@ -323,6 +329,7 @@ namespace CityBuilder.EditorTools
             downloaded += TryDownload(settings.invasionCsvUrl, InvasionCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.sandboxCsvUrl, SandboxCsvPath) ? 1 : 0;
             downloaded += TryDownload(settings.botWavesCsvUrl, BotWavesCsvPath) ? 1 : 0;
+            downloaded += TryDownload(settings.tutorialCsvUrl, TutorialCsvPath) ? 1 : 0;
 
             AssetDatabase.Refresh();
             if (downloaded == 0)

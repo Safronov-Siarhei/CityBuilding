@@ -53,6 +53,8 @@ namespace CityBuilder.Core
         public void Post(GameEvent gameEvent)
         {
             if (gameEvent == null) return;
+            // the tutorial speaks through the King alone: no game notifications (the user, 2026-11-05)
+            if (Tutorial.TutorialMode.IsActive) return;
             AddEntry(gameEvent.Text);
             OnEventPosted?.Invoke(gameEvent);
         }

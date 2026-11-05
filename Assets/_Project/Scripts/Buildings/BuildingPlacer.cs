@@ -352,7 +352,7 @@ namespace CityBuilder.Buildings
             // anything else reaching in from outside.
             // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
             if (data != null && data != mandatoryFirstBuilding && !(_lighthousePending && data == _lighthouse)
-                && !(Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.Allows(data)
+                && !(Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.IsWanted(data)
                      : Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
                                                    : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
 

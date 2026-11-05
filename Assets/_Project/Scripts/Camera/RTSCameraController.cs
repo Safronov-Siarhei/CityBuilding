@@ -180,6 +180,17 @@ namespace CityBuilder.CameraControl
 
         public bool IsFocusing => _focusing;
 
+        /// <summary>How far the camera stands (or is gliding to) -- the tutorial's zoom in and back.</summary>
+        public float GoalDistance => _hasGoal ? _goalDistance : (cameraTransform != null ? -cameraTransform.localPosition.z : 0f);
+
+        /// <summary>Glides the zoom to this distance (clamped to the camera's range).</summary>
+        public void ZoomTo(float distance)
+        {
+            if (cameraTransform == null) return;
+            if (!_hasGoal) TakeGoalFromRig();
+            _goalDistance = Mathf.Clamp(distance, minDistance, maxDistance);
+        }
+
         private void OnEnable()
         {
             var router = TouchInputRouter.Instance;

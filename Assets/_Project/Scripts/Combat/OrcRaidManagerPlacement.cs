@@ -420,7 +420,7 @@ namespace CityBuilder.Combat
                 var guard = SpawnOrcOfKind(guardAt, 1, OrcKind.Raider);
                 if (guard != null)
                 {
-                    guard.Toughen(1f, soft);
+                    guard.Toughen(BalanceConfig.Instance.TutorialOrcHealthMult, soft);
                     guard.SetGuardPost(null, guardAt, 6f);
                 }
             }

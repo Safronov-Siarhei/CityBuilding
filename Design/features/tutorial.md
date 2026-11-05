@@ -1,8 +1,8 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode ALL STAGES BUILT (menu button,
-> the map, systems off; rules; step script + King's hints + camera focus; orcs, portal win, +25 once), NOT PLAYED by the user; with the user, NOTHING BUILT. Option «Г» of five proposed
-> (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
+> Status 2026-11-05: game mode BUILT and played once by the user; the FIRST PLAYTEST's rules (below) BUILT,
+> NOT PLAYED yet. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
+> `Balance/tutorial.csv`). Next: the user plays it again.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
 > orc-raids-and-portals (portal, orc landing), hud-and-ui (main-menu mode cards).
@@ -34,7 +34,7 @@ attack -> destroy the portal -> victory.
 - **Camera focus steps** (gathering, boarding): the camera centres on the unit; the player follows
   it until he taps it; once picked, the camera centres on the target.
 
-## Rules from the user's first playtest (2026-11-05) -- NOT BUILT YET
+## Rules from the user's first playtest (2026-11-05) -- BUILT 2026-11-05, not played
 **HUD**
 - While the Town Hall is being placed: NOTHING but the hint panel and «Выберите место для Ратуши».
   Hidden: resource bar, Day, army button, rotate and cancel buttons, people/inventory buttons, minimap.
@@ -183,7 +183,32 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
 5. Texts and numbers are in (economy `tutorial_*`, localization `#tutorial_hint_*`, `#mode_tutorial`,
    `#over_tutorial_reason`). Left: whatever the user finds playing it; a skip button; first-launch start.
 
+## How the playtest rules are built (2026-11-05)
+- `Tutorial/TutorialHud.cs` (owned by the director): hides HUD elements BY NAME through a CanvasGroup
+  (alpha 0, no taps, LayoutElement.ignoreLayout) -- not SetActive, their controllers would switch them
+  back. Lists `AlwaysHidden` / `HiddenBeforeHall` (ResourceHUD, Heroes until the hall stands). A renamed
+  HUD object silently shows again -- the names are in Editor/SetupProject*.cs. The resource bar shows
+  the people chip alone (`ResourceHUDController`, tutorial branch). Also: the blinking build tab
+  (`BuildingCategoryPanel.FirstTab`), the arrow over the card (`CardOf`, a procedural triangle), the
+  blinking gold ring in the world (LineRenderer).
+- `TutorialRules.Wanted` (set per step by the director): the one card not locked (the shade of
+  `ShowLimit`, empty text) and the only building `BuildingPlacer.SelectBuilding` accepts.
+- Camera: `RTSCameraController.ZoomTo/GoalDistance`; zoom to tutorial_person_zoom at WoodPick, back
+  and onto the Town Hall at Barracks. Soldier/Ship steps: camera + ring on the Barracks/Shipyard until
+  `BuildingFocus.Instance.Current` is it.
+- No «!»: `BuildingFocus.NoDetails`. No notifications: `EventLogManager.Post` drops all in the tutorial.
+- Gather: `CitizenAgent.HarvestSeconds` -> tutorial_gather_sec. Fish: `ShipManagerFish` (count,
+  `ShoalAt` null). Orc health: `Toughen(tutorial_orc_health_mult, …)` for the guard and every raider.
+- King strolls (`Wander`, every 9 s within 14 m of the hall) until KingPick. Portrait: a Mask on its ring.
+- Orc barge: `ShipManagerOrcs.MoorTutorialBarge` (shore water by the portal, out of `Steer` while in
+  `_moored`) once the portal stands; at Raid the orcs spawn by the portal, `Steered`, walk
+  (`SteerTo`) to `TryBargeBeach`, vanish aboard (or after 30 s), `SailTutorialBarge` lands them at
+  orc_landing and sends the barge to `_tutorialExit` (open sea to the side), where it is removed.
+  Test: TutorialTests checks the empty barge by the orcs' island.
+
 ## Open
+- Not asked, my calls: the selection's round cancel button (CancelSelectionButton) stays; the King's
+  stroll numbers (9 s, 14 m) and the 30-s boarding give-up are code constants.
 - The soldier: the user said «гвардеец или что-то такое» -- read as ЛАТНИК (ManAtArms, the armoured
   one) at level 3; confirm when the Barracks step is built.
 - Skip button inside the tutorial; first-launch auto-start -- later.
