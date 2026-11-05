@@ -36,12 +36,14 @@ if not os.path.exists(MODELS):     # the islands live in a folder of their own n
 PREFIX = f"Isl-{KIND}{VARIANT}"
 
 _SCALES = {'start': 130, 'orc': 125, 'bot': 160, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
-           'crescent': 150, 'atoll': 150, 'islet': 70}
+           'crescent': 150, 'atoll': 150, 'islet': 70, 'tutorial': 54}
 N = int(round(_SCALES[KIND] * 1.4 / 2)) * 2
 HALF = N // 2
 WATER_Z = -0.5
 CLIP_Z = -0.47          # the ground stops here; below it a cell has no ground and is water
 BEACH = 2.6             # metres of beach slope above the waterline
+if KIND == 'tutorial':
+    BEACH = 1.2         # the tutorial's islands are small: a narrow slope, the land is used
 BEACH_DROP = 0.40       # how far the beach falls to meet the water
 RELIEF_MIN = 0.06       # relief lower than this is flattened into the plain
 
@@ -109,10 +111,13 @@ KINDS = {
     'crescent': (150, 'crescent', 'low', 0, (2, 2), 1.4),
     'atoll':    (150, 'atoll', 'flat', 0, (2, 2), 0.8),
     'islet':    (70, 'islet', 'flat', 0, (1, 1), 0.8),
+    # the tutorial's two small islands in one frame, drawn from Tools/blender/tutorial-plan.json
+    # (Design/features/tutorial.md): flat, no rim, the plan's forest, stones and pads
+    'tutorial': (54, 'plan', 'flat', 0, (0, 0), 0.0),
 }
 _spec = KINDS[KIND]
 # odd variants full size, even ones a little smaller (start/orc/bot/islet always full)
-SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet') else int(_spec[0] * 0.86)
+SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet', 'tutorial') else int(_spec[0] * 0.86)
 SHAPE, RELIEF_KIND, HILL_COUNT, BEACH_COUNT, RIM = _spec[1], _spec[2], _spec[3], _spec[4], _spec[5]
 # a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
 # for the castle (2026-11-03)
@@ -120,13 +125,41 @@ _ROLL = {('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 
 if os.environ.get('ISL_ROLL'):     # a roll to try (searching a variant a new roll)
     _ROLL[(KIND, VARIANT)] = int(os.environ['ISL_ROLL'])
 SEED = {'start': 11, 'orc': 23, 'bot': 37, 'flat': 41, 'hilly': 53, 'rocky': 67, 'long': 71,
-        'crescent': 83, 'atoll': 97, 'islet': 101}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
+        'crescent': 83, 'atoll': 97, 'islet': 101, 'tutorial': 131}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
 _rnd = random.Random(SEED)
 ANGLE = _rnd.uniform(0, 2 * math.pi)
 SQUASH = 1.0 + _rnd.random() * 0.35
 RADIUS = {'start': 0.33, 'orc': 0.38, 'bot': 0.33, 'flat': 0.33, 'hilly': 0.34, 'rocky': 0.32}.get(KIND, 0.33) * SCALE
 CHANNELS = [_rnd.uniform(0, 2 * math.pi) for _ in range(_rnd.randint(1, 2))] if SHAPE == 'atoll' else []
 S1, S2, S3, S4 = SEED * 7 + 1, SEED * 7 + 2, SEED * 7 + 3, SEED * 7 + 4
+
+# the tutorial's plan, in its own cells (0..W, 0..H, y north); the frame's middle is the plan's
+TPLAN = None
+if KIND == 'tutorial':
+    import json
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tutorial-plan.json"), encoding="utf-8") as _f:
+        TPLAN = json.load(_f)
+    _TW, _TH = TPLAN["size"]
+
+
+def tut_local(px, py):
+    """A plan point in the frame's metres (cells), the frame's middle at the plan's middle."""
+    return px - _TW / 2, py - _TH / 2
+
+
+def tut_spot(name):
+    return tut_local(*TPLAN["spots"][name]["at"])
+
+
+def plan_sd(x, y):
+    """Signed distance to the plan's land (negative on an island), with the plan's own wobble."""
+    px, py = x + _TW / 2, y + _TH / 2
+    best = 1e9
+    for blobs, seed in ((TPLAN["player_blobs"], 1.3), (TPLAN["orc_blobs"], 4.1)):
+        sd = min(math.hypot(px - bx, py - by) - r for bx, by, r in blobs)
+        best = min(best, sd + 0.6 * math.sin(px * 0.7 + seed) * math.cos(py * 0.6 - seed))
+    return best
+
 
 PONDS = []
 LAKE = (1e5, 1e5, 1.0, 1.0)        # none: far off the frame
@@ -157,6 +190,8 @@ def shore(x, y):
             d += math.exp(-(off / 0.12) ** 2) * 2.0
     elif SHAPE == 'islet':
         d = math.hypot(u, v) / (0.16 * SCALE)
+    elif SHAPE == 'plan':
+        return 1.0 + plan_sd(x, y)          # WIDTH 1: coast_sd is the plan's distance in cells
     else:
         d = math.hypot(u / SQUASH, v * SQUASH * 0.9) / RADIUS
     warp = (0.75 * (fbm(x / (SCALE / 3), y / (SCALE / 3), S1) - 0.5)
@@ -167,6 +202,8 @@ def shore(x, y):
 
 # metres per unit of `shore` near the coast: the island's half width for its shape
 WIDTH = {'long': 0.14, 'crescent': 0.11, 'atoll': 0.09, 'islet': 0.16}.get(SHAPE, RADIUS / SCALE) * SCALE
+if SHAPE == 'plan':
+    WIDTH = 1.0
 
 
 def coast_sd(x, y):
@@ -260,6 +297,17 @@ if KIND == 'start':
         raise SystemExit(f"Isl-start{VARIANT}: no room for the Town Hall's zone -- give the variant another roll in _ROLL")
     START_ZONE = [(START[0] + math.cos(math.pi / 8 + k * math.pi / 4) * ZONE_R,
                    START[1] + math.sin(math.pi / 8 + k * math.pi / 4) * ZONE_R) for k in range(8)]
+# the tutorial: the Town Hall's zone where the plan has it, small; the orcs' portal, tower and guard
+# on flat ground; the forest and the stones exactly where the plan put them
+TUT_PADS = []
+FOREST_CLEAR = 24.0          # no tree this near the Town Hall's zone (the tutorial's wood is nearer)
+if KIND == 'tutorial':
+    START = tut_spot("town_hall_zone")
+    ZONE_R = 4.5
+    FOREST_CLEAR = 6.5
+    START_ZONE = [(START[0] + math.cos(math.pi / 8 + k * math.pi / 4) * ZONE_R,
+                   START[1] + math.sin(math.pi / 8 + k * math.pi / 4) * ZONE_R) for k in range(8)]
+    TUT_PADS = [(*tut_spot(n), r) for n, r in (("portal", 3.2), ("orc_tower", 2.4), ("orc_guard", 1.6))]
 if KIND == 'orc':
     def _orc_score(x, y):
         x0, x1, y0, y1 = MAIN_PAD
@@ -302,6 +350,10 @@ def camp_pad(x, y):
     best = 0.0
     if KIND == 'start':
         best = smoothstep(ZONE_R + 10.0, ZONE_R + 4.0, math.hypot(x - START[0], y - START[1]))
+    if KIND == 'tutorial':
+        best = smoothstep(ZONE_R + 1.5, ZONE_R + 0.5, math.hypot(x - START[0], y - START[1]))
+        for px, py, r in TUT_PADS:
+            best = max(best, smoothstep(r + 1.5, r, math.hypot(x - px, y - py)))
     if KIND == 'bot' and BOT:
         x0, x1, y0, y1 = BOT_PAD
         d = max(x0 + BOT[0] - x, x - x1 - BOT[0], y0 + BOT[1] - y, y - y1 - BOT[1])
@@ -329,6 +381,21 @@ def _coast_point(angle):
 
 
 def _beaches():
+    if KIND == 'tutorial':
+        # where ships land and put out: the orcs' landing on our island, ours on theirs, the
+        # Shipyard's shore and where the orc barge puts out
+        out = []
+        for name in ("orc_landing", "player_landing", "shipyard", "orc_barge"):
+            sx, sy = tut_spot(name)
+            best, bd = None, 1e9
+            for k in range(-40, 41):
+                for m in range(-40, 41):
+                    x, y = sx + k * 0.25, sy + m * 0.25
+                    if 0.0 < coast_sd(x, y) < 0.5 and math.hypot(x - sx, y - sy) < bd:
+                        best, bd = (x, y), math.hypot(x - sx, y - sy)
+            if best:
+                out.append(best)
+        return out
     out = []
     want = _rnd.randint(*BEACH_COUNT)
     if KIND == 'orc':
@@ -360,7 +427,8 @@ GROVES, FORESTS, OUTCROPS, HILLS = [], [], [], []
 
 def beach_gate(x, y):
     """1 on a landing beach, 0 away from them."""
-    return max(smoothstep(24.0, 14.0, math.hypot(x - bx, y - by)) for bx, by in BEACHES)
+    near, full = (6.0, 3.5) if KIND == 'tutorial' else (24.0, 14.0)
+    return max(smoothstep(near, full, math.hypot(x - bx, y - by)) for bx, by in BEACHES)
 
 
 def land_sd(x, y):
@@ -417,7 +485,11 @@ def _place_features():
     FORESTS.extend((x, y, r, r) for x, y, r in GROVES)
 
 
-_place_features()
+if KIND == 'tutorial':
+    FORESTS.extend((*tut_local(x, y), 2.3, 2.3) for x, y in TPLAN["forest"])
+    OUTCROPS.extend((*tut_local(x, y), 2.0) for x, y in TPLAN["rocks"])
+else:
+    _place_features()
 FLOWER_SEED, DRY_SEED = SEED + 401, SEED + 433
 
 
@@ -493,7 +565,7 @@ def sand_width(x, y):
     if ford_at(x, y) > 0:
         return 2.2
     if coast_sd(x, y) < 12:
-        return 0.6 + 7.0 * beach_gate(x, y)
+        return 0.6 + (2.5 if KIND == 'tutorial' else 7.0) * beach_gate(x, y)
     if _ellipse_sd(x, y, *LAKE, 0.35, 7) < 8:
         return 2.0
     return 0.4 + 1.4 * smoothstep(0.4, 0.7, fbm(x / 16, y / 16, 117))
@@ -928,7 +1000,7 @@ def main():
     forest_cells = {(i, j) for i in range(N) for j in range(N)
                     if flat[i][j] and cell_sd[i, j] > BEACH + 1
                     and cell_sd[i, j] > sand_width(i - HALF + 0.5, j - HALF + 0.5) + 1.5
-                    and math.hypot(i - HALF + 0.5 - START[0], j - HALF + 0.5 - START[1]) > 24
+                    and math.hypot(i - HALF + 0.5 - START[0], j - HALF + 0.5 - START[1]) > FOREST_CLEAR
                     and in_forest(i - HALF + 0.5, j - HALF + 0.5)}
     rocks_cells = {(i, j) for i in range(N) for j in range(N)
                    if flat[i][j] and (i, j) not in forest_cells and cell_sd[i, j] > BEACH + 1
@@ -1015,6 +1087,10 @@ def main():
             f.write(f"bot,{BOT[0]:.1f},{BOT[1]:.1f}\n")
         for x, y in BEACHES:
             f.write(f"beach,{x:.1f},{y:.1f}\n")
+        if TPLAN:
+            for name in TPLAN["spots"]:
+                x, y = tut_spot(name)
+                f.write(f"{name},{x:.1f},{y:.1f}\n")
     print("ISLAND", KIND, VARIANT, "frame", N, "start", START, "main", MAIN_BASE, "bot", BOT, "beaches", BEACHES)
 
     if PREVIEW:

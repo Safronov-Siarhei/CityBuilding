@@ -1,6 +1,6 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map scheme sent for approval; with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED, islands built in Blender (not exported); with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -57,7 +57,14 @@ attack -> destroy the portal -> victory.
 `tutorial-plan.png`. 64 x 44 cells: TURNED 180° at the user's word: the player's island EAST (~26 x 26, Town Hall zone 9x9 in the
 middle, forest east, stones north-east, the Shipyard on the west shore facing the strait, the orc
 landing beach north-west), the orcs' island WEST (~16 x 16: landing beach east, tower, guard,
-portal). Strait ~10 cells. NOT approved yet.
+portal). Strait ~10 cells. APPROVED by the user 2026-11-05 (after turning it 180°).
+
+**Blender (2026-11-05, previews sent, not reviewed):** `islands.py` kind `tutorial` (`-- <Islands/Isl-tutorial1.blend> tutorial 1 [preview]`):
+both islands in one 76x76 frame drawn from `tutorial-plan.json` (`SHAPE 'plan'`: coast = the plan's blob distance),
+flat, no rim, beach slope 1.2 (not 2.6: the islands are small), landing beaches at the plan's orc_landing /
+player_landing / shipyard / orc_barge, forest + stones from the plan's points (33 forest, 18 stony cells), flat pads
+round the Town Hall zone (r 4.5) and the portal/tower/guard; `-spots.csv` carries every plan spot. ~504 land cells.
+Not exported yet (export + the game's tutorial mode are the next step).
 
 ## To build (plan)
 - Two islands drawn in Blender, with spots: Town Hall area, trees, rocks, shipyard shore, orc
