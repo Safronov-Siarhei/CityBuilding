@@ -182,10 +182,113 @@ namespace CityBuilder.Combat
         {
             if (unit == null || to == null || unit.Group == to || unit.Group == null) return;
             if (SoldierStats.IsMachine(unit.Type) || SoldierStats.IsHero(unit.Type)) return;
-            unit.Group.Remove(unit);
+            var from = unit.Group;
+            from.Remove(unit);
             unit.Regroup(to);
             to.Add(unit);
             if (to.IsGarrison) to.SetPost(unit, GarrisonPost());
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// The player moving a soldier in the squad window: the move, and the squads' wanted makeup
+        /// (what a refill tops up to) follows it. Null when done, else why not -- a soldier aboard a
+        /// ship, or a squad away from the main island (the Garrison never leaves it, the user 2026-11-05).
+        /// </summary>
+        public string PlayerMove(SoldierUnit unit, ArmyGroup to)
+        {
+            if (unit == null || to == null || unit.Group == null || unit.Group == to) return null;
+            var blocker = TransferBlocker(unit.Group, to, unit);
+            if (blocker != null) return blocker;
+            var from = unit.Group;
+            MoveSoldier(unit, to);
+            if (from.IsSquad) from.SetWanted(unit.Type, from.CountOf(unit.Type));
+            if (to.IsSquad) to.SetWanted(unit.Type, to.CountOf(unit.Type));
+            return null;
+        }
+
+        /// <summary>Why a soldier cannot pass between these two groups now, or null.</summary>
+        public string TransferBlocker(ArmyGroup from, ArmyGroup to, SoldierUnit unit = null)
+        {
+            if (unit != null && !unit.gameObject.activeInHierarchy) return Localization.Get("#army_move_aboard");
+            if ((from != null && from.IsSquad && !AtHome(from)) || (to != null && to.IsSquad && !AtHome(to)))
+                return Localization.Get("#army_move_not_home");
+            return null;
+        }
+
+        /// <summary>The squad stands on the main island (the Town Hall's), none of it aboard a ship.</summary>
+        public bool AtHome(ArmyGroup squad)
+        {
+            if (squad == null) return false;
+            var hall = Buildings.BuildingInstance.TownHall;
+            var map = Maps.MeshMapApplier.Instance;
+            if (hall == null || map == null) return true;
+            if (squad.Count == 0) return map.SameIsland(squad.HoldPosition, hall.transform.position);
+            for (var i = 0; i < squad.Count; i++)
+            {
+                var member = squad.Members[i];
+                if (member == null) continue;
+                if (!member.gameObject.activeInHierarchy || !map.SameIsland(member.transform.position, hall.transform.position)) return false;
+            }
+            return true;
+        }
+
+        private float _refillIn;
+
+        /// <summary>Every two seconds: a squad with «Пополнять» on, at home, takes the soldiers it lost from the Garrison.</summary>
+        private void Update()
+        {
+            _refillIn -= Time.deltaTime;
+            if (_refillIn > 0f) return;
+            _refillIn = 2f;
+            TickRefill();
+        }
+
+        /// <summary>The refill pass (public for a test).</summary>
+        public void TickRefill()
+        {
+            if (_garrison == null || _garrison.Count == 0) return;
+            foreach (var squad in _squads)
+            {
+                if (!squad.AutoRefill || !AtHome(squad)) continue;
+                for (var g = _garrison.Count - 1; g >= 0; g--)
+                {
+                    var soldier = _garrison.Members[g];
+                    if (soldier == null || squad.CountOf(soldier.Type) >= squad.WantedOf(soldier.Type)) continue;
+                    MoveSoldier(soldier, squad);
+                }
+            }
+        }
+
+        /// <summary>A squad renamed in the window; empty brings «Отряд N» back.</summary>
+        public void RenameSquad(ArmyGroup squad, string name)
+        {
+            if (squad == null || !squad.IsSquad) return;
+            squad.Name = (name ?? string.Empty).Trim();
+            if (squad.Name.Length > 24) squad.Name = squad.Name.Substring(0, 24);
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>The next crest no other squad wears.</summary>
+        public void NextCrest(ArmyGroup squad, int crestCount)
+        {
+            if (squad == null || !squad.IsSquad || crestCount <= 0) return;
+            for (var step = 1; step <= crestCount; step++)
+            {
+                var crest = (squad.Crest + step) % crestCount;
+                var taken = false;
+                foreach (var other in _squads) taken |= other != squad && other.Crest == crest;
+                if (taken) continue;
+                squad.Crest = crest;
+                break;
+            }
+            OnArmyChanged?.Invoke();
+        }
+
+        public void SetAutoRefill(ArmyGroup squad, bool on)
+        {
+            if (squad == null || !squad.IsSquad) return;
+            squad.AutoRefill = on;
             OnArmyChanged?.Invoke();
         }
 

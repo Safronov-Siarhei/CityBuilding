@@ -63,6 +63,32 @@ namespace CityBuilder.Combat
         /// <summary>A squad's crest, an index into the crest set.</summary>
         public int Crest { get; set; }
 
+        /// <summary>
+        /// «Пополнять из Гарнизона» (the user, 2026-11-05): a squad standing on the main island takes
+        /// soldiers of the types it lost from the Garrison (ArmyManager.TickRefill). Not hiring.
+        /// </summary>
+        public bool AutoRefill { get; set; }
+
+        // The makeup the player gave the squad in the window, by SoldierType: what a refill tops up
+        // to. Changed by the player's moves only, never by deaths.
+        private readonly int[] _wanted = new int[32];
+
+        public int WantedOf(SoldierType type) => (int)type >= 0 && (int)type < _wanted.Length ? _wanted[(int)type] : 0;
+
+        public void SetWanted(SoldierType type, int count)
+        {
+            if ((int)type >= 0 && (int)type < _wanted.Length) _wanted[(int)type] = Mathf.Max(0, count);
+        }
+
+        /// <summary>How many of this type the squad has now.</summary>
+        public int CountOf(SoldierType type)
+        {
+            var n = 0;
+            for (var i = 0; i < _members.Count; i++)
+                if (_members[i] != null && _members[i].Type == type) n++;
+            return n;
+        }
+
         // A garrison soldier stands at his own post (where he was hired) and acts alone (the user,
         // 2026-11-05: «солдаты действуют отдельно и защищают территорию"), not in rings round one point.
         private readonly Dictionary<SoldierUnit, Vector3> _posts = new Dictionary<SoldierUnit, Vector3>();

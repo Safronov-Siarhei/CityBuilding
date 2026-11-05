@@ -825,6 +825,45 @@ namespace CityBuilder.EditorTools
             row.SetActive(false);
         }
 
+        /// <summary>The squad window (UI/SquadWindow): built at runtime; here only its sprites and the HUD root.</summary>
+        private static void BuildSquadWindow(Transform uiRoot, HudHider hud)
+        {
+            var go = new GameObject("SquadWindowController");
+            go.transform.SetParent(uiRoot, false);
+            go.AddComponent<HudOverlay>();
+            var window = go.AddComponent<SquadWindow>();
+            var so = new SerializedObject(window);
+            so.FindProperty("uiRoot").objectReferenceValue = uiRoot;
+            so.FindProperty("hud").objectReferenceValue = hud;
+            so.FindProperty("cardSprite").objectReferenceValue = SkinSprite("card");
+            so.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment");
+            so.FindProperty("circleSprite").objectReferenceValue = SkinSprite("circle_mask");
+            so.FindProperty("shieldSprite").objectReferenceValue = HudGlyph("Shield");
+            so.FindProperty("homeSprite").objectReferenceValue = HudGlyph("Home");
+            so.FindProperty("binSprite").objectReferenceValue = HudGlyph("Cancel");
+            so.FindProperty("checkSprite").objectReferenceValue = HudGlyph("Check");
+            var names = new string[17];
+            names[(int)SoldierType.Militia] = "PortraitMilitia";
+            names[(int)SoldierType.Spearman] = "PortraitSpearman";
+            names[(int)SoldierType.Archer] = "PortraitArcher";
+            names[(int)SoldierType.ManAtArms] = "PortraitManAtArms";
+            names[(int)SoldierType.King] = "PortraitKing";
+            names[(int)SoldierType.Queen] = "PortraitQueen";
+            names[(int)SoldierType.Captain] = "PortraitCaptain";
+            names[(int)SoldierType.Crossbowman] = "PortraitCrossbowman";
+            names[(int)SoldierType.Knight] = "PortraitKnight";
+            names[(int)SoldierType.Monk] = "PortraitMonk";
+            names[(int)SoldierType.Ram] = "PortraitRam";
+            names[(int)SoldierType.Ballista] = "PortraitBallista";
+            names[(int)SoldierType.Catapult] = "PortraitCatapult";
+            names[(int)SoldierType.SiegeTower] = "PortraitSiegeTower";
+            var sprites = new Object[names.Length];
+            for (var i = 0; i < names.Length; i++)
+                sprites[i] = names[i] != null ? AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{names[i]}.png") : null;
+            SetArray(so.FindProperty("portraits"), sprites);
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static void SetArray(SerializedProperty property, Object[] values)
         {
             property.arraySize = values.Length;

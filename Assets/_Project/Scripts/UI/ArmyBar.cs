@@ -40,6 +40,20 @@ namespace CityBuilder.UI
         /// <summary>Stand-in crest colours until the crest set is drawn (stage 5).</summary>
         [SerializeField] private Color[] crestColours = Array.Empty<Color>();
 
+        private static ArmyBar _instance;
+
+        /// <summary>How many crests there are to choose from (stand-in colours until the set is drawn).</summary>
+        public static int CrestCount => _instance != null && _instance.crestColours.Length > 0 ? _instance.crestColours.Length : 10;
+
+        /// <summary>A crest's colour (stand-in for its picture).</summary>
+        public static Color CrestColour(int crest)
+        {
+            if (_instance == null || _instance.crestColours.Length == 0) return Color.white;
+            return _instance.crestColours[Mathf.Abs(crest) % _instance.crestColours.Length];
+        }
+
+        private void Awake() => _instance = this;
+
         /// <summary>The squad row is up: the build menu steps aside (BuildingPlacerUIVisibility).</summary>
         public static bool Showing { get; private set; }
 
@@ -210,8 +224,7 @@ namespace CityBuilder.UI
                 if (squadButtons[i] != null && squadButtons[i].activeSelf != has) squadButtons[i].SetActive(has);
                 if (!has) continue;
                 var squad = army.Squads[i];
-                if (i < squadCrests.Length && squadCrests[i] != null && crestColours.Length > 0)
-                    squadCrests[i].color = crestColours[Mathf.Abs(squad.Crest) % crestColours.Length];
+                if (i < squadCrests.Length && squadCrests[i] != null) squadCrests[i].color = CrestColour(squad.Crest);
                 if (i < squadCounts.Length && squadCounts[i] != null) squadCounts[i].text = squad.Count.ToString();
                 if (i < squadRings.Length && squadRings[i] != null) squadRings[i].SetActive(selected == squad);
             }

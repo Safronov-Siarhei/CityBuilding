@@ -288,6 +288,26 @@ namespace CityBuilder.Tests.PlayMode
             army.DeleteSquad(squad);
             Assert.AreEqual(2, army.Garrison.Count, "A broken-up squad's soldier did not go back to the Garrison.");
             Assert.AreEqual(ArmyManager.MaxSquads - 1, army.Squads.Count);
+
+            // «Пополнять из Гарнизона»: the squad takes back the type it lost, up to what the player gave it
+            var refilled = army.Squads[0];
+            Assert.IsNull(army.PlayerMove(army.Garrison.Members[0], refilled));
+            Assert.AreEqual(1, refilled.WantedOf(SoldierType.Militia), "The window's move did not set the squad's makeup.");
+            army.SetAutoRefill(refilled, true);
+            army.Disband(refilled.Members[0]);
+            army.TickRefill();
+            Assert.AreEqual(1, refilled.Count, "The squad with «Пополнять» on did not take a militiaman from the Garrison.");
+            Assert.AreEqual(0, army.Garrison.Count);
+
+            // the squad window builds and opens on both tabs without throwing, and stops the game while open
+            var window = CityBuilder.UI.SquadWindow.Instance;
+            Assert.IsNotNull(window, "No squad window in the scene.");
+            window.Open(null);
+            Assert.IsTrue(window.IsOpen);
+            Assert.AreEqual(0f, Time.timeScale, "The game runs on under the squad window.");
+            window.Open(refilled);
+            window.Close();
+            Assert.Greater(Time.timeScale, 0f, "Closing the squad window left the game stopped.");
         }
 
         [UnityTest]

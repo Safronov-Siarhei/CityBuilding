@@ -339,6 +339,10 @@ namespace CityBuilder.Saving
         public string squadName = string.Empty;
         public int crest;
 
+        /// <summary>A squad's «Пополнять из Гарнизона» and the makeup it tops up to, as (type, count) pairs.</summary>
+        public bool autoRefill;
+        public List<int> wanted = new List<int>();
+
         /// <summary>The group's rally point and its standing target priority -- orders the player gave, not state the group can work out again.</summary>
         public Vector3 holdPosition;
         public TargetPriority priority;

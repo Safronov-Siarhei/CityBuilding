@@ -523,6 +523,9 @@ namespace CityBuilder.Saving
                 case Combat.ArmyGroupKind.Squad:
                     var squad = army.RestoreSquad(entry.holdPosition, entry.squadName, entry.crest);
                     squad.SetPriority(entry.priority);
+                    squad.AutoRefill = entry.autoRefill;
+                    if (entry.wanted != null)
+                        for (var w = 0; w + 1 < entry.wanted.Count; w += 2) squad.SetWanted((Combat.SoldierType)entry.wanted[w], entry.wanted[w + 1]);
                     return squad;
                 case Combat.ArmyGroupKind.Machine:
                     return army.RestoreMachine(entry.type, entry.holdPosition);
@@ -805,6 +808,17 @@ namespace CityBuilder.Saving
                         holdPosition = group.HoldPosition, priority = group.Priority,
                     };
                     WriteAttackOrder(group, entry, orcIndices);
+                    if (group.IsSquad)
+                    {
+                        entry.autoRefill = group.AutoRefill;
+                        foreach (Combat.SoldierType type in System.Enum.GetValues(typeof(Combat.SoldierType)))
+                        {
+                            var want = group.WantedOf(type);
+                            if (want <= 0) continue;
+                            entry.wanted.Add((int)type);
+                            entry.wanted.Add(want);
+                        }
+                    }
                     foreach (var soldier in group.Members)
                     {
                         if (soldier == null) continue;

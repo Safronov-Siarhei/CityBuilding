@@ -322,6 +322,7 @@ namespace CityBuilder.EditorTools
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonShopCard(uiRoot, panelSprite);
             BuildArmyBar(uiRoot);
+            BuildSquadWindow(uiRoot, hud);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 
             // One tap, one owner, decided in one place -- see WorldInputDispatcher for why the

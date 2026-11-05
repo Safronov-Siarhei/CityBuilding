@@ -2,7 +2,7 @@
 
 > **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
-> not run yet; user not seen). Stages 2-5 to do.
+> not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. Stages 3-5 to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
@@ -70,3 +70,15 @@ machines -> own groups). Built by `SetupProjectHud.BuildArmyBar`. Old `ArmyPanel
 Sheet: economy `army_max_squads` 5, `garrison_defend_cells` 30; localization `#army_garrison`,
 `#army_squad_name`, `#army_garrison_hint`, `#army_squads_full`. Test `ArmyCombatTests.ARecruitJoinsTheGarrison_...`.
 Until stage 2, «+» makes an empty squad (no window yet to fill it); the cheat «отряд» fills a new squad.
+
+## Code (stage 2, the squad window)
+`UI/SquadWindow.cs` -- built AT RUNTIME on first open (SetupProjectHud.BuildSquadWindow only passes sprites,
+portraits by SoldierType, the HUD root and HudHider); opened by `ArmyBar.WindowRequested` («＋» = create tab,
+«!» = manage tab); pauses (timeScale 0, ModalGate, HudHider). Create tab: two columns (drop-down = Garrison /
+squads / «Новый отряд»; same group picked on both sides swaps), card tap = `ArmyManager.PlayerMove` (sets the
+squad's wanted makeup), «Aa» rename (InputField, 24 chars), «X» break up. Manage tab: squad drop-down (the
+Garrison listed only to say it takes no settings), crest tap = `NextCrest`, members, «Пополнять из Гарнизона»
+(`AutoRefill`, `ArmyManager.TickRefill` every 2 s, only while `AtHome`). `TransferBlocker`: aboard a ship,
+or a squad off the main island (`MeshMapApplier.SameIsland` with the hall). Saved: `autoRefill`, `wanted` pairs.
+Pencil/bin are text «Aa»/«X» (no glyphs drawn for them). Behaviour/formation buttons: stage 3.
+Texts: `#squads_*` (13 keys), `#army_move_aboard`, `#army_move_not_home`.
