@@ -48,6 +48,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text infoTitle;
         [SerializeField] private Text infoText;
         [SerializeField] private GameObject savesDialog;
+        [Tooltip("The number on the tutorial's crystal tag: its reward (economy tutorial_reward_crystals).")]
+        [SerializeField] private Text tutorialReward;
         [SerializeField] private SettingsPanelController settingsPanel;
 
         [Header("Sandbox")]
@@ -70,6 +72,7 @@ namespace CityBuilder.UI
 
         private void Start()
         {
+            if (tutorialReward != null) tutorialReward.text = "+" + BalanceConfig.Instance.TutorialRewardCrystals;
             RefreshBadges();
             Snap();
         }
@@ -124,6 +127,16 @@ namespace CityBuilder.UI
         {
             ChooseMode((int)GameMode.Sandbox);
             Snap();
+        }
+
+        /// <summary>«Обучение»: the tutorial's own map, summer, never saved (see CityBuilder.Tutorial.TutorialMode).</summary>
+        public void StartTutorial()
+        {
+            GameSessionIntent.SaveNameToLoad = null;
+            GameSessionIntent.NewGameMapId = Maps.Archipelago.ArchipelagoMapId.TutorialId;
+            GameSessionIntent.NewGameSeason = MapSeason.Summer;
+            GameSessionIntent.NewGameIsInvasion = false;
+            LoadingScreen.IntoGame(gameplaySceneName);
         }
 
         /// <summary>«Забег»: a new Invasion run on the theme's map, in the theme's season (see CityBuilder.Invasion.InvasionMode).</summary>

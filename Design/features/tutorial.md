@@ -1,6 +1,7 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED, islands built and exported (Isl-tutorial1), the game mode NOT started; with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGE 1 BUILT (menu button,
+> the map loads, systems off), not seen, no tests; stages 2-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -83,6 +84,26 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
 - Step script: completion condition, camera focus / highlight, the King's line.
 - Numbers and texts in the sheet (a `tutorial` tab; localization keys `#tutorial_*`).
 - Main-menu card «Обучение».
+
+## Game mode -- stages
+1. **BUILT 2026-11-05, not seen, untested.** Modes screen: an «Обучение» plaque (`#mode_tutorial`) under the
+   two mode pills with a crystal tag «+25» over it (`economy tutorial_reward_crystals`; nothing pays it yet)
+   -> `MainMenuController.StartTutorial` -> map id `Archipelago-tutorial` (`ArchipelagoMapId.TutorialId`),
+   summer. `Tutorial/TutorialMode.IsActive` is decided in `MeshMapApplier.Awake` from the pending map id.
+   `ArchipelagoGenerator.Tutorial()` lays the library's `Kind.Tutorial` frame (Isl-tutorial1) unturned in
+   the middle of the 500 m sea; start zone = its `zone` spots; camera pan limited to the frame
+   (±37 m). Off in the tutorial: fog (`FogOfWarManager.DisabledCheat`), bot (no `ArchipelagoBotCell`),
+   orc main base and portals (`OrcRaidManager.TrySpawnPortalsNearTownHall` returns), lighthouse, start
+   scout ship, dungeon mouths, tide caches, fertile land, ore veins, riches, autosave. The King still
+   comes with the Town Hall (GiveStartingParty).
+   `IslandAsset` now keeps every other -Spots.csv row by name (`TryGetSpot`): the tutorial's hovel,
+   barracks, shipyard, orc_landing, portal... for the later stages.
+2. Rules: build menu = Ратуша/Лачуга/Казарма/Верфь, 1/1 caps, 5-s builds, infinite resources, 3 people
+   with the hall, Barracks offers the level-3 Латник only, Shipyard the ship only; King cannot die.
+3. Step script + the King's hint panel + camera focus (follow the unit until tapped, then the target).
+4. Orcs: the landing barge with 2 orcs (soft hits), their island: portal, level-1 tower, 1 orc; win
+   on the portal; victory screen pays the crystals (`Wallet.Crystals`).
+5. Texts (`#tutorial_*`), the numbers (a `tutorial` sheet tab or economy keys), tests.
 
 ## Open
 - The soldier: the user said «гвардеец или что-то такое» -- read as ЛАТНИК (ManAtArms, the armoured

@@ -274,6 +274,8 @@ namespace CityBuilder.Maps
         private void Start()
         {
             EnsureInitialized();
+            // the tutorial's two small islands are in view from the start (the user, 2026-11-05)
+            if (Tutorial.TutorialMode.IsActive) DisabledCheat = true;
             // A loaded save already has mandatoryFirstBuilding placed (see GameSaveController.
             // Awake -> MarkMandatoryBuildingAlreadyPlaced, guaranteed to run before this Start
             // since Unity runs every Awake before any Start) -- fog starts active immediately.

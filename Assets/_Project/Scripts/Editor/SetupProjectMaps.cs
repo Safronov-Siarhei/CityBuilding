@@ -274,6 +274,8 @@ namespace CityBuilder.EditorTools
 
                     var zone = new List<Vector2>();
                     var beaches = new List<Vector2>();
+                    var spotNames = new List<string>();
+                    var spotPositions = new List<Vector2>();
                     Vector2? main = null, bot = null;
                     var spots = $"{folder}/{prefix}-Spots.csv";
                     if (File.Exists(spots))
@@ -290,12 +292,14 @@ namespace CityBuilder.EditorTools
                                 case "main": main = at; break;
                                 case "bot": bot = at; break;
                                 case "beach": beaches.Add(at); break;
+                                default: spotNames.Add(f[0]); spotPositions.Add(at); break;
                             }
                         }
                     }
 
                     var island = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.IslandAsset>();
                     island.EditorInitialize(prefix, kind, cells.bytes, ground, relief, water, decor, zone.ToArray(), main, bot, beaches.ToArray());
+                    island.EditorSetSpots(spotNames.ToArray(), spotPositions.ToArray());
                     var path = $"{assetsFolder}/{prefix}.asset";
                     DeleteIfExists(path);
                     AssetDatabase.CreateAsset(island, path);

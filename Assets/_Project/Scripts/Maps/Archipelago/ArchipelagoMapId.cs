@@ -17,6 +17,11 @@ namespace CityBuilder.Maps.Archipelago
 
         public static bool IsArchipelago(string mapId) => !string.IsNullOrEmpty(mapId) && mapId.StartsWith(TemplateId);
 
+        /// <summary>The tutorial's map (Tutorial.TutorialMode): the archipelago's sea with the one tutorial frame in it, no seed.</summary>
+        public const string TutorialId = TemplateId + "-tutorial";
+
+        public static bool IsTutorial(string mapId) => mapId == TutorialId;
+
         /// <summary>The seed in an id, or false for an id that is not a generated map (or a plain template id).</summary>
         public static bool TryParse(string mapId, out int seed, out int version)
         {

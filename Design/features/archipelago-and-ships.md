@@ -269,6 +269,9 @@
 - `MapPickerTests.AMapCode_StartsThatVeryMap`.
 
 ## Traps already paid for
+- `MeshMapDefinition.EditorInitializeSpots` was inside `#if UNITY_EDITOR` yet `ApplyGenerated` calls it at run time
+  (a player build would not compile); moved out 2026-11-05. `Kind.Tutorial` (last in the enum) is the
+  tutorial's own frame: never drawn by `Generate` (only `ArchipelagoGenerator.Tutorial()`), skipped by the variants test.
 - `kit.hull()`'s rail is a full-width slab: its colour IS the deck's (a gold rail = a gold deck).
 - Orcs landed at the very water's edge spread into the sea: a fleet lands them 4 m up the beach.
 - `OrcUnit`/`OrcCampBuilding` implement `IsAlive` explicitly: test `CurrentHealth > 0` on them.

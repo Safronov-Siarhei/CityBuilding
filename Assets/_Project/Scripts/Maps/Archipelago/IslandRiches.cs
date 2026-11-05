@@ -31,7 +31,8 @@ namespace CityBuilder.Maps.Archipelago
                 {
                     case ArchipelagoGenerator.Kind.Start: riches[i] = Riches.Start; break;
                     case ArchipelagoGenerator.Kind.Orc:
-                    case ArchipelagoGenerator.Kind.Bot: riches[i] = Riches.None; break;
+                    case ArchipelagoGenerator.Kind.Bot:
+                    case ArchipelagoGenerator.Kind.Tutorial: riches[i] = Riches.None; break;
                     case ArchipelagoGenerator.Kind.Islet: riches[i] = Riches.Stone; break;
                     default:
                         riches[i] = ByShape(island.Kind);

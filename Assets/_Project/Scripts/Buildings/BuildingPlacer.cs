@@ -191,7 +191,8 @@ namespace CityBuilder.Buildings
             if (hall == null) return;
             var roster = Combat.HeroRoster.Instance;
             if (roster != null && roster.HeroOf(Combat.SoldierType.King) == null) roster.Spawn(Combat.SoldierType.King);
-            Ships.ShipManager.Instance?.GiveStartScout(hall.transform.position);
+            // the tutorial: the player builds the Shipyard and hires the ship himself
+            if (!Tutorial.TutorialMode.IsActive) Ships.ShipManager.Instance?.GiveStartScout(hall.transform.position);
         }
 
         private void TryBeginLighthouse()
@@ -199,7 +200,7 @@ namespace CityBuilder.Buildings
             _lighthouseChecked = true;
             var map = Maps.MeshMapApplier.Instance;
             if (map == null || !Maps.Archipelago.ArchipelagoMapId.IsArchipelago(map.CurrentMapId)) return;
-            if (Invasion.InvasionRules.Active || Dungeon.DungeonMode.IsActive) return;
+            if (Invasion.InvasionRules.Active || Dungeon.DungeonMode.IsActive || Tutorial.TutorialMode.IsActive) return;
             if (BuildingInstance.HasAny(Ships.LighthouseAim.BuildingId)) return;
             BuildingData lighthouse = null;
             foreach (var data in availableBuildings)

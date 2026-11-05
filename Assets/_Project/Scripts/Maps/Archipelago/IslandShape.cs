@@ -196,7 +196,7 @@ namespace CityBuilder.Maps.Archipelago
                 var p = Turn(local, turns);
                 return new Vector2Int(Mathf.FloorToInt(p.x + half), Mathf.FloorToInt(p.y + half));
             }
-            if (asset.Kind == ArchipelagoGenerator.Kind.Start && asset.StartZone.Length > 0)
+            if ((asset.Kind == ArchipelagoGenerator.Kind.Start || asset.Kind == ArchipelagoGenerator.Kind.Tutorial) && asset.StartZone.Length > 0)
             {
                 var centre = Vector2.zero;
                 island.StartZone = new Vector2[asset.StartZone.Length];

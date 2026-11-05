@@ -28,6 +28,12 @@ namespace CityBuilder.Combat
         {
             var grid = GridManager.Instance;
             if (grid == null) return;
+            // the tutorial's orcs (the landing, the portal on their island) are its script's own
+            if (Tutorial.TutorialMode.IsActive)
+            {
+                _portalsPlaced = true;
+                return;
+            }
 
             if (!TryFindTownHallPosition(out var townHallPosition))
             {

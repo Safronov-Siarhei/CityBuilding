@@ -80,6 +80,11 @@ namespace CityBuilder.EditorTools
                 Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(x, -320f), new Vector2(110f, 110f));
                 UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)modeIds[i]);
             }
+            // the tutorial, always offered and replayable for now (the user, 2026-11-05), its reward on a
+            // crystal tag over it
+            var tutorialButton = MenuTextButton(modes, "TutorialButton", "plaque", "#mode_tutorial", HudInk.OnMenuPlaque, new Vector2(0f, -360f), new Vector2(420f, 110f), 40);
+            UnityEventTools.AddPersistentListener(tutorialButton.onClick, controller.StartTutorial);
+            var tutorialReward = Counter(modes, "TutorialReward", new Vector2(0f, -270f), new Color(0.5f, 0.77f, 0.94f), null, MenuArt("Crystal"));
 
             // ---- the sandbox and the invasion
             var sandboxScreen = BuildSandboxScreen(canvas, controller, out var sandbox, out var sandboxSettings);
@@ -134,6 +139,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("settingsPanel").objectReferenceValue = settingsPanel;
             so.FindProperty("sandbox").objectReferenceValue = sandbox;
             so.FindProperty("loadGamePanel").objectReferenceValue = loadPanel;
+            so.FindProperty("tutorialReward").objectReferenceValue = tutorialReward;
             WriteArray(so.FindProperty("shopBadges"), shopBadges.ToArray());
             WriteArray(so.FindProperty("discordBadges"), discordBadges.ToArray());
             WriteArray(so.FindProperty("youTubeBadges"), youTubeBadges.ToArray());

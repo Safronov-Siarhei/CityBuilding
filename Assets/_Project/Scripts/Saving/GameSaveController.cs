@@ -146,7 +146,7 @@ namespace CityBuilder.Saving
         /// (the user, 2026-10-20: a dropped run is not resumed).
         /// </summary>
         private bool CanAutosave => (buildingPlacer == null || !buildingPlacer.IsPlacingMandatoryBuilding) && !Invasion.InvasionMode.IsActive
-            && !Dungeon.DungeonMode.IsActive;
+            && !Dungeon.DungeonMode.IsActive && !Tutorial.TutorialMode.IsActive;
 
         /// <summary>Writes the autosave slot now and starts the interval over. Does not touch CurrentSaveName.</summary>
         public void Autosave()

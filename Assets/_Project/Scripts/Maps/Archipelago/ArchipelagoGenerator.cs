@@ -39,7 +39,7 @@ namespace CityBuilder.Maps.Archipelago
         /// <summary>Over this the land is relief: hills and mountains, out of the plain.</summary>
         public const float ReliefFrom = 0.45f;
 
-        public enum Kind { Start, Orc, Bot, Flat, Hilly, Rocky, Long, Crescent, Atoll, Islet }
+        public enum Kind { Start, Orc, Bot, Flat, Hilly, Rocky, Long, Crescent, Atoll, Islet, Tutorial }
 
         private static readonly (Kind kind, int size, float weight)[] Medium =
         {
@@ -55,6 +55,31 @@ namespace CityBuilder.Maps.Archipelago
         /// The map of a seed as the generator of `version` drew it (a save keeps its version, so an
         /// old save gets back its own islands after the library grows).
         /// </summary>
+        /// <summary>
+        /// The tutorial's map: the library's tutorial frame (both small islands, Tools/blender/islands.py
+        /// kind 'tutorial') unturned in the middle of the sea, nothing else. The start cell is the frame's
+        /// Town Hall spot, the orcs' cell its portal. Null when the library has no tutorial island.
+        /// </summary>
+        public static ArchipelagoMap Tutorial()
+        {
+            var library = ArchipelagoLibrary.Load();
+            if (library == null) return null;
+            IslandAsset asset = null;
+            foreach (var a in library.Islands)
+                if (a != null && a.Kind == Kind.Tutorial) { asset = a; break; }
+            if (asset == null) return null;
+            var map = new ArchipelagoMap(0, World);
+            var island = IslandShape.FromAsset(asset, 0);
+            island.OffsetX = World / 2 - island.Frame / 2;
+            island.OffsetY = World / 2 - island.Frame / 2;
+            Stamp(map, island);
+            map.Islands.Add(island);
+            var half = island.Frame / 2;
+            if (asset.TryGetSpot("portal", out var portal))
+                map.OrcBaseCell = new Vector2Int(Mathf.FloorToInt(portal.x + half) + island.OffsetX, Mathf.FloorToInt(portal.y + half) + island.OffsetY);
+            return map;
+        }
+
         public static ArchipelagoMap Generate(int seed, int version = Version)
         {
             var rng = new SeedRandom(seed);
@@ -248,14 +273,15 @@ namespace CityBuilder.Maps.Archipelago
             if (island.Zone.HasValue)
             {
                 var z = island.Zone.Value + new Vector2Int(island.OffsetX, island.OffsetY);
-                if (island.Kind == Kind.Start && island.StartZone != null)
+                if ((island.Kind == Kind.Start || island.Kind == Kind.Tutorial) && island.StartZone != null)
                 {
                     map.StartZone = new Vector2[island.StartZone.Length];
                     for (var k = 0; k < island.StartZone.Length; k++) map.StartZone[k] = island.StartZone[k] + new Vector2(island.OffsetX, island.OffsetY);
                 }
                 switch (island.Kind)
                 {
-                    case Kind.Start: map.StartCell = z; break;
+                    case Kind.Start:
+                    case Kind.Tutorial: map.StartCell = z; break;
                     case Kind.Orc: map.OrcBaseCell = z; break;
                     case Kind.Bot: map.BotCell = z; break;
                 }

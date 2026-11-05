@@ -54,6 +54,7 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsNotNull(library, "No island library.");
             foreach (ArchipelagoGenerator.Kind kind in System.Enum.GetValues(typeof(ArchipelagoGenerator.Kind)))
             {
+                if (kind == ArchipelagoGenerator.Kind.Tutorial) continue;      // one frame, the tutorial's own map
                 var count = 0;
                 foreach (var asset in library.Islands)
                 {

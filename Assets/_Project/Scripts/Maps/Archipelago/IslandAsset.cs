@@ -27,6 +27,9 @@ namespace CityBuilder.Maps.Archipelago
         [SerializeField] private bool hasBot;
         [SerializeField] private Vector2 bot;
         [SerializeField] private Vector2[] beaches = new Vector2[0];
+        // every other spot of the island's -Spots.csv by name (the tutorial's: hovel, shipyard, portal...)
+        [SerializeField] private string[] spotNames = new string[0];
+        [SerializeField] private Vector2[] spotPositions = new Vector2[0];
 
         public string IslandName => islandName;
         public ArchipelagoGenerator.Kind Kind => kind;
@@ -55,6 +58,19 @@ namespace CityBuilder.Maps.Archipelago
         public Vector2 Bot => bot;
         public Vector2[] Beaches => beaches;
 
+        /// <summary>A named spot of the island (frame coordinates, unturned); false when it has none of the name.</summary>
+        public bool TryGetSpot(string name, out Vector2 at)
+        {
+            for (var k = 0; k < spotNames.Length && k < spotPositions.Length; k++)
+            {
+                if (spotNames[k] != name) continue;
+                at = spotPositions[k];
+                return true;
+            }
+            at = Vector2.zero;
+            return false;
+        }
+
         /// <summary>The flags of cell (i, j), i east and j north from the frame's south-west corner.</summary>
         public byte Cell(int i, int j) => cells[j * frame + i];
 
@@ -77,6 +93,12 @@ namespace CityBuilder.Maps.Archipelago
             hasBot = botSpot.HasValue;
             bot = botSpot ?? Vector2.zero;
             beaches = beachSpots ?? new Vector2[0];
+        }
+
+        public void EditorSetSpots(string[] names, Vector2[] positions)
+        {
+            spotNames = names ?? new string[0];
+            spotPositions = positions ?? new Vector2[0];
         }
 #endif
     }

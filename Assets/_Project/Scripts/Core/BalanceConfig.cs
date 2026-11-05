@@ -566,6 +566,8 @@ namespace CityBuilder.Core
         [SerializeField] private float drawbridgeRaiseSeconds = 1.5f;
         // boulders laid on the archipelago's start island on top of its share (island_start_rocks)
         [SerializeField] private int islandStartRocks = 40;
+        // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
+        [SerializeField] private int tutorialRewardCrystals = 25;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -1157,6 +1159,7 @@ namespace CityBuilder.Core
         public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public int IslandStartRocks => islandStartRocks;
+        public int TutorialRewardCrystals => tutorialRewardCrystals;
         public int WallWalkFromLevel => wallWalkFromLevel;
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
@@ -1982,6 +1985,7 @@ namespace CityBuilder.Core
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
+            tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
             wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
             for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);

@@ -175,6 +175,9 @@ namespace CityBuilder.Maps
             buildingPrefabs = buildings ?? new GameObject[0];
         }
 
+#endif
+
+        // not editor-only: a generated map (MeshMapApplier.ApplyGenerated) sets its spots at run time
         public void EditorInitializeSpots(Vector2? mainBase, Vector2[] camps, int[] levels, Vector2[] zone, MapSpot[] others = null)
         {
             otherSpots = others ?? new MapSpot[0];
@@ -184,7 +187,6 @@ namespace CityBuilder.Maps
             campLevels = levels ?? new int[0];
             townHallZone = zone ?? new Vector2[0];
         }
-#endif
     }
 
     /// <summary>A marked place on a designed map: its kind, where (world x, z) and a level where the kind has one.</summary>

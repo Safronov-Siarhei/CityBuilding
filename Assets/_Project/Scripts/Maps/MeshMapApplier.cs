@@ -216,6 +216,8 @@ namespace CityBuilder.Maps
                 return;
             }
             Instance = this;
+            // before any system's Start asks whether this game is the tutorial
+            Tutorial.TutorialMode.DecideFor(Archipelago.ArchipelagoMapId.Pending());
         }
 
         private void Start()
@@ -770,12 +772,15 @@ namespace CityBuilder.Maps
             var grid = GridManager.Instance;
             if (grid == null) return;
             Archipelago.ArchipelagoMapId.TryParse(mapId, out var seed, out var version);
-            var world = Archipelago.ArchipelagoGenerator.Generate(seed, version > 0 ? version : Archipelago.ArchipelagoGenerator.Version);
+            var tutorial = Archipelago.ArchipelagoMapId.IsTutorial(mapId);
+            var world = (tutorial ? Archipelago.ArchipelagoGenerator.Tutorial() : null)
+                        ?? Archipelago.ArchipelagoGenerator.Generate(seed, version > 0 ? version : Archipelago.ArchipelagoGenerator.Version);
+            if (tutorial && world.Islands.Count != 1) Debug.LogError("MeshMapApplier: the library has no tutorial island (Isl-tutorial1) -- a random archipelago instead.");
             // every island its riches, before the veins and the soil are dealt (the user, 2026-11-02)
             IslandLabels = Archipelago.IslandRiches.Label(world);
             IslandRichesOf = Archipelago.IslandRiches.Assign(world);
             _archipelagoStart = world.StartCell;
-            ArchipelagoBotCell = world.BotCell;
+            ArchipelagoBotCell = tutorial ? (Vector2Int?)null : world.BotCell;
             ArchipelagoSeed = seed;
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);
@@ -798,7 +803,9 @@ namespace CityBuilder.Maps
                 zone = new Vector2[world.StartZone.Length];
                 for (var k = 0; k < zone.Length; k++) zone[k] = new Vector2(origin.x + world.StartZone[k].x, origin.z + world.StartZone[k].y);
             }
-            map.EditorInitializeSpots(At(world.OrcBaseCell), new Vector2[0], new int[0], zone,
+            // the tutorial: no orc main base and no bot (its orcs are the script's own)
+            if (tutorial) map.EditorInitializeSpots(null, new Vector2[0], new int[0], zone, new MapSpot[0]);
+            else map.EditorInitializeSpots(At(world.OrcBaseCell), new Vector2[0], new int[0], zone,
                 new[] { new MapSpot { kind = "bot", position = At(world.BotCell), level = 1 } });
 
             if (baseGroundToHide != null) baseGroundToHide.SetActive(false);
@@ -865,7 +872,9 @@ namespace CityBuilder.Maps
             // the camera and the minimap's frame reach over the whole archipelago
             var half = n * grid.CellSize * 0.5f;
             var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
-            if (rig != null) rig.SetPanBounds(new Vector2(-half + 10f, -half + 10f), new Vector2(half - 10f, half - 10f));
+            // the tutorial: the camera over its own round sea only (the frame sits in the middle)
+            var reach = tutorial ? world.Islands[0].Frame * grid.CellSize * 0.5f - 8f : half - 10f;
+            if (rig != null) rig.SetPanBounds(new Vector2(-reach, -reach), new Vector2(reach, reach));
             var indicator = FindAnyObjectByType<CityBuilder.UI.MinimapCameraIndicator>();
             if (indicator != null) indicator.MapHalfExtent = half;
 
@@ -874,12 +883,12 @@ namespace CityBuilder.Maps
             if (streamer == null) streamer = gameObject.AddComponent<SceneryStreamer>();
             streamer.Initialize(rig != null ? rig.transform : null);
             // the dungeons' mouths before the forest, so no tree grows in one
-            if (fromLibrary) Archipelago.DungeonEntrances.Place(world, this, map.DungeonEntrancePrefab, _noBuildCells);
+            if (fromLibrary && !tutorial) Archipelago.DungeonEntrances.Place(world, this, map.DungeonEntrancePrefab, _noBuildCells);
             // a cache guarded by Стражи Глубин on every ordinary island, clear of the dungeons (the user, 2026-11-02)
-            if (fromLibrary) Archipelago.TideCaches.Place(world, this, IslandLabels, IslandRichesOf, cacheRuinModel, cacheChestModel, _noBuildCells);
+            if (fromLibrary && !tutorial) Archipelago.TideCaches.Place(world, this, IslandLabels, IslandRichesOf, cacheRuinModel, cacheChestModel, _noBuildCells);
             FillTheLand(map);
             if (fromLibrary) DecorateLibraryIslands(world, origin, map);
-            _fertileCells = Archipelago.FertileLand.Compute(world, IslandLabels, IslandRichesOf);
+            _fertileCells = tutorial ? new HashSet<Vector2Int>() : Archipelago.FertileLand.Compute(world, IslandLabels, IslandRichesOf);
             Archipelago.FertileLand.KeepGrass(_fertileCells, this);
             Archipelago.FertileLand.Build(_fertileCells, transform, this, map.TerrainMaterial);
             Ships.ShipManager.Instance?.BuildSea(world, origin);

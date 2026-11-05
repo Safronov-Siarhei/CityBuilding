@@ -74,6 +74,8 @@ namespace CityBuilder.Maps
             if (grid == null || applier == null || map == null) return;
             // An Invasion run gathers wood and stone only (the user, 2026-10-21): no veins.
             if (Invasion.InvasionMode.IsActive) return;
+            // nor the tutorial: wood and stone are all it teaches
+            if (Tutorial.TutorialMode.IsActive) return;
 
             var start = map.TownHallZone.Length > 0
                 ? StartZone.Centre(map.TownHallZone)
