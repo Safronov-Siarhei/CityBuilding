@@ -147,6 +147,19 @@ namespace CityBuilder.Maps
         /// <summary>The archipelago's bot island spot, where the bot kingdom's castle stands (Bot.BotKingdom); null on any other map.</summary>
         public Vector2Int? ArchipelagoBotCell { get; private set; }
 
+        private Archipelago.Island _tutorialIsland;
+        private Vector3 _tutorialOrigin;
+
+        /// <summary>A spot of the tutorial's frame (its -Spots.csv: hovel, shipyard, orc_landing, portal...) in the world, on the ground plane; false outside the tutorial or for a name it lacks.</summary>
+        public bool TryTutorialSpot(string name, out Vector3 world)
+        {
+            world = Vector3.zero;
+            if (_tutorialIsland == null || _tutorialIsland.Asset == null || !_tutorialIsland.Asset.TryGetSpot(name, out var at)) return false;
+            var half = _tutorialIsland.Frame / 2f;
+            world = new Vector3(_tutorialOrigin.x + _tutorialIsland.OffsetX + half + at.x, 0f, _tutorialOrigin.z + _tutorialIsland.OffsetY + half + at.y);
+            return true;
+        }
+
         /// <summary>The archipelago's seed (its map id's), for what a map picks by it: the bot's town template.</summary>
         public int ArchipelagoSeed { get; private set; }
 
@@ -775,6 +788,7 @@ namespace CityBuilder.Maps
             var tutorial = Archipelago.ArchipelagoMapId.IsTutorial(mapId);
             var world = (tutorial ? Archipelago.ArchipelagoGenerator.Tutorial() : null)
                         ?? Archipelago.ArchipelagoGenerator.Generate(seed, version > 0 ? version : Archipelago.ArchipelagoGenerator.Version);
+            if (tutorial && world.Islands.Count == 1) _tutorialIsland = world.Islands[0];
             if (tutorial && world.Islands.Count != 1) Debug.LogError("MeshMapApplier: the library has no tutorial island (Isl-tutorial1) -- a random archipelago instead.");
             // every island its riches, before the veins and the soil are dealt (the user, 2026-11-02)
             IslandLabels = Archipelago.IslandRiches.Label(world);
@@ -784,6 +798,7 @@ namespace CityBuilder.Maps
             ArchipelagoSeed = seed;
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);
+            _tutorialOrigin = origin;
             Vector2 At(Vector2Int cell) => new Vector2(origin.x + cell.x + 0.5f, origin.z + cell.y + 0.5f);
 
             // the start zone an octagon round the start island's spot; the orcs' main base on theirs;

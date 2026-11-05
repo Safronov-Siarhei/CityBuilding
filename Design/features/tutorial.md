@@ -1,7 +1,7 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGES 1-2 BUILT (menu button,
-> the map, systems off; the tutorial's rules), not seen, no tests; stages 3-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGES 1-3 BUILT (menu button,
+> the map, systems off; rules; step script + King's hints + camera focus), not seen, no tests; stages 4-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -110,7 +110,19 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
    0.25 of his health (`SoldierUnit.TakeDamage`). Keys on the economy tab (sheet == repo).
    Still shown, for stage 3: the army icon / squad row (a tap on the soldier selects his Garrison squad,
    which is him alone), the resource bar.
-3. Step script + the King's hint panel + camera focus (follow the unit until tapped, then the target).
+3. **BUILT 2026-11-05, not seen, untested.** `Tutorial/TutorialDirector.cs` (on «TutorialDirector» under the HUD
+   root, made by `SetupProjectHud.BuildTutorialDirector`, sprites only; idle outside the tutorial): steps
+   TownHall -> Hovel (built) -> People (6 s) -> WoodPick/WoodSend -> StonePick/StoneSend -> Barracks (built) ->
+   Soldier (a Латник exists) -> Shipyard (built) -> Ship (the transport) -> KingPick/KingBoard ->
+   SoldierPick/SoldierBoard (in `ShipUnit.Aboard`; a fallen soldier skips it) -> Sail (the ship within 12 m
+   of the frame's `player_landing` spot) -> Done. Panel at the top: the King's portrait + `#tutorial_hint_<step>`
+   (17 keys, sheet == repo). Camera (`RTSCameraController.FocusOn` every 0.3 s): on a free person until
+   one is selected (`CitizenSelector.Selected`), then on the nearest tree / boulder until he takes the
+   order (`CitizenAgent.GatherTarget`); the step ends when he is idle again. King/soldier: on the unit
+   until his group is selected (`ArmyManager.SelectedGroup`), then on the ship until he is aboard.
+   `MeshMapApplier.TryTutorialSpot(name)` gives the frame's spots in the world.
+   Not yet: the step order skips the orc landing (stage 4 adds Raid after Soldier); no arrow/highlight on
+   the build menu; the camera fights a player who pans during a focus step (by design: it re-centres).
 4. Orcs: the landing barge with 2 orcs (soft hits), their island: portal, level-1 tower, 1 orc; win
    on the portal; victory screen pays the crystals (`Wallet.Crystals`).
 5. Texts (`#tutorial_*`), the numbers (a `tutorial` sheet tab or economy keys), tests.

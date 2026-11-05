@@ -879,6 +879,20 @@ namespace CityBuilder.EditorTools
             AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/PortraitKing.png"),
         };
 
+        /// <summary>The tutorial's script and the King's hint panel (Tutorial/TutorialDirector): idle outside the tutorial; here only its sprites.</summary>
+        private static void BuildTutorialDirector(Transform uiRoot)
+        {
+            var go = new GameObject("TutorialDirector");
+            go.transform.SetParent(uiRoot, false);
+            var director = go.AddComponent<CityBuilder.Tutorial.TutorialDirector>();
+            var so = new SerializedObject(director);
+            so.FindProperty("uiRoot").objectReferenceValue = uiRoot;
+            so.FindProperty("cardSprite").objectReferenceValue = SkinSprite("card");
+            so.FindProperty("circleSprite").objectReferenceValue = SkinSprite("circle_mask");
+            so.FindProperty("kingPortrait").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/PortraitKing.png");
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         /// <summary>The squad window (UI/SquadWindow): built at runtime; here only its sprites and the HUD root.</summary>
         private static void BuildSquadWindow(Transform uiRoot, HudHider hud)
         {

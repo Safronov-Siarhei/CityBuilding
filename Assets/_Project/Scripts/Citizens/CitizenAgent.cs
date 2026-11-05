@@ -171,6 +171,9 @@ namespace CityBuilder.Citizens
         /// <summary>True from a player-issued order (MoveTo/GatherFrom) until the agent either finishes it or gives up (see MaxManualMoveStuckRetries) -- CitizenSelector uses this to know when to hide the persistent target-cell highlight.</summary>
         public bool IsExecutingOrder => _mode == Mode.ManualMove || _mode == Mode.Gathering;
 
+        /// <summary>The tree or boulder he was sent to by hand, while that order lasts; null otherwise.</summary>
+        public ResourceNode GatherTarget => _gatherNode;
+
         /// <summary>
         /// The route currently being walked (NavMesh corners, or the one-point straight-line
         /// fallback) and the corner the agent is heading for. Read-only views for MoveOrderMarker,

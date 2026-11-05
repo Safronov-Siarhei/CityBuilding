@@ -91,6 +91,9 @@ namespace CityBuilder.UI
         /// <summary>True while a citizen is selected -- the dispatcher reads it to decide whether a world tap is an ORDER or plain selection.</summary>
         public bool HasSelection => _selected != null;
 
+        /// <summary>The citizen picked up, or null (the tutorial waits on the one it showed).</summary>
+        public CitizenAgent Selected => _selected;
+
         /// <summary>
         /// Plain selection, from browsing mode: picks up an idle citizen. Returns false when the
         /// tap met no citizen at all, so the dispatcher can pass it on to the building card.
