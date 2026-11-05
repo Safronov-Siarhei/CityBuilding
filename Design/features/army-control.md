@@ -12,7 +12,7 @@
   selected a «!» appears right of «＋» (opens «Управление отрядами» for it).
 - **Machines** have their own smaller icons in a row ABOVE the squad icons; each is selected and ordered
   alone; no «!» for a machine.
-- A squad icon = its **crest** (changeable in «Управление») with the soldier count under it.
+- A squad icon = its **crest** (8-10 to choose from, changed in «Управление»; art to be approved) with the soldier count under it.
 - With a squad selected: 3 **formation** buttons on the right under the army icon, and a **cancel
   selection** button below them. The same cancel button replaces the «Выбран король» plaque for heroes.
 - One squad (or one machine) selected at a time; no multi-select, no «all».
@@ -40,19 +40,19 @@
 
 ## Behaviours and formations (proposed by Claude, the user's examples were placeholders)
 - Behaviour: Стоять (hold, short chase) / Охранять город (patrol near the hall and walls, chase in a zone)
-  / Наступать (seek enemies on the island) / За героем (follow a chosen hero) -- 4th not yet agreed.
+  / Наступать (seek enemies on the island) / За героем (follow a chosen hero) -- all 4 agreed 2026-11-05.
 - Formation: Колонна (march) / Линия (infantry ahead, ranged + monk behind) / Каре (infantry outside,
   ranged + monk inside). Slots computed once per order, not per frame.
 
 ## Ships
-- Capacity grows with the ship's level: **8-10-12-14-16**. A squad bigger than the ship does NOT board
+- Capacity grows with the ship's level (the user, 2026-11-05): **transport 8-10-12-14-16, battleship
+  (линкор) 12-14-16-18-20**; ship levels are raised in the **Laboratory** (not built yet -- part of this work). A squad bigger than the ship does NOT board
   and NOT split: notice «Уменьшите отряд или улучшите корабль».
 - Squad selected + tap the ship = it boards when it fits; the ship then has a «Высадить десант» icon by a shore.
 - A machine takes **4 places**; boards the same way.
 - No «bring the squads home» button on a raid (the user: return them by hand or grow the Garrison).
 
 ## Open
-- Which ships the 8-16 ladder is for (now transport 8, battleship 8, scout/war 0) and whether ship
-  levels already exist (Laboratory) -- asked.
-- Crest set (how many, art); behaviour «За героем» yes/no; heroes in squads or apart (apart now).
+- Crest art (8-10) -- renders to the user first. Heroes stay apart from squads.
+- Hiring stays as is (the user, 2026-11-05): recruit -> Garrison -> moved into a squad in the window.
 - Squads in save data; the bot and Invasion keep their own automatic armies.
