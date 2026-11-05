@@ -54,7 +54,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Modes** | | |
 | [invasion-mode](invasion-mode.md) | «Нашествие»: endless waves, the King hero, run economy, Dota-like map (log: `Design/Invasion.md`) | нашествие, король, герой, волны, забег, рейтинг |
 | [sandbox-run-systems](sandbox-run-systems.md) | the sandbox on the run's systems (2026-10-25): houses make people, heroes for coins, timed build/upgrade, repair by damage, no decay/happiness/migration, run card + minimap, the `sandbox` sheet tab | песочница, жители из домов, герои, стройка по таймеру, ремонт, лист sandbox |
-| [tutorial](tutorial.md) | the tutorial scenario (agreed 2026-11-05; map Isl-tutorial1; mode stage 1 of 5 built: menu button, map, systems off): two tiny islands, Town Hall -> King + 3 people, gather, Barracks, orc landing, Shipyard, ship, orc portal; hints from the King | обучение, туториал, подсказки |
+| [tutorial](tutorial.md) | the tutorial scenario (agreed 2026-11-05; map Isl-tutorial1; mode stages 1-2 of 5 built: menu button, map, systems off, the rules): two tiny islands, Town Hall -> King + 3 people, gather, Barracks, orc landing, Shipyard, ship, orc portal; hints from the King | обучение, туториал, подсказки |
 | [construction-look](construction-look.md) | the building wrapped in a construction net inside scaffolding while building/upgrading, the dust finish | стройка, леса, сетка, стройплощадка, пыль, эффект окончания стройки |
 | [invasion-newyear](invasion-newyear.md) | the New Year Invasion map: winter fir map, tree, gifts and the Thief, blizzard, midnight salute, Ice Shaman | новогодняя карта, подарки, воришка, метель, куранты, шаман |
 | **Interface & meta** | | |

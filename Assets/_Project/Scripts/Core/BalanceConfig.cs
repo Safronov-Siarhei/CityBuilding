@@ -568,6 +568,10 @@ namespace CityBuilder.Core
         [SerializeField] private int islandStartRocks = 40;
         // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
         [SerializeField] private int tutorialRewardCrystals = 25;
+        // the tutorial's rules (tutorial_build_sec, tutorial_start_people, tutorial_king_heal_below)
+        [SerializeField] private float tutorialBuildSeconds = 5f;
+        [SerializeField] private int tutorialStartPeople = 3;
+        [SerializeField] private float tutorialKingHealBelow = 0.25f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -1160,6 +1164,9 @@ namespace CityBuilder.Core
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public int IslandStartRocks => islandStartRocks;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
+        public float TutorialBuildSeconds => tutorialBuildSeconds;
+        public int TutorialStartPeople => tutorialStartPeople;
+        public float TutorialKingHealBelow => tutorialKingHealBelow;
         public int WallWalkFromLevel => wallWalkFromLevel;
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
@@ -1986,6 +1993,9 @@ namespace CityBuilder.Core
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
+            tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
+            tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
+            tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);
             wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
             for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);

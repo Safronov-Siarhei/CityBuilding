@@ -154,7 +154,10 @@ namespace CityBuilder.UI
             for (var i = 0; i < buttons.Length && i < Ships.ShipStats.All.Length; i++)
             {
                 var shipKind = Ships.ShipStats.All[i];
-                buttons[i].SetActive(true);
+                // the tutorial: its one ship
+                var offered = !Tutorial.TutorialMode.IsActive || shipKind == Tutorial.TutorialRules.Ship;
+                buttons[i].SetActive(offered);
+                if (!offered) continue;
                 var need = Ships.ShipStats.ShipyardLevel(shipKind);
                 var tooLow = shipyard.Level < need;
                 if (i < locks.Length && locks[i] != null) locks[i].SetActive(tooLow);
@@ -197,6 +200,8 @@ namespace CityBuilder.UI
         {
             var target = kind == Kind.HireCamp ? null : Target;
             var show = kind == Kind.HireCamp ? CampHeld : target != null;
+            // the tutorial's Town Hall sells no heroes: the King comes with it (the user: nothing extra)
+            if (kind == Kind.Castle && Tutorial.TutorialMode.IsActive) show = false;
             if (show != _shown)
             {
                 _shown = show;

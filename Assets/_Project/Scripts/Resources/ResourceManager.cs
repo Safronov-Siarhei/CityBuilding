@@ -46,6 +46,12 @@ namespace CityBuilder.Resources
         /// </summary>
         public int LifetimeProduced { get; private set; }
 
+        private void Start()
+        {
+            // the tutorial shows gathering and building, it never waits on them (the user, 2026-11-05)
+            if (Tutorial.TutorialMode.IsActive) SetInfiniteResources(true);
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

@@ -83,6 +83,8 @@ namespace CityBuilder.Citizens
             // room is. What is left here is the founding party that arrives with the Town Hall --
             // every other building adds room and nobody to fill it.
             var arrivals = data != null ? data.citizensOnBuild : 0;
+            // the tutorial's hall: two to work, one to become the soldier (the user, 2026-11-05)
+            if (Tutorial.TutorialMode.IsActive && data != null && data.buildingName == Buildings.BuildingIds.TownHall) arrivals = Tutorial.TutorialRules.StartPeople;
             if (arrivals > 0) AddCitizens(arrivals);
         }
 

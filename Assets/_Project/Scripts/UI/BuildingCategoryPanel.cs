@@ -95,6 +95,13 @@ namespace CityBuilder.UI
         /// </summary>
         private void ShowRunTabsOnly()
         {
+            if (Tutorial.TutorialMode.IsActive)
+            {
+                // the tutorial: one tab -- the first -- holding its four buildings (the user, 2026-11-05)
+                for (var t = 0; t < _categoryButtons.Length; t++) _categoryButtons[t].gameObject.SetActive(t == 0);
+                CloseUpTabs();
+                return;
+            }
             if (!Invasion.InvasionRules.Active) return;
             var buildings = new System.Collections.Generic.List<BuildingData>();
             foreach (var button in _buildingButtons)
@@ -266,12 +273,14 @@ namespace CityBuilder.UI
                 // icons with no room to explain itself, and the Laboratory's window is where the
                 // player is told what is still locked and what it costs.
                 var show = building != null
-                           && building.category == category
+                           && (Tutorial.TutorialMode.IsActive
+                               ? Tutorial.TutorialRules.Allows(building)     // whatever its category: the tutorial's one tab
+                               : building.category == category
                            && (Invasion.InvasionRules.Active
                                ? Invasion.InvasionRules.Allows(building)   // a run's nine, nothing to research
-                               : Research.ResearchManager.BuildingUnlocked(building.buildingName));
+                               : Research.ResearchManager.BuildingUnlocked(building.buildingName)));
                 buildingButton.gameObject.SetActive(show);
-                if (show && Invasion.InvasionRules.Active) ShowLimit(buildingButton);
+                if (show && (Invasion.InvasionRules.Active || Tutorial.TutorialMode.IsActive)) ShowLimit(buildingButton);
             }
 
             FitCardsRow();
@@ -284,7 +293,7 @@ namespace CityBuilder.UI
         /// </summary>
         private static void ShowLimit(HotbarButtonHandler card)
         {
-            var max = Invasion.InvasionRules.LimitOf(card.Building);
+            var max = Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.LimitOf(card.Building) : Invasion.InvasionRules.LimitOf(card.Building);
             var shade = card.transform.Find("LimitShade");
             if (max <= 0)
             {

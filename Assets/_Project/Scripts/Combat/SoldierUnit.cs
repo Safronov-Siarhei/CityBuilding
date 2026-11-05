@@ -704,6 +704,9 @@ namespace CityBuilder.Combat
             if (_wardLeft > 0f) amount = Mathf.Max(1, Mathf.RoundToInt(amount * _wardKeep));
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            // the tutorial's King never dies: low, he heals himself back to full (the user, 2026-11-05)
+            if (Type == SoldierType.King && Tutorial.TutorialMode.IsActive && CurrentHealth <= MaxHealth * Tutorial.TutorialRules.KingHealBelow)
+                CurrentHealth = MaxHealth;
             if (CurrentHealth > 0)
             {
                 ShowHealth();

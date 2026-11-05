@@ -216,7 +216,7 @@ namespace CityBuilder.Buildings
         private static readonly BuildingLevelStats Fallback = new BuildingLevelStats();
 
         /// <summary>How long putting `level` up takes: building it (1) or the upgrade into it -- see BuildingLevelStats.buildSeconds.</summary>
-        public float BuildSeconds(int level) => Mathf.Max(0, LevelStats(level).buildSeconds);
+        public float BuildSeconds(int level) => Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.BuildSeconds : Mathf.Max(0, LevelStats(level).buildSeconds);
 
         /// <summary>What upgrading INTO the given level costs (2..MaxLevel), or null for a level that has no upgrade into it.</summary>
         public List<ResourceAmount> UpgradeCostTo(int level)

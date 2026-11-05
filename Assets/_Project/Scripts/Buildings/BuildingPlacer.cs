@@ -352,7 +352,8 @@ namespace CityBuilder.Buildings
             // anything else reaching in from outside.
             // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
             if (data != null && data != mandatoryFirstBuilding && !(_lighthousePending && data == _lighthouse)
-                && !(Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
+                && !(Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.Allows(data)
+                     : Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
                                                    : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
 
             ClearSelection();
@@ -903,6 +904,8 @@ namespace CityBuilder.Buildings
         {
             // a run's nine buildings wait on nothing but wood and stone -- and one sawmill, one quarry
             if (Invasion.InvasionRules.Active) return !Invasion.InvasionRules.AtLimit(_selectedBuilding);
+            // the tutorial's four, one of each, waiting on nothing
+            if (Tutorial.TutorialMode.IsActive) return !Tutorial.TutorialRules.AtLimit(_selectedBuilding);
             var required = _selectedBuilding.requiredBuilding;
             return required == null || BuildingInstance.HasAny(required.buildingName);
         }

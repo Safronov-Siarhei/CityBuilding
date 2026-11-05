@@ -1,7 +1,7 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGE 1 BUILT (menu button,
-> the map loads, systems off), not seen, no tests; stages 2-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED and exported (Isl-tutorial1); game mode STAGES 1-2 BUILT (menu button,
+> the map, systems off; the tutorial's rules), not seen, no tests; stages 3-5 not started; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -98,8 +98,18 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
    comes with the Town Hall (GiveStartingParty).
    `IslandAsset` now keeps every other -Spots.csv row by name (`TryGetSpot`): the tutorial's hovel,
    barracks, shipyard, orc_landing, portal... for the later stages.
-2. Rules: build menu = Ратуша/Лачуга/Казарма/Верфь, 1/1 caps, 5-s builds, infinite resources, 3 people
-   with the hall, Barracks offers the level-3 Латник only, Shipyard the ship only; King cannot die.
+2. **BUILT 2026-11-05, not seen, untested.** `Tutorial/TutorialRules.cs`: build menu = ONE tab (the first
+   category's tab; the others hidden, `BuildingCategoryPanel.ShowRunTabsOnly`) holding Castle/Hovel/Barracks/
+   Shipyard whatever their categories, each greyed «1/1» once built (`ShowLimit`, `BuildingPlacer`
+   `HasRequiredBuilding`/`SelectBuilding`); every build `tutorial_build_sec` 5 s (`BuildingData.BuildSeconds`);
+   infinite resources (`ResourceManager.Start` -> `SetInfiniteResources`); the hall brings
+   `tutorial_start_people` 3 (`CitizenManager.HandleBuildingPlaced`); Barracks: the Латник only, at level 1
+   (`SoldierStats.IsUnlocked`/`BarracksLevel`); Shipyard: the transport only, at level 1
+   (`ShipStats.ShipyardLevel`, `FocusHireBar.ShowShips`); the Town Hall's hero bar hidden; building cards
+   bare (name only, no demolish: `RunBuildingCard`); the King heals to full at `tutorial_king_heal_below`
+   0.25 of his health (`SoldierUnit.TakeDamage`). Keys on the economy tab (sheet == repo).
+   Still shown, for stage 3: the army icon / squad row (a tap on the soldier selects his Garrison squad,
+   which is him alone), the resource bar.
 3. Step script + the King's hint panel + camera focus (follow the unit until tapped, then the target).
 4. Orcs: the landing barge with 2 orcs (soft hits), their island: portal, level-1 tower, 1 orc; win
    on the portal; victory screen pays the crystals (`Wallet.Crystals`).

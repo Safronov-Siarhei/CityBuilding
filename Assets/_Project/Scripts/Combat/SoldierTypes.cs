@@ -195,6 +195,8 @@ namespace CityBuilder.Combat
         {
             // nothing in a run waits on the Laboratory (InvasionRules)
             if (Invasion.InvasionRules.Active) return true;
+            // the tutorial's Barracks offers its one soldier and nothing else
+            if (Tutorial.TutorialMode.IsActive) return type == Tutorial.TutorialRules.Soldier || IsHero(type);
             var research = Research.ResearchManager.Instance;
             return research == null || research.IsUnitUnlocked(type);
         }
@@ -279,6 +281,7 @@ namespace CityBuilder.Combat
         /// </summary>
         public static int BarracksLevel(SoldierType type)
         {
+            if (Tutorial.TutorialMode.IsActive) return 1;         // the tutorial's soldier at a level-1 Barracks
             var row = IsHero(type) ? null : BalanceConfig.Instance.Unit(SheetIdOf(type));
             return row != null ? System.Math.Max(1, row.barracksLevel) : 1;
         }

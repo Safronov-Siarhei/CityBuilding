@@ -108,7 +108,8 @@ namespace CityBuilder.UI
             var data = building.Data;
             if (title != null) title.text = data.LocalizedName;
             // the Moat's card is its name and Demolish, nothing else (the user, 2026-11-02)
-            var bare = data.isMoat;
+            // and the tutorial's: nothing extra on any card (the user, 2026-11-05)
+            var bare = data.isMoat || Tutorial.TutorialMode.IsActive;
             if (level != null) level.gameObject.SetActive(!bare);
             foreach (var part in statParts) if (part != null) part.SetActive(!bare);
             if (bare)
@@ -117,7 +118,7 @@ namespace CityBuilder.UI
                 if (nextLevel != null) nextLevel.SetActive(false);
                 if (upgradeBlock != null) upgradeBlock.SetActive(false);
                 if (repairBlock != null) repairBlock.SetActive(false);
-                if (demolishButton != null) demolishButton.SetActive(building.CanDemolish);
+                if (demolishButton != null) demolishButton.SetActive(building.CanDemolish && !Tutorial.TutorialMode.IsActive);
                 return;
             }
             if (level != null) level.text = Localization.Format("#building_level_run", building.Level);

@@ -80,7 +80,7 @@ namespace CityBuilder.Ships
             return BalanceConfig.Instance != null ? Mathf.Max(1, BalanceConfig.Instance.ShipMachinePlaces) : 4;
         }
         /// <summary>The Shipyard's level that builds it (the user: the shipyard's level opens the ships).</summary>
-        public static int ShipyardLevel(ShipKind kind) => Mathf.Max(1, Row(kind)?.shipyardLevel ?? 1);
+        public static int ShipyardLevel(ShipKind kind) => Tutorial.TutorialMode.IsActive ? 1 : Mathf.Max(1, Row(kind)?.shipyardLevel ?? 1);
         /// <summary>How many may sail at once; 0 = no limit (the user, 2026-10-28: unlimited for now, a column to balance later).</summary>
         public static int MaxCount(ShipKind kind) => Row(kind)?.maxCount ?? 0;
         /// <summary>How far round it the fog opens while it sails, in cells.</summary>
