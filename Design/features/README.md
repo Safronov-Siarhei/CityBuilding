@@ -38,7 +38,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [research-laboratory](research-laboratory.md) | tech tree, scientists, lab levels gate, research window | лаборатория, исследования |
 | **War** | | |
 | [army-and-soldiers](army-and-soldiers.md) | soldier tiers, groups, orders, recruitment, move-order flag; roster widening 2026-11-05: crossbowman, knight (Stable), monk IN THE CODE; Workshop + 4 machines + siege rules IN THE CODE; bot mirror next | армия, солдаты, казарма, приказ |
-| [army-control](army-control.md) | squads concept 2026-11-05: army icon, 5 player squads + Garrison, squad window (pause), behaviours, formations, ship capacity 8-16; STAGE 1 BUILT 2026-11-05 (Garrison, squads, army icon/row), window/formations/ships/crests next | управление армией, отряды, гарнизон, построение |
+| [army-control](army-control.md) | squads concept 2026-11-05: army icon, 5 player squads + Garrison, squad window (pause), behaviours, formations, ship capacity 8-16; STAGES 1-2 BUILT 2026-11-05 (Garrison, squads, army icon/row, squad window), formations/ships/crests next | управление армией, отряды, гарнизон, построение |
 | [combat-core](combat-core.md) | damage targets, towers, projectiles, NavRoute, wall breaching | бой, башня, стрелы, урон |
 | [moat](moat.md) | the Moat: wadeable water that slows, orcs in it don't fight units, lab-opened for crystals | ров, вода, замедление |
 | [bot](bot.md) | the bot kingdom: castle scheme v2, garrison, Diplomacy Hall relations (peace/trade/war), WAR built 2026-11-04 (guards, botwaves sea raids, ransom) | бот, дипломатия, война, торговля |
