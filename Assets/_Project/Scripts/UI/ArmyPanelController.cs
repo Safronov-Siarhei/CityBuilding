@@ -84,7 +84,9 @@ namespace CityBuilder.UI
 
             if (summaryLabel != null)
             {
-                summaryLabel.text = Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep);
+                summaryLabel.text = ArmyManager.UpkeepCharged
+                    ? Localization.Format("#army_summary", army.SoldierCount, SoldierStats.MaxArmySize, army.DailyUpkeep)
+                    : Localization.Format("#army_summary_run", army.SoldierCount, SoldierStats.MaxArmySize);
             }
 
             var index = 0;

@@ -145,8 +145,9 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>The user, 2026-11-05: a soldier is hired once and never paid by the day -- an empty treasury keeps the army.</summary>
         [Test]
-        public void UnpayableUpkeep_DisbandsSoldiersAndSendsThemHome()
+        public void NoUpkeep_AnEmptyTreasuryKeepsTheArmy()
         {
             var army = ArmyManager.Instance;
             var spot = WalkablePoint();
@@ -155,14 +156,11 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
             }
 
-            var populationWithArmy = CitizenManager.Instance.TotalPopulation;
             ResourceManager.Instance.SetAmount(ResourceType.Coins, 0);
-
             army.ChargeDailyUpkeep();
 
-            Assert.AreEqual(0, army.SoldierCount, "Nobody can be paid, so nobody stays.");
-            Assert.AreEqual(populationWithArmy + 3, CitizenManager.Instance.TotalPopulation,
-                "Soldiers let go for lack of pay walk home as citizens -- being unpaid is not the same as dying.");
+            Assert.AreEqual(0, army.DailyUpkeep, "The army costs nothing by the day.");
+            Assert.AreEqual(3, army.SoldierCount, "Nobody is let go for lack of pay.");
         }
 
         /// <summary>

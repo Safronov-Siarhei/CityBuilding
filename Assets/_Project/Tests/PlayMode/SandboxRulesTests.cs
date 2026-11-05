@@ -234,7 +234,7 @@ namespace CityBuilder.Tests.PlayMode
             }
             Assert.IsNotNull(roster.HeroOf(SoldierType.Queen).Unit, "The Queen has no fighter.");
             var army = ArmyManager.Instance;
-            Assert.AreEqual(0, army.DailyUpkeep - army.Groups.Where(g => !SoldierStats.IsHero(g.Type) && !g.IsSummoned).Sum(g => g.Count * SoldierStats.UpkeepCoinsPerDay(g.Type)), "A hero is paid by the day.");
+            Assert.AreEqual(0, army.DailyUpkeep, "Nothing is paid by the day, a hero least of all.");
         }
 
         [Test]

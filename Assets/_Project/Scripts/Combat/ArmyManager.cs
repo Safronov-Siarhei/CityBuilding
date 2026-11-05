@@ -110,11 +110,18 @@ namespace CityBuilder.Combat
             }
         }
 
-        /// <summary>Coins this army costs per game day at its current size.</summary>
+        /// <summary>
+        /// Coins this army costs per game day: NOTHING since 2026-11-05 (the user: «один раз нанял и
+        /// больше не тратишься», both modes). Kept as the one place to switch it back on.
+        /// </summary>
+        public static readonly bool UpkeepCharged = false;
+
+        /// <summary>Coins this army costs per game day at its current size (0 while UpkeepCharged is off).</summary>
         public int DailyUpkeep
         {
             get
             {
+                if (!UpkeepCharged) return 0;
                 var total = 0;
                 foreach (var group in _groups)
                 {
@@ -302,8 +309,9 @@ namespace CityBuilder.Combat
         /// </summary>
         public void ChargeDailyUpkeep()
         {
-            // a run's soldiers are hired once and never paid by the day (the user, 2026-10-21)
-            if (Invasion.InvasionMode.IsActive) return;
+            // soldiers are hired once and never paid by the day: a run's since 2026-10-21, the
+            // sandbox's since 2026-11-05 (the user)
+            if (!UpkeepCharged || Invasion.InvasionMode.IsActive) return;
             var resources = ResourceManager.Instance;
             if (resources == null) return;
 

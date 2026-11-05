@@ -1,8 +1,8 @@
 # Army and soldiers
 
 > **Status (2026-10-24):** four tiers, groups, orders, saving — shipped. Every tier is now a jointed
-> Blender figure in the heroes' style (stand / run / strike / limp death). Army upkeep vs tax is
-> unbalanced (20 soldiers cost more coins/day than 20 citizens pay).
+> Blender figure in the heroes' style (stand / run / strike / limp death). Army upkeep in coins is GONE
+> (2026-11-05): a soldier is paid once, at hiring.
 > **Read with:** [combat-core](combat-core.md), [orc-camps-and-main-base](orc-camps-and-main-base.md),
 > [research-laboratory](research-laboratory.md).
 
@@ -26,8 +26,11 @@ gather = ring; refused = red ripple.
   AT THE BARRACKS in `recruit_ironbar`/`recruit_copperbar` (user, 2026-08-19, overriding "one workshop
   per equipment"). Kit is flat across levels; level tax is in coins.
 - Recruit takes an idle citizen; disband returns them; death in battle = permanent population loss.
-- Army cap `army_max_size` = 20, fixed (device reasons); upkeep is the real limiter. Unpaid → that
-  soldier disbands (turning hostile = an idea, not decided). Soldiers eat like citizens.
+- Army cap `army_max_size` = 20, fixed (device reasons). **NO UPKEEP in coins since 2026-11-05 (the user: «один раз
+  нанял и больше не тратишься», both modes):** `ArmyManager.UpkeepCharged = false` makes DailyUpkeep 0 and ChargeDailyUpkeep
+  a no-op; the army line reads «Армия: N/20» (`#army_summary_run`). The units tab's `upkeep_coins_per_day*` columns and
+  `#army_summary` / `#log_disbanded` are unused now (kept for switching back). Soldiers still EAT like citizens (food).
+  Test: `ArmyCombatTests.NoUpkeep_AnEmptyTreasuryKeepsTheArmy` (replaced UnpayableUpkeep_Disbands...).
 - Command by GROUPS, never individuals; one group per unit type today (`ArmyGroup` is a real object
   so splitting later doesn't rewrite orders/UI).
 - Target priority (enemies / structures) is a PERSISTENT per-group mode.
@@ -109,7 +112,7 @@ Heavy for the budget: trim (quoins, wheels, the crane) if the phone needs it.
 **Numbers AGREED by the user (2026-11-05)** -- go into the sheet when the code is built (no columns yet):
 - Workshop: 40 wood, 30 stone, 10 iron; health 220, levels by the Barracks' formula. Opens: lvl1 Ram, lvl2 Ballista,
   lvl3 Catapult, lvl4 Siege tower, lvl5 nothing new (look only).
-- Level 1 machines (hp / damage / every s / range cells / speed / army slots / crew citizens / coins + kit / upkeep a day):
+- Level 1 machines (hp / damage / every s / range cells / speed / army slots / crew citizens / coins + kit / upkeep a day -- MOOT since upkeep was removed the same day):
   - Ram: 160 / 60 to GATES only / 3 / touch / 0.7 / 2 / 2 / 120 + 20 wood, 2 iron bars / 4. Arrows do 25% to it.
   - Ballista: 40 / 30 / 3.5 / 11 / 0.8 / 2 / 2 / 140 + 1 iron bar, 1 copper bar / 5. x1.5 vs big targets (man-at-arms, brute,
     chief, machines, ships), x0.3 vs buildings.
