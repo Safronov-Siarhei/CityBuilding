@@ -109,6 +109,14 @@ lvl3 gold finials on the gable ends, a weathervane on the louvre, a stone gatewa
 lvl4 glazed roof + glazed lean-to (5248); lvl5 gilded roofs (5248). Each level 3.6 m +X of the one before, 6 m -y of the Barracks.
 Heavy for the budget: trim (quoins, wheels, the crane) if the phone needs it.
 
+**New fighters' drafts (2026-11-05, waiting for the user's approval):** `Tools/blender/soldiers_new_drafts.py -- <out_dir>`
+(borrows soldiers.py's helpers by exec without its main(); never saves) builds jointed SoldierCrossbow (kettle hat with a wide
+brim, breastplate over the blue gambeson, blue pavise on the back, crossbow at the hip; 960 tris), SoldierMonk (white habit,
+blue scapular and hood, gold sun on the chest and on the staff, a lit lantern; 1034) and SoldierKnight (the man-at-arms seated
+on a white horse in a blue caparison with gold crosses, steel chanfron, couched lance with a pennant, feather plume; parts
+HorseHead + LegFL/FR/BL/BR for the gallop; 1566), and a lineup with the spearman, archer and man-at-arms. Level 2-3 looks not
+made yet.
+
 **Numbers AGREED by the user (2026-11-05)** -- go into the sheet when the code is built (no columns yet):
 - Workshop: 40 wood, 30 stone, 10 iron; health 220, levels by the Barracks' formula. Opens: lvl1 Ram, lvl2 Ballista,
   lvl3 Catapult, lvl4 Siege tower, lvl5 nothing new (look only).
