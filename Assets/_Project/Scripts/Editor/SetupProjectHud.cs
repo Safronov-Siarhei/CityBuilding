@@ -177,6 +177,9 @@ namespace CityBuilder.EditorTools
             // the roster widening (the user, 2026-11-05): the Stable hires the knight, the Church the monk
             BuildHireBar(row.transform, FocusHireBar.Kind.Stable, new[] { SoldierType.Knight }, new[] { "PortraitKnight" }, iconLibrary);
             BuildHireBar(row.transform, FocusHireBar.Kind.Church, new[] { SoldierType.Monk }, new[] { "PortraitMonk" }, iconLibrary);
+            // the Workshop's machines, each opened by a Workshop level
+            BuildHireBar(row.transform, FocusHireBar.Kind.Workshop, new[] { SoldierType.Ram, SoldierType.Ballista, SoldierType.Catapult, SoldierType.SiegeTower },
+                new[] { "PortraitRam", "PortraitBallista", "PortraitCatapult", "PortraitSiegeTower" }, iconLibrary);
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
             // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers

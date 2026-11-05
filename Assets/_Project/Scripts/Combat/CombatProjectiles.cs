@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using UnityEngine;
@@ -110,6 +110,9 @@ namespace CityBuilder.Combat
             public bool Stuck;
             public Vector3 StuckOffset;
 
+            /// <summary>The catapult's stone: every other orc within this radius of where it lands takes the blow too.</summary>
+            public float Splash;
+
             // Exactly one of these is the target; the rest are null.
             public IDamageTarget Enemy;
             public SoldierUnit Soldier;
@@ -134,12 +137,13 @@ namespace CityBuilder.Combat
         // ---------------------------------------------------------------- firing
 
         /// <summary>A shot at an orc, a portal or an orc camp building. The archer, if it is one, is told to the orc it hits.</summary>
-        public static void Fire(ProjectileKind kind, Vector3 from, IDamageTarget target, int damage, SoldierUnit attacker = null)
+        public static void Fire(ProjectileKind kind, Vector3 from, IDamageTarget target, int damage, SoldierUnit attacker = null, float splash = 0f)
         {
             if (target == null || target.Transform == null || !target.IsAlive) return;
             var instance = Instance;
             if (instance == null)
             {
+                Splash(target.Transform.position, splash, damage, target, attacker);
                 if (target is OrcUnit struck) struck.TakeDamage(damage, attacker);
                 else target.TakeDamage(damage);
                 if (attacker != null && target is OrcUnit orc && orc != null && orc.CurrentHealth > 0) orc.NotifyAttackedBy(attacker);
@@ -152,14 +156,32 @@ namespace CityBuilder.Combat
                 AimOffset = target.IsStructure ? StructureAimOffset(target.Transform, from) : Vector3.up * UnitAimHeight,
                 Damage = damage,
                 Attacker = attacker,
+                Splash = splash,
             };
             instance.Launch(kind, from, ref shot);
+        }
+
+        /// <summary>The catapult's stone landing: every live orc within `radius` of `at` but the one it was thrown at takes `damage`.</summary>
+        private static void Splash(Vector3 at, float radius, int damage, IDamageTarget aimed, SoldierUnit attacker)
+        {
+            if (radius <= 0f) return;
+            var all = OrcUnit.All;
+            for (var i = all.Count - 1; i >= 0; i--)
+            {
+                var orc = all[i];
+                if (orc == null || orc.CurrentHealth <= 0 || ReferenceEquals(orc, aimed)) continue;
+                var d = orc.transform.position - at;
+                d.y = 0f;
+                if (d.sqrMagnitude <= radius * radius) orc.TakeDamage(damage, attacker);
+            }
         }
 
         /// <summary>A shot at one of the player's soldiers.</summary>
         public static void Fire(ProjectileKind kind, Vector3 from, SoldierUnit target, int damage)
         {
             if (target == null || target.CurrentHealth <= 0) return;
+            // a ram under its hides takes a quarter of it, a siege tower half (units `ranged_taken`)
+            damage = Mathf.Max(1, Mathf.RoundToInt(damage * target.RangedTakenShare));
             var instance = Instance;
             if (instance == null)
             {
@@ -375,6 +397,7 @@ namespace CityBuilder.Combat
             if (shot.Enemy != null)
             {
                 if (shot.Enemy.Transform == null || !shot.Enemy.IsAlive) return;
+                Splash(shot.Enemy.Transform.position, shot.Splash, shot.Damage, shot.Enemy, shot.Attacker);
                 if (shot.Enemy is OrcUnit struck) struck.TakeDamage(shot.Damage, shot.Attacker);
                 else shot.Enemy.TakeDamage(shot.Damage);
                 // An orc has to be able to come after whoever is shooting it (see SoldierUnit.TickAttack).

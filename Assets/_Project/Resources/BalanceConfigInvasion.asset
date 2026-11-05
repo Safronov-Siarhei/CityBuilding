@@ -49,11 +49,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 80
       seconds: 90
@@ -98,11 +106,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -147,11 +163,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 120
       seconds: 90
@@ -196,11 +220,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 200
       seconds: 110
@@ -245,11 +277,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 380
       seconds: 150
@@ -294,11 +334,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 1
     recruitCopperBars: 1
+    recruitWood: 0
     levelResearch:
     - coins: 450
       seconds: 150
@@ -343,11 +391,19 @@ MonoBehaviour:
     chargeMultiplier: 2
     chargeRun: 3
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 3
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 500
       seconds: 150
@@ -392,15 +448,251 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 1
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 300
       seconds: 120
     - coins: 500
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ram
+    displayName: "\u0422\u0430\u0440\u0430\u043D"
+    attackRangeUnits: 1.2
+    attackRangeStructures: 1.6
+    engageRadius: 6
+    levels:
+    - maxHealth: 160
+      attackDamage: 60
+      attackIntervalSeconds: 3
+      walkSpeed: 0.7
+      recruitCoins: 120
+      upkeepCoinsPerDay: 4
+    - maxHealth: 232
+      attackDamage: 87
+      attackIntervalSeconds: 3
+      walkSpeed: 0.7
+      recruitCoins: 120
+      upkeepCoinsPerDay: 4
+    - maxHealth: 336
+      attackDamage: 126
+      attackIntervalSeconds: 3
+      walkSpeed: 0.7
+      recruitCoins: 120
+      upkeepCoinsPerDay: 4
+    startsUnlocked: 1
+    barracksLevel: 1
+    hiredAt: Workshop
+    armySlots: 2
+    capPerLevel: 0
+    armoured: 0
+    cavalry: 0
+    vsArmoured: 1
+    vsCavalry: 1
+    chargeMultiplier: 1
+    chargeRun: 0
+    healer: 0
+    crew: 2
+    vsBuildings: 1
+    gatesOnly: 1
+    splash: 0
+    minRange: 0
+    rangedTaken: 0.25
+    carrier: 0
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 2
+    recruitCopperBars: 0
+    recruitWood: 20
+    levelResearch:
+    - coins: 250
+      seconds: 120
+    - coins: 450
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: ballista
+    displayName: "\u0411\u0430\u043B\u043B\u0438\u0441\u0442\u0430"
+    attackRangeUnits: 11
+    attackRangeStructures: 11
+    engageRadius: 12
+    levels:
+    - maxHealth: 40
+      attackDamage: 30
+      attackIntervalSeconds: 3.5
+      walkSpeed: 0.8
+      recruitCoins: 140
+      upkeepCoinsPerDay: 5
+    - maxHealth: 58
+      attackDamage: 44
+      attackIntervalSeconds: 3.5
+      walkSpeed: 0.8
+      recruitCoins: 140
+      upkeepCoinsPerDay: 5
+    - maxHealth: 84
+      attackDamage: 63
+      attackIntervalSeconds: 3.5
+      walkSpeed: 0.8
+      recruitCoins: 140
+      upkeepCoinsPerDay: 5
+    startsUnlocked: 1
+    barracksLevel: 2
+    hiredAt: Workshop
+    armySlots: 2
+    capPerLevel: 0
+    armoured: 0
+    cavalry: 0
+    vsArmoured: 1.5
+    vsCavalry: 1
+    chargeMultiplier: 1
+    chargeRun: 0
+    healer: 0
+    crew: 2
+    vsBuildings: 0.3
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 1
+    recruitCopperBars: 1
+    recruitWood: 0
+    levelResearch:
+    - coins: 250
+      seconds: 120
+    - coins: 450
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: catapult
+    displayName: "\u041A\u0430\u0442\u0430\u043F\u0443\u043B\u044C\u0442\u0430"
+    attackRangeUnits: 14
+    attackRangeStructures: 14
+    engageRadius: 15
+    levels:
+    - maxHealth: 60
+      attackDamage: 25
+      attackIntervalSeconds: 5
+      walkSpeed: 0.6
+      recruitCoins: 180
+      upkeepCoinsPerDay: 6
+    - maxHealth: 87
+      attackDamage: 36
+      attackIntervalSeconds: 5
+      walkSpeed: 0.6
+      recruitCoins: 180
+      upkeepCoinsPerDay: 6
+    - maxHealth: 126
+      attackDamage: 53
+      attackIntervalSeconds: 5
+      walkSpeed: 0.6
+      recruitCoins: 180
+      upkeepCoinsPerDay: 6
+    startsUnlocked: 1
+    barracksLevel: 3
+    hiredAt: Workshop
+    armySlots: 3
+    capPerLevel: 0
+    armoured: 0
+    cavalry: 0
+    vsArmoured: 1
+    vsCavalry: 1
+    chargeMultiplier: 1
+    chargeRun: 0
+    healer: 0
+    crew: 2
+    vsBuildings: 2
+    gatesOnly: 0
+    splash: 1.2
+    minRange: 4
+    rangedTaken: 1
+    carrier: 0
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 2
+    recruitCopperBars: 0
+    recruitWood: 30
+    levelResearch:
+    - coins: 250
+      seconds: 120
+    - coins: 450
+      seconds: 150
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: siege_tower
+    displayName: "\u041E\u0441\u0430\u0434\u043D\u0430\u044F \u0431\u0430\u0448\u043D\u044F"
+    attackRangeUnits: 1
+    attackRangeStructures: 1
+    engageRadius: 6
+    levels:
+    - maxHealth: 300
+      attackDamage: 1
+      attackIntervalSeconds: 1
+      walkSpeed: 0.5
+      recruitCoins: 150
+      upkeepCoinsPerDay: 5
+    - maxHealth: 435
+      attackDamage: 1
+      attackIntervalSeconds: 1
+      walkSpeed: 0.5
+      recruitCoins: 150
+      upkeepCoinsPerDay: 5
+    - maxHealth: 631
+      attackDamage: 2
+      attackIntervalSeconds: 1
+      walkSpeed: 0.5
+      recruitCoins: 150
+      upkeepCoinsPerDay: 5
+    startsUnlocked: 1
+    barracksLevel: 4
+    hiredAt: Workshop
+    armySlots: 3
+    capPerLevel: 0
+    armoured: 0
+    cavalry: 0
+    vsArmoured: 1
+    vsCavalry: 1
+    chargeMultiplier: 1
+    chargeRun: 0
+    healer: 0
+    crew: 2
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 0.5
+    carrier: 1
+    capacity: 0
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    recruitWood: 60
+    levelResearch:
+    - coins: 250
+      seconds: 120
+    - coins: 450
       seconds: 150
     unlockResearch:
       coins: 0
@@ -441,11 +733,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -490,11 +790,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -539,11 +847,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -588,11 +904,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -637,11 +961,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -686,11 +1018,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 8
     shipyardLevel: 2
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -735,11 +1075,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 3
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -784,11 +1132,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 8
     shipyardLevel: 4
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -833,11 +1189,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 8
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -882,11 +1246,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -931,11 +1303,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -980,11 +1360,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -1029,11 +1417,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -1078,11 +1474,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -1127,11 +1531,19 @@ MonoBehaviour:
     chargeMultiplier: 1
     chargeRun: 0
     healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
     capacity: 0
     shipyardLevel: 1
     maxCount: 0
     recruitIronBars: 0
     recruitCopperBars: 0
+    recruitWood: 0
     levelResearch:
     - coins: 0
       seconds: 0
@@ -3093,6 +3505,115 @@ MonoBehaviour:
       amount: 172
     - type: 5
       amount: 60
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 40
+      seconds: 60
+    - coins: 70
+      seconds: 120
+    - coins: 120
+      seconds: 180
+    - coins: 200
+      seconds: 240
+  - id: Workshop
+    displayName: "\u041C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0430\u044F"
+    category: 3
+    cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 30
+    - type: 5
+      amount: 10
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 10
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    levels:
+    - maxHealth: 220
+      defense: 10
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 350
+      defense: 16
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 550
+      defense: 25
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 790
+      defense: 36
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    - maxHealth: 1100
+      defense: 50
+      housingCapacity: 0
+      maxWorkers: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      happiness: 0
+      buildSeconds: 0
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 64
+    - type: 1
+      amount: 48
+    - type: 5
+      amount: 20
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 112
+    - type: 1
+      amount: 84
+    - type: 5
+      amount: 40
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 196
+    - type: 1
+      amount: 147
+    - type: 5
+      amount: 70
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 343
+    - type: 1
+      amount: 257
+    - type: 5
+      amount: 120
     startsUnlocked: 1
     unlockResearch:
       coins: 0

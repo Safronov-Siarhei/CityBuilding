@@ -168,6 +168,33 @@ namespace CityBuilder.Tests.PlayMode
         /// the Stable allows four a level; a monk strikes nobody and gives a wounded soldier beside
         /// him his health back.
         /// </summary>
+        /// <summary>
+        /// The Workshop (the user, 2026-11-05): a machine takes its crew of two citizens and gives
+        /// them back when sent home; each Workshop level opens the next machine; the ram knows a
+        /// gate from a wall.
+        /// </summary>
+        [Test]
+        public void AMachineTakesItsCrew_AndTheWorkshopLevelOpensIt()
+        {
+            var army = ArmyManager.Instance;
+            var spot = WalkablePoint();
+            ResourceManager.Instance.SetAmount(ResourceType.IronBar, 50);
+            ResourceManager.Instance.SetAmount(ResourceType.Wood, 500);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 5000);
+
+            Assert.AreEqual(2, SoldierStats.Crew(SoldierType.Ram), "A machine's crew is not two citizens.");
+            Assert.IsNotNull(army.DescribeRecruitBlocker(SoldierType.Ballista, 1), "A level-1 Workshop built a ballista.");
+            var idle = CitizenManager.Instance.IdlePopulation;
+            Assert.IsTrue(army.TryRecruit(SoldierType.Ram, spot, 1), army.DescribeRecruitBlocker(SoldierType.Ram, 1));
+            Assert.AreEqual(idle - 2, CitizenManager.Instance.IdlePopulation, "The ram did not take its crew of two.");
+            SoldierUnit ram = null;
+            foreach (var unit in SoldierUnit.All) if (unit != null && unit.Type == SoldierType.Ram) ram = unit;
+            Assert.IsNotNull(ram);
+            Assert.Less(ram.RangedTakenShare, 1f, "Arrows hit the ram under its hides at full strength.");
+            army.Disband(ram);
+            Assert.AreEqual(idle, CitizenManager.Instance.IdlePopulation, "Sending the ram home did not give its crew back.");
+        }
+
         [UnityTest]
         public IEnumerator TheKnightTakesTwoPlaces_AndTheMonkHeals()
         {

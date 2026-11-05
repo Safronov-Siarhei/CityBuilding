@@ -52,7 +52,7 @@ namespace CityBuilder.Combat
         /// <summary>Sends a ranged fighter up to the free wall cell nearest `cell`; false when there is no way up to it.</summary>
         public bool GoToWall(Vector2Int cell)
         {
-            if (!IsRanged || CurrentHealth <= 0 || Dungeon.DungeonMode.IsActive) return false;
+            if (!IsRanged || SoldierStats.IsMachine(Type) || CurrentHealth <= 0 || Dungeon.DungeonMode.IsActive) return false;   // a machine climbs no stair
             if (!WallWalk.FreeCellNear(cell, this, out var post)) return false;
             if (_wallPhase == WallPhase.Walking || _wallPhase == WallPhase.Posted)
             {
@@ -277,7 +277,7 @@ namespace CityBuilder.Combat
         /// <summary>A ranged fighter left to himself goes up the nearest wall when orcs come near.</summary>
         private bool TrySeekWall()
         {
-            if (!IsRanged || Marching || IsRetreating || Group == null || Group.AttackTarget != null || Dungeon.DungeonMode.IsActive) return false;
+            if (!IsRanged || SoldierStats.IsMachine(Type) || Marching || IsRetreating || Group == null || Group.AttackTarget != null || Dungeon.DungeonMode.IsActive) return false;
             _wallSeekIn -= Time.deltaTime;
             if (_wallSeekIn > 0f) return false;
             _wallSeekIn = 1f + Random.value * 0.5f;

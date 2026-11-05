@@ -157,6 +157,13 @@ namespace CityBuilder.EditorTools
                 style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
                 motif: BuildingMotif.Banner);
 
+            // the Мастерская (the user, 2026-11-05): builds the siege machines; 3x3, model Tools/blender/workshop1*.py
+            var workshopData = CreateBuildingData(
+                BuildingIds.Workshop, new Vector2Int(3, 3), height: 2.4f,
+                wallColor: new Color(0.55f, 0.45f, 0.34f), roofColor: new Color(0.24f, 0.36f, 0.62f),
+                style: BuildingStyle.Fortification, trimMaterial: trimMaterial, windowMaterial: windowMaterial,
+                motif: BuildingMotif.Banner);
+
             // the Конюшня (the user, 2026-11-05): hires the knights; 3x3 like the Barracks, model Tools/blender/stable1*.py
             var stableData = CreateBuildingData(
                 BuildingIds.Stable, new Vector2Int(3, 3), height: 2.2f,
@@ -344,7 +351,7 @@ namespace CityBuilder.EditorTools
                 lumberjackData, quarryData, mineData, coalMineData,
                 warehouseData, barnData, treasuryData,
                 bigWarehouseData, bigBarnData, bigTreasuryData,
-                roadData, fenceData, towerData, barracksData, stableData, gateData,
+                roadData, fenceData, towerData, barracksData, stableData, workshopData, gateData,
                 fortifiedTowerData, fortifiedGateData, moatData, drawbridgeData,
                 bridgeData, waterMillData, dockData, shipyardData, lighthouseData,
                 townSquareData, flagData, decTreeData, decBushData, decGardenData, squareData
@@ -549,7 +556,9 @@ namespace CityBuilder.EditorTools
             // indexed by SoldierType; the heroes and the gnomes (4-9) have models of their own -- null here.
             // The roster widening's crossbowman, knight, monk (10-12): Tools/blender/soldiers_new_drafts.py
             var soldierNames = new[] { "SoldierMilitia", "SoldierSpearman", "SoldierArcher", "SoldierManAtArms", null, null, null, null, null, null,
-                "SoldierCrossbow", "SoldierKnight", "SoldierMonk" };
+                "SoldierCrossbow", "SoldierKnight", "SoldierMonk",
+                // the Workshop's machines (13-16), one look for every level: Tools/blender/siege_drafts.py
+                "SiegeRam", "SiegeBallista", "SiegeCatapult", "SiegeTower" };
             soldierModels.arraySize = soldierNames.Length * ArmyManager.SoldierLooks;
             for (var i = 0; i < soldierNames.Length; i++)
             for (var level = 1; level <= ArmyManager.SoldierLooks; level++)

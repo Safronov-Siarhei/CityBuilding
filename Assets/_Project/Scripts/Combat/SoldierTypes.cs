@@ -68,6 +68,17 @@ namespace CityBuilder.Combat
         Crossbowman = 10,
         Knight = 11,
         Monk = 12,
+
+        /// <summary>
+        /// The Workshop's machines (the user, 2026-11-05): ONE unit each with its crew in the model,
+        /// two citizens to hire. The ram strikes only gates; the ballista's bolt is heavy on big
+        /// targets and light on walls; the catapult throws a stone that splashes and wrecks
+        /// buildings, over a dead zone close in; the siege tower carries the men onto a wall.
+        /// </summary>
+        Ram = 13,
+        Ballista = 14,
+        Catapult = 15,
+        SiegeTower = 16,
     }
 
     /// <summary>
@@ -111,6 +122,10 @@ namespace CityBuilder.Combat
                 case SoldierType.Crossbowman: return "crossbowman";
                 case SoldierType.Knight: return "knight";
                 case SoldierType.Monk: return "monk";
+                case SoldierType.Ram: return "ram";
+                case SoldierType.Ballista: return "ballista";
+                case SoldierType.Catapult: return "catapult";
+                case SoldierType.SiegeTower: return "siege_tower";
                 case SoldierType.Militia:
                 default:
                     return "militia";
@@ -143,7 +158,17 @@ namespace CityBuilder.Combat
             SoldierType.Crossbowman,
             SoldierType.Knight,
             SoldierType.Monk,
+            SoldierType.Ram,
+            SoldierType.Ballista,
+            SoldierType.Catapult,
+            SoldierType.SiegeTower,
         };
+
+        /// <summary>One of the Workshop's machines.</summary>
+        public static bool IsMachine(SoldierType type) => type >= SoldierType.Ram && type <= SoldierType.SiegeTower;
+
+        /// <summary>Citizens one of these takes to hire and gives back when sent home (units `crew`; a machine 2).</summary>
+        public static int Crew(SoldierType type) => IsHero(type) || IsHireling(type) ? 1 : System.Math.Max(1, BalanceConfig.Instance.Unit(SheetIdOf(type)).crew);
 
         /// <summary>The building id that hires this type (units tab `hired_at`): the Barracks unless the sheet says the Stable or the Church.</summary>
         public static string HiredAt(SoldierType type)
@@ -268,6 +293,7 @@ namespace CityBuilder.Combat
 
             if (row.recruitIronBars > 0) cost.Add(new ResourceAmount { type = ResourceType.IronBar, amount = row.recruitIronBars });
             if (row.recruitCopperBars > 0) cost.Add(new ResourceAmount { type = ResourceType.CopperBar, amount = row.recruitCopperBars });
+            if (row.recruitWood > 0) cost.Add(new ResourceAmount { type = ResourceType.Wood, amount = row.recruitWood });
 
             return cost;
         }

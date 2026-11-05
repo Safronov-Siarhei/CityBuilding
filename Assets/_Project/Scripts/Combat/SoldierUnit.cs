@@ -58,7 +58,8 @@ namespace CityBuilder.Combat
         public event Action Struck;
 
         /// <summary>Shoots rather than swings: its hits are drawn as arrows (see CombatProjectiles).</summary>
-        public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Crossbowman || Type == SoldierType.Queen || Type == SoldierType.GnomeCrossbow;
+        public bool IsRanged => Type == SoldierType.Archer || Type == SoldierType.Crossbowman || Type == SoldierType.Ballista || Type == SoldierType.Catapult
+            || Type == SoldierType.Queen || Type == SoldierType.GnomeCrossbow;
         public SoldierType Type { get; private set; } = SoldierType.Militia;
 
         /// <summary>The level whose look the figure wears (ArmyManager: metal at 2, gold at 3).</summary>
@@ -324,10 +325,11 @@ namespace CityBuilder.Combat
                 }
             }
 
-            // the monk strikes nobody: he heals, or keeps his place (SoldierUnitRoles)
-            if (IsHealer)
+            // the monk strikes nobody: he heals, or keeps his place (SoldierUnitRoles); the siege
+            // tower strikes nobody either: it goes where it is sent
+            if (IsHealer || IsCarrier)
             {
-                if (TickHealer()) return;
+                if (IsHealer && TickHealer()) return;
                 var place = Group.SlotPositionFor(this);
                 if (HorizontalDistance(place, transform.position) > SlotArrivalDistance) WalkTowards(place);
                 return;
@@ -415,7 +417,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private IDamageTarget AcquireTarget()
         {
-            if (Group.AttackTarget != null && Group.AttackTarget.IsAlive) return Group.AttackTarget;
+            if (Group.AttackTarget != null && Group.AttackTarget.IsAlive && CanStrike(Group.AttackTarget)) return Group.AttackTarget;
             // sent somewhere by the player: he goes there first, fights after (the user, 2026-11-02) --
             // unless he is caught on the way: one pinned by monsters striking him stood and took it
             // (the user, 2026-11-04), so he answers whoever hits him from close by
@@ -434,6 +436,8 @@ namespace CityBuilder.Combat
                 // Hitting a shielded portal does nothing (see OrcPortal.IsShielded): left to choose,
                 // a soldier goes for what can actually be broken -- the camp around it.
                 if (candidate is OrcPortal portal && portal.IsShielded) continue;
+                // the ram only at gates, the catapult nothing inside its dead zone (SoldierUnitRoles)
+                if (!CanStrike(candidate)) continue;
 
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
                 // one striking at the group from further off (the serpent spitting from its canal,
@@ -554,7 +558,8 @@ namespace CityBuilder.Combat
             {
                 // The arrow carries both the damage and the "who shot me" to the orc it lands in
                 // (see CombatProjectiles), so the orc turns on the archer when it is hit, not when the arrow leaves.
-                CombatProjectiles.Fire(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform), _target, StrikeDamageOn(_target), this);
+                CombatProjectiles.Fire(Type == SoldierType.Catapult ? ProjectileKind.Cannonball : ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(transform),
+                    _target, StrikeDamageOn(_target), this, _row != null ? _row.splash : 0f);
                 return;
             }
 

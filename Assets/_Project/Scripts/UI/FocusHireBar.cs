@@ -23,7 +23,7 @@ namespace CityBuilder.UI
         // the Shipyard (the user, 2026-10-28): a ship per button, the shipyard's level opens them
         // the dungeon's hire camp (the user, 2026-11-01): a gnome per button, held like the Barracks
         // the Stable and the Church (the user, 2026-11-05): the knight, the monk -- hired like the Barracks' soldiers
-        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3, Stable = 4, Church = 5 }
+        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3, Stable = 4, Church = 5, Workshop = 6 }
 
         private const float RefreshSeconds = 0.25f;
         private static readonly Color Dimmed = new Color(0.45f, 0.45f, 0.45f, 1f);
@@ -56,7 +56,8 @@ namespace CityBuilder.UI
                 if (focus == null || focus.Data == null) return null;
                 if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
                 if (kind == Kind.Shipyard) return focus.Data.buildingName == Ships.ShipManager.ShipyardId && focus.IsOperational ? focus : null;
-                var hall = kind == Kind.Stable ? BuildingIds.Stable : kind == Kind.Church ? BuildingIds.Church : BuildingIds.Barracks;
+                var hall = kind == Kind.Stable ? BuildingIds.Stable : kind == Kind.Church ? BuildingIds.Church
+                    : kind == Kind.Workshop ? BuildingIds.Workshop : BuildingIds.Barracks;
                 return focus.Data.buildingName == hall && focus.IsOperational ? focus : null;
             }
         }

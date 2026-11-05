@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1879666493350582202
+--- !u!1 &257830481564576442
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4429617223784868585}
-  - component: {fileID: 8021811816539588943}
-  - component: {fileID: 8618106625141712680}
+  - component: {fileID: 243329085907916173}
+  - component: {fileID: 3313510814503023352}
+  - component: {fileID: 3596953484521826863}
   m_Layer: 0
   m_Name: Shipyard
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4429617223784868585
+--- !u!4 &243329085907916173
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1879666493350582202}
+  m_GameObject: {fileID: 257830481564576442}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3433858626242530433}
+  - {fileID: 3044235985280896133}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8021811816539588943
+--- !u!114 &3313510814503023352
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1879666493350582202}
+  m_GameObject: {fileID: 257830481564576442}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &8618106625141712680
+--- !u!65 &3596953484521826863
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1879666493350582202}
+  m_GameObject: {fileID: 257830481564576442}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -67,7 +67,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.92, y: 3.0347114, z: 3.92}
   m_Center: {x: 0, y: 1.5173557, z: 0}
---- !u!1 &7691037672195127274
+--- !u!1 &876907477011192891
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -75,9 +75,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3433858626242530433}
-  - component: {fileID: 2368352268284188929}
-  - component: {fileID: 1514348214400360776}
+  - component: {fileID: 3044235985280896133}
+  - component: {fileID: 3776488825244686625}
+  - component: {fileID: 4503014914110229082}
   m_Layer: 0
   m_Name: Shipyard1-lvl1(Clone)
   m_TagString: Untagged
@@ -85,36 +85,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3433858626242530433
+--- !u!4 &3044235985280896133
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7691037672195127274}
+  m_GameObject: {fileID: 876907477011192891}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.6000678, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4429617223784868585}
+  m_Father: {fileID: 243329085907916173}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2368352268284188929
+--- !u!33 &3776488825244686625
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7691037672195127274}
+  m_GameObject: {fileID: 876907477011192891}
   m_Mesh: {fileID: 8230946824554350525, guid: cf1e616fca925fe47974a8d90c7a3382, type: 3}
---- !u!23 &1514348214400360776
+--- !u!23 &4503014914110229082
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7691037672195127274}
+  m_GameObject: {fileID: 876907477011192891}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

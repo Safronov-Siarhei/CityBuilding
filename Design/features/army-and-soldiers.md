@@ -182,7 +182,19 @@ spearman 20/7 for 45, archer 14/6 range 8 for 60, man-at-arms 45/9 for 90):
 - The Stable: building `Stable` (`BuildingIds.Stable`), 3x3, Defence, models `Stable1-lvl1..5.fbx`, icons
   `Stable.png`/`Stable_L2..5.png`; buildings + sandbox rows by the Barracks' formula (40 wood 20 stone 5 iron,
   hp 220/350/550/790/1100). Not in the Invasion tab (a run has no Stable -- not decided).
-- Not yet: the knight walks walls (cavalry must not -- wall walking is the siege phase), the bot's mirror of the
+- **The Workshop's machines (2026-11-05, built, not seen):** `SoldierType.Ram = 13, Ballista = 14, Catapult = 15,
+  SiegeTower = 16` (`IsMachine`), hired at the `Workshop` building (3x3, Defence, Workshop1-lvl1..5, icons) by
+  `FocusHireBar.Kind.Workshop`, its level opening ram 1 / ballista 2 / catapult 3 / tower 4. Units columns `crew` (2:
+  TryRecruit takes, Disband returns), `vs_buildings` (catapult 2, ballista 0.3), `gates_only` (ram; `SoldierUnit.IsGate`
+  = orc camp Gate/GateTower or a bot Gate/FortifiedGate/Drawbridge), `splash` (catapult 1.2: `CombatProjectiles.Splash`
+  on landing), `min_range` (catapult 4: `CanStrike`), `ranged_taken` (ram 0.25, tower 0.5: applied in
+  `CombatProjectiles.Fire(.., SoldierUnit ..)`), `carrier` (tower: no blows), `recruit_wood` (20/30/60, in RecruitCost).
+  Ballista's x1.5 vs big targets = `vs_armoured`. Models `Models/Soldiers/Siege{Ram,Ballista,Catapult,Tower}.fbx` with
+  parts Arm / Head / Log / Bridge (siege_drafts.py `--install`), real size (no UnitSize), animated by
+  `Combat/SiegeMachine.cs` on Struck (the tower's Bridge drops when `Docked`). Machines climb no wall stair
+  (SoldierUnitWalls). Test `ArmyCombatTests.AMachineTakesItsCrew_AndTheWorkshopLevelOpensIt`.
+- Not yet: the siege tower docking at a wall + everyone but cavalry walking walls + the jump-down damage (the
+  siege-rules phase), the knight walks walls (cavalry must not -- wall walking is the siege phase), the bot's mirror of the
   three, upkeep columns filled (5/7/3) only so the old tests' relationships hold -- upkeep is off.
 
 ## Code

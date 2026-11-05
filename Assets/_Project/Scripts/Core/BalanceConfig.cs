@@ -179,6 +179,21 @@ namespace CityBuilder.Core
         /// </summary>
         public bool healer;
 
+        /// <summary>
+        /// The Workshop's machines (the user, 2026-11-05): `crew` citizens it takes to hire (2; a
+        /// soldier 1), `vs_buildings` its damage on a structure (catapult 2, ballista 0.3),
+        /// `gates_only` (the ram: it strikes nothing but gates), `splash` the catapult's stone's
+        /// radius, `min_range` its dead zone, `ranged_taken` the share of an arrow's or a thrown
+        /// spear's damage it takes (ram 0.25, tower 0.5), `carrier` (the siege tower: no blows).
+        /// </summary>
+        public int crew = 1;
+        public float vsBuildings = 1f;
+        public bool gatesOnly;
+        public float splash;
+        public float minRange;
+        public float rangedTaken = 1f;
+        public bool carrier;
+
         /// <summary>A ship's row (ship_*): how many it carries, the Shipyard level that builds it, how many may sail (0 = no limit).</summary>
         public int capacity;
         public int shipyardLevel = 1;
@@ -196,6 +211,9 @@ namespace CityBuilder.Core
         public int recruitIronBars;
 
         public int recruitCopperBars;
+
+        /// <summary>Wood a machine is built of, on top of its coins (units `recruit_wood`; the ram 20, the catapult 30, the siege tower 60).</summary>
+        public int recruitWood;
 
         /// <summary>What it costs to research levels 2 and 3, index 0 being level 2. Shorter than MaxLevel-1 for a unit the sheet gives no upgrades.</summary>
         public List<ResearchStep> levelResearch = new List<ResearchStep>();

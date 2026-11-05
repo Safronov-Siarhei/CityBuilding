@@ -1,4 +1,4 @@
-using CityBuilder.Core;
+﻿using CityBuilder.Core;
 using UnityEngine;
 
 namespace CityBuilder.Combat
@@ -25,6 +25,35 @@ namespace CityBuilder.Combat
 
         /// <summary>A healer (the monk): no blows, health for the others.</summary>
         public bool IsHealer => _row != null && _row.healer;
+
+        /// <summary>The siege tower: strikes nobody, goes where it is sent.</summary>
+        public bool IsCarrier => _row != null && _row.carrier;
+
+        /// <summary>The share of an arrow's or a thrown spear's damage this one takes (the ram a quarter, the tower half).</summary>
+        public float RangedTakenShare => _row != null ? _row.rangedTaken : 1f;
+
+        /// <summary>A gate of an orc camp or of the bot's town: all the ram strikes.</summary>
+        public static bool IsGate(IDamageTarget target)
+        {
+            if (target is OrcCampBuilding camp) return camp.Kind == OrcCampBuildingKind.Gate || camp.Kind == OrcCampBuildingKind.GateTower;
+            if (target is Component c && c != null)
+            {
+                var building = c.GetComponent<Buildings.BuildingInstance>();
+                var id = building != null && building.Data != null ? building.Data.buildingName : null;
+                return id == "Gate" || id == "FortifiedGate" || id == "Drawbridge";
+            }
+            return false;
+        }
+
+        /// <summary>Whether this one may pick that target at all: the ram only gates, the catapult nothing inside its dead zone, the healer and the tower nothing.</summary>
+        private bool CanStrike(IDamageTarget target)
+        {
+            if (_row == null || target == null) return true;
+            if (_row.healer || _row.carrier) return false;
+            if (_row.gatesOnly && !IsGate(target)) return false;
+            if (_row.minRange > 0f && target.Transform != null && HorizontalDistance(target.Transform.position, transform.position) < _row.minRange) return false;
+            return true;
+        }
 
         /// <summary>The cells run since the last blow (the charge's run-up). For the tests.</summary>
         public float RunUp => _run;
@@ -54,6 +83,7 @@ namespace CityBuilder.Combat
                 if (orc.Row.armoured) damage *= _row.vsArmoured;
                 if (orc.Row.cavalry) damage *= _row.vsCavalry;
             }
+            if (_row != null && target != null && target.IsStructure) damage *= _row.vsBuildings;   // the catapult x2, the ballista x0.3
             if (_row != null && _row.chargeRun > 0f && _run >= _row.chargeRun) damage *= _row.chargeMultiplier;
             _run = 0f;
             return Mathf.Max(1, Mathf.RoundToInt(damage));

@@ -40,7 +40,7 @@ namespace CityBuilder.Combat
         /// researched level: index type * SoldierLooks + level - 1 (metal at level 2, gold at 3).
         /// A missing level wears the one below; a type with none is drawn in cubes.
         /// </summary>
-        [SerializeField] private GameObject[] soldierModels = new GameObject[13 * SoldierLooks];
+        [SerializeField] private GameObject[] soldierModels = new GameObject[17 * SoldierLooks];
 
         public const int SoldierLooks = 3;
 
@@ -195,7 +195,7 @@ namespace CityBuilder.Combat
                 return Localization.Format("#army_type_cap", SoldierStats.DisplayName(type), cap * barracksLevel);
 
             var citizens = CitizenManager.Instance;
-            if (citizens == null || citizens.IdlePopulation <= 0) return Localization.Get("#army_no_citizens");
+            if (citizens == null || citizens.IdlePopulation < SoldierStats.Crew(type)) return Localization.Get("#army_no_citizens");
 
             var resources = ResourceManager.Instance;
             if (resources != null && !resources.HasEnough(SoldierStats.RecruitCost(type))) return Localization.Get("#army_no_coins");
@@ -214,8 +214,13 @@ namespace CityBuilder.Combat
             // Checked in DescribeRecruitBlocker a moment ago, so this can only fail if something
             // else took the last idle citizen in between -- impossible on one thread, but refunding
             // rather than silently pocketing the coins is the honest way to handle it anyway.
-            if (!CitizenManager.Instance.TryTakeIdleCitizen())
+            // a machine takes its whole crew (2 citizens), a soldier one
+            var crew = SoldierStats.Crew(type);
+            var taken = 0;
+            while (taken < crew && CitizenManager.Instance.TryTakeIdleCitizen()) taken++;
+            if (taken < crew)
             {
+                for (var i = 0; i < taken; i++) CitizenManager.Instance.ReturnCitizen();
                 // Nothing to refund when the cheat is on -- TrySpend reported success without
                 // deducting anything, and paying it back would mint coins out of nowhere.
                 if (resources != null && !resources.InfiniteResources) RefundCost(resources, SoldierStats.RecruitCost(type));
@@ -237,7 +242,7 @@ namespace CityBuilder.Combat
             if (unit == null) return;
 
             RemoveFromGroup(unit);
-            CitizenManager.Instance?.ReturnCitizen();
+            for (var i = 0; i < SoldierStats.Crew(unit.Type); i++) CitizenManager.Instance?.ReturnCitizen();
             Destroy(unit.gameObject);
             OnArmyChanged?.Invoke();
         }
@@ -542,6 +547,13 @@ namespace CityBuilder.Combat
         private void BuildAppearance(Transform root, SoldierType type, int level)
         {
             var soldierModel = SoldierModel(type, level);
+            if (soldierModel != null && SoldierStats.IsMachine(type))
+            {
+                // a machine is modelled at its real size, its moving parts animated by SiegeMachine
+                var machine = AddFigure(root, soldierModel, type, false);
+                root.gameObject.AddComponent<SiegeMachine>().Bind(machine.transform, type);
+                return;
+            }
             if (soldierModel != null)
             {
                 AddFigure(root, soldierModel, type);
