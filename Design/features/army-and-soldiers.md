@@ -90,11 +90,11 @@ gather = ring; refused = red ripple.
 - **Orcs get no siege and no wall walking for now** (user); the bot, as a full mirror, gets the machines and storms the
   player's walls (machines ride transports, taking more room than a footman).
 
-**Machine drafts (2026-11-05, waiting for the user's approval):** `Tools/blender/siege_drafts.py -- <out_dir>` builds and
+**Machine drafts (2026-11-05, APPROVED by the user the same day):** `Tools/blender/siege_drafts.py -- <out_dir>` builds and
 renders SiegeCatapult / SiegeBallista / SiegeTower / SiegeRam in GAME metres with their crew (the soldiers' figure at 0.625,
 blue gambeson, leather cap) plus a lineup with a spearman, a lvl-5 wall and a lvl-1 fence; never saves. Sizes: catapult
 0.94x1.27x0.86 (2.5k tris), ballista 0.88x1.27x0.60 (2.2k), tower 1.06x1.20x1.97 with the deck at 1.35 (2.7k), ram
-0.78x1.61x0.89 (2.6k). Not yet: the bot's straw-coloured versions, animation parts (arm, string, log, drawbridge).
+0.78x1.61x0.89 (2.6k). The bot needs no models of its own: its units draw through BotPalette.mat, which turns roof_blue/banner_blue (the crew, pennants) to straw. Not yet: splitting into animated parts (catapult arm, ballista string+bolt, ram log, tower drawbridge), install into the .blend, export, the Workshop building's model.
 
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
 
