@@ -76,10 +76,10 @@ namespace CityBuilder.Tests.EditMode
         public void ArmyCap_IsSmallEnoughForAPhone()
         {
             // The cap is a device-performance decision as much as a design one, so the sheet is
-            // free to tune it -- within a range that keeps twenty-ish units on screen, not two
-            // hundred.
+            // free to tune it -- within a range that keeps the army on screen in the tens, not the
+            // hundreds (the user raised it from 20 to 80 on 2026-11-05: «пока что поставь 80»).
             Assert.GreaterOrEqual(SoldierStats.MaxArmySize, 5);
-            Assert.LessOrEqual(SoldierStats.MaxArmySize, 40);
+            Assert.LessOrEqual(SoldierStats.MaxArmySize, 100);
         }
 
         [Test]
@@ -110,7 +110,8 @@ namespace CityBuilder.Tests.EditMode
             // half the map can't be commanded as one thing.
             for (var i = 0; i < SoldierStats.MaxArmySize; i++)
             {
-                Assert.Less(ArmyGroup.FormationOffset(i).magnitude, 4f);
+                // 80 in one group (the cap since 2026-11-05) stand in five rings: 4.5 cells out
+                Assert.Less(ArmyGroup.FormationOffset(i).magnitude, 5f);
             }
         }
     }

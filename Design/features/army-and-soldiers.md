@@ -26,7 +26,7 @@ gather = ring; refused = red ripple.
   AT THE BARRACKS in `recruit_ironbar`/`recruit_copperbar` (user, 2026-08-19, overriding "one workshop
   per equipment"). Kit is flat across levels; level tax is in coins.
 - Recruit takes an idle citizen; disband returns them; death in battle = permanent population loss.
-- Army cap `army_max_size` = 20, fixed (device reasons). **NO UPKEEP in coins since 2026-11-05 (the user: «один раз
+- Army cap `army_max_size` = **80 since 2026-11-05** (the user: «убери лимит в 20, пока что поставь 80»; economy AND invasion tabs; was 20 for device reasons -- watch the frame time on the phone with a full army; a full group stands in 5 rings, 4.5 cells out). **NO UPKEEP in coins since 2026-11-05 (the user: «один раз
   нанял и больше не тратишься», both modes):** `ArmyManager.UpkeepCharged = false` makes DailyUpkeep 0 and ChargeDailyUpkeep
   a no-op; the army line reads «Армия: N/20» (`#army_summary_run`). The units tab's `upkeep_coins_per_day*` columns and
   `#army_summary` / `#log_disbanded` are unused now (kept for switching back). Soldiers still EAT like citizens (food).
@@ -75,11 +75,11 @@ gather = ring; refused = red ripple.
 - Всадник: fast, a heavy first blow after a run-up; the Spearman gets a bonus against it (the spearman's real role).
 - Монах: no attack, heals nearby soldiers over time.
 - Катапульта: slow, long range, hits buildings/walls; walks no walls, crosses no moat.
-- Big units (cavalry, siege) take 2 of the 20 army slots.
+- Big units (cavalry, siege) take 2 of the army slots.
 - Models: jointed figures in the soldiers' style, 3 looks per level; a horse rig is the costliest part. Renders go to the user first.
 
 **Мастерская (the user, 2026-11-05): four machines** -- катапульта, баллиста, осадная башня, таран.
-- **A machine is ONE unit with its crew in the model** (user picked): takes 2 citizens and 2-3 of the 20 army slots; cheap on the phone.
+- **A machine is ONE unit with its crew in the model** (user picked): takes 2 citizens and 2-3 army slots; cheap on the phone.
 - My roles (not agreed): катапульта = slow, long, area, a dead zone close in, vs buildings/towers/crowds;
   баллиста = one heavy bolt, longer than an archer, vs big targets (man-at-arms, brutes, knights, machines, ships near shore);
   таран = slow, roofed (arrows barely hurt it), weak to melee.
