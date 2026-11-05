@@ -62,6 +62,9 @@ namespace CityBuilder.Saving
         public float botRelations;
         /// <summary>Seconds of the war with the bot so far (BotRelations.WarSeconds).</summary>
         public float botWarSeconds;
+        /// <summary>Bot buildings razed by the town's army in this war (BotRelations.WarRazed) and wars declared so far (WarsFought).</summary>
+        public int botWarRazed;
+        public int botWarsFought;
         public int botStance;
         /// <summary>The bot kingdom's castle (Bot.BotKingdom): its Town Hall razed, and which of its blueprint's buildings are down.</summary>
         public bool botCastleSaved;

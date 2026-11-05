@@ -163,14 +163,14 @@ namespace CityBuilder.Bot
             RaidNow(index, config);
         }
 
-        /// <summary>The raid number `index` (0 = the first): the botwaves tab's wave index + 1, out of the harbour.</summary>
+        /// <summary>The raid number `index` of this war (0 = the first): the botwaves tab's wave FirstWave() + index (later wars start further on), out of the harbour.</summary>
         public void RaidNow(int index, BalanceConfig config)
         {
             var harbour = Harbour;
             var ships = ShipManager.Instance;
             if (!harbour.HasValue || ships == null) return;
             var units = new Queue<(OrcKind, int)>();
-            foreach (var row in config.BotWave(index + 1))
+            foreach (var row in config.BotWave(BotRelations.FirstWave() + index))
             {
                 if (!TryKindOf(row.unit, out var kind))
                 {

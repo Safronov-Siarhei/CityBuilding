@@ -189,7 +189,7 @@ namespace CityBuilder.Saving
             if (gameCalendar != null)
             {
                 gameCalendar.SetCurrentDay(data.currentDay);
-                if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance, data.botWarSeconds);
+                if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance, data.botWarSeconds, data.botWarRazed, data.botWarsFought);
                 if (data.botCastleSaved && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.Restore(data.botHallRazed, data.botMissing);
             }
 
@@ -651,6 +651,8 @@ namespace CityBuilder.Saving
                 data.botRelations = Diplomacy.BotRelations.Score;
                 data.botStance = (int)Diplomacy.BotRelations.Stance;
                 data.botWarSeconds = Diplomacy.BotRelations.WarSeconds;
+                data.botWarRazed = Diplomacy.BotRelations.WarRazed;
+                data.botWarsFought = Diplomacy.BotRelations.WarsFought;
                 if (Bot.BotKingdom.Instance != null && Bot.BotKingdom.Instance.Placed)
                 {
                     data.botCastleSaved = true;

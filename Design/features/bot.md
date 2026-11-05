@@ -1,5 +1,5 @@
 # Bot kingdom (Бот)
-Status: BUILT up to WAR (2026-11-04): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
+Status: BUILT up to WAR (2026-11-04; ransom-by-razing + harder later wars + 20 waves 2026-11-05): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
 
 The user's decisions are marked "user"; the rest are my proposals.
 
@@ -158,6 +158,17 @@ How it works:
 - The bot's buildings take no blessing or shield.
 - Sheet: economy `bot_war_*` keys + `mon_bot_*`; tab `botwaves` gid 1680852949 (BalanceImporter `ReadBotWaves`, `BalanceSheetSettings.botWavesCsvUrl`, `verify_sheet.py`).
 - Test: `ArchipelagoTests.TheBotKingdom_...` covers war guards, no hirelings, a wave with a transport, the ransom, and peace clearing the units.
+
+## Built 2026-11-05, part 4: razing pays, later wars start harder (not seen, untested)
+User decisions:
+- The army razing the bot's buildings **lowers the ransom**: we reward it. Each building razed by the town's army in this war (`BotWarTarget.TakeDamage` → `BotRelations.NoteRazed`) takes `bot_war_contribution_per_building` (5) coins off. The ransom never drops below `bot_war_contribution_min` (50). Orc raids on the bot do not count.
+- **Each new war starts at a later wave**: war n starts at wave 1 + (n-1) × `bot_war_start_wave_step` (2), so the 2nd war starts at wave 3. `BotRelations.WarsFought` counts wars on declaration.
+- Saved fields: `botWarRazed` and `botWarsFought`.
+- The `botwaves` tab now has **20 waves**: from 4+2 at level 2 up to 30+15 at level 5. Past wave 20, wave 20 repeats.
+
+## Open (user, 2026-11-05)
+- **Widen the barracks' unit list for the player and for the bot** (new unit types). To discuss later; the botwaves tab then gets the new `unit` ids.
+- The Diplomacy window does not show how many buildings were razed; only the price drops.
 
 ## Traps (war)
 - The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.

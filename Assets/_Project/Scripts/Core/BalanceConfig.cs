@@ -464,6 +464,9 @@ namespace CityBuilder.Core
         [SerializeField] private int botWarContributionPerMinute = 20;
         [SerializeField] private float botWarContributionHallDiscount = 0.1f;
         [SerializeField] private int botWarCoinsPerCrystal = 100;
+        [SerializeField] private int botWarContributionPerBuilding = 5;
+        [SerializeField] private int botWarContributionMin = 50;
+        [SerializeField] private int botWarStartWaveStep = 2;
         [SerializeField] private float moatPathCost = 6f;
         // the Drawbridge's leaves: rise while an orc is within this many cells, to this angle, in this time
         [SerializeField] private float drawbridgeRaiseRadiusCells = 6f;
@@ -1132,6 +1135,9 @@ namespace CityBuilder.Core
         public int BotWarContributionPerMinute => botWarContributionPerMinute;
         public float BotWarContributionHallDiscount => botWarContributionHallDiscount;
         public int BotWarCoinsPerCrystal => botWarCoinsPerCrystal;
+        public int BotWarContributionPerBuilding => botWarContributionPerBuilding;
+        public int BotWarContributionMin => botWarContributionMin;
+        public int BotWarStartWaveStep => botWarStartWaveStep;
         public float MoatPathCost => moatPathCost;
         public float DrawbridgeRaiseRadiusCells => drawbridgeRaiseRadiusCells;
         public float DrawbridgeRaiseDegrees => drawbridgeRaiseDegrees;
@@ -1884,6 +1890,9 @@ namespace CityBuilder.Core
             botWarContributionPerMinute = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_min", botWarContributionPerMinute));
             botWarContributionHallDiscount = Read(economy, "bot_war_contribution_hall_discount", botWarContributionHallDiscount);
             botWarCoinsPerCrystal = Mathf.RoundToInt(Read(economy, "bot_war_coins_per_crystal", botWarCoinsPerCrystal));
+            botWarContributionPerBuilding = Mathf.RoundToInt(Read(economy, "bot_war_contribution_per_building", botWarContributionPerBuilding));
+            botWarContributionMin = Mathf.RoundToInt(Read(economy, "bot_war_contribution_min", botWarContributionMin));
+            botWarStartWaveStep = Mathf.RoundToInt(Read(economy, "bot_war_start_wave_step", botWarStartWaveStep));
             moatPathCost = Read(economy, "moat_path_cost", moatPathCost);
             drawbridgeRaiseRadiusCells = Read(economy, "drawbridge_raise_radius_cells", drawbridgeRaiseRadiusCells);
             drawbridgeRaiseDegrees = Read(economy, "drawbridge_raise_degrees", drawbridgeRaiseDegrees);

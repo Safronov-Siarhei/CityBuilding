@@ -36,7 +36,10 @@ namespace CityBuilder.Bot
 
         public void TakeDamage(int amount)
         {
-            if (IsAlive) _building.TryDamage(amount);
+            if (!IsAlive) return;
+            _building.TryDamage(amount);
+            // razed by the town's army: the ransom falls (the user, 2026-11-05)
+            if (_building == null || _building.CurrentHealth <= 0) BotRelations.NoteRazed();
         }
     }
 }
