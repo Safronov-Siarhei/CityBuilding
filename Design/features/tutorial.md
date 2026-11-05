@@ -1,6 +1,6 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: SCENARIO AGREED, map APPROVED, islands built in Blender (not exported); with the user, NOTHING BUILT. Option «Г» of five proposed
+> Status 2026-11-05: SCENARIO AGREED, map APPROVED, islands built and exported (Isl-tutorial1), the game mode NOT started; with the user, NOTHING BUILT. Option «Г» of five proposed
 > (a separate tutorial scenario on its own two islands). Next: the islands in Blender, then the mode.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -69,7 +69,11 @@ grassy islets (`islets`) and 12 bare sea rocks (`sea_rocks`: stone spires up to 
 ground) on the open water, clear of the ship routes. The sea is SOLID here (deep water drawn as `water_deep`;
 library islands leave it to the game's Sea layer) -- the user saw holes otherwise. The sea is ROUND (the user): a disc r = HALF-0.5 = 44.5
 (`SEA_R`), the frame's corners empty; every islet and rock lies inside it. Now ~508 buildable cells, 89% water.
-Not exported yet (export + the game's tutorial mode are the next step).
+**Exported 2026-11-05** (`export_map.py -- D:/Fork/CityBuilding Islands Isl-tutorial1`) to
+`Assets/_Project/Models/Islands/Isl-tutorial1-*` (Ground, Relief, Water, areas, DecorKit, Cells.bytes, Spots.csv,
+Decor.csv). TRAP: `SetupProjectMaps.CreateArchipelagoLibrary` reads every `Isl-*` there; 'tutorial' is no
+`ArchipelagoGenerator.Kind`, so it is skipped (one warning) and never enters a random archipelago -- the tutorial
+mode must load it itself. .meta files come with the next Unity setup. Next: the game's tutorial mode.
 
 ## To build (plan)
 - Two islands drawn in Blender, with spots: Town Hall area, trees, rocks, shipyard shore, orc
