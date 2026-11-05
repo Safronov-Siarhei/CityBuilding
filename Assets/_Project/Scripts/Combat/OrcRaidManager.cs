@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
@@ -414,7 +414,21 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A raid's wave put ashore by an orc ship (ShipManager): raiders, throwers and a chief as SpawnRaid's are.</summary>
-        public OrcUnit SpawnLanding(Vector3 beach, int count, int level) => SpawnWave(beach, count, level);
+        public OrcUnit SpawnLanding(Vector3 beach, int count, int level)
+        {
+            var before = OrcUnit.All.Count;
+            var leader = SpawnWave(beach, count, level);
+            // a wave spreads round its point: none of it left standing in the shallows
+            var map = Maps.MeshMapApplier.Instance;
+            var grid = GridManager.Instance;
+            if (map != null && grid != null)
+                for (var i = before; i < OrcUnit.All.Count; i++)
+                {
+                    var orc = OrcUnit.All[i];
+                    if (orc != null && map.IsWaterCell(grid.WorldToCell(orc.transform.position))) orc.transform.position = beach;
+                }
+            return leader;
+        }
 
         /// <summary>One orc of a given kind and level -- the Invasion run's waves make up their own mixes (InvasionWaves). Works with the raids switched off, as they are in a run.</summary>
         public OrcUnit SpawnOrcOfKind(Vector3 origin, int level, OrcKind kind)

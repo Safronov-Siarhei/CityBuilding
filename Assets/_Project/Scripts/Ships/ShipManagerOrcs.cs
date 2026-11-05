@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using UnityEngine;
@@ -354,6 +354,8 @@ namespace CityBuilder.Ships
                 var inland = beach - here;
                 inland.y = 0f;
                 if (inland.sqrMagnitude > 0.01f && TrySampleLand(beach + inland.normalized * InlandSteps, 2f, out var up)) beach = up;
+                // the shallows are walkable too: on up the beach until no water is within the wave's spread
+                if (inland.sqrMagnitude > 0.01f) beach = DryOf(beach, inland.normalized);
                 var leader = ship.IsBotShip ? Bot.BotWar.Land(ship.OrcRaid, beach, ship.OrcCargo)
                     : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
                 EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
@@ -361,6 +363,53 @@ namespace CityBuilder.Ships
             }
             ship.OrcCargo = 0;
             ship.OrcHomeward = true;
+        }
+
+        /// <summary>
+        /// The nearest dry ground to `beach` (the shallows are walkable, so the NavMesh's beach can
+        /// be water): rings of cells outward, up to 25, the first with no water within 2 cells (else
+        /// within 1, else just dry) that the NavMesh reaches. `inland` breaks ties toward the land.
+        /// </summary>
+        private static Vector3 DryOf(Vector3 beach, Vector3 inland)
+        {
+            var map = Maps.MeshMapApplier.Instance;
+            var grid = Grid.GridManager.Instance;
+            if (map == null || grid == null) return beach;
+            var size = grid.CellSize;
+            var centre = grid.WorldToCell(beach);
+            for (var margin = 2; margin >= 0; margin--)
+            for (var r = 0; r <= 25; r++)
+            {
+                var found = false;
+                var best = default(Vector3);
+                var bestScore = float.MaxValue;
+                for (var dx = -r; dx <= r; dx++)
+                for (var dy = -r; dy <= r; dy++)
+                {
+                    if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) != r) continue;
+                    var cell = centre + new Vector2Int(dx, dy);
+                    if (map.IsWaterCell(cell) || (margin > 0 && WetNear(map, grid, grid.GetFootprintCenterWorld(cell, Vector2Int.one), margin * size))) continue;
+                    if (!TrySampleLand(grid.GetFootprintCenterWorld(cell, Vector2Int.one), size * 0.7f, out var point)) continue;
+                    if (map.IsWaterCell(grid.WorldToCell(point))) continue;
+                    var score = -Vector3.Dot(new Vector3(dx, 0f, dy), inland);
+                    if (score >= bestScore) continue;
+                    bestScore = score;
+                    best = point;
+                    found = true;
+                }
+                if (found) return best;
+            }
+            return beach;
+        }
+
+        private static bool WetNear(Maps.MeshMapApplier map, Grid.GridManager grid, Vector3 at, float radius)
+        {
+            var centre = grid.WorldToCell(at);
+            var r = Mathf.CeilToInt(radius / Mathf.Max(0.01f, grid.CellSize));
+            for (var dx = -r; dx <= r; dx++)
+            for (var dy = -r; dy <= r; dy++)
+                if (dx * dx + dy * dy <= r * r && map.IsWaterCell(centre + new Vector2Int(dx, dy))) return true;
+            return false;
         }
 
         private bool RaidStillOutbound(int raid)

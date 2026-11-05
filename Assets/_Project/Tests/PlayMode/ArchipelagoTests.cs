@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -142,7 +142,11 @@ namespace CityBuilder.Tests.PlayMode
             {
                 if (!b.IsBot) continue;
                 standing++;
-                Assert.LessOrEqual((b.OriginCell - bot).magnitude, 30f, $"A bot {b.Data.buildingName} stands off its island at {b.OriginCell}.");
+                // the town templates are 55 cells across, anchored on their centre (2026-11-05): a corner
+                // stands ~39 cells out -- what matters is that it stands on the bot's own island
+                Assert.LessOrEqual((b.OriginCell - bot).magnitude, 42f, $"A bot {b.Data.buildingName} stands outside its town at {b.OriginCell}.");
+                Assert.IsTrue(MeshMapApplier.Instance.SameIsland(b.transform.position, kingdom.Hall.transform.position),
+                    $"A bot {b.Data.buildingName} stands off its island at {b.OriginCell}.");
                 if (manor == null && b.Data.buildingName == "Manor") manor = b;
             }
             Assert.Greater(standing, 500, "The bot's castle stands only in part.");

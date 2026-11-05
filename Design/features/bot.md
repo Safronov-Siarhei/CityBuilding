@@ -253,3 +253,7 @@ Proposed templates:
 ## Next
 - Trade window, gifts, the reward for razing the hall (later, per the user).
 - Playtest the war: raid size against the town, the ransom price.
+
+Test note (2026-11-05): the town templates are 55 cells across, anchored on their centre, so a corner stands ~39 cells
+from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each bot building is on the hall's island
+(`MeshMapApplier.SameIsland`) and within 42 cells (was a stale 30).

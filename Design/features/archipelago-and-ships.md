@@ -359,3 +359,8 @@
 - Ore rule (asked 2026-11-02): one mine per vein -- already so (`BuildingPlacer`: footprint == vein,
   `vein.Mine == null`).
 - The Water build tab's icon is the Lighthouse picture (`CategoryIconBuilding`).
+
+Trap (2026-11-05): the shallows round an island are walkable NavMesh, so `TryFindLandingAt` can hand an orc landing a
+beach point that is a WATER cell (the fleet test landed an orc in the sea). `ShipManagerOrcs.DryOf` now searches rings
+of cells (up to 25) for the nearest dry cell with no water within 2 (then 1, then 0) that the NavMesh reaches, and
+`OrcRaidManager.SpawnLanding` puts any orc whose scatter left it on a water cell back on the beach.
