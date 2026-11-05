@@ -1,7 +1,8 @@
 # Army control: squads (concept, 2026-11-05)
 
 > **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
-> cancel, tap-selects-squad) WRITTEN 2026-11-05, NOT YET COMPILED (Unity editor was open). Stages 2-5 to do.
+> cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
+> not run yet; user not seen). Stages 2-5 to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).

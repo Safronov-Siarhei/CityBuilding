@@ -9,8 +9,8 @@
 > [research-laboratory](research-laboratory.md).
 
 ## What the player sees
-Barracks card with four tier buttons (a locked one stays tappable). A right-side army panel, one row
-per group with a target-priority toggle. Selecting a group makes a world tap an ORDER (move / attack);
+Barracks card with four tier buttons (a locked one stays tappable). SINCE 2026-11-05 the army is
+commanded by SQUADS -- see [army-control](army-control.md); the old right-side army panel is gone. Selecting a group makes a world tap an ORDER (move / attack);
 the other selectors stand down. A move order shows a ripple + gold flag + dot trail along the route;
 gather = ring; refused = red ripple.
 
