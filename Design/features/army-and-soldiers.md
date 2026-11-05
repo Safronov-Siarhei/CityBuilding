@@ -70,7 +70,7 @@ gather = ring; refused = red ripple.
 - **Hired from the Barracks plus new buildings:** infantry from the Barracks, cavalry from a new Конюшня, siege from a new Мастерская, the healer from the Church.
 - **The bot is a full mirror:** the same units as the player, in the bot's colours (straw capes). Its `botwaves` and garrison get the new ids.
 
-**Proposed (mine, not agreed yet):**
+**Proposed (mine, 2026-11-05; superseded by the agreed numbers below):**
 - Арбалетчик opens at Barracks level 5 (it opens nothing today). Slow reload, pierces armour (bonus vs man-at-arms / brutes), +range from walls.
 - Всадник: fast, a heavy first blow after a run-up; the Spearman gets a bonus against it (the spearman's real role).
 - Монах: no attack, heals nearby soldiers over time.
@@ -143,7 +143,21 @@ the rail fence. Fix 2026-11-05 (user): open loose boxes under a blue lean-to alo
 - New sheet columns: units `army_slots` (soldiers 1), `crew`, damage multipliers vs gates / buildings / big targets;
   economy: wall jump damage share, arrow-damage shares for the ram and the tower. The bot (full mirror) uses the same numbers.
 
-**Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
+**Fighters' numbers AGREED by the user (2026-11-05)** -- into the sheet with the code (current: militia 12/5 for 25,
+spearman 20/7 for 45, archer 14/6 range 8 for 60, man-at-arms 45/9 for 90):
+- **Арбалетчик** (`crossbowman`, Barracks lvl 5 -- which opened nothing): hp 18, damage 14 every 2.6 s (dps 5.4), range 9;
+  x1.5 vs armoured (man-at-arms, knight, orc brute, chiefs); 100 coins + 1 iron bar + 1 copper bar; 1 army slot.
+- **Рыцарь** (`knight`, the Stable): hp 60, damage 12 every 1.3 s, speed 2.6; CHARGE: the first blow after a run of 3+
+  cells does x2; 2 army slots; walks no walls; 150 coins + 3 iron bars. **The spearman does x2 vs cavalry.**
+- **Монах** (`monk`, the Church): hp 16, no attack; every 1.5 s heals 2 hp to the most wounded soldier within 3 cells;
+  heals no machines, no buildings; 70 coins; at most 2 monks per Church level.
+- **Конюшня** (Stable): 40 wood, 20 stone, 5 iron; hp 220; knights capped at 4 per Stable level (4/8/12/16/20).
+- Levels 2-3 of all three: hp and damage x1.45 a level (the monk's heal 3, then 4); hire price x1.5 a level;
+  research crossbowman 450 / 700, knight 500 / 800, monk 300 / 500 coins.
+- New sheet columns beyond the machines': damage multiplier vs armoured, vs cavalry, charge multiplier and run, heal
+  amount / interval / radius, per-building-level cap.
+
+**Open questions:** the bot's unit counts per wave; whether orcs get answers too.
 
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,
