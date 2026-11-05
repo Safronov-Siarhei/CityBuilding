@@ -36,7 +36,7 @@ if not os.path.exists(MODELS):     # the islands live in a folder of their own n
 PREFIX = f"Isl-{KIND}{VARIANT}"
 
 _SCALES = {'start': 130, 'orc': 125, 'bot': 160, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
-           'crescent': 150, 'atoll': 150, 'islet': 70, 'tutorial': 54}
+           'crescent': 150, 'atoll': 150, 'islet': 70, 'tutorial': 64}
 N = int(round(_SCALES[KIND] * 1.4 / 2)) * 2
 HALF = N // 2
 WATER_Z = -0.5
@@ -155,7 +155,10 @@ def plan_sd(x, y):
     """Signed distance to the plan's land (negative on an island), with the plan's own wobble."""
     px, py = x + _TW / 2, y + _TH / 2
     best = 1e9
-    for blobs, seed in ((TPLAN["player_blobs"], 1.3), (TPLAN["orc_blobs"], 4.1)):
+    for blobs, seed in ((TPLAN["player_blobs"], 1.3), (TPLAN["orc_blobs"], 4.1),
+                        (TPLAN.get("islets", []), 2.2), (TPLAN.get("sea_rocks", []), 0.0)):
+        if not blobs:
+            continue
         sd = min(math.hypot(px - bx, py - by) - r for bx, by, r in blobs)
         best = min(best, sd + 0.6 * math.sin(px * 0.7 + seed) * math.cos(py * 0.6 - seed))
     return best
@@ -488,6 +491,8 @@ def _place_features():
 if KIND == 'tutorial':
     FORESTS.extend((*tut_local(x, y), 2.3, 2.3) for x, y in TPLAN["forest"])
     OUTCROPS.extend((*tut_local(x, y), 2.0) for x, y in TPLAN["rocks"])
+    # the sea rocks: bare stone all over, standing up out of the water
+    OUTCROPS.extend((*tut_local(x, y), r + 1.6) for x, y, r in TPLAN.get("sea_rocks", []))
 else:
     _place_features()
 FLOWER_SEED, DRY_SEED = SEED + 401, SEED + 433
@@ -510,6 +515,9 @@ def relief_at(x, y):
     return max(0.0, h - RELIEF_MIN)
 
 
+SEA_ROCK_PTS = [(*tut_local(x, y), r) for x, y, r in TPLAN.get("sea_rocks", [])] if TPLAN else []
+
+
 def height_at(x, y):
     sd = land_sd(x, y)
     if sd >= BEACH:
@@ -519,6 +527,11 @@ def height_at(x, y):
     else:
         base = -BEACH_DROP + sd * 0.6
     rel = relief_at(x, y) * smoothstep(BEACH + 0.5, BEACH + 5.0, sd)
+    if TPLAN:
+        for rx, ry, r in SEA_ROCK_PTS:
+            d = math.hypot(x - rx, y - ry)
+            if d < r + 1.2:
+                rel = max(rel, (1.0 + 1.4 * r) * smoothstep(r + 1.2, 0.2, d) * (0.8 + 0.4 * fbm(x / 1.5, y / 1.5, 77)))
     return base + rel, sd
 
 

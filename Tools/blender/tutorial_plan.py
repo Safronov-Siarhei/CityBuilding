@@ -57,12 +57,37 @@ ROCKS = [_turn(x, y) for x, y in ROCKS]
 ROUTES = [((46, 15), (31, 9.5), "orc"), ((31, 9.5), (27, 11.5), "orc"), ((34, 21), (42, 22), "ours")]
 ROUTES = [(_turn(*a), _turn(*b), k) for a, b, k in ROUTES]
 
+# more open sea round the two islands (the user, 2026-11-05): the plan is moved MARGIN cells in and
+# the map grows by 2 MARGIN; then small islets and sea rocks are scattered over that water
+MARGIN = 10
+W, H = W + 2 * MARGIN, H + 2 * MARGIN
+
+
+def _shift(x, y):
+    return x + MARGIN, y + MARGIN
+
+
+PLAYER_BLOBS = [(*_shift(x, y), r) for x, y, r in PLAYER_BLOBS]
+ORC_BLOBS = [(*_shift(x, y), r) for x, y, r in ORC_BLOBS]
+for _s in SPOTS.values():
+    _s["at"] = _shift(*_s["at"])
+FOREST = [_shift(x, y) for x, y in FOREST]
+ROCKS = [_shift(x, y) for x, y in ROCKS]
+ROUTES = [(_shift(*a), _shift(*b), k) for a, b, k in ROUTES]
+# islets: small grassy blobs (x, y, r), away from the ship routes; sea rocks: bare stone spires (x, y, r)
+ISLETS = [(9, 52, 2.6), (12, 49, 1.4), (39, 59, 2.2), (74, 58, 2.8), (71, 54, 1.5), (78, 30, 2.3),
+          (70, 8, 2.6), (40, 6, 2.0), (8, 12, 2.4), (11, 33, 1.6)]
+SEA_ROCKS = [(20, 56, 0.9), (22, 55, 0.6), (57, 61, 0.8), (79, 44, 0.9), (77, 42, 0.6), (60, 4, 0.9),
+             (25, 5, 0.8), (27, 7, 0.6), (4, 24, 0.9), (34, 47, 0.7), (51, 51, 0.6), (4, 40, 0.8)]
+
 
 def wobble(x, y, seed):
     return 0.6 * math.sin(x * 0.7 + seed) * math.cos(y * 0.6 - seed)
 
 
 def land(blobs, x, y, seed):
+    if not blobs:
+        return 1e9
     return min(math.hypot(x - bx, y - by) - r for bx, by, r in blobs) + wobble(x, y, seed)
 
 
@@ -72,10 +97,11 @@ def main():
     for cy in range(H):
         for cx in range(W):
             x, y = cx + 0.5, cy + 0.5
-            for blobs, seed, grass in ((PLAYER_BLOBS, 1.3, (120, 170, 85)), (ORC_BLOBS, 4.1, (125, 120, 95))):
+            for blobs, seed, grass in ((PLAYER_BLOBS, 1.3, (120, 170, 85)), (ORC_BLOBS, 4.1, (125, 120, 95)),
+                                       (ISLETS, 2.2, (120, 170, 85)), (SEA_ROCKS, 0.0, (140, 140, 140))):
                 sd = land(blobs, x, y, seed)
                 if sd < 0:
-                    colour = (225, 205, 150) if sd > -1.5 else grass          # a beach ring
+                    colour = grass if seed == 0.0 else (225, 205, 150) if sd > -1.5 else grass          # a beach ring
                     px, py = cx * PX, (H - 1 - cy) * PX
                     d.rectangle([px, py, px + PX - 1, py + PX - 1], fill=colour)
     for cx in range(0, W, 4):                                                 # a 4-cell grid
@@ -122,7 +148,7 @@ def main():
     for a, b, kind in ROUTES:
         arrow(a, b, (220, 70, 60) if kind == "orc" else (60, 90, 200))
 
-    d.text((8, 8), "Обучение: остров игрока (восток) и остров орков (запад). Карта 64 x 44 клетки, сетка 4 клетки.",
+    d.text((8, 8), "Обучение: остров игрока (восток) и остров орков (запад). Карта 84 x 64 клетки, сетка 4 клетки.",
            font=font, fill=(255, 255, 255))
     d.text((8, 28), "Красное — путь орочьего баркаса к высадке; синее — наш корабль от Верфи к острову орков.",
            font=small, fill=(255, 255, 255))
@@ -130,7 +156,7 @@ def main():
 
     plan = {"size": [W, H], "player_blobs": PLAYER_BLOBS, "orc_blobs": ORC_BLOBS,
             "spots": {k: {"at": v["at"], "size": v["size"]} for k, v in SPOTS.items()},
-            "forest": FOREST, "rocks": ROCKS}
+            "forest": FOREST, "rocks": ROCKS, "islets": ISLETS, "sea_rocks": SEA_ROCKS}
     with open(os.path.join(HERE, "tutorial-plan.json"), "w", encoding="utf-8") as f:
         json.dump(plan, f, indent=1)
     print("written tutorial-plan.png / .json")

@@ -64,6 +64,9 @@ both islands in one 76x76 frame drawn from `tutorial-plan.json` (`SHAPE 'plan'`:
 flat, no rim, beach slope 1.2 (not 2.6: the islands are small), landing beaches at the plan's orc_landing /
 player_landing / shipyard / orc_barge, forest + stones from the plan's points (33 forest, 18 stony cells), flat pads
 round the Town Hall zone (r 4.5) and the portal/tower/guard; `-spots.csv` carries every plan spot. ~504 land cells.
+**More sea (the user, 2026-11-05):** the plan got a 10-cell margin (map 84 x 64, frame 90), 10 small
+grassy islets (`islets`) and 12 bare sea rocks (`sea_rocks`: stone spires up to ~2.5 m, all stony
+ground) on the open water, clear of the ship routes. Now ~508 buildable cells, 89% water.
 Not exported yet (export + the game's tutorial mode are the next step).
 
 ## To build (plan)
