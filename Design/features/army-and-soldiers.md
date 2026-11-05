@@ -100,7 +100,11 @@ blue gambeson, leather cap) plus a lineup with a spearman, a lvl-5 wall and a lv
 Workshop1-lvl1 (3x3 like the Barracks, borrowing its box -- no placeholder of its own; stands 6 m in -y of it in the Models
 .blend): a tall half-timbered carpenters' hall gable-on with its great doors SHUT (the user: no black hole; a wicket door with a lit window), blue Defence roof, lean-to timber store, forge
 chimney, yard with a treadwheel crane, a catapult half built on trestles, stone shot. 3065 tris (over the 1000-1500 services
-budget; the crane wheel and the trestle catapult are the place to trim). Levels 2-5 not made.
+budget; the crane wheel and the trestle catapult are the place to trim). Levels 2-5 (2026-11-05, drafts for approval): `workshop1_lvl2..5.py` (kit.borrow chain like the Barracks):
+lvl2 quoins, a louvre on the ridge, a dormer in the left slope, a rail fence open in the middle, a stack of wheels (4453 tris);
+lvl3 gold finials on the gable ends, a weathervane on the louvre, a stone gateway with blue caps and a banner, a paved way (4916);
+lvl4 glazed roof + glazed lean-to (5248); lvl5 gilded roofs (5248). Each level 3.6 m +X of the one before, 6 m -y of the Barracks.
+Heavy for the budget: trim (quoins, wheels, the crane) if the phone needs it.
 
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
 
