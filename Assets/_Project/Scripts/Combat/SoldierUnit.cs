@@ -204,6 +204,15 @@ namespace CityBuilder.Combat
             CurrentHealth = MaxHealth;
         }
 
+        /// <summary>Moved into another group (ArmyManager.MoveSoldier): what he was after belongs to the old one.</summary>
+        public void Regroup(ArmyGroup group)
+        {
+            Group = group;
+            _target = null;
+            _hasRoute = false;
+            Marching = false;
+        }
+
         /// <summary>
         /// Puts a loaded soldier on the health it was saved with, clamped into what its type can
         /// have today -- a save made before the militia's level 2 was researched holds a smaller
@@ -423,6 +432,7 @@ namespace CityBuilder.Combat
             // unless he is caught on the way: one pinned by monsters striking him stood and took it
             // (the user, 2026-11-04), so he answers whoever hits him from close by
             if (Marching) return Assailant(UnitAttackRange + 0.6f);
+            if (Group.IsGarrison) return GarrisonTarget();
             var dungeon = Dungeon.DungeonMode.IsActive;
 
             var slot = Group.SlotPositionFor(this);
@@ -464,6 +474,36 @@ namespace CityBuilder.Combat
             }
 
             return preferred ?? fallback;
+        }
+
+        /// <summary>
+        /// The Garrison defends the main island soldier by soldier (the user, 2026-11-05): the enemy
+        /// fighter nearest HIM among those within `garrison_defend_cells` of the Town Hall -- fighters
+        /// only, never a camp or a portal, which would take the Garrison off on a war of its own.
+        /// </summary>
+        private IDamageTarget GarrisonTarget()
+        {
+            var hall = Buildings.BuildingInstance.TownHall;
+            var cells = BalanceConfig.Instance != null ? BalanceConfig.Instance.GarrisonDefendCells : 30f;
+            var reach = cells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
+            var post = Group.SlotPositionFor(this);
+            IDamageTarget best = null;
+            var bestDistance = float.MaxValue;
+            foreach (var candidate in EnumerateEnemies())
+            {
+                if (candidate == null || !candidate.IsAlive || candidate.IsStructure || !CanStrike(candidate)) continue;
+                var at = candidate.Transform.position;
+                // round the Town Hall, or come up to his own post (a post far out, a hall not built)
+                var nearHall = hall != null && HorizontalDistance(at, hall.transform.position) <= reach;
+                var nearPost = HorizontalDistance(at, post) <= EngageRadius
+                    || (candidate is OrcUnit striker && StrikesGroup(striker) && HorizontalDistance(at, post) <= EngageRadius * 2.5f);
+                if (!nearHall && !nearPost) continue;
+                var d = HorizontalDistance(at, transform.position);
+                if (d >= bestDistance) continue;
+                bestDistance = d;
+                best = candidate;
+            }
+            return best;
         }
 
         /// <summary>This orc is fighting someone of this soldier's group.</summary>

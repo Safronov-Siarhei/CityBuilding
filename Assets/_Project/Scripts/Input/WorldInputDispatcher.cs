@@ -96,6 +96,8 @@ namespace CityBuilder.InputControl
             //    boulder (how much is left in it), or nothing. A building behind a tree's wide
             //    click box still wins -- the card is what the player was reaching for.
             if (citizenSelector != null && HeroPortraitController.TrySelectAt(screenPosition, citizenSelector.TapCamera)) return;
+            // one of the player's squad soldiers or a machine: that squad (army-control.md); his card is on a long press
+            if (UI.ArmyBar.TrySelectSoldierAt(screenPosition, tapCamera)) return;
             if (Ships.ShipInput.TrySelectAt(screenPosition, tapCamera)) return;
             if (citizenSelector != null && citizenSelector.TrySelectCitizen(screenPosition)) return;
             if (citizenSelector != null && (buildingSelector == null || !buildingSelector.HasBuildingAt(screenPosition)))
@@ -207,8 +209,18 @@ namespace CityBuilder.InputControl
                 return;
             }
 
-            if (citizenSelector != null && citizenSelector.HasSelection) citizenSelector.Deselect();
-            if (Ships.ShipInput.HasSelection) Ships.ShipInput.Select(null);
+            if (citizenSelector != null && citizenSelector.HasSelection)
+            {
+                citizenSelector.Deselect();
+                return;
+            }
+            if (Ships.ShipInput.HasSelection)
+            {
+                Ships.ShipInput.Select(null);
+                return;
+            }
+            // nothing in hand: a fighter's card (a tap on a squad soldier selects his squad, the user 2026-11-05)
+            if (buildingSelector != null) buildingSelector.ShowFighterAt(screenPosition);
         }
     }
 }

@@ -96,7 +96,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()));
 
             var populationWithSoldier = CitizenManager.Instance.TotalPopulation;
-            army.Disband(army.Groups[0].Members[0]);
+            army.Disband(army.Garrison.Members[0]);
 
             Assert.AreEqual(0, army.SoldierCount);
             Assert.AreEqual(populationWithSoldier + 1, CitizenManager.Instance.TotalPopulation,
@@ -209,6 +209,8 @@ namespace CityBuilder.Tests.PlayMode
                 if (u.Type == SoldierType.Spearman) footman = u;
                 if (u.Type == SoldierType.Knight) knight = u;
             }
+            // a recruit joins the Garrison, which takes no orders: the spearman goes into a squad
+            IntoNewSquad(army, footman);
             Assert.IsFalse(knight.GoToWall(fenceCell), "A knight was let up a wall.");
             Assert.IsTrue(footman.GoToWall(fenceCell), "A spearman was not let up the docked tower.");
             waited = 0f;
@@ -252,6 +254,40 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(ram.RangedTakenShare, 1f, "Arrows hit the ram under its hides at full strength.");
             army.Disband(ram);
             Assert.AreEqual(idle, CitizenManager.Instance.IdlePopulation, "Sending the ram home did not give its crew back.");
+        }
+
+        /// <summary>
+        /// Army control by squads (the user, 2026-11-05): a recruit joins the Garrison, a machine
+        /// stands alone; a squad takes soldiers from the Garrison, five at most; a squad broken up
+        /// sends its soldiers back to the Garrison.
+        /// </summary>
+        [Test]
+        public void ARecruitJoinsTheGarrison_ASquadTakesHim_AndABrokenSquadSendsHimBack()
+        {
+            var army = ArmyManager.Instance;
+            var spot = WalkablePoint();
+            ResourceManager.Instance.SetAmount(ResourceType.Wood, 500);
+            ResourceManager.Instance.SetAmount(ResourceType.Coins, 5000);
+            Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
+            Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
+            Assert.IsTrue(army.TryRecruit(SoldierType.Ram, spot, 1), army.DescribeRecruitBlocker(SoldierType.Ram, 1));
+            Assert.AreEqual(2, army.Garrison.Count, "A recruit did not join the Garrison.");
+            Assert.AreEqual(1, army.Machines.Count, "The ram is not a machine standing alone.");
+
+            var squad = army.CreateSquad();
+            army.MoveSoldier(army.Garrison.Members[0], squad);
+            Assert.AreEqual(1, squad.Count, "The squad did not take the soldier.");
+            Assert.AreEqual(1, army.Garrison.Count);
+            Assert.AreEqual(2, army.CountOf(SoldierType.Militia), "Moving a soldier changed the army's count.");
+            army.MoveSoldier(army.Machines[0].Members[0], squad);
+            Assert.AreEqual(1, squad.Count, "A machine went into a squad.");
+
+            while (army.Squads.Count < ArmyManager.MaxSquads) Assert.IsNotNull(army.CreateSquad());
+            Assert.IsNull(army.CreateSquad(), "More squads than the cap.");
+
+            army.DeleteSquad(squad);
+            Assert.AreEqual(2, army.Garrison.Count, "A broken-up squad's soldier did not go back to the Garrison.");
+            Assert.AreEqual(ArmyManager.MaxSquads - 1, army.Squads.Count);
         }
 
         [UnityTest]
@@ -371,13 +407,22 @@ namespace CityBuilder.Tests.PlayMode
 
         private static ArmyGroup ArcherGroup(ArmyManager army)
         {
-            foreach (var group in army.Groups)
+            foreach (var unit in SoldierUnit.All)
             {
-                if (group.Type == SoldierType.Archer) return group;
+                if (unit != null && unit.Type == SoldierType.Archer) return IntoNewSquad(army, unit);
             }
 
             Assert.Fail("The recruited archer is in no group.");
             return null;
+        }
+
+        /// <summary>Recruits join the Garrison (army-control.md): these soldiers go into a new squad of the player's, which takes orders.</summary>
+        private static ArmyGroup IntoNewSquad(ArmyManager army, params SoldierUnit[] units)
+        {
+            var squad = army.CreateSquad();
+            Assert.IsNotNull(squad, "No squad could be made.");
+            foreach (var unit in units) army.MoveSoldier(unit, squad);
+            return squad;
         }
 
         [UnityTest]
@@ -435,7 +480,7 @@ namespace CityBuilder.Tests.PlayMode
                 Assert.IsTrue(army.TryRecruit(SoldierType.Militia, spot));
             }
 
-            var group = army.Groups[0];
+            var group = IntoNewSquad(army, new System.Collections.Generic.List<SoldierUnit>(army.Garrison.Members).ToArray());
             group.SetPriority(TargetPriority.Structures);
             group.OrderAttack(portal);
 
@@ -509,7 +554,9 @@ namespace CityBuilder.Tests.PlayMode
             if (army == null) return;
 
             army.SelectGroup(null);
-            foreach (var group in army.Groups)
+            while (army.Squads.Count > 0) army.DeleteSquad(army.Squads[0]);
+            // a copy: a machine's group goes with its machine
+            foreach (var group in new System.Collections.Generic.List<ArmyGroup>(army.Groups))
             {
                 while (group.Count > 0)
                 {

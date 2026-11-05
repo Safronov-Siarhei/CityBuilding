@@ -493,18 +493,45 @@ namespace CityBuilder.Saving
 
             foreach (var groupEntry in data.armyGroups)
             {
-                var group = army.RestoreGroup(groupEntry.type, groupEntry.holdPosition, groupEntry.priority);
+                var group = RestoreGroupOf(army, groupEntry);
                 restored.Add(group);
                 if (groupEntry.soldiers == null) continue;
 
                 foreach (var soldier in groupEntry.soldiers)
                 {
-                    var unit = army.RestoreSoldier(group, soldier.position, soldier.currentHealth);
+                    var type = soldier.type >= 0 ? (Combat.SoldierType)soldier.type : groupEntry.type;
+                    var into = group;
+                    // a save from before the squads: a machine gets a group of its own, a soldier joins the Garrison
+                    if (groupEntry.kind == Combat.ArmyGroupKind.Type && Combat.ArmyManager.UsesSquads)
+                        into = Combat.SoldierStats.IsMachine(type) ? army.RestoreMachine(type, groupEntry.holdPosition) : army.Garrison;
+                    var unit = army.RestoreSoldier(into, soldier.position, soldier.currentHealth, type);
+                    if (into.IsGarrison) into.SetPost(unit, soldier.hasPost ? soldier.post : soldier.position);
                     if (soldier.aboardShip > 0) Ships.ShipManager.Instance?.RestoreAboard(soldier.aboardShip - 1, unit);
                 }
             }
 
             return restored;
+        }
+
+        /// <summary>The group a saved entry stands for: the Garrison, a squad, a machine, or (in a run, or an older save) a type group.</summary>
+        private static Combat.ArmyGroup RestoreGroupOf(Combat.ArmyManager army, ArmyGroupEntry entry)
+        {
+            switch (entry.kind)
+            {
+                case Combat.ArmyGroupKind.Garrison:
+                    return army.Garrison;
+                case Combat.ArmyGroupKind.Squad:
+                    var squad = army.RestoreSquad(entry.holdPosition, entry.squadName, entry.crest);
+                    squad.SetPriority(entry.priority);
+                    return squad;
+                case Combat.ArmyGroupKind.Machine:
+                    return army.RestoreMachine(entry.type, entry.holdPosition);
+                default:
+                    // an older save in the sandbox: its soldiers are dealt out above; the group still
+                    // stands so the orders pass pairs entries and groups by index
+                    if (Combat.ArmyManager.UsesSquads) return army.Garrison;
+                    return army.RestoreGroup(entry.type, entry.holdPosition, entry.priority);
+            }
         }
 
         /// <summary>The heroes, as they were: where they stood, their levels, down or not (HeroRoster).</summary>
@@ -538,6 +565,8 @@ namespace CityBuilder.Saving
             for (var i = 0; i < groups.Count && i < data.armyGroups.Count; i++)
             {
                 var entry = data.armyGroups[i];
+                // the Garrison takes no orders (an older save's type groups all became it)
+                if (groups[i].IsGarrison) continue;
                 switch (entry.attackTargetKind)
                 {
                     case ArmyAttackTargetKind.Portal:
@@ -565,7 +594,7 @@ namespace CityBuilder.Saving
             // Restored last, and deliberately not folded into the loop above: selection belongs to
             // the player rather than to a group, and the index means nothing until every group is
             // back in place.
-            if (data.selectedGroupIndex >= 0 && data.selectedGroupIndex < groups.Count)
+            if (data.selectedGroupIndex >= 0 && data.selectedGroupIndex < groups.Count && !groups[data.selectedGroupIndex].IsGarrison)
             {
                 army.SelectGroup(groups[data.selectedGroupIndex]);
             }
@@ -770,12 +799,21 @@ namespace CityBuilder.Saving
                     // An empty group is still worth writing down: it carries the rally point and
                     // priority the player set, which ArmyManager deliberately keeps when the last
                     // member dies.
-                    var entry = new ArmyGroupEntry { type = group.Type, holdPosition = group.HoldPosition, priority = group.Priority };
+                    var entry = new ArmyGroupEntry
+                    {
+                        type = group.Type, kind = group.Kind, squadName = group.Name, crest = group.Crest,
+                        holdPosition = group.HoldPosition, priority = group.Priority,
+                    };
                     WriteAttackOrder(group, entry, orcIndices);
                     foreach (var soldier in group.Members)
                     {
                         if (soldier == null) continue;
-                        entry.soldiers.Add(new SoldierEntry { position = soldier.transform.position, currentHealth = soldier.CurrentHealth, aboardShip = AboardShip(soldier) });
+                        var hasPost = group.TryGetPost(soldier, out var post);
+                        entry.soldiers.Add(new SoldierEntry
+                        {
+                            position = soldier.transform.position, currentHealth = soldier.CurrentHealth, aboardShip = AboardShip(soldier),
+                            type = (int)soldier.Type, hasPost = hasPost, post = post,
+                        });
                     }
                     data.armyGroups.Add(entry);
 

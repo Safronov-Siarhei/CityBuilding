@@ -22,6 +22,12 @@ namespace CityBuilder.UI
         [SerializeField] private CitizenSelector citizenSelector;
         [SerializeField] private GameObject badgeRoot;
         [SerializeField] private Text label;
+        /// <summary>
+        /// The round cancel button that stands for the badge while a squad, a machine or a hero is in
+        /// hand (the user, 2026-11-05: «значок отмены выбора армии», the same for a hero instead of
+        /// «Выбран король»); the badge with its words is left for a citizen.
+        /// </summary>
+        [SerializeField] private GameObject cancelRoot;
 
         /// <summary>From the bottom-right corner's edges, in an Invasion run.</summary>
         private static readonly Vector2 RunCornerOffset = new Vector2(-24f, 24f);
@@ -38,6 +44,10 @@ namespace CityBuilder.UI
             var rect = (RectTransform)badgeRoot.transform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0f);
             rect.anchoredPosition = RunCornerOffset;
+            if (cancelRoot == null) return;
+            var cancel = (RectTransform)cancelRoot.transform;
+            cancel.anchorMin = cancel.anchorMax = cancel.pivot = new Vector2(1f, 0f);
+            cancel.anchoredPosition = RunCornerOffset;
         }
 
         private void Update()
@@ -45,19 +55,15 @@ namespace CityBuilder.UI
             var army = ArmyManager.Instance;
             var hasGroup = army != null && army.SelectedGroup != null;
             var hasCitizen = citizenSelector != null && citizenSelector.HasSelection;
-            var visible = (hasGroup || hasCitizen) && !ModalGate.IsBlocked;
+            var visible = !hasGroup && hasCitizen && !ModalGate.IsBlocked;
+            var round = hasGroup && !ModalGate.IsBlocked;
+            if (cancelRoot != null && cancelRoot.activeSelf != round) cancelRoot.SetActive(round);
 
             if (badgeRoot != null && badgeRoot.activeSelf != visible) badgeRoot.SetActive(visible);
             if (!visible || label == null) return;
 
-            label.text = hasGroup
-                ? Localization.Get(HeroKey(army.SelectedGroup) ?? "#selection_army")
-                : Localization.Get("#selection_citizen");
+            label.text = Localization.Get("#selection_citizen");
         }
-
-        /// <summary>«Выбран король» / «Выбрана королева» / «Выбран капитан» for a hero; null for an army group.</summary>
-        private static string HeroKey(ArmyGroup group) =>
-            SoldierStats.IsHero(group.Type) ? "#selection_" + SoldierStats.SheetIdOf(group.Type) : null;
 
         /// <summary>The badge's own X. Clears whichever selection is showing -- the army group wins, matching the order the dispatcher resolves taps in.</summary>
         public void ClearSelection()

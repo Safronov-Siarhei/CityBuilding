@@ -120,6 +120,16 @@ namespace CityBuilder.UI
         /// a monster, the bot's men -- gets the read-only card. Screen distance, not a ray: units
         /// carry no colliders of their own to hit, and a small figure needs a forgiving target.
         /// </summary>
+        /// <summary>A long press on a fighter: his card (a tap on one of the player's squads selects the squad instead, ArmyBar).</summary>
+        public bool ShowFighterAt(Vector2 screenPosition)
+        {
+            if (targetCamera == null || !TryShowFighter(screenPosition)) return false;
+            if (focus != null) focus.Clear();
+            if (infoPanel != null) infoPanel.Close();
+            if (researchPanel != null) researchPanel.Close();
+            return true;
+        }
+
         private bool TryShowFighter(Vector2 screenPosition)
         {
             var card = ForeignBuildingCard.Instance;

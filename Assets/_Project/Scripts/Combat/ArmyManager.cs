@@ -97,15 +97,131 @@ namespace CityBuilder.Combat
             SelectGroup(SelectedGroup == group ? null : group);
         }
 
-        /// <summary>How many soldiers of this type the army holds (the summoned ones aside).</summary>
+        /// <summary>How many soldiers of this type the army holds (the summoned ones aside). Per member: a squad is mixed.</summary>
         public int CountOf(SoldierType type)
         {
             var total = 0;
             foreach (var group in _groups)
             {
-                if (group.Type == type && !group.IsSummoned) total += group.Count;
+                if (group.IsSummoned) continue;
+                var members = group.Members;
+                for (var i = 0; i < members.Count; i++)
+                    if (members[i] != null && members[i].Type == type) total++;
             }
             return total;
+        }
+
+        // ---- squads (the user, 2026-11-05, Design/features/army-control.md) ----
+
+        /// <summary>Army control by squads: everywhere but an Invasion run, which keeps its per-type groups (InvasionGarrison).</summary>
+        public static bool UsesSquads => !Invasion.InvasionMode.IsActive;
+
+        private ArmyGroup _garrison;
+
+        /// <summary>Every recruit joins it; it stays home and defends the main island, soldier by soldier. Made on first ask.</summary>
+        public ArmyGroup Garrison
+        {
+            get
+            {
+                if (_garrison != null) return _garrison;
+                var hall = Buildings.BuildingInstance.TownHall;
+                _garrison = new ArmyGroup(SoldierType.Militia, hall != null ? hall.transform.position : transform.position, ArmyGroupKind.Garrison);
+                _groups.Add(_garrison);
+                return _garrison;
+            }
+        }
+
+        private readonly List<ArmyGroup> _squads = new List<ArmyGroup>();
+        private readonly List<ArmyGroup> _machines = new List<ArmyGroup>();
+
+        /// <summary>The player's squads, in the order the squad row shows them.</summary>
+        public IReadOnlyList<ArmyGroup> Squads => _squads;
+
+        /// <summary>One group per siege machine: each is selected and ordered alone (the user, 2026-11-05).</summary>
+        public IReadOnlyList<ArmyGroup> Machines => _machines;
+
+        /// <summary>economy `army_max_squads` (5).</summary>
+        public static int MaxSquads => BalanceConfig.Instance != null ? BalanceConfig.Instance.ArmyMaxSquads : 5;
+
+        /// <summary>A new empty squad standing before the Town Hall; null at the cap. Its crest is the first one no squad wears.</summary>
+        public ArmyGroup CreateSquad()
+        {
+            if (_squads.Count >= MaxSquads) return null;
+            var hall = Buildings.BuildingInstance.TownHall;
+            var at = hall != null ? OpenGroundNear(hall.transform.position + Vector3.back * 3f) : transform.position;
+            var squad = new ArmyGroup(SoldierType.Militia, at, ArmyGroupKind.Squad) { Crest = FreeCrest() };
+            _squads.Add(squad);
+            _groups.Add(squad);
+            OnArmyChanged?.Invoke();
+            return squad;
+        }
+
+        private int FreeCrest()
+        {
+            for (var crest = 0; ; crest++)
+            {
+                var taken = false;
+                foreach (var squad in _squads) taken |= squad.Crest == crest;
+                if (!taken) return crest;
+            }
+        }
+
+        /// <summary>The squad is broken up: its soldiers go back to the Garrison (the user, 2026-11-05).</summary>
+        public void DeleteSquad(ArmyGroup squad)
+        {
+            if (squad == null || !squad.IsSquad) return;
+            while (squad.Count > 0) MoveSoldier(squad.Members[squad.Count - 1], Garrison);
+            if (SelectedGroup == squad) SelectGroup(null);
+            _squads.Remove(squad);
+            _groups.Remove(squad);
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>One soldier from his group into another (the squad window). Into the Garrison: a post round the Town Hall.</summary>
+        public void MoveSoldier(SoldierUnit unit, ArmyGroup to)
+        {
+            if (unit == null || to == null || unit.Group == to || unit.Group == null) return;
+            if (SoldierStats.IsMachine(unit.Type) || SoldierStats.IsHero(unit.Type)) return;
+            unit.Group.Remove(unit);
+            unit.Regroup(to);
+            to.Add(unit);
+            if (to.IsGarrison) to.SetPost(unit, GarrisonPost());
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>A free spot round the Town Hall for a soldier coming back to the Garrison.</summary>
+        private Vector3 GarrisonPost()
+        {
+            var hall = Buildings.BuildingInstance.TownHall;
+            var centre = hall != null ? hall.transform.position : Garrison.HoldPosition;
+            return OpenGroundNear(centre + ArmyGroup.FormationOffset(7 + Garrison.Count) * 2.2f);
+        }
+
+        /// <summary>A loaded squad, as it was saved.</summary>
+        public ArmyGroup RestoreSquad(Vector3 holdPosition, string squadName, int crest)
+        {
+            var squad = new ArmyGroup(SoldierType.Militia, holdPosition, ArmyGroupKind.Squad) { Name = squadName ?? string.Empty, Crest = crest };
+            _squads.Add(squad);
+            _groups.Add(squad);
+            return squad;
+        }
+
+        /// <summary>A machine's own group (hired or loaded).</summary>
+        public ArmyGroup RestoreMachine(SoldierType type, Vector3 holdPosition)
+        {
+            var group = new ArmyGroup(type, holdPosition, ArmyGroupKind.Machine);
+            _machines.Add(group);
+            _groups.Add(group);
+            return group;
+        }
+
+        /// <summary>«Гарнизон», or «Отряд N» unless renamed.</summary>
+        public string SquadName(ArmyGroup squad)
+        {
+            if (squad == null) return string.Empty;
+            if (squad.IsGarrison) return Localization.Get("#army_garrison");
+            if (!string.IsNullOrEmpty(squad.Name)) return squad.Name;
+            return Localization.Format("#army_squad_name", _squads.IndexOf(squad) + 1);
         }
 
         public int SoldierCount
@@ -116,7 +232,10 @@ namespace CityBuilder.Combat
                 foreach (var group in _groups)
                 {
                     if (SoldierStats.IsHero(group.Type) || group.IsSummoned) continue;   // heroes and the Queen's summons are no soldiers the army cap counts
-                    total += group.Count * SoldierStats.ArmySlots(group.Type);   // a knight takes two places (the user, 2026-11-05)
+                    // a knight takes two places (the user, 2026-11-05); per member, a squad being mixed
+                    var members = group.Members;
+                    for (var i = 0; i < members.Count; i++)
+                        if (members[i] != null) total += SoldierStats.ArmySlots(members[i].Type);
                 }
                 return total;
             }
@@ -227,9 +346,11 @@ namespace CityBuilder.Combat
                 return false;
             }
 
-            var group = GetOrCreateGroup(type, position);
+            var group = RecruitGroup(type, position);
             var unit = SpawnSoldier(type, position, group);
             group.Add(unit);
+            // a garrison soldier keeps the spot he stepped out at (army-control.md)
+            if (group.IsGarrison) group.SetPost(unit, unit.transform.position);
 
             EventLogManager.Instance?.Log(Localization.Format("#log_recruited", SoldierStats.DisplayName(type), SoldierCount, SoldierStats.MaxArmySize));
             OnArmyChanged?.Invoke();
@@ -309,11 +430,11 @@ namespace CityBuilder.Combat
         /// this soldier was first recruited, and the saved population already has them subtracted --
         /// charging again on load would quietly eat the town one reload at a time.
         /// </summary>
-        public SoldierUnit RestoreSoldier(ArmyGroup group, Vector3 position, int currentHealth)
+        public SoldierUnit RestoreSoldier(ArmyGroup group, Vector3 position, int currentHealth, SoldierType? type = null)
         {
             if (group == null) return null;
 
-            var unit = SpawnSoldier(group.Type, position, group, scatter: false);
+            var unit = SpawnSoldier(type ?? group.Type, position, group, scatter: false);
             group.Add(unit);
             unit.SetCurrentHealth(currentHealth);
             OnArmyChanged?.Invoke();
@@ -390,16 +511,32 @@ namespace CityBuilder.Combat
             if (group == null) return;
 
             group.Remove(unit);
+            // a machine's group is the machine: gone with it
+            if (group.IsMachine && group.Count == 0)
+            {
+                _machines.Remove(group);
+                _groups.Remove(group);
+                if (SelectedGroup == group) SelectGroup(null);
+            }
             // Empty groups are kept, not dropped: the group carries the player's chosen target
             // priority and rally point, and losing those because the last member died would be a
             // nasty surprise the next time they recruit.
+        }
+
+        /// <summary>Where a recruit goes: a machine into its own group, a soldier into the Garrison; in a run, his type's group as before.</summary>
+        private ArmyGroup RecruitGroup(SoldierType type, Vector3 position)
+        {
+            if (!UsesSquads) return GetOrCreateGroup(type, position);
+            if (SoldierStats.IsMachine(type)) return RestoreMachine(type, position);
+            return Garrison;
         }
 
         private ArmyGroup GetOrCreateGroup(SoldierType type, Vector3 holdPosition)
         {
             foreach (var group in _groups)
             {
-                if (group.Type == type) return group;
+                // a type group only: the Garrison and the squads carry Militia as a stand-in type
+                if (group.Kind == ArmyGroupKind.Type && !group.IsSummoned && group.Type == type) return group;
             }
 
             var created = new ArmyGroup(type, holdPosition);

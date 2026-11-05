@@ -60,7 +60,7 @@ namespace CityBuilder.UI
             var held = BuildingFocus.Instance != null && BuildingFocus.Instance.Holding;
             // ...and a hero in hand puts his skills there (HeroSkillBar)
             // nothing is built below: no menu in a dungeon at all (the user, 2026-11-01)
-            var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held && !HeroSkillBar.Showing && !ShipActionBar.Showing
+            var showMenu = !mandatory && !buildingPlacer.IsSelecting && !held && !HeroSkillBar.Showing && !ShipActionBar.Showing && !ArmyBar.Showing
                 && !Dungeon.DungeonMode.IsActive;
             if (hideWhilePlacingMandatory != null && hideWhilePlacingMandatory.activeSelf != showMenu)
             {

@@ -175,7 +175,11 @@ namespace CityBuilder.UI
         private bool TryOrderOntoWall(ArmyGroup group, int hitCount)
         {
             // every fighter but the cavalry and the machines may go up (the user, 2026-11-05)
-            if (group == null || group.Count == 0 || group.Members[0].IsCavalry) return false;
+            if (group == null || group.Count == 0) return false;
+            // a mixed squad goes up but for its riders; all riders: no order onto the wall
+            var anyClimber = false;
+            for (var k = 0; k < group.Count; k++) anyClimber |= !group.Members[k].IsCavalry;
+            if (!anyClimber) return false;
             var grid = Grid.GridManager.Instance;
             if (grid == null) return false;
             if (group.Members[0].IsCarrier) return TryDockTowers(group, hitCount);

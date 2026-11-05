@@ -53,7 +53,11 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()), "Recruitment was refused with population and coins to spare.");
             Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()));
 
-            var group = army.Groups[0];
+            // recruits join the Garrison; a squad of the player's carries the orders (army-control.md)
+            var group = army.CreateSquad();
+            group.Name = "Тестовый";
+            group.Crest = 3;
+            while (army.Garrison.Count > 0) army.MoveSoldier(army.Garrison.Members[0], group);
             group.SetPriority(TargetPriority.Structures);
             group.OrderMoveTo(WalkablePoint());
             var holdPosition = group.HoldPosition;
@@ -128,7 +132,11 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(populationWithArmy, CitizenManager.Instance.TotalPopulation,
                 "The citizens the soldiers were recruited from must not be charged again on load, nor handed back: the army is still holding them.");
 
-            var loadedGroup = loadedArmy.Groups[0];
+            Assert.AreEqual(1, loadedArmy.Squads.Count, "The squad did not come back.");
+            var loadedGroup = loadedArmy.Squads[0];
+            Assert.AreEqual(2, loadedGroup.Count, "The squad came back without its soldiers (they went to the Garrison?).");
+            Assert.AreEqual("Тестовый", loadedGroup.Name, "The squad's name was lost.");
+            Assert.AreEqual(3, loadedGroup.Crest, "The squad's crest was lost.");
             Assert.AreEqual(TargetPriority.Structures, loadedGroup.Priority, "The group's standing target priority is an order the player gave.");
             Assert.AreEqual(holdPosition.x, loadedGroup.HoldPosition.x, 0.01f, "The group came back somewhere other than its rally point.");
             Assert.AreEqual(holdPosition.z, loadedGroup.HoldPosition.z, 0.01f);
@@ -208,7 +216,8 @@ namespace CityBuilder.Tests.PlayMode
             ResourceManager.Instance.SetAmount(ResourceType.Coins, 500);
             Assert.IsTrue(army.TryRecruit(SoldierType.Militia, WalkablePoint()), "Recruitment was refused with population and coins to spare.");
 
-            var group = army.Groups[0];
+            var group = army.CreateSquad();
+            army.MoveSoldier(army.Garrison.Members[0], group);
             // The LAST portal, not the first: with several on the map, a save that stores "a
             // portal" rather than WHICH portal restores the order onto whichever one comes back
             // first, and pointing at index zero is exactly the bug that would hide.
@@ -225,9 +234,9 @@ namespace CityBuilder.Tests.PlayMode
             yield return StartGame(SaveName, suspendRaidsAfterLoad: false);
 
             var loadedArmy = ArmyManager.Instance;
-            Assert.AreEqual(1, loadedArmy.Groups.Count, "The group did not come back, so there is nothing to have been ordered.");
+            Assert.AreEqual(1, loadedArmy.Squads.Count, "The squad did not come back, so there is nothing to have been ordered.");
 
-            var loadedGroup = loadedArmy.Groups[0];
+            var loadedGroup = loadedArmy.Squads[0];
             CollectionAssert.IsNotEmpty(OrcPortal.All, "The portals did not come back, so the order has nothing to point at.");
             Assert.IsNotNull(loadedGroup.AttackTarget,
                 "The assault was called off by the reload: the group came back holding its ground.");

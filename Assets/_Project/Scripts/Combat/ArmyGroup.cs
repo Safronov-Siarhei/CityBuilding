@@ -16,6 +16,20 @@ namespace CityBuilder.Combat
     /// home, one assaulting a portal) is a planned follow-up -- with this shape that becomes a
     /// change in how groups are created, not a rewrite of orders, targeting and UI.
     /// </summary>
+    /// <summary>
+    /// What a group is (army control by squads, the user 2026-11-05, Design/features/army-control.md):
+    /// a type group (a hero, the Invasion's per-type groups, hirelings, summons -- the old shape),
+    /// the GARRISON every recruit joins, one of the player's SQUADS, or one siege MACHINE alone.
+    /// Pinned ints: saved.
+    /// </summary>
+    public enum ArmyGroupKind
+    {
+        Type = 0,
+        Garrison = 1,
+        Squad = 2,
+        Machine = 3,
+    }
+
     public class ArmyGroup
     {
         /// <summary>Spacing between neighbouring formation slots, in metres.</summary>
@@ -25,15 +39,38 @@ namespace CityBuilder.Combat
 
         private readonly List<SoldierUnit> _members = new List<SoldierUnit>();
 
-        public ArmyGroup(SoldierType type, Vector3 holdPosition)
+        public ArmyGroup(SoldierType type, Vector3 holdPosition, ArmyGroupKind kind = ArmyGroupKind.Type)
         {
             Id = _nextId++;
             Type = type;
+            Kind = kind;
             HoldPosition = holdPosition;
         }
 
         public int Id { get; }
+
+        /// <summary>The members' type for a type group or a machine; a garrison or a squad is mixed (read each member's own Type).</summary>
         public SoldierType Type { get; }
+
+        public ArmyGroupKind Kind { get; }
+        public bool IsGarrison => Kind == ArmyGroupKind.Garrison;
+        public bool IsSquad => Kind == ArmyGroupKind.Squad;
+        public bool IsMachine => Kind == ArmyGroupKind.Machine;
+
+        /// <summary>A squad's own name (renamed in the squad window); empty = «Отряд N».</summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>A squad's crest, an index into the crest set.</summary>
+        public int Crest { get; set; }
+
+        // A garrison soldier stands at his own post (where he was hired) and acts alone (the user,
+        // 2026-11-05: «солдаты действуют отдельно и защищают территорию"), not in rings round one point.
+        private readonly Dictionary<SoldierUnit, Vector3> _posts = new Dictionary<SoldierUnit, Vector3>();
+
+        /// <summary>A garrison soldier's post.</summary>
+        public void SetPost(SoldierUnit unit, Vector3 post) => _posts[unit] = post;
+
+        public bool TryGetPost(SoldierUnit unit, out Vector3 post) => _posts.TryGetValue(unit, out post);
 
         /// <summary>The Queen's Призыв: soldiers for a while, in no list of the army's (ArmyManager.SpawnSummons).</summary>
         public bool IsSummoned { get; set; }
@@ -67,6 +104,7 @@ namespace CityBuilder.Combat
         public void Remove(SoldierUnit unit)
         {
             if (!_members.Remove(unit)) return;
+            _posts.Remove(unit);
             OnChanged?.Invoke();
         }
 
@@ -107,6 +145,9 @@ namespace CityBuilder.Combat
             OnChanged?.Invoke();
         }
 
+        /// <summary>Puts the rally point back without an order (a load, a new squad).</summary>
+        public void SetHold(Vector3 position) => HoldPosition = position;
+
         public void SetPriority(TargetPriority priority)
         {
             if (Priority == priority) return;
@@ -125,6 +166,7 @@ namespace CityBuilder.Combat
         /// <summary>Where this member stands relative to HoldPosition, so a group of ten doesn't pile into one point and shove each other around.</summary>
         public Vector3 SlotPositionFor(SoldierUnit unit)
         {
+            if (IsGarrison && _posts.TryGetValue(unit, out var post)) return post;
             var index = _members.IndexOf(unit);
             return HoldPosition + FormationOffset(index < 0 ? 0 : index);
         }

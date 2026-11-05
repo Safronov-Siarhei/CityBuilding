@@ -74,13 +74,18 @@ namespace CityBuilder.Cheats
         {
             var army = ArmyManager.Instance;
             if (army == null) return;
-            var group = army.RestoreGroup(type, at, target != null ? TargetPriority.Structures : TargetPriority.Units);
+            // squads mode: a new squad when one is free, else the Garrison (army-control.md)
+            var group = !ArmyManager.UsesSquads
+                ? army.RestoreGroup(type, at, target != null ? TargetPriority.Structures : TargetPriority.Units)
+                : SoldierStats.IsMachine(type) ? army.RestoreMachine(type, at) : army.CreateSquad() ?? army.Garrison;
+            if (group.IsSquad) group.OrderMoveTo(at);
             for (var i = 0; i < count; i++)
             {
                 var row = i / 5;
-                army.RestoreSoldier(group, at + new Vector3((i % 5 - 2) * 0.6f, 0f, -row * 0.6f), int.MaxValue);
+                var unit = army.RestoreSoldier(group, at + new Vector3((i % 5 - 2) * 0.6f, 0f, -row * 0.6f), int.MaxValue, type);
+                if (group.IsGarrison) group.SetPost(unit, unit.transform.position);
             }
-            if (target != null) group.OrderAttack(target);
+            if (target != null && !group.IsGarrison) group.OrderAttack(target);
             Say($"отряд: {count}");
         }
 

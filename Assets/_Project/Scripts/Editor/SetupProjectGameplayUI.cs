@@ -321,7 +321,7 @@ namespace CityBuilder.EditorTools
             BuildDiplomacyWindow(uiRoot, panelSprite, infoPanel);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonShopCard(uiRoot, panelSprite);
-            BuildArmyPanel(uiRoot, panelSprite);
+            BuildArmyBar(uiRoot);
             var armyOrderInput = BuildArmyOrderInput(uiRoot, targetCamera);
 
             // One tap, one owner, decided in one place -- see WorldInputDispatcher for why the
@@ -799,9 +799,19 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("citizenSelector").objectReferenceValue = citizenSelector;
             controllerSO.FindProperty("badgeRoot").objectReferenceValue = badge.gameObject;
             controllerSO.FindProperty("label").objectReferenceValue = label;
+
+            // a squad, a machine or a hero in hand: a round cancel button in the badge's corner instead (the user, 2026-11-05)
+            var cancelRound = CreateGlyphButton(canvasParent, "CancelSelectionButton", "round", HudInk.OnRound, "Cancel", cancelIcon, RoundButton);
+            var cancelRect = (RectTransform)cancelRound.transform;
+            cancelRect.anchorMin = cancelRect.anchorMax = cancelRect.pivot = new Vector2(1f, 0f);
+            cancelRect.anchoredPosition = new Vector2(-HudMargin, HudMargin + 84f + 14f);
+            cancelRect.sizeDelta = new Vector2(RoundButton, RoundButton);
+            controllerSO.FindProperty("cancelRoot").objectReferenceValue = cancelRound.gameObject;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(clearButton.onClick, controller.ClearSelection);
+            UnityEventTools.AddPersistentListener(cancelRound.onClick, controller.ClearSelection);
+            cancelRound.gameObject.SetActive(false);
 
             badge.gameObject.SetActive(false);
         }

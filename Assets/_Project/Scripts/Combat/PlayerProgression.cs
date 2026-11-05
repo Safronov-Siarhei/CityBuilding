@@ -108,7 +108,10 @@ namespace CityBuilder.Combat
             var total = 0;
             foreach (var group in army.Groups)
             {
-                total += group.Count * SoldierStats.CurrentLevel(group.Type);
+                // per member: a garrison or a squad is mixed
+                var members = group.Members;
+                for (var i = 0; i < members.Count; i++)
+                    if (members[i] != null) total += SoldierStats.CurrentLevel(members[i].Type);
             }
             return total;
         }

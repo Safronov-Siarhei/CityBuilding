@@ -682,6 +682,149 @@ namespace CityBuilder.EditorTools
             row.SetActive(false);
         }
 
+        /// <summary>
+        /// Army control by squads (the user, 2026-11-05, Design/features/army-control.md): the army
+        /// icon under the hero portraits, the squad row where the build menu stands (Garrison,
+        /// squads, «＋», «!»), the machines' smaller row above it. See UI/ArmyBar.
+        /// Crests are stand-ins (a tinted shield) until the crest set is drawn and approved.
+        /// </summary>
+        private static void BuildArmyBar(Transform uiRoot)
+        {
+            const float size = 116f;
+            const float machineSize = 84f;
+            var circle = SkinSprite("circle_mask");
+            var shield = HudGlyph("Shield");
+            var go = new GameObject("ArmyBarController");
+            go.transform.SetParent(uiRoot, false);
+            var bar = go.AddComponent<ArmyBar>();
+
+            // the army icon, right edge, under the heroes
+            var army = CreateGlyphButton(uiRoot, "ArmyButton", "round", HudInk.Keep, null,
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png"), RoundButton, 0.62f);
+            Anchor((RectTransform)army.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f), new Vector2(RoundButton, RoundButton));
+            UnityEventTools.AddPersistentListener(army.onClick, bar.TapArmy);
+
+            // the squad row, bottom centre
+            var row = new GameObject("ArmySquadRow", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(uiRoot, false);
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(8 * size + 7 * 22f, size + 16f));
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 22f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = layout.childControlHeight = false;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+
+            Text CountUnder(Transform button)
+            {
+                var plaque = HudImage(button, "Count", "plaque", new Vector2(70f, 38f));
+                plaque.raycastTarget = false;
+                Anchor(plaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 4f), new Vector2(70f, 38f));
+                var text = CreateText(plaque.transform, "Text", "0", 26, Vector2.zero, new Vector2(70f, 38f), UiTheme.Ink);
+                text.font = UiTheme.Heavy;
+                text.alignment = TextAnchor.MiddleCenter;
+                text.raycastTarget = false;
+                return text;
+            }
+
+            GameObject RingBehind(Transform button, float diameter)
+            {
+                var ring = CreateImage(button, "Selected", UiTheme.Gold);
+                ring.sprite = circle;
+                ring.raycastTarget = false;
+                Anchor(ring.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(diameter + 16f, diameter + 16f));
+                ring.transform.SetAsFirstSibling();
+                ring.gameObject.SetActive(false);
+                return ring.gameObject;
+            }
+
+            var garrison = CreateGlyphButton(row.transform, "Garrison", "round", HudInk.OnRound, "Home", null, size, 0.5f);
+            var garrisonCount = CountUnder(garrison.transform);
+            UnityEventTools.AddPersistentListener(garrison.onClick, bar.TapGarrison);
+
+            var max = 5;
+            var squadButtons = new Object[max];
+            var squadCrests = new Object[max];
+            var squadCounts = new Object[max];
+            var squadRings = new Object[max];
+            for (var i = 0; i < max; i++)
+            {
+                var button = CreateGlyphButton(row.transform, $"Squad{i + 1}", "round", HudInk.Keep, null, shield, size, 0.58f);
+                squadButtons[i] = button.gameObject;
+                squadCrests[i] = button.transform.Find("Icon").GetComponent<Image>();
+                squadCounts[i] = CountUnder(button.transform);
+                squadRings[i] = RingBehind(button.transform, size);
+                UnityEventTools.AddIntPersistentListener(button.onClick, bar.TapSquad, i);
+                button.gameObject.SetActive(false);
+            }
+
+            var plus = CreateGlyphButton(row.transform, "NewSquad", "round", HudInk.OnRound, null, null, size * 0.86f);
+            var plusMark = CreateText(plus.transform, "Plus", "+", 72, new Vector2(0f, 4f), new Vector2(size, size));
+            plusMark.font = UiTheme.Heavy;
+            plusMark.alignment = TextAnchor.MiddleCenter;
+            plusMark.raycastTarget = false;
+            SkinInk(plusMark, HudInk.OnRound);
+            UnityEventTools.AddPersistentListener(plus.onClick, bar.TapPlus);
+
+            var info = CreateGlyphButton(row.transform, "SquadInfo", "round", HudInk.OnRound, "Info", null, size * 0.86f);
+            UnityEventTools.AddPersistentListener(info.onClick, bar.TapInfo);
+            info.gameObject.SetActive(false);
+
+            // the machines' row, smaller, above the squads
+            var machineRow = new GameObject("ArmyMachineRow", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            machineRow.transform.SetParent(row.transform, false);
+            var machineLayoutElement = machineRow.AddComponent<LayoutElement>();
+            machineLayoutElement.ignoreLayout = true;
+            Anchor((RectTransform)machineRow.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(8 * machineSize + 7 * 16f, machineSize));
+            var machineLayout = machineRow.GetComponent<HorizontalLayoutGroup>();
+            machineLayout.spacing = 16f;
+            machineLayout.childAlignment = TextAnchor.MiddleCenter;
+            machineLayout.childControlWidth = machineLayout.childControlHeight = false;
+            machineLayout.childForceExpandWidth = machineLayout.childForceExpandHeight = false;
+            var machines = 8;
+            var machineButtons = new Object[machines];
+            var machineIcons = new Object[machines];
+            var machineRings = new Object[machines];
+            for (var i = 0; i < machines; i++)
+            {
+                var button = CreateGlyphButton(machineRow.transform, $"Machine{i + 1}", "round_value", HudInk.Keep, null, null, machineSize, 0.8f);
+                machineButtons[i] = button.gameObject;
+                machineIcons[i] = button.transform.Find("Icon").GetComponent<Image>();
+                machineRings[i] = RingBehind(button.transform, machineSize);
+                UnityEventTools.AddIntPersistentListener(button.onClick, bar.TapMachine, i);
+                button.gameObject.SetActive(false);
+            }
+            machineRow.SetActive(false);
+
+            var so = new SerializedObject(bar);
+            so.FindProperty("armyButton").objectReferenceValue = army.gameObject;
+            so.FindProperty("row").objectReferenceValue = row;
+            so.FindProperty("garrisonCount").objectReferenceValue = garrisonCount;
+            SetArray(so.FindProperty("squadButtons"), squadButtons);
+            SetArray(so.FindProperty("squadCrests"), squadCrests);
+            SetArray(so.FindProperty("squadCounts"), squadCounts);
+            SetArray(so.FindProperty("squadRings"), squadRings);
+            so.FindProperty("plusButton").objectReferenceValue = plus.gameObject;
+            so.FindProperty("infoButton").objectReferenceValue = info.gameObject;
+            so.FindProperty("machineRow").objectReferenceValue = machineRow;
+            SetArray(so.FindProperty("machineButtons"), machineButtons);
+            SetArray(so.FindProperty("machineIcons"), machineIcons);
+            SetArray(so.FindProperty("machineRings"), machineRings);
+            var portraits = new Object[4];
+            var names = new[] { "PortraitRam", "PortraitBallista", "PortraitCatapult", "PortraitSiegeTower" };
+            for (var i = 0; i < names.Length; i++) portraits[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{names[i]}.png");
+            SetArray(so.FindProperty("machinePortraits"), portraits);
+            var colours = new[]
+            {
+                UiTheme.Rgb(0xc0392b), UiTheme.Rgb(0x2e6fb7), UiTheme.Rgb(0x3f9b4a), UiTheme.Rgb(0xd9a520), UiTheme.Rgb(0x7d4bb3),
+                UiTheme.Rgb(0x1f9c9c), UiTheme.Rgb(0xd2691e), UiTheme.Rgb(0x8e8e8e), UiTheme.Rgb(0xc2477e), UiTheme.Rgb(0x5a3e2b),
+            };
+            var crestColours = so.FindProperty("crestColours");
+            crestColours.arraySize = colours.Length;
+            for (var i = 0; i < colours.Length; i++) crestColours.GetArrayElementAtIndex(i).colorValue = colours[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+            row.SetActive(false);
+        }
+
         private static void SetArray(SerializedProperty property, Object[] values)
         {
             property.arraySize = values.Length;

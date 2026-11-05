@@ -362,6 +362,9 @@ namespace CityBuilder.Core
 
         [Header("Army (economy.csv)")]
         [SerializeField] private int armyMaxSize = 20;
+        // army control by squads (the user, 2026-11-05): how many squads, how far from the Town Hall the Garrison defends
+        [SerializeField] private int armyMaxSquads = 5;
+        [SerializeField] private float garrisonDefendCells = 30f;
 
         [Header("Raids (economy.csv)")]
         [SerializeField] private float raidIntervalSeconds = 90f;
@@ -1006,6 +1009,8 @@ namespace CityBuilder.Core
         public IReadOnlyList<UnitBalance> Units => units;
         public IReadOnlyList<BuildingBalance> Buildings => buildings;
         public int ArmyMaxSize => armyMaxSize;
+        public int ArmyMaxSquads => armyMaxSquads;
+        public float GarrisonDefendCells => garrisonDefendCells;
         public float RaidIntervalSeconds => raidIntervalSeconds;
         public int RaidBaseSize => raidBaseSize;
         public int RaidProgressPerExtraRaider => raidProgressPerExtraRaider;
@@ -1817,6 +1822,8 @@ namespace CityBuilder.Core
             buildings = importedBuildings;
 
             armyMaxSize = (int)Read(economy, "army_max_size", armyMaxSize);
+            armyMaxSquads = (int)Read(economy, "army_max_squads", armyMaxSquads);
+            garrisonDefendCells = Read(economy, "garrison_defend_cells", garrisonDefendCells);
             raidIntervalSeconds = Read(economy, "raid_interval_seconds", raidIntervalSeconds);
             raidBaseSize = (int)Read(economy, "raid_base_size", raidBaseSize);
             raidProgressPerExtraRaider = (int)Read(economy, "raid_progress_per_extra_raider", raidProgressPerExtraRaider);

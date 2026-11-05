@@ -1,6 +1,7 @@
 # Army control: squads (concept, 2026-11-05)
 
-> **Status:** CONCEPT AGREED with the user 2026-11-05 (their 4 mock-ups + answers), NOTHING BUILT.
+> **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
+> cancel, tap-selects-squad) WRITTEN 2026-11-05, NOT YET COMPILED (Unity editor was open). Stages 2-5 to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
@@ -41,8 +42,7 @@
 ## Behaviours and formations (proposed by Claude, the user's examples were placeholders)
 - Behaviour: Стоять (hold, short chase) / Охранять город (patrol near the hall and walls, chase in a zone)
   / Наступать (seek enemies on the island) / За героем (follow a chosen hero) -- all 4 agreed 2026-11-05.
-- Formation: Колонна (march) / Линия (infantry ahead, ranged + monk behind) / Каре (infantry outside,
-  ranged + monk inside). Slots computed once per order, not per frame.
+- Formation (the user, 2026-11-05): **Квадрат / Треугольник / Врассыпную**. Slots computed once per order, not per frame.
 
 ## Ships
 - Capacity grows with the ship's level (the user, 2026-11-05): **transport 8-10-12-14-16, battleship
@@ -56,3 +56,16 @@
 - Crest art (8-10) -- renders to the user first. Heroes stay apart from squads.
 - Hiring stays as is (the user, 2026-11-05): recruit -> Garrison -> moved into a squad in the window.
 - Squads in save data; the bot and Invasion keep their own automatic armies.
+
+## Code (stage 1)
+`Combat/ArmyGroup.cs` (`ArmyGroupKind` Type/Garrison/Squad/Machine, Name, Crest, garrison posts),
+`Combat/ArmyManager.cs` (`UsesSquads` = not Invasion, `Garrison`, `Squads`, `Machines`, `CreateSquad`,
+`DeleteSquad`, `MoveSoldier`, `RecruitGroup`, `SquadName`; CountOf/SoldierCount per member),
+`Combat/SoldierUnit.cs` (`Regroup`, `GarrisonTarget`: fighters within `garrison_defend_cells` of the hall
+or near his post, never structures), `UI/ArmyBar.cs` (+ `TrySelectSoldierAt`), `UI/SelectionBadgeController.cs`
+(round cancel for a group, plaque for a citizen), `Input/WorldInputDispatcher.cs` (long press = fighter card),
+save `ArmyGroupEntry.kind/squadName/crest`, `SoldierEntry.type/post` (older saves: soldiers -> Garrison,
+machines -> own groups). Built by `SetupProjectHud.BuildArmyBar`. Old `ArmyPanelController` DELETED.
+Sheet: economy `army_max_squads` 5, `garrison_defend_cells` 30; localization `#army_garrison`,
+`#army_squad_name`, `#army_garrison_hint`, `#army_squads_full`. Test `ArmyCombatTests.ARecruitJoinsTheGarrison_...`.
+Until stage 2, «+» makes an empty squad (no window yet to fill it); the cheat «отряд» fills a new squad.

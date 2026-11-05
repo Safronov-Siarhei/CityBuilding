@@ -31,52 +31,6 @@ namespace CityBuilder.EditorTools
     /// </summary>
     public static partial class SetupProject
     {
-        /// <summary>
-        /// The army panel, directly under the Happiness panel on the right (same x 760 and width,
-        /// see BuildHappinessPanel for why it isn't 810). Hidden by ArmyPanelController until the
-        /// player actually has soldiers, so a settlement with no army isn't staring at an empty
-        /// box -- which is also why the rows inside are built at runtime rather than here: their
-        /// number changes with recruitment.
-        /// </summary>
-        private static void BuildArmyPanel(Transform canvasParent, Sprite panelSprite)
-        {
-            var frame = CreateImage(canvasParent, "Army", new Color(0.16f, 0.18f, 0.15f, 0.85f));
-            frame.sprite = panelSprite;
-            frame.type = Image.Type.Sliced;
-            var frameRect = frame.GetComponent<RectTransform>();
-            // Down the right edge under the migration line.
-            frameRect.anchorMin = frameRect.anchorMax = frameRect.pivot = new Vector2(1f, 1f);
-            frameRect.anchoredPosition = new Vector2(-HudMargin, -HudMargin * 0.7f - RoundButton - 90f);
-            frameRect.sizeDelta = new Vector2(400f, 220f);
-
-            var summaryLabel = CreateText(frame.transform, "ArmySummary", string.Empty, 19, new Vector2(0f, 88f), new Vector2(370f, 36f), new Color(1f, 1f, 1f, 0.75f));
-
-            // Rows are added top-down from here by the controller; the container leaves room for
-            // the summary line above it.
-            var rowContainer = new GameObject("ArmyGroupRows", typeof(RectTransform));
-            rowContainer.transform.SetParent(frame.transform, false);
-            var rowRect = rowContainer.GetComponent<RectTransform>();
-            rowRect.anchorMin = new Vector2(0f, 0f);
-            rowRect.anchorMax = new Vector2(1f, 1f);
-            rowRect.offsetMin = new Vector2(15f, 15f);
-            rowRect.offsetMax = new Vector2(-15f, -50f);
-
-            // On its own always-active object, NOT on the panel it shows: a component on a
-            // deactivated GameObject never runs Start() and would never subscribe (same trap
-            // documented on GameOverController).
-            var go = new GameObject("ArmyPanelController");
-            go.transform.SetParent(canvasParent, false);
-            var controller = go.AddComponent<ArmyPanelController>();
-            var so = new SerializedObject(controller);
-            so.FindProperty("panelRoot").objectReferenceValue = frame.gameObject;
-            so.FindProperty("rowContainer").objectReferenceValue = rowContainer.GetComponent<RectTransform>();
-            so.FindProperty("summaryLabel").objectReferenceValue = summaryLabel;
-            so.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
-            so.ApplyModifiedPropertiesWithoutUndo();
-
-            frame.gameObject.SetActive(false);
-        }
-
         /// <summary>Turns world taps into orders for the selected group (see ArmyOrderInput) -- inert while no group is selected, which is how it coexists with the citizen/building selectors.</summary>
         private static ArmyOrderInput BuildArmyOrderInput(Transform canvasParent, Camera targetCamera)
         {

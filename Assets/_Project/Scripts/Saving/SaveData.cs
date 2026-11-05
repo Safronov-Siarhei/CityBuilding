@@ -332,6 +332,13 @@ namespace CityBuilder.Saving
     {
         public SoldierType type;
 
+        /// <summary>Garrison / squad / machine (army-control.md); 0 = a type group, which is what every older save holds.</summary>
+        public Combat.ArmyGroupKind kind;
+
+        /// <summary>A squad's own name (empty = «Отряд N») and crest.</summary>
+        public string squadName = string.Empty;
+        public int crest;
+
         /// <summary>The group's rally point and its standing target priority -- orders the player gave, not state the group can work out again.</summary>
         public Vector3 holdPosition;
         public TargetPriority priority;
@@ -374,6 +381,13 @@ namespace CityBuilder.Saving
     public class SoldierEntry
     {
         public Vector3 position;
+
+        /// <summary>His own type (a squad is mixed); -1 = the group's, which is what every older save means.</summary>
+        public int type = -1;
+
+        /// <summary>A garrison soldier's post (ArmyGroup.SetPost).</summary>
+        public bool hasPost;
+        public Vector3 post;
 
         /// <summary>Carried across rather than reset to full: reloading in the middle of a raid must not heal the survivors, the same rule BuildingInstance follows for a damaged building.</summary>
         public int currentHealth;
