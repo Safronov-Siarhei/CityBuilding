@@ -48,6 +48,18 @@ detail.OVERRIDE.update({c: detail.PLAIN for c in (SKIN, LEATHER, STEEL, BLUE, BL
 
 # ------------------------------------------------------------------------------------- helpers
 
+# The moving parts (the game animates them, Combat/SiegeMachine): each machine function draws a
+# part's geometry into its own Builder, in the machine's coordinates; make() hangs it on the body
+# at its pivot (the arm's axle, the turntable, the log's chains, the drawbridge's hinge).
+PARTS = {}
+
+
+def part(name, pivot):
+    pb = Builder()
+    PARTS[name] = (pb, Vector(pivot))
+    return pb
+
+
 def since(b):
     b.bm.verts.ensure_lookup_table()
     return len(b.bm.verts)
@@ -149,11 +161,12 @@ def catapult(b):
     b.hcylinder('x', pivot, W - 0.04, 0.065, ROPE, sides=10)
     for x in (-W + 0.05, W - 0.05):
         b.hcylinder('x', (x, pivot.y, pivot.z), 0.015, 0.075, IRON, sides=10)
-    # the arm, cocked back, the cup with its stone at the end
+    # the arm, cocked back, the cup with its stone at the end -- the part "Arm", turning on the pivot
+    arm = part("Arm", pivot)
     tip = Vector((0, 0.58, z + 0.17))
-    beam(b, pivot, tip, 0.06, WOOD_L)
-    b.box(-0.07, 0.07, tip.y - 0.07, tip.y + 0.07, tip.z - 0.02, tip.z + 0.05, WOOD_D, bevel=0.01)
-    b.ball(0, tip.y, tip.z + 0.03, 0.06, 0.09, STONE, sides=6)
+    beam(arm, pivot, tip, 0.06, WOOD_L)
+    arm.box(-0.07, 0.07, tip.y - 0.07, tip.y + 0.07, tip.z - 0.02, tip.z + 0.05, WOOD_D, bevel=0.01)
+    arm.ball(0, tip.y, tip.z + 0.03, 0.06, 0.09, STONE, sides=6)
     # the windlass at the back that hauls it down
     b.hcylinder('x', (0, L - 0.08, z + 0.12), W + 0.02, 0.035, WOOD_D, sides=6)
     beam(b, (0, L - 0.08, z + 0.12), (0, tip.y - 0.02, tip.z), 0.012, ROPE)
@@ -180,7 +193,9 @@ def ballista(b):
     # the post and its turntable
     b.cylinder(0, 0.05, R + 0.06, 0.36, 0.05, WOOD_D, sides=8)
     b.cylinder(0, 0.05, 0.36, 0.39, 0.09, IRON, sides=10)
-    # the stock, tilted a little up
+    # the stock, tilted a little up -- from here up, the part "Head" turning on the turntable
+    sled = b
+    b = part("Head", (0, 0.05, 0.39))
     a = math.radians(6)
     fwd = Vector((0, -math.cos(a), math.sin(a)))
     base = Vector((0, 0.36, 0.4))
@@ -217,6 +232,7 @@ def ballista(b):
     for k in (-1, 1):
         beam(b, base + Vector((k * 0.09, 0.02, 0)), base + Vector((k * 0.09, 0.02, 0.09)), 0.015, WOOD_D)
     # a rack of bolts on the sled
+    b = sled
     for i in range(3):
         beam(b, (0.17, -0.25 + i * 0.03, R + 0.09), (0.17, 0.25 + i * 0.03, R + 0.09), 0.018, WOOD_L)
     crewman(b, 0.0, 0.55, reach=0.16, drop=0.4)
@@ -264,9 +280,10 @@ def siege_tower(b):
         b.rod((x * lo / hi * 0.95, -lo - 0.045, z0 + 0.06), (x, -hi - 0.045, DECK - 0.02), 0.014, ROPE)
     # the drawbridge folded up at the top of the front, its chains, hinges
     bh = 0.42
-    b.box(-hi + 0.04, hi - 0.04, -hi - 0.07, -hi - 0.03, DECK, DECK + bh, WOOD_L, bevel=0.008)
+    bridge = part("Bridge", (0, -hi - 0.05, DECK))
+    bridge.box(-hi + 0.04, hi - 0.04, -hi - 0.07, -hi - 0.03, DECK, DECK + bh, WOOD_L, bevel=0.008)
     for x in (-0.18, 0.0, 0.18):
-        b.box(x - 0.02, x + 0.02, -hi - 0.08, -hi - 0.065, DECK + 0.02, DECK + bh - 0.02, IRON)
+        bridge.box(x - 0.02, x + 0.02, -hi - 0.08, -hi - 0.065, DECK + 0.02, DECK + bh - 0.02, IRON)
     for k in (-1, 1):
         beam(b, (k * (hi - 0.06), -hi - 0.05, DECK + bh - 0.02), (k * (hi - 0.02), -hi + 0.02, DECK + bh + 0.12), 0.012, IRON)
     # the parapet round the top deck with merlons, a blue banner
@@ -320,6 +337,8 @@ def ram(b):
     b.box(-0.03, 0.03, -L - 0.06, L + 0.06, ridge - 0.02, ridge + 0.03, WOOD_D)
     # the log on chains, the iron ram's head with gold horns
     zl = 0.36
+    roof = b
+    b = part("Log", (0, 0.05, eave - 0.02))
     b.hcylinder('y', (0, 0.05, zl), 0.68, 0.07, WOOD, sides=8)
     for y in (-0.35, 0.35):
         b.hcylinder('y', (0, y, zl), 0.02, 0.076, IRON, sides=8)
@@ -331,6 +350,7 @@ def ram(b):
         beam(b, (k * 0.05, nose - 0.02, zl + 0.05), (k * 0.12, nose + 0.04, zl + 0.12), 0.03, GOLD)
         beam(b, (k * 0.12, nose + 0.04, zl + 0.12), (k * 0.13, nose - 0.04, zl + 0.03), 0.026, GOLD)
     # a blue shield on the front gable, and the two who swing the log, inside
+    b = roof
     b.obox((0, -L - 0.07, eave + 0.09), (1, 0, 0), (0, 0, 1), (0, -1, 0), 0.08, 0.09, 0.01, KINGDOM)
     b.box(-0.015, 0.015, -L - 0.09, -L - 0.08, eave + 0.02, eave + 0.16, GOLD)
     for x, y in ((-0.13, 0.15), (0.13, -0.15)):
@@ -342,15 +362,33 @@ MACHINES = [("SiegeCatapult", catapult), ("SiegeBallista", ballista), ("SiegeTow
 
 # ------------------------------------------------------------------------------------- render
 
-def make(name, fn, mat):
-    b = Builder()
-    fn(b)
+def mesh_of(name, b, mat, pivot=None):
+    if pivot is not None:
+        for v in b.bm.verts:
+            v.co -= pivot
+    old = bpy.data.objects.get(name)
+    if old is not None:
+        bpy.data.objects.remove(old, do_unlink=True)
     me = b.to_mesh(name)
     me.materials.append(mat)
     detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
     obj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(obj)
+    return obj
+
+
+def make(name, fn, mat):
+    PARTS.clear()
+    b = Builder()
+    fn(b)
+    obj = mesh_of(name, b, mat)
+    me = obj.data
     tris = sum(len(p.vertices) - 2 for p in me.polygons)
+    for pname, (pb, pivot) in PARTS.items():
+        child = mesh_of(f"{name}-{pname}", pb, mat, pivot)
+        child.parent = obj
+        child.location = pivot
+        tris += sum(len(p.vertices) - 2 for p in child.data.polygons)
     xs = [v.co.x for v in me.vertices]
     ys = [v.co.y for v in me.vertices]
     zs = [v.co.z for v in me.vertices]
@@ -428,6 +466,20 @@ def shoot(sc, cam, cam_data, objs, path, w=SIZE, h=SIZE, yaw_deg=-35, pitch_deg=
 
 
 def main():
+    if "--install" in sys.argv:
+        # the approved machines (2026-11-05) into the models file, saved, beside the new fighters --
+        # export_fbx.py sends Siege* with its parts to Models/Soldiers
+        folder = os.path.dirname(bpy.data.filepath)
+        img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
+        mat = kit.ensure_material(img)
+        atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
+        detail.build_material_nodes(mat, img, atlas)
+        for i, (name, fn) in enumerate(MACHINES):
+            obj = make(name, fn, mat)
+            obj.location = (60.0 + i * 2.0, -20.0, 0.0)
+        kit.file_display_settings()
+        bpy.ops.wm.save_mainfile()
+        return
     os.makedirs(OUT, exist_ok=True)
     sc, cam, cam_data, ground = stage()
     folder = os.path.dirname(bpy.data.filepath)

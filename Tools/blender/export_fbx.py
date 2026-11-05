@@ -45,7 +45,7 @@ def is_model(o):
     if o.type != 'MESH' or o.name.endswith("-size"):
         return False
     # a jointed figure's parts go out inside their figure's file, not as models of their own
-    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Wild", "Monster", "Gnome", "Fauna", "Tide", "Cache", "Tool")):
+    if o.parent is not None and o.parent.name.startswith(("Hero", "Soldier", "Siege", "Wild", "Monster", "Gnome", "Fauna", "Tide", "Cache", "Tool")):
         return False
     if any(c.name == "Габариты" for c in o.users_collection):
         return False
@@ -60,7 +60,7 @@ def target(o):
     if o.name.startswith("Hero"):
         os.makedirs(HEROES, exist_ok=True)
         return os.path.join(HEROES, o.name + ".fbx")
-    if o.name.startswith("Soldier"):
+    if o.name.startswith(("Soldier", "Siege")):   # the Workshop's machines ride with the army (siege_drafts.py)
         os.makedirs(SOLDIERS, exist_ok=True)
         return os.path.join(SOLDIERS, o.name + ".fbx")
     if o.name.startswith("Wild"):
