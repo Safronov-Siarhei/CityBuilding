@@ -88,7 +88,7 @@ namespace CityBuilder.UI
             var manager = ShipManager.Instance;
             if (carries)
             {
-                if (seats != null) seats.text = $"{ship.Aboard.Count}/{ship.Capacity}";
+                if (seats != null) seats.text = $"{ship.UsedPlaces}/{ship.Capacity}";
                 if (landIcon != null) landIcon.color = manager != null && manager.DescribeLandBlocker(ship) == null ? Color.white : Dimmed;
             }
             if (holed)

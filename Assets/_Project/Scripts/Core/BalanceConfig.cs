@@ -196,6 +196,32 @@ namespace CityBuilder.Core
 
         /// <summary>A ship's row (ship_*): how many it carries, the Shipyard level that builds it, how many may sail (0 = no limit).</summary>
         public int capacity;
+
+        /// <summary>
+        /// A ship's places at levels 2..5 (units `capacity_2`..`capacity_5`, the user 2026-11-05: transport
+        /// 8-10-12-14-16, battleship 12-14-16-18-20; levels from the Laboratory). Index 0 = level 2; an
+        /// empty cell repeats the level below.
+        /// </summary>
+        public int[] capacityUp = new int[4];
+
+        /// <summary>Places at this level (1..5).</summary>
+        public int CapacityAt(int level)
+        {
+            var places = capacity;
+            for (var l = 2; l <= level && l - 2 < capacityUp.Length; l++)
+                if (capacityUp[l - 2] > 0) places = capacityUp[l - 2];
+            return places;
+        }
+
+        /// <summary>The ship has levels to research: a later level carries more.</summary>
+        public bool HasShipLevels
+        {
+            get
+            {
+                foreach (var places in capacityUp) if (places > 0) return true;
+                return false;
+            }
+        }
         public int shipyardLevel = 1;
         public int maxCount;
 
@@ -371,6 +397,10 @@ namespace CityBuilder.Core
         [SerializeField] private float squadGuardPatrolCells = 10f;
         [SerializeField] private float squadGuardZoneCells = 22f;
         [SerializeField] private float squadFollowCells = 2f;
+        // ship levels (the user, 2026-11-05): the Laboratory's price per level, the places a machine takes
+        [SerializeField] private int[] shipLevelCoins = { 150, 300, 500, 800 };
+        [SerializeField] private float[] shipLevelSeconds = { 60f, 120f, 180f, 240f };
+        [SerializeField] private int shipMachinePlaces = 4;
 
         [Header("Raids (economy.csv)")]
         [SerializeField] private float raidIntervalSeconds = 90f;
@@ -1022,6 +1052,10 @@ namespace CityBuilder.Core
         public float SquadGuardPatrolCells => squadGuardPatrolCells;
         public float SquadGuardZoneCells => squadGuardZoneCells;
         public float SquadFollowCells => squadFollowCells;
+        /// <summary>Coins to research ship level 2..5 (economy `ship_level_coins_N`).</summary>
+        public int ShipLevelCoins(int level) => level >= 2 && level - 2 < shipLevelCoins.Length ? shipLevelCoins[level - 2] : 0;
+        public float ShipLevelSeconds(int level) => level >= 2 && level - 2 < shipLevelSeconds.Length ? shipLevelSeconds[level - 2] : 60f;
+        public int ShipMachinePlaces => shipMachinePlaces;
         public float RaidIntervalSeconds => raidIntervalSeconds;
         public int RaidBaseSize => raidBaseSize;
         public int RaidProgressPerExtraRaider => raidProgressPerExtraRaider;
@@ -1840,6 +1874,12 @@ namespace CityBuilder.Core
             squadGuardPatrolCells = Read(economy, "squad_guard_patrol_cells", squadGuardPatrolCells);
             squadGuardZoneCells = Read(economy, "squad_guard_zone_cells", squadGuardZoneCells);
             squadFollowCells = Read(economy, "squad_follow_cells", squadFollowCells);
+            for (var l = 2; l <= 5; l++)
+            {
+                shipLevelCoins[l - 2] = (int)Read(economy, "ship_level_coins_" + l, shipLevelCoins[l - 2]);
+                shipLevelSeconds[l - 2] = Read(economy, "ship_level_seconds_" + l, shipLevelSeconds[l - 2]);
+            }
+            shipMachinePlaces = (int)Read(economy, "ship_machine_places", shipMachinePlaces);
             raidIntervalSeconds = Read(economy, "raid_interval_seconds", raidIntervalSeconds);
             raidBaseSize = (int)Read(economy, "raid_base_size", raidBaseSize);
             raidProgressPerExtraRaider = (int)Read(economy, "raid_progress_per_extra_raider", raidProgressPerExtraRaider);

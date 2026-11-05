@@ -178,6 +178,15 @@ namespace CityBuilder.Ships
             if (group == null || ship == null) return Localization.Get("#ship_cannot_carry");
             if (ship.Capacity <= 0) return Localization.Format("#ship_cannot_carry", ShipStats.DisplayName(ship.Kind));
             if (ship.FreeSeats == 0) return Localization.Format("#ship_full", ShipStats.DisplayName(ship.Kind));
+            // a squad or a machine goes aboard whole or not at all (the user, 2026-11-05): no splitting
+            if (group.IsSquad || group.IsMachine)
+            {
+                var need = 0;
+                foreach (var unit in group.Members)
+                    if (unit != null && unit.gameObject.activeSelf) need += ShipStats.PlacesOf(unit);
+                if (need > ship.Capacity) return Localization.Format("#ship_squad_too_big", need, ship.Capacity);
+                if (need > ship.FreeSeats) return Localization.Format("#ship_full", ShipStats.DisplayName(ship.Kind));
+            }
             if (!TryFindLanding(ship, out _)) return Localization.Get("#ship_no_beach");
             return null;
         }

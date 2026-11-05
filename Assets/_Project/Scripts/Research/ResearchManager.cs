@@ -260,6 +260,15 @@ namespace CityBuilder.Research
             return level;
         }
 
+        /// <summary>A ship's researched level (1..5): what it carries (ShipUnit.Capacity).</summary>
+        public int ShipLevel(string shipId)
+        {
+            var level = 1;
+            for (var candidate = 2; candidate <= 5; candidate++)
+                if (IsCompleted(ResearchTopic.ShipLevelId(shipId, candidate))) level = candidate;
+            return level;
+        }
+
         /// <summary>
         /// Whether this topic belongs in the window's list at all. The list is deliberately compact:
         /// what can be researched now, plus what already has been (greyed out). A topic waiting on a

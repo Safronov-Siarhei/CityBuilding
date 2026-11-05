@@ -283,7 +283,7 @@
 ## Open
 - Citizens aboard (the user said capacity counts citizens too) -- only soldiers and heroes board now.
 - Orc ships hidden in the fog; soldiers may not reach the orc shipyard in the water (archers and
-  ships can). Ship levels in the Laboratory. Lighthouse cooldowns are not saved;
+  ships can). Ship levels in the Laboratory BUILT 2026-11-05 (capacity only, see army-control.md). Lighthouse cooldowns are not saved;
   no hint on the Farm/Fisher's Hut card of the bonus it gets. Fog with 3 states for 500 m on phones (no longer needed by
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.

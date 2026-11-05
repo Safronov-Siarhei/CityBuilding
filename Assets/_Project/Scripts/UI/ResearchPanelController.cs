@@ -404,6 +404,7 @@ namespace CityBuilder.UI
             var topicsByUnit = new Dictionary<string, ResearchTopic[]>();
             foreach (var topic in ResearchCatalog.UnitTopics)
             {
+                if (topic.Kind == ResearchKind.ShipLevel) continue;   // the ships' rows below
                 if (!topicsByUnit.TryGetValue(topic.TargetId, out var levels)) topicsByUnit[topic.TargetId] = levels = new ResearchTopic[UnitBalance.MaxLevel + 1];
                 levels[topic.Kind == ResearchKind.UnlockUnit ? 1 : topic.Level] = topic;
             }
@@ -421,6 +422,16 @@ namespace CityBuilder.UI
             {
                 topicsByUnit.TryGetValue(id, out var levels);
                 CreateRow(SoldierStats.DisplayName(type), id, levels ?? new ResearchTopic[UnitBalance.MaxLevel + 1], UnitBalance.MaxLevel, isUnit: true);
+            }
+
+            // the carrying ships' levels 2..5 (the user, 2026-11-05): more places aboard
+            foreach (var unit in BalanceConfig.Instance.Units)
+            {
+                if (unit == null || !unit.HasShipLevels) continue;
+                var levels = new ResearchTopic[6];
+                foreach (var topic in ResearchCatalog.UnitTopics)
+                    if (topic.Kind == ResearchKind.ShipLevel && topic.TargetId == unit.id) levels[topic.Level] = topic;
+                CreateRow(Localization.Get("#unit_" + unit.id), unit.id, levels, 5, isUnit: true);
             }
         }
 
@@ -591,7 +602,7 @@ namespace CityBuilder.UI
         {
             var data = DataOf(cell.TargetId);
             var name = cell.IsUnit
-                ? (SoldierStats.TryTypeFromSheetId(cell.TargetId, out var type) ? SoldierStats.DisplayName(type) : cell.TargetId)
+                ? (SoldierStats.TryTypeFromSheetId(cell.TargetId, out var type) ? SoldierStats.DisplayName(type) : Localization.Get("#unit_" + cell.TargetId))
                 : (data != null ? data.LocalizedName : cell.TargetId);
             ShowBubble(cell, Localization.Format("#research_level", name, cell.Level) + "\n" + DescribeGain(cell.TargetId, cell.Level, cell.IsUnit, data));
         }
@@ -634,6 +645,11 @@ namespace CityBuilder.UI
         /// </summary>
         public static string DescribeGain(string targetId, int level, bool isUnit, BuildingData data = null)
         {
+            if (isUnit && BalanceConfig.Instance != null && BalanceConfig.Instance.Unit(targetId) is UnitBalance ship && ship.HasShipLevels)
+            {
+                if (level <= 1) return Localization.Format("#research_ship_places", ship.CapacityAt(1));
+                return Localization.Format("#research_ship_gain", ship.CapacityAt(level) - ship.CapacityAt(level - 1), ship.CapacityAt(level));
+            }
             if (isUnit)
             {
                 if (level <= 1) return Localization.Get("#research_gain_opens_unit");
@@ -670,7 +686,10 @@ namespace CityBuilder.UI
             }
             if (isUnit)
             {
-                return SoldierStats.TryTypeFromSheetId(targetId, out var type) && _iconsByKey.TryGetValue("Portrait" + type, out var portrait) ? portrait : null;
+                if (SoldierStats.TryTypeFromSheetId(targetId, out var type)) return _iconsByKey.TryGetValue("Portrait" + type, out var portrait) ? portrait : null;
+                // a ship: ship_transport -> PortraitShipTransport
+                var key = "PortraitShip" + System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(targetId.Replace("ship_", string.Empty));
+                return _iconsByKey.TryGetValue(key, out var ship) ? ship : null;
             }
             // the level's own picture, else the nearest one below it
             for (var l = level; l >= 1; l--)

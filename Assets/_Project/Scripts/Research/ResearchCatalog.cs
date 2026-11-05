@@ -70,6 +70,11 @@ namespace CityBuilder.Research
             foreach (var unit in config.Units)
             {
                 if (string.IsNullOrEmpty(unit.id)) continue;
+                if (unit.HasShipLevels)
+                {
+                    AddShipTopics(unit);
+                    continue;
+                }
                 if (!SoldierStats.TryTypeFromSheetId(unit.id, out var unitType) || SoldierStats.IsHireling(unitType)) continue;
                 AddUnitTopics(unit);
             }
@@ -157,6 +162,20 @@ namespace CityBuilder.Research
                 var id = ResearchTopic.UnitLevelId(unit.id, level);
                 Add(new ResearchTopic(id, ResearchKind.UnitLevel, unit.id, level, step.coins, step.seconds,
                     default, unit.displayName, previous), _unitTopics);
+                previous = id;
+            }
+        }
+
+        /// <summary>A carrying ship's levels 2..5, each after the one below; prices from economy `ship_level_*`.</summary>
+        private static void AddShipTopics(UnitBalance ship)
+        {
+            string previous = null;
+            var config = BalanceConfig.Instance;
+            for (var level = 2; level <= 5; level++)
+            {
+                var id = ResearchTopic.ShipLevelId(ship.id, level);
+                Add(new ResearchTopic(id, ResearchKind.ShipLevel, ship.id, level, config.ShipLevelCoins(level), config.ShipLevelSeconds(level),
+                    default, ship.displayName, previous), _unitTopics);
                 previous = id;
             }
         }

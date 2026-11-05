@@ -118,6 +118,12 @@ namespace CityBuilder.Tests.EditMode
 
             foreach (var topic in ResearchCatalog.UnitTopics)
             {
+                // a carrying ship's levels (the user, 2026-11-05) are the player's too
+                if (topic.Kind == ResearchKind.ShipLevel)
+                {
+                    Assert.IsTrue(topic.TargetId.StartsWith("ship_") && !topic.TargetId.Contains("orc"), $"'{topic.TargetId}' has ship levels but is no ship of the player's.");
+                    continue;
+                }
                 Assert.IsTrue(SoldierStats.TryTypeFromSheetId(topic.TargetId, out _),
                     $"'{topic.TargetId}' is in the soldiers tab but the game has no unit type for it.");
             }

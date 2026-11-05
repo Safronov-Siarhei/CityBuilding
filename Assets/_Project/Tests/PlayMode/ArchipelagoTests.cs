@@ -358,6 +358,15 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
 
             Assert.IsNotNull(ships.DescribeBoardBlocker(group, scout), "The scout takes passengers.");
+
+            // a squad bigger than the ship does not go aboard and is not split (the user, 2026-11-05)
+            var big = army.CreateSquad();
+            for (var i = 0; i <= transport.Capacity; i++)
+                army.RestoreSoldier(big, beach + new Vector3(i * 0.4f, 0f, -2f), 50, CityBuilder.Combat.SoldierType.Militia);
+            Assert.IsNotNull(ships.DescribeBoardBlocker(big, transport), "A squad bigger than the transport was let aboard.");
+            Assert.IsFalse(ships.OrderBoard(big, transport, out _), "A squad bigger than the transport was sent aboard.");
+            while (big.Count > 0) army.Disband(big.Members[0]);
+            army.DeleteSquad(big);
             Assert.IsTrue(ships.OrderBoard(group, transport, out _), ships.DescribeBoardBlocker(group, transport));
             for (var t = 0f; t < 15f && transport.Aboard.Count < 2; t += Time.deltaTime) yield return null;
             Assert.AreEqual(2, transport.Aboard.Count, "The group did not go aboard.");

@@ -61,6 +61,24 @@ namespace CityBuilder.Ships
         public static float AttackRange(ShipKind kind) => Row(kind)?.attackRangeUnits ?? 10f;
         /// <summary>How many it carries: citizens, soldiers and heroes alike (0 for the scout).</summary>
         public static int Capacity(ShipKind kind) => Row(kind)?.capacity ?? 0;
+
+        /// <summary>The player's ship at its researched level (the Laboratory); another side's at level 1.</summary>
+        public static int CapacityNow(ShipKind kind)
+        {
+            var row = Row(kind);
+            if (row == null) return 0;
+            if (IsOrc(kind) || IsBot(kind)) return row.capacity;
+            var research = Research.ResearchManager.Instance;
+            return row.CapacityAt(research != null ? research.ShipLevel(SheetId(kind)) : 1);
+        }
+
+        /// <summary>Places one takes aboard: a siege machine `ship_machine_places` (4), anyone else one (the user, 2026-11-05).</summary>
+        public static int PlacesOf(Combat.SoldierUnit unit)
+        {
+            if (unit == null) return 0;
+            if (!Combat.SoldierStats.IsMachine(unit.Type)) return 1;
+            return BalanceConfig.Instance != null ? Mathf.Max(1, BalanceConfig.Instance.ShipMachinePlaces) : 4;
+        }
         /// <summary>The Shipyard's level that builds it (the user: the shipyard's level opens the ships).</summary>
         public static int ShipyardLevel(ShipKind kind) => Mathf.Max(1, Row(kind)?.shipyardLevel ?? 1);
         /// <summary>How many may sail at once; 0 = no limit (the user, 2026-10-28: unlimited for now, a column to balance later).</summary>
@@ -153,13 +171,25 @@ namespace CityBuilder.Ships
         /// </summary>
         public readonly List<Combat.SoldierUnit> Aboard = new List<Combat.SoldierUnit>();
 
-        public int Capacity => ShipStats.Capacity(Kind);
-        public int FreeSeats => Mathf.Max(0, Capacity - Aboard.Count);
+        public int Capacity => ShipStats.CapacityNow(Kind);
 
-        /// <summary>Takes this one aboard: out of the world until the ship lands them. False when it is full.</summary>
+        /// <summary>Places taken: a machine takes several.</summary>
+        public int UsedPlaces
+        {
+            get
+            {
+                var used = 0;
+                foreach (var unit in Aboard) used += ShipStats.PlacesOf(unit);
+                return used;
+            }
+        }
+
+        public int FreeSeats => Mathf.Max(0, Capacity - UsedPlaces);
+
+        /// <summary>Takes this one aboard: out of the world until the ship lands them. False when there is no room for him.</summary>
         public bool Embark(Combat.SoldierUnit unit)
         {
-            if (unit == null || FreeSeats == 0 || Aboard.Contains(unit)) return false;
+            if (unit == null || FreeSeats < ShipStats.PlacesOf(unit) || Aboard.Contains(unit)) return false;
             Aboard.Add(unit);
             unit.gameObject.SetActive(false);
             return true;

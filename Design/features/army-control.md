@@ -4,7 +4,7 @@
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
 > not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. STAGE 3 (behaviours + formations) BUILT 2026-11-05,
 > user not seen. General run after stage 3: EditMode 461/461, PlayMode 365/384 (18 skipped, 1 flaky
-> dungeon test, green alone). Stages 4 (ships/machines aboard) and 5 (crest art) to do.
+> dungeon test, green alone). STAGE 4 (ships) BUILT 2026-11-05, user not seen. Stage 5 (crest art) to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
@@ -97,3 +97,13 @@ FollowHero = rally point `squad_follow_cells` 2 behind the chosen hero. Advance 
 manage-tab rows Поведение (shield/home/swords/King portrait; «За героем» asks which hero) and Построение.
 Spacing `squad_formation_spacing` 0.9 m, `squad_scatter_spacing` 1.8 m. Open: a mixed squad marches at each
 member's own speed (no common pace yet).
+
+## Code (stage 4, ships)
+units `capacity_2..capacity_5` (transport 10-16, battleship 14-20; battleship `capacity` 8 -> 12) ->
+`UnitBalance.CapacityAt(level)` / `HasShipLevels`; `ResearchKind.ShipLevel` (`level_ship:<id>:<n>`, levels 2-5,
+economy `ship_level_coins_N` / `ship_level_seconds_N`, crystals by the usual research rule from level 3, Lab level
+>= ship level), `ResearchManager.ShipLevel(id)`, rows on the Lab's army tab after the soldiers. `ShipStats.CapacityNow`
+(the player's at its level; orc/bot at level 1), `PlacesOf` (machine `ship_machine_places` 4, anyone else 1),
+`ShipUnit.UsedPlaces`/`FreeSeats`. `ShipManager.DescribeBoardBlocker`: a squad or machine boards whole --
+`#ship_squad_too_big` «Уменьшите отряд или улучшите корабль». «Высадить десант» = the existing land button,
+its plaque now places used/capacity. Test: ArchipelagoTests boarding (a squad bigger than the transport refused).

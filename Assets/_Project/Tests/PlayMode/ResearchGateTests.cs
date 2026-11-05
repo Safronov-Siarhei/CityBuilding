@@ -367,7 +367,10 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Greater(panel.RowCount, 20, "The buildings tab has hardly any rows.");
             yield return PlaytestCapture.ShootWithUi("lab-window-buildings", lab.transform.position);
             panel.SelectUnitsTab();
-            Assert.AreEqual(CityBuilder.Combat.SoldierStats.Hireable.Length, panel.RowCount, "The army tab is not every hired type (the Barracks' five, the knight, the monk, the four machines).");
+            var shipRows = 0;
+            foreach (var unit in CityBuilder.Core.BalanceConfig.Instance.Units) if (unit != null && unit.HasShipLevels) shipRows++;
+            Assert.AreEqual(2, shipRows, "Not the transport and the battleship with levels (the user, 2026-11-05).");
+            Assert.AreEqual(CityBuilder.Combat.SoldierStats.Hireable.Length + shipRows, panel.RowCount, "The army tab is not every hired type (the Barracks' five, the knight, the monk, the four machines) and the two carrying ships.");
             yield return PlaytestCapture.ShootWithUi("lab-window-army", lab.transform.position);
             panel.ToggleHint();
             yield return PlaytestCapture.ShootWithUi("lab-window-hint", lab.transform.position);

@@ -421,6 +421,11 @@ namespace CityBuilder.EditorTools
                     rangedTaken = OptionalNumber(header, row, "ranged_taken", 1f, path),
                     carrier = Flag(header, row, "carrier", false, path),
                     capacity = (int)OptionalNumber(header, row, "capacity", 0f, path),
+                    capacityUp = new[]
+                    {
+                        (int)OptionalNumber(header, row, "capacity_2", 0f, path), (int)OptionalNumber(header, row, "capacity_3", 0f, path),
+                        (int)OptionalNumber(header, row, "capacity_4", 0f, path), (int)OptionalNumber(header, row, "capacity_5", 0f, path),
+                    },
                     shipyardLevel = Mathf.Max(1, (int)OptionalNumber(header, row, "shipyard_level", 1f, path)),
                     maxCount = (int)OptionalNumber(header, row, "max_count", 0f, path),
                     recruitIronBars = CostAmount(header, row, "recruit_ironbar", path),

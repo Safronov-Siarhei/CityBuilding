@@ -17,6 +17,9 @@ namespace CityBuilder.Research
 
         /// <summary>Raises one soldier type's stats -- for every soldier of that type, including the ones already standing.</summary>
         UnitLevel = 3,
+
+        /// <summary>A ship's level 2..5: more places aboard (the user, 2026-11-05).</summary>
+        ShipLevel = 4,
     }
 
     /// <summary>
@@ -114,5 +117,6 @@ namespace CityBuilder.Research
         public static string BuildingLevelId(string buildingId, int level) => "level_building:" + buildingId + ":" + level;
         public static string UnlockUnitId(string unitId) => "unlock_unit:" + unitId;
         public static string UnitLevelId(string unitId, int level) => "level_unit:" + unitId + ":" + level;
+        public static string ShipLevelId(string shipId, int level) => "level_ship:" + shipId + ":" + level;
     }
 }
