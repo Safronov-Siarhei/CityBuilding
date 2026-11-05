@@ -66,3 +66,4 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 
 `archive/` holds the long chronological notes these cards were distilled from (2026-10-21). Read an
 archive file only when a card points at it for a specific detail.
+| [ruins](ruins.md) | ruins of the player's destroyed buildings: restore for a share of the price / demolish / later; sandbox only; DESIGN | руины, восстановить, снести, обломки |
