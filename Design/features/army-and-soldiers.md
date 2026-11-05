@@ -125,7 +125,9 @@ edge, crinet plates on the neck / +gold helm band, gold shield rim, broad gold h
 borrows the Barracks' box, stands 12 m in -y of it): a long stable with a timber hayloft under the blue Defence roof, blue
 double doors with white X braces, four stalls with horses looking out over the half doors (white, chestnut, bay, grey; blue
 halters; no dark holes), a hay door, a gold horseshoe sign; yard with a quintain, a lance rack, trough, hay bales, saddle on
-the rail fence. Fix 2026-11-05 (user): open loose boxes under a blue lean-to along the front (partitions, half doors, straw), horses standing inside with closed boxes (no missing faces); 3145 tris; approved after this fix. Levels 2-5 not made yet.
+the rail fence. Fix 2026-11-05 (user): open loose boxes under a blue lean-to along the front (partitions, half doors, straw), horses standing inside with closed boxes (no missing faces); 3145 tris; approved after this fix.
+
+**Stable levels 2-5 drafts (2026-11-05, waiting for the user's approval):** `stable1_lvl2..5.py`, the Workshop's chain -- lvl2 back quoins, two ridge louvres, door lanterns, a mounting block, side rails, a blue blanket on the fence (4383 tris); lvl3 gold finials + weathervane, gold caps on the stall posts, a paved apron, the stone gateway with a blue banner (4870); lvl4 glazed main roof and both stall lean-tos (5266); lvl5 gilded roofs (5266). All FIT.
 
 **Numbers AGREED by the user (2026-11-05)** -- go into the sheet when the code is built (no columns yet):
 - Workshop: 40 wood, 30 stone, 10 iron; health 220, levels by the Barracks' formula. Opens: lvl1 Ram, lvl2 Ballista,
