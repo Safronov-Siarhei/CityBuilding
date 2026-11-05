@@ -131,14 +131,19 @@ def monk_body(b):
     """A white habit to the ground, a blue scapular down front and back with a gold sun on the
     chest, a rope belt with its knotted end."""
     b.frustum(0, 0, 0.03, 0.29, 0.11, 0.08, WHITE, sides=10)
+    # the scapular lies ON the habit (the user: a straight board stood off the chest): down the
+    # skirt's slope below the belt, flat on the chest above it
     for y in (-1, 1):
-        b.obox((0, y * 0.085, 0.2), (1, 0, 0), (0, 0, 1), (0, y, 0), 0.04, 0.17, 0.008, KINGDOM)
+        lo, hi = Vector((0, y * 0.111, 0.03)), Vector((0, y * 0.082, 0.27))
+        along = (hi - lo).normalized()
+        out = Vector((0, y, 0)) - along * (along.y * y)
+        b.obox((lo + hi) / 2 + out.normalized() * 0.004, (1, 0, 0), along, out.normalized(), 0.04, (hi - lo).length / 2, 0.005, KINGDOM)
+        b.obox((0, y * 0.062, 0.335), (1, 0, 0), (0, 0, 1), (0, y, 0), 0.04, 0.07, 0.005, KINGDOM)
     b.cylinder(0, 0, 0.255, 0.27, 0.088, ROPE, sides=8)
     b.rod((0.03, -0.088, 0.26), (0.04, -0.095, 0.14), 0.012, ROPE)
     b.obox((0, 0, 0.34), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.08, 0.058, 0.06, WHITE, bevel=0.022)
-    b.obox((0, -0.055, 0.34), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.035, 0.008, 0.06, KINGDOM)
     # the gold sun ON the scapular (in front of it, the user: it was hidden behind it)
-    sy, sz = -0.097, 0.32
+    sy, sz = -0.068, 0.33
     b.hcylinder('y', (0, sy, sz), 0.004, 0.026, GOLD, sides=8)
     for a in range(0, 360, 45):
         r = math.radians(a)
