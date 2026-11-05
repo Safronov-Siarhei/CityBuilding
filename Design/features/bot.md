@@ -197,6 +197,19 @@ Proposed templates:
 - The Laboratory stands on the shore in the port (user, 2026-11-05).
 - Not in the game yet; waiting for the user's review.
 
+**Templates B, C, D, draft v1 (2026-11-05):**
+- Built on the shared kit `Design/bot_town_common.py`: Town.put, wall_rect, citadel, districts with PLAN + FILL capped per district, and the json/png output. One script per template: `bot_town_b/c/d.py` → `.json` + `.png`.
+- **B «Приморский»**: strips from the shore — port/posad (open), lower town (wall 3), upper town (wall 4), and the citadel at the far north with a 3-sided moat.
+  - The Town Hall is NOT in the middle, so BotKingdom must anchor templates on the town's centre, not the hall (to do).
+- **C «Город кварталов»**: a 3×3 grid of 17×17 quarters, each with its own wall:
+  - noble and armoury: wall 4;
+  - craft, living and food: wall 3;
+  - market: wall 2;
+  - fields: open; port: open to the sea.
+  - The lanes between quarters are grass.
+- **D «Цитадель и посад»**: a keep with a lvl-5 wall at d=14 and lvl 4-5 buildings, inside a wide open posad of lvl 1-2 (workshops up to 3).
+- Pieces: A 942, B 863, C 858, D 760 (v2 had 547).
+
 ## Traps (war)
 - The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.
 - BotSide units and the orcs **do not fight each other** (both are the hostile side); the bot's towers skip BotSide.
