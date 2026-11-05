@@ -98,8 +98,8 @@ blue gambeson, leather cap) plus a lineup with a spearman, a lvl-5 wall and a lv
 
 **Workshop building draft (2026-11-05, waiting for the user's approval):** `Tools/blender/workshop1.py` builds
 Workshop1-lvl1 (3x3 like the Barracks, borrowing its box -- no placeholder of its own; stands 6 m in -y of it in the Models
-.blend): a tall half-timbered carpenters' hall gable-on with its doors open, blue Defence roof, lean-to timber store, forge
-chimney, yard with a treadwheel crane, a catapult half built on trestles, stone shot. 2935 tris (over the 1000-1500 services
+.blend): a tall half-timbered carpenters' hall gable-on with its great doors SHUT (the user: no black hole; a wicket door with a lit window), blue Defence roof, lean-to timber store, forge
+chimney, yard with a treadwheel crane, a catapult half built on trestles, stone shot. 3065 tris (over the 1000-1500 services
 budget; the crane wheel and the trestle catapult are the place to trim). Levels 2-5 not made.
 
 **Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.

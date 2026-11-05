@@ -4,7 +4,7 @@ Footprint 3x3 like the Barracks (no placeholder of its own yet: borrows the Barr
 stands beside it). Front is -Y. Defence, so the castle's blue roof.
 
 A tall carpenters' hall standing gable-on to the street -- stone below, half-timber above -- its
-great doors swung open on the dark inside; a lean-to timber store on the right, a forge chimney on
+great doors shut, a wicket door with a lit window in one leaf; a lean-to timber store on the right, a forge chimney on
 the left. The yard in front tells what is made here: a treadwheel crane lifting a beam, a catapult
 half built on trestles (frame, two wheels, its arm waiting), a pyramid of stone shot, a sawhorse.
 
@@ -115,20 +115,21 @@ def build(lo, hi):
     f = Facade(b, '-y', y0)
     gw, gh = 0.78, 0.86
     f.rect(-gw / 2 - 0.05, gw / 2 + 0.05, 0.0, gh + 0.05, 0.015, 'stone_mid')
-    f.arch(0, 0.0, gw, gh + 0.12, 0.02, 'window', segments=8)
+    # the great doors, shut (the user, 2026-11-05: no black hole): planks, iron bands, the seam
+    # between the leaves, and a wicket door in the right leaf with a warm lit window
+    f.arch(0, 0.0, gw, gh + 0.12, 0.025, 'door', segments=8)
+    for sx in (-0.27, -0.13, 0.13, 0.27):
+        f.rect(sx - 0.006, sx + 0.006, 0.0, gh - 0.02, 0.03, 'wood_dark')
+    f.rect(-0.012, 0.012, 0.0, gh + 0.1, 0.034, 'wood_dark')
+    for z in (0.16, gh - 0.18):
+        f.rect(-gw / 2 + 0.02, gw / 2 - 0.02, z, z + 0.035, 0.036, 'iron')
+        for sx in (-0.3, -0.06, 0.06, 0.3):
+            f.disc(sx, z + 0.018, 0.012, 0.042, 'stone_light', sides=6)
+    f.rect(0.12, 0.3, 0.0, 0.46, 0.038, 'wood_mid')                      # the wicket door
+    f.rect(0.16, 0.26, 0.28, 0.4, 0.042, 'window_light')
+    f.rect(0.205, 0.215, 0.28, 0.4, 0.046, 'wood_dark')
+    f.disc(0.145, 0.22, 0.012, 0.046, 'gold', sides=6)
     f.rect(-gw / 2 - 0.06, gw / 2 + 0.06, gh + 0.02, gh + 0.07, 0.05, 'wood_dark')               # lintel
-    for k in (-1, 1):                                                                          # the leaves, swung out
-        hinge = (k * gw / 2, y0 - 0.015)
-        a = math.radians(70)
-        ux, uy = k * math.cos(a), -math.sin(a)
-        cx, cy = hinge[0] + ux * gw / 4, hinge[1] + uy * gw / 4
-        b.obox((cx, cy, gh / 2 + 0.01), (ux, uy, 0), (-uy, ux, 0), (0, 0, 1), gw / 4, 0.02, gh / 2, 'door')
-        for z in (0.18, gh - 0.16):
-            b.obox((cx, cy, z), (ux, uy, 0), (-uy, ux, 0), (0, 0, 1), gw / 4 - 0.02, 0.028, 0.02, 'iron')
-    # inside, in the dark: a ram's iron head poking out of the gloom, and a lamp
-    b.box(-0.08, 0.08, y0 + 0.02, y0 + 0.2, 0.26, 0.4, 'iron', bevel=0.015)
-    for k in (-1, 1):
-        b.rod((k * 0.07, y0 + 0.04, 0.38), (k * 0.14, y0 + 0.1, 0.46), 0.025, 'gold')
     d.timber(f, x0, x1, G_TOP, WALL_TOP, (x0 + 0.025, -0.48, 0.48, x1 - 0.025), ((x0 + 0.03, -0.48), (x1 - 0.03, 0.48)))
     d.gable_frame(f, 0, hs, WALL_TOP, zr)
     d.banner(f, -0.6, G_TOP - 0.04, 0.32, w=0.12, color='banner_blue')
