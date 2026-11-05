@@ -753,6 +753,9 @@ namespace CityBuilder.Combat
         {
             if (!UsesSquads) return GetOrCreateGroup(type, position);
             if (SoldierStats.IsMachine(type)) return RestoreMachine(type, position);
+            // the tutorial's one soldier is tapped and sent aboard (its hints): he joins a squad, not the
+            // Garrison, which takes no orders
+            if (Tutorial.TutorialMode.IsActive) return _squads.Count > 0 ? _squads[0] : CreateSquad() ?? Garrison;
             return Garrison;
         }
 

@@ -144,3 +144,7 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
 - The soldier: the user said «гвардеец или что-то такое» -- read as ЛАТНИК (ManAtArms, the armoured
   one) at level 3; confirm when the Barracks step is built.
 - Skip button inside the tutorial; first-launch auto-start -- later.
+
+Trap (2026-11-05): `TutorialDirector` decides it is on in **Start**, not Awake -- TutorialMode is set in
+MeshMapApplier.Awake and Awake order between scene objects is not fixed (new HUD objects broke it). Its soldier
+joins a squad, not the Garrison (army control by squads, [army-control](army-control.md)).

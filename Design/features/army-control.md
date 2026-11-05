@@ -114,3 +114,8 @@ its plaque now places used/capacity. Test: ArchipelagoTests boarding (a squad bi
 charge: crown, tower, tree, swords, star, waves, moon, cross, chevron+star, sun) -> `UI/Glyphs/Crest_0..9.png`;
 approved by the user 2026-11-05. `ArmyBar.crestSprites` (index = `ArmyGroup.Crest`), `CrestSprite(i)`;
 the stand-in colours stay as the fallback. The squad window's crest shows the picture.
+
+Tutorial (2026-11-05, met the other device's tutorial work): in `TutorialMode` a recruit joins the first squad
+(made if none), not the Garrison -- the tutorial taps its soldier and sends him aboard. `TutorialDirector` now
+checks the mode in Start, not Awake (MeshMapApplier decides it in its Awake; the HUD objects added for the squads
+changed the Awake order and turned the tutorial off).

@@ -67,15 +67,9 @@ namespace CityBuilder.Tutorial
         private readonly HashSet<OrcUnit> _softened = new HashSet<OrcUnit>();
         private const string RewardedKey = "tutorial.rewarded";
 
-        private void Awake()
-        {
-            if (!TutorialMode.IsActive)
-            {
-                enabled = false;
-                return;
-            }
-            Instance = this;
-        }
+        // Not in Awake: TutorialMode is decided in MeshMapApplier.Awake, and the order of two objects'
+        // Awakes is not fixed -- a new HUD object put before this one turned the tutorial off (2026-11-05).
+        // Every Awake has run by the first Start.
 
         private void OnDestroy()
         {
@@ -85,7 +79,12 @@ namespace CityBuilder.Tutorial
 
         private void Start()
         {
-            if (!enabled) return;
+            if (!TutorialMode.IsActive)
+            {
+                enabled = false;
+                return;
+            }
+            Instance = this;
             _camera = FindAnyObjectByType<RTSCameraController>();
             _citizens = FindAnyObjectByType<CitizenSelector>();
             BuildPanel();
