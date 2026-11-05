@@ -746,6 +746,9 @@ def build_surface(verts):
     return ground, relief, flat
 
 
+SEA_R = HALF - 0.5          # the tutorial's sea is a disc this wide, the frame's corners left empty
+
+
 def build_water(verts):
     """The water plane, only where there is water (and a lip under the shore), on the same nudged
     grid as the land, cut into depth bands along smooth contours: a pale rim at the waterline,
@@ -761,10 +764,16 @@ def build_water(verts):
             for c in corners:
                 x, y, sd = c[0], c[1], c[3]
                 depth = -sd + 1.8 * (fbm(x / 6, y / 6, 113) - 0.5)
-                pts.append((x, y, WATER_Z, depth, -sd - 0.28, depth - 1.8, depth - 6.5))
+                # the last field: outside the tutorial's round sea (the user: a round map, not a square)
+                pts.append((x, y, WATER_Z, depth, -sd - 0.28, depth - 1.8, depth - 6.5,
+                            math.hypot(x, y) - SEA_R if TPLAN else -1.0))
+            if TPLAN and min(p[7] for p in pts) > 0:
+                continue
             for tri in ((pts[0], pts[1], pts[2]), (pts[0], pts[2], pts[3])):
-                for pc in _split(list(tri), (4, 5, 6)):
+                for pc in _split(list(tri), (4, 5, 6, 7)):
                     c = _centre(pc)
+                    if c[7] > 0:
+                        continue
                     if c[4] < 0:
                         col = "foam"
                     elif c[5] < 0:
