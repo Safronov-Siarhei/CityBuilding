@@ -299,6 +299,18 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(1, refilled.Count, "The squad with «Пополнять» on did not take a militiaman from the Garrison.");
             Assert.AreEqual(0, army.Garrison.Count);
 
+            // formations: every slot of each is its own spot; «Наступать» goes for an orc by itself
+            foreach (SquadFormation formation in Enum.GetValues(typeof(SquadFormation)))
+                for (var i = 0; i < 12; i++)
+                    for (var j = i + 1; j < 12; j++)
+                        Assert.Greater((ArmyGroup.FormationOffset(formation, i, 12) - ArmyGroup.FormationOffset(formation, j, 12)).magnitude, 0.3f,
+                            $"Two soldiers share a place in the {formation} formation.");
+            OrcRaidManager.Instance.SpawnOrcs(spot + new Vector3(4f, 0f, 0f), count: 1, level: 1);
+            army.SetBehaviour(refilled, SquadBehaviour.Advance);
+            army.TickBehaviours();
+            Assert.IsNotNull(refilled.AttackTarget, "A squad on «Наступать» did not go for the orc beside it.");
+            Assert.IsFalse(refilled.HasPlayerAttack, "The squad's own target was taken for the player's order.");
+
             // the squad window builds and opens on both tabs without throwing, and stops the game while open
             var window = CityBuilder.UI.SquadWindow.Instance;
             Assert.IsNotNull(window, "No squad window in the scene.");

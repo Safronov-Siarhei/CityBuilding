@@ -30,6 +30,27 @@ namespace CityBuilder.Combat
         Machine = 3,
     }
 
+    /// <summary>What a squad does with no order of the player's to carry out (the user, 2026-11-05). Pinned ints: saved.</summary>
+    public enum SquadBehaviour
+    {
+        /// <summary>«Стоять»: holds its place, fights what comes near, a short way after a shooter.</summary>
+        Hold = 0,
+        /// <summary>«Охранять город»: walks round the Town Hall, chases what comes into the town's zone, comes back.</summary>
+        Guard = 1,
+        /// <summary>«Наступать»: goes after the nearest enemy on its island, and after any shooter.</summary>
+        Advance = 2,
+        /// <summary>«За героем»: walks behind a hero and fights beside him.</summary>
+        FollowHero = 3,
+    }
+
+    /// <summary>How a squad stands (the user, 2026-11-05: квадрат, треугольник, врассыпную). Pinned ints: saved.</summary>
+    public enum SquadFormation
+    {
+        Square = 0,
+        Triangle = 1,
+        Scatter = 2,
+    }
+
     public class ArmyGroup
     {
         /// <summary>Spacing between neighbouring formation slots, in metres.</summary>
@@ -62,6 +83,86 @@ namespace CityBuilder.Combat
 
         /// <summary>A squad's crest, an index into the crest set.</summary>
         public int Crest { get; set; }
+
+        public SquadBehaviour Behaviour { get; private set; } = SquadBehaviour.Hold;
+        public SquadFormation Formation { get; private set; } = SquadFormation.Square;
+
+        /// <summary>The hero a squad «За героем» walks behind.</summary>
+        public SoldierType FollowHero { get; set; } = SoldierType.King;
+
+        /// <summary>Where the squad faces: the way it was last sent. Its front rank stands on that side.</summary>
+        public Vector3 Facing { get; private set; } = Vector3.back;
+
+        /// <summary>The «Охранять город» round: which point of it the squad walks to.</summary>
+        public int PatrolStep { get; set; }
+
+        public void SetBehaviour(SquadBehaviour behaviour)
+        {
+            if (Behaviour == behaviour) return;
+            Behaviour = behaviour;
+            // a target the last behaviour chose is not the new one's business
+            if (AttackTarget != null && !_playerAttack) AttackTarget = null;
+            OnChanged?.Invoke();
+        }
+
+        public void SetFormation(SquadFormation formation)
+        {
+            if (Formation == formation) return;
+            Formation = formation;
+            _slotsDirty = true;
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>The rally point moved by the squad's own behaviour (a patrol step, behind its hero), not an order.</summary>
+        public void SetHold(Vector3 position, Vector3 facing)
+        {
+            HoldPosition = position;
+            TurnTo(facing);
+        }
+
+        private void TurnTo(Vector3 direction)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.25f) Facing = direction.normalized;
+        }
+
+        /// <summary>The middle of the squad as it stands now (the hold point when empty).</summary>
+        public Vector3 Centre()
+        {
+            var sum = Vector3.zero;
+            var n = 0;
+            for (var i = 0; i < _members.Count; i++)
+            {
+                if (_members[i] == null) continue;
+                sum += _members[i].transform.position;
+                n++;
+            }
+            return n > 0 ? sum / n : HoldPosition;
+        }
+
+        // the attack order is the player's (ArmyOrderInput), not one a behaviour picked
+        private bool _playerAttack;
+
+        /// <summary>A behaviour's own target (Advance, Guard): moves the rally point like an order but is not the player's.</summary>
+        public void AttackOnItsOwn(IDamageTarget target)
+        {
+            if (target == null || !target.IsAlive) return;
+            AttackTarget = target;
+            _playerAttack = false;
+            TurnTo(target.Transform.position - Centre());
+            HoldPosition = target.Transform.position;
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>A behaviour's own target dropped (it left the town's zone).</summary>
+        public void DropOwnAttack()
+        {
+            if (AttackTarget == null || _playerAttack) return;
+            AttackTarget = null;
+            OnChanged?.Invoke();
+        }
+
+        public bool HasPlayerAttack => AttackTarget != null && _playerAttack && AttackTarget.IsAlive;
 
         /// <summary>
         /// «Пополнять из Гарнизона» (the user, 2026-11-05): a squad standing on the main island takes
@@ -124,6 +225,7 @@ namespace CityBuilder.Combat
         {
             if (unit == null || _members.Contains(unit)) return;
             _members.Add(unit);
+            _slotsDirty = true;
             OnChanged?.Invoke();
         }
 
@@ -131,6 +233,7 @@ namespace CityBuilder.Combat
         {
             if (!_members.Remove(unit)) return;
             _posts.Remove(unit);
+            _slotsDirty = true;
             OnChanged?.Invoke();
         }
 
@@ -139,6 +242,7 @@ namespace CityBuilder.Combat
         {
             // an order on the ground brings whoever is on the walls down first
             for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall(destination);
+            TurnTo(destination - Centre());
             HoldPosition = destination;
             AttackTarget = null;
             OnChanged?.Invoke();
@@ -153,7 +257,9 @@ namespace CityBuilder.Combat
         {
             if (target == null || !target.IsAlive) return;
             for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall(target.Transform.position);
+            TurnTo(target.Transform.position - Centre());
             AttackTarget = target;
+            _playerAttack = true;
             HoldPosition = target.Transform.position;
             OnChanged?.Invoke();
         }
@@ -168,6 +274,7 @@ namespace CityBuilder.Combat
         {
             if (target == null || !target.IsAlive) return;
             AttackTarget = target;
+            _playerAttack = true;
             OnChanged?.Invoke();
         }
 
@@ -193,8 +300,105 @@ namespace CityBuilder.Combat
         public Vector3 SlotPositionFor(SoldierUnit unit)
         {
             if (IsGarrison && _posts.TryGetValue(unit, out var post)) return post;
+            if (IsSquad) return HoldPosition + FormationSlot(unit);
             var index = _members.IndexOf(unit);
             return HoldPosition + FormationOffset(index < 0 ? 0 : index);
+        }
+
+        // ---- formations (squads) ----
+
+        private bool _slotsDirty = true;
+        private readonly Dictionary<SoldierUnit, int> _slotOf = new Dictionary<SoldierUnit, int>();
+        private readonly List<SoldierUnit> _byRank = new List<SoldierUnit>();
+
+        /// <summary>Front to back: fighters on foot and riders, then shooters, then the monk (the user's Линия idea kept in every formation).</summary>
+        private static int Rank(SoldierUnit unit)
+        {
+            if (unit == null) return 9;
+            if (unit.IsHealer) return 2;
+            if (unit.IsRanged) return 1;
+            return 0;
+        }
+
+        private void RebuildSlots()
+        {
+            _slotsDirty = false;
+            _byRank.Clear();
+            _slotOf.Clear();
+            for (var i = 0; i < _members.Count; i++) if (_members[i] != null) _byRank.Add(_members[i]);
+            // stable: within a rank, the order they joined in -- a resort must not shuffle the ranks
+            for (var i = 0; i < _byRank.Count; i++) _slotOf[_byRank[i]] = i;
+            _byRank.Sort((a, b) =>
+            {
+                var r = Rank(a).CompareTo(Rank(b));
+                return r != 0 ? r : _slotOf[a].CompareTo(_slotOf[b]);
+            });
+            _slotOf.Clear();
+            for (var i = 0; i < _byRank.Count; i++) _slotOf[_byRank[i]] = i;
+        }
+
+        /// <summary>The unit's place in the squad's formation, turned to its facing, from the hold point.</summary>
+        private Vector3 FormationSlot(SoldierUnit unit)
+        {
+            if (_slotsDirty) RebuildSlots();
+            if (!_slotOf.TryGetValue(unit, out var index)) index = 0;
+            var local = FormationOffset(Formation, index, _byRank.Count);
+            var forward = Facing;
+            var right = new Vector3(forward.z, 0f, -forward.x);
+            return right * local.x + forward * local.y;
+        }
+
+        /// <summary>
+        /// A formation's slot `index` of `count`, as (right, forward) from the middle; slot 0 in the front.
+        /// Pure, for the EditMode tests. Spacing from economy (squad_formation_spacing, squad_scatter_spacing).
+        /// </summary>
+        public static Vector2 FormationOffset(SquadFormation formation, int index, int count)
+        {
+            var spacing = Core.BalanceConfig.Instance != null ? Core.BalanceConfig.Instance.SquadFormationSpacing : 0.9f;
+            count = Mathf.Max(1, count);
+            switch (formation)
+            {
+                case SquadFormation.Triangle:
+                {
+                    // row r holds r + 1: the apex leads
+                    var row = 0;
+                    var first = 0;
+                    while (index >= first + row + 1)
+                    {
+                        first += row + 1;
+                        row++;
+                    }
+                    var lastRow = 0;
+                    var filled = 0;
+                    while (filled + lastRow + 1 < count)
+                    {
+                        filled += lastRow + 1;
+                        lastRow++;
+                    }
+                    var k = index - first;
+                    return new Vector2((k - row * 0.5f) * spacing, (lastRow * 0.5f - row) * spacing);
+                }
+                case SquadFormation.Scatter:
+                {
+                    var wide = Core.BalanceConfig.Instance != null ? Core.BalanceConfig.Instance.SquadScatterSpacing : 1.8f;
+                    var cols = Mathf.CeilToInt(Mathf.Sqrt(count));
+                    var rows = Mathf.CeilToInt(count / (float)cols);
+                    var col = index % cols;
+                    var row = index / cols;
+                    // a fixed shake per slot, so a scattered squad does not stand in a grid
+                    var jx = Mathf.Sin(index * 12.9898f) * 0.3f;
+                    var jz = Mathf.Sin(index * 78.233f) * 0.3f;
+                    return new Vector2((col - (cols - 1) * 0.5f + jx) * wide, ((rows - 1) * 0.5f - row + jz) * wide);
+                }
+                default:
+                {
+                    var cols = Mathf.CeilToInt(Mathf.Sqrt(count));
+                    var rows = Mathf.CeilToInt(count / (float)cols);
+                    var col = index % cols;
+                    var row = index / cols;
+                    return new Vector2((col - (cols - 1) * 0.5f) * spacing, ((rows - 1) * 0.5f - row) * spacing);
+                }
+            }
         }
 
         /// <summary>

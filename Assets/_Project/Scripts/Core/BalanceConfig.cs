@@ -365,6 +365,12 @@ namespace CityBuilder.Core
         // army control by squads (the user, 2026-11-05): how many squads, how far from the Town Hall the Garrison defends
         [SerializeField] private int armyMaxSquads = 5;
         [SerializeField] private float garrisonDefendCells = 30f;
+        // squads' behaviours and formations (the user, 2026-11-05)
+        [SerializeField] private float squadFormationSpacing = 0.9f;
+        [SerializeField] private float squadScatterSpacing = 1.8f;
+        [SerializeField] private float squadGuardPatrolCells = 10f;
+        [SerializeField] private float squadGuardZoneCells = 22f;
+        [SerializeField] private float squadFollowCells = 2f;
 
         [Header("Raids (economy.csv)")]
         [SerializeField] private float raidIntervalSeconds = 90f;
@@ -1011,6 +1017,11 @@ namespace CityBuilder.Core
         public int ArmyMaxSize => armyMaxSize;
         public int ArmyMaxSquads => armyMaxSquads;
         public float GarrisonDefendCells => garrisonDefendCells;
+        public float SquadFormationSpacing => squadFormationSpacing;
+        public float SquadScatterSpacing => squadScatterSpacing;
+        public float SquadGuardPatrolCells => squadGuardPatrolCells;
+        public float SquadGuardZoneCells => squadGuardZoneCells;
+        public float SquadFollowCells => squadFollowCells;
         public float RaidIntervalSeconds => raidIntervalSeconds;
         public int RaidBaseSize => raidBaseSize;
         public int RaidProgressPerExtraRaider => raidProgressPerExtraRaider;
@@ -1824,6 +1835,11 @@ namespace CityBuilder.Core
             armyMaxSize = (int)Read(economy, "army_max_size", armyMaxSize);
             armyMaxSquads = (int)Read(economy, "army_max_squads", armyMaxSquads);
             garrisonDefendCells = Read(economy, "garrison_defend_cells", garrisonDefendCells);
+            squadFormationSpacing = Read(economy, "squad_formation_spacing", squadFormationSpacing);
+            squadScatterSpacing = Read(economy, "squad_scatter_spacing", squadScatterSpacing);
+            squadGuardPatrolCells = Read(economy, "squad_guard_patrol_cells", squadGuardPatrolCells);
+            squadGuardZoneCells = Read(economy, "squad_guard_zone_cells", squadGuardZoneCells);
+            squadFollowCells = Read(economy, "squad_follow_cells", squadFollowCells);
             raidIntervalSeconds = Read(economy, "raid_interval_seconds", raidIntervalSeconds);
             raidBaseSize = (int)Read(economy, "raid_base_size", raidBaseSize);
             raidProgressPerExtraRaider = (int)Read(economy, "raid_progress_per_extra_raider", raidProgressPerExtraRaider);

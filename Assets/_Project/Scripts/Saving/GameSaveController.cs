@@ -524,6 +524,9 @@ namespace CityBuilder.Saving
                     var squad = army.RestoreSquad(entry.holdPosition, entry.squadName, entry.crest);
                     squad.SetPriority(entry.priority);
                     squad.AutoRefill = entry.autoRefill;
+                    squad.FollowHero = entry.followHero;
+                    squad.SetBehaviour(entry.behaviour);
+                    squad.SetFormation(entry.formation);
                     if (entry.wanted != null)
                         for (var w = 0; w + 1 < entry.wanted.Count; w += 2) squad.SetWanted((Combat.SoldierType)entry.wanted[w], entry.wanted[w + 1]);
                     return squad;
@@ -811,6 +814,9 @@ namespace CityBuilder.Saving
                     if (group.IsSquad)
                     {
                         entry.autoRefill = group.AutoRefill;
+                        entry.behaviour = group.Behaviour;
+                        entry.formation = group.Formation;
+                        entry.followHero = group.FollowHero;
                         foreach (Combat.SoldierType type in System.Enum.GetValues(typeof(Combat.SoldierType)))
                         {
                             var want = group.WantedOf(type);

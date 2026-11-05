@@ -453,7 +453,9 @@ namespace CityBuilder.Combat
                 var distance = HorizontalDistance(candidate.Transform.position, slot);
                 // one striking at the group from further off (the serpent spitting from its canal,
                 // the user 2026-11-04: «не реагирует на змея на таком расстоянии») is answered too
-                if (distance > EngageRadius && !(candidate is OrcUnit striker && StrikesGroup(striker) && distance <= EngageRadius * 2.5f)) continue;
+                // «Наступать» answers a shooter however far; the rest a short way (the user, 2026-11-05)
+                var answer = Group.Behaviour == SquadBehaviour.Advance ? float.MaxValue : EngageRadius * 2.5f;
+                if (distance > EngageRadius && !(candidate is OrcUnit striker && StrikesGroup(striker) && distance <= answer)) continue;
                 // below, no shooting or running at what stands behind the rock (the Queen did)
                 if (dungeon && UnityEngine.AI.NavMesh.Raycast(transform.position, candidate.Transform.position, out _, UnityEngine.AI.NavMesh.AllAreas)) continue;
 

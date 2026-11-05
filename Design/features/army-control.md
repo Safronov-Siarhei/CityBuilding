@@ -2,7 +2,8 @@
 
 > **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
-> not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. Stages 3-5 to do.
+> not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. STAGE 3 (behaviours + formations) BUILT 2026-11-05,
+> user not seen. Stages 4 (ships/machines aboard) and 5 (crest art) to do.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
@@ -82,3 +83,16 @@ Garrison listed only to say it takes no settings), crest tap = `NextCrest`, memb
 or a squad off the main island (`MeshMapApplier.SameIsland` with the hall). Saved: `autoRefill`, `wanted` pairs.
 Pencil/bin are text «Aa»/«X» (no glyphs drawn for them). Behaviour/formation buttons: stage 3.
 Texts: `#squads_*` (13 keys), `#army_move_aboard`, `#army_move_not_home`.
+
+## Code (stage 3, behaviours and formations)
+`ArmyGroup`: `SquadBehaviour` Hold/Guard/Advance/FollowHero, `SquadFormation` Square/Triangle/Scatter (pinned ints,
+saved), `Facing` (set by orders: the front rank stands on the side it was sent), `FormationOffset(formation, i, n)`
+(pure; slots sorted by rank: melee/riders front, shooters, monk last -- stable), `AttackOnItsOwn` / `DropOwnAttack`
+(a behaviour's target, apart from the player's: `HasPlayerAttack`). `ArmyManager.TickBehaviours` every 0.5 s:
+Guard = 6-point round of the hall (`squad_guard_patrol_cells` 10), chases fighters inside `squad_guard_zone_cells` 22,
+only at home; Advance = nearest enemy on its island (fighters first unless priority Structures), any distance;
+FollowHero = rally point `squad_follow_cells` 2 behind the chosen hero. Advance answers a shooter at any distance
+(SoldierUnit.AcquireTarget). UI: 3 formation buttons under the army icon (pictures drawn in SetupProjectHud.FormationIcons),
+manage-tab rows Поведение (shield/home/swords/King portrait; «За героем» asks which hero) and Построение.
+Spacing `squad_formation_spacing` 0.9 m, `squad_scatter_spacing` 1.8 m. Open: a mixed squad marches at each
+member's own speed (no common pace yet).

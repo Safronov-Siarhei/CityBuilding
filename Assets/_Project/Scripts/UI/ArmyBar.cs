@@ -39,6 +39,9 @@ namespace CityBuilder.UI
         [SerializeField] private Sprite[] machinePortraits = Array.Empty<Sprite>();
         /// <summary>Stand-in crest colours until the crest set is drawn (stage 5).</summary>
         [SerializeField] private Color[] crestColours = Array.Empty<Color>();
+        /// <summary>Квадрат, треугольник, врассыпную: under the army icon while a squad is in hand (the user's mock-up).</summary>
+        [SerializeField] private GameObject[] formationButtons = Array.Empty<GameObject>();
+        [SerializeField] private GameObject[] formationRings = Array.Empty<GameObject>();
 
         private static ArmyBar _instance;
 
@@ -138,6 +141,16 @@ namespace CityBuilder.UI
             _refreshIn = 0f;
         }
 
+        /// <summary>A quick formation button: the selected squad stands so from its next step.</summary>
+        public void TapFormation(int formation)
+        {
+            var army = ArmyManager.Instance;
+            var squad = army != null ? army.SelectedGroup : null;
+            if (squad == null || !squad.IsSquad) return;
+            army.SetFormation(squad, (SquadFormation)formation);
+            _refreshIn = 0f;
+        }
+
         /// <summary>«!»: the selected squad's «Управление отрядами».</summary>
         public void TapInfo()
         {
@@ -192,7 +205,11 @@ namespace CityBuilder.UI
             if (_refreshIn > 0f) return;
             _refreshIn = RefreshSeconds;
             if (_open) Refresh();
-            else if (machineRow != null && machineRow.activeSelf) machineRow.SetActive(false);
+            else
+            {
+                if (machineRow != null && machineRow.activeSelf) machineRow.SetActive(false);
+                foreach (var b in formationButtons) if (b != null && b.activeSelf) b.SetActive(false);
+            }
         }
 
         private static bool HeroInHand()
@@ -209,6 +226,15 @@ namespace CityBuilder.UI
             if (float.IsNaN(_armyBaseY)) _armyBaseY = rect.anchoredPosition.y;
             var y = HeroPortraitController.ShownRows > 0 ? HeroPortraitController.StackBottom - 14f : _armyBaseY;
             if (!Mathf.Approximately(rect.anchoredPosition.y, y)) rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
+            // the formation buttons in a column under it
+            var below = y - rect.sizeDelta.y - 16f;
+            for (var i = 0; i < formationButtons.Length; i++)
+            {
+                if (formationButtons[i] == null) continue;
+                var r = (RectTransform)formationButtons[i].transform;
+                var at = new Vector2(r.anchoredPosition.x, below - i * (r.sizeDelta.y + 14f));
+                if (r.anchoredPosition != at) r.anchoredPosition = at;
+            }
         }
 
         private void Refresh()
@@ -231,6 +257,11 @@ namespace CityBuilder.UI
             if (plusButton != null) plusButton.SetActive(army.Squads.Count < ArmyManager.MaxSquads || WindowRequested != null);
             var info = selected != null && selected.IsSquad;
             if (infoButton != null && infoButton.activeSelf != info) infoButton.SetActive(info);
+            for (var i = 0; i < formationButtons.Length; i++)
+            {
+                if (formationButtons[i] != null && formationButtons[i].activeSelf != info) formationButtons[i].SetActive(info);
+                if (info && i < formationRings.Length && formationRings[i] != null) formationRings[i].SetActive((int)selected.Formation == i);
+            }
 
             var machines = army.Machines.Count;
             if (machineRow != null && machineRow.activeSelf != machines > 0) machineRow.SetActive(machines > 0);

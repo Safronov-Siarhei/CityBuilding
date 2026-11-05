@@ -795,6 +795,22 @@ namespace CityBuilder.EditorTools
             }
             machineRow.SetActive(false);
 
+            // the three formation buttons under the army icon (ArmyBar.LateUpdate stacks them)
+            const float formationSize = 88f;
+            var formationPictures = FormationIcons();
+            var formationButtons = new Object[3];
+            var formationRings = new Object[3];
+            for (var i = 0; i < 3; i++)
+            {
+                var button = CreateGlyphButton(uiRoot, $"Formation{i + 1}", "round", HudInk.Keep, null, formationPictures[i], formationSize, 0.66f);
+                Anchor((RectTransform)button.transform, new Vector2(1f, 1f), new Vector2(1f, 1f),
+                    new Vector2(-HudMargin - (RoundButton - formationSize) * 0.5f, -400f - i * 100f), new Vector2(formationSize, formationSize));
+                formationButtons[i] = button.gameObject;
+                formationRings[i] = RingBehind(button.transform, formationSize);
+                UnityEventTools.AddIntPersistentListener(button.onClick, bar.TapFormation, i);
+                button.gameObject.SetActive(false);
+            }
+
             var so = new SerializedObject(bar);
             so.FindProperty("armyButton").objectReferenceValue = army.gameObject;
             so.FindProperty("row").objectReferenceValue = row;
@@ -809,6 +825,8 @@ namespace CityBuilder.EditorTools
             SetArray(so.FindProperty("machineButtons"), machineButtons);
             SetArray(so.FindProperty("machineIcons"), machineIcons);
             SetArray(so.FindProperty("machineRings"), machineRings);
+            SetArray(so.FindProperty("formationButtons"), formationButtons);
+            SetArray(so.FindProperty("formationRings"), formationRings);
             var portraits = new Object[4];
             var names = new[] { "PortraitRam", "PortraitBallista", "PortraitCatapult", "PortraitSiegeTower" };
             for (var i = 0; i < names.Length; i++) portraits[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{names[i]}.png");
@@ -824,6 +842,42 @@ namespace CityBuilder.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
             row.SetActive(false);
         }
+
+        /// <summary>
+        /// The three formation pictures (the user, 2026-11-05: квадрат, треугольник, врассыпную):
+        /// dark dots in that shape, drawn here -- no glyph exists for them.
+        /// </summary>
+        private static Sprite[] FormationIcons()
+        {
+            var ink = new Color(0.23f, 0.14f, 0.08f);
+            void Dot(Color[] p, int size, float x, float y) => FillIconRect(p, size, x - 0.07f, y - 0.07f, x + 0.07f, y + 0.07f, ink);
+            return new[]
+            {
+                CreateIconSprite("Formation_Square", 96, (p, size) =>
+                {
+                    for (var i = 0; i < 3; i++)
+                        for (var j = 0; j < 3; j++) Dot(p, size, 0.25f + i * 0.25f, 0.25f + j * 0.25f);
+                }),
+                CreateIconSprite("Formation_Triangle", 96, (p, size) =>
+                {
+                    for (var row = 0; row < 4; row++)
+                        for (var k = 0; k <= row; k++) Dot(p, size, 0.5f + (k - row * 0.5f) * 0.2f, 0.82f - row * 0.2f);
+                }),
+                CreateIconSprite("Formation_Scatter", 96, (p, size) =>
+                {
+                    var spots = new[] { 0.18f, 0.8f, 0.55f, 0.72f, 0.3f, 0.45f, 0.82f, 0.38f, 0.5f, 0.15f, 0.2f, 0.2f };
+                    for (var i = 0; i + 1 < spots.Length; i += 2) Dot(p, size, spots[i], spots[i + 1]);
+                }),
+            };
+        }
+
+        /// <summary>Стоять (shield), охранять город (home), наступать (swords), за героем (the King).</summary>
+        private static Sprite[] BehaviourIcons() => new[]
+        {
+            HudGlyph("Shield"), HudGlyph("Home"),
+            AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png"),
+            AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/PortraitKing.png"),
+        };
 
         /// <summary>The squad window (UI/SquadWindow): built at runtime; here only its sprites and the HUD root.</summary>
         private static void BuildSquadWindow(Transform uiRoot, HudHider hud)
@@ -861,6 +915,8 @@ namespace CityBuilder.EditorTools
             for (var i = 0; i < names.Length; i++)
                 sprites[i] = names[i] != null ? AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{names[i]}.png") : null;
             SetArray(so.FindProperty("portraits"), sprites);
+            SetArray(so.FindProperty("behaviourIcons"), BehaviourIcons());
+            SetArray(so.FindProperty("formationIcons"), FormationIcons());
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

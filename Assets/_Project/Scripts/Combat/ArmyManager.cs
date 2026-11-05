@@ -236,12 +236,134 @@ namespace CityBuilder.Combat
         private float _refillIn;
 
         /// <summary>Every two seconds: a squad with «Пополнять» on, at home, takes the soldiers it lost from the Garrison.</summary>
+        private float _behaviourIn;
+
         private void Update()
         {
+            _behaviourIn -= Time.deltaTime;
+            if (_behaviourIn <= 0f)
+            {
+                _behaviourIn = 0.5f;
+                TickBehaviours();
+            }
             _refillIn -= Time.deltaTime;
             if (_refillIn > 0f) return;
             _refillIn = 2f;
             TickRefill();
+        }
+
+        // ---- squads' behaviours (the user, 2026-11-05, army-control.md stage 3) ----
+
+        private static float Cells(float cells) => cells * (Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f);
+
+        /// <summary>Twice a second: each squad with no order of the player's to finish does what its behaviour says. Public for a test.</summary>
+        public void TickBehaviours()
+        {
+            foreach (var squad in _squads)
+            {
+                if (squad.Count == 0 || squad.HasPlayerAttack) continue;
+                switch (squad.Behaviour)
+                {
+                    case SquadBehaviour.Guard: TickGuard(squad); break;
+                    case SquadBehaviour.Advance: TickAdvance(squad); break;
+                    case SquadBehaviour.FollowHero: TickFollow(squad); break;
+                }
+            }
+        }
+
+        /// <summary>«Охранять город»: a round of the Town Hall; an enemy fighter inside the town's zone is chased while it stays in it.</summary>
+        private void TickGuard(ArmyGroup squad)
+        {
+            var hall = Buildings.BuildingInstance.TownHall;
+            if (hall == null || !AtHome(squad)) return;
+            var centre = hall.transform.position;
+            var zone = Cells(BalanceConfig.Instance != null ? BalanceConfig.Instance.SquadGuardZoneCells : 22f);
+            if (squad.AttackTarget != null)
+            {
+                if (!squad.AttackTarget.IsAlive || HorizontalGap(squad.AttackTarget.Transform.position, centre) > zone) squad.DropOwnAttack();
+                else return;
+            }
+            var foe = NearestFoe(squad.Centre(), t => !t.IsStructure && HorizontalGap(t.Transform.position, centre) <= zone, false);
+            if (foe != null)
+            {
+                squad.AttackOnItsOwn(foe);
+                return;
+            }
+            // on to the next point of the round once the squad is at this one
+            if (HorizontalGap(squad.Centre(), squad.HoldPosition) > 2.5f) return;
+            var radius = Cells(BalanceConfig.Instance != null ? BalanceConfig.Instance.SquadGuardPatrolCells : 10f);
+            squad.PatrolStep = (squad.PatrolStep + 1) % 6;
+            var angle = squad.PatrolStep * Mathf.PI / 3f;
+            var point = centre + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+            if (UnityEngine.AI.NavMesh.SamplePosition(point, out var hit, 3f, UnityEngine.AI.NavMesh.AllAreas)) point = hit.position;
+            squad.SetHold(point, point - squad.Centre());
+        }
+
+        /// <summary>«Наступать»: the nearest enemy on the squad's island, whatever the distance.</summary>
+        private void TickAdvance(ArmyGroup squad)
+        {
+            if (squad.AttackTarget != null && squad.AttackTarget.IsAlive) return;
+            var map = Maps.MeshMapApplier.Instance;
+            var from = squad.Centre();
+            var foe = NearestFoe(from, t => map == null || map.SameIsland(from, t.Transform.position), squad.Priority == TargetPriority.Structures);
+            if (foe != null) squad.AttackOnItsOwn(foe);
+        }
+
+        /// <summary>«За героем»: the squad's rally point a little behind its hero; nothing while he is down or aboard.</summary>
+        private void TickFollow(ArmyGroup squad)
+        {
+            var roster = HeroRoster.Instance;
+            var hero = roster != null ? roster.HeroOf(squad.FollowHero) : null;
+            if (hero == null || hero.IsFallen || hero.Unit == null || !hero.gameObject.activeInHierarchy) return;
+            var forward = hero.transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f) forward = squad.Facing;
+            var spot = hero.transform.position - forward.normalized * Cells(BalanceConfig.Instance != null ? BalanceConfig.Instance.SquadFollowCells : 2f);
+            if (HorizontalGap(spot, squad.HoldPosition) < 1.2f) return;
+            squad.SetHold(spot, forward);
+        }
+
+        private static float HorizontalGap(Vector3 a, Vector3 b)
+        {
+            a.y = b.y = 0f;
+            return Vector3.Distance(a, b);
+        }
+
+        /// <summary>The nearest live enemy that passes `fits`: fighters first unless `structuresFirst` (a camp, a portal not shielded).</summary>
+        private static IDamageTarget NearestFoe(Vector3 from, Func<IDamageTarget, bool> fits, bool structuresFirst)
+        {
+            IDamageTarget best = null, other = null;
+            float bestGap = float.MaxValue, otherGap = float.MaxValue;
+            void Consider(IDamageTarget t)
+            {
+                if (t == null || !t.IsAlive || !fits(t)) return;
+                if (t is OrcPortal portal && portal.IsShielded) return;
+                var gap = HorizontalGap(t.Transform.position, from);
+                if (t.IsStructure == structuresFirst)
+                {
+                    if (gap < bestGap) { bestGap = gap; best = t; }
+                }
+                else if (gap < otherGap) { otherGap = gap; other = t; }
+            }
+            foreach (var orc in OrcUnit.All) if (orc != null && orc.gameObject.activeInHierarchy) Consider(orc);
+            foreach (var portal in OrcPortal.All) Consider(portal);
+            foreach (var building in OrcCampBuilding.All) Consider(building);
+            return best ?? other;
+        }
+
+        public void SetBehaviour(ArmyGroup squad, SquadBehaviour behaviour, SoldierType hero = SoldierType.King)
+        {
+            if (squad == null || !squad.IsSquad) return;
+            if (behaviour == SquadBehaviour.FollowHero) squad.FollowHero = hero;
+            squad.SetBehaviour(behaviour);
+            OnArmyChanged?.Invoke();
+        }
+
+        public void SetFormation(ArmyGroup squad, SquadFormation formation)
+        {
+            if (squad == null || !squad.IsSquad) return;
+            squad.SetFormation(formation);
+            OnArmyChanged?.Invoke();
         }
 
         /// <summary>The refill pass (public for a test).</summary>

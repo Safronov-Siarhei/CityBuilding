@@ -341,6 +341,11 @@ namespace CityBuilder.Saving
 
         /// <summary>A squad's «Пополнять из Гарнизона» and the makeup it tops up to, as (type, count) pairs.</summary>
         public bool autoRefill;
+
+        /// <summary>A squad's behaviour, formation and the hero it follows (stage 3).</summary>
+        public Combat.SquadBehaviour behaviour;
+        public Combat.SquadFormation formation;
+        public SoldierType followHero = SoldierType.King;
         public List<int> wanted = new List<int>();
 
         /// <summary>The group's rally point and its standing target priority -- orders the player gave, not state the group can work out again.</summary>

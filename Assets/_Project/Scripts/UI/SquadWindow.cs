@@ -33,6 +33,10 @@ namespace CityBuilder.UI
         [SerializeField] private Sprite checkSprite;
         /// <summary>A portrait per SoldierType (by its int), null where there is none.</summary>
         [SerializeField] private Sprite[] portraits = Array.Empty<Sprite>();
+        /// <summary>Стоять, охранять город, наступать, за героем.</summary>
+        [SerializeField] private Sprite[] behaviourIcons = Array.Empty<Sprite>();
+        /// <summary>Квадрат, треугольник, врассыпную.</summary>
+        [SerializeField] private Sprite[] formationIcons = Array.Empty<Sprite>();
 
         public static SquadWindow Instance { get; private set; }
 
@@ -67,6 +71,9 @@ namespace CityBuilder.UI
         private Text _manageEmpty;
         private Image _refillBox;
         private Text _refillLabel;
+        private readonly List<Image> _behaviourButtons = new List<Image>();
+        private readonly List<Image> _formationButtons = new List<Image>();
+        private Text _followLabel;
 
         private void Awake() => Instance = this;
 
@@ -270,6 +277,72 @@ namespace CityBuilder.UI
             _refillBox.color = squad != null && squad.AutoRefill ? UiTheme.Good : new Color(1f, 1f, 1f, 0.35f);
             FillCards(_manageList, _manageEmpty, squad, -1);
             if (squad == null) _manageEmpty.text = Localization.Get("#squads_none");
+            for (var i = 0; i < _behaviourButtons.Count; i++)
+                _behaviourButtons[i].color = squad != null && (int)squad.Behaviour == i ? UiTheme.Gold : UiTheme.TabIdle;
+            for (var i = 0; i < _formationButtons.Count; i++)
+                _formationButtons[i].color = squad != null && (int)squad.Formation == i ? UiTheme.Gold : UiTheme.TabIdle;
+            if (_followLabel != null)
+                _followLabel.text = squad != null && squad.Behaviour == SquadBehaviour.FollowHero
+                    ? Localization.Get("#hero_" + SoldierStats.SheetIdOf(squad.FollowHero))
+                    : Localization.Get("#squads_behaviour_3");
+        }
+
+        private void TapBehaviour(int behaviour)
+        {
+            var army = ArmyManager.Instance;
+            if (_managed == null) return;
+            if ((SquadBehaviour)behaviour != SquadBehaviour.FollowHero)
+            {
+                army.SetBehaviour(_managed, (SquadBehaviour)behaviour);
+                RefreshManage();
+                return;
+            }
+            // «За героем»: which one (the bought ones)
+            var roster = HeroRoster.Instance;
+            var options = new List<(string, Action)>();
+            if (roster != null)
+                foreach (var hero in roster.Heroes)
+                {
+                    if (hero == null) continue;
+                    var type = hero.Type;
+                    options.Add((Localization.Get("#hero_" + SoldierStats.SheetIdOf(type)), () =>
+                    {
+                        army.SetBehaviour(_managed, SquadBehaviour.FollowHero, type);
+                        RefreshManage();
+                    }));
+                }
+            if (options.Count == 0)
+            {
+                ShowHint(Localization.Get("#squads_no_hero"));
+                return;
+            }
+            OpenPopup(_behaviourButtons[behaviour].rectTransform, options);
+        }
+
+        private void TapFormation(int formation)
+        {
+            if (_managed == null) return;
+            ArmyManager.Instance.SetFormation(_managed, (SquadFormation)formation);
+            RefreshManage();
+        }
+
+        /// <summary>A row of round picture buttons with a word under each.</summary>
+        private void IconRow(Transform parent, string titleKey, Vector2 at, Sprite[] icons, string keyPrefix, int count, Action<int> tap, List<Image> into)
+        {
+            Label(parent, Localization.Get(titleKey), 24, TextAnchor.MiddleLeft, at + new Vector2(0f, 62f), new Vector2(500f, 34f), UiTheme.Ink, UiTheme.Bold);
+            for (var i = 0; i < count; i++)
+            {
+                var index = i;
+                var x = at.x - 150f + i * 120f;
+                var button = Img(parent, "Choice", UiTheme.TabIdle, circleSprite, new Vector2(x, at.y), new Vector2(84f, 84f));
+                button.gameObject.AddComponent<Button>().onClick.AddListener(() => tap(index));
+                var icon = Img(button.transform, "Icon", Color.white, i < icons.Length ? icons[i] : null, Vector2.zero, new Vector2(58f, 58f));
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                var word = Label(parent, Localization.Get(keyPrefix + i), 17, TextAnchor.UpperCenter, new Vector2(x, at.y - 62f), new Vector2(118f, 44f), UiTheme.InkSoft, UiTheme.Regular);
+                if (keyPrefix == "#squads_behaviour_" && i == 3) _followLabel = word;
+                into.Add(button);
+            }
         }
 
         private void PickManaged()
@@ -429,10 +502,13 @@ namespace CityBuilder.UI
             crestButton.gameObject.AddComponent<Button>().onClick.AddListener(TapCrest);
             _crest = crestButton;
             Label(_manageView.transform, Localization.Get("#squads_crest"), 20, TextAnchor.MiddleCenter, new Vector2(-600f, 205f), new Vector2(200f, 30f), UiTheme.InkSoft, UiTheme.Regular);
-            _manageList = ScrollGrid(_manageView.transform, new Vector2(0f, -10f), new Vector2(1360f, 420f), 4, out _manageEmpty);
-            var refill = TextButton(_manageView.transform, Localization.Get("#squads_refill"), new Vector2(-380f, -260f), new Vector2(520f, 62f), 24, TapRefill);
+            _manageList = ScrollGrid(_manageView.transform, new Vector2(0f, 40f), new Vector2(1360f, 300f), 4, out _manageEmpty);
+            // the user's mock-up: behaviours bottom left, formations bottom right
+            IconRow(_manageView.transform, "#squads_behaviour", new Vector2(-470f, -190f), behaviourIcons, "#squads_behaviour_", 4, TapBehaviour, _behaviourButtons);
+            IconRow(_manageView.transform, "#squads_formation", new Vector2(330f, -190f), formationIcons, "#squads_formation_", 3, TapFormation, _formationButtons);
+            var refill = TextButton(_manageView.transform, Localization.Get("#squads_refill"), new Vector2(380f, 270f), new Vector2(440f, 62f), 22, TapRefill);
             _refillLabel = refill.GetComponentInChildren<Text>();
-            _refillBox = Img(refill.transform, "Box", Color.white, checkSprite != null ? checkSprite : circleSprite, new Vector2(-230f, 0f), new Vector2(44f, 44f));
+            _refillBox = Img(refill.transform, "Box", Color.white, checkSprite != null ? checkSprite : circleSprite, new Vector2(-185f, 0f), new Vector2(44f, 44f));
             _refillLabel.rectTransform.anchoredPosition = new Vector2(24f, 0f);
 
             // the help plaque and the rename field
