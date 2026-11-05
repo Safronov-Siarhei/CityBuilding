@@ -26,17 +26,17 @@ namespace CityBuilder.Diplomacy
         /// <summary>Seconds of the war so far (0 at peace): the ransom and the raids grow with it.</summary>
         public static float WarSeconds { get; private set; }
 
-        /// <summary>The bot's buildings the town's army razed in this war: each takes bot_war_contribution_per_building off the ransom (the user, 2026-11-05).</summary>
+        /// <summary>The LEVELS of the bot's buildings the town's army razed in this war: each level takes bot_war_contribution_per_building off the ransom (the user, 2026-11-05: a lvl-5 tower is worth more than a lvl-1 hovel).</summary>
         public static int WarRazed { get; private set; }
 
         /// <summary>Wars declared on the bot so far, this one counted: each new war starts its raids bot_war_start_wave_step waves further on (the user, 2026-11-05).</summary>
         public static int WarsFought { get; private set; }
 
-        /// <summary>The town's army razed a bot building at war (BotWarTarget).</summary>
-        public static void NoteRazed()
+        /// <summary>The town's army razed a bot building of `level` at war (BotWarTarget).</summary>
+        public static void NoteRazed(int level)
         {
             if (Stance != BotStance.War) return;
-            WarRazed++;
+            WarRazed += Mathf.Max(1, level);
             Changed?.Invoke();
         }
 

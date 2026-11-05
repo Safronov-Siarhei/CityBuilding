@@ -147,6 +147,9 @@ namespace CityBuilder.Maps
         /// <summary>The archipelago's bot island spot, where the bot kingdom's castle stands (Bot.BotKingdom); null on any other map.</summary>
         public Vector2Int? ArchipelagoBotCell { get; private set; }
 
+        /// <summary>The archipelago's seed (its map id's), for what a map picks by it: the bot's town template.</summary>
+        public int ArchipelagoSeed { get; private set; }
+
         /// <summary>What each archipelago island is rich in (Archipelago.IslandRiches), null on any other map.</summary>
         public Archipelago.IslandRiches.Riches[] IslandRichesOf { get; private set; }
 
@@ -773,6 +776,7 @@ namespace CityBuilder.Maps
             IslandRichesOf = Archipelago.IslandRiches.Assign(world);
             _archipelagoStart = world.StartCell;
             ArchipelagoBotCell = world.BotCell;
+            ArchipelagoSeed = seed;
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);
             Vector2 At(Vector2Int cell) => new Vector2(origin.x + cell.x + 0.5f, origin.z + cell.y + 0.5f);

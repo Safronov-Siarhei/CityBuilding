@@ -477,7 +477,12 @@ namespace CityBuilder.EditorTools
             // the bot kingdom's castle on the archipelago's bot island, from the base editor's blueprint (the user, 2026-11-03)
             var botKingdom = managers.AddComponent<Bot.BotKingdom>();
             var botSo = new SerializedObject(botKingdom);
-            botSo.FindProperty("blueprint").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Bot/BotCastle.json");
+            // four town templates, one per map seed (the user, 2026-11-05: Design/bot_town_a..d.py)
+            var botTemplates = botSo.FindProperty("blueprints");
+            var templateNames = new[] { "BotTownA", "BotTownB", "BotTownC", "BotTownD" };
+            botTemplates.arraySize = templateNames.Length;
+            for (var k = 0; k < templateNames.Length; k++)
+                botTemplates.GetArrayElementAtIndex(k).objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/_Project/Bot/{templateNames[k]}.json");
             botSo.FindProperty("buildingsPalette").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.PaletteMaterialPath);
             botSo.FindProperty("botPalette").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.BotPaletteMaterialPath);
             botSo.FindProperty("figures").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.SeasonPalettesFolder + "Figures.mat");

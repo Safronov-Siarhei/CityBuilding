@@ -116,7 +116,9 @@ SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet')
 SHAPE, RELIEF_KIND, HILL_COUNT, BEACH_COUNT, RIM = _spec[1], _spec[2], _spec[3], _spec[4], _spec[5]
 # a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
 # for the castle (2026-11-03)
-_ROLL = {('bot', 4): 6, ('bot', 6): 8}
+_ROLL = {('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 6): 29}   # bot: rolls that fit the 55x55 town (2026-11-05)
+if os.environ.get('ISL_ROLL'):     # a roll to try (searching a variant a new roll)
+    _ROLL[(KIND, VARIANT)] = int(os.environ['ISL_ROLL'])
 SEED = {'start': 11, 'orc': 23, 'bot': 37, 'flat': 41, 'hilly': 53, 'rocky': 67, 'long': 71,
         'crescent': 83, 'atoll': 97, 'islet': 101}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
 _rnd = random.Random(SEED)
@@ -277,17 +279,17 @@ if KIND == 'orc':
 # the bot kingdom's castle (the user's scheme, 2026-11-03: Design/bot_castle_v2.json): a body of
 # 35x35 cells round the spot, its harbour on the -y side -- the coast 19-23 m below the spot, where
 # the shipyard stands out over the water; flat, no relief and no wood on it all (camp_pad)
-BOT_PAD = (-20.0, 20.0, -27.0, 20.0)
+BOT_PAD = (-30.0, 30.0, -37.0, 30.0)     # the 55x55 town templates (Design/bot_town_*.json, the user 2026-11-05)
 if KIND == 'bot':
     def _bot_score(x, y):
         total = 0.0
-        for dx in (-19.0, -10.0, 0.0, 10.0, 19.0):
-            for dy in (-17.0, -8.0, 0.0, 10.0, 19.0):
+        for dx in (-29.0, -15.0, 0.0, 15.0, 29.0):
+            for dy in (-27.0, -13.0, 0.0, 14.0, 29.0):
                 if coast_sd(x + dx, y + dy) < 3.0:
                     return None
                 total += raw_mountains(x + dx, y + dy)
-        shore = coast_sd(x, y - 21.0)
-        if shore < -2.5 or shore > 2.0 or coast_sd(x, y - 27.0) > -1.0:
+        shore = coast_sd(x, y - 31.0)
+        if shore < -2.5 or shore > 2.0 or coast_sd(x, y - 37.0) > -1.0:
             return None
         return -total * 0.3 - abs(shore) * 2.0 - math.hypot(x, y) * 0.01
     BOT = _search(_bot_score, step=2.0)
@@ -337,7 +339,7 @@ def _beaches():
             out.append(p)
     if KIND == 'bot' and BOT:
         # one at the bot's harbour, below its castle
-        out.append((BOT[0], BOT[1] - 21.0))
+        out.append((BOT[0], BOT[1] - 31.0))
     tries = 0
     while len(out) < want and tries < 200:
         tries += 1

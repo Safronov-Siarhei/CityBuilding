@@ -307,8 +307,8 @@ namespace CityBuilder.Maps.Archipelago
 
         public static int StartZoneRadiusMeters => StartZoneRadius;
 
-        /// <summary>The bot kingdom's castle ground round its spot (Design/bot_castle_v2.json: a 35x35 body, islands.py BOT_PAD).</summary>
-        private const int BotHalf = 20;
+        /// <summary>The bot kingdom's town ground round its spot (Design/bot_town_*.json: a 55x55 body, islands.py BOT_PAD).</summary>
+        private const int BotHalf = 30;
     }
 
     /// <summary>One island in its own square frame before and after it is placed.</summary>

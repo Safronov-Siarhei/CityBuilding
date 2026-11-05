@@ -210,6 +210,22 @@ Proposed templates:
 - **D «Цитадель и посад»**: a keep with a lvl-5 wall at d=14 and lvl 4-5 buildings, inside a wide open posad of lvl 1-2 (workshops up to 3).
 - Pieces: A 942, B 863, C 858, D 760 (v2 had 547).
 
+**BUILT 2026-11-05 (user: «Утверждаю, строй»), not seen in game:**
+- The game reads `Assets/_Project/Bot/BotTownA..D.json`, copies of `Design/bot_town_*.json`; re-copy after re-running a template script. The old BotCastle.json is deleted.
+- `BotKingdom.blueprints[]` holds the four templates; `TemplateFor(seed)` picks one (its own hash) and `TemplateName` names it.
+- `MeshMapApplier.ArchipelagoSeed` exposes the seed.
+- **Anchor = the town's centre** (width/2, width/2), not the hall. `CellAt`/`WorldAt` offsets are from the town centre.
+- **Garrison routes are read off the template** (`BotKingdom.Routes`):
+  - King ring: 4 open points 9-14 cells from the hall;
+  - avenues: one per side with open ground 11+ cells out, street preferred, up to 8 long.
+  - `BotGarrison.KingRing`/`Avenues` read them. Fewer than 4 routes is fine.
+- Orc raids on the bot come up at `_half + 3` from the centre.
+- **Bot island:** islands.py `BOT_PAD` (-30, 30, -37, 30); harbour coast 31 below the spot.
+  - All 6 Isl-bot variants were regenerated and exported. Bot rolls: 2→11, 3→22, 4→6, 5→28, 6→29; the old rolls did not fit. `ISL_ROLL` env tries a roll.
+  - The frame stays 224 (scale 160), so the world layout of existing seeds does not move. `ArchipelagoGenerator.BotHalf` is now 30.
+- **Ransom by level:** `BotRelations.WarRazed` counts LEVELS (`NoteRazed(level)`). The key comment was updated in the CSV and the sheet.
+- Trap: the bot test's numbers (>500 standing, a Manor) were written for v2; check them in the next general run.
+
 ## Traps (war)
 - The fleet sails for the player's **Town Hall** (`TryFindOrcLanding`). With no hall there is no raid, silently.
 - BotSide units and the orcs **do not fight each other** (both are the hostile side); the bot's towers skip BotSide.

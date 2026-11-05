@@ -32,14 +32,9 @@ namespace CityBuilder.Bot
 
         // the routes, as offsets from the hall in blueprint cells (y south): the King round the
         // ring of squares, each patrol up and down an avenue between its drawbridge and its gate
-        private static readonly Vector2Int[] KingRing = { new Vector2Int(0, -9), new Vector2Int(9, 0), new Vector2Int(0, 9), new Vector2Int(-9, 0) };
-        private static readonly Vector2Int[][] Avenues =
-        {
-            new[] { new Vector2Int(0, -11), new Vector2Int(0, -15) },
-            new[] { new Vector2Int(11, 0), new Vector2Int(15, 0) },
-            new[] { new Vector2Int(0, 11), new Vector2Int(0, 15) },
-            new[] { new Vector2Int(-11, 0), new Vector2Int(-15, 0) },
-        };
+        // (read off the town template by BotKingdom.Routes, the user 2026-11-05: four templates)
+        private static Vector2Int[] KingRing => BotKingdom.Instance != null ? BotKingdom.Instance.KingRing : new Vector2Int[0];
+        private static Vector2Int[][] Avenues => BotKingdom.Instance != null ? BotKingdom.Instance.Avenues : new Vector2Int[0][];
 
         private readonly List<Post> _posts = new List<Post>();
         private ArmyGroup _kingGroup;
@@ -167,7 +162,7 @@ namespace CityBuilder.Bot
             if (post.duty == Duty.King) kingdom.DressKing(unit.gameObject);
             if (post.duty == Duty.Wall) post.onWall = unit.GoToWall(post.wallCell);
             else if (post.duty == Duty.Patrol) group.OrderMoveTo(kingdom.WorldAt(Avenues[post.route][_patrolLeg[post.route]]));
-            else group.OrderMoveTo(kingdom.WorldAt(KingRing[_kingLeg]));
+            else if (KingRing.Length > 0) group.OrderMoveTo(kingdom.WorldAt(KingRing[_kingLeg % KingRing.Length]));
         }
 
         /// <summary>Each patrol on to the other end of its avenue once its first man is there; the King on round the ring.</summary>
@@ -182,7 +177,7 @@ namespace CityBuilder.Bot
                 _patrolLeg[r] = 1 - _patrolLeg[r];
                 group.OrderMoveTo(kingdom.WorldAt(Avenues[r][_patrolLeg[r]]));
             }
-            if (_kingGroup != null && _kingGroup.Count > 0)
+            if (_kingGroup != null && _kingGroup.Count > 0 && KingRing.Length > 0)
             {
                 var target = kingdom.WorldAt(KingRing[_kingLeg]);
                 if (Flat(_kingGroup.Members[0].transform.position - target) <= 2.5f)

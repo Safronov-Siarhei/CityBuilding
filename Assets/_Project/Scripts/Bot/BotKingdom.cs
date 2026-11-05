@@ -14,7 +14,7 @@ namespace CityBuilder.Bot
     /// <summary>
     /// The bot kingdom (the user, 2026-11-03): already grown when the game starts, its castle
     /// stands on the archipelago's bot island, read from a base-editor blueprint
-    /// (Resources/Bot/BotCastle.json, format citybuilder-base/1 -- Tools/base_editor) and turned
+    /// (one of four town templates Bot/BotTownA..D.json picked by the map seed, format citybuilder-base/1 -- Design/bot_town_*.py) and turned
     /// so its harbour, the blueprint's south, faces the island's nearest water. Its buildings are
     /// the town's own kinds marked IsBot (BuildingInstance.InitializeAsBot): walls, towers, moat
     /// and bridges work as they do in the town, none of the town's sums see them.
@@ -25,7 +25,9 @@ namespace CityBuilder.Bot
     /// </summary>
     public class BotKingdom : MonoBehaviour
     {
-        [SerializeField] private TextAsset blueprint;
+        // the town templates (the user, 2026-11-05: a random one per map seed, so the player does
+        // not storm the same town on every map) -- Design/bot_town_*.py, the base editor's format
+        [SerializeField] private TextAsset[] blueprints;
         // the bot's roofs, gold and banners in its own neutral straw, so the player sees at a glance
         // whose they are (the user, 2026-11-03): every renderer on the town's palette swapped onto the bot's copy
         [SerializeField] private Material buildingsPalette;
@@ -95,14 +97,16 @@ namespace CityBuilder.Bot
             yield return null;
             yield return null;
             var map = MeshMapApplier.Instance;
-            if (map == null || !map.ArchipelagoBotCell.HasValue || blueprint == null) yield break;
+            if (map == null || !map.ArchipelagoBotCell.HasValue || blueprints == null || blueprints.Length == 0) yield break;
             Place(map.ArchipelagoBotCell.Value, map);
             if (_pendingRestore) ApplyRestore(_pendingRazed, _pendingMissing);
         }
 
         private void Place(Vector2Int centre, MeshMapApplier map)
         {
-            var plan = JsonUtility.FromJson<Blueprint>(blueprint.text);
+            var template = TemplateFor(map.ArchipelagoSeed, blueprints.Length);
+            TemplateName = blueprints[template] != null ? blueprints[template].name : null;
+            var plan = blueprints[template] != null ? JsonUtility.FromJson<Blueprint>(blueprints[template].text) : null;
             var grid = GridManager.Instance;
             var placer = FindAnyObjectByType<BuildingPlacer>();
             if (plan == null || plan.buildings == null || grid == null || placer == null) return;
@@ -111,10 +115,10 @@ namespace CityBuilder.Bot
                 if (data != null) catalog[data.buildingName] = data;
             if (placer.MandatoryFirstBuilding != null) catalog[placer.MandatoryFirstBuilding.buildingName] = placer.MandatoryFirstBuilding;
 
-            // the blueprint's own centre: the cell in its Town Hall's middle
-            var anchor = new Vector2Int(plan.width / 2, plan.height / 2);
-            foreach (var piece in plan.buildings)
-                if (piece.id == BuildingIds.TownHall) anchor = new Vector2Int(piece.x + piece.w / 2, piece.y + piece.h / 2);
+            // the town's own centre (the middle of its square body; the sea rows lie below it) -- not
+            // its Town Hall: template B keeps its hall at the far end of the town
+            var anchor = new Vector2Int(plan.width / 2, plan.width / 2);
+            _half = plan.width / 2;
             var turns = HarbourTurns(centre, map);
             _centre = centre;
             _turns = turns;
@@ -130,12 +134,84 @@ namespace CityBuilder.Bot
                 _slots.Add(slot);
                 Raise(slot, map);
             }
+            Routes(plan, anchor);
             Placed = true;
             gameObject.AddComponent<BotGarrison>();
             gameObject.AddComponent<BotWar>();
         }
 
-        /// <summary>The map cell of a blueprint offset from its Town Hall (x right, y down = south), turned as the castle is.</summary>
+        /// <summary>Which template a map seed gets: a hash of its own, so it does not follow the dungeons' picks.</summary>
+        public static int TemplateFor(int seed, int count)
+            => count <= 0 ? 0 : (int)((uint)(seed * 2654435761u + 40503u) >> 11) % count;
+
+        /// <summary>The template standing on this map (its asset's name), for the cheats and the tests.</summary>
+        public string TemplateName { get; private set; }
+
+        /// <summary>The King's round: four points about the Town Hall, offsets from the town's centre (blueprint cells, y south).</summary>
+        public Vector2Int[] KingRing { get; private set; } = new Vector2Int[0];
+
+        /// <summary>The patrols' avenues: each a pair of points along a street out of the hall, offsets from the town's centre.</summary>
+        public Vector2Int[][] Avenues { get; private set; } = new Vector2Int[0][];
+
+        private int _half = 17;
+
+        /// <summary>
+        /// The garrison's routes, read off the template: the King round four open points 9-14 cells
+        /// from the hall; a patrol along each of the four ways out of it that has open ground 11+
+        /// cells out (preferring the street), up to 8 cells long.
+        /// </summary>
+        private void Routes(Blueprint plan, Vector2Int anchor)
+        {
+            var blocked = new HashSet<Vector2Int>();
+            var roads = new HashSet<Vector2Int>();
+            var hall = Vector2Int.zero;
+            foreach (var piece in plan.buildings)
+            {
+                var open = piece.id == "Road" || piece.id == "Square" || piece.id == "Drawbridge";
+                for (var x = 0; x < piece.w; x++)
+                for (var y = 0; y < piece.h; y++)
+                {
+                    var c = new Vector2Int(piece.x + x - anchor.x, piece.y + y - anchor.y);
+                    if (open) roads.Add(c);
+                    else blocked.Add(c);
+                }
+                if (piece.id == BuildingIds.TownHall) hall = new Vector2Int(piece.x + piece.w / 2 - anchor.x, piece.y + piece.h / 2 - anchor.y);
+            }
+            var limit = _half - 1;
+            bool Open(Vector2Int c) => Mathf.Abs(c.x) <= limit && Mathf.Abs(c.y) <= limit && !blocked.Contains(c);
+            var dirs = new[] { new Vector2Int(0, -1), new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(-1, 0) };
+            var ring = new List<Vector2Int>();
+            foreach (var d in dirs)
+                for (var k = 9; k <= 14; k++)
+                    if (Open(hall + d * k)) { ring.Add(hall + d * k); break; }
+            if (ring.Count == 0) ring.Add(hall + new Vector2Int(0, 4));
+            KingRing = ring.ToArray();
+            var avenues = new List<Vector2Int[]>();
+            foreach (var d in dirs)
+            {
+                Vector2Int? first = null;
+                for (var k = 11; k <= 2 * _half; k++)
+                {
+                    var c = hall + d * k;
+                    if (Mathf.Abs(c.x) > limit || Mathf.Abs(c.y) > limit) break;
+                    if (!Open(c)) continue;
+                    if (first == null) first = c;
+                    if (roads.Contains(c)) { first = c; break; }
+                }
+                if (!first.HasValue) continue;
+                var end = first.Value;
+                for (var k = 1; k <= 8; k++)
+                {
+                    var c = first.Value + d * k;
+                    if (!Open(c)) break;
+                    end = c;
+                }
+                if (end != first.Value) avenues.Add(new[] { first.Value, end });
+            }
+            Avenues = avenues.ToArray();
+        }
+
+        /// <summary>The map cell of a blueprint offset from the town's centre (x right, y down = south), turned as the castle is.</summary>
         public Vector2Int CellAt(Vector2Int blueprintOffset) => _centre + Turn(new Vector2Int(blueprintOffset.x, -blueprintOffset.y), _turns);
 
         /// <summary>The world point in the middle of that cell.</summary>
@@ -272,7 +348,8 @@ namespace CityBuilder.Bot
             var raids = OrcRaidManager.Instance;
             if (raids == null || !Placed) return;
             // the blueprint's north, east or west, beyond the outer wall (its south is the harbour)
-            var sides = new[] { new Vector2Int(0, -21), new Vector2Int(21, 0), new Vector2Int(-21, 0) };
+            var o = _half + 3;
+            var sides = new[] { new Vector2Int(0, -o), new Vector2Int(o, 0), new Vector2Int(-o, 0) };
             var at = WorldAt(sides[UnityEngine.Random.Range(0, sides.Length)]);
             if (!UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 6f, UnityEngine.AI.NavMesh.AllAreas)) return;
             raids.SpawnOrcs(hit.position, count, level);
