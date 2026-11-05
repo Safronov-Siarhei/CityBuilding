@@ -4,7 +4,8 @@
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
 > not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. STAGE 3 (behaviours + formations) BUILT 2026-11-05,
 > user not seen. General run after stage 3: EditMode 461/461, PlayMode 365/384 (18 skipped, 1 flaky
-> dungeon test, green alone). STAGE 4 (ships) BUILT 2026-11-05, user not seen. Stage 5 (crest art) to do.
+> dungeon test, green alone). STAGE 4 (ships) BUILT 2026-11-05, user not seen. STAGE 5 crests APPROVED and IN THE GAME 2026-11-05.
+> ALL FIVE STAGES DONE; the user has not played any of it yet.
 > Replaces the right-side army panel (one group per soldier type) described in
 > [army-and-soldiers](army-and-soldiers.md). **Read with:** [army-and-soldiers](army-and-soldiers.md),
 > [archipelago-and-ships](archipelago-and-ships.md), [hud-and-ui](hud-and-ui.md).
@@ -107,3 +108,9 @@ economy `ship_level_coins_N` / `ship_level_seconds_N`, crystals by the usual res
 `ShipUnit.UsedPlaces`/`FreeSeats`. `ShipManager.DescribeBoardBlocker`: a squad or machine boards whole --
 `#ship_squad_too_big` «Уменьшите отряд или улучшите корабль». «Высадить десант» = the existing land button,
 its plaque now places used/capacity. Test: ArchipelagoTests boarding (a squad bigger than the transport refused).
+
+## Crests (stage 5)
+`Tools/ui/make_crests.py <out> [--sheet preview.png]` draws ten heater shields (gold rim, coloured field, one
+charge: crown, tower, tree, swords, star, waves, moon, cross, chevron+star, sun) -> `UI/Glyphs/Crest_0..9.png`;
+approved by the user 2026-11-05. `ArmyBar.crestSprites` (index = `ArmyGroup.Crest`), `CrestSprite(i)`;
+the stand-in colours stay as the fallback. The squad window's crest shows the picture.

@@ -273,7 +273,9 @@ namespace CityBuilder.UI
             var army = ArmyManager.Instance;
             var squad = _managed;
             _manageName.text = squad != null ? army.SquadName(squad) : Localization.Get("#squads_pick");
-            _crest.color = squad != null ? ArmyBar.CrestColour(squad.Crest) : new Color(1f, 1f, 1f, 0.3f);
+            var picture = squad != null ? ArmyBar.CrestSprite(squad.Crest) : null;
+            _crest.sprite = picture != null ? picture : shieldSprite;
+            _crest.color = squad == null ? new Color(1f, 1f, 1f, 0.3f) : picture != null ? Color.white : ArmyBar.CrestColour(squad.Crest);
             _refillBox.color = squad != null && squad.AutoRefill ? UiTheme.Good : new Color(1f, 1f, 1f, 0.35f);
             FillCards(_manageList, _manageEmpty, squad, -1);
             if (squad == null) _manageEmpty.text = Localization.Get("#squads_none");

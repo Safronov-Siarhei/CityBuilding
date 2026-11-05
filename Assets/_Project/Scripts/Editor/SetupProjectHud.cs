@@ -748,7 +748,7 @@ namespace CityBuilder.EditorTools
             var squadRings = new Object[max];
             for (var i = 0; i < max; i++)
             {
-                var button = CreateGlyphButton(row.transform, $"Squad{i + 1}", "round", HudInk.Keep, null, shield, size, 0.58f);
+                var button = CreateGlyphButton(row.transform, $"Squad{i + 1}", "round", HudInk.Keep, null, shield, size, 0.72f);
                 squadButtons[i] = button.gameObject;
                 squadCrests[i] = button.transform.Find("Icon").GetComponent<Image>();
                 squadCounts[i] = CountUnder(button.transform);
@@ -836,6 +836,9 @@ namespace CityBuilder.EditorTools
                 UiTheme.Rgb(0xc0392b), UiTheme.Rgb(0x2e6fb7), UiTheme.Rgb(0x3f9b4a), UiTheme.Rgb(0xd9a520), UiTheme.Rgb(0x7d4bb3),
                 UiTheme.Rgb(0x1f9c9c), UiTheme.Rgb(0xd2691e), UiTheme.Rgb(0x8e8e8e), UiTheme.Rgb(0xc2477e), UiTheme.Rgb(0x5a3e2b),
             };
+            var crests = new Object[10];
+            for (var i = 0; i < crests.Length; i++) crests[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Crest_{i}.png");
+            SetArray(so.FindProperty("crestSprites"), crests);
             var crestColours = so.FindProperty("crestColours");
             crestColours.arraySize = colours.Length;
             for (var i = 0; i < colours.Length; i++) crestColours.GetArrayElementAtIndex(i).colorValue = colours[i];

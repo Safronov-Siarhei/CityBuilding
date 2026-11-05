@@ -39,6 +39,8 @@ namespace CityBuilder.UI
         [SerializeField] private Sprite[] machinePortraits = Array.Empty<Sprite>();
         /// <summary>Stand-in crest colours until the crest set is drawn (stage 5).</summary>
         [SerializeField] private Color[] crestColours = Array.Empty<Color>();
+        /// <summary>The squads' crests (Tools/ui/make_crests.py, approved by the user 2026-11-05); index = ArmyGroup.Crest.</summary>
+        [SerializeField] private Sprite[] crestSprites = Array.Empty<Sprite>();
         /// <summary>Квадрат, треугольник, врассыпную: under the army icon while a squad is in hand (the user's mock-up).</summary>
         [SerializeField] private GameObject[] formationButtons = Array.Empty<GameObject>();
         [SerializeField] private GameObject[] formationRings = Array.Empty<GameObject>();
@@ -46,7 +48,15 @@ namespace CityBuilder.UI
         private static ArmyBar _instance;
 
         /// <summary>How many crests there are to choose from (stand-in colours until the set is drawn).</summary>
-        public static int CrestCount => _instance != null && _instance.crestColours.Length > 0 ? _instance.crestColours.Length : 10;
+        public static int CrestCount => _instance != null && _instance.crestSprites.Length > 0 ? _instance.crestSprites.Length
+            : _instance != null && _instance.crestColours.Length > 0 ? _instance.crestColours.Length : 10;
+
+        /// <summary>A crest's picture; null when none is drawn (the stand-in tint then).</summary>
+        public static Sprite CrestSprite(int crest)
+        {
+            if (_instance == null || _instance.crestSprites.Length == 0) return null;
+            return _instance.crestSprites[Mathf.Abs(crest) % _instance.crestSprites.Length];
+        }
 
         /// <summary>A crest's colour (stand-in for its picture).</summary>
         public static Color CrestColour(int crest)
@@ -250,7 +260,16 @@ namespace CityBuilder.UI
                 if (squadButtons[i] != null && squadButtons[i].activeSelf != has) squadButtons[i].SetActive(has);
                 if (!has) continue;
                 var squad = army.Squads[i];
-                if (i < squadCrests.Length && squadCrests[i] != null) squadCrests[i].color = CrestColour(squad.Crest);
+                if (i < squadCrests.Length && squadCrests[i] != null)
+                {
+                    var picture = CrestSprite(squad.Crest);
+                    if (picture != null)
+                    {
+                        squadCrests[i].sprite = picture;
+                        squadCrests[i].color = Color.white;
+                    }
+                    else squadCrests[i].color = CrestColour(squad.Crest);
+                }
                 if (i < squadCounts.Length && squadCounts[i] != null) squadCounts[i].text = squad.Count.ToString();
                 if (i < squadRings.Length && squadRings[i] != null) squadRings[i].SetActive(selected == squad);
             }
