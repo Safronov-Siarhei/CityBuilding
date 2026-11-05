@@ -60,6 +60,23 @@ gather = ring; refused = red ripple.
   in rings round the barracks, in a run one with a complete path to the castle (2026-10-23: recruits
   stood stuck in the gap between the barracks and a house).
 
+## Roster widening (DESIGN, the user 2026-11-05)
+**Decided by the user:**
+- **Roles and counters**, not a ladder of strength: every unit has a job and a weakness.
+- **New units:** Арбалетчик, Всадник/рыцарь, Монах-лекарь, Катапульта/баллиста.
+- **Hired from the Barracks plus new buildings:** infantry from the Barracks, cavalry from a new Конюшня, siege from a new Мастерская, the healer from the Church.
+- **The bot is a full mirror:** the same units as the player, in the bot's colours (straw capes). Its `botwaves` and garrison get the new ids.
+
+**Proposed (mine, not agreed yet):**
+- Арбалетчик opens at Barracks level 5 (it opens nothing today). Slow reload, pierces armour (bonus vs man-at-arms / brutes), +range from walls.
+- Всадник: fast, a heavy first blow after a run-up; the Spearman gets a bonus against it (the spearman's real role).
+- Монах: no attack, heals nearby soldiers over time.
+- Катапульта: slow, long range, hits buildings/walls; walks no walls, crosses no moat.
+- Big units (cavalry, siege) take 2 of the 20 army slots.
+- Models: jointed figures in the soldiers' style, 3 looks per level; a horse rig is the costliest part. Renders go to the user first.
+
+**Open questions:** levels and prices of Конюшня / Мастерская; the healer's numbers; the bot's unit counts per wave; whether orcs get answers too.
+
 ## Code
 `Combat/SoldierUnit.cs` (`IsRanged`, `_breach`), `Combat/SoldierTypes.cs` (`SoldierType`,
 `TargetPriority`, `SheetIdOf`), `Combat/ArmyGroup.cs` (`RestoreAttackOrder`), `Combat/ArmyManager.cs`,

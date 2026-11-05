@@ -167,7 +167,7 @@ User decisions:
 - The `botwaves` tab now has **20 waves**: from 4+2 at level 2 up to 30+15 at level 5. Past wave 20, wave 20 repeats.
 
 ## Open (user, 2026-11-05)
-- **Widen the barracks' unit list for the player and for the bot** (new unit types). To discuss later; the botwaves tab then gets the new `unit` ids.
+- **Unit list widened (decided 2026-11-05, design in army-and-soldiers.md):** the bot is a FULL MIRROR of the player's units (crossbowman, cavalry, monk, catapult added) in its colours; botwaves gets the new `unit` ids.
 - The Diplomacy window does not show how many buildings were razed; only the price drops.
 
 ## Town templates (user, 2026-11-05) — IN DESIGN
