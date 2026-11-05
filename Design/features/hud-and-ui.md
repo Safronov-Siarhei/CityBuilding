@@ -19,6 +19,8 @@
 
 ## Layout (user's sketch round 2 + round 3 fixes)
 Menu round button top-left (pauses `timeScale`, hides HUD via `HudHider`; save/settings/home);
+`HudHider` (menu, «Запасы», workforce) hides the hero portraits, the hero skill bar, the ship bar and the
+dungeon potion bar too (the user, 2026-11-05) -- only the menu, dialogs and panels carry `HudOverlay`;
 citizens button under it; event feed down the left edge; one resource bar top-centre on a wood plaque,
 «День N» under it; happiness round number top-right (tap → breakdown), migration + army under it;
 minimap bottom-left (round); build menu bottom-centre — CLOSED at rest (tabs only), a tab slides the

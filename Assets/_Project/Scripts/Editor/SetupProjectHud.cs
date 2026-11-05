@@ -388,7 +388,6 @@ namespace CityBuilder.EditorTools
             const float icon = 84f;
             var root = new GameObject("DungeonPotionBar", typeof(RectTransform));
             root.transform.SetParent(uiRoot, false);
-            root.AddComponent<HudOverlay>();
             var rootRect = (RectTransform)root.transform;
             Anchor(rootRect, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, -HudMargin * 0.7f - HeroPortraitStep), new Vector2(icon * 4f + 36f, icon + 10f));
             var circle = SkinSprite("circle_mask");
@@ -439,8 +438,7 @@ namespace CityBuilder.EditorTools
 
             var root = new GameObject($"{type}Portrait", typeof(RectTransform));
             root.transform.SetParent(uiRoot, false);
-            // stays up while a hero is selected and the rest of the HUD steps aside (HudHider)
-            root.AddComponent<HudOverlay>();
+            // no HudOverlay: the menu and the full-screen panels hide the portraits with the rest (the user, 2026-11-05)
             var top = -HudMargin * 0.7f;
             Anchor((RectTransform)root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-HudMargin, top), new Vector2(380f, RoundButton + 20f));
 
@@ -517,7 +515,6 @@ namespace CityBuilder.EditorTools
             const float size = 124f;
             var row = new GameObject("HeroSkillBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             row.transform.SetParent(uiRoot, false);
-            row.AddComponent<HudOverlay>();
             Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(4 * size + 3 * 28f, size + 16f));
             var layout = row.GetComponent<HorizontalLayoutGroup>();
             layout.spacing = 28f;
@@ -639,7 +636,6 @@ namespace CityBuilder.EditorTools
             // one centred row: land, then repair; each hides itself when it does not apply
             var row = new GameObject("ShipActionBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             row.transform.SetParent(uiRoot, false);
-            row.AddComponent<HudOverlay>();
             Anchor((RectTransform)row.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, HudMargin), new Vector2(size * 2f + 28f, size + 16f));
             var layout = row.GetComponent<HorizontalLayoutGroup>();
             layout.spacing = 28f;
