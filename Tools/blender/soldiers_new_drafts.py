@@ -525,6 +525,18 @@ def main():
     mat = kit.ensure_material(img)
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
+    if "--install" in sys.argv:
+        # the approved figures (2026-11-05) into the models file beside soldiers.py's, a metre a
+        # level behind, like theirs -- export_fbx.py then sends them to Models/Soldiers
+        for i, (name, spec) in enumerate(FIGURES.items()):
+            for level in (1, 2, 3):
+                obj_name = name if level == 1 else f"{name}-lvl{level}"
+                location, _, _ = kit.refresh_placeholder(obj_name, "Flag1-lvl1")
+                root = build_figure(name, spec, mat, level)
+                root.location = location + Vector((S['o'].COLUMN_X + 13.2 + i * 0.8, (level - 1) * S['LEVEL_DY'], 0))
+        kit.file_display_settings()
+        bpy.ops.wm.save_mainfile()
+        return
     for name, spec in FIGURES.items():
         for level in (1, 2, 3):
             build_figure(name, spec, mat, level)
