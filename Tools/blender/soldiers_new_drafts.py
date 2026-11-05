@@ -137,11 +137,13 @@ def monk_body(b):
     b.rod((0.03, -0.088, 0.26), (0.04, -0.095, 0.14), 0.012, ROPE)
     b.obox((0, 0, 0.34), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.08, 0.058, 0.06, WHITE, bevel=0.022)
     b.obox((0, -0.055, 0.34), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.035, 0.008, 0.06, KINGDOM)
-    b.hcylinder('y', (0, -0.066, 0.355), 0.004, 0.022, GOLD, sides=8)
+    # the gold sun ON the scapular (in front of it, the user: it was hidden behind it)
+    sy, sz = -0.097, 0.32
+    b.hcylinder('y', (0, sy, sz), 0.004, 0.026, GOLD, sides=8)
     for a in range(0, 360, 45):
         r = math.radians(a)
-        b.rod((math.cos(r) * 0.024, -0.068, 0.355 + math.sin(r) * 0.024),
-              (math.cos(r) * 0.036, -0.068, 0.355 + math.sin(r) * 0.036), 0.006, GOLD)
+        b.rod((math.cos(r) * 0.028, sy - 0.001, sz + math.sin(r) * 0.028),
+              (math.cos(r) * 0.044, sy - 0.001, sz + math.sin(r) * 0.044), 0.008, GOLD)
     b.obox((0, 0, 0.385), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.09, 0.06, 0.018, KINGDOM, bevel=0.012)    # the hood's cowl
 
 
