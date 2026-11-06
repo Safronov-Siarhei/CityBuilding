@@ -17,7 +17,7 @@
 > turf/moss style clashes with the gloom (needs a reskin?); later: per-seed base VARIANTS
 > (layouts + special buildings: shaman hut, war drum, catapults, wolf den, forge, arena) and
 > liveliness (smoke, fires, patrols, alarm horn) -- discussed 2026-11-06, not decided.
-> **2026-11-06 models for approval** (`Tools/blender/orcisland1.py`, in the Models file, NOT exported):
+> **2026-11-06 models APPROVED by the user** (`Tools/blender/orcisland1.py`, in the Models file, NOT exported):
 > OrcSkullGate1 (10x12, corridor 2 wide / 3.4 high), OrcRib1-A/-B (foot 2x2, arc 10 up / 11.5 in),
 > OrcVertebra1, DeadTree1-A/B/C (slate grey: wood colours get the planks detail), OrcSkullStake1,
 > Wreck1, Crow1. Bone GREY = `stone_mid`/`stone_dark`/`roof_slate_dark`, drawn plain (the user: yellow no). Ribs drawn by `flat_tube` (o.tube twisted the section past upright). Teeth inside the mouth (user note).
