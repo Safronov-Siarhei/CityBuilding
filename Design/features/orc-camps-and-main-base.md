@@ -69,6 +69,12 @@
 >   (variant 1) lays a causeway piece a cell along every GatCauseway leg (model runs along x, legs along z turned
 >   90), 9 bog lanterns beside them, 5 stilt huts + 2 rafts in the bog, 14 reed clumps (ambush bend, edges).
 >   Bog decor stands at the bog's ground height: check it does not sink under the water in play.
+> - VARIANT C «Хребет» (the user chose it next, 2026-11-06): scheme `Design/orc_base_living_c.png/.py` SENT FOR
+>   APPROVAL -- 24x53, inside the ribcage: the spine (impassable giant vertebrae, x -1..0) splits every zone,
+>   gaps alternate (z -33, -21, -10), cross-wall gates alternate sides (z -42 L, -30 R, -18 L, -7 R), so the way
+>   snakes; skull at the front gate (head), tail behind the portal; ribs from the spine over the side walls.
+>   Patrols: plaza, a runner along the whole snake, middle gap, sanctum, skull; 2 brutes per spine gap.
+>   Proposed: on swamp islands 3 and 5 (A on 1, «Гать» on 2/4/6) -- needs their pad elongated.
 > - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
