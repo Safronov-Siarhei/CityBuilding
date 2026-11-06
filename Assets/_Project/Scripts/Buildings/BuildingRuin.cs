@@ -44,6 +44,24 @@ namespace CityBuilder.Buildings
         public static readonly List<BuildingRuin> All = new List<BuildingRuin>();
 
         public BuildingData Data { get; private set; }
+
+        /// <summary>The bot kingdom's (the user, 2026-11-06): not the player's to tap, restore or save -- the bot raises it again itself (BotKingdom.Rebuild).</summary>
+        public bool IsBot { get; set; }
+
+        /// <summary>The bot's ruin on this plot, if one lies there.</summary>
+        public static BuildingRuin BotRuinAt(BuildingData data, Vector2Int origin)
+        {
+            foreach (var ruin in All)
+                if (ruin != null && ruin.IsBot && ruin.Data == data && ruin.OriginCell == origin) return ruin;
+            return null;
+        }
+
+        /// <summary>Takes the ruin away and frees its plot, with no word in the feed (the bot building over it).</summary>
+        public void Remove()
+        {
+            Release();
+            Destroy(gameObject);
+        }
         public Vector2Int OriginCell { get; private set; }
         public int RotationSteps { get; private set; }
         public int Level { get; private set; } = 1;
@@ -69,7 +87,7 @@ namespace CityBuilder.Buildings
 
         /// <summary>Whether this building leaves ruins when it falls (see the class summary).</summary>
         public static bool LeavesRuin(BuildingInstance building) =>
-            building != null && !building.IsBot && building.Data != null && building.Data.prefab != null
+            building != null && building.Data != null && building.Data.prefab != null
             && building.Data.buildingName != BuildingIds.TownHall && !building.Data.isMoat
             && !Invasion.InvasionRules.Active;
 

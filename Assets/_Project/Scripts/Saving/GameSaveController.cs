@@ -306,7 +306,8 @@ namespace CityBuilder.Saving
             // the ruins of what the orcs or the bot burnt down (sandbox)
             for (var i = BuildingRuin.All.Count - 1; i >= 0; i--)
             {
-                if (BuildingRuin.All[i] != null) Destroy(BuildingRuin.All[i].gameObject);
+                // the bot's ruins are its own: BotKingdom.Restore lays them from the save's missing slots
+                if (BuildingRuin.All[i] != null && !BuildingRuin.All[i].IsBot) Destroy(BuildingRuin.All[i].gameObject);
             }
             if (data.ruins != null)
             {
@@ -910,7 +911,7 @@ namespace CityBuilder.Saving
 
             foreach (var ruin in BuildingRuin.All)
             {
-                if (ruin == null || ruin.Data == null) continue;
+                if (ruin == null || ruin.Data == null || ruin.IsBot) continue;
                 data.ruins.Add(new RuinEntry
                 {
                     buildingName = ruin.Data.buildingName,

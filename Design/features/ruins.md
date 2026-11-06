@@ -11,6 +11,7 @@ Status: BUILT 2026-11-05 (look A approved by the user). No tests yet, the user h
 - **Ruins from EVERYTHING**, roads, fences, walls and decor included.
 - **Restoring works like construction, but faster**: `BuildOnTimer` for (sum of `build_sec` up to its level) × `ruin_restore_time_fraction` (0.5; sandbox tab).
 - **Sandbox only**: the Invasion mode stays as it is.
+- **The bot's buildings leave ruins too** (2026-11-06): `IsBot` ruins, not the player's (no card, not saved); the bot raises them itself -- see bot.md.
 - **The Town Hall gives no ruins**: losing it loses the game.
 - **Look A, «обгоревший остов»** (the user's choice).
 

@@ -536,6 +536,7 @@ namespace CityBuilder.Core
         [SerializeField] private float botWarDeclareScoreLoss = 40f;
         [SerializeField] private float botRelationsDriftPerDay = 2f;
         [SerializeField] private float botRebuildCalmSeconds = 60f;
+        [SerializeField] private int botRebuildEveryRaids = 3;
         [SerializeField] private float botCalmRadiusCells = 45f;
         [SerializeField] private float botGarrisonRespawnSeconds = 90f;
         [SerializeField] private int botGarrisonPatrols = 4;
@@ -1233,6 +1234,8 @@ namespace CityBuilder.Core
         public float BotRelationsDriftPerDay => botRelationsDriftPerDay;
         /// <summary>How long the bot's castle must be clear of orcs before it rebuilds what a raid destroyed (the user, 2026-11-03).</summary>
         public float BotRebuildCalmSeconds => botRebuildCalmSeconds;
+        /// <summary>The bot raises its ruins after every this many orc raids on it (the user, 2026-11-06: every third).</summary>
+        public int BotRebuildEveryRaids => Mathf.Max(1, botRebuildEveryRaids);
         /// <summary>How far round the bot's castle an orc still counts as its raid.</summary>
         public float BotCalmRadiusCells => botCalmRadiusCells;
         /// <summary>The bot's garrison (the user, 2026-11-03): how long a fallen soldier takes to come back while its Town Hall stands.</summary>
@@ -2065,6 +2068,7 @@ namespace CityBuilder.Core
             botWarDeclareScoreLoss = Read(economy, "bot_war_declare_score_loss", botWarDeclareScoreLoss);
             botRelationsDriftPerDay = Read(economy, "bot_relations_drift_per_day", botRelationsDriftPerDay);
             botRebuildCalmSeconds = Read(economy, "bot_rebuild_calm_sec", botRebuildCalmSeconds);
+            botRebuildEveryRaids = Mathf.RoundToInt(Read(economy, "bot_rebuild_every_raids", botRebuildEveryRaids));
             botCalmRadiusCells = Read(economy, "bot_calm_radius_cells", botCalmRadiusCells);
             botGarrisonRespawnSeconds = Read(economy, "bot_garrison_respawn_sec", botGarrisonRespawnSeconds);
             botGarrisonPatrols = Mathf.RoundToInt(Read(economy, "bot_garrison_patrols", botGarrisonPatrols));

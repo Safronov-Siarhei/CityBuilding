@@ -19,9 +19,11 @@ namespace CityBuilder.Bot
     /// the town's own kinds marked IsBot (BuildingInstance.InitializeAsBot): walls, towers, moat
     /// and bridges work as they do in the town, none of the town's sums see them.
     ///
-    /// What a raid destroys comes back once no orc has been within bot_calm_radius_cells of its
-    /// Town Hall for bot_rebuild_calm_sec -- while that hall stands. Razed, the bot rebuilds
-    /// nothing again, and a war with it ends (BotRelations.EndWar).
+    /// What a raid destroys lies in ruins (BuildingRuin, IsBot); after every
+    /// bot_rebuild_every_raids-th raid (the user, 2026-11-06: every third), once no orc has been
+    /// within bot_calm_radius_cells of its Town Hall for bot_rebuild_calm_sec, the bot raises every
+    /// ruin again as a construction under scaffolding -- while that hall stands. Razed, the bot
+    /// rebuilds nothing again, and a war with it ends (BotRelations.EndWar).
     /// </summary>
     public class BotKingdom : MonoBehaviour
     {
@@ -72,6 +74,9 @@ namespace CityBuilder.Bot
         private Vector2Int _centre;
         private int _turns;
         private float _calmFor;
+        // the raids on the castle since its last rebuild, and whether the next calm raises its ruins
+        private int _raidsSinceRebuild;
+        private bool _rebuildDue;
         private float _raidIn = -1f;
         private bool _pendingRestore;
         private bool _pendingRazed;
@@ -332,6 +337,12 @@ namespace CityBuilder.Bot
             var config = BalanceConfig.Instance;
             if (config == null) return;
             RaidNow(config);
+            // the bot rebuilds only after every bot_rebuild_every_raids-th raid (the user, 2026-11-06)
+            if (!_rebuildDue)
+            {
+                _calmFor = 0f;
+                return;
+            }
             var reach = config.BotCalmRadiusCells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
             var at = Hall.transform.position;
             foreach (var orc in OrcUnit.All)
@@ -359,6 +370,7 @@ namespace CityBuilder.Bot
             _calmFor += Time.deltaTime;
             if (_calmFor < config.BotRebuildCalmSeconds) return;
             _calmFor = 0f;
+            _rebuildDue = false;
             Rebuild();
         }
 
@@ -390,17 +402,32 @@ namespace CityBuilder.Bot
             var at = WorldAt(sides[UnityEngine.Random.Range(0, sides.Length)]);
             if (!UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 6f, UnityEngine.AI.NavMesh.AllAreas)) return;
             raids.SpawnOrcs(hit.position, count, level);
+            _raidsSinceRebuild++;
+            var every = BalanceConfig.Instance != null ? BalanceConfig.Instance.BotRebuildEveryRaids : 3;
+            if (_raidsSinceRebuild < every) return;
+            _raidsSinceRebuild = 0;
+            _rebuildDue = true;
         }
 
-        /// <summary>Raises every slot whose building is gone (a beaten-off raid's damage).</summary>
+        /// <summary>
+        /// Raises every slot whose building is gone (the raids' damage): its ruin cleared away and
+        /// the building put back at its level as a construction, as long as the player's restoring
+        /// of a ruin takes (its build times to its level x ruin_restore_time_fraction).
+        /// </summary>
         public void Rebuild()
         {
             var map = MeshMapApplier.Instance;
             if (map == null || HallRazed) return;
+            var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.RuinRestoreTimeFraction : 0.5f;
             foreach (var slot in _slots)
             {
                 if (slot.instance != null) continue;
+                BuildingRuin.BotRuinAt(slot.data, slot.origin)?.Remove();
                 Raise(slot, map);
+                if (slot.instance == null || slot.data.isRoad) continue;
+                var seconds = 0f;
+                for (var l = 1; l <= slot.level; l++) seconds += slot.data.BuildSeconds(l);
+                slot.instance.BuildOnTimer(seconds * share);
             }
         }
 
@@ -437,6 +464,17 @@ namespace CityBuilder.Bot
                 var slot = _slots[i];
                 var footprint = slot.steps % 2 == 0 ? slot.data.footprintSize : new Vector2Int(slot.data.footprintSize.y, slot.data.footprintSize.x);
                 grid?.SetAreaOccupied(slot.origin, footprint, false);
+                // down in the save: its ruin where it stood (but the hall, which leaves none)
+                if (slot.data.buildingName != BuildingIds.TownHall && !slot.data.isMoat)
+                {
+                    var cells = new List<Vector2Int>();
+                    for (var x = 0; x < footprint.x; x++)
+                    for (var y = 0; y < footprint.y; y++)
+                        cells.Add(slot.origin + new Vector2Int(x, y));
+                    BuildingRuin.BotRuinAt(slot.data, slot.origin)?.Remove();
+                    var ruin = BuildingRuin.LeaveOf(slot.instance, cells);
+                    if (ruin != null) ruin.IsBot = true;
+                }
                 Destroy(slot.instance.gameObject);
                 slot.instance = null;
             }

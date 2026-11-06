@@ -296,7 +296,8 @@ namespace CityBuilder.Buildings
         /// </summary>
         private void ChangeStoredCapacity(int delta)
         {
-            if (delta == 0 || Data == null || Data.storageGroup == ResourceStorageGroup.None) return;
+            // the bot kingdom's stores are not the town's (a bot building rising again under scaffolding)
+            if (delta == 0 || IsBot || Data == null || Data.storageGroup == ResourceStorageGroup.None) return;
             ResourceManager.Instance?.AddCapacity(Data.storageGroup, delta);
         }
 
@@ -389,7 +390,8 @@ namespace CityBuilder.Buildings
                     foreach (var cell in held) RoadNetwork.Instance.UnregisterRoad(cell);
                 }
                 FreeCellsAndDestroy();
-                BuildingRuin.LeaveOf(this, held);
+                var ruin = BuildingRuin.LeaveOf(this, held);
+                if (ruin != null) ruin.IsBot = IsBot;
                 return;
             }
             FreeCellsAndDestroy();

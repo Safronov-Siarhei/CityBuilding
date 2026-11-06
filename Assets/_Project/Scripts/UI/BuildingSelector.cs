@@ -200,7 +200,7 @@ namespace CityBuilder.UI
             {
                 if (_hits[i].distance >= nearestDistance) continue;
                 var ruin = _hits[i].collider.GetComponent<BuildingRuin>();
-                if (ruin == null) continue;
+                if (ruin == null || ruin.IsBot) continue;
                 nearest = ruin;
                 nearestDistance = _hits[i].distance;
             }

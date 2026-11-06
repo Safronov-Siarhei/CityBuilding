@@ -257,3 +257,10 @@ Proposed templates:
 Test note (2026-11-05): the town templates are 55 cells across, anchored on their centre, so a corner stands ~39 cells
 from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each bot building is on the hall's island
 (`MeshMapApplier.SameIsland`) and within 42 cells (was a stale 30).
+
+## Ruins and rebuild every third raid (2026-11-06, the user: «бот не восстанавливает, после каждой третьей атаки орков начинал отстраивать, здания без руин -- добавить»)
+- Bot buildings now leave RUINS like the player's (look A): `BuildingRuin.LeavesRuin` no longer excludes IsBot (hall and moat still none); `BuildingRuin.IsBot` set in TryDamage; bot ruins are NOT tappable (BuildingSelector.FindRuin), NOT saved (GameSaveController skips them; the load wipe keeps them) -- `BotKingdom.ApplyRestore` lays a ruin for every missing slot from the save.
+- Rebuild rule: `Raid()` counts raids; every `bot_rebuild_every_raids` (economy, 3) sets `_rebuildDue`; only then the old calm check (bot_rebuild_calm_sec with no orc within bot_calm_radius_cells; at war no soldier either) fires `Rebuild()`. Before it, the bot rebuilt after any calm (and orcs lingering may have blocked it -- the user saw no rebuild).
+- `Rebuild()` removes the slot's ruin (`BotRuinAt(...).Remove()`), raises the building and puts it under construction: `BuildOnTimer(sum of build_sec to its level x ruin_restore_time_fraction)`; roads at once. `ChangeStoredCapacity` ignores bot buildings (BuildOnTimer used to touch the town's capacity).
+- The raid counter and the due flag are not saved (a load starts counting afresh). Untested, not seen.
+

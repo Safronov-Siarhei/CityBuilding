@@ -38,7 +38,7 @@ namespace CityBuilder.CameraControl
         // border) used to be here and was removed -- it hijacked the camera during ordinary
         // pointing, e.g. reaching for the hotbar or a building near the edge. It also has no
         // meaning on the touch devices this game primarily targets, where panning is a finger drag.
-        [SerializeField] private float panSpeed = 50f;
+        [SerializeField] private float panSpeed = 35f;
         [SerializeField] private Vector2 panBoundsMin = new Vector2(-100f, -100f);
         [SerializeField] private Vector2 panBoundsMax = new Vector2(100f, 100f);
 
@@ -75,7 +75,10 @@ namespace CityBuilder.CameraControl
 
         [Header("Inertia")]
         /// <summary>How fast a fling dies out: velocity is multiplied by exp(-damping * dt) every frame.</summary>
-        [SerializeField] private float flingDamping = 6f;
+        [SerializeField] private float flingDamping = 5f;
+
+        /// <summary>The fastest a fling may glide (world m/s): a hard flick no longer throws the view across the map (the user, 2026-11-06: smoother and slower, lighter for the phone -- less of the world streams in per frame).</summary>
+        [SerializeField] private float maxFlingSpeed = 22f;
 
         /// <summary>Below this world speed the glide stops rather than creeping for another second.</summary>
         [SerializeField] private float minFlingSpeed = 0.5f;
@@ -98,11 +101,12 @@ namespace CityBuilder.CameraControl
         /// The rig follows where the gestures put it rather than jumping there (the user,
         /// 2026-10-28: «камера двигается как будто не плавно»): touches arrive unevenly against the
         /// frames, so moving the rig straight to each one stuttered. Gestures move a goal; each
-        /// frame the rig closes on it exponentially at this rate per second, ~50 ms behind.
+        /// frame the rig closes on it exponentially at this rate per second, ~100 ms behind
+        /// (18 -> 10 on 2026-11-06, the user: smoother and slower).
         /// </summary>
-        [SerializeField] private float followSharpness = 18f;
+        [SerializeField] private float followSharpness = 10f;
         /// <summary>The same for the mouse wheel's zoom, whose notches jumped. A pinch zooms at once: it is already smooth, and the pan that keeps the fingers' point under them needs the real distance.</summary>
-        [SerializeField] private float zoomSharpness = 14f;
+        [SerializeField] private float zoomSharpness = 9f;
 
         private Vector3 _goal;
         private float _goalDistance;
@@ -117,7 +121,7 @@ namespace CityBuilder.CameraControl
 
         [Header("Focus")]
         /// <summary>How fast FocusOn closes on its target -- a rate, so a long trip is quick and a short one gentle.</summary>
-        [SerializeField] private float focusSharpness = 6f;
+        [SerializeField] private float focusSharpness = 4.5f;
 
         private Vector3 _focusTarget;
         private bool _focusing;
@@ -400,7 +404,7 @@ namespace CityBuilder.CameraControl
 
             // a finger held still before it lifted throws nothing
             if (Time.unscaledTime - _lastStepTime > 0.1f) return;
-            if (_panVelocity.magnitude >= minFlingSpeed) _flingVelocity = _panVelocity;
+            if (_panVelocity.magnitude >= minFlingSpeed) _flingVelocity = Vector3.ClampMagnitude(_panVelocity, maxFlingSpeed);
         }
 
         private void HandlePinchStarted(Vector2 centroid, float distance)

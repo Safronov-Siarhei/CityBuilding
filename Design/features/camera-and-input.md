@@ -27,6 +27,9 @@
   finger rested >0.1 s before lifting. Mouse-wheel zoom eases (`zoomSharpness` 14); a PINCH zooms
   at once (its pan needs the real distance). A move from outside (`JumpTo`, a test setting the rig)
   is adopted as the new goal (`AdoptOutsideMoves`). Not felt on a phone yet.
+- SMOOTHER AND SLOWER (2026-11-06, the user: «более плавной, уменьшить скорость для оптимизации и плавности»):
+  followSharpness 18 -> 10 (~100 ms behind), zoomSharpness 14 -> 9, focusSharpness 6 -> 4.5, flingDamping
+  6 -> 5, keys panSpeed 50 -> 35, NEW maxFlingSpeed 22 m/s cap on the fling. Code defaults (the scene takes them).
 - A held building (BuildingFocus) is let go once the camera leaves it -- its middle off the
   screen, not while the camera is still gliding to it (`BuildingFocus.OffScreen`, the user
   2026-10-28; test `BuildingFocusTests`). The router raises `TouchedDown` on the first finger
