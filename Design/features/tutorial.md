@@ -170,13 +170,15 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
   `ShipInput.HandleTap` ignores orders); not pickable while sailing (`ShipSelectable` false once sent).
 - Line: «Поставьте *Ратушу* в *жёлтой зоне*».
 - Boarding mark: a flat arrow turned to the camera over the hull's middle (the pyramid read as a cube beside it).
-- ALL modes: the portal collapses (`OrcPortal.TakeDamage` -> `PlayCollapse`); a portal victory waits 5 s
-  (`GameOverManager.WinAfterTheFall`: IsGameOver at once, OnGameEnded after); every building that goes collapses
+- ALL modes: the portal collapses (`OrcPortal.TakeDamage` -> `PlayCollapse`); a portal victory waits 3 s
+  (economy `victory_delay_sec`, was 5; `GameOverManager.WinAfterTheFall`: IsGameOver at once, OnGameEnded after); every building that goes collapses
   -- combat, decay, demolish, orc buildings, portal (not roads/fences: `Data.isRoad`).
 
 - Camera (2026-11-06): EVERY moving target (the person, the King/soldier, the ship at boarding, the raid, the ship
   at Sail) is followed per frame in `FollowMoving`; only the still ones (node, Barracks, Shipyard) stay on the
   0.3-s `Follow`. Re-aimed every 0.3 s the camera caught up, stopped, caught up -- the ship looked stepwise.
+- Raid camera (2026-11-06): after the soldier's hire the camera stays on the town for `tutorial_raid_camera_sec`
+  (3) before it goes over to the orcs boarding (`FollowMoving`, gated on `_stepTime`).
 
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».

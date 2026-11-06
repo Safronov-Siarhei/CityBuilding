@@ -116,9 +116,6 @@ namespace CityBuilder.Core
             WinAfterTheFall(Localization.Get("#log_victory"));
         }
 
-        /// <summary>Seconds between the last portal falling and the victory panel: its collapse is watched first (the user, 2026-11-06).</summary>
-        private const float VictoryDelaySeconds = 5f;
-
         /// <summary>The map is won now (nothing can lose it any more), the panel comes once the portal has fallen.</summary>
         private void WinAfterTheFall(string logMessage)
         {
@@ -129,7 +126,8 @@ namespace CityBuilder.Core
 
         private System.Collections.IEnumerator AnnounceLater(string logMessage)
         {
-            yield return new WaitForSeconds(VictoryDelaySeconds);
+            // its collapse is watched first (the user, 2026-11-06: 3 s)
+            yield return new WaitForSeconds(BalanceConfig.Instance != null ? BalanceConfig.Instance.VictoryDelaySeconds : 3f);
             EventLogManager.Instance?.Log(logMessage);
             OnGameEnded?.Invoke(true);
         }

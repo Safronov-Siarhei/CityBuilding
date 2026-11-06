@@ -679,7 +679,8 @@ namespace CityBuilder.Tutorial
                     if (_ship != null) _camera.FocusOn(_ship.transform.position);
                     return;
             }
-            if (Current == Step.Raid)
+            // the raid: the camera stays a moment on the town before it goes over to the orcs (the user, 2026-11-06)
+            if (Current == Step.Raid && _stepTime >= BalanceConfig.Instance.TutorialRaidCameraSeconds)
             {
                 if (_walkers.Count > 0 && Centre(_walkers, out var walking)) _camera.FocusOn(walking);
                 else if (_barge != null && _barge && _barge.OrcCargo > 0) _camera.FocusOn(_barge.transform.position);

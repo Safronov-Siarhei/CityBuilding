@@ -587,6 +587,8 @@ namespace CityBuilder.Core
         [SerializeField] private int tutorialFishShoals = 2;
         [SerializeField] private float tutorialPeopleHintSeconds = 6f;
         [SerializeField] private float tutorialBlinkSeconds = 0.5f;
+        [SerializeField] private float tutorialRaidCameraSeconds = 3f;
+        [SerializeField] private float victoryDelaySeconds = 3f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
         [SerializeField] private float decayPenaltyThreshold = 0.7f;
         [SerializeField] private float minDecayProductionMultiplier = 0.5f;
@@ -1199,6 +1201,12 @@ namespace CityBuilder.Core
         public int TutorialFishShoals => tutorialFishShoals;
         public float TutorialPeopleHintSeconds => tutorialPeopleHintSeconds;
         public float TutorialBlinkSeconds => tutorialBlinkSeconds;
+
+        /// <summary>The tutorial's camera goes to the orcs this long after the soldier is hired (`tutorial_raid_camera_sec`; the user, 2026-11-06: 3).</summary>
+        public float TutorialRaidCameraSeconds => tutorialRaidCameraSeconds;
+
+        /// <summary>Seconds from the last portal's fall to the victory panel (economy `victory_delay_sec`; the user, 2026-11-06: 3).</summary>
+        public float VictoryDelaySeconds => victoryDelaySeconds;
         public int WallWalkFromLevel => wallWalkFromLevel;
         public float WallRangeBonusCells => wallRangeBonusCells;
         public float WallSeekRadiusCells => wallSeekRadiusCells;
@@ -2035,6 +2043,8 @@ namespace CityBuilder.Core
             tutorialFishShoals = (int)Read(economy, "tutorial_fish_shoals", tutorialFishShoals);
             tutorialPeopleHintSeconds = Read(economy, "tutorial_people_hint_sec", tutorialPeopleHintSeconds);
             tutorialBlinkSeconds = Read(economy, "tutorial_blink_sec", tutorialBlinkSeconds);
+            tutorialRaidCameraSeconds = Read(economy, "tutorial_raid_camera_sec", tutorialRaidCameraSeconds);
+            victoryDelaySeconds = Read(economy, "victory_delay_sec", victoryDelaySeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);
             tutorialPortalSeconds = Read(economy, "tutorial_portal_sec", tutorialPortalSeconds);
             tutorialBirthSeconds = Read(economy, "tutorial_birth_sec", tutorialBirthSeconds);
