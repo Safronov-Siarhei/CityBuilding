@@ -850,6 +850,9 @@ def scatter_decor(flat, forest_cells, rnd):
                             math.hypot(x - START[0], y - START[1]) > 20:
                         add("reeds", x, y, rnd.uniform(0.8, 1.25))
                     continue
+                # nothing grows on a bare sea rock (the user, 2026-11-06: a bush sat on a spire's tip)
+                if any(math.hypot(x - rx, y - ry) < r + 1.4 for rx, ry, r in SEA_ROCK_PTS):
+                    continue
                 if z > 0.05:                          # hills and mountains
                     # crags only up on the slope, never at the foot where a player could take
                     # one for a boulder to gather

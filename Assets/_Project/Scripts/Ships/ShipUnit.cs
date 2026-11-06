@@ -213,18 +213,35 @@ namespace CityBuilder.Ships
         {
             var landed = 0;
             var groups = new List<Combat.ArmyGroup>();
+            var spots = new List<Vector3>();
             foreach (var unit in Aboard)
             {
                 if (unit == null) continue;
-                var spot = at + Combat.ArmyGroup.FormationOffset(landed);
+                // each a step apart round the beach point, not all on it: the King and the soldier came out as
+                // one figure (the user, 2026-11-06)
+                var spot = at + LandingOffset(landed);
                 unit.transform.position = ShipManager.TrySampleLand(spot, 3f, out var onLand) ? onLand : at;
                 unit.gameObject.SetActive(true);
-                if (unit.Group != null && !groups.Contains(unit.Group)) groups.Add(unit.Group);
+                if (unit.Group != null && !groups.Contains(unit.Group))
+                {
+                    groups.Add(unit.Group);
+                    spots.Add(unit.transform.position);
+                }
                 landed++;
             }
             Aboard.Clear();
-            foreach (var group in groups) group.OrderMoveTo(at);
+            // every group to where its first man stepped ashore -- one point for all piled them up again
+            for (var i = 0; i < groups.Count; i++) groups[i].OrderMoveTo(spots[i]);
             return landed;
+        }
+
+        /// <summary>The n-th man's place on the beach: the first on the point, the rest round it 1.4 m apart.</summary>
+        private static Vector3 LandingOffset(int n)
+        {
+            if (n == 0) return Vector3.zero;
+            var angle = n * 2.39996f;                 // the golden angle: never two on one bearing
+            var radius = 1.4f * Mathf.Sqrt(n);
+            return new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
         }
 
         private readonly List<Vector3> _corners = new List<Vector3>();

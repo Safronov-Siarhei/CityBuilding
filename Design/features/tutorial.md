@@ -134,6 +134,25 @@ portal from too far» -- his structure reach is 1.6+1.2 m from the portal's cent
 - No defeat by an empty town in the tutorial (`GameOverManager`); the Barracks hires its one soldier only while
   none is alive (`FocusHireBar`).
 
+## Fourth playtest (2026-11-06) -- BUILT, not played
+- Wood/Stone Send: once the person is sent the King's line hides (it covered the chopping bar).
+- The boulder shown is one with no tree within 3.5 m (`TreeNear`); only that node takes the tap (also a tap
+  within 140 px of it on screen), any other tap is ignored (`TutorialRules.WantedNode`, `CitizenSelector`).
+- The camera is locked (`RTSCameraController.GesturesLocked`: no drag, pinch, keys, wheel) while a person and his
+  node are shown (Pick steps, Send until sent).
+- The blinking card no longer grows (its edge was cut by the cards' scroll view): colour only.
+- Hire buttons: no price, the coin alone centred (`FocusHireBar.TutorialPrice`). The Shipyard is let go at KingPick.
+- Sail: the camera is free until the ship is sent; a tap must be within 9 m of `player_landing` (land or sea),
+  anything else refused (`TutorialRules.SailTarget`, `ShipInput.HandleTap`); once sent the ship is let go, cannot
+  be picked (`ShipSelectable`), the camera rides with it. Land: the ship is handed over held, the arrow on the
+  landing button (`ShipActionBar.LandButtonShown`), line «Нажмите на значок снизу, чтобы высадить солдат.»
+- Victory: the crystal and the number measured and centred as a pair.
+- Map: no decor within r+1.4 of a sea rock (`islands.py`; a bush sat on a spire), re-exported.
+- ALL modes: landing puts each man a step apart (golden-angle spiral, 1.4 m) and each group holds where it stepped
+  ashore (`ShipUnit.Disembark`); the ship is let go after a landing; a ship ordered to take on troops that is not
+  by their island's beach SAILS IN to the sea nearest them (`ShipManager.TryMeetingPoint`, `Boarding.Meeting`).
+**Open:** a destruction effect for buildings (options proposed to the user).
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».

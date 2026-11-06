@@ -95,6 +95,12 @@ namespace CityBuilder.Tutorial
             TutorialRules.Wanted = null;
             TutorialRules.Selectable = null;
             TutorialRules.MayLand = false;
+            TutorialRules.WantedNode = null;
+            TutorialRules.SailTarget = null;
+            TutorialRules.SailOrdered = false;
+            TutorialRules.ShipSelectable = true;
+            RTSCameraController.GesturesLocked = false;
+            if (_shipyardZone != null) Destroy(_shipyardZone);
         }
 
         private void Start()
@@ -133,6 +139,7 @@ namespace CityBuilder.Tutorial
         private void Update()
         {
             _stepTime += Time.deltaTime;
+            Steady();
             WalkToBarge();
             ShowTheWay();
             FollowMoving();
@@ -175,6 +182,19 @@ namespace CityBuilder.Tutorial
             TutorialRules.Wanted = WantedAt(step);
             TutorialRules.Selectable = SelectableAt(step);
             TutorialRules.MayLand = step >= Step.Land;
+            TutorialRules.SailTarget = step == Step.Sail && MeshMapApplier.Instance != null
+                && MeshMapApplier.Instance.TryTutorialSpot("player_landing", out var landingSpot) ? landingSpot : (Vector3?)null;
+            TutorialRules.SailOrdered = false;
+            // the ship cannot be picked while it sails (the player watches it); at the beach it is handed to him held,
+            // its landing button under the arrow (the user, 2026-11-06)
+            TutorialRules.ShipSelectable = step != Step.Land;
+            if (step == Step.Land)
+            {
+                if (_ship == null || !_ship) _ship = OurShip();
+                if (_ship != null) Ships.ShipInput.Select(_ship);
+            }
+            // the ship bought: out of the Shipyard, its ship button gone with it
+            if (step == Step.KingPick && BuildingFocus.Instance != null) BuildingFocus.Instance.Clear();
             // a group still held from before (the King came out selected in the raid) is let go: the step shows whom to tap
             if ((step == Step.KingPick || step == Step.SoldierPick) && ArmyManager.Instance != null) ArmyManager.Instance.SelectGroup(null);
             // the first person shown close up (the user: zoomed in 50%, easy to tap) ...
@@ -406,6 +426,21 @@ namespace CityBuilder.Tutorial
             return false;
         }
 
+        /// <summary>
+        /// The person and his tree / boulder (the user, 2026-11-06): the camera is not the player's while they are
+        /// shown, only that node takes the tap, and once he is on his way the King's line steps aside -- it hid the
+        /// chopping bar.
+        /// </summary>
+        private void Steady()
+        {
+            var showing = (Current == Step.WoodPick || Current == Step.StonePick
+                || ((Current == Step.WoodSend || Current == Step.StoneSend) && !_sent));
+            RTSCameraController.GesturesLocked = showing;
+            TutorialRules.WantedNode = (Current == Step.WoodSend || Current == Step.StoneSend) && !_sent && _node != null && _node ? _node : null;
+            var hideLine = (Current == Step.WoodSend || Current == Step.StoneSend) && _sent;
+            if (_panel != null && hideLine && _panel.activeSelf) _panel.SetActive(false);
+        }
+
         // ------------------------------------------------------------ the fight runs itself
 
         /// <summary>
@@ -482,6 +517,7 @@ namespace CityBuilder.Tutorial
             var tab = _buildMenu != null ? _buildMenu.FirstTab : null;
             var card = building && open && !placing && _buildMenu != null ? _buildMenu.CardOf(TutorialRules.Wanted) : null;
             // the Barracks / the Shipyard held: the arrow on its hiring button (the user: nothing said where to hire)
+            if (card == null && Current == Step.Land) card = ShipActionBar.LandButtonShown;
             if (card == null && (Current == Step.Soldier || Current == Step.Ship))
                 card = HireButton(Current == Step.Soldier ? FocusHireBar.Kind.Barracks : FocusHireBar.Kind.Shipyard);
             Highlight(out var at, out var radius);
@@ -635,8 +671,9 @@ namespace CityBuilder.Tutorial
                 else if (_barge != null && _barge && _barge.OrcCargo > 0) _camera.FocusOn(_barge.transform.position);
                 else if (RaidAshore(out var fight)) _camera.FocusOn(fight);   // their group ashore, and the fight
             }
-            else if (Current == Step.Sail)
+            else if (Current == Step.Sail && TutorialRules.SailOrdered)
             {
+                // free while he looks for the marked place (the user, 2026-11-06); sent, the camera rides with the ship
                 if (_ship == null || !_ship) _ship = OurShip();
                 if (_ship != null) _camera.FocusOn(_ship.transform.position);
             }
@@ -712,6 +749,8 @@ namespace CityBuilder.Tutorial
             return null;
         }
 
+        private const float ClearOfTrees = 3.5f;   // a boulder this far from any tree (a tree beside it took the tap)
+
         private static ResourceNode NearestNode(ResourceType type, Vector3 from)
         {
             ResourceNode best = null;
@@ -720,6 +759,8 @@ namespace CityBuilder.Tutorial
             {
                 if (node == null || node.ResourceType != type) continue;
                 var d = (node.transform.position - from).sqrMagnitude;
+                // a stone among trees counts as much further: the clear one wins unless there is none
+                if (type == ResourceType.Stone && TreeNear(node.transform.position)) d += 10000f;
                 if (d < bestDistance)
                 {
                     best = node;
@@ -727,6 +768,18 @@ namespace CityBuilder.Tutorial
                 }
             }
             return best;
+        }
+
+        private static bool TreeNear(Vector3 at)
+        {
+            foreach (var node in ResourceNode.All)
+            {
+                if (node == null || node.ResourceType != ResourceType.Wood) continue;
+                var off = node.transform.position - at;
+                off.y = 0f;
+                if (off.sqrMagnitude < ClearOfTrees * ClearOfTrees) return true;
+            }
+            return false;
         }
 
         private static SoldierUnit FindUnit(SoldierType type)

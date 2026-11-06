@@ -217,7 +217,7 @@ namespace CityBuilder.Tutorial
                 if (card != null) _blinkScale = card.localScale;
             }
             if (_blinkCard == null) return;
-            _blinkCard.localScale = _blinkScale * (1f + 0.06f * pulse);
+            // colour only: grown, its edge was cut off by the cards' scroll view (the user, 2026-11-06)
             if (_blinkGraphic != null) _blinkGraphic.color = Color.Lerp(_blinkColour, Yellow, 0.55f * pulse);
         }
 

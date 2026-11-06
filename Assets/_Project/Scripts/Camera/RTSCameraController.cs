@@ -180,6 +180,9 @@ namespace CityBuilder.CameraControl
 
         public bool IsFocusing => _focusing;
 
+        /// <summary>No pan, no zoom by the player (the tutorial while it shows a person and his tree, the user 2026-11-06).</summary>
+        public static bool GesturesLocked { get; set; }
+
         /// <summary>How far the camera stands (or is gliding to) -- the tutorial's zoom in and back.</summary>
         public float GoalDistance => _hasGoal ? _goalDistance : (cameraTransform != null ? -cameraTransform.localPosition.z : 0f);
 
@@ -239,10 +242,10 @@ namespace CityBuilder.CameraControl
             ApplyFling(dt);
 
             var keyboard = Keyboard.current;
-            if (keyboard != null) HandleKeyboardPan(keyboard, dt);
+            if (keyboard != null && !GesturesLocked) HandleKeyboardPan(keyboard, dt);
 
             var mouse = Mouse.current;
-            if (mouse != null) HandleScrollZoom(mouse, dt);
+            if (mouse != null && !GesturesLocked) HandleScrollZoom(mouse, dt);
 
             Follow(dt);
             KeepAboveTheLand(dt);
@@ -370,6 +373,7 @@ namespace CityBuilder.CameraControl
 
         private void HandlePinchStarted(Vector2 centroid, float distance)
         {
+            if (GesturesLocked) return;
             _focusing = false;
             _flingVelocity = Vector3.zero;
             _panVelocity = Vector3.zero;
@@ -383,6 +387,7 @@ namespace CityBuilder.CameraControl
         /// </summary>
         private void HandlePinchMoved(Vector2 centroid, float distance, float previousDistance)
         {
+            if (GesturesLocked) return;
             if (previousDistance > 0.01f && distance > 0.01f)
             {
                 // Fingers spreading (distance up) must bring the camera closer, hence previous/current.
@@ -401,6 +406,7 @@ namespace CityBuilder.CameraControl
         private static bool OwnsSingleDrag()
         {
             var router = TouchInputRouter.Instance;
+            if (GesturesLocked) return false;
             return router == null || router.SingleDragOwner == DragOwner.Camera;
         }
 

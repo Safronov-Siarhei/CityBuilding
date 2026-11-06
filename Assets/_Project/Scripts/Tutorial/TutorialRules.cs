@@ -49,6 +49,18 @@ namespace CityBuilder.Tutorial
 
         public static bool MaySelect(ArmyGroup group) => Selectable != null && Selectable(group);
 
+        /// <summary>The tree / boulder the step shows: the only node a tap may send the person to (the user, 2026-11-06).</summary>
+        public static Maps.ResourceNode WantedNode { get; set; }
+
+        /// <summary>Where the ship may be sent (Sail): a tap elsewhere on the sea is refused; null: anywhere.</summary>
+        public static UnityEngine.Vector3? SailTarget { get; set; }
+
+        /// <summary>The ship has been sent to SailTarget (it is then let go and cannot be picked till it is there).</summary>
+        public static bool SailOrdered { get; set; }
+
+        /// <summary>A tap may pick a ship of ours now.</summary>
+        public static bool ShipSelectable { get; set; } = true;
+
         /// <summary>The ship's «Высадить десант» is offered (the director: once it has reached the orcs' island).</summary>
         public static bool MayLand { get; set; }
 

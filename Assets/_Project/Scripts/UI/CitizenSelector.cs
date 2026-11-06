@@ -113,6 +113,16 @@ namespace CityBuilder.UI
             return NearestNode(RaycastWorld(screenPosition));
         }
 
+        /// <summary>The tap within a finger's breadth of this point on the screen.</summary>
+        private bool NearOnScreen(Vector3 world, Vector2 screen)
+        {
+            if (targetCamera == null) return false;
+            var at = targetCamera.WorldToScreenPoint(world + Vector3.up * 0.6f);
+            if (at.z <= 0f) return false;
+            var reach = 140f * Screen.height / 1080f;
+            return ((Vector2)at - screen).sqrMagnitude <= reach * reach;
+        }
+
         /// <summary>The camera taps are read through.</summary>
         public Camera TapCamera => targetCamera;
 
@@ -194,6 +204,14 @@ namespace CityBuilder.UI
             // root but a boulder's cluster parts are children, and either could be what the
             // raycast reports depending on the model.
             var node = NearestNode(hitCount);
+            // the tutorial: only the tree / boulder it shows, and a tap near it on the screen counts (the user,
+            // 2026-11-06: a tree beside the boulder took the tap); any other tap is no order at all
+            if (Tutorial.TutorialMode.IsActive && Tutorial.TutorialRules.WantedNode != null)
+            {
+                var wanted = Tutorial.TutorialRules.WantedNode;
+                if (node != wanted && !NearOnScreen(wanted.transform.position, screenPosition)) return true;
+                node = wanted;
+            }
             if (node != null)
             {
                 // An order, not a question: the citizen goes, no badge (the user, 2026-10-21).

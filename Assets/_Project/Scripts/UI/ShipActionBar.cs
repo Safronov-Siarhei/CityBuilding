@@ -48,8 +48,14 @@ namespace CityBuilder.UI
             if (ship == null || manager == null) return 0;
             if (Refused(manager.DescribeLandBlocker(ship))) return 0;
             _refreshIn = 0f;
-            return manager.TryLand(ship);
+            var landed = manager.TryLand(ship);
+            // the people are ashore: the ship is let go, the camera is the player's again (the user, 2026-11-06)
+            if (landed > 0) ShipInput.Select(null);
+            return landed;
         }
+
+        /// <summary>The «Высадить десант» button while it shows (the tutorial points at it), or null.</summary>
+        public static RectTransform LandButtonShown { get; private set; }
 
         /// <summary>Mends the selected ship at the Shipyard by it; false = said why not.</summary>
         public bool Repair()
@@ -77,10 +83,12 @@ namespace CityBuilder.UI
             var holed = ship != null && ship.Health < ship.MaxHealth;
             var show = carries || holed;
             Showing = show;
+            if (!show) LandButtonShown = null;
             if (bar != null && bar.activeSelf != show) bar.SetActive(show);
             if (!show) return;
 
             if (landButton != null && landButton.gameObject.activeSelf != carries) landButton.gameObject.SetActive(carries);
+            LandButtonShown = carries && landButton != null ? (RectTransform)landButton.transform : null;
             if (repairButton != null && repairButton.gameObject.activeSelf != holed) repairButton.gameObject.SetActive(holed);
 
             _refreshIn -= Time.unscaledDeltaTime;

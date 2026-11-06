@@ -101,6 +101,7 @@ namespace CityBuilder.UI
                 prices[i].SetActive(true);
                 priceTexts[i].text = Dungeon.DungeonHirelings.Price(types[i]).ToString();
                 if (priceIcons[i] != null) priceIcons[i].sprite = coin;
+                TutorialPrice(i);
                 faces[i].color = party != null && party.CanHire(types[i]) ? Color.white : Dimmed;
             }
         }
@@ -197,6 +198,14 @@ namespace CityBuilder.UI
         /// <summary>Whether this bar's buttons are up. For the tests.</summary>
         public bool Shown => _shown;
 
+        /// <summary>The tutorial shows no price, only the coin, centred on its plaque (the user, 2026-11-06).</summary>
+        private void TutorialPrice(int i)
+        {
+            if (!Tutorial.TutorialMode.IsActive) return;
+            if (i < priceTexts.Length && priceTexts[i] != null && priceTexts[i].gameObject.activeSelf) priceTexts[i].gameObject.SetActive(false);
+            if (i < priceIcons.Length && priceIcons[i] != null) priceIcons[i].rectTransform.anchoredPosition = new Vector2(0f, 1f);
+        }
+
         /// <summary>The first button showing (the tutorial's arrow points at it), or null.</summary>
         public RectTransform FirstShownButton
         {
@@ -265,6 +274,7 @@ namespace CityBuilder.UI
                 {
                     priceTexts[i].text = price.amount.ToString();
                     if (iconLibrary != null) priceIcons[i].sprite = iconLibrary.GetIcon(price.type);
+                    TutorialPrice(i);
                 }
                 faces[i].color = army != null && army.DescribeRecruitBlocker(types[i], barracks.Level) == null ? Color.white : Dimmed;
             }

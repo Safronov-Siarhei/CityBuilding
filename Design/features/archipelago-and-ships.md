@@ -376,3 +376,7 @@ of cells (up to 25) for the nearest dry cell with no water within 2 (then 1, the
 Boarding mark (2026-11-06, the user): a ship someone walks to board carries a bobbing gold arrow and a pulsing gold
 ring (`Ships/ShipBoardingMark`, pool of 4, fed by `ShipManager.BoardingShips`); the beach flag is no longer shown.
 Wake (2026-11-06): spawned at the stern, drifting back and out (`ShipWake.Sail`).
+
+2026-11-06: boarding a ship that is not at the troops' beach -- it sails in to the sea nearest them
+(`ShipManager.TryMeetingPoint`; the boarding waits while it sails, `Boarding.Meeting`); a landing spreads the men
+1.4 m apart (golden angle) and lets the ship go.
