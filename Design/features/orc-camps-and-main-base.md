@@ -79,7 +79,13 @@
 >   back wall, dead trees in the side strips; A's decor zone by zone (throne turned -90 to face the spine).
 >   islands.py `SPINE` (orc 3/5): pad (-18,17,-64,14), rolls orc3=10, orc5=11.
 > - All three variants share A's decor models; only «Гать» has its own (orcdecor2.py).
-> - NEXT: variant «Кольцо» if the user wants it; then playtest all three («Гать», «Хребет», «Кольцо»).
+> - VARIANT D «Кольцо» (the user chose it, 2026-11-06): scheme `Design/orc_base_living_d.png/.py` SENT FOR APPROVAL --
+>   three round walls (r 20.5 / 13.5 / 7.5, cells inside the disc with a 4-neighbour outside), gates turned a quarter
+>   per ring (outer front+back, middle left+right 1x2, inner front), 26 towers, ring streets with buildings; patrols:
+>   outer street both ways, middle street, round the portal, skull; brutes at middle/inner gates. Skeleton curled
+>   round the base (skull at the front gate, spine arcing behind, ribs outside arching in). Proposed: «Кольцо» on
+>   Isl-orc1 and A moves to Isl-orc5 (asked in the scheme).
+> - NEXT: D after approval; then playtest all four («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
