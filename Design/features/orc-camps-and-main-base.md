@@ -17,6 +17,11 @@
 > turf/moss style clashes with the gloom (needs a reskin?); later: per-seed base VARIANTS
 > (layouts + special buildings: shaman hut, war drum, catapults, wolf den, forge, arena) and
 > liveliness (smoke, fires, patrols, alarm horn) -- discussed 2026-11-06, not decided.
+> **2026-11-06 models for approval** (`Tools/blender/orcisland1.py`, in the Models file, NOT exported):
+> OrcSkullGate1 (10x12, corridor 2 wide / 3.4 high), OrcRib1-A/-B (foot 2x2, arc 10 up / 11.5 in),
+> OrcVertebra1, DeadTree1-A/B/C (slate grey: wood colours get the planks detail), OrcSkullStake1,
+> Wreck1, Crow1. Bone = `burlap`/`stone_mid`/`stone_dark` (the camps' plaster read as cream).
+> Sheet `render_orcisland_models.py`; the concept stands them when all are in the Models file.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
 

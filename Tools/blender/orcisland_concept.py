@@ -155,6 +155,42 @@ def blob(bm, centre, size, seed, subdiv=2, jitter=0.12, rot=(0, 0, 0)):
 
 # -- the main base from its real plan (OrcBaseLayout.Main, cells, +y = its back) -------------------
 
+# the island's own models (orcisland1.py); with them all in the Models file the concept stands
+# them instead of its placeholders
+ISLAND = ["OrcSkullGate1", "OrcRib1-A", "OrcRib1-B", "OrcVertebra1", "DeadTree1-A", "DeadTree1-B",
+          "DeadTree1-C", "OrcSkullStake1", "Wreck1", "Crow1"]
+PROTOS = {}
+
+
+def real():
+    return all(n in PROTOS for n in ISLAND)
+
+
+def put(name, x, y, z=0.0, rot=0.0, scale=1.0, tilt=(0.0, 0.0)):
+    o = bpy.data.objects.new(name + "_p", PROTOS[name].data)
+    sc.collection.objects.link(o)
+    o.location = (x, y, z)
+    o.rotation_euler = (tilt[0], tilt[1], rot)
+    o.scale = (scale, scale, scale)
+    return o
+
+
+def skeleton_real():
+    gy = MY - 23.0
+    put("OrcSkullGate1", MX, gy - 7.0)
+    for i, z in enumerate((-12.0, -7.5, -3.0, 1.5, 6.0)):
+        k = 1.0 - abs(z + 3.0) * 0.03
+        put("OrcRib1-B" if i == 3 else "OrcRib1-A", MX - 21.0, MY + z, scale=k)
+        put("OrcRib1-B" if i == 1 else "OrcRib1-A", MX + 21.0, MY + z, rot=math.pi, scale=k)
+    prev = None
+    for i in range(18):
+        t = i / 17.0
+        x, y = MX + 5.0 * math.sin(t * 2.4), MY + 11.0 + i * 2.6
+        heading = math.atan2(2.6, 5.0 * 2.4 / 17.0 * math.cos(t * 2.4)) - math.pi / 2
+        z = ground_z(x, y)
+        put("OrcVertebra1", x, y, (z if z is not None else -0.3), rot=heading, scale=1.5 - 1.0 * t)
+
+
 def main_plan():
     pieces = []
 
@@ -213,10 +249,11 @@ def main_plan():
 
 
 def lay_base():
-    names = sorted({p[0] for p in main_plan()} | {"OrcGrunt-lvl3", "OrcBrute-lvl2", "OrcChief-Boss", "OrcThrower"})
+    names = sorted({p[0] for p in main_plan()} | {"OrcGrunt-lvl3", "OrcBrute-lvl2", "OrcChief-Boss", "OrcThrower"} | set(ISLAND))
     with bpy.data.libraries.load(MODELS, link=False) as (src, dst):
         dst.objects = [n for n in names if n in src.objects]
     protos = {o.name: o for o in dst.objects if o is not None}
+    PROTOS.update(protos)
     coll = bpy.data.collections.new("Base")
     sc.collection.children.link(coll)
     for name, x, z, w, h, along in main_plan():
@@ -250,6 +287,9 @@ def lay_base():
 # -- the beast's skeleton -------------------------------------------------------------------------
 
 def skeleton():
+    if real():
+        skeleton_real()
+        return
     coll = bpy.data.collections.new("Skeleton")
     sc.collection.children.link(coll)
     gy = MY - 23.0                 # the front wall's line; the gate between x -1 and 1
@@ -376,10 +416,15 @@ def in_base(x, y, margin):
 
 
 def dress():
-    trees = [dead_tree(s) for s in range(8)]
-    stakes = [stake(100 + s) for s in range(4)]
+    if real():
+        trees = [PROTOS[n] for n in ("DeadTree1-A", "DeadTree1-B", "DeadTree1-C")]
+        stakes = [PROTOS["OrcSkullStake1"]]
+    else:
+        trees = [dead_tree(s) for s in range(8)]
+        stakes = [stake(100 + s) for s in range(4)]
     for p in trees + stakes:
-        p.location = (0, 0, -500)
+        if p.users_scene:
+            p.location = (0, 0, -500)
     half = 85
     placed = 0
     for _ in range(9000):
@@ -405,6 +450,9 @@ def dress():
                 instance(rnd.choice(stakes), x, y, z, rnd.uniform(0, 6.28))
     # wrecks on the shore
     for wx, wy, rot in ((MX + 11.4, MY + 15.2, 0.6), (38.9, -46.9, 2.2)):
+        if real():
+            put("Wreck1", wx, wy, -0.3, rot=rot, tilt=(0.12, 0.08))
+            continue
         bm = bmesh.new()
         for k in range(7):
             a = math.pi * (0.15 + 0.7 * k / 6)
@@ -416,8 +464,19 @@ def dress():
         o.location = (wx, wy, -0.35)
         o.rotation_euler = (0.25, 0.15, rot)
     # crows circling over the skull and the ribs (the user, 2026-11-06: instead of the cloud)
-    bm = bmesh.new()
-    for k in range(34):
+    if real():
+        for k in range(20):
+            over_skull = k < 9
+            a = rnd.uniform(0, 2 * math.pi)
+            rad = rnd.uniform(4, 10) if over_skull else rnd.uniform(6, 16)
+            cx, cy = (MX, MY - 29) if over_skull else (MX, MY - 3)
+            put("Crow1", cx + math.cos(a) * rad, cy + math.sin(a) * rad,
+                rnd.uniform(9, 17) if over_skull else rnd.uniform(13, 20), rot=a, scale=1.4,
+                tilt=(0.0, rnd.uniform(-0.4, 0.4)))
+        bm = None
+    else:
+        bm = bmesh.new()
+    for k in range(34 if bm is not None else 0):
         over_skull = k < 16
         a = rnd.uniform(0, 2 * math.pi)
         rad = rnd.uniform(4, 10) if over_skull else rnd.uniform(6, 16)
@@ -433,7 +492,8 @@ def dress():
             tip = bm.verts.new(c + side * sd * 0.75 * s_ - fwd * 0.12 * s_ + Vector((0, 0, flap * s_)))
             mid = bm.verts.new(c + side * sd * 0.3 * s_ + fwd * 0.08 * s_ + Vector((0, 0, flap * 0.4 * s_)))
             bm.faces.new((body[0], mid, tip, body[1]) if sd > 0 else (body[1], tip, mid, body[0]))
-    obj_from_bm("Crows", bm, CROW)
+    if bm is not None:
+        obj_from_bm("Crows", bm, CROW)
     # a low swamp haze lying among the dead trees (the user, 2026-11-06: instead of the cloud)
     bm = bmesh.new()
     for k in range(45):
