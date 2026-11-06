@@ -204,6 +204,32 @@ namespace CityBuilder.Combat
                     var z = Mathf.Sin(a) * 3.2f;
                     Put(runeStoneModel, x, z, Mathf.Atan2(-x, -z) * Mathf.Rad2Deg, "RuneStone");
                 }
+
+                // the causeways' planks, a piece a cell along each leg (OrcBaseLayout.GatCauseway);
+                // the model runs along x, so a leg along z turns it a quarter
+                void Leg(float x0, float z0, float dx, float dz, int count)
+                {
+                    for (var i = 0; i < count; i++) Put(causewayModel, x0 + dx * i, z0 + dz * i, dz != 0f ? 90f : 0f, "Causeway");
+                }
+                Leg(0f, -16.5f, 0f, -1f, 5);       // the front: out of the gate
+                Leg(-1.5f, -20f, -1f, 0f, 5);      // ... left along the first bend
+                Leg(-7f, -20.5f, 0f, -1f, 5);      // ... down
+                Leg(-5.5f, -24f, 1f, 0f, 5);       // ... back right
+                Leg(0f, -24.5f, 0f, -1f, 4);       // ... and out to the land
+                Leg(-15.5f, -1f, -1f, 0f, 11);     // the left one
+                Leg(15.5f, 4f, 1f, 0f, 11);        // the right one
+                // bog lights along them
+                foreach (var (x, z) in new[] { (1.3f, -18.5f), (-4f, -18.7f), (-8.6f, -22.5f), (-4f, -25.8f), (1.3f, -26.8f),
+                             (-19f, -2.4f), (-24f, 0.4f), (18f, 2.6f), (23f, 5.4f) })
+                    Put(bogLanternModel, x, z, 0f, "BogLantern");
+                // huts on stilts and moored rafts out in the bog, reeds where the ambush hides and along the edges
+                foreach (var (x, z, turn) in new[] { (-20f, 11f, 20f), (-18f, 15f, -30f), (19f, 14f, 160f), (22f, -11f, 100f), (-20f, -14f, 60f) })
+                    Put(stiltHutModel, x, z, turn, "StiltHut");
+                Put(raftModel, -17f, 7.5f, 15f, "Raft");
+                Put(raftModel, 20f, -5.5f, -40f, "Raft");
+                foreach (var (x, z) in new[] { (-5f, -22.6f), (-4f, -22.3f), (-3f, -22.8f), (-5.5f, -26.3f), (4.5f, -21.5f), (5.5f, -21f),
+                             (-3.5f, -18.5f), (3.2f, -24f), (-20f, -4f), (-22f, 1.5f), (19f, 6.5f), (22f, 1.8f), (-18f, 13f), (17f, -9f) })
+                    Put(reedsModel, x, z, x * 37f, "Reeds");
                 return;
             }
 

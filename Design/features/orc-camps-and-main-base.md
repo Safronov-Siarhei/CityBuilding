@@ -64,10 +64,11 @@
 >   Skeleton for B: ribs out of the bog behind (z 18, turned 90), vertebrae + dead trees in the bog.
 >   islands.py `GAT` (even orc variants): pad (-29,28,-50,22), `gat_sd` carves the bog (min into land_sd);
 >   new rolls orc2=45, orc4=46, orc6=60 (the old shapes had no room). Cells checked: patch, causeways, pile islets.
-> - B's own DECOR (`Tools/blender/orcdecor2.py`: OrcCauseway1, OrcStiltHut1, OrcRaft1, OrcBogLantern1, OrcReeds1;
->   render `Design/concepts/orc_decor_b.png`) SENT FOR APPROVAL 2026-11-06, not exported. After approval: export,
->   wire, lay causeway pieces along every GatCauseway leg, lanterns along them, huts/rafts in the bog, reeds
->   at the ambush.
+> - B's own DECOR APPROVED and IN THE GAME 2026-11-06 (not seen): `Tools/blender/orcdecor2.py` -> Models/Orcs
+>   (OrcCauseway1, OrcStiltHut1, OrcRaft1, OrcBogLantern1, OrcReeds1), wired in SetupProjectOrcs; DressMainBase
+>   (variant 1) lays a causeway piece a cell along every GatCauseway leg (model runs along x, legs along z turned
+>   90), 9 bog lanterns beside them, 5 stilt huts + 2 rafts in the bog, 14 reed clumps (ambush bend, edges).
+>   Bog decor stands at the bog's ground height: check it does not sink under the water in play.
 > - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)

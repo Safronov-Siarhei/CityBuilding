@@ -160,7 +160,10 @@ namespace CityBuilder.EditorTools
                          // the main base's decor (living variant A, approved 2026-11-06)
                          ("campfireModel", "OrcCampfire1"), ("dummyModel", "OrcDummy1"), ("cauldronModel", "OrcCauldron1"),
                          ("meatRackModel", "OrcMeatRack1"), ("hideRackModel", "OrcHideRack1"), ("warDrumModel", "OrcWarDrum1"),
-                         ("boneThroneModel", "OrcBoneThrone1"), ("runeStoneModel", "OrcRuneStone1") })
+                         ("boneThroneModel", "OrcBoneThrone1"), ("runeStoneModel", "OrcRuneStone1"),
+                         // «Гать»'s own (approved 2026-11-06)
+                         ("causewayModel", "OrcCauseway1"), ("stiltHutModel", "OrcStiltHut1"), ("raftModel", "OrcRaft1"),
+                         ("bogLanternModel", "OrcBogLantern1"), ("reedsModel", "OrcReeds1") })
                 so.FindProperty(field).objectReferenceValue = Load(file);
 
             // By level, index 0 = level 1 (see OrcRaidManager).

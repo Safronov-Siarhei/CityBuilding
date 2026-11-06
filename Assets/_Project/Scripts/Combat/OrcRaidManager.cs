@@ -126,6 +126,12 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject warDrumModel;
         [SerializeField] private GameObject boneThroneModel;
         [SerializeField] private GameObject runeStoneModel;
+        // ... and variant B «Гать»'s own (Tools/blender/orcdecor2.py, approved 2026-11-06)
+        [SerializeField] private GameObject causewayModel;
+        [SerializeField] private GameObject stiltHutModel;
+        [SerializeField] private GameObject raftModel;
+        [SerializeField] private GameObject bogLanternModel;
+        [SerializeField] private GameObject reedsModel;
         [SerializeField] private GameObject bossModel;
         // The Invasion jungle's monsters (Tools/blender/wild.py, Models/Wild), jointed.
         [SerializeField] private GameObject wolfModel;
