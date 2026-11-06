@@ -27,6 +27,8 @@ namespace CityBuilder.Maps.Archipelago
         [SerializeField] private bool hasBot;
         [SerializeField] private Vector2 bot;
         [SerializeField] private Vector2[] beaches = new Vector2[0];
+        [Tooltip("The island's own terrain palette (the orcs' gloomy swamp, 2026-11-06); null = the shared one.")]
+        [SerializeField] private Material palette;
         // every other spot of the island's -Spots.csv by name (the tutorial's: hovel, shipyard, portal...)
         [SerializeField] private string[] spotNames = new string[0];
         [SerializeField] private Vector2[] spotPositions = new Vector2[0];
@@ -57,6 +59,8 @@ namespace CityBuilder.Maps.Archipelago
         public bool HasBot => hasBot;
         public Vector2 Bot => bot;
         public Vector2[] Beaches => beaches;
+        /// <summary>The island's own terrain palette material, or null for the map's shared one.</summary>
+        public Material Palette => palette;
 
         /// <summary>A named spot of the island (frame coordinates, unturned); false when it has none of the name.</summary>
         public bool TryGetSpot(string name, out Vector2 at)
@@ -94,6 +98,8 @@ namespace CityBuilder.Maps.Archipelago
             bot = botSpot ?? Vector2.zero;
             beaches = beachSpots ?? new Vector2[0];
         }
+
+        public void EditorSetPalette(Material own) => palette = own;
 
         public void EditorSetSpots(string[] names, Vector2[] positions)
         {

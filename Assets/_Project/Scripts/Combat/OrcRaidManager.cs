@@ -107,6 +107,16 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject chiefHouseModel;
         [SerializeField] private GameObject chiefHouseRuinModel;
         [SerializeField] private GameObject[] mountainModels;
+        // The main base's beast skeleton instead of the mountains, and the orcs' swamp island's dress
+        // (Tools/blender/orcisland1.py, the user's concept 2026-11-06)
+        [SerializeField] private GameObject skullGateModel;
+        [SerializeField] private GameObject[] ribModels;
+        [SerializeField] private GameObject vertebraModel;
+        [SerializeField] private GameObject[] deadTreeModels;
+        [SerializeField] private GameObject skullStakeModel;
+        [SerializeField] private GameObject wreckModel;
+        [SerializeField] private GameObject crowModel;
+        [SerializeField] private Material swampHazeMaterial;
         [SerializeField] private GameObject bossModel;
         // The Invasion jungle's monsters (Tools/blender/wild.py, Models/Wild), jointed.
         [SerializeField] private GameObject wolfModel;
@@ -181,6 +191,10 @@ namespace CityBuilder.Combat
         public Material DungeonDarkMaterial => dungeonDarkMaterial;
         public Material SleepMaterial => sleepMaterial;
         public Material ShoreSurfMaterial => shoreSurfMaterial;
+        /// <summary>The orcs' swamp island's dead trees, wrecks and haze (MeshMapApplier dresses the island with them).</summary>
+        public GameObject[] DeadTreeModels => deadTreeModels;
+        public GameObject WreckModel => wreckModel;
+        public Material SwampHazeMaterial => swampHazeMaterial;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;

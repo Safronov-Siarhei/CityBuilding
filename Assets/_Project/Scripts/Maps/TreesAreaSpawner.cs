@@ -71,6 +71,12 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>`count` 0 = the designed maps' own InitialTreeCount; a generated map passes one for its forest's size.</summary>
+        /// <summary>
+        /// The trees a cell grows instead of the map's (the orcs' island grows dead ones, the user
+        /// 2026-11-06); null or empty = the map's own. Set before Initialize.
+        /// </summary>
+        public System.Func<Vector2Int, GameObject[]> PrefabsAt { get; set; }
+
         public void Initialize(Vector2Int[] zoneCells, GameObject[] treePrefabs, int count = 0)
         {
             var initial = count > 0 ? count : InitialTreeCount;
@@ -140,14 +146,17 @@ namespace CityBuilder.Maps
                 if (_treeCells.Contains(cell) || !grid.IsAreaFree(cell, Vector2Int.one)) continue;
                 if (HasNearbyTree(cell)) continue;
 
-                var prefab = _treePrefabs[UnityEngine.Random.Range(0, _treePrefabs.Length)];
+                var local = PrefabsAt?.Invoke(cell);
+                var own = local != null && local.Length > 0;
+                var prefab = own ? local[UnityEngine.Random.Range(0, local.Length)] : _treePrefabs[UnityEngine.Random.Range(0, _treePrefabs.Length)];
                 if (prefab == null) continue;
 
                 var position = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 // Preserve the prefab's own corrective root rotation (see MeshMapApplier) rather
                 // than forcing identity, which would render the tree tipped over.
                 var instance = Instantiate(prefab, position, prefab.transform.rotation, transform);
-                SeasonStyle.DressTree(instance, prefab.name, cell.x * 73856093 ^ cell.y * 19349663);
+                if (!own) SeasonStyle.DressTree(instance, prefab.name, cell.x * 73856093 ^ cell.y * 19349663);
+                else instance.transform.rotation = Quaternion.Euler(0f, (cell.x * 37 + cell.y * 101) % 360, 0f) * prefab.transform.rotation;
                 // Before TreeGrowth, so the collider is measured at the tree's full size and then
                 // scales down/up along with the transform as the sapling grows, instead of being
                 // permanently sized to a 10% sapling.

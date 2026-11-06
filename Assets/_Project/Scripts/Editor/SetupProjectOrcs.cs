@@ -153,6 +153,11 @@ namespace CityBuilder.EditorTools
             so.FindProperty("sleepMaterial").objectReferenceValue = CrystalMaterial("SleepZ", "CityBuilder/SleepZ", null);
             // the living coasts of the archipelago (the user, 2026-11-02)
             so.FindProperty("shoreSurfMaterial").objectReferenceValue = CrystalMaterial("ShoreSurf", "CityBuilder/ShoreSurf", null);
+            // the orcs' swamp island (the user, 2026-11-06): its haze, and the skeleton and dress models
+            so.FindProperty("swampHazeMaterial").objectReferenceValue = CrystalMaterial("SwampHaze", "CityBuilder/SwampHaze", null);
+            foreach (var (field, file) in new[] { ("skullGateModel", "OrcSkullGate1"), ("vertebraModel", "OrcVertebra1"),
+                         ("skullStakeModel", "OrcSkullStake1"), ("wreckModel", "OrcWreck1"), ("crowModel", "OrcCrow1") })
+                so.FindProperty(field).objectReferenceValue = Load(file);
 
             // By level, index 0 = level 1 (see OrcRaidManager).
             var fences = new List<string>();
@@ -174,6 +179,8 @@ namespace CityBuilder.EditorTools
                          ("palisadeModels", fences.ToArray()),
                          ("mainWallModels", new[] { "OrcStoneWall1-Straight", "OrcStoneWall1-Corner", "OrcStoneWall1-T", "OrcStoneWall1-Cross" }),
                          ("mountainModels", new[] { "OrcMountain1-A", "OrcMountain1-B" }),
+                         ("ribModels", new[] { "OrcRib1-A", "OrcRib1-B" }),
+                         ("deadTreeModels", new[] { "OrcDeadTree1-A", "OrcDeadTree1-B", "OrcDeadTree1-C" }),
                      })
             {
                 var property = so.FindProperty(field);

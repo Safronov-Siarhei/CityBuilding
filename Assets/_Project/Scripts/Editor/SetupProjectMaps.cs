@@ -300,6 +300,9 @@ namespace CityBuilder.EditorTools
                     var island = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.IslandAsset>();
                     island.EditorInitialize(prefix, kind, cells.bytes, ground, relief, water, decor, zone.ToArray(), main, bot, beaches.ToArray());
                     island.EditorSetSpots(spotNames.ToArray(), spotPositions.ToArray());
+                    // the orcs' island in its gloomy swamp palette (the user, 2026-11-06)
+                    if (kind == CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Kind.Orc)
+                        island.EditorSetPalette(AssetDatabase.LoadAssetAtPath<Material>(ModelImportDefaults.OrcIslandPaletteMaterialPath));
                     var path = $"{assetsFolder}/{prefix}.asset";
                     DeleteIfExists(path);
                     AssetDatabase.CreateAsset(island, path);

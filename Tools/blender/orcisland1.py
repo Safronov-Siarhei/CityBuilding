@@ -9,10 +9,10 @@ FOR APPROVAL: built into the Models file, not exported, not in the game.
     OrcRib1-A, -B     2x2    one rib: a foot in the ground outside the base's side wall, arching
                              up 10 and over 11 cells inward (+x); B is snapped, its tip at its foot
     OrcVertebra1      2x2    a vertebra half sunk in the ground: the spine and the tail, scaled
-    DeadTree1-A/B/C   1x1    the swamp's dead trees, bare and crooked, moss hanging off them
+    OrcDeadTree1-A/B/C   1x1    the swamp's dead trees, bare and crooked, moss hanging off them
     OrcSkullStake1    1x1    a stake with a skull and a rag, along the ways in
-    Wreck1            2x6    a wrecked ship's ribs and keel on the shore, its mast snapped
-    Crow1                    a crow on the wing (circling the skeleton)
+    OrcWreck1                a wrecked ship's ribs and keel on the shore, its mast snapped
+    OrcCrow1                 a crow on the wing (circling the skeleton)
 
     blender --background "<Models>.blend" --python orcisland1.py
 """
@@ -260,16 +260,21 @@ def build_crow(lo, hi):
 
 def main():
     o.ensure_collection()
+    for old in ("DeadTree1-A", "DeadTree1-B", "DeadTree1-C", "Wreck1", "Crow1"):   # the first names (2026-11-06)
+        for name in (old, old + "-size"):
+            ob = bpy.data.objects.get(name)
+            if ob is not None:
+                bpy.data.objects.remove(ob)
     src = "Laboratory1-lvl1"
     o.place("OrcSkullGate1", build_skull, src, 30.0, ROW_Y)
     o.place("OrcRib1-A", rib(False), src, 44.0, ROW_Y)
     o.place("OrcRib1-B", rib(True), src, 44.0, ROW_Y - 8.0)
     o.place("OrcVertebra1", build_vertebra, src, 30.0, ROW_Y - 12.0)
-    for k, (name, h) in enumerate((("DeadTree1-A", 3.6), ("DeadTree1-B", 2.8), ("DeadTree1-C", 4.2))):
+    for k, (name, h) in enumerate((("OrcDeadTree1-A", 3.6), ("OrcDeadTree1-B", 2.8), ("OrcDeadTree1-C", 4.2))):
         o.place(name, dead_tree(4 + k, h), src, 34.0 + k * 2.5, ROW_Y - 12.0)
     o.place("OrcSkullStake1", build_stake, src, 42.0, ROW_Y - 12.0)
-    o.place("Wreck1", build_wreck, src, 30.0, ROW_Y - 20.0)
-    o.place("Crow1", build_crow, src, 36.0, ROW_Y - 20.0)
+    o.place("OrcWreck1", build_wreck, src, 30.0, ROW_Y - 20.0)
+    o.place("OrcCrow1", build_crow, src, 36.0, ROW_Y - 20.0)
     bpy.ops.wm.save_mainfile()
 
 

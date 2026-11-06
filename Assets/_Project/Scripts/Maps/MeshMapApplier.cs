@@ -922,20 +922,39 @@ namespace CityBuilder.Maps
             relief.transform.SetParent(transform, false);
             var water = new GameObject("ArchipelagoCoasts");
             water.transform.SetParent(transform, false);
+            var swampFrames = new List<Rect>();
             foreach (var island in world.Islands)
             {
                 if (island.Asset == null) continue;
                 var at = origin + new Vector3(island.OffsetX + island.Frame * 0.5f, 0f, island.OffsetY + island.Frame * 0.5f);
                 var turn = Quaternion.Euler(0f, 90f * island.Turns, 0f);
+                var own = island.Asset.Palette;
                 void Put(GameObject prefab, Transform parent)
                 {
                     if (prefab == null) return;
                     var instance = Instantiate(prefab, at, turn * prefab.transform.rotation, parent);
                     instance.name = $"{island.Asset.IslandName}-{prefab.name}";
+                    // an island in its own palette (the orcs' gloomy swamp, the user 2026-11-06)
+                    if (own != null)
+                        foreach (var r in instance.GetComponentsInChildren<Renderer>(true)) r.sharedMaterial = own;
                 }
                 Put(island.Asset.Ground, ground.transform);
                 Put(island.Asset.Relief, relief.transform);
                 Put(island.Asset.Water, water.transform);
+                if (own != null) DressSwampIsland(island, origin, swampFrames);
+            }
+            // the swamp islands grow dead trees (the user, 2026-11-06)
+            var deadTrees = Combat.OrcRaidManager.Instance != null ? Combat.OrcRaidManager.Instance.DeadTreeModels : null;
+            if (TreesAreaSpawner.Instance != null)
+            {
+                var grid = GridManager.Instance;
+                TreesAreaSpawner.Instance.PrefabsAt = swampFrames.Count == 0 || deadTrees == null || deadTrees.Length == 0 || grid == null ? null : cell =>
+                {
+                    var w = grid.CellToWorld(cell);
+                    foreach (var frame in swampFrames)
+                        if (frame.Contains(new Vector2(w.x, w.z))) return deadTrees;
+                    return null;
+                };
             }
             // the blue band lightened: light water = where a water building may stand
             var lightened = new Dictionary<Mesh, Mesh>();
@@ -952,15 +971,108 @@ namespace CityBuilder.Maps
             return (ground, relief);
         }
 
+        /// <summary>
+        /// The orcs' swamp island's dress (the user's concept, 2026-11-06): a ship's wreck on each of
+        /// its landing beaches and a thin low haze lying over its land, away from the main base. A
+        /// dozen flat patches, alpha-blended (SwampHaze.shader) -- what a phone carries.
+        /// </summary>
+        private void DressSwampIsland(Archipelago.Island island, Vector3 origin, List<Rect> frames)
+        {
+            var asset = island.Asset;
+            var half = asset.Frame * 0.5f;
+            Vector3 World(Vector2 local)
+            {
+                var p = Archipelago.IslandShape.Turn(local, island.Turns);
+                return origin + new Vector3(p.x + half + island.OffsetX, 0f, p.y + half + island.OffsetY);
+            }
+            frames.Add(new Rect(origin.x + island.OffsetX, origin.z + island.OffsetY, asset.Frame, asset.Frame));
+            var orcs = Combat.OrcRaidManager.Instance;
+            if (orcs == null) return;
+            var root = new GameObject($"{asset.IslandName}-SwampDress");
+            root.transform.SetParent(transform, false);
+            var random = new System.Random(asset.IslandName.GetHashCode() ^ island.OffsetX * 31 ^ island.OffsetY);
+            float Range(float a, float b) => a + (float)random.NextDouble() * (b - a);
+
+            if (orcs.WreckModel != null)
+            {
+                foreach (var beach in asset.Beaches)
+                {
+                    // a little inland of the coast point, along the line from the island's middle
+                    var inward = beach.sqrMagnitude > 1f ? -beach.normalized * 2.5f : Vector2.zero;
+                    var at = World(beach + inward + new Vector2(Range(-3f, 3f), Range(-3f, 3f)));
+                    at.y = TryGetGroundHeight(at, out var h) ? h - 0.15f : -0.3f;
+                    var wreck = Instantiate(orcs.WreckModel, at, Quaternion.Euler(Range(-6f, 6f), Range(0f, 360f), Range(-8f, 8f)), root.transform);
+                    wreck.name = "Wreck";
+                }
+            }
+
+            var haze = orcs.SwampHazeMaterial;
+            if (haze != null)
+            {
+                var quad = HazeQuad();
+                var main = asset.HasMainBase ? asset.MainBase : new Vector2(1e5f, 1e5f);
+                var placed = 0;
+                for (var attempt = 0; attempt < 400 && placed < 12; attempt++)
+                {
+                    var i = random.Next(asset.Frame);
+                    var j = random.Next(asset.Frame);
+                    if ((asset.Cell(i, j) & Archipelago.IslandAsset.Land) == 0) continue;
+                    var local = new Vector2(i - half + 0.5f, j - half + 0.5f);
+                    if (Vector2.Distance(local, main) < 30f) continue;
+                    var at = World(local);
+                    at.y = (TryGetGroundHeight(at, out var h) ? h : 0f) + Range(0.35f, 0.9f);
+                    var patch = new GameObject("SwampHaze", typeof(MeshFilter), typeof(MeshRenderer));
+                    patch.transform.SetParent(root.transform, false);
+                    patch.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, Range(0f, 360f), 0f));
+                    var size = Range(12f, 22f);
+                    patch.transform.localScale = new Vector3(size, 1f, size * Range(0.6f, 0.9f));
+                    patch.GetComponent<MeshFilter>().sharedMesh = quad;
+                    var renderer = patch.GetComponent<MeshRenderer>();
+                    renderer.sharedMaterial = haze;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                    placed++;
+                }
+            }
+        }
+
+        private static Mesh _hazeQuad;
+
+        /// <summary>A flat unit square on XZ, uv 0..1 -- the haze patch, scaled per patch.</summary>
+        private static Mesh HazeQuad()
+        {
+            if (_hazeQuad != null) return _hazeQuad;
+            _hazeQuad = new Mesh { name = "SwampHazeQuad" };
+            _hazeQuad.SetVertices(new[] { new Vector3(-0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f) });
+            _hazeQuad.SetUVs(0, new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) });
+            _hazeQuad.SetTriangles(new[] { 0, 2, 1, 0, 3, 2 }, 0);
+            _hazeQuad.RecalculateBounds();
+            return _hazeQuad;
+        }
+
         /// <summary>Every library island's props in one set, each turned and moved with its island.</summary>
         private void DecorateLibraryIslands(Archipelago.ArchipelagoMap world, Vector3 origin, MeshMapDefinition map)
         {
             var parts = new List<(MapDecorData data, Vector3 at, Quaternion turn)>();
+            // the islands in a palette of their own: their props in it too, as a set of their own
+            var ownParts = new Dictionary<Material, List<(MapDecorData data, Vector3 at, Quaternion turn)>>();
             foreach (var island in world.Islands)
             {
                 if (island.Asset == null || island.Asset.Decor == null) continue;
                 var at = origin + new Vector3(island.OffsetX + island.Frame * 0.5f, 0f, island.OffsetY + island.Frame * 0.5f);
-                parts.Add((island.Asset.Decor, at, Quaternion.Euler(0f, 90f * island.Turns, 0f)));
+                var part = (island.Asset.Decor, at, Quaternion.Euler(0f, 90f * island.Turns, 0f));
+                if (island.Asset.Palette == null) parts.Add(part);
+                else
+                {
+                    if (!ownParts.TryGetValue(island.Asset.Palette, out var list)) ownParts[island.Asset.Palette] = list = new List<(MapDecorData, Vector3, Quaternion)>();
+                    list.Add(part);
+                }
+            }
+            foreach (var pair in ownParts)
+            {
+                var holder = new GameObject("IslandPropsOwnPalette");
+                holder.transform.SetParent(transform, false);
+                holder.AddComponent<MapDecorRenderer>().Initialize(MapDecorData.Combine(pair.Value), pair.Key);
             }
             if (parts.Count == 0 || map.TerrainMaterial == null) return;
             var decor = GetComponent<MapDecorRenderer>();

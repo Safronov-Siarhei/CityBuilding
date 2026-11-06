@@ -16,16 +16,16 @@ for ob in sc.objects:
 OX, OY = 500.0, 500.0
 ROW = [("OrcSkullGate1", 0.0, 0.0, 0.0), ("OrcRib1-A", 9.0, 2.0, 0.0), ("OrcRib1-B", 9.0, -4.0, 0.0),
        ("OrcVertebra1", -9.0, -3.0, 0.4), ("OrcStoneTower1", -9.0, 2.0, 0.0), ("OrcGrunt-lvl3", -7.0, -1.0, 0.0),
-       ("DeadTree1-A", -12.5, 4.0, 0.0), ("DeadTree1-B", -14.0, 1.0, 0.0), ("DeadTree1-C", -12.5, -1.5, 0.0),
-       ("OrcSkullStake1", -6.5, -5.0, 0.0), ("OrcSkullStake1", -5.5, -6.2, 1.0), ("Wreck1", 20.0, -3.0, 0.5),
-       ("Crow1", -3.0, -8.0, 0.0), ("Crow1", 2.0, -9.0, 0.0)]
+       ("OrcDeadTree1-A", -12.5, 4.0, 0.0), ("OrcDeadTree1-B", -14.0, 1.0, 0.0), ("OrcDeadTree1-C", -12.5, -1.5, 0.0),
+       ("OrcSkullStake1", -6.5, -5.0, 0.0), ("OrcSkullStake1", -5.5, -6.2, 1.0), ("OrcWreck1", 20.0, -3.0, 0.5),
+       ("OrcCrow1", -3.0, -8.0, 0.0), ("OrcCrow1", 2.0, -9.0, 0.0)]
 for name, x, y, rot in ROW:
     src = bpy.data.objects[name]
     o = bpy.data.objects.new("r_" + name, src.data)
     sc.collection.objects.link(o)
-    o.location = (OX + x, OY + y, 6.0 if name == "Crow1" else 0.0)
+    o.location = (OX + x, OY + y, 6.0 if name == "OrcCrow1" else 0.0)
     o.rotation_euler = (0, 0, rot)
-    if name == "Crow1":
+    if name == "OrcCrow1":
         o.scale = (2, 2, 2)
 bpy.ops.mesh.primitive_plane_add(size=80, location=(OX, OY, -0.02))
 g = bpy.context.active_object

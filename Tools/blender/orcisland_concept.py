@@ -27,20 +27,7 @@ rnd = random.Random(7)
 sc = bpy.context.scene
 
 # -- the gloomy palette: the same cells, swamp and ash colours ------------------------------------
-GLOOM = {
-    "grass_light": "6E7A4A", "grass": "5F6E40", "grass_mid": "566539", "grass_lush": "4C5C33",
-    "grass_dark": "3F4E2C", "forest_floor": "343F26", "moss": "4F5A30", "grass_dry": "7A7448",
-    "sand": "7D705A", "sand_wet": "5E5444", "dirt": "5C4A36", "dirt_dark": "45372A",
-    "path": "6E5E46", "clay": "5E4636", "mud": "3E3226", "pebble": "77756C",
-    "rock_light": "7E7C78", "rock": "6A6864", "rock_mid": "5A5855", "rock_dark": "4A4846",
-    "rock_deep": "3B3A39", "water_shallow": "4E6A4C", "water": "3C5642", "water_deep": "2C4036",
-    "foam": "7E8F74", "leaf": "3A4A2C", "leaf_light": "51603A", "flower_white": "A8A898",
-    "flower_yellow": "9A8F4A", "flower_purple": "6E5A7A", "flower_red": "7A3A32", "flower_pink": "7A5A62",
-    "bark": "4A3A2C", "bark_dark": "33281F", "reed": "6E6A3E", "cattail": "4A3424",
-    "lily": "3E5A32", "mushroom_cap": "8A6A3A", "mushroom_stem": "B0A890", "birch_bark": "8A877C",
-    "grass_b": "64733F", "grass_light_b": "737F4D", "grass_mid_b": "5A693C", "grass_lush_b": "505F35",
-    "grass_dark_b": "43522E", "forest_floor_b": "38432A", "grass_dry_b": "7F784B", "stony": "6B675A",
-}
+GLOOM = terrain.ORC_PALETTE
 
 
 def rgb(h):
@@ -157,8 +144,8 @@ def blob(bm, centre, size, seed, subdiv=2, jitter=0.12, rot=(0, 0, 0)):
 
 # the island's own models (orcisland1.py); with them all in the Models file the concept stands
 # them instead of its placeholders
-ISLAND = ["OrcSkullGate1", "OrcRib1-A", "OrcRib1-B", "OrcVertebra1", "DeadTree1-A", "DeadTree1-B",
-          "DeadTree1-C", "OrcSkullStake1", "Wreck1", "Crow1"]
+ISLAND = ["OrcSkullGate1", "OrcRib1-A", "OrcRib1-B", "OrcVertebra1", "OrcDeadTree1-A", "OrcDeadTree1-B",
+          "OrcDeadTree1-C", "OrcSkullStake1", "OrcWreck1", "OrcCrow1"]
 PROTOS = {}
 
 
@@ -417,7 +404,7 @@ def in_base(x, y, margin):
 
 def dress():
     if real():
-        trees = [PROTOS[n] for n in ("DeadTree1-A", "DeadTree1-B", "DeadTree1-C")]
+        trees = [PROTOS[n] for n in ("OrcDeadTree1-A", "OrcDeadTree1-B", "OrcDeadTree1-C")]
         stakes = [PROTOS["OrcSkullStake1"]]
     else:
         trees = [dead_tree(s) for s in range(8)]
@@ -451,7 +438,7 @@ def dress():
     # wrecks on the shore
     for wx, wy, rot in ((MX + 11.4, MY + 15.2, 0.6), (38.9, -46.9, 2.2)):
         if real():
-            put("Wreck1", wx, wy, -0.3, rot=rot, tilt=(0.12, 0.08))
+            put("OrcWreck1", wx, wy, -0.3, rot=rot, tilt=(0.12, 0.08))
             continue
         bm = bmesh.new()
         for k in range(7):
@@ -470,7 +457,7 @@ def dress():
             a = rnd.uniform(0, 2 * math.pi)
             rad = rnd.uniform(4, 10) if over_skull else rnd.uniform(6, 16)
             cx, cy = (MX, MY - 29) if over_skull else (MX, MY - 3)
-            put("Crow1", cx + math.cos(a) * rad, cy + math.sin(a) * rad,
+            put("OrcCrow1", cx + math.cos(a) * rad, cy + math.sin(a) * rad,
                 rnd.uniform(9, 17) if over_skull else rnd.uniform(13, 20), rot=a, scale=1.4,
                 tilt=(0.0, rnd.uniform(-0.4, 0.4)))
         bm = None

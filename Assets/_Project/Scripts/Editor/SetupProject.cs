@@ -225,6 +225,29 @@ namespace CityBuilder.EditorTools
             EditorUtility.SetDirty(material);
             AssetDatabase.SaveAssets();
             EnsureFirePaletteMaterial(material);
+            EnsureOwnPaletteMaterial(material, ModelImportDefaults.OrcIslandPaletteTexturePath, ModelImportDefaults.OrcIslandPaletteMaterialPath);
+        }
+
+        /// <summary>The terrain material with a recoloured palette of the same layout (the orcs' island).</summary>
+        private static void EnsureOwnPaletteMaterial(Material terrain, string texturePath, string materialPath)
+        {
+            AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            if (texture == null) return;
+            var own = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (own == null)
+            {
+                own = new Material(terrain);
+                AssetDatabase.CreateAsset(own, materialPath);
+            }
+            else
+            {
+                own.CopyPropertiesFromMaterial(terrain);
+                own.shader = terrain.shader;
+            }
+            own.SetTexture("_BaseMap", texture);
+            EditorUtility.SetDirty(own);
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>

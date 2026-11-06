@@ -4,24 +4,26 @@
 > prisoners' cages and the chief's treasury are IN THE GAME. Not on a phone; big-base FPS unmeasured.
 > **Next the user named:** raid roster per portal level; main-base extras offered but not picked
 > (shaman hut, war drum, chief's forge, portal altar, catapults, wolf den, arena).
-> **Gloomy orc island -- CONCEPT 2026-11-06, waiting for the user's verdict (nothing in the game):**
-> the user wants the orcs' island to look savage and gloomy and the main base less same-y; picked
-> "C as the heart + B round it": a giant beast's SKELETON (skull lying in front of the main gate, the
-> way in through its jaws; ribs arching over the side zones -- they replace the side/back mountains;
-> spine running off behind) + a SWAMP round it (hummocks, black pools, dead trees, stakes with
-> skulls, wrecks, crows circling the skeleton, a thin low swamp haze; the storm cloud was REJECTED). Renders: `Design/concepts/orcisland_*.png`.
-> Made by `ISL_SWAMP=1` islands.py (orc kind: relief 'swamp', `swamp_sd` pools as land_sd holes)
-> + `Tools/blender/orcisland_concept.py` (gloomy palette on the same terrain cells = a 2nd
-> Terrain material for this island only; the base from its real plan and models; skeleton,
-> dead trees, stakes, wrecks, crows, haze -- placeholders, not game models). Open: the main base's green
-> turf/moss style clashes with the gloom (needs a reskin?); later: per-seed base VARIANTS
-> (layouts + special buildings: shaman hut, war drum, catapults, wolf den, forge, arena) and
-> liveliness (smoke, fires, patrols, alarm horn) -- discussed 2026-11-06, not decided.
-> **2026-11-06 models APPROVED by the user** (`Tools/blender/orcisland1.py`, in the Models file, NOT exported):
-> OrcSkullGate1 (10x12, corridor 2 wide / 3.4 high), OrcRib1-A/-B (foot 2x2, arc 10 up / 11.5 in),
-> OrcVertebra1, DeadTree1-A/B/C (slate grey: wood colours get the planks detail), OrcSkullStake1,
-> Wreck1, Crow1. Bone GREY = `stone_mid`/`stone_dark`/`roof_slate_dark`, drawn plain (the user: yellow no). Ribs drawn by `flat_tube` (o.tube twisted the section past upright). Teeth inside the mouth (user note).
-> Sheet `render_orcisland_models.py`; the concept stands them when all are in the Models file.
+> **Gloomy orc island -- IN THE GAME 2026-11-06 (built, NOT played, no tests -- the user checks):**
+> the user's concept "C heart + B swamp" (renders `Design/concepts/orcisland_*.png`, models approved).
+> - All 6 orc library islands are SWAMPS (`islands.py`: `SWAMP = KIND == 'orc'`, relief 'swamp',
+>   `swamp_sd` pools as holes in land_sd, no flowers; MAIN_PAD front -40 for the skull), re-exported.
+> - Own palette: `terrain.ORC_PALETTE` -> `orc_palette.py` -> `Models/Palette/OrcIslandPalette.png/.mat`
+>   (name must NOT start with TerrainPalette); `IslandAsset.Palette` set for Kind.Orc in
+>   `CreateArchipelagoLibrary`; `MeshMapApplier.PlaceLibraryIslands` puts it on the island's ground,
+>   relief and coast; its props are a 2nd MapDecorRenderer (`IslandPropsOwnPalette`). Seasons do not touch it.
+>   Deep water keeps the sea's blue (no seam), shallows murky.
+> - Dead forest: `TreesAreaSpawner.PrefabsAt` (cells inside a palette island's frame -> OrcDeadTree1-A/B/C, no DressTree).
+> - `DressSwampIsland`: OrcWreck1 on every landing beach, 12 SwampHaze patches (`Shaders/SwampHaze.shader`,
+>   flat alpha quads, wisps by sines) on land >= 30 m from the main base.
+> - EVERY map's main base: `SpawnMountains` keeps the blocks' NavMesh obstacles (base as closed as before)
+>   but stands the SKELETON instead of OrcMountain rocks (`DressSkeleton`): 4 ribs per side block (one
+>   snapped), vertebrae + dead trees between, the spine across the back block; OrcSkullGate1 in front of the
+>   outer gate when its 10x13 cells are free land (`SkullGroundFree`, then occupied), two box obstacles,
+>   the corridor between the jaws open (raid exit at Bounds.yMin-1.5 lies in it); 12 skull stakes along the
+>   way in; `CrowFlock` (7 over the skull, 9 over the base, one Update). Mountains stay as the fallback.
+> - Models: `Tools/blender/orcisland1.py` (Models file) -> Models/Orcs. Concept: `orcisland_concept.py`.
+> - Open: the main base's green turf style (the user: decide later); not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
 

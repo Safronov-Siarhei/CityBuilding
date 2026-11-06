@@ -143,6 +143,8 @@ namespace CityBuilder.Combat
                 obstacle.center = new Vector3(0f, 1.5f, 0f);
                 obstacle.size = new Vector3(size.x * grid.CellSize, 3f, size.y * grid.CellSize);
                 obstacle.carving = true;
+                // the beast's skeleton stands instead of the rock blocks (DressSkeleton, below)
+                if (HasSkeleton) continue;
                 if (mountainModels == null || mountainModels.Length == 0) continue;
                 // rock blocks every three cells across the rect, the outer ones sunk a little
                 for (var x = 1.5f; x < size.x; x += 3f)
@@ -157,7 +159,121 @@ namespace CityBuilder.Combat
                     }
                 }
             }
+            if (HasSkeleton) DressSkeleton(camp, root);
             return root;
+        }
+
+        private bool HasSkeleton => ribModels != null && ribModels.Length > 0 && ribModels[0] != null && vertebraModel != null;
+
+        /// <summary>
+        /// The main base's heart (the user's concept, 2026-11-06: "C as the heart"): a giant beast's
+        /// skeleton where the mountains were -- its ribs rising out of the side blocks and arching
+        /// over the base, its fallen spine across the back block, dead trees between the bones --
+        /// and its skull lying in front of the outer gate, the way in through its jaws. The blocks'
+        /// obstacles stay exactly as they were: the base is as closed as before. Crows circle over it
+        /// all; skull stakes line the way in. Everything is a child of `root`, gone with it.
+        /// </summary>
+        private void DressSkeleton(OrcCamp camp, GameObject root)
+        {
+            var yaw = camp.Quarters * 90f;
+            var applier = MeshMapApplier.Instance;
+            GameObject Put(GameObject model, Vector2 local, float turn, float scale, string name)
+            {
+                if (model == null) return null;
+                var at = camp.LocalToWorld(local);
+                if (applier != null && applier.TryGetGroundHeight(at, out var h)) at.y = h;
+                var go = Instantiate(model, at, Quaternion.Euler(0f, yaw + turn, 0f), root.transform);
+                go.name = name;
+                if (!Mathf.Approximately(scale, 1f)) go.transform.localScale = Vector3.one * scale;
+                return go;
+            }
+            GameObject Rib(int k) => ribModels[Mathf.Min(k, ribModels.Length - 1)];
+            GameObject Tree(int k) => deadTreeModels != null && deadTreeModels.Length > 0 ? deadTreeModels[Mathf.Abs(k) % deadTreeModels.Length] : null;
+
+            // the ribs: their feet in the side blocks, reaching in over the base (one snapped each side)
+            var ys = new[] { -12f, -8f, -4f, 0f };
+            for (var i = 0; i < ys.Length; i++)
+            {
+                var size = 1f - 0.025f * Mathf.Abs(ys[i] + 6f);
+                Put(Rib(i == 2 ? 1 : 0), new Vector2(-16.5f, ys[i]), 0f, size, "Rib");
+                Put(Rib(i == 1 ? 1 : 0), new Vector2(16.5f, ys[i]), 180f, size, "Rib");
+            }
+            // between the ribs: vertebrae fallen off the spine and dead trees, so the blocks read as closed
+            for (var y = -13f; y <= 2f; y += 3.8f)
+            {
+                var k = (int)(y + 20f);
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    Put(vertebraModel, new Vector2(side * 18.2f, y + 1.9f), 37f * k * side, 0.9f, "Vertebra");
+                    Put(Tree(k + (side > 0 ? 1 : 0)), new Vector2(side * 14.6f, y + 0.6f), 53f * k, 1f, "DeadTree");
+                }
+            }
+            // the spine: fallen across the back block, big in the middle, smaller to the ends
+            for (var x = -17.5f; x <= 17.6f; x += 2.5f)
+            {
+                var size = 1.6f - 0.6f * Mathf.Abs(x) / 17.5f;
+                Put(vertebraModel, new Vector2(x, 5.6f), 90f + (x > 0f ? 0f : 180f), size, "Spine");
+            }
+            for (var x = -16f; x <= 16.1f; x += 4f)
+                Put(Tree((int)(x + 40f)), new Vector2(x + 1.2f, 8.1f), 41f * x, 1.1f, "DeadTree");
+
+            // the skull before the outer gate, where the ground in front lets it lie
+            var gateLine = camp.Layout.Bounds.yMin;
+            if (skullGateModel != null && SkullGroundFree(camp, gateLine))
+            {
+                Put(skullGateModel, new Vector2(0f, gateLine - 6.5f), 0f, 1f, "SkullGate");
+                // its two halves are solid; the way between the jaws is open
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    var half = new GameObject("SkullObstacle");
+                    half.transform.SetParent(root.transform, false);
+                    half.transform.SetPositionAndRotation(camp.LocalToWorld(new Vector2(side * 3.2f, gateLine - 6.5f)), Quaternion.Euler(0f, yaw, 0f));
+                    var obstacle = half.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+                    obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+                    obstacle.center = new Vector3(0f, 1.5f, 0f);
+                    obstacle.size = new Vector3(3.6f, 3f, 12.5f);
+                    obstacle.carving = true;
+                }
+                // skull stakes along the way in
+                var grid = GridManager.Instance;
+                for (var k = 0; k < 6; k++)
+                {
+                    foreach (var side in new[] { -1f, 1f })
+                    {
+                        var at = new Vector2(side * (3.3f + 0.4f * (k % 2)), gateLine - 14.5f - k * 2.6f);
+                        if (applier != null && grid != null && applier.IsWaterCell(grid.WorldToCell(camp.LocalToWorld(at)))) continue;
+                        Put(skullStakeModel, at, 70f * k * side, 1.2f, "SkullStake");
+                    }
+                }
+            }
+
+            // crows circling over the skull and over the base
+            if (crowModel != null)
+            {
+                var flock = root.AddComponent<CrowFlock>();
+                flock.Initialize(crowModel, camp.LocalToWorld(new Vector2(0f, gateLine - 6.5f)), camp.LocalToWorld(new Vector2(0f, -6f)));
+            }
+            SceneryShadows.DisableCasting(root);
+        }
+
+        /// <summary>Whether the skull's ground in front of the gate (10 x 13 cells) is the camp's to lie on: land, in the grid, nothing standing there. Takes it if so.</summary>
+        private static bool SkullGroundFree(OrcCamp camp, int gateLine)
+        {
+            var grid = GridManager.Instance;
+            var applier = MeshMapApplier.Instance;
+            if (grid == null) return false;
+            OrcBaseLayout.ToWorld(new Vector2Int(-5, gateLine - 13), new Vector2Int(10, 13), camp.Centre, camp.Quarters, out var min, out var size);
+            for (var x = 0; x < size.x; x++)
+            {
+                for (var z = 0; z < size.y; z++)
+                {
+                    var cell = min + new Vector2Int(x, z);
+                    if (!grid.IsWithinBounds(cell, Vector2Int.one) || !grid.IsAreaFree(cell, Vector2Int.one)) return false;
+                    if (applier != null && applier.IsWaterCell(cell)) return false;
+                }
+            }
+            grid.SetAreaOccupied(min, size, true);
+            return true;
         }
 
         /// <summary>

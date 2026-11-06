@@ -41,6 +41,25 @@ TERRAIN_PALETTE = [
     ("grass_dark_b", "519C40"), ("forest_floor_b", "458639"), ("grass_dry_b", "CCD472"), ("stony", "ADA285"),
 ]
 NAMES = [n for n, _ in TERRAIN_PALETTE]
+
+# The orcs' gloomy swamp island (the user, 2026-11-06): the same cells in swamp and ash colours,
+# drawn by the game through its own material (Models/Palette/OrcIslandPalette.png, written by
+# orc_palette.py). The deep water keeps the sea's blue so the island's coast meets the open sea
+# without a seam; the shallows go murky.
+ORC_PALETTE = {
+    "grass_light": "6E7A4A", "grass": "5F6E40", "grass_mid": "566539", "grass_lush": "4C5C33",
+    "grass_dark": "3F4E2C", "forest_floor": "343F26", "moss": "4F5A30", "grass_dry": "7A7448",
+    "sand": "7D705A", "sand_wet": "5E5444", "dirt": "5C4A36", "dirt_dark": "45372A",
+    "path": "6E5E46", "clay": "5E4636", "mud": "3E3226", "pebble": "77756C",
+    "rock_light": "7E7C78", "rock": "6A6864", "rock_mid": "5A5855", "rock_dark": "4A4846",
+    "rock_deep": "3B3A39", "water_shallow": "4E6A4C", "water": "35626A", "water_deep": "3290CD",
+    "foam": "7E8F74", "leaf": "3A4A2C", "leaf_light": "51603A", "flower_white": "A8A898",
+    "flower_yellow": "9A8F4A", "flower_purple": "6E5A7A", "flower_red": "7A3A32", "flower_pink": "7A5A62",
+    "bark": "4A3A2C", "bark_dark": "33281F", "reed": "6E6A3E", "cattail": "4A3424",
+    "lily": "3E5A32", "mushroom_cap": "8A6A3A", "mushroom_stem": "B0A890", "birch_bark": "8A877C",
+    "grass_b": "64733F", "grass_light_b": "737F4D", "grass_mid_b": "5A693C", "grass_lush_b": "505F35",
+    "grass_dark_b": "43522E", "forest_floor_b": "38432A", "grass_dry_b": "7F784B", "stony": "6B675A",
+}
 assert len(TERRAIN_PALETTE) <= COLS * ROWS
 
 MATERIAL_NAME = "Terrain"

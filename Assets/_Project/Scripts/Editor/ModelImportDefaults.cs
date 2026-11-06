@@ -52,6 +52,10 @@ namespace CityBuilder.EditorTools
         // Dungeon 3's fire palette (Tools/blender/dungeon3.py), the same layout recoloured
         public const string FirePaletteTexturePath = "Assets/_Project/Models/Palette/TerrainPaletteFire.png";
         public const string FirePaletteMaterialPath = "Assets/_Project/Models/Palette/TerrainPaletteFire.mat";
+        // the orcs' gloomy swamp island (Tools/blender/orc_palette.py, the user 2026-11-06): the same
+        // layout recoloured; its name must NOT start with TerrainPalette (MeshMapApplier swaps those)
+        public const string OrcIslandPaletteTexturePath = "Assets/_Project/Models/Palette/OrcIslandPalette.png";
+        public const string OrcIslandPaletteMaterialPath = "Assets/_Project/Models/Palette/OrcIslandPalette.mat";
 
         /// <summary>The seasons' palettes (Tools/blender/seasons.py): imported exactly as the two above.</summary>
         public const string SeasonPalettesFolder = "Assets/_Project/Models/Palette/Seasons/";
@@ -139,7 +143,7 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != FirePaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != FirePaletteTexturePath && assetPath != OrcIslandPaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would
