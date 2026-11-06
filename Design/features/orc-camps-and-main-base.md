@@ -70,7 +70,7 @@
 >   90), 9 bog lanterns beside them, 5 stilt huts + 2 rafts in the bog, 14 reed clumps (ambush bend, edges).
 >   Bog decor stands at the bog's ground height: check it does not sink under the water in play.
 > - VARIANT C «Хребет» APPROVED and IN THE GAME 2026-11-06 (built, not seen): `OrcBaseLayout.MainSpine()`, variant 2,
->   on Isl-orc3/5 (VariantOfIsland: 1 -> A, 2/4/6 -> «Гать», 3/5 -> «Хребет»). Bounds x -15..14, z -48..8; spine =
+>   on Isl-orc3 (since «Кольцо»: 3 only). Bounds x -15..14, z -48..8; spine =
 >   `SpineCell` (x -1..0, z -41..-8, minus cross walls -30/-18 and gaps -33/-32, -21/-20, -10/-9) as the layout's
 >   Mountains (no rocks); cross gates alternate (-42 L, -30 R, -18 L, -7 R); sanctum double-walled (outer x -15/14,
 >   z 8; corridor entered by a 1x2 GateTower in the inner wall at (-12,-2)); 25 towers. Patrols: plaza, runner down
@@ -79,13 +79,16 @@
 >   back wall, dead trees in the side strips; A's decor zone by zone (throne turned -90 to face the spine).
 >   islands.py `SPINE` (orc 3/5): pad (-18,17,-64,14), rolls orc3=10, orc5=11.
 > - All three variants share A's decor models; only «Гать» has its own (orcdecor2.py).
-> - VARIANT D «Кольцо» (the user chose it, 2026-11-06): scheme `Design/orc_base_living_d.png/.py` SENT FOR APPROVAL --
->   three round walls (r 20.5 / 13.5 / 7.5, cells inside the disc with a 4-neighbour outside), gates turned a quarter
->   per ring (outer front+back, middle left+right 1x2, inner front), 26 towers, ring streets with buildings; patrols:
->   outer street both ways, middle street, round the portal, skull; brutes at middle/inner gates. Skeleton curled
->   round the base (skull at the front gate, spine arcing behind, ribs outside arching in). Proposed: «Кольцо» on
->   Isl-orc1 and A moves to Isl-orc5 (asked in the scheme).
-> - NEXT: D after approval; then playtest all four («Гать», «Хребет», «Кольцо»).
+> - VARIANT D «Кольцо» APPROVED and IN THE GAME 2026-11-06 (built, not seen): `OrcBaseLayout.MainRing()`, variant 3.
+>   Rings `RingCell` (r 20.5/13.5/7.5); gates found where a ring crosses an axis (outer front+back 2x1, middle
+>   left+right 1x2, inner front); 26 towers placed by bearing on r-0.5; Bounds x -24..23, z -21..26; Apron the
+>   skull way. Patrols: outer street r 18.8 both ways (3+2 grunts), middle r 11.5 (brute+2), portal r 5.6 (2
+>   brutes), skull 2; brutes at middle and inner gates; 12 throwers; chief (-2.7,8.5) before the throne.
+>   Dress: spine arc r 23 from -60 to 240 deg, 6 ribs at r 21.8 arching in (yaw 180-bearing), dead trees.
+>   ISLANDS NOW (VariantOfIsland): 1 = «Кольцо» (RING pad (-27,27,-38,27), roll 16), 2/4/6 = «Гать» (45/46/60),
+>   3 = «Хребет» (roll 10), 5 = A (its own roll again). Island 5 dropped from «Хребет» for the ring.
+> - NEXT: the user playtests all four
+(«Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.

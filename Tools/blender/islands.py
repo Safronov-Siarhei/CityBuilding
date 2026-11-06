@@ -127,7 +127,7 @@ if SWAMP:
     RELIEF_KIND, RIM, HILL_COUNT = 'swamp', 0.9, 0
 # a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
 # for the castle (2026-11-03)
-_ROLL = {('orc', 2): 45, ('orc', 4): 46, ('orc', 6): 60, ('orc', 3): 10, ('orc', 5): 11,   # «Гать»'s and «Хребет»'s pads (2026-11-06)
+_ROLL = {('orc', 2): 45, ('orc', 4): 46, ('orc', 6): 60, ('orc', 3): 10, ('orc', 1): 16,   # «Гать»'s and «Хребет»'s pads (2026-11-06)
          ('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 6): 29}   # bot: rolls that fit the 55x55 town (2026-11-05)
 if os.environ.get('ISL_ROLL'):     # a roll to try (searching a variant a new roll)
     _ROLL[(KIND, VARIANT)] = int(os.environ['ISL_ROLL'])
@@ -306,11 +306,16 @@ if KIND == 'orc':
 GAT = KIND == 'orc' and VARIANT % 2 == 0
 if GAT:
     MAIN_PAD = (-29.0, 28.0, -50.0, 22.0)
-# ... and Isl-orc3/5 variant C «Хребет» (approved 2026-11-06): a long narrow base (x -15..14, z -48..8),
+# ... Isl-orc3 variant C «Хребет» (approved 2026-11-06): a long narrow base (x -15..14, z -48..8),
 # the skull in front of it, the tail behind
-SPINE = KIND == 'orc' and VARIANT in (3, 5)
+SPINE = KIND == 'orc' and VARIANT == 3
 if SPINE:
     MAIN_PAD = (-18.0, 17.0, -64.0, 14.0)
+# ... and Isl-orc1 variant D «Кольцо» (approved 2026-11-06): three round walls (r 20.5), the beast curled
+# round them (r 23), the skull in front; Isl-orc5 keeps A
+RING = KIND == 'orc' and VARIANT == 1
+if RING:
+    MAIN_PAD = (-27.0, 27.0, -38.0, 27.0)
 
 
 def _gat_dry(x, z):

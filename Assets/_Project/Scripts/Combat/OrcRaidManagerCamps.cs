@@ -187,6 +187,30 @@ namespace CityBuilder.Combat
                 go.name = name;
             }
 
+            if (OrcBaseLayout.MainVariant == 3)
+            {
+                // «Кольцо» (scheme Design/orc_base_living_d.png): A's decor along the ring streets
+                Put(campfireModel, -9.5f, -13f, 0f, "Campfire");
+                Put(campfireModel, 4f, 16.3f, 50f, "Campfire");
+                foreach (var deg in new[] { 212f, 219f, 226f })
+                {
+                    var a = deg * Mathf.Deg2Rad;
+                    Put(dummyModel, Mathf.Cos(a) * 15.6f, Mathf.Sin(a) * 15.6f, 90f - deg, "Dummy");
+                }
+                Put(cauldronModel, 11f, -13f, 30f, "Cauldron");
+                Put(meatRackModel, -12.6f, 10.6f, -50f, "MeatRack");
+                Put(hideRackModel, 13.5f, 9.5f, 55f, "HideRack");
+                Put(warDrumModel, 3.5f, 9.5f, 0f, "WarDrum");
+                Put(boneThroneModel, -2.7f, 9.6f, 0f, "BoneThrone");
+                for (var k = 0; k < 8; k++)
+                {
+                    var a = (22.5f + 45f * k) * Mathf.Deg2Rad;
+                    var x = Mathf.Cos(a) * 3f;
+                    var z = Mathf.Sin(a) * 2.6f;
+                    Put(runeStoneModel, x, z, Mathf.Atan2(-x, -z) * Mathf.Rad2Deg, "RuneStone");
+                }
+                return;
+            }
             if (OrcBaseLayout.MainVariant == 2)
             {
                 // «Хребет» (scheme Design/orc_base_living_c.png): A's decor zone by zone
@@ -306,7 +330,27 @@ namespace CityBuilder.Combat
             GameObject Rib(int k) => ribModels[Mathf.Min(k, ribModels.Length - 1)];
             GameObject Tree(int k) => deadTreeModels != null && deadTreeModels.Length > 0 ? deadTreeModels[Mathf.Abs(k) % deadTreeModels.Length] : null;
 
-            if (OrcBaseLayout.MainVariant == 2)
+            if (OrcBaseLayout.MainVariant == 3)
+            {
+                // «Кольцо»: the beast curled round the base -- its spine arcing round the back outside
+                // the outer wall, its ribs rising outside it and arching in over it; dead trees between
+                for (var deg = -60f; deg <= 240.1f; deg += 12f)
+                {
+                    var a = deg * Mathf.Deg2Rad;
+                    var size = 1.5f - 0.5f * Mathf.Abs(deg - 90f) / 150f;
+                    Put(vertebraModel, new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 23f, 90f - deg + 90f, size, "Spine");
+                }
+                var rib = 0;
+                foreach (var deg in new[] { -35f, 10f, 55f, 125f, 170f, 215f })
+                {
+                    var a = deg * Mathf.Deg2Rad;
+                    Put(Rib(rib == 3 ? 1 : 0), new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 21.8f, 180f - deg, 0.95f, "Rib");
+                    var b = (deg + 22f) * Mathf.Deg2Rad;
+                    Put(Tree(rib), new Vector2(Mathf.Cos(b), Mathf.Sin(b)) * 22.3f, 53f * rib, 1f, "DeadTree");
+                    rib++;
+                }
+            }
+            else if (OrcBaseLayout.MainVariant == 2)
             {
                 // «Хребет»: the spine's giant vertebrae down the base's middle (on its obstacles), the
                 // ribs rising from it and arching out over the side walls, the tail behind the portal
