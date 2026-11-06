@@ -637,25 +637,10 @@ namespace CityBuilder.Tutorial
             if (_camera == null) return;
             switch (Current)
             {
-                case Step.WoodPick:
-                case Step.StonePick:
-                    if (_person == null || !_person.isActiveAndEnabled) _person = AnyIdlePerson();
-                    if (_person != null) _camera.FocusOn(_person.transform.position);
-                    break;
                 case Step.WoodSend:
                 case Step.StoneSend:
                     // the tree / the boulder until he is on his way, then nothing: the player watches him
                     if (!_sent && _node != null && _node) _camera.FocusOn(_node.transform.position);
-                    break;
-                case Step.KingPick:
-                case Step.SoldierPick:
-                    if (_unit == null || !_unit) _unit = FindUnit(Current == Step.KingPick ? SoldierType.King : TutorialRules.Soldier);
-                    if (_unit != null && _unit.isActiveAndEnabled) _camera.FocusOn(_unit.transform.position);
-                    break;
-                case Step.KingBoard:
-                case Step.SoldierBoard:
-                    if (_ship == null || !_ship) _ship = OurShip();
-                    if (_ship != null) _camera.FocusOn(_ship.transform.position);
                     break;
                 case Step.Soldier:
                 case Step.Ship:
@@ -674,6 +659,26 @@ namespace CityBuilder.Tutorial
         private void FollowMoving()
         {
             if (_camera == null) return;
+            // everything that walks or sails is followed here, every frame: re-aimed every 0.3 s the camera caught
+            // up, stopped and caught up again -- the ship coming in for the King looked jerky (the user, 2026-11-06)
+            switch (Current)
+            {
+                case Step.WoodPick:
+                case Step.StonePick:
+                    if (_person == null || !_person.isActiveAndEnabled) _person = AnyIdlePerson();
+                    if (_person != null) _camera.FocusOn(_person.transform.position);
+                    return;
+                case Step.KingPick:
+                case Step.SoldierPick:
+                    if (_unit == null || !_unit) _unit = FindUnit(Current == Step.KingPick ? SoldierType.King : TutorialRules.Soldier);
+                    if (_unit != null && _unit.isActiveAndEnabled) _camera.FocusOn(_unit.transform.position);
+                    return;
+                case Step.KingBoard:
+                case Step.SoldierBoard:
+                    if (_ship == null || !_ship) _ship = OurShip();
+                    if (_ship != null) _camera.FocusOn(_ship.transform.position);
+                    return;
+            }
             if (Current == Step.Raid)
             {
                 if (_walkers.Count > 0 && Centre(_walkers, out var walking)) _camera.FocusOn(walking);

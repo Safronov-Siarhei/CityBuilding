@@ -174,6 +174,10 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
   (`GameOverManager.WinAfterTheFall`: IsGameOver at once, OnGameEnded after); every building that goes collapses
   -- combat, decay, demolish, orc buildings, portal (not roads/fences: `Data.isRoad`).
 
+- Camera (2026-11-06): EVERY moving target (the person, the King/soldier, the ship at boarding, the raid, the ship
+  at Sail) is followed per frame in `FollowMoving`; only the still ones (node, Barracks, Shipyard) stay on the
+  0.3-s `Follow`. Re-aimed every 0.3 s the camera caught up, stopped, caught up -- the ship looked stepwise.
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».
