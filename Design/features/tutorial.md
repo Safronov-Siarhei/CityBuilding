@@ -1,7 +1,8 @@
 # Tutorial (обучение)
 
-> Status 2026-11-06: game mode BUILT, played twice; the SECOND PLAYTEST's rules (below) BUILT, NOT PLAYED yet. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
-> `Balance/tutorial.csv`). Next: the user plays it again.
+> Status 2026-11-06: DONE -- the user closed the tutorial after five playtests. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
+> `Balance/tutorial.csv`). OPEN, deliberately left for the final pre-release pass (the user): how the tutorial is
+> offered to the player (first launch, a menu entry, skip, etc.) -- do not decide it before then.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
 > orc-raids-and-portals (portal, orc landing), hud-and-ui (main-menu mode cards).
