@@ -60,3 +60,7 @@
 
 ## Open
 - Big/special buildings may want their own site models later. Phone check of the net and the dust.
+
+Destruction (2026-11-06, the user's pick 1): `BuildFinishEffect.PlayCollapse` -- the building's body copied, sinking
+into the ground in 0.6 s with a 9° lean, a dust cloud and column, planks and stones thrown, a short camera jolt
+(`RTSCameraController.Shake`) when in view. Called from `BuildingInstance.TryDamage` and `OrcCampBuilding.Fall`.

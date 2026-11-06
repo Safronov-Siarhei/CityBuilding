@@ -180,6 +180,36 @@ namespace CityBuilder.CameraControl
 
         public bool IsFocusing => _focusing;
 
+        public static RTSCameraController Instance { get; private set; }
+
+        private float _shakeLeft, _shakeSeconds, _shakeAmount;
+        private Vector2 _shakeOffset;
+
+        /// <summary>A short jolt of the view (a building falling down, the user 2026-11-06): `amount` metres, dying away.</summary>
+        public void Shake(float amount, float seconds)
+        {
+            _shakeAmount = Mathf.Max(_shakeAmount * (_shakeLeft > 0f ? 1f : 0f), amount);
+            _shakeSeconds = _shakeLeft = Mathf.Max(0.05f, seconds);
+        }
+
+        private void ApplyShake(float dt)
+        {
+            if (cameraTransform == null || (_shakeLeft <= 0f && _shakeOffset == Vector2.zero)) return;
+            var local = cameraTransform.localPosition;
+            local.x -= _shakeOffset.x;
+            local.y -= _shakeOffset.y;
+            _shakeOffset = Vector2.zero;
+            if (_shakeLeft > 0f)
+            {
+                _shakeLeft -= dt;
+                var k = Mathf.Clamp01(_shakeLeft / _shakeSeconds);
+                _shakeOffset = new Vector2(Mathf.Sin(Time.unscaledTime * 61f), Mathf.Sin(Time.unscaledTime * 47f + 1.3f)) * (_shakeAmount * k);
+                local.x += _shakeOffset.x;
+                local.y += _shakeOffset.y;
+            }
+            cameraTransform.localPosition = local;
+        }
+
         /// <summary>No pan, no zoom by the player (the tutorial while it shows a person and his tree, the user 2026-11-06).</summary>
         public static bool GesturesLocked { get; set; }
 
@@ -196,6 +226,7 @@ namespace CityBuilder.CameraControl
 
         private void OnEnable()
         {
+            Instance = this;
             var router = TouchInputRouter.Instance;
             if (router == null) return;
 
@@ -249,6 +280,7 @@ namespace CityBuilder.CameraControl
 
             Follow(dt);
             KeepAboveTheLand(dt);
+            ApplyShake(dt);
         }
 
         // ---------------------------------------------------------------- the follow

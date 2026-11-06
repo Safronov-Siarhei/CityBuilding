@@ -151,7 +151,10 @@ portal from too far» -- his structure reach is 1.6+1.2 m from the portal's cent
 - ALL modes: landing puts each man a step apart (golden-angle spiral, 1.4 m) and each group holds where it stepped
   ashore (`ShipUnit.Disembark`); the ship is let go after a landing; a ship ordered to take on troops that is not
   by their island's beach SAILS IN to the sea nearest them (`ShipManager.TryMeetingPoint`, `Boarding.Meeting`).
-**Open:** a destruction effect for buildings (options proposed to the user).
+- Destruction (ALL modes, the user's pick 1): `BuildFinishEffect.PlayCollapse` -- a copy of the building's body
+  sinks ~its height into the ground in 0.6 s leaning 9°, dust cloud + column + ring, planks and stones thrown,
+  `RTSCameraController.Shake` when in view. From `BuildingInstance.TryDamage` (the ruin is laid under it) and
+  `OrcCampBuilding.Fall(announce)` (orc shaders: every mesh but the health bar).
 
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».

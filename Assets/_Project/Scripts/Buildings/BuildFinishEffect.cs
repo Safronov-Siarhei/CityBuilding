@@ -88,6 +88,116 @@ namespace CityBuilder.Buildings
             return effect;
         }
 
+        /// <summary>
+        /// A building destroyed (the user's pick 1, 2026-11-06): a copy of its body sinks into the ground in about
+        /// half a second, leaning a little; a cloud of dust round it and up its walls; planks and stones thrown out;
+        /// the camera jolts once when it is in view. The ruin (or the bare ground) is already there under it.
+        /// Call BEFORE the building goes: its meshes are copied.
+        /// </summary>
+        public static BuildFinishEffect PlayCollapse(Transform building, Vector2 footprint, float height, bool anyShader = false)
+        {
+            var root = building;
+            var go = new GameObject("BuildingCollapse");
+            go.transform.SetPositionAndRotation(root.position, root.rotation);
+            var effect = go.AddComponent<BuildFinishEffect>();
+            effect._block = new MaterialPropertyBlock();
+            effect._squash = 0f;
+            effect.CopyBody(root, anyShader);
+            effect._fallHeight = Mathf.Max(1f, height) * 1.05f;
+            var tilt = Random.insideUnitCircle.normalized;
+            effect._tiltAxis = new Vector3(tilt.x, 0f, tilt.y);
+            effect.Crumble(footprint, Mathf.Max(1f, height));
+            var rig = CameraControl.RTSCameraController.Instance;
+            if (rig != null && OnScreen(root.position)) rig.Shake(Mathf.Clamp(0.06f * (footprint.x + footprint.y), 0.08f, 0.3f), 0.35f);
+            return effect;
+        }
+
+        private Transform _body;
+        private float _fallHeight;
+        private Vector3 _tiltAxis;
+        private const float FallSeconds = 0.6f;
+
+        private static bool OnScreen(Vector3 at)
+        {
+            var camera = Camera.main;
+            if (camera == null) return false;
+            var view = camera.WorldToViewportPoint(at);
+            return view.z > 0f && view.x > -0.1f && view.x < 1.1f && view.y > -0.1f && view.y < 1.1f;
+        }
+
+        /// <summary>The building's own body (as the ruin takes it: its live-shaded meshes) copied under this effect.</summary>
+        private void CopyBody(Transform root, bool anyShader)
+        {
+            var body = new GameObject("Body").transform;
+            body.SetParent(transform, false);
+            foreach (var filter in root.GetComponentsInChildren<MeshFilter>())
+            {
+                var renderer = filter.GetComponent<MeshRenderer>();
+                if (renderer == null || !renderer.enabled || filter.sharedMesh == null || renderer.sharedMaterial == null) continue;
+                // an orc building's own shaders: all of it but its health bar
+                if (anyShader ? filter.GetComponentInParent<BuildingHealthBar>() != null
+                    : renderer.sharedMaterial.shader == null || renderer.sharedMaterial.shader.name != BuildingRuin.LiveShaderName) continue;
+                var part = new GameObject("Part", typeof(MeshFilter), typeof(MeshRenderer)).transform;
+                part.SetParent(body, false);
+                part.localPosition = root.InverseTransformPoint(filter.transform.position);
+                part.localRotation = Quaternion.Inverse(root.rotation) * filter.transform.rotation;
+                var rs = root.lossyScale;
+                var fs = filter.transform.lossyScale;
+                part.localScale = new Vector3(fs.x / Mathf.Max(1e-4f, rs.x), fs.y / Mathf.Max(1e-4f, rs.y), fs.z / Mathf.Max(1e-4f, rs.z));
+                part.GetComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+                var copy = part.GetComponent<MeshRenderer>();
+                copy.sharedMaterials = renderer.sharedMaterials;
+                copy.shadowCastingMode = ShadowCastingMode.Off;
+            }
+            _body = body;
+        }
+
+        /// <summary>The body sinking and leaning, gone once it is under the ground.</summary>
+        private void Fall()
+        {
+            if (_body == null) return;
+            var t = Mathf.Clamp01(_age / FallSeconds);
+            if (t >= 1f)
+            {
+                Destroy(_body.gameObject);
+                _body = null;
+                return;
+            }
+            var k = t * t;   // slow at first, then down it goes
+            _body.localPosition = Vector3.down * (_fallHeight * k);
+            _body.localRotation = Quaternion.AngleAxis(9f * k, _tiltAxis);
+            var squash = 1f - 0.25f * k;
+            _body.localScale = new Vector3(1f + 0.06f * k, squash, 1f + 0.06f * k);
+        }
+
+        private void Crumble(Vector2 footprint, float height)
+        {
+            var hx = footprint.x * 0.5f;
+            var hz = footprint.y * 0.5f;
+            var span = footprint.x + footprint.y;
+            var scale = Mathf.Clamp(0.35f * span, 0.9f, 2.2f);
+            var ground = Mathf.Clamp(Mathf.RoundToInt(6f * span), 14, 36);
+            for (var i = 0; i < ground; i++)
+            {
+                var dir = Around(i, ground, 0.25f);
+                Add(Kind.Puff, Edge(dir, hx, hz) * Random.Range(0.6f, 1f) + Vector3.up * Random.Range(0.1f, 0.6f),
+                    dir * Random.Range(2f, 3.5f) + Vector3.up * Random.Range(0.3f, 0.9f),
+                    Random.Range(1f, 1.5f) * scale, 1.7f, Random.Range(0f, 0.12f), Random.Range(1.2f, 1.7f), DustColour());
+            }
+            // the column the body falls through
+            var column = Mathf.Clamp(Mathf.RoundToInt(4f * span), 10, 26);
+            for (var i = 0; i < column; i++)
+            {
+                var dir = Around(i, column, 0.5f);
+                Add(Kind.Puff, Edge(dir, hx, hz) * Random.Range(0.2f, 0.8f) + Vector3.up * Random.Range(0.2f, height * 0.8f),
+                    dir * Random.Range(0.5f, 1.2f) + Vector3.up * Random.Range(0.4f, 1.2f),
+                    Random.Range(1.1f, 1.7f) * scale, 1.3f, Random.Range(0.1f, 0.35f), Random.Range(0.9f, 1.3f), DustColour());
+            }
+            Add(Kind.Ring, Vector3.up * 0.06f, Vector3.zero, Mathf.Max(footprint.x, footprint.y) * 1.1f, 2.2f + 3f / span, 0.1f, 0.6f, DustDark);
+            Throw(Mathf.Clamp(Mathf.RoundToInt(1.6f * span), 4, 12), hx, hz, height, Plank(), Wood(), new Vector3(0.24f, 0.06f, 0.8f));
+            Throw(Mathf.Clamp(Mathf.RoundToInt(2f * span), 5, 14), hx, hz, height * 0.6f, Plank(), Stone(), new Vector3(0.2f, 0.16f, 0.18f));
+        }
+
         private void Sparkle(Vector2 footprint, float height)
         {
             var hx = footprint.x * 0.5f;
@@ -228,6 +338,7 @@ namespace CityBuilder.Buildings
             var dt = Time.unscaledDeltaTime;
             _age += dt;
             Spring();
+            Fall();
             var camera = Camera.main;
             foreach (var bit in _bits)
             {

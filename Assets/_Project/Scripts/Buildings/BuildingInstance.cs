@@ -374,6 +374,7 @@ namespace CityBuilder.Buildings
             // (the bot kingdom's losses are not the town's news)
             if (!IsBot) EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_combat", Data.LocalizedName), EventSeverity.Danger, EventGlyph.Ruin));
             OnDestroyedInCombat?.Invoke(this);
+            Collapse();
             // the sandbox keeps a burnt shell where it stood (BuildingRuin; the user, 2026-11-05)
             if (BuildingRuin.LeavesRuin(this))
             {
@@ -391,6 +392,19 @@ namespace CityBuilder.Buildings
                 return;
             }
             FreeCellsAndDestroy();
+        }
+
+        /// <summary>Falling down (BuildFinishEffect.PlayCollapse; the user, 2026-11-06): it just turned into its ruin before.</summary>
+        private void Collapse()
+        {
+            if (Data == null) return;
+            var grid = GridManager.Instance;
+            var cell = grid != null ? grid.CellSize : 1f;
+            var footprint = RotatedFootprint();
+            var top = transform.position.y + 1f;
+            foreach (var r in GetComponentsInChildren<MeshRenderer>())
+                if (r != null && r.enabled) top = Mathf.Max(top, r.bounds.max.y);
+            BuildFinishEffect.PlayCollapse(transform, new Vector2(footprint.x, footprint.y) * cell, top - transform.position.y);
         }
 
         /// <summary>Created on first damage rather than up front -- most buildings are never attacked at all, and this way they carry no extra objects or per-frame work for a bar nobody will see.</summary>

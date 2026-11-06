@@ -26,7 +26,7 @@ namespace CityBuilder.Buildings
         public const string ShaderName = "CityBuilder/BuildingRuin";
         /// <summary>Assets/_Project/Resources/BuildingRuin.mat, made by SetupProject.EnsurePaletteMaterial.</summary>
         public const string MaterialResource = "BuildingRuin";
-        private const string LiveShaderName = "CityBuilder/BuildingDetail";
+        internal const string LiveShaderName = "CityBuilder/BuildingDetail";
 
         private static readonly Color Stone = new Color(0.56f, 0.53f, 0.49f, 1f);
         private static readonly Color Ash = new Color(0.13f, 0.12f, 0.11f, 1f);

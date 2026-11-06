@@ -255,6 +255,15 @@ namespace CityBuilder.Combat
             if (announce && Kind == OrcCampBuildingKind.Cage) ReleasePrisoners();
             // the same for the treasury: one a save puts back broken was paid out back then
             if (announce && Kind == OrcCampBuildingKind.Treasury) PayOutTreasury();
+            // falling down, as the player's buildings do (the user, 2026-11-06) -- not one a save puts back broken
+            if (announce)
+            {
+                var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f;
+                var top = transform.position.y + 1f;
+                foreach (var r in GetComponentsInChildren<MeshRenderer>())
+                    if (r != null && r.enabled) top = Mathf.Max(top, r.bounds.max.y);
+                Buildings.BuildFinishEffect.PlayCollapse(transform, new Vector2(Footprint.x, Footprint.y) * cell, top - transform.position.y, true);
+            }
             var ruin = SpawnRuin(_ruinModel, Cell, transform.position, transform.rotation);
             if (Camp != null)
             {
