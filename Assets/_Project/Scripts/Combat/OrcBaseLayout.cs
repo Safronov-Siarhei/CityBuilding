@@ -332,19 +332,19 @@ namespace CityBuilder.Combat
             // 3: the corridor between the sanctum's two walls, two brutes
             Patrol(new[] { brute, brute }, (-11.5f, -7f), (11.5f, -7f), (11.5f, 5.5f), (-11.5f, 5.5f));
             // 5: round the portal itself, two brutes and a grunt
-            Patrol(new[] { brute, brute, grunt }, (-9.5f, -4.5f), (9.5f, -4.5f), (9.5f, 2.5f), (-9.5f, 2.5f));
+            Patrol(new[] { brute, brute, grunt }, (-9.5f, -4.5f), (9.5f, -4.5f), (9.5f, 1.5f), (8.5f, 3.4f), (-8.5f, 3.4f), (-9.5f, 1.5f));
             // 4: at the skull, two grunts from its jaws out to the stakes and back
             Patrol(new[] { grunt, grunt }, (0f, -31.5f), (0f, -41f));
 
             // the yard's campfire, the chief's campfire, the sanctum's outer gate
-            Post(OrcKind.Raider, 3, (3f, -26f), (6f, -26.5f), (4.5f, -25f), (5f, -12f), (7f, -13f));
+            Post(OrcKind.Raider, 3, (3f, -26f), (6f, -26.5f), (4.5f, -25f), (4.6f, -11.6f), (7.4f, -13.4f));
             Post(OrcKind.Brute, 2, (4.5f, -10.3f), (7.5f, -10.3f));
             // a thrower by the towers: the yard's corners, the bulge, the quarter, the sanctum
             Post(OrcKind.Thrower, 1, (-16f, -28.6f), (15.5f, -28.6f), (-17.5f, -20.5f), (16.5f, -20.5f),
                 (-6.5f, -19.5f), (5.5f, -19.5f), (-12.5f, -10.5f), (11.5f, -10.5f),
                 (-11.5f, 1f), (11.5f, 1f), (2.5f, 5.5f), (-8f, 0f), (8f, 0f));
             // the chief by his throne behind his house
-            Post(OrcKind.Boss, 1, (0.5f, -12.5f));
+            Post(OrcKind.Boss, 1, (0.5f, -11.5f));
 
             // the skull's way in before the gate is the base's ground too: its patrol fights there
             return new CampLayout(L, new RectInt(-19, -30, 38, 38), pieces, guards, new List<RectInt>(), 4)

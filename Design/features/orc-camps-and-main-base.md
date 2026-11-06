@@ -44,11 +44,14 @@
 >   spine at z 10 behind the back wall (`SpawnMountains` now also runs for IsMain with no rects, for the dress).
 >   islands.py orc MAIN_PAD (-21,20,-47,14); all 6 Isl-orc re-exported (each found a spot).
 >   Main layout is SHARED by every map (Map3-5 too): their bases are 7 cells deeper now -- not checked there.
-> - DECOR for A (`Tools/blender/orcdecor1.py`, Models file row y -180, NOT exported, renders
->   `Design/concepts/orc_decor_a*.png` sent for approval 2026-11-06): OrcCampfire1 (2 seated orcs), OrcDummy1,
->   OrcCauldron1, OrcMeatRack1, OrcHideRack1, OrcWarDrum1, OrcBoneThrone1, OrcRuneStone1. After approval: export
->   to Models/Orcs, wire in SetupProjectOrcs, place per the scheme (positions: scheme z - 7).
-> - NEXT: decor approval -> place it; then other variants («Гать», «Хребет», «Кольцо»).
+> - DECOR for A APPROVED and IN THE GAME 2026-11-06 (not seen): `Tools/blender/orcdecor1.py` -> Models/Orcs
+>   (OrcPalette), fields on OrcRaidManager, wired in SetupProjectOrcs; `OrcRaidManagerCamps.DressMainBase` (from
+>   SpawnMountains for IsMain, skeleton or not) places at native scale: yard campfire (4.5,-26.5) with 2 seated
+>   orcs, 5 dummies z -27.5, cauldron, meat rack (11,-23), 2 hide racks; drum in the bulge (-0.5,-19.3), bone
+>   throne (0.5,-12.6) facing the sanctum with the chief before it (0.5,-11.5), 2nd fire (6,-12.5), skull stakes;
+>   8 rune stones on an ellipse 3 x 2.6 round the portal, runes outwards. No obstacles. Patrol 5's back leg moved
+>   to z 3.4 to clear the stones; fire guards stand ~1.6 off the fires.
+> - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.

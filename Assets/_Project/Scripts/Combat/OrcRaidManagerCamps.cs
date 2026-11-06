@@ -159,8 +159,57 @@ namespace CityBuilder.Combat
                     }
                 }
             }
+            if (camp.Layout.IsMain) DressMainBase(camp, root);
             if (HasSkeleton) DressSkeleton(camp, root);
+            else SceneryShadows.DisableCasting(root);
             return root;
+        }
+
+        /// <summary>
+        /// The main base's life between its buildings (living variant A, the user approved the
+        /// models 2026-11-06), placed as the scheme Design/orc_base_living_a.png draws it: in the
+        /// yard a campfire with orcs sitting round it, training dummies, the cauldron, the
+        /// butcher's rack and hides drying; in the chief's quarter the war drum in the wall's
+        /// bulge, his bone throne and a second fire; round the portal a ring of rune stones.
+        /// Decor only: no obstacles, nothing to fight -- the guards walk through it.
+        /// </summary>
+        private void DressMainBase(OrcCamp camp, GameObject root)
+        {
+            var yaw = camp.Quarters * 90f;
+            var applier = MeshMapApplier.Instance;
+            void Put(GameObject model, float x, float z, float turn, string name)
+            {
+                if (model == null) return;
+                var at = camp.LocalToWorld(new Vector2(x, z));
+                if (applier != null && applier.TryGetGroundHeight(at, out var h)) at.y = h;
+                var go = Instantiate(model, at, Quaternion.Euler(0f, yaw + turn, 0f), root.transform);
+                go.name = name;
+            }
+
+            // the yard
+            Put(campfireModel, 4.5f, -26.5f, 0f, "Campfire");
+            for (var k = 0; k < 5; k++) Put(dummyModel, -8.5f + k, -27.5f, 12f * (k % 3) - 12f, "Dummy");
+            Put(cauldronModel, 10.5f, -27.5f, 30f, "Cauldron");
+            Put(meatRackModel, 11f, -23f, 0f, "MeatRack");
+            Put(hideRackModel, -15f, -20.2f, 0f, "HideRack");
+            Put(hideRackModel, 12f, -20.2f, 180f, "HideRack");
+            // the chief's quarter
+            Put(warDrumModel, -0.5f, -19.3f, 0f, "WarDrum");
+            Put(boneThroneModel, 0.5f, -12.6f, 180f, "BoneThrone");
+            Put(campfireModel, 6f, -12.5f, 70f, "Campfire");
+            Put(skullStakeModel, -11.5f, -15.5f, 40f, "SkullStake");
+            Put(skullStakeModel, 11.5f, -15.5f, -40f, "SkullStake");
+            // the sanctum: rune stones round the portal, skull stakes behind it
+            for (var k = 0; k < 8; k++)
+            {
+                var a = (22.5f + 45f * k) * Mathf.Deg2Rad;
+                var x = Mathf.Cos(a) * 3f;
+                var z = Mathf.Sin(a) * 2.6f;
+                // each turned with its runes (the model's front) outwards
+                Put(runeStoneModel, x, z, Mathf.Atan2(-x, -z) * Mathf.Rad2Deg, "RuneStone");
+            }
+            Put(skullStakeModel, -7.5f, 2.8f, 20f, "SkullStake");
+            Put(skullStakeModel, 7.5f, 2.8f, -20f, "SkullStake");
         }
 
         private bool HasSkeleton => ribModels != null && ribModels.Length > 0 && ribModels[0] != null && vertebraModel != null;

@@ -117,6 +117,15 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject wreckModel;
         [SerializeField] private GameObject crowModel;
         [SerializeField] private Material swampHazeMaterial;
+        // The main base's decor, living variant A (Tools/blender/orcdecor1.py, approved 2026-11-06)
+        [SerializeField] private GameObject campfireModel;
+        [SerializeField] private GameObject dummyModel;
+        [SerializeField] private GameObject cauldronModel;
+        [SerializeField] private GameObject meatRackModel;
+        [SerializeField] private GameObject hideRackModel;
+        [SerializeField] private GameObject warDrumModel;
+        [SerializeField] private GameObject boneThroneModel;
+        [SerializeField] private GameObject runeStoneModel;
         [SerializeField] private GameObject bossModel;
         // The Invasion jungle's monsters (Tools/blender/wild.py, Models/Wild), jointed.
         [SerializeField] private GameObject wolfModel;

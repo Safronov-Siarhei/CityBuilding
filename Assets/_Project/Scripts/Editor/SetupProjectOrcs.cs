@@ -156,7 +156,11 @@ namespace CityBuilder.EditorTools
             // the orcs' swamp island (the user, 2026-11-06): its haze, and the skeleton and dress models
             so.FindProperty("swampHazeMaterial").objectReferenceValue = CrystalMaterial("SwampHaze", "CityBuilder/SwampHaze", null);
             foreach (var (field, file) in new[] { ("skullGateModel", "OrcSkullGate1"), ("vertebraModel", "OrcVertebra1"),
-                         ("skullStakeModel", "OrcSkullStake1"), ("wreckModel", "OrcWreck1"), ("crowModel", "OrcCrow1") })
+                         ("skullStakeModel", "OrcSkullStake1"), ("wreckModel", "OrcWreck1"), ("crowModel", "OrcCrow1"),
+                         // the main base's decor (living variant A, approved 2026-11-06)
+                         ("campfireModel", "OrcCampfire1"), ("dummyModel", "OrcDummy1"), ("cauldronModel", "OrcCauldron1"),
+                         ("meatRackModel", "OrcMeatRack1"), ("hideRackModel", "OrcHideRack1"), ("warDrumModel", "OrcWarDrum1"),
+                         ("boneThroneModel", "OrcBoneThrone1"), ("runeStoneModel", "OrcRuneStone1") })
                 so.FindProperty(field).objectReferenceValue = Load(file);
 
             // By level, index 0 = level 1 (see OrcRaidManager).
