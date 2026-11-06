@@ -63,6 +63,19 @@ namespace CityBuilder.EditorTools
         /// <summary>The bot kingdom's palette: roofs, gold and banners in its straw (Tools/palette/bot_palette.py), imported as the buildings' own.</summary>
         public const string BotPaletteTexturePath = "Assets/_Project/Models/Palette/BotPalette.png";
         public const string BotPaletteMaterialPath = "Assets/_Project/Models/Palette/BotPalette.mat";
+        // the orcs' own darker palette (Tools/palette/orc_palette.py, approved by the user 2026-11-06):
+        // every model under Models/Orcs draws through it, but the swamp island's set (OrcIslandModel)
+        public const string OrcPaletteTexturePath = "Assets/_Project/Models/Palette/OrcPalette.png";
+        public const string OrcPaletteMaterialPath = "Assets/_Project/Models/Palette/OrcPalette.mat";
+
+        /// <summary>The swamp island's skeleton, trees, stakes, wrecks and crows (orcisland1.py): approved in the town's palette.</summary>
+        public static bool OrcIslandModel(string fileName) => fileName.StartsWith("OrcSkullGate") || fileName.StartsWith("OrcRib")
+            || fileName.StartsWith("OrcVertebra") || fileName.StartsWith("OrcDeadTree") || fileName.StartsWith("OrcSkullStake")
+            || fileName.StartsWith("OrcWreck") || fileName.StartsWith("OrcCrow");
+
+        /// <summary>Whether this model file draws through the orcs' palette.</summary>
+        public static bool UsesOrcPalette(string assetPath) => assetPath.StartsWith(OrcsFolder)
+            && !OrcIslandModel(System.IO.Path.GetFileNameWithoutExtension(assetPath));
         /// <summary>The bot's King: the figures' material with only his cape in the bot's straw.</summary>
         public const string BotKingPaletteTexturePath = "Assets/_Project/Models/Palette/BotKingPalette.png";
         public const string BotKingPaletteMaterialPath = "Assets/_Project/Models/Palette/BotKingPalette.mat";
@@ -79,6 +92,7 @@ namespace CityBuilder.EditorTools
             // ground -- draws through the one palette material. Files without a `Buildings`
             // material are untouched by the remap.
             var palette = AssetDatabase.LoadAssetAtPath<Material>(PaletteMaterialPath);
+            if (UsesOrcPalette(assetPath)) palette = AssetDatabase.LoadAssetAtPath<Material>(OrcPaletteMaterialPath) ?? palette;
             if (palette != null)
             {
                 modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedMaterialName), palette);
@@ -143,7 +157,7 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != FirePaletteTexturePath && assetPath != OrcIslandPaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
+            if (assetPath != PaletteTexturePath && assetPath != TerrainPaletteTexturePath && assetPath != FirePaletteTexturePath && assetPath != OrcIslandPaletteTexturePath && assetPath != BotPaletteTexturePath && assetPath != OrcPaletteTexturePath && assetPath != BotKingPaletteTexturePath && !assetPath.StartsWith(SeasonPalettesFolder)) return;
             if (!(assetImporter is TextureImporter textureImporter)) return;
 
             // Each colour is a 4x4 cell and every face samples one cell's centre. Mipmaps would

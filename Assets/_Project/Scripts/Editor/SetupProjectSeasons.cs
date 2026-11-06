@@ -54,6 +54,13 @@ namespace CityBuilder.EditorTools
             MaterialCopy(buildings, ModelImportDefaults.BotPaletteMaterialPath, ModelImportDefaults.BotPaletteTexturePath);
             var botKing = MaterialCopy(looks.figures, ModelImportDefaults.BotKingPaletteMaterialPath, ModelImportDefaults.BotKingPaletteTexturePath);
             if (botKing != looks.figures) botKing.SetFloat("_SnowMask", 0f);
+            // the orcs in their own darker palette (approved 2026-11-06), never snowed on
+            var orcs = MaterialCopy(buildings, ModelImportDefaults.OrcPaletteMaterialPath, ModelImportDefaults.OrcPaletteTexturePath);
+            if (orcs != buildings)
+            {
+                orcs.SetFloat("_SnowMask", 0f);
+                ReimportOrcModels(orcs);
+            }
             AssetDatabase.SaveAssets();
         }
 
@@ -84,6 +91,20 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>`source` copied to `path` (kept if it is there, so its GUID holds), with `palette` as its base map; `source` itself when the palette is missing.</summary>
+        /// <summary>Every orc model imported before its palette existed is imported again, so the remap (ModelImportDefaults) takes.</summary>
+        private static void ReimportOrcModels(Material orcs)
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/_Project/Models/Orcs" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!ModelImportDefaults.UsesOrcPalette(path)) continue;
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                var renderer = model != null ? model.GetComponentInChildren<Renderer>() : null;
+                if (renderer == null || renderer.sharedMaterial == orcs) continue;
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+        }
+
         private static Material MaterialCopy(Material source, string path, string palette)
         {
             Texture2D texture = null;

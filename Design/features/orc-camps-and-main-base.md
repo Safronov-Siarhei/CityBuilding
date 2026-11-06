@@ -23,7 +23,13 @@
 >   the corridor between the jaws open (raid exit at Bounds.yMin-1.5 lies in it); 12 skull stakes along the
 >   way in; `CrowFlock` (7 over the skull, 9 over the base, one Update). Mountains stay as the fallback.
 > - Models: `Tools/blender/orcisland1.py` (Models file) -> Models/Orcs. Concept: `orcisland_concept.py`.
-> - Open: the main base's green turf style (the user: decide later); not seen in game; phone cost unmeasured.
+> - ORC PALETTE (approved 2026-11-06, "цвета орков темнее"): `Tools/palette/orc_palette.py` -> `OrcPalette.png/.mat`
+>   (copy of the buildings' material, `_SnowMask` 0, made in BuildSeasonLooks); `ModelImportDefaults.UsesOrcPalette`
+>   remaps every Models/Orcs FBX to it at import (units, buildings, portals, ruins) EXCEPT the island set
+>   (`OrcIslandModel`: skull gate, ribs, vertebra, dead trees, stakes, wreck, crow); `ReimportOrcModels` re-imports
+>   stale ones. Portal purple/white, fire, lit windows kept. This settles the "green base" question.
+> - NEXT (the user): LIVING base layouts -- patrols and interesting decor; ONE variant first, then others.
+> - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
 
