@@ -130,6 +130,10 @@ mountains, expect it to need rewriting for plan A; not run 2026-11-06, the user 
 PlayMode `OrcCampTests` (filter `!IsMain`), `MainBaseTests`, `PrisonerCageTests`, `SaveRoundTripTests`.
 
 ## Traps
+- (2026-11-06, the user: town hall + lighthouse placed, NO orc base) A designed map's main spot used
+  `CampSquareFits` = the WHOLE Bounds dry -> «Гать»'s bog (and any pool in a corner) placed no main base, only a
+  warning. Now `OpenAtMapSpots` asks only: portal 4x4 free-or-scenery and dry, Bounds on the map
+  (`FreeOrScenery`, `MainSquareOnMap`); Reserve skips water cells. Not yet seen working.
 - Place the MAIN base FIRST, then camps round it (last failed ~1 in 4 on Map 3).
 - Restore skips the ground raycast (colliders not ready at load) — water check only.
 - Guards are not saved; spawners re-muster them. Only damaged/fallen buildings are saved.

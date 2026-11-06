@@ -154,9 +154,14 @@ namespace CityBuilder.Combat
             {
                 var spot = new Vector3(map.MainBaseSpot.x, 0f, map.MainBaseSpot.y);
                 var half = MainPortalFootprint / 2;
+                // The map's spot is made for the base (the swamp island's pad, its bog, its skull's
+                // ground): ask only that the portal stands on free dry ground and the base's square
+                // lies on the map. The whole square used to have to be dry -- «Гать»'s bog, and any
+                // pool in a round or long base's corners, put no main base at all (the user,
+                // 2026-11-06); Reserve skips the water cells anyway.
                 if (TryFindNear(grid, spot, half, cell => grid.IsWithinBounds(cell, MainPortalFootprint) &&
-                        grid.IsAreaFree(cell, MainPortalFootprint) &&
-                        CampSquareFits(grid, mapApplier, cell, OrcBaseLayout.MainLevel, townHall, quartersOverride: 0), out var mainCell))
+                        FreeOrScenery(grid, cell, MainPortalFootprint) && IsSolidGround(grid, mapApplier, cell, MainPortalFootprint) &&
+                        MainSquareOnMap(grid, cell), out var mainCell))
                 {
                     var main = SpawnPortal(grid, mainCell, isMain: true, rotation: Quaternion.identity);
                     MainPortalCell = mainCell;
@@ -343,6 +348,26 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A boulder or a tree on the cell -- scenery an orc camp clears for itself.</summary>
+        private static bool FreeOrScenery(GridManager grid, Vector2Int cell, Vector2Int size)
+        {
+            for (var x = 0; x < size.x; x++)
+                for (var z = 0; z < size.y; z++)
+                {
+                    var c = cell + new Vector2Int(x, z);
+                    if (!grid.IsAreaFree(c, Vector2Int.one) && !IsScenery(c)) return false;
+                }
+            return true;
+        }
+
+        /// <summary>The main base's square (its plan facing south) lies within the map.</summary>
+        private static bool MainSquareOnMap(GridManager grid, Vector2Int cell)
+        {
+            var layout = OrcBaseLayout.For(OrcBaseLayout.MainLevel);
+            var plot = Vector2Int.one * layout.PortalSize;
+            OrcBaseLayout.ToWorld(layout.Bounds.min, layout.Bounds.size, cell + plot / 2, 0, out var min, out var size);
+            return grid.IsWithinBounds(min, size);
+        }
+
         public static bool IsScenery(Vector2Int cell) =>
             (RockSpawner.Instance != null && RockSpawner.Instance.Has(cell)) ||
             (TreesAreaSpawner.Instance != null && TreesAreaSpawner.Instance.Has(cell));
