@@ -51,6 +51,11 @@
 >   throne (0.5,-12.6) facing the sanctum with the chief before it (0.5,-11.5), 2nd fire (6,-12.5), skull stakes;
 >   8 rune stones on an ellipse 3 x 2.6 round the portal, runes outwards. No obstacles. Patrol 5's back leg moved
 >   to z 3.4 to clear the stones; fire guards stand ~1.6 off the fires.
+> - VARIANT B «Гать» (the user chose it next, 2026-11-06): scheme `Design/orc_base_living_b.png/.py` SENT FOR
+>   APPROVAL -- dry octagon in an impassable bog, 3 plank causeways (front zig-zag with a reed ambush, left,
+>   right), one stone ring + a palisade round the portal mound with its gate at the BACK, 16 towers (4 on piles
+>   in the bog), 5 patrols (3 causeways, wall ring, mound). Needs new: bog cells in the island terrain per
+>   variant, gates in side walls (GateTower is along x only), variant pick per island.
 > - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
