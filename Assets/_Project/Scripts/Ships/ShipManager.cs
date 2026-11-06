@@ -344,6 +344,7 @@ namespace CityBuilder.Ships
 
         private void Update()
         {
+            if (_boardMark == null) _boardMark = gameObject.AddComponent<ShipBoardingMark>();
             TickOrcs();
             TickShoals();
             TickBuoy();
@@ -368,6 +369,16 @@ namespace CityBuilder.Ships
                 if (!waiting || b.Ship.FreeSeats == 0) _boarding.RemoveAt(i);
             }
         }
+
+        /// <summary>The ships someone is walking to board now (ShipBoardingMark marks them), once each.</summary>
+        public void BoardingShips(List<ShipUnit> into)
+        {
+            if (_boardMark == null) _boardMark = gameObject.AddComponent<ShipBoardingMark>();
+            foreach (var b in _boarding)
+                if (b.Ship != null && !into.Contains(b.Ship)) into.Add(b.Ship);
+        }
+
+        private ShipBoardingMark _boardMark;
 
         private static float Flat(Vector3 v)
         {

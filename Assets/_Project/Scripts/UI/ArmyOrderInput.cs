@@ -77,7 +77,8 @@ namespace CityBuilder.UI
                 if (blocker == null && Ships.ShipManager.Instance.OrderBoard(boarding, ship, out var landing))
                 {
                     boarding.NotifyPlayerOrder();
-                    if (boarding.Count > 0) OrderMarker.ShowFlagFor(boarding.Members[0].transform, landing);
+                    // no flag on the beach: the ship itself is marked while they walk to it (ShipBoardingMark; the user, 2026-11-06)
+                    OrderMarker.HideOrder();
                 }
                 else
                 {

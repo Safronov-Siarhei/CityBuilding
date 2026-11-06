@@ -105,7 +105,9 @@ EXCEPT two bugs the user said to fix for the whole game: the deselect-on-boardin
   crystal icon and 25, the menu button centred (`GameOverController.ShowTutorialReward`).
 - The held person's mark (ALL modes, the user's pick D of `Design/marker_options.png`): a gold octahedron gem,
   turning, in a soft camera-facing glow (`CitizenSelector.CreateMarker`), instead of the yellow cube.
-**Open (proposed to the user, waiting):** the boarding mark on the ship, other wake looks. **Unverified:** «the King hits the
+- Boarding (ALL modes, the user's pick 1): no flag on the beach; while anyone walks to a ship, a gold arrow bobs
+  over it and a gold ring pulses round it (`Ships/ShipBoardingMark`, on the ShipManager, from `BoardingShips`).
+**Open (proposed to the user, waiting):** other wake looks. **Unverified:** «the King hits the
 portal from too far» -- his structure reach is 1.6+1.2 m from the portal's centre; not reproduced.
 
 ## The script

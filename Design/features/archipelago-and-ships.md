@@ -372,3 +372,7 @@ Trap (2026-11-05): the shallows round an island are walkable NavMesh, so `TryFin
 beach point that is a WATER cell (the fleet test landed an orc in the sea). `ShipManagerOrcs.DryOf` now searches rings
 of cells (up to 25) for the nearest dry cell with no water within 2 (then 1, then 0) that the NavMesh reaches, and
 `OrcRaidManager.SpawnLanding` puts any orc whose scatter left it on a water cell back on the beach.
+
+Boarding mark (2026-11-06, the user): a ship someone walks to board carries a bobbing gold arrow and a pulsing gold
+ring (`Ships/ShipBoardingMark`, pool of 4, fed by `ShipManager.BoardingShips`); the beach flag is no longer shown.
+Wake (2026-11-06): spawned at the stern, drifting back and out (`ShipWake.Sail`).
