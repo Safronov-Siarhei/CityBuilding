@@ -23,6 +23,8 @@ import terrain  # noqa: E402
 argv = sys.argv[sys.argv.index("--") + 1:]
 MODELS, OUT_DIR = argv[0], argv[1]
 MX, MY = float(argv[2]), float(argv[3])
+# the orcs' own darker palette (Tools/palette/orc_palette.py, the user 2026-11-06) on the base and the orcs
+ORC_PNG = next((a[7:] for a in argv[4:] if a.startswith("orcpal=")), None)
 rnd = random.Random(7)
 sc = bpy.context.scene
 
@@ -243,6 +245,22 @@ def lay_base():
     PROTOS.update(protos)
     coll = bpy.data.collections.new("Base")
     sc.collection.children.link(coll)
+    orc_mat = None
+    if ORC_PNG:
+        src_mat = next((m for o in protos.values() if o.type == 'MESH' for m in o.data.materials if m is not None), None)
+        if src_mat is not None:
+            orc_mat = src_mat.copy()
+            orc_mat.name = "OrcPalette"
+            img = bpy.data.images.load(ORC_PNG)
+            for n in orc_mat.node_tree.nodes:
+                if n.type == 'TEX_IMAGE' and n.image is not None and "alette" in n.image.name:
+                    n.image = img
+            for name in names:
+                o = protos.get(name)
+                if o is not None and o.type == 'MESH' and name not in ISLAND:
+                    o.data = o.data.copy()
+                    o.data.materials.clear()
+                    o.data.materials.append(orc_mat)
     for name, x, z, w, h, along in main_plan():
         src = protos.get(name)
         if src is None:
