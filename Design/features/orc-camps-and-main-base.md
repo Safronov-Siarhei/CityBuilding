@@ -74,6 +74,9 @@
 >   gaps alternate (z -33, -21, -10), cross-wall gates alternate sides (z -42 L, -30 R, -18 L, -7 R), so the way
 >   snakes; skull at the front gate (head), tail behind the portal; ribs from the spine over the side walls.
 >   Patrols: plaza, a runner along the whole snake, middle gap, sanctum, skull; 2 brutes per spine gap.
+>   User note (same rule as A): the player may go straight at the portal -> the sanctum got a SECOND wall
+>   round its sides and back (x -15/14, z 8), a corridor with no gate out (entered by a 1x2 side gate in the
+>   inner wall at x -12), 13 towers on the two rings, patrol 6 (2 brutes) in the corridor. Re-sent. Now 30x57.
 >   Proposed: on swamp islands 3 and 5 (A on 1, «Гать» on 2/4/6) -- needs their pad elongated.
 > - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.

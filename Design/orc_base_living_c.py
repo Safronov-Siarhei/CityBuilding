@@ -9,7 +9,7 @@ on the origin, the front at the bottom), for approval.
 from PIL import Image, ImageDraw, ImageFont
 
 C = 17
-X0, X1, Z0, Z1 = -22, 22, -63, 10
+X0, X1, Z0, Z1 = -22, 22, -63, 13
 LEGEND_W = 560
 W, H = (X1 - X0) * C + LEGEND_W, (Z1 - Z0) * C
 img = Image.new("RGB", (W, H), (58, 66, 46))
@@ -78,6 +78,17 @@ hwall(-11, 10, -18, gaps=(-8, -7))
 hwall(-11, 10, -7, gaps=(6, 7))
 for gx, gz in ((-1, -48), (-8, -42), (6, -30), (-8, -18), (6, -7)):
     rect(gx, gz, 2, 1, GATE, label="В")
+# the sanctum, a fortress in the fortress (the user: the player may go straight at it, not through the
+# gates): a SECOND wall round its sides and back, a corridor between; no gate out of it -- the
+# corridor is entered from the sanctum by a side gate in the inner wall
+for z in range(-10, 9):
+    rect(-15, z, 1, 1, WALL, outline=(40, 40, 40))
+    rect(14, z, 1, 1, WALL, outline=(40, 40, 40))
+for x in range(-15, 15):
+    rect(x, 8, 1, 1, WALL, outline=(40, 40, 40))
+for x in (-14, -13, 12, 13):
+    rect(x, -10, 1, 1, WALL, outline=(40, 40, 40))
+rect(-12, -2, 1, 2, GATE, label="в")
 
 # the spine: giant vertebrae, impassable, a gap in each zone (the way across), the gaps alternate
 GAPS = {-33, -32, -21, -20, -10, -9}
@@ -92,7 +103,9 @@ for z in (-32.5, -20.5, -9.5):
 
 TOWERS = [(-12, -48), (10, -48), (-12, 4), (10, 4),
           (-12, -43), (10, -43), (-12, -31), (10, -31), (-12, -19), (10, -19), (-12, -8), (10, -8),
-          (-3, -43), (1, -31), (-3, -19), (1, -8)]               # on the spine's ends at every cross wall
+          (-3, -43), (1, -31), (-3, -19), (1, -8),               # on the spine's ends at every cross wall
+          (10, -2), (-1, 4),                                     # the sanctum's inner wall: its right side, its back
+          (-15, -10), (13, -10), (-15, 7), (13, 7), (-15, 1), (13, 1), (-1, 7)]   # its outer wall
 for tx, tz in TOWERS:
     rect(tx, tz, 2, 2, TOWER, label="Б")
 
@@ -135,9 +148,9 @@ for k in range(8):
 # the skull at the head: the spine runs from it to the portal
 d.rectangle([px(-5, -48), px(5, -61)], outline=(220, 215, 200), width=3)
 d.text(px(0, -54.5), "ЧЕРЕП\n(голова зверя)", fill=(230, 225, 210), font=FONT, anchor="mm", align="center")
-d.text(px(0, 7.5), "хвост: позвонки уходят в болото", fill=(220, 215, 200), font=FONT, anchor="mm")
-for k in range(5):
-    rect(-1, 6 + k * 0.7, 2, 0.6, SPINE, outline=(150, 145, 130))
+d.text(px(0, 11.5), "хвост: позвонки уходят в болото", fill=(220, 215, 200), font=FONT, anchor="mm")
+for k in range(3):
+    rect(-1, 9 + k * 0.7, 2, 0.6, SPINE, outline=(150, 145, 130))
 
 PATROLS = [
     ("1", (255, 210, 60), [(-10, -44.5), (9.5, -44.5), (9.5, -43.5), (-10, -43.5), (-10, -44.5)]),
@@ -145,6 +158,7 @@ PATROLS = [
                            (7, -9.5), (-7.5, -9.5), (-7.5, -20.5), (7, -20.5), (7, -32.5), (-7.5, -32.5), (-7.5, -46)]),
     ("3", (255, 110, 200), [(-5, -25), (-5, -21.5), (5, -21.5), (5, -25), (-5, -25)]),
     ("4", (255, 150, 60), [(-9, -5), (9, -5), (9, 3), (-9, 3), (-9, -5)]),
+    ("6", (255, 90, 90), [(-13.5, -8.5), (-13.5, 6.5), (12.5, 6.5), (12.5, -8.5), (12.5, 6.5), (-13.5, 6.5), (-13.5, -8.5)]),
     ("5", (140, 255, 140), [(0, -49.5), (0, -60)]),
 ]
 
@@ -183,7 +197,12 @@ LINES = [
     ("  → правая → ворота → правая → проход → левая", None),
     ("  → ворота → ... → святилище. Ворота поперечных", None),
     ("  стен чередуют стороны, проходы тоже.", None),
-    ("База узкая и длинная (24 x 53 клетки).", None),
+    ("Святилище — крепость в крепости: ВТОРАЯ стена", None),
+    ("  по бокам и сзади, коридор между стенами, из", None),
+    ("  коридора наружу ворот нет (вход — боковые", None),
+    ("  ворота «в» из святилища); 13 башен на двух", None),
+    ("  кольцах: с тыла и боков портал не взять с ходу.", None),
+    ("База узкая и длинная (30 x 57 клеток).", None),
     ("", None),
     ("В — ворота, Б — башня (по углам, у каждой", None),
     ("  поперечной стены и на концах хребта),", None),
@@ -201,6 +220,7 @@ LINES = [
     ("    громила + 2 грунта", None),
     ("3 — у среднего прохода: 2 грунта", (255, 110, 200)),
     ("4 — святилище: 2 громилы + грунт", (255, 150, 60)),
+    ("6 — коридор между стенами святилища: 2 громилы", (255, 90, 90)),
     ("5 — у черепа: 2 грунта", (140, 255, 140)),
     ("Красные точки — громилы, стерегущие проходы", (200, 60, 60)),
     ("  в хребте (по два у каждого).", None),
