@@ -2,7 +2,8 @@
 a swamp island (islands.py with ISL_SWAMP=1) dressed for review -- a gloomy palette on the same
 terrain cells, the main base laid out from its real plan and models, a giant beast's skeleton as
 its heart (the skull over the front gate, ribs over the sides, the spine running off behind),
-dead trees, stakes with skulls, wrecks on the beaches and a storm cloud. Renders, never saves.
+dead trees, stakes with skulls, wrecks on the beaches, crows and a low swamp haze (the storm cloud was
+rejected by the user, 2026-11-06). Renders, never saves.
 
     ISL_SWAMP=1 blender --background --factory-startup --python islands.py -- <dir>/Isl-orc1.blend orc 1
     blender --background <dir>/Isl-orc1.blend --python orcisland_concept.py -- <models.blend> <out_dir> <main_x> <main_y>
@@ -88,7 +89,14 @@ DEADWOOD = flat_mat("Deadwood", "3E342B")
 MOSS_HANG = flat_mat("HangingMoss", "56603A")
 STAKE = flat_mat("Stake", "4E3A28")
 HULL = flat_mat("Hull", "4A3B2C")
-CLOUD = flat_mat("StormCloud", "34313A")
+CROW = flat_mat("Crow", "17161B")
+HAZE = flat_mat("Haze", "66735E")
+HAZE.node_tree.nodes.get("Principled BSDF").inputs["Alpha"].default_value = 0.13
+try:
+    HAZE.surface_render_method = 'BLENDED'
+except AttributeError:
+    HAZE.blend_method = 'BLEND'
+
 FIRE = flat_mat("Fire", "FF7A1E", emit=3.0)
 
 
@@ -407,15 +415,38 @@ def dress():
         o = obj_from_bm("Wreck", bm, HULL)
         o.location = (wx, wy, -0.35)
         o.rotation_euler = (0.25, 0.15, rot)
-    # the storm cloud over the island
+    # crows circling over the skull and the ribs (the user, 2026-11-06: instead of the cloud)
     bm = bmesh.new()
-    for k in range(24):
+    for k in range(34):
+        over_skull = k < 16
         a = rnd.uniform(0, 2 * math.pi)
-        d = 38 * math.sqrt(rnd.random())
-        blob(bm, (MX * 0.4 + math.cos(a) * d, MY * 0.4 + 8 + math.sin(a) * d * 0.7, 50 + rnd.uniform(-2, 3)),
-             (rnd.uniform(9, 14), rnd.uniform(8, 12), rnd.uniform(2.2, 3.6)), 300 + k, subdiv=2, jitter=0.18)
-    c = obj_from_bm("StormCloud", bm, CLOUD)
-    c.visible_shadow = False
+        rad = rnd.uniform(4, 10) if over_skull else rnd.uniform(6, 16)
+        cx, cy = (MX, MY - 29) if over_skull else (MX, MY - 3)
+        c = Vector((cx + math.cos(a) * rad, cy + math.sin(a) * rad, rnd.uniform(9, 17) if over_skull else rnd.uniform(13, 20)))
+        heading = a + math.pi / 2
+        fwd = Vector((math.cos(heading), math.sin(heading), 0))
+        side = Vector((-fwd.y, fwd.x, 0))
+        flap = rnd.uniform(-0.25, 0.35)
+        s_ = rnd.uniform(0.6, 0.9)
+        body = [bm.verts.new(c + fwd * 0.35 * s_), bm.verts.new(c - fwd * 0.3 * s_ + Vector((0, 0, 0.05)))]
+        for sd in (-1, 1):
+            tip = bm.verts.new(c + side * sd * 0.75 * s_ - fwd * 0.12 * s_ + Vector((0, 0, flap * s_)))
+            mid = bm.verts.new(c + side * sd * 0.3 * s_ + fwd * 0.08 * s_ + Vector((0, 0, flap * 0.4 * s_)))
+            bm.faces.new((body[0], mid, tip, body[1]) if sd > 0 else (body[1], tip, mid, body[0]))
+    obj_from_bm("Crows", bm, CROW)
+    # a low swamp haze lying among the dead trees (the user, 2026-11-06: instead of the cloud)
+    bm = bmesh.new()
+    for k in range(45):
+        for _ in range(30):
+            x, y = rnd.uniform(-80, 80), rnd.uniform(-80, 80)
+            if in_base(x, y, -2):
+                continue
+            if ground_z(x, y) is not None:
+                break
+        blob(bm, (x, y, rnd.uniform(0.2, 0.6)), (rnd.uniform(5, 10), rnd.uniform(4, 8), rnd.uniform(0.35, 0.6)),
+             500 + k, subdiv=2, jitter=0.2)
+    h = obj_from_bm("SwampHaze", bm, HAZE)
+    h.visible_shadow = False
 
 
 # -- render ---------------------------------------------------------------------------------------
@@ -450,7 +481,6 @@ def render():
     sc.camera = cam
     cam_data.clip_end = 2000
     os.makedirs(OUT_DIR, exist_ok=True)
-    cloud = bpy.data.objects.get("StormCloud")
 
     def shot(name, w, h, loc, target, lens=None, ortho=None):
         sc.render.resolution_x, sc.render.resolution_y = w, h
@@ -465,11 +495,8 @@ def render():
         sc.render.filepath = os.path.join(OUT_DIR, name)
         bpy.ops.render.render(write_still=True)
 
-    cloud.hide_render = True
     shot("orcisland_top.png", 1000, 1000, (0, 0, 300), (0, 0, 0), ortho=150)
-    cloud.hide_render = False
     shot("orcisland_far.png", 1600, 900, (0, -175, 120), (0, 0, 8), lens=30)
-    cloud.hide_render = True
     shot("orcisland_game.png", 1600, 900, (MX, MY - 62, 50), (MX, MY - 10, 0), lens=30)
     shot("orcisland_gate.png", 1600, 900, (MX + 16, MY - 60, 22), (MX, MY - 18, 2), lens=32)
     print("RENDERED concept")

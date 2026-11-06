@@ -9,11 +9,11 @@
 > "C as the heart + B round it": a giant beast's SKELETON (skull lying in front of the main gate, the
 > way in through its jaws; ribs arching over the side zones -- they replace the side/back mountains;
 > spine running off behind) + a SWAMP round it (hummocks, black pools, dead trees, stakes with
-> skulls, wrecks, a storm cloud over the island). Renders: `Design/concepts/orcisland_*.png`.
+> skulls, wrecks, crows circling the skeleton, a thin low swamp haze; the storm cloud was REJECTED). Renders: `Design/concepts/orcisland_*.png`.
 > Made by `ISL_SWAMP=1` islands.py (orc kind: relief 'swamp', `swamp_sd` pools as land_sd holes)
 > + `Tools/blender/orcisland_concept.py` (gloomy palette on the same terrain cells = a 2nd
 > Terrain material for this island only; the base from its real plan and models; skeleton,
-> dead trees, stakes, wrecks, cloud -- placeholders, not game models). Open: the main base's green
+> dead trees, stakes, wrecks, crows, haze -- placeholders, not game models). Open: the main base's green
 > turf/moss style clashes with the gloom (needs a reskin?); later: per-seed base VARIANTS
 > (layouts + special buildings: shaman hut, war drum, catapults, wolf den, forge, arena) and
 > liveliness (smoke, fires, patrols, alarm horn) -- discussed 2026-11-06, not decided.
