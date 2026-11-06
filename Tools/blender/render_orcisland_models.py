@@ -57,3 +57,11 @@ sc.render.resolution_x, sc.render.resolution_y = 1800, 900
 sc.render.filepath = out
 bpy.ops.render.render(write_still=True)
 print("RENDERED", out)
+
+# the skull's mouth from the front, low: the teeth must be inside it
+cam.location = Vector((OX + 3.5, OY - 15.0, 4.2))
+cam.rotation_euler = (Vector((OX, OY - 2.0, 2.4)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
+sc.render.resolution_x, sc.render.resolution_y = 1200, 800
+sc.render.filepath = out.replace(".png", "_mouth.png")
+bpy.ops.render.render(write_still=True)
+print("RENDERED mouth")

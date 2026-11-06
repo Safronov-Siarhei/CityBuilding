@@ -29,7 +29,9 @@ import kit  # noqa: E402
 import orcs as o  # noqa: E402
 from kit import Builder  # noqa: E402
 
-BONE, BONE_OLD, BONE_DIRT = 'burlap', 'stone_mid', 'stone_dark'   # dirty bone, not the camps' clean plaster
+BONE, BONE_OLD, BONE_DIRT = 'stone_mid', 'stone_dark', 'roof_slate_dark'   # grey bone (the user, 2026-11-06: the yellow one no)
+import detail  # noqa: E402
+detail.OVERRIDE.update({c: detail.PLAIN for c in ('stone_light', 'stone_mid')})   # bone, not dressed stone courses
 HOLLOW = o.HAIR                         # near-black: sockets, nostrils
 EYE = 'fire'
 MOSS, MOSS_DARK = 'leaf', 'leaf'     # the palette's darkest green; tufts kept few
@@ -72,6 +74,32 @@ def lump(b, centre, size, color, rot=(0.0, 0.0, 0.0), seed=0, sides=7, rings=4, 
                 b._face([bands[k][i], bands[k + 1][j], bands[k][j]], col)
 
 
+def flat_tube(b, pts, radii, color, side_axis, sides=7, tip=True):
+    """A tube along a curve lying in one plane: every ring is drawn on the same side axis (the
+    plane's normal), so its facets run straight along it -- o.tube's frame flips where the
+    curve turns past upright and twists the bone (the user, 2026-11-06)."""
+    pts = [Vector(p) for p in pts]
+    n = Vector(side_axis).normalized()
+    rings = []
+    last = len(pts) - 1 if tip else len(pts)
+    for i in range(last):
+        d = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+        c = d.cross(n).normalized()
+        rings.append([b.bm.verts.new(pts[i] + (n * math.cos(2 * math.pi * k / sides) + c * math.sin(2 * math.pi * k / sides)) * radii[i])
+                      for k in range(sides)])
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(sides):
+            j = (k + 1) % sides
+            b._face([r0[k], r0[j], r1[j], r1[k]], color)
+    if tip:
+        apex = b.bm.verts.new(pts[-1])
+        for k in range(sides):
+            b._face([rings[-1][k], rings[-1][(k + 1) % sides], apex], color)
+    else:
+        b._face(rings[-1], color)
+    b._face(list(reversed(rings[0])), color)
+
+
 def moss_tufts(b, pts, seed=0):
     r = random.Random(seed)
     for x, y in pts:
@@ -90,13 +118,18 @@ def build_skull(lo, hi):
              under=BONE_DIRT)                                                                   # the lower jaw on the ground
         lump(b, (s * 2.3, 1.3, 5.1), (1.25, 0.55, 0.75), HOLLOW, rot=(0, s * -0.4, 0), seed=20 + s, sides=6, rings=3)  # sockets
         lump(b, (s * 2.3, 0.9, 5.0), (0.3, 0.18, 0.22), EYE, seed=30 + s, sides=5, rings=2)     # the glow in them
-        lump(b, (s * 0.7, -5.5, 5.2), (0.35, 0.3, 0.3), HOLLOW, seed=22 + s, sides=5, rings=2)  # nostrils
-        for k in range(5):              # upper teeth along the jaw's sides, the middle left open
-            t = Vector((s * (2.2 - 0.12 * k), 1.0 - k * 1.4, 3.4 + k * 0.28))
-            o.tube(b, [t, t + Vector((0, 0, -0.7)), t + Vector((0, -0.1, -1.5))], [0.26, 0.18, 0.0], BONE_OLD)
-        for k in range(5):              # lower teeth up off the jaw
-            t = Vector((s * (2.4 - 0.1 * k), 2.0 - k * 1.5, 0.8))
-            o.tube(b, [t, t + Vector((0, 0, 0.6)), t + Vector((0, 0.05, 1.2))], [0.22, 0.15, 0.0], BONE_OLD)
+        lump(b, (s * 0.6, -5.4, 3.95), (0.32, 0.28, 0.2), HOLLOW, seed=22 + s, sides=5, rings=2)  # nostrils, on the snout's top
+        for k in range(5):              # upper teeth hanging from the upper jaw's underside, in from its edge
+            yl, x = 2.6 - k * 1.5, s * 1.35
+            zl = -0.9 * math.sqrt(max(0.0, 1 - (yl / 4.4) ** 2 - (x / 2.1) ** 2)) * 0.6   # just inside the bone
+            t = Vector((x, -1.8 + yl * math.cos(0.2) - zl * math.sin(0.2), 4.2 + yl * math.sin(0.2) + zl * math.cos(0.2)))
+            o.tube(b, [t, t + Vector((0, 0, -0.75)), t + Vector((0, -0.05, -1.45))], [0.24, 0.17, 0.0], BONE_OLD)
+        for k in range(5):              # lower teeth up off the lower jaw's inner edge
+            yl = 3.0 - k * 1.6
+            x = s * (2.6 + 0.12 * yl - 0.35)
+            top = 0.45 + 0.6 * math.sqrt(max(0.0, 1 - (yl / 4.6) ** 2)) - 0.15
+            t = Vector((x, -1.0 + yl, top))
+            o.tube(b, [t, t + Vector((0, 0, 0.55)), t + Vector((0, 0.05, 1.1))], [0.2, 0.14, 0.0], BONE_OLD)
         t = Vector((s * 2.2, -5.0, 0.6))  # tusks off the jaw's front
         o.tube(b, [t, t + Vector((s * 0.6, -1.0, 1.4)), t + Vector((s * 0.5, -1.4, 3.0)), t + Vector((s * -0.1, -1.1, 4.0))],
                [0.5, 0.4, 0.25, 0.0], BONE, sides=6)
@@ -132,7 +165,7 @@ def rib(snapped):
             radii.append(0.78 - 0.6 * t)
         if not snapped:
             radii[-1] = 0.0
-        o.tube(b, pts, radii, BONE, sides=7, tip=not snapped)
+        flat_tube(b, pts, radii, BONE, (0, 1, 0), sides=7, tip=not snapped)
         # bands of old bone and the swamp's dirt up its foot
         lump(b, (0.2, 0.0, 0.3), (1.0, 0.95, 0.6), BONE_DIRT, seed=41, sides=7, rings=3)
         moss_tufts(b, [(-0.7, -0.5), (0.6, 0.7), (-0.4, 0.8), (0.8, -0.6)], seed=42)
