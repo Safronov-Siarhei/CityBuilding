@@ -40,6 +40,18 @@ namespace CityBuilder.Tutorial
         /// <summary>This card may be tapped now: the step's own building, not yet built.</summary>
         public static bool IsWanted(BuildingData data) => data != null && data.buildingName == Wanted && !AtLimit(data);
 
+        /// <summary>
+        /// Whose group a tap may pick now (TutorialDirector sets it per step): nobody's until the boarding
+        /// steps, then the King's, then the soldier's; anyone's once they have landed (the user, 2026-11-06:
+        /// the King came out selected in the raid and stayed so).
+        /// </summary>
+        public static System.Func<ArmyGroup, bool> Selectable { get; set; }
+
+        public static bool MaySelect(ArmyGroup group) => Selectable != null && Selectable(group);
+
+        /// <summary>The ship's «Высадить десант» is offered (the director: once it has reached the orcs' island).</summary>
+        public static bool MayLand { get; set; }
+
         public static float BuildSeconds => BalanceConfig.Instance.TutorialBuildSeconds;
 
         /// <summary>The chop at a tree, the dig at a boulder (the walk is the usual one).</summary>

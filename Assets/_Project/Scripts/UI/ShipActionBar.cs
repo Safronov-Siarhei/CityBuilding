@@ -72,7 +72,8 @@ namespace CityBuilder.UI
         private void Update()
         {
             var ship = ShipInput.Selected;
-            var carries = ship != null && ship.Capacity > 0;
+            // the tutorial: no landing by our own shore -- the people could not be got back aboard (the user, 2026-11-06)
+            var carries = ship != null && ship.Capacity > 0 && (!Tutorial.TutorialMode.IsActive || Tutorial.TutorialRules.MayLand);
             var holed = ship != null && ship.Health < ship.MaxHealth;
             var show = carries || holed;
             Showing = show;

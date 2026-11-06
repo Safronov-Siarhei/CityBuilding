@@ -318,6 +318,30 @@ namespace CityBuilder.UI
             var locked = Tutorial.TutorialMode.IsActive && built < max && !Tutorial.TutorialRules.IsWanted(card.Building);
             shade.gameObject.SetActive(built >= max || locked);
             shade.GetComponentInChildren<Text>().text = locked ? string.Empty : Localization.Format("#card_limit", built, max);
+            if (Tutorial.TutorialMode.IsActive) TutorialCard(card, built < max && Tutorial.TutorialRules.IsWanted(card.Building));
+        }
+
+        private static readonly Color TutorialFrame = new Color(1f, 0.82f, 0.1f, 1f);
+
+        /// <summary>
+        /// The tutorial's cards (the user's playtest, 2026-11-06): no numbers under them -- resources are
+        /// infinite there -- only the resource icons, centred; the card to build framed in yellow.
+        /// </summary>
+        private static void TutorialCard(HotbarButtonHandler card, bool wanted)
+        {
+            foreach (var chip in card.GetComponentsInChildren<Transform>(true))
+                if (chip.name.StartsWith("Amount_") && chip.gameObject.activeSelf) chip.gameObject.SetActive(false);
+            var rows = card.GetComponentInChildren<CardPriceRows>(true);
+            if (rows != null) rows.Arrange();
+            var image = card.GetComponent<Image>();
+            if (image == null) return;
+            var frame = card.GetComponent<Outline>();
+            if (frame == null && wanted) frame = card.gameObject.AddComponent<Outline>();
+            if (frame == null) return;
+            frame.enabled = wanted;
+            frame.effectColor = TutorialFrame;
+            frame.effectDistance = new Vector2(7f, -7f);
+            frame.useGraphicAlpha = false;
         }
 
         private static Transform BuildShade(Transform card)

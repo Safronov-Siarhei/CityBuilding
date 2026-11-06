@@ -195,9 +195,11 @@ namespace CityBuilder.Buildings
         private static void EnsureShared()
         {
             if (_fillMaterial != null) return;
-            _barTexture = Draw(64, 16, RoundedBar);
-            _heartTexture = Draw(48, 48, Heart);
-            _shieldTexture = Draw(48, 48, Shield);
+            // drawn large with mipmaps: the 64 x 16 pill was stretched over the screen and looked soapy
+            // (the user, 2026-11-06, a tower's bar)
+            _barTexture = Draw(BarPixelsWide, BarPixelsHigh, RoundedBar);
+            _heartTexture = Draw(96, 96, Heart);
+            _shieldTexture = Draw(IconPixels, IconPixels, Shield);
             // Drawn in a fixed order, not sorted by distance: the layers are transparent quads a hair
             // apart, and sorted by their centres the track came out in front of a drained fill and
             // hid it -- a beast's bar looked full or empty at random when hit (playtest 4, 2026-10-22).
@@ -221,28 +223,30 @@ namespace CityBuilder.Buildings
 
         private static Texture2D Draw(int width, int height, Pixel pixel)
         {
-            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 2 };
             var pixels = new Color[width * height];
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++) pixels[y * width + x] = pixel((x + 0.5f) / width, (y + 0.5f) / height);
             }
             texture.SetPixels(pixels);
-            texture.Apply(false, true);
+            texture.Apply(true, true);
             return texture;
         }
 
-        /// <summary>A pill: white, its ends round, soft-edged.</summary>
+        private const int BarPixelsWide = 256, BarPixelsHigh = 64, IconPixels = 128;
+
+        /// <summary>A pill: white, its ends round, its edge one pixel of smoothing.</summary>
         private static Color RoundedBar(float u, float v)
         {
-            const float aspect = 4f;   // 64 x 16
+            const float aspect = BarPixelsWide / (float)BarPixelsHigh;
             var x = (u - 0.5f) * aspect;
             var y = v - 0.5f;
             var r = 0.5f;
             var inner = aspect * 0.5f - r;
             var dx = Mathf.Max(Mathf.Abs(x) - inner, 0f);
             var d = Mathf.Sqrt(dx * dx + y * y) - r;
-            return new Color(1f, 1f, 1f, Mathf.Clamp01(-d * 16f));
+            return new Color(1f, 1f, 1f, Mathf.Clamp01(0.5f - d * BarPixelsHigh));
         }
 
         /// <summary>A red heart with a dark outline and a light highlight.</summary>
@@ -273,7 +277,7 @@ namespace CityBuilder.Buildings
             var inTop = y < 0.85f;
             var edge = Mathf.Min(halfWidth - Mathf.Abs(x), 0.85f - y, y + 0.95f);
             if (!inTop || edge < -0.04f) return Color.clear;
-            var alpha = Mathf.Clamp01((edge + 0.04f) * 25f);
+            var alpha = Mathf.Clamp01(0.5f + edge * IconPixels * 0.5f);
             var rim = edge < 0.12f;
             var c = rim ? new Color(0.95f, 0.75f, 0.25f) : Color.Lerp(new Color(0.45f, 0.55f, 0.7f), new Color(0.75f, 0.82f, 0.92f), Mathf.Clamp01(-x * 0.6f + 0.5f));
             c.a = alpha;

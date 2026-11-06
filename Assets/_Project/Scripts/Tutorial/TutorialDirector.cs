@@ -74,6 +74,8 @@ namespace CityBuilder.Tutorial
         private BuildingPlacer _placer;
         private float _normalDistance = -1f;       // the camera's distance before it zoomed in on a person
         private float _wanderIn;
+        private bool _portalSet;                   // the portal's health set to the tutorial's few seconds
+        private FocusHireBar[] _hireBars;
         private const string RewardedKey = "tutorial.rewarded";
 
         // Not in Awake: TutorialMode is decided in MeshMapApplier.Awake, and the order of two objects'
@@ -86,6 +88,8 @@ namespace CityBuilder.Tutorial
             if (Instance == this) Instance = null;
             _hud?.Dispose();
             TutorialRules.Wanted = null;
+            TutorialRules.Selectable = null;
+            TutorialRules.MayLand = false;
         }
 
         private void Start()
@@ -100,8 +104,9 @@ namespace CityBuilder.Tutorial
             _citizens = FindAnyObjectByType<CitizenSelector>();
             _buildMenu = FindAnyObjectByType<BuildingCategoryPanel>();
             _placer = FindAnyObjectByType<BuildingPlacer>();
+            _hireBars = FindObjectsByType<FocusHireBar>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             BuildPanel();
-            _hud = new TutorialHud(uiRoot != null ? uiRoot : transform);
+            _hud = new TutorialHud(uiRoot != null ? uiRoot : transform, circleSprite);
             _hud.ApplyHidden(false);
             Enter(Step.TownHall);
             if (GameOverManager.Instance != null) GameOverManager.Instance.OnGameEnded += OnGameEnded;
@@ -112,6 +117,9 @@ namespace CityBuilder.Tutorial
         {
             if (!victory) return;
             Enter(Step.Done);
+            // nothing behind the victory but the King's line and the panel (the user, 2026-11-06)
+            _hud.HideAllBut("GameOverPanel", "TutorialHint");
+            _hud.Tick(null, false, null, Vector3.zero, 0f);
             if (PlayerPrefs.GetInt(RewardedKey, 0) != 0) return;
             PlayerPrefs.SetInt(RewardedKey, 1);
             Wallet.Crystals += BalanceConfig.Instance.TutorialRewardCrystals;
@@ -135,6 +143,8 @@ namespace CityBuilder.Tutorial
             MoorBarge();
             Wander();
             Soften();
+            Drive();
+            ShortenPortal();
             if (Current != Step.Done && StepDone()) Enter(Current + 1);
         }
 
@@ -153,6 +163,10 @@ namespace CityBuilder.Tutorial
             if (step == Step.KingPick || step == Step.SoldierPick) _unit = null;
             if (step == Step.Raid) LaunchRaid();
             TutorialRules.Wanted = WantedAt(step);
+            TutorialRules.Selectable = SelectableAt(step);
+            TutorialRules.MayLand = step >= Step.Land;
+            // a group still held from before (the King came out selected in the raid) is let go: the step shows whom to tap
+            if ((step == Step.KingPick || step == Step.SoldierPick) && ArmyManager.Instance != null) ArmyManager.Instance.SelectGroup(null);
             // the first person shown close up (the user: zoomed in 50%, easy to tap) ...
             if (step == Step.WoodPick && _camera != null && _normalDistance < 0f)
             {
@@ -354,6 +368,82 @@ namespace CityBuilder.Tutorial
             }
         }
 
+        /// <summary>
+        /// Whose group a tap may pick on this step (the user, 2026-11-06): nobody's while the town is built and
+        /// the raid beaten off -- it all runs on its own --, the King's and then the soldier's at the boarding,
+        /// anyone's once they have landed.
+        /// </summary>
+        private static System.Func<ArmyGroup, bool> SelectableAt(Step step)
+        {
+            switch (step)
+            {
+                case Step.KingPick:
+                case Step.KingBoard:
+                    return g => Holds(g, SoldierType.King);
+                case Step.SoldierPick:
+                case Step.SoldierBoard:
+                    return g => Holds(g, TutorialRules.Soldier);
+                default:
+                    return step >= Step.Land ? g => true : (System.Func<ArmyGroup, bool>)null;
+            }
+        }
+
+        private static bool Holds(ArmyGroup group, SoldierType type)
+        {
+            if (group == null) return false;
+            foreach (var member in group.Members)
+                if (member != null && member.Type == type) return true;
+            return false;
+        }
+
+        // ------------------------------------------------------------ the fight runs itself
+
+        /// <summary>
+        /// The soldier and the King fight on their own (the user, 2026-11-06): the soldier walks the island's
+        /// round and runs at a landing (the squad's «Охранять город») until he is picked for the ship; landed
+        /// on the orcs' island, both go for the orcs, then the tower, then the portal.
+        /// </summary>
+        private void Drive()
+        {
+            var army = ArmyManager.Instance;
+            if (army == null) return;
+            var soldier = FindUnit(TutorialRules.Soldier);
+            var squad = soldier != null ? soldier.Group : null;
+            if (squad != null && squad.IsSquad)
+            {
+                var behaviour = Current < Step.SoldierPick ? SquadBehaviour.Guard : SquadBehaviour.Hold;
+                if (squad.Behaviour != behaviour) army.SetBehaviour(squad, behaviour);
+            }
+            if (Current < Step.Land || Current >= Step.Done) return;
+            Assault(soldier);
+            Assault(FindUnit(SoldierType.King));
+        }
+
+        /// <summary>A unit ashore on the orcs' island with nothing to hit: at the next foe there, in the order the user gave.</summary>
+        private static void Assault(SoldierUnit unit)
+        {
+            if (unit == null || !unit.isActiveAndEnabled || unit.Group == null) return;
+            var group = unit.Group;
+            if (group.AttackTarget != null && group.AttackTarget.IsAlive) return;
+            var map = MeshMapApplier.Instance;
+            var from = unit.transform.position;
+            var tower = AnyTowerStanding();
+            var foe = ArmyManager.NearestFoe(from, t => (map == null || map.SameIsland(from, t.Transform.position))
+                && !(tower && t is OrcPortal), false);
+            if (foe != null) group.OrderAttack(foe);
+        }
+
+        /// <summary>The tutorial's portal falls to the King alone in tutorial_portal_sec (the user, 2026-11-06: ~7 s, it took ages).</summary>
+        private void ShortenPortal()
+        {
+            if (_portalSet || OrcPortal.All.Count == 0) return;
+            _portalSet = true;
+            var king = SoldierStats.Stats(SoldierType.King);
+            var perSecond = king.attackDamage / Mathf.Max(0.1f, king.attackIntervalSeconds);
+            var portal = OrcPortal.All[0];
+            portal.SetLevel(portal.Level, Mathf.Max(1, Mathf.CeilToInt(perSecond * BalanceConfig.Instance.TutorialPortalSeconds)));
+        }
+
         // ------------------------------------------------------------ showing the way
 
         /// <summary>The building the step asks for: its card unlocked, the arrow on it.</summary>
@@ -372,13 +462,28 @@ namespace CityBuilder.Tutorial
         /// <summary>Every frame: the blinking build button, the arrow over the card, the gold ring on what to tap.</summary>
         private void ShowTheWay()
         {
-            var building = Current == Step.Hovel || Current == Step.Barracks || Current == Step.Shipyard;
+            // a build step only until its building is down: then no blinking, no arrow, and the menu shut --
+            // it is being built (the user, 2026-11-06: the arrow kept pointing at the Лачуга under construction)
+            var buildStep = Current == Step.Hovel || Current == Step.Barracks || Current == Step.Shipyard;
+            var building = buildStep && !BuildingInstance.HasAny(TutorialRules.Wanted);
             var placing = _placer != null && _placer.IsSelecting;
             var open = _buildMenu != null && _buildMenu.IsOpen;
+            if (buildStep && !building && open && !placing) _buildMenu.Close();
             var tab = _buildMenu != null ? _buildMenu.FirstTab : null;
             var card = building && open && !placing && _buildMenu != null ? _buildMenu.CardOf(TutorialRules.Wanted) : null;
+            // the Barracks / the Shipyard held: the arrow on its hiring button (the user: nothing said where to hire)
+            if (card == null && (Current == Step.Soldier || Current == Step.Ship))
+                card = HireButton(Current == Step.Soldier ? FocusHireBar.Kind.Barracks : FocusHireBar.Kind.Shipyard);
             Highlight(out var at, out var radius);
             _hud.Tick(tab, building && !open && !placing, card, at, radius);
+        }
+
+        private RectTransform HireButton(FocusHireBar.Kind kind)
+        {
+            if (_hireBars == null) return null;
+            foreach (var bar in _hireBars)
+                if (bar != null && bar.BarKind == kind) return bar.FirstShownButton;
+            return null;
         }
 
         /// <summary>What the player should tap now, in the world: a ring round it (radius 0: nothing).</summary>
@@ -409,6 +514,17 @@ namespace CityBuilder.Tutorial
                 case Step.KingBoard:
                 case Step.SoldierBoard:
                     if (_ship != null && _ship) Ring(_ship.transform.position, 3f, out at, out radius);
+                    break;
+                case Step.Shipyard:
+                    // where the Shipyard goes, while it is being placed (the user, 2026-11-06: hard to find the spot)
+                    if (_placer != null && _placer.IsSelecting && !BuildingInstance.HasAny(ShipManager.ShipyardId)
+                        && MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryTutorialSpot("shipyard", out var yard))
+                        Ring(yard, 2.6f, out at, out radius);
+                    break;
+                case Step.Sail:
+                    // where to send the ship with the troops aboard (the user, 2026-11-06)
+                    if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryTutorialSpot("player_landing", out var landing))
+                        Ring(landing, 4f, out at, out radius);
                     break;
             }
         }
@@ -457,6 +573,8 @@ namespace CityBuilder.Tutorial
             var king = FindUnit(SoldierType.King);
             if (king == null || king.Group == null || !king.isActiveAndEnabled) return;
             if (ArmyManager.Instance != null && ArmyManager.Instance.SelectedGroup == king.Group) return;
+            // not in a fight: a stroll order called him off the raid
+            if (Current == Step.Raid || (king.Group.AttackTarget != null && king.Group.AttackTarget.IsAlive)) return;
             var hall = BuildingInstance.TownHall.transform.position;
             var offset = Random.insideUnitCircle * WanderReach;
             if (ShipManager.TrySampleLand(hall + new Vector3(offset.x, 0f, offset.y), 3f, out var spot)) king.Group.OrderMoveTo(spot);
@@ -489,6 +607,15 @@ namespace CityBuilder.Tutorial
                 case Step.SoldierBoard:
                     if (_ship == null || !_ship) _ship = OurShip();
                     if (_ship != null) _camera.FocusOn(_ship.transform.position);
+                    break;
+                case Step.Raid:
+                    // the orcs' barge on its way (the user, 2026-11-06), until it has put them ashore
+                    if (_barge != null && _barge && (_walkers.Count > 0 || _barge.OrcCargo > 0)) _camera.FocusOn(_barge.transform.position);
+                    break;
+                case Step.Sail:
+                    // the ship at first, the marked spot ahead of it in view
+                    if (_ship == null || !_ship) _ship = OurShip();
+                    if (_ship != null && _stepTime < 3f) _camera.FocusOn(_ship.transform.position);
                     break;
                 case Step.Soldier:
                 case Step.Ship:
@@ -549,8 +676,33 @@ namespace CityBuilder.Tutorial
         {
             if (_line == null) return;
             var text = Localization.Get(key);
-            _line.text = text;
+            _line.text = Emphasise(text);
             _panel.SetActive(!string.IsNullOrEmpty(text) && text != key);
+        }
+
+        private const string KeywordColour = "#B5400C";
+
+        /// <summary>
+        /// The words between asterisks in the sheet («Постройте *Казарму*») in their own colour (the user,
+        /// 2026-11-06: the key words should stand out). The sheet holds the stars, the colour stays here.
+        /// </summary>
+        public static string Emphasise(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text.IndexOf('*') < 0) return text;
+            var sb = new System.Text.StringBuilder(text.Length + 32);
+            var open = false;
+            foreach (var c in text)
+            {
+                if (c != '*')
+                {
+                    sb.Append(c);
+                    continue;
+                }
+                sb.Append(open ? "</color>" : "<color=" + KeywordColour + ">");
+                open = !open;
+            }
+            if (open) sb.Append("</color>");
+            return sb.ToString();
         }
 
         private void BuildPanel()
@@ -581,6 +733,7 @@ namespace CityBuilder.Tutorial
             _line.alignment = TextAnchor.MiddleLeft;
             _line.color = new Color(0.25f, 0.14f, 0.06f);
             _line.raycastTarget = false;
+            _line.supportRichText = true;
             _line.horizontalOverflow = HorizontalWrapMode.Wrap;
             _line.verticalOverflow = VerticalWrapMode.Truncate;
             var lr = _line.rectTransform;

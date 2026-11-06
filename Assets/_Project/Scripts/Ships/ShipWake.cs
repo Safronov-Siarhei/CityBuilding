@@ -51,11 +51,15 @@ namespace CityBuilder.Ships
             if (forward.sqrMagnitude < 0.01f) return;
             forward.Normalize();
             var right = new Vector3(forward.z, 0f, -forward.x);
-            var bow = ship.position + forward * (beam * 2.2f);
-            bow.y = ShipManager.WaterLevel + AboveWater;
-            var size = Mathf.Lerp(0.6f, 1f, speedShare) * beam;
-            _instance.Spawn(bow + right * (beam * 0.5f), right * DriftSpeed, size);
-            _instance.Spawn(bow - right * (beam * 0.5f), -right * DriftSpeed, size);
+            // from the stern, not the bow: dropped at the bow, the big ovals of a wide hull lay out AHEAD of it
+            // and looked silly (the user, 2026-11-06) -- now the V opens behind the ship and stays there
+            var stern = ship.position - forward * (beam * 1.2f);
+            stern.y = ShipManager.WaterLevel + AboveWater;
+            var size = Mathf.Lerp(0.5f, 0.85f, speedShare) * beam;
+            var outward = (right - forward * 0.6f).normalized * DriftSpeed;
+            var outwardLeft = (-right - forward * 0.6f).normalized * DriftSpeed;
+            _instance.Spawn(stern + right * (beam * 0.45f), outward, size);
+            _instance.Spawn(stern - right * (beam * 0.45f), outwardLeft, size);
         }
 
         private void OnDestroy()

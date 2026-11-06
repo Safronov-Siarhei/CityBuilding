@@ -208,9 +208,17 @@ namespace CityBuilder.UI
         /// <summary>The «!» is up: a building held and its card closed -- when a run's hiring buttons stand beside it (FocusHireBar).</summary>
         public bool DetailsShown => detailsButton != null && detailsButton.activeSelf;
 
+        /// <summary>
+        /// A building's own buttons (hiring, the lighthouse) may stand at the bottom: where the «!» is up --
+        /// or, in the tutorial (no «!» at all), whenever a building is held: the Barracks' and the Shipyard's
+        /// hiring were gone with the «!» (the user's playtest, 2026-11-06).
+        /// </summary>
+        public bool ButtonsShown => DetailsShown || (NoDetails && Current != null && !(infoPanel != null && infoPanel.IsOpen));
+
         /// <summary>The «!»: the held building's card.</summary>
         public void OpenDetails()
         {
+            if (NoDetails) return;   // the tutorial: a second tap on a held building opened its card (the user, 2026-11-06)
             if (Foreign != null)
             {
                 if (ForeignBuildingCard.Instance != null) ForeignBuildingCard.Instance.Show(Foreign);

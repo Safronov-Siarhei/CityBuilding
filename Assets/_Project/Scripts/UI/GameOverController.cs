@@ -23,6 +23,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text reasonLabel;
         // Shown only on a win: the user's free mode, keep playing the map after it is won.
         [SerializeField] private GameObject continueButton;
+        // the tutorial's reward, shown as the crystal and its number (the user, 2026-11-06)
+        [SerializeField] private Sprite crystalIcon;
 
         private void Start()
         {
@@ -49,12 +51,44 @@ namespace CityBuilder.UI
                 reasonLabel.text = Localization.Get(victory ? won : "#over_defeat_reason");
             }
             if (continueButton != null) continueButton.SetActive(victory && !Tutorial.TutorialMode.IsActive);
-            if (victory && Tutorial.TutorialMode.IsActive && reasonLabel != null)
-                reasonLabel.text = Localization.Format("#over_tutorial_reason", BalanceConfig.Instance.TutorialRewardCrystals);
+            if (victory && Tutorial.TutorialMode.IsActive) ShowTutorialReward();
 
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
             Time.timeScale = 0f;
+        }
+
+        /// <summary>
+        /// The tutorial won (the user's playtest, 2026-11-06: the panel was dull): no sentence, the crystal and
+        /// its number in the middle, the one button «В главное меню» centred under them.
+        /// </summary>
+        private void ShowTutorialReward()
+        {
+            if (reasonLabel == null) return;
+            reasonLabel.text = BalanceConfig.Instance.TutorialRewardCrystals.ToString();
+            reasonLabel.font = UiTheme.Heavy;
+            reasonLabel.fontSize = 64;
+            reasonLabel.alignment = TextAnchor.MiddleLeft;
+            reasonLabel.color = UiTheme.Ink;
+            var label = reasonLabel.rectTransform;
+            var centre = label.anchoredPosition;
+            const float icon = 96f;
+            label.sizeDelta = new Vector2(180f, label.sizeDelta.y);
+            label.anchoredPosition = new Vector2(centre.x + 20f + label.sizeDelta.x * 0.5f, centre.y);   // its left edge just right of the middle
+            if (crystalIcon != null && label.parent.Find("TutorialCrystal") == null)
+            {
+                var go = new GameObject("TutorialCrystal", typeof(RectTransform), typeof(Image));
+                go.transform.SetParent(label.parent, false);
+                var image = go.GetComponent<Image>();
+                image.sprite = crystalIcon;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+                image.rectTransform.anchorMin = image.rectTransform.anchorMax = label.anchorMin;
+                image.rectTransform.sizeDelta = new Vector2(icon, icon);
+                image.rectTransform.anchoredPosition = new Vector2(centre.x + 10f - icon * 0.5f, centre.y);   // just left of the middle
+            }
+            var menu = panelRoot != null ? panelRoot.transform.Find("Card/GameOverMenuButton") as RectTransform : null;
+            if (menu != null) menu.anchoredPosition = new Vector2(0f, menu.anchoredPosition.y);
         }
 
         /// <summary>

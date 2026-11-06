@@ -860,6 +860,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("titleLabel").objectReferenceValue = title;
             controllerSO.FindProperty("reasonLabel").objectReferenceValue = reason;
             controllerSO.FindProperty("continueButton").objectReferenceValue = continueButton.gameObject;
+            controllerSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(menuButton.onClick, controller.ReturnToMenu);

@@ -25,7 +25,7 @@ namespace CityBuilder.UI
         {
             get
             {
-                var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.DetailsShown ? BuildingFocus.Instance.Current : null;
+                var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.ButtonsShown ? BuildingFocus.Instance.Current : null;
                 return focus != null && focus.Data != null && focus.Data.buildingName == LighthouseAim.BuildingId && focus.IsOperational ? focus : null;
             }
         }

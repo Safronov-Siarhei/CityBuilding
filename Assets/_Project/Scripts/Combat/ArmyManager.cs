@@ -87,6 +87,8 @@ namespace CityBuilder.Combat
         public void SelectGroup(ArmyGroup group)
         {
             if (SelectedGroup == group) return;
+            // the tutorial hands the King and the soldier over only at the steps that ask for them (the user, 2026-11-06)
+            if (group != null && Tutorial.TutorialMode.IsActive && !Tutorial.TutorialRules.MaySelect(group)) return;
             SelectedGroup = group;
             OnSelectionChanged?.Invoke();
         }
@@ -330,7 +332,7 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>The nearest live enemy that passes `fits`: fighters first unless `structuresFirst` (a camp, a portal not shielded).</summary>
-        private static IDamageTarget NearestFoe(Vector3 from, Func<IDamageTarget, bool> fits, bool structuresFirst)
+        public static IDamageTarget NearestFoe(Vector3 from, Func<IDamageTarget, bool> fits, bool structuresFirst)
         {
             IDamageTarget best = null, other = null;
             float bestGap = float.MaxValue, otherGap = float.MaxValue;

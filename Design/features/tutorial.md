@@ -1,7 +1,6 @@
 # Tutorial (обучение)
 
-> Status 2026-11-05: game mode BUILT and played once by the user; the FIRST PLAYTEST's rules (below) BUILT,
-> NOT PLAYED yet. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
+> Status 2026-11-06: game mode BUILT, played twice; the SECOND PLAYTEST's rules (below) BUILT, NOT PLAYED yet. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
 > `Balance/tutorial.csv`). Next: the user plays it again.
 > Read with: archipelago-and-ships (islands, ships, shipyard), sandbox-run-systems (Town Hall start,
 > houses make people), army-and-soldiers / army-control (hiring; the Garrison is OFF here),
@@ -76,6 +75,38 @@ tapped); the orc ship sails past the map edge and is gone; rotate/cancel/«!»/n
 removed in the tutorial only.
 **The user (2026-11-05): EVERY change from this playtest is tutorial-only -- other modes are not touched**
 EXCEPT two bugs the user said to fix for the whole game: the deselect-on-boarding and the floating Shipyard.
+
+## Second playtest (2026-11-06) -- BUILT, not played
+**Rules the user gave** (tutorial only unless said):
+- Build button: blinks with a gold GLOW behind it (`TutorialHud.BuildHalo`, the circle sprite), scale +22%.
+- Build cards: no price numbers (the `Amount_*` chips hidden), only the resource icons, centred; the card to build
+  framed in yellow (`BuildingCategoryPanel.TutorialCard`, an Outline 7 px).
+- Game menu: no Save entry; Settings and Home move up one place (`TutorialHud`, by name `SaveEntry`).
+- Once the step's building is PLACED: build menu shut, no blinking, no arrow (`ShowTheWay`: `HasAny(Wanted)`).
+- King's lines: words between `*stars*` in the sheet are coloured (`TutorialDirector.Emphasise`, #B5400C);
+  «третий житель» gone. All 22 `#tutorial_hint_*` rewritten.
+- Hiring was impossible: `FocusHireBar` showed only beside the «!», which the tutorial hides ->
+  `BuildingFocus.ButtonsShown` (also the lighthouse bar); the arrow points at the hire button on Soldier/Ship.
+- A double tap on a building opened its card: `BuildingFocus.OpenDetails` does nothing in the tutorial.
+- Orc raid: `tutorial_raid_orcs` 5; the camera follows the barge until it lands them.
+- The soldier: walks the island's round and runs at the landing (his squad on «Охранять город» until SoldierPick,
+  then «Стоять»); walks at the King's speed (`SoldierUnit.ReadStats`).
+- Selection is LOCKED (`TutorialRules.Selectable`, gate in `ArmyManager.SelectGroup`): nobody before KingPick,
+  the King at KingPick/KingBoard, the soldier at SoldierPick/SoldierBoard, anyone from Land. Any held group is
+  let go at KingPick/SoldierPick. `CancelSelectionButton` hidden.
+- Shipyard placing: a gold ring at the map's `shipyard` spot. Sail: a ring at `player_landing`, camera on the ship.
+- «Высадить десант» only from Land (`TutorialRules.MayLand`, `ShipActionBar`).
+- Landed: the King and the soldier attack by themselves -- orcs, then the tower, then the portal
+  (`TutorialDirector.Assault`, `ArmyManager.NearestFoe` now public).
+- Portal: health = King's damage/s x `tutorial_portal_sec` 7; it shows a health bar when hit (ALL modes).
+- Health bars sharper (ALL modes): `BuildingHealthBar` textures 256x64 / 128 with mipmaps, 1-px edge.
+- Ship wake (ALL modes): spawned at the stern, drifting back and out (it lay ahead of the ship).
+- Victory: the whole HUD hidden but the King's line and the panel (`TutorialHud.HideAllBut`); the panel shows the
+  crystal icon and 25, the menu button centred (`GameOverController.ShowTutorialReward`).
+- The held person's mark (ALL modes, the user's pick D of `Design/marker_options.png`): a gold octahedron gem,
+  turning, in a soft camera-facing glow (`CitizenSelector.CreateMarker`), instead of the yellow cube.
+**Open (proposed to the user, waiting):** the boarding mark on the ship, other wake looks. **Unverified:** «the King hits the
+portal from too far» -- his structure reach is 1.6+1.2 m from the portal's centre; not reproduced.
 
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».

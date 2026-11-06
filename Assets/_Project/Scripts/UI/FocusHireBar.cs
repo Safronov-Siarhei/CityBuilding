@@ -52,7 +52,7 @@ namespace CityBuilder.UI
             get
             {
                 // beside the «!», and away with it while the building's card is up
-                var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.DetailsShown ? BuildingFocus.Instance.Current : null;
+                var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.ButtonsShown ? BuildingFocus.Instance.Current : null;
                 if (focus == null || focus.Data == null) return null;
                 if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
                 if (kind == Kind.Shipyard) return focus.Data.buildingName == Ships.ShipManager.ShipyardId && focus.IsOperational ? focus : null;
@@ -195,6 +195,18 @@ namespace CityBuilder.UI
 
         /// <summary>Whether this bar's buttons are up. For the tests.</summary>
         public bool Shown => _shown;
+
+        /// <summary>The first button showing (the tutorial's arrow points at it), or null.</summary>
+        public RectTransform FirstShownButton
+        {
+            get
+            {
+                if (!_shown) return null;
+                foreach (var button in buttons)
+                    if (button != null && button.activeInHierarchy) return (RectTransform)button.transform;
+                return null;
+            }
+        }
 
         private void Update()
         {

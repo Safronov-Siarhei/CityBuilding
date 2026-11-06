@@ -26,7 +26,14 @@ namespace CityBuilder.Tutorial
             "SettlementStatus", "Minimap", "MinimapRing", "Happiness", "HappinessBreakdown", "Migration",
             "EventFeed", "SelectionBadge", "HeroSkillBar", "SkillHint", "RotateButton", "CancelPlacementButton",
             "Formation1", "Formation2", "Formation3", "Formation4", "Formation5", "Formation6",
+            // the selection's cancel: neither the King nor the soldier needs it here (the user, 2026-11-06)
+            "CancelSelectionButton",
         };
+
+        // the game menu: no saving in the tutorial; the entries below it move up into its place (the user, 2026-11-06)
+        private const string SaveEntry = "SaveEntry";
+        private static readonly string[] BelowSave = { "SettingsEntry", "MainMenuEntry" };
+        private const float MenuEntryStep = 112f;
 
         // and while the Town Hall is placed: the resource bar and the hero portraits too
         private static readonly string[] HiddenBeforeHall = { "ResourceHUD", "Heroes" };
@@ -43,13 +50,17 @@ namespace CityBuilder.Tutorial
         private Vector3 _tabScale;
         private bool _tabBlinking;
 
+        private Image _halo;               // the glow behind the blinking build button
+        private readonly Sprite _circle;
+
         private RectTransform _arrow;
         private LineRenderer _ring;
         private float _clock;
 
-        public TutorialHud(Transform uiRoot)
+        public TutorialHud(Transform uiRoot, Sprite circle)
         {
             _uiRoot = uiRoot;
+            _circle = circle;
             var always = new HashSet<string>(AlwaysHidden);
             var beforeHall = new HashSet<string>(HiddenBeforeHall);
             foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
@@ -59,6 +70,9 @@ namespace CityBuilder.Tutorial
                 {
                     if (always.Contains(t.name)) _always.Add(GroupOf(t));
                     else if (beforeHall.Contains(t.name)) _beforeHall.Add(GroupOf(t));
+                    else if (t.name == SaveEntry) t.gameObject.SetActive(false);
+                    else if (System.Array.IndexOf(BelowSave, t.name) >= 0 && t is RectTransform entry)
+                        entry.anchoredPosition += new Vector2(0f, MenuEntryStep);
                 }
             }
         }
@@ -79,6 +93,34 @@ namespace CityBuilder.Tutorial
         {
             foreach (var g in _always) Hide(g, true);
             foreach (var g in _beforeHall) Hide(g, !hallPlaced);
+        }
+
+        /// <summary>
+        /// The whole screen away but these (by name) -- the victory (the user, 2026-11-06: only the King's
+        /// line and the victory panel). A branch holding one of them is gone into, the rest of it hidden.
+        /// </summary>
+        public void HideAllBut(params string[] keep)
+        {
+            foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                if (canvas != null && canvas.isRootCanvas && canvas.renderMode != RenderMode.WorldSpace) HideBranch(canvas.transform, keep);
+        }
+
+        private static void HideBranch(Transform branch, string[] keep)
+        {
+            for (var i = 0; i < branch.childCount; i++)
+            {
+                var child = branch.GetChild(i);
+                if (System.Array.IndexOf(keep, child.name) >= 0) continue;
+                if (Holds(child, keep)) HideBranch(child, keep);
+                else if (child.gameObject.activeSelf) Hide(GroupOf(child), true);
+            }
+        }
+
+        private static bool Holds(Transform branch, string[] keep)
+        {
+            foreach (var t in branch.GetComponentsInChildren<Transform>(true))
+                if (t != branch && System.Array.IndexOf(keep, t.name) >= 0) return true;
+            return false;
         }
 
         private static void Hide(CanvasGroup group, bool hide)
@@ -123,12 +165,38 @@ namespace CityBuilder.Tutorial
                 return;
             }
             _tabBlinking = true;
-            _tab.localScale = _tabScale * (1f + 0.15f * pulse);
+            _tab.localScale = _tabScale * (1f + 0.22f * pulse);
             if (_tabGraphic != null) _tabGraphic.color = Color.Lerp(_tabColour, Yellow, pulse);
+            // a gold glow swelling behind it: the colour alone hardly showed (the user, 2026-11-06)
+            if (_halo == null) _halo = BuildHalo(_tab);
+            if (_halo == null) return;
+            if (!_halo.gameObject.activeSelf) _halo.gameObject.SetActive(true);
+            var size = Mathf.Max(_tab.rect.width, _tab.rect.height);
+            _halo.rectTransform.position = _tab.TransformPoint(_tab.rect.center);
+            _halo.rectTransform.sizeDelta = Vector2.one * size * (1.25f + 0.45f * pulse);
+            var c = Yellow;
+            c.a = 0.95f - 0.55f * pulse;
+            _halo.color = c;
+        }
+
+        private Image BuildHalo(RectTransform tab)
+        {
+            if (_circle == null || tab.parent == null) return null;
+            var go = new GameObject("TutorialTabGlow", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            go.GetComponent<LayoutElement>().ignoreLayout = true;
+            go.transform.SetParent(tab.parent, false);
+            go.transform.SetSiblingIndex(tab.GetSiblingIndex());   // behind the button
+            var image = go.GetComponent<Image>();
+            image.sprite = _circle;
+            image.raycastTarget = false;
+            var rect = image.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            return image;
         }
 
         private void StopTab()
         {
+            if (_halo != null && _halo.gameObject.activeSelf) _halo.gameObject.SetActive(false);
             if (!_tabBlinking || _tab == null) return;
             _tabBlinking = false;
             _tab.localScale = _tabScale;
@@ -233,6 +301,7 @@ namespace CityBuilder.Tutorial
         {
             StopTab();
             if (_arrow != null) Object.Destroy(_arrow.gameObject);
+            if (_halo != null) Object.Destroy(_halo.gameObject);
             if (_ring != null) Object.Destroy(_ring.gameObject);
         }
     }

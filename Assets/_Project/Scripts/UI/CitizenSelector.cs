@@ -354,20 +354,99 @@ namespace CityBuilder.UI
             if (_marker == null || _selected == null) return;
             var bob = Mathf.Sin(Time.time * MarkerBobSpeed) * MarkerBobAmount;
             _marker.transform.position = _selected.transform.position + new Vector3(0f, MarkerHeight + bob, 0f);
+            // the gem turns slowly; its glow faces the camera and breathes (the user's pick D, 2026-11-06)
+            _marker.transform.rotation = Quaternion.Euler(0f, Time.time * GemTurnSpeed, 0f);
+            if (_glow == null) return;
+            var cam = Camera.main;
+            if (cam != null) _glow.rotation = cam.transform.rotation;
+            _glow.localScale = Vector3.one * (GlowSize * (1f + 0.12f * Mathf.Sin(Time.time * 3f)));
         }
 
-        private static GameObject CreateMarker()
+        private const float GemTurnSpeed = 90f;     // degrees a second
+        private const float GlowSize = 0.62f;
+        private Transform _glow;
+
+        /// <summary>
+        /// The mark over the held person (the user's pick D, 2026-11-06, instead of the rough cube): a gold
+        /// gem -- a tall octahedron, flat-shaded so its faces catch the light -- in a soft gold glow.
+        /// </summary>
+        private GameObject CreateMarker()
         {
-            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            marker.name = "CitizenSelectionMarker";
-            Destroy(marker.GetComponent<BoxCollider>());
-            marker.transform.localScale = new Vector3(0.16f, 0.16f, 0.16f);
-            marker.transform.rotation = Quaternion.Euler(45f, 45f, 0f);
-            marker.GetComponent<Renderer>().sharedMaterial = new Material(RuntimeShaders.Lit)
-            {
-                color = new Color(1f, 0.85f, 0.2f)
-            };
+            var marker = new GameObject("CitizenSelectionMarker", typeof(MeshFilter), typeof(MeshRenderer));
+            marker.GetComponent<MeshFilter>().sharedMesh = GemMesh(0.11f, 0.17f);
+            var gem = marker.GetComponent<MeshRenderer>();
+            gem.sharedMaterial = new Material(RuntimeShaders.Lit) { color = new Color(1f, 0.82f, 0.18f) };
+            gem.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            var glow = new GameObject("Glow", typeof(MeshFilter), typeof(MeshRenderer));
+            glow.transform.SetParent(marker.transform, false);
+            glow.GetComponent<MeshFilter>().sharedMesh = QuadMesh();
+            var halo = glow.GetComponent<MeshRenderer>();
+            var material = MoveOrderMarker.CreateTransparentMaterial(new Color(1f, 0.88f, 0.4f, 0.55f));
+            material.SetTexture("_BaseMap", GlowTexture());
+            material.mainTexture = GlowTexture();
+            halo.sharedMaterial = material;
+            halo.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            halo.receiveShadows = false;
+            _glow = glow.transform;
+            _glow.localScale = Vector3.one * GlowSize;
             return marker;
+        }
+
+        /// <summary>An octahedron `half` wide and `tall` from the middle to each tip, its faces unshared (flat light).</summary>
+        private static Mesh GemMesh(float half, float tall)
+        {
+            var top = new Vector3(0f, tall, 0f);
+            var bottom = new Vector3(0f, -tall, 0f);
+            var ring = new[] { new Vector3(half, 0f, 0f), new Vector3(0f, 0f, half), new Vector3(-half, 0f, 0f), new Vector3(0f, 0f, -half) };
+            var vertices = new System.Collections.Generic.List<Vector3>();
+            for (var i = 0; i < 4; i++)
+            {
+                var a = ring[i];
+                var b = ring[(i + 1) % 4];
+                vertices.Add(top); vertices.Add(b); vertices.Add(a);
+                vertices.Add(bottom); vertices.Add(a); vertices.Add(b);
+            }
+            var triangles = new int[vertices.Count];
+            for (var i = 0; i < triangles.Length; i++) triangles[i] = i;
+            var mesh = new Mesh { name = "SelectionGem" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static Mesh QuadMesh()
+        {
+            var mesh = new Mesh { name = "SelectionGlow" };
+            mesh.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+            mesh.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
+            mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
+        private static Texture2D _glowTexture;
+
+        /// <summary>A round soft glow, white (the material tints it), drawn once.</summary>
+        private static Texture2D GlowTexture()
+        {
+            if (_glowTexture != null) return _glowTexture;
+            const int size = 64;
+            _glowTexture = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            var pixels = new Color32[size * size];
+            for (var y = 0; y < size; y++)
+            for (var x = 0; x < size; x++)
+            {
+                var dx = (x + 0.5f) / size * 2f - 1f;
+                var dy = (y + 0.5f) / size * 2f - 1f;
+                var t = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)(255f * t * t));
+            }
+            _glowTexture.SetPixels32(pixels);
+            _glowTexture.Apply(false, true);
+            return _glowTexture;
         }
 
         private void ShowFeedback(bool ok)

@@ -33,6 +33,8 @@ namespace CityBuilder.Combat
 
         public int CurrentHealth { get; private set; }
 
+        private Buildings.BuildingHealthBar _healthBar;
+
         /// <summary>
         /// The grid cell this portal stands on and has reserved. Carried by the portal rather than
         /// by the spawner, because with several per map the save has to write out each one's place
@@ -145,7 +147,14 @@ namespace CityBuilder.Combat
             }
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            if (CurrentHealth > 0) return;
+            if (CurrentHealth > 0)
+            {
+                // a bar over it while it is hit, as over the orcs' other buildings (the user, 2026-11-06: no way
+                // to see a blow land on the portal)
+                if (_healthBar == null) _healthBar = Buildings.BuildingHealthBar.CreateFor(transform);
+                _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
+                return;
+            }
 
             // Out of the registry before the event fires: handlers (the win check) ask how many
             // portals are left, and a destroyed one must not still be counted among them.

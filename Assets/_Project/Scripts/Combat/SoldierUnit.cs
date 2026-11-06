@@ -284,6 +284,9 @@ namespace CityBuilder.Combat
 
             var level = SoldierStats.Stats(Type);
             _walkSpeed = level.walkSpeed;
+            // the tutorial's soldier keeps up with the King (the user, 2026-11-06: he crawled)
+            if (Tutorial.TutorialMode.IsActive && Type == Tutorial.TutorialRules.Soldier)
+                _walkSpeed = Mathf.Max(_walkSpeed, SoldierStats.Stats(SoldierType.King).walkSpeed);
             _attackIntervalSeconds = level.attackIntervalSeconds;
             _attackDamage = level.attackDamage;
         }
