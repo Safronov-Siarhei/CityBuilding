@@ -119,6 +119,11 @@ _spec = KINDS[KIND]
 # odd variants full size, even ones a little smaller (start/orc/bot/islet always full)
 SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet', 'tutorial') else int(_spec[0] * 0.86)
 SHAPE, RELIEF_KIND, HILL_COUNT, BEACH_COUNT, RIM = _spec[1], _spec[2], _spec[3], _spec[4], _spec[5]
+# the orcs' gloomy island (the user, 2026-11-06: "C as its heart + B round it"): a swamp of hummocks
+# and black pools round the main base instead of the rocky mass; CONCEPT, set by ISL_SWAMP=1
+SWAMP = KIND == 'orc' and bool(os.environ.get('ISL_SWAMP'))
+if SWAMP:
+    RELIEF_KIND, RIM, HILL_COUNT = 'swamp', 0.9, 0
 # a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
 # for the castle (2026-11-03)
 _ROLL = {('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 6): 29}   # bot: rolls that fit the 55x55 town (2026-11-05)
@@ -248,6 +253,10 @@ def raw_mountains(x, y):
     if RELIEF_KIND == 'low':
         rise = smoothstep(0.5, 0.95, i)
         return 4.0 * rise * (0.6 + 0.4 * ridge)
+    if RELIEF_KIND == 'swamp':
+        # low hummocks here and there between the pools
+        rise = smoothstep(0.25, 0.7, i)
+        return (0.45 + 0.8 * crag) * rise * smoothstep(0.48, 0.72, fbm(x / 9, y / 9, SEED + 81))
     return 0.0
 
 
@@ -434,7 +443,23 @@ def beach_gate(x, y):
     return max(smoothstep(near, full, math.hypot(x - bx, y - by)) for bx, by in BEACHES)
 
 
+def swamp_sd(x, y):
+    """The swamp's pools: negative in the black water, kept off the coast's ring, the landing
+    beaches and the main base with its margin (the way in stays dry)."""
+    n = fbm(x / 8, y / 8, SEED + 501) + 0.12 * fbm(x / 3.5, y / 3.5, SEED + 502)
+    sd = (0.58 - n) * 26.0
+    sd += smoothstep(16.0, 9.0, coast_sd(x, y)) * 40.0
+    sd += beach_gate(x, y) * 40.0
+    x0, x1, y0, y1 = MAIN_PAD
+    mx, my = MAIN_BASE
+    d = max(x0 + mx - x, x - x1 - mx, y0 + my - y, y - y1 - my)
+    sd += smoothstep(10.0, 4.0, d) * 40.0
+    return sd
+
+
 def land_sd(x, y):
+    if SWAMP:
+        return min(coast_sd(x, y), swamp_sd(x, y))
     return coast_sd(x, y)
 
 
@@ -834,7 +859,7 @@ def scatter_decor(flat, forest_cells, rnd):
                 z, sd = height_at(x, y)
                 r = rnd.random()
                 if sd < -0.9:                         # open water: lilies on the still ones
-                    still = (_ellipse_sd(x, y, *LAKE, 0.35, 7) < 0 or
+                    still = (SWAMP and coast_sd(x, y) > 6) or (_ellipse_sd(x, y, *LAKE, 0.35, 7) < 0 or
                              any(_ellipse_sd(x, y, *p, 0.35, 5) < 0 for p in PONDS))
                     if still and fbm(x / 7, y / 7, 131) > 0.6 and r < 0.18 and sd > -9:
                         add("lily", x, y, rnd.uniform(0.8, 1.2))
@@ -845,7 +870,7 @@ def scatter_decor(flat, forest_cells, rnd):
                     continue
                 if -0.9 <= sd < 0.6:                  # the waterline: reeds where the water is calm
                     calm = (river(x, y)[1] > 0.5 and coast_sd(x, y) > 10 and ford_at(x, y) == 0) or \
-                        _ellipse_sd(x, y, *LAKE, 0.35, 7) < 1.5
+                        _ellipse_sd(x, y, *LAKE, 0.35, 7) < 1.5 or (SWAMP and coast_sd(x, y) > 8)
                     if calm and fbm(x / 9, y / 9, 137) > 0.45 and r < 0.35 and \
                             math.hypot(x - START[0], y - START[1]) > 20:
                         add("reeds", x, y, rnd.uniform(0.8, 1.25))
