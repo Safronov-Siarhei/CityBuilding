@@ -301,7 +301,7 @@ namespace CityBuilder.Maps.Archipelago
         /// same softened outline the soil is drawn with, a hand's breadth over the ground. One at a
         /// time -- a new tap takes the last one down.
         /// </summary>
-        public static GameObject Flash(HashSet<Vector2Int> patch, MeshMapApplier applier)
+        public static GameObject Flash(HashSet<Vector2Int> patch, MeshMapApplier applier, float seconds = FertileFlash.DefaultSeconds)
         {
             if (_flash != null) Object.Destroy(_flash);
             var grid = GridManager.Instance;
@@ -386,7 +386,7 @@ namespace CityBuilder.Maps.Archipelago
             renderer.sharedMaterial = new Material(RuntimeShaders.Unlit) { name = "FertileFlash", color = FertileFlash.Gold };
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
-            go.AddComponent<FertileFlash>();
+            go.AddComponent<FertileFlash>().Seconds = seconds;
             _flash = go;
             return go;
         }

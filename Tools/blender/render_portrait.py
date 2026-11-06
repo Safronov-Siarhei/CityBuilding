@@ -1,7 +1,7 @@
 """A hero's portrait for the HUD: the figure's head and shoulders, front three-quarter, on a
 transparent background. Opens the models file, renders, never saves.
 
-    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size] [head_z] [frame]
+    blender --background Buildings-Size1-Models.blend --python render_portrait.py -- <Obj> <out.png> [size] [head_z] [frame] [distance] [yaw]
 
 head_z is the height (m) the camera looks at: 0.58 for the King's crown, less for a shorter hero.
 
@@ -20,6 +20,10 @@ size = int(argv[2]) if len(argv) > 2 else 256
 head_z = float(argv[3]) if len(argv) > 3 else 0.58
 # how much of him the frame holds (m): the King's 0.42; a gnome, half his height, less
 frame = float(argv[4]) if len(argv) > 4 else 0.42
+# a ship (2026-11-06): seen from further off and more from the side -- 3 m from the deck the transport's
+# portrait was a close-up of planks; [distance] [yaw degrees from the front]
+distance = float(argv[5]) if len(argv) > 5 else 3.0
+yaw = float(argv[6]) if len(argv) > 6 else -20.0
 
 sc = bpy.context.scene
 target = bpy.data.objects[target_name]
@@ -61,8 +65,8 @@ sc.camera = cam
 # the head and the crown: about the top third of the figure, seen from the front (-y), a little
 # to the side and from a little above
 head = target.matrix_world.translation + Vector((0, 0, head_z))
-d = Vector((math.sin(math.radians(-20)), -math.cos(math.radians(-20)), 0.25)).normalized()
-cam.location = head + d * 3.0
+d = Vector((math.sin(math.radians(yaw)), -math.cos(math.radians(yaw)), 0.25 if distance <= 3.0 else 0.55)).normalized()
+cam.location = head + d * distance
 cam.rotation_euler = (head - cam.location).to_track_quat('-Z', 'Y').to_euler()
 
 os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)

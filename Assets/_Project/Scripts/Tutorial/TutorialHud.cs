@@ -30,10 +30,7 @@ namespace CityBuilder.Tutorial
             "CancelSelectionButton",
         };
 
-        // the game menu: no saving in the tutorial; the entries below it move up into its place (the user, 2026-11-06)
-        private const string SaveEntry = "SaveEntry";
-        private static readonly string[] BelowSave = { "SettingsEntry", "MainMenuEntry" };
-        private const float MenuEntryStep = 112f;
+
 
         // and while the Town Hall is placed: the resource bar and the hero portraits too
         private static readonly string[] HiddenBeforeHall = { "ResourceHUD", "Heroes" };
@@ -53,6 +50,11 @@ namespace CityBuilder.Tutorial
         private Image _halo;               // the glow behind the blinking build button
         private readonly Sprite _circle;
 
+        private RectTransform _blinkCard;      // the card / button the arrow is on: it blinks (no frame)
+        private Graphic _blinkGraphic;
+        private Color _blinkColour;
+        private Vector3 _blinkScale;
+
         private RectTransform _arrow;
         private LineRenderer _ring;
         private float _clock;
@@ -70,9 +72,7 @@ namespace CityBuilder.Tutorial
                 {
                     if (always.Contains(t.name)) _always.Add(GroupOf(t));
                     else if (beforeHall.Contains(t.name)) _beforeHall.Add(GroupOf(t));
-                    else if (t.name == SaveEntry) t.gameObject.SetActive(false);
-                    else if (System.Array.IndexOf(BelowSave, t.name) >= 0 && t is RectTransform entry)
-                        entry.anchoredPosition += new Vector2(0f, MenuEntryStep);
+
                 }
             }
         }
@@ -143,6 +143,7 @@ namespace CityBuilder.Tutorial
             var pulse = 0.5f + 0.5f * Mathf.Sin(_clock * Mathf.PI / period);   // 0..1, one blink per `period`
             BlinkTab(tab, blinkTab, pulse);
             PointAt(card);
+            BlinkCard(card, pulse);
             Ring(ringAt, ringRadius, pulse);
         }
 
@@ -201,6 +202,32 @@ namespace CityBuilder.Tutorial
             _tabBlinking = false;
             _tab.localScale = _tabScale;
             if (_tabGraphic != null) _tabGraphic.color = _tabColour;
+        }
+
+        // ------------------------------------------------------------ the card under the arrow
+
+        private void BlinkCard(RectTransform card, float pulse)
+        {
+            if (card != _blinkCard)
+            {
+                StopCard();
+                _blinkCard = card;
+                _blinkGraphic = card != null ? card.GetComponent<Graphic>() : null;
+                if (_blinkGraphic != null) _blinkColour = _blinkGraphic.color;
+                if (card != null) _blinkScale = card.localScale;
+            }
+            if (_blinkCard == null) return;
+            _blinkCard.localScale = _blinkScale * (1f + 0.06f * pulse);
+            if (_blinkGraphic != null) _blinkGraphic.color = Color.Lerp(_blinkColour, Yellow, 0.55f * pulse);
+        }
+
+        private void StopCard()
+        {
+            if (_blinkCard == null) return;
+            _blinkCard.localScale = _blinkScale;
+            if (_blinkGraphic != null) _blinkGraphic.color = _blinkColour;
+            _blinkCard = null;
+            _blinkGraphic = null;
         }
 
         // ------------------------------------------------------------ the arrow
@@ -300,6 +327,7 @@ namespace CityBuilder.Tutorial
         public void Dispose()
         {
             StopTab();
+            StopCard();
             if (_arrow != null) Object.Destroy(_arrow.gameObject);
             if (_halo != null) Object.Destroy(_halo.gameObject);
             if (_ring != null) Object.Destroy(_ring.gameObject);

@@ -74,9 +74,22 @@ for _s in SPOTS.values():
 FOREST = [_shift(x, y) for x, y in FOREST]
 ROCKS = [_shift(x, y) for x, y in ROCKS]
 ROUTES = [(_shift(*a), _shift(*b), k) for a, b, k in ROUTES]
+# the strait wider (the user, 2026-11-06: the ship stood at the orcs' beach the moment it was bought, and
+# «высадить» put the troops back on our own island): the orcs' island SPREAD cells west, ours SPREAD east
+SPREAD = 6
+ORC_SPOTS = ("orc_tower", "orc_guard", "portal", "player_landing", "orc_barge")
+ORC_BLOBS = [(x - SPREAD, y, r) for x, y, r in ORC_BLOBS]
+PLAYER_BLOBS = [(x + SPREAD, y, r) for x, y, r in PLAYER_BLOBS]
+for _n, _s in SPOTS.items():
+    _x, _y = _s["at"]
+    _s["at"] = (_x - SPREAD, _y) if _n in ORC_SPOTS else (_x + SPREAD, _y)
+FOREST = [(x + SPREAD, y) for x, y in FOREST]
+ROCKS = [(x + SPREAD, y) for x, y in ROCKS]
+ROUTES = [((a[0] + SPREAD, a[1]), (b[0] - SPREAD, b[1]), k) if k == "ours" else ((a[0] - SPREAD, a[1]), (b[0] + SPREAD, b[1]), k)
+          for a, b, k in ROUTES]
 # islets: small grassy blobs (x, y, r), away from the ship routes; sea rocks: bare stone spires (x, y, r)
 ISLETS = [(9, 52, 2.6), (12, 49, 1.4), (39, 59, 2.2), (74, 58, 2.8), (71, 54, 1.5), (78, 30, 2.3),
-          (70, 8, 2.6), (40, 6, 2.0), (8, 12, 2.4), (11, 33, 1.6)]
+          (70, 8, 2.6), (40, 6, 2.0), (8, 12, 2.4), (5, 45, 1.6)]
 SEA_ROCKS = [(20, 56, 0.9), (22, 55, 0.6), (57, 61, 0.8), (79, 44, 0.9), (77, 42, 0.6), (60, 4, 0.9),
              (25, 5, 0.8), (27, 7, 0.6), (4, 24, 0.9), (34, 47, 0.7), (51, 51, 0.6), (4, 40, 0.8)]
 

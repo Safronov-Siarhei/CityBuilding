@@ -68,7 +68,7 @@ namespace CityBuilder.Citizens
         // tree's center can never fully complete -- the agent would grind against the carve until
         // the stuck timeout instead of ever starting work. Doubles as the "did I actually get
         // there?" test, see OnArrived/OnPauseElapsed.
-        public const float NodeReachDistance = 1.6f;
+        public const float NodeReachDistance = 1.0f;   // 1.6 left them two trees off it (the user, 2026-11-06)
 
         /// <summary>Close enough to a tree or a boulder to work it on a shift -- nearer than a hand-gather's reach, so the worker is seen at the trunk.</summary>
         private const float WorkNodeReach = 0.7f;

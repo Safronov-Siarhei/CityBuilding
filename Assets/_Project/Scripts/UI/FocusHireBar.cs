@@ -120,6 +120,7 @@ namespace CityBuilder.UI
             var barracks = Target;
             var army = ArmyManager.Instance;
             if (barracks == null || army == null || index < 0 || index >= types.Length) return false;
+            if (Tutorial.TutorialMode.IsActive && army.CountOf(types[index]) > 0) return false;
             var blocker = army.DescribeRecruitBlocker(types[index], barracks.Level);
             var hired = blocker == null && army.TryRecruit(types[index], barracks.transform.position, barracks.Level);
             if (!hired && blocker != null)
@@ -241,6 +242,8 @@ namespace CityBuilder.UI
             for (var i = 0; i < types.Length; i++)
             {
                 var open = SoldierStats.IsUnlocked(types[i]);
+                // the tutorial hires its one soldier, again only if he falls (the user, 2026-11-06: hired the town away)
+                if (open && Tutorial.TutorialMode.IsActive && army != null && army.CountOf(types[i]) > 0) open = false;
                 buttons[i].SetActive(open);
                 if (!open) continue;
                 var need = SoldierStats.BarracksLevel(types[i]);

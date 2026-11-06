@@ -10,7 +10,10 @@ namespace CityBuilder.Maps.Archipelago
     {
         public static readonly Color Gold = new Color(1f, 0.82f, 0.25f, 1f);
         private static readonly Color Pale = new Color(1f, 0.97f, 0.78f, 1f);
-        private const float Seconds = 4f;
+        public const float DefaultSeconds = 4f;
+
+        /// <summary>How long it shows; infinity keeps it up until its owner takes it down (the tutorial's Shipyard zone).</summary>
+        public float Seconds { get; set; } = DefaultSeconds;
 
         private float _age;
         private Material _material;

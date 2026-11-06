@@ -78,8 +78,8 @@ namespace CityBuilder.Tests.PlayMode
             var towers = 0;
             foreach (var b in OrcCampBuilding.All) if (b != null && b.Kind == OrcCampBuildingKind.Watchtower) towers++;
             Assert.AreEqual(1, towers, "The orcs' island has not exactly one tower.");
-            Assert.AreEqual(1, OrcUnit.All.Count, "The orcs' island has not exactly one guard.");
-            Assert.IsTrue(OrcUnit.All[0].IsGuard, "The orc on their island is not on guard.");
+            Assert.AreEqual(BalanceConfig.Instance.TutorialOrcGuards, OrcUnit.All.Count, "The orcs' island has not its tutorial_orc_guards guards.");
+            foreach (var orc in OrcUnit.All) Assert.IsTrue(orc.IsGuard, "An orc on their island is not on guard.");
             Assert.IsNotNull(TutorialDirector.Instance, "No tutorial script.");
             for (var t = 0f; t < 2f && TutorialDirector.Instance.Current == TutorialDirector.Step.TownHall; t += Time.deltaTime) yield return null;
             Assert.AreNotEqual(TutorialDirector.Step.TownHall, TutorialDirector.Instance.Current, "The script did not move past the Town Hall.");

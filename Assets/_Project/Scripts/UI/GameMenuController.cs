@@ -60,7 +60,8 @@ namespace CityBuilder.UI
         {
             if (entries.Length == 0 || entries[0] == null) return;
             if (float.IsNaN(_firstEntryY)) _firstEntryY = entries[0].anchoredPosition.y;
-            var run = Invasion.InvasionMode.IsActive;
+            // and the tutorial (the user, 2026-11-06): nothing to save there
+            var run = Invasion.InvasionMode.IsActive || Tutorial.TutorialMode.IsActive;
             var slot = 0;
             for (var i = 0; i < entries.Length; i++)
             {

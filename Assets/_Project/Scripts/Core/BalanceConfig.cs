@@ -576,6 +576,8 @@ namespace CityBuilder.Core
         [SerializeField] private float tutorialOrcDamageMult = 0.2f;
         [SerializeField] private int tutorialRaidOrcs = 5;
         [SerializeField] private float tutorialPortalSeconds = 7f;
+        [SerializeField] private float tutorialBirthSeconds = 7f;
+        [SerializeField] private int tutorialOrcGuards = 3;
         // the tutorial's own tab (the user, 2026-11-05): orcs' health times this; the chop/dig;
         // the camera's distance on a person (share of its distance); fish shoals kept; the
         // «people came» line; one blink of a highlight
@@ -1185,6 +1187,12 @@ namespace CityBuilder.Core
 
         /// <summary>The tutorial's portal falls to the King alone in about this many seconds (economy/tutorial `tutorial_portal_sec`; the user, 2026-11-06: ~7).</summary>
         public float TutorialPortalSeconds => tutorialPortalSeconds;
+
+        /// <summary>The tutorial's Hovel brings a person in this many seconds (`tutorial_birth_sec`; the user, 2026-11-06: 7).</summary>
+        public float TutorialBirthSeconds => tutorialBirthSeconds;
+
+        /// <summary>Orcs on guard on the tutorial's orc island (`tutorial_orc_guards`; the user, 2026-11-06: at least 3).</summary>
+        public int TutorialOrcGuards => tutorialOrcGuards;
         public float TutorialOrcHealthMult => tutorialOrcHealthMult;
         public float TutorialGatherSeconds => tutorialGatherSeconds;
         public float TutorialPersonZoom => tutorialPersonZoom;
@@ -2029,6 +2037,8 @@ namespace CityBuilder.Core
             tutorialBlinkSeconds = Read(economy, "tutorial_blink_sec", tutorialBlinkSeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);
             tutorialPortalSeconds = Read(economy, "tutorial_portal_sec", tutorialPortalSeconds);
+            tutorialBirthSeconds = Read(economy, "tutorial_birth_sec", tutorialBirthSeconds);
+            tutorialOrcGuards = (int)Read(economy, "tutorial_orc_guards", tutorialOrcGuards);
             wallWalkFromLevel = (int)Read(economy, "wall_walk_from_level", wallWalkFromLevel);
             for (var l = 0; l < wallWalkHeight.Length; l++) wallWalkHeight[l] = Read(economy, $"wall_walk_height_{l + 3}", wallWalkHeight[l]);
             wallRangeBonusCells = Read(economy, "wall_range_bonus_cells", wallRangeBonusCells);

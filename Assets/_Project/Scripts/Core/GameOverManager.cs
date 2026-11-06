@@ -74,6 +74,8 @@ namespace CityBuilder.Core
         {
             // A run ends only with its castle: its people can all be away soldiering, and come back.
             if (Invasion.InvasionMode.IsActive) return;
+            // nor the tutorial: the player hired his people away and lost it (the user, 2026-11-06)
+            if (Tutorial.TutorialMode.IsActive) return;
             var population = CitizenManager.Instance != null ? CitizenManager.Instance.TotalPopulation : 0;
             if (population > 0)
             {

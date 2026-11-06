@@ -49,10 +49,12 @@ namespace CityBuilder.Tutorial
 
         private const float FocusEvery = 0.3f;     // the camera re-centred on a moving unit this often
         private const float CheckEvery = 0.25f;
-        private const float SailReach = 12f;       // metres from our landing beach that count as «there»
-        private const float BoardingGiveUp = 30f;  // the raid's orcs not at their barge by then: aboard anyway
-        private const float WanderEvery = 9f;      // the King strolls to a new spot this often
-        private const float WanderReach = 14f;     // that far from the Town Hall at most
+        private const float SailReach = 6f;        // metres from our landing beach that count as «there»
+        private const float BoardingGiveUp = 8f;   // the raid's orcs not at their barge by then: aboard anyway (30 s hung, the user)
+        private const float WanderEvery = 6f;      // the King strolls to a new spot this often
+        private const float WanderReach = 8f;      // that far from the Town Hall at most (14 took him to the shore)
+        private const float GuardWalkEvery = 7f;   // the orcs' guards move on round their island this often
+        private const float GuardWalkReach = 6f;   // that far from their portal
 
         private GameObject _panel;
         private Text _line;
@@ -76,6 +78,9 @@ namespace CityBuilder.Tutorial
         private float _wanderIn;
         private bool _portalSet;                   // the portal's health set to the tutorial's few seconds
         private FocusHireBar[] _hireBars;
+        private float _guardWalkIn;
+        private GameObject _shipyardZone;          // the outline where the Shipyard can go, while it is placed
+        private readonly List<OrcUnit> _landed = new List<OrcUnit>();   // the raid's orcs ashore: the camera follows them
         private const string RewardedKey = "tutorial.rewarded";
 
         // Not in Awake: TutorialMode is decided in MeshMapApplier.Awake, and the order of two objects'
@@ -130,6 +135,8 @@ namespace CityBuilder.Tutorial
             _stepTime += Time.deltaTime;
             WalkToBarge();
             ShowTheWay();
+            FollowMoving();
+            ShipyardZone();
             _focusIn -= Time.unscaledDeltaTime;
             if (_focusIn <= 0f)
             {
@@ -143,6 +150,7 @@ namespace CityBuilder.Tutorial
             MoorBarge();
             Wander();
             Soften();
+            WalkGuards();
             Drive();
             ShortenPortal();
             if (Current != Step.Done && StepDone()) Enter(Current + 1);
@@ -161,6 +169,8 @@ namespace CityBuilder.Tutorial
                 _node = null;
             }
             if (step == Step.KingPick || step == Step.SoldierPick) _unit = null;
+            // the stone is in: the person is let go (he stayed selected into the next step, the user 2026-11-06)
+            if (step == Step.Barracks && _citizens != null) _citizens.Deselect();
             if (step == Step.Raid) LaunchRaid();
             TutorialRules.Wanted = WantedAt(step);
             TutorialRules.Selectable = SelectableAt(step);
@@ -515,12 +525,6 @@ namespace CityBuilder.Tutorial
                 case Step.SoldierBoard:
                     if (_ship != null && _ship) Ring(_ship.transform.position, 3f, out at, out radius);
                     break;
-                case Step.Shipyard:
-                    // where the Shipyard goes, while it is being placed (the user, 2026-11-06: hard to find the spot)
-                    if (_placer != null && _placer.IsSelecting && !BuildingInstance.HasAny(ShipManager.ShipyardId)
-                        && MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryTutorialSpot("shipyard", out var yard))
-                        Ring(yard, 2.6f, out at, out radius);
-                    break;
                 case Step.Sail:
                     // where to send the ship with the troops aboard (the user, 2026-11-06)
                     if (MeshMapApplier.Instance != null && MeshMapApplier.Instance.TryTutorialSpot("player_landing", out var landing))
@@ -608,15 +612,6 @@ namespace CityBuilder.Tutorial
                     if (_ship == null || !_ship) _ship = OurShip();
                     if (_ship != null) _camera.FocusOn(_ship.transform.position);
                     break;
-                case Step.Raid:
-                    // the orcs' barge on its way (the user, 2026-11-06), until it has put them ashore
-                    if (_barge != null && _barge && (_walkers.Count > 0 || _barge.OrcCargo > 0)) _camera.FocusOn(_barge.transform.position);
-                    break;
-                case Step.Sail:
-                    // the ship at first, the marked spot ahead of it in view
-                    if (_ship == null || !_ship) _ship = OurShip();
-                    if (_ship != null && _stepTime < 3f) _camera.FocusOn(_ship.transform.position);
-                    break;
                 case Step.Soldier:
                 case Step.Ship:
                     // the Barracks to hire at, the Shipyard to buy at: on it until the player taps it
@@ -624,6 +619,86 @@ namespace CityBuilder.Tutorial
                     if (place != null && !Holding(place)) _camera.FocusOn(place.transform.position);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Every frame, not every 0.3 s: a target that moves (the orcs walking to their barge, the barge, the orcs
+        /// ashore, our ship) -- re-aimed only now and then, the camera caught up and stopped, and both the ship
+        /// and the view looked jerky (the user, 2026-11-06).
+        /// </summary>
+        private void FollowMoving()
+        {
+            if (_camera == null) return;
+            if (Current == Step.Raid)
+            {
+                if (_walkers.Count > 0 && Centre(_walkers, out var walking)) _camera.FocusOn(walking);
+                else if (_barge != null && _barge && _barge.OrcCargo > 0) _camera.FocusOn(_barge.transform.position);
+                else if (RaidAshore(out var fight)) _camera.FocusOn(fight);   // their group ashore, and the fight
+            }
+            else if (Current == Step.Sail)
+            {
+                if (_ship == null || !_ship) _ship = OurShip();
+                if (_ship != null) _camera.FocusOn(_ship.transform.position);
+            }
+        }
+
+        private static bool Centre(List<OrcUnit> orcs, out Vector3 centre)
+        {
+            centre = Vector3.zero;
+            var n = 0;
+            foreach (var orc in orcs)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                centre += orc.transform.position;
+                n++;
+            }
+            if (n == 0) return false;
+            centre /= n;
+            return true;
+        }
+
+        /// <summary>The raid's orcs on our island (not the guards over there): where they are, together.</summary>
+        private bool RaidAshore(out Vector3 centre)
+        {
+            _landed.Clear();
+            foreach (var orc in OrcUnit.All)
+                if (orc != null && orc.CurrentHealth > 0 && !orc.IsGuard && orc.isActiveAndEnabled) _landed.Add(orc);
+            return Centre(_landed, out centre);
+        }
+
+        /// <summary>The orcs' guards walk their island round the portal, a new point now and then (the user, 2026-11-06).</summary>
+        private void WalkGuards()
+        {
+            _guardWalkIn -= CheckEvery;
+            if (_guardWalkIn > 0f || OrcPortal.All.Count == 0) return;
+            _guardWalkIn = GuardWalkEvery;
+            var portal = OrcPortal.All[0].transform.position;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0 || !orc.IsGuard) continue;
+                var offset = Random.insideUnitCircle * GuardWalkReach;
+                if (ShipManager.TrySampleLand(portal + new Vector3(offset.x, 0f, offset.y), 2f, out var spot)) orc.MovePost(spot);
+            }
+        }
+
+        /// <summary>
+        /// While the Shipyard is being placed, the shore where it can go outlined like a fertile patch (the user,
+        /// 2026-11-06: the ring on one spot was wrong -- there are many places).
+        /// </summary>
+        private void ShipyardZone()
+        {
+            var placing = Current == Step.Shipyard && _placer != null && _placer.IsSelecting && !BuildingInstance.HasAny(ShipManager.ShipyardId);
+            if (!placing)
+            {
+                if (_shipyardZone != null) Destroy(_shipyardZone);
+                _shipyardZone = null;
+                return;
+            }
+            if (_shipyardZone != null || BuildingInstance.TownHall == null || Grid.GridManager.Instance == null) return;
+            var hall = BuildingInstance.TownHall.OriginCell;
+            var cells = new HashSet<Vector2Int>();
+            _placer.CellsItCanCover(hall - Vector2Int.one * 24, hall + Vector2Int.one * 24, cells);
+            _shipyardZone = Maps.Archipelago.FertileLand.Flash(cells, MeshMapApplier.Instance, float.PositiveInfinity);
         }
 
         // ------------------------------------------------------------ finding things
@@ -723,7 +798,8 @@ namespace CityBuilder.Tutorial
             var ring = Img(_panel.transform, "Portrait", new Color(0.66f, 0.92f, 0.76f), circleSprite, new Vector2(-410f, 0f), new Vector2(140f, 140f));
             // the face kept inside its round frame (the crown stuck out of it, the user 2026-11-05)
             ring.gameObject.AddComponent<Mask>().showMaskGraphic = true;
-            Img(ring.transform, "Face", Color.white, kingPortrait, Vector2.zero, new Vector2(126f, 126f)).preserveAspect = true;
+            // bigger and lower: a strip of the ring showed under his chin (the user, 2026-11-06)
+            Img(ring.transform, "Face", Color.white, kingPortrait, new Vector2(0f, -12f), new Vector2(156f, 156f)).preserveAspect = true;
 
             var go = new GameObject("Line", typeof(RectTransform), typeof(Text));
             go.transform.SetParent(_panel.transform, false);

@@ -416,12 +416,18 @@ namespace CityBuilder.Combat
             }
             if (map.TryTutorialSpot("orc_guard", out var guardAt))
             {
-                guardAt.y = map.TryGetGroundHeight(guardAt, out var gh) ? gh : 0f;
-                var guard = SpawnOrcOfKind(guardAt, 1, OrcKind.Raider);
-                if (guard != null)
+                // tutorial_orc_guards of them round the spot (the user, 2026-11-06: one was too few); the
+                // tutorial's director walks their posts round the island and they answer an attack
+                var count = Mathf.Max(1, BalanceConfig.Instance.TutorialOrcGuards);
+                for (var i = 0; i < count; i++)
                 {
+                    var a = i * Mathf.PI * 2f / count;
+                    var at = guardAt + (count > 1 ? new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 1.5f : Vector3.zero);
+                    at.y = map.TryGetGroundHeight(at, out var gh) ? gh : 0f;
+                    var guard = SpawnOrcOfKind(at, 1, OrcKind.Raider);
+                    if (guard == null) continue;
                     guard.Toughen(BalanceConfig.Instance.TutorialOrcHealthMult, soft);
-                    guard.SetGuardPost(null, guardAt, 6f);
+                    guard.SetGuardPost(null, at, 9f);
                 }
             }
         }

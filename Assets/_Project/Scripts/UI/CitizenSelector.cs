@@ -451,7 +451,9 @@ namespace CityBuilder.UI
 
         private void ShowFeedback(bool ok)
         {
-            ShowMessage(ok ? "OK!" : "NO!", ok);
+            // a taken order says nothing (the user, 2026-11-06: «OK» over the tree); a refused one still says so
+            if (ok) return;
+            ShowMessage("NO!", false);
         }
 
         /// <summary>The same one-second centre-screen flash, with words in it -- used for refusals that a bare "NO!" would leave the player guessing about.</summary>

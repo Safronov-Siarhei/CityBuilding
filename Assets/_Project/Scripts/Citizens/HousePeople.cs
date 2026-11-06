@@ -98,7 +98,9 @@ namespace CityBuilder.Citizens
             return 0f;
         }
 
-        private static float Seconds => Mathf.Max(0.1f, BalanceConfig.Instance.PersonRespawnSeconds);
+        // the tutorial's Hovel brings its person in tutorial_birth_sec (the user, 2026-11-06: it took too long)
+        private static float Seconds => Mathf.Max(0.1f, Tutorial.TutorialMode.IsActive
+            ? BalanceConfig.Instance.TutorialBirthSeconds : BalanceConfig.Instance.PersonRespawnSeconds);
 
         /// <summary>Every house full at once -- a run's island, whose people are there from the start.</summary>
         public void FillNow()

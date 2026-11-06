@@ -110,6 +110,30 @@ EXCEPT two bugs the user said to fix for the whole game: the deselect-on-boardin
 **Open (proposed to the user, waiting):** other wake looks. **Unverified:** «the King hits the
 portal from too far» -- his structure reach is 1.6+1.2 m from the portal's centre; not reproduced.
 
+## Third playtest (2026-11-06) -- BUILT, not played
+- King's face in the hint ring: 156 px, 12 px lower (a green strip showed under it).
+- Build button lifted `TutorialLift` 46 px in the tutorial (its glow ran off the screen).
+- Cards: the yellow Outline gone; the card (or hire button) under the arrow BLINKS (`TutorialHud.BlinkCard`).
+- Menu Save entry: `GameMenuController.LayEntries` drops it in the tutorial too (TutorialHud's own move was undone
+  by LayEntries -- that is why the Save button stayed).
+- `tutorial_birth_sec` 7: the Hovel's person (`HousePeople.Seconds`).
+- ALL modes: no «OK!» over a gather order (CitizenSelector; «NO!» stays); people work a tree/boulder from 1.0 m
+  (`CitizenAgent.NodeReachDistance`, was 1.6); melee fighters strike a portal / orc building from its wall
+  (`SoldierUnit.StructureRange`: half footprint + 0.8 m, never more than the sheet reach).
+- Citizen deselected at the Barracks step; the King strolls within 8 m every 6 s.
+- Orc raid: boarding give-up 8 s (they hung 30 s); the camera follows EVERY FRAME (walkers -> barge -> the orcs
+  ashore and their fight; our ship at Sail) -- `FollowMoving`; FocusOn every 0.3 s looked jerky.
+- `tutorial_orc_guards` 3 guards round `orc_guard`, guard radius 9; `WalkGuards` moves their posts round the portal
+  (6 m) every 7 s.
+- Shipyard placing: every cell it can cover outlined like a fertile patch (`BuildingPlacer.CellsItCanCover`,
+  `FertileLand.Flash(..., infinity)`), the ring on the one spot dropped.
+- Ship portraits re-rendered (`render_portrait.py` got [distance] [yaw]; ships: distance 20, yaw -65).
+- `#tutorial_hint_kingpick` = «Нажмите на меня — я поплыву с вами.»
+- MAP: the strait widened -- `tutorial_plan.py` SPREAD 6 (orcs' island 6 cells west, ours 6 east), islet moved;
+  islands.py + export_map.py re-run (Isl-tutorial1 on H:, assets in Models/Islands). SailReach 12 -> 6 m.
+- No defeat by an empty town in the tutorial (`GameOverManager`); the Barracks hires its one soldier only while
+  none is alive (`FocusHireBar`).
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».

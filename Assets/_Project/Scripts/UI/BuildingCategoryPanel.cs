@@ -193,7 +193,7 @@ namespace CityBuilder.UI
         private void Update()
         {
             if (categoryBar == null) return;
-            var target = _open ? openBarY : closedBarY;
+            var target = (_open ? openBarY : closedBarY) + (Tutorial.TutorialMode.IsActive ? TutorialLift : 0f);
             var position = categoryBar.anchoredPosition;
             if (Mathf.Abs(position.y - target) < 0.5f)
             {
@@ -321,7 +321,8 @@ namespace CityBuilder.UI
             if (Tutorial.TutorialMode.IsActive) TutorialCard(card, built < max && Tutorial.TutorialRules.IsWanted(card.Building));
         }
 
-        private static readonly Color TutorialFrame = new Color(1f, 0.82f, 0.1f, 1f);
+        /// <summary>The tutorial lifts the build button: its glow ran off the screen's foot (the user, 2026-11-06).</summary>
+        private const float TutorialLift = 46f;
 
         /// <summary>
         /// The tutorial's cards (the user's playtest, 2026-11-06): no numbers under them -- resources are
@@ -333,15 +334,9 @@ namespace CityBuilder.UI
                 if (chip.name.StartsWith("Amount_") && chip.gameObject.activeSelf) chip.gameObject.SetActive(false);
             var rows = card.GetComponentInChildren<CardPriceRows>(true);
             if (rows != null) rows.Arrange();
-            var image = card.GetComponent<Image>();
-            if (image == null) return;
+            // the yellow frame looked odd (the user, 2026-11-06): the card blinks instead (TutorialHud)
             var frame = card.GetComponent<Outline>();
-            if (frame == null && wanted) frame = card.gameObject.AddComponent<Outline>();
-            if (frame == null) return;
-            frame.enabled = wanted;
-            frame.effectColor = TutorialFrame;
-            frame.effectDistance = new Vector2(7f, -7f);
-            frame.useGraphicAlpha = false;
+            if (frame != null) frame.enabled = false;
         }
 
         private static Transform BuildShade(Transform card)

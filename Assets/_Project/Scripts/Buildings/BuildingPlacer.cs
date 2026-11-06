@@ -837,6 +837,24 @@ namespace CityBuilder.Buildings
         private float _onlyOneCheckedAt = -100f;
         private bool _onlyOneStands;
 
+        /// <summary>
+        /// Every cell some placing of the held building would cover, its origin within [from, to] at the current
+        /// turn -- where it can go (the tutorial outlines the Shipyard's shore, the user 2026-11-06). Costly: once.
+        /// </summary>
+        public void CellsItCanCover(Vector2Int from, Vector2Int to, HashSet<Vector2Int> into)
+        {
+            if (_selectedBuilding == null || GridManager.Instance == null) return;
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
+            for (var z = from.y; z <= to.y; z++)
+            for (var x = from.x; x <= to.x; x++)
+            {
+                var origin = new Vector2Int(x, z);
+                if (!CanPlaceSelectedBuilding(origin, footprint)) continue;
+                for (var dz = 0; dz < footprint.y; dz++)
+                for (var dx = 0; dx < footprint.x; dx++) into.Add(new Vector2Int(x + dx, z + dz));
+            }
+        }
+
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint, bool wholeFootprintRules = true)
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !IsFreeFor(_selectedBuilding, cell, footprint)) return false;

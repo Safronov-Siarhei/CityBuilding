@@ -387,7 +387,7 @@ namespace CityBuilder.Combat
                 var targetPosition = _target.Transform.position;
                 // a big one (a boss) is reached at its edge, not its middle: the gnomes stood
                 // beside the spider queen not striking (the user, 2026-11-02)
-                var range = _target.IsStructure ? _structureAttackRange + StructureReach(_target) : UnitAttackRange + _targetBody;
+                var range = _target.IsStructure ? StructureRange(_target) : UnitAttackRange + _targetBody;
 
                 if (HorizontalDistance(targetPosition, transform.position) <= range)
                 {
@@ -554,6 +554,26 @@ namespace CityBuilder.Combat
         /// <summary>A gate's centre is a cell further off than a palisade cell's; reach it from the wall's face.</summary>
         /// <summary>How far past its middle a structure's walls stand: a bot building at war is struck at its walls (Bot/BotWarTarget).</summary>
         private static float StructureReach(IDamageTarget target) => target is Bot.BotWarTarget bot ? bot.Reach : 0f;
+
+        /// <summary>Between a melee fighter and the wall of the building he strikes.</summary>
+        private const float MeleeWallGap = 0.8f;
+
+        /// <summary>
+        /// How near he must be to strike this building, from its middle. A melee fighter stands at its wall
+        /// (half its footprint + MeleeWallGap) when that is nearer than his sheet reach -- the King struck the
+        /// portal from well off it (the user, 2026-11-06); a shooter keeps his reach.
+        /// </summary>
+        private float StructureRange(IDamageTarget target)
+        {
+            var sheet = _structureAttackRange + StructureReach(target);
+            if (IsRanged) return sheet;
+            var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f;
+            float half;
+            if (target is OrcPortal portal) half = (portal.IsMain ? OrcRaidManager.MainPortalFootprint.x : OrcRaidManager.PortalFootprint.x) * 0.5f * cell;
+            else if (target is OrcCampBuilding building) half = Mathf.Max(building.Footprint.x, building.Footprint.y) * 0.5f * cell;
+            else return sheet;
+            return Mathf.Min(sheet, half + MeleeWallGap);
+        }
 
         private static float BreachSlack(OrcCampBuilding wall) => Mathf.Max(wall.Footprint.x, wall.Footprint.y) * 0.5f;
 
