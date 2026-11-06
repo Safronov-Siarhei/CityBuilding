@@ -55,6 +55,7 @@ namespace CityBuilder.Combat
             var nearestAllowed = template[0].DistanceMeters;
 
             var designed = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            OrcBaseLayout.MainVariant = designed != null ? designed.MainBaseVariant : 0;
             if (designed != null && (designed.HasMainBaseSpot || designed.CampSpots.Length > 0))
             {
                 // A designed map says where the orcs stand: its rivers and mountains are laid out

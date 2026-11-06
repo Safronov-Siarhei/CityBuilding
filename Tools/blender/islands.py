@@ -127,7 +127,8 @@ if SWAMP:
     RELIEF_KIND, RIM, HILL_COUNT = 'swamp', 0.9, 0
 # a variant whose own roll gave an unusable island takes another roll's shape: bot 4's had no room
 # for the castle (2026-11-03)
-_ROLL = {('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 6): 29}   # bot: rolls that fit the 55x55 town (2026-11-05)
+_ROLL = {('orc', 2): 45, ('orc', 4): 46, ('orc', 6): 60,   # «Гать»'s bigger pad (2026-11-06)
+         ('bot', 2): 11, ('bot', 3): 22, ('bot', 4): 6, ('bot', 5): 28, ('bot', 6): 29}   # bot: rolls that fit the 55x55 town (2026-11-05)
 if os.environ.get('ISL_ROLL'):     # a roll to try (searching a variant a new roll)
     _ROLL[(KIND, VARIANT)] = int(os.environ['ISL_ROLL'])
 SEED = {'start': 11, 'orc': 23, 'bot': 37, 'flat': 41, 'hilly': 53, 'rocky': 67, 'long': 71,
@@ -299,6 +300,45 @@ if KIND == 'orc':
     # ... and on the swamp island the living base A (2026-11-06): its yard 7 cells further out,
     # the skull gate's ground and stakes in front of that, the fallen spine behind its back wall
     MAIN_PAD = (-21.0, 20.0, -47.0, 14.0)
+# the even orc islands carry the base's variant B «Гать» (OrcBaseLayout.VariantOfIsland, approved
+# 2026-11-06): its dry patch stands in a bog of black water, three causeways across it; the bog is
+# carved here cell for cell as OrcBaseLayout.GatBog draws it (the game's obstacles are the same cells)
+GAT = KIND == 'orc' and VARIANT % 2 == 0
+if GAT:
+    MAIN_PAD = (-29.0, 28.0, -50.0, 22.0)
+
+
+def _gat_dry(x, z):
+    if x < -15 or x > 14 or z < -16 or z > 11:
+        return False
+    return min(x + 15, 14 - x) + min(z + 16, 11 - z) >= 4
+
+
+def _gat_causeway(x, z):
+    if -1 <= x <= 0 and (-21 <= z <= -17 or -28 <= z <= -25):
+        return True
+    if -21 <= z <= -20 and -8 <= x <= 0:
+        return True
+    if -8 <= x <= -7 and -25 <= z <= -21:
+        return True
+    if -25 <= z <= -24 and -8 <= x <= 0:
+        return True
+    if -2 <= z <= -1 and -26 <= x <= -16:
+        return True
+    return 3 <= z <= 4 and 15 <= x <= 25
+
+
+GAT_PILES = [(-11, -23), (2, -23), (-11, -27), (2, -27), (-21, 0), (20, 5)]
+
+
+def gat_bog(x, z):
+    if not (-26 <= x <= 25 and -28 <= z <= 19):
+        return False
+    if any(_gat_dry(x + dx, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1)):
+        return False
+    if _gat_causeway(x, z):
+        return False
+    return not any(tx <= x <= tx + 1 and tz <= z <= tz + 1 for tx, tz in GAT_PILES)
 BOT = None
 CAMPS = []
 CAMP_HALF = {1: 6, 2: 7, 3: 11}
@@ -462,7 +502,20 @@ def swamp_sd(x, y):
     return sd
 
 
+def gat_sd(x, y):
+    """«Гать»'s bog: the cells' +1 (dry) / -1 (bog) blended between cell centres, so the edges are
+    smooth -- negative in the bog's water."""
+    cx, cz = x - MAIN_BASE[0] - 0.5, y - MAIN_BASE[1] - 0.5
+    i, j = math.floor(cx), math.floor(cz)
+    fx, fz = cx - i, cz - j
+    def v(a, b):
+        return -1.0 if gat_bog(a, b) else 1.0
+    return 1.6 * ((v(i, j) * (1 - fx) + v(i + 1, j) * fx) * (1 - fz) + (v(i, j + 1) * (1 - fx) + v(i + 1, j + 1) * fx) * fz)
+
+
 def land_sd(x, y):
+    if GAT and abs(x - MAIN_BASE[0]) < 30 and abs(y - MAIN_BASE[1]) < 30:
+        return min(coast_sd(x, y), swamp_sd(x, y), gat_sd(x, y))
     if SWAMP:
         return min(coast_sd(x, y), swamp_sd(x, y))
     return coast_sd(x, y)

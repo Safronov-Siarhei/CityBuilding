@@ -73,6 +73,7 @@ namespace CityBuilder.Combat
 
             // a designed map's main base faces south whatever the Town Hall's place
             var designed = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMap : null;
+            OrcBaseLayout.MainVariant = designed != null ? designed.MainBaseVariant : 0;
             Quaternion? mainFacing = designed != null && designed.HasMainBaseSpot ? Quaternion.identity : (Quaternion?)null;
             var restored = new List<(OrcPortal portal, int health)>();
             foreach (var state in portals)

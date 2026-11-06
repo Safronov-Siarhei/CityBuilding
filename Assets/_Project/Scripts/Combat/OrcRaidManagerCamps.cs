@@ -143,8 +143,9 @@ namespace CityBuilder.Combat
                 obstacle.center = new Vector3(0f, 1.5f, 0f);
                 obstacle.size = new Vector3(size.x * grid.CellSize, 3f, size.y * grid.CellSize);
                 obstacle.carving = true;
-                // the beast's skeleton stands instead of the rock blocks (DressSkeleton, below)
-                if (HasSkeleton) continue;
+                // the beast's skeleton stands instead of the rock blocks (DressSkeleton, below); a bog is
+                // the island's own swamp water
+                if (HasSkeleton || camp.Layout.BogMountains) continue;
                 if (mountainModels == null || mountainModels.Length == 0) continue;
                 // rock blocks every three cells across the rect, the outer ones sunk a little
                 for (var x = 1.5f; x < size.x; x += 3f)
@@ -184,6 +185,26 @@ namespace CityBuilder.Combat
                 if (applier != null && applier.TryGetGroundHeight(at, out var h)) at.y = h;
                 var go = Instantiate(model, at, Quaternion.Euler(0f, yaw + turn, 0f), root.transform);
                 go.name = name;
+            }
+
+            if (OrcBaseLayout.MainVariant == 1)
+            {
+                // «Гать» (scheme Design/orc_base_living_b.png): A's decor inside the patch
+                Put(campfireModel, -6.5f, -10f, 0f, "Campfire");
+                Put(cauldronModel, 6f, -9.5f, 30f, "Cauldron");
+                Put(warDrumModel, 10f, -9.5f, 0f, "WarDrum");
+                Put(boneThroneModel, -3.5f, 9.3f, 0f, "BoneThrone");
+                Put(meatRackModel, -1f, -9.8f, 0f, "MeatRack");
+                Put(hideRackModel, 7.5f, 9.6f, 0f, "HideRack");
+                for (var k = 0; k < 3; k++) Put(dummyModel, -9.5f + k, -14.6f, 12f * k - 12f, "Dummy");
+                for (var k = 0; k < 8; k++)
+                {
+                    var a = (22.5f + 45f * k) * Mathf.Deg2Rad;
+                    var x = Mathf.Cos(a) * 3.6f;
+                    var z = Mathf.Sin(a) * 3.2f;
+                    Put(runeStoneModel, x, z, Mathf.Atan2(-x, -z) * Mathf.Rad2Deg, "RuneStone");
+                }
+                return;
             }
 
             // the yard
@@ -239,6 +260,26 @@ namespace CityBuilder.Combat
             GameObject Rib(int k) => ribModels[Mathf.Min(k, ribModels.Length - 1)];
             GameObject Tree(int k) => deadTreeModels != null && deadTreeModels.Length > 0 ? deadTreeModels[Mathf.Abs(k) % deadTreeModels.Length] : null;
 
+            if (OrcBaseLayout.MainVariant == 1)
+            {
+                // «Гать»: the ribs rise out of the bog behind the base and arch over its back wall,
+                // vertebrae and dead trees drowned in the bog round it
+                for (var k = 0; k < 5; k++)
+                    Put(Rib(k == 3 ? 1 : 0), new Vector2(-9f + k * 4.5f, 18f), 90f, 0.95f, "Rib");
+                for (var k = 0; k < 9; k++)
+                {
+                    var x = -22f + k * 5.5f;
+                    Put(vertebraModel, new Vector2(x, 15.5f + (k % 2) * 2f), 41f * k, 0.9f, "Vertebra");
+                    Put(Tree(k), new Vector2(x + 2.5f, 13.5f + (k % 3) * 1.6f), 53f * k, 1f, "DeadTree");
+                }
+                for (var k = 0; k < 6; k++)
+                {
+                    foreach (var side in new[] { -1f, 1f })
+                        Put(Tree(k + (side > 0 ? 2 : 0)), new Vector2(side * (19f + (k % 2) * 3f), -22f + k * 6.5f), 37f * k, 1f, "DeadTree");
+                }
+            }
+            else
+            {
             // the ribs: their feet in the strips beside the chief's quarter and the sanctum, outside
             // their walls, arching in over them (living base A, 2026-11-06; one snapped each side)
             var ys = new[] { -16f, -11f, -6f, -1f, 4f };
@@ -266,6 +307,7 @@ namespace CityBuilder.Combat
             }
             for (var x = -16f; x <= 16.1f; x += 4f)
                 Put(Tree((int)(x + 40f)), new Vector2(x + 1.2f, 12.5f), 41f * x, 1.1f, "DeadTree");
+            }
 
             // the skull before the outer gate, where the ground in front lets it lie
             var gateLine = camp.Layout.Bounds.yMin;
@@ -403,7 +445,12 @@ namespace CityBuilder.Combat
                 model = ModelOf(piece.Kind, piece.Level);
                 // A gate's model runs its wall along its own Z with the outside on -X; in the camp
                 // the wall runs across the front, the outside towards the town.
-                if (piece.Kind == OrcCampBuildingKind.Gate || piece.Kind == OrcCampBuildingKind.GateTower) yaw = baseYaw - 90f;
+                if (piece.Kind == OrcCampBuildingKind.Gate || piece.Kind == OrcCampBuildingKind.GateTower)
+                {
+                    // ... or across a side wall, or the back one («Гать»): the outside away from the camp's middle
+                    if (piece.Size.y > piece.Size.x) yaw = piece.Min.x < 0 ? baseYaw : baseYaw + 180f;
+                    else yaw = piece.Min.y > 0 ? baseYaw + 90f : baseYaw - 90f;
+                }
             }
 
             var root = new GameObject($"OrcCamp{piece.Kind} {cell.x},{cell.y}");

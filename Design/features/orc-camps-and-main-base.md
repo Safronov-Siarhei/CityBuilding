@@ -51,11 +51,23 @@
 >   throne (0.5,-12.6) facing the sanctum with the chief before it (0.5,-11.5), 2nd fire (6,-12.5), skull stakes;
 >   8 rune stones on an ellipse 3 x 2.6 round the portal, runes outwards. No obstacles. Patrol 5's back leg moved
 >   to z 3.4 to clear the stones; fire guards stand ~1.6 off the fires.
-> - VARIANT B «Гать» (the user chose it next, 2026-11-06): scheme `Design/orc_base_living_b.png/.py` SENT FOR
->   APPROVAL -- dry octagon in an impassable bog, 3 plank causeways (front zig-zag with a reed ambush, left,
->   right), one stone ring + a palisade round the portal mound with its gate at the BACK, 16 towers (4 on piles
->   in the bog), 5 patrols (3 causeways, wall ring, mound). Needs new: bog cells in the island terrain per
->   variant, gates in side walls (GateTower is along x only), variant pick per island.
+> - VARIANT B «Гать» APPROVED and IN THE GAME 2026-11-06 (built, not seen): `OrcBaseLayout.MainGat()`; the variant
+>   is `OrcBaseLayout.MainVariant` (static, one main base a map), set by OrcRaidManager (placement AND restore)
+>   from `MeshMapDefinition.MainBaseVariant` <- `ArchipelagoGenerator` map.MainBaseVariant <- `VariantOfIsland`
+>   (Isl-orc2/4/6 = «Гать», the rest A; other maps A). Geometry shared C#/Python: `GatDry` (octagon x -15..14,
+>   z -16..11, cut 4; its edge = the stone wall), `GatCauseway`, `GatPileTowers`, `GatBog` (bounds x -26..25,
+>   z -28..19, minus dry+1 strip, causeways, piles). Bog = the layout's Mountains (row runs merged into rects,
+>   carving obstacles, `BogMountains` -> no rocks). Side gates: GateTower 1x2; SpawnCampBuilding turns a gate's
+>   outside away from the middle (side: by x sign; back: +90). Portal mound: lvl-2 wooden palisade ring
+>   x -7..6, z -7..6, Gate lvl 2 at the BACK. 16 towers (6 on piles). Patrols: front causeway (ping-pong),
+>   left, right, wall ring, mound; ambush grunts at the bend; chief at (-3.5,8.2) by the throne (-3.5,9.3).
+>   Skeleton for B: ribs out of the bog behind (z 18, turned 90), vertebrae + dead trees in the bog.
+>   islands.py `GAT` (even orc variants): pad (-29,28,-50,22), `gat_sd` carves the bog (min into land_sd);
+>   new rolls orc2=45, orc4=46, orc6=60 (the old shapes had no room). Cells checked: patch, causeways, pile islets.
+> - B's own DECOR (`Tools/blender/orcdecor2.py`: OrcCauseway1, OrcStiltHut1, OrcRaft1, OrcBogLantern1, OrcReeds1;
+>   render `Design/concepts/orc_decor_b.png`) SENT FOR APPROVAL 2026-11-06, not exported. After approval: export,
+>   wire, lay causeway pieces along every GatCauseway leg, lanterns along them, huts/rafts in the bog, reeds
+>   at the ambush.
 > - NEXT: other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)

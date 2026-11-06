@@ -111,6 +111,9 @@ namespace CityBuilder.Maps
         public Material DecorMaterial => decorMaterial;
         public bool KeepWaterRotation => keepWaterRotation;
         public bool HasMainBaseSpot => hasMainBaseSpot;
+
+        /// <summary>The main base's living variant (OrcBaseLayout.MainVariant), set by a generated map.</summary>
+        public int MainBaseVariant { get; set; }
         public Vector2 MainBaseSpot => mainBaseSpot;
         public Vector2[] CampSpots => campSpots ?? new Vector2[0];
         public int[] CampLevels => campLevels ?? new int[0];

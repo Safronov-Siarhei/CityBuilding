@@ -282,7 +282,10 @@ namespace CityBuilder.Maps.Archipelago
                 {
                     case Kind.Start:
                     case Kind.Tutorial: map.StartCell = z; break;
-                    case Kind.Orc: map.OrcBaseCell = z; break;
+                    case Kind.Orc:
+                        map.OrcBaseCell = z;
+                        map.MainBaseVariant = Combat.OrcBaseLayout.VariantOfIsland(island.Asset != null ? island.Asset.IslandName : null);
+                        break;
                     case Kind.Bot: map.BotCell = z; break;
                 }
             }
@@ -377,6 +380,8 @@ namespace CityBuilder.Maps.Archipelago
         public Vector2[] StartZone;
         public Vector2Int StartCell;
         public Vector2Int OrcBaseCell;
+        /// <summary>Its main base's living variant (from its orc island, OrcBaseLayout.VariantOfIsland).</summary>
+        public int MainBaseVariant;
         public Vector2Int BotCell;
         public readonly List<Island> Islands = new List<Island>();
         /// <summary>The generator version that drew it (a version-2 map keeps its old dungeon).</summary>

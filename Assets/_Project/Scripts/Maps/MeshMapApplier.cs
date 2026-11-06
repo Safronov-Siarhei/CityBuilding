@@ -822,6 +822,7 @@ namespace CityBuilder.Maps
             if (tutorial) map.EditorInitializeSpots(null, new Vector2[0], new int[0], zone, new MapSpot[0]);
             else map.EditorInitializeSpots(At(world.OrcBaseCell), new Vector2[0], new int[0], zone,
                 new[] { new MapSpot { kind = "bot", position = At(world.BotCell), level = 1 } });
+            map.MainBaseVariant = tutorial ? 0 : world.MainBaseVariant;
 
             if (baseGroundToHide != null) baseGroundToHide.SetActive(false);
             if (baseForestBorderToHide != null) baseForestBorderToHide.SetActive(false);

@@ -92,6 +92,9 @@ namespace CityBuilder.Combat
 
         /// <summary>Ground outside Bounds that is still the camp's zone for its guards (the main base's skull way in), or empty.</summary>
         public RectInt Apron { get; set; }
+
+        /// <summary>The Mountains are bog (variant «Гать»): as impassable, but the island's own swamp water shows there, no rocks.</summary>
+        public bool BogMountains { get; set; }
     }
 
     /// <summary>
@@ -124,7 +127,77 @@ namespace CityBuilder.Combat
 
         private static readonly CampLayout[] _layouts = { Level1(), Level2(), Level3(), Main() };
 
-        public static CampLayout For(int level) => _layouts[Mathf.Clamp(level, 1, MainLevel) - 1];
+        // the main base's living variants (the user, 2026-11-06): A «Логово в рёбрах», B «Гать»
+        private static readonly CampLayout[] _mains = { _layouts[MainLevel - 1], MainGat() };
+
+        public const int MainVariantCount = 2;
+
+        /// <summary>
+        /// Which living variant the map's main base is (0 = A, 1 = B «Гать»). One main base a map, so
+        /// one value a session: OrcRaidManager sets it from the map before it builds or restores the
+        /// main base; a map that says nothing has A.
+        /// </summary>
+        public static int MainVariant { get; set; }
+
+        public static CampLayout For(int level) => level >= MainLevel
+            ? _mains[Mathf.Clamp(MainVariant, 0, MainVariantCount - 1)]
+            : _layouts[Mathf.Clamp(level, 1, MainLevel) - 1];
+
+        /// <summary>
+        /// The variant an orc library island's base is: «Гать» on Isl-orc2/4/6 (their terrain is
+        /// carved for it -- Tools/blender/islands.py, GAT), A on the rest.
+        /// </summary>
+        public static int VariantOfIsland(string islandName)
+        {
+            if (string.IsNullOrEmpty(islandName)) return 0;
+            var last = islandName[islandName.Length - 1];
+            return char.IsDigit(last) && (last - '0') % 2 == 0 ? 1 : 0;
+        }
+
+        /// <summary>«Гать»'s dry patch: an octagon x -15..14, z -16..11 with its corners cut 4 cells (its edge is the wall).</summary>
+        public static bool GatDry(int x, int z)
+        {
+            if (x < -15 || x > 14 || z < -16 || z > 11) return false;
+            return Mathf.Min(x + 15, 14 - x) + Mathf.Min(z + 16, 11 - z) >= 4;
+        }
+
+        /// <summary>«Гать»'s causeways, 2 cells wide: the front one zig-zagging, the left and the right straight.</summary>
+        public static bool GatCauseway(int x, int z)
+        {
+            if (x >= -1 && x <= 0 && ((z >= -21 && z <= -17) || (z >= -28 && z <= -25))) return true;   // the front, its two straight legs
+            if (z >= -21 && z <= -20 && x >= -8 && x <= 0) return true;                                // ... its first bend, out left
+            if (x >= -8 && x <= -7 && z >= -25 && z <= -21) return true;                               // ... down
+            if (z >= -25 && z <= -24 && x >= -8 && x <= 0) return true;                                // ... and back
+            if (z >= -2 && z <= -1 && x >= -26 && x <= -16) return true;                               // the left one
+            if (z >= 3 && z <= 4 && x >= 15 && x <= 25) return true;                                   // the right one
+            return false;
+        }
+
+        /// <summary>«Гать»'s towers standing on piles out in the bog (their ground is kept dry).</summary>
+        // (properties, not fields: _mains above is built from them while the class initialises)
+        public static Vector2Int[] GatPileTowers => _piles ??= new[]
+        {
+            new Vector2Int(-11, -23), new Vector2Int(2, -23), new Vector2Int(-11, -27), new Vector2Int(2, -27),
+            new Vector2Int(-21, 0), new Vector2Int(20, 5),
+        };
+
+        private static Vector2Int[] _piles;
+
+        /// <summary>«Гать»'s bounds: the bog round the patch, the causeways' land ends on its edge.</summary>
+        public static RectInt GatBounds => new RectInt(-26, -28, 52, 48);
+
+        /// <summary>Whether a cell of «Гать»'s ground is bog: inside its bounds, a cell off the dry patch (and the strip round it), the causeways and the piles.</summary>
+        public static bool GatBog(int x, int z)
+        {
+            if (!GatBounds.Contains(new Vector2Int(x, z))) return false;
+            for (var dx = -1; dx <= 1; dx++)
+                for (var dz = -1; dz <= 1; dz++)
+                    if (GatDry(x + dx, z + dz)) return false;
+            if (GatCauseway(x, z)) return false;
+            foreach (var t in GatPileTowers)
+                if (x >= t.x && x <= t.x + 1 && z >= t.y && z <= t.y + 1) return false;
+            return true;
+        }
 
         /// <summary>The orc kind a spawner keeps topped up, or null for a building that spawns nothing.</summary>
         public static OrcKind? SpawnedBy(OrcCampBuildingKind kind) => kind switch
@@ -351,6 +424,143 @@ namespace CityBuilder.Combat
             {
                 Apron = new RectInt(-5, -44, 10, 14),
             };
+        }
+
+        /// <summary>
+        /// The main base, living variant B «Гать» (the user approved the scheme
+        /// Design/orc_base_living_b.png, 2026-11-06): a dry patch in the middle of an impassable bog,
+        /// reached only by three plank causeways two cells wide -- the front one zig-zagging under
+        /// towers on piles, the left and the right straight to gates in the side walls. One stone
+        /// wall along the patch's edge (the bog is the outer ring); the portal on its mound behind
+        /// a palisade gated at the BACK, so from any gate the way to it goes round. The bog is the
+        /// layout's Mountains (BogMountains): impassable ground with no rocks drawn on it.
+        /// </summary>
+        private static CampLayout MainGat()
+        {
+            const int L = MainLevel;
+            var pieces = new List<CampPiece>();
+            var walls = new HashSet<Vector2Int>();
+            for (var z = -16; z <= 11; z++)
+            {
+                for (var x = -15; x <= 14; x++)
+                {
+                    if (!GatDry(x, z)) continue;
+                    if (GatDry(x - 1, z) && GatDry(x + 1, z) && GatDry(x, z - 1) && GatDry(x, z + 1)) continue;
+                    walls.Add(new Vector2Int(x, z));
+                }
+            }
+            // the three gates: the front one along the wall, the side ones across it
+            foreach (var (x, z, w, h) in new[] { (-1, -16, 2, 1), (-15, -2, 1, 2), (14, 3, 1, 2) })
+            {
+                for (var dx = 0; dx < w; dx++)
+                    for (var dz = 0; dz < h; dz++)
+                        walls.Remove(new Vector2Int(x + dx, z + dz));
+                pieces.Add(Piece(OrcCampBuildingKind.GateTower, L, x, z, w, h));
+            }
+            // towers: the cut corners, two beside each gate, and the piles in the bog
+            var towers = new List<Vector2Int>
+            {
+                new Vector2Int(-15, -12), new Vector2Int(13, -12), new Vector2Int(-14, 7), new Vector2Int(12, 7),
+                new Vector2Int(-4, -17), new Vector2Int(2, -17), new Vector2Int(-16, 1), new Vector2Int(-16, -5),
+                new Vector2Int(14, 0), new Vector2Int(14, 5),
+            };
+            towers.AddRange(GatPileTowers);
+            foreach (var t in towers)
+            {
+                pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, t.x, t.y, 2, 2));
+                for (var dx = 0; dx < 2; dx++)
+                    for (var dz = 0; dz < 2; dz++)
+                        walls.Remove(new Vector2Int(t.x + dx, t.y + dz));
+            }
+            foreach (var cell in walls) pieces.Add(Piece(OrcCampBuildingKind.Palisade, L, cell.x, cell.y, 1, 1));
+
+            // the portal's mound behind a wooden palisade, its gate at the back
+            for (var x = -7; x <= 6; x++)
+            {
+                pieces.Add(Piece(OrcCampBuildingKind.Palisade, 2, x, -7, 1, 1));
+                if (x != -1 && x != 0) pieces.Add(Piece(OrcCampBuildingKind.Palisade, 2, x, 6, 1, 1));
+            }
+            for (var z = -6; z <= 5; z++)
+            {
+                pieces.Add(Piece(OrcCampBuildingKind.Palisade, 2, -7, z, 1, 1));
+                pieces.Add(Piece(OrcCampBuildingKind.Palisade, 2, 6, z, 1, 1));
+            }
+            pieces.Add(Piece(OrcCampBuildingKind.Gate, 2, -1, 6, 2, 1));
+
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, -12, -13, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, 9, -13, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, -12, 3, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, 9, -5, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -11, -8, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, 9, 0, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -5, -13, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 3, -13, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -1, 8, 3, 3));
+            pieces.Add(Piece(OrcCampBuildingKind.Treasury, L, 4, 8, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -6, 9, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -9, -12, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 7, 4, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, -4, 3, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, 3, -4, 1, 1));
+
+            var guards = new List<GuardSlot>();
+            void Post(OrcKind kind, int level, params (float x, float z)[] at)
+            {
+                foreach (var (x, z) in at) guards.Add(new GuardSlot(kind, level, new Vector2(x, z)));
+            }
+            void Patrol((OrcKind kind, int level)[] members, params (float x, float z)[] at)
+            {
+                var route = new Vector2[at.Length];
+                for (var i = 0; i < at.Length; i++) route[i] = new Vector2(at[i].x, at[i].z);
+                foreach (var (kind, level) in members) guards.Add(new GuardSlot(kind, level, route));
+            }
+            var grunt = (OrcKind.Raider, 3);
+            var brute = (OrcKind.Brute, 2);
+            // 1: the front causeway, out to its land end and back
+            Patrol(new[] { grunt, grunt }, (0f, -17.5f), (0f, -20f), (-7f, -20f), (-7f, -24f), (0f, -24f), (0f, -27.5f),
+                (0f, -24f), (-7f, -24f), (-7f, -20f), (0f, -20f));
+            // 2, 3: the side causeways
+            Patrol(new[] { grunt, grunt }, (-16.5f, -1f), (-25.5f, -1f));
+            Patrol(new[] { grunt, grunt }, (15.5f, 4f), (24.5f, 4f));
+            // 4: along the wall inside, a brute and two grunts
+            Patrol(new[] { brute, grunt, grunt }, (-10.5f, -14.3f), (9.5f, -14.3f), (12.5f, -9.5f), (11.5f, 6.5f), (9f, 9.5f),
+                (-10f, 9.5f), (-12.5f, 6f), (-13.2f, -9f));
+            // 5: round the portal's mound
+            Patrol(new[] { brute, brute }, (-5.5f, -5.5f), (4.5f, -5.5f), (4.5f, 4.5f), (-5.5f, 4.5f));
+
+            // the fire, the ambush at the front causeway's bend, the mound's back gate
+            Post(OrcKind.Raider, 3, (-8f, -9.5f), (-5f, -9.4f), (-6.5f, -11.6f), (-5f, -24.5f), (-3.5f, -24.5f));
+            Post(OrcKind.Brute, 2, (-1.5f, 7.3f), (1.5f, 7.3f));
+            Post(OrcKind.Thrower, 1, (-12.5f, -10.5f), (12.5f, -10.5f), (-11.5f, 7.5f), (11.5f, 8f),
+                (-3f, -15f), (2.5f, -15f), (-13.5f, 1.5f), (-13.5f, -4.5f), (13.2f, 1f), (13.2f, 6f));
+            Post(OrcKind.Boss, 1, (-3.5f, 8.2f));
+
+            // the bog: rows of bog cells merged into rects, one obstacle each
+            var bog = new List<RectInt>();
+            var open = new Dictionary<(int, int), RectInt>();
+            for (var z = GatBounds.yMin; z < GatBounds.yMax; z++)
+            {
+                var runs = new List<(int, int)>();
+                for (var x = GatBounds.xMin; x < GatBounds.xMax; x++)
+                {
+                    if (!GatBog(x, z)) continue;
+                    var x0 = x;
+                    while (x + 1 < GatBounds.xMax && GatBog(x + 1, z)) x++;
+                    runs.Add((x0, x));
+                }
+                var next = new Dictionary<(int, int), RectInt>();
+                foreach (var run in runs)
+                {
+                    next[run] = open.TryGetValue(run, out var r) ? new RectInt(r.x, r.y, r.width, r.height + 1)
+                        : new RectInt(run.Item1, z, run.Item2 - run.Item1 + 1, 1);
+                    open.Remove(run);
+                }
+                bog.AddRange(open.Values);
+                open = next;
+            }
+            bog.AddRange(open.Values);
+
+            return new CampLayout(L, GatBounds, pieces, guards, bog, 4) { BogMountains = true };
         }
 
         private static CampPiece Piece(OrcCampBuildingKind kind, int level, int x, int z, int w, int h) =>

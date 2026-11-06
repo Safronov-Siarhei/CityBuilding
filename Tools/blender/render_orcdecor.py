@@ -14,7 +14,15 @@ sc = bpy.context.scene
 for ob in sc.objects:
     ob.hide_render = True
 OX, OY = 500.0, 500.0
-ROW = [("OrcCampfire1", 0.0, 0.0, 0.0), ("OrcDummy1", -2.0, 0.8, 0.0), ("OrcDummy1", -2.6, 0.8, 0.3),
+import os
+GAT = os.environ.get("DECOR") == "gat"
+if GAT:
+    ROW = [("OrcCauseway1", -1.0, 0.0, 0.0), ("OrcCauseway1", 0.0, 0.0, 0.0), ("OrcCauseway1", 1.0, 0.0, 0.0),
+           ("OrcCauseway1", 2.0, 0.0, 0.0), ("OrcStiltHut1", -3.2, 2.0, 0.3), ("OrcRaft1", 3.8, 2.0, 0.4),
+           ("OrcBogLantern1", -1.5, -1.2, 0.0), ("OrcBogLantern1", 1.5, -1.2, 0.0), ("OrcReeds1", -2.6, -1.0, 0.0),
+           ("OrcReeds1", -3.1, -0.5, 1.0), ("OrcReeds1", 3.0, -1.0, 2.0), ("OrcGrunt-lvl3", 0.3, 0.0, 0.0)]
+else:
+    ROW = [("OrcCampfire1", 0.0, 0.0, 0.0), ("OrcDummy1", -2.0, 0.8, 0.0), ("OrcDummy1", -2.6, 0.8, 0.3),
        ("OrcCauldron1", 2.0, 0.9, 0.0), ("OrcMeatRack1", 0.3, 2.4, 0.0), ("OrcHideRack1", -3.2, 2.3, 0.2),
        ("OrcWarDrum1", 3.6, 2.6, 0.0), ("OrcBoneThrone1", 3.9, 0.4, 0.0), ("OrcRuneStone1", -4.3, 0.0, 0.0),
        ("OrcRuneStone1", -4.8, 0.9, 1.0), ("OrcGrunt-lvl3", -1.2, -0.6, 0.0), ("OrcGrunt-lvl3", 2.9, -0.2, 0.0)]
@@ -41,7 +49,7 @@ bpy.ops.mesh.primitive_plane_add(size=80, location=(OX, OY, -0.02))
 g = bpy.context.active_object
 m = bpy.data.materials.new("SwampGround")
 m.use_nodes = True
-m.node_tree.nodes.get("Principled BSDF").inputs["Base Color"].default_value = (0.2, 0.25, 0.14, 1)
+m.node_tree.nodes.get("Principled BSDF").inputs["Base Color"].default_value = (0.05, 0.07, 0.06, 1) if GAT else (0.2, 0.25, 0.14, 1)
 g.data.materials.append(m)
 sun_data = bpy.data.lights.new("Sun", 'SUN')
 sun_data.energy = 2.6
