@@ -30,11 +30,24 @@ namespace CityBuilder.Combat
             Kind = kind;
             Level = level;
             Local = local;
+            Route = null;
+        }
+
+        /// <summary>A patrol's member: it walks the loop of `route` (camp frame, metres), starting at its first point.</summary>
+        public GuardSlot(OrcKind kind, int level, Vector2[] route)
+        {
+            Kind = kind;
+            Level = level;
+            Local = route[0];
+            Route = route;
         }
 
         public OrcKind Kind { get; }
         public int Level { get; }
         public Vector2 Local { get; }
+
+        /// <summary>The patrol's loop, or null for a guard who holds its post.</summary>
+        public Vector2[] Route { get; }
     }
 
     /// <summary>A camp at one level: its buildings, its walls, its guards, and the ground it covers.</summary>
@@ -76,6 +89,9 @@ namespace CityBuilder.Combat
 
         public IReadOnlyList<CampPiece> Pieces { get; }
         public IReadOnlyList<GuardSlot> Guards { get; }
+
+        /// <summary>Ground outside Bounds that is still the camp's zone for its guards (the main base's skull way in), or empty.</summary>
+        public RectInt Apron { get; set; }
     }
 
     /// <summary>
@@ -203,96 +219,138 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>
-        /// The main base, after the user's sketch (2026-10-19): backed into mountains behind and on
-        /// both sides of its two inner zones, three stone walls one inside the other, each entered
-        /// through a stone gate under a tower. The great portal (4x4) at the back between two
-        /// totems; the chief's house and the chief in the middle zone; the widest zone in front.
-        /// Every building at MainLevel -- drawn from the main base's own models.
+        /// The main base, living variant A «Логово в рёбрах» (the user approved the scheme
+        /// Design/orc_base_living_a.png, 2026-11-06): three zones one behind the other, each gate
+        /// offset from the last, so the way to the portal zig-zags through the whole base -- the
+        /// yard (two war tents, two stores) behind the skull's way in; the chief's quarter (his
+        /// house, the throwers' ranges, the brute pits, the treasury, its front wall bulging round
+        /// the war drum); the portal's sanctum, a fortress in the fortress (the user: the player may
+        /// come at it from any side, not only through the gates) -- two walls all round with a
+        /// corridor between, the outer gate right, the inner one left. 17 towers stand on the
+        /// walls' bends. Five patrols walk their loops (GuardSlot.Route) and a guard on each zone's
+        /// spots. Every building at MainLevel -- drawn from the main base's own models.
+        /// The scheme's cells sit 7 further back: here the portal's 4x4 is centred on the origin.
         /// </summary>
         private static CampLayout Main()
         {
             const int L = MainLevel;
             var pieces = new List<CampPiece>();
-            void Wall(int x, int z) => pieces.Add(Piece(OrcCampBuildingKind.Palisade, L, x, z, 1, 1));
-            void HLine(int x0, int x1, int z, bool gate)
+            var walls = new HashSet<Vector2Int>();
+            var gates = new List<Vector2Int>();
+            void H(int x0, int x1, int z, int gateX = int.MinValue)
             {
                 for (var x = x0; x <= x1; x++)
                 {
-                    if (gate && (x == -1 || x == 0)) continue;
-                    Wall(x, z);
+                    if (gateX != int.MinValue && (x == gateX || x == gateX + 1)) continue;
+                    walls.Add(new Vector2Int(x, z));
                 }
-                if (gate) pieces.Add(Piece(OrcCampBuildingKind.GateTower, L, -1, z, 2, 1));
+                if (gateX != int.MinValue) gates.Add(new Vector2Int(gateX, z));
             }
-            void VLine(int x, int z0, int z1)
+            void V(int x, int z0, int z1)
             {
-                for (var z = z0; z <= z1; z++) Wall(x, z);
+                for (var z = z0; z <= z1; z++) walls.Add(new Vector2Int(x, z));
             }
 
-            // the back zone's front, the middle zone's front and its short sides, the front zone
-            HLine(-13, 12, -8, gate: true);
-            HLine(-14, 13, -17, gate: true);
-            VLine(-14, -16, -15);
-            VLine(13, -16, -15);
-            HLine(-19, -15, -15, gate: false);
-            HLine(14, 18, -15, gate: false);
-            HLine(-19, 18, -23, gate: true);
-            VLine(-19, -22, -16);
-            VLine(18, -22, -16);
+            // the yard: its front with the skull's way in, its sides, its back on both sides of the chief's quarter
+            H(-19, 18, -30, gateX: -1);
+            V(-19, -29, -19);
+            V(18, -29, -19);
+            H(-19, -15, -19);
+            H(14, 18, -19);
+            // the chief's quarter: its gate LEFT of the yard's, its front bulging forward round the drum
+            H(-14, -9, -19, gateX: -10);
+            H(-8, 7, -21);
+            V(-8, -20, -20);
+            V(7, -20, -20);
+            H(8, 13, -19);
+            V(-14, -18, -10);
+            V(13, -18, -10);
+            // the sanctum: two walls all round, the outer gate RIGHT, the inner LEFT
+            H(-14, 13, -9, gateX: 5);
+            V(-14, -8, 7);
+            V(13, -8, 7);
+            H(-14, 13, 7);
+            H(-11, 10, -6, gateX: -6);
+            V(-11, -5, 3);
+            V(10, -5, 3);
+            H(-11, 10, 4);
 
-            // the back zone
-            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, -5, 0, 1, 1));
-            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, 4, 0, 1, 1));
-            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, -12, -2, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, 10, -2, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -13, -5, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 11, -5, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -9, -7, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 7, -7, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -7, -4, 1, 1));
-            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 6, -4, 1, 1));
-            pieces.Add(Piece(OrcCampBuildingKind.Treasury, L, -11, 0, 2, 2));
-            // the middle zone
-            pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -2, -13, 3, 3));
-            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -6, -11, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, 3, -11, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -9, -11, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 7, -11, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, -11, -16, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, 9, -16, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 2, -9, 1, 1));
-            // the front zone
-            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, -16, -17, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, 14, -17, 2, 2));
-            foreach (var (x, z) in new[] { (-18, -17), (16, -17), (-18, -22), (-9, -22), (7, -22), (16, -22) })
+            // the towers on the walls' bends take the wall cells they stand on
+            foreach (var (x, z) in new[]
+                     {
+                         (-19, -30), (17, -30), (-19, -20), (17, -20), (-9, -22), (6, -22),
+                         (-14, -10), (12, -10), (-14, 6), (12, 6), (-14, -2), (12, -2), (-1, 6),
+                         (-11, 3), (9, 3), (-11, -6), (9, -6),
+                     })
             {
                 pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, x, z, 2, 2));
+                for (var dx = 0; dx < 2; dx++)
+                    for (var dz = 0; dz < 2; dz++)
+                        walls.Remove(new Vector2Int(x + dx, z + dz));
             }
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -13, -22, 2, 2));
-            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 10, -22, 2, 2));
+            foreach (var cell in walls) pieces.Add(Piece(OrcCampBuildingKind.Palisade, L, cell.x, cell.y, 1, 1));
+            foreach (var gate in gates) pieces.Add(Piece(OrcCampBuildingKind.GateTower, L, gate.x, gate.y, 2, 1));
+
+            // the yard
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, -17, -28, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.WarTent, L, 14, -28, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -17, -23, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 15, -23, 2, 2));
+            // the chief's quarter
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, -13, -18, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ThrowerRange, L, 10, -18, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, -12, -14, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.BrutePit, L, 10, -14, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.ChiefHouse, L, -1, -17, 3, 3));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, -4, -16, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 3, -16, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Treasury, L, -7, -13, 2, 2));
+            // the sanctum
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, -5, -1, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Totem, L, 4, -1, 1, 1));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, -9, -4, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Storehouse, L, 7, -4, 2, 2));
+            pieces.Add(Piece(OrcCampBuildingKind.Cage, L, 0, -4, 1, 1));
 
             var guards = new List<GuardSlot>();
             void Post(OrcKind kind, int level, params (float x, float z)[] at)
             {
                 foreach (var (x, z) in at) guards.Add(new GuardSlot(kind, level, new Vector2(x, z)));
             }
-            Post(OrcKind.Thrower, 1, (-7.5f, 1.1f), (7.4f, 1.4f), (0f, -4.7f),
-                (-11.5f, -10.3f), (11.8f, -10.4f), (-4.4f, -15.5f), (4.1f, -15.1f),
-                (-13.3f, -19.6f), (-2.2f, -20.5f), (1f, -20.5f), (11f, -19.4f));
-            Post(OrcKind.Raider, 3, (-9f, -3.1f), (-2.7f, -2.7f), (2.6f, -2.7f), (9.3f, -3.3f),
-                (-10.7f, -13.2f), (10.4f, -13.4f), (-7.5f, -15.7f), (8f, -15.7f),
-                (-17f, -18.7f), (-14.4f, -21.6f), (-10.1f, -21.1f), (-5f, -21.3f), (3.1f, -21.1f),
-                (9.5f, -19.5f), (13.5f, -21.1f), (16.5f, -18.7f));
-            Post(OrcKind.Brute, 2, (-11.4f, -6.6f), (-4.8f, -6.4f), (4.9f, -6.7f), (11.6f, -6.7f),
-                (-6.3f, -13.1f), (6.3f, -13.1f));
-            Post(OrcKind.Boss, 1, (-0.5f, -15f));
-
-            var mountains = new List<RectInt>
+            void Patrol((OrcKind kind, int level)[] members, params (float x, float z)[] at)
             {
-                new RectInt(-19, 3, 38, 6),
-                new RectInt(-19, -14, 6, 17),
-                new RectInt(13, -14, 6, 17),
+                var route = new Vector2[at.Length];
+                for (var i = 0; i < at.Length; i++) route[i] = new Vector2(at[i].x, at[i].z);
+                foreach (var (kind, level) in members) guards.Add(new GuardSlot(kind, level, route));
+            }
+            var grunt = (OrcKind.Raider, 3);
+            var brute = (OrcKind.Brute, 2);
+            // 1: the yard's watch, three grunts round the yard
+            Patrol(new[] { grunt, grunt, grunt }, (-13f, -28.5f), (12.5f, -28.5f), (12.5f, -24.5f), (-13f, -24.5f));
+            // 2: round the chief's quarter, a brute and two grunts, in through its gate from the yard
+            Patrol(new[] { brute, grunt, grunt }, (-9f, -23f), (-9f, -17.5f), (-9f, -10.5f), (8.5f, -10.5f), (8.5f, -17.5f), (-9f, -17.5f));
+            // 3: the corridor between the sanctum's two walls, two brutes
+            Patrol(new[] { brute, brute }, (-11.5f, -7f), (11.5f, -7f), (11.5f, 5.5f), (-11.5f, 5.5f));
+            // 5: round the portal itself, two brutes and a grunt
+            Patrol(new[] { brute, brute, grunt }, (-9.5f, -4.5f), (9.5f, -4.5f), (9.5f, 2.5f), (-9.5f, 2.5f));
+            // 4: at the skull, two grunts from its jaws out to the stakes and back
+            Patrol(new[] { grunt, grunt }, (0f, -31.5f), (0f, -41f));
+
+            // the yard's campfire, the chief's campfire, the sanctum's outer gate
+            Post(OrcKind.Raider, 3, (3f, -26f), (6f, -26.5f), (4.5f, -25f), (5f, -12f), (7f, -13f));
+            Post(OrcKind.Brute, 2, (4.5f, -10.3f), (7.5f, -10.3f));
+            // a thrower by the towers: the yard's corners, the bulge, the quarter, the sanctum
+            Post(OrcKind.Thrower, 1, (-16f, -28.6f), (15.5f, -28.6f), (-17.5f, -20.5f), (16.5f, -20.5f),
+                (-6.5f, -19.5f), (5.5f, -19.5f), (-12.5f, -10.5f), (11.5f, -10.5f),
+                (-11.5f, 1f), (11.5f, 1f), (2.5f, 5.5f), (-8f, 0f), (8f, 0f));
+            // the chief by his throne behind his house
+            Post(OrcKind.Boss, 1, (0.5f, -12.5f));
+
+            // the skull's way in before the gate is the base's ground too: its patrol fights there
+            return new CampLayout(L, new RectInt(-19, -30, 38, 38), pieces, guards, new List<RectInt>(), 4)
+            {
+                Apron = new RectInt(-5, -44, 10, 14),
             };
-            return new CampLayout(L, new RectInt(-19, -23, 38, 32), pieces, guards, mountains, 4);
         }
 
         private static CampPiece Piece(OrcCampBuildingKind kind, int level, int x, int z, int w, int h) =>

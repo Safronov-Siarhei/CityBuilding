@@ -296,8 +296,9 @@ START_ZONE = []
 MAIN_BASE = (1e5, 1e5)
 MAIN_PAD = (-21.0, 20.0, -26.0, 8.0)           # the main base's flat ground round its spot (map 5's)
 if KIND == 'orc':
-    # ... and on the swamp island the skull gate's ground in front of it (OrcBaseLayout.MainSkull)
-    MAIN_PAD = (-21.0, 20.0, -40.0, 10.0)
+    # ... and on the swamp island the living base A (2026-11-06): its yard 7 cells further out,
+    # the skull gate's ground and stakes in front of that, the fallen spine behind its back wall
+    MAIN_PAD = (-21.0, 20.0, -47.0, 14.0)
 BOT = None
 CAMPS = []
 CAMP_HALF = {1: 6, 2: 7, 3: 11}

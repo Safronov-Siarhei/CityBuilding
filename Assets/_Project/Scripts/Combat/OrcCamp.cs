@@ -40,6 +40,9 @@ namespace CityBuilder.Combat
         private readonly HashSet<Vector2Int> _reserved = new HashSet<Vector2Int>();
         private readonly Dictionary<OrcKind, float> _spawnTimers = new Dictionary<OrcKind, float>();
         private OrcUnit[] _slotGuards = new OrcUnit[0];
+        // per slot, the leg of its patrol's loop it is walking (0 for a guard who holds its post)
+        private int[] _legs = new int[0];
+        private float _patrolTick;
         private GameObject _wallObstacles;
         private GameObject _mountains;
         private readonly HashSet<Vector2Int> _wallCells = new HashSet<Vector2Int>();
@@ -212,7 +215,9 @@ namespace CityBuilder.Combat
             var local = OrcBaseLayout.Rotate(offset, -Quarters);
             var bounds = Layout.Bounds;
             var m = margin / grid.CellSize;
-            return local.x >= bounds.xMin - m && local.x <= bounds.xMax + m && local.y >= bounds.yMin - m && local.y <= bounds.yMax + m;
+            if (local.x >= bounds.xMin - m && local.x <= bounds.xMax + m && local.y >= bounds.yMin - m && local.y <= bounds.yMax + m) return true;
+            var apron = Layout.Apron;
+            return apron.width > 0 && local.x >= apron.xMin - m && local.x <= apron.xMax + m && local.y >= apron.yMin - m && local.y <= apron.yMax + m;
         }
 
         /// <summary>Where a raid comes out: just in front of the camp's outer gate, so it never has to break its own wall.</summary>
@@ -249,7 +254,8 @@ namespace CityBuilder.Combat
             if (Portal != null) builder.ApplyPortalLevel(Portal, Level);
             UpdateShield();
             RebuildWalls();
-            if (_mountains == null && layout.Mountains.Count > 0) _mountains = builder.SpawnMountains(this, layout.Mountains);
+            // the main base's dressing (its skeleton) comes with its mountains, even where it has none
+            if (_mountains == null && (layout.Mountains.Count > 0 || layout.IsMain)) _mountains = builder.SpawnMountains(this, layout.Mountains);
 
             for (var k = 0; k < SpawnedKinds.Length; k++)
             {
@@ -257,6 +263,7 @@ namespace CityBuilder.Combat
                 foreach (var slot in layout.Guards) _kindsPosted[k] |= slot.Kind == SpawnedKinds[k];
             }
             _slotGuards = new OrcUnit[layout.Guards.Count];
+            _legs = new int[layout.Guards.Count];
             _spawnTimers.Clear();
             for (var i = 0; i < _slotGuards.Length; i++)
             {
@@ -283,6 +290,7 @@ namespace CityBuilder.Combat
                 if (guard != null) Destroy(guard.gameObject);
             }
             _slotGuards = new OrcUnit[0];
+            _legs = new int[0];
             if (_wallObstacles != null) Destroy(_wallObstacles);
             _wallObstacles = null;
             if (_mountains != null) Destroy(_mountains);
@@ -438,6 +446,8 @@ namespace CityBuilder.Combat
             var layout = Layout;
             if (_slotGuards.Length != layout.Guards.Count) return;
 
+            WalkPatrols(layout);
+
             var balance = BalanceConfig.Instance;
             // a plain loop over a fixed array: this runs every frame for every camp, and an
             // iterator would hand the garbage collector something each time
@@ -471,6 +481,31 @@ namespace CityBuilder.Combat
             }
         }
 
+        /// <summary>
+        /// The patrols walk their loops (the user's living base, 2026-11-06): twice a second, a
+        /// member who has reached the point it was making for is sent on to the next. A fight
+        /// takes it off the route and it comes back to the same point after (OrcUnit's guard
+        /// walk), so nothing here has to know about fighting.
+        /// </summary>
+        private void WalkPatrols(CampLayout layout)
+        {
+            _patrolTick += Time.deltaTime;
+            if (_patrolTick < 0.5f) return;
+            _patrolTick = 0f;
+            for (var i = 0; i < _slotGuards.Length; i++)
+            {
+                var route = layout.Guards[i].Route;
+                if (route == null || route.Length < 2) continue;
+                var guard = _slotGuards[i];
+                if (guard == null || guard.CurrentHealth <= 0) continue;
+                var to = guard.GuardPost - guard.transform.position;
+                to.y = 0f;
+                if (to.sqrMagnitude > 2f * 2f) continue;
+                _legs[i] = (_legs[i] + 1) % route.Length;
+                guard.MovePost(LocalToWorld(route[_legs[i]]));
+            }
+        }
+
         private static readonly OrcKind[] SpawnedKinds = { OrcKind.Raider, OrcKind.Brute, OrcKind.Thrower, OrcKind.Boss };
 
         // Which of SpawnedKinds the current plan posts at all -- worked out once per Build.
@@ -495,7 +530,8 @@ namespace CityBuilder.Combat
             var builder = OrcRaidManager.Instance;
             if (builder == null) return;
             var slot = layout.Guards[slotIndex];
-            var post = LocalToWorld(slot.Local);
+            // a patrol's new member makes for the point its patrol is walking to now
+            var post = LocalToWorld(slot.Route != null ? slot.Route[_legs[slotIndex] % slot.Route.Length] : slot.Local);
             var door = spawner.transform.position - spawner.transform.forward * (spawner.Footprint.y * 0.5f + 0.4f);
 
             _path ??= new NavMeshPath();

@@ -190,32 +190,33 @@ namespace CityBuilder.Combat
             GameObject Rib(int k) => ribModels[Mathf.Min(k, ribModels.Length - 1)];
             GameObject Tree(int k) => deadTreeModels != null && deadTreeModels.Length > 0 ? deadTreeModels[Mathf.Abs(k) % deadTreeModels.Length] : null;
 
-            // the ribs: their feet in the side blocks, reaching in over the base (one snapped each side)
-            var ys = new[] { -12f, -8f, -4f, 0f };
+            // the ribs: their feet in the strips beside the chief's quarter and the sanctum, outside
+            // their walls, arching in over them (living base A, 2026-11-06; one snapped each side)
+            var ys = new[] { -16f, -11f, -6f, -1f, 4f };
             for (var i = 0; i < ys.Length; i++)
             {
-                var size = 1f - 0.025f * Mathf.Abs(ys[i] + 6f);
-                Put(Rib(i == 2 ? 1 : 0), new Vector2(-16.5f, ys[i]), 0f, size, "Rib");
+                var size = 1f - 0.02f * Mathf.Abs(ys[i] + 6f);
+                Put(Rib(i == 3 ? 1 : 0), new Vector2(-16.5f, ys[i]), 0f, size, "Rib");
                 Put(Rib(i == 1 ? 1 : 0), new Vector2(16.5f, ys[i]), 180f, size, "Rib");
             }
-            // between the ribs: vertebrae fallen off the spine and dead trees, so the blocks read as closed
-            for (var y = -13f; y <= 2f; y += 3.8f)
+            // between the ribs: vertebrae fallen off the spine and dead trees
+            for (var y = -17f; y <= 4f; y += 3.8f)
             {
                 var k = (int)(y + 20f);
                 foreach (var side in new[] { -1f, 1f })
                 {
                     Put(vertebraModel, new Vector2(side * 18.2f, y + 1.9f), 37f * k * side, 0.9f, "Vertebra");
-                    Put(Tree(k + (side > 0 ? 1 : 0)), new Vector2(side * 14.6f, y + 0.6f), 53f * k, 1f, "DeadTree");
+                    Put(Tree(k + (side > 0 ? 1 : 0)), new Vector2(side * 15.3f, y + 0.6f), 53f * k, 1f, "DeadTree");
                 }
             }
-            // the spine: fallen across the back block, big in the middle, smaller to the ends
+            // the spine: fallen behind the sanctum's back wall, big in the middle, smaller to the ends
             for (var x = -17.5f; x <= 17.6f; x += 2.5f)
             {
                 var size = 1.6f - 0.6f * Mathf.Abs(x) / 17.5f;
-                Put(vertebraModel, new Vector2(x, 5.6f), 90f + (x > 0f ? 0f : 180f), size, "Spine");
+                Put(vertebraModel, new Vector2(x, 10f), 90f + (x > 0f ? 0f : 180f), size, "Spine");
             }
             for (var x = -16f; x <= 16.1f; x += 4f)
-                Put(Tree((int)(x + 40f)), new Vector2(x + 1.2f, 8.1f), 41f * x, 1.1f, "DeadTree");
+                Put(Tree((int)(x + 40f)), new Vector2(x + 1.2f, 12.5f), 41f * x, 1.1f, "DeadTree");
 
             // the skull before the outer gate, where the ground in front lets it lie
             var gateLine = camp.Layout.Bounds.yMin;
@@ -251,7 +252,7 @@ namespace CityBuilder.Combat
             if (crowModel != null)
             {
                 var flock = root.AddComponent<CrowFlock>();
-                flock.Initialize(crowModel, camp.LocalToWorld(new Vector2(0f, gateLine - 6.5f)), camp.LocalToWorld(new Vector2(0f, -6f)));
+                flock.Initialize(crowModel, camp.LocalToWorld(new Vector2(0f, gateLine - 6.5f)), camp.LocalToWorld(new Vector2(0f, -12f)));
             }
             SceneryShadows.DisableCasting(root);
         }

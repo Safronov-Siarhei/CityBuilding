@@ -28,7 +28,27 @@
 >   remaps every Models/Orcs FBX to it at import (units, buildings, portals, ruins) EXCEPT the island set
 >   (`OrcIslandModel`: skull gate, ribs, vertebra, dead trees, stakes, wreck, crow); `ReimportOrcModels` re-imports
 >   stale ones. Portal purple/white, fire, lit windows kept. This settles the "green base" question.
-> - NEXT (the user): LIVING base layouts -- patrols and interesting decor; ONE variant first, then others.
+> - LIVING BASE, variant A «Логово в рёбрах» (scheme `Design/orc_base_living_a.png`, APPROVED 2026-11-06,
+>   IN THE GAME same day, built, not seen): `OrcBaseLayout.Main()` = the scheme shifted 7 cells back (portal
+>   4x4 on the origin), Bounds x -19..18, z -30..7, NO mountains. Yard (z -30..-19: 2 war tents, 2 stores,
+>   gate x -1) -> chief's quarter (gate LEFT at x -10, front bulging round the drum; chief house, 2 ranges,
+>   2 pits, treasury, 2 cages) -> sanctum = TWO walls all round (outer gate RIGHT x 5, inner LEFT x -6),
+>   2 totems, 2 stores, cage. 17 Watchtowers on the bends take the wall cells under them.
+>   PATROLS: `GuardSlot.Route` (camp frame loop); `OrcCamp.WalkPatrols` every 0.5 s sends a member within 2 m
+>   of its point on to the next (`MovePost`; a fight pulls it off, it returns to the same point); a refilled
+>   member makes for its patrol's current point. 5 patrols: yard 3 grunts, chief's quarter brute+2, sanctum
+>   corridor 2 brutes, round the portal 2 brutes+grunt, skull 2 grunts out to the stakes. Static: 5 grunts at
+>   the fires, 2 brutes at the sanctum gate, 13 throwers by towers, the chief by the throne (0.5,-12.5).
+>   `CampLayout.Apron` (main: x -5..5, z -44..-30) = the skull way in counts as the camp's zone for its guards.
+>   Skeleton moved outside the walls: 5 ribs per side in the strips x ±15..18 beside the quarter and sanctum,
+>   spine at z 10 behind the back wall (`SpawnMountains` now also runs for IsMain with no rects, for the dress).
+>   islands.py orc MAIN_PAD (-21,20,-47,14); all 6 Isl-orc re-exported (each found a spot).
+>   Main layout is SHARED by every map (Map3-5 too): their bases are 7 cells deeper now -- not checked there.
+> - DECOR for A (`Tools/blender/orcdecor1.py`, Models file row y -180, NOT exported, renders
+>   `Design/concepts/orc_decor_a*.png` sent for approval 2026-11-06): OrcCampfire1 (2 seated orcs), OrcDummy1,
+>   OrcCauldron1, OrcMeatRack1, OrcHideRack1, OrcWarDrum1, OrcBoneThrone1, OrcRuneStone1. After approval: export
+>   to Models/Orcs, wire in SetupProjectOrcs, place per the scheme (positions: scheme z - 7).
+> - NEXT: decor approval -> place it; then other variants («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
@@ -65,11 +85,12 @@ economy `orc_*`, `main_portal_health`, `orc_main_*`, `orc_chief_*`, `orc_cage_*`
 `orc_treasury_*`, `orc_camp_level{2,3}_score`, `orc_camp_loot_*`.
 
 ## Tests
-EditMode `OrcBaseLayoutTests` (incl. `TheMainBaseIsBuildableClosedAndAsDrawn`, `EveryCampHoldsItsCages`);
+EditMode `OrcBaseLayoutTests` (incl. `TheMainBaseIsBuildableClosedAndAsDrawn` -- written for the OLD plan with
+mountains, expect it to need rewriting for plan A; not run 2026-11-06, the user tests themselves; `EveryCampHoldsItsCages`);
 PlayMode `OrcCampTests` (filter `!IsMain`), `MainBaseTests`, `PrisonerCageTests`, `SaveRoundTripTests`.
 
 ## Traps
 - Place the MAIN base FIRST, then camps round it (last failed ~1 in 4 on Map 3).
 - Restore skips the ground raycast (colliders not ready at load) — water check only.
 - Guards are not saved; spawners re-muster them. Only damaged/fallen buildings are saved.
-- ~136 palisade renderers per L3 camp, ~130 wall pieces + ~50 rock blocks on the main base — watch draws.
+- ~136 palisade renderers per L3 camp, ~130 wall pieces + ~50 rock blocks on the main base — watch draws. Plan A: ~330 wall cells + 17 towers.
