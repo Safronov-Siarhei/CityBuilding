@@ -93,7 +93,7 @@ namespace CityBuilder.Combat
         /// <summary>Ground outside Bounds that is still the camp's zone for its guards (the main base's skull way in), or empty.</summary>
         public RectInt Apron { get; set; }
 
-        /// <summary>The Mountains are bog (variant «Гать»): as impassable, but the island's own swamp water shows there, no rocks.</summary>
+        /// <summary>The Mountains draw no rocks: a bog («Гать», the island's own swamp water shows) or the beast's spine («Хребет», its vertebrae are the skeleton's dress).</summary>
         public bool BogMountains { get; set; }
     }
 
@@ -127,10 +127,10 @@ namespace CityBuilder.Combat
 
         private static readonly CampLayout[] _layouts = { Level1(), Level2(), Level3(), Main() };
 
-        // the main base's living variants (the user, 2026-11-06): A «Логово в рёбрах», B «Гать»
-        private static readonly CampLayout[] _mains = { _layouts[MainLevel - 1], MainGat() };
+        // the main base's living variants (the user, 2026-11-06): A «Логово в рёбрах», B «Гать», C «Хребет»
+        private static readonly CampLayout[] _mains = { _layouts[MainLevel - 1], MainGat(), MainSpine() };
 
-        public const int MainVariantCount = 2;
+        public const int MainVariantCount = 3;
 
         /// <summary>
         /// Which living variant the map's main base is (0 = A, 1 = B «Гать»). One main base a map, so
@@ -145,13 +145,25 @@ namespace CityBuilder.Combat
 
         /// <summary>
         /// The variant an orc library island's base is: «Гать» on Isl-orc2/4/6 (their terrain is
-        /// carved for it -- Tools/blender/islands.py, GAT), A on the rest.
+        /// carved for it -- Tools/blender/islands.py, GAT), «Хребет» on Isl-orc3/5 (their pad is
+        /// long -- SPINE), A on Isl-orc1.
         /// </summary>
         public static int VariantOfIsland(string islandName)
         {
             if (string.IsNullOrEmpty(islandName)) return 0;
             var last = islandName[islandName.Length - 1];
-            return char.IsDigit(last) && (last - '0') % 2 == 0 ? 1 : 0;
+            if (!char.IsDigit(last)) return 0;
+            var n = last - '0';
+            if (n % 2 == 0) return 1;
+            return n == 3 || n == 5 ? 2 : 0;
+        }
+
+        /// <summary>«Хребет»'s spine: the beast's giant vertebrae down the base's middle (x -1..0), impassable, cut by the cross walls and by one gap a zone.</summary>
+        public static bool SpineCell(int x, int z)
+        {
+            if (x < -1 || x > 0 || z < -41 || z > -8) return false;
+            if (z == -30 || z == -18) return false;                       // the cross walls
+            return !(z == -33 || z == -32 || z == -21 || z == -20 || z == -10 || z == -9);   // the gaps
         }
 
         /// <summary>«Гать»'s dry patch: an octagon x -15..14, z -16..11 with its corners cut 4 cells (its edge is the wall).</summary>
@@ -561,6 +573,142 @@ namespace CityBuilder.Combat
             bog.AddRange(open.Values);
 
             return new CampLayout(L, GatBounds, pieces, guards, bog, 4) { BogMountains = true };
+        }
+
+        /// <summary>
+        /// The main base, living variant C «Хребет» (the user approved the scheme
+        /// Design/orc_base_living_c.png, 2026-11-06): the base built inside the beast's ribcage, 24
+        /// cells wide and long, its spine down the middle from the skull at the gate to the tail
+        /// behind the portal. The spine's vertebrae are impassable and split every zone in two;
+        /// the gaps in it and the cross walls' gates alternate sides, so the way to the portal
+        /// snakes: the plaza, the left half, across the spine, the right half, through a gate, and
+        /// on. The sanctum is walled twice round its sides and back (the user: the player may go
+        /// straight at the portal), its corridor entered only from inside by a side gate.
+        /// </summary>
+        private static CampLayout MainSpine()
+        {
+            const int L = MainLevel;
+            var pieces = new List<CampPiece>();
+            var walls = new HashSet<Vector2Int>();
+            var gates = new List<(int x, int z, int w, int h)>();
+            void H(int x0, int x1, int z, int gateX = int.MinValue)
+            {
+                for (var x = x0; x <= x1; x++)
+                {
+                    if (gateX != int.MinValue && (x == gateX || x == gateX + 1)) continue;
+                    walls.Add(new Vector2Int(x, z));
+                }
+                if (gateX != int.MinValue) gates.Add((gateX, z, 2, 1));
+            }
+            void V(int x, int z0, int z1)
+            {
+                for (var z = z0; z <= z1; z++) walls.Add(new Vector2Int(x, z));
+            }
+            // the outer wall, the inner sanctum's back
+            H(-12, 11, -48, gateX: -1);
+            V(-12, -47, 4);
+            V(11, -47, 4);
+            H(-12, 11, 5);
+            // the cross walls, their gates alternating sides
+            H(-11, 10, -42, gateX: -8);
+            H(-11, 10, -30, gateX: 6);
+            H(-11, 10, -18, gateX: -8);
+            H(-11, 10, -7, gateX: 6);
+            // the sanctum's second wall round its sides and back
+            V(-15, -10, 8);
+            V(14, -10, 8);
+            H(-15, 14, 8);
+            foreach (var x in new[] { -14, -13, 12, 13 }) walls.Add(new Vector2Int(x, -10));
+            // the corridor's way in: a side gate in the inner wall
+            walls.Remove(new Vector2Int(-12, -2));
+            walls.Remove(new Vector2Int(-12, -1));
+            gates.Add((-12, -2, 1, 2));
+
+            foreach (var t in new[]
+                     {
+                         (-12, -48), (10, -48), (-12, 4), (10, 4),
+                         (-12, -43), (10, -43), (-12, -31), (10, -31), (-12, -19), (10, -19), (-12, -8), (10, -8),
+                         (-3, -43), (1, -31), (-3, -19), (1, -8),
+                         (10, -2), (-1, 4),
+                         (-15, -10), (13, -10), (-15, 7), (13, 7), (-15, 1), (13, 1), (-1, 7),
+                     })
+            {
+                pieces.Add(Piece(OrcCampBuildingKind.Watchtower, L, t.Item1, t.Item2, 2, 2));
+                for (var dx = 0; dx < 2; dx++)
+                    for (var dz = 0; dz < 2; dz++)
+                        walls.Remove(new Vector2Int(t.Item1 + dx, t.Item2 + dz));
+            }
+            foreach (var cell in walls) pieces.Add(Piece(OrcCampBuildingKind.Palisade, L, cell.x, cell.y, 1, 1));
+            foreach (var g in gates) pieces.Add(Piece(OrcCampBuildingKind.GateTower, L, g.x, g.z, g.w, g.h));
+
+            void B(OrcCampBuildingKind kind, int x, int z, int size = 2) => pieces.Add(Piece(kind, L, x, z, size, size));
+            B(OrcCampBuildingKind.WarTent, -10, -46);
+            B(OrcCampBuildingKind.WarTent, 7, -46);
+            B(OrcCampBuildingKind.Storehouse, -10, -39);
+            B(OrcCampBuildingKind.Cage, -4, -39, 1);
+            B(OrcCampBuildingKind.WarTent, 8, -40);
+            B(OrcCampBuildingKind.Storehouse, 8, -35);
+            B(OrcCampBuildingKind.ThrowerRange, 8, -27);
+            B(OrcCampBuildingKind.Cage, 4, -24, 1);
+            B(OrcCampBuildingKind.BrutePit, -10, -27);
+            B(OrcCampBuildingKind.Storehouse, -10, -22);
+            B(OrcCampBuildingKind.ChiefHouse, -10, -15, 3);
+            B(OrcCampBuildingKind.Cage, -5, -16, 1);
+            B(OrcCampBuildingKind.BrutePit, 8, -16);
+            B(OrcCampBuildingKind.ThrowerRange, 8, -12);
+            B(OrcCampBuildingKind.Totem, -5, 0, 1);
+            B(OrcCampBuildingKind.Totem, 4, 0, 1);
+            B(OrcCampBuildingKind.Treasury, -10, 1);
+            B(OrcCampBuildingKind.Storehouse, 8, 1);
+
+            var guards = new List<GuardSlot>();
+            void Post(OrcKind kind, int level, params (float x, float z)[] at)
+            {
+                foreach (var (x, z) in at) guards.Add(new GuardSlot(kind, level, new Vector2(x, z)));
+            }
+            void Patrol((OrcKind kind, int level)[] members, params (float x, float z)[] at)
+            {
+                var route = new Vector2[at.Length];
+                for (var i = 0; i < at.Length; i++) route[i] = new Vector2(at[i].x, at[i].z);
+                foreach (var (kind, level) in members) guards.Add(new GuardSlot(kind, level, route));
+            }
+            var grunt = (OrcKind.Raider, 3);
+            var brute = (OrcKind.Brute, 2);
+            // 1: the plaza by the gate
+            Patrol(new[] { grunt, grunt, grunt }, (-6.5f, -46.5f), (5.5f, -46.5f), (5.5f, -43.5f), (-6.5f, -43.5f));
+            // 2: the runner, down the whole snake and back
+            Patrol(new[] { brute, grunt, grunt }, (-7f, -46f), (-7f, -32f), (7f, -32f), (7f, -20f), (-7f, -20f), (-7f, -9f),
+                (7f, -9f), (7f, -4.5f), (7f, -9f), (-7f, -9f), (-7f, -20f), (7f, -20f), (7f, -32f), (-7f, -32f));
+            // 3: round the middle gap
+            Patrol(new[] { grunt, grunt }, (-5f, -24.5f), (-4f, -20f), (4f, -20f), (5.5f, -25f));
+            // 4: the sanctum
+            Patrol(new[] { brute, brute, grunt }, (-9f, -5f), (9f, -5f), (7f, 3.5f), (-7f, 3.5f));
+            // 6: the corridor between the sanctum's walls, out and back
+            Patrol(new[] { brute, brute }, (-12.5f, -8.5f), (-12.5f, 6.5f), (12.5f, 6.5f), (12.5f, -8.5f), (12.5f, 6.5f), (-12.5f, 6.5f));
+            // 5: at the skull
+            Patrol(new[] { grunt, grunt }, (0f, -49.5f), (0f, -60f));
+
+            // two brutes at every gap in the spine, grunts at the fires
+            Post(OrcKind.Brute, 2, (-2.2f, -32f), (2.2f, -32f), (-2.2f, -20f), (2.2f, -20f), (-2.2f, -9f), (2.2f, -9f));
+            Post(OrcKind.Raider, 3, (-7.6f, -45.3f), (-4.5f, -45.5f), (2.6f, -13.5f), (5.4f, -14.6f));
+            Post(OrcKind.Thrower, 1, (-10.5f, -45.5f), (9.5f, -45.5f), (-10.5f, -41f), (9.5f, -41.5f), (-10.5f, -29f), (9.5f, -29f),
+                (-10.5f, -17f), (9.5f, -17.5f), (-10.5f, -5.5f), (9.5f, -5.5f), (-12.5f, -5f), (12.5f, -5f), (0.5f, 6.5f));
+            Post(OrcKind.Boss, 1, (-4.8f, -13.5f));
+
+            // the spine: its runs of cells, one obstacle each
+            var spine = new List<RectInt>();
+            for (var z = -41; z <= -8; z++)
+            {
+                if (!SpineCell(0, z)) continue;
+                var z0 = z;
+                while (SpineCell(0, z + 1)) z++;
+                spine.Add(new RectInt(-1, z0, 2, z - z0 + 1));
+            }
+            return new CampLayout(L, new RectInt(-15, -48, 30, 57), pieces, guards, spine, 4)
+            {
+                BogMountains = true,
+                Apron = new RectInt(-5, -62, 10, 14),
+            };
         }
 
         private static CampPiece Piece(OrcCampBuildingKind kind, int level, int x, int z, int w, int h) =>

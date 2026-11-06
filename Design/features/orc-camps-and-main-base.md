@@ -69,16 +69,17 @@
 >   (variant 1) lays a causeway piece a cell along every GatCauseway leg (model runs along x, legs along z turned
 >   90), 9 bog lanterns beside them, 5 stilt huts + 2 rafts in the bog, 14 reed clumps (ambush bend, edges).
 >   Bog decor stands at the bog's ground height: check it does not sink under the water in play.
-> - VARIANT C «Хребет» (the user chose it next, 2026-11-06): scheme `Design/orc_base_living_c.png/.py` SENT FOR
->   APPROVAL -- 24x53, inside the ribcage: the spine (impassable giant vertebrae, x -1..0) splits every zone,
->   gaps alternate (z -33, -21, -10), cross-wall gates alternate sides (z -42 L, -30 R, -18 L, -7 R), so the way
->   snakes; skull at the front gate (head), tail behind the portal; ribs from the spine over the side walls.
->   Patrols: plaza, a runner along the whole snake, middle gap, sanctum, skull; 2 brutes per spine gap.
->   User note (same rule as A): the player may go straight at the portal -> the sanctum got a SECOND wall
->   round its sides and back (x -15/14, z 8), a corridor with no gate out (entered by a 1x2 side gate in the
->   inner wall at x -12), 13 towers on the two rings, patrol 6 (2 brutes) in the corridor. Re-sent. Now 30x57.
->   Proposed: on swamp islands 3 and 5 (A on 1, «Гать» on 2/4/6) -- needs their pad elongated.
-> - NEXT: other variants («Гать», «Хребет», «Кольцо»).
+> - VARIANT C «Хребет» APPROVED and IN THE GAME 2026-11-06 (built, not seen): `OrcBaseLayout.MainSpine()`, variant 2,
+>   on Isl-orc3/5 (VariantOfIsland: 1 -> A, 2/4/6 -> «Гать», 3/5 -> «Хребет»). Bounds x -15..14, z -48..8; spine =
+>   `SpineCell` (x -1..0, z -41..-8, minus cross walls -30/-18 and gaps -33/-32, -21/-20, -10/-9) as the layout's
+>   Mountains (no rocks); cross gates alternate (-42 L, -30 R, -18 L, -7 R); sanctum double-walled (outer x -15/14,
+>   z 8; corridor entered by a 1x2 GateTower in the inner wall at (-12,-2)); 25 towers. Patrols: plaza, runner down
+>   the whole snake and back, middle gap, sanctum, corridor, skull (Apron x -5..5, z -62..-48); 2 brutes per gap.
+>   Dress: vertebrae x1.7 on the spine, 4 rib pairs from the spine arching out over the side walls, tail behind the
+>   back wall, dead trees in the side strips; A's decor zone by zone (throne turned -90 to face the spine).
+>   islands.py `SPINE` (orc 3/5): pad (-18,17,-64,14), rolls orc3=10, orc5=11.
+> - All three variants share A's decor models; only «Гать» has its own (orcdecor2.py).
+> - NEXT: variant «Кольцо» if the user wants it; then playtest all three («Гать», «Хребет», «Кольцо»).
 > - Not seen in game; phone cost unmeasured.
 > **Read with:** [orc-raids-and-portals](orc-raids-and-portals.md), [art-pipeline](art-pipeline.md)
 > (orc models), `archive/project_orc_faction.md` for the full sketch-by-sketch history.
