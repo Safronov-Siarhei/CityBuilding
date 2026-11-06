@@ -353,6 +353,9 @@ namespace CityBuilder.UI
 
         private void Select(CitizenAgent citizen)
         {
+            // the tutorial: a person is picked only on its steps that ask for one (the user, 2026-11-06: picked again
+            // and sent elsewhere, the step counted as done)
+            if (Tutorial.TutorialMode.IsActive && !Tutorial.TutorialRules.CitizenSelectable) return;
             _selected = citizen;
             if (_marker == null) _marker = CreateMarker();
             _marker.SetActive(true);

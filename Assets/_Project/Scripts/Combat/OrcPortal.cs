@@ -167,6 +167,13 @@ namespace CityBuilder.Combat
                     ? Localization.Format("#log_portal_destroyed_remaining", _all.Count)
                     : Localization.Get("#log_portal_destroyed"),
                 EventSeverity.Good, EventGlyph.Portal, null, transform.position));
+            // it falls as a building does (the user, 2026-11-06); the victory waits for it (GameOverManager)
+            var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 1f;
+            var size = (IsMain ? OrcRaidManager.MainPortalFootprint : OrcRaidManager.PortalFootprint);
+            var top = transform.position.y + 2f;
+            foreach (var r in GetComponentsInChildren<MeshRenderer>())
+                if (r != null && r.enabled) top = Mathf.Max(top, r.bounds.max.y);
+            Buildings.BuildFinishEffect.PlayCollapse(transform, new Vector2(size.x, size.y) * cell, top - transform.position.y, true);
             OnPortalDestroyed?.Invoke(this);
             Destroy(gameObject);
         }

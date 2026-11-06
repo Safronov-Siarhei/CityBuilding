@@ -108,12 +108,30 @@ namespace CityBuilder.Core
             if (portal != null && portal.IsMain)
             {
                 WonByMainPortal = true;
-                EndGame(victory: true, Localization.Get("#log_victory_main"));
+                WinAfterTheFall(Localization.Get("#log_victory_main"));
                 return;
             }
             if (OrcPortal.All.Count > 0) return;
 
-            EndGame(victory: true, Localization.Get("#log_victory"));
+            WinAfterTheFall(Localization.Get("#log_victory"));
+        }
+
+        /// <summary>Seconds between the last portal falling and the victory panel: its collapse is watched first (the user, 2026-11-06).</summary>
+        private const float VictoryDelaySeconds = 5f;
+
+        /// <summary>The map is won now (nothing can lose it any more), the panel comes once the portal has fallen.</summary>
+        private void WinAfterTheFall(string logMessage)
+        {
+            IsGameOver = true;
+            IsVictory = true;
+            StartCoroutine(AnnounceLater(logMessage));
+        }
+
+        private System.Collections.IEnumerator AnnounceLater(string logMessage)
+        {
+            yield return new WaitForSeconds(VictoryDelaySeconds);
+            EventLogManager.Instance?.Log(logMessage);
+            OnGameEnded?.Invoke(true);
         }
 
         /// <summary>After a win, the map carries on as a sandbox: nothing ends it again.</summary>

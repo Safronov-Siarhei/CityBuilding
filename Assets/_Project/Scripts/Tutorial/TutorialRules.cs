@@ -52,6 +52,12 @@ namespace CityBuilder.Tutorial
         /// <summary>The tree / boulder the step shows: the only node a tap may send the person to (the user, 2026-11-06).</summary>
         public static Maps.ResourceNode WantedNode { get; set; }
 
+        /// <summary>A person may be picked now (the director: only on the wood / stone steps, until he is sent).</summary>
+        public static bool CitizenSelectable { get; set; }
+
+        /// <summary>The ship is held where it reached the orcs: no order moves it (the user, 2026-11-06).</summary>
+        public static bool ShipFixed { get; set; }
+
         /// <summary>Where the ship may be sent (Sail): a tap elsewhere on the sea is refused; null: anywhere.</summary>
         public static UnityEngine.Vector3? SailTarget { get; set; }
 

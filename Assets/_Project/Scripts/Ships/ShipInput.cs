@@ -71,6 +71,8 @@ namespace CityBuilder.Ships
             var sea = new Plane(Vector3.up, new Vector3(0f, ShipManager.WaterLevel, 0f));
             if (!sea.Raycast(ray, out var distance)) return false;
             var point = ray.GetPoint(distance);
+            // the tutorial: the ship at the orcs' beach goes nowhere (the user, 2026-11-06)
+            if (Tutorial.TutorialMode.IsActive && Tutorial.TutorialRules.ShipFixed) return true;
             // the tutorial: only to the marked place by the orcs' island (the user, 2026-11-06), land or sea
             if (Tutorial.TutorialMode.IsActive && Tutorial.TutorialRules.SailTarget is Vector3 target)
             {
@@ -83,6 +85,7 @@ namespace CityBuilder.Ships
                 }
                 ShipManager.Instance?.ShowBuoy(Selected);
                 Tutorial.TutorialRules.SailOrdered = true;
+                Tutorial.TutorialRules.ShipSelectable = false;   // the player watches it sail (the user, 2026-11-06)
                 Select(null);
                 return true;
             }

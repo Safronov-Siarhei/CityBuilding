@@ -358,7 +358,9 @@ namespace CityBuilder.Ships
         /// </summary>
         private void TickIdle(float t)
         {
-            if (Selected || IsMoving)
+            // nor while people are aboard or walking down to it, nor in the tutorial (it sailed off from under them)
+            if (Selected || IsMoving || Aboard.Count > 0 || Tutorial.TutorialMode.IsActive
+                || (ShipManager.Instance != null && ShipManager.Instance.IsBeingBoarded(this)))
             {
                 _idle = 0f;
                 return;

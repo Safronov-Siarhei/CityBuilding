@@ -156,6 +156,24 @@ portal from too far» -- his structure reach is 1.6+1.2 m from the portal's cent
   `RTSCameraController.Shake` when in view. From `BuildingInstance.TryDamage` (the ruin is laid under it) and
   `OrcCampBuilding.Fall(announce)` (orc shaders: every mesh but the health bar).
 
+## Fifth playtest (2026-11-06) -- BUILT, not played
+The user: several round-4 items had NOT worked -- each checked in the code this time:
+- Ship price still shown: round 4's `TutorialPrice` had landed in ShowGnomes, not ShowShips (fixed: ShowShips).
+- Boarding a ship at sea / at its pier failed (twice reported): now ALWAYS the ship sails to the group
+  (`ShipManager.TryMeetingPoint`: the land NavMesh raycast from the group toward the nearest water = a beach they
+  can reach; the sea point by it); boarding waits until the ship stopped within 3 m of that sea point
+  (`Boarding.Sea`). A ship no longer sails home on its own while people are aboard, someone is boarding it, or in
+  the tutorial (`ShipUnit.TickIdle`).
+- The person could be picked again and sent elsewhere, skipping the step: `TutorialRules.CitizenSelectable`
+  (gate in `CitizenSelector.Select`) only on Pick steps and Send until sent; sent -> deselected.
+- Barracks let go at Raid (after the hire). Ship fixed at the orcs' beach from Land (`TutorialRules.ShipFixed`,
+  `ShipInput.HandleTap` ignores orders); not pickable while sailing (`ShipSelectable` false once sent).
+- Line: «Поставьте *Ратушу* в *жёлтой зоне*».
+- Boarding mark: a flat arrow turned to the camera over the hull's middle (the pyramid read as a cube beside it).
+- ALL modes: the portal collapses (`OrcPortal.TakeDamage` -> `PlayCollapse`); a portal victory waits 5 s
+  (`GameOverManager.WinAfterTheFall`: IsGameOver at once, OnGameEnded after); every building that goes collapses
+  -- combat, decay, demolish, orc buildings, portal (not roads/fences: `Data.isRoad`).
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».

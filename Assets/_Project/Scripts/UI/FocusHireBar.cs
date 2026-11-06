@@ -101,7 +101,6 @@ namespace CityBuilder.UI
                 prices[i].SetActive(true);
                 priceTexts[i].text = Dungeon.DungeonHirelings.Price(types[i]).ToString();
                 if (priceIcons[i] != null) priceIcons[i].sprite = coin;
-                TutorialPrice(i);
                 faces[i].color = party != null && party.CanHire(types[i]) ? Color.white : Dimmed;
             }
         }
@@ -167,6 +166,7 @@ namespace CityBuilder.UI
                 prices[i].SetActive(!tooLow);
                 priceTexts[i].text = Ships.ShipStats.PriceCoins(shipKind).ToString();
                 if (priceIcons[i] != null) priceIcons[i].sprite = coin;
+                TutorialPrice(i);   // the tutorial: the coin alone (the user, 2026-11-06)
                 faces[i].color = !tooLow && Ships.ShipManager.Instance != null && Ships.ShipManager.Instance.DescribeBuildBlocker(shipKind, shipyard) == null ? Color.white : Dimmed;
             }
         }

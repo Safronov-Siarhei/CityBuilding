@@ -99,6 +99,8 @@ namespace CityBuilder.Tutorial
             TutorialRules.SailTarget = null;
             TutorialRules.SailOrdered = false;
             TutorialRules.ShipSelectable = true;
+            TutorialRules.CitizenSelectable = false;
+            TutorialRules.ShipFixed = false;
             RTSCameraController.GesturesLocked = false;
             if (_shipyardZone != null) Destroy(_shipyardZone);
         }
@@ -187,12 +189,16 @@ namespace CityBuilder.Tutorial
             TutorialRules.SailOrdered = false;
             // the ship cannot be picked while it sails (the player watches it); at the beach it is handed to him held,
             // its landing button under the arrow (the user, 2026-11-06)
-            TutorialRules.ShipSelectable = step != Step.Land;
+            TutorialRules.ShipSelectable = step != Step.Sail || !TutorialRules.SailOrdered;
+            // at the orcs' beach the ship stays put: led away, it could not land them (the user, 2026-11-06)
+            TutorialRules.ShipFixed = step >= Step.Land;
             if (step == Step.Land)
             {
                 if (_ship == null || !_ship) _ship = OurShip();
                 if (_ship != null) Ships.ShipInput.Select(_ship);
             }
+            // the soldier hired: out of the Barracks (it stayed held, the user 2026-11-06)
+            if (step == Step.Raid && BuildingFocus.Instance != null) BuildingFocus.Instance.Clear();
             // the ship bought: out of the Shipyard, its ship button gone with it
             if (step == Step.KingPick && BuildingFocus.Instance != null) BuildingFocus.Instance.Clear();
             // a group still held from before (the King came out selected in the raid) is let go: the step shows whom to tap
@@ -436,6 +442,9 @@ namespace CityBuilder.Tutorial
             var showing = (Current == Step.WoodPick || Current == Step.StonePick
                 || ((Current == Step.WoodSend || Current == Step.StoneSend) && !_sent));
             RTSCameraController.GesturesLocked = showing;
+            TutorialRules.CitizenSelectable = showing;
+            // sent: he is let go, and nobody can pick him and send him elsewhere till the next step
+            if ((Current == Step.WoodSend || Current == Step.StoneSend) && _sent && _citizens != null && _citizens.HasSelection) _citizens.Deselect();
             TutorialRules.WantedNode = (Current == Step.WoodSend || Current == Step.StoneSend) && !_sent && _node != null && _node ? _node : null;
             var hideLine = (Current == Step.WoodSend || Current == Step.StoneSend) && _sent;
             if (_panel != null && hideLine && _panel.activeSelf) _panel.SetActive(false);

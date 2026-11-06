@@ -344,6 +344,7 @@ namespace CityBuilder.Buildings
         private void HandleFullyDecayed()
         {
             EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_decay", Data.LocalizedName), EventSeverity.Warning, EventGlyph.Ruin));
+            Collapse();   // every building that goes, goes down (the user, 2026-11-06)
             FreeCellsAndDestroy();
         }
 
@@ -397,7 +398,8 @@ namespace CityBuilder.Buildings
         /// <summary>Falling down (BuildFinishEffect.PlayCollapse; the user, 2026-11-06): it just turned into its ruin before.</summary>
         private void Collapse()
         {
-            if (Data == null) return;
+            // a road or a fence piece is not a building to fall: nothing to see but dust on the ground
+            if (Data == null || Data.isRoad) return;
             var grid = GridManager.Instance;
             var cell = grid != null ? grid.CellSize : 1f;
             var footprint = RotatedFootprint();
@@ -603,6 +605,7 @@ namespace CityBuilder.Buildings
             }
 
             EventLogManager.Instance?.Log(Localization.Format("#log_demolished", Data.LocalizedName));
+            Collapse();
             FreeCellsAndDestroy();
         }
 

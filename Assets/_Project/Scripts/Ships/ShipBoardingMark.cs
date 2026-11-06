@@ -19,7 +19,7 @@ namespace CityBuilder.Ships
         private static readonly Color Gold = new Color(1f, 0.82f, 0.18f, 1f);
 
         private readonly List<ShipUnit> _ships = new List<ShipUnit>();
-        private readonly Dictionary<ShipUnit, float> _tops = new Dictionary<ShipUnit, float>();
+        private readonly Dictionary<ShipUnit, Vector3> _tops = new Dictionary<ShipUnit, Vector3>();   // the hull's top middle, in the ship's own space
         private Transform[] _arrows;
         private LineRenderer[] _rings;
 
@@ -40,11 +40,19 @@ namespace CityBuilder.Ships
                 if (_arrows[i].gameObject.activeSelf != on) _arrows[i].gameObject.SetActive(on);
                 if (_rings[i].gameObject.activeSelf != on) _rings[i].gameObject.SetActive(on);
                 if (!on) continue;
-                var at = ship.transform.position;
-                _arrows[i].position = new Vector3(at.x, TopOf(ship) + ArrowGap + Mathf.Abs(Mathf.Sin(t * 3f)) * 0.45f, at.z);
-                _arrows[i].rotation = Quaternion.Euler(0f, t * 90f, 0f);
+                // over the hull's middle (the ship's pivot is not), a flat arrow turned to the camera: from above the
+                // turning pyramid read as a yellow cube beside the ship (the user, 2026-11-06)
+                var top = ship.transform.TransformPoint(TopOf(ship));
+                _arrows[i].position = new Vector3(top.x, top.y + ArrowGap + Mathf.Abs(Mathf.Sin(t * 3f)) * 0.45f, top.z);
+                var cam = Camera.main;
+                if (cam != null)
+                {
+                    var toCam = cam.transform.position - _arrows[i].position;
+                    toCam.y = 0f;
+                    if (toCam.sqrMagnitude > 0.01f) _arrows[i].rotation = Quaternion.LookRotation(-toCam.normalized, Vector3.up);
+                }
                 var ring = _rings[i];
-                ring.transform.position = new Vector3(at.x, ShipManager.WaterLevel + 0.08f, at.z);
+                ring.transform.position = new Vector3(top.x, ShipManager.WaterLevel + 0.08f, top.z);
                 var r = RingRadius * (1f + 0.08f * pulse);
                 for (var p = 0; p < RingPoints; p++)
                 {
@@ -60,12 +68,19 @@ namespace CityBuilder.Ships
         }
 
         /// <summary>The ship's highest point, measured once per ship (its masts).</summary>
-        private float TopOf(ShipUnit ship)
+        private Vector3 TopOf(ShipUnit ship)
         {
             if (_tops.TryGetValue(ship, out var top)) return top;
-            top = ship.transform.position.y + 2f;
+            var any = false;
+            var bounds = new Bounds(ship.transform.position, Vector3.zero);
             foreach (var r in ship.GetComponentsInChildren<MeshRenderer>())
-                if (r != null && r.enabled) top = Mathf.Max(top, r.bounds.max.y);
+            {
+                if (r == null || !r.enabled) continue;
+                if (!any) bounds = r.bounds;
+                else bounds.Encapsulate(r.bounds);
+                any = true;
+            }
+            top = ship.transform.InverseTransformPoint(new Vector3(bounds.center.x, Mathf.Max(bounds.max.y, ship.transform.position.y + 2f), bounds.center.z));
             _tops[ship] = top;
             return top;
         }
@@ -74,7 +89,7 @@ namespace CityBuilder.Ships
         {
             _arrows = new Transform[Marks];
             _rings = new LineRenderer[Marks];
-            var mesh = ArrowMesh(0.32f, 0.55f);
+            var mesh = ArrowMesh(0.55f, 1.1f);
             var gold = new Material(RuntimeShaders.Lit) { color = Gold };
             var line = new Material(RuntimeShaders.Unlit) { color = Gold };
             for (var i = 0; i < Marks; i++)
@@ -102,24 +117,22 @@ namespace CityBuilder.Ships
             }
         }
 
-        /// <summary>A four-sided arrowhead pointing down: a square `half` wide on top, its tip `tall` below; faces unshared (flat light).</summary>
+        /// <summary>A flat arrow pointing down, its tip at the origin: a head `half` wide and as tall, a shaft over it; both faces.</summary>
         private static Mesh ArrowMesh(float half, float tall)
         {
-            var tip = new Vector3(0f, 0f, 0f);
-            var top = new[] { new Vector3(-half, tall, -half), new Vector3(half, tall, -half), new Vector3(half, tall, half), new Vector3(-half, tall, half) };
-            var vertices = new List<Vector3>();
-            for (var i = 0; i < 4; i++)
+            var shaft = half * 0.42f;
+            var v = new List<Vector3>
             {
-                vertices.Add(tip); vertices.Add(top[i]); vertices.Add(top[(i + 1) % 4]);
-            }
-            // the lid
-            vertices.Add(top[0]); vertices.Add(top[2]); vertices.Add(top[1]);
-            vertices.Add(top[0]); vertices.Add(top[3]); vertices.Add(top[2]);
-            var triangles = new int[vertices.Count];
-            for (var i = 0; i < triangles.Length; i++) triangles[i] = i;
+                new Vector3(0f, 0f, 0f), new Vector3(-half, half, 0f), new Vector3(half, half, 0f),          // the head
+                new Vector3(-shaft, half, 0f), new Vector3(shaft, half, 0f),                                  // the shaft
+                new Vector3(shaft, half + tall * 0.7f, 0f), new Vector3(-shaft, half + tall * 0.7f, 0f),
+            };
+            var front = new List<int> { 0, 1, 2, 3, 6, 5, 3, 5, 4 };
+            var tris = new List<int>(front);
+            for (var i = 0; i < front.Count; i += 3) { tris.Add(front[i]); tris.Add(front[i + 2]); tris.Add(front[i + 1]); }
             var mesh = new Mesh { name = "BoardingArrow" };
-            mesh.SetVertices(vertices);
-            mesh.SetTriangles(triangles, 0);
+            mesh.SetVertices(v);
+            mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;

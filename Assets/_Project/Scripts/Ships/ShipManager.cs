@@ -32,6 +32,7 @@ namespace CityBuilder.Ships
             public ShipUnit Ship;
             public Vector3 Landing;
             public bool Meeting;        // the ship sails to the troops' beach: not given up while it is on the way
+            public Vector3 Sea;         // where it stops for them
         }
 
         private readonly List<Boarding> _boarding = new List<Boarding>();
@@ -188,7 +189,7 @@ namespace CityBuilder.Ships
                 if (need > ship.Capacity) return Localization.Format("#ship_squad_too_big", need, ship.Capacity);
                 if (need > ship.FreeSeats) return Localization.Format("#ship_full", ShipStats.DisplayName(ship.Kind));
             }
-            if (!TryFindLanding(ship, out _) && !TryMeetingPoint(group, out _, out _)) return Localization.Get("#ship_no_beach");
+            if (!TryMeetingPoint(group, out _, out _)) return Localization.Get("#ship_no_beach");
             return null;
         }
 
@@ -200,10 +201,14 @@ namespace CityBuilder.Ships
         {
             sea = beach = default;
             if (group == null || group.Count == 0) return false;
-            var centre = group.Centre();
-            if (!TrySampleSea(centre, 25f, out sea) || !TryFindLandingAt(sea, out beach)) return false;
-            var map = Maps.MeshMapApplier.Instance;
-            return map == null || map.SameIsland(beach, centre);
+            var land = new NavMeshQueryFilter { agentTypeID = 0, areaMask = NavMesh.AllAreas };
+            if (!NavMesh.SamplePosition(group.Centre(), out var from, 4f, land)) return false;
+            // the nearest open water, then the last walkable point on the straight way down to it: a beach the
+            // group can surely reach (the beach "by the ship" was the Shipyard's pier, which nobody could walk to)
+            if (!TrySampleSea(from.position, 80f, out var water)) return false;
+            var toward = new Vector3(water.x, from.position.y, water.z);
+            beach = NavMesh.Raycast(from.position, toward, out var edge, land) ? edge.position : from.position;
+            return TrySampleSea(beach, 15f, out sea);
         }
 
         /// <summary>
@@ -214,18 +219,13 @@ namespace CityBuilder.Ships
         {
             landing = default;
             if (DescribeBoardBlocker(group, ship) != null) return false;
-            var map = Maps.MeshMapApplier.Instance;
-            var meeting = false;
-            // the ship by a beach of the group's own island: they walk to it, as before
-            if (!TryFindLanding(ship, out landing) || (map != null && !map.SameIsland(landing, group.Centre())))
-            {
-                // else it sails in to the beach nearest them and they walk down to meet it
-                if (!TryMeetingPoint(group, out var sea, out landing) || !ship.SailTo(sea)) return false;
-                meeting = true;
-            }
+            // ALWAYS: the ship sails in to the beach nearest the group and they walk down to meet it (the user,
+            // 2026-11-06, twice: a ship out on the water or at its pier could not be boarded)
+            if (!TryMeetingPoint(group, out var sea, out landing)) return false;
+            if (Flat(ship.transform.position - sea) > 1.5f && !ship.SailTo(sea)) return false;
             _boarding.RemoveAll(b => b.Group == group);
             group.OrderMoveTo(landing);
-            _boarding.Add(new Boarding { Group = group, Ship = ship, Landing = landing, Meeting = meeting });
+            _boarding.Add(new Boarding { Group = group, Ship = ship, Landing = landing, Meeting = true, Sea = sea });
             return true;
         }
 
@@ -376,7 +376,7 @@ namespace CityBuilder.Ships
             {
                 var b = _boarding[i];
                 // gone, sailed off, or the player sent the group elsewhere
-                var shipThere = b.Ship != null && Flat(b.Ship.transform.position - b.Landing) <= LandingReach + 1f;
+                var shipThere = b.Ship != null && !b.Ship.IsMoving && Flat(b.Ship.transform.position - b.Sea) <= 3f;
                 if (b.Ship == null || b.Group == null || b.Group.Count == 0 || (b.Group.HoldPosition - b.Landing).sqrMagnitude > 0.01f
                     || (!shipThere && !(b.Meeting && b.Ship.IsMoving)))
                 {
@@ -394,6 +394,13 @@ namespace CityBuilder.Ships
                 }
                 if (!waiting || b.Ship.FreeSeats == 0) _boarding.RemoveAt(i);
             }
+        }
+
+        public bool IsBeingBoarded(ShipUnit ship)
+        {
+            foreach (var b in _boarding)
+                if (b.Ship == ship) return true;
+            return false;
         }
 
         /// <summary>The ships someone is walking to board now (ShipBoardingMark marks them), once each.</summary>
