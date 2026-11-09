@@ -7,6 +7,16 @@
 > water-category buildings nor roads/fences (keepSelectedAfterPlacement). Untested, not seen.
 
 
+> **2026-11-09 PHONE LOOK (the user, variant A of four offered):** on touch / a mobile build the
+> ghost is `Buildings/PlacementTilePreview.cs`: the building in its OWN colours (a red-tinted copy of
+> each material when refused), hovering 0.12, its centre riding a DOT in the exact middle of the
+> screen (aim moved 58 % -> 50 %; the HUD's four bars replaced by the dot, `CreateAimMarker`), over its
+> footprint's cells filled green / red (red only on cells in the way, all red for money/zone). PC
+> (mouse) keeps the ink drawing. The cells snap; the building follows the dot smoothly and drops onto
+> the cells on ✓ (a mine and an offered road piece sit on their cells). EVERY footprint now takes the
+> origin whose centre is NEAREST the aim point (even sizes used to round half a cell one way).
+> Built, not seen on a phone.
+
 > **Status (2026-10-21):** the PEN look is the only placement look (user's pick 2026-10-20, after six
 > were photographed): an ink drawing hovering over a pen sketch of its plot. Roads and fences are laid
 > ONE PIECE AT A TIME (the drag-to-draw line is gone). Gates are 1×1 and stand on roads.
@@ -23,7 +33,8 @@ quicker re-sketch; dust on landing; a soft shadow. Red ink only over the cells i
 or all of it when the reason is elsewhere (money, start zone). Cost chips go red while stock can't cover them.
 
 ## Rules (decided)
-- Aim point is the building's CENTRE (`OriginForCentredFootprint`). Footprint rotates in 90° steps.
+- Aim point is the building's CENTRE: the footprint whose centre is nearest the aimed ground point
+  (`TryGetPlacementOrigin`; `OriginForCentredFootprint` is now only the tests' helper). Touch aim = screen centre, a dot. Footprint rotates in 90° steps.
 - **Roads/fences (user, 2026-10-20):** placed like any building, piece by piece on ✓, and stay in hand;
   the next piece is offered right after the last, along the way the last two ran (first time: towards
   the screen's right). Touch: the camera glides one piece along. ✕ puts the road away.
@@ -44,7 +55,7 @@ or all of it when the reason is elsewhere (money, start zone). Cost chips go red
 
 ## Code
 `Buildings/BuildingPlacer.cs` (selection, aim, confirm, next-piece offer, refusal reasons, `IsFreeFor`),
-`Buildings/PlacementPreview.cs` + `Buildings/SketchMarks.cs` + `Buildings/Ink.cs` +
+`Buildings/PlacementPreview.cs` (PC) / `Buildings/PlacementTilePreview.cs` (phone) + `Buildings/SketchMarks.cs` + `Buildings/Ink.cs` +
 `Shaders/PlacementGhost.shader` (always included via `RuntimeShaders`), `Buildings/FenceShape.cs`,
 `FenceNetwork.cs`, `FenceAppearance.cs`, `Buildings/RoadNetwork.cs`, `Maps/NavAreas.cs`
 (`MeshMapApplier.RegisterGate`), `Grid/GridManager.cs` (cells, occupancy, `GroundHeight`,

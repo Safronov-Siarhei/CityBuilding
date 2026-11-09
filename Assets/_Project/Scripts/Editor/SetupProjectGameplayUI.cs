@@ -746,26 +746,29 @@ namespace CityBuilder.EditorTools
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(96f, 96f);
 
-            var color = new Color(1f, 1f, 1f, 0.85f);
-            const float length = 34f;
-            const float thickness = 4f;
-
-            CreateAimBar(root.transform, "Top", new Vector2(0f, 48f), new Vector2(length, thickness), color);
-            CreateAimBar(root.transform, "Bottom", new Vector2(0f, -48f), new Vector2(length, thickness), color);
-            CreateAimBar(root.transform, "Left", new Vector2(-48f, 0f), new Vector2(thickness, length), color);
-            CreateAimBar(root.transform, "Right", new Vector2(48f, 0f), new Vector2(thickness, length), color);
+            // One dot in the middle of the screen (the user, 2026-11-09): the building's centre
+            // rides it. Four bars round it read as a frame the building sat off-centre in.
+            var dot = SkinSprite("circle_mask");
+            var rim = CreateAimBar(root.transform, "DotRim", Vector2.zero, new Vector2(26f, 26f), new Color(0.1f, 0.08f, 0.05f, 0.75f));
+            var core = CreateAimBar(root.transform, "Dot", Vector2.zero, new Vector2(16f, 16f), new Color(1f, 1f, 1f, 0.95f));
+            rim.sprite = dot;
+            core.sprite = dot;
+            // a dot over the building must not swallow the tap that confirms it
+            rim.raycastTarget = false;
+            core.raycastTarget = false;
 
             root.SetActive(false);
             return rect;
         }
 
-        private static void CreateAimBar(Transform parent, string name, Vector2 anchoredPos, Vector2 size, Color color)
+        private static Image CreateAimBar(Transform parent, string name, Vector2 anchoredPos, Vector2 size, Color color)
         {
             var bar = CreateImage(parent, name, color);
             var rect = bar.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
+            return bar;
         }
 
         /// <summary>

@@ -33,7 +33,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hazards-fire-sickness](hazards-fire-sickness.md) | fire from decay, brigade, illness, well, healer | пожар, болезнь, колодец, лекарь |
 | **Buildings** | | |
 | [buildings-catalog](buildings-catalog.md) | the 49-building roster, categories, ids, BuildingData, model contract | здания, ростер, категории |
-| [building-placement](building-placement.md) | placing, pen-sketch ghost, rotation, roads/fences piece by piece, gates on roads, demolition, no-build, start zone | установка, призрак, забор, дорога, ворота, снос |
+| [building-placement](building-placement.md) | placing, pen-sketch ghost, rotation, roads/fences piece by piece, gates on roads, demolition, no-build, start zone | установка, призрак, вид на телефоне, клетки, точка в центре, забор, дорога, ворота, снос |
 | [building-levels-and-decay](building-levels-and-decay.md) | levels 1–5, upgrade rules, level models, decay, repair | уровни, улучшение, ветхость, ремонт |
 | [research-laboratory](research-laboratory.md) | tech tree, scientists, lab levels gate, research window | лаборатория, исследования |
 | **War** | | |

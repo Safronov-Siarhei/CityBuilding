@@ -47,13 +47,20 @@ namespace CityBuilder.Buildings
         [SerializeField] private GameObject[] wallSteps = new GameObject[0];
 
         /// <summary>Height of the aim point as a fraction of the screen, measured from the bottom. Above the hotbar and the confirm row, and high enough that the hand holding the phone is not over it.</summary>
-        [SerializeField] private float aimScreenHeightFraction = 0.58f;
+        // the screen's centre (the user, 2026-11-09: a dot in the middle, the building's centre on it)
+        [SerializeField] private float aimScreenHeightFraction = 0.5f;
 
         private BuildingData _selectedBuilding;
         private GameObject _ghostInstance;
         private readonly List<Renderer> _ghostRenderers = new List<Renderer>();
         // The ghost's look: an ink drawing over a pen sketch of its plot (see PlacementPreview).
         private PlacementPreview _preview;
+        // The phone's look instead (the user, 2026-11-09, variant A): the building in its own colours
+        // over coloured cells, its centre on the screen's dot. PC keeps the ink drawing above.
+        private PlacementTilePreview _tiles;
+        // the ground point under the aim (the dot / the cursor), last time it was found
+        private Vector3 _aimWorld;
+        private bool _hasAimWorld;
         // Asked per cell of the footprint every frame the ghost is up; made once, not per frame.
         private Func<Vector2Int, bool> _cellInTheWay;
 
@@ -280,7 +287,7 @@ namespace CityBuilder.Buildings
             }
         }
 
-        /// <summary>Horizontally centred, and above the middle so neither the hotbar nor the hand holding the phone covers the building being aimed.</summary>
+        /// <summary>The middle of the screen (the user, 2026-11-09), where the HUD draws its dot.</summary>
         private Vector2 FixedAimPoint =>
             new Vector2(Screen.width * 0.5f, Screen.height * Mathf.Clamp01(aimScreenHeightFraction));
 
@@ -377,7 +384,8 @@ namespace CityBuilder.Buildings
                 col.enabled = false;
             }
 
-            _preview = PlacementPreview.Attach(_ghostInstance, _ghostRenderers);
+            if (UsesTouchAiming || Application.isMobilePlatform) _tiles = PlacementTilePreview.Attach(_ghostInstance, _ghostRenderers);
+            else _preview = PlacementPreview.Attach(_ghostInstance, _ghostRenderers);
 
             RefreshTargetCell();
         }
@@ -394,6 +402,8 @@ namespace CityBuilder.Buildings
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
             _preview = null;
+            _tiles = null;
+            _hasAimWorld = false;
             _ghostRenderers.Clear();
 
             if (cameraController != null) cameraController.InertiaEnabled = true;
@@ -418,6 +428,15 @@ namespace CityBuilder.Buildings
         private bool TryGetGroundCell(Vector2 screenPosition, out Vector2Int cell)
         {
             cell = default;
+            if (!TryGetGroundPoint(screenPosition, out var point)) return false;
+            cell = GridManager.Instance.WorldToCell(point);
+            return true;
+        }
+
+        /// <summary>The ground (or, for a water building, the sea's surface) under this screen point.</summary>
+        private bool TryGetGroundPoint(Vector2 screenPosition, out Vector3 point)
+        {
+            point = default;
             if (targetCamera == null) return false;
 
             var ray = targetCamera.ScreenPointToRay(screenPosition);
@@ -439,11 +458,11 @@ namespace CityBuilder.Buildings
                     && (!onGround || groundHit.point.y < Ships.ShipManager.WaterLevel)
                     && new Plane(Vector3.up, new Vector3(0f, Ships.ShipManager.WaterLevel, 0f)).Raycast(ray, out var toSea))
                 {
-                    cell = GridManager.Instance.WorldToCell(ray.GetPoint(toSea));
+                    point = ray.GetPoint(toSea);
                     return true;
                 }
                 if (!onGround) return false;
-                cell = GridManager.Instance.WorldToCell(groundHit.point);
+                point = groundHit.point;
                 return true;
             }
 
@@ -451,7 +470,7 @@ namespace CityBuilder.Buildings
             // ignoring triggers so tree/boulder click boxes stay out of it.
             if (!Physics.Raycast(ray, out var hit, 500f, groundLayerMask, QueryTriggerInteraction.Ignore)) return false;
 
-            cell = GridManager.Instance.WorldToCell(hit.point);
+            point = hit.point;
             return true;
         }
 
@@ -466,9 +485,17 @@ namespace CityBuilder.Buildings
         private bool TryGetPlacementOrigin(Vector2 screenPosition, out Vector2Int origin)
         {
             origin = default;
-            if (!TryGetGroundCell(screenPosition, out var aimCell)) return false;
+            if (!TryGetGroundPoint(screenPosition, out var point)) return false;
+            _aimWorld = point;
+            _hasAimWorld = true;
 
-            origin = SnapMineToVein(OriginForCentredFootprint(aimCell, RotatedFootprint(_selectedBuilding.footprintSize)));
+            // The footprint whose centre lies NEAREST the aim point (2026-11-09): centring on the
+            // aimed cell rounded an even footprint half a cell off the dot, always the same way;
+            // shifting the point back by (size - 1) / 2 cells first picks the closer of the two.
+            var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
+            var half = GridManager.Instance.CellSize * 0.5f;
+            var shifted = point - new Vector3((footprint.x - 1) * half, 0f, (footprint.y - 1) * half);
+            origin = SnapMineToVein(GridManager.Instance.WorldToCell(shifted));
             return true;
         }
 
@@ -504,6 +531,7 @@ namespace CityBuilder.Buildings
             {
                 if (_ghostInstance.activeSelf != ghostVisible) _ghostInstance.SetActive(ghostVisible);
                 if (_preview != null) _preview.SetVisible(ghostVisible);
+                else if (_tiles != null) _tiles.SetVisible(ghostVisible);
                 else
                 {
                     _ghostInstance.transform.position = center;
@@ -526,8 +554,18 @@ namespace CityBuilder.Buildings
 
             if (_ghostInstance == null) return;
 
-            if (_preview == null) return;
             _cellInTheWay ??= c => !CanPlaceSelectedBuilding(c, Vector2Int.one, wholeFootprintRules: false);
+            if (_tiles != null)
+            {
+                // the building's centre rides the dot; the cells show where it will land (a mine
+                // snapped to its vein, a road piece on offer: the building sits on its cells)
+                var follow = UsesTouchAiming && _hasAimWorld && !OfferStillStands()
+                    && !OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue
+                    ? new Vector3(_aimWorld.x, center.y, _aimWorld.z) : center;
+                _tiles.Show(follow, center, Quaternion.Euler(0f, _rotationSteps * 90f, 0f), cell, footprint, ok, _cellInTheWay);
+                return;
+            }
+            if (_preview == null) return;
             _preview.Show(GridManager.Instance.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, _rotationSteps * 90f, 0f),
                 cell, footprint, ok, _cellInTheWay);
         }
