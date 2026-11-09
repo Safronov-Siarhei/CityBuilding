@@ -105,6 +105,7 @@ namespace CityBuilder.EditorTools
             ConfigureMobileLandscape();
             NameTerrainLayer();
             IncludeRuntimeShadersInBuilds();
+            KeepTransparentVariantsInBuilds();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -332,6 +333,46 @@ namespace CityBuilder.EditorTools
         /// Always Included Shaders is the setting that says "build this in regardless", which is
         /// exactly the guarantee those call sites need.
         /// </summary>
+        /// <summary>
+        /// Keeps the TRANSPARENT variants of URP Lit/Unlit in every build (the user, 2026-11-09: the
+        /// dust, the zone carpets and the ink drawing looked like flat opaque squares on the phone).
+        /// Those materials are only ever made at runtime and switched to transparent by keyword
+        /// (_SURFACE_TYPE_TRANSPARENT, a shader_feature), so no material on disk asked for that
+        /// variant and a player build could leave it out -- the editor never shows it, it compiles
+        /// variants on demand. A material asset under Resources that uses the variant is the plain
+        /// guarantee: Resources travel into every build, and their keywords keep their variants.
+        /// </summary>
+        private static void KeepTransparentVariantsInBuilds()
+        {
+            const string folder = "Assets/_Project/Resources/ShaderVariants";
+            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder("Assets/_Project/Resources", "ShaderVariants");
+            KeepTransparent(folder + "/TransparentUnlit.mat", RuntimeShaders.Unlit, false);
+            KeepTransparent(folder + "/TransparentUnlitTwoSided.mat", RuntimeShaders.Unlit, true);
+            KeepTransparent(folder + "/TransparentLit.mat", RuntimeShaders.Lit, false);
+        }
+
+        private static void KeepTransparent(string path, Shader shader, bool twoSided)
+        {
+            if (shader == null) return;
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.shader = shader;
+            material.SetFloat("_Surface", 1f);
+            material.SetFloat("_Blend", 0f);
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_ZWrite", 0f);
+            material.SetFloat("_Cull", (float)(twoSided ? UnityEngine.Rendering.CullMode.Off : UnityEngine.Rendering.CullMode.Back));
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(material);
+        }
+
         private static void IncludeRuntimeShadersInBuilds()
         {
             var graphicsSettings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");

@@ -22,6 +22,7 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform languageRow;
         [SerializeField] private RectTransform fogRow;
         [SerializeField] private RectTransform hudRow;
+        [SerializeField] private RectTransform graphicsRow;
         [SerializeField] private Sprite buttonSprite;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
@@ -37,6 +38,15 @@ namespace CityBuilder.UI
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
         private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
+        private readonly List<(GraphicsTier tier, Image background)> _graphicsButtons = new List<(GraphicsTier, Image)>();
+
+        private static readonly (GraphicsTier tier, string key)[] GraphicsChoices =
+        {
+            (GraphicsTier.Auto, "#settings_graphics_auto"),
+            (GraphicsTier.Low, "#settings_graphics_low"),
+            (GraphicsTier.Medium, "#settings_graphics_medium"),
+            (GraphicsTier.High, "#settings_graphics_high"),
+        };
         /// <summary>The HUD's looks in the order their buttons stand -- А, В, Г, Д of the mockups -- each with its caption's sheet key.</summary>
         private static readonly (HudSkin skin, string key)[] HudSkinChoices =
         {
@@ -58,6 +68,7 @@ namespace CityBuilder.UI
             if (_buttons.Count == 0) BuildLanguageButtons();
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
+            if (_graphicsButtons.Count == 0) BuildGraphicsButtons();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -85,6 +96,30 @@ namespace CityBuilder.UI
         {
             GameSettings.HudSkin = skin;
             HighlightSelected();
+        }
+
+        public void SelectGraphics(GraphicsTier tier)
+        {
+            GraphicsQuality.Chosen = tier;
+            HighlightSelected();
+        }
+
+        private void BuildGraphicsButtons()
+        {
+            if (graphicsRow == null) return;
+
+            const float width = 170f;
+            const float spacing = 12f;
+            for (var i = 0; i < GraphicsChoices.Length; i++)
+            {
+                var (tier, key) = GraphicsChoices[i];
+                var x = (i - (GraphicsChoices.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(graphicsRow, $"Graphics_{tier}", x, width, out var label);
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                var captured = tier;
+                image.GetComponent<Button>().onClick.AddListener(() => SelectGraphics(captured));
+                _graphicsButtons.Add((tier, image));
+            }
         }
 
         private void BuildHudButtons()
@@ -195,6 +230,10 @@ namespace CityBuilder.UI
             foreach (var (skin, background) in _hudButtons)
             {
                 background.color = skin == GameSettings.HudSkin ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (tier, background) in _graphicsButtons)
+            {
+                background.color = tier == GraphicsQuality.Chosen ? SelectedColor : UnselectedColor;
             }
         }
     }

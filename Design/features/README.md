@@ -64,7 +64,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Pipelines** | | |
 | [balance-and-localization](balance-and-localization.md) | Google Sheet → CSV → BalanceConfig; localization keys | баланс, таблица, локализация |
 | [art-pipeline](art-pipeline.md) | Blender models, standard, levels, export, icons, UI sprites | Blender, модели, иконки |
-| [performance-mobile](performance-mobile.md) | measured CPU/draw budget, triangle budget, device fleet | производительность, FPS, draw calls |
+| [performance-mobile](performance-mobile.md) | measured CPU/draw budget, triangle budget, device fleet, quality tiers | производительность, FPS, draw calls, качество графики, уровни Низкая/Средняя/Высокая, прозрачность на телефоне |
 | [build-and-test](build-and-test.md) | SetupProject, batchmode loop, tests, APK/Windows builds, cheats | сборка, тесты, APK, читы |
 
 `archive/` holds the long chronological notes these cards were distilled from (2026-10-21). Read an

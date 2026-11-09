@@ -64,7 +64,7 @@ namespace CityBuilder.EditorTools
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -140,7 +140,7 @@ namespace CityBuilder.EditorTools
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var types = new List<ResourceType>();
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
@@ -234,7 +234,7 @@ namespace CityBuilder.EditorTools
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -267,7 +267,7 @@ namespace CityBuilder.EditorTools
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -309,7 +309,7 @@ namespace CityBuilder.EditorTools
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -378,7 +378,7 @@ namespace CityBuilder.EditorTools
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -461,7 +461,7 @@ namespace CityBuilder.EditorTools
             panelRoot.transform.SetParent(canvasParent, false);
             StretchFull(panelRoot.GetComponent<RectTransform>());
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -524,7 +524,7 @@ namespace CityBuilder.EditorTools
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -637,7 +637,7 @@ namespace CityBuilder.EditorTools
             StretchFull(demolishConfirm.GetComponent<RectTransform>());
 
             var demolishBackdrop = CreateImage(demolishConfirm.transform, "Backdrop", new Color(0f, 0f, 0f, 0.75f));
-            StretchFull(demolishBackdrop.GetComponent<RectTransform>());
+            StretchBleed(demolishBackdrop.GetComponent<RectTransform>());
 
             var demolishCard = CreateImage(demolishConfirm.transform, "Card", new Color(0.18f, 0.14f, 0.13f, 0.98f));
             demolishCard.sprite = panelSprite;
@@ -922,7 +922,7 @@ namespace CityBuilder.EditorTools
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;

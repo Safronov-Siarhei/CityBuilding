@@ -93,7 +93,7 @@ namespace CityBuilder.EditorTools
             root.AddComponent<HudOverlay>();
 
             var backdrop = CreateImage(root.transform, "Backdrop", new Color(0f, 0f, 0f, 0.45f));
-            StretchFull(backdrop.rectTransform);
+            StretchBleed(backdrop.rectTransform);
             var backdropButton = backdrop.gameObject.AddComponent<Button>();
             backdropButton.transition = Selectable.Transition.None;
 

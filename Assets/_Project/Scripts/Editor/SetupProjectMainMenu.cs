@@ -121,7 +121,7 @@ namespace CityBuilder.EditorTools
         {
             var root = StretchedChild(canvas, name);
             var backdrop = CreateImage(root, "Backdrop", new Color(0.04f, 0.02f, 0.01f, 0.65f));
-            StretchFull(backdrop.rectTransform);
+            StretchBleed(backdrop.rectTransform);
             var panel = MenuImage(root, "Card", "panel", Vector2.zero, size, Image.Type.Tiled);
             card = panel.transform;
             var title = MenuImage(card, "TitlePlate", "title", new Vector2(0f, size.y * 0.5f - 6f), new Vector2(560f, 110f));

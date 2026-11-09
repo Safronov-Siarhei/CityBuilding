@@ -108,7 +108,7 @@ namespace CityBuilder.EditorTools
             StretchFull(panelRoot.GetComponent<RectTransform>());
 
             var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.7f));
-            StretchFull(backdrop.GetComponent<RectTransform>());
+            StretchBleed(backdrop.GetComponent<RectTransform>());
 
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -117,20 +117,24 @@ namespace CityBuilder.EditorTools
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             // The language, the fog's look, the HUD's look (the season and the Invasion's map left for
             // the menu's theme buttons, the user 2026-10-25).
-            cardRect.sizeDelta = new Vector2(800f, 760f);
+            // + the graphics tier (the user, 2026-11-09)
+            cardRect.sizeDelta = new Vector2(800f, 900f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 320f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 250f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
-            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 186f);
+            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 390f), new Vector2(680f, 70f)), "#settings_title");
+            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 320f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 256f);
 
-            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 120f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
-            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 56f);
+            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 190f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 126f);
 
-            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, -10f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
-            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -74f);
+            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, 60f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
+            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -4f);
 
-            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -290f), new Vector2(300f, 80f));
+            Localize(CreateText(card.transform, "GraphicsLabel", string.Empty, 26, new Vector2(0f, -70f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_graphics");
+            var graphicsRowRect = CreateSettingsRow(card.transform, "GraphicsRow", -134f);
+
+            var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -340f), new Vector2(300f, 80f));
 
             var controller = panelRoot.AddComponent<SettingsPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -138,6 +142,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("languageRow").objectReferenceValue = languageRowRect;
             controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
             controllerSO.FindProperty("hudRow").objectReferenceValue = hudRowRect;
+            controllerSO.FindProperty("graphicsRow").objectReferenceValue = graphicsRowRect;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 

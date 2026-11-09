@@ -462,6 +462,9 @@ namespace CityBuilder.UI
             Stretch((RectTransform)_root.transform);
             var backdrop = Img(_root.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f), null, Vector2.zero, Vector2.zero);
             Stretch(backdrop.rectTransform);
+            // bled past the SafeArea, so a phone's cut-out edge is dimmed too
+            backdrop.rectTransform.offsetMin = new Vector2(-600f, -600f);
+            backdrop.rectTransform.offsetMax = new Vector2(600f, 600f);
             backdrop.gameObject.AddComponent<Button>().onClick.AddListener(() => ClosePopups());
 
             var card = Panel(_root.transform, "Card", cardSprite, new Color(1f, 0.96f, 0.78f, 1f));

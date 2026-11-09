@@ -61,7 +61,7 @@ namespace CityBuilder.EditorTools
             // ---- the modes
             var modes = StretchedChild(canvas, "ModesScreen");
             var dim = CreateImage(modes, "Dim", new Color(0.05f, 0.03f, 0.01f, 0.25f));
-            StretchFull(dim.rectTransform);
+            StretchBleed(dim.rectTransform);
             dim.raycastTarget = false;
             var modesBack = Corner(modes, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
             var modesSettings = Corner(modes, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);

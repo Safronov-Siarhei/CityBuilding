@@ -88,6 +88,18 @@ namespace CityBuilder.EditorTools
             return go.transform;
         }
 
+        /// <summary>
+        /// A screen dim: stretched full AND bled well past its parent, which is usually the
+        /// SafeArea -- on a phone with a camera cut-out a plain stretch left a light strip of the
+        /// game along the edge (the user's victory screen, 2026-11-09).
+        /// </summary>
+        private static void StretchBleed(RectTransform rect)
+        {
+            StretchFull(rect);
+            rect.offsetMin = new Vector2(-600f, -600f);
+            rect.offsetMax = new Vector2(600f, 600f);
+        }
+
         private static void StretchFull(RectTransform rect)
         {
             rect.anchorMin = Vector2.zero;
