@@ -7,13 +7,13 @@
 > water-category buildings nor roads/fences (keepSelectedAfterPlacement). Untested, not seen.
 
 
-> **2026-11-09 PHONE LOOK (the user, variant A of four offered):** on touch / a mobile build the
-> ghost is `Buildings/PlacementTilePreview.cs`: the building in its OWN colours (a red-tinted copy of
-> each material when refused), hovering 0.12, its centre riding a DOT in the exact middle of the
+> **2026-11-09 PHONE LOOK (the user, variant A of four offered):** on a MOBILE BUILD (strictly by
+> platform, `Application.isMobilePlatform`, the user's call -- not by the last gesture) the ghost is `Buildings/PlacementTilePreview.cs`: the building in its OWN colours (a red-tinted copy of
+> each material when refused), hovering 0.12, aimed by a DOT in the exact middle of the
 > screen (aim moved 58 % -> 50 %; the HUD's four bars replaced by the dot, `CreateAimMarker`), over its
 > footprint's cells filled green / red (red only on cells in the way, all red for money/zone). PC
-> (mouse) keeps the ink drawing. The cells snap; the building follows the dot smoothly and drops onto
-> the cells on ✓ (a mine and an offered road piece sit on their cells). EVERY footprint now takes the
+> (mouse) keeps the ink drawing. The building JUMPS cell by cell with its cells, like Clash of
+> Clans (the user's call; a short glide, not a teleport), its centre within half a cell of the dot. EVERY footprint now takes the
 > origin whose centre is NEAREST the aim point (even sizes used to round half a cell one way).
 > Built, not seen on a phone.
 

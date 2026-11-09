@@ -58,9 +58,6 @@ namespace CityBuilder.Buildings
         // The phone's look instead (the user, 2026-11-09, variant A): the building in its own colours
         // over coloured cells, its centre on the screen's dot. PC keeps the ink drawing above.
         private PlacementTilePreview _tiles;
-        // the ground point under the aim (the dot / the cursor), last time it was found
-        private Vector3 _aimWorld;
-        private bool _hasAimWorld;
         // Asked per cell of the footprint every frame the ghost is up; made once, not per frame.
         private Func<Vector2Int, bool> _cellInTheWay;
 
@@ -384,7 +381,8 @@ namespace CityBuilder.Buildings
                 col.enabled = false;
             }
 
-            if (UsesTouchAiming || Application.isMobilePlatform) _tiles = PlacementTilePreview.Attach(_ghostInstance, _ghostRenderers);
+            // the look by PLATFORM, never by the last gesture (the user, 2026-11-09)
+            if (Application.isMobilePlatform) _tiles = PlacementTilePreview.Attach(_ghostInstance, _ghostRenderers);
             else _preview = PlacementPreview.Attach(_ghostInstance, _ghostRenderers);
 
             RefreshTargetCell();
@@ -403,7 +401,6 @@ namespace CityBuilder.Buildings
             _ghostInstance = null;
             _preview = null;
             _tiles = null;
-            _hasAimWorld = false;
             _ghostRenderers.Clear();
 
             if (cameraController != null) cameraController.InertiaEnabled = true;
@@ -486,8 +483,6 @@ namespace CityBuilder.Buildings
         {
             origin = default;
             if (!TryGetGroundPoint(screenPosition, out var point)) return false;
-            _aimWorld = point;
-            _hasAimWorld = true;
 
             // The footprint whose centre lies NEAREST the aim point (2026-11-09): centring on the
             // aimed cell rounded an even footprint half a cell off the dot, always the same way;
@@ -557,12 +552,8 @@ namespace CityBuilder.Buildings
             _cellInTheWay ??= c => !CanPlaceSelectedBuilding(c, Vector2Int.one, wholeFootprintRules: false);
             if (_tiles != null)
             {
-                // the building's centre rides the dot; the cells show where it will land (a mine
-                // snapped to its vein, a road piece on offer: the building sits on its cells)
-                var follow = UsesTouchAiming && _hasAimWorld && !OfferStillStands()
-                    && !OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue
-                    ? new Vector3(_aimWorld.x, center.y, _aimWorld.z) : center;
-                _tiles.Show(follow, center, Quaternion.Euler(0f, _rotationSteps * 90f, 0f), cell, footprint, ok, _cellInTheWay);
+                // the building jumps cell by cell with its cells, like Clash of Clans (the user, 2026-11-09)
+                _tiles.Show(center, Quaternion.Euler(0f, _rotationSteps * 90f, 0f), cell, footprint, ok, _cellInTheWay);
                 return;
             }
             if (_preview == null) return;

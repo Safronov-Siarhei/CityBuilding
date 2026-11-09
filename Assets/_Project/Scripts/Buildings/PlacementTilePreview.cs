@@ -9,8 +9,8 @@ namespace CityBuilder.Buildings
 {
     /// <summary>
     /// The PHONE's look of the building being placed (the user, 2026-11-09, variant A -- PC keeps
-    /// PlacementPreview's ink drawing): the building in its own colours, its centre riding the dot
-    /// in the middle of the screen, over its footprint's cells filled green where it can stand and
+    /// PlacementPreview's ink drawing; chosen by platform): the building in its own colours, jumping
+    /// cell by cell like Clash of Clans as the dot in the middle of the screen crosses the grid, over its footprint's cells filled green where it can stand and
     /// red where it cannot (only the cells in the way, or all of them when the reason is elsewhere:
     /// money, the start zone). The ink drawing's fine lines and pale paper melted into a grey box
     /// on a phone screen.
@@ -23,7 +23,7 @@ namespace CityBuilder.Buildings
         private const float Lift = 0.12f;          // the building hovers this far: "in hand", not built
         private const float TileLift = 0.06f;      // the cells, over the grass
         private const float TileInset = 0.06f;     // gap between cells, in cell sizes
-        private const float FollowSharpness = 30f; // how fast the building catches up with the dot
+        private const float HopSharpness = 40f;    // a quick glide onto the next cell, not a teleport
 
         private static readonly Color Green = new Color(0.25f, 0.85f, 0.3f, 0.55f);
         private static readonly Color Red = new Color(0.95f, 0.2f, 0.15f, 0.6f);
@@ -68,14 +68,11 @@ namespace CityBuilder.Buildings
             return preview;
         }
 
-        /// <summary>
-        /// `follow`: where the building's centre goes (the dot's ground point); `centre`: the centre
-        /// of the cells it will land on; `blockedCell` says, per cell, whether that cell is in the way.
-        /// </summary>
-        public void Show(Vector3 follow, Vector3 centre, Quaternion rotation, Vector2Int origin, Vector2Int footprint, bool valid, Func<Vector2Int, bool> blockedCell)
+        /// <summary>`centre`: the centre of the cells it will land on; `blockedCell` says, per cell, whether that cell is in the way.</summary>
+        public void Show(Vector3 centre, Quaternion rotation, Vector2Int origin, Vector2Int footprint, bool valid, Func<Vector2Int, bool> blockedCell)
         {
             transform.rotation = rotation;
-            _target = new Vector3(follow.x, centre.y + Lift, follow.z);
+            _target = centre + Vector3.up * Lift;
             if (!_placedOnce)
             {
                 _placedOnce = true;
@@ -173,7 +170,7 @@ namespace CityBuilder.Buildings
         private void LateUpdate()
         {
             if (!_placedOnce) return;
-            var t = 1f - Mathf.Exp(-FollowSharpness * Time.unscaledDeltaTime);
+            var t = 1f - Mathf.Exp(-HopSharpness * Time.unscaledDeltaTime);
             transform.position = Vector3.Lerp(transform.position, _target, t);
         }
 
