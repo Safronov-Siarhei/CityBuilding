@@ -43,7 +43,8 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   lock, «Скоро») -- art `UI/MenuArt/Banner_<Mode>.png` drawn by `Tools/ui/make_mode_banners.py` in
   the HUD's Classic kit (same parchment/wood/gold/hard shadow; one art for all four looks). Round 2 (the user, 11-10): no side folds (read as seeing the banner from all sides), book pages joined at a spine, one tail line for hem/cloth/seam (seam parallel to the torn edge), tassels in the banner's colour under a cap of its perch metal. Name on
   the kit's plaque, a motto and a LIVE line on the cloth (tutorial reward or «Пройдено», saves count
-  or «Новое королевство», invasion points today, «Скоро»; keys `#banner_*`). Tap = pick (bigger x1.14,
+  or «Новое королевство», invasion points today, «Скоро»; keys `#banner_*`). The tutorial's reward is
+  «Награда: 25» + the upgrade-crystal ICON (Res_UpgradeCrystal, `rewardIcon`; the user 11-10), centred «Пройдено» once rewarded. Tap = pick (bigger x1.14,
   sways more, others dimmed, remembered in PlayerPrefs `menu.mode`); tap the picked one or «Играть»
   (gold, bottom centre) = start; LONG PRESS (0.5 s, `UI/LongPress.cs`) = the mode's «!» words. They
   unroll from the perch on entry (staggered). `UI/ModeBannersController.cs`, built by
@@ -58,8 +59,9 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   card on the board's left (one map = no lit frame); a column: «Код карты» label, code field
   (placeholder «Случайная») + round arrows = write a fresh random code in (`RandomCode`), error line,
   «Сохранения» plaque (the corner Saves button is gone), gold «Начать». A theme a map lacks hides the
-  map (New Year in the sandbox: no maps, Start off). Built 2026-11-10, NOT yet seen by the user.
-- saves dialog rows (2026-11-10, the user): round badge with the save's THEME glyph (season -> first
+  map (New Year in the sandbox: no maps, Start off). The user saw it 2026-11-10; then: tapping the banner
+  swings it like a struck cloth (`UI/BannerKnock`, damped wobble from the perch, away from the hit side).
+- saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»
   (`#load_row_stats` / `#load_row_code`; buildings = save entries minus Road/Fence/Moat/Bridge/
   Drawbridge/Dec*, the list written by the builder). `LoadGamePanelController` (also the in-game load).

@@ -288,8 +288,10 @@ namespace CityBuilder.EditorTools
             var banner = CreateImage(screen, "SandboxBanner", Color.white);
             banner.sprite = MenuArt("Banner_Sandbox");
             banner.preserveAspect = true;
-            banner.raycastTarget = false;
             Anchor(banner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(-700f, 330f), new Vector2(bannerWidth, 660f * k));
+            // tap it and it swings like a struck cloth (the user, 2026-11-10: a small touch)
+            banner.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+            banner.gameObject.AddComponent<BannerKnock>();
             var plaque = MenuImage(banner.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(220f, 60f));
             Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(220f, 60f));
             plaque.raycastTarget = false;
@@ -417,12 +419,13 @@ namespace CityBuilder.EditorTools
             so.FindProperty("selectedNameLabel").objectReferenceValue = picked;
             so.FindProperty("menuLook").boolValue = true;
             // each row: the save's theme on a round, then day, people, buildings and the map code
-            var badge = MenuImage(body, "ThemeBadgeTemplate", "round", Vector2.zero, new Vector2(84f, 84f), Image.Type.Simple);
-            badge.preserveAspect = true;
-            badge.raycastTarget = false;
-            MenuGlyph(badge.transform, "Theme_summer", HudInk.OnRound, 46f);
-            badge.gameObject.SetActive(false);
-            so.FindProperty("themeBadgeTemplate").objectReferenceValue = badge.gameObject;
+            // the theme's picture alone, no round under it (the user, 2026-11-10)
+            var badge = new GameObject("ThemeBadgeTemplate", typeof(RectTransform));
+            badge.transform.SetParent(body, false);
+            ((RectTransform)badge.transform).sizeDelta = new Vector2(84f, 84f);
+            MenuGlyph(badge.transform, "Theme_summer", HudInk.OnPanel, 66f);
+            badge.SetActive(false);
+            so.FindProperty("themeBadgeTemplate").objectReferenceValue = badge;
             var glyphs = new Object[MapThemes.All.Length];
             for (var i = 0; i < glyphs.Length; i++) glyphs[i] = HudGlyph($"Theme_{MapThemes.Id(MapThemes.All[i])}");
             WriteArray(so.FindProperty("themeGlyphs"), glyphs);
@@ -550,6 +553,7 @@ namespace CityBuilder.EditorTools
             var cloths = new Object[names.Length];
             var lines = new Object[names.Length];
             var bannerControl = modes.gameObject.AddComponent<ModeBannersController>();
+            Image rewardIcon = null;
             // a banner sprite is 380 x 660; on screen 300 wide
             const float width = 300f;
             const float k = width / 380f;
@@ -575,6 +579,16 @@ namespace CityBuilder.EditorTools
 
                 // the live line, shrunk to fit inside the stitched seam whatever the number
                 var line = BannerLine(cloth.transform, "Line", -392f * k, 26, true);
+                if (i == 0)
+                {
+                    // the tutorial's reward: «Награда: 25» and the upgrade crystal (the user, 2026-11-10)
+                    var crystal = CreateImage(cloth.transform, "RewardCrystal", Color.white);
+                    crystal.sprite = IconSprite("Res_UpgradeCrystal");
+                    crystal.preserveAspect = true;
+                    crystal.raycastTarget = false;
+                    Anchor(crystal.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(95f - 24f, -392f * k), new Vector2(40f, 40f));
+                    rewardIcon = crystal;
+                }
                 banners[i] = rect;
                 cloths[i] = cloth;
                 lines[i] = line;
@@ -595,6 +609,7 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("banners"), banners);
             WriteArray(so.FindProperty("cloths"), cloths);
             so.FindProperty("motto").objectReferenceValue = motto;
+            so.FindProperty("rewardIcon").objectReferenceValue = rewardIcon;
             WriteArray(so.FindProperty("lines"), lines);
             so.ApplyModifiedPropertiesWithoutUndo();
         }

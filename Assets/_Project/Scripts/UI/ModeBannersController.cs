@@ -22,6 +22,9 @@ namespace CityBuilder.UI
         private const float Ease = 12f;
         private const float UnrollSeconds = 0.38f;
         private const float UnrollStagger = 0.07f;
+        // the live line's width on the cloth and the room the crystal takes off its right
+        private const float LineWidth = 190f;
+        private const float RewardIconRoom = 48f;
 
         [SerializeField] private MainMenuController menu;
         [SerializeField] private CanvasGroup screen;
@@ -30,6 +33,8 @@ namespace CityBuilder.UI
         [SerializeField] private Text motto;
         [SerializeField] private Text[] lines = new Text[0];
         [SerializeField] private Image playButton;
+        /// <summary>The upgrade crystal after the tutorial's reward number (the user, 2026-11-10: an icon, not the word); hidden once rewarded.</summary>
+        [SerializeField] private Image rewardIcon;
 
         private static readonly string[] MottoKeys = { "#banner_motto_tutorial", "#banner_motto_sandbox", "#banner_motto_invasion", "#banner_motto_campaign" };
         private static readonly Color Dimmed = new Color(0.72f, 0.72f, 0.72f, 1f);
@@ -126,9 +131,20 @@ namespace CityBuilder.UI
         {
             ShowMotto();
             var config = BalanceConfig.Instance;
-            SetLine(Tutorial, PlayerPrefs.GetInt("tutorial.rewarded", 0) != 0
+            var rewarded = PlayerPrefs.GetInt("tutorial.rewarded", 0) != 0;
+            SetLine(Tutorial, rewarded
                 ? Localization.Get("#banner_tutorial_done")
                 : Localization.Format("#banner_reward", config != null ? config.TutorialRewardCrystals : 0));
+            // with the icon the number stands left of it; «Пройдено» alone is centred
+            if (rewardIcon != null) rewardIcon.gameObject.SetActive(!rewarded);
+            if (lines.Length > Tutorial && lines[Tutorial] != null)
+            {
+                var line = lines[Tutorial];
+                line.alignment = rewarded || rewardIcon == null ? TextAnchor.MiddleCenter : TextAnchor.MiddleRight;
+                var rect = line.rectTransform;
+                rect.anchoredPosition = new Vector2(rewarded || rewardIcon == null ? 0f : -RewardIconRoom * 0.5f, rect.anchoredPosition.y);
+                rect.sizeDelta = new Vector2(LineWidth - (rewarded || rewardIcon == null ? 0f : RewardIconRoom), rect.sizeDelta.y);
+            }
             var saves = SaveSystem.ListSaves().Count;
             SetLine(Sandbox, saves > 0 ? Localization.Format("#mode_saves_count", saves) : Localization.Get("#banner_no_saves"));
             var counted = config != null ? config.InvasionRunsCountedPerDay : 5;
