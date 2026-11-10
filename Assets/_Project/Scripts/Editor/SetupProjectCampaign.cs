@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -24,6 +25,8 @@ namespace CityBuilder.EditorTools
         private const string OpeningLifePath = "Assets/_Project/Campaign/OpeningLife.json";
         private const string OpeningScriptPath = "Assets/_Project/Campaign/OpeningScript.json";
         private const string OpeningTracksPath = "Assets/_Project/Campaign/OpeningTracks.json";
+        private const string ChimneysPath = "Assets/_Project/Campaign/Chimneys.json";
+        private const string OpeningVolumePath = "Assets/_Project/Campaign/OpeningVolume.asset";
 
         // the village's houses: the game's own buildings (OpeningVillage picks among them by id)
         private static readonly string[] OpeningVillageBuildings =
@@ -162,6 +165,46 @@ namespace CityBuilder.EditorTools
             outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
             outline.effectDistance = new Vector2(2f, -2f);
 
+            // the title over the first wide shot
+            var titleGO = new GameObject("Title", typeof(RectTransform), typeof(Text), typeof(Outline));
+            titleGO.transform.SetParent(canvasGO.transform, false);
+            var trect = (RectTransform)titleGO.transform;
+            trect.anchorMin = new Vector2(0.05f, 0.5f);
+            trect.anchorMax = new Vector2(0.95f, 0.5f);
+            trect.pivot = new Vector2(0.5f, 0.5f);
+            trect.anchoredPosition = new Vector2(0f, 90f);
+            trect.sizeDelta = new Vector2(0f, 120f);
+            var title = titleGO.GetComponent<Text>();
+            title.font = CityBuilder.UI.UiTheme.Regular;
+            title.fontSize = 56;
+            title.alignment = TextAnchor.MiddleCenter;
+            title.color = new Color(0.98f, 0.9f, 0.68f);
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.raycastTarget = false;
+            var toutline = titleGO.GetComponent<Outline>();
+            toutline.effectColor = new Color(0.1f, 0.06f, 0.02f, 0.9f);
+            toutline.effectDistance = new Vector2(3f, -3f);
+
+            // the film's effects: the portal, the sky turning, the post, the chimney smoke
+            cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            var volume = new GameObject("FilmVolume", typeof(Volume)).GetComponent<Volume>();
+            volume.isGlobal = true;
+            volume.sharedProfile = OpeningVolume();
+            var fx = village.gameObject.AddComponent<OpeningFx>();
+            var fso = new SerializedObject(fx);
+            fso.FindProperty("village").objectReferenceValue = village;
+            fso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            fso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
+            fso.FindProperty("chimneysFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(ChimneysPath);
+            fso.FindProperty("vortexMaterial").objectReferenceValue = ShaderMaterial("CampaignVortex", "CityBuilder/CineVortex");
+            fso.FindProperty("groundMaterial").objectReferenceValue = ShaderMaterial("CampaignGroundFx", "CityBuilder/CineGroundFx");
+            fso.FindProperty("sparkMaterial").objectReferenceValue = ParticleMaterial("CampaignSpark", dot, true);
+            fso.FindProperty("dustMaterial").objectReferenceValue = ParticleMaterial("CampaignDust", dot, false);
+            fso.FindProperty("debrisMaterial").objectReferenceValue = Matte("CampaignDebris", new Color(0.55f, 0.53f, 0.5f));
+            fso.FindProperty("volume").objectReferenceValue = volume;
+            fso.FindProperty("title").objectReferenceValue = title;
+            fso.ApplyModifiedPropertiesWithoutUndo();
+
             var director = new GameObject("OpeningDirector").AddComponent<OpeningDirector>();
             var dso = new SerializedObject(director);
             dso.FindProperty("village").objectReferenceValue = village;
@@ -170,6 +213,7 @@ namespace CityBuilder.EditorTools
             dso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
             dso.FindProperty("cam").objectReferenceValue = cam;
             dso.FindProperty("subtitle").objectReferenceValue = line;
+            dso.FindProperty("fx").objectReferenceValue = fx;
             dso.FindProperty("ropeMaterial").objectReferenceValue = Matte("CampaignRope", new Color(0.55f, 0.42f, 0.26f));
             var dcast = dso.FindProperty("cast");
             dcast.arraySize = castProp.arraySize;
@@ -355,6 +399,38 @@ namespace CityBuilder.EditorTools
             m.renderQueue = (int)RenderQueue.Transparent;
             AssetDatabase.CreateAsset(m, path);
             return m;
+        }
+
+        /// <summary>A material on one of the film's own shaders.</summary>
+        private static Material ShaderMaterial(string name, string shader)
+        {
+            var path = $"{MaterialsFolder}/{name}.mat";
+            DeleteIfExists(path);
+            var m = new Material(Shader.Find(shader));
+            AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
+        /// <summary>The film's post: bloom, a touch of grading, a vignette, depth of field (off until
+        /// a close shot asks for it). The numbers are set from OpeningScript.json's fx block at play.</summary>
+        private static VolumeProfile OpeningVolume()
+        {
+            DeleteIfExists(OpeningVolumePath);
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(profile, OpeningVolumePath);
+            void Add<T>() where T : VolumeComponent
+            {
+                var c = profile.Add<T>(true);
+                c.name = typeof(T).Name;
+                AssetDatabase.AddObjectToAsset(c, profile);
+            }
+            Add<Bloom>();
+            Add<Vignette>();
+            Add<ColorAdjustments>();
+            Add<DepthOfField>();
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+            return profile;
         }
 
         /// <summary>A lit material with no shine: the default smoothness mirrored the sky's brown

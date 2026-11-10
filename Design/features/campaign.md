@@ -62,6 +62,22 @@
     `blender --background --python Tools/blender/cinematic/encode_frames.py -- RunLogs/campaign/film <out.mp4> 30`.
   - Traps: a shell whose cwd is inside RunLogs/campaign/film locks it and the film step dies on delete.
   - Not yet: nobody has watched it in play mode on a device; the handover to mission 1; sound.
+- **The user's notes on the Unity film v1 (2026-11-10)** -- FIXED in v2 (f1bff537d): the sack floated and
+  the hand hung (cause: skinned meshes never re-skin in the frame-by-frame editor film, so EVERY figure
+  stood in its bind pose -- now `CineFigure.Rigidify` cuts each skinned mesh into rigid parts on their
+  bones, like the game's figures; cheaper on phones too); holes in the belfry (the church's faces now
+  both ways, `export_cine.double_sided`); a foot poking back out of the dress (women run with
+  `perfs.skirt_run`).
+- **The user's CHOICE of additions (2026-11-10, after v2):**
+  - Portal: living swirl (shader spiral + sparks drawn in + pulsing light), assembly energy (runes truly
+    glow, blue arcs between flying stones, dust under rising stones), opening blast (flash, shockwave
+    ring, debris, hard shake), glowing cracks from the platform when the shaking starts.
+  - Atmosphere: the sky darkens after the portal (sun dims, lilac-crimson, thicker haze), bloom +
+    grading + vignette (film only), sparks and ash over fires with flickering firelight.
+  - Filling: birds flee at the first shake + animals (hens, dogs, cows/sheep in fields, a beast at the
+    cart); villagers at work (fields, wood, buckets, kids at tag); chimney smoke, washing and flags.
+  - Cinema: SOUND AND MUSIC, depth of field on close-ups, a title at the start.
+  - Not chosen: champion-landing dust, orcs smashing things, letterbox.
   - Traps: Blender `matrix_world` lags a set location until `view_layer.update()`; ground materials need
     smoothness 0 (the sky's brown lower half mirrored in the grass); the editor's first `Render()` drew
     no ground while its shader compiled in the background -> CampaignPhotos renders a warm-up frame.

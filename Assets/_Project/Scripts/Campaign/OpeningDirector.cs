@@ -60,6 +60,7 @@ namespace CityBuilder.Campaign
             public string name;
             public float start;
             public bool ease;
+            public bool dof;
             public string follow;
             public Key[] keys;
         }
@@ -116,6 +117,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private Camera cam;
         [SerializeField] private Text subtitle;
         [SerializeField] private Material ropeMaterial;
+        [SerializeField] private OpeningFx fx;
         [SerializeField] private OpeningLife.CastMember[] cast = new OpeningLife.CastMember[0];
         [SerializeField] private bool autoPlay = true;
 
@@ -163,6 +165,8 @@ namespace CityBuilder.Campaign
         private float _subT0 = -1f, _subLen;
         private string _subText;
         private bool _finished;
+        private Vector3 _camFrom, _camAt;
+        private bool _shallow;
 
         private void Start()
         {
@@ -216,6 +220,7 @@ namespace CityBuilder.Campaign
             var swirlPiece = village.Piece("CinePortalSwirl");
             if (swirlPiece != null) swirlPiece.gameObject.SetActive(false);
             if (subtitle != null) subtitle.text = string.Empty;
+            if (fx != null) fx.Begin();
 
             cam.usePhysicalProperties = true;
             cam.sensorSize = new Vector2(_s.lens.sensorWidth, _s.lens.sensorHeight);
@@ -240,6 +245,7 @@ namespace CityBuilder.Campaign
             if (life != null) life.Step(dt);
             StepCamera();
             StepSubtitle();
+            if (fx != null) fx.Step(Time, dt, _camFrom, _camAt, cam.focalLength, _shallow);
             if (!_finished && Time >= _s.end)
             {
                 _finished = true;
@@ -306,7 +312,8 @@ namespace CityBuilder.Campaign
                     if (c.track == "swirl")
                     {
                         var sw = village.Piece("CinePortalSwirl");
-                        if (sw != null) sw.gameObject.SetActive(true);
+                        // the effects draw the swirl themselves (a living vortex, not the flat disc)
+                        if (sw != null && fx == null) sw.gameObject.SetActive(true);
                     }
                     break;
                 case "values":
@@ -509,6 +516,7 @@ namespace CityBuilder.Campaign
             }
             if (shot == null || shot.keys.Length == 0) return;
             ShotName = shot.name;
+            _shallow = shot.dof;
             var u = Time - shot.start;
             var ia = 0;
             while (ia + 1 < shot.keys.Length && shot.keys[ia + 1].t <= u) ia++;
@@ -529,6 +537,8 @@ namespace CityBuilder.Campaign
                 from += new Vector3(Mathf.Sin(Time * 37f), Mathf.Sin(Time * 43f + 2f), Mathf.Sin(Time * 29f + 1f)) * shake;
             }
             cam.transform.SetPositionAndRotation(from, Quaternion.LookRotation(at - from));
+            _camFrom = from;
+            _camAt = at;
             cam.focalLength = Mathf.Lerp(a.lens, b.lens, w);
         }
 

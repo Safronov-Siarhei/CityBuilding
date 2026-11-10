@@ -9,6 +9,23 @@
  },
  "sack": {"vx": -0.27, "vy": 0.27, "vz": 0.37, "gravity": 3.5, "spinX": 140.0, "spinZ": 50.0},
  "rope": {"width": 0.012},
+ "fx": {
+  "runesStart": 20.35, "runesStep": 0.1, "runesRamp": 0.25, "runesBrightness": 2.2, "runeColor": [0.3, 0.85, 1.0],
+  "cracksStart": 20.6, "cracksSeconds": 6.5, "cracksRadius": 1.55, "cracksInner": 0.2, "cracksHeight": 0.085, "cracksColor": [0.25, 0.75, 1.0],
+  "assemblyStart": 27.8, "assemblySeconds": 6.0, "arcCount": 3, "arcRefresh": 0.07, "arcWidth": 0.012, "arcJitter": 0.05, "dustPerStone": 6,
+  "swirlStart": 33.8, "openDelay": 0.15, "openSeconds": 1.3, "swirlSpeed": 1.0,
+  "doorCentre": [0.0, 0.89, 0.0], "doorSize": [1.04, 1.58],
+  "vortexA": [0.42, 0.16, 0.85], "vortexB": [0.86, 0.66, 1.0],
+  "blastFlash": 0.35, "blastLight": 30.0, "blastLightRange": 6.0, "ringSeconds": 0.9, "ringRadius": 4.0,
+  "debris": 40, "debrisSpeed": 3.0, "debrisSize": 0.06,
+  "sparksRate": 40.0, "sparksRadius": 1.2, "sparksLife": 1.2, "sparksSize": 0.04,
+  "moodStart": 34.3, "moodSeconds": 6.0, "sunIntensity": 0.55, "sunColor": [1.0, 0.55, 0.62],
+  "skyTint": [0.62, 0.26, 0.5], "skyExposure": 0.75, "skyAtmosphere": 1.6, "fogColor": [0.46, 0.31, 0.43], "fogEnd": 110.0,
+  "ambientSky": [0.46, 0.36, 0.56], "ambientEquator": [0.45, 0.35, 0.42], "ambientGround": [0.25, 0.2, 0.22],
+  "bloomThreshold": 0.9, "bloomIntensity": 0.8, "vignette": 0.28, "saturation": 8.0, "contrast": 10.0, "dofAperture": 2.8,
+  "smokeRate": 6.0, "smokeLife": 4.0, "smokeSize": 0.18, "smokeSpeed": 0.25, "smokeStop": 46.0, "chimneySigns": [1.0, 1.0],
+  "titleKey": "#cine_opening_title", "titleStart": 0.6, "titleSeconds": 4.2, "titleFade": 0.8
+ },
  "subtitle": {"fadeIn": 0.15, "fadeOut": 0.3},
  "actors": [
   {"id": "ardan", "figure": "CineArdan"},
@@ -33,14 +50,14 @@
   {"name": "square", "start": 11.0, "keys": [
    {"t": 0.0, "from": [-2.3, 1.0, -4.7], "at": [-0.6, 0.3, -1.3], "lens": 30.0},
    {"t": 6.0, "from": [-2.0, 1.0, -4.7], "at": [-0.3, 0.3, -1.3], "lens": 30.0}]},
-  {"name": "talk_two", "start": 17.0, "keys": [
+  {"name": "talk_two", "dof": true, "start": 17.0, "keys": [
    {"t": 0.0, "from": [1.33, 0.58, -1.5], "at": [-0.12, 0.33, -2.2], "lens": 32.0}]},
-  {"name": "talk_amulet", "start": 19.3, "keys": [
+  {"name": "talk_amulet", "dof": true, "start": 19.3, "keys": [
    {"t": 0.0, "from": [-0.25, 0.42, -1.55], "at": [0.0, 0.371, -2.35], "lens": 50.0}]},
-  {"name": "talk_runes", "start": 20.4, "keys": [
+  {"name": "talk_runes", "dof": true, "start": 20.4, "keys": [
    {"t": 0.0, "from": [-0.55, 0.72, -3.25], "at": [0.0, 0.3, 0.0], "lens": 30.0, "shake": 0.0},
    {"t": 0.6, "from": [-0.55, 0.72, -3.25], "at": [0.0, 0.3, 0.0], "lens": 30.0, "shake": 0.008}]},
-  {"name": "fright", "start": 23.5, "keys": [
+  {"name": "fright", "dof": true, "start": 23.5, "keys": [
    {"t": 0.0, "from": [1.5, 0.8, -4.0], "at": [0.5, 0.22, -0.8], "lens": 26.0, "shake": 0.006},
    {"t": 4.3, "from": [1.5, 0.8, -4.1], "at": [1.0, 0.22, -0.5], "lens": 24.0, "shake": 0.006}]},
   {"name": "assembly", "start": 27.8, "keys": [
@@ -48,7 +65,7 @@
    {"t": 6.0, "from": [1.7, 0.45, -4.5], "at": [0.0, 0.9, 0.0], "lens": 30.0, "shake": 0.004}]},
   {"name": "swirl", "start": 33.8, "keys": [
    {"t": 0.0, "from": [0.5, 0.55, -3.3], "at": [0.0, 0.8, 0.0], "lens": 32.0}]},
-  {"name": "swirl_faces", "start": 35.3, "keys": [
+  {"name": "swirl_faces", "dof": true, "start": 35.3, "keys": [
    {"t": 0.0, "from": [0.3, 0.5, -1.05], "at": [-0.15, 0.4, -2.25], "lens": 38.0}]},
   {"name": "leap", "start": 36.8, "keys": [
    {"t": 0.0, "from": [0.85, 0.35, -2.85], "at": [0.0, 0.5, -0.55], "lens": 32.0},

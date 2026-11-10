@@ -39,6 +39,7 @@ namespace CityBuilder.Campaign
             public string name;
             public Placement ruin;
             public Placement arch;
+            public string glow;
         }
 
         [Serializable]
@@ -67,11 +68,25 @@ namespace CityBuilder.Campaign
         private readonly List<Vector2[]> _streets = new List<Vector2[]>();
         private readonly List<Vector2[]> _lanes = new List<Vector2[]>();
         private readonly List<Transform> _houses = new List<Transform>();
+        private readonly List<(string stone, string glow)> _glows = new List<(string, string)>();
         private Random _rnd;
         private Transform _root;
 
         /// <summary>A set piece by its model name (CineChurch, CinePortalStone_Arch3...).</summary>
         public Transform Piece(string name) => _pieces.TryGetValue(name, out var t) ? t : null;
+
+        /// <summary>A set piece's model as imported (the rune glows are laid over their stones).</summary>
+        public GameObject SetPieceModel(string name)
+        {
+            foreach (var p in setPieces) if (p.id == name) return p.prefab;
+            return null;
+        }
+
+        /// <summary>Each portal stone and the name of its runes' glow model.</summary>
+        public IEnumerable<(Transform stone, string glow)> StoneGlows()
+        {
+            foreach (var (name, glow) in _glows) yield return (Piece(name), glow);
+        }
 
         /// <summary>Where a ruin stone lies, and where the arch puts it (village frame).</summary>
         public bool StonePoses(string name, out Pose ruin, out Pose arch)
@@ -341,6 +356,7 @@ namespace CityBuilder.Campaign
             if (setFile == null) return;
             var file = JsonUtility.FromJson<SetFile>(setFile.text);
             if (file == null) return;
+            _glows.Clear();
             foreach (var p in file.pieces)
             {
                 var t = Spawn(p.name, ToPose(p));
@@ -350,6 +366,7 @@ namespace CityBuilder.Campaign
             {
                 var ruin = ToPose(s.ruin);
                 _stonePoses[s.name] = (ruin, ToPose(s.arch));
+                if (!string.IsNullOrEmpty(s.glow)) _glows.Add((s.name, s.glow));
                 Spawn(s.name, ruin);
             }
         }

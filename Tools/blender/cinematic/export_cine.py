@@ -29,6 +29,7 @@ import figure as fg  # noqa: E402
 import portal  # noqa: E402
 import townsfolk_anim as ta  # noqa: E402
 import bell_anim as ba  # noqa: E402
+import cutscene as cs  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 S = fg.SET_SCALE
@@ -120,9 +121,16 @@ def main():
     for name, m in pieces.items():
         export(bpy.data.objects[name], folder)
         out["pieces"].append(dict(name=name, **unity(village @ m)))
+    # each stone's rune as its own glowing insert, in the stone's own frame (Unity lights them in turn)
+    glows = cs.rune_glows(sts)
+    for s, (g, _) in zip(sts, glows):
+        g.name = "CineRuneGlow_" + s.name.split("_", 1)[1]
+        g.data.name = g.name
     for name, poses in stones.items():
         export(bpy.data.objects[name], folder)
-        out["stones"].append(dict(name=name, **poses))
+        glow = "CineRuneGlow_" + name.split("_", 1)[1]
+        export(bpy.data.objects[glow], folder)
+        out["stones"].append(dict(name=name, glow=glow, **poses))
     data = os.path.join(project, "Assets", "_Project", "Campaign")
     os.makedirs(data, exist_ok=True)
     with open(os.path.join(data, "OpeningSet.json"), "w", encoding="utf-8") as f:
