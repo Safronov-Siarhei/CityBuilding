@@ -41,7 +41,7 @@ namespace CityBuilder.UI
         private const float WornStrength = 0.6f;
         private const float Grain = 5f;
 
-        /// <summary>The corner the compass rose sits in, as a fraction of the chart (x east, y north): the UI puts its «С» above it.</summary>
+        /// <summary>The corner the compass rose sits in, as a fraction of the chart (x east, y north).</summary>
         public static readonly Vector2 RoseAt = new Vector2(0.9f, 0.1f);
         public const float RoseRadius = 0.06f;
 

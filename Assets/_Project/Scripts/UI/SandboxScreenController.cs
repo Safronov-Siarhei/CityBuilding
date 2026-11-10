@@ -33,11 +33,6 @@ namespace CityBuilder.UI
         [SerializeField] private Image[] pictures = new Image[0];
         [SerializeField] private GameObject[] pickedFrames = new GameObject[0];
 
-        [Header("The generated map's ink chart (2026-11-10): drawn from the code, markers laid over it")]
-        [SerializeField] private RectTransform homeMarker;
-        [SerializeField] private RectTransform orcsMarker;
-        [SerializeField] private RectTransform neighbourMarker;
-
         [Header("Pictures: map id + '_' + theme id (MenuArtBake); a map with none in a theme shows its plain one")]
         [SerializeField] private string[] pictureKeys = new string[0];
         [SerializeField] private Sprite[] pictureSprites = new Sprite[0];
@@ -163,7 +158,7 @@ namespace CityBuilder.UI
 
         /// <summary>
         /// A generated map's ink chart for the code in the box (InkMapPainter), redrawn only when the
-        /// code changes; null (the plain picture then, no markers) for a map that is not generated or
+        /// code changes; plain, no markers (the user, 2026-11-10); null (the plain picture then) for a map that is not generated or
         /// a code that does not parse.
         /// </summary>
         private Sprite ChartOf(string mapId)
@@ -173,10 +168,7 @@ namespace CityBuilder.UI
             var typed = mapCode != null ? mapCode.text : string.Empty;
             if (!Maps.Archipelago.ArchipelagoMapId.TryParseCode(typed, out var id, out _)
                 || !Maps.Archipelago.ArchipelagoMapId.TryParse(id, out var seed, out var version))
-            {
-                Markers(null);
                 return null;
-            }
             if (id != _charted || _chartSprite == null)
             {
                 var map = Maps.Archipelago.ArchipelagoGenerator.Generate(seed, version, preview: true);
@@ -187,27 +179,8 @@ namespace CityBuilder.UI
                 }
                 InkMapPainter.Paint(map, _chart);
                 _charted = id;
-                Markers(map);
             }
             return _chartSprite;
-        }
-
-        private void Markers(Maps.Archipelago.ArchipelagoMap map)
-        {
-            Place(homeMarker, map, map != null ? map.StartCell : default);
-            Place(orcsMarker, map, map != null ? map.OrcBaseCell : default);
-            Place(neighbourMarker, map, map != null ? map.BotCell : default);
-        }
-
-        private static void Place(RectTransform marker, Maps.Archipelago.ArchipelagoMap map, Vector2Int cell)
-        {
-            if (marker == null) return;
-            marker.gameObject.SetActive(map != null);
-            if (map == null) return;
-            var at = new Vector2((cell.x + 0.5f) / map.Size, (cell.y + 0.5f) / map.Size);
-            marker.anchorMin = at;
-            marker.anchorMax = at;
-            marker.anchoredPosition = Vector2.zero;
         }
 
         private Sprite PictureOf(string mapId, MapTheme theme)
