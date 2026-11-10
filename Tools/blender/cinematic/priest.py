@@ -46,20 +46,42 @@ def thigh(b, k):
     b.box(x - 0.023, x + 0.023, -0.023, 0.023, 0.098, 0.2, CASSOCK, bevel=0.008)
 
 
+SKIRT_Z0, SKIRT_Z1, SKIRT_R0, SKIRT_R1 = 0.028, 0.27, 0.104, 0.083
+FLAT = math.cos(math.pi / 8)            # an 8-sided skirt's flat front is this much of its radius
+
+
+def skirt_front(z):
+    """How far forward (-y) the skirt's flat front face is at height z."""
+    t = (z - SKIRT_Z0) / (SKIRT_Z1 - SKIRT_Z0)
+    return FLAT * (SKIRT_R0 + (SKIRT_R1 - SKIRT_R0) * t)
+
+
+def on_skirt(b, x, z0, z1, half_w, depth, color, lift=0.0):
+    """A flat strip lying on the skirt's sloping front from z0 to z1."""
+    y0, y1 = -(skirt_front(z0) + lift), -(skirt_front(z1) + lift)
+    along = (0, y1 - y0, z1 - z0)
+    length = math.hypot(along[1], along[2])
+    ay = (0, -along[2] / length, along[1] / length)                 # out of the cloth, forward
+    centre = (x, (y0 + y1) / 2 + ay[1] * depth / 2, (z0 + z1) / 2 + ay[2] * depth / 2)
+    b.obox(centre, (1, 0, 0), ay, (0, along[1], along[2]), half_w, depth / 2, length / 2, color)
+
+
 def waist(b):
-    """The cassock's skirt to the ankles, buttons down the front, the sash, the stole's ends."""
-    b.frustum(0, 0, 0.028, 0.27, 0.104, 0.083, CASSOCK, sides=8)
-    for i in range(7):
-        z = 0.06 + i * 0.03
-        b.box(-0.0035, 0.0035, -0.103 + i * 0.0029, -0.098 + i * 0.0029, z - 0.0035, z + 0.0035, BUTTON)
-    b.cylinder(0, 0, 0.238, 0.262, 0.087, STOLE, sides=8)
-    b.box(0.03, 0.05, -0.092, -0.082, 0.17, 0.25, STOLE_DARK, bevel=0.003)          # the sash's end
-    # the stole's two bands down to the knees, gold-fringed
+    """The cassock's skirt to the ankles, buttons down the front, the stole's two bands lying on the
+    skirt down to the knees, the sash over them (2026-11-10: the bands stood off the cloth and the
+    belt ran behind them)."""
+    b.frustum(0, 0, SKIRT_Z0, SKIRT_Z1, SKIRT_R0, SKIRT_R1, CASSOCK, sides=8)
+    for i in range(6):
+        on_skirt(b, 0, 0.055 + i * 0.03, 0.062 + i * 0.03, 0.0035, 0.003, BUTTON)
     for k in (-1, 1):
         x = k * 0.03
-        b.box(x - 0.014, x + 0.014, -0.098, -0.089, 0.12, 0.27, STOLE, bevel=0.002)
-        b.box(x - 0.015, x + 0.015, -0.1, -0.088, 0.105, 0.122, GOLD, bevel=0.002)
-        b.box(x - 0.006, x + 0.006, -0.1005, -0.097, 0.2, 0.212, GOLD)              # a little sun
+        on_skirt(b, x, 0.12, 0.25, 0.014, 0.004, STOLE)
+        on_skirt(b, x, 0.106, 0.124, 0.015, 0.006, GOLD)                            # the fringe
+        on_skirt(b, x, 0.186, 0.198, 0.006, 0.006, GOLD)                            # a little sun
+    # the sash: a band round the waist over the stole, its end hanging at his left hip
+    b.cylinder(0, 0, 0.236, 0.262, 0.095, STOLE_DARK, sides=8)
+    b.box(0.052, 0.07, -0.082, -0.07, 0.16, 0.24, STOLE_DARK, bevel=0.003)
+    b.box(0.05, 0.072, -0.084, -0.068, 0.15, 0.162, GOLD, bevel=0.002)
 
 
 def chest(b):
@@ -71,20 +93,22 @@ def chest(b):
     # the stole over the shoulders and down the chest
     for k in (-1, 1):
         x = k * 0.03
-        b.box(x - 0.014, x + 0.014, -0.062, -0.056, 0.27, 0.39, STOLE, bevel=0.002)
+        b.box(x - 0.014, x + 0.014, -0.062, -0.056, 0.255, 0.39, STOLE, bevel=0.002)
         b.box(x - 0.014, x + 0.014, -0.056, 0.06, 0.383, 0.396, STOLE, bevel=0.003)
     # the collar: a standing black band with the white tab in front
     b.obox((0, 0.0, 0.402), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.032, 0.03, 0.012, CASSOCK, bevel=0.006)
     b.box(-0.008, 0.008, -0.033, -0.029, 0.396, 0.41, COLLAR)
-    # the gold sun medallion on its chain
-    b.rod((-0.02, -0.05, 0.4), (0.0, -0.064, 0.345), 0.003, GOLD)
-    b.rod((0.02, -0.05, 0.4), (0.0, -0.064, 0.345), 0.003, GOLD)
-    b.prism([(0.014 * math.cos(a), 0.33 + 0.014 * math.sin(a)) for a in [i * math.pi / 4 for i in range(8)]],
-            (0, -0.063, 0), (1, 0, 0), (0, 0, 1), 0.005, GOLD, back_cap=True)
+    # the gold sun medallion between the stole's bands, on a chain round his neck
+    for k in (-1, 1):
+        pts = [(k * 0.03, -0.035, 0.398), (k * 0.016, -0.06, 0.38), (k * 0.006, -0.064, 0.362), (0.0, -0.065, 0.354)]
+        for p0, p1 in zip(pts, pts[1:]):
+            b.rod(p0, p1, 0.0035, GOLD)
+    b.prism([(0.009 * math.cos(a), 0.342 + 0.009 * math.sin(a)) for a in [i * math.pi / 4 for i in range(8)]],
+            (0, -0.062, 0), (1, 0, 0), (0, 0, 1), 0.004, GOLD, back_cap=True)
     for i in range(8):
-        a = i * math.pi / 4
-        b.box(0.02 * math.cos(a) - 0.002, 0.02 * math.cos(a) + 0.002, -0.066, -0.063,
-              0.33 + 0.02 * math.sin(a) - 0.002, 0.33 + 0.02 * math.sin(a) + 0.002, GOLD)
+        a = i * math.pi / 4 + math.pi / 8
+        b.box(0.0125 * math.cos(a) - 0.0017, 0.0125 * math.cos(a) + 0.0017, -0.0645, -0.0615,
+              0.342 + 0.0125 * math.sin(a) - 0.0017, 0.342 + 0.0125 * math.sin(a) + 0.0017, GOLD)
 
 
 def upper_arm(b, k):
