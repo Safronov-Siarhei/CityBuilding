@@ -57,6 +57,13 @@
   12. Bell (3 s): the priest pulls the rope in the belfry.
   13. «Беги!» (3 s): the elder shouts it and pushes Ардан away.
   14. Into play (3 s): Ардан drops the sack and runs; the camera swings behind him and the joystick hint appears.
+- **Animations come next, group by group, each sent for approval** (the user, 2026-11-10: «Сначала анимации»).
+  - Ардан round 2 (`ardan_anim2.py`, it reuses the rig, sack and stage of `ardan_anim.py`) was sent on 2026-11-10:
+    - CineArdan_Amulet, 4.6 s: he turns his head to the elder, looks down and brings his left fist to the amulet; the rune flickers, then flashes (an emissive gem plus a point light on the chest bone); he looks up, startled.
+    - CineArdan_DropRun, 3.6 s: a flinch; the right hand lets go and the sack falls off his shoulder (baked world keys: it tumbles, thumps and settles); he eases into the run, the cycle driven by distance so the feet don't skate.
+    - CineArdan_Run: a 0.72 s cycle at 0.95*S units a second.
+  - The left-fist-on-amulet angles were FITTED numerically (upper arm -40/-10/-30, forearm -50/0/-45), because eyeballed angles put the fist in his face or inside his chest.
+  - Groups still to make: the children; the elder (talk, shout, push); the champion (leap, land, roar); the torch and spear orcs (run); the priest (bell); the townsfolk (fright, flight, the merchant calling).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.

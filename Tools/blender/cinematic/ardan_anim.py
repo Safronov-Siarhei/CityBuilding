@@ -297,4 +297,5 @@ def main():
         clip(out, "ardan_carry", arm, carry_act, 0.3 * S, 4.0, -1, cam)
 
 
-main()
+if __name__ == "__main__":
+    main()
