@@ -308,6 +308,8 @@ namespace CityBuilder.Cheats
                 ? $"Отрисовок (draw calls): {_drawCallsSeen}   треугольников: {_trianglesSeen}"
                 : "Отрисовки и треугольники видны только в редакторе и в development-сборке.");
 
+            DrawRenderTuning();
+
             Header("Сохранение");
             var save = FindAnyObjectByType<GameSaveController>();
             GUILayout.BeginHorizontal();
@@ -326,6 +328,35 @@ namespace CityBuilder.Cheats
                 GameSessionIntent.NewGameIsInvasion = InvasionMode.IsActive;
                 LeaveTo();
             }
+        }
+
+        // Tuning a graphics tier on a device (2026-11-10, Low shimmered on the Redmi Pad): the
+        // render scale, MSAA and the upscaling filter over the tier, applied at once; not saved.
+        private void DrawRenderTuning()
+        {
+            Header("Рендер (поверх тира, не сохраняется)");
+            var px = Mathf.RoundToInt(Mathf.Min(Screen.width, Screen.height) * GraphicsQuality.AppliedScale);
+            Label($"тир {GraphicsQuality.Effective}: масштаб {GraphicsQuality.AppliedScale:0.00} ({px}p), MSAA {GraphicsQuality.AppliedMsaa}x, растяжение {GraphicsQuality.AppliedFilter}");
+            GUILayout.BeginHorizontal();
+            if (Button("масштаб −0.05")) TuneScale(-0.05f);
+            if (Button("масштаб +0.05")) TuneScale(0.05f);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            foreach (var m in new[] { 1, 2, 4 })
+                if (Button($"MSAA {m}x")) { GraphicsQuality.OverrideMsaa = m; GraphicsQuality.Apply(); }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (Button("Linear")) { GraphicsQuality.OverrideFilter = UnityEngine.Rendering.Universal.UpscalingFilterSelection.Linear; GraphicsQuality.Apply(); }
+            if (Button("Point")) { GraphicsQuality.OverrideFilter = UnityEngine.Rendering.Universal.UpscalingFilterSelection.Point; GraphicsQuality.Apply(); }
+            if (Button("FSR")) { GraphicsQuality.OverrideFilter = UnityEngine.Rendering.Universal.UpscalingFilterSelection.FSR; GraphicsQuality.Apply(); }
+            if (Button("сброс")) { GraphicsQuality.OverrideScale = 0f; GraphicsQuality.OverrideMsaa = 0; GraphicsQuality.OverrideFilter = null; GraphicsQuality.Apply(); }
+            GUILayout.EndHorizontal();
+        }
+
+        private static void TuneScale(float step)
+        {
+            GraphicsQuality.OverrideScale = Mathf.Clamp(Mathf.Round((GraphicsQuality.AppliedScale + step) * 20f) / 20f, 0.3f, 1f);
+            GraphicsQuality.Apply();
         }
 
         /// <summary>Reloads the game scene with what GameSessionIntent was just told.</summary>

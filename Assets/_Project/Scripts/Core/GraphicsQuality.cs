@@ -32,7 +32,10 @@ namespace CityBuilder.Core
         // tier: render scale, the cap on the short screen side in pixels, MSAA samples, shadow map, shadow reach
         private static readonly (float scale, int shortSideCap, int msaa, int shadowMap, float shadowDistance)[] Tiers =
         {
-            (0.75f, 720, 2, 1024, 35f),   // Low
+            // Low at the screen's own resolution: on the Redmi Pad (Mali-G57) 720p and native 1200p
+            // both drew 54 fps, and 720p stretched to the screen shimmered (the user, 2026-11-10);
+            // what costs there is MSAA 4x (54 -> 31 fps at any scale), so Low keeps 2x
+            (1f, 1200, 2, 1024, 35f),     // Low
             (0.9f, 1080, 4, 1024, 50f),   // Medium
             (1f, 1440, 4, 2048, 60f),     // High
         };
@@ -86,6 +89,16 @@ namespace CityBuilder.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void ApplyAtStart() => Apply();
 
+        // a cheat's override for tuning a tier on a device (CheatsPanel, «Служебное»): 0 / null = the tier's own
+        public static float OverrideScale;
+        public static int OverrideMsaa;
+        public static UpscalingFilterSelection? OverrideFilter;
+
+        /// <summary>The render scale last applied (for the cheat window's readout).</summary>
+        public static float AppliedScale => _copy != null ? _copy.renderScale : 1f;
+        public static int AppliedMsaa => _copy != null ? _copy.msaaSampleCount : 1;
+        public static UpscalingFilterSelection AppliedFilter => _copy != null ? _copy.upscalingFilter : UpscalingFilterSelection.Auto;
+
         /// <summary>
         /// Draws with the effective tier from now on. Every call builds a FRESH copy of the project's
         /// URP asset and assigns it: on the device, editing the live copy's render scale / MSAA did
@@ -112,6 +125,9 @@ namespace CityBuilder.Core
             _copy.shadowDistance = tier.shadowDistance;
             // no post effects in the game: HDR buys nothing but bandwidth
             _copy.supportsHDR = false;
+            if (OverrideScale > 0f) _copy.renderScale = Mathf.Clamp(OverrideScale, 0.3f, 1f);
+            if (OverrideMsaa > 0) _copy.msaaSampleCount = OverrideMsaa;
+            if (OverrideFilter.HasValue) _copy.upscalingFilter = OverrideFilter.Value;
 
             QualitySettings.renderPipeline = _copy;
             if (old != null) Object.Destroy(old);

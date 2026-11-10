@@ -15,6 +15,12 @@
 > - GPU-bound frames inflate BehaviourUpdate (14–16 ms at Medium vs 6 ms at Low): a script that
 >   draws (MinimapCameraUpdater calls `Camera.Render()` from Update every 0.15 s in the sandbox) waits
 >   for the GPU there. Scripts at Low: ~6 ms (Pixel 3.4), physics 1.0, NavMesh 0.4.
+> - **Low retuned (the user: Low «рябит»)** with the cheat «Рендер» (CheatsPanel → Служебное: render
+>   scale ±0.05, MSAA 1/2/4x, upscaler Linear/Point/FSR over the tier, not saved). Tablet, town:
+>   0.6/2x 54 fps · 1.0/2x **54** · 0.6/4x 29 · 0.9/4x 31 · 1.0/4x 31 · FSR changes nothing.
+>   **Resolution is ~free on Mali-G57, MSAA 4x halves the frame rate.** Low is now scale 1.0, cap
+>   1200 px, MSAA 2x (was 0.75/720 = 0.6 here). Medium (0.9, 4x) is just as slow on this GPU -- left
+>   until an Adreno device (A71) is measured. Comparison picture: RunLogs/compare (not in git).
 > - Per-script markers (`X.Update() [Invoke]`) do NOT exist in a non-deep development player --
 >   a ProfilerRecorder split by script finds nothing (tried, reverted).
 > - The cheats panel's «К лагерю» did not react to adb taps on the tablet (worked on the Pixel).
