@@ -250,15 +250,10 @@ def king_scene():
         part(f"Hand{side}", fist, (0.066, 0.066, 0.066), skin, rot)
         return fist
 
-    arm(-1, 6)                  # his left arm hangs at his side
-    fist = arm(1, 132)          # his right raises the hammer up and out
-    # the hammer: an upright handle through the fist, a square head straight across its top
-    grip_below, grip_above = 0.08, 0.24
-    part("Handle", fist + Vector((0, 0, (grip_above - grip_below) / 2)), (0.03, 0.03, grip_below + grip_above), wood, bevel=0.004)
-    head = fist + Vector((0, 0, grip_above + 0.045))
-    part("HammerHead", head, (0.21, 0.095, 0.095), iron, bevel=0.01)
-    for s in (-1, 1):
-        part(f"HammerBand{s}", head + Vector((s * 0.068, 0, 0)), (0.018, 0.104, 0.104), band, bevel=0.004)
+    # a big portrait (the user, 2026-11-10: «просто большой портрет короля без молота»): both arms
+    # hang at his sides, so the shoulders are whole; no hammer
+    arm(-1, 6)
+    arm(1, 6)
 
     # the town behind him, out of focus
     show("Cottage1-lvl3", (1.05, 1.9, 0), yaw=-25)
@@ -267,7 +262,8 @@ def king_scene():
     grass = mat("Grass", (110, 170, 70), 0.95)
     box("Ground", (0, 2, -0.01), (12, 12, 0.02), grass, bevel=0)
 
-    cam = camera((-0.15, -2.05, 0.62), (0.11, 0, 0.62), 98, fstop=2.0, focus=2.05)
+    # head and shoulders filling the icon, seen a little from his right and from just below his eyes
+    cam = camera((-0.45, -2.0, 0.57), (0.0, 0, 0.60), 172, fstop=1.6, focus=2.05)
     backdrop(cam, 9.0, ((0.0, (205, 232, 246)), (0.55, (130, 192, 238)), (1.0, (70, 140, 215))))
     world((180, 210, 255), 0.5)
     sun("Key", (50, 0, -30), 3.2, (255, 244, 225))
