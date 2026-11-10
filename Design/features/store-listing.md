@@ -46,10 +46,15 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   of its own); the King and the orc chief stand either side and ask to support the project with a
   rating; the King is the GAME'S OWN HeroKing model (the user rejected the icon's retouched king:
   "a model we use nowhere"); the orc chief is BIG, a head taller than the king.
-- Mock-up v2: `Design/store/RateWindow_Mockup.png` by `Tools/store/rate_window_mockup.py <folder>`:
-  the game dimmed behind (Load_summer stands in for the game), a wood-framed window whose picture is a
-  blurred town, the heroes standing on the window floor with heads over the frame, a parchment column
-  in the middle (ribbon «Поддержите нас!», text, 5 stars, green «Оценить», «Позже», close X).
+- Mock-up v3: `Design/store/RateWindow_Mockup.png` (+ `RateWindow_Backgrounds.png`: the window's picture
+  A blurred summer town / B blurred autumn town / C sunburst rays / D the painted chart -- the user to pick)
+  by `Tools/store/rate_window_mockup.py <folder> <town|autumn|sunburst|map> [out]`. The user's v3 notes:
+  the window 1.5x bigger (now 1800x820 of a 1920x1080 screen); the ribbon title as in v1 (a wide band
+  with folded tails behind both ends, «Поддержите королевство!»); the orc chief's height is measured
+  FEET TO HEAD, never by his flag or axe top: he is a head taller than the king (body 1.2x). The
+  scale comes from measured pixels on the renders (king feet 1170 / head top under the crown 270, orc
+  feet 1090 / head top under the spikes 490 in the 900x1200 figures). His banner above the skull staff
+  is erased in the mock-up (`no_flag`), so the staff ends in the skull.
   Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure,
   transparent, ortho camera fitted to bounds; figure_king = plain HeroKing, no retouch).
   In the game the heroes would be pre-rendered sprites (cheap on mobile), not live 3D.
