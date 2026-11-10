@@ -104,3 +104,13 @@ def make(name, parts, scale, location=(0, 0, 0), post=None):
         groups[t - 1].add([i], 1.0, 'REPLACE')
     print(f"MODEL {name} tris={sum(len(p.vertices) - 2 for p in me.polygons)}")
     return obj
+
+
+def grow_part(b, parts, bone, factor, pivot):
+    """Scales one part about `pivot` (a child's bigger head) before the figure is scaled."""
+    layer = b.bm.verts.layers.int.get(PART_LAYER)
+    index = [n for n, _ in parts].index(bone) + 1
+    p = Vector(pivot)
+    for v in b.bm.verts:
+        if v[layer] == index:
+            v.co = p + (v.co - p) * factor

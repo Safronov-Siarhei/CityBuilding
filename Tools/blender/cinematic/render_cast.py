@@ -12,18 +12,20 @@ import bpy  # noqa: E402
 import ardan  # noqa: E402
 import elder  # noqa: E402
 import priest  # noqa: E402
+import townsfolk  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": elder.make, "CinePriest": priest.make}
+BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 out, solos = argv[0], argv[1:]
 os.makedirs(out, exist_ok=True)
-for build in BUILDERS.values():
-    build()
+for n in set(solos) | {"CineArdan", "CineElder", "CinePriest"}:
+    BUILDERS[n]()
 
 sc = bpy.context.scene
-lineup = ["CineElder", "CineArdan", "CinePriest", "HeroKing"]
+lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + ["CineElder", "CinePriest"]
 for i, n in enumerate(lineup):
     bpy.data.objects[n].location = (i * 0.5, 0, 0)
 sc.render.engine = 'BLENDER_EEVEE'
@@ -64,12 +66,14 @@ def shot(name, at, offset, lens):
 
 
 show(lineup)
-shot("cast_lineup", (0.75, 0, 0.3), (0.6, -3.2, 0.8), 55)
+mid = (len(lineup) - 1) * 0.25
+shot("cast_lineup", (mid, 0, 0.3), (0.0, -2.0 - 0.58 * len(lineup), 0.9), 55)
 for n in solos:
     show([n])
     a = bpy.data.objects[n].location
+    h = bpy.data.objects[n].dimensions.z
     short = n.replace("Cine", "").lower()
-    shot(short + "_front", a + Vector((0, 0, 0.29)), (0, -1.9, 0.25), 80)
-    shot(short + "_three_quarter", a + Vector((0, 0, 0.29)), (1.25, -1.45, 0.4), 80)
-    shot(short + "_back", a + Vector((0, 0, 0.29)), (-0.8, 1.7, 0.4), 80)
-    shot(short + "_face", a + Vector((0, -0.02, 0.48)), (0.25, -0.75, 0.08), 85)
+    shot(short + "_front", a + Vector((0, 0, h * 0.5)), (0, -1.9, 0.25), 80)
+    shot(short + "_three_quarter", a + Vector((0, 0, h * 0.5)), (1.25, -1.45, 0.4), 80)
+    shot(short + "_back", a + Vector((0, 0, h * 0.5)), (-0.8, 1.7, 0.4), 80)
+    shot(short + "_face", a + Vector((0, -0.02, h - 0.08)), (0.25, -0.75, 0.08), 85)

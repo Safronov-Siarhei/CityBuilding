@@ -4,7 +4,11 @@
 - Ардан's cutscene MODEL is APPROVED by the user (`Tools/blender/cinematic/ardan.py`).
 - His rig and two animations (walk, carry the sack) are APPROVED (`ardan_anim.py`).
 - The old man (`elder.py`, CineElder) and the priest (`priest.py`, CinePriest) are built on Ардан's rig
-  through the shared `figure.py`. Their renders went to the user; awaiting approval.
+  through the shared `figure.py`. Both are APPROVED. The priest was fixed first: the stole now lies on the skirt under the sash, and the medallion hangs between the bands on a chain round the neck.
+- The townsfolk (`townsfolk.py`) are built and their renders went to the user; awaiting approval:
+  - CineMerchant, CinePeasant (with a sickle), CinePeasantWoman (with a basket), CineBoy and CineGirl.
+  - The children are scaled to about 0.67 with heads 1.18x bigger.
+  - None of them may look like Ардан.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
@@ -60,6 +64,6 @@ Commands:
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
-- The rest of the cinematic set: villagers (trade, field, church), the church, the market, the
+- The rest of the cinematic set: the church, the market, the
   square's stones and the portal.
 - The level structure beyond mission 1.
