@@ -1,5 +1,29 @@
 # Performance on mobile
 
+> **2026-11-10 MEASURED ON THE PIXEL 6 PRO** (development APK + `Cheats/PerfProbe.cs`; the user's sandbox
+> day 22: 52 orcs, 20 people, 3120x1440). Holds **60 fps everywhere** (town, fog, an L4 orc camp, menu).
+> - **The phone is loafing:** Mali GPU at **251–351 MHz of ~850**, CPU cores at ~40 % clock. So the
+>   FrameTimingManager times (CPU main 12 ms, GPU 14–15 ms) are work STRETCHED by DVFS to fill the vsync
+>   frame, NOT headroom used up. Read GPU ms only together with `cur_freq`
+>   (`/sys/devices/platform/1c500000.mali/cur_freq`, readable over adb; max_freq/utilization are not).
+> - Main-thread split, town: scripts **BehaviourUpdate 3.4 ms** (largest), DrawOpaque 2.2, Physics
+>   Simulate+Sync 0.8, Culling 0.5, LateUpdate 0.43, NavMesh 0.25, UI 0.25–0.36. setpass 33, 276k tris,
+>   23 shadow casters. Fog/sea only: 215k tris, 0 casters, scripts 3.2.
+> - **Orc camp (L4) is the heaviest view:** 412k tris, **150 shadow casters**, MainLightShadow ×2,
+>   GPU +3 ms at the same clock, ~+30 setpass.
+> - Tiers (same view, same low clock): High GPU 14.8 → Medium 12.9 → Low 11.0 ms -- resolution/MSAA
+>   are not where the GPU time goes (Low is ¼ of the pixels).
+> - GC: **3.3 KB/frame in the game, 5.2 KB/frame in the main menu** with nothing running -- steady
+>   allocation, source not found yet. The cheats panel open = 26.7 KB/frame + ~85 setpass (ignore it
+>   when measuring; closing it moves the camera back to the town).
+> - Menu was 30 fps only in the first seconds after launch; settled at 60.
+> - Next: the same probe on a WEAK phone of the fleet (the flagship can't show a bottleneck);
+>   find the per-frame allocations; camp shadow casters (palisade/decor out of the shadow pass);
+>   split BehaviourUpdate by script (deep profile or markers).
+> - Probe: in a development build only (`build_android.ps1 -Development`; BuildAndroid sets
+>   `enableFrameTimingStats` for it); a line `PERF …` every 3 s in `adb logcat -s Unity`. The
+>   "Draw Calls/Batches Count" recorders read 0 in a player build; setpass/tris/casters work.
+
 > **2026-11-10 FOG CULLING (the user: «под туманом ничего не должно быть»):** `Maps/FogCulling.cs` + `FogCulled.cs` -- an object's renderers are off while none of its sample cells (middle + 4 at RadiusCells) is revealed; 40 objects checked a frame. On: orc camp roots (decor/rocks/skeleton, radius HalfExtent), every orc camp building, every OrcUnit, every bot building (InitializeAsBot), bot garrison soldiers. Simulation only on view: bot castle raids + rebuild (BotKingdom, `SeenRadiusCells` 14), bot garrison (BotGarrison), orc camp patrol walking (OrcCamp), fish shoals hidden + not animated. Wildlife already spawned only where revealed. Crows over the main base removed. No fog (dungeon, cheat, no map fog) = nothing hidden (`FogOfWarManager.IsActive`). Not measured on a phone.
 
 > **2026-11-09:** quality tiers + transparent-variant fix + dims past the SafeArea (see "Picture quality"), not seen on a phone.

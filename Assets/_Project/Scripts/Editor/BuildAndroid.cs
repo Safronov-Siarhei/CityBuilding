@@ -72,6 +72,8 @@ namespace CityBuilder.EditorTools
                 // per-frame timings far more than it explains them.
                 options |= BuildOptions.Development | BuildOptions.ConnectWithProfiler;
             }
+            // the CPU/GPU frame times Cheats/PerfProbe logs (FrameTimingManager) -- the development build only
+            PlayerSettings.enableFrameTimingStats = development;
 
             var buildPlayerOptions = new BuildPlayerOptions
             {
