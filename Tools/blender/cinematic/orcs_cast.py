@@ -218,9 +218,15 @@ def torchbearer():
                    [0.032, 0.022, 0], o.FIRE, sides=6)
             o.tube(b, [(x, y - 0.034, z + 0.22), (x - 0.012, y - 0.04, z + 0.27)], [0.02, 0], 'plaster_yellow', sides=5)
         else:
-            b.rod((x, y + 0.04, z - 0.04), (x, y - 0.14, z + 0.06), 0.02, o.TIMBER)
-            b.prism([(-0.13, z + 0.02), (-0.15, z + 0.09), (-0.22, z + 0.12), (-0.24, z + 0.0), (-0.19, z - 0.02)],
-                    (x - 0.006, y, 0), (0, 1, 0), (0, 0, 1), 0.012, o.METAL, back_cap=True)
+            # the axe gripped in the fist, haft up and a little forward, the blade facing forward
+            # (2026-11-10: it was held out level and its head hung in the air)
+            top = z + 0.22
+            b.rod((x, y + 0.012, z - 0.03), (x, y - 0.03, top), 0.02, o.TIMBER)
+            b.prism([(-0.03, top - 0.07), (-0.035, top - 0.01), (-0.1, top + 0.02), (-0.115, top - 0.06), (-0.1, top - 0.11)],
+                    (x - 0.007, y, 0), (0, 1, 0), (0, 0, 1), 0.014, o.METAL, back_cap=True)
+            b.prism([(-0.1, top + 0.02), (-0.115, top + 0.02), (-0.13, top - 0.06), (-0.115, top - 0.11), (-0.1, top - 0.11), (-0.115, top - 0.06)][:4],
+                    (x - 0.006, y, 0), (0, 1, 0), (0, 0, 1), 0.012, 'stone_light', back_cap=True)
+            b.box(x - 0.013, x + 0.013, y - 0.045, y - 0.015, top - 0.05, top - 0.02, o.RUST)
 
     return parts(waist, chest, head_fn, arm_parts(hold=hold))
 
