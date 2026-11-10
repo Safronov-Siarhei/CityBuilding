@@ -16,13 +16,17 @@
   - They use the game's orc look and the OrcPalette, on the orcs' own wider joints.
   - Trap: `figure.material()` is made ONCE a session. `ensure_palette`/`ensure_atlas` remake their
     images, so an earlier orc copy pointed at removed images and rendered black.
-- The church (`church.py`, CineChurch, ~6 500 tris) is built and its renders went to the user; awaiting approval.
+- The church (`church.py`, CineChurch, ~6 500 tris) is APPROVED.
   - It is the game's Church1 with more detail:
     - stained lancets, a spoked rose window, quoins, stepped buttresses;
     - an OPEN belfry the priest can stand in, with the bell, its yoke and its rope;
     - steps, a strapped door, lanterns, a notice board and a bench.
   - Set pieces are drawn to the game's building standard and then grown by `figure.SET_SCALE` (1.6), so a cutscene figure fits the doors.
   - Render: `church.py -- render <out>`.
+- The village (`village.py`) is built and its renders went to the user; awaiting approval.
+  - The houses are the GAME's hovel, cottage and manor, loaded with `kit.borrow` so their scripts are not run or saved. Life is added round them: washing on a line, a broom, hens, a shop sign, sacks, a rain barrel, flower pots, a cat, barrels and crates.
+  - New pieces: two market stalls (striped awnings, fruit and cloth, counter at a figure's waist) and a farm cart (spoked wheels, hay and sacks).
+  - Render: `village.py -- render <out>`.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
@@ -78,6 +82,6 @@ Commands:
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
-- The rest of the cinematic set: houses, the market stalls, the cart, the
+- The rest of the cinematic set: the
   square's stones and the portal.
 - The level structure beyond mission 1.
