@@ -7,7 +7,7 @@
 
 Opens the models file, builds the scene, renders, never saves:
 
-    blender --background Buildings-Size1-Models.blend --python Tools/store/render_icons_3d.py -- <orc|king> <out.png> [size]
+    blender --background Buildings-Size1-Models.blend --python Tools/store/render_icons_3d.py -- <orc|king|figure_king|figure_orc> <out.png> [size]
 """
 import math
 import os
@@ -356,15 +356,45 @@ def king_scene():
     sun("Fill", (75, 0, 60), 0.8, (170, 200, 255))
 
 
-{"orc": orc_scene, "king": king_scene}[which]()
+# ---------------------------------------------------------------- full figures for the rate-us window
+def figure_scene(root, yaw, retouch=False):
+    """One hero standing, whole, on a transparent background, seen from the front and a bit above,
+    by an orthographic camera fitted to his bounds (the rate-us window composes these over a blurred town)."""
+    r = show(root, (0, 0, 0), yaw=yaw)
+    if retouch:
+        retouch_king(r)
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(c) for o in [r] + list(r.children_recursive)
+           if not o.hide_render and o.type == 'MESH' for c in o.bound_box]
+    lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    c = (lo + hi) / 2
+    h = hi.z - lo.z
+    cam = camera((c.x, c.y - 3.0, c.z + 0.8), (c.x, c.y, c.z), 50)
+    cam.data.type = 'ORTHO'
+    cam.data.ortho_scale = max(h * 1.06, (hi.x - lo.x) * 1.06 * sc.render.resolution_y / sc.render.resolution_x)
+    world((200, 215, 255), 0.6)
+    sun("Key", (50, 0, -30), 3.2, (255, 244, 225))
+    sun("Rim", (55, 0, 155), 3.0, (255, 250, 235), angle=3)
+    sun("Fill", (75, 0, 60), 0.9, (170, 200, 255))
+
+
+SCENES = {"orc": orc_scene, "king": king_scene,
+          "figure_king": lambda: figure_scene("HeroKing", 22, retouch=True),
+          "figure_orc": lambda: figure_scene("OrcChief", -22)}
+FIGURE = which.startswith("figure")
+if FIGURE:
+    sc.render.resolution_x, sc.render.resolution_y = size * 3 // 4, size
+SCENES[which]()
 
 sc.render.engine = 'BLENDER_EEVEE'
-sc.render.film_transparent = False
+sc.render.film_transparent = FIGURE
 sc.render.image_settings.file_format = 'PNG'
-sc.render.image_settings.color_mode = 'RGB'
+sc.render.image_settings.color_mode = 'RGBA' if FIGURE else 'RGB'
 sc.view_settings.view_transform = 'Standard'
 sc.view_settings.look = 'None'
-sc.render.resolution_x = sc.render.resolution_y = size
+if not FIGURE:
+    sc.render.resolution_x = sc.render.resolution_y = size
 sc.render.resolution_percentage = 100
 try:
     sc.eevee.taa_render_samples = 64

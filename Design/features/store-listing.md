@@ -1,7 +1,7 @@
 # Store listing (Google Play)
 
 **Status (2026-11-10):** two icon candidates, each as a flat drawing (king corrected once by the
-user) and as a 3D render from the game's models; waiting for the user's corrections and pick. Not yet uploaded anywhere; no store screenshots yet.
+user) and as a 3D render from the game's models; waiting for the user's corrections and pick. Not yet uploaded anywhere; no store screenshots yet. Rate-us window: concept + mock-up only.
 
 ## Icon
 - **The game's icon NOW = the 3D orc** (the user, 2026-11-10: «поставь пока что орка, оставим вопрос
@@ -41,7 +41,23 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
 - Rules: no text and no badges (Google forbids "#1", "free"...); keep the subject in the middle ~80%
   (the mask rounds the corners); judge it at 48 px.
 
+## Rate-us window (concept, 2026-11-10; NOT in the game yet)
+- The user's vision: a blurred town behind, the King on the left and the orc chief on the right of a
+  panel, together asking to support the project with a rating. Mock-up: `Design/store/RateWindow_Mockup.png`
+  (`Tools/store/rate_window_mockup.py` over Load_summer blurred; heroes from
+  `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200`: whole figure, transparent, ortho camera
+  fitted to bounds, the king with `retouch_king` eyes/crown and his own sword+shield arms).
+  Panel = wood frame + parchment, red ribbon title «Поддержите королевство!», 5 stars, green «Оценить», «Позже», close X.
+- Google Play rules that shape it: our stars are decoration only (the real rating is Google's In-App
+  Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
+  sheet has a quota and may silently not show, so a button should open the store page (or our window
+  calls the review flow by itself, not from a button).
+- Proposed timing (numbers on the sheet): only after a happy moment (raid won, portal closed, tutorial
+  done, Town Hall up), never after a defeat, not before N sessions; «Позже» = again in N days, gone after
+  two refusals or after «Оценить».
+
 ## Open
+- Rate window: the user's corrections to the mock-up, then the build (UI, trigger points, sheet keys, texts).
 - The user's corrections to both icons.
 - The king is not a character in the game yet (if he wins, he may need to appear in the menu/tutorial).
 - Feature graphic 1024x500 and screenshots.
