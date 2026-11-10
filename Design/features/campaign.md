@@ -105,6 +105,15 @@
     - New effects: rune glows lighting one by one, the stones flying ruin->arch, the swirl growing (no spin; a spin tilts its door shape), the purple portal light, the roof fire, camera shake.
     - CUT_SMALL / CUT_SHEET are for checks.
   - `cutscene_edit.py -- <dir> <mp4>` joins the shots in the sequencer, with the subtitles as text strips at the bottom. EDIT_STILL=<frame> renders one frame for a check.
+- **The user's notes on the Blender film (2026-11-10).** The decision: «можно переносить в юнити и доделывать сцену там». The film itself is NOT reworked in Blender. The notes are REQUIREMENTS for the Unity scene:
+  1. ~22 s, when the shake starts: the children are gone from the stones in the square's middle. They must still be playing there when the runes wake.
+  2. ~24 s: the children are standing with their mother there. They must visibly run off with her.
+  3. ~26 s: Ардан and the elder look at the centre, but the children and mother are not seen running away. Their flight must be in view.
+  4. ~31 s: the bottom pillar stones had sunk into the ground. This is FIXED in portal.py: the standing bases now take their arch pose, on the platform.
+  5. ~43 s: an orc runs out of a BUILDING (he started inside it), and the portal in the background stands empty, without the champion, Ардан or the elder. The background must carry on the same moment.
+  6. ~51 s: the champion just stands by Ардан and the elder. They must start running, and the elder tells him to run to the town («в город», or similar). The champion must act, not stand.
+  7. Missing in general: environment. Unity needs a full, BIG village, a sky, many more people walking about, and orcs with movement logic (not set paths). The background is dull and empty now.
+- The user asked: does play begin right after the scene? Yes, as planned: shot 14 hands over to mission 1 (the camera behind Ардан, the joystick hint). That handover exists only in Unity.
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.

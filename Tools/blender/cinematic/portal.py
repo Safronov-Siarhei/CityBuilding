@@ -143,7 +143,9 @@ def ruin_pose(i, name, size, arch):
     tumbled outward round the platform, half sunk, tipped, one leaning on another."""
     if name in ("PillarL0", "PillarR0"):
         PLACED.append(arch.to_translation() * Vector((1, 1, 0)))
-        return arch @ Matrix.Translation((0, 0, -0.04))                     # sunk a little, still standing
+        # still standing, exactly where the arch needs them: on the platform (its +0.08), so they do
+        # not sit sunk under the rebuilt pillars (the user saw them gone into the ground, 2026-11-10)
+        return arch @ Matrix.Translation((0, 0, 0.08))
     rnd = random.Random(i * 7 + 3)
     a = (i * 2.399 + 0.6) % (2 * math.pi)                                    # golden-angle spread round the ring
     if abs(math.sin(a)) < 0.25 and math.cos(a) > 0:                          # keep the front of the gap clear for the children
