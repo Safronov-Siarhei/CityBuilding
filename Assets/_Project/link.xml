@@ -1,0 +1,12 @@
+<!--
+  Kept out of code stripping (2026-11-10). GameObject.CreatePrimitive adds a CapsuleCollider to a
+  capsule or cylinder and a SphereCollider to a sphere; nothing in the scenes uses those classes, so
+  the player build stripped them and every such primitive (menu background, dungeon webs and balls,
+  jungle shrines, respawn pillars, building markers) logged "class doesn't exist" on the phones.
+-->
+<linker>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all" />
+    <type fullname="UnityEngine.SphereCollider" preserve="all" />
+  </assembly>
+</linker>

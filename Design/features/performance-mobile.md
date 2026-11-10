@@ -34,7 +34,15 @@
 > (graphics_tier=2 + graphics_detail.*), force-stop + relaunch = a new setting in the main menu.
 > Main-menu bug seen on device: MainMenuBackground's CreatePrimitive logs "Can't add component
 > because class 'CapsuleCollider' doesn't exist" (stripped) on every menu open.
-> Proposal waiting on the user: Medium -> 1.0/2x, Low -> 1.0/off.
+> **DONE (the user approved, 2026-11-10): Medium = scale 1.0 / MSAA 2x, Low = 1.0 / no MSAA**
+> (GraphicsQuality Tiers + Preset; High unchanged; Auto bands unchanged). Not yet on a device.
+> CapsuleCollider/SphereCollider kept from stripping by `Assets/_Project/link.xml` (CreatePrimitive
+> cylinders/spheres in the menu, dungeons, jungle, respawn flash, building markers all logged it);
+> MainMenuBackground builds its pieces from the built-in meshes without colliders.
+> The ~54 fps ceiling: config is right (vSyncCount 0, targetFrameRate 60, Swappy frame pacing on).
+> Main thread 12-16 ms with the GPU idle means some frames miss the 16.7 ms vsync (and the governor
+> keeps clocks just high enough), so it is a CPU-time item, not a settings bug -- see the A71's
+> BehaviourUpdate 11 ms with units. Next: profile the CPU in the sandbox/battles.
 
 > **2026-11-10 REDMI PAD (Helio G99, Mali-G57 MC2, 4 GB, 1200x2000) -- the first weak device measured.**
 > Same sandbox save as the Pixel. **The GPU is the limit and the tier decides everything:**

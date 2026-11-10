@@ -260,8 +260,10 @@ namespace CityBuilder.UI
 
         private GameObject Piece(PrimitiveType type, Vector3 position, Vector3 euler, Vector3 size, Material material)
         {
-            var go = GameObject.CreatePrimitive(type);
-            Destroy(go.GetComponent<Collider>());
+            // not CreatePrimitive: it adds a collider, and code stripping leaves CapsuleCollider out of
+            // the player, so every capsule logged "class doesn't exist" on the phones (2026-11-10)
+            var go = new GameObject(type.ToString(), typeof(MeshFilter), typeof(MeshRenderer));
+            go.GetComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>(type + ".fbx");
             go.transform.SetParent(_stage, false);
             go.transform.SetPositionAndRotation(position, Quaternion.LookRotation(_forward) * Quaternion.Euler(euler));
             go.transform.localScale = size;

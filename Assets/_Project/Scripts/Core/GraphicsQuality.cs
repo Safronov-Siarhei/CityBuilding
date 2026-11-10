@@ -34,9 +34,13 @@ namespace CityBuilder.Core
         {
             // Low at the screen's own resolution: on the Redmi Pad (Mali-G57) 720p and native 1200p
             // both drew 54 fps, and 720p stretched to the screen shimmered (the user, 2026-11-10);
-            // what costs there is MSAA 4x (54 -> 31 fps at any scale), so Low keeps 2x
-            (1f, 1200, 2, 1024, 35f),     // Low
-            (0.9f, 1080, 4, 1024, 50f),   // Medium
+            // what costs there is MSAA 4x (54 -> 31 fps at any scale).
+            // 2026-11-10, three phones (the user: "all points"): 4x took Medium's 6 GB phones down to
+            // 21-27 fps (Redmi Note 14 / Mali-G57, Samsung A71 / Adreno 618); 2x is free on Mali (54)
+            // but not on Adreno (39), off is 54 on both; scale 0.9 vs 1.0 changed nothing. So Medium
+            // is native with 2x and Low native with no MSAA.
+            (1f, 1200, 1, 1024, 35f),     // Low
+            (1f, 1080, 2, 1024, 50f),     // Medium
             (1f, 1440, 4, 2048, 60f),     // High
         };
 
@@ -74,8 +78,8 @@ namespace CityBuilder.Core
             switch (tier)
             {
                 case GraphicsTier.High: return new Detail { Fps = 60, Msaa = 4, ScalePercent = 100, Shadows = 2, ShadowReach = 2 };
-                case GraphicsTier.Medium: return new Detail { Fps = 60, Msaa = 4, ScalePercent = 90, Shadows = 1, ShadowReach = 1 };
-                default: return new Detail { Fps = 60, Msaa = 2, ScalePercent = 100, Shadows = 1, ShadowReach = 0 };
+                case GraphicsTier.Medium: return new Detail { Fps = 60, Msaa = 2, ScalePercent = 100, Shadows = 1, ShadowReach = 1 };
+                default: return new Detail { Fps = 60, Msaa = 1, ScalePercent = 100, Shadows = 1, ShadowReach = 0 };
             }
         }
 
