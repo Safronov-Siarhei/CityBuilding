@@ -141,6 +141,12 @@ PlayMode screenshots don't render Screen Space Overlay canvases — `PlaytestCap
 switches them to ScreenSpaceCamera. Layout tests are vacuous under `-nographics`.
 
 ## Open
+- **OPEN QUESTION, to think over (the user, 2026-11-10): the device check and its camera cut-out.**
+  Since 2026-11-10 `SafeAreaFitter` ignores the side insets so the left column sits at the screen
+  edge; on a phone whose cut-out (punch hole, notch, waterdrop) lands on a left/right button or the
+  event feed, something may be covered. To decide: detect the device / its cut-out (`Screen.cutouts`)
+  and shift only what it would cover? a per-device list? a setting «отступ от выреза»? Check on
+  every phone of the fleet before release.
 Tap on an event icon could also open the building card; persistent problems as markers over
 buildings; the old tier-up toast; skinning windows per look; no highlight of the selected card.
 Mockup canvases: https://claude.ai/artifact/6NUqZfA52W2gZxMSDUdxUV (style D),
