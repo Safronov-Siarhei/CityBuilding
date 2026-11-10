@@ -23,6 +23,17 @@
 > Main menu on Medium: 24 fps. Same story as the Mali tablet: **MSAA is the cost, resolution ~free**,
 > so the Adreno hope (cheap MSAA) is wrong. CPU ~16-20 ms (BehaviourUpdate ~11 ms with 14 orcs and
 > 49 soldiers in the sandbox) -- a second ceiling near 55-60 fps. Edge photo: RunLogs/a71_edges_off_2x_4x.png.
+> **REDMI NOTE 14 4G (24117RN76G, Helio G99 MT6789, Mali-G57 MC2, 5.6 GB -> Medium, 2400x1080,
+> serial iznbqkljnbtsl7vc)**, same sandbox start: Medium (0.9/4x) **21-26 fps** GPU 38-48 ms ·
+> 0.9/2x **54** · 0.9/off **54** (GPU 14 ms). Main menu: 4x 26, everything else 60. So on Mali 2x is
+> ~free and 4x is the whole cost; on Adreno 2x still costs (39 vs 54). Both phones top out at ~54 in
+> the sandbox with the GPU idle (12-14 ms) -- an unexplained ceiling below 60 to look into.
+> HyperOS trap: "USB debugging (security settings)" ON (persist.security.adbinput=1) still gave
+> INJECT_EVENTS denied (needs a phone reboot?). Workaround without taps: the dev build is debuggable,
+> so `run-as com.depigogames.citybuilding` reads/writes shared_prefs/<pkg>.v2.playerprefs.xml
+> (graphics_tier=2 + graphics_detail.*), force-stop + relaunch = a new setting in the main menu.
+> Main-menu bug seen on device: MainMenuBackground's CreatePrimitive logs "Can't add component
+> because class 'CapsuleCollider' doesn't exist" (stripped) on every menu open.
 > Proposal waiting on the user: Medium -> 1.0/2x, Low -> 1.0/off.
 
 > **2026-11-10 REDMI PAD (Helio G99, Mali-G57 MC2, 4 GB, 1200x2000) -- the first weak device measured.**
