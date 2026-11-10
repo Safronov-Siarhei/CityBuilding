@@ -197,6 +197,17 @@ namespace CityBuilder.Tests.PlayMode
 
             CitizenManager.Instance.SetPopulation(0);
             var seconds = BalanceConfig.Sandbox.PersonRespawnSeconds;
+
+            // a hungry town makes no one (the user, 2026-11-10: starving leavers were replaced in a loop)
+            var food = FoodConsumptionManager.Instance;
+            Assert.IsNotNull(food, "No FoodConsumptionManager in the sandbox scene.");
+            Time.timeScale = 20f;
+            // held hungry every frame: a meal of an empty town in between would count as eating well
+            for (var t = 0f; t < seconds * 1.5f; t += Time.deltaTime) { food.RestoreFromSave(1, null); yield return null; }
+            Time.timeScale = 1f;
+            Assert.AreEqual(0, CitizenManager.Instance.TotalPopulation, "A house made a person while the town was hungry.");
+            food.RestoreFromSave(0, null);
+
             Time.timeScale = 20f;
             for (var t = 0f; t < seconds * 1.5f && CitizenManager.Instance.TotalPopulation == 0; t += Time.deltaTime) yield return null;
             Time.timeScale = 1f;

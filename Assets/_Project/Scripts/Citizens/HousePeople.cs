@@ -22,6 +22,11 @@ namespace CityBuilder.Citizens
     /// householder). Which house makes the next person does not matter to the count; the houses
     /// share the shortfall. The town's room (CitizenManager.Capacity) is the houses' places and
     /// nothing else -- not the Town Hall's, whose founding party simply lives there.
+    ///
+    /// **A hungry town makes no one** (the user, 2026-11-10): while the last meal fell short
+    /// (FoodConsumptionManager.Hungry) every house's bar stands still where it is, so starving people
+    /// leaving one by one are not replaced by new mouths in an endless loop; one day of eating
+    /// properly and the houses go on from where they stopped. Not in the tutorial (its own pacing).
     /// </summary>
     public class HousePeople : MonoBehaviour
     {
@@ -77,6 +82,10 @@ namespace CityBuilder.Citizens
 
         public int StandingHouses => BuildingInstance.Houses.Count;
 
+        /// <summary>The houses wait: the town is short of food.</summary>
+        public static bool PausedByHunger =>
+            !Tutorial.TutorialMode.IsActive && FoodConsumptionManager.Instance != null && FoodConsumptionManager.Instance.Hungry;
+
         /// <summary>People the houses are making right now (one at a time each).</summary>
         public int Owed
         {
@@ -118,6 +127,7 @@ namespace CityBuilder.Citizens
             Balance(shortfall);
 
             var seconds = Seconds;
+            var paused = PausedByHunger;
             foreach (var house in _houses)
             {
                 if (house.Owed <= 0)
@@ -127,7 +137,7 @@ namespace CityBuilder.Citizens
                     continue;
                 }
 
-                house.Timer += Time.deltaTime;
+                if (!paused) house.Timer += Time.deltaTime;
                 if (house.Bar == null) house.Bar = HarvestProgressBar.CreateFor(house.Building.transform, ResourceType.Population);
                 house.Bar.Report(house.Timer / seconds);
                 if (house.Timer < seconds) continue;
