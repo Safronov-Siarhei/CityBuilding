@@ -16,6 +16,15 @@
 > SettingsPanelController). Left open by the user: Water (simple/live) and Effects (simple/full) rows.
 > Not seen on a device yet.
 
+> **2026-11-10 SAMSUNG A71 (SM-A715F, Snapdragon 730, Adreno 618, 5.5 GB -> Auto gives Medium,
+> 2400x1080, serial RZ8NA0ZYGSX; GPU load readable at /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage).**
+> Sandbox start (Archipelago, ~210k tris), GPU-bound (busy 98 %): scale 0.9 MSAA 4x (Medium) **27 fps**
+> GPU 36 ms · 0.9/2x **39** (19 ms) · 0.9/off **54** (12 ms) · 1.0/2x 38 (20 ms) · 1.0/4x 26 (36 ms).
+> Main menu on Medium: 24 fps. Same story as the Mali tablet: **MSAA is the cost, resolution ~free**,
+> so the Adreno hope (cheap MSAA) is wrong. CPU ~16-20 ms (BehaviourUpdate ~11 ms with 14 orcs and
+> 49 soldiers in the sandbox) -- a second ceiling near 55-60 fps. Edge photo: RunLogs/a71_edges_off_2x_4x.png.
+> Proposal waiting on the user: Medium -> 1.0/2x, Low -> 1.0/off.
+
 > **2026-11-10 REDMI PAD (Helio G99, Mali-G57 MC2, 4 GB, 1200x2000) -- the first weak device measured.**
 > Same sandbox save as the Pixel. **The GPU is the limit and the tier decides everything:**
 > - Auto picks **Medium** here (3.9 GB) → **21 fps** in the game (GPU ~46 ms, even over plain fog),
