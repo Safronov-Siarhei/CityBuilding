@@ -23,10 +23,18 @@
     - steps, a strapped door, lanterns, a notice board and a bench.
   - Set pieces are drawn to the game's building standard and then grown by `figure.SET_SCALE` (1.6), so a cutscene figure fits the doors.
   - Render: `church.py -- render <out>`.
-- The village (`village.py`) is built and its renders went to the user; awaiting approval.
+- The village (`village.py`) is APPROVED.
+  - Fixed on the way: the manor without the half-timber diagonals across its windows, and real tied sacks.
+  - The GAME's manor was fixed too (`manor1.py`/`manor1_lvl2.py`, `manor1_lvl3.py`): no braces over the gable windows; the lvl3-5 turret was moved clear of the eaves. Re-exported; Unity not rebuilt yet.
   - The houses are the GAME's hovel, cottage and manor, loaded with `kit.borrow` so their scripts are not run or saved. Life is added round them: washing on a line, a broom, hens, a shop sign, sacks, a rain barrel, flower pots, a cat, barrels and crates.
   - New pieces: two market stalls (striped awnings, fruit and cloth, counter at a figure's waist) and a farm cart (spoked wheels, hay and sacks).
   - Render: `village.py -- render <out>`.
+- The square's stones and the portal (`portal.py`) were sent for approval on 2026-11-10.
+  - It is ONE set of 15 stones (`CinePortalStone_*`) in dark stone with blue runes, the amulet's stone. There are 8 pillar blocks and 7 arch blocks, the middle one the keystone.
+  - Each object stands in its RUIN pose: a ring round the cracked round platform `CinePortalSquare`. The bottom pillar blocks still stand; the rest lean, lie on a side or lie on their backs, runes outward.
+  - The ARCH pose is the custom property `arch`, a flattened 4x4 world matrix; `set_arch(stones, swirl, on)` switches poses. The cutscene flies each stone between the two poses; how they fly is for the storyboard.
+  - `CinePortalSwirl`, hidden in the ruin pose, fills the opening: a door shape, purple ovals, a white heart and swirling dashes.
+  - Render: `portal.py -- render <out>`.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
@@ -82,6 +90,5 @@ Commands:
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
-- The rest of the cinematic set: the
-  square's stones and the portal.
+- The approval of the stones and the portal.
 - The level structure beyond mission 1.
