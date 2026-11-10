@@ -63,7 +63,12 @@
     - CineArdan_DropRun, 3.6 s: a flinch; the right hand lets go and the sack falls off his shoulder (baked world keys: it tumbles, thumps and settles); he eases into the run, the cycle driven by distance so the feet don't skate.
     - CineArdan_Run: a 0.72 s cycle at 0.95*S units a second.
   - The left-fist-on-amulet angles were FITTED numerically (upper arm -40/-10/-30, forearm -50/0/-45), because eyeballed angles put the fist in his face or inside his chest.
-  - Groups still to make: the children; the elder (talk, shout, push); the champion (leap, land, roar); the torch and spear orcs (run); the priest (bell); the townsfolk (fright, flight, the merchant calling).
+  - Ардан round 2 APPROVED (2026-11-10).
+  - The children (`kids_anim.py`) were sent on 2026-11-10. They play on the REAL ruin stones (portal.py); `stepping_stones` picks a chain of flat tops below 0.36 with hops of 0.25-0.7.
+    - KidsPlay (shot 3): the boy hops stone to stone, arms out for balance, then jumps down by the girl; she bounces and waves, the doll in her other hand.
+    - KidsFlee (shot 6): both freeze and stare at the centre; the boy jumps down, and they run to the peasant woman.
+    - `rig_figure(mesh, scale)` is Ардан's rig at any figure.py figure's scale, and `Track` is a timeline of pose / jump / run moves that bakes the root and heading with crossfades. Reuse both for the other groups.
+  - Groups still to make: the elder (talk, shout, push); the champion (leap, land, roar); the torch and spear orcs (run); the priest (bell); the townsfolk (fright, flight, the merchant calling).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.
