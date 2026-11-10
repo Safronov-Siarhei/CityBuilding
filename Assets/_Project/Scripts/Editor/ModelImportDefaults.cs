@@ -35,6 +35,8 @@ namespace CityBuilder.EditorTools
         private const string MonstersFolder = "Assets/_Project/Models/Monsters/";
         private const string FaunaFolder = "Assets/_Project/Models/Fauna/";
         private const string TideFolder = "Assets/_Project/Models/Tide/";
+        // the campaign's cutscene set (Tools/blender/cinematic/export_cine.py)
+        public const string CinematicFolder = "Assets/_Project/Models/Cinematic/";
 
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
         public const string PaletteMaterialPath = "Assets/_Project/Models/Palette/BuildingsPalette.mat";
@@ -106,7 +108,8 @@ namespace CityBuilder.EditorTools
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder)
                              || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder) || assetPath.StartsWith(SoldiersFolder)
                              || assetPath.StartsWith(WildFolder) || assetPath.StartsWith(CitizensFolder) || assetPath.StartsWith(ShipsFolder)
-                             || assetPath.StartsWith(MonstersFolder) || assetPath.StartsWith(FaunaFolder) || assetPath.StartsWith(TideFolder);
+                             || assetPath.StartsWith(MonstersFolder) || assetPath.StartsWith(FaunaFolder) || assetPath.StartsWith(TideFolder)
+                             || assetPath.StartsWith(CinematicFolder);
             if (!isSetPiece)
             {
                 // MeshMapApplier.BuildNavMesh (NavMeshBuilder.BuildNavMeshData) needs CPU access

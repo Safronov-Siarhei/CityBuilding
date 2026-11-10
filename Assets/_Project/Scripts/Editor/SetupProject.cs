@@ -84,6 +84,8 @@ namespace CityBuilder.EditorTools
             BuildCityScene();
             BuildMainMenuScene();
             BuildLoadingScreen();
+            // the campaign's opening cutscene (SetupProjectCampaign) -- not in the build list yet
+            BuildCampaignOpeningScene();
 
             EditorBuildSettings.scenes = new[]
             {

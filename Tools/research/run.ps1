@@ -89,6 +89,14 @@ foreach ($step in $Steps) {
             Write-Output "=== setup$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
         }
+        'campaign' {
+            # photos of the campaign's opening village (Editor/CampaignPhotos) into RunLogs/campaign/ -- needs graphics
+            $log = "$logs/campaign_run.log"
+            $code = Invoke-Unity "campaign$i" @('-batchmode', '-quit', '-projectPath', $project,
+                '-executeMethod', 'CityBuilder.EditorTools.CampaignPhotos.Capture', '-logFile', $log)
+            Write-Output "=== campaign$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
+            Write-LogProblems $log
+        }
         { $_ -in 'editmode', 'playmode' } {
             $platform = if ($step -eq 'editmode') { 'EditMode' } else { 'PlayMode' }
             $suffix = if ($step -eq 'editmode') { '' } else { '_playmode' }
