@@ -87,7 +87,7 @@
     - CineBellRope is a unit rod keyed every frame from the lever to between his fists.
     - The priest faces the bell; both arms are AIMED at the grip, which rises and falls with the swing, and his knees and back give on each haul.
   - The priest APPROVED (2026-11-10).
-  - The townsfolk (`townsfolk_anim.py`) were sent on 2026-11-10. This is the LAST animation group.
+  - The townsfolk (`townsfolk_anim.py`) are APPROVED (2026-11-10), after the topple fix. **Every animation of the opening cutscene is approved**; next is the video.
     - Market (shot 2): the merchant calls (hand waving high, the other cupped at his mouth), then turns to the woman with an open palm. She reaches for a fruit, looks it over and drops it in her basket. A peasant pulls the cart past: the shafts follow his fists, the body pitches about its axle, the wheels turn by the distance rolled.
     - Panic (shot 11): a torch orc storms in. The woman shrieks with her hands to her face and runs; the merchant ducks behind his counter, arms over his head, trembling. The peasant flings the shafts (the cart drops onto them) and runs. The orc topples the cloth stall backward as he passes.
     - Round 2 of the topple: the user found the first one strange. The whole stall had tipped backward with its baskets and crates floating along and the goods glued to the counter, and the orc never touched it.
@@ -149,5 +149,5 @@ Commands:
   - Demo clips: `blender --background <Models.blend> --python Tools/blender/cinematic/ardan_anim.py -- render <out> [walk|carry|all]`.
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
-- How the cutscene is produced: a Blender animatic first, and the animations the shots need (children jumping, the orc leap and roar, the bell ringing, the shout and push, Ардан's run).
+- How the video is assembled: a Blender render of the 14 shots, or in-engine in Unity (decided earlier: in-engine).
 - The level structure beyond mission 1.
