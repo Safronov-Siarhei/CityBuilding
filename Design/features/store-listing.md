@@ -22,7 +22,14 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   rejected skewed world-space beams as crooked), the handle upright through the fist, the head
   straight across. The user disliked the hammer version: now a BIG PORTRAIT, head and shoulders,
   no hammer, both arms hanging (lens 172), on a plain sky gradient like the orc (the user: stands out
-  better; the town and the depth of field are gone), Cottage1-lvl3 / FortifiedTower1-lvl2 / Hovel1-lvl2 behind in
+  better; the town and the depth of field are gone),
+  `retouch_king()` (icon only, the file is never saved) answers the user's «корона кривая, треугольники,
+  глаза чёрные не живые, чёрные штуки на плечах»: deletes the head's crown faces by palette cell
+  (gold 0.69/0.5, gems 0.06/0.9 + 0.81/0.9, purple cap 0.56/0.9 + 0.69/0.9), builds a block crown
+  (band, velvet cap, five tall points with pearls, ruby + sapphires); eyes = white + brown iris turned
+  to the camera + pupil + glint over the black blocks (local x +-0.025, z 0.092, front y -0.06); the
+  collar's black ermine tails (cell 0.81/0.5, the SAME cell as the eyes) recoloured cream; rosy cheeks.
+  Gold must stay low-metal (0.25) or it renders olive. Cottage1-lvl3 / FortifiedTower1-lvl2 / Hovel1-lvl2 behind in
   depth of field. Output -> `Design/store/Icon3D_<Orc|King>_512.png` + `Icons3D_Sheet.png`.
   Trap: give Blender an ABSOLUTE output path (a relative one lands next to the .blend).
   Run per scene: `blender --background <Models.blend> --python Tools/store/render_icons_3d.py -- orc D:/Fork/CityBuilding/Design/store/Icon3D_Orc_1024.png 1024`,

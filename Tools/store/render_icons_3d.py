@@ -216,6 +216,94 @@ def orc_scene():
 
 
 # ---------------------------------------------------------------- the builder king
+# palette cells (UV of the shared 32 x 20 Buildings palette) the King's meshes use
+GOLD, BLACK, CREAM = (0.69, 0.5), (0.81, 0.5), (0.19, 0.7)
+CROWN_CELLS = {GOLD, (0.06, 0.9), (0.81, 0.9), (0.56, 0.9), (0.69, 0.9)}  # gold, blue/red gems, purple cap
+
+
+def retouch_king(k):
+    """For the icon only (the file is never saved), the user, 2026-11-10: «корона кривая, какие-то
+    треугольники, глаза чёрные -- не живые, чёрные штуки на плечах; сделать приятнее, как орк».
+    The pyramid crown goes and a block crown replaces it; the black eye blocks get a white, an iris
+    and a glint; the ermine's black tails are painted cream; rosy cheeks."""
+    import bmesh
+
+    def cell(bm, f, uvl):
+        u = f.loops[0][uvl].uv
+        return (round(u.x, 2), round(u.y, 2))
+
+    # the collar: black tails -> cream
+    body = k.data.copy()
+    k.data = body
+    bm = bmesh.new()
+    bm.from_mesh(body)
+    uvl = bm.loops.layers.uv["UVMap"]
+    for f in bm.faces:
+        if cell(bm, f, uvl) == BLACK:
+            for lp in f.loops:
+                lp[uvl].uv = (CREAM[0] + 0.0005, CREAM[1])
+    bm.to_mesh(body)
+    bm.free()
+
+    # the head: the old crown out; what is left tells where the new one sits
+    head = bpy.data.objects["HeroKing-Head"]
+    me = head.data.copy()
+    head.data = me
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    uvl = bm.loops.layers.uv["UVMap"]
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if cell(bm, f, uvl) in CROWN_CELLS], context='FACES')
+    vs = [v.co for v in bm.verts]
+    top = max(v.z for v in vs)
+    x0, x1 = min(v.x for v in vs), max(v.x for v in vs)
+    y0, y1 = min(v.y for v in vs), max(v.y for v in vs)
+    bm.to_mesh(me)
+    bm.free()
+
+    gold = mat("CrownGold", (250, 196, 64), 0.45, metal=0.25)
+    velvet = mat("Velvet", (120, 60, 190), 0.8)
+    pearl = mat("Pearl", (255, 250, 236), 0.3)
+    ruby = mat("Ruby", (220, 40, 60), 0.2)
+    sapphire = mat("Sapphire", (50, 110, 230), 0.2)
+    white = mat("EyeWhite", (255, 255, 255), 0.4)
+    iris = mat("Iris", (92, 58, 30), 0.3)
+    pupil = mat("Pupil", (24, 18, 14), 0.3)
+    cheek = mat("Cheek", (244, 150, 130), 0.7)
+
+    def hp(name, loc, dims, material, bevel=0.002):
+        o = box(name, (0, 0, 0), dims, material, bevel=bevel)
+        o.parent = head
+        o.location = loc
+        return o
+
+    cx, cy, w, dpt = (x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0
+    band_h, grow = 0.032, 0.006
+    bz = top - 0.018 + band_h / 2
+    rim = bz + band_h / 2
+    hp("CrownBand", (cx, cy, bz), (w + grow, dpt + grow, band_h), gold, 0.004)
+    hp("CrownCap", (cx, cy, rim + 0.009), (w - 0.02, dpt - 0.02, 0.022), velvet, 0.006)
+    hp("CrownOrb", (cx, cy, rim + 0.027), (0.016, 0.016, 0.016), gold, 0.003)
+    # tall points round the rim, each with a pearl
+    fy, by = cy - (dpt + grow) / 2 + 0.008, cy + (dpt + grow) / 2 - 0.008
+    pts = [(cx - w / 2 + 0.006, fy), (cx, fy), (cx + w / 2 - 0.006, fy), (cx - w / 2 + 0.006, by), (cx + w / 2 - 0.006, by)]
+    for i, (px, py) in enumerate(pts):
+        hp(f"CrownPoint{i}", (px, py, rim + 0.02), (0.017, 0.014, 0.04), gold, 0.003)
+        hp(f"CrownPearl{i}", (px, py, rim + 0.045), (0.012, 0.012, 0.012), pearl, 0.003)
+    front = cy - (dpt + grow) / 2
+    hp("Ruby", (cx, front - 0.003, bz), (0.016, 0.006, 0.016), ruby, 0.002)
+    for s in (-1, 1):
+        hp(f"Sapphire{s}", (cx + s * w * 0.32, front - 0.003, bz), (0.012, 0.006, 0.012), sapphire, 0.002)
+
+    # eyes that look alive: a white, a brown iris turned a touch toward the camera, a glint
+    for s in (-1, 1):
+        ex = s * 0.025
+        hp(f"EyeWhite{s}", (ex, -0.0615, 0.0925), (0.025, 0.004, 0.021), white, 0.0015)
+        hp(f"Iris{s}", (ex - 0.003, -0.064, 0.091), (0.014, 0.003, 0.016), iris, 0.001)
+        hp(f"Pupil{s}", (ex - 0.003, -0.0655, 0.091), (0.007, 0.002, 0.009), pupil, 0.0008)
+        hp(f"Glint{s}", (ex - 0.0005, -0.0668, 0.095), (0.004, 0.0015, 0.004), white, 0.0005)
+        hp(f"Cheek{s}", (s * 0.046, -0.0612, 0.071), (0.016, 0.003, 0.009), cheek, 0.001)
+
+
 def king_scene():
     show("HeroKing", (0, 0, 0), yaw=8)
     bpy.data.objects["HeroKing-ArmSword"].hide_render = True
@@ -227,10 +315,12 @@ def king_scene():
     wood = mat("Wood", (150, 96, 50), 0.8)
     iron = mat("Iron", (70, 72, 82), 0.45, metal=0.6)
     band = mat("Band", (232, 178, 40), 0.35, metal=0.8)
+    retouch_king(k)
+
     # every new part is a child of the king, placed in his own frame (x his right, -y his front)
-    def part(name, loc, dims, material, rot_y=0.0, bevel=0.008):
+    def part(name, loc, dims, material, rot_y=0.0, bevel=0.008, parent=None):
         o = box(name, (0, 0, 0), dims, material, bevel=bevel)
-        o.parent = k
+        o.parent = parent or k
         o.location = loc
         o.rotation_euler = (0, rot_y, 0)
         return o
