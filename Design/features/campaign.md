@@ -1,6 +1,24 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; the user got the mp4 (2026-11-10), awaiting notes. Next: the handover into mission 1 (not built).
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. Still to do from the user's choice: birds/animals and villagers at work (new models -> renders for approval first), sound and music (no audio assets: source to be asked). Next after that: the handover into mission 1 (not built).
+- **Effects (v3):** `Scripts/Campaign/OpeningFx.cs` on the village object, stepped by the director on the
+  film clock (`Step(time, dt, camFrom, camAt, lens, dof)`); every number in the `fx` block of
+  `Campaign/OpeningScript.json`. Portal: `Shaders/CineVortex.shader` quad in the arch (door given as
+  `doorCentre`/`doorSize`, NOT from the swirl mesh; the old swirl disc stays hidden when fx is set),
+  opens from its heart (`_Open`), `_Flash` + point light + `CineGroundFx` shock ring (mode 1) + cube
+  debris + inward sparks. Runes: `CineRuneGlow_*` FBX (export_cine.py, OpeningSet stones' `glow`) laid
+  on each stone, `CineGroundFx` mode 2 (flat additive, Offset -1) lit 0.1 s apart from 20.35. Cracks:
+  mode 0 quad ON the platform (`cracksHeight` 0.085 -- at ground level the platform hid it). Arcs
+  (LineRenderers) + dust puffs during the assembly. Mood: runtime skybox copy, sun, ambient, fog lerp
+  to lilac-crimson from 34.3 over 6 s. Post: `Campaign/OpeningVolume.asset` (Bloom, Vignette,
+  ColorAdjustments, DepthOfField Bokeh), camera post on; shots with `"dof": true` focus on |at-from|.
+  Chimney smoke from `Campaign/Chimneys.json` (`Tools/blender/cinematic/chimneys.py`, Blender model
+  coords mapped (x, z, y), `chimneySigns` if mirrored) until 46 s. Title `#cine_opening_title`
+  (sheet row 745) 0.6-4.8 s.
+  - Traps: the Editor asmdef needs `Unity.RenderPipelines.Core.Runtime` for VolumeProfile; run
+    `run.ps1 -Steps a,b` from the PowerShell tool (from bash the list arrives as ONE unknown step and
+    nothing runs, report says only RUN FINISHED); Blender for encode_frames is
+    `G:\SteamLibrary\steamapps\common\Blenderlender.exe`.
 - **Unity part 1 (2026-11-10):** scene `Scenes/CampaignOpening.unity` (NOT in the build list), made by
   `SetupProjectCampaign.cs`: procedural morning sky `CampaignSky.mat`, low warm sun, trilight ambient,
   linear haze fog 45-140. `Scripts/Campaign/OpeningVillage.cs` lays the village out on Start (seed 11):
