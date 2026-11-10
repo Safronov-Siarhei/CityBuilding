@@ -42,12 +42,17 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   (the mask rounds the corners); judge it at 48 px.
 
 ## Rate-us window (concept, 2026-11-10; NOT in the game yet)
-- The user's vision: a blurred town behind, the King on the left and the orc chief on the right of a
-  panel, together asking to support the project with a rating. Mock-up: `Design/store/RateWindow_Mockup.png`
-  (`Tools/store/rate_window_mockup.py` over Load_summer blurred; heroes from
-  `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200`: whole figure, transparent, ortho camera
-  fitted to bounds, the king with `retouch_king` eyes/crown and his own sword+shield arms).
-  Panel = wood frame + parchment, red ribbon title «Поддержите королевство!», 5 stars, green «Оценить», «Позже», close X.
+- The user's rules: a POPUP that can be shown at any moment over whatever the game shows (not a screen
+  of its own); the King and the orc chief stand either side and ask to support the project with a
+  rating; the King is the GAME'S OWN HeroKing model (the user rejected the icon's retouched king:
+  "a model we use nowhere"); the orc chief is BIG, a head taller than the king.
+- Mock-up v2: `Design/store/RateWindow_Mockup.png` by `Tools/store/rate_window_mockup.py <folder>`:
+  the game dimmed behind (Load_summer stands in for the game), a wood-framed window whose picture is a
+  blurred town, the heroes standing on the window floor with heads over the frame, a parchment column
+  in the middle (ribbon «Поддержите нас!», text, 5 stars, green «Оценить», «Позже», close X).
+  Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure,
+  transparent, ortho camera fitted to bounds; figure_king = plain HeroKing, no retouch).
+  In the game the heroes would be pre-rendered sprites (cheap on mobile), not live 3D.
 - Google Play rules that shape it: our stars are decoration only (the real rating is Google's In-App
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
   sheet has a quota and may silently not show, so a button should open the store page (or our window

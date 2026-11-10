@@ -380,7 +380,7 @@ def figure_scene(root, yaw, retouch=False):
 
 
 SCENES = {"orc": orc_scene, "king": king_scene,
-          "figure_king": lambda: figure_scene("HeroKing", 22, retouch=True),
+          "figure_king": lambda: figure_scene("HeroKing", 22),
           "figure_orc": lambda: figure_scene("OrcChief", -22)}
 FIGURE = which.startswith("figure")
 if FIGURE:
