@@ -75,7 +75,12 @@
     - The right hand keeps the staff planted.
     - The left arm is AIMED in world space (`AIM` key: direction + weight, turned about the shoulder after the angles), not guessed in angles.
     - `rig_figure(..., bend=stoop)` moves the joints with the stoop, so his arms pivot at his real shoulders.
-  - Groups still to make: the champion (leap, land, roar); the torch and spear orcs (run); the priest (bell); the townsfolk (fright, flight, the merchant calling).
+  - The elder APPROVED (2026-11-10).
+  - The orcs (`orc_anim.py`) were sent on 2026-11-10. They have their OWN rig (`BONES` from orcs_cast's wider, lower joints), passed to `rig_figure(..., bones=)`.
+    - ChampionLeap (shot 9): he gathers hidden behind the swirl, leaps out (an arc 0.32 high) and lands in a deep crouch, a fist down. Cracks key in under him and grit chips fly. He rises slowly, roars with arms flung wide and a shake, then turns his head to the village.
+    - HordeRun (shot 10): the torchbearer (torch high, axe swinging) and the spearman (shield up, spear forward) run out after him, past the roaring champion, and split left and right. Each path crosses the arch's line 0.2 off its middle, clear of the pillars.
+    - Track gained a 'fn' move (hand-made root and pose) and a per-figure `run_pose`.
+  - Groups still to make: the priest (bell); the townsfolk (fright, flight, the merchant calling).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.

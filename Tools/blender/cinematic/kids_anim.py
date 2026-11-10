@@ -31,7 +31,7 @@ STAND = sum(LEG)
 PLATFORM_Z = 0.085
 
 
-def rig_figure(mesh, scale, bend=None):
+def rig_figure(mesh, scale, bend=None, bones=None):
     """Ардан's bones at this figure's scale; `bend(Vector) -> Vector` moves the joints as the
     figure's own post-build bend did (the elder's stoop), so his limbs turn where they are."""
     data = bpy.data.armatures.new(mesh.name + "Rig")
@@ -39,7 +39,7 @@ def rig_figure(mesh, scale, bend=None):
     mesh.users_collection[0].objects.link(arm)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='EDIT')
-    for name, head, tail, parent in aa.BONES:
+    for name, head, tail, parent in (bones or aa.BONES):
         b = data.edit_bones.new(name)
         bh, bt = Vector(head), Vector(tail)
         if bend:
@@ -149,6 +149,7 @@ class Track:
         self.speed = run_speed
         self.moves = []
         self.apply = apply
+        self.run_pose = a2.run            # a figure's own run (an orc with a torch held high)
 
     def add(self, kind, dur, *args):
         self.moves.append((kind, dur) + args)
@@ -172,6 +173,8 @@ class Track:
         """(root point, heading or None, pose) of move i at u seconds into it."""
         m = self.moves[i]
         kind, dur = m[0], m[1]
+        if kind == 'fn':                                     # a hand-made move: fn(u) -> (point, heading, pose)
+            return m[2](u)
         if kind == 'pose':
             at, fn, face = m[2], m[3], m[4]
             return Vector(at), (self.heading(Vector(face) - Vector(at)) if face else None), fn(u)
@@ -194,7 +197,7 @@ class Track:
         d = self.speed * (u * u / (2 * ramp) if u < ramp else ramp / 2 + (u - ramp))
         d = min(d, (p1 - p0).length)
         pos = p0 + (p1 - p0).normalized() * d
-        pose = a2.run((d / (self.speed * a2.RUN_CYCLE)) % 1.0)
+        pose = self.run_pose((d / (self.speed * a2.RUN_CYCLE)) % 1.0)
         return pos, head, a2.mix(stare(0), pose, a2.ease(u / ramp))
 
     def bake(self, arm, name):
