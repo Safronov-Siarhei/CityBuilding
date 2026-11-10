@@ -53,16 +53,31 @@ detail.OVERRIDE.update({c: detail.PLAIN for c in (
     SCARF_DARK, TRIM, EYE, PUPIL, STONE, RUNE, BRASS, 'burlap', 'stone_light')})
 
 
+def foot(b, k):
+    x = k * 0.045
+    b.box(x - 0.031, x + 0.031, -0.057, 0.032, 0.0, 0.012, SOLE, bevel=0.004)           # sole
+    b.box(x - 0.029, x + 0.029, -0.053, 0.03, 0.012, 0.034, BOOT, bevel=0.009)          # foot
+
+
+def shin(b, k):
+    x = k * 0.045
+    b.box(x - 0.027, x + 0.027, -0.027, 0.027, 0.03, 0.086, BOOT, bevel=0.008)          # shaft
+    b.box(x - 0.032, x + 0.032, -0.032, 0.032, 0.078, 0.1, CUFF, bevel=0.007)           # turned cuff
+
+
+def thigh(b, k):
+    x = k * 0.045
+    b.box(x - 0.0255, x + 0.0255, -0.0255, 0.0255, 0.098, 0.2, TROUSERS, bevel=0.009)
+    if k == -1:
+        # a patch on the right knee: a lad who works
+        b.box(-0.062, -0.034, -0.0285, -0.024, 0.118, 0.148, 'burlap', bevel=0.002)
+
+
 def legs(b):
     for k in (-1, 1):
-        x = k * 0.045
-        b.box(x - 0.031, x + 0.031, -0.057, 0.032, 0.0, 0.012, SOLE, bevel=0.004)           # sole
-        b.box(x - 0.029, x + 0.029, -0.053, 0.03, 0.012, 0.034, BOOT, bevel=0.009)          # foot
-        b.box(x - 0.027, x + 0.027, -0.027, 0.027, 0.03, 0.086, BOOT, bevel=0.008)          # shaft
-        b.box(x - 0.032, x + 0.032, -0.032, 0.032, 0.078, 0.1, CUFF, bevel=0.007)           # turned cuff
-        b.box(x - 0.0255, x + 0.0255, -0.0255, 0.0255, 0.098, 0.2, TROUSERS, bevel=0.009)
-    # a patch on the right knee: a lad who works
-    b.box(-0.062, -0.034, -0.0285, -0.024, 0.118, 0.148, 'burlap', bevel=0.002)
+        foot(b, k)
+        shin(b, k)
+        thigh(b, k)
 
 
 def waist(b):
@@ -98,8 +113,6 @@ def chest(b):
     # stitched seams down the sides of the vest
     for k in (-1, 1):
         b.box(k * 0.0855 - 0.0015, k * 0.0855 + 0.0015, -0.03, 0.03, 0.28, 0.37, LACE)
-    # neck
-    b.cylinder(0, 0.0, 0.39, 0.432, 0.026, SKIN, sides=6)
     # the neckerchief: a roll round the neck and a bandana triangle on the chest, point down
     # (2026-11-10: tails knotted at the side read as a flag stuck on the vest), knotted at the back
     b.obox((0, -0.002, 0.405), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.044, 0.042, 0.014, SCARF, bevel=0.01)
@@ -119,28 +132,45 @@ def chest(b):
         b.obox((k * 0.0035, -0.0742, 0.3405), (1, 0, -1.2 * k), (0, 1, 0), (1.2 * k, 0, 1), 0.0045, 0.0012, 0.0013, RUNE)
 
 
+SHOULDER, ELBOW, WRIST = (0.096, 0.0, 0.384), (0.114, -0.008, 0.318), (0.117, -0.03, 0.258)
+
+
+def _joints(k):
+    return (Vector((k * SHOULDER[0], SHOULDER[1], SHOULDER[2])), Vector((k * ELBOW[0], ELBOW[1], ELBOW[2])),
+            Vector((k * WRIST[0], WRIST[1], WRIST[2])))
+
+
+def upper_arm(b, k):
+    """A green sleeve rolled to the elbow."""
+    sh, el, _ = _joints(k)
+    b.rod(sh, el, 0.043, TUNIC)
+    d = (el - sh).normalized()
+    b.rod(el - d * 0.013, el + d * 0.007, 0.05, TUNIC_DARK)                               # rolled cuff
+
+
+def forearm(b, k):
+    """The bare forearm, a leather bracer on the left one, the fist."""
+    _, el, wr = _joints(k)
+    b.rod(el, wr, 0.034, SKIN)
+    if k == 1:
+        f = (wr - el)
+        b.rod(el + f * 0.25, el + f * 0.85, 0.04, VEST)                                   # bracer
+        for t in (0.35, 0.72):
+            b.rod(el + f * (t - 0.04), el + f * (t + 0.04), 0.043, LACE)
+    b.ball(wr.x, wr.y, wr.z - 0.034, 0.021, 0.036, SKIN, sides=6)                          # fist
+    b.box(wr.x - k * 0.006 - 0.006, wr.x - k * 0.006 + 0.006, wr.y - 0.026, wr.y - 0.014,
+          wr.z - 0.016, wr.z - 0.002, SKIN, bevel=0.003)                                   # thumb
+
+
 def arms(b):
-    """Green sleeves rolled to the elbow, bare forearms, a leather bracer on the left one."""
     for k in (-1, 1):
-        sh = Vector((k * 0.096, 0.0, 0.384))
-        el = Vector((k * 0.114, -0.008, 0.318))
-        wr = Vector((k * 0.117, -0.03, 0.258))
-        b.rod(sh, el, 0.043, TUNIC)
-        d = (el - sh).normalized()
-        b.rod(el - d * 0.013, el + d * 0.007, 0.05, TUNIC_DARK)                           # rolled cuff
-        b.rod(el, wr, 0.034, SKIN)
-        if k == 1:
-            f = (wr - el)
-            b.rod(el + f * 0.25, el + f * 0.85, 0.04, VEST)                               # bracer
-            for t in (0.35, 0.72):
-                b.rod(el + f * (t - 0.04), el + f * (t + 0.04), 0.043, LACE)
-        b.ball(wr.x, wr.y, wr.z - 0.034, 0.021, 0.036, SKIN, sides=6)                      # fist
-        b.box(wr.x - k * 0.006 - 0.006, wr.x - k * 0.006 + 0.006, wr.y - 0.026, wr.y - 0.014,
-              wr.z - 0.016, wr.z - 0.002, SKIN, bevel=0.003)                               # thumb
+        upper_arm(b, k)
+        forearm(b, k)
 
 
 def head(b):
     z = 0.425
+    b.cylinder(0, 0.0, 0.39, 0.432, 0.026, SKIN, sides=6)                                # neck
     b.box(-0.044, 0.044, -0.046, 0.042, z - 0.005, z + 0.09, SKIN, bevel=0.017)
     b.box(-0.007, 0.007, -0.057, -0.044, z + 0.022, z + 0.046, SKIN, bevel=0.003)         # nose
     b.box(-0.012, 0.012, -0.048, -0.0445, z + 0.012, z + 0.016, SCARF_DARK)               # mouth
@@ -174,13 +204,25 @@ def hair(b):
     b.obox((0.03, 0.03, z + 0.117), (1, 0, 0.4), (0, 1, -0.6), (-0.4, 0.6, 1), 0.012, 0.011, 0.01, HAIR_LIGHT, bevel=0.003)
 
 
+# The parts the cutscene rig moves, each wholly on its bone (rigid, like the game's jointed figures).
+PARTS = [
+    ("hips", lambda b: waist(b)),
+    ("chest", lambda b: chest(b)),
+    ("head", lambda b: (head(b), hair(b))),
+] + [(f"{bone}.{side}", (lambda fn, k: (lambda b: fn(b, k)))(fn, k))
+     for side, k in (("L", 1), ("R", -1))
+     for bone, fn in (("thigh", thigh), ("shin", shin), ("foot", foot), ("upper_arm", upper_arm), ("forearm", forearm))]
+PART_LAYER = "part"
+
+
 def build(b):
-    legs(b)
-    waist(b)
-    chest(b)
-    arms(b)
-    head(b)
-    hair(b)
+    """Every part in turn; each vertex remembers its part (1-based index into PARTS)."""
+    layer = b.bm.verts.layers.int.new(PART_LAYER)
+    for i, (_, fn) in enumerate(PARTS):
+        fn(b)
+        for v in b.bm.verts:
+            if v[layer] == 0:
+                v[layer] = i + 1
     for v in b.bm.verts:
         v.co *= SCALE
 
@@ -214,6 +256,13 @@ def make(location):
         if old.users == 0:
             bpy.data.meshes.remove(old)
     obj.location = location
+    # a vertex group per part, for the cutscene rig (ardan_anim.py)
+    obj.vertex_groups.clear()
+    tags = [0] * len(me.vertices)
+    me.attributes[PART_LAYER].data.foreach_get("value", tags)
+    groups = [obj.vertex_groups.new(name=name) for name, _ in PARTS]
+    for i, t in enumerate(tags):
+        groups[t - 1].add([i], 1.0, 'REPLACE')
     print(f"MODEL {OBJ} tris={sum(len(p.vertices) - 2 for p in me.polygons)}")
     return obj
 
@@ -283,4 +332,5 @@ def main():
         bpy.ops.wm.save_mainfile()
 
 
-main()
+if __name__ == "__main__":
+    main()

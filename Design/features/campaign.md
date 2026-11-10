@@ -1,7 +1,8 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** design stage. Ардан's cutscene MODEL is built (`Tools/blender/cinematic/ardan.py`)
-and is waiting for the user's approval. Nothing is in the game yet; the menu banner says «Скоро».
+**Status (2026-11-10):** design stage.
+- Ардан's cutscene MODEL is APPROVED by the user (`Tools/blender/cinematic/ardan.py`).
+- His rig and two animations (walk, carry the sack) are built (`ardan_anim.py`); the user is reviewing them. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
@@ -24,7 +25,11 @@ and is waiting for the user's approval. Nothing is in the game yet; the menu ban
 - **Cutscene models:** a SEPARATE, more detailed set from the gameplay models, but in the **same blocky,
   flat-palette style as the King and the townsfolk**. The player must see that it is one game.
   (A smooth, realistic first try was rejected on 2026-11-10.)
-- **No rig and no animation until the user approves the model.**
+- **The order of work (the user):**
+  1. The model is approved.
+  2. Its animations are approved.
+  3. Then the other cutscene models are made.
+  4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
 ## Ардан (the model)
@@ -45,8 +50,11 @@ Commands:
 - Store in the file: `-- save`.
 
 ## Open
-- The user's verdict on Ардан.
-- After approval: a rig (rigid parts on bones), then walk and carry-the-sack animations.
+- The user's verdict on the walk and carry animations.
+  - The rig is rigid, like the game's jointed figures: each part of the model rides one bone, through the vertex groups of `ardan.PARTS`.
+  - Actions: `CineArdan_Walk` (30 frames) and `CineArdan_CarrySack` (34 frames).
+  - Demo clips: `blender --background <Models.blend> --python Tools/blender/cinematic/ardan_anim.py -- render <out> [walk|carry|all]`.
+  - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
 - The rest of the cinematic set: the old man, the priest, villagers, the church, the market, the
