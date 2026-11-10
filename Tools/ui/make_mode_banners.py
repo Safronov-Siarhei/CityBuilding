@@ -48,25 +48,34 @@ def p(x, y):
     return (x * SS, y * SS)
 
 
-def cloth_outline(inset, torn):
-    """The cloth's polygon, `inset` px in from the outer hem; the swallowtail notch in the middle."""
-    l, r, top, side, notch = 34 + inset, W - 34 - inset, 44 + inset, 590 - inset * 0.6, 520 - inset * 0.6
-    pts = [(l, top), (r, top), (r, side)]
+TAIL_SIDE, TAIL_NOTCH = 590, 520
+
+
+def tail_points(torn):
+    """The tail's line from the right point to the notch to the left point, on the OUTER hem;
+    torn: bites along each edge (the same bites for every layer, so hem, cloth and seam agree)."""
+    l, r = 34, W - 34
+    pts = [(r, TAIL_SIDE)]
     if torn:
-        # a torn hem: a few bites along each tail edge
         for k in range(1, 5):
             t = k / 5
-            x = r + (W / 2 - r) * t
-            y = side + (notch - side) * t + (14 if k % 2 else -6)
-            pts.append((x, y))
-    pts.append((W / 2, notch))
+            pts.append((r + (W / 2 - r) * t, TAIL_SIDE + (TAIL_NOTCH - TAIL_SIDE) * t + (16 if k % 2 else -4)))
+    pts.append((W / 2, TAIL_NOTCH))
     if torn:
         for k in range(4, 0, -1):
             t = k / 5
-            x = l + (W / 2 - l) * t
-            y = side + (notch - side) * t + (14 if k % 2 == 0 else -6)
-            pts.append((x, y))
-    pts.append((l, side))
+            pts.append((l + (W / 2 - l) * t, TAIL_SIDE + (TAIL_NOTCH - TAIL_SIDE) * t + (16 if k % 2 == 0 else -4)))
+    pts.append((l, TAIL_SIDE))
+    return pts
+
+
+def cloth_outline(inset, torn):
+    """The cloth's polygon `inset` px in from the outer hem: the sides move in, the top down and the
+    whole tail line straight up -- one shape, so every layer's edge runs parallel to the hem."""
+    l, r, top = 34 + inset, W - 34 - inset, 44 + inset
+    pts = [(l, top), (r, top)]
+    for x, y in tail_points(torn):
+        pts.append((min(max(x, l), r), y - inset))
     return [p(x, y) for x, y in pts]
 
 
@@ -99,24 +108,42 @@ def castle(d, cx, cy, ink):
     d.rounded_rectangle([p(cx - 12, cy + 18), p(cx + 12, cy + 47)], radius=12 * s, fill=PARCHMENT)
 
 
-def portal(d, cx, cy, ink, fire):
-    d.rounded_rectangle([p(cx - 40, cy - 52), p(cx + 40, cy + 48)], radius=40 * SS, fill=ink)
-    d.rounded_rectangle([p(cx - 26, cy - 38), p(cx + 26, cy + 48)], radius=26 * SS, fill=fire)
-    d.ellipse([p(cx - 13, cy - 8), p(cx + 13, cy + 30)], fill=(250, 199, 117, 255))
+def orc_skull(d, cx, cy, bone, ink, blade):
+    """The invasion: an orc's horned skull with tusks over two crossed axes -- war, plainly."""
+    # the axes behind: hafts crossed, heads at the top corners
     for a in (-1, 1):
-        d.polygon([p(cx + a * 40, cy - 30), p(cx + a * 58, cy - 56), p(cx + a * 46, cy - 18)], fill=ink)
-    d.rectangle([p(cx - 52, cy + 44), p(cx + 52, cy + 54)], fill=ink)
+        d.line([p(cx - a * 50, cy + 52), p(cx + a * 40, cy - 46)], fill=WOOD_HI, width=9 * SS)
+        hx, hy = cx + a * 40, cy - 46
+        d.polygon([p(hx - a * 6, hy - 14), p(hx + a * 26, hy - 26), p(hx + a * 20, hy + 6), p(hx - a * 2, hy + 8)], fill=blade)
+        d.polygon([p(hx - a * 6, hy - 14), p(hx + a * 26, hy - 26), p(hx + a * 20, hy + 6), p(hx - a * 2, hy + 8)], outline=ink, width=3 * SS)
+    # horns
+    for a in (-1, 1):
+        d.polygon([p(cx + a * 22, cy - 26), p(cx + a * 52, cy - 44), p(cx + a * 44, cy - 16), p(cx + a * 30, cy - 10)], fill=bone, outline=ink, width=3 * SS)
+    # the skull: a broad cranium and a heavy jaw
+    d.ellipse([p(cx - 34, cy - 38), p(cx + 34, cy + 22)], fill=bone, outline=ink, width=4 * SS)
+    d.rounded_rectangle([p(cx - 26, cy + 6), p(cx + 26, cy + 38)], radius=10 * SS, fill=bone, outline=ink, width=4 * SS)
+    # brow and eyes
+    d.polygon([p(cx - 24, cy - 12), p(cx - 6, cy - 6), p(cx - 8, cy + 6), p(cx - 22, cy + 4)], fill=ink)
+    d.polygon([p(cx + 24, cy - 12), p(cx + 6, cy - 6), p(cx + 8, cy + 6), p(cx + 22, cy + 4)], fill=ink)
+    d.polygon([p(cx - 4, cy + 10), p(cx + 4, cy + 10), p(cx, cy + 18)], fill=ink)
+    # tusks up from the jaw
+    for a in (-1, 1):
+        d.polygon([p(cx + a * 18, cy + 30), p(cx + a * 10, cy + 30), p(cx + a * 16, cy + 8)], fill=(255, 250, 235, 255), outline=ink, width=2 * SS)
+    for x in (-8, 0, 8):
+        d.line([p(cx + x, cy + 26), p(cx + x, cy + 36)], fill=ink, width=2 * SS)
 
 
 def book(d, cx, cy, ink):
     d.polygon([p(cx - 52, cy - 4), p(cx - 4, cy + 4), p(cx - 4, cy + 50), p(cx - 52, cy + 42)], fill=ink)
     d.polygon([p(cx + 52, cy - 4), p(cx + 4, cy + 4), p(cx + 4, cy + 50), p(cx + 52, cy + 42)], fill=ink)
-    d.polygon([p(cx - 44, cy + 4), p(cx - 10, cy + 10), p(cx - 10, cy + 40), p(cx - 44, cy + 34)], fill=PARCHMENT)
-    d.polygon([p(cx + 44, cy + 4), p(cx + 10, cy + 10), p(cx + 10, cy + 40), p(cx + 44, cy + 34)], fill=PARCHMENT)
+    d.polygon([p(cx - 44, cy + 4), p(cx - 1, cy + 11), p(cx - 1, cy + 42), p(cx - 44, cy + 34)], fill=PARCHMENT)
+    d.polygon([p(cx + 44, cy + 4), p(cx + 1, cy + 11), p(cx + 1, cy + 42), p(cx + 44, cy + 34)], fill=PARCHMENT)
+    # the spine: the two pages bound into one book
+    d.line([p(cx, cy + 9), p(cx, cy + 44)], fill=ink, width=3 * SS)
     for k in range(3):
         y = cy + 14 + k * 8
-        d.line([p(cx - 38, y), p(cx - 16, y + 3)], fill=ink, width=3 * SS)
-        d.line([p(cx + 38, y), p(cx + 16, y + 3)], fill=ink, width=3 * SS)
+        d.line([p(cx - 38, y), p(cx - 8, y + 4)], fill=ink, width=3 * SS)
+        d.line([p(cx + 38, y), p(cx + 8, y + 4)], fill=ink, width=3 * SS)
     d.polygon([p(cx - 30, cy - 14), p(cx - 30, cy - 46), p(cx - 15, cy - 30), p(cx, cy - 54),
                p(cx + 15, cy - 30), p(cx + 30, cy - 46), p(cx + 30, cy - 14)], fill=GOLD_LO)
     d.polygon([p(cx - 24, cy - 18), p(cx - 24, cy - 38), p(cx - 13, cy - 26), p(cx, cy - 44),
@@ -140,16 +167,18 @@ def banner(name, spec):
     d.polygon(shadow, fill=SHADOW)
     d.polygon(cloth_outline(0, torn), fill=hem)
     d.polygon(cloth_outline(12, torn), fill=cloth)
-    # a light fold down each side, so the cloth is not a flat card
-    d.polygon([p(46, 56), p(70, 56), p(70, 560), p(46, 572)], fill=tuple(min(255, c + 18) for c in cloth[:3]) + (255,))
-    d.polygon([p(W - 70, 56), p(W - 46, 56), p(W - 46, 572), p(W - 70, 560)], fill=tuple(max(0, c - 18) for c in cloth[:3]) + (255,))
     dashed(d, cloth_outline(22, torn), seam, 3)
 
     # tassels at the tail's points
+    # tassels in the banner's own colour under a cap of its perch's metal (gold; iron; grey when closed)
     for x in (40, W - 40):
-        d.line([p(x, 586), p(x, 612)], fill=finial[0], width=4 * SS)
-        d.polygon([p(x - 10, 612), p(x + 10, 612), p(x + 7, 640), p(x - 7, 640)], fill=finial[0])
-        d.ellipse([p(x - 8, 604), p(x + 8, 620)], fill=finial[1])
+        d.line([p(x, TAIL_SIDE - 6), p(x, 610)], fill=hem, width=4 * SS)
+        d.polygon([p(x - 11, 616), p(x + 11, 616), p(x + 9, 646), p(x - 9, 646)], fill=hem)
+        d.polygon([p(x - 8, 616), p(x + 8, 616), p(x + 6, 642), p(x - 6, 642)], fill=cloth)
+        for dx in (-4, 0, 4):
+            d.line([p(x + dx, 622), p(x + dx, 642)], fill=hem, width=2 * SS)
+        d.ellipse([p(x - 9, 604), p(x + 9, 622)], fill=finial[0])
+        d.ellipse([p(x - 5, 607), p(x + 1, 613)], fill=finial[1])
 
     # the perch: the kit's wood pill (iron for the invasion) and two finials
     fill, edge, hi = perch
@@ -171,13 +200,13 @@ def banner(name, spec):
     d.ellipse([p(cx - r + 6, cy - r + 6), p(cx + r - 6, cy + r - 6)], fill=ring)
     d.arc([p(cx - r + 10, cy - r + 10), p(cx + r - 10, cy + r - 10)], 200, 340, fill=ring_hi, width=5 * SS)
     inner = r - 20
-    face = PARCHMENT if name != "Invasion" else (60, 44, 38, 255)
+    face = PARCHMENT if name != "Invasion" else (58, 38, 32, 255)
     d.ellipse([p(cx - inner, cy - inner), p(cx + inner, cy + inner)], fill=CARD_EDGE if name != "Invasion" else IRON_EDGE)
     d.ellipse([p(cx - inner + 4, cy - inner + 4), p(cx + inner - 4, cy + inner - 4)], fill=face)
     if name == "Sandbox":
         castle(d, cx, cy + 6, WOOD_DARK)
     elif name == "Invasion":
-        portal(d, cx, cy + 4, (24, 20, 18, 255), (216, 90, 48, 255))
+        orc_skull(d, cx, cy + 2, (226, 214, 186, 255), (24, 20, 18, 255), (160, 156, 148, 255))
     elif name == "Tutorial":
         book(d, cx, cy + 6, WOOD_DARK)
     else:

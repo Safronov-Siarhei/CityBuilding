@@ -37,9 +37,9 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
 - main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Предложения» (= the
   shop), Discord + YouTube rounds under them. No resume-last-save plaque any more.
 - modes (REDONE 2026-11-10, the user: «дёшево и скучно» -> «Зал знамён»): four BANNERS hanging in a
-  row -- Обучение (teal), Песочница (green), Нашествие (red, iron perch, torn tail), Кампания (grey,
+  row -- Обучение (teal), Песочница (green), Нашествие (red, iron perch, torn tail, emblem = horned orc skull over crossed axes since 11-10 round 2), Кампания (grey,
   lock, «Скоро») -- art `UI/MenuArt/Banner_<Mode>.png` drawn by `Tools/ui/make_mode_banners.py` in
-  the HUD's Classic kit (same parchment/wood/gold/hard shadow; one art for all four looks). Name on
+  the HUD's Classic kit (same parchment/wood/gold/hard shadow; one art for all four looks). Round 2 (the user, 11-10): no side folds (read as seeing the banner from all sides), book pages joined at a spine, one tail line for hem/cloth/seam (seam parallel to the torn edge), tassels in the banner's colour under a cap of its perch metal. Name on
   the kit's plaque, a motto and a LIVE line on the cloth (tutorial reward or «Пройдено», saves count
   or «Новое королевство», invasion points today, «Скоро»; keys `#banner_*`). Tap = pick (bigger x1.14,
   sways more, others dimmed, remembered in PlayerPrefs `menu.mode`); tap the picked one or «Играть»
