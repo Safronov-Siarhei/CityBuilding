@@ -33,7 +33,7 @@ It uses the shared palette material, and only palette colours (the palette is fu
 
 What marks him out:
 - ginger hair with a forelock swept over his right brow;
-- a red neckerchief with hanging tails;
+- a red neckerchief: a bandana triangle on the chest, knotted at the back (the first version, tails knotted at the side, looked like a flag stuck on the vest);
 - a green tunic under an open, laced leather vest;
 - a dark stone amulet with a blue rune: the stone of the portal ruins, a story hook;
 - a bracer on his left arm, a knife behind his back, a pouch, a knee patch;

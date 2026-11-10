@@ -100,13 +100,18 @@ def chest(b):
         b.box(k * 0.0855 - 0.0015, k * 0.0855 + 0.0015, -0.03, 0.03, 0.28, 0.37, LACE)
     # neck
     b.cylinder(0, 0.0, 0.39, 0.432, 0.026, SKIN, sides=6)
-    # the neckerchief: a roll round the neck, a knot at the front right, two tails
+    # the neckerchief: a roll round the neck and a bandana triangle on the chest, point down
+    # (2026-11-10: tails knotted at the side read as a flag stuck on the vest), knotted at the back
     b.obox((0, -0.002, 0.405), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.044, 0.042, 0.014, SCARF, bevel=0.01)
-    b.obox((-0.026, -0.058, 0.394), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.012, 0.009, 0.011, SCARF, bevel=0.004)
-    b.obox((-0.032, -0.07, 0.366), (1, 0, 0), (0, 1, 0), (-0.3, -0.12, 1), 0.012, 0.004, 0.026, SCARF)
-    b.obox((-0.014, -0.071, 0.37), (1, 0, 0), (0, 1, 0), (0.25, -0.12, 1), 0.01, 0.004, 0.022, SCARF_DARK)
+    for i, (z0, z1, w) in enumerate(((0.381, 0.396, 0.036), (0.37, 0.383, 0.026), (0.36, 0.372, 0.017), (0.352, 0.362, 0.008))):
+        y = -0.061 - 0.0015 * i
+        b.box(-w, w, y - 0.006, y, z0, z1, SCARF, bevel=0.003)
+    b.box(-0.004, 0.004, -0.068, -0.066, 0.354, 0.39, SCARF_DARK)                         # the fold down its middle
+    b.obox((0, 0.046, 0.398), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.011, 0.008, 0.01, SCARF, bevel=0.003)   # knot behind
+    for k in (-1, 1):
+        b.obox((k * 0.008, 0.052, 0.38), (1, 0, 0), (0, 1, 0), (0.3 * k, 0.15, 1), 0.006, 0.003, 0.016, SCARF_DARK)
     # the amulet: a cord, a dark stone set on its point, a blue rune cut in it
-    b.rod((0.03, -0.05, 0.395), (0.004, -0.07, 0.345), 0.0035, LACE)
+    b.rod((0.004, -0.066, 0.356), (0.002, -0.07, 0.346), 0.0035, LACE)
     s = 0.7071
     b.obox((0, -0.07, 0.335), (s, 0, s), (0, 1, 0), (-s, 0, s), 0.012, 0.004, 0.012, STONE, bevel=0.002)
     b.box(-0.0018, 0.0018, -0.0755, -0.073, 0.326, 0.344, RUNE)
