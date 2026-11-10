@@ -1,8 +1,8 @@
 """Manor1-lvl3 -- the Manor (Особняк) at its last upgrade. Footprint 3x3 (level 1's).
 Front is -Y.
 
-Level 2 (manor1_lvl2.build) crowned: a round stone turret under a terracotta cone on the side
-wing's garden corner, gold finials on every gable end, a gold weathervane on the main ridge, and
+Level 2 (manor1_lvl2.build) crowned: a round stone turret under a terracotta cone beside the side
+wing's garden corner, clear of its eaves, gold finials on every gable end, a gold weathervane on the main ridge, and
 the garden path paved.
 """
 import os
@@ -29,7 +29,13 @@ def build(lo, hi):
     wxc, whs = (wx0 + wx1) / 2, (wx1 - wx0) / 2 + J
     wzr = U_TOP + whs * d.PITCH
 
-    d.turret(b, wx0 + 0.02, wy0 + 0.06, FOOTING, wzr + 0.06, 0.17, face='-x')
+    # the turret stands just clear of the side wing's eaves (the user, 2026-11-10: at the wall's
+    # corner its shaft came up through the wing's roof), tied to the wall by a stone link
+    tx, ty, tr = 0.18, -1.21, 0.11
+    eave = wx0 - J - d.ROOF['overhang']
+    assert tx + tr + 0.03 <= eave + 0.001, "the turret's band would cut the eaves"
+    d.turret(b, tx, ty, FOOTING, wzr + 0.06, tr, face='-y')
+    b.box(tx + tr - 0.02, wx0 + 0.01, ty - 0.06, ty + 0.06, 0.0, U_TOP - 0.1, 'stone_light', bevel=0.008)
     for ex in (-(mx1 + J + 0.07), mx1 + J + 0.07):
         d.finial(b, ex, myc, mzr + 0.06)
     d.finial(b, wxc, wy0 - J - 0.09, wzr + 0.06)
