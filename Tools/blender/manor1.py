@@ -70,8 +70,8 @@ def build(lo, hi):
 
     # -- side wing faces ------------------------------------------------------------------------
     f = Facade(b, '-y', wy0 - J)  # gable end on the street
-    d.timber(f, wx0 - J, wx1 + J, G_TOP, U_TOP, (wx0 - J + 0.025, wxc, wx1 + J - 0.025),
-             ((wx0, wxc), (wx1, wxc)))
+    # no diagonals here: they ran across both windows (the user, 2026-11-10)
+    d.timber(f, wx0 - J, wx1 + J, G_TOP, U_TOP, (wx0 - J + 0.025, wxc, wx1 + J - 0.025))
     d.cross_window(f, wxc - 0.22, G_TOP, w=0.18)
     d.cross_window(f, wxc + 0.22, G_TOP, w=0.18)
     d.gable_frame(f, wxc, whs, U_TOP, wzr)
