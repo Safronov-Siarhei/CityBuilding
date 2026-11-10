@@ -9,10 +9,10 @@ using UnityEngine.UI;
 namespace CityBuilder.EditorTools
 {
     /// <summary>
-    /// The drawn loading screen (UI/LoadingScreen.cs; the user, 2026-10-25) as a prefab in
-    /// Resources, so it can be put up from any scene and live across the change: a parchment page
-    /// with the sandbox map's ink chart and its quill, the Invasion's painted scene with its wooden
-    /// plank and runner, and a tip at the foot.
+    /// The loading screen (UI/LoadingScreen.cs) as a prefab in Resources, so it can be put up from any
+    /// scene and live across the change: since 2026-11-10 (the user) a painted map covering the screen,
+    /// a course along the bottom with a flat ink galleon sailing it, a tip above; the art comes from
+    /// Tools/loading/loading_maps.py.
     /// </summary>
     public static partial class SetupProject
     {
@@ -29,108 +29,81 @@ namespace CityBuilder.EditorTools
             ConfigureScaler(root.GetComponent<CanvasScaler>());
             var screen = root.AddComponent<LoadingScreen>();
 
-            // the page under everything: parchment, which also hides the scenes changing behind it
-            var page = CreateImage(root.transform, "Page", UiTheme.Parchment);
+            // under everything a dark page, so nothing of the scenes changing shows at any edge
+            var page = CreateImage(root.transform, "Page", new Color(0.24f, 0.16f, 0.09f));
             StretchFull(page.rectTransform);
 
-            // ---- the sandbox: the chart drawn in by the quill
-            var sandbox = StretchedChild(root.transform, "Sandbox");
-            var under = CreateImage(sandbox, "ChartFaint", new Color(1f, 1f, 1f, 0.16f));
-            under.preserveAspect = true;
-            Anchor(under.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(780f, 780f));
-            var chart = CreateImage(sandbox, "Chart", Color.white);
-            chart.preserveAspect = true;
-            chart.type = Image.Type.Filled;
-            chart.fillMethod = Image.FillMethod.Horizontal;
-            chart.fillOrigin = (int)Image.OriginHorizontal.Left;
-            Anchor(chart.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(780f, 780f));
-            var quill = CreateImage(chart.transform, "Quill", Color.white);
-            quill.sprite = LoadingArt("Quill");
-            quill.preserveAspect = true;
-            quill.raycastTarget = false;
-            // the nib is the sprite's lower-left corner
-            Anchor(quill.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.08f, 0.08f), Vector2.zero, new Vector2(170f, 170f));
-            var mapName = CreateText(sandbox, "MapName", string.Empty, 52, new Vector2(0f, -400f), new Vector2(1000f, 70f), UiTheme.Ink);
-            mapName.font = UiTheme.Heavy;
-
-            // ---- the invasion: the painted scene, the plank and its runner
-            var invasion = StretchedChild(root.transform, "Invasion");
-            var scene = CreateImage(invasion, "Scene", Color.white);
-            StretchFull(scene.rectTransform);
-            var fitter = scene.gameObject.AddComponent<AspectRatioFitter>();
+            // ---- the map: a painted chart covering the screen, never stretched (LoadingScreen picks it)
+            var map = CreateImage(root.transform, "Map", Color.white);
+            map.raycastTarget = false;
+            StretchFull(map.rectTransform);
+            var fitter = map.gameObject.AddComponent<AspectRatioFitter>();
             fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fitter.aspectRatio = 16f / 9f;
-            var plank = Plaque(invasion, "Plank");
-            Anchor(plank.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 150f), new Vector2(1100f, 50f));
-            var fill = CreateImage(plank.transform, "Fill", new Color(0.62f, 0.38f, 0.17f));
-            // a Filled image without a sprite draws whole: the plaque's own, tinted wood
-            fill.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.HudSkinsFolder}/Classic/card.png");
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
-            var fillRect = fill.rectTransform;
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = new Vector2(12f, 12f);
-            fillRect.offsetMax = new Vector2(-12f, -16f);
-            var runner = CreateImage(plank.transform, "Runner", Color.white);
-            runner.sprite = LoadingArt("Runner_A");
-            runner.preserveAspect = true;
-            runner.raycastTarget = false;
-            Anchor(runner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.08f), new Vector2(0f, 14f), new Vector2(130f, 130f));
-            // the figure was drawn facing left: it runs to the right along the plank
-            runner.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+            fitter.aspectRatio = 20f / 9f;
 
-            // ---- the tip, on a plaque so it reads over the painting too
-            var tipPlaque = Plaque(root.transform, "TipPlaque");
-            Anchor(tipPlaque.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 64f), new Vector2(1400f, 76f));
-            var tip = CreateText(tipPlaque.transform, "Tip", string.Empty, 30, new Vector2(0f, 3f), new Vector2(1340f, 64f), UiTheme.Ink);
-            tip.font = UiTheme.Regular;
+            // ---- the course along the bottom: anchor, dashed ahead, red behind, the cross, the ship
+            var course = new GameObject("Course", typeof(RectTransform)).GetComponent<RectTransform>();
+            course.SetParent(root.transform, false);
+            course.anchorMin = new Vector2(0.1f, 0f);
+            course.anchorMax = new Vector2(0.9f, 0f);
+            course.pivot = new Vector2(0.5f, 0.5f);
+            course.anchoredPosition = new Vector2(0f, 92f);
+            course.sizeDelta = new Vector2(0f, 80f);
+            var dashed = CreateImage(course, "Dashed", Color.white);
+            dashed.sprite = LoadingArt("Route_Dashed");
+            dashed.raycastTarget = false;
+            StretchFull(dashed.rectTransform);
+            var sailed = CreateImage(course, "Sailed", Color.white);
+            sailed.sprite = LoadingArt("Route_Sailed");
+            sailed.raycastTarget = false;
+            sailed.type = Image.Type.Filled;
+            sailed.fillMethod = Image.FillMethod.Horizontal;
+            sailed.fillOrigin = (int)Image.OriginHorizontal.Left;
+            sailed.fillAmount = 0f;
+            StretchFull(sailed.rectTransform);
+            var anchor = CreateImage(course, "Anchor", Color.white);
+            anchor.sprite = LoadingArt("Route_Anchor");
+            anchor.raycastTarget = false;
+            Anchor(anchor.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-46f, 0f), new Vector2(76f, 76f));
+            var cross = CreateImage(course, "Cross", Color.white);
+            cross.sprite = LoadingArt("Route_Cross");
+            cross.raycastTarget = false;
+            Anchor(cross.rectTransform, new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(46f, 0f), new Vector2(76f, 76f));
+            var ship = CreateImage(course, "Ship", Color.white);
+            ship.sprite = LoadingArt("Ship");
+            ship.raycastTarget = false;
+            // the sprite is 340 x 240 with its waterline 30 px up at x 160 (loading_maps.py ship_sprite)
+            Anchor(ship.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(160f / 340f, 30f / 240f), Vector2.zero, new Vector2(204f, 144f));
+
+            // ---- the tip, in ink over the sea above the course, a paper rim so it reads over land too
+            var tip = CreateText(root.transform, "Tip", string.Empty, 34, Vector2.zero, new Vector2(1600f, 64f), UiTheme.Ink);
+            Anchor(tip.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 196f), new Vector2(1600f, 64f));
+            tip.font = UiTheme.Bold;
             tip.resizeTextForBestFit = true;
-            tip.resizeTextMinSize = 20;
-            tip.resizeTextMaxSize = 30;
+            tip.resizeTextMinSize = 22;
+            tip.resizeTextMaxSize = 34;
+            tip.raycastTarget = false;
+            var rim = tip.gameObject.AddComponent<Outline>();
+            rim.effectColor = new Color(0.95f, 0.9f, 0.78f, 0.85f);
+            rim.effectDistance = new Vector2(2f, -2f);
 
-            // the pictures: a chart per sandbox map, a scene per theme
-            var chartKeys = new List<string>();
-            var charts = new List<Object>();
-            foreach (var id in Maps.MapSelector.PlayerMapIds)
-            {
-                var art = LoadingArt($"Ink_{id}");
-                if (art == null) continue;
-                chartKeys.Add(id);
-                charts.Add(art);
-            }
-            var sceneKeys = new List<string>();
-            var scenes = new List<Object>();
-            foreach (var theme in MapThemes.All)
-            {
-                var art = LoadingArt($"Load_{MapThemes.Id(theme)}");
-                if (art == null) continue;
-                sceneKeys.Add(MapThemes.Id(theme));
-                scenes.Add(art);
-            }
+            // the maps under Resources: how many of each shape (Map_Wide_N / Map_Tall_N)
+            var variants = 0;
+            while (File.Exists($"{UiTextureImport.LoadingFolder}/Resources/LoadingMaps/Map_Wide_{variants + 1}.png")
+                   && File.Exists($"{UiTextureImport.LoadingFolder}/Resources/LoadingMaps/Map_Tall_{variants + 1}.png")) variants++;
+            if (variants == 0) Debug.LogWarning("BuildLoadingScreen: no maps in UI/Loading/Resources/LoadingMaps -- run Tools/loading/loading_maps.py.");
 
             var so = new SerializedObject(screen);
             so.FindProperty("group").objectReferenceValue = root.GetComponent<CanvasGroup>();
-            so.FindProperty("sandboxRoot").objectReferenceValue = sandbox.gameObject;
-            so.FindProperty("chart").objectReferenceValue = chart;
-            so.FindProperty("chartFaint").objectReferenceValue = under;
-            so.FindProperty("quill").objectReferenceValue = quill.rectTransform;
-            so.FindProperty("mapName").objectReferenceValue = mapName;
-            so.FindProperty("invasionRoot").objectReferenceValue = invasion.gameObject;
-            so.FindProperty("scene").objectReferenceValue = scene;
-            so.FindProperty("plankFill").objectReferenceValue = fill;
-            so.FindProperty("plank").objectReferenceValue = fillRect;
-            so.FindProperty("runner").objectReferenceValue = runner;
-            WriteArray(so.FindProperty("runnerFrames"), new Object[] { LoadingArt("Runner_A"), LoadingArt("Runner_B") });
+            so.FindProperty("map").objectReferenceValue = map;
+            so.FindProperty("mapFitter").objectReferenceValue = fitter;
+            so.FindProperty("course").objectReferenceValue = course;
+            so.FindProperty("sailed").objectReferenceValue = sailed;
+            so.FindProperty("ship").objectReferenceValue = ship.rectTransform;
             so.FindProperty("tip").objectReferenceValue = tip;
-            WriteStrings(so.FindProperty("chartKeys"), chartKeys);
-            WriteArray(so.FindProperty("charts"), charts.ToArray());
-            WriteStrings(so.FindProperty("sceneKeys"), sceneKeys);
-            WriteArray(so.FindProperty("scenes"), scenes.ToArray());
-            // one pool of tips for every look (the user, 2026-11-10: #tip_1..30, shown at random)
-            WriteStrings(so.FindProperty("sandboxTips"), TipKeys("#tip_"));
-            WriteStrings(so.FindProperty("invasionTips"), TipKeys("#tip_"));
+            so.FindProperty("mapVariants").intValue = Mathf.Max(1, variants);
+            // one pool of tips (the user, 2026-11-10: #tip_1..30, shown at random)
+            WriteStrings(so.FindProperty("tips"), TipKeys("#tip_"));
             so.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(Path.GetDirectoryName(LoadingPrefabPath));

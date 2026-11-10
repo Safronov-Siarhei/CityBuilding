@@ -1,7 +1,6 @@
 using System.Collections;
 using CityBuilder.Core;
 using CityBuilder.Maps;
-using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,101 +8,64 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The drawn loading screen between the menu and a game, both ways (the user, 2026-10-25:
-    /// «прикольный загрузочный экран, который нарисован»; 1 for the sandbox, 2 for the Invasion,
-    /// tips, shown on the way out too):
+    /// The loading screen between the menu and a game, both ways (the user, 2026-11-10, replacing the
+    /// quill and the runner): a painted map of islands over the whole screen -- one of a few, at
+    /// random, drawn for the screen's shape (Wide 20:9 / Tall 4:3, Tools/loading/loading_maps.py) and
+    /// covering it, never stretched; along the bottom a course from an anchor to a red cross, dashed
+    /// ahead, red behind, a flat ink galleon sailing it; a random tip above (#tip_1..30, empty ones
+    /// skipped).
     ///
-    /// - sandbox: the map's own ink-on-parchment chart (UI/Loading/Ink_&lt;map&gt;.png) drawn in from
-    ///   the left by a quill riding the line as the scene loads; the map's name when it is done;
-    /// - invasion: the theme's painted scene (Load_&lt;theme&gt;.png), a wooden plank filling along the
-    ///   bottom with a militiaman running on it;
-    /// - a tip under either, a new one every few seconds (#tip_sandbox_N / #tip_invasion_N).
-    ///
-    /// One prefab in Resources, made by SetupProject; it lives across the scene change and goes
-    /// once the new scene is up (a game: its map laid out) and it has been seen for a moment.
+    /// The ship takes loading_seconds_enter into a game and loading_seconds_exit out to the menu, by
+    /// the clock, smoothly, whatever the load does; if the scene is not up when it arrives, it waits at
+    /// the cross and nothing moves; once both are done the screen fades out. One prefab in Resources,
+    /// made by SetupProject; the map's texture is loaded for the screen alone and unloaded after.
     /// </summary>
     public class LoadingScreen : MonoBehaviour
     {
-        public enum Look { Sandbox = 0, Invasion = 1 }
-
         private const string ResourcePath = "LoadingScreen";
-        private const float MinSeconds = 2.4f;
+        private const string MapsPath = "LoadingMaps/Map_";
+        // a screen at least this wide for its height takes the Wide map (phones, 16:9 and wider), else the Tall one
+        private const float WideFrom = 1.55f;
         private const float MaxReadySeconds = 15f;
         private const float FadeSeconds = 0.25f;
         private const float TipSeconds = 4f;
+        // the course's shape, as baked (loading_maps.py ROUTE_*): y = -Amplitude * sin(2 pi u) on a strip this tall
+        private const float CourseBakedHeight = 80f;
+        private const float CourseBakedAmplitude = 16f;
+        // the ship rocks a little on the swell
+        private const float RockDegrees = 2.5f;
+        private const float RockHz = 0.7f;
+        private const float BobUnits = 3f;
 
         [SerializeField] private CanvasGroup group;
-        [SerializeField] private GameObject sandboxRoot;
-        [SerializeField] private Image chart;
-        /// <summary>The same chart, faint, under the ink: the pencil the quill inks over.</summary>
-        [SerializeField] private Image chartFaint;
-        [SerializeField] private RectTransform quill;
-        [SerializeField] private Text mapName;
-        [SerializeField] private GameObject invasionRoot;
-        [SerializeField] private Image scene;
-        [SerializeField] private Image plankFill;
-        [SerializeField] private RectTransform plank;
-        [SerializeField] private Image runner;
-        [SerializeField] private Sprite[] runnerFrames = new Sprite[0];
+        [SerializeField] private Image map;
+        [SerializeField] private AspectRatioFitter mapFitter;
+        [SerializeField] private RectTransform course;
+        [SerializeField] private Image sailed;
+        [SerializeField] private RectTransform ship;
         [SerializeField] private Text tip;
-        [SerializeField] private string[] chartKeys = new string[0];
-        [SerializeField] private Sprite[] charts = new Sprite[0];
-        [SerializeField] private string[] sceneKeys = new string[0];
-        [SerializeField] private Sprite[] scenes = new Sprite[0];
-        [SerializeField] private string[] sandboxTips = new string[0];
-        [SerializeField] private string[] invasionTips = new string[0];
+        [SerializeField] private string[] tips = new string[0];
+        /// <summary>How many maps each shape has (Map_Wide_1..N, Map_Tall_1..N), written by the builder.</summary>
+        [SerializeField] private int mapVariants = 1;
 
         /// <summary>A loading screen is up (a new load waits for it).</summary>
         public static bool Busy => _current != null;
 
         private static LoadingScreen _current;
 
-        private Look _look;
+        private float _sailSeconds;
         private float _shown;
-        private string[] _tips;
         private int _tip;
+        private Sprite _mapSprite;
 
-        /// <summary>Into a game: the look and its picture from what the menu set up (GameSessionIntent).</summary>
-        public static void IntoGame(string sceneName)
-        {
-            if (GameSessionIntent.NewGameIsInvasion)
-            {
-                Load(sceneName, Look.Invasion, MapThemes.Id(GameSettings.InvasionTheme), null);
-                return;
-            }
-            var mapId = GameSessionIntent.NewGameMapId;
-            if (string.IsNullOrEmpty(mapId) && !string.IsNullOrEmpty(GameSessionIntent.SaveNameToLoad))
-            {
-                var save = SaveSystem.Load(GameSessionIntent.SaveNameToLoad);
-                if (save != null) mapId = save.mapId;
-            }
-            Load(sceneName, Look.Sandbox, mapId, mapId);
-        }
+        /// <summary>Into a game (a new one, a save, a dungeon and back).</summary>
+        public static void IntoGame(string sceneName) => Load(sceneName, true);
 
-        /// <summary>Out to the menu: the look of the game being left.</summary>
-        public static void OutToMenu(string sceneName)
-        {
-            if (Invasion.InvasionMode.IsActive)
-            {
-                var theme = Invasion.InvasionMode.IsNewYear ? MapTheme.NewYear : ThemeOf(SeasonStyle.Session);
-                Load(sceneName, Look.Invasion, MapThemes.Id(theme), null);
-                return;
-            }
-            var mapId = MeshMapApplier.Instance != null ? MeshMapApplier.Instance.CurrentMapId : null;
-            Load(sceneName, Look.Sandbox, mapId, mapId);
-        }
+        /// <summary>Out to the menu.</summary>
+        public static void OutToMenu(string sceneName) => Load(sceneName, false);
 
-        private static MapTheme ThemeOf(MapSeason season)
-        {
-            foreach (var theme in MapThemes.All)
-            {
-                if (theme != MapTheme.NewYear && MapThemes.SeasonOf(theme) == season) return theme;
-            }
-            return MapTheme.Summer;
-        }
-
-        /// <summary>Loads `sceneName` behind the drawn screen; without the prefab (a test scene), loads it plainly.</summary>
-        public static void Load(string sceneName, Look look, string pictureKey, string mapId)
+        /// <summary>Loads `sceneName` behind the screen; without the prefab (a test scene), loads it plainly.</summary>
+        public static void Load(string sceneName, bool intoGame)
         {
             if (_current != null) return;
             var prefab = UnityEngine.Resources.Load<LoadingScreen>(ResourcePath);
@@ -114,42 +76,27 @@ namespace CityBuilder.UI
             }
             _current = Instantiate(prefab);
             DontDestroyOnLoad(_current.gameObject);
-            _current.Begin(sceneName, look, pictureKey, mapId);
+            var config = BalanceConfig.Instance;
+            var seconds = config == null ? (intoGame ? 10f : 5f) : intoGame ? config.LoadingSecondsEnter : config.LoadingSecondsExit;
+            _current.Begin(sceneName, Mathf.Max(0.5f, seconds));
         }
 
-        private void Begin(string sceneName, Look look, string pictureKey, string mapId)
+        private void Begin(string sceneName, float sailSeconds)
         {
-            _look = look;
-            sandboxRoot.SetActive(look == Look.Sandbox);
-            invasionRoot.SetActive(look == Look.Invasion);
-            if (look == Look.Sandbox)
+            _sailSeconds = sailSeconds;
+            var wide = Screen.height > 0 && Screen.width / (float)Screen.height >= WideFrom;
+            _mapSprite = UnityEngine.Resources.Load<Sprite>($"{MapsPath}{(wide ? "Wide" : "Tall")}_{Random.Range(1, Mathf.Max(1, mapVariants) + 1)}");
+            if (_mapSprite != null)
             {
-                var sprite = Find(chartKeys, charts, pictureKey) ?? (charts.Length > 0 ? charts[0] : null);
-                chart.sprite = sprite;
-                if (chartFaint != null) chartFaint.sprite = sprite;
-                chart.fillAmount = 0f;
-                mapName.text = string.IsNullOrEmpty(mapId) ? string.Empty : Localization.Get(MapSelectPanelController.NameKey(mapId));
-                mapName.color = new Color(mapName.color.r, mapName.color.g, mapName.color.b, 0f);
+                map.sprite = _mapSprite;
+                map.color = Color.white;
+                if (mapFitter != null) mapFitter.aspectRatio = _mapSprite.rect.width / _mapSprite.rect.height;
             }
-            else
-            {
-                scene.sprite = Find(sceneKeys, scenes, pictureKey) ?? (scenes.Length > 0 ? scenes[0] : null);
-                plankFill.fillAmount = 0f;
-            }
-            _tips = look == Look.Sandbox ? sandboxTips : invasionTips;
-            _tip = _tips.Length > 0 ? Random.Range(0, _tips.Length) : 0;
+            _tip = tips.Length > 0 ? Random.Range(0, tips.Length) : 0;
             ShowTip();
+            Sail(0f);
             group.alpha = 0f;
             StartCoroutine(Run(sceneName));
-        }
-
-        private static Sprite Find(string[] keys, Sprite[] sprites, string key)
-        {
-            for (var i = 0; i < keys.Length && i < sprites.Length; i++)
-            {
-                if (keys[i] == key) return sprites[i];
-            }
-            return null;
         }
 
         private IEnumerator Run(string sceneName)
@@ -161,7 +108,6 @@ namespace CityBuilder.UI
                 yield return null;
             }
             group.alpha = 1f;
-            var shown = 0f;
             var load = SceneManager.LoadSceneAsync(sceneName);
             var readyFor = 0f;
             var started = Time.realtimeSinceStartup;
@@ -170,18 +116,11 @@ namespace CityBuilder.UI
                 var loaded = load == null || load.isDone;
                 var ready = loaded && (SceneReady(sceneName) || readyFor > MaxReadySeconds);
                 if (loaded) readyFor += Time.unscaledDeltaTime;
-                var elapsed = Time.realtimeSinceStartup - started;
-                // the picture is drawn over at least MinSeconds, and only finishes when the scene is up
-                var target = Mathf.Min(elapsed / MinSeconds, ready ? 1f : 0.9f * (load != null ? Mathf.Clamp01(load.progress / 0.9f) : 1f) + (loaded ? 0.05f : 0f));
-                shown = Mathf.MoveTowards(shown, target, Time.unscaledDeltaTime * 0.9f);
-                Draw(shown);
-                if (ready && shown >= 0.999f) break;
-                yield return null;
-            }
-            // the map's name, then out
-            for (var t = 0f; t < 0.5f; t += Time.unscaledDeltaTime)
-            {
-                if (_look == Look.Sandbox) SetAlpha(mapName, t / 0.5f);
+                // the ship goes by the clock alone; at the cross it waits for the scene
+                var voyage = Mathf.Clamp01((Time.realtimeSinceStartup - started) / _sailSeconds);
+                Sail(voyage);
+                Tips();
+                if (ready && voyage >= 1f) break;
                 yield return null;
             }
             for (var t = 0f; t < FadeSeconds; t += Time.unscaledDeltaTime)
@@ -193,6 +132,18 @@ namespace CityBuilder.UI
             Destroy(gameObject);
         }
 
+        private void OnDestroy()
+        {
+            if (_current == this) _current = null;
+            if (_mapSprite != null)
+            {
+                var texture = _mapSprite.texture;
+                map.sprite = null;
+                UnityEngine.Resources.UnloadAsset(texture);
+                _mapSprite = null;
+            }
+        }
+
         /// <summary>A game is up once its map is laid out; the menu, at once.</summary>
         private static bool SceneReady(string sceneName)
         {
@@ -201,54 +152,50 @@ namespace CityBuilder.UI
             return applier == null || applier.CurrentMap != null;
         }
 
-        private void Draw(float progress)
+        /// <summary>The ship at `voyage` (0..1 of the time) along the course, eased in and out, the red line behind it.</summary>
+        private void Sail(float voyage)
         {
-            if (_look == Look.Sandbox)
-            {
-                chart.fillAmount = progress;
-                // the quill rides the drawn edge, its nib bobbing as it writes
-                var rect = chart.rectTransform.rect;
-                var x = rect.xMin + rect.width * progress;
-                var y = Mathf.Sin(Time.unscaledTime * 9f) * rect.height * 0.18f + Mathf.Sin(Time.unscaledTime * 2.3f) * rect.height * 0.2f;
-                quill.anchoredPosition = new Vector2(x, y);
-                quill.gameObject.SetActive(progress < 0.999f);
-            }
-            else
-            {
-                plankFill.fillAmount = progress;
-                var rect = plank.rect;
-                var rr = runner.rectTransform;
-                rr.anchoredPosition = new Vector2(rect.xMin + rect.width * progress, rr.anchoredPosition.y);
-                if (runnerFrames.Length > 0) runner.sprite = runnerFrames[(int)(Time.unscaledTime * 8f) % runnerFrames.Length];
-            }
+            // half linear, half smoothstep: it gathers way and slows to the cross without crawling
+            var u = Mathf.Lerp(voyage, voyage * voyage * (3f - 2f * voyage), 0.5f);
+            if (sailed != null) sailed.fillAmount = u;
+            if (course == null || ship == null) return;
+            var rect = course.rect;
+            var scale = rect.height / CourseBakedHeight;
+            var phase = u * Mathf.PI * 2f;
+            var y = -CourseBakedAmplitude * scale * Mathf.Sin(phase);
+            // the course's slope (stretched across the screen's width), so the ship follows the curve
+            var slope = -CourseBakedAmplitude * scale * Mathf.Cos(phase) * Mathf.PI * 2f / Mathf.Max(1f, rect.width);
+            var time = Time.unscaledTime * RockHz * Mathf.PI * 2f;
+            var arrived = voyage >= 1f;
+            // at the cross it waits still, as the user asked: nothing on the screen changes
+            var rock = arrived ? 0f : Mathf.Sin(time) * RockDegrees;
+            var bob = arrived ? 0f : Mathf.Sin(time * 1.3f) * BobUnits;
+            ship.anchoredPosition = new Vector2(rect.xMin + rect.width * u, y + bob);
+            ship.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan(slope) * Mathf.Rad2Deg + rock);
+        }
+
+        private void Tips()
+        {
             _shown += Time.unscaledDeltaTime;
-            if (_shown >= TipSeconds && _tips.Length > 1)
-            {
-                _shown = 0f;
-                _tip = (_tip + 1) % _tips.Length;
-                ShowTip();
-            }
+            if (_shown < TipSeconds || tips.Length < 2) return;
+            _shown = 0f;
+            _tip = (_tip + 1) % tips.Length;
+            ShowTip();
         }
 
         private void ShowTip()
         {
             if (tip == null) return;
             // a tip left empty in the sheet is skipped (#tip_1..30, the user fills them in over time)
-            for (var k = 0; k < _tips.Length; k++)
+            for (var k = 0; k < tips.Length; k++)
             {
-                var text = Localization.Get(_tips[(_tip + k) % _tips.Length]);
+                var text = Localization.Get(tips[(_tip + k) % tips.Length]);
                 if (string.IsNullOrWhiteSpace(text) || text.StartsWith("#")) continue;
-                _tip = (_tip + k) % _tips.Length;
+                _tip = (_tip + k) % tips.Length;
                 tip.text = text;
                 return;
             }
             tip.text = string.Empty;
-        }
-
-        private static void SetAlpha(Text text, float a)
-        {
-            var c = text.color;
-            text.color = new Color(c.r, c.g, c.b, a);
         }
     }
 }

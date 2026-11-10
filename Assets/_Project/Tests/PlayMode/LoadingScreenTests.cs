@@ -47,7 +47,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ASandboxGame_LoadsBehindTheQuill_AndTheMenuBehindItAgain()
+        public IEnumerator ASandboxGame_LoadsBehindTheMap_AndTheMenuBehindItAgain()
         {
             var sandbox = Object.FindAnyObjectByType<SandboxScreenController>(FindObjectsInactive.Include);
             Object.FindAnyObjectByType<MainMenuController>().StartNewGame();
@@ -56,7 +56,8 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
             Assert.IsTrue(LoadingScreen.Busy, "No loading screen on the way into the game.");
             var screen = Object.FindAnyObjectByType<LoadingScreen>();
-            Assert.IsTrue(screen.transform.Find("Sandbox").gameObject.activeSelf, "The sandbox is not loading behind its chart.");
+            Assert.IsNotNull(screen.transform.Find("Map").GetComponent<UnityEngine.UI.Image>().sprite, "No painted map behind the loading.");
+            Assert.IsNotNull(screen.transform.Find("Course/Ship"), "No ship on the course.");
             yield return new WaitForSecondsRealtime(1.3f);
             yield return PlaytestCapture.ShootWithUi("loading-sandbox", Vector3.zero);
             yield return WaitForTheScreenToGo();
@@ -70,15 +71,15 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ARun_LoadsBehindItsThemesPainting()
+        public IEnumerator ARun_LoadsBehindTheMap_WithATip()
         {
             GameSettings.InvasionTheme = MapTheme.NewYear;
             Object.FindAnyObjectByType<MainMenuController>().StartInvasion();
             yield return null;
             Assert.IsTrue(LoadingScreen.Busy, "No loading screen on the way into the run.");
             var screen = Object.FindAnyObjectByType<LoadingScreen>();
-            Assert.IsTrue(screen.transform.Find("Invasion").gameObject.activeSelf, "The run is not loading behind its painting.");
-            var tip = screen.transform.Find("TipPlaque/Tip").GetComponent<UnityEngine.UI.Text>().text;
+            Assert.IsNotNull(screen.transform.Find("Map").GetComponent<UnityEngine.UI.Image>().sprite, "No painted map behind the loading.");
+            var tip = screen.transform.Find("Tip").GetComponent<UnityEngine.UI.Text>().text;
             Assert.IsFalse(string.IsNullOrEmpty(tip) || tip.StartsWith("#"), $"No tip, or a raw key: \"{tip}\"");
             yield return new WaitForSecondsRealtime(1.3f);
             yield return PlaytestCapture.ShootWithUi("loading-invasion", Vector3.zero);

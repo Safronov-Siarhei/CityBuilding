@@ -113,7 +113,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return PlayModeScene.WaitUntilMapIsPhysicsReady(id);
             Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId);
             // the loading screen lets the next test load its own scene only once it is gone
-            for (var f = 0; f < 600 && LoadingScreen.Busy; f++) yield return null;
+            for (var t = 0f; t < 25f && LoadingScreen.Busy; t += Time.unscaledDeltaTime) yield return null;
         }
 
         private static SandboxScreenController OpenSandbox()

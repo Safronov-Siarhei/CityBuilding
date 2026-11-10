@@ -98,21 +98,27 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
 Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMenuTests`,
 `MapPickerTests` (sandbox screen).
 
-## Loading screen (user's pick, 2026-10-25: 1 for the sandbox, 2 for the Invasion, tips, both ways)
+## Loading screen (REDONE 2026-11-10, the user: a painted island map + a ship on the course)
 `UI/LoadingScreen.cs`, prefab `Resources/LoadingScreen.prefab` (built by `SetupProjectLoading.cs`),
-DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (menu: sandbox Start, saves Load, Run) and
-`OutToMenu` (game menu Home, game over); loads with `LoadSceneAsync`, shown ≥ 2.4 s, gone once the new
-scene's map is laid out (`MeshMapApplier.CurrentMap`).
-- sandbox: parchment page, the map's own ink chart (`UI/Loading/Ink_<map>.png`) drawn in left→right
-  (Image Filled) over a faint copy, a quill (`Quill.png`) riding the edge; the map's name at the end.
-- invasion: the theme's painted scene (`Load_<theme>.png`), a plank filling at the foot with a running
-  militiaman (`Runner_A/B.png`, Tools/blender/render_runner.py).
-- tips: rotating every 4 s from `#tip_sandbox_N` / `#tip_invasion_N` (the builder reads the CSV keys).
-- Pictures: `MenuArtBake.Bake_TheLoadingPictures` (-Graphics) writes raw shots to the IGNORED
-  `playtest_shots/loading/` (the chart = `FogOfWarManager.ConcealAll()` + top-down shot of the
-  parchment fog; the scene = the run with the King in front), then `python Tools/ui/illustrate.py .`
-  paints them (flatten, ink edges, paper, vignette), crops the charts, draws the quill.
-- Trap: a Filled Image without a sprite draws WHOLE (the plank fill uses the HUD card sprite).
+DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (sandbox Start, saves Load, Run, dungeon) and
+`OutToMenu` (game menu Home, game over); loads with `LoadSceneAsync`.
+- The user's rules: one look for every mode; a full-screen painted map of invented islands (NOT the
+  mode's real map), the LIGHTLY COLOURED look (ink-only rejected), no names on the islands; drawn per
+  screen shape, never stretched; along the bottom variant A «путь по карте»: anchor -> red cross,
+  dashed ahead, red solid behind, a flat ink galleon sailing it -- NO waves behind the ship (removed
+  at the user's word); the ship takes `loading_seconds_enter` (10) into a game and
+  `loading_seconds_exit` (5) out to the menu, by the clock, eased; arrived early -> it waits still at
+  the cross (no rocking) until the scene is up (`MeshMapApplier.CurrentMap`; 15 s cap), then fade.
+- Tips: one pool `#tip_1..30` (16 old texts moved into 1-16, 17-30 empty for the user to fill),
+  random start, every 4 s the next; an empty one is skipped. Tips keep rotating while it waits.
+- Art: `python Tools/loading/loading_maps.py` (numpy/scipy/Pillow) -> `UI/Loading/Resources/
+  LoadingMaps/Map_Wide_1..3.png` (2400x1080, 20:9; screens >= 1.55 wide) and `Map_Tall_1..3.png`
+  (2048x1536, 4:3), plus `Route_Dashed/Route_Sailed/Route_Anchor/Route_Cross/Ship.png`. The course's
+  sine (ROUTE_* in the script) is mirrored in LoadingScreen's CourseBaked* constants -- change both.
+  The map is `Resources.Load`ed for the screen alone and unloaded on destroy (mobile memory); the
+  builder counts the variants into `mapVariants`. Map image = AspectRatioFitter EnvelopeParent.
+- Old art (Ink_<map>.png, Load_<theme>.png, Quill, Runner_A/B, MenuArtBake's loading bake,
+  Tools/ui/illustrate.py) is no longer used by the screen; left in place.
 Test `LoadingScreenTests` (+ photos loading-sandbox / loading-invasion).
 
 ## Building card in a run (user's sketch, 2026-10-25)
