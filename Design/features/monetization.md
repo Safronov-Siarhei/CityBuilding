@@ -16,3 +16,21 @@
 
 Related, undecided: the sandbox lacks goals — a campaign of scenario levels with stars (tiers as
 milestones) was proposed.
+
+## Store payments and regions (researched 2026-11-11, the user asked; to settle before release)
+Not checked against the live Play Console -- re-read Google's pages before acting.
+- **Regional prices.** Google Play allows a price per country in local currency for every in-app product
+  (~170 countries), recommended local prices, pricing templates for many products, and price experiments
+  (A/B by country). No Steam-like purchasing-power matrix: we build our own grid (e.g. from Steam's
+  regional recommendations / PPP). In the game, never hard-code a price: show the string Play returns
+  (formatted price in the player's currency); regional OFFERS = different products/bundles per
+  country/currency (e.g. smaller cheaper packs), read from the billing answer. Needs Google Play Billing
+  (Unity IAP or the Play Billing plugin).
+- **Russia.** Google Play billing is suspended for users in Russia (March 2022). Since 2022-08-02 Google
+  lifted the requirement to use Play Billing for users in Russia (help article 11950272), so a
+  third-party payment for Russian players inside the Play build is allowed -- other countries still
+  must use Play Billing. Since 2024-12-26 developers paid by Google to a RUSSIAN bank account cannot
+  monetise on Play (does not touch third-party payments, but matters for where Google pays us).
+  Open, for a lawyer/accountant: which entity can take rubles (ЮKassa/CloudPayments etc. want a
+  Russian entity), sanctions law of our company's country, taxes. Alternative: a separate RuStore
+  build with its own payments; rewarded ads as a fallback income there.
