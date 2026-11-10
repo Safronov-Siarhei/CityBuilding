@@ -24,11 +24,18 @@ fg.plain('burlap', 'plaster_white', 'roof_red', 'roof_blue', 'plaster_yellow', '
          'leaf', 'grass', 'white', 'banner_red', 'banner_blue', 'wood_light', 'wood_mid', 'wood_dark')
 
 
-def game_house(script, obj):
-    """The game's own house (its build at its placeholder box) and that box."""
+def game_house(script, obj, braces=True):
+    """The game's own house (its build at its placeholder box) and that box. `braces=False` drops
+    the half-timber diagonals (2026-11-10: the manor's ran across its windows)."""
     ns = kit.borrow(script)
     _, lo, hi = kit.refresh_placeholder(obj)
-    return ns['build'](lo, hi), lo, hi
+    real = d.timber
+    if not braces:
+        d.timber = lambda f, s0, s1, z0, z1, posts, braces=(): real(f, s0, s1, z0, z1, posts, ())
+    try:
+        return ns['build'](lo, hi), lo, hi
+    finally:
+        d.timber = real
 
 
 # ---------------------------------------------------------------- lived-in details
@@ -64,9 +71,21 @@ def cat(b, x, y, z0):
     b.rod((x - 0.035, y, z0 + 0.01), (x - 0.07, y - 0.02, z0 + 0.005), 0.012, 'roof_orange_dark')
 
 
+def sack(b, x, y, z0=0.0, r=0.055, h=0.11):
+    """A filled grain sack: a rounded body, a gathered neck tied with string."""
+    b.ball(x, y, z0, r, h, 'burlap', sides=7)
+    b.cylinder(x, y, z0 + h - 0.008, z0 + h + 0.02, r * 0.35, 'burlap', sides=6)
+    b.cylinder(x, y, z0 + h + 0.004, z0 + h + 0.012, r * 0.4, 'wood_dark', sides=6)
+    b.ball(x, y, z0 + h + 0.018, r * 0.42, 0.02, 'burlap', sides=6)
+
+
 def sacks(b, x, y, n=3):
-    for i in range(n):
-        d.sack(b, x + (i % 2) * 0.09, y + (i // 2) * 0.08, z0=0.0 if i < 2 else 0.08)
+    """Two sacks standing side by side, a third lying on the ground in front of them."""
+    sack(b, x, y)
+    sack(b, x + 0.11, y + 0.01)
+    if n > 2:
+        b.hcylinder('x', (x + 0.055, y - 0.09, 0.04), 0.08, 0.04, 'burlap', sides=7)
+        b.box(x + 0.13, x + 0.145, y - 0.13, y - 0.05, 0.0, 0.08, 'wood_dark')
 
 
 def rain_barrel(b, x, y):
@@ -111,7 +130,7 @@ def cottage():
 
 
 def manor():
-    b, lo, hi = game_house('manor1.py', 'Manor1-lvl1')
+    b, lo, hi = game_house('manor1.py', 'Manor1-lvl1', braces=False)
     for i, (x, y) in enumerate(((hi[0] - 0.12, lo[1] + 0.15), (hi[0] - 0.3, lo[1] + 0.12))):
         d.barrel(b, x, y)
     d.crate(b, hi[0] - 0.12, lo[1] + 0.38, angle=15)
@@ -194,8 +213,8 @@ def cart():
     b.rod((L + 0.4, -0.1, 0.06), (L + 0.4, 0.1, 0.06), 0.02, 'wood_dark')
     # the load
     b.ball(-0.1, 0.0, z + 0.03, 0.26, 0.22, 'roof_straw', sides=8, top='plaster_yellow')
-    d.sack(b, 0.22, -0.08, z0=z + 0.035)
-    d.sack(b, 0.25, 0.08, z0=z + 0.035)
+    sack(b, 0.22, -0.08, z0=z + 0.035, r=0.07, h=0.13)
+    sack(b, 0.25, 0.08, z0=z + 0.035, r=0.07, h=0.13)
     b.rod((-0.3, -0.12, z + 0.2), (0.3, 0.12, z + 0.06), 0.012, 'burlap')                          # a rope over it
     for v in b.bm.verts:                     # drawn large; a wheel comes to a man's chest once grown
         v.co *= 0.65
