@@ -1,6 +1,32 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** design stage.
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Part 1 (village + sky) and part 2 (the cast with clips) BUILT, user saw photos.
+- **Unity part 1 (2026-11-10):** scene `Scenes/CampaignOpening.unity` (NOT in the build list), made by
+  `SetupProjectCampaign.cs`: procedural morning sky `CampaignSky.mat`, low warm sun, trilight ambient,
+  linear haze fog 45-140. `Scripts/Campaign/OpeningVillage.cs` lays the village out on Start (seed 11):
+  ground, square, the set pieces from `Campaign/OpeningSet.json`, cobble/dirt streets + a ring road r17,
+  ~90 of the GAME's buildings (prefabs stripped of behaviours/colliders) scaled by 1.6, 14 fields with
+  farmsteads, up to 1100 trees. The set pieces (church without bell, bell, clapper, portal platform,
+  swirl, 15 stones with ruin+arch poses, stalls, bolts, fruit, cart) come from
+  `Tools/blender/cinematic/export_cine.py` into `Models/Cinematic/`. Photos: `run.ps1 -Steps campaign`
+  -> `RunLogs/campaign/*.png` (`CampaignPhotos.cs`). Next: characters with animations, living background,
+  the director (cameras, cuts, subtitles), the handover to mission 1.
+- **Unity part 2 (2026-11-10): the cast.** `Tools/blender/cinematic/export_cast.py` exports the 11
+  figures to `Models/Cinematic/Cast/*.fbx`, each on its rigid rig with every clip a take, baked from the
+  approved pose functions: all humans Idle/Walk/Run/Stare/Talk (loops); kids + Cheer/Balance/Crouch;
+  Ардан + WalkSack/Amulet/Drop (the sack is its own mesh on the chest bone); woman Scream, peasant
+  Startle, merchant Panic; orcs Idle/Walk/Run (each orc his own run); the champion + `Leap` (the only
+  clip with root motion, from behind the swirl to the landing). Clips are IN PLACE; the director moves
+  the figures. `Campaign/OpeningCast.json`: each figure's clips (length, loop) and walk/run speeds; the
+  importer loops clips from it and names them without the `<rig>|` prefix. A figure faces Unity +Z.
+  - Traps: the .blend runs at 24 fps -> export sets 30 (else every take stretches); `bakeAxisConversion`
+    is OFF for the cast and the export uses -Z forward (the standard Blender->Unity armature setup);
+    townsfolk clips need `bell_anim.apply` (aims); in the EDITOR an imported clip poses nothing through
+    `SampleAnimation` or a playable graph (a playable graph even T-posed the kids) -- CampaignPhotos reads
+    the curves onto the bones itself. In play mode an Animator plays them normally.
+  - Traps: Blender `matrix_world` lags a set location until `view_layer.update()`; ground materials need
+    smoothness 0 (the sky's brown lower half mirrored in the grass); the editor's first `Render()` drew
+    no ground while its shader compiled in the background -> CampaignPhotos renders a warm-up frame.
 - Ардан's cutscene MODEL is APPROVED by the user (`Tools/blender/cinematic/ardan.py`).
 - His rig and two animations (walk, carry the sack) are APPROVED (`ardan_anim.py`).
 - The old man (`elder.py`, CineElder) and the priest (`priest.py`, CinePriest) are built on Ардан's rig

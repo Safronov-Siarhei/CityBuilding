@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace CityBuilder.EditorTools
@@ -37,6 +37,9 @@ namespace CityBuilder.EditorTools
         private const string TideFolder = "Assets/_Project/Models/Tide/";
         // the campaign's cutscene set (Tools/blender/cinematic/export_cine.py)
         public const string CinematicFolder = "Assets/_Project/Models/Cinematic/";
+        /// <summary>The opening cutscene's cast (export_cast.py): rigged, every clip a take.</summary>
+        public const string CinematicCastFolder = CinematicFolder + "Cast/";
+        public const string OpeningCastPath = "Assets/_Project/Campaign/OpeningCast.json";
 
         public const string PaletteTexturePath = "Assets/_Project/Models/Palette/BuildingsPalette.png";
         public const string PaletteMaterialPath = "Assets/_Project/Models/Palette/BuildingsPalette.mat";
@@ -105,6 +108,23 @@ namespace CityBuilder.EditorTools
                 modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedTerrainMaterialName), terrainPalette);
             }
 
+            if (assetPath.StartsWith(CinematicCastFolder))
+            {
+                // the figures carry their animations: a generic rig, the orcs drawn in their palette
+                var orcPalette = AssetDatabase.LoadAssetAtPath<Material>(OrcPaletteMaterialPath);
+                if (orcPalette != null)
+                {
+                    modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "CineOrcPalette"), orcPalette);
+                }
+                modelImporter.bakeAxisConversion = false;   // baked, it bent the rigid limbs off their joints
+                modelImporter.importAnimation = true;
+                modelImporter.animationType = ModelImporterAnimationType.Generic;
+                modelImporter.avatarSetup = ModelImporterAvatarSetup.NoAvatar;
+                modelImporter.animationCompression = ModelImporterAnimationCompression.KeyframeReduction;
+                modelImporter.meshCompression = ModelImporterMeshCompression.Medium;
+                return;
+            }
+
             var isSetPiece = assetPath.StartsWith(BuildingsFolder) || assetPath.StartsWith(TerrainFolder)
                              || assetPath.StartsWith(OrcsFolder) || assetPath.StartsWith(HeroesFolder) || assetPath.StartsWith(SoldiersFolder)
                              || assetPath.StartsWith(WildFolder) || assetPath.StartsWith(CitizensFolder) || assetPath.StartsWith(ShipsFolder)
@@ -139,6 +159,37 @@ namespace CityBuilder.EditorTools
             // hundredth of a millimetre. The maps stay at Low -- across 200 m, Medium would open
             // seams between their chunks.
             modelImporter.meshCompression = ModelImporterMeshCompression.Medium;
+        }
+
+        /// <summary>The cast's takes come in as "<rig>|<clip>": named by the clip alone, and looped
+        /// where OpeningCast.json says so.</summary>
+        private void OnPreprocessAnimation()
+        {
+            if (!assetPath.StartsWith(CinematicCastFolder)) return;
+            if (!(assetImporter is ModelImporter modelImporter)) return;
+            var json = System.IO.File.Exists(OpeningCastPath) ? System.IO.File.ReadAllText(OpeningCastPath) : "";
+            var figure = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            var clips = modelImporter.defaultClipAnimations;
+            foreach (var c in clips)
+            {
+                var bar = c.name.LastIndexOf('|');
+                if (bar >= 0) c.name = c.name.Substring(bar + 1);
+                c.loopTime = CastClipLoops(json, figure, c.name);
+            }
+            modelImporter.clipAnimations = clips;
+        }
+
+        private static bool CastClipLoops(string json, string figure, string clip)
+        {
+            // the file is small and flat: find the figure's block, then the clip's entry in it
+            var at = json.IndexOf("\"" + figure + "\"", System.StringComparison.Ordinal);
+            if (at < 0) return false;
+            var end = json.IndexOf("\"name\": \"Cine", at + figure.Length + 2, System.StringComparison.Ordinal);
+            if (end < 0) end = json.Length;
+            var entry = json.IndexOf("\"name\": \"" + clip + "\"", at, System.StringComparison.Ordinal);
+            if (entry < 0 || entry > end) return false;
+            var close = json.IndexOf('}', entry);
+            return close > entry && json.Substring(entry, close - entry).Contains("\"loop\": true");
         }
 
         private void OnPreprocessTexture()
