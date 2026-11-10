@@ -128,8 +128,9 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("charts"), charts.ToArray());
             WriteStrings(so.FindProperty("sceneKeys"), sceneKeys);
             WriteArray(so.FindProperty("scenes"), scenes.ToArray());
-            WriteStrings(so.FindProperty("sandboxTips"), TipKeys("#tip_sandbox_"));
-            WriteStrings(so.FindProperty("invasionTips"), TipKeys("#tip_invasion_"));
+            // one pool of tips for every look (the user, 2026-11-10: #tip_1..30, shown at random)
+            WriteStrings(so.FindProperty("sandboxTips"), TipKeys("#tip_"));
+            WriteStrings(so.FindProperty("invasionTips"), TipKeys("#tip_"));
             so.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(Path.GetDirectoryName(LoadingPrefabPath));

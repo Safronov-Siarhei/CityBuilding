@@ -232,7 +232,17 @@ namespace CityBuilder.UI
 
         private void ShowTip()
         {
-            if (tip != null) tip.text = _tips.Length > 0 ? Localization.Get(_tips[_tip]) : string.Empty;
+            if (tip == null) return;
+            // a tip left empty in the sheet is skipped (#tip_1..30, the user fills them in over time)
+            for (var k = 0; k < _tips.Length; k++)
+            {
+                var text = Localization.Get(_tips[(_tip + k) % _tips.Length]);
+                if (string.IsNullOrWhiteSpace(text) || text.StartsWith("#")) continue;
+                _tip = (_tip + k) % _tips.Length;
+                tip.text = text;
+                return;
+            }
+            tip.text = string.Empty;
         }
 
         private static void SetAlpha(Text text, float a)

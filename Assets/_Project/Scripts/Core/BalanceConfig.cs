@@ -569,6 +569,9 @@ namespace CityBuilder.Core
         [SerializeField] private int islandStartRocks = 40;
         // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
         [SerializeField] private int tutorialRewardCrystals = 25;
+        // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
+        [SerializeField] private float loadingSecondsEnter = 10f;
+        [SerializeField] private float loadingSecondsExit = 5f;
         // the tutorial's rules (tutorial_build_sec, tutorial_start_people, tutorial_king_heal_below)
         [SerializeField] private float tutorialBuildSeconds = 5f;
         [SerializeField] private int tutorialStartPeople = 3;
@@ -1184,6 +1187,8 @@ namespace CityBuilder.Core
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public int IslandStartRocks => islandStartRocks;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
+        public float LoadingSecondsEnter => loadingSecondsEnter;
+        public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
         public int TutorialStartPeople => tutorialStartPeople;
         public float TutorialKingHealBelow => tutorialKingHealBelow;
@@ -2041,6 +2046,8 @@ namespace CityBuilder.Core
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
+            loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
+            loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
