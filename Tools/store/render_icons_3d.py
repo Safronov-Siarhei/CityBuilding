@@ -227,32 +227,38 @@ def king_scene():
     wood = mat("Wood", (150, 96, 50), 0.8)
     iron = mat("Iron", (70, 72, 82), 0.45, metal=0.6)
     band = mat("Band", (232, 178, 40), 0.35, metal=0.8)
-    # his right arm raised: shoulder -> hand, all blocks, in the king's own frame
-    yaw = math.radians(8)
+    # every new part is a child of the king, placed in his own frame (x his right, -y his front)
+    def part(name, loc, dims, material, rot_y=0.0, bevel=0.008):
+        o = box(name, (0, 0, 0), dims, material, bevel=bevel)
+        o.parent = k
+        o.location = loc
+        o.rotation_euler = (0, rot_y, 0)
+        return o
 
-    def K(x, y, z):
-        return (k.location.x + x * math.cos(yaw) - y * math.sin(yaw), k.location.y + x * math.sin(yaw) + y * math.cos(yaw), z)
+    Y = -0.03  # the arms' depth: through the middle of his body
 
-    shoulder, hand = K(0.13, -0.03, 0.43), K(0.22, -0.09, 0.56)
-    # the left arm hangs at his side (the shield arm is hidden)
-    beam("SleeveL", K(-0.13, -0.03, 0.45), K(-0.16, -0.04, 0.31), 0.085, robe)
-    beam("CuffL", K(-0.158, -0.04, 0.315), K(-0.162, -0.04, 0.29), 0.095, ermine)
-    box("HandL", K(-0.163, -0.04, 0.26), (0.065, 0.065, 0.065), skin, rot=(0, 0, yaw), bevel=0.008)
-    beam("Sleeve", shoulder, K(0.205, -0.08, 0.53), 0.085, robe)
-    beam("Cuff", K(0.195, -0.075, 0.515), K(0.21, -0.085, 0.54), 0.095, ermine)
-    box("Hand", hand, (0.07, 0.07, 0.07), skin, rot=(0, math.radians(-12), yaw), bevel=0.008)
-    # the hammer: a handle through the fist, leaning out, a square head across its top
-    bottom, top = K(0.205, -0.10, 0.47), K(0.27, -0.12, 0.84)
-    beam("Handle", bottom, top, 0.032, wood)
-    head = Vector(top) + (Vector(top) - Vector(bottom)).normalized() * 0.015
-    hd = box("HammerHead", head, (0.20, 0.095, 0.095), iron, bevel=0.01)
-    hd.rotation_euler = (0, math.radians(-10), yaw)
+    def arm(side, angle_deg):
+        """A straight block arm from the shoulder; angle from hanging straight down, outward positive.
+        Returns the fist's centre."""
+        a = math.radians(angle_deg)
+        d = Vector((side * math.sin(a), 0, -math.cos(a)))
+        shoulder = Vector((side * 0.155, Y, 0.455))
+        rot = math.atan2(d.x, d.z)
+        part(f"Sleeve{side}", shoulder + d * 0.085, (0.078, 0.078, 0.17), robe, rot)
+        part(f"Cuff{side}", shoulder + d * 0.168, (0.088, 0.088, 0.026), ermine, rot, bevel=0.004)
+        fist = shoulder + d * 0.212
+        part(f"Hand{side}", fist, (0.066, 0.066, 0.066), skin, rot)
+        return fist
+
+    arm(-1, 6)                  # his left arm hangs at his side
+    fist = arm(1, 132)          # his right raises the hammer up and out
+    # the hammer: an upright handle through the fist, a square head straight across its top
+    grip_below, grip_above = 0.08, 0.24
+    part("Handle", fist + Vector((0, 0, (grip_above - grip_below) / 2)), (0.03, 0.03, grip_below + grip_above), wood, bevel=0.004)
+    head = fist + Vector((0, 0, grip_above + 0.045))
+    part("HammerHead", head, (0.21, 0.095, 0.095), iron, bevel=0.01)
     for s in (-1, 1):
-        b = box("HammerBand", head, (0.018, 0.105, 0.105), band, bevel=0.004)
-        b.rotation_euler = hd.rotation_euler
-        off = Vector((s * 0.06, 0, 0))
-        off.rotate(hd.rotation_euler)
-        b.location = head + off
+        part(f"HammerBand{s}", head + Vector((s * 0.068, 0, 0)), (0.018, 0.104, 0.104), band, bevel=0.004)
 
     # the town behind him, out of focus
     show("Cottage1-lvl3", (1.05, 1.9, 0), yaw=-25)
@@ -261,7 +267,7 @@ def king_scene():
     grass = mat("Grass", (110, 170, 70), 0.95)
     box("Ground", (0, 2, -0.01), (12, 12, 0.02), grass, bevel=0)
 
-    cam = camera((-0.35, -2.05, 0.58), (0.07, 0, 0.57), 95, fstop=2.0, focus=2.1)
+    cam = camera((-0.15, -2.05, 0.62), (0.11, 0, 0.62), 98, fstop=2.0, focus=2.05)
     backdrop(cam, 9.0, ((0.0, (205, 232, 246)), (0.55, (130, 192, 238)), (1.0, (70, 140, 215))))
     world((180, 210, 255), 0.5)
     sun("Key", (50, 0, -30), 3.2, (255, 244, 225))
