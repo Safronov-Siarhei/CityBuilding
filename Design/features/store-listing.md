@@ -4,6 +4,10 @@
 user) and as a 3D render from the game's models; waiting for the user's corrections and pick. Not yet uploaded anywhere; no store screenshots yet.
 
 ## Icon
+- **The game's icon NOW = the 3D orc** (the user, 2026-11-10: «поставь пока что орка, оставим вопрос
+  открытым»): `Assets/_Project/UI/AppIcon.png` (1024, rendered straight there by
+  `render_icons_3d.py -- orc <abs path>/AppIcon.png 1024`); SetupProject sets it as the default icon.
+  Replacing the file keeps its GUID, so no setup is needed to switch. Orc vs king is still open.
 - Concepts proposed: island diorama, orc over the wall, builder king, banner crest, galleon. The user
   picked **2 (orc)** and **3 (king)**; both polished, to be A/B tested later with Play Console store
   listing experiments.

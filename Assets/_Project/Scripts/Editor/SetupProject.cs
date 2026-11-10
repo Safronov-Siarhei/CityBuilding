@@ -305,9 +305,10 @@ namespace CityBuilder.EditorTools
             // that gets blamed on a slow phone and hunted in the wrong place for months.
             PlayerSettings.Android.optimizedFramePacing = true;
 
-            // The app's icon: a placeholder the user picked (2026-10-16) -- the village with the
-            // windmill, rendered from the game's own models. One default icon; Unity derives every
-            // size and the Android legacy/round icons from it.
+            // The app's icon: for now the 3D orc chief over the wall (the user, 2026-11-10: «поставь
+            // пока что орка», the choice against the king left open), rendered by
+            // Tools/store/render_icons_3d.py from the game's own models. One default icon; Unity
+            // derives every size and the Android legacy/round icons from it.
             var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconPath);
             if (icon != null)
             {
