@@ -1,0 +1,147 @@
+using CityBuilder.Core;
+using CityBuilder.Saving;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace CityBuilder.UI
+{
+    /// <summary>
+    /// The modes screen as a hall of banners (the user, 2026-11-10, «Зал знамён»): one banner per
+    /// mode -- Tutorial, Sandbox, Invasion, Campaign -- in the HUD's Classic kit
+    /// (Tools/ui/make_mode_banners.py). A tap picks a banner (bigger, swaying, the rest dimmed); a
+    /// tap on the picked one or «Играть» starts it; a long press opens the mode's few words. The
+    /// banners unroll when the screen comes up and each carries live lines: the tutorial's reward,
+    /// the sandbox's saves, the invasion's points today; the campaign is «Скоро».
+    /// </summary>
+    public class ModeBannersController : MonoBehaviour
+    {
+        public const int Tutorial = 0, Sandbox = 1, Invasion = 2, Campaign = 3;
+
+        private const string PickedKey = "menu.mode";
+        private const float PickedScale = 1.14f;
+        private const float Ease = 12f;
+        private const float UnrollSeconds = 0.38f;
+        private const float UnrollStagger = 0.07f;
+
+        [SerializeField] private MainMenuController menu;
+        [SerializeField] private CanvasGroup screen;
+        [SerializeField] private RectTransform[] banners = new RectTransform[0];
+        [SerializeField] private Image[] cloths = new Image[0];
+        [SerializeField] private Text[] mottos = new Text[0];
+        [SerializeField] private Text[] lines = new Text[0];
+        [SerializeField] private Image playButton;
+
+        private static readonly string[] MottoKeys = { "#banner_motto_tutorial", "#banner_motto_sandbox", "#banner_motto_invasion", "#banner_motto_campaign" };
+        private static readonly Color Dimmed = new Color(0.72f, 0.72f, 0.72f, 1f);
+
+        private int _picked = Sandbox;
+        private float[] _scale;
+        private bool _shown;
+        private float _shownAt;
+
+        private void Awake()
+        {
+            _picked = Mathf.Clamp(PlayerPrefs.GetInt(PickedKey, Sandbox), Tutorial, Invasion);
+            _scale = new float[banners.Length];
+            for (var i = 0; i < _scale.Length; i++) _scale[i] = 1f;
+        }
+
+        private void Update()
+        {
+            // the screen coming up: the live lines read afresh, the banners unroll from their perch
+            var visible = screen != null && screen.alpha > 0.5f;
+            if (visible && !_shown)
+            {
+                _shownAt = Time.unscaledTime;
+                Refresh();
+            }
+            _shown = visible;
+            if (!visible) return;
+
+            var k = 1f - Mathf.Exp(-Ease * Time.unscaledDeltaTime);
+            var now = Time.unscaledTime;
+            for (var i = 0; i < banners.Length; i++)
+            {
+                if (banners[i] == null) continue;
+                var picked = i == _picked;
+                _scale[i] = Mathf.Lerp(_scale[i], picked ? PickedScale : 1f, k);
+                var unroll = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((now - _shownAt - i * UnrollStagger) / UnrollSeconds));
+                banners[i].localScale = new Vector3(_scale[i], _scale[i] * Mathf.Max(0.02f, unroll), 1f);
+                // the cloth sways from its perch, the picked one more
+                var sway = Mathf.Sin(now * (picked ? 1.6f : 1.1f) + i * 1.7f) * (picked ? 1.8f : 0.7f);
+                banners[i].localRotation = Quaternion.Euler(0f, 0f, sway);
+                if (cloths.Length > i && cloths[i] != null)
+                    cloths[i].color = Color.Lerp(cloths[i].color, picked ? Color.white : Dimmed, k);
+            }
+            if (playButton != null) playButton.color = _picked == Campaign ? Dimmed : Color.white;
+        }
+
+        /// <summary>A tap on a banner: picks it, or starts it when it is picked already.</summary>
+        public void TapBanner(int index)
+        {
+            var press = banners.Length > index && banners[index] != null ? banners[index].GetComponent<LongPress>() : null;
+            if (press != null && press.ConsumeFired()) return;
+            if (index == _picked) Play();
+            else Pick(index);
+        }
+
+        /// <summary>A long press: the mode's few words (the sandbox's and the invasion's; the others have none).</summary>
+        public void HoldBanner(int index)
+        {
+            Pick(index);
+            if (menu == null) return;
+            if (index == Sandbox) menu.ShowInfo((int)GameMode.Sandbox);
+            else if (index == Invasion) menu.ShowInfo((int)GameMode.Invasion);
+        }
+
+        /// <summary>«Играть»: the picked mode.</summary>
+        public void Play()
+        {
+            if (menu == null) return;
+            switch (_picked)
+            {
+                case Tutorial: menu.StartTutorial(); break;
+                case Sandbox: menu.ChooseMode((int)GameMode.Sandbox); break;
+                case Invasion: menu.ChooseMode((int)GameMode.Invasion); break;
+            }
+        }
+
+        private void Pick(int index)
+        {
+            if (index < 0 || index >= banners.Length) return;
+            _picked = index;
+            // the last mode picked is the one waiting next time (the campaign is not a choice yet)
+            if (index != Campaign)
+            {
+                PlayerPrefs.SetInt(PickedKey, index);
+                PlayerPrefs.Save();
+            }
+            // the picked banner in front of its neighbours
+            banners[index].SetAsLastSibling();
+        }
+
+        /// <summary>The banners' live lines.</summary>
+        private void Refresh()
+        {
+            for (var i = 0; i < mottos.Length; i++)
+            {
+                if (mottos[i] != null) mottos[i].text = Localization.Get(MottoKeys[i]);
+            }
+            var config = BalanceConfig.Instance;
+            SetLine(Tutorial, PlayerPrefs.GetInt("tutorial.rewarded", 0) != 0
+                ? Localization.Get("#banner_tutorial_done")
+                : Localization.Format("#banner_reward", config != null ? config.TutorialRewardCrystals : 0));
+            var saves = SaveSystem.ListSaves().Count;
+            SetLine(Sandbox, saves > 0 ? Localization.Format("#mode_saves_count", saves) : Localization.Get("#banner_no_saves"));
+            var counted = config != null ? config.InvasionRunsCountedPerDay : 5;
+            var points = CityBuilder.Invasion.InvasionRecords.DayPoints(CityBuilder.Invasion.InvasionRecords.LoadDays(), System.DateTime.Now, counted);
+            SetLine(Invasion, Localization.Format("#banner_points_today", points));
+            SetLine(Campaign, Localization.Get("#banner_soon"));
+        }
+
+        private void SetLine(int index, string text)
+        {
+            if (lines.Length > index && lines[index] != null) lines[index].text = text;
+        }
+    }
+}

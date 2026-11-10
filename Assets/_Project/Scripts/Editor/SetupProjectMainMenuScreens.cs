@@ -69,22 +69,9 @@ namespace CityBuilder.EditorTools
             discordBadges.Add(Badge(modesDiscord.transform));
             var modesYouTube = BrandCorner(modes, "YouTubeButton", "YouTube", new Vector2(1f, 0f), new Vector2(-CornerInset, CornerInset), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(modesYouTube.transform));
-            var modeIds = new[] { GameMode.Sandbox, GameMode.Invasion };
-            for (var i = 0; i < modeIds.Length; i++)
-            {
-                var x = i == 0 ? -380f : 380f;
-                var key = modeIds[i] == GameMode.Sandbox ? "#mode_sandbox" : "#mode_invasion";
-                var button = MenuTextButton(modes, $"{modeIds[i]}Button", "button", key, HudInk.OnButton, new Vector2(x, -170f), new Vector2(480f, 130f), 46);
-                UnityEventTools.AddIntPersistentListener(button.onClick, controller.ChooseMode, (int)modeIds[i]);
-                var info = MenuRoundButton(modes, $"{modeIds[i]}Info", "round", "Info", HudInk.OnRound, 110f, 0.5f);
-                Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(x, -320f), new Vector2(110f, 110f));
-                UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)modeIds[i]);
-            }
-            // the tutorial, always offered and replayable for now (the user, 2026-11-05), its reward on a
-            // crystal tag over it
-            var tutorialButton = MenuTextButton(modes, "TutorialButton", "plaque", "#mode_tutorial", HudInk.OnMenuPlaque, new Vector2(0f, -360f), new Vector2(420f, 110f), 40);
-            UnityEventTools.AddPersistentListener(tutorialButton.onClick, controller.StartTutorial);
-            var tutorialReward = Counter(modes, "TutorialReward", new Vector2(0f, -270f), new Color(0.5f, 0.77f, 0.94f), null, MenuArt("Crystal"));
+            // the hall of banners (the user, 2026-11-10, «Зал знамён»): Tutorial, Sandbox, Invasion,
+            // Campaign, drawn in the HUD's Classic kit by Tools/ui/make_mode_banners.py
+            BuildModeBanners(modes, controller);
 
             // ---- the sandbox and the invasion
             var sandboxScreen = BuildSandboxScreen(canvas, controller, out var sandbox, out var sandboxSettings);
@@ -139,7 +126,6 @@ namespace CityBuilder.EditorTools
             so.FindProperty("settingsPanel").objectReferenceValue = settingsPanel;
             so.FindProperty("sandbox").objectReferenceValue = sandbox;
             so.FindProperty("loadGamePanel").objectReferenceValue = loadPanel;
-            so.FindProperty("tutorialReward").objectReferenceValue = tutorialReward;
             WriteArray(so.FindProperty("shopBadges"), shopBadges.ToArray());
             WriteArray(so.FindProperty("discordBadges"), discordBadges.ToArray());
             WriteArray(so.FindProperty("youTubeBadges"), youTubeBadges.ToArray());
@@ -475,6 +461,83 @@ namespace CityBuilder.EditorTools
             var group = Group(screen.gameObject);
             group.alpha = 0f;
             return group;
+        }
+
+        /// <summary>
+        /// The modes screen's banners and «Играть» (ModeBannersController). Each banner hangs from
+        /// its top (the pivot), so it unrolls downward and sways from its perch; the name sits on the
+        /// kit's parchment plaque, the motto and the live line in light ink on the cloth.
+        /// </summary>
+        private static void BuildModeBanners(RectTransform modes, MainMenuController menu)
+        {
+            var names = new[] { "Tutorial", "Sandbox", "Invasion", "Campaign" };
+            var keys = new[] { "#mode_tutorial", "#mode_sandbox", "#mode_invasion", "#mode_campaign" };
+            var hall = StretchedChild(modes, "Banners");
+            var banners = new Object[names.Length];
+            var cloths = new Object[names.Length];
+            var mottos = new Object[names.Length];
+            var lines = new Object[names.Length];
+            var bannerControl = modes.gameObject.AddComponent<ModeBannersController>();
+            // a banner sprite is 380 x 660; on screen 300 wide
+            const float width = 300f;
+            const float k = width / 380f;
+            var size = new Vector2(width, 660f * k);
+            for (var i = 0; i < names.Length; i++)
+            {
+                var cloth = CreateImage(hall, $"{names[i]}Banner", Color.white);
+                cloth.sprite = MenuArt($"Banner_{names[i]}");
+                cloth.preserveAspect = true;
+                var rect = cloth.rectTransform;
+                Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2((i - 1.5f) * 350f, 380f), size);
+                var button = cloth.gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                UnityEventTools.AddIntPersistentListener(button.onClick, bannerControl.TapBanner, i);
+                var press = cloth.gameObject.AddComponent<LongPress>();
+                UnityEventTools.AddIntPersistentListener(press.onLongPress, bannerControl.HoldBanner, i);
+
+                var plaque = MenuImage(cloth.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(250f, 70f));
+                Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(250f, 70f));
+                plaque.raycastTarget = false;
+                MenuLabel(plaque.transform, "Label", keys[i], 32, new Vector2(0f, 3f), new Vector2(230f, 60f), HudInk.OnMenuPlaque, bold: true);
+
+                var motto = BannerLine(cloth.transform, "Motto", -392f * k, 24, false);
+                var line = BannerLine(cloth.transform, "Line", -446f * k, 26, true);
+                banners[i] = rect;
+                cloths[i] = cloth;
+                mottos[i] = motto;
+                lines[i] = line;
+            }
+
+            var play = MenuTextButton(modes, "PlayButton", "button", "#newgame_play", HudInk.OnButton, Vector2.zero, new Vector2(420f, 120f), 48);
+            Anchor((RectTransform)play.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 110f), new Vector2(420f, 120f));
+            UnityEventTools.AddPersistentListener(play.onClick, bannerControl.Play);
+
+            var so = new SerializedObject(bannerControl);
+            so.FindProperty("menu").objectReferenceValue = menu;
+            so.FindProperty("screen").objectReferenceValue = Group(modes.gameObject);
+            so.FindProperty("playButton").objectReferenceValue = play.GetComponent<Image>();
+            WriteArray(so.FindProperty("banners"), banners);
+            WriteArray(so.FindProperty("cloths"), cloths);
+            WriteArray(so.FindProperty("mottos"), mottos);
+            WriteArray(so.FindProperty("lines"), lines);
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>A line on a banner's cloth: light ink with a dark edge, so it reads on every cloth colour.</summary>
+        private static Text BannerLine(Transform banner, string name, float y, int size, bool bold)
+        {
+            var text = CreateText(banner, name, string.Empty, size, Vector2.zero, new Vector2(240f, 44f));
+            Anchor(text.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, y), new Vector2(240f, 44f));
+            text.font = bold ? UiTheme.Bold : UiTheme.Regular;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.color = new Color(1f, 0.96f, 0.86f);
+            text.raycastTarget = false;
+            var edge = text.gameObject.AddComponent<Outline>();
+            edge.effectColor = new Color(0.18f, 0.1f, 0.05f, 0.85f);
+            edge.effectDistance = new Vector2(2f, -2f);
+            return text;
         }
 
         /// <summary>A number on a parchment capsule with a disc on its left -- the HUD's resource chip, as the user picked for the points and the crystals.</summary>

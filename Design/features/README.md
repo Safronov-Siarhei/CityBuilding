@@ -58,7 +58,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [construction-look](construction-look.md) | the building wrapped in a construction net inside scaffolding while building/upgrading, the dust finish | стройка, леса, сетка, стройплощадка, пыль, эффект окончания стройки |
 | [invasion-newyear](invasion-newyear.md) | the New Year Invasion map: winter fir map, tree, gifts and the Thief, blizzard, midnight salute, Ice Shaman | новогодняя карта, подарки, воришка, метель, куранты, шаман |
 | **Interface & meta** | | |
-| [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню |
+| [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | ideas only: rewarded ads, paid HUD looks, promo codes | монетизация, реклама, покупки |
 | **Pipelines** | | |

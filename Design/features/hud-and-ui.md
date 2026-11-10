@@ -36,7 +36,18 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
 `Editor/SetupProjectMainMenuScreens.cs`; helpers + dialogs in `SetupProjectMainMenu.cs`):
 - main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Предложения» (= the
   shop), Discord + YouTube rounds under them. No resume-last-save plaque any more.
-- modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
+- modes (REDONE 2026-11-10, the user: «дёшево и скучно» -> «Зал знамён»): four BANNERS hanging in a
+  row -- Обучение (teal), Песочница (green), Нашествие (red, iron perch, torn tail), Кампания (grey,
+  lock, «Скоро») -- art `UI/MenuArt/Banner_<Mode>.png` drawn by `Tools/ui/make_mode_banners.py` in
+  the HUD's Classic kit (same parchment/wood/gold/hard shadow; one art for all four looks). Name on
+  the kit's plaque, a motto and a LIVE line on the cloth (tutorial reward or «Пройдено», saves count
+  or «Новое королевство», invasion points today, «Скоро»; keys `#banner_*`). Tap = pick (bigger x1.14,
+  sways more, others dimmed, remembered in PlayerPrefs `menu.mode`); tap the picked one or «Играть»
+  (gold, bottom centre) = start; LONG PRESS (0.5 s, `UI/LongPress.cs`) = the mode's «!» words. They
+  unroll from the perch on entry (staggered). `UI/ModeBannersController.cs`, built by
+  `SetupProjectMainMenuScreens.BuildModeBanners`. The old pills, round «!» and tutorial plaque are
+  gone (MainMenuController.tutorialReward left unwired). Not seen by the user in the game.
+- (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
 - sandbox: window, back + SAVES (the only way into saves now) TL, «!» + settings TR; map cards 3 per
   row with the theme's picture (`SandboxScreenController`); 5 theme rounds (`ThemePicker`); «Начать».
