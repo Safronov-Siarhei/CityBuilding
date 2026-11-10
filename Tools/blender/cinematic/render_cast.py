@@ -13,10 +13,12 @@ import ardan  # noqa: E402
 import elder  # noqa: E402
 import priest  # noqa: E402
 import townsfolk  # noqa: E402
+import orcs_cast  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": elder.make, "CinePriest": priest.make}
 BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
+BUILDERS.update({n: (lambda nn: (lambda: orcs_cast.make(nn)))(n) for n in orcs_cast.FIGURES})
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 out, solos = argv[0], argv[1:]
@@ -25,7 +27,7 @@ for n in set(solos) | {"CineArdan", "CineElder", "CinePriest"}:
     BUILDERS[n]()
 
 sc = bpy.context.scene
-lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + ["CineElder", "CinePriest"]
+lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + (["HeroKing"] if any("Orc" in n for n in solos) else ["CineElder", "CinePriest"])
 for i, n in enumerate(lineup):
     bpy.data.objects[n].location = (i * 0.5, 0, 0)
 sc.render.engine = 'BLENDER_EEVEE'

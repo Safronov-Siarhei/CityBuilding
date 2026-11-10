@@ -5,10 +5,17 @@
 - His rig and two animations (walk, carry the sack) are APPROVED (`ardan_anim.py`).
 - The old man (`elder.py`, CineElder) and the priest (`priest.py`, CinePriest) are built on Ардан's rig
   through the shared `figure.py`. Both are APPROVED. The priest was fixed first: the stole now lies on the skirt under the sash, and the medallion hangs between the bands on a chain round the neck.
-- The townsfolk (`townsfolk.py`) are built and their renders went to the user; awaiting approval:
+- The townsfolk (`townsfolk.py`) are APPROVED:
   - CineMerchant, CinePeasant (with a sickle), CinePeasantWoman (with a basket), CineBoy and CineGirl.
   - The children are scaled to about 0.67 with heads 1.18x bigger.
   - None of them may look like Ардан.
+- The orcs (`orcs_cast.py`) are built and their renders went to the user; awaiting approval:
+  - CineOrcChampion leaps out of the portal: scaled 1.3, a bare painted chest, one great spiked pauldron, a scar, a topknot and a cleaver.
+  - CineOrcTorch carries a torch and an axe.
+  - CineOrcSpear carries a spear and a shield with claw slashes.
+  - They use the game's orc look and the OrcPalette, on the orcs' own wider joints.
+  - Trap: `figure.material()` is made ONCE a session. `ensure_palette`/`ensure_atlas` remake their
+    images, so an earlier orc copy pointed at removed images and rendered black.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided

@@ -236,11 +236,8 @@ def ensure_collection():
 
 
 def make(location):
-    folder = os.path.dirname(bpy.data.filepath)
-    img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
-    mat = kit.ensure_material(img)
-    atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
-    detail.build_material_nodes(mat, img, atlas)
+    import figure  # the shared material, made once a session (see figure.material)
+    mat = figure.material()
     b = Builder()
     build(b)
     me = b.to_mesh(OBJ)

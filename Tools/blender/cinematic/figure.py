@@ -61,16 +61,41 @@ def ensure_collection():
     return coll
 
 
-def material():
-    folder = os.path.dirname(bpy.data.filepath)
-    img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
-    mat = kit.ensure_material(img)
-    atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
-    detail.build_material_nodes(mat, img, atlas)
-    return mat
+ORC_PALETTE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))),
+                           "Assets", "_Project", "Models", "Palette", "OrcPalette.png")
 
 
-def make(name, parts, scale, location=(0, 0, 0), post=None):
+_SHARED = None
+
+
+def material(orc=False):
+    """The shared palette material; for orcs a copy drawing the orcs' darker palette (as the game
+    does: same UVs, OrcPalette.png)."""
+    # once a session: ensure_palette/ensure_atlas REMAKE their images, which would leave an earlier
+    # copy (the orcs') pointing at removed images -- it rendered black (2026-11-10)
+    global _SHARED
+    if _SHARED is None:
+        folder = os.path.dirname(bpy.data.filepath)
+        img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
+        mat = kit.ensure_material(img)
+        atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
+        detail.build_material_nodes(mat, img, atlas)
+        _SHARED = (mat, img)
+    mat, img = _SHARED
+    if not orc:
+        return mat
+    orc_mat = bpy.data.materials.get("CineOrcPalette")
+    if orc_mat is None:
+        orc_mat = mat.copy()
+        orc_mat.name = "CineOrcPalette"
+        pal = bpy.data.images.load(ORC_PALETTE, check_existing=True)
+        for n in orc_mat.node_tree.nodes:
+            if n.type == 'TEX_IMAGE' and n.image is img:
+                n.image = pal
+    return orc_mat
+
+
+def make(name, parts, scale, location=(0, 0, 0), post=None, orc=False):
     """Builds the parts (each vertex remembers its part), scales, and installs the object."""
     b = Builder()
     layer = b.bm.verts.layers.int.new(PART_LAYER)
@@ -84,7 +109,7 @@ def make(name, parts, scale, location=(0, 0, 0), post=None):
     for v in b.bm.verts:
         v.co *= scale
     me = b.to_mesh(name)
-    me.materials.append(material())
+    me.materials.append(material(orc))
     detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
     obj = bpy.data.objects.get(name)
     if obj is None:
