@@ -109,28 +109,33 @@ def castle(d, cx, cy, ink):
 
 
 def orc_skull(d, cx, cy, bone, ink, blade):
-    """The invasion: an orc's horned skull with tusks over two crossed axes -- war, plainly."""
+    """The invasion: an orc's horned skull with tusks over two crossed axes -- war, plainly. Kept
+    within ~62 px of the centre so nothing crosses the medallion's ring (the user, 2026-11-10)."""
     # the axes behind: hafts crossed, heads at the top corners
     for a in (-1, 1):
-        d.line([p(cx - a * 50, cy + 52), p(cx + a * 40, cy - 46)], fill=WOOD_HI, width=9 * SS)
-        hx, hy = cx + a * 40, cy - 46
-        d.polygon([p(hx - a * 6, hy - 14), p(hx + a * 26, hy - 26), p(hx + a * 20, hy + 6), p(hx - a * 2, hy + 8)], fill=blade)
-        d.polygon([p(hx - a * 6, hy - 14), p(hx + a * 26, hy - 26), p(hx + a * 20, hy + 6), p(hx - a * 2, hy + 8)], outline=ink, width=3 * SS)
+        d.line([p(cx - a * 40, cy + 42), p(cx + a * 28, cy - 30)], fill=WOOD_HI, width=8 * SS)
+        hx, hy = cx + a * 28, cy - 30
+        head = [p(hx - a * 6, hy - 10), p(hx + a * 14, hy - 30), p(hx + a * 24, hy - 8), p(hx + a * 4, hy + 6)]
+        d.polygon(head, fill=blade, outline=ink, width=3 * SS)
     # horns
     for a in (-1, 1):
-        d.polygon([p(cx + a * 22, cy - 26), p(cx + a * 52, cy - 44), p(cx + a * 44, cy - 16), p(cx + a * 30, cy - 10)], fill=bone, outline=ink, width=3 * SS)
+        d.polygon([p(cx + a * 18, cy - 20), p(cx + a * 42, cy - 36), p(cx + a * 36, cy - 12), p(cx + a * 26, cy - 6)], fill=bone, outline=ink, width=3 * SS)
     # the skull: a broad cranium and a heavy jaw
-    d.ellipse([p(cx - 34, cy - 38), p(cx + 34, cy + 22)], fill=bone, outline=ink, width=4 * SS)
-    d.rounded_rectangle([p(cx - 26, cy + 6), p(cx + 26, cy + 38)], radius=10 * SS, fill=bone, outline=ink, width=4 * SS)
-    # brow and eyes
-    d.polygon([p(cx - 24, cy - 12), p(cx - 6, cy - 6), p(cx - 8, cy + 6), p(cx - 22, cy + 4)], fill=ink)
-    d.polygon([p(cx + 24, cy - 12), p(cx + 6, cy - 6), p(cx + 8, cy + 6), p(cx + 22, cy + 4)], fill=ink)
-    d.polygon([p(cx - 4, cy + 10), p(cx + 4, cy + 10), p(cx, cy + 18)], fill=ink)
-    # tusks up from the jaw
+    d.ellipse([p(cx - 28, cy - 32), p(cx + 28, cy + 16)], fill=bone, outline=ink, width=4 * SS)
+    d.rounded_rectangle([p(cx - 22, cy + 2), p(cx + 22, cy + 32)], radius=9 * SS, fill=bone, outline=ink, width=4 * SS)
+    d.rectangle([p(cx - 18, cy + 2), p(cx + 18, cy + 8)], fill=bone)
+    # brow and eyes, the nose
+    d.polygon([p(cx - 21, cy - 12), p(cx - 5, cy - 6), p(cx - 7, cy + 4), p(cx - 19, cy + 2)], fill=ink)
+    d.polygon([p(cx + 21, cy - 12), p(cx + 5, cy - 6), p(cx + 7, cy + 4), p(cx + 19, cy + 2)], fill=ink)
+    d.polygon([p(cx - 4, cy + 6), p(cx + 4, cy + 6), p(cx, cy + 12)], fill=ink)
+    # the mouth: a dark slot with a row of square teeth
+    d.rounded_rectangle([p(cx - 15, cy + 15), p(cx + 15, cy + 26)], radius=3 * SS, fill=ink)
+    for x in (-11, -4, 3):
+        d.rectangle([p(cx + x, cy + 15), p(cx + x + 6, cy + 20)], fill=bone)
+    # two tusks rising from the lower jaw past the upper lip
+    tusk = (255, 250, 235, 255)
     for a in (-1, 1):
-        d.polygon([p(cx + a * 18, cy + 30), p(cx + a * 10, cy + 30), p(cx + a * 16, cy + 8)], fill=(255, 250, 235, 255), outline=ink, width=2 * SS)
-    for x in (-8, 0, 8):
-        d.line([p(cx + x, cy + 26), p(cx + x, cy + 36)], fill=ink, width=2 * SS)
+        d.polygon([p(cx + a * 10, cy + 28), p(cx + a * 19, cy + 28), p(cx + a * 18, cy + 6)], fill=tusk, outline=ink, width=2 * SS)
 
 
 def book(d, cx, cy, ink):
