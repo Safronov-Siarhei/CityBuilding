@@ -3,10 +3,12 @@
 > **2026-11-10 GRAPHICS SETTINGS: Auto / Manual (the user).** Settings → Graphics: **Авто | Ручная**.
 > Auto = the device's tier (line «Сейчас: Низкий»). Manual opens, each row with a «!» info window
 > (texts `#settings_gfx_*_info` in the sheet): **Уровень графики** Низкий/Средний/Высокий/Свой (a level
-> sets all the rows; any changed row shows «Свой») · **Частота кадров** 30/60 · **Сглаживание краёв**
-> Выкл/2x/4x · **Чёткость** 50/75/90/100 % · **Тени** Выкл/Простые/Чёткие (off = reach 0; sharp =
+> sets all the rows; any changed row shows «Свой») · **Плавность** 30/60 · **Ровные края**
+> Выкл/Немного/Сильно (MSAA 1/2/4) · **Чёткость** 50/75/90/100 % · **Тени** Выкл/Простые/Чёткие (off = reach 0; sharp =
 > 2048 map; soft shadows cannot be switched at runtime) · **Дальность теней** Близко/Средне/Далеко
-> (35/50/60 m) · **Показывать FPS** (UI/FpsCounter, bottom left right of the minimap, every scene).
+> (35/50/60 m) · **Счётчик плавности** (UI/FpsCounter, bottom left right of the minimap, every scene).
+> Texts rule (the user, 2026-11-10): a child with no tech knowledge must understand them — no
+> «FPS», «кадры», «разрешение», «сглаживание», «MSAA» in labels or «!» texts.
 > Model: `GraphicsQuality` (Chosen Auto = Auto mode; `Detail`, `Preset`, `Current` in PlayerPrefs
 > `graphics_detail.*`, `MatchingLevel`, `SetManual`/`SetLevel`, `FrameRate`, `ShowFps`); presets
 > Low 60/2x/100/simple/near, Medium 60/4x/90/simple/mid, High 60/4x/100/sharp/far. The settings card's

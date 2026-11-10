@@ -184,7 +184,7 @@ namespace CityBuilder.UI
             for (var i = 0; i < GraphicsQuality.MsaaChoices.Length; i++)
             {
                 var value = GraphicsQuality.MsaaChoices[i];
-                AddChoice(msaa, i, GraphicsQuality.MsaaChoices.Length, value <= 1 ? "#settings_gfx_off" : null, value <= 1 ? null : value + "x",
+                AddChoice(msaa, i, GraphicsQuality.MsaaChoices.Length, value <= 1 ? "#settings_gfx_off" : value <= 2 ? "#settings_gfx_msaa_2" : "#settings_gfx_msaa_4", null,
                     () => GraphicsQuality.Current.Msaa == value, () => Change(d => d.Msaa = value));
             }
 
