@@ -1,6 +1,6 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Part 1 (village + sky) and part 2 (the cast with clips) BUILT, user saw photos.
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-3 (village + sky, the cast with clips, the living background) BUILT, user saw photos. Next: part 4, the director.
 - **Unity part 1 (2026-11-10):** scene `Scenes/CampaignOpening.unity` (NOT in the build list), made by
   `SetupProjectCampaign.cs`: procedural morning sky `CampaignSky.mat`, low warm sun, trilight ambient,
   linear haze fog 45-140. `Scripts/Campaign/OpeningVillage.cs` lays the village out on Start (seed 11):
@@ -24,6 +24,20 @@
     townsfolk clips need `bell_anim.apply` (aims); in the EDITOR an imported clip poses nothing through
     `SampleAnimation` or a playable graph (a playable graph even T-posed the kids) -- CampaignPhotos reads
     the curves onto the bones itself. In play mode an Animator plays them normally.
+- **Unity part 3 (2026-11-10): the living background.** `Scripts/Campaign/OpeningLife.cs` on the village
+  object, every number in `Campaign/OpeningLife.json`. `Begin()`: walkers stroll the LANES (the roads out
+  of the square, `OpeningVillage.Lanes`, each from its square end out; the ring road is not a lane),
+  pause to idle/talk; pairs chat on the square. `Panic(origin)`: each reacts (Scream/Startle/Panic/Stare)
+  after a delay growing with distance, then runs OUT along its lane (square standers first to the
+  nearest lane mouth) and vanishes past the end. `ReleaseOrcs(portal)`: torchbearers and spearmen in
+  turn, one per lane round-robin; torchbearers leave the road for the nearest unclaimed house in reach,
+  stand, set the roof alight (flames = stretched additive particles, smoke = alpha particles,
+  `CampaignFlame/CampaignSmoke.mat` on a generated `SoftDot.png`); spearmen chase the nearest fleeing
+  villager for a few seconds (people are faster). `Step(dt)` runs it (photos step it by hand);
+  autoBegin starts it in play until the director takes over.
+  - Figures play through `CineFigure` + `CineClips` (no Animator): setup bakes each cast FBX's takes
+    into `Campaign/Cast/<Figure>Clips.asset` at 15 fps (bone rotations, positions of bones that move).
+  - Not yet: the director, the hero shots, the user's notes 1-7; nobody has seen it in play mode.
   - Traps: Blender `matrix_world` lags a set location until `view_layer.update()`; ground materials need
     smoothness 0 (the sky's brown lower half mirrored in the grass); the editor's first `Render()` drew
     no ground while its shader compiled in the background -> CampaignPhotos renders a warm-up frame.

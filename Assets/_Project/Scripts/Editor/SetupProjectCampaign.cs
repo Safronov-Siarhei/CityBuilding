@@ -20,6 +20,7 @@ namespace CityBuilder.EditorTools
         public const string CampaignOpeningScenePath = ScenesFolder + "/CampaignOpening.unity";
         private const string CinematicModelsFolder = "Assets/_Project/Models/Cinematic";
         private const string OpeningSetPath = "Assets/_Project/Campaign/OpeningSet.json";
+        private const string OpeningLifePath = "Assets/_Project/Campaign/OpeningLife.json";
 
         // the village's houses: the game's own buildings (OpeningVillage picks among them by id)
         private static readonly string[] OpeningVillageBuildings =
@@ -105,9 +106,200 @@ namespace CityBuilder.EditorTools
             so.FindProperty("field").objectReferenceValue = Matte("CampaignField", new Color(0.5f, 0.38f, 0.24f));
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            // the living background: villagers, their flight, the orcs and the fires
+            var clips = BakeCastClips();
+            var life = village.gameObject.AddComponent<OpeningLife>();
+            var lso = new SerializedObject(life);
+            lso.FindProperty("village").objectReferenceValue = village;
+            var castProp = lso.FindProperty("cast");
+            castProp.arraySize = clips.Count;
+            var n = 0;
+            foreach (var kv in clips)
+            {
+                var e = castProp.GetArrayElementAtIndex(n++);
+                e.FindPropertyRelative("id").stringValue = kv.Key;
+                e.FindPropertyRelative("model").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelImportDefaults.CinematicCastFolder}{kv.Key}.fbx");
+                e.FindPropertyRelative("clips").objectReferenceValue = kv.Value;
+            }
+            lso.FindProperty("config").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningLifePath);
+            var dot = SoftDot();
+            lso.FindProperty("flameMaterial").objectReferenceValue = ParticleMaterial("CampaignFlame", dot, true);
+            lso.FindProperty("smokeMaterial").objectReferenceValue = ParticleMaterial("CampaignSmoke", dot, false);
+            lso.ApplyModifiedPropertiesWithoutUndo();
+
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists(CampaignOpeningScenePath);
             EditorSceneManager.SaveScene(scene, CampaignOpeningScenePath);
+        }
+
+        // ------------------------------------------------------------ the cast's clips
+
+        private const string CastClipsFolder = "Assets/_Project/Campaign/Cast";
+
+        [System.Serializable]
+        private class CastFile
+        {
+            public CastFigure[] figures;
+        }
+
+        [System.Serializable]
+        private class CastFigure
+        {
+            public string name;
+            public float walkSpeed;
+            public float runSpeed;
+        }
+
+        /// <summary>Bakes every cast FBX's takes into a CineClips asset (CineFigure plays them by
+        /// hand: an imported clip poses nothing in the editor, and no Animator is needed in play).</summary>
+        private static Dictionary<string, CineClips> BakeCastClips()
+        {
+            var result = new Dictionary<string, CineClips>();
+            var folder = ModelImportDefaults.CinematicCastFolder.TrimEnd('/');
+            if (!Directory.Exists(folder)) return result;
+            Directory.CreateDirectory(CastClipsFolder);
+            var speeds = new Dictionary<string, CastFigure>();
+            var castJson = AssetDatabase.LoadAssetAtPath<TextAsset>(ModelImportDefaults.OpeningCastPath);
+            if (castJson != null)
+            {
+                foreach (var f in JsonUtility.FromJson<CastFile>(castJson.text).figures) speeds[f.name] = f;
+            }
+            foreach (var file in Directory.GetFiles(folder, "*.fbx"))
+            {
+                var path = file.Replace('\\', '/');
+                var name = Path.GetFileNameWithoutExtension(path);
+                var takes = new List<AnimationClip>();
+                foreach (var a in AssetDatabase.LoadAllAssetsAtPath(path))
+                {
+                    if (a is AnimationClip c && !c.name.StartsWith("__preview")) takes.Add(c);
+                }
+                if (takes.Count == 0) continue;
+
+                // the bones: every path with a rotation curve; the moving ones: a position that changes
+                var bones = new List<string>();
+                var moving = new HashSet<string>();
+                foreach (var c in takes)
+                {
+                    foreach (var b in AnimationUtility.GetCurveBindings(c))
+                    {
+                        if (b.propertyName == "m_LocalRotation.w" && !bones.Contains(b.path)) bones.Add(b.path);
+                        if (b.propertyName.StartsWith("m_LocalPosition"))
+                        {
+                            var cv = AnimationUtility.GetEditorCurve(c, b);
+                            var lo = float.MaxValue;
+                            var hi = float.MinValue;
+                            foreach (var k in cv.keys)
+                            {
+                                lo = Mathf.Min(lo, k.value);
+                                hi = Mathf.Max(hi, k.value);
+                            }
+                            if (hi - lo > 1e-4f) moving.Add(b.path);
+                        }
+                    }
+                }
+                var movingIdx = new List<int>();
+                for (var i = 0; i < bones.Count; i++) if (moving.Contains(bones[i])) movingIdx.Add(i);
+
+                var set = ScriptableObject.CreateInstance<CineClips>();
+                set.bones = bones.ToArray();
+                set.movingBones = movingIdx.ToArray();
+                var list = new List<CineClips.Clip>();
+                foreach (var c in takes)
+                {
+                    var curves = new Dictionary<string, AnimationCurve>();
+                    foreach (var b in AnimationUtility.GetCurveBindings(c)) curves[b.path + "|" + b.propertyName] = AnimationUtility.GetEditorCurve(c, b);
+                    float Value(string bone, string prop, float t, float rest) =>
+                        curves.TryGetValue(bone + "|" + prop, out var cv) ? cv.Evaluate(t) : rest;
+                    var frames = Mathf.Max(2, Mathf.RoundToInt(c.length * CineClips.FramesPerSecond) + 1);
+                    var rot = new float[frames * bones.Count * 4];
+                    var pos = new float[frames * movingIdx.Count * 3];
+                    for (var f = 0; f < frames; f++)
+                    {
+                        var t = c.length * f / (frames - 1);
+                        for (var i = 0; i < bones.Count; i++)
+                        {
+                            var q = new Quaternion(Value(bones[i], "m_LocalRotation.x", t, 0f), Value(bones[i], "m_LocalRotation.y", t, 0f),
+                                Value(bones[i], "m_LocalRotation.z", t, 0f), Value(bones[i], "m_LocalRotation.w", t, 1f)).normalized;
+                            var o = (f * bones.Count + i) * 4;
+                            rot[o] = q.x;
+                            rot[o + 1] = q.y;
+                            rot[o + 2] = q.z;
+                            rot[o + 3] = q.w;
+                        }
+                        for (var m = 0; m < movingIdx.Count; m++)
+                        {
+                            var bone = bones[movingIdx[m]];
+                            var o = (f * movingIdx.Count + m) * 3;
+                            pos[o] = Value(bone, "m_LocalPosition.x", t, 0f);
+                            pos[o + 1] = Value(bone, "m_LocalPosition.y", t, 0f);
+                            pos[o + 2] = Value(bone, "m_LocalPosition.z", t, 0f);
+                        }
+                    }
+                    list.Add(new CineClips.Clip { name = c.name, seconds = c.length, loop = AnimationUtility.GetAnimationClipSettings(c).loopTime, frames = frames, rot = rot, pos = pos });
+                }
+                set.clips = list.ToArray();
+                if (speeds.TryGetValue(name, out var sp))
+                {
+                    set.walkSpeed = sp.walkSpeed;
+                    set.runSpeed = sp.runSpeed;
+                }
+                var assetPath = $"{CastClipsFolder}/{name}Clips.asset";
+                DeleteIfExists(assetPath);
+                AssetDatabase.CreateAsset(set, assetPath);
+                result[name] = set;
+            }
+            AssetDatabase.SaveAssets();
+            return result;
+        }
+
+        /// <summary>A soft round dot for the fire's and smoke's particles (white, alpha falling to the rim).</summary>
+        private static Texture2D SoftDot()
+        {
+            var path = "Assets/_Project/Campaign/SoftDot.png";
+            if (!File.Exists(path))
+            {
+                const int size = 64;
+                var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                for (var y = 0; y < size; y++)
+                {
+                    for (var x = 0; x < size; x++)
+                    {
+                        var d = new Vector2(x - size / 2f + 0.5f, y - size / 2f + 0.5f).magnitude / (size / 2f);
+                        var a = Mathf.Clamp01(1f - d);
+                        tex.SetPixel(x, y, new Color(1f, 1f, 1f, a * a * (3f - 2f * a)));
+                    }
+                }
+                File.WriteAllBytes(path, tex.EncodeToPNG());
+                Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(path);
+                var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+                imp.alphaIsTransparency = true;
+                imp.mipmapEnabled = false;
+                imp.textureCompression = TextureImporterCompression.Uncompressed;
+                imp.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>URP's unlit particle material: additive for flames, alpha-blended for smoke.</summary>
+        private static Material ParticleMaterial(string name, Texture2D dot, bool additive)
+        {
+            var path = $"{MaterialsFolder}/{name}.mat";
+            DeleteIfExists(path);
+            var m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+            m.SetTexture("_BaseMap", dot);
+            m.SetColor("_BaseColor", Color.white);
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", additive ? 2f : 0f);
+            m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)(additive ? BlendMode.One : BlendMode.OneMinusSrcAlpha));
+            m.SetFloat("_ZWrite", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)RenderQueue.Transparent;
+            AssetDatabase.CreateAsset(m, path);
+            return m;
         }
 
         /// <summary>A lit material with no shine: the default smoothness mirrored the sky's brown

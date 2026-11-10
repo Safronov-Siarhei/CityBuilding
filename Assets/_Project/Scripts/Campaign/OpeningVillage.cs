@@ -65,6 +65,8 @@ namespace CityBuilder.Campaign
         private readonly Dictionary<string, (Pose ruin, Pose arch)> _stonePoses = new Dictionary<string, (Pose, Pose)>();
         private readonly List<(Vector2 at, float r)> _taken = new List<(Vector2, float)>();
         private readonly List<Vector2[]> _streets = new List<Vector2[]>();
+        private readonly List<Vector2[]> _lanes = new List<Vector2[]>();
+        private readonly List<Transform> _houses = new List<Transform>();
         private Random _rnd;
         private Transform _root;
 
@@ -82,6 +84,13 @@ namespace CityBuilder.Campaign
 
         public int BuildingCount { get; private set; }
 
+        /// <summary>The roads out of the square, each from its square end outwards (not the ring road):
+        /// where the villagers stroll and which way they flee.</summary>
+        public IReadOnlyList<Vector2[]> Lanes => _lanes;
+
+        /// <summary>Every house and farm building placed, for the orcs' torches.</summary>
+        public IReadOnlyList<Transform> Houses => _houses;
+
         private void Start()
         {
             if (_root == null) Build();
@@ -97,6 +106,8 @@ namespace CityBuilder.Campaign
             _stonePoses.Clear();
             _taken.Clear();
             _streets.Clear();
+            _lanes.Clear();
+            _houses.Clear();
             BuildingCount = 0;
             _rnd = new Random(seed);
 
@@ -138,12 +149,13 @@ namespace CityBuilder.Campaign
                 var a = Mathf.PI * 2f * i / (ring.Length - 1);
                 ring[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 17f;
             }
-            Street(ring, 1.6f, dirt);
+            Street(ring, 1.6f, dirt, false);
         }
 
-        private void Street(Vector2[] line, float width, Material material)
+        private void Street(Vector2[] line, float width, Material material, bool lane = true)
         {
             _streets.Add(line);
+            if (lane && line.Length > 2) _lanes.Add(line);
             for (var i = 0; i + 1 < line.Length; i++)
             {
                 var a = line[i];
@@ -268,6 +280,7 @@ namespace CityBuilder.Campaign
             go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * prefab.transform.rotation);
             go.transform.localScale = prefab.transform.localScale * BuildingScale;
             Reserve(at, radius);
+            if (id != "Well") _houses.Add(go.transform);
             BuildingCount++;
             return true;
         }
