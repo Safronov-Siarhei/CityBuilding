@@ -204,6 +204,37 @@ namespace CityBuilder.EditorTools
             return window.transform;
         }
 
+        /// <summary>The five themes as tabs with their pictures (the sandbox board, 2026-11-10: pictures, not words); the picked tab stands out.</summary>
+        private static ThemePicker BuildThemeTabs(Transform parent, Vector2 centre)
+        {
+            const float width = 170f, height = 96f, step = 184f;
+            var row = new GameObject("ThemeTabs", typeof(RectTransform));
+            row.transform.SetParent(parent, false);
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), centre, new Vector2(step * MapThemes.All.Length, height));
+            var picker = row.AddComponent<ThemePicker>();
+            var buttons = new Object[MapThemes.All.Length];
+            var picked = new Object[MapThemes.All.Length];
+            for (var i = 0; i < MapThemes.All.Length; i++)
+            {
+                var id = MapThemes.Id(MapThemes.All[i]);
+                var size = new Vector2(width, height);
+                var idle = MenuImage(row.transform, $"Theme_{id}", "tab", new Vector2((i - (MapThemes.All.Length - 1) * 0.5f) * step, 0f), size);
+                buttons[i] = idle.gameObject.AddComponent<Button>();
+                MenuGlyph(idle.transform, $"Theme_{id}", HudInk.OnTab, 58f);
+                var lit = MenuImage(idle.transform, "Picked", "tab_selected", new Vector2(0f, 8f), size + new Vector2(0f, 16f));
+                lit.raycastTarget = false;
+                MenuGlyph(lit.transform, $"Theme_{id}", HudInk.OnTabSelected, 66f);
+                lit.gameObject.SetActive(false);
+                picked[i] = lit.gameObject;
+            }
+            var so = new SerializedObject(picker);
+            so.FindProperty("invasion").boolValue = false;
+            WriteArray(so.FindProperty("buttons"), buttons);
+            WriteArray(so.FindProperty("picked"), picked);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return picker;
+        }
+
         /// <summary>The five theme buttons in a row about `centre`; the picked one wears the gold face.</summary>
         private static ThemePicker BuildThemes(Transform parent, Vector2 centre, float size, float spacing, bool invasion)
         {
@@ -236,27 +267,46 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- the sandbox
 
+        // The user's pick of three concepts (2026-11-10, «Знамя и доска»): the sandbox banner of the
+        // hall on the left, a board on the right with the themes as picture tabs along its top, the
+        // map on it, and a column of the map code, Saves and Start.
+        private static readonly Vector2 SandboxBoardPos = new Vector2(180f, -60f);
+        private static readonly Vector2 SandboxBoardSize = new Vector2(1240f, 720f);
+
         private static CanvasGroup BuildSandboxScreen(Transform canvas, MainMenuController controller, out SandboxScreenController sandbox, out Button settings)
         {
             var screen = StretchedChild(canvas, "SandboxScreen");
-            var window = MenuWindow(screen, "#mode_sandbox");
             var back = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
-            var saves = Corner(screen, "SavesButton", "Save", new Vector2(0f, 1f), new Vector2(CornerInset + CornerButton + 20f, -CornerInset), CornerButton);
             var info = Corner(screen, "InfoButton", "Info", new Vector2(1f, 1f), new Vector2(-CornerInset - CornerButton - 20f, -CornerInset), CornerButton);
             settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
             UnityEventTools.AddPersistentListener(back.onClick, controller.Back);
-            UnityEventTools.AddPersistentListener(saves.onClick, controller.OpenSaves);
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Sandbox);
 
-            // the map cards, three to a row
+            // the banner, as it hangs in the hall (a sprite is 380 x 660)
+            const float bannerWidth = 340f;
+            const float k = bannerWidth / 380f;
+            var banner = CreateImage(screen, "SandboxBanner", Color.white);
+            banner.sprite = MenuArt("Banner_Sandbox");
+            banner.preserveAspect = true;
+            banner.raycastTarget = false;
+            Anchor(banner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(-700f, 330f), new Vector2(bannerWidth, 660f * k));
+            var plaque = MenuImage(banner.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(220f, 60f));
+            Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(220f, 60f));
+            plaque.raycastTarget = false;
+            MenuLabel(plaque.transform, "Label", "#mode_sandbox", 28, new Vector2(0f, 2f), new Vector2(200f, 50f), HudInk.OnMenuPlaque, bold: true);
+
+            var window = MenuImage(screen, "Window", "panel", SandboxBoardPos, SandboxBoardSize, Image.Type.Tiled).transform;
+            var themes = BuildThemeTabs(screen, new Vector2(SandboxBoardPos.x, SandboxBoardPos.y + SandboxBoardSize.y * 0.5f + 44f));
+
+            // the map card(s), left on the board
             var grid = new GameObject("Maps", typeof(RectTransform), typeof(GridLayoutGroup));
             grid.transform.SetParent(window, false);
-            Anchor((RectTransform)grid.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 95f), new Vector2(1400f, 520f));
+            Anchor((RectTransform)grid.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-200f, 0f), new Vector2(760f, 580f));
             var layout = grid.GetComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2(440f, 240f);
-            layout.spacing = new Vector2(40f, 40f);
+            layout.cellSize = new Vector2(760f, 580f);
+            layout.spacing = new Vector2(30f, 30f);
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            layout.constraintCount = 3;
+            layout.constraintCount = Mathf.Max(1, MapSelector.PlayerMapIds.Length);
             layout.childAlignment = TextAnchor.MiddleCenter;
 
             var ids = MapSelector.PlayerMapIds;
@@ -270,26 +320,30 @@ namespace CityBuilder.EditorTools
                 var lit = MenuImage(card.transform, "Picked", "row_selected", Vector2.zero, Vector2.zero);
                 StretchFull(lit.rectTransform);
                 lit.raycastTarget = false;
+                // one map: nothing to pick between, so no lit frame
+                lit.color = ids.Length > 1 ? Color.white : Color.clear;
                 picked[i] = lit.gameObject;
                 var picture = CreateImage(card.transform, "Picture", new Color(0.12f, 0.08f, 0.05f));
                 var plain = MenuArt($"Map_{ids[i]}");
                 if (plain != null) { picture.sprite = plain; picture.color = Color.white; }
                 picture.raycastTarget = false;
+                picture.preserveAspect = true;
                 var rect = picture.rectTransform;
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
-                rect.offsetMin = new Vector2(16f, 58f);
-                rect.offsetMax = new Vector2(-16f, -16f);
+                rect.offsetMin = new Vector2(20f, 70f);
+                rect.offsetMax = new Vector2(-20f, -20f);
                 pictures[i] = picture;
-                var name = MenuLabel(card.transform, "Name", MapSelectPanelController.NameKey(ids[i]), 30, Vector2.zero, new Vector2(400f, 44f), HudInk.OnPanel, bold: true);
-                Anchor(name.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f), new Vector2(400f, 44f));
+                var name = MenuLabel(card.transform, "Name", MapSelectPanelController.NameKey(ids[i]), 34, Vector2.zero, new Vector2(600f, 50f), HudInk.OnPanel, bold: true);
+                Anchor(name.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(600f, 50f));
             }
-            var noMaps = MenuLabel(window, "NoMaps", "#sandbox_no_maps", 32, new Vector2(0f, 95f), new Vector2(1000f, 80f), HudInk.OnPanel);
+            var noMaps = MenuLabel(window, "NoMaps", "#sandbox_no_maps", 32, new Vector2(-200f, 0f), new Vector2(700f, 120f), HudInk.OnPanel);
 
-            var themes = BuildThemes(window, new Vector2(0f, -235f), 104f, 136f, invasion: false);
-            var start = MenuTextButton(window, "StartButton", "button", "#sandbox_start", HudInk.OnButton, new Vector2(0f, -345f), new Vector2(420f, 110f), 44);
+            // the column: the map code (+ a random one), Saves, Start
+            const float colX = 425f;
+            MenuLabel(window, "MapCodeLabel", "#sandbox_code_label", 28, new Vector2(colX, 230f), new Vector2(340f, 44f), HudInk.OnPanel, bold: true);
             // the archipelago's code: empty = a random map, a friend's code = their map
-            var mapCode = CreateInputField(window, "MapCode", string.Empty, new Vector2(0f, -110f), new Vector2(560f, 76f),
+            var mapCode = CreateInputField(window, "MapCode", string.Empty, new Vector2(colX - 45f, 165f), new Vector2(250f, 80f),
                 AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.HudSkinsFolder}/Classic/plaque.png"));
             mapCode.contentType = InputField.ContentType.Standard;
             mapCode.characterLimit = 16;
@@ -297,8 +351,14 @@ namespace CityBuilder.EditorTools
             var codePlaceholder = (Text)mapCode.placeholder;
             codePlaceholder.alignment = TextAnchor.MiddleCenter;
             Localize(codePlaceholder, "#sandbox_code_hint");
-            var codeError = CreateText(window, "MapCodeError", string.Empty, 24, new Vector2(0f, -160f), new Vector2(900f, 34f), UiTheme.Danger);
+            var random = MenuRoundButton(window, "RandomCodeButton", "round", "Rotate", HudInk.OnRound, 84f, 0.5f);
+            Anchor((RectTransform)random.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(colX + 130f, 165f), new Vector2(84f, 84f));
+            var codeError = CreateText(window, "MapCodeError", string.Empty, 22, new Vector2(colX, 95f), new Vector2(360f, 60f), UiTheme.Danger);
+            codeError.horizontalOverflow = HorizontalWrapMode.Wrap;
             codeError.gameObject.SetActive(false);
+            var saves = MenuTextButton(window, "SavesButton", "plaque", "#sandbox_saves", HudInk.OnMenuPlaque, new Vector2(colX, -10f), new Vector2(340f, 104f), 34);
+            UnityEventTools.AddPersistentListener(saves.onClick, controller.OpenSaves);
+            var start = MenuTextButton(window, "StartButton", "button", "#sandbox_start", HudInk.OnButton, new Vector2(colX, -240f), new Vector2(340f, 130f), 44);
 
             sandbox = screen.gameObject.AddComponent<SandboxScreenController>();
             var so = new SerializedObject(sandbox);
@@ -306,6 +366,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("startButton").objectReferenceValue = start;
             so.FindProperty("mapCode").objectReferenceValue = mapCode;
             so.FindProperty("mapCodeError").objectReferenceValue = codeError;
+            so.FindProperty("randomCodeButton").objectReferenceValue = random;
             so.FindProperty("noMapsLabel").objectReferenceValue = noMaps.gameObject;
             WriteStrings(so.FindProperty("mapIds"), ids);
             WriteArray(so.FindProperty("cards"), cards);
@@ -355,6 +416,18 @@ namespace CityBuilder.EditorTools
             so.FindProperty("loadSelectedButton").objectReferenceValue = load;
             so.FindProperty("selectedNameLabel").objectReferenceValue = picked;
             so.FindProperty("menuLook").boolValue = true;
+            // each row: the save's theme on a round, then day, people, buildings and the map code
+            var badge = MenuImage(body, "ThemeBadgeTemplate", "round", Vector2.zero, new Vector2(84f, 84f), Image.Type.Simple);
+            badge.preserveAspect = true;
+            badge.raycastTarget = false;
+            MenuGlyph(badge.transform, "Theme_summer", HudInk.OnRound, 46f);
+            badge.gameObject.SetActive(false);
+            so.FindProperty("themeBadgeTemplate").objectReferenceValue = badge.gameObject;
+            var glyphs = new Object[MapThemes.All.Length];
+            for (var i = 0; i < glyphs.Length; i++) glyphs[i] = HudGlyph($"Theme_{MapThemes.Id(MapThemes.All[i])}");
+            WriteArray(so.FindProperty("themeGlyphs"), glyphs);
+            // pieces, not buildings: roads, fences, moats, bridges and the decor pieces
+            WriteStrings(so.FindProperty("uncountedBuildings"), new[] { "Road", "Fence", "Moat", "Bridge", "Drawbridge", "DecTree", "DecBush", "DecGarden" });
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(load.onClick, loadPanel.ConfirmLoad);
             UnityEventTools.AddPersistentListener(close.onClick, controller.CloseSaves);

@@ -51,9 +51,18 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   gone (MainMenuController.tutorialReward left unwired). Round 3 (the user saw it, 11-10): smaller name plaques (196x54, 26 pt); the MOTTO moved off the banners to ONE line bottom centre over «Играть», showing the picked mode's; the live line sits under the plaque, 190 wide and best-fit (14..26 pt) so big numbers stay inside the seam.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
-- sandbox: window, back + SAVES (the only way into saves now) TL, «!» + settings TR; map cards 3 per
-  row with the theme's picture (`SandboxScreenController`); 5 theme rounds (`ThemePicker`); «Начать».
-  A theme a map lacks hides the map (New Year in the sandbox: no maps, Start off).
+- sandbox (REDONE 2026-11-10, the user picked concept В «Знамя и доска» of three, PIL concepts in
+  RunLogs/concept_sandbox_*.png): back TL, «!» + settings TR; the hall's sandbox banner on the left
+  (340 wide, name plaque); a board (`Window`, kept the name for MapPickerTests) with the 5 themes as
+  PICTURE TABS on its top (glyphs, no words -- the user; `BuildThemeTabs`, same `ThemePicker`); the map
+  card on the board's left (one map = no lit frame); a column: «Код карты» label, code field
+  (placeholder «Случайная») + round arrows = write a fresh random code in (`RandomCode`), error line,
+  «Сохранения» plaque (the corner Saves button is gone), gold «Начать». A theme a map lacks hides the
+  map (New Year in the sandbox: no maps, Start off). Built 2026-11-10, NOT yet seen by the user.
+- saves dialog rows (2026-11-10, the user): round badge with the save's THEME glyph (season -> first
+  theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»
+  (`#load_row_stats` / `#load_row_code`; buildings = save entries minus Road/Fence/Moat/Bridge/
+  Drawbridge/Dec*, the list written by the builder). `LoadGamePanelController` (also the in-game load).
 - invasion: window; theme picture across the top (`Inv_<theme>.png`) with King/Queen leaning in at the
   sides (`Peek_*.png`, Tools/blender/render_peek.py), points plaque (sum of the period's best 5 runs),
   crystals plaque (`Core/Wallet`, 0 for now) + «!», themes on the picture; «Топ 5 забегов …», the

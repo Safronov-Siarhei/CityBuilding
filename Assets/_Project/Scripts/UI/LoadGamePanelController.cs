@@ -25,6 +25,14 @@ namespace CityBuilder.UI
         /// <summary>On in the main menu: rows take the menu's look (MenuRowLook) instead of the tinted rowSprite.</summary>
         [SerializeField] private bool menuLook;
 
+        [Header("The row's details (the user, 2026-11-10: theme badge, map code, people, buildings, day)")]
+        /// <summary>A round with an Icon child, copied to the row's left for the save's theme; none = no badge.</summary>
+        [SerializeField] private GameObject themeBadgeTemplate;
+        /// <summary>The theme glyphs in MapThemes.All order.</summary>
+        [SerializeField] private Sprite[] themeGlyphs = new Sprite[0];
+        /// <summary>Building ids not counted as the player's buildings (roads, fences, moats, bridges, decor pieces).</summary>
+        [SerializeField] private string[] uncountedBuildings = new string[0];
+
         private MenuRowLook _look;
 
         private static readonly Color NormalRowColor = UiTheme.RowNormal;
@@ -82,12 +90,14 @@ namespace CityBuilder.UI
 
         private void CreateRow(SaveSlotInfo info)
         {
+            var data = SaveSystem.Load(info.Name);
+            var badge = themeBadgeTemplate != null && data != null;
             var rowGO = new GameObject($"Save_{info.Name}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
             rowGO.transform.SetParent(listContent, false);
 
             var layoutElement = rowGO.GetComponent<LayoutElement>();
-            layoutElement.preferredHeight = 96f;
-            layoutElement.minHeight = 96f;
+            layoutElement.preferredHeight = 120f;
+            layoutElement.minHeight = 120f;
 
             var image = rowGO.GetComponent<Image>();
             image.sprite = rowSprite;
@@ -95,24 +105,30 @@ namespace CityBuilder.UI
             image.color = NormalRowColor;
             if (_look != null) _look.Style(image, false);
 
-            var textGO = new GameObject("Label", typeof(RectTransform), typeof(Text));
-            textGO.transform.SetParent(rowGO.transform, false);
-            var textRect = textGO.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(28f, 6f);
-            textRect.offsetMax = new Vector2(-28f, -6f);
+            var left = 28f;
+            if (badge)
+            {
+                var round = Instantiate(themeBadgeTemplate, rowGO.transform, false);
+                round.name = "Theme";
+                round.SetActive(true);
+                var rect = (RectTransform)round.transform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
+                rect.anchoredPosition = new Vector2(70f, 0f);
+                var icon = round.transform.Find("Icon");
+                var glyph = ThemeGlyph(data.season);
+                if (icon != null && glyph != null) icon.GetComponent<Image>().sprite = glyph;
+                left = 130f;
+            }
 
-            var text = textGO.GetComponent<Text>();
-            text.font = UiTheme.Regular;
-            text.fontSize = 24;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.color = _look != null ? _look.Ink : UiTheme.Ink;
+            var ink = _look != null ? _look.Ink : UiTheme.Ink;
             var localTime = info.LastModifiedUtc.ToLocalTime();
-            var mapExists = MapStillExists(info.Name);
-            text.text = mapExists
-                ? $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm}"
-                : $"{DisplayName(info.Name)}\n{localTime:yyyy-MM-dd HH:mm} \u00b7 {Localization.Get("#load_map_removed")}";
+            var mapExists = MapStillExists(data);
+            var title = Line(rowGO.transform, "Name", left, 0.5f, 1f, UiTheme.Bold, 28, ink);
+            title.text = $"{DisplayName(info.Name)}   <size=22>{localTime:yyyy-MM-dd HH:mm}</size>";
+            var details = Line(rowGO.transform, "Details", left, 0f, 0.5f, UiTheme.Regular, 24, ink);
+            details.text = data == null ? string.Empty
+                : mapExists ? Details(data)
+                : Localization.Get("#load_map_removed");
 
             var button = rowGO.GetComponent<Button>();
             if (mapExists)
@@ -125,17 +141,67 @@ namespace CityBuilder.UI
                 // A save on a map that is no longer in the game (Maps 1 and 2 went on 2026-10-20)
                 // is shown, so the player knows where it went, but cannot be picked.
                 button.interactable = false;
-                var ink = _look != null ? _look.Ink : UiTheme.Ink;
-                text.color = new Color(ink.r, ink.g, ink.b, 0.45f);
+                var faded = new Color(ink.r, ink.g, ink.b, 0.45f);
+                title.color = faded;
+                details.color = faded;
             }
 
             _rows.Add((info.Name, image));
         }
 
-        /// <summary>Whether the map this save was made on is still in the game. A save that names no map, or one of the old PNG maps, counts as loadable.</summary>
-        private static bool MapStillExists(string saveName)
+        private static Text Line(Transform row, string name, float left, float bottom, float top, Font font, int size, Color ink)
         {
-            var mapId = SaveSystem.Load(saveName)?.mapId;
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(row, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, bottom);
+            rect.anchorMax = new Vector2(1f, top);
+            rect.offsetMin = new Vector2(left, top > 0.9f ? 0f : 8f);
+            rect.offsetMax = new Vector2(-28f, top > 0.9f ? -8f : 0f);
+            var text = go.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = size;
+            text.supportRichText = true;
+            text.alignment = TextAnchor.MiddleLeft;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.color = ink;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        /// <summary>«День 42 · Жителей 86 · Зданий 31 · Код карты 3-83115» (no code on a hand-made map).</summary>
+        private string Details(GameSaveData data)
+        {
+            var line = Localization.Format("#load_row_stats", data.currentDay, data.population, CountBuildings(data));
+            var code = Maps.Archipelago.ArchipelagoMapId.Code(data.mapId);
+            return string.IsNullOrEmpty(code) ? line : line + "  ·  " + Localization.Format("#load_row_code", code);
+        }
+
+        private int CountBuildings(GameSaveData data)
+        {
+            var count = 0;
+            foreach (var entry in data.buildings)
+            {
+                if (entry != null && System.Array.IndexOf(uncountedBuildings, entry.buildingName) < 0) count++;
+            }
+            return count;
+        }
+
+        /// <summary>The save's season as a theme glyph: the first theme dressed in it (winter, not the New Year); -1 = an old save = summer.</summary>
+        private Sprite ThemeGlyph(int season)
+        {
+            var wanted = season < 0 ? MapSeason.Summer : (MapSeason)season;
+            for (var i = 0; i < MapThemes.All.Length && i < themeGlyphs.Length; i++)
+            {
+                if (MapThemes.SeasonOf(MapThemes.All[i]) == wanted) return themeGlyphs[i];
+            }
+            return null;
+        }
+
+        /// <summary>Whether the map this save was made on is still in the game. A save that names no map, or one of the old PNG maps, counts as loadable.</summary>
+        private static bool MapStillExists(GameSaveData data)
+        {
+            var mapId = data?.mapId;
             return string.IsNullOrEmpty(mapId) || MeshMapCatalog.GetById(mapId) != null || MapCatalog.GetById(mapId) != null;
         }
 

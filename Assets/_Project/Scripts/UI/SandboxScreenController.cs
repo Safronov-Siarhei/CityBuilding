@@ -8,7 +8,9 @@ using UnityEngine.UI;
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The sandbox's screen in the main menu (the user's sketch, 2026-10-25): a card per map
+    /// The sandbox's screen in the main menu (the user's sketch, 2026-10-25; since 2026-11-10 the
+    /// user's pick «Знамя и доска»: the sandbox banner on the left, a board with theme tabs, the map,
+    /// the map code, Saves and Start on the right): a card per map
     /// (MapSelector.PlayerMapIds) with its picture in the theme picked below, the picked card lit;
     /// a map that does not come in the theme is not shown; «Начать» starts a new game on the picked
     /// map, dressed in the theme's season.
@@ -22,6 +24,8 @@ namespace CityBuilder.UI
         // the archipelago's code (the user, 2026-10-28): empty starts a random map, a friend's code their map
         [SerializeField] private InputField mapCode;
         [SerializeField] private Text mapCodeError;
+        /// <summary>The round arrows by the code (2026-11-10): writes a fresh random code in, so the map's code is seen before the game.</summary>
+        [SerializeField] private Button randomCodeButton;
 
         [Header("A card per map, in MapSelector.PlayerMapIds order")]
         [SerializeField] private string[] mapIds = new string[0];
@@ -46,6 +50,7 @@ namespace CityBuilder.UI
             }
             if (themes != null) themes.Changed += _ => Show();
             if (startButton != null) startButton.onClick.AddListener(StartGame);
+            if (randomCodeButton != null) randomCodeButton.onClick.AddListener(RandomCode);
         }
 
         /// <summary>Called as the screen comes in: the newest map picked unless the player picked another.</summary>
@@ -59,6 +64,13 @@ namespace CityBuilder.UI
         {
             _picked = mapId;
             Show();
+        }
+
+        public void RandomCode()
+        {
+            if (mapCode == null) return;
+            mapCode.text = Maps.Archipelago.ArchipelagoMapId.Code(Maps.Archipelago.ArchipelagoMapId.NewRandom());
+            if (mapCodeError != null) mapCodeError.gameObject.SetActive(false);
         }
 
         public void StartGame()
