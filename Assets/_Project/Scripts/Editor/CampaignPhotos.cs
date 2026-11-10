@@ -38,6 +38,7 @@ namespace CityBuilder.EditorTools
             // the first render skipped the ground while its shader still compiled in the background
             // (the first view showed the sky's lower half instead of the grass): compile up front
             // and throw a warm-up frame away
+            var wasAsync = EditorSettings.asyncShaderCompilation;   // put back at the end: it is a project setting
             EditorSettings.asyncShaderCompilation = false;
             cam.targetTexture = rt;
             cam.Render();
@@ -91,6 +92,7 @@ namespace CityBuilder.EditorTools
                 RenderTexture.active = null;
                 cam.targetTexture = null;
             }
+            EditorSettings.asyncShaderCompilation = wasAsync;
         }
 
         /// <summary>Puts a figure in a clip's pose at a time by reading the clip's curves straight
