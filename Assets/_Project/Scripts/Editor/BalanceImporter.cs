@@ -320,16 +320,18 @@ namespace CityBuilder.EditorTools
                 return;
             }
 
-            var downloaded = 0;
-            downloaded += TryDownload(settings.unitsCsvUrl, UnitsCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.economyCsvUrl, EconomyCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.buildingsCsvUrl, BuildingsCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.recipesCsvUrl, RecipesCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.localizationCsvUrl, LocalizationCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.invasionCsvUrl, InvasionCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.sandboxCsvUrl, SandboxCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.botWavesCsvUrl, BotWavesCsvPath) ? 1 : 0;
-            downloaded += TryDownload(settings.tutorialCsvUrl, TutorialCsvPath) ? 1 : 0;
+            var downloaded = DownloadAll(new[]
+            {
+                (settings.unitsCsvUrl, UnitsCsvPath),
+                (settings.economyCsvUrl, EconomyCsvPath),
+                (settings.buildingsCsvUrl, BuildingsCsvPath),
+                (settings.recipesCsvUrl, RecipesCsvPath),
+                (settings.localizationCsvUrl, LocalizationCsvPath),
+                (settings.invasionCsvUrl, InvasionCsvPath),
+                (settings.sandboxCsvUrl, SandboxCsvPath),
+                (settings.botWavesCsvUrl, BotWavesCsvPath),
+                (settings.tutorialCsvUrl, TutorialCsvPath),
+            });
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -342,34 +344,69 @@ namespace CityBuilder.EditorTools
             EditorUtility.DisplayDialog("Баланс", $"Обновлено вкладок: {downloaded}. Конфиг пересобран.", "OK");
         }
 
-        private static bool TryDownload(string url, string destinationPath)
-        {
-            if (string.IsNullOrWhiteSpace(url)) return false;
+        // a published tab answers in a second or two; a request that hangs gives up rather than the Editor
+        private const int DownloadTimeoutSeconds = 30;
 
+        /// <summary>
+        /// Downloads every tab at once with UnityWebRequest, each with a timeout, behind a cancelable
+        /// progress bar (2026-11-10: the old one-by-one WebClient had no timeout and could hold the
+        /// Editor for minutes -- Mono's WebClient stalls on proxy detection / TLS). Returns how many
+        /// tabs were written; a failed tab leaves its CSV untouched.
+        /// </summary>
+        private static int DownloadAll((string url, string path)[] tabs)
+        {
+            var requests = new List<(UnityEngine.Networking.UnityWebRequest request, string url, string path)>();
+            foreach (var (url, path) in tabs)
+            {
+                if (string.IsNullOrWhiteSpace(url)) continue;
+                var request = UnityEngine.Networking.UnityWebRequest.Get(url.Trim());
+                request.timeout = DownloadTimeoutSeconds;
+                request.SendWebRequest();
+                requests.Add((request, url, path));
+            }
+
+            var written = 0;
             try
             {
-                // Editor-only and deliberately synchronous: this is a menu item a human just
-                // clicked, and a blocking call keeps it far simpler than an editor coroutine.
-                using (var client = new WebClient { Encoding = Encoding.UTF8 })
+                while (true)
                 {
-                    var csv = client.DownloadString(url);
+                    var done = 0;
+                    foreach (var r in requests) done += r.request.isDone ? 1 : 0;
+                    if (done == requests.Count) break;
+                    if (EditorUtility.DisplayCancelableProgressBar("Баланс", $"Скачиваю вкладки таблицы: {done} из {requests.Count}", requests.Count > 0 ? done / (float)requests.Count : 1f))
+                    {
+                        Debug.LogWarning("BalanceImporter: pull cancelled -- CSVs not yet downloaded are left as they were.");
+                        foreach (var r in requests) if (!r.request.isDone) r.request.Abort();
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(50);
+                }
+
+                foreach (var (request, url, path) in requests)
+                {
+                    if (!request.isDone || request.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                    {
+                        Debug.LogError($"BalanceImporter: could not download {url} -- {request.error}");
+                        continue;
+                    }
+                    var csv = request.downloadHandler.text;
                     if (string.IsNullOrWhiteSpace(csv) || csv.TrimStart().StartsWith("<", StringComparison.Ordinal))
                     {
                         // A published CSV link returns CSV; HTML means the link points at the
                         // document's viewer instead, or the publication was revoked.
                         Debug.LogError($"BalanceImporter: {url} returned HTML rather than CSV. Re-publish that tab as CSV and copy the link it gives you.");
-                        return false;
+                        continue;
                     }
-
-                    File.WriteAllText(destinationPath, csv, new UTF8Encoding(false));
-                    return true;
+                    File.WriteAllText(path, csv, new UTF8Encoding(false));
+                    written++;
                 }
             }
-            catch (Exception e)
+            finally
             {
-                Debug.LogError($"BalanceImporter: could not download {url} -- {e.Message}");
-                return false;
+                EditorUtility.ClearProgressBar();
+                foreach (var r in requests) r.request.Dispose();
             }
+            return written;
         }
 
         private static BalanceSheetSettings LoadOrCreateSettings()

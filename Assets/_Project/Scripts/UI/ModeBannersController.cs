@@ -22,9 +22,8 @@ namespace CityBuilder.UI
         private const float Ease = 12f;
         private const float UnrollSeconds = 0.38f;
         private const float UnrollStagger = 0.07f;
-        // the live line's width on the cloth and the room the crystal takes off its right
-        private const float LineWidth = 190f;
-        private const float RewardIconRoom = 48f;
+        // the gap between the reward's number and its crystal
+        private const float RewardIconGap = 6f;
 
         [SerializeField] private MainMenuController menu;
         [SerializeField] private CanvasGroup screen;
@@ -35,6 +34,8 @@ namespace CityBuilder.UI
         [SerializeField] private Image playButton;
         /// <summary>The upgrade crystal after the tutorial's reward number (the user, 2026-11-10: an icon, not the word); hidden once rewarded.</summary>
         [SerializeField] private Image rewardIcon;
+        /// <summary>The reward's number, on its own line under «Награда:», the crystal right of it, the pair centred (the user, 2026-11-10).</summary>
+        [SerializeField] private Text rewardAmount;
 
         private static readonly string[] MottoKeys = { "#banner_motto_tutorial", "#banner_motto_sandbox", "#banner_motto_invasion", "#banner_motto_campaign" };
         private static readonly Color Dimmed = new Color(0.72f, 0.72f, 0.72f, 1f);
@@ -132,19 +133,8 @@ namespace CityBuilder.UI
             ShowMotto();
             var config = BalanceConfig.Instance;
             var rewarded = PlayerPrefs.GetInt("tutorial.rewarded", 0) != 0;
-            SetLine(Tutorial, rewarded
-                ? Localization.Get("#banner_tutorial_done")
-                : Localization.Format("#banner_reward", config != null ? config.TutorialRewardCrystals : 0));
-            // with the icon the number stands left of it; «Пройдено» alone is centred
-            if (rewardIcon != null) rewardIcon.gameObject.SetActive(!rewarded);
-            if (lines.Length > Tutorial && lines[Tutorial] != null)
-            {
-                var line = lines[Tutorial];
-                line.alignment = rewarded || rewardIcon == null ? TextAnchor.MiddleCenter : TextAnchor.MiddleRight;
-                var rect = line.rectTransform;
-                rect.anchoredPosition = new Vector2(rewarded || rewardIcon == null ? 0f : -RewardIconRoom * 0.5f, rect.anchoredPosition.y);
-                rect.sizeDelta = new Vector2(LineWidth - (rewarded || rewardIcon == null ? 0f : RewardIconRoom), rect.sizeDelta.y);
-            }
+            SetLine(Tutorial, Localization.Get(rewarded ? "#banner_tutorial_done" : "#banner_reward"));
+            ShowReward(rewarded ? -1 : config != null ? config.TutorialRewardCrystals : 0);
             var saves = SaveSystem.ListSaves().Count;
             SetLine(Sandbox, saves > 0 ? Localization.Format("#mode_saves_count", saves) : Localization.Get("#banner_no_saves"));
             var counted = config != null ? config.InvasionRunsCountedPerDay : 5;
@@ -157,6 +147,27 @@ namespace CityBuilder.UI
         private void ShowMotto()
         {
             if (motto != null) motto.text = Localization.Get(MottoKeys[Mathf.Clamp(_picked, 0, MottoKeys.Length - 1)]);
+        }
+
+        /// <summary>«25» and the crystal on the line under «Награда:», centred as a pair; amount below 0 hides both.</summary>
+        private void ShowReward(int amount)
+        {
+            var shown = amount >= 0;
+            if (rewardAmount != null) rewardAmount.gameObject.SetActive(shown);
+            if (rewardIcon != null) rewardIcon.gameObject.SetActive(shown);
+            if (!shown || rewardAmount == null) return;
+            rewardAmount.text = amount.ToString();
+            var number = rewardAmount.preferredWidth;
+            var icon = rewardIcon != null ? rewardIcon.rectTransform.sizeDelta.x + RewardIconGap : 0f;
+            // the number's centre and the crystal's, so number + gap + crystal sits centred on the cloth
+            var left = -(number + icon) * 0.5f;
+            var amountRect = rewardAmount.rectTransform;
+            amountRect.anchoredPosition = new Vector2(left + number * 0.5f, amountRect.anchoredPosition.y);
+            if (rewardIcon != null)
+            {
+                var iconRect = rewardIcon.rectTransform;
+                iconRect.anchoredPosition = new Vector2(left + number + RewardIconGap + iconRect.sizeDelta.x * 0.5f, iconRect.anchoredPosition.y);
+            }
         }
 
         private void SetLine(int index, string text)

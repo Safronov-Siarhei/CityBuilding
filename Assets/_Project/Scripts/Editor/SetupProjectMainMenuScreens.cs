@@ -551,6 +551,7 @@ namespace CityBuilder.EditorTools
             var lines = new Object[names.Length];
             var bannerControl = modes.gameObject.AddComponent<ModeBannersController>();
             Image rewardIcon = null;
+            Text rewardAmount = null;
             // a banner sprite is 380 x 660; on screen 300 wide
             const float width = 300f;
             const float k = width / 380f;
@@ -578,12 +579,20 @@ namespace CityBuilder.EditorTools
                 var line = BannerLine(cloth.transform, "Line", -392f * k, 26, true);
                 if (i == 0)
                 {
-                    // the tutorial's reward: «Награда: 25» and the upgrade crystal (the user, 2026-11-10)
+                    // the tutorial's reward (the user, 2026-11-10): «Награда:» centred, under it «25» and the
+                    // upgrade crystal, centred as a pair (ModeBannersController.ShowReward places them)
+                    var lineRect = line.rectTransform;
+                    lineRect.anchoredPosition = new Vector2(0f, -392f * k + 16f);
+                    var amount = BannerLine(cloth.transform, "RewardAmount", -392f * k - 22f, 26, true);
+                    amount.rectTransform.sizeDelta = new Vector2(120f, 40f);
+                    amount.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    amount.resizeTextForBestFit = false;
+                    rewardAmount = amount;
                     var crystal = CreateImage(cloth.transform, "RewardCrystal", Color.white);
                     crystal.sprite = IconSprite("Res_UpgradeCrystal");
                     crystal.preserveAspect = true;
                     crystal.raycastTarget = false;
-                    Anchor(crystal.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(95f - 24f, -392f * k), new Vector2(40f, 40f));
+                    Anchor(crystal.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(30f, -392f * k - 22f), new Vector2(36f, 36f));
                     rewardIcon = crystal;
                 }
                 banners[i] = rect;
@@ -607,6 +616,7 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("cloths"), cloths);
             so.FindProperty("motto").objectReferenceValue = motto;
             so.FindProperty("rewardIcon").objectReferenceValue = rewardIcon;
+            so.FindProperty("rewardAmount").objectReferenceValue = rewardAmount;
             WriteArray(so.FindProperty("lines"), lines);
             so.ApplyModifiedPropertiesWithoutUndo();
         }

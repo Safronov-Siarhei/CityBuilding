@@ -16,6 +16,9 @@
 - **Uploading (the user's question, 2026-10-23):** Unity → CityBuilder → Balance → Pull From Google
   Sheets downloads every published tab into the CSVs and rebuilds both configs; the generated assets
   (BuildingData) need a SetupProject run for the SANDBOX's building numbers, the run's are applied live.
+  Since 2026-11-10 it downloads all tabs AT ONCE with UnityWebRequest, 30 s timeout each, behind a
+  cancelable progress bar (`BalanceImporter.DownloadAll`). TRAP: the old one-by-one WebClient had no
+  timeout and froze the Editor for 4+ minutes (Mono WebClient stalls; the links themselves answer in 1-2 s).
 - Chain: Google Sheet `CityBuilding_Balance` (doc `1eroe1LMQCrpFtP4se7Oae4pGv-aOrHiqYAMdWKxxook`) →
   committed `Assets/_Project/Balance/{units,economy,buildings,recipes,localization}.csv` →
   `Editor/BalanceImporter.cs` (run first thing by `SetupProject.Run`) → `Resources/BalanceConfig.asset`

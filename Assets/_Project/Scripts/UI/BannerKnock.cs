@@ -6,8 +6,10 @@ namespace CityBuilder.UI
     /// <summary>
     /// A banner that swings when tapped, like a cloth struck on its perch (the user, 2026-11-10: the
     /// sandbox screen's banner, a small touch). The swing is a damped wobble about the pivot (the
-    /// perch, top centre); each tap adds to it, swinging away from the side that was hit. It runs only
-    /// while it moves and allocates nothing.
+    /// perch, top centre); each tap adds to it, swinging away from the side that was hit. It allocates
+    /// nothing and its Update returns at once while the banner hangs still.
+    /// TRAP: the component must stay ENABLED -- the EventSystem sends no clicks to a disabled one (the
+    /// first version switched itself off at rest and never swung).
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public class BannerKnock : MonoBehaviour, IPointerClickHandler
@@ -22,12 +24,9 @@ namespace CityBuilder.UI
         private RectTransform _rect;
         private float _amplitude;
         private float _time;
+        private bool _swinging;
 
-        private void Awake()
-        {
-            _rect = (RectTransform)transform;
-            enabled = false;
-        }
+        private void Awake() => _rect = (RectTransform)transform;
 
         public void OnPointerClick(PointerEventData eventData)
         {
@@ -42,28 +41,29 @@ namespace CityBuilder.UI
 
         public void Knock(float side)
         {
-            var current = Current();
-            _amplitude = Mathf.Clamp(current + side * KickDegrees, -MaxDegrees, MaxDegrees);
+            _amplitude = Mathf.Clamp(Current() + side * KickDegrees, -MaxDegrees, MaxDegrees);
             _time = 0f;
-            enabled = true;
+            _swinging = true;
         }
 
-        private float Current() => enabled ? _amplitude * Mathf.Exp(-Damping * _time) * Mathf.Cos(_time * Frequency * Mathf.PI * 2f) : 0f;
+        private float Current() => _swinging ? _amplitude * Mathf.Exp(-Damping * _time) * Mathf.Cos(_time * Frequency * Mathf.PI * 2f) : 0f;
 
         private void Update()
         {
+            if (!_swinging) return;
             _time += Time.unscaledDeltaTime;
             var angle = Current();
             if (Mathf.Abs(_amplitude) * Mathf.Exp(-Damping * _time) < RestDegrees)
             {
                 angle = 0f;
-                enabled = false;
+                _swinging = false;
             }
             _rect.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
         private void OnDisable()
         {
+            _swinging = false;
             if (_rect != null) _rect.localRotation = Quaternion.identity;
         }
     }

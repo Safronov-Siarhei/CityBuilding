@@ -44,7 +44,8 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   the HUD's Classic kit (same parchment/wood/gold/hard shadow; one art for all four looks). Round 2 (the user, 11-10): no side folds (read as seeing the banner from all sides), book pages joined at a spine, one tail line for hem/cloth/seam (seam parallel to the torn edge), tassels in the banner's colour under a cap of its perch metal. Name on
   the kit's plaque, a motto and a LIVE line on the cloth (tutorial reward or «Пройдено», saves count
   or «Новое королевство», invasion points today, «Скоро»; keys `#banner_*`). The tutorial's reward is
-  «Награда: 25» + the upgrade-crystal ICON (Res_UpgradeCrystal, `rewardIcon`; the user 11-10), centred «Пройдено» once rewarded. Tap = pick (bigger x1.14,
+  «Награда:» centred, under it «25» + the upgrade-crystal ICON centred as a pair (`rewardAmount` +
+  `rewardIcon`, placed by `ShowReward`; `#banner_reward` is now just «Награда:»; the user 11-10), centred «Пройдено» once rewarded. Tap = pick (bigger x1.14,
   sways more, others dimmed, remembered in PlayerPrefs `menu.mode`); tap the picked one or «Играть»
   (gold, bottom centre) = start; LONG PRESS (0.5 s, `UI/LongPress.cs`) = the mode's «!» words. They
   unroll from the perch on entry (staggered). `UI/ModeBannersController.cs`, built by
@@ -61,6 +62,8 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   «Сохранения» plaque (the corner Saves button is gone), gold «Начать». A theme a map lacks hides the
   map (New Year in the sandbox: no maps, Start off). The user saw it 2026-11-10; then: tapping the banner
   swings it like a struck cloth (`UI/BannerKnock`, damped wobble from the perch, away from the hit side).
+  TRAP (fixed 11-10): BannerKnock must stay enabled -- the EventSystem sends no clicks to a disabled
+  component; the first version switched itself off at rest and never swung.
 - sandbox map = INK CHART ON PARCHMENT (2026-11-10, the user picked concept 2 of three, RunLogs/concept_map_*.png):
   drawn LIVE from the code in the box (`UI/InkMapPainter`, 500 px = 1 px per cell: paper sea, wave
   strokes, two coast ripple lines, ink coastline, sand beaches, ink trees on forest, «^» on relief,
