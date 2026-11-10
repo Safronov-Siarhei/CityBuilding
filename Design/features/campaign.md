@@ -35,6 +35,10 @@
   - The ARCH pose is the custom property `arch`, a flattened 4x4 world matrix; `set_arch(stones, swirl, on)` switches poses. The cutscene flies each stone between the two poses; how they fly is for the storyboard.
   - `CinePortalSwirl`, hidden in the ruin pose, fills the opening: a door shape, purple ovals, a white heart and swirling dashes.
   - Render: `portal.py -- render <out>`.
+  - Round 2: the user found the stones «слишком ровные» and disliked the green squares.
+    - Every stone is now lofted from a worn front outline to a differently worn, smaller back one: corners knocked off unevenly, sides leaning, no seam.
+    - All moss (squares) is gone; small rubble chips lie on the platform.
+    - Pillar blocks sway slightly, and ruin stones are placed so none sits inside another.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided

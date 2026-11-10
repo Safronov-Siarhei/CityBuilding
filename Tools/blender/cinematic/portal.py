@@ -50,29 +50,61 @@ RUNE_SHAPES = [
 ]
 
 
-def stone_mesh(name, size, rune, wedge=None, moss=True, seed=0):
-    """One block centred on its origin, its rune on its front (-y) face; `wedge` = (inner, outer)
-    half-widths for an arch block (narrower inside). Chipped corners, a moss cap."""
+def rough(pts, rnd, cut):
+    """A convex outline with every corner knocked off by a different amount: weathered, not cut."""
+    out = []
+    n = len(pts)
+    for i in range(n):
+        p, prev, nxt = Vector(pts[i]), Vector(pts[i - 1]), Vector(pts[(i + 1) % n])
+        out.append(tuple(p + (prev - p).normalized() * rnd.uniform(cut * 0.4, cut)))
+        out.append(tuple(p + (nxt - p).normalized() * rnd.uniform(cut * 0.4, cut)))
+    return out
+
+
+def stone_mesh(name, size, rune, wedge=None, moss=False, seed=0):
+    """One old block centred on its origin, its rune on its front (-y) face; `wedge` = (inner, outer)
+    half-widths for an arch block (narrower inside). Weathered: every corner knocked off unevenly,
+    the front and back halves worn differently, so its edges step and no face is a clean box."""
     b = Builder()
     sx, sy, sz = size
-    rnd = random.Random(seed)
+    rnd = random.Random(seed * 31 + 5)
     if wedge:
         wi, wo = wedge
-        pts = [(-wi, -sz / 2), (wi, -sz / 2), (wo, sz / 2), (-wo, sz / 2)]
-        b.prism(pts, (0, sy / 2, 0), (1, 0, 0), (0, 0, 1), sy, STONE, bevel=0.012, back_cap=True)
+        outline = [(-wi, -sz / 2), (wi, -sz / 2), (wo, sz / 2), (-wo, sz / 2)]
     else:
-        b.obox((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), sx / 2, sy / 2, sz / 2, STONE, bevel=0.018, skip=())
+        outline = [(-sx / 2, -sz / 2), (sx / 2, -sz / 2), (sx / 2, sz / 2), (-sx / 2, sz / 2)]
+    # one body lofted from a worn front outline to a differently worn, slightly smaller back one:
+    # the sides lean and twist a little, like a stone weathered for centuries, with no seam
+    front = rough(outline, rnd, 0.07)
+    shrink = rnd.uniform(0.88, 0.95)
+    back = [(x * shrink + rnd.uniform(-0.012, 0.012), z * shrink + rnd.uniform(-0.012, 0.012))
+            for x, z in rough(outline, rnd, 0.09)]
+    bm = b.bm
+    fv = [bm.verts.new((x, -sy * 0.52, z)) for x, z in front]
+    bv = [bm.verts.new((x, sy * 0.48, z)) for x, z in back]
+    faces = [b._face(fv, STONE), b._face(list(reversed(bv)), STONE)]
+    if faces[0].normal.y > 0:
+        for f in faces:
+            f.normal_flip()
+    n = len(fv)
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append(b._face([fv[j], fv[i], bv[i], bv[j]], STONE))
+    if faces[-1].calc_center_median().length and faces[-1].normal.dot(faces[-1].calc_center_median()) < 0:
+        for f in faces[2:]:
+            f.normal_flip()
+    b._bevel(faces, 0.01)
+    # a softened rim round the front face: the face sits a hair proud of the worn edge
+    face = [(x * 0.86, z * 0.86) for x, z in rough(outline, rnd, 0.05)]
+    b.prism(face, (0, -sy * 0.52 + 0.001, 0), (1, 0, 0), (0, 0, 1), 0.012, STONE, bevel=0.006, back_cap=True)
     # the rune, cut in blue
     for (a, c) in RUNE_SHAPES[rune % len(RUNE_SHAPES)]:
         a, c = Vector((a[0], 0, a[1])), Vector((c[0], 0, c[1]))
         mid = (a + c) / 2
         d = c - a
         ax = d.normalized()
-        b.obox((mid.x, -sy / 2 - 0.004, mid.z), ax, (0, 1, 0), ax.cross(Vector((0, 1, 0))) * -1,
+        b.obox((mid.x, -sy * 0.52 - 0.013, mid.z), ax, (0, 1, 0), ax.cross(Vector((0, 1, 0))) * -1,
                d.length / 2 + 0.006, 0.006, 0.008, RUNE, skip=())
-    if moss and rnd.random() < 0.55:
-        b.obox((rnd.uniform(-0.05, 0.05), rnd.uniform(0.0, 0.04), sz / 2 + 0.004), (1, 0, 0), (0, 1, 0), (0, 0, 1),
-               sx * 0.18, sy * 0.2, 0.006, MOSS_DARK if rnd.random() < 0.7 else MOSS, bevel=0.004, skip=())
     me = b.to_mesh(name)
     return me
 
@@ -84,7 +116,8 @@ def arch_poses():
         x = k * (HALF_GAP + BLOCK[0] / 2)
         for i in range(PILLAR_BLOCKS):
             z = BLOCK[2] * (i + 0.5)
-            out.append((f"Pillar{side}{i}", BLOCK, None, Matrix.Translation((x, 0, z))))
+            sway = Matrix.Rotation(random.Random(i * 5 + k).uniform(-0.035, 0.035), 4, 'Z')   # laid by hand, not by rule
+            out.append((f"Pillar{side}{i}", BLOCK, None, Matrix.Translation((x, 0, z)) @ sway))
     for i in range(ARCH_BLOCKS):
         a0 = math.pi * i / ARCH_BLOCKS
         a1 = math.pi * (i + 1) / ARCH_BLOCKS
@@ -102,16 +135,27 @@ def arch_poses():
     return out
 
 
+PLACED = []
+
+
 def ruin_pose(i, name, size, arch):
     """Where a stone lies in the ruin: the two bottom pillar blocks stand in place; the others
     tumbled outward round the platform, half sunk, tipped, one leaning on another."""
     if name in ("PillarL0", "PillarR0"):
+        PLACED.append(arch.to_translation() * Vector((1, 1, 0)))
         return arch @ Matrix.Translation((0, 0, -0.04))                     # sunk a little, still standing
     rnd = random.Random(i * 7 + 3)
     a = (i * 2.399 + 0.6) % (2 * math.pi)                                    # golden-angle spread round the ring
     if abs(math.sin(a)) < 0.25 and math.cos(a) > 0:                          # keep the front of the gap clear for the children
         a += 0.6
-    r = rnd.uniform(0.75, 1.15)
+    for _ in range(60):                                                      # no stone inside another
+        aa = a + rnd.uniform(-0.3, 0.3)
+        r = rnd.uniform(0.6, 1.15)
+        spot = Vector((r * math.cos(aa), r * math.sin(aa), 0))
+        if all((spot - q).length > 0.36 for q in PLACED):
+            break
+    a = aa
+    PLACED.append(spot)
     face_out = Matrix.Rotation(a + math.pi / 2, 4, 'Z')                      # the rune face (-y) turned outward
     kind = i % 3
     if kind == 0:                                                            # still upright, leaning
@@ -142,10 +186,15 @@ def platform():
         b.rod((0.7 * math.cos(a0), 0.7 * math.sin(a0), 0.081), (0.7 * math.cos(a1), 0.7 * math.sin(a1), 0.081), 0.006, 'roof_slate')
     b.cylinder(0, 0, 0.08, 0.083, 0.36, 'roof_slate', sides=12)
     b.cylinder(0, 0, 0.083, 0.085, 0.33, 'cobble', sides=12)
-    for i in range(10):                                                       # moss creeping in
+    for i in range(12):                                                       # rubble: chips knocked off the stones
         a = rnd.uniform(0, 2 * math.pi)
         r = rnd.uniform(0.5, 1.35)
-        b.blob(r * math.cos(a), r * math.sin(a), 0.05, rnd.uniform(0.05, 0.09), 0.05, MOSS if i % 2 else MOSS_DARK, sides=5)
+        h = rnd.uniform(0.025, 0.05)
+        pts = [(h * math.cos(t), h * math.sin(t)) for t in (2 * math.pi * k / 4 + rnd.uniform(-0.3, 0.3) for k in range(4))]
+        rot = rnd.uniform(0, math.pi)
+        b.prism(rough(pts, rnd, h * 0.4), (r * math.cos(a), r * math.sin(a), 0.08),
+                (math.cos(rot), math.sin(rot), 0), (-math.sin(rot), math.cos(rot), 0), rnd.uniform(0.02, 0.04),
+                STONE if i % 3 else 'stone_mid', bevel=0.004, back_cap=True)
     for i in range(5):                                                        # short zigzag cracks, spread round
         a = 2 * math.pi * i / 5 + rnd.uniform(-0.3, 0.3)
         r = rnd.uniform(0.45, 1.0)
@@ -202,6 +251,7 @@ def make(origin=(0, 0, 0)):
     plat_b = platform()
     plat = fg.install_static("CinePortalSquare", plat_b, scale=1.0, location=origin)
     stones = []
+    PLACED.clear()
     for i, (name, size, wedge, arch) in enumerate(arch_poses()):
         me = stone_mesh("CinePortalStone_" + name, size, i, wedge, moss=True, seed=i)
         me.materials.append(mat)
@@ -232,7 +282,7 @@ def render(out):
     import ardan
     os.makedirs(out, exist_ok=True)
     plat, stones, sw = make()
-    kids = [townsfolk.make("CineBoy", (0.35, -0.62, 0.08)), townsfolk.make("CineGirl", (-0.2, -0.75, 0.08))]
+    kids = [townsfolk.make("CineBoy", (0.05, -0.2, 0.08)), townsfolk.make("CineGirl", (-0.2, -0.75, 0.08))]
     old = elder.make((0.9, -1.2, 0))
     hero = ardan.make(Vector((-1.1, -1.8, 0)))
     champ = orcs_cast.make("CineOrcChampion", (0.0, -0.55, 0.08))
