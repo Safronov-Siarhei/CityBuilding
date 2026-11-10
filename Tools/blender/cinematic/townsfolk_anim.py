@@ -259,17 +259,32 @@ def key_cart(body, wheels, prig, frames, holding):
 
 # ---------------------------------------------------------------- the stalls
 
+CLOTH_AT = Vector((0.85, 0.1 - village.STALL['dep'], 0)) * S     # the cloth stall's front-bottom edge
+
+
 def stall_pieces():
     b = Builder()
     village.stall(b, 0.0, 0.0, ('roof_red', 'plaster_white'), 'fruit')
     fruit_st = fg.install_static("CineStallFruit", b)
+    cy = village.STALL['dep']                       # built with its front-bottom edge on the origin: it falls about it
     c = Builder()
-    village.stall(c, 0.0, -0.2, ('roof_blue', 'plaster_yellow'), 'cloth')     # its back edge on the origin: it topples about it
-    cloth = fg.install_static("CineStallCloth", c, location=(0.85 * S, (0.1 + 0.2) * S, 0))
+    village.stall(c, 0.0, cy, ('roof_blue', 'plaster_yellow'), 'cloth', parts=('frame',))
+    cloth = fg.install_static("CineStallCloth", c, location=tuple(CLOTH_AT))
+    g = Builder()
+    village.stall(g, 0.0, cy, ('roof_blue', 'plaster_yellow'), 'cloth', parts=('ground',))
+    ground = fg.install_static("CineStallClothGround", g, location=tuple(CLOTH_AT))
+    bolts = []
+    for i in range(8):
+        bb = Builder()
+        village.stall_goods(bb, 0.0, cy, 'cloth', only=i)
+        centre = sum((v.co for v in bb.bm.verts), Vector()) / len(bb.bm.verts)
+        for v in bb.bm.verts:
+            v.co -= centre
+        bolts.append((fg.install_static("CineBolt%d" % i, bb, location=tuple(CLOTH_AT + centre * S)), centre * S))
     f = Builder()
     f.ball(0, 0, 0, 0.018, 0.032, 'roof_red', sides=6)
     fruit = fg.install_static("CineFruit", f, location=tuple(FRUIT))
-    return fruit_st, cloth, fruit
+    return fruit_st, cloth, ground, bolts, fruit
 
 
 def key_fruit(fruit, wrig, frames):
@@ -287,15 +302,92 @@ def key_fruit(fruit, wrig, frames):
         fruit.keyframe_insert("location", frame=f + 1)
 
 
-def key_topple(cloth, frames):
+FALL = 0.5               # seconds from the yank to the awning hitting the street
+REST = 80.0              # degrees forward when it lies on its awning
+
+
+def topple_angle(t):
+    """Forward about its front-bottom edge: slow to start, falling ever faster, a jolt on landing."""
+    u = t - TIP
+    if u <= 0:
+        return 0.0
+    if u < FALL:
+        return REST * (u / FALL) ** 2
+    v = u - FALL
+    return REST - 7 * math.exp(-v * 8) * abs(math.sin(v * 22))
+
+
+def key_topple(cloth, bolts, frames):
+    """The frame falls into the street; the bolts ride the counter until it tilts past ~20 degrees,
+    then slide off and tumble down in front of it, rolling to a stop."""
+    rnd = __import__('random').Random(4)
+    flying = {}
     for f in range(frames):
         t = f / FPS
-        x = a2.ease(min(1.0, max(0.0, (t - TIP) / 0.5)))
-        ang = -82 * x * x
-        if t > TIP + 0.5:
-            ang += 6 * math.exp(-(t - TIP - 0.5) * 9) * abs(math.sin((t - TIP - 0.5) * 25))
+        ang = topple_angle(t)
+        rot = Matrix.Rotation(math.radians(ang), 4, 'X')
         cloth.rotation_euler = (math.radians(ang), 0, 0)
         cloth.keyframe_insert("rotation_euler", frame=f + 1)
+        for i, (ob, local) in enumerate(bolts):
+            if i not in flying and ang < 18 + 4 * (i % 4):
+                m = Matrix.Translation(CLOTH_AT) @ rot @ Matrix.Translation(local)
+            else:
+                if i not in flying:
+                    m0 = Matrix.Translation(CLOTH_AT) @ rot @ Matrix.Translation(local)
+                    vel = Vector((rnd.uniform(-0.2, 0.2), -rnd.uniform(0.5, 0.9), rnd.uniform(0.0, 0.3)))
+                    flying[i] = (t, m0, vel, rnd.uniform(4, 9))
+                t0, m0, vel, spin = flying[i]
+                dt = t - t0
+                p0 = m0.to_translation()
+                r = 0.028 * S
+                pos = p0 + vel * dt + Vector((0, 0, -0.5 * 3.3 * dt * dt))
+                roll = spin * dt
+                if pos.z < r:                       # landed: rolls on, slowing
+                    tl = (vel.z + math.sqrt(max(0.0, vel.z ** 2 + 2 * 3.3 * (p0.z - r)))) / 3.3
+                    land = p0 + vel * tl + Vector((0, 0, -0.5 * 3.3 * tl * tl))
+                    k = 1 - math.exp(-(dt - tl) * 4)
+                    pos = Vector((land.x + vel.x * 0.25 * k, land.y + vel.y * 0.25 * k, r))
+                    roll = spin * tl + 6 * k
+                m = Matrix.Translation(pos) @ Matrix.Rotation(-roll, 4, 'X') @ m0.to_3x3().to_4x4()
+            ob.matrix_world = m
+            ob.keyframe_insert("location", frame=f + 1)
+            ob.keyframe_insert("rotation_euler", frame=f + 1)
+
+
+# ---------------------------------------------------------------- the orc who knocks it over
+
+def orc_distance(t, sp, ramp=0.35):
+    u = t - ORC_WAIT
+    if u <= 0:
+        return 0.0
+    return sp * (u * u / (2 * ramp) if u < ramp else ramp / 2 + (u - ramp))
+
+
+def orc_time_at_x(x, sp):
+    t = 0.0
+    while ORC_FROM.x - orc_distance(t, sp) > x and t < PANIC:
+        t += 1 / FPS / 4
+    return t
+
+
+def orc_move(t, sp):
+    """Running through the market; as he passes the cloth stall his right hand hooks its counter
+    and wrenches it over behind him."""
+    d = orc_distance(t, sp)
+    pos = ORC_FROM + (ORC_TO - ORC_FROM).normalized() * d
+    q = oa.torch_run((d / (sp * a2.RUN_CYCLE)) % 1.0) if d > 0 else oa.crouch(0)
+    if d > 0 and d < sp * 0.35:
+        q = ka.mix_any(oa.crouch(0), q, a2.ease(d / (sp * 0.35 / 2)))
+    hook = a2.env(t, TIP - 0.3, TIP - 0.08) * (1 - a2.env(t, TIP + 0.1, TIP + 0.35))
+    if hook > 0.01:
+        sh = pos + Matrix.Rotation(-math.pi / 2, 3, 'Z') @ Vector((-0.16, -0.02, 0.37))
+        edge = Vector((pos.x + 0.05, CLOTH_AT.y + 0.03, village.STALL['C'] * S))
+        pull = a2.env(t, TIP - 0.05, TIP + 0.15)
+        target = edge + Vector((0.25 * pull, -0.25 * pull, -0.05 * pull))
+        q["aim.upper_arm.R"] = list((target - sh).normalized()) + [hook]
+        q["forearm.R"] = [-15 - 30 * pull, 0, 0]
+        q["chest"][2] += -18 * hook
+    return pos, -math.pi / 2 + 0.0, q
 
 
 # ---------------------------------------------------------------- render
@@ -336,13 +428,14 @@ def main():
     out = argv[1]
     what = argv[2] if len(argv) > 2 else "all"
     os.makedirs(out, exist_ok=True)
-    fruit_st, cloth, fruit = stall_pieces()
+    fruit_st, cloth, ground, bolts, fruit = stall_pieces()
     body, wheels = cart_pieces()
     rigs = {}
     for name in ("CineMerchant", "CinePeasantWoman", "CinePeasant"):
         rigs[name] = ka.rig_figure(tf.make(name), tf.FIGURES[name][1])
     orc = ka.rig_figure(oc.make("CineOrcTorch"), 1.0, bones=oa.BONES)
-    keep = {fruit_st.name, cloth.name, fruit.name, body.name, orc.name} | {w.name for w, _ in wheels}
+    keep = {fruit_st.name, cloth.name, ground.name, fruit.name, body.name, orc.name} | {w.name for w, _ in wheels}
+    keep |= {b.name for b, _ in bolts}
     for r in list(rigs.values()) + [orc]:
         keep |= {r.name} | {c.name for c in r.children}
     aa.stage(keep)
@@ -367,11 +460,10 @@ def main():
         key_fruit(fruit, rigs["CinePeasantWoman"], frames)
         shoot(out, "town_market", MARKET, *view)
     if what in ("panic", "all"):
-        for o in (fruit, body, cloth) + tuple(w for w, _ in wheels):
+        for o in (fruit, body, cloth) + tuple(w for w, _ in wheels) + tuple(b for b, _ in bolts):
             o.animation_data_clear()
         sp = 0.95 * 1.05
-        dist = (ORC_FROM.x - (0.85 * S + 0.25))
-        TIP = ORC_WAIT + dist / sp + 0.35 / 2
+        TIP = orc_time_at_x(CLOTH_AT.x - 0.05, sp)
         tr = track(tf.FIGURES["CineMerchant"][1])
         tr.add('fn', PANIC, merchant_panic)
         tr.bake(rigs["CineMerchant"], "CineMerchant_Panic")
@@ -382,10 +474,8 @@ def main():
         start = peasant_at(MARKET) + Vector((-P_SPEED * 0.15, 0, 0))
         tr.add('fn', 0.75, peasant_startle).add('run', PANIC - 0.75, start, start + Vector((-3.2, 0.3, 0)))
         tr.bake(rigs["CinePeasant"], "CinePeasant_Panic")
-        tr = track(1.0, apply=ka.apply)
-        tr.run_pose = oa.torch_run
-        tr.add('pose', ORC_WAIT, ORC_FROM, lambda t: oa.crouch(0), tuple(ORC_TO))
-        tr.add('run', PANIC - ORC_WAIT, ORC_FROM, ORC_TO)
+        tr = track(1.0)
+        tr.add('fn', PANIC, lambda t: orc_move(t, sp))
         tr.bake(orc, "CineOrcTorch_Raid")
         frames = int(PANIC * FPS) + 1
         key_cart(body, wheels, rigs["CinePeasant"], frames, lambda t: 1.0 - a2.env(t, DROP, DROP + 0.12))
@@ -395,7 +485,7 @@ def main():
             sc.frame_set(f + 1)
             fruit.location = rigs["CinePeasantWoman"].matrix_world @ rigs["CinePeasantWoman"].pose.bones["forearm.L"].tail + Vector((0, 0, 0.012))
             fruit.keyframe_insert("location", frame=f + 1)
-        key_topple(cloth, frames)
+        key_topple(cloth, bolts, frames)
         shoot(out, "town_panic", PANIC, *view)
 
 

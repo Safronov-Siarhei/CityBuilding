@@ -90,6 +90,11 @@
   - The townsfolk (`townsfolk_anim.py`) were sent on 2026-11-10. This is the LAST animation group.
     - Market (shot 2): the merchant calls (hand waving high, the other cupped at his mouth), then turns to the woman with an open palm. She reaches for a fruit, looks it over and drops it in her basket. A peasant pulls the cart past: the shafts follow his fists, the body pitches about its axle, the wheels turn by the distance rolled.
     - Panic (shot 11): a torch orc storms in. The woman shrieks with her hands to her face and runs; the merchant ducks behind his counter, arms over his head, trembling. The peasant flings the shafts (the cart drops onto them) and runs. The orc topples the cloth stall backward as he passes.
+    - Round 2 of the topple: the user found the first one strange. The whole stall had tipped backward with its baskets and crates floating along and the goods glued to the counter, and the orc never touched it.
+      - Now the orc's right hand hooks the counter as he runs past and wrenches it.
+      - The FRAME falls forward into the street about its front-bottom edge, slow then ever faster, and lands on its fringe at 80° with a jolt.
+      - The bolts ride the counter until it tilts past about 20°, then slide off, tumble and roll to a stop.
+      - The baskets and crates stay on the ground. `village.stall(parts=)` and `village.stall_goods(only=)` build the pieces.
     - Built for it, with the approved look unchanged: `village.cart(wheels=False)` + `village.cart_wheel` + `village.CART`; the stalls one by one through `village.stall`.
     - `kids_anim.mix_any` crossfades poses that do not share keys (aims fade by weight).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).

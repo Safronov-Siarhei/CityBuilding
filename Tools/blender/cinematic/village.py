@@ -140,11 +140,48 @@ def manor():
 
 # ---------------------------------------------------------------- the market
 
-def stall(b, cx, cy, stripe=('roof_red', 'plaster_white'), goods='fruit'):
+STALL = dict(w=0.3, dep=0.2, C=0.2)
+
+
+def stall_goods(b, cx, cy, goods, only=None):
+    """The goods on a stall's counter; `only` = the index of one heap/bolt (a toppled stall throws
+    them one by one)."""
+    w, dep, C = STALL['w'], STALL['dep'], STALL['C']
+    rnd = __import__('random').Random(hash(goods) & 0xffff)
+    for i in range(8):
+        x = cx - w + 0.06 + (i % 4) * (2 * w - 0.12) / 3
+        y = cy - dep + 0.07 + (i // 4) * 0.1
+        if goods == 'fruit':
+            colour = ('roof_red', 'plaster_yellow', 'roof_green', 'roof_orange')[i % 4]
+            jit = [rnd.uniform(-0.01, 0.01) for _ in range(3)]
+            if only is not None and i != only:
+                continue
+            b.frustum(x, y, C, C + 0.03, 0.045, 0.05, 'wood_light', sides=6)
+            for j in range(3):
+                b.ball(x + (j - 1) * 0.022, y + jit[j], C + 0.025, 0.017, 0.03, colour, sides=5)
+        else:
+            if only is not None and i != only:
+                continue
+            colour = ('roof_blue', 'roof_purple', 'banner_red', 'plaster_white', 'roof_green')[i % 5]
+            b.hcylinder('y', (x, y, C + 0.028), 0.04, 0.028, colour, sides=6)                          # bolts of cloth
+
+
+def stall(b, cx, cy, stripe=('roof_red', 'plaster_white'), goods='fruit', parts=('frame', 'goods', 'ground')):
     """A market stall facing -y: four posts, a counter, a striped sloping awning with a scalloped
-    fringe, goods on the counter and baskets and crates round it."""
-    w, dep = 0.3, 0.2
-    C = 0.2                              # the counter top: a cutscene figure's waist once grown
+    fringe, goods on the counter and baskets and crates round it. `parts` picks pieces (a toppled
+    stall: the frame tips, the goods fly, what stands on the ground stays)."""
+    w, dep = STALL['w'], STALL['dep']
+    C = STALL['C']                       # the counter top: a cutscene figure's waist once grown
+    if 'goods' in parts:
+        stall_goods(b, cx, cy, goods)
+    if 'ground' in parts:
+        for x in (cx - w - 0.1, cx + w + 0.1):
+            b.frustum(x, cy - dep - 0.05, 0.0, 0.08, 0.05, 0.065, 'wood_light', sides=8)
+            b.ball(x, cy - dep - 0.05, 0.06, 0.05, 0.05, 'roof_red' if goods == 'fruit' else 'leaf', sides=6)
+        d.crate(b, cx + w - 0.05, cy + dep + 0.12, angle=10, size=0.14)
+        d.crate(b, cx + w - 0.2, cy + dep + 0.12, angle=-5, size=0.12)
+    if 'frame' not in parts:
+        return
     for sx in (-1, 1):
         for sy in (-1, 1):
             h = 0.52 if sy < 0 else 0.6
@@ -159,25 +196,6 @@ def stall(b, cx, cy, stripe=('roof_red', 'plaster_white'), goods='fruit'):
         c = stripe[i % 2]
         b.obox(((x0 + x1) / 2, cy, 0.575), (1, 0, 0), (0, 1, 0.3), (0, -0.3, 1), (x1 - x0) / 2, dep + 0.08, 0.008, c)
         b.box(x0 + 0.004, x1 - 0.004, cy - dep - 0.075, cy - dep - 0.062, 0.48, 0.525, c)                # the fringe
-    # goods on the counter
-    rnd = __import__('random').Random(hash(goods) & 0xffff)
-    for i in range(8):
-        x = cx - w + 0.06 + (i % 4) * (2 * w - 0.12) / 3
-        y = cy - dep + 0.07 + (i // 4) * 0.1
-        if goods == 'fruit':
-            colour = ('roof_red', 'plaster_yellow', 'roof_green', 'roof_orange')[i % 4]
-            b.frustum(x, y, C, C + 0.03, 0.045, 0.05, 'wood_light', sides=6)
-            for j in range(3):
-                b.ball(x + (j - 1) * 0.022, y + rnd.uniform(-0.01, 0.01), C + 0.025, 0.017, 0.03, colour, sides=5)
-        else:
-            colour = ('roof_blue', 'roof_purple', 'banner_red', 'plaster_white', 'roof_green')[i % 5]
-            b.hcylinder('y', (x, y, C + 0.028), 0.04, 0.028, colour, sides=6)                          # bolts of cloth
-    # baskets and crates round it
-    for x in (cx - w - 0.1, cx + w + 0.1):
-        b.frustum(x, cy - dep - 0.05, 0.0, 0.08, 0.05, 0.065, 'wood_light', sides=8)
-        b.ball(x, cy - dep - 0.05, 0.06, 0.05, 0.05, 'roof_red' if goods == 'fruit' else 'leaf', sides=6)
-    d.crate(b, cx + w - 0.05, cy + dep + 0.12, angle=10, size=0.14)
-    d.crate(b, cx + w - 0.2, cy + dep + 0.12, angle=-5, size=0.12)
 
 
 def stalls():
