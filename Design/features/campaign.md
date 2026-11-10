@@ -2,7 +2,10 @@
 
 **Status (2026-11-10):** design stage.
 - Ардан's cutscene MODEL is APPROVED by the user (`Tools/blender/cinematic/ardan.py`).
-- His rig and two animations (walk, carry the sack) are built (`ardan_anim.py`); the user is reviewing them. Nothing is in the game yet; the menu banner says «Скоро».
+- His rig and two animations (walk, carry the sack) are APPROVED (`ardan_anim.py`).
+- The old man (`elder.py`, CineElder) and the priest (`priest.py`, CinePriest) are built on Ардан's rig
+  through the shared `figure.py`. Their renders went to the user; awaiting approval.
+  - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
@@ -50,13 +53,13 @@ Commands:
 - Store in the file: `-- save`.
 
 ## Open
-- The user's verdict on the walk and carry animations.
+- Ардан's rig, approved:
   - The rig is rigid, like the game's jointed figures: each part of the model rides one bone, through the vertex groups of `ardan.PARTS`.
   - Actions: `CineArdan_Walk` (30 frames) and `CineArdan_CarrySack` (34 frames).
   - Demo clips: `blender --background <Models.blend> --python Tools/blender/cinematic/ardan_anim.py -- render <out> [walk|carry|all]`.
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
-- The rest of the cinematic set: the old man, the priest, villagers, the church, the market, the
+- The rest of the cinematic set: villagers (trade, field, church), the church, the market, the
   square's stones and the portal.
 - The level structure beyond mission 1.

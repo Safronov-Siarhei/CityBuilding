@@ -1,0 +1,106 @@
+"""Shared plumbing for the cutscene figures (the user, 2026-11-10: the same blocky palette style as
+the King and the townsfolk, more detail; every figure on Ардан's rig so his approved animations
+carry over).
+
+A figure script gives a list of PARTS -- (bone name, build function) -- in the joint layout of
+ardan.py (hips, chest, head, upper_arm/forearm/thigh/shin/foot .L/.R); `make` builds them into one
+mesh in the «Кино» collection with a vertex group per part, ready for ardan_anim.rig.
+"""
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.dirname(HERE))
+import bpy  # noqa: E402
+import detail  # noqa: E402
+import kit  # noqa: E402
+from kit import Builder  # noqa: E402
+from mathutils import Vector  # noqa: E402
+
+COLLECTION = "Кино"
+PART_LAYER = "part"
+
+# Ардан's joints (before scale), shared so every figure fits the same rig
+SHOULDER, ELBOW, WRIST = (0.096, 0.0, 0.384), (0.114, -0.008, 0.318), (0.117, -0.03, 0.258)
+HIP_X, HIP_Z, KNEE_Z, ANKLE_Z = 0.045, 0.2, 0.098, 0.032
+
+
+def joints(k):
+    return (Vector((k * SHOULDER[0], SHOULDER[1], SHOULDER[2])), Vector((k * ELBOW[0], ELBOW[1], ELBOW[2])),
+            Vector((k * WRIST[0], WRIST[1], WRIST[2])))
+
+
+def plain(*colours):
+    """Cloth, skin, hair: none of the town's tiles, plaster or planks on them."""
+    detail.OVERRIDE.update({c: detail.PLAIN for c in colours})
+
+
+def limbs(parts_by_bone):
+    """[(bone, fn(b))] for both sides from {bone: fn(b, k)}."""
+    out = []
+    for side, k in (("L", 1), ("R", -1)):
+        for bone, fn in parts_by_bone.items():
+            out.append((f"{bone}.{side}", (lambda f, kk: (lambda b: f(b, kk)))(fn, k)))
+    return out
+
+
+def lean(b, since, z0, amount):
+    """Stoops what was built since `since`: everything above z0 leans forward (-y) by amount per metre."""
+    b.bm.verts.ensure_lookup_table()
+    for v in list(b.bm.verts)[since:]:
+        if v.co.z > z0:
+            v.co.y -= (v.co.z - z0) * amount
+
+
+def ensure_collection():
+    coll = bpy.data.collections.get(COLLECTION)
+    if coll is None:
+        coll = bpy.data.collections.new(COLLECTION)
+        bpy.context.scene.collection.children.link(coll)
+    return coll
+
+
+def material():
+    folder = os.path.dirname(bpy.data.filepath)
+    img = kit.ensure_palette(os.path.join(folder, "Buildings-Palette.png"))
+    mat = kit.ensure_material(img)
+    atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
+    detail.build_material_nodes(mat, img, atlas)
+    return mat
+
+
+def make(name, parts, scale, location=(0, 0, 0), post=None):
+    """Builds the parts (each vertex remembers its part), scales, and installs the object."""
+    b = Builder()
+    layer = b.bm.verts.layers.int.new(PART_LAYER)
+    for i, (_, fn) in enumerate(parts):
+        fn(b)
+        for v in b.bm.verts:
+            if v[layer] == 0:
+                v[layer] = i + 1
+    if post:
+        post(b)
+    for v in b.bm.verts:
+        v.co *= scale
+    me = b.to_mesh(name)
+    me.materials.append(material())
+    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+    obj = bpy.data.objects.get(name)
+    if obj is None:
+        obj = bpy.data.objects.new(name, me)
+        ensure_collection().objects.link(obj)
+    else:
+        old = obj.data
+        obj.data = me
+        if old.users == 0:
+            bpy.data.meshes.remove(old)
+    obj.location = location
+    obj.vertex_groups.clear()
+    tags = [0] * len(me.vertices)
+    me.attributes[PART_LAYER].data.foreach_get("value", tags)
+    groups = [obj.vertex_groups.new(name=n) for n, _ in parts]
+    for i, t in enumerate(tags):
+        groups[t - 1].add([i], 1.0, 'REPLACE')
+    print(f"MODEL {name} tris={sum(len(p.vertices) - 2 for p in me.polygons)}")
+    return obj
