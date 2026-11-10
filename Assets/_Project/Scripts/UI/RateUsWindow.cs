@@ -1,4 +1,6 @@
 using CityBuilder.Core;
+using CityBuilder.Invasion;
+using CityBuilder.Maps;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,6 +38,8 @@ namespace CityBuilder.UI
         [SerializeField] private Button later;
         /// <summary>The window's size against the art's 1920 x 1080 reference (the user, 2026-11-10: half).</summary>
         [SerializeField] private float size = 1f;
+        /// <summary>The framed picture behind the heroes: the town of the map's theme (the user, 2026-11-10: «зимняя карта -- зимнее предложение»).</summary>
+        [SerializeField] private Image picture;
 
         private static RateUsWindow _current;
         // the interface behind, hidden while the window is up (the user, 2026-11-10: «скрывать весь
@@ -76,6 +80,20 @@ namespace CityBuilder.UI
             group.alpha = 0f;
             window.localScale = Vector3.one * (PopFromScale * size);
             HideTheInterfaceBehind();
+            if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>("RateUs/Window_" + ThemeId());
+        }
+
+        /// <summary>The picture for the map being played: the New Year Invasion map has its own, else the map's season; the menu shows the last game's.</summary>
+        private static string ThemeId()
+        {
+            if (InvasionMode.IsActive && GameSettings.InvasionTheme == MapTheme.NewYear) return MapThemes.Id(MapTheme.NewYear);
+            switch (SeasonStyle.Current)
+            {
+                case MapSeason.Spring: return MapThemes.Id(MapTheme.Spring);
+                case MapSeason.Autumn: return MapThemes.Id(MapTheme.Autumn);
+                case MapSeason.Winter: return MapThemes.Id(MapTheme.Winter);
+                default: return MapThemes.Id(MapTheme.Summer);
+            }
         }
 
         private void HideTheInterfaceBehind()

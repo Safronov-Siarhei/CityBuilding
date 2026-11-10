@@ -55,7 +55,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   NO close X -- «Позже», or a tap OUTSIDE the frame, closes it.
 - Art: `Tools/store/rate_window_art.py <folder with figure_king.png/figure_orc.png>` draws every piece on
   its own layer and writes `Assets/_Project/UI/RateUs/` (Window = shadow+frame+town+parchment+heroes'
-  ground shadows, Tails, King, Orc, Band = folds+band, Stars, Button) + `layout.json` (piece/text/frame
+  ground shadows, one per theme under Resources/RateUs, Tails, King, Orc, Band = folds+band, Stars, Button) + `layout.json` (piece/text/frame
   rects in reference px, y down) + the mock-up `Design/store/RateWindow_Mockup.png` with Russian words.
   Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure, transparent,
   ortho camera fitted to bounds; plain HeroKing). Scale from measured pixels (king feet 1170 / head top
@@ -70,6 +70,10 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   (sheet + csv). Cheat: Сервис -> «Окно оценки игры».
 - Trap (2026-11-10, white boxes in the editor): PNGs imported BEFORE `UiTextureImport.RateUsFolder` existed stay
   plain textures (LoadAssetAtPath<Sprite> = null); `BuildRateUsWindow` re-imports any piece that is not a Sprite.
+  Seasons (the user, 2026-11-10): the framed town follows the map's theme -- `Resources/RateUs/Window_<spring|summer|
+  autumn|winter|newyear>.png` (same rect; crop of each `Load_<theme>.png`), loaded by `RateUsWindow` as it comes up
+  (the prefab holds none): New Year Invasion map -> newyear, else `SeasonStyle.Current`; in the menu, the last
+  game's season (summer at start). Preview of all five: `Design/store/RateWindow_Seasons.png`.
   Behind it: EVERY other screen-space root canvas under its order is switched off while it is up and back
   on as it closes (the user, 2026-11-10: «скрывать весь задний интерфейс везде»); world-space canvases and
   the loading screen (order 1000) stay.

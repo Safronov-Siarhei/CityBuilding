@@ -33,9 +33,12 @@ namespace CityBuilder.EditorTools
             var layout = JsonUtility.FromJson<RateUsLayout>(File.ReadAllText(layoutPath));
             // pictures imported before UiTextureImport knew the folder stay plain textures (no sprite,
             // the window came out white boxes, 2026-11-10): import them again under its rules
-            foreach (var piece in layout.pieces)
+            var pictures = new System.Collections.Generic.List<string>();
+            foreach (var piece in layout.pieces) if (piece.name != "Window") pictures.Add($"{UiTextureImport.RateUsFolder}/{piece.name}.png");
+            pictures.AddRange(Directory.GetFiles($"{UiTextureImport.RateUsFolder}/Resources/RateUs", "Window_*.png"));
+            foreach (var picture in pictures)
             {
-                var path = $"{UiTextureImport.RateUsFolder}/{piece.name}.png";
+                var path = picture.Replace(Path.DirectorySeparatorChar, '/');
                 if (AssetImporter.GetAtPath(path) is TextureImporter ti
                     && (ti.textureType != TextureImporterType.Sprite || ti.GetPlatformTextureSettings("Android").maxTextureSize != 1024))
                     AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
@@ -76,10 +79,14 @@ namespace CityBuilder.EditorTools
             Place(hit.rectTransform, layout.frame);
 
             Image rateImage = null;
+            Image windowImage = null;
             foreach (var piece in layout.pieces)
             {
                 var image = CreateImage(window, piece.name, Color.white);
-                image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.RateUsFolder}/{piece.name}.png");
+                // the window's picture is one per map theme, loaded by RateUsWindow when it comes up
+                // (Resources/RateUs/Window_<theme>), so the prefab holds none of them
+                if (piece.name == "Window") windowImage = image;
+                else image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.RateUsFolder}/{piece.name}.png");
                 image.raycastTarget = piece.name == "Band" || piece.name == "Button";
                 Place(image.rectTransform, piece.rect);
                 if (piece.name == "Button") rateImage = image;
@@ -127,6 +134,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("rate").objectReferenceValue = rateButton;
             so.FindProperty("later").objectReferenceValue = laterButton;
             so.FindProperty("size").floatValue = RateUsSize;
+            so.FindProperty("picture").objectReferenceValue = windowImage;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(Path.GetDirectoryName(RateUsPrefabPath));

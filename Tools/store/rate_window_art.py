@@ -49,14 +49,26 @@ d.rounded_rectangle((X0, Y0, X1, Y1), 60, fill=(92, 54, 26), outline=(44, 24, 8)
 d.rounded_rectangle((X0 + 14, Y0 + 14, X1 - 14, Y1 - 14), 50, fill=(126, 77, 37))
 for y in range(Y0 + 30, Y1 - 20, 26):
     d.line((X0 + 26, y, X1 - 26, y + 3), fill=(113, 68, 32), width=2)
-# the picture: the summer town, blurred (background A, the user's pick)
-town = Image.open(LOADING + 'Load_summer.png').convert('RGB')
-inner = town.crop((820, 140, 1920, 760)).resize((IX1 - IX0, IY1 - IY0)).filter(ImageFilter.GaussianBlur(12))
-inner = ImageEnhance.Color(inner).enhance(1.15).convert('RGBA')
-mask = Image.new('L', inner.size, 0)
-ImageDraw.Draw(mask).rounded_rectangle((0, 0, inner.width - 1, inner.height - 1), 36, fill=255)
-win.paste(inner, (IX0, IY0), mask)
-d = ImageDraw.Draw(win)
+# the picture: the town of the map's theme, blurred (background A, the user's pick; one window per
+# theme, the user 2026-11-10: «зимняя карта -- зимнее предложение»). Everything over the picture --
+# its rim, the parchment, the heroes' ground shadows -- goes on `over`, so each theme's window is
+# base + picture + over.
+THEMES = ('spring', 'summer', 'autumn', 'winter', 'newyear')
+
+
+def picture(theme):
+    town = Image.open(LOADING + 'Load_' + theme + '.png').convert('RGB')
+    inner = town.crop((820, 140, 1920, 760)).resize((IX1 - IX0, IY1 - IY0)).filter(ImageFilter.GaussianBlur(12))
+    inner = ImageEnhance.Color(inner).enhance(1.15).convert('RGBA')
+    mask = Image.new('L', inner.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, inner.width - 1, inner.height - 1), 36, fill=255)
+    lay = layer()
+    lay.paste(inner, (IX0, IY0), mask)
+    return lay
+
+
+over = layer()
+d = ImageDraw.Draw(over)
 d.rounded_rectangle((IX0, IY0, IX1, IY1), 36, outline=(60, 34, 12), width=5)
 # the parchment column
 pw0, pw1, pt, pb = 585, 1225, IY0 + 60, IY1 - 40
@@ -67,8 +79,8 @@ ImageDraw.Draw(pm).rounded_rectangle((pw0 + 40, pt + 40, pw1 - 40, pb - 40), 24,
 pm = pm.filter(ImageFilter.GaussianBlur(40))
 edge = Image.new('RGBA', (W, H), (218, 184, 128, 255))
 parch = Image.composite(parch, Image.composite(edge, parch, parch.split()[3]), pm)
-win = Image.alpha_composite(win, parch)
-d = ImageDraw.Draw(win)
+over = Image.alpha_composite(over, parch)
+d = ImageDraw.Draw(over)
 d.rounded_rectangle((pw0, pt, pw1, pb), 40, outline=(158, 110, 58), width=4)
 
 # ---------------------------------------------------------------- the heroes
@@ -93,7 +105,7 @@ def no_flag(a):
 
 
 def hero(path, body, feet, head, mid, x, prep=None):
-    global win
+    global over
     a = Image.open(path).convert('RGBA')
     if prep:
         a = prep(a)
@@ -105,7 +117,7 @@ def hero(path, body, feet, head, mid, x, prep=None):
     top = round(FLOOR - (feet - bb[1]) * k)
     e = layer()   # his shadow on the window's floor belongs to the window piece
     ImageDraw.Draw(e).ellipse((x - body * 0.3, FLOOR - 22, x + body * 0.3, FLOOR + 20), fill=(0, 0, 0, 140))
-    win = Image.alpha_composite(win, e.filter(ImageFilter.GaussianBlur(12)))
+    over = Image.alpha_composite(over, e.filter(ImageFilter.GaussianBlur(12)))
     lay = layer()
     lay.alpha_composite(a, (max(0, left), max(0, top)), (max(0, -left), max(0, -top)))
     return lay
@@ -167,39 +179,57 @@ dbt.rounded_rectangle((bx0 + 11, by0 + 10, bx1 - 11, (by0 + by1) / 2), 30, fill=
 texts['RateLabel'] = (bx0 + 20, by0 + 8, bx1 - 20, by1 - 4)
 texts['Later'] = (CX - 200, 880, CX + 200, 950)
 
-pieces = [('Window', win), ('Tails', tails), ('King', king), ('Orc', orc), ('Band', band), ('Stars', stars), ('Button', button)]
+windows = {t: Image.alpha_composite(Image.alpha_composite(win, picture(t)), over) for t in THEMES}
+pieces = [('Window', windows['summer']), ('Tails', tails), ('King', king), ('Orc', orc), ('Band', band), ('Stars', stars), ('Button', button)]
 
 # ---------------------------------------------------------------- write the pieces + layout
 os.makedirs(OUT, exist_ok=True)
 # rects are (x0, y0, x1, y1) in reference pixels, y down; `frame` = the wood frame (taps inside it
-# do not close the window)
+# do not close the window). The Window piece is one picture per theme, under Resources so the game
+# loads only the one it shows: Resources/RateUs/Window_<theme>.png (same rect for all).
+os.makedirs(OUT + 'Resources/RateUs', exist_ok=True)
 layout = {'reference': [W, H], 'frame': [X0, Y0, X1, Y1], 'pieces': [], 'texts': []}
 for name, lay in pieces:
     bb = lay.getbbox()
-    lay.crop(bb).save(OUT + name + '.png')
+    if name == 'Window':
+        for t, w in windows.items():
+            w.crop(bb).save(OUT + 'Resources/RateUs/Window_' + t + '.png')
+    else:
+        lay.crop(bb).save(OUT + name + '.png')
     layout['pieces'].append({'name': name, 'rect': list(bb)})
 for name, rect in texts.items():
     layout['texts'].append({'name': name, 'rect': [round(v) for v in rect]})
 with open(OUT + 'layout.json', 'w', encoding='utf-8') as f:
     json.dump(layout, f, indent=1)
 
-# ---------------------------------------------------------------- the mock-up: the pieces over the dimmed game, Russian words
-game = Image.open(LOADING + 'Load_summer.png').convert('RGB').resize((W, H))
-img = Image.alpha_composite(game.convert('RGBA'), Image.new('RGBA', (W, H), (10, 8, 6, 160)))
-for _, lay in pieces:
-    img = Image.alpha_composite(img, lay)
-d = ImageDraw.Draw(img)
 
-
-def text(name, s, size, fill, font='Rubik-ExtraBold.ttf', stroke=0, sf=None, spacing=14):
+# ---------------------------------------------------------------- mock-ups: the pieces over the dimmed game, Russian words
+def text(d, name, s, size, fill, font='Rubik-ExtraBold.ttf', stroke=0, sf=None, spacing=14):
     x0, y0, x1, y1 = texts[name]
     d.multiline_text(((x0 + x1) / 2, (y0 + y1) / 2), s, font=ImageFont.truetype(F + font, size), fill=fill,
                      anchor='mm', align='center', stroke_width=stroke, stroke_fill=sf, spacing=spacing)
 
 
-text('Title', 'Поддержите королевство!', 60, (255, 240, 200), stroke=5, sf=(90, 14, 16))
-text('Body', 'Ваша оценка помогает\nкоролевству расти\nи становиться лучше!', 46, (84, 50, 24), 'Rubik-Medium.ttf')
-text('RateLabel', 'Оценить', 66, (255, 255, 255), stroke=4, sf=out_g)
-text('Later', 'Позже', 44, (140, 98, 58), 'Rubik-Bold.ttf')
-img.convert('RGB').save(R + 'Design/store/RateWindow_Mockup.png')
+def mockup(theme):
+    game = Image.open(LOADING + 'Load_' + theme + '.png').convert('RGB').resize((W, H))
+    img = Image.alpha_composite(game.convert('RGBA'), Image.new('RGBA', (W, H), (10, 8, 6, 160)))
+    for name, lay in pieces:
+        img = Image.alpha_composite(img, windows[theme] if name == 'Window' else lay)
+    d = ImageDraw.Draw(img)
+    text(d, 'Title', 'Поддержите королевство!', 60, (255, 240, 200), stroke=5, sf=(90, 14, 16))
+    text(d, 'Body', 'Ваша оценка помогает'+chr(10)+'королевству расти'+chr(10)+'и становиться лучше!', 46, (84, 50, 24), 'Rubik-Medium.ttf')
+    text(d, 'RateLabel', 'Оценить', 66, (255, 255, 255), stroke=4, sf=out_g)
+    text(d, 'Later', 'Позже', 44, (140, 98, 58), 'Rubik-Bold.ttf')
+    return img.convert('RGB')
+
+
+mockup('summer').save(R + 'Design/store/RateWindow_Mockup.png')
+NAMES = {'spring': 'Весна', 'summer': 'Лето', 'autumn': 'Осень', 'winter': 'Зима', 'newyear': 'Новый год'}
+sheet = Image.new('RGB', (1920, 3 * 580), (30, 30, 30))
+ds = ImageDraw.Draw(sheet)
+for i, t in enumerate(THEMES):
+    x, y = (i % 2) * 960, (i // 2) * 580
+    sheet.paste(mockup(t).resize((960, 540)), (x, y + 40))
+    ds.text((x + 20, y + 2), NAMES[t], font=ImageFont.truetype(F + 'Rubik-ExtraBold.ttf', 34), fill='white')
+sheet.save(R + 'Design/store/RateWindow_Seasons.png')
 print('pieces', [(l['name'], l['rect']) for l in layout['pieces']])
