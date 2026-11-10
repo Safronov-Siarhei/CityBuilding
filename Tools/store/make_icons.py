@@ -286,8 +286,6 @@ def king_icon():
     GOLD, GOLD_D, GOLD_H = (246, 196, 52, 255), (196, 140, 30, 255), (255, 236, 140, 255)
     RED, RED_D = (190, 36, 40, 255), (130, 20, 28, 255)
 
-    # a soft shadow behind him lifts him off the town
-    soft(img, lambda dd: dd.ellipse(P([(200, 220), (860, 1100)]), fill=(20, 30, 50, 90)), 40)
     # the cloak and the ermine collar
     cloak = [(150, 1044), (230, 800), (380, 730), (644, 730), (794, 800), (874, 1044)]
     shape(d, cloak, RED)
