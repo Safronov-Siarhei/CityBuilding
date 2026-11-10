@@ -31,8 +31,9 @@ STAND = sum(LEG)
 PLATFORM_Z = 0.085
 
 
-def rig_figure(mesh, scale):
-    """Ардан's bones at this figure's scale."""
+def rig_figure(mesh, scale, bend=None):
+    """Ардан's bones at this figure's scale; `bend(Vector) -> Vector` moves the joints as the
+    figure's own post-build bend did (the elder's stoop), so his limbs turn where they are."""
     data = bpy.data.armatures.new(mesh.name + "Rig")
     arm = bpy.data.objects.new(mesh.name + "Rig", data)
     mesh.users_collection[0].objects.link(arm)
@@ -40,8 +41,11 @@ def rig_figure(mesh, scale):
     bpy.ops.object.mode_set(mode='EDIT')
     for name, head, tail, parent in aa.BONES:
         b = data.edit_bones.new(name)
-        b.head = Vector(head) * scale
-        b.tail = Vector(tail) * scale
+        bh, bt = Vector(head), Vector(tail)
+        if bend:
+            bh, bt = bend(bh), bend(bt)
+        b.head = bh * scale
+        b.tail = bt * scale
         if parent:
             b.parent = data.edit_bones[parent]
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -144,6 +148,7 @@ class Track:
         self.scale = scale
         self.speed = run_speed
         self.moves = []
+        self.apply = apply
 
     def add(self, kind, dur, *args):
         self.moves.append((kind, dur) + args)
@@ -212,8 +217,10 @@ class Track:
                     heading = head
                 diff = (head - heading + math.pi) % TAU - math.pi
                 heading += diff * 0.25                       # turns, never snaps
+            arm.location = pos                               # placed first: an aimed limb needs the root
+            arm.rotation_euler = (0, 0, heading or 0.0)
             aa.rest(arm)
-            apply(arm, pose, self.scale)
+            self.apply(arm, pose, self.scale)
             for pb in arm.pose.bones:
                 pb.keyframe_insert("rotation_quaternion", frame=f + 1, group=pb.name)
                 pb.keyframe_insert("location", frame=f + 1, group=pb.name)
