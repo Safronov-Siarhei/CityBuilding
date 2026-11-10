@@ -132,6 +132,12 @@ not in the entries, Play's AAB won't carry it). `data.unity3d` 167 MB LZ4HC, 308
 13 MB, buildings small. Textures ~0. Inside meshes: positions 90, **UV 83 (3 UV sets per vertex,
 the palette needs 1)**, triangles 33, normals 30, vertex colours 12 MB. Exact duplicate meshes only
 6.7 MB. Native libs ~24 MB packed. Estimated Play download ≈ 185-190 MB -- at Google Play's 200 MB
-base-module cap. Levers: drop the extra UV sets/colours on map meshes (find which shader keeps them
-past stripUnusedMeshComponents), Medium compression per map chunk, slimmer dungeon variants, Play
-Asset Delivery for dungeons. Analysis scripts: UnityPy on the APK (pip `UnityPy`).
+base-module cap. Analysis: UnityPy on the APK (pip `UnityPy`).
+**DECISION (the user, 2026-11-10): Google Play Asset Delivery, NOT mesh slimming.** Dropping the
+extra UV sets / stronger map compression was rejected as too risky to the look (a palette UV moved
+into the next cell recolours a piece; seams between ground chunks). Plan: before release, move the
+dungeons (and likely islands) to Addressables in Play Asset Delivery packs (fast-follow: downloaded
+in the background right after install while the player plays the start), base ~50-70 MB. Own CDN
+only if the game goes to other stores (RuStore etc.) or needs content updates without a release.
+Needs: maps loaded via Addressables instead of being baked into SetupProject's scenes; a release
+AAB build path (build_android.ps1 makes APKs today). Not started.
