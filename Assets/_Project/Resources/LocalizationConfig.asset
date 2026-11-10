@@ -1488,16 +1488,162 @@ MonoBehaviour:
     - Auto
   - key: '#settings_graphics_low'
     values:
-    - "\u041D\u0438\u0437\u043A\u0430\u044F"
+    - "\u041D\u0438\u0437\u043A\u0438\u0439"
     - Low
   - key: '#settings_graphics_medium'
     values:
-    - "\u0421\u0440\u0435\u0434\u043D\u044F\u044F"
+    - "\u0421\u0440\u0435\u0434\u043D\u0438\u0439"
     - Medium
   - key: '#settings_graphics_high'
     values:
-    - "\u0412\u044B\u0441\u043E\u043A\u0430\u044F"
+    - "\u0412\u044B\u0441\u043E\u043A\u0438\u0439"
     - High
+  - key: '#settings_graphics_manual'
+    values:
+    - "\u0420\u0443\u0447\u043D\u0430\u044F"
+    - Manual
+  - key: '#settings_gfx_auto_now'
+    values:
+    - "\u0421\u0435\u0439\u0447\u0430\u0441: {0}"
+    - 'Now: {0}'
+  - key: '#settings_gfx_level'
+    values:
+    - "\u0423\u0440\u043E\u0432\u0435\u043D\u044C \u0433\u0440\u0430\u0444\u0438\u043A\u0438"
+    - Graphics level
+  - key: '#settings_gfx_level_info'
+    values:
+    - "\u0413\u043E\u0442\u043E\u0432\u044B\u0439 \u043D\u0430\u0431\u043E\u0440
+      \u0432\u0441\u0435\u0445 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043A \u043D\u0438\u0436\u0435.
+      \u041D\u0438\u0437\u043A\u0438\u0439 \u2014 \u0434\u043B\u044F \u0441\u043B\u0430\u0431\u044B\u0445
+      \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u043E\u0432, \u0412\u044B\u0441\u043E\u043A\u0438\u0439
+      \u2014 \u0434\u043B\u044F \u043C\u043E\u0449\u043D\u044B\u0445. \u0415\u0441\u043B\u0438
+      \u043F\u043E\u043C\u0435\u043D\u044F\u0442\u044C \u043B\u044E\u0431\u0443\u044E
+      \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0443 \u043D\u0438\u0436\u0435,
+      \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F
+      \xAB\u0421\u0432\u043E\u0439\xBB."
+    - A ready set of all the settings below. Low is for weak phones, High for strong
+      ones. Change any setting below and this shows Custom.
+  - key: '#settings_gfx_custom'
+    values:
+    - "\u0421\u0432\u043E\u0439"
+    - Custom
+  - key: '#settings_gfx_fps'
+    values:
+    - "\u0427\u0430\u0441\u0442\u043E\u0442\u0430 \u043A\u0430\u0434\u0440\u043E\u0432"
+    - Frame rate
+  - key: '#settings_gfx_fps_info'
+    values:
+    - "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0440\u0430\u0437 \u0432 \u0441\u0435\u043A\u0443\u043D\u0434\u0443
+      \u043E\u0431\u043D\u043E\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0430.
+      60 \u2014 \u043F\u043B\u0430\u0432\u043D\u0435\u0435, 30 \u2014 \u043C\u0435\u043D\u044C\u0448\u0435
+      \u0433\u0440\u0435\u0435\u0442 \u0442\u0435\u043B\u0435\u0444\u043E\u043D \u0438
+      \u0431\u0435\u0440\u0435\u0436\u0451\u0442 \u0431\u0430\u0442\u0430\u0440\u0435\u044E."
+    - How many times a second the picture updates. 60 is smoother, 30 keeps the phone
+      cooler and saves battery.
+  - key: '#settings_gfx_msaa'
+    values:
+    - "\u0421\u0433\u043B\u0430\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u043A\u0440\u0430\u0451\u0432"
+    - Edge smoothing
+  - key: '#settings_gfx_msaa_info'
+    values:
+    - "\u0423\u0431\u0438\u0440\u0430\u0435\u0442 \xAB\u043B\u0435\u0441\u0435\u043D\u043A\u0438\xBB
+      \u043D\u0430 \u043A\u0440\u0430\u044F\u0445 \u043A\u0440\u044B\u0448, \u0441\u0442\u0435\u043D
+      \u0438 \u0434\u0435\u0440\u0435\u0432\u044C\u0435\u0432. \u0421\u0438\u043B\u044C\u043D\u0435\u0435
+      \u0432\u0441\u0435\u0433\u043E \u043D\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442
+      \u0441\u043B\u0430\u0431\u044B\u0435 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u044B:
+      \u0435\u0441\u043B\u0438 \u0438\u0433\u0440\u0430 \u043F\u043E\u0434\u0442\u043E\u0440\u043C\u0430\u0436\u0438\u0432\u0430\u0435\u0442,
+      \u043D\u0430\u0447\u043D\u0438\u0442\u0435 \u0441 \u044D\u0442\u043E\u0439
+      \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438."
+    - 'Removes jagged edges on roofs, walls and trees. The heaviest setting for weak
+      phones: if the game stutters, start here.'
+  - key: '#settings_gfx_scale'
+    values:
+    - "\u0427\u0451\u0442\u043A\u043E\u0441\u0442\u044C"
+    - Sharpness
+  - key: '#settings_gfx_scale_info'
+    values:
+    - "\u0412 \u043A\u0430\u043A\u043E\u043C \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0438
+      \u0440\u0438\u0441\u0443\u0435\u0442\u0441\u044F \u043C\u0438\u0440. 100% \u2014
+      \u0440\u043E\u0434\u043D\u043E\u0435 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435
+      \u044D\u043A\u0440\u0430\u043D\u0430, \u043D\u0438\u0436\u0435 \u2014 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0430
+      \u043C\u044F\u0433\u0447\u0435 \u0438 \u043C\u043E\u0436\u0435\u0442 \u0440\u044F\u0431\u0438\u0442\u044C,
+      \u043D\u043E \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0443 \u043B\u0435\u0433\u0447\u0435."
+    - The resolution the world is drawn at. 100% is the screen's own; lower is softer
+      and may shimmer, but easier on the phone.
+  - key: '#settings_gfx_shadows'
+    values:
+    - "\u0422\u0435\u043D\u0438"
+    - Shadows
+  - key: '#settings_gfx_shadows_info'
+    values:
+    - "\u0422\u0435\u043D\u0438 \u043E\u0442 \u0437\u0434\u0430\u043D\u0438\u0439,
+      \u043B\u044E\u0434\u0435\u0439 \u0438 \u0434\u0435\u0440\u0435\u0432\u044C\u0435\u0432.
+      \u0427\u0451\u0442\u043A\u0438\u0435 \u2014 \u0440\u043E\u0432\u043D\u0435\u0435
+      \u043A\u0440\u0430\u044F \u0442\u0435\u043D\u0435\u0439, \u0412\u044B\u043A\u043B
+      \u2014 \u0431\u0435\u0437 \u0442\u0435\u043D\u0435\u0439, \u043B\u0435\u0433\u0447\u0435
+      \u0432\u0441\u0435\u0433\u043E \u0434\u043B\u044F \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0430."
+    - Shadows of buildings, people and trees. Sharp gives cleaner shadow edges; Off
+      draws none and is the lightest.
+  - key: '#settings_gfx_shadows_simple'
+    values:
+    - "\u041F\u0440\u043E\u0441\u0442\u044B\u0435"
+    - Simple
+  - key: '#settings_gfx_shadows_sharp'
+    values:
+    - "\u0427\u0451\u0442\u043A\u0438\u0435"
+    - Sharp
+  - key: '#settings_gfx_shadow_reach'
+    values:
+    - "\u0414\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C \u0442\u0435\u043D\u0435\u0439"
+    - Shadow distance
+  - key: '#settings_gfx_shadow_reach_info'
+    values:
+    - "\u041A\u0430\u043A \u0434\u0430\u043B\u0435\u043A\u043E \u043E\u0442 \u043A\u0430\u043C\u0435\u0440\u044B
+      \u0435\u0449\u0451 \u0432\u0438\u0434\u043D\u044B \u0442\u0435\u043D\u0438.
+      \u0414\u0430\u043B\u044C\u0448\u0435 \u2014 \u043A\u0440\u0430\u0441\u0438\u0432\u0435\u0435
+      \u043F\u0440\u0438 \u043E\u0442\u0434\u0430\u043B\u0451\u043D\u043D\u043E\u0439
+      \u043A\u0430\u043C\u0435\u0440\u0435, \u043D\u043E \u0434\u043E\u0440\u043E\u0436\u0435.
+      \u0411\u0435\u0437 \u0442\u0435\u043D\u0435\u0439 \u043D\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442."
+    - How far from the camera shadows are still drawn. Farther looks better with
+      the camera pulled back but costs more. No effect with shadows off.
+  - key: '#settings_gfx_near'
+    values:
+    - "\u0411\u043B\u0438\u0437\u043A\u043E"
+    - Near
+  - key: '#settings_gfx_mid'
+    values:
+    - "\u0421\u0440\u0435\u0434\u043D\u0435"
+    - Medium
+  - key: '#settings_gfx_far'
+    values:
+    - "\u0414\u0430\u043B\u0435\u043A\u043E"
+    - Far
+  - key: '#settings_gfx_show_fps'
+    values:
+    - "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C FPS"
+    - Show FPS
+  - key: '#settings_gfx_show_fps_info'
+    values:
+    - "\u041C\u0430\u043B\u0435\u043D\u044C\u043A\u0438\u0439 \u0441\u0447\u0451\u0442\u0447\u0438\u043A
+      \u043A\u0430\u0434\u0440\u043E\u0432 \u0432 \u0441\u0435\u043A\u0443\u043D\u0434\u0443
+      \u0432\u043D\u0438\u0437\u0443 \u044D\u043A\u0440\u0430\u043D\u0430: \u0432\u0438\u0434\u043D\u043E,
+      \u043D\u0430\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u043F\u043B\u0430\u0432\u043D\u043E
+      \u0438\u0434\u0451\u0442 \u0438\u0433\u0440\u0430 \u0438 \u043F\u043E\u043C\u043E\u0433\u043B\u0430
+      \u043B\u0438 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430."
+    - 'A small frames-per-second counter at the bottom of the screen: shows how smooth
+      the game runs and whether a setting helped.'
+  - key: '#settings_gfx_on'
+    values:
+    - "\u0412\u043A\u043B"
+    - On
+  - key: '#settings_gfx_off'
+    values:
+    - "\u0412\u044B\u043A\u043B"
+    - Off
+  - key: '#settings_info_ok'
+    values:
+    - "\u041F\u043E\u043D\u044F\u0442\u043D\u043E"
+    - Got it
   - key: '#log_portal_shielded'
     values:
     - "\u041F\u043E\u0440\u0442\u0430\u043B \u0437\u0430\u0449\u0438\u0449\u0451\u043D
