@@ -64,10 +64,13 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   swings it like a struck cloth (`UI/BannerKnock`, damped wobble from the perch, away from the hit side).
   TRAP (fixed 11-10): BannerKnock must stay enabled -- the EventSystem sends no clicks to a disabled
   component; the first version switched itself off at rest and never swung.
-- sandbox map = INK CHART ON PARCHMENT (2026-11-10, the user picked concept 2 of three, RunLogs/concept_map_*.png):
-  drawn LIVE from the code in the box (`UI/InkMapPainter`, 500 px = 1 px per cell: paper sea, wave
-  strokes, two coast ripple lines, ink coastline, sand beaches, ink trees on forest, «^» on relief,
-  compass rose, worn edge, grain). PLAIN: no markers, no «С» (the user saw markers + «С» on the board
+- sandbox map = PAINTED CHART IN THE LOADING SCREEN'S LOOK (the user, 2026-11-10: «аналогичную как на
+  загрузочном экране»; before that an ink-on-parchment chart): drawn LIVE from the code in the box
+  (`UI/InkMapPainter`, 500 px = 1 px per cell, palette = loading_maps.py coloured: grey-blue sea in
+  broken horizontal hatching, pale shallow halo + dotted ring, land ochre at the coast -> green inland
+  with a rim, ink coastline + thin echo, ink peaks on relief/ridges, compass rose top-left, paper stains,
+  worn dark edge). Paint ~96 ms in the editor (generate ~40): smooth noises sampled every 4 cells,
+  worn-edge noise only near the edge -- keep it that way, it runs once per code on a phone. PLAIN: no markers, no «С» (the user saw markers + «С» on the board
   and asked for the plain chart, 2026-11-10; they may want to discuss extras later). The screen fills a random code on open (so the chart = the map Start
   makes; empty box still = random, no chart then, the static picture). Redrawn on code change only
   (typing waits 0.4 s). The menu lays the map out from `Resources/ArchipelagoPreview`
