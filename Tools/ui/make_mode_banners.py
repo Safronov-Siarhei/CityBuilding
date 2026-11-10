@@ -108,15 +108,39 @@ def castle(d, cx, cy, ink):
     d.rounded_rectangle([p(cx - 12, cy + 18), p(cx + 12, cy + 47)], radius=12 * s, fill=PARCHMENT)
 
 
+def axe_head(d, base, top, side, blade, ink):
+    """A bearded axe head on the haft from `base` to `top`: a crescent blade swept out on the outer
+    side (`side` -1 left, 1 right), its cutting edge an arc, a short spike behind the haft."""
+    ux, uy = top[0] - base[0], top[1] - base[1]
+    n = math.hypot(ux, uy)
+    ux, uy = ux / n, uy / n
+    # the blade faces in and up, over the skull: the heraldic crossed axes, blades meeting above
+    vx, vy = -uy, ux
+    if vx * side > 0:
+        vx, vy = -vx, -vy
+    def at(along, out):
+        return p(top[0] + ux * along + vx * out, top[1] + uy * along + vy * out)
+    # a narrow neck off the haft flaring into a broad blade: a horn above, a curved edge, a beard below
+    pts = [at(3, 0), at(1, 7), at(9, 19)]
+    for k in range(11):
+        t = k / 10
+        pts.append(at(9 - 34 * t, 19 + 6 * math.sin(math.pi * t)))
+    pts += [at(-25, 19), at(-15, 7), at(-13, 0)]
+    d.polygon(pts, fill=blade, outline=ink, width=3 * SS)
+    # the edge's bright bevel
+    edge = [at(6 - 28 * k / 8, 16 + 5 * math.sin(math.pi * k / 8)) for k in range(9)]
+    d.line(edge, fill=(214, 210, 200, 255), width=2 * SS)
+    # a short spike behind the haft
+    d.polygon([at(-4, -2), at(-8, -11), at(-12, -2)], fill=blade, outline=ink, width=2 * SS)
+
+
 def orc_skull(d, cx, cy, bone, ink, blade):
     """The invasion: an orc's horned skull with tusks over two crossed axes -- war, plainly. Kept
     within ~62 px of the centre so nothing crosses the medallion's ring (the user, 2026-11-10)."""
     # the axes behind: hafts crossed, heads at the top corners
     for a in (-1, 1):
-        d.line([p(cx - a * 40, cy + 42), p(cx + a * 28, cy - 30)], fill=WOOD_HI, width=8 * SS)
-        hx, hy = cx + a * 28, cy - 30
-        head = [p(hx - a * 6, hy - 10), p(hx + a * 14, hy - 30), p(hx + a * 24, hy - 8), p(hx + a * 4, hy + 6)]
-        d.polygon(head, fill=blade, outline=ink, width=3 * SS)
+        d.line([p(cx - a * 40, cy + 44), p(cx + a * 34, cy - 40)], fill=WOOD_HI, width=8 * SS)
+        axe_head(d, (cx - a * 40, cy + 44), (cx + a * 34, cy - 40), a, blade, ink)
     # horns
     for a in (-1, 1):
         d.polygon([p(cx + a * 18, cy - 20), p(cx + a * 42, cy - 36), p(cx + a * 36, cy - 12), p(cx + a * 26, cy - 6)], fill=bone, outline=ink, width=3 * SS)
