@@ -472,18 +472,12 @@ namespace CityBuilder.Campaign
         private void DropSack()
         {
             if (!_actors.TryGetValue("ardan", out var ardan)) return;
-            foreach (var smr in ardan.t.GetComponentsInChildren<SkinnedMeshRenderer>())
+            // the sack is a rigid part on his chest bone (CineFigure): it comes off and falls
+            foreach (var r in ardan.t.GetComponentsInChildren<MeshRenderer>())
             {
-                if (!smr.name.Contains("Sack")) continue;
-                var mesh = new Mesh();
-                smr.BakeMesh(mesh, true);
-                var go = new GameObject("DroppedSack", typeof(MeshFilter), typeof(MeshRenderer));
-                go.transform.SetParent(_root, false);
-                go.transform.SetPositionAndRotation(smr.transform.position, smr.transform.rotation);
-                go.GetComponent<MeshFilter>().sharedMesh = mesh;
-                go.GetComponent<MeshRenderer>().sharedMaterials = smr.sharedMaterials;
-                smr.enabled = false;
-                _sack = go.transform;
+                if (!r.name.StartsWith("CineArdanSack")) continue;
+                r.transform.SetParent(_root, true);
+                _sack = r.transform;
                 _sackVel = new Vector3(_s.sack.vx, _s.sack.vy, _s.sack.vz);
             }
         }

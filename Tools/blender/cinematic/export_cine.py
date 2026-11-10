@@ -47,6 +47,18 @@ def unity(m):
             "s": [round(scale.x, 5), round(scale.z, 5), round(scale.y, 5)]}
 
 
+def double_sided(o):
+    """Every face twice, the copy turned round: the game's building shader culls back faces, and
+    the church has faces modelled facing in (the belfry's walls showed holes in Unity, 2026-11-10)."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    dup = bmesh.ops.duplicate(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:])
+    bmesh.ops.reverse_faces(bm, faces=[g for g in dup["geom"] if isinstance(g, bmesh.types.BMFace)])
+    bm.to_mesh(o.data)
+    bm.free()
+
+
 def export(o, folder):
     saved = o.matrix_world.copy()
     o.parent = None
@@ -104,6 +116,7 @@ def main():
         pieces[wh.name] = cart_at @ Matrix.Translation((0, y, 0.2 * ta.K))
 
     out = {"pieces": [], "stones": []}
+    double_sided(ch)
     for name, m in pieces.items():
         export(bpy.data.objects[name], folder)
         out["pieces"].append(dict(name=name, **unity(village @ m)))

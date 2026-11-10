@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CityBuilder.Campaign
@@ -29,6 +30,112 @@ namespace CityBuilder.Campaign
         {
             clips = set;
             _bones = null;
+            Rigidify();
+        }
+
+        // the rigid parts cut from each model's skinned mesh, shared by every copy of that model
+        private static readonly Dictionary<Mesh, (int bone, Mesh part)[]> PartsByMesh = new Dictionary<Mesh, (int, Mesh)[]>();
+
+        /// <summary>
+        /// Swaps the skinned meshes for rigid parts riding their bones, as the game's own figures are
+        /// built. Every vertex of a cutscene figure belongs to one bone, so nothing bends; and a skinned
+        /// mesh is only re-skinned by the player loop, so a film rendered frame by frame in the editor
+        /// showed every figure frozen in its bind pose (the user, 2026-11-10: the sack floating, the hand
+        /// down). Cheaper on a phone too: no skinning at all.
+        /// </summary>
+        private void Rigidify()
+        {
+            foreach (var smr in GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var mesh = smr.sharedMesh;
+                if (mesh == null) continue;
+                if (!PartsByMesh.TryGetValue(mesh, out var parts))
+                {
+                    parts = Cut(mesh);
+                    PartsByMesh[mesh] = parts;
+                }
+                var bones = smr.bones;
+                foreach (var (bone, part) in parts)
+                {
+                    if (bone < 0 || bone >= bones.Length || bones[bone] == null) continue;
+                    var go = new GameObject(smr.name + "_" + bones[bone].name, typeof(MeshFilter), typeof(MeshRenderer));
+                    go.transform.SetParent(bones[bone], false);
+                    go.GetComponent<MeshFilter>().sharedMesh = part;
+                    var r = go.GetComponent<MeshRenderer>();
+                    r.sharedMaterials = smr.sharedMaterials;
+                    r.shadowCastingMode = smr.shadowCastingMode;
+                }
+                smr.enabled = false;
+            }
+        }
+
+        /// <summary>The mesh split by the bone that carries each vertex, every piece in its bone's own space.</summary>
+        private static (int, Mesh)[] Cut(Mesh mesh)
+        {
+            var weights = mesh.boneWeights;
+            var bind = mesh.bindposes;
+            var verts = mesh.vertices;
+            var normals = mesh.normals;
+            var uv0 = new List<Vector2>();
+            var uv1 = new List<Vector2>();
+            mesh.GetUVs(0, uv0);
+            mesh.GetUVs(1, uv1);
+            var colours = mesh.colors;
+            var owner = new int[verts.Length];
+            for (var i = 0; i < verts.Length; i++) owner[i] = weights.Length > i ? weights[i].boneIndex0 : 0;
+            var result = new List<(int, Mesh)>();
+            for (var b = 0; b < bind.Length; b++)
+            {
+                var map = new Dictionary<int, int>();
+                var subTris = new List<int>[mesh.subMeshCount];
+                var any = false;
+                for (var s = 0; s < mesh.subMeshCount; s++)
+                {
+                    subTris[s] = new List<int>();
+                    var tris = mesh.GetTriangles(s);
+                    for (var t = 0; t + 2 < tris.Length; t += 3)
+                    {
+                        if (owner[tris[t]] != b) continue;
+                        for (var k = 0; k < 3; k++)
+                        {
+                            var v = tris[t + k];
+                            if (!map.TryGetValue(v, out var nv))
+                            {
+                                nv = map.Count;
+                                map[v] = nv;
+                            }
+                            subTris[s].Add(nv);
+                        }
+                        any = true;
+                    }
+                }
+                if (!any) continue;
+                var n = map.Count;
+                var pv = new Vector3[n];
+                var pn = new Vector3[n];
+                var p0 = new Vector2[n];
+                var p1 = uv1.Count == verts.Length ? new Vector2[n] : null;
+                var pc = colours.Length == verts.Length ? new Color[n] : null;
+                foreach (var kv in map)
+                {
+                    pv[kv.Value] = bind[b].MultiplyPoint3x4(verts[kv.Key]);
+                    pn[kv.Value] = normals.Length > kv.Key ? bind[b].MultiplyVector(normals[kv.Key]).normalized : Vector3.up;
+                    if (uv0.Count == verts.Length) p0[kv.Value] = uv0[kv.Key];
+                    if (p1 != null) p1[kv.Value] = uv1[kv.Key];
+                    if (pc != null) pc[kv.Value] = colours[kv.Key];
+                }
+                var part = new Mesh { name = mesh.name + "_" + b };
+                part.vertices = pv;
+                part.normals = pn;
+                part.uv = p0;
+                if (p1 != null) part.uv2 = p1;
+                if (pc != null) part.colors = pc;
+                part.subMeshCount = mesh.subMeshCount;
+                for (var s = 0; s < mesh.subMeshCount; s++) part.SetTriangles(subTris[s], s);
+                part.RecalculateBounds();
+                result.Add((b, part));
+            }
+            return result.ToArray();
         }
 
         /// <summary>Starts a clip, faded in over `fade` seconds from whatever played; `rate` scales its

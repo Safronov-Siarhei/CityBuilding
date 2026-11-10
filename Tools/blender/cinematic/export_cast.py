@@ -158,6 +158,7 @@ def kid_clips():
 def townsfolk_clips(name):
     c = human_clips()
     if name == "CinePeasantWoman":
+        c["Run"] = cyc(pf.skirt_run, RUN_CYCLE)
         c["Scream"] = clip(lambda t: ta.woman_scream(t)[2], 0.85)
     if name == "CinePeasant":
         c["Startle"] = clip(lambda t: ta.peasant_startle(t)[2], 0.75)
@@ -451,6 +452,10 @@ def main():
               "meta": {"kidsPlay": pf.KIDS_PLAY, "sackRelease": a2.RELEASE + ea.HOLD,
                        "orcFrom": unity_p(pf.frame_M(ta.ORC_FROM)), "tip": round(ta.TIP, 3)}}
     scenes(rigs, perf_by, stones, sw, tracks)
+    # the set pieces' own keys would ride into every figure's FBX as takes of its rig (they resolve
+    # on any object): gone before the figures are baked and exported
+    for a_ in list(bpy.data.actions):
+        bpy.data.actions.remove(a_)
     for p in perf_list:
         tracks["figures"].append({"name": p.figure + "/" + p.name, "frames": p.frames(), "root": root_track(p)})
 

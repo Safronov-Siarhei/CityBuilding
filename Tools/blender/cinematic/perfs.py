@@ -67,6 +67,17 @@ def heading(frm, to):
     return math.atan2(d.x, -d.y)
 
 
+def skirt_run(phase):
+    """The run for a figure in a long dress: the knee folds and the heel kicks far less, so the
+    foot never pokes out behind the hem (the user, 2026-11-10: «торчит нога в обратную сторону»)."""
+    q = a2.run(phase)
+    for side in ("L", "R"):
+        q["thigh." + side][0] *= 0.75
+        q["shin." + side][0] = 8 + (q["shin." + side][0] - 12) * 0.35
+        q["foot." + side][0] *= 0.5
+    return q
+
+
 def track_fn(tr):
     """A ka.Track as fn(t) -> (point, heading, pose), exactly as Track.bake samples it (sampled in
     order: the heading turns, never snaps)."""
@@ -165,13 +176,15 @@ def build(stones):
     out.append(Perf("CinePeasant", "P_Market", ta.MARKET, ta.peasant_market, "M", ba.apply))
     out.append(Perf("CineMerchant", "P_Panic", ta.PANIC, ta.merchant_panic, "M", ba.apply))
 
-    def runner(scale, first, first_dur, p0, p1):
+    def runner(scale, first, first_dur, p0, p1, run_pose=None):
         tr = ka.Track(scale, 0.95 * scale * 1.05)
         tr.apply = ba.apply
+        if run_pose:
+            tr.run_pose = run_pose
         tr.add('fn', first_dur, first).add('run', ta.PANIC - first_dur, p0, p1)
         return track_fn(tr)
     out.append(Perf("CinePeasantWoman", "P_Chaos", ta.PANIC,
-                    runner(ta.WS, ta.woman_scream, 0.85, ta.WOMAN_AT, Vector((-2.4, -1.6, 0))), "M", ba.apply))
+                    runner(ta.WS, ta.woman_scream, 0.85, ta.WOMAN_AT, Vector((-2.4, -1.6, 0)), skirt_run), "M", ba.apply))
     pstart = ta.peasant_at(ta.MARKET) + Vector((-ta.P_SPEED * 0.15, 0, 0))
     out.append(Perf("CinePeasant", "P_Chaos", ta.PANIC,
                     runner(ta.PS, ta.peasant_startle, 0.75, pstart, pstart + Vector((-3.2, 0.3, 0))), "M", ba.apply))
