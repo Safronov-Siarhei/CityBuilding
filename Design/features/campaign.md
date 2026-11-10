@@ -42,6 +42,22 @@
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
+- **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.
+  1. Wide (5 s): the camera glides over roofs to the square; chimney smoke, birds, the church.
+  2. Market (6 s): the merchant calls, the peasant woman picks fruit, the cart rolls by.
+  3. Square (6 s): the children jump about the ruin stones, the elder stands by. Ардан carries a sack across the square.
+  4. Talk (6 s): the elder stops Ардан, subtitle «Эти камни старше деревни…»; Ардан glances at his amulet.
+  5. Sign (4 s): the amulet's rune flashes faintly blue, then the stones' runes light one by one; a rumble, dust. The user KEEPS the amulet flash.
+  6. Fright (3 s): the children jump off and run to the woman, and people turn.
+  7. Assembly (6 s): the stones rise, turn and fly into place. First the pillars grow from the two standing bases, then the arch, the keystone last, with a flash.
+  8. Swirl (3 s): it opens from a point; its light falls on faces.
+  9. A beat of silence, then the champion leaps out (4 s): he lands, the platform cracks, he roars.
+  10. Flood (3 s): torch and spear orcs pour out.
+  11. Chaos (5 s): a straw roof is set alight, a stall knocked over, people flee.
+  12. Bell (3 s): the priest pulls the rope in the belfry.
+  13. «Беги!» (3 s): the elder shouts it and pushes Ардан away.
+  14. Into play (3 s): Ардан drops the sack and runs; the camera swings behind him and the joystick hint appears.
+- The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.
 - **Mission 1:** a portal opens in a village and the horde burns it. The player is **Ардан** (a named
@@ -93,5 +109,5 @@ Commands:
   - Demo clips: `blender --background <Models.blend> --python Tools/blender/cinematic/ardan_anim.py -- render <out> [walk|carry|all]`.
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
-- The cutscene shot list, detailed action by action.
+- How the cutscene is produced: a Blender animatic first, and the animations the shots need (children jumping, the orc leap and roar, the bell ringing, the shout and push, Ардан's run).
 - The level structure beyond mission 1.
