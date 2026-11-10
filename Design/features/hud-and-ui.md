@@ -46,7 +46,7 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   (gold, bottom centre) = start; LONG PRESS (0.5 s, `UI/LongPress.cs`) = the mode's «!» words. They
   unroll from the perch on entry (staggered). `UI/ModeBannersController.cs`, built by
   `SetupProjectMainMenuScreens.BuildModeBanners`. The old pills, round «!» and tutorial plaque are
-  gone (MainMenuController.tutorialReward left unwired). Not seen by the user in the game.
+  gone (MainMenuController.tutorialReward left unwired). Round 3 (the user saw it, 11-10): smaller name plaques (196x54, 26 pt); the MOTTO moved off the banners to ONE line bottom centre over «Играть», showing the picked mode's; the live line sits under the plaque, 190 wide and best-fit (14..26 pt) so big numbers stay inside the seam.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
 - sandbox: window, back + SAVES (the only way into saves now) TL, «!» + settings TR; map cards 3 per

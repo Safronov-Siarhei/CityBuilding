@@ -475,7 +475,6 @@ namespace CityBuilder.EditorTools
             var hall = StretchedChild(modes, "Banners");
             var banners = new Object[names.Length];
             var cloths = new Object[names.Length];
-            var mottos = new Object[names.Length];
             var lines = new Object[names.Length];
             var bannerControl = modes.gameObject.AddComponent<ModeBannersController>();
             // a banner sprite is 380 x 660; on screen 300 wide
@@ -495,22 +494,26 @@ namespace CityBuilder.EditorTools
                 var press = cloth.gameObject.AddComponent<LongPress>();
                 UnityEventTools.AddIntPersistentListener(press.onLongPress, bannerControl.HoldBanner, i);
 
-                var plaque = MenuImage(cloth.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(250f, 70f));
-                Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(250f, 70f));
+                // the name on a small plaque (the user, 2026-11-10: the first ones were too big)
+                var plaque = MenuImage(cloth.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(196f, 54f));
+                Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(196f, 54f));
                 plaque.raycastTarget = false;
-                MenuLabel(plaque.transform, "Label", keys[i], 32, new Vector2(0f, 3f), new Vector2(230f, 60f), HudInk.OnMenuPlaque, bold: true);
+                MenuLabel(plaque.transform, "Label", keys[i], 26, new Vector2(0f, 2f), new Vector2(180f, 46f), HudInk.OnMenuPlaque, bold: true);
 
-                var motto = BannerLine(cloth.transform, "Motto", -392f * k, 24, false);
-                var line = BannerLine(cloth.transform, "Line", -446f * k, 26, true);
+                // the live line, shrunk to fit inside the stitched seam whatever the number
+                var line = BannerLine(cloth.transform, "Line", -392f * k, 26, true);
                 banners[i] = rect;
                 cloths[i] = cloth;
-                mottos[i] = motto;
                 lines[i] = line;
             }
 
             var play = MenuTextButton(modes, "PlayButton", "button", "#newgame_play", HudInk.OnButton, Vector2.zero, new Vector2(420f, 120f), 48);
             Anchor((RectTransform)play.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 110f), new Vector2(420f, 120f));
             UnityEventTools.AddPersistentListener(play.onClick, bannerControl.Play);
+            // the picked mode's motto, bottom centre over «Играть» (the user, 2026-11-10)
+            var motto = BannerLine(modes, "Motto", 0f, 32, true);
+            Anchor(motto.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 205f), new Vector2(760f, 52f));
+            motto.resizeTextForBestFit = false;
 
             var so = new SerializedObject(bannerControl);
             so.FindProperty("menu").objectReferenceValue = menu;
@@ -518,7 +521,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("playButton").objectReferenceValue = play.GetComponent<Image>();
             WriteArray(so.FindProperty("banners"), banners);
             WriteArray(so.FindProperty("cloths"), cloths);
-            WriteArray(so.FindProperty("mottos"), mottos);
+            so.FindProperty("motto").objectReferenceValue = motto;
             WriteArray(so.FindProperty("lines"), lines);
             so.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -526,12 +529,17 @@ namespace CityBuilder.EditorTools
         /// <summary>A line on a banner's cloth: light ink with a dark edge, so it reads on every cloth colour.</summary>
         private static Text BannerLine(Transform banner, string name, float y, int size, bool bold)
         {
-            var text = CreateText(banner, name, string.Empty, size, Vector2.zero, new Vector2(240f, 44f));
-            Anchor(text.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, y), new Vector2(240f, 44f));
+            // 190 wide: inside the stitched seam (268 sprite px x 300/380 = 211, less a margin)
+            var text = CreateText(banner, name, string.Empty, size, Vector2.zero, new Vector2(190f, 40f));
+            Anchor(text.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, y), new Vector2(190f, 40f));
             text.font = bold ? UiTheme.Bold : UiTheme.Regular;
             text.alignment = TextAnchor.MiddleCenter;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            // one line, shrunk rather than spilling over the seam (three-digit points, many saves)
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 14;
+            text.resizeTextMaxSize = size;
             text.color = new Color(1f, 0.96f, 0.86f);
             text.raycastTarget = false;
             var edge = text.gameObject.AddComponent<Outline>();

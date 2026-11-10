@@ -27,7 +27,7 @@ namespace CityBuilder.UI
         [SerializeField] private CanvasGroup screen;
         [SerializeField] private RectTransform[] banners = new RectTransform[0];
         [SerializeField] private Image[] cloths = new Image[0];
-        [SerializeField] private Text[] mottos = new Text[0];
+        [SerializeField] private Text motto;
         [SerializeField] private Text[] lines = new Text[0];
         [SerializeField] private Image playButton;
 
@@ -118,15 +118,13 @@ namespace CityBuilder.UI
             }
             // the picked banner in front of its neighbours
             banners[index].SetAsLastSibling();
+            ShowMotto();
         }
 
         /// <summary>The banners' live lines.</summary>
         private void Refresh()
         {
-            for (var i = 0; i < mottos.Length; i++)
-            {
-                if (mottos[i] != null) mottos[i].text = Localization.Get(MottoKeys[i]);
-            }
+            ShowMotto();
             var config = BalanceConfig.Instance;
             SetLine(Tutorial, PlayerPrefs.GetInt("tutorial.rewarded", 0) != 0
                 ? Localization.Get("#banner_tutorial_done")
@@ -137,6 +135,12 @@ namespace CityBuilder.UI
             var points = CityBuilder.Invasion.InvasionRecords.DayPoints(CityBuilder.Invasion.InvasionRecords.LoadDays(), System.DateTime.Now, counted);
             SetLine(Invasion, Localization.Format("#banner_points_today", points));
             SetLine(Campaign, Localization.Get("#banner_soon"));
+        }
+
+        /// <summary>The picked mode's motto, over «Играть».</summary>
+        private void ShowMotto()
+        {
+            if (motto != null) motto.text = Localization.Get(MottoKeys[Mathf.Clamp(_picked, 0, MottoKeys.Length - 1)]);
         }
 
         private void SetLine(int index, string text)
