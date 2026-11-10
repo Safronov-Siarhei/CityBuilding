@@ -150,6 +150,16 @@ def cancel():
     return img
 
 
+def plus():
+    """Make a new squad (the user, 2026-11-10: the button showed a blank square)."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    w = int(u(0.16))
+    d.line([(u(0.5), u(0.18)), (u(0.5), u(0.82))], fill=WHITE, width=w)
+    d.line([(u(0.18), u(0.5)), (u(0.82), u(0.5))], fill=WHITE, width=w)
+    return img
+
+
 def play():
     """The main menu's big button: a triangle with softened corners, nudged right of centre so it looks centred."""
     img = canvas()
@@ -406,7 +416,7 @@ def crystal():
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
-                     ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel),
+                     ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel), ("Plus", plus),
                      ("Play", play), ("Shop", shop), ("Bag", bag), ("Back", back), ("Resume", resume), ("Lock", lock),
                      ("Info", info), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),

@@ -75,6 +75,14 @@ namespace CityBuilder.Citizens
             }
         }
 
+        /// <summary>A water cell whose ground lies under the sea's surface: one a line can drop into.</summary>
+        private static bool Wet(MeshMapApplier map, GridManager grid, Vector2Int cell)
+        {
+            if (!map.IsWaterCell(cell)) return false;
+            var at = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+            return !map.TryGetGroundHeight(at, out var ground) || ground < Ships.ShipManager.WaterLevel - 0.15f;
+        }
+
         /// <summary>
         /// Land cells at the water within the hut's fishing reach (fish_hut_reach_meters), on its own
         /// island, that a walker can stand on -- each facing its water. Found once per hut.
@@ -100,10 +108,14 @@ namespace CityBuilder.Citizens
                 {
                     if (dx * dx + dz * dz > reach * reach) continue;
                     var c = home + new Vector2Int(dx, dz);
-                    if (map.IsWaterCell(c)) continue;
+                    // he stands on land or the beach's dry-looking wet margin, never in real water
+                    if (Wet(map, grid, c)) continue;
                     foreach (var step in steps)
                     {
-                        if (!map.IsWaterCell(c + step)) continue;
+                        // real water under the line (the user, 2026-11-10: he cast into the sand):
+                        // a "water" cell on the beach's wet margin can be ground above the sea's
+                        // surface, so the cell he faces must lie below it
+                        if (!Wet(map, grid, c + step)) continue;
                         var at = grid.GetFootprintCenterWorld(c, Vector2Int.one);
                         if (!map.SameIsland(hut.transform.position, at)) break;
                         if (!NavMesh.SamplePosition(at, out var hit, grid.CellSize * 0.6f, NavMesh.AllAreas)) break;

@@ -28,6 +28,8 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform aimMarker;
 
         [SerializeField] private Text statusLabel;
+        /// <summary>Over the building in hand: the food bonus it would get or give there (the user, 2026-11-10).</summary>
+        [SerializeField] private Text bonusLabel;
 
         private static readonly Color ConfirmReady = new Color(0.35f, 0.75f, 0.4f, 1f);
         private static readonly Color ConfirmBlocked = new Color(0.35f, 0.35f, 0.35f, 0.8f);
@@ -61,6 +63,52 @@ namespace CityBuilder.UI
             if (confirmImage != null) confirmImage.color = buildingPlacer.CanConfirm ? ConfirmReady : ConfirmBlocked;
 
             UpdateStatus(selecting);
+            UpdateBonus(selecting);
+        }
+
+        private int _shownBonus = -1, _shownReached = -1;
+
+        /// <summary>
+        /// A Farm, Fisher's Hut or Pig Farm aimed inside a working Bakery's/Smokehouse's reach shows
+        /// "+N" over it; a Bakery or Smokehouse shows "+N x M", the producers it would feed.
+        /// </summary>
+        private void UpdateBonus(bool selecting)
+        {
+            if (bonusLabel == null) return;
+            var data = selecting ? buildingPlacer.SelectedBuilding : null;
+            var show = false;
+            if (data != null && Citizens.FoodOutput.IsFood(data.buildingName) && buildingPlacer.TryGetGhostCentre(out var centre))
+            {
+                int bonus, reached = 0;
+                if (Citizens.FoodOutput.IsProducer(data.buildingName))
+                    bonus = Citizens.FoodOutput.BoostAt(data.buildingName, centre);
+                else
+                {
+                    var config = BalanceConfig.Instance;
+                    bonus = config != null ? config.FoodBoost(data.buildingName, 1) : 0;
+                    reached = Citizens.FoodOutput.ReachedFrom(data.buildingName, centre, data.LevelStats(1).serviceRadius);
+                    if (reached == 0) bonus = 0;
+                }
+                show = bonus > 0;
+                if (show)
+                {
+                    if (bonus != _shownBonus || reached != _shownReached)
+                    {
+                        _shownBonus = bonus;
+                        _shownReached = reached;
+                        bonusLabel.text = reached > 0 ? Localization.Format("#place_food_boosts", bonus, reached) : Localization.Format("#place_food_bonus", bonus);
+                    }
+                    var camera = UnityEngine.Camera.main;
+                    if (camera != null)
+                    {
+                        var height = data.footprintSize.x * 0.9f + 1.6f;
+                        // bobbing gently, a sign over the building
+                        bonusLabel.rectTransform.position = camera.WorldToScreenPoint(centre + Vector3.up * height)
+                            + Vector3.up * (6f * Mathf.Sin(Time.unscaledTime * 3f));
+                    }
+                }
+            }
+            if (bonusLabel.gameObject.activeSelf != show) bonusLabel.gameObject.SetActive(show);
         }
 
         /// <summary>The confirm button: places the building (or the road or fence piece) in hand.</summary>

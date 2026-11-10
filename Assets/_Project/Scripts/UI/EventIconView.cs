@@ -1,4 +1,5 @@
 using System;
+using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -43,6 +44,8 @@ namespace CityBuilder.UI
 
         private float _pressedAt = -1f;
         private int _shownCount = -1;
+        // a tap shows the caption this long (the user, 2026-11-10: on the phone it closed at once)
+        private float _captionUntil = -1f;
 
         public void Show(Sprite pictureSprite, Sprite glyphSprite, Color colour, string text, int count)
         {
@@ -87,6 +90,7 @@ namespace CityBuilder.UI
         {
             caption.SetActive(false);
             _pressedAt = -1f;
+            _captionUntil = -1f;
             _shownCount = -1;
             gameObject.SetActive(false);
         }
@@ -100,7 +104,10 @@ namespace CityBuilder.UI
         {
             var held = _pressedAt >= 0f ? Time.unscaledTime - _pressedAt : 0f;
             _pressedAt = -1f;
-            caption.SetActive(false);
+            // the line stays up event_caption_sec after the tap (or the reading hold), then goes
+            var seconds = BalanceConfig.Instance != null ? BalanceConfig.Instance.EventCaptionSeconds : 4f;
+            _captionUntil = Time.unscaledTime + seconds;
+            caption.SetActive(true);
             if (held > ReadingHoldSeconds) return;
 
             Clicked?.Invoke(this);
@@ -113,6 +120,14 @@ namespace CityBuilder.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            // a finger lifting is an exit too: a caption a tap put up stays its seconds
+            if (_captionUntil < 0f) caption.SetActive(false);
+        }
+
+        private void Update()
+        {
+            if (_captionUntil < 0f || Time.unscaledTime < _captionUntil) return;
+            _captionUntil = -1f;
             caption.SetActive(false);
         }
     }

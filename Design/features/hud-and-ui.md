@@ -1,5 +1,7 @@
 # HUD and UI
 
+> **2026-11-10 playtest (the user, phone):** a tapped event icon keeps its line up `event_caption_sec` (4, economy) -- a finger lifting no longer hides it (`EventIconView`); the HUD ignores the SIDE safe-area insets (`SafeAreaFitter`: left column to the screen edge; top/bottom still kept); the Day plaque sits UNDER the windows (sibling before BuildingInfoPanel); one round cancel button for every selection incl. a citizen (old «Выбран житель ✕» badge unused), pinned to the bottom-right corner; the new-squad button draws `Hud_Plus` (was a blank square); the food chip pulses red while hungry, faster while people leave. Built, not seen.
+
 > **2026-10-25:** left column = menu, citizens, INVENTORY (sack; `InventoryButtonTop`), then the event
 > feed (`LeftColumnTop` moved down); the run's building card and hero portraits are the sandbox's too
 > ([sandbox-run-systems](sandbox-run-systems.md)); contentment's round number is off.

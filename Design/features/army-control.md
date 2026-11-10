@@ -1,5 +1,7 @@
 # Army control: squads (concept, 2026-11-05)
 
+> **2026-11-10:** the squad row's «+» draws `Hud_Plus` (Tools/ui/make_hud_glyphs.py `plus`). The squad-creation window needs rework -- TO DISCUSS with the user (not started).
+
 > **Status:** CONCEPT AGREED 2026-11-05. STAGE 1 (squads, Garrison, army icon, squad row, machine row, round
 > cancel, tap-selects-squad) BUILT 592efc49 2026-11-05 (army/save/dungeon/sandbox tests green; Invasion/Archipelago tests
 > not run yet; user not seen). STAGE 2 (squad window) BUILT 2026-11-05, user not seen. STAGE 3 (behaviours + formations) BUILT 2026-11-05,

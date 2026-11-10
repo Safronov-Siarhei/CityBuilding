@@ -1,5 +1,7 @@
 # Food, eating and starvation
 
+> **2026-11-10 (the user):** past the hungry grace (`hungry_days_before_deaths`) with NO food in store, people leave ONE AT A TIME every `starve_leave_interval_sec` (20, economy) instead of a batch at the meal (`FoodConsumptionManager.Update`, `Starving`/`Hungry`); the day's leavers go into the death register at the next meal; the HUD food chip warns. Placing a Farm/Fisher/PigFarm inside a working Bakery's/Smokehouse's reach shows «+N» over it, a Bakery/Smokehouse «+N ×M» (`PlacementHudController.UpdateBonus`, `FoodOutput.BoostAt/ReachedFrom`, keys `#place_food_*`). The fisherman casts only into cells whose ground is under the sea (`WorkSpots.Wet`), standing on land or the beach's wet margin. Old hunger tests (deaths at the meal) are now outdated. Built, not seen.
+
 > **2026-11-02 round 9:** every citizen eats 1 food a day (`food_per_mouth_per_day` = 1, confirmed to the
 > user). Fisher's hut fishing radius = `fish_hut_reach_meters` 8 (was 16), shown as the hut's radius
 > ring (`HarvestRadiusOverlay.RadiusOf`); the fisherman fishes from shore cells inside it, and a shoal

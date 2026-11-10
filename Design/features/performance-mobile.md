@@ -1,5 +1,7 @@
 # Performance on mobile
 
+> **2026-11-10 FOG CULLING (the user: «под туманом ничего не должно быть»):** `Maps/FogCulling.cs` + `FogCulled.cs` -- an object's renderers are off while none of its sample cells (middle + 4 at RadiusCells) is revealed; 40 objects checked a frame. On: orc camp roots (decor/rocks/skeleton, radius HalfExtent), every orc camp building, every OrcUnit, every bot building (InitializeAsBot), bot garrison soldiers. Simulation only on view: bot castle raids + rebuild (BotKingdom, `SeenRadiusCells` 14), bot garrison (BotGarrison), orc camp patrol walking (OrcCamp), fish shoals hidden + not animated. Wildlife already spawned only where revealed. Crows over the main base removed. No fog (dungeon, cheat, no map fog) = nothing hidden (`FogOfWarManager.IsActive`). Not measured on a phone.
+
 > **2026-11-09:** quality tiers + transparent-variant fix + dims past the SafeArea (see "Picture quality"), not seen on a phone.
 > **Status (2026-10-21):** CPU and draw calls measured in the editor (2026-08-19/31); almost nothing
 > measured ON A DEVICE. Since then much was added unmeasured (5-level models, Map 3–5 decor, orc bases,

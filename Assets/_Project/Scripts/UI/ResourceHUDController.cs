@@ -82,6 +82,34 @@ namespace CityBuilder.UI
         }
 
         /// <summary>A rotation, a resized window or a fold changes the row's width: lay the chips out again.</summary>
+        // the food chip's warning (the user, 2026-11-10): red and pulsing while the town is short
+        private int _foodSlot = -2;
+        private Color _foodInk;
+        private bool _warning;
+
+        private void Update()
+        {
+            if (_foodSlot == -2) _foodSlot = resourceOrder != null ? System.Array.IndexOf(resourceOrder, ResourceType.Food) : -1;
+            if (_foodSlot < 0 || amountTexts == null || _foodSlot >= amountTexts.Length || amountTexts[_foodSlot] == null) return;
+            var food = FoodConsumptionManager.Instance;
+            var warn = food != null && food.Hungry;
+            var text = amountTexts[_foodSlot];
+            var icon = icons != null && _foodSlot < icons.Length ? icons[_foodSlot] : null;
+            if (warn)
+            {
+                if (!_warning) _foodInk = text.color;
+                var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (food.Starving ? 9f : 5f));
+                text.color = Color.Lerp(new Color(0.75f, 0.1f, 0.05f), new Color(1f, 0.35f, 0.2f), pulse);
+                if (icon != null) icon.localScale = Vector3.one * (1f + 0.15f * pulse);
+            }
+            else if (_warning)
+            {
+                text.color = _foodInk;
+                if (icon != null) icon.localScale = Vector3.one;
+            }
+            _warning = warn;
+        }
+
         private void OnRectTransformDimensionsChange()
         {
             if (_seen != null) Refresh();

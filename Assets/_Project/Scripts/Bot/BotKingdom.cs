@@ -74,6 +74,9 @@ namespace CityBuilder.Bot
         private Vector2Int _centre;
         private int _turns;
         private float _calmFor;
+
+        /// <summary>How far round the Town Hall a revealed cell counts as the player seeing the castle.</summary>
+        public const int SeenRadiusCells = 14;
         // the raids on the castle since its last rebuild, and whether the next calm raises its ruins
         private int _raidsSinceRebuild;
         private bool _rebuildDue;
@@ -336,6 +339,9 @@ namespace CityBuilder.Bot
             if (!Placed || HallRazed || Hall == null) return;
             var config = BalanceConfig.Instance;
             if (config == null) return;
+            // the orcs' raids on the castle, and its rebuilding, only while the player can see it
+            // (the user, 2026-11-10: a fight under the fog is load on the phone for nothing)
+            if (!Maps.FogCulling.Seen(Hall.transform.position, SeenRadiusCells)) return;
             RaidNow(config);
             // the bot rebuilds only after every bot_rebuild_every_raids-th raid (the user, 2026-11-06)
             if (!_rebuildDue)

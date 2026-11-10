@@ -211,7 +211,10 @@ namespace CityBuilder.Ships
             {
                 if (shoal.Visual != null)
                 {
-                    SwimShoal(shoal, t);
+                    // under the fog: not drawn, not swum (the user, 2026-11-10: nothing under the fog)
+                    var seen = Maps.FogCulling.Seen(shoal.At, 2);
+                    if (shoal.Visual.activeSelf != seen) shoal.Visual.SetActive(seen);
+                    if (seen) SwimShoal(shoal, t);
                     continue;
                 }
                 if (shoal.Alive) continue;

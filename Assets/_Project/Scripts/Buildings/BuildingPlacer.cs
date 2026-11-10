@@ -160,6 +160,15 @@ namespace CityBuilder.Buildings
         /// <summary>The building in hand, or null.</summary>
         public BuildingData SelectedBuilding => _selectedBuilding;
 
+        /// <summary>The middle of the cells the building in hand would stand on, if it is aimed anywhere.</summary>
+        public bool TryGetGhostCentre(out Vector3 centre)
+        {
+            centre = default;
+            if (_selectedBuilding == null || !_hasCurrentCell || GridManager.Instance == null) return false;
+            centre = GridManager.Instance.GetFootprintCenterWorld(_currentCell, RotatedFootprint(_selectedBuilding.footprintSize));
+            return true;
+        }
+
         /// <summary>
         /// What the game uses for this building now -- its replacement after ReplaceCatalog, else
         /// itself. Anything wired to a BuildingData ASSET (the build menu's cards) asks here: a card

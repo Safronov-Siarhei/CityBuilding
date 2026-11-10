@@ -348,6 +348,9 @@ namespace CityBuilder.Maps
             _needsSnap = true;
         }
 
+        /// <summary>Whether the fog is up and drawn at all (off: a map or mode without it, or the cheat) -- FogCulling hides nothing then.</summary>
+        public bool IsActive => _active && _initialized && !_disabledCheat;
+
         /// <summary>Whether this cell is open to view right now (a building's permanent reveal, or a citizen nearby).</summary>
         public bool IsCellRevealed(Vector2Int cell)
         {

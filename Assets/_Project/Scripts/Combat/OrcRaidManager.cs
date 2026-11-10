@@ -637,6 +637,8 @@ namespace CityBuilder.Combat
 
             var unit = root.AddComponent<OrcUnit>();
             unit.Initialize(level, kind);
+            // not drawn under the fog (the user, 2026-11-10)
+            Maps.FogCulling.Cull(root, 1);
             return unit;
         }
 

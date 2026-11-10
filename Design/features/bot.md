@@ -1,4 +1,6 @@
 # Bot kingdom (Бот)
+
+> **2026-11-10 (the user):** no event-feed line when a bot garrison soldier dies (`BotGarrison.Owns` in ArmyManager). Under the fog the bot's town and soldiers are not drawn, and its orc raids, rebuilding and garrison stand still until the player sees the castle (FogCulling, see performance-mobile).
 Status: BUILT up to WAR (2026-11-04; ransom-by-razing + harder later wars + 20 waves 2026-11-05): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
 
 The user's decisions are marked "user"; the rest are my proposals.

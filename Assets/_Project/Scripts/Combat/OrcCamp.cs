@@ -233,6 +233,8 @@ namespace CityBuilder.Combat
         {
             Level = Mathf.Clamp(level, 1, MaxLevel);
             var layout = Layout;
+            // the camp's own decor, rocks and skeleton are not drawn under the fog (the user, 2026-11-10)
+            Maps.FogCulling.Cull(gameObject, layout.HalfExtent);
             _wallCells.Clear();
             foreach (var piece in layout.Pieces)
             {
@@ -446,7 +448,8 @@ namespace CityBuilder.Combat
             var layout = Layout;
             if (_slotGuards.Length != layout.Guards.Count) return;
 
-            WalkPatrols(layout);
+            // patrols walk only where the player can see them: under the fog they would be work for nothing
+            if (Maps.FogCulling.Seen(transform.position, layout.HalfExtent)) WalkPatrols(layout);
 
             var balance = BalanceConfig.Instance;
             // a plain loop over a fixed array: this runs every frame for every camp, and an

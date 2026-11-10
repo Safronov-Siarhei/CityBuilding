@@ -287,6 +287,16 @@ namespace CityBuilder.EditorTools
             placementHudSO.FindProperty("cancelButton").objectReferenceValue = cancelButton.gameObject;
             placementHudSO.FindProperty("aimMarker").objectReferenceValue = aimMarker;
             placementHudSO.FindProperty("statusLabel").objectReferenceValue = placementStatus;
+            // the food bonus over the building in hand: big green, a dark edge (the user, 2026-11-10)
+            var bonusLabel = CreateText(uiRoot, "PlacementFoodBonus", string.Empty, 52, Vector2.zero, new Vector2(320f, 80f), new Color(0.55f, 1f, 0.35f));
+            bonusLabel.font = UiTheme.Heavy;
+            bonusLabel.alignment = TextAnchor.MiddleCenter;
+            bonusLabel.raycastTarget = false;
+            var bonusEdge = bonusLabel.gameObject.AddComponent<Outline>();
+            bonusEdge.effectColor = new Color(0.08f, 0.2f, 0.05f, 0.95f);
+            bonusEdge.effectDistance = new Vector2(3f, -3f);
+            bonusLabel.gameObject.SetActive(false);
+            placementHudSO.FindProperty("bonusLabel").objectReferenceValue = bonusLabel;
             placementHudSO.ApplyModifiedPropertiesWithoutUndo();
             // Confirm places the building -- or, while drawing a road, finishes drawing.
             UnityEventTools.AddPersistentListener(confirmButton.onClick, placementHud.ConfirmPressed);
@@ -809,7 +819,8 @@ namespace CityBuilder.EditorTools
             var cancelRound = CreateGlyphButton(canvasParent, "CancelSelectionButton", "round", HudInk.OnRound, "Cancel", cancelIcon, RoundButton);
             var cancelRect = (RectTransform)cancelRound.transform;
             cancelRect.anchorMin = cancelRect.anchorMax = cancelRect.pivot = new Vector2(1f, 0f);
-            cancelRect.anchoredPosition = new Vector2(-HudMargin, HudMargin + 84f + 14f);
+            // pinned to the bottom-right corner itself (the user, 2026-11-10: the tax it once sat over is gone)
+            cancelRect.anchoredPosition = new Vector2(-HudMargin, HudMargin);
             cancelRect.sizeDelta = new Vector2(RoundButton, RoundButton);
             controllerSO.FindProperty("cancelRoot").objectReferenceValue = cancelRound.gameObject;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();

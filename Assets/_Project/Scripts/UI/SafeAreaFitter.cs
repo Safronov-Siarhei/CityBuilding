@@ -46,8 +46,12 @@ namespace CityBuilder.UI
             _lastSafeArea = safeArea;
             _lastScreen = new Vector2Int(width, height);
 
-            var min = new Vector2(safeArea.xMin / width, safeArea.yMin / height);
-            var max = new Vector2(safeArea.xMax / width, safeArea.yMax / height);
+            // Up and down only (the user, 2026-11-10): in landscape the camera cut-out's inset pushed
+            // the whole left column ~90 px in from the edge, which read as unanchored; the punch
+            // hole is small and sits mid-height, so the HUD goes to the screen's left and right
+            // edges and only the gesture bar and the top are kept clear.
+            var min = new Vector2(0f, safeArea.yMin / height);
+            var max = new Vector2(1f, safeArea.yMax / height);
 
             _rect.anchorMin = min;
             _rect.anchorMax = max;

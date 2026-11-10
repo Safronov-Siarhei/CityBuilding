@@ -71,6 +71,8 @@ namespace CityBuilder.Bot
             var config = BalanceConfig.Instance;
             if (kingdom == null || !kingdom.Placed || army == null || config == null) return;
             if (_standDown) return;
+            // the garrison mans, walks and refills only while the player can see the castle
+            if (kingdom.Hall != null && !Maps.FogCulling.Seen(kingdom.Hall.transform.position, BotKingdom.SeenRadiusCells)) return;
             if (!_manned)
             {
                 Man(kingdom, config);
@@ -148,6 +150,8 @@ namespace CityBuilder.Bot
             unit.SetCurrentHealth(stats.maxHealth);
             post.unit = unit;
             post.downFor = 0f;
+            // not drawn under the fog (the user, 2026-11-10)
+            Maps.FogCulling.Cull(unit.gameObject, 1);
             if (post.duty == Duty.King) kingdom.DressKing(unit.gameObject);
             if (post.duty == Duty.Wall) post.onWall = unit.GoToWall(post.wallCell);
             else if (post.duty == Duty.Patrol) group.OrderMoveTo(kingdom.WorldAt(Avenues[post.route][_patrolLeg[post.route]]));

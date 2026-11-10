@@ -191,6 +191,8 @@ namespace CityBuilder.Buildings
         public void InitializeAsBot(BuildingData data, Vector2Int originCell, int rotationSteps, int level)
         {
             IsBot = true;
+            // the bot's town is not drawn under the fog (the user, 2026-11-10)
+            if (data != null) Maps.FogCulling.Cull(gameObject, Mathf.Max(data.footprintSize.x, data.footprintSize.y) / 2 + 1);
             Data = data;
             OriginCell = originCell;
             _levelAppearance = GetComponent<BuildingLevelAppearance>();

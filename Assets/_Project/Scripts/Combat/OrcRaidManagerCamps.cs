@@ -453,12 +453,7 @@ namespace CityBuilder.Combat
                 }
             }
 
-            // crows circling over the skull and over the base
-            if (crowModel != null)
-            {
-                var flock = root.AddComponent<CrowFlock>();
-                flock.Initialize(crowModel, camp.LocalToWorld(new Vector2(0f, gateLine - 6.5f)), camp.LocalToWorld(new Vector2(0f, -12f)));
-            }
+            // no crows over the base any more (the user, 2026-11-10: off, and they cost frames)
             SceneryShadows.DisableCasting(root);
         }
 
@@ -571,6 +566,7 @@ namespace CityBuilder.Combat
             root.transform.SetPositionAndRotation(grid.GetFootprintCenterWorld(cell, footprint), Quaternion.Euler(0f, yaw, 0f));
             var building = root.AddComponent<OrcCampBuilding>();
             building.Initialize(piece.Kind, piece.Level, camp, cell, footprint, RuinOf(piece.Kind, piece.Level));
+            Maps.FogCulling.Cull(root, Mathf.Max(footprint.x, footprint.y) / 2 + 1);
 
             if (model != null)
             {
@@ -625,6 +621,7 @@ namespace CityBuilder.Combat
             root.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
             var building = root.AddComponent<OrcCampBuilding>();
             building.Initialize(kind, level, null, cell, footprint, ruin);
+            Maps.FogCulling.Cull(root, Mathf.Max(footprint.x, footprint.y) / 2 + 1);
             if (model != null) Instantiate(model, root.transform, false).name = "Model";
             else AddPortalPart(root.transform, new Vector3(0f, 0.6f, 0f), new Vector3(size.x * 0.8f, 1.2f, size.y * 0.8f));
 

@@ -1,5 +1,7 @@
 # Gathering: trees, rocks, ore veins and the harvest walk
 
+> **2026-11-10 (the user):** Sawmill and Quarry workers 1/2/3/4/5 by level (buildings max_workers*, sheet synced). Their work radius is the sheet's harvest_radius..._5 (the user tunes it himself).
+
 > **Status (2026-10-21):** shipped. Since 2026-10-21 nodes hold a STOCK and give one per visit; mines
 > stand only on ORE VEINS. Two delivery bugs fixed 2026-10-20 (no sawmill on any map ever delivered).
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [production-chains](production-chains.md),

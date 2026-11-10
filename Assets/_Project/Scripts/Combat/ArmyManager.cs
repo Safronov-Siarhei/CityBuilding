@@ -612,8 +612,9 @@ namespace CityBuilder.Combat
             // the figure falls and sinks where he stood, as an orc's does
             OrcCorpse.Leave(unit.transform, unit.HealthBar);
             Destroy(unit.gameObject);
-            // Where they fell, which is the fight the player may want to look at.
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_soldier_died"), EventSeverity.Danger, EventGlyph.Skull, "Barracks", unit.transform.position));
+            // Where they fell, which is the fight the player may want to look at -- but not the
+            // bot's garrison against the orcs: not the player's fight (the user, 2026-11-10)
+            if (!Bot.BotGarrison.Owns(unit)) EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_soldier_died"), EventSeverity.Danger, EventGlyph.Skull, "Barracks", unit.transform.position));
             OnArmyChanged?.Invoke();
         }
 

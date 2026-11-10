@@ -55,8 +55,10 @@ namespace CityBuilder.UI
             var army = ArmyManager.Instance;
             var hasGroup = army != null && army.SelectedGroup != null;
             var hasCitizen = citizenSelector != null && citizenSelector.HasSelection;
-            var visible = !hasGroup && hasCitizen && !ModalGate.IsBlocked;
-            var round = hasGroup && !ModalGate.IsBlocked;
+            // one round cancel button for every selection, a citizen's too (the user, 2026-11-10:
+            // the old «Выбран житель ✕» badge is gone); the badge stays built but unused
+            var visible = false;
+            var round = (hasGroup || hasCitizen) && !ModalGate.IsBlocked;
             if (cancelRoot != null && cancelRoot.activeSelf != round) cancelRoot.SetActive(round);
 
             if (badgeRoot != null && badgeRoot.activeSelf != visible) badgeRoot.SetActive(visible);

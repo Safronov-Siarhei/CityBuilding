@@ -757,12 +757,8 @@ namespace CityBuilder.EditorTools
                 button.gameObject.SetActive(false);
             }
 
-            var plus = CreateGlyphButton(row.transform, "NewSquad", "round", HudInk.OnRound, null, null, size * 0.86f);
-            var plusMark = CreateText(plus.transform, "Plus", "+", 72, new Vector2(0f, 4f), new Vector2(size, size));
-            plusMark.font = UiTheme.Heavy;
-            plusMark.alignment = TextAnchor.MiddleCenter;
-            plusMark.raycastTarget = false;
-            SkinInk(plusMark, HudInk.OnRound);
+            // a drawn plus (the user, 2026-11-10: the glyph-less button showed a blank square over the text "+")
+            var plus = CreateGlyphButton(row.transform, "NewSquad", "round", HudInk.OnRound, "Plus", null, size * 0.86f, 0.5f);
             UnityEventTools.AddPersistentListener(plus.onClick, bar.TapPlus);
 
             var info = CreateGlyphButton(row.transform, "SquadInfo", "round", HudInk.OnRound, "Info", null, size * 0.86f);
@@ -978,6 +974,9 @@ namespace CityBuilder.EditorTools
         {
             var plaque = HudImage(uiRoot, "SettlementStatus", "plaque", new Vector2(360f, 50f));
             plaque.raycastTarget = false;
+            // under the windows, not over them (the user, 2026-11-10: the day hid the building card's name)
+            var infoPanel = uiRoot.Find("BuildingInfoPanel");
+            if (infoPanel != null) plaque.transform.SetSiblingIndex(infoPanel.GetSiblingIndex());
             Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -114f), new Vector2(360f, 50f));
             var statusText = CreateText(plaque.transform, "Label", string.Empty, 28, Vector2.zero, new Vector2(340f, 44f), UiTheme.Ink);
             statusText.font = UiTheme.Bold;

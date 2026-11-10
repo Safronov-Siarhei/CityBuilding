@@ -44,6 +44,44 @@ namespace CityBuilder.Resources
         /// <summary>Citizens lost to starvation on each of the last few days, newest last. Drives the happiness "recent deaths" factor.</summary>
         private readonly Queue<int> _recentDeaths = new Queue<int>();
 
+        // Starving people leave ONE AT A TIME, one every starve_leave_interval_sec (the user,
+        // 2026-11-10: they all vanished at once), while the town is past its hungry grace and has
+        // no food in store; how many left today goes into the death register at the next meal.
+        private float _leaveTimer;
+        private int _leftToday;
+
+        /// <summary>Past the hungry grace with an empty store: people are leaving. The HUD's food chip warns.</summary>
+        public bool Starving
+        {
+            get
+            {
+                var config = BalanceConfig.Instance;
+                var resources = ResourceManager.Instance;
+                if (config == null || resources == null || HungryDaysInARow < config.HungryDaysBeforeDeaths) return false;
+                for (var i = 0; i < ResourceDiet.Edible.Count; i++)
+                    if (resources.GetAmount(ResourceDiet.Edible[i]) > 0) return false;
+                return true;
+            }
+        }
+
+        /// <summary>Short of food at the last meal: the HUD's food chip warns from the first hungry day.</summary>
+        public bool Hungry => HungryDaysInARow > 0;
+
+        private void Update()
+        {
+            if (!Starving || citizenManager == null)
+            {
+                _leaveTimer = 0f;
+                return;
+            }
+            _leaveTimer += Time.deltaTime;
+            if (_leaveTimer < BalanceConfig.Instance.StarveLeaveIntervalSeconds) return;
+            _leaveTimer = 0f;
+            if (citizenManager.KillCitizens(1) <= 0) return;
+            _leftToday++;
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_starved", 1), EventSeverity.Danger, EventGlyph.Skull, FoodPicture, GranaryBuildingName));
+        }
+
         public event Action OnFoodConsumed;
 
         private void Awake()
@@ -147,7 +185,10 @@ namespace CityBuilder.Resources
                 LastVariety++;
             }
 
-            RememberDeaths(ResolveShortfall(LastDemand - LastEaten));
+            ResolveShortfall(LastDemand - LastEaten);
+            // yesterday's leavers (Update) into the register the happiness model reads
+            RememberDeaths(_leftToday);
+            _leftToday = 0;
             OnFoodConsumed?.Invoke();
         }
 
@@ -173,13 +214,9 @@ namespace CityBuilder.Resources
                 return 0;
             }
 
-            if (citizenManager == null) return 0;
-
-            var deaths = citizenManager.KillCitizens(ComputeStarvationDeaths(shortfall));
-            if (deaths <= 0) return 0;
-
-            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_starved", deaths), EventSeverity.Danger, EventGlyph.Skull, FoodPicture, GranaryBuildingName));
-            return deaths;
+            // past the grace: no one dies at the meal any more -- they leave one by one (Update)
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_hungry", shortfall), EventSeverity.Danger, EventGlyph.Alert, FoodPicture, GranaryBuildingName));
+            return 0;
         }
 
         /// <summary>

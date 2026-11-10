@@ -60,6 +60,44 @@ namespace CityBuilder.Citizens
             return bonus;
         }
 
+        /// <summary>
+        /// The bonus a producer of this kind standing at `here` would get from the working boosters
+        /// reaching it -- shown over the building being placed (the user, 2026-11-10).
+        /// </summary>
+        public static int BoostAt(string producerId, Vector3 here)
+        {
+            if (!IsProducer(producerId)) return 0;
+            var grid = GridManager.Instance;
+            var cell = grid != null ? grid.CellSize : 1f;
+            var bonus = 0;
+            foreach (var booster in ProductionBuilding.All)
+            {
+                if (booster == null || !IsBooster(booster.BuildingId) || !Boosts(booster.BuildingId, producerId) || !Working(booster)) continue;
+                var reach = booster.Instance.ServiceRadius * cell;
+                var d = booster.transform.position - here;
+                d.y = 0f;
+                if (d.sqrMagnitude <= reach * reach) bonus += BoostGiven(booster);
+            }
+            return bonus;
+        }
+
+        /// <summary>How many producers a booster of this kind, at `radiusCells` reach, would boost from `here`.</summary>
+        public static int ReachedFrom(string boosterId, Vector3 here, int radiusCells)
+        {
+            if (!IsBooster(boosterId) || radiusCells <= 0) return 0;
+            var grid = GridManager.Instance;
+            var reach = radiusCells * (grid != null ? grid.CellSize : 1f);
+            var count = 0;
+            foreach (var producer in ProductionBuilding.All)
+            {
+                if (producer == null || !Boosts(boosterId, producer.BuildingId) || producer.Instance == null) continue;
+                var d = producer.transform.position - here;
+                d.y = 0f;
+                if (d.sqrMagnitude <= reach * reach) count++;
+            }
+            return count;
+        }
+
         /// <summary>Food a day this producer makes now, every bonus counted; 0 for anything else.</summary>
         public static int PerDay(ProductionBuilding producer)
         {
