@@ -151,9 +151,14 @@ print('orc', hero(S + '/figure_orc.png', ORC_BODY, ORC_FEET, ORC_HEAD, 1520, FLO
 d = ImageDraw.Draw(img)
 
 # the band itself over the heroes (his spikes pass behind the title, his head in front of the tail)
-d.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=(196, 44, 42), outline=(90, 14, 16), width=6)
+# the folds joining the band to each tail (the user: «соедини эти элементы знамени»): a dark triangle
+# from the band's bottom edge down to the tail's top corner, the band's bottom corners square over it
+for side, bx in ((-1, rx0), (1, rx1)):
+    d.polygon([(bx - side * 50, ry1 - 3), (bx, ry1 - 3), (bx, ry1 + 42)], fill=(98, 16, 18), outline=(70, 10, 12))
+d.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=(196, 44, 42), outline=(90, 14, 16), width=6,
+                    corners=(True, True, False, False))
 d.line((rx0 + 26, ry0 + 18, rx1 - 26, ry0 + 18), fill=(228, 92, 82), width=5)
-text(((rx0 + rx1) / 2, (ry0 + ry1) / 2 + 2), 'Поддержите королевство!', 74, (255, 240, 200), stroke=5, sf=(90, 14, 16))
+text(((rx0 + rx1) / 2, (ry0 + ry1) / 2 + 2), 'Поддержите королевство!', 60, (255, 240, 200), stroke=5, sf=(90, 14, 16))
 
 # ---- words, stars, buttons (1.5x)
 CX = (pw0 + pw1) / 2
@@ -192,10 +197,6 @@ def button(box, label, top, bot, out, size):
 button((CX - 270, 725, CX + 270, 845), 'Оценить', (118, 214, 72), (70, 170, 44), (28, 84, 18), 66)
 text((CX, 915), 'Позже', 44, (140, 98, 58), 'Rubik-Bold.ttf')
 
-# ---- close
-cx, cy = X1 - 10, Y0 + 10
-d.ellipse((cx - 48, cy - 48, cx + 48, cy + 48), fill=(196, 44, 42), outline=(90, 14, 16), width=6)
-d.line((cx - 18, cy - 18, cx + 18, cy + 18), fill='white', width=11)
-d.line((cx - 18, cy + 18, cx + 18, cy - 18), fill='white', width=11)
+# no close X (the user: «Позже» is the way out); a tap outside the window closes it too (= «Позже»)
 
 img.convert('RGB').save(S + '/' + OUT)
