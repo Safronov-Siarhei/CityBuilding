@@ -9,7 +9,7 @@ namespace CityBuilder.Maps.Archipelago
     /// each (see the flags); its props; and the spots its kind needs, in frame coordinates (metres
     /// from the frame's centre, x east, y north).
     /// </summary>
-    public class IslandAsset : ScriptableObject
+    public class IslandAsset : ScriptableObject, IIslandCells
     {
         public const byte Land = 1, NoBuild = 2, Forest = 4, Stony = 8, Shore = 16;
 
@@ -36,17 +36,17 @@ namespace CityBuilder.Maps.Archipelago
         public string IslandName => islandName;
         public ArchipelagoGenerator.Kind Kind => kind;
 
-        /// <summary>The variant number its name ends in ("Isl-flat3" -> 3); 1 when it has none.</summary>
-        public int Variant
+        public int Variant => VariantOf(islandName);
+
+        /// <summary>The variant number a name ends in ("Isl-flat3" -> 3); 1 when it has none.</summary>
+        public static int VariantOf(string islandName)
         {
-            get
-            {
-                var end = islandName != null ? islandName.Length : 0;
-                var start = end;
-                while (start > 0 && char.IsDigit(islandName[start - 1])) start--;
-                return start < end && int.TryParse(islandName.Substring(start), out var n) ? n : 1;
-            }
+            var end = islandName != null ? islandName.Length : 0;
+            var start = end;
+            while (start > 0 && char.IsDigit(islandName[start - 1])) start--;
+            return start < end && int.TryParse(islandName.Substring(start), out var n) ? n : 1;
         }
+
         /// <summary>The square frame's side in metres (cells); even, so a quarter turn keeps every cell on a cell.</summary>
         public int Frame => frame;
         public GameObject Ground => ground;
@@ -79,6 +79,8 @@ namespace CityBuilder.Maps.Archipelago
         public byte Cell(int i, int j) => cells[j * frame + i];
 
 #if UNITY_EDITOR
+        public byte[] EditorCells => (byte[])cells.Clone();
+
         public void EditorInitialize(string name, ArchipelagoGenerator.Kind islandKind, byte[] cellBytes, GameObject groundMesh,
             GameObject reliefMesh, GameObject waterMesh, MapDecorData props, Vector2[] zone, Vector2? main, Vector2? botSpot, Vector2[] beachSpots)
         {

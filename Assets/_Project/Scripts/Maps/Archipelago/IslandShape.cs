@@ -155,7 +155,7 @@ namespace CityBuilder.Maps.Archipelago
         /// cells, turned the way the game will turn its meshes (Quaternion.Euler(0, 90 * turns, 0),
         /// which takes a point (x, z) to (z, -x) per quarter).
         /// </summary>
-        public static Island FromAsset(IslandAsset asset, int turns)
+        public static Island FromAsset(IIslandCells asset, int turns)
         {
             var n = asset.Frame;
             var half = n / 2f;
@@ -170,7 +170,8 @@ namespace CityBuilder.Maps.Archipelago
                 Forest = new bool[n * n],
                 Stony = new bool[n * n],
                 Shore = new bool[n * n],
-                Asset = asset,
+                Asset = asset as IslandAsset,
+                Source = asset,
                 Turns = turns,
             };
             for (var j = 0; j < n; j++)

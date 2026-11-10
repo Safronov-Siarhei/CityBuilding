@@ -28,6 +28,36 @@ namespace CityBuilder.Tests.EditMode
         }
 
         /// <summary>The code a player shares is the map's id back again; a bad or old-version code is refused, not turned into some other map.</summary>
+        /// <summary>
+        /// The sandbox board's ink chart lays a code out from the cells-only library (no meshes in
+        /// the menu): it must be the very map the game makes from that code (2026-11-10). Seed 42's
+        /// chart goes to RunLogs for the eye, with the time it took.
+        /// </summary>
+        [Test]
+        public void TheMenuChart_IsTheMapTheGameMakes()
+        {
+            Assert.IsNotNull(ArchipelagoPreviewLibrary.Load(), "no Resources/ArchipelagoPreview -- run setup");
+            foreach (var seed in Seeds)
+            {
+                var game = ArchipelagoGenerator.Generate(seed);
+                var chart = ArchipelagoGenerator.Generate(seed, preview: true);
+                Assert.AreEqual(game.StartCell, chart.StartCell, $"seed {seed}: start");
+                Assert.AreEqual(game.OrcBaseCell, chart.OrcBaseCell, $"seed {seed}: orcs");
+                Assert.AreEqual(game.BotCell, chart.BotCell, $"seed {seed}: bot");
+                CollectionAssert.AreEqual(game.Land, chart.Land, $"seed {seed}: land");
+                CollectionAssert.AreEqual(game.Forest, chart.Forest, $"seed {seed}: forest");
+            }
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var map = ArchipelagoGenerator.Generate(42, preview: true);
+            var made = watch.ElapsedMilliseconds;
+            var texture = CityBuilder.UI.InkMapPainter.NewTexture(map.Size);
+            CityBuilder.UI.InkMapPainter.Paint(map, texture);
+            Debug.Log($"INKMAP generate {made} ms, paint {watch.ElapsedMilliseconds - made} ms");
+            Directory.CreateDirectory("RunLogs");
+            File.WriteAllBytes("RunLogs/ink_map_42.png", texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+        }
+
         [Test]
         public void AMapCode_IsTheMapBackAgain()
         {

@@ -316,6 +316,12 @@ namespace CityBuilder.EditorTools
             var libraryPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoLibrary.ResourcePath}.asset";
             DeleteIfExists(libraryPath);
             AssetDatabase.CreateAsset(library, libraryPath);
+            // the same islands as cells only, for the main menu's chart (no meshes loaded there)
+            var preview = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoPreviewLibrary>();
+            preview.EditorInitialize(islands.ToArray());
+            var previewPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoPreviewLibrary.ResourcePath}.asset";
+            DeleteIfExists(previewPath);
+            AssetDatabase.CreateAsset(preview, previewPath);
             Debug.Log($"CreateArchipelagoLibrary: {islands.Count} island(s).");
         }
 

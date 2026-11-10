@@ -315,6 +315,7 @@ namespace CityBuilder.EditorTools
             var cards = new Object[ids.Length];
             var pictures = new Object[ids.Length];
             var picked = new Object[ids.Length];
+            RectTransform homeMarker = null, orcsMarker = null, neighbourMarker = null;
             for (var i = 0; i < ids.Length; i++)
             {
                 var card = MenuImage(grid.transform, $"Map_{ids[i]}", "row", Vector2.zero, layout.cellSize);
@@ -330,12 +331,19 @@ namespace CityBuilder.EditorTools
                 if (plain != null) { picture.sprite = plain; picture.color = Color.white; }
                 picture.raycastTarget = false;
                 picture.preserveAspect = true;
-                var rect = picture.rectTransform;
-                rect.anchorMin = Vector2.zero;
-                rect.anchorMax = Vector2.one;
-                rect.offsetMin = new Vector2(20f, 70f);
-                rect.offsetMax = new Vector2(-20f, -20f);
+                // a square: a generated map's ink chart is drawn square (InkMapPainter), its markers laid over it
+                Anchor(picture.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(500f, 500f));
                 pictures[i] = picture;
+                if (CityBuilder.Maps.Archipelago.ArchipelagoMapId.IsArchipelago(ids[i]) && homeMarker == null)
+                {
+                    homeMarker = InkMarker(picture.transform, "Marker_Home", "Hud_Home");
+                    orcsMarker = InkMarker(picture.transform, "Marker_Orcs", "Skull");
+                    neighbourMarker = InkMarker(picture.transform, "Marker_Neighbour", "Hud_Shield");
+                    // the compass rose's «С», above the rose InkMapPainter draws
+                    var north = MenuLabel(picture.transform, "North", "#sandbox_map_north", 20, Vector2.zero, new Vector2(40f, 28f), HudInk.OnPanel, bold: true);
+                    var at = InkMapPainter.RoseAt + new Vector2(0f, InkMapPainter.RoseRadius + 0.035f);
+                    Anchor(north.rectTransform, at, at, Vector2.zero, new Vector2(40f, 28f));
+                }
                 var name = MenuLabel(card.transform, "Name", MapSelectPanelController.NameKey(ids[i]), 34, Vector2.zero, new Vector2(600f, 50f), HudInk.OnPanel, bold: true);
                 Anchor(name.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(600f, 50f));
             }
@@ -370,6 +378,9 @@ namespace CityBuilder.EditorTools
             so.FindProperty("mapCodeError").objectReferenceValue = codeError;
             so.FindProperty("randomCodeButton").objectReferenceValue = random;
             so.FindProperty("noMapsLabel").objectReferenceValue = noMaps.gameObject;
+            so.FindProperty("homeMarker").objectReferenceValue = homeMarker;
+            so.FindProperty("orcsMarker").objectReferenceValue = orcsMarker;
+            so.FindProperty("neighbourMarker").objectReferenceValue = neighbourMarker;
             WriteStrings(so.FindProperty("mapIds"), ids);
             WriteArray(so.FindProperty("cards"), cards);
             WriteArray(so.FindProperty("pictures"), pictures);
@@ -388,6 +399,21 @@ namespace CityBuilder.EditorTools
             var group = Group(screen.gameObject);
             group.alpha = 0f;
             return group;
+        }
+
+        /// <summary>A marker on the ink chart: the glyph in ink with a paper rim, placed by the controller.</summary>
+        private static RectTransform InkMarker(Transform picture, string name, string glyph)
+        {
+            var image = CreateImage(picture, name, new Color32(74, 46, 22, 255));
+            image.sprite = HudGlyph(glyph);
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            var rim = image.gameObject.AddComponent<Outline>();
+            rim.effectColor = new Color32(246, 236, 206, 230);
+            rim.effectDistance = new Vector2(2f, -2f);
+            Anchor(image.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(36f, 36f));
+            image.gameObject.SetActive(false);
+            return image.rectTransform;
         }
 
         private static void AddArt(List<string> keys, List<Object> sprites, string key, string art)

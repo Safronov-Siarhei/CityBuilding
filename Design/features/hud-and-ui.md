@@ -61,6 +61,16 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   «Сохранения» plaque (the corner Saves button is gone), gold «Начать». A theme a map lacks hides the
   map (New Year in the sandbox: no maps, Start off). The user saw it 2026-11-10; then: tapping the banner
   swings it like a struck cloth (`UI/BannerKnock`, damped wobble from the perch, away from the hit side).
+- sandbox map = INK CHART ON PARCHMENT (2026-11-10, the user picked concept 2 of three, RunLogs/concept_map_*.png):
+  drawn LIVE from the code in the box (`UI/InkMapPainter`, 500 px = 1 px per cell: paper sea, wave
+  strokes, two coast ripple lines, ink coastline, sand beaches, ink trees on forest, «^» on relief,
+  compass rose with a UI «С» `#sandbox_map_north`, worn edge, grain) + UI ink markers Home/Skull/Shield
+  at StartCell/OrcBaseCell/BotCell. The screen fills a random code on open (so the chart = the map Start
+  makes; empty box still = random, no chart then, the static picture). Redrawn on code change only
+  (typing waits 0.4 s). The menu lays the map out from `Resources/ArchipelagoPreview`
+  (`ArchipelagoPreviewLibrary`, cells only, written next to ArchipelagoLibrary by CreateArchipelagoLibrary)
+  via `Generate(seed, version, preview: true)` -- TRAP: never load ArchipelagoLibrary in the menu, it
+  drags every island's meshes in. Test `TheMenuChart_IsTheMapTheGameMakes` (also writes RunLogs/ink_map_42.png + INKMAP ms).
 - saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»
   (`#load_row_stats` / `#load_row_code`; buildings = save entries minus Road/Fence/Moat/Bridge/

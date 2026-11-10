@@ -80,12 +80,14 @@ namespace CityBuilder.Maps.Archipelago
             return map;
         }
 
-        public static ArchipelagoMap Generate(int seed, int version = Version)
+        /// <param name="preview">Lay it out from the cells-only copy of the library (ArchipelagoPreviewLibrary):
+        /// the same map with no island meshes loaded, for the main menu's chart; its islands carry no Asset.</param>
+        public static ArchipelagoMap Generate(int seed, int version = Version, bool preview = false)
         {
             var rng = new SeedRandom(seed);
             var map = new ArchipelagoMap(seed, World) { Version = version };
-            var library = ArchipelagoLibrary.Load();
-            var used = new HashSet<IslandAsset>();
+            var library = preview ? ArchipelagoPreviewLibrary.Load()?.Islands : ArchipelagoLibrary.Load()?.Islands;
+            var used = new HashSet<IIslandCells>();
             Island Make(Kind kind, int size, int shapeSeed)
             {
                 return library != null ? FromLibrary(library, kind, rng, used, version) ?? IslandShape.Make(kind, size, shapeSeed)
@@ -165,12 +167,12 @@ namespace CityBuilder.Maps.Archipelago
         /// unturned (gate to the south) on the pad islands.py flattened for it, and on a turned
         /// island it did not fit -- three maps in four had no main base.
         /// </summary>
-        private static Island FromLibrary(ArchipelagoLibrary library, Kind kind, SeedRandom rng, HashSet<IslandAsset> used, int version)
+        private static Island FromLibrary(IReadOnlyList<IIslandCells> library, Kind kind, SeedRandom rng, HashSet<IIslandCells> used, int version)
         {
             var variants = VariantsOf(version);
-            var fresh = new List<IslandAsset>();
-            var any = new List<IslandAsset>();
-            foreach (var asset in library.Islands)
+            var fresh = new List<IIslandCells>();
+            var any = new List<IIslandCells>();
+            foreach (var asset in library)
             {
                 if (asset == null || asset.Kind != kind || asset.Variant > variants) continue;
                 any.Add(asset);
@@ -284,7 +286,7 @@ namespace CityBuilder.Maps.Archipelago
                     case Kind.Tutorial: map.StartCell = z; break;
                     case Kind.Orc:
                         map.OrcBaseCell = z;
-                        map.MainBaseVariant = Combat.OrcBaseLayout.VariantOfIsland(island.Asset != null ? island.Asset.IslandName : null);
+                        map.MainBaseVariant = Combat.OrcBaseLayout.VariantOfIsland(island.Source?.IslandName);
                         break;
                     case Kind.Bot: map.BotCell = z; break;
                 }
@@ -356,6 +358,8 @@ namespace CityBuilder.Maps.Archipelago
         // a library island: what it is, how far it is turned, its own forest, stone and shore water,
         // and its start zone (frame cells), all already turned
         public IslandAsset Asset;
+        /// <summary>The cells it was made from: its Asset, or the preview library's copy (no Asset then).</summary>
+        public IIslandCells Source;
         public int Turns;
         public bool[] Forest, Stony, Shore;
         public Vector2[] StartZone;
