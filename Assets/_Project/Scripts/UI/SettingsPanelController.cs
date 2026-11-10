@@ -142,13 +142,22 @@ namespace CityBuilder.UI
         private void BuildGraphicsDetails()
         {
             if (graphicsDetails == null || labelTemplate == null) return;
-            for (var i = graphicsDetails.childCount - 1; i >= 0; i--) Destroy(graphicsDetails.GetChild(i).gameObject);
+            // the old rows go at once: Destroy waits for the frame's end, and the layout counted the
+            // old rows with the new ones -- Manual after Auto drew them on top of each other (the user)
+            for (var i = graphicsDetails.childCount - 1; i >= 0; i--)
+            {
+                var old = graphicsDetails.GetChild(i).gameObject;
+                old.SetActive(false);
+                old.transform.SetParent(null, false);
+                Destroy(old);
+            }
             _detailButtons.Clear();
 
             if (!GraphicsQuality.Manual)
             {
                 var line = Caption(graphicsDetails, "AutoNow", 46f);
                 line.text = string.Format(Localization.Get("#settings_gfx_auto_now"), Localization.Get(LevelKey(GraphicsQuality.Detect())));
+                Relayout();
                 return;
             }
 
@@ -206,6 +215,14 @@ namespace CityBuilder.UI
             var counter = DetailRow("#settings_gfx_show_fps", "#settings_gfx_show_fps_info", 2);
             AddChoice(counter, 0, 2, "#settings_gfx_on", null, () => GraphicsQuality.ShowFps, () => GraphicsQuality.ShowFps = true);
             AddChoice(counter, 1, 2, "#settings_gfx_off", null, () => !GraphicsQuality.ShowFps, () => GraphicsQuality.ShowFps = false);
+            Relayout();
+        }
+
+        /// <summary>Lays the rows and the scrolling card out now, not on the next layout pass.</summary>
+        private void Relayout()
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(graphicsDetails);
+            if (graphicsDetails.parent is RectTransform content) LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
 
         private static string LevelKey(GraphicsTier tier)
