@@ -152,9 +152,9 @@ d = ImageDraw.Draw(img)
 
 # the band itself over the heroes (his spikes pass behind the title, his head in front of the tail)
 # the folds joining the band to each tail (the user: «соедини эти элементы знамени»): a dark triangle
-# from the band's bottom edge down to the tail's top corner, the band's bottom corners square over it
+# along the band's bottom edge from its end inward, down to the tail's inner bottom corner (v6), the band's bottom corners square over it
 for side, bx in ((-1, rx0), (1, rx1)):
-    d.polygon([(bx - side * 50, ry1 - 3), (bx, ry1 - 3), (bx, ry1 + 42)], fill=(98, 16, 18), outline=(70, 10, 12))
+    d.polygon([(bx, ry1 - 3), (bx - side * 50, ry1 - 3), (bx - side * 50, ry1 + 42)], fill=(98, 16, 18), outline=(70, 10, 12))
 d.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=(196, 44, 42), outline=(90, 14, 16), width=6,
                     corners=(True, True, False, False))
 d.line((rx0 + 26, ry0 + 18, rx1 - 26, ry0 + 18), fill=(228, 92, 82), width=5)

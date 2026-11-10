@@ -61,7 +61,8 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   down to the parchment's top edge, its tails longer; draw order = tails, heroes, band (the chief's
   head in front of the right tail, his spikes behind the title). Body text replaced (the user disliked
   «Король и вождь орков…»): «Ваша оценка помогает королевству расти и становиться лучше!».
-  v5 (the user): dark fold triangles join the band to both tails (band bottom corners square); title
+  v5 (the user): dark fold triangles join the band to both tails (band bottom corners square; v6 turned
+  them the other way: along the band's bottom edge from its end inward, down to the tail's inner bottom corner); title
   font smaller so it stays inside the band; NO close X (the user: «Позже» is enough). Behaviour rule:
   a tap OUTSIDE the window closes it, the same as «Позже».
   In the game the heroes would be pre-rendered sprites (cheap on mobile), not live 3D.
