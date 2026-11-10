@@ -138,24 +138,26 @@ def hero(path, body, feet, head, x, floor, prep=None, mid=None):
     return left, top, left + a.width
 
 
+# ---- the ribbon's tails (under the heroes, so the chief's head stays in front of them), as in the first mock-up: a wide band with folded tails behind both ends
+rx0, rx1, ry0, ry1 = 400, 1410, Y0 - 82, IY0 + 66   # down to the parchment's top edge (the user)
+my = (ry0 + ry1) / 2 + 42
+for side, bx in ((-1, rx0), (1, rx1)):
+    d.polygon([(bx + side * 130, ry0 + 42), (bx - side * 50, ry0 + 42), (bx - side * 50, ry1 + 42),
+               (bx + side * 130, ry1 + 42), (bx + side * 70, my)], fill=(140, 28, 30), outline=(70, 10, 12))
+
 FLOOR = IY1 - 16
 print('king', hero(S + '/figure_king.png', KING_BODY, KING_FEET, KING_HEAD, 330, FLOOR, mid=390))
 print('orc', hero(S + '/figure_orc.png', ORC_BODY, ORC_FEET, ORC_HEAD, 1520, FLOOR, no_flag, mid=390))
 d = ImageDraw.Draw(img)
 
-# ---- the ribbon, as in the first mock-up: a wide band with folded tails behind both ends
-rx0, rx1, ry0, ry1 = 470, 1340, Y0 - 66, Y0 + 70
-my = (ry0 + ry1) / 2 + 30
-for side, bx in ((-1, rx0), (1, rx1)):
-    d.polygon([(bx + side * 75, ry0 + 30), (bx - side * 45, ry0 + 30), (bx - side * 45, ry1 + 30),
-               (bx + side * 75, ry1 + 30), (bx + side * 30, my)], fill=(140, 28, 30), outline=(70, 10, 12))
+# the band itself over the heroes (his spikes pass behind the title, his head in front of the tail)
 d.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=(196, 44, 42), outline=(90, 14, 16), width=6)
 d.line((rx0 + 26, ry0 + 18, rx1 - 26, ry0 + 18), fill=(228, 92, 82), width=5)
-text(((rx0 + rx1) / 2, (ry0 + ry1) / 2 + 2), 'Поддержите королевство!', 66, (255, 240, 200), stroke=5, sf=(90, 14, 16))
+text(((rx0 + rx1) / 2, (ry0 + ry1) / 2 + 2), 'Поддержите королевство!', 74, (255, 240, 200), stroke=5, sf=(90, 14, 16))
 
 # ---- words, stars, buttons (1.5x)
 CX = (pw0 + pw1) / 2
-text((CX, 425), 'Король и вождь орков\nвпервые в чём-то согласны:\nоцените игру!', 44, (84, 50, 24), 'Rubik-Medium.ttf', spacing=14)
+text((CX, 460), 'Ваша оценка помогает\nкоролевству расти\nи становиться лучше!', 46, (84, 50, 24), 'Rubik-Medium.ttf', spacing=14)
 
 
 def star(cx, cy, r, fill, out):

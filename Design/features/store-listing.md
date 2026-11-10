@@ -47,7 +47,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   rating; the King is the GAME'S OWN HeroKing model (the user rejected the icon's retouched king:
   "a model we use nowhere"); the orc chief is BIG, a head taller than the king.
 - Mock-up v3: `Design/store/RateWindow_Mockup.png` (+ `RateWindow_Backgrounds.png`: the window's picture
-  A blurred summer town / B blurred autumn town / C sunburst rays / D the painted chart -- the user to pick)
+  A blurred summer town / B blurred autumn town / C sunburst rays / D the painted chart -- the user picked A)
   by `Tools/store/rate_window_mockup.py <folder> <town|autumn|sunburst|map> [out]`. The user's v3 notes:
   the window 1.5x bigger (now 1800x820 of a 1920x1080 screen); the ribbon title as in v1 (a wide band
   with folded tails behind both ends, «Поддержите королевство!»); the orc chief's height is measured
@@ -57,6 +57,10 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   is erased in the mock-up (`no_flag`), so the staff ends in the skull.
   Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure,
   transparent, ortho camera fitted to bounds; figure_king = plain HeroKing, no retouch).
+  v4 (the user picked background A, the blurred summer town): the ribbon bigger every way, reaching
+  down to the parchment's top edge, its tails longer; draw order = tails, heroes, band (the chief's
+  head in front of the right tail, his spikes behind the title). Body text replaced (the user disliked
+  «Король и вождь орков…»): «Ваша оценка помогает королевству расти и становиться лучше!».
   In the game the heroes would be pre-rendered sprites (cheap on mobile), not live 3D.
 - Google Play rules that shape it: our stars are decoration only (the real rating is Google's In-App
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
