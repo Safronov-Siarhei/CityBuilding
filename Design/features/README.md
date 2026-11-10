@@ -61,6 +61,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | ideas only: rewarded ads, paid HUD looks, promo codes | монетизация, реклама, покупки |
+| [store-listing](store-listing.md) | Google Play icon candidates (orc over the wall, builder king), Tools/store/make_icons.py | иконка, гугл плей, стор, листинг |
 | **Pipelines** | | |
 | [balance-and-localization](balance-and-localization.md) | Google Sheet → CSV → BalanceConfig; localization keys | баланс, таблица, локализация |
 | [art-pipeline](art-pipeline.md) | Blender models, standard, levels, export, icons, UI sprites | Blender, модели, иконки |
