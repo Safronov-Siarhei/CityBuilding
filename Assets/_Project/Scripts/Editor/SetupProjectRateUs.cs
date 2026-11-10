@@ -29,6 +29,14 @@ namespace CityBuilder.EditorTools
                 return;
             }
             var layout = JsonUtility.FromJson<RateUsLayout>(File.ReadAllText(layoutPath));
+            // pictures imported before UiTextureImport knew the folder stay plain textures (no sprite,
+            // the window came out white boxes, 2026-11-10): import them again under its rules
+            foreach (var piece in layout.pieces)
+            {
+                var path = $"{UiTextureImport.RateUsFolder}/{piece.name}.png";
+                if (AssetImporter.GetAtPath(path) is TextureImporter ti && ti.textureType != TextureImporterType.Sprite)
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
             var refW = layout.reference[0];
             var refH = layout.reference[1];
 
@@ -81,12 +89,11 @@ namespace CityBuilder.EditorTools
                     title.resizeTextForBestFit = true;
                     title.resizeTextMinSize = 36;
                     title.resizeTextMaxSize = 60;
-                    var body = Words(window, "Body", "#rateus_body", 46, UiTheme.Regular, UiTheme.Rgb(0x543218));
+                    // three lines of 46 did not fit Rubik's tall line box and the third was cut: 42,
+                    // and the text may run over its box rather than lose a line
+                    var body = Words(window, "Body", "#rateus_body", 42, UiTheme.Regular, UiTheme.Rgb(0x543218));
                     Place(body.rectTransform, TextRect("Body"));
-                    body.resizeTextForBestFit = true;
-                    body.resizeTextMinSize = 28;
-                    body.resizeTextMaxSize = 46;
-                    body.lineSpacing = 1.1f;
+                    body.verticalOverflow = VerticalWrapMode.Overflow;
                 }
             }
 

@@ -68,6 +68,9 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   (device, not the save) for the future show rule. Art imported as UI art (`UiTextureImport.RateUsFolder`,
   ASTC on Android), unloaded after the window closes. Words: `#rateus_title/_body/_rate/_later`
   (sheet + csv). Cheat: Сервис -> «Окно оценки игры».
+- Trap (2026-11-10, white boxes in the editor): PNGs imported BEFORE `UiTextureImport.RateUsFolder` existed stay
+  plain textures (LoadAssetAtPath<Sprite> = null); `BuildRateUsWindow` re-imports any piece that is not a Sprite.
+  Body text: 3 lines of 46 did not fit Rubik's line box (third line lost) -> 42, vertical overflow allowed.
 - Google Play rules that shape it: our stars are decoration only (the real rating is Google's In-App
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
   sheet has a quota and may silently not show, so a button should open the store page (or our window
