@@ -6,6 +6,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace CityBuilder.EditorTools
 {
@@ -21,6 +22,8 @@ namespace CityBuilder.EditorTools
         private const string CinematicModelsFolder = "Assets/_Project/Models/Cinematic";
         private const string OpeningSetPath = "Assets/_Project/Campaign/OpeningSet.json";
         private const string OpeningLifePath = "Assets/_Project/Campaign/OpeningLife.json";
+        private const string OpeningScriptPath = "Assets/_Project/Campaign/OpeningScript.json";
+        private const string OpeningTracksPath = "Assets/_Project/Campaign/OpeningTracks.json";
 
         // the village's houses: the game's own buildings (OpeningVillage picks among them by id)
         private static readonly string[] OpeningVillageBuildings =
@@ -126,7 +129,59 @@ namespace CityBuilder.EditorTools
             var dot = SoftDot();
             lso.FindProperty("flameMaterial").objectReferenceValue = ParticleMaterial("CampaignFlame", dot, true);
             lso.FindProperty("smokeMaterial").objectReferenceValue = ParticleMaterial("CampaignSmoke", dot, false);
+            lso.FindProperty("autoBegin").boolValue = false;            // the director starts it on its clock
             lso.ApplyModifiedPropertiesWithoutUndo();
+
+            // the director: the film itself, with its subtitles drawn by the cutscene camera
+            var canvasGO = new GameObject("Subtitles", typeof(Canvas), typeof(CanvasScaler));
+            var canvas = canvasGO.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 0.5f;
+            var scaler = canvasGO.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280f, 720f);
+            scaler.matchWidthOrHeight = 1f;
+            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline));
+            textGO.transform.SetParent(canvasGO.transform, false);
+            var rect = (RectTransform)textGO.transform;
+            rect.anchorMin = new Vector2(0.1f, 0f);
+            rect.anchorMax = new Vector2(0.9f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 46f);
+            rect.sizeDelta = new Vector2(0f, 80f);
+            var line = textGO.GetComponent<Text>();
+            line.font = CityBuilder.UI.UiTheme.Regular;
+            line.fontSize = 34;
+            line.alignment = TextAnchor.LowerCenter;
+            line.color = Color.white;
+            line.supportRichText = true;
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;
+            line.raycastTarget = false;
+            var outline = textGO.GetComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            var director = new GameObject("OpeningDirector").AddComponent<OpeningDirector>();
+            var dso = new SerializedObject(director);
+            dso.FindProperty("village").objectReferenceValue = village;
+            dso.FindProperty("life").objectReferenceValue = life;
+            dso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            dso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
+            dso.FindProperty("cam").objectReferenceValue = cam;
+            dso.FindProperty("subtitle").objectReferenceValue = line;
+            dso.FindProperty("ropeMaterial").objectReferenceValue = Matte("CampaignRope", new Color(0.55f, 0.42f, 0.26f));
+            var dcast = dso.FindProperty("cast");
+            dcast.arraySize = castProp.arraySize;
+            for (var i = 0; i < castProp.arraySize; i++)
+            {
+                var src = castProp.GetArrayElementAtIndex(i);
+                var dst = dcast.GetArrayElementAtIndex(i);
+                dst.FindPropertyRelative("id").stringValue = src.FindPropertyRelative("id").stringValue;
+                dst.FindPropertyRelative("model").objectReferenceValue = src.FindPropertyRelative("model").objectReferenceValue;
+                dst.FindPropertyRelative("clips").objectReferenceValue = src.FindPropertyRelative("clips").objectReferenceValue;
+            }
+            dso.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists(CampaignOpeningScenePath);

@@ -55,6 +55,7 @@ namespace CityBuilder.Campaign
             public float chaseSeconds;
             public float orcLaneSpread;
             public float turnRate;
+            public int[] orcSkipLanes;
             public FireConfig fire;
         }
 
@@ -214,14 +215,39 @@ namespace CityBuilder.Campaign
 
         private void Start()
         {
-            if (!autoBegin) return;
+            if (!autoBegin || External) return;
             if (village.BuildingCount == 0) village.Build();
             Begin();
         }
 
+        /// <summary>Set by the director, which steps the life itself on the film's clock.</summary>
+        public bool External { get; set; }
+
         private void Update()
         {
-            if (Application.isPlaying && _c != null) Step(Time.deltaTime);
+            if (Application.isPlaying && _c != null && !External) Step(Time.deltaTime);
+        }
+
+        /// <summary>Sets alight the house nearest `at` that is not burning yet (the director's cue).</summary>
+        public void IgniteNearest(Vector3 at)
+        {
+            Transform best = null;
+            var bestD = float.MaxValue;
+            foreach (var h in village.Houses)
+            {
+                if (_burning.Contains(h)) continue;
+                var d = Flat(h.position - at).sqrMagnitude;
+                if (d < bestD)
+                {
+                    bestD = d;
+                    best = h;
+                }
+            }
+            if (best != null)
+            {
+                _claimed.Add(best);
+                Ignite(best);
+            }
         }
 
         public void Step(float dt)
@@ -352,7 +378,13 @@ namespace CityBuilder.Campaign
             if (torch) _torchesOut++;
             var o = Spawn(torch ? "CineOrcTorch" : "CineOrcSpear", true);
             o.torch = torch;
-            o.lane = _released % Mathf.Max(1, village.Lanes.Count);
+            // round the roads in turn, past the ones the orcs keep off (the heroes stand on the market road)
+            var lanes = new List<int>();
+            for (var l = 0; l < village.Lanes.Count; l++)
+            {
+                if (_c.orcSkipLanes == null || Array.IndexOf(_c.orcSkipLanes, l) < 0) lanes.Add(l);
+            }
+            o.lane = lanes.Count > 0 ? lanes[_released % lanes.Count] : 0;
             o.side = Range(-_c.orcLaneSpread, _c.orcLaneSpread);
             o.speed = o.fig.Clips.runSpeed * _c.orcSpeedFactor;
             o.goal = LanePoint(o.lane, 0f, o.side);

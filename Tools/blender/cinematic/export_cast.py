@@ -41,7 +41,10 @@ import orcs_cast as oc  # noqa: E402
 import priest  # noqa: E402
 import townsfolk as tf  # noqa: E402
 import townsfolk_anim as ta  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import perfs as pf  # noqa: E402
+import portal  # noqa: E402
+import cutscene as cs  # noqa: E402
+from mathutils import Matrix, Vector  # noqa: E402
 
 FPS = 30
 TAU = 2 * math.pi
@@ -170,8 +173,6 @@ def orc_clips(name):
         "Walk": cyc(orc_walk, WALK_CYCLE * 1.1),
         "Run": cyc(run, RUN_CYCLE * 1.1),
     }
-    if name == "CineOrcChampion":
-        c["Leap"] = dict(fn=leap_root, seconds=oa.LEAP_SECONDS, loop=False, root=True)
     return c
 
 
@@ -238,6 +239,175 @@ def bake(arm, name, scale, apply, spec):
     return act
 
 
+# ---------------------------------------------------------------- the performances
+
+P = Matrix(((1, 0, 0), (0, 0, 1), (0, 1, 0)))
+
+
+def unity_m(m):
+    loc, rot, _ = m.decompose()
+    q = (P @ rot.to_matrix() @ P).to_quaternion()
+    return [round(loc.x, 4), round(loc.z, 4), round(loc.y, 4), round(q.x, 5), round(q.y, 5), round(q.z, 5), round(q.w, 5)]
+
+
+def unity_p(v):
+    return [round(v.x, 4), round(v.z, 4), round(v.y, 4)]
+
+
+def samples(perf):
+    """The performance sampled once, in order (a Track's heading turns as it goes)."""
+    if getattr(perf, "_samples", None) is None:
+        perf._samples = []
+        for f in range(perf.frames()):
+            pos, head, pose = perf.fn(f / FPS)
+            perf._samples.append((Vector(pos), head or 0.0, {k: list(v) for k, v in pose.items()}))
+    return perf._samples
+
+
+def root_track(perf):
+    fmap, turn = pf.FRAMES[perf.frame]
+    out = []
+    for pos, head, _ in samples(perf):
+        w = fmap(pos)
+        out += [round(w.x, 4), round(w.z, 4), round(w.y, 4), round(math.degrees(math.pi - (head + turn)), 2)]
+    return out
+
+
+def bake_perf(arm, perf, scale, apply, keyed_root=False, start=0):
+    """The performance's pose as a take, posed where it stands in its shot (so an aimed arm points
+    where it did); the root keyed too only for sampling the set pieces that follow it."""
+    arm.animation_data_create()
+    act = bpy.data.actions.new(perf.name)
+    act.use_fake_user = True
+    arm.animation_data.action = act
+    for f, (pos, head, pose) in enumerate(samples(perf)):
+        arm.location = pos
+        arm.rotation_euler = (0, 0, head)
+        aa.rest(arm)
+        bpy.context.view_layer.update()
+        (perf.apply or apply)(arm, pose, scale)
+        for pb in arm.pose.bones:
+            pb.keyframe_insert("rotation_quaternion", frame=f + start, group=pb.name)
+            pb.keyframe_insert("location", frame=f + start, group=pb.name)
+        if keyed_root:
+            arm.keyframe_insert("location", frame=f + start)
+            arm.keyframe_insert("rotation_euler", frame=f + start)
+    return act
+
+
+def sample_objects(objs, frames, fmap, prefix, tracks):
+    sc = bpy.context.scene
+    mats = {o.name: [] for o in objs}
+    shift = Matrix.Translation(fmap(Vector()))
+    for f in range(frames):
+        sc.frame_set(f + 1)
+        for o in objs:
+            mats[o.name] += unity_m(shift @ o.matrix_world)
+    for o in objs:
+        tracks["objects"].append({"name": prefix + "/" + o.name.split(".")[0], "piece": o.name.split(".")[0],
+                                  "frames": frames, "m": mats[o.name]})
+
+
+def scenes(rigs, perf_by, stones, sw, tracks):
+    """Plays the performances that move set pieces and samples those pieces."""
+    sc = bpy.context.scene
+    keyed = []
+
+    def play(fig, name):
+        arm, scale, apply = rigs[fig]
+        keyed.append((arm, bake_perf(arm, perf_by[(fig, name)], scale, apply, keyed_root=True, start=1)))
+        return arm
+
+    def clear():
+        for arm, act in keyed:
+            arm.animation_data.action = None
+            bpy.data.actions.remove(act)
+        keyed.clear()
+
+    # the market: the cart behind the peasant, the fruit the woman takes
+    fruit_st, cloth, ground, bolts, fruit = ta.stall_pieces()
+    body, wheels = ta.cart_pieces()
+    frames = int(ta.MARKET * FPS) + 1
+    play("CineMerchant", "P_Market")
+    wrig = play("CinePeasantWoman", "P_Market")
+    prig = play("CinePeasant", "P_Market")
+    ta.key_cart(body, wheels, prig, frames, lambda t: 1.0)
+    ta.key_fruit(fruit, wrig, frames)
+    sample_objects([body] + [w for w, _ in wheels] + [fruit], frames, pf.frame_M, "market", tracks)
+    clear()
+
+    # the chaos: the cart dropped, the fruit in her basket, the stall wrenched over, its bolts rolling
+    frames = int(ta.PANIC * FPS) + 1
+    play("CineMerchant", "P_Panic")
+    wrig = play("CinePeasantWoman", "P_Chaos")
+    prig = play("CinePeasant", "P_Chaos")
+    play("CineOrcTorch", "P_Raid")
+    ta.key_cart(body, wheels, prig, frames, lambda t: 1.0 - a2.env(t, ta.DROP, ta.DROP + 0.12))
+    for f in range(frames):
+        sc.frame_set(f + 1)
+        fruit.location = wrig.matrix_world @ wrig.pose.bones["forearm.L"].tail + Vector((0, 0, 0.012))
+        fruit.keyframe_insert("location", frame=f + 1)
+    ta.key_topple(cloth, bolts, frames)
+    sample_objects([body] + [w for w, _ in wheels] + [fruit, cloth] + [b for b, _ in bolts], frames, pf.frame_M, "chaos", tracks)
+    clear()
+
+    # the bell: its swing, the clapper's, and the rope from the lever to the priest's fists
+    move, grip, loc, _ = pf.bell_stage()
+    frames = int(3.4 * FPS) + 1
+    prig = play("CinePriest", "P_Ring")
+    top, bottom, bell, clap = [], [], [], []
+    for f in range(frames):
+        sc.frame_set(f + 1)
+        t = f / FPS
+        lt = ba.lever_world(loc, t)
+        fists = [prig.matrix_world @ prig.pose.bones["forearm." + s].tail for s in ("L", "R")]
+        end = (fists[0] + fists[1]) / 2 if t >= ba.GRAB else grip(t)
+        top += unity_p(pf.frame_B(lt))
+        bottom += unity_p(pf.frame_B(end))
+        bell.append(round(ba.swing(t), 3))
+        clap.append(round(ba.swing(max(0.0, t - 0.1)), 3))
+    tracks["points"] += [{"name": "bell/ropeTop", "p": top}, {"name": "bell/ropeBottom", "p": bottom}]
+    tracks["values"] += [{"name": "bell/bell", "v": bell}, {"name": "bell/clapper", "v": clap}]
+    clear()
+
+    # the talk: the amulet's glow, the runes waking one by one
+    frames = int(6.5 * FPS) + 1
+    glow, runes = [], []
+    for f in range(frames):
+        t = f / FPS
+        glow.append(round(a2.amulet_glow(t), 4))
+        g = 0.0
+        for i in range(len(stones)):
+            u = t - (3.35 + 0.1 * i)
+            g += 0.0 if u < 0 else min(1.0, u / 0.25) * (0.75 + 0.25 * math.sin(t * 13 + i))
+        runes.append(round(g / len(stones), 4))
+    tracks["values"] += [{"name": "talk/amulet", "v": glow}, {"name": "talk/runes", "v": runes}]
+
+    # the assembly, then the swirl opening in the arch
+    flash = bpy.data.objects.new("CineFlash", bpy.data.lights.new("CineFlash", 'POINT'))
+    sc.collection.objects.link(flash)
+    frames = int(6.0 * FPS) + 1
+    cs.key_assembly(stones, frames, 0.4, flash)
+    sample_objects(stones, frames, pf.frame_V, "assembly", tracks)
+    energy = []
+    for f in range(frames):
+        sc.frame_set(f + 1)
+        energy.append(round(flash.data.energy, 2))
+    tracks["values"].append({"name": "assembly/flash", "v": energy})
+    for s_ in stones:
+        s_.animation_data_clear()
+    portal.set_arch(stones, sw, True)
+    frames = int(3.0 * FPS) + 1
+    hub, light = cs.open_swirl(sw, frames, 0.15, 1.2)
+    sample_objects([sw], frames, pf.frame_V, "swirl", tracks)
+    energy = []
+    for f in range(frames):
+        sc.frame_set(f + 1)
+        energy.append(round(light.data.energy, 2))
+    tracks["values"].append({"name": "swirl/light", "v": energy})
+    tracks["points"].append({"name": "swirl/light", "p": unity_p(light.location)})
+
+
 def export(name, arm, meshes, folder):
     arm.location = (0, 0, 0)
     arm.rotation_euler = (0, 0, 0)
@@ -269,11 +439,29 @@ def main():
     folder = os.path.join(project, "Assets", "_Project", "Models", "Cinematic", "Cast")
     os.makedirs(folder, exist_ok=True)
     data = {"figures": []}
-    for name, arm, scale, apply, clips, extra in cast():
+    members = cast()
+    rigs = {name: (arm, scale, apply) for name, arm, scale, apply, _, _ in members}
+    plat, stones, sw = portal.make((0, 0, 0))
+    bpy.context.view_layer.update()
+    perf_list = pf.build(stones)
+    move, _, _, _ = pf.bell_stage()
+    perf_list.append(pf.Perf("CinePriest", "P_Ring", 3.4, move, "B", ba.apply))
+    perf_by = {(p.figure, p.name): p for p in perf_list}
+    tracks = {"fps": FPS, "figures": [], "objects": [], "values": [], "points": [],
+              "meta": {"kidsPlay": pf.KIDS_PLAY, "sackRelease": a2.RELEASE + ea.HOLD,
+                       "orcFrom": unity_p(pf.frame_M(ta.ORC_FROM)), "tip": round(ta.TIP, 3)}}
+    scenes(rigs, perf_by, stones, sw, tracks)
+    for p in perf_list:
+        tracks["figures"].append({"name": p.figure + "/" + p.name, "frames": p.frames(), "root": root_track(p)})
+
+    for name, arm, scale, apply, clips, extra in members:
         meshes = [c for c in arm.children if c.type == 'MESH'] + [m for m in extra if m not in arm.children]
         acts = []
         for cname, spec in clips.items():
             acts.append(bake(arm, cname, scale, apply, spec))
+        for p in [p for p in perf_list if p.figure == name]:
+            acts.append(bake_perf(arm, p, scale, apply))
+            clips[p.name] = dict(seconds=p.seconds, loop=False)
         export(name, arm, meshes, folder)
         data["figures"].append({
             "name": name,
@@ -286,7 +474,9 @@ def main():
     out = os.path.join(project, "Assets", "_Project", "Campaign", "OpeningCast.json")
     with open(out, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
-    print("EXPORT CAST DONE", len(data["figures"]), "figures")
+    with open(os.path.join(project, "Assets", "_Project", "Campaign", "OpeningTracks.json"), "w", encoding="utf-8") as f:
+        json.dump(tracks, f, ensure_ascii=False, separators=(",", ":"))
+    print("EXPORT CAST DONE", len(data["figures"]), "figures", len(perf_list), "performances")
 
 
 main()

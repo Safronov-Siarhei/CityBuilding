@@ -84,6 +84,50 @@ namespace CityBuilder.EditorTools
             EditorSettings.asyncShaderCompilation = wasAsync;
         }
 
+        /// <summary>The whole opening film, frame by frame at 30 fps, as JPGs in RunLogs/campaign/film/
+        /// (run.ps1 -Steps film; Tools/blender/cinematic/encode_frames.py joins them into an mp4).</summary>
+        public static void Film()
+        {
+            EditorSceneManager.OpenScene(SetupProject.CampaignOpeningScenePath);
+            var village = Object.FindAnyObjectByType<OpeningVillage>();
+            village.Build();
+            var director = Object.FindAnyObjectByType<OpeningDirector>();
+            var cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
+            var dir = Path.Combine(Directory.GetCurrentDirectory(), "RunLogs", "campaign", "film");
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            Directory.CreateDirectory(dir);
+            var wasAsync = EditorSettings.asyncShaderCompilation;
+            EditorSettings.asyncShaderCompilation = false;
+            var rt = new RenderTexture(1280, 720, 24) { antiAliasing = 4 };
+            var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            director.Play();
+            cam.targetTexture = rt;
+            cam.Render();                                   // warm-up: shaders compiled before the first frame
+            var frames = Mathf.CeilToInt(director.Length * 30f);
+            var shots = new System.Text.StringBuilder();
+            var lastShot = "";
+            for (var f = 0; f < frames; f++)
+            {
+                if (f > 0) director.Step(1f / 30f);
+                if (director.ShotName != lastShot)
+                {
+                    lastShot = director.ShotName;
+                    shots.Append($"{f}:{lastShot} ");
+                }
+                Canvas.ForceUpdateCanvases();
+                cam.targetTexture = rt;
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(dir, $"{f:D5}.jpg"), tex.EncodeToJPG(88));
+                RenderTexture.active = null;
+            }
+            cam.targetTexture = null;
+            EditorSettings.asyncShaderCompilation = wasAsync;
+            Debug.Log($"[CampaignFilm] {frames} frames to {dir}; shots {shots}");
+        }
+
         private static void Simulate(OpeningLife life, float seconds)
         {
             for (var t = 0f; t < seconds; t += 1f / 30f) life.Step(1f / 30f);

@@ -1,6 +1,6 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-3 (village + sky, the cast with clips, the living background) BUILT, user saw photos. Next: part 4, the director.
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; the user got the mp4 (2026-11-10), awaiting notes. Next: the handover into mission 1 (not built).
 - **Unity part 1 (2026-11-10):** scene `Scenes/CampaignOpening.unity` (NOT in the build list), made by
   `SetupProjectCampaign.cs`: procedural morning sky `CampaignSky.mat`, low warm sun, trilight ambient,
   linear haze fog 45-140. `Scripts/Campaign/OpeningVillage.cs` lays the village out on Start (seed 11):
@@ -37,7 +37,31 @@
   autoBegin starts it in play until the director takes over.
   - Figures play through `CineFigure` + `CineClips` (no Animator): setup bakes each cast FBX's takes
     into `Campaign/Cast/<Figure>Clips.asset` at 15 fps (bone rotations, positions of bones that move).
-  - Not yet: the director, the hero shots, the user's notes 1-7; nobody has seen it in play mode.
+- **Unity part 4 (2026-11-10): the director.** `Scripts/Campaign/OpeningDirector.cs` plays
+  `Campaign/OpeningScript.json` (the film: shots with camera keys in Unity coords + lens in mm on a
+  physical 36x20.25 camera, the actors, the cues on ONE clock -- one world, so a shot's background is
+  never empty). A cue: an actor plays a PERFORMANCE (`perf`), runs/walks a `path`, or stands (`at`/
+  `face`/`yaw` + `clip`); events `life`, `panic`, `orcs`, `ignite`, `objects` (set-piece tracks; `hold`
+  freezes frame 0), `values` (amulet/runes/flash/swirl lights, bell/clapper swing), `rope`, `sack`
+  (Ардан's sack baked off the skin and dropped), `sub` (who + key from the localization sheet:
+  `#cine_name_elder`, `#cine_opening_stones`, `#cine_opening_run`).
+  - PERFORMANCES (`Tools/blender/cinematic/perfs.py`, exported by `export_cast.py`): the approved
+    Blender motion of a figure in a shot, baked as an in-place take posed where it stood (aims right)
+    plus its root path in `Campaign/OpeningTracks.json` (village frame, Unity axes, yaw = 180 - heading);
+    the set pieces that move with them (cart, fruit, toppled stall + bolts, stones' assembly, swirl,
+    bell rope points, light curves) sampled there too. Shot frames V/M/T/B/R map onto the village.
+  - The user's notes 1-7 as built: kids keep hopping on the stones until 23.5 s (`P_Play`, ping-pong);
+    the mother runs in at 20 s, calls, the kids jump to her, all three run off east IN VIEW of Ардан and
+    the elder (fright camera beside Ардан); the market raid's orc comes from the square, not out of a
+    house; the chaos shot shows the portal, the champion and the heroes behind; the champion roars
+    and walks at them in the run shot; the elder shouts «Беги в город, Ардан! Предупреди всех!» and runs
+    west; Ардан drops the sack and runs south down the market road; the last shot follows him from
+    behind (mission 1's start; the handover itself is not built).
+  - Elder/Ардан stand at the talk spots until the run shot, then at the run frame's (a cut hides it).
+  - Film to mp4: `run.ps1 -Steps film` (CampaignPhotos.Film, 1809 JPG frames in ~40 s) then
+    `blender --background --python Tools/blender/cinematic/encode_frames.py -- RunLogs/campaign/film <out.mp4> 30`.
+  - Traps: a shell whose cwd is inside RunLogs/campaign/film locks it and the film step dies on delete.
+  - Not yet: nobody has watched it in play mode on a device; the handover to mission 1; sound.
   - Traps: Blender `matrix_world` lags a set location until `view_layer.update()`; ground materials need
     smoothness 0 (the sky's brown lower half mirrored in the grass); the editor's first `Render()` drew
     no ground while its shader compiled in the background -> CampaignPhotos renders a warm-up frame.

@@ -1,5 +1,6 @@
-# Unity batchmode loop for this project: any sequence of steps, each waited on properly.
+﻿# Unity batchmode loop for this project: any sequence of steps, each waited on properly.
 #   run.ps1 -Steps setup,setup,editmode,playmode [-Filter Map4Tests] [-Graphics]
+#   (also: campaign = opening village photos, film = the opening film's frames; both need graphics)
 # 'setup' twice after an Editor-assembly edit: the first pass compiles, then runs the OLD code.
 # Waits with WaitForExit() on Unity alone -- Start-Process -Wait waits on helper processes too
 # and has wedged for minutes.
@@ -87,6 +88,14 @@ foreach ($step in $Steps) {
             $code = Invoke-Unity "setup$i" @('-batchmode', '-nographics', '-quit', '-projectPath', $project,
                 '-executeMethod', 'CityBuilder.EditorTools.SetupProject.Run', '-logFile', $log)
             Write-Output "=== setup$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
+            Write-LogProblems $log
+        }
+        'film' {
+            # the campaign's opening film rendered frame by frame (Editor/CampaignPhotos.Film) into RunLogs/campaign/film/ -- needs graphics
+            $log = "$logs/film_run.log"
+            $code = Invoke-Unity "film$i" @('-batchmode', '-quit', '-projectPath', $project,
+                '-executeMethod', 'CityBuilder.EditorTools.CampaignPhotos.Film', '-logFile', $log)
+            Write-Output "=== film$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
         }
         'campaign' {
