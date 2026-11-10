@@ -21,7 +21,8 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   (`part()`/`arm()`: a straight block from the shoulder at an angle from hanging down; the user
   rejected skewed world-space beams as crooked), the handle upright through the fist, the head
   straight across. The user disliked the hammer version: now a BIG PORTRAIT, head and shoulders,
-  no hammer, both arms hanging (lens 172, f/1.6), Cottage1-lvl3 / FortifiedTower1-lvl2 / Hovel1-lvl2 behind in
+  no hammer, both arms hanging (lens 172), on a plain sky gradient like the orc (the user: stands out
+  better; the town and the depth of field are gone), Cottage1-lvl3 / FortifiedTower1-lvl2 / Hovel1-lvl2 behind in
   depth of field. Output -> `Design/store/Icon3D_<Orc|King>_512.png` + `Icons3D_Sheet.png`.
   Trap: give Blender an ABSOLUTE output path (a relative one lands next to the .blend).
   Run per scene: `blender --background <Models.blend> --python Tools/store/render_icons_3d.py -- orc D:/Fork/CityBuilding/Design/store/Icon3D_Orc_1024.png 1024`,

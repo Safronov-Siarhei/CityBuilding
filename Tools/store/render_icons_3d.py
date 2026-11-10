@@ -255,15 +255,10 @@ def king_scene():
     arm(-1, 6)
     arm(1, 6)
 
-    # the town behind him, out of focus
-    show("Cottage1-lvl3", (1.05, 1.9, 0), yaw=-25)
-    show("FortifiedTower1-lvl2", (-1.2, 2.6, 0), yaw=20)
-    show("Hovel1-lvl2", (-0.15, 3.4, 0), yaw=10)
-    grass = mat("Grass", (110, 170, 70), 0.95)
-    box("Ground", (0, 2, -0.01), (12, 12, 0.02), grass, bevel=0)
+    # nothing behind him but the sky gradient, like the orc's (the user: a plain background stands him out)
 
     # head and shoulders filling the icon, seen a little from his right and from just below his eyes
-    cam = camera((-0.45, -2.0, 0.57), (0.0, 0, 0.60), 172, fstop=1.6, focus=2.05)
+    cam = camera((-0.45, -2.0, 0.57), (0.0, 0, 0.60), 172)
     backdrop(cam, 9.0, ((0.0, (205, 232, 246)), (0.55, (130, 192, 238)), (1.0, (70, 140, 215))))
     world((180, 210, 255), 0.5)
     sun("Key", (50, 0, -30), 3.2, (255, 244, 225))
