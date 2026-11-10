@@ -80,7 +80,13 @@
     - ChampionLeap (shot 9): he gathers hidden behind the swirl, leaps out (an arc 0.32 high) and lands in a deep crouch, a fist down. Cracks key in under him and grit chips fly. He rises slowly, roars with arms flung wide and a shake, then turns his head to the village.
     - HordeRun (shot 10): the torchbearer (torch high, axe swinging) and the spearman (shield up, spear forward) run out after him, past the roaring champion, and split left and right. Each path crosses the arch's line 0.2 off its middle, clear of the pillars.
     - Track gained a 'fn' move (hand-made root and pose) and a per-figure `run_pose`.
-  - Groups still to make: the priest (bell); the townsfolk (fright, flight, the merchant calling).
+  - The orcs APPROVED (2026-11-10).
+  - The priest (`bell_anim.py`) was sent on 2026-11-10.
+    - The church can be built WITHOUT its bell, clapper and rope: `church.build(with_bell=False)`, with the pieces in `church.bell`/`church.clapper` and the belfry's measures in `church.BELFRY`. The approved look is unchanged.
+    - CineBell swings about its yoke (x axis), 24° once going, on a 1.15 s period. A timber lever to the front carries the rope; CineClapper follows 0.1 s late.
+    - CineBellRope is a unit rod keyed every frame from the lever to between his fists.
+    - The priest faces the bell; both arms are AIMED at the grip, which rises and falls with the swing, and his knees and back give on each haul.
+  - Groups still to make: the townsfolk (fright, flight, the merchant calling).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.

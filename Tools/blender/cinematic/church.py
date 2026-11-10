@@ -43,7 +43,21 @@ def stained_lancet(f, s, z0, w=d.ARCH_W, h=LANCET_H):
     f.rect(s - w / 2 - 0.035, s + w / 2 + 0.035, z0 - 0.045, z0 - 0.02, 0.035, 'stone_mid')
 
 
-def build():
+BELFRY = {}          # the belfry's centre, floor and top (before SET_SCALE), filled by build()
+
+
+def bell(b, tx, ty, top):
+    b.frustum(tx, ty, top - 0.27, top - 0.13, 0.12, 0.065, 'gold', sides=10)
+    b.cylinder(tx, ty, top - 0.3, top - 0.27, 0.13, 'gold', sides=10)
+    b.dome(tx, ty, top - 0.135, 0.067, 0.05, ['gold'], sides=10)
+
+
+def clapper(b, tx, ty, top):
+    b.ball(tx, ty, top - 0.33, 0.025, 0.05, 'iron', sides=6)
+
+
+def build(with_bell=True):
+    """The church; with_bell=False leaves the bell, clapper and rope out (bell_anim swings them)."""
     b = Builder()
     # ---- the nave
     x0, x1, y0, y1 = -0.66, 0.66, -0.55, 1.35
@@ -110,11 +124,11 @@ def build():
     b.box(tx - th + 0.12, tx + th - 0.12, ty + th - 0.14, ty + th - 0.1, bell0, bell1 - 0.1, 'window')     # dark back wall
     # the yoke and the bell, its rope down to the floor
     b.box(tx - th + 0.09, tx + th - 0.09, ty - 0.025, ty + 0.025, bell1 - 0.12, bell1 - 0.08, 'wood_dark')
-    b.frustum(tx, ty, bell1 - 0.27, bell1 - 0.13, 0.12, 0.065, 'gold', sides=10)
-    b.cylinder(tx, ty, bell1 - 0.3, bell1 - 0.27, 0.13, 'gold', sides=10)
-    b.dome(tx, ty, bell1 - 0.135, 0.067, 0.05, ['gold'], sides=10)
-    b.ball(tx, ty, bell1 - 0.33, 0.025, 0.05, 'iron', sides=6)                                # the clapper
-    b.rod((tx + 0.08, ty, bell1 - 0.18), (tx + 0.1, ty - 0.05, bell0 + 0.02), 0.012, 'burlap')   # the rope
+    BELFRY.update(tx=tx, ty=ty, floor=bell0, top=bell1)
+    if with_bell:
+        bell(b, tx, ty, bell1)
+        clapper(b, tx, ty, bell1)
+        b.rod((tx + 0.08, ty, bell1 - 0.18), (tx + 0.1, ty - 0.05, bell0 + 0.02), 0.012, 'burlap')   # the rope
     b.box(tx - th - 0.02, tx + th + 0.02, ty - th - 0.02, ty + th + 0.02, bell1, bell1 + 0.06, 'stone_mid', bevel=0.01)
     top = bell1 + 0.06 + 1.0
     cross = top - 0.16
@@ -163,8 +177,8 @@ def build():
     return b
 
 
-def make(location=(0, 0, 0)):
-    return fg.install_static(OBJ, build(), location=location)
+def make(location=(0, 0, 0), with_bell=True):
+    return fg.install_static(OBJ, build(with_bell), location=location)
 
 
 def render(out):
