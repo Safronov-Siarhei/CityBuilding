@@ -310,6 +310,8 @@ namespace CityBuilder.Cheats
 
             DrawRenderTuning();
 
+            if (Button("Окно оценки игры")) { SetOpen(false); RateUsWindow.Show(); }
+
             Header("Сохранение");
             var save = FindAnyObjectByType<GameSaveController>();
             GUILayout.BeginHorizontal();

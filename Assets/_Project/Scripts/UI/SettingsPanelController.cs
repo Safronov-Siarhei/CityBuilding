@@ -84,6 +84,9 @@ namespace CityBuilder.UI
             BuildGraphicsDetails();
             HighlightSelected();
             ModalGate.SetBlocked(true);
+            // TEMPORARY, for the user to try the rate-us window (2026-11-10): it comes up over the
+            // settings each time they open; remove once the real show rule is decided
+            RateUsWindow.Show();
         }
 
         public void ClosePanel()

@@ -41,31 +41,33 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
 - Rules: no text and no badges (Google forbids "#1", "free"...); keep the subject in the middle ~80%
   (the mask rounds the corners); judge it at 48 px.
 
-## Rate-us window (concept, 2026-11-10; NOT in the game yet)
+## Rate-us window (BUILT 2026-11-10, mock-up v6 approved; the user to try it; WHEN it shows: the user will say)
+- **TEMPORARY test hook:** `SettingsPanelController.OpenPanel` calls `RateUsWindow.Show()` -- the window
+  comes up every time the settings open (the user, 2026-11-10: «для теста ... при открытии настроек»).
+  REMOVE it when the real show rule goes in.
 - The user's rules: a POPUP that can be shown at any moment over whatever the game shows (not a screen
   of its own); the King and the orc chief stand either side and ask to support the project with a
   rating; the King is the GAME'S OWN HeroKing model (the user rejected the icon's retouched king:
-  "a model we use nowhere"); the orc chief is BIG, a head taller than the king.
-- Mock-up v3: `Design/store/RateWindow_Mockup.png` (+ `RateWindow_Backgrounds.png`: the window's picture
-  A blurred summer town / B blurred autumn town / C sunburst rays / D the painted chart -- the user picked A)
-  by `Tools/store/rate_window_mockup.py <folder> <town|autumn|sunburst|map> [out]`. The user's v3 notes:
-  the window 1.5x bigger (now 1800x820 of a 1920x1080 screen); the ribbon title as in v1 (a wide band
-  with folded tails behind both ends, «Поддержите королевство!»); the orc chief's height is measured
-  FEET TO HEAD, never by his flag or axe top: he is a head taller than the king (body 1.2x). The
-  scale comes from measured pixels on the renders (king feet 1170 / head top under the crown 270, orc
-  feet 1090 / head top under the spikes 490 in the 900x1200 figures). His banner above the skull staff
-  is erased in the mock-up (`no_flag`), so the staff ends in the skull.
-  Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure,
-  transparent, ortho camera fitted to bounds; figure_king = plain HeroKing, no retouch).
-  v4 (the user picked background A, the blurred summer town): the ribbon bigger every way, reaching
-  down to the parchment's top edge, its tails longer; draw order = tails, heroes, band (the chief's
-  head in front of the right tail, his spikes behind the title). Body text replaced (the user disliked
-  «Король и вождь орков…»): «Ваша оценка помогает королевству расти и становиться лучше!».
-  v5 (the user): dark fold triangles join the band to both tails (band bottom corners square; v6 turned
-  them the other way: along the band's bottom edge from its end inward, down to the tail's inner bottom corner); title
-  font smaller so it stays inside the band; NO close X (the user: «Позже» is enough). Behaviour rule:
-  a tap OUTSIDE the window closes it, the same as «Позже».
-  In the game the heroes would be pre-rendered sprites (cheap on mobile), not live 3D.
+  "a model we use nowhere"); the orc chief a head taller, measured FEET TO HEAD (never by his flag or
+  axe); the window ~1.5x the first mock-up (1800x820 of the 1920x1080 reference); the blurred summer
+  town as the window's picture (background A of A-D); the ribbon reaches down to the parchment, its
+  dark folds go along the band's bottom edge from each end inward down to the tail's inner corner;
+  NO close X -- «Позже», or a tap OUTSIDE the frame, closes it.
+- Art: `Tools/store/rate_window_art.py <folder with figure_king.png/figure_orc.png>` draws every piece on
+  its own layer and writes `Assets/_Project/UI/RateUs/` (Window = shadow+frame+town+parchment+heroes'
+  ground shadows, Tails, King, Orc, Band = folds+band, Stars, Button) + `layout.json` (piece/text/frame
+  rects in reference px, y down) + the mock-up `Design/store/RateWindow_Mockup.png` with Russian words.
+  Heroes from `render_icons_3d.py -- figure_king|figure_orc <abs out> 1200` (whole figure, transparent,
+  ortho camera fitted to bounds; plain HeroKing). Scale from measured pixels (king feet 1170 / head top
+  under the crown 270, orc feet 1090 / head top under the spikes 490, in the 900x1200 renders); the
+  orc's banner above his skull staff is erased (`no_flag`). Draw order: tails, heroes, band.
+- Game: `UI/RateUsWindow.cs` -- `RateUsWindow.Show()` from anywhere (prefab `Resources/RateUsWindow`
+  built by `Editor/SetupProjectRateUs.cs` from layout.json; canvas order 900, under the loading screen);
+  pops in (unscaled time); «Оценить» opens `market://details?id=com.depigogames.citybuilding` (the Android identifier SetupProject sets; the game's own page once it is published) (https Play link off
+  Android) and sets `Rated`; «Позже»/shade tap count `LaterCount` + `LastLaterUtc` -- all PlayerPrefs
+  (device, not the save) for the future show rule. Art imported as UI art (`UiTextureImport.RateUsFolder`,
+  ASTC on Android), unloaded after the window closes. Words: `#rateus_title/_body/_rate/_later`
+  (sheet + csv). Cheat: Сервис -> «Окно оценки игры».
 - Google Play rules that shape it: our stars are decoration only (the real rating is Google's In-App
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
   sheet has a quota and may silently not show, so a button should open the store page (or our window
@@ -75,7 +77,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   two refusals or after «Оценить».
 
 ## Open
-- Rate window: the user's corrections to the mock-up, then the build (UI, trigger points, sheet keys, texts).
+- Rate window: WHEN it shows (the user will say; proposed below), then see it on a phone.
 - The user's corrections to both icons.
 - The king is not a character in the game yet (if he wins, he may need to appear in the menu/tutorial).
 - Feature graphic 1024x500 and screenshots.

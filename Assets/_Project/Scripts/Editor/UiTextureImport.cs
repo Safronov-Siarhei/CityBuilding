@@ -38,12 +38,14 @@ namespace CityBuilder.EditorTools
 
         /// <summary>The loading screen's pictures (Tools/ui/illustrate.py, render_runner.py): big, so compressed as the menu's art.</summary>
         public const string LoadingFolder = "Assets/_Project/UI/Loading";
+        /// <summary>The rate-us window's pieces (Tools/store/rate_window_art.py), placed by SetupProjectRateUs.</summary>
+        public const string RateUsFolder = "Assets/_Project/UI/RateUs";
 
         private void OnPreprocessTexture()
         {
             var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(RateUsFolder + "/");
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
