@@ -78,9 +78,11 @@ namespace CityBuilder.UI
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
             if (_graphicsButtons.Count == 0) BuildGraphicsButtons();
+            // shown first: a layout rebuilt while the panel is hidden does nothing, and the Auto line
+            // then sat on the Auto/Manual buttons
+            if (panelRoot != null) panelRoot.SetActive(true);
             BuildGraphicsDetails();
             HighlightSelected();
-            if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
         }
 
@@ -221,6 +223,9 @@ namespace CityBuilder.UI
         /// <summary>Lays the rows and the scrolling card out now, not on the next layout pass.</summary>
         private void Relayout()
         {
+            // the rows grow downwards from the top, so a late size change cannot push them up over the row above
+            graphicsDetails.pivot = new Vector2(0.5f, 1f);
+            Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(graphicsDetails);
             if (graphicsDetails.parent is RectTransform content) LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
@@ -256,7 +261,11 @@ namespace CityBuilder.UI
             text.name = name;
             var localized = text.GetComponent<LocalizedText>();
             if (localized != null) Destroy(localized);
+            // the template was placed by the card's layout, which pins it to the top left corner:
+            // a copy in a parent without a layout must be centred again (it drifted left and down)
             var rect = text.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
             rect.sizeDelta = new Vector2(680f, height);
             return text;
         }
