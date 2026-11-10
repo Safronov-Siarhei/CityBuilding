@@ -97,6 +97,14 @@
       - The baskets and crates stay on the ground. `village.stall(parts=)` and `village.stall_goods(only=)` build the pieces.
     - Built for it, with the approved look unchanged: `village.cart(wheels=False)` + `village.cart_wheel` + `village.CART`; the stalls one by one through `village.stall`.
     - `kids_anim.mix_any` crossfades poses that do not share keys (aims fade by weight).
+- **The Blender film, first cut, was sent on 2026-11-10**: 1662 frames, 55 s, 1280x720, no sound.
+  - `cutscene.py -- <shot> <dir>` renders one shot (12 shots: wide market square talk fright assembly swirl leap horde chaos bell run) as PNGs.
+    - It builds the whole village under CineVillageRoot: square r 4.3, church at (0, 7.4), 8 houses facing the square, trees, a market street with the stalls at (1, -5.2).
+    - The village is moved UNDER each shot's own animation frame; the talk shot turns it 180°, so Ардан is always south of the ruins.
+    - The file's saved Cine* objects are deleted first, and its game models are hidden.
+    - New effects: rune glows lighting one by one, the stones flying ruin->arch, the swirl growing (no spin; a spin tilts its door shape), the purple portal light, the roof fire, camera shake.
+    - CUT_SMALL / CUT_SHEET are for checks.
+  - `cutscene_edit.py -- <dir> <mp4>` joins the shots in the sequencer, with the subtitles as text strips at the bottom. EDIT_STILL=<frame> renders one frame for a check.
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.
@@ -149,5 +157,5 @@ Commands:
   - Demo clips: `blender --background <Models.blend> --python Tools/blender/cinematic/ardan_anim.py -- render <out> [walk|carry|all]`.
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
-- How the video is assembled: a Blender render of the 14 shots, or in-engine in Unity (decided earlier: in-engine).
+- The video: the user chose «Сначала в Blender» (2026-11-10). The film is approved in Blender first and then moved into Unity.
 - The level structure beyond mission 1.
