@@ -16,6 +16,8 @@
 > backdrop skips maps without a ground prefab (the archipelago, dungeons) -- that was the lost ground.
 > **2026-11-01:** an orc building or a dungeon mouth held hides the build menu like one's own
 > (`BuildingFocus.Holding`, read by `BuildingPlacerUIVisibility`), so the «!» stands alone.
+> **2026-11-10:** the modes screen's banners unroll from the screen's FIRST faded-in frame and stay rolled up
+> while it is away (`ModeBannersController`: was alpha > 0.5, so they showed whole, folded and unrolled again).
 > **Rule:** the user SKETCHES layouts; implement their sketch, don't redesign or restyle unasked.
 > **Read with:** [art-pipeline](art-pipeline.md) (icons), [balance-and-localization](balance-and-localization.md) (all text).
 

@@ -55,14 +55,22 @@ namespace CityBuilder.UI
         private void Update()
         {
             // the screen coming up: the live lines read afresh, the banners unroll from their perch
-            var visible = screen != null && screen.alpha > 0.5f;
+            // from the first faded-in frame (was alpha > 0.5: the banners showed whole while the screen
+            // faded in, then folded and unrolled -- the user, 2026-11-10: «исчезают и снова открываются»)
+            var visible = screen != null && screen.alpha > 0.01f;
             if (visible && !_shown)
             {
                 _shownAt = Time.unscaledTime;
                 Refresh();
             }
             _shown = visible;
-            if (!visible) return;
+            if (!visible)
+            {
+                // rolled up while away, so the next coming up starts from the perch
+                for (var i = 0; i < banners.Length; i++)
+                    if (banners[i] != null) banners[i].localScale = new Vector3(_scale[i], _scale[i] * 0.02f, 1f);
+                return;
+            }
 
             var k = 1f - Mathf.Exp(-Ease * Time.unscaledDeltaTime);
             var now = Time.unscaledTime;

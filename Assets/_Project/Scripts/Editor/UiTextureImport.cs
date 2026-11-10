@@ -66,7 +66,8 @@ namespace CityBuilder.EditorTools
                 name = "Android",
                 overridden = true,
                 format = TextureImporterFormat.ASTC_4x4,
-                maxTextureSize = 2048,
+                // the rate-us window shows its art at half size: half the texture is enough
+                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") ? 1024 : 2048,
                 compressionQuality = 100,
             });
 

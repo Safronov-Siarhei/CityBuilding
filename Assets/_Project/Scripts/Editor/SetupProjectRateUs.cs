@@ -16,6 +16,8 @@ namespace CityBuilder.EditorTools
     public static partial class SetupProject
     {
         private const string RateUsPrefabPath = "Assets/_Project/Resources/RateUsWindow.prefab";
+        // the window at half the art's reference size (the user, 2026-11-10: «уменьши окно оценки в 2 раза»)
+        private const float RateUsSize = 0.5f;
 
         [Serializable] private class RateUsRect { public string name; public float[] rect; }
         [Serializable] private class RateUsLayout { public float[] reference; public float[] frame; public RateUsRect[] pieces; public RateUsRect[] texts; }
@@ -34,7 +36,8 @@ namespace CityBuilder.EditorTools
             foreach (var piece in layout.pieces)
             {
                 var path = $"{UiTextureImport.RateUsFolder}/{piece.name}.png";
-                if (AssetImporter.GetAtPath(path) is TextureImporter ti && ti.textureType != TextureImporterType.Sprite)
+                if (AssetImporter.GetAtPath(path) is TextureImporter ti
+                    && (ti.textureType != TextureImporterType.Sprite || ti.GetPlatformTextureSettings("Android").maxTextureSize != 1024))
                     AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             }
             var refW = layout.reference[0];
@@ -123,6 +126,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("shade").objectReferenceValue = shadeButton;
             so.FindProperty("rate").objectReferenceValue = rateButton;
             so.FindProperty("later").objectReferenceValue = laterButton;
+            so.FindProperty("size").floatValue = RateUsSize;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(Path.GetDirectoryName(RateUsPrefabPath));

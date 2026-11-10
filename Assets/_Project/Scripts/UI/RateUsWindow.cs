@@ -34,6 +34,8 @@ namespace CityBuilder.UI
         [SerializeField] private Button shade;
         [SerializeField] private Button rate;
         [SerializeField] private Button later;
+        /// <summary>The window's size against the art's 1920 x 1080 reference (the user, 2026-11-10: half).</summary>
+        [SerializeField] private float size = 1f;
 
         private static RateUsWindow _current;
         private float _t;
@@ -69,7 +71,7 @@ namespace CityBuilder.UI
             later.onClick.AddListener(PutOff);
             rate.onClick.AddListener(Rate);
             group.alpha = 0f;
-            window.localScale = Vector3.one * PopFromScale;
+            window.localScale = Vector3.one * (PopFromScale * size);
         }
 
         private void Update()
@@ -86,7 +88,7 @@ namespace CityBuilder.UI
             group.alpha = k;
             // a small overshoot so the window pops rather than slides in
             var back = 1f + 2.2f * Mathf.Pow(k - 1f, 3f) + 1.2f * Mathf.Pow(k - 1f, 2f);
-            window.localScale = Vector3.one * Mathf.LerpUnclamped(PopFromScale, 1f, back);
+            window.localScale = Vector3.one * (size * Mathf.LerpUnclamped(PopFromScale, 1f, back));
         }
 
         private void Rate()
