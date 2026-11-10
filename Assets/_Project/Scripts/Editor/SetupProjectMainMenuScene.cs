@@ -117,22 +117,65 @@ namespace CityBuilder.EditorTools
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             // The language, the fog's look, the HUD's look (the season and the Invasion's map left for
             // the menu's theme buttons, the user 2026-10-25).
-            // + the graphics tier (the user, 2026-11-09)
+            // + the graphics tier (the user, 2026-11-09), Auto/Manual with details (2026-11-10)
             cardRect.sizeDelta = new Vector2(800f, 900f);
             cardRect.anchoredPosition = Vector2.zero;
 
             Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 390f), new Vector2(680f, 70f)), "#settings_title");
-            Localize(CreateText(card.transform, "LanguageLabel", string.Empty, 26, new Vector2(0f, 320f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
-            var languageRowRect = CreateSettingsRow(card.transform, "LanguageRow", 256f);
 
-            Localize(CreateText(card.transform, "FogLabel", string.Empty, 26, new Vector2(0f, 190f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
-            var fogRowRect = CreateSettingsRow(card.transform, "FogRow", 126f);
+            // the rows scroll between the title and the Back button (the user, 2026-11-10: the manual
+            // graphics settings open under the graphics row and make the card taller than the screen)
+            var scroll = new GameObject("Scroll", typeof(RectTransform), typeof(RectMask2D), typeof(ScrollRect));
+            scroll.transform.SetParent(card.transform, false);
+            var scrollRect = scroll.GetComponent<RectTransform>();
+            scrollRect.anchorMin = scrollRect.anchorMax = new Vector2(0.5f, 0.5f);
+            scrollRect.anchoredPosition = new Vector2(0f, 30f);
+            scrollRect.sizeDelta = new Vector2(780f, 640f);
+            var content = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            content.transform.SetParent(scroll.transform, false);
+            var contentRect = content.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.sizeDelta = Vector2.zero;
+            var layout = content.GetComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.spacing = 6f;
+            layout.childControlWidth = layout.childControlHeight = false;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+            content.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroller = scroll.GetComponent<ScrollRect>();
+            scroller.viewport = scrollRect;
+            scroller.content = contentRect;
+            scroller.horizontal = false;
+            scroller.movementType = ScrollRect.MovementType.Clamped;
+            scroller.scrollSensitivity = 30f;
+            var rows = content.transform;
 
-            Localize(CreateText(card.transform, "HudLabel", string.Empty, 26, new Vector2(0f, 60f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
-            var hudRowRect = CreateSettingsRow(card.transform, "HudRow", -4f);
+            Localize(CreateText(rows, "LanguageLabel", string.Empty, 26, Vector2.zero, new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
+            var languageRowRect = CreateSettingsRow(rows, "LanguageRow", 0f);
 
-            Localize(CreateText(card.transform, "GraphicsLabel", string.Empty, 26, new Vector2(0f, -70f), new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_graphics");
-            var graphicsRowRect = CreateSettingsRow(card.transform, "GraphicsRow", -134f);
+            Localize(CreateText(rows, "FogLabel", string.Empty, 26, Vector2.zero, new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_fog");
+            var fogRowRect = CreateSettingsRow(rows, "FogRow", 0f);
+
+            Localize(CreateText(rows, "HudLabel", string.Empty, 26, Vector2.zero, new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_hud");
+            var hudRowRect = CreateSettingsRow(rows, "HudRow", 0f);
+
+            var graphicsLabel = CreateText(rows, "GraphicsLabel", string.Empty, 26, Vector2.zero, new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f));
+            Localize(graphicsLabel, "#settings_graphics");
+            var graphicsRowRect = CreateSettingsRow(rows, "GraphicsRow", 0f);
+
+            // Auto: one line of what the device got; Manual: the level and the details (built at play time)
+            var details = new GameObject("GraphicsDetails", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            details.transform.SetParent(rows, false);
+            var detailsRect = details.GetComponent<RectTransform>();
+            detailsRect.sizeDelta = new Vector2(760f, 0f);
+            var detailsLayout = details.GetComponent<VerticalLayoutGroup>();
+            detailsLayout.childAlignment = TextAnchor.UpperCenter;
+            detailsLayout.spacing = 6f;
+            detailsLayout.childControlWidth = detailsLayout.childControlHeight = false;
+            detailsLayout.childForceExpandWidth = detailsLayout.childForceExpandHeight = false;
+            details.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var backButton = CreateButton(card.transform, panelSprite, "SettingsBackButton", "#settings_back", new Vector2(0f, -340f), new Vector2(300f, 80f));
 
@@ -143,6 +186,9 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("fogRow").objectReferenceValue = fogRowRect;
             controllerSO.FindProperty("hudRow").objectReferenceValue = hudRowRect;
             controllerSO.FindProperty("graphicsRow").objectReferenceValue = graphicsRowRect;
+            controllerSO.FindProperty("graphicsDetails").objectReferenceValue = detailsRect;
+            controllerSO.FindProperty("labelTemplate").objectReferenceValue = graphicsLabel;
+            controllerSO.FindProperty("cardImage").objectReferenceValue = card;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 

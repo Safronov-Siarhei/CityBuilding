@@ -1,5 +1,19 @@
 # Performance on mobile
 
+> **2026-11-10 GRAPHICS SETTINGS: Auto / Manual (the user).** Settings → Graphics: **Авто | Ручная**.
+> Auto = the device's tier (line «Сейчас: Низкий»). Manual opens, each row with a «!» info window
+> (texts `#settings_gfx_*_info` in the sheet): **Уровень графики** Низкий/Средний/Высокий/Свой (a level
+> sets all the rows; any changed row shows «Свой») · **Частота кадров** 30/60 · **Сглаживание краёв**
+> Выкл/2x/4x · **Чёткость** 50/75/90/100 % · **Тени** Выкл/Простые/Чёткие (off = reach 0; sharp =
+> 2048 map; soft shadows cannot be switched at runtime) · **Дальность теней** Близко/Средне/Далеко
+> (35/50/60 m) · **Показывать FPS** (UI/FpsCounter, bottom left right of the minimap, every scene).
+> Model: `GraphicsQuality` (Chosen Auto = Auto mode; `Detail`, `Preset`, `Current` in PlayerPrefs
+> `graphics_detail.*`, `MatchingLevel`, `SetManual`/`SetLevel`, `FrameRate`, `ShowFps`); presets
+> Low 60/2x/100/simple/near, Medium 60/4x/90/simple/mid, High 60/4x/100/sharp/far. The settings card's
+> rows now scroll (SetupProjectMainMenuScene: Scroll/Content + GraphicsDetails built at play time by
+> SettingsPanelController). Left open by the user: Water (simple/live) and Effects (simple/full) rows.
+> Not seen on a device yet.
+
 > **2026-11-10 REDMI PAD (Helio G99, Mali-G57 MC2, 4 GB, 1200x2000) -- the first weak device measured.**
 > Same sandbox save as the Pixel. **The GPU is the limit and the tier decides everything:**
 > - Auto picks **Medium** here (3.9 GB) → **21 fps** in the game (GPU ~46 ms, even over plain fog),

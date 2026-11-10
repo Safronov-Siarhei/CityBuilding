@@ -49,6 +49,123 @@ namespace CityBuilder.Core
         private const int LowBelowMb = 4500;
         private const int HighFromMb = 7000;
 
+        // ---- the manual settings (the user, 2026-11-10: Auto/Manual with a graphics level and
+        // the details under it). Chosen == Auto is the Auto mode; any level is the Manual mode, and the
+        // details start from that level's preset and may then be changed one by one.
+
+        /// <summary>One manual setup: frames a second, MSAA samples, render scale in %, shadows (0 off, 1 simple, 2 sharp), shadow reach (0 near .. 2 far).</summary>
+        public struct Detail
+        {
+            public int Fps, Msaa, ScalePercent, Shadows, ShadowReach;
+
+            public bool Same(Detail o) =>
+                Fps == o.Fps && Msaa == o.Msaa && ScalePercent == o.ScalePercent && Shadows == o.Shadows && ShadowReach == o.ShadowReach;
+        }
+
+        public static readonly int[] FpsChoices = { 30, 60 };
+        public static readonly int[] MsaaChoices = { 1, 2, 4 };
+        public static readonly int[] ScaleChoices = { 50, 75, 90, 100 };
+        private static readonly int[] ShadowMaps = { 1024, 1024, 2048 };
+        private static readonly float[] ShadowReaches = { 35f, 50f, 60f };
+
+        /// <summary>The details a level stands for -- what picking it in Manual sets.</summary>
+        public static Detail Preset(GraphicsTier tier)
+        {
+            switch (tier)
+            {
+                case GraphicsTier.High: return new Detail { Fps = 60, Msaa = 4, ScalePercent = 100, Shadows = 2, ShadowReach = 2 };
+                case GraphicsTier.Medium: return new Detail { Fps = 60, Msaa = 4, ScalePercent = 90, Shadows = 1, ShadowReach = 1 };
+                default: return new Detail { Fps = 60, Msaa = 2, ScalePercent = 100, Shadows = 1, ShadowReach = 0 };
+            }
+        }
+
+        private const string DetailKey = "graphics_detail.";
+        private static Detail? _detail;
+
+        public static bool Manual => Chosen != GraphicsTier.Auto;
+
+        /// <summary>The manual details (the chosen level's preset until the player changed one).</summary>
+        public static Detail Current
+        {
+            get
+            {
+                if (_detail == null)
+                {
+                    var preset = Preset(Chosen);
+                    _detail = new Detail
+                    {
+                        Fps = PlayerPrefs.GetInt(DetailKey + "fps", preset.Fps),
+                        Msaa = PlayerPrefs.GetInt(DetailKey + "msaa", preset.Msaa),
+                        ScalePercent = PlayerPrefs.GetInt(DetailKey + "scale", preset.ScalePercent),
+                        Shadows = PlayerPrefs.GetInt(DetailKey + "shadows", preset.Shadows),
+                        ShadowReach = PlayerPrefs.GetInt(DetailKey + "reach", preset.ShadowReach),
+                    };
+                }
+                return _detail.Value;
+            }
+            set
+            {
+                _detail = value;
+                PlayerPrefs.SetInt(DetailKey + "fps", value.Fps);
+                PlayerPrefs.SetInt(DetailKey + "msaa", value.Msaa);
+                PlayerPrefs.SetInt(DetailKey + "scale", value.ScalePercent);
+                PlayerPrefs.SetInt(DetailKey + "shadows", value.Shadows);
+                PlayerPrefs.SetInt(DetailKey + "reach", value.ShadowReach);
+                PlayerPrefs.Save();
+                Apply();
+            }
+        }
+
+        /// <summary>The level whose preset the manual details are, or null for the player's own mix ("custom").</summary>
+        public static GraphicsTier? MatchingLevel
+        {
+            get
+            {
+                var d = Current;
+                for (var t = GraphicsTier.Low; t <= GraphicsTier.High; t++)
+                    if (Preset(t).Same(d)) return t;
+                return null;
+            }
+        }
+
+        /// <summary>Manual on: starts from the device's own level. Off: back to Auto (the details are kept for next time).</summary>
+        public static void SetManual(bool manual)
+        {
+            if (manual == Manual) return;
+            if (!manual) { Chosen = GraphicsTier.Auto; return; }
+            if (!PlayerPrefs.HasKey(DetailKey + "fps")) { SetLevel(Detect()); return; }
+            // the details the player left last time, under the level they match
+            Chosen = MatchingLevel ?? Detect();
+        }
+
+        /// <summary>A level in Manual: every detail to its preset.</summary>
+        public static void SetLevel(GraphicsTier tier)
+        {
+            if (tier == GraphicsTier.Auto) { Chosen = GraphicsTier.Auto; return; }
+            _chosen = tier;
+            PlayerPrefs.SetInt(Key, (int)tier);
+            Current = Preset(tier);   // saves and applies
+        }
+
+        /// <summary>Frames a second the game is capped at: Manual's choice, 60 in Auto.</summary>
+        public static int FrameRate => Manual ? Current.Fps : 60;
+
+        // ---- the FPS counter (the user: it can be switched on in the settings)
+        private const string ShowFpsKey = "graphics_show_fps";
+        public static event System.Action ShowFpsChanged;
+
+        public static bool ShowFps
+        {
+            get => PlayerPrefs.GetInt(ShowFpsKey, 0) == 1;
+            set
+            {
+                if (value == ShowFps) return;
+                PlayerPrefs.SetInt(ShowFpsKey, value ? 1 : 0);
+                PlayerPrefs.Save();
+                ShowFpsChanged?.Invoke();
+            }
+        }
+
         public static GraphicsTier Chosen
         {
             get
@@ -70,8 +187,8 @@ namespace CityBuilder.Core
             }
         }
 
-        /// <summary>The tier actually drawn: the chosen one, or the device's for Auto.</summary>
-        public static GraphicsTier Effective => Chosen == GraphicsTier.Auto ? Detect() : Chosen;
+        /// <summary>The tier actually drawn: the device's in Auto; in Manual the level the details match (the chosen one for a mix).</summary>
+        public static GraphicsTier Effective => !Manual ? Detect() : MatchingLevel ?? Chosen;
 
         /// <summary>
         /// The device's tier from its memory and cores: a flagship (8+ GB, 8 cores) draws High, a
@@ -116,13 +233,27 @@ namespace CityBuilder.Core
             _copy = Object.Instantiate(_source);
             _copy.name = _source.name + " (tier)";
 
-            var tier = Tiers[Mathf.Clamp((int)Effective - 1, 0, Tiers.Length - 1)];
-            // a 1440p phone at full scale would pay for pixels nobody sees: the short side is capped
-            var shortSide = Mathf.Max(1, Mathf.Min(Screen.width, Screen.height));
-            _copy.renderScale = Mathf.Clamp(Mathf.Min(tier.scale, tier.shortSideCap / (float)shortSide), 0.5f, 1f);
-            _copy.msaaSampleCount = tier.msaa;
-            _copy.mainLightShadowmapResolution = tier.shadowMap;
-            _copy.shadowDistance = tier.shadowDistance;
+            if (!Manual)
+            {
+                var tier = Tiers[Mathf.Clamp((int)Detect() - 1, 0, Tiers.Length - 1)];
+                // a 1440p phone at full scale would pay for pixels nobody sees: the short side is capped
+                var shortSide = Mathf.Max(1, Mathf.Min(Screen.width, Screen.height));
+                _copy.renderScale = Mathf.Clamp(Mathf.Min(tier.scale, tier.shortSideCap / (float)shortSide), 0.5f, 1f);
+                _copy.msaaSampleCount = tier.msaa;
+                _copy.mainLightShadowmapResolution = tier.shadowMap;
+                _copy.shadowDistance = tier.shadowDistance;
+            }
+            else
+            {
+                var d = Current;
+                _copy.renderScale = Mathf.Clamp(d.ScalePercent / 100f, 0.5f, 1f);
+                _copy.msaaSampleCount = Mathf.Max(1, d.Msaa);
+                var shadows = Mathf.Clamp(d.Shadows, 0, ShadowMaps.Length - 1);
+                _copy.mainLightShadowmapResolution = ShadowMaps[shadows];
+                // a zero reach is URP's "no main light shadows"
+                _copy.shadowDistance = shadows == 0 ? 0f : ShadowReaches[Mathf.Clamp(d.ShadowReach, 0, ShadowReaches.Length - 1)];
+            }
+            Application.targetFrameRate = FrameRate;
             // no post effects in the game: HDR buys nothing but bandwidth
             _copy.supportsHDR = false;
             if (OverrideScale > 0f) _copy.renderScale = Mathf.Clamp(OverrideScale, 0.3f, 1f);

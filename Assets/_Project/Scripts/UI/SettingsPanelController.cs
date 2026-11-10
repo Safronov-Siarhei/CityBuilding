@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,11 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform hudRow;
         [SerializeField] private RectTransform graphicsRow;
         [SerializeField] private Sprite buttonSprite;
+        // the manual graphics settings (the user, 2026-11-10): the rows under the Auto/Manual row,
+        // a caption to copy for their headers (the card's own look), and the card for the "!" window
+        [SerializeField] private RectTransform graphicsDetails;
+        [SerializeField] private Text labelTemplate;
+        [SerializeField] private Image cardImage;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
         private static readonly Color UnselectedColor = UiTheme.TabIdle;
@@ -38,11 +44,14 @@ namespace CityBuilder.UI
         private readonly List<(string code, Image background)> _buttons = new List<(string, Image)>();
         private readonly List<(FogStyle style, Image background)> _fogButtons = new List<(FogStyle, Image)>();
         private readonly List<(HudSkin skin, Image background)> _hudButtons = new List<(HudSkin, Image)>();
-        private readonly List<(GraphicsTier tier, Image background)> _graphicsButtons = new List<(GraphicsTier, Image)>();
+        private readonly List<(bool manual, Image background)> _graphicsButtons = new List<(bool, Image)>();
+        // every button of the detail rows with "is it the chosen one" -- rebuilt with the rows
+        private readonly List<(Func<bool> selected, Image background)> _detailButtons = new List<(Func<bool>, Image)>();
+        private GameObject _info;
+        private LocalizedText _infoTitle, _infoBody;
 
-        private static readonly (GraphicsTier tier, string key)[] GraphicsChoices =
+        private static readonly (GraphicsTier tier, string key)[] Levels =
         {
-            (GraphicsTier.Auto, "#settings_graphics_auto"),
             (GraphicsTier.Low, "#settings_graphics_low"),
             (GraphicsTier.Medium, "#settings_graphics_medium"),
             (GraphicsTier.High, "#settings_graphics_high"),
@@ -69,6 +78,7 @@ namespace CityBuilder.UI
             if (_fogButtons.Count == 0) BuildFogButtons();
             if (_hudButtons.Count == 0) BuildHudButtons();
             if (_graphicsButtons.Count == 0) BuildGraphicsButtons();
+            BuildGraphicsDetails();
             HighlightSelected();
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
@@ -76,6 +86,7 @@ namespace CityBuilder.UI
 
         public void ClosePanel()
         {
+            if (_info != null) _info.SetActive(false);
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
         }
@@ -83,6 +94,7 @@ namespace CityBuilder.UI
         public void SelectLanguage(string code)
         {
             Localization.SetLanguage(code);
+            BuildGraphicsDetails();   // the Auto line is formatted, not a LocalizedText
             HighlightSelected();
         }
 
@@ -98,9 +110,11 @@ namespace CityBuilder.UI
             HighlightSelected();
         }
 
-        public void SelectGraphics(GraphicsTier tier)
+        /// <summary>Auto or Manual; Manual opens the level and the details under the row.</summary>
+        public void SelectGraphicsManual(bool manual)
         {
-            GraphicsQuality.Chosen = tier;
+            GraphicsQuality.SetManual(manual);
+            BuildGraphicsDetails();
             HighlightSelected();
         }
 
@@ -108,18 +122,219 @@ namespace CityBuilder.UI
         {
             if (graphicsRow == null) return;
 
-            const float width = 170f;
-            const float spacing = 12f;
-            for (var i = 0; i < GraphicsChoices.Length; i++)
+            const float width = 260f;
+            const float spacing = 16f;
+            var choices = new[] { (false, "#settings_graphics_auto"), (true, "#settings_graphics_manual") };
+            for (var i = 0; i < choices.Length; i++)
             {
-                var (tier, key) = GraphicsChoices[i];
-                var x = (i - (GraphicsChoices.Length - 1) * 0.5f) * (width + spacing);
-                var image = CreateRowButton(graphicsRow, $"Graphics_{tier}", x, width, out var label);
+                var (manual, key) = choices[i];
+                var x = (i - (choices.Length - 1) * 0.5f) * (width + spacing);
+                var image = CreateRowButton(graphicsRow, manual ? "Graphics_Manual" : "Graphics_Auto", x, width, out var label);
                 label.gameObject.AddComponent<LocalizedText>().SetKey(key);
-                var captured = tier;
-                image.GetComponent<Button>().onClick.AddListener(() => SelectGraphics(captured));
-                _graphicsButtons.Add((tier, image));
+                image.GetComponent<Button>().onClick.AddListener(() => SelectGraphicsManual(manual));
+                _graphicsButtons.Add((manual, image));
             }
+        }
+
+        // ---- the rows under Auto/Manual -------------------------------------------------------
+
+        /// <summary>Auto: one line of what the device draws. Manual: the level, then each detail, each with its "!".</summary>
+        private void BuildGraphicsDetails()
+        {
+            if (graphicsDetails == null || labelTemplate == null) return;
+            for (var i = graphicsDetails.childCount - 1; i >= 0; i--) Destroy(graphicsDetails.GetChild(i).gameObject);
+            _detailButtons.Clear();
+
+            if (!GraphicsQuality.Manual)
+            {
+                var line = Caption(graphicsDetails, "AutoNow", 46f);
+                line.text = string.Format(Localization.Get("#settings_gfx_auto_now"), Localization.Get(LevelKey(GraphicsQuality.Detect())));
+                return;
+            }
+
+            // the level: picking one sets every detail; a changed detail shows "custom"
+            var levelRow = DetailRow("#settings_gfx_level", "#settings_gfx_level_info", 4);
+            for (var i = 0; i < Levels.Length; i++)
+            {
+                var (tier, key) = Levels[i];
+                AddChoice(levelRow, i, 4, key, null, () => GraphicsQuality.MatchingLevel == tier, () => GraphicsQuality.SetLevel(tier));
+            }
+            AddChoice(levelRow, 3, 4, "#settings_gfx_custom", null, () => GraphicsQuality.MatchingLevel == null, null);
+
+            var fps = DetailRow("#settings_gfx_fps", "#settings_gfx_fps_info", GraphicsQuality.FpsChoices.Length);
+            for (var i = 0; i < GraphicsQuality.FpsChoices.Length; i++)
+            {
+                var value = GraphicsQuality.FpsChoices[i];
+                AddChoice(fps, i, GraphicsQuality.FpsChoices.Length, null, value.ToString(),
+                    () => GraphicsQuality.Current.Fps == value, () => Change(d => d.Fps = value));
+            }
+
+            var msaa = DetailRow("#settings_gfx_msaa", "#settings_gfx_msaa_info", GraphicsQuality.MsaaChoices.Length);
+            for (var i = 0; i < GraphicsQuality.MsaaChoices.Length; i++)
+            {
+                var value = GraphicsQuality.MsaaChoices[i];
+                AddChoice(msaa, i, GraphicsQuality.MsaaChoices.Length, value <= 1 ? "#settings_gfx_off" : null, value <= 1 ? null : value + "x",
+                    () => GraphicsQuality.Current.Msaa == value, () => Change(d => d.Msaa = value));
+            }
+
+            var scale = DetailRow("#settings_gfx_scale", "#settings_gfx_scale_info", GraphicsQuality.ScaleChoices.Length);
+            for (var i = 0; i < GraphicsQuality.ScaleChoices.Length; i++)
+            {
+                var value = GraphicsQuality.ScaleChoices[i];
+                AddChoice(scale, i, GraphicsQuality.ScaleChoices.Length, null, value + "%",
+                    () => GraphicsQuality.Current.ScalePercent == value, () => Change(d => d.ScalePercent = value));
+            }
+
+            var shadowKeys = new[] { "#settings_gfx_off", "#settings_gfx_shadows_simple", "#settings_gfx_shadows_sharp" };
+            var shadows = DetailRow("#settings_gfx_shadows", "#settings_gfx_shadows_info", shadowKeys.Length);
+            for (var i = 0; i < shadowKeys.Length; i++)
+            {
+                var value = i;
+                AddChoice(shadows, i, shadowKeys.Length, shadowKeys[i], null,
+                    () => GraphicsQuality.Current.Shadows == value, () => Change(d => d.Shadows = value));
+            }
+
+            var reachKeys = new[] { "#settings_gfx_near", "#settings_gfx_mid", "#settings_gfx_far" };
+            var reach = DetailRow("#settings_gfx_shadow_reach", "#settings_gfx_shadow_reach_info", reachKeys.Length);
+            for (var i = 0; i < reachKeys.Length; i++)
+            {
+                var value = i;
+                AddChoice(reach, i, reachKeys.Length, reachKeys[i], null,
+                    () => GraphicsQuality.Current.ShadowReach == value, () => Change(d => d.ShadowReach = value));
+            }
+
+            var counter = DetailRow("#settings_gfx_show_fps", "#settings_gfx_show_fps_info", 2);
+            AddChoice(counter, 0, 2, "#settings_gfx_on", null, () => GraphicsQuality.ShowFps, () => GraphicsQuality.ShowFps = true);
+            AddChoice(counter, 1, 2, "#settings_gfx_off", null, () => !GraphicsQuality.ShowFps, () => GraphicsQuality.ShowFps = false);
+        }
+
+        private static string LevelKey(GraphicsTier tier)
+        {
+            foreach (var (t, key) in Levels) if (t == tier) return key;
+            return "#settings_graphics_medium";
+        }
+
+        private void Change(Action<Box> edit)
+        {
+            var box = new Box { Detail = GraphicsQuality.Current };
+            edit(box);
+            GraphicsQuality.Current = box.Detail;   // saves and applies
+        }
+
+        /// <summary>A mutable holder, so a lambda can set one field of the struct.</summary>
+        private sealed class Box
+        {
+            public GraphicsQuality.Detail Detail;
+            public int Fps { set => Detail.Fps = value; }
+            public int Msaa { set => Detail.Msaa = value; }
+            public int ScalePercent { set => Detail.ScalePercent = value; }
+            public int Shadows { set => Detail.Shadows = value; }
+            public int ShadowReach { set => Detail.ShadowReach = value; }
+        }
+
+        /// <summary>A copy of the card's caption: same font, colour and skin.</summary>
+        private Text Caption(Transform parent, string name, float height)
+        {
+            var text = Instantiate(labelTemplate, parent, false);
+            text.name = name;
+            var localized = text.GetComponent<LocalizedText>();
+            if (localized != null) Destroy(localized);
+            var rect = text.rectTransform;
+            rect.sizeDelta = new Vector2(680f, height);
+            return text;
+        }
+
+        /// <summary>A detail's header (name + "!") over an empty row for its buttons.</summary>
+        private RectTransform DetailRow(string nameKey, string infoKey, int buttons)
+        {
+            var header = new GameObject(nameKey.TrimStart('#'), typeof(RectTransform));
+            header.transform.SetParent(graphicsDetails, false);
+            header.GetComponent<RectTransform>().sizeDelta = new Vector2(760f, 50f);
+            var caption = Caption(header.transform, "Label", 50f);
+            caption.gameObject.AddComponent<LocalizedText>().SetKey(nameKey);
+            caption.rectTransform.anchoredPosition = Vector2.zero;
+
+            var info = CreateRowButton(header.GetComponent<RectTransform>(), "Info", 330f, 50f, out var mark);
+            info.rectTransform.sizeDelta = new Vector2(50f, 50f);
+            mark.text = "!";
+            mark.fontSize = 30;
+            info.color = UnselectedColor;
+            info.GetComponent<Button>().onClick.AddListener(() => ShowInfo(nameKey, infoKey));
+
+            var row = new GameObject("Row", typeof(RectTransform));
+            row.transform.SetParent(graphicsDetails, false);
+            var rect = row.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(760f, 72f);
+            return rect;
+        }
+
+        private void AddChoice(RectTransform row, int index, int count, string key, string literal, Func<bool> selected, Action pick)
+        {
+            const float spacing = 12f;
+            var width = count >= 4 ? 170f : count == 3 ? 220f : 260f;
+            var x = (index - (count - 1) * 0.5f) * (width + spacing);
+            var image = CreateRowButton(row, $"Choice_{index}", x, width, out var label);
+            if (key != null) label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+            else label.text = literal;
+            if (pick != null)
+                image.GetComponent<Button>().onClick.AddListener(() => { pick(); HighlightSelected(); });
+            _detailButtons.Add((selected, image));
+        }
+
+        // ---- the "!" window ----------------------------------------------------------------
+
+        private void ShowInfo(string titleKey, string bodyKey)
+        {
+            if (_info == null) BuildInfo();
+            _infoTitle.SetKey(titleKey);
+            _infoBody.SetKey(bodyKey);
+            _info.SetActive(true);
+            _info.transform.SetAsLastSibling();
+        }
+
+        private void BuildInfo()
+        {
+            var parent = panelRoot != null ? panelRoot.transform : transform;
+            _info = new GameObject("GraphicsInfo", typeof(RectTransform), typeof(Image), typeof(Button));
+            _info.transform.SetParent(parent, false);
+            var rootRect = _info.GetComponent<RectTransform>();
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = rootRect.offsetMax = Vector2.zero;
+            _info.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+            _info.GetComponent<Button>().onClick.AddListener(() => _info.SetActive(false));
+
+            var card = new GameObject("Card", typeof(RectTransform), typeof(Image));
+            card.transform.SetParent(_info.transform, false);
+            var cardRect = card.GetComponent<RectTransform>();
+            cardRect.sizeDelta = new Vector2(720f, 460f);
+            var image = card.GetComponent<Image>();
+            if (cardImage != null)
+            {
+                image.sprite = cardImage.sprite;
+                image.type = cardImage.type;
+                image.color = cardImage.color;
+            }
+
+            var title = Caption(card.transform, "Title", 60f);
+            title.fontSize = 34;
+            title.rectTransform.anchoredPosition = new Vector2(0f, 170f);
+            _infoTitle = title.gameObject.AddComponent<LocalizedText>();
+
+            var body = Caption(card.transform, "Body", 250f);
+            body.fontSize = 26;
+            body.alignment = TextAnchor.MiddleCenter;
+            body.horizontalOverflow = HorizontalWrapMode.Wrap;
+            body.verticalOverflow = VerticalWrapMode.Truncate;
+            body.rectTransform.sizeDelta = new Vector2(640f, 250f);
+            body.rectTransform.anchoredPosition = new Vector2(0f, 10f);
+            _infoBody = body.gameObject.AddComponent<LocalizedText>();
+
+            var ok = CreateRowButton(cardRect, "Ok", 0f, 260f, out var okLabel);
+            ok.rectTransform.anchoredPosition = new Vector2(0f, -170f);
+            ok.color = SelectedColor;
+            okLabel.gameObject.AddComponent<LocalizedText>().SetKey("#settings_info_ok");
+            ok.GetComponent<Button>().onClick.AddListener(() => _info.SetActive(false));
         }
 
         private void BuildHudButtons()
@@ -231,9 +446,13 @@ namespace CityBuilder.UI
             {
                 background.color = skin == GameSettings.HudSkin ? SelectedColor : UnselectedColor;
             }
-            foreach (var (tier, background) in _graphicsButtons)
+            foreach (var (manual, background) in _graphicsButtons)
             {
-                background.color = tier == GraphicsQuality.Chosen ? SelectedColor : UnselectedColor;
+                background.color = manual == GraphicsQuality.Manual ? SelectedColor : UnselectedColor;
+            }
+            foreach (var (selected, background) in _detailButtons)
+            {
+                if (background != null) background.color = selected() ? SelectedColor : UnselectedColor;
             }
         }
     }

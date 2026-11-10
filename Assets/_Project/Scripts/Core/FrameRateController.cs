@@ -12,11 +12,10 @@ namespace CityBuilder.Core
     /// </summary>
     public class FrameRateController : MonoBehaviour
     {
-        private const int TargetFrameRate = 60;
-
+        // 60, or the 30/60 picked in the manual graphics settings (GraphicsQuality.FrameRate)
         private void Awake()
         {
-            Application.targetFrameRate = TargetFrameRate;
+            Application.targetFrameRate = GraphicsQuality.FrameRate;
         }
     }
 }
