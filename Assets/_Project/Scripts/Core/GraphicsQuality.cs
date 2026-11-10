@@ -38,7 +38,13 @@ namespace CityBuilder.Core
         };
 
         private static GraphicsTier? _chosen;
-        private static UniversalRenderPipelineAsset _copy;
+        private static UniversalRenderPipelineAsset _source, _copy;
+
+        // Auto's memory bands in MB (SystemInfo reports less than the box says: a "4 GB" Redmi Pad
+        // reads ~3 800). Measured 2026-11-10: that tablet (Helio G99) drew 21 fps on Medium and
+        // 54 on Low, so a 4 GB device is Low; 6 GB and up with 8 cores Medium, 8 GB+ High.
+        private const int LowBelowMb = 4500;
+        private const int HighFromMb = 7000;
 
         public static GraphicsTier Chosen
         {
@@ -66,31 +72,36 @@ namespace CityBuilder.Core
 
         /// <summary>
         /// The device's tier from its memory and cores: a flagship (8+ GB, 8 cores) draws High, a
-        /// phone under 4 GB Low, the rest Medium. A desktop is High.
+        /// 4 GB device or less Low, the rest Medium. A desktop is High.
         /// </summary>
         public static GraphicsTier Detect()
         {
             if (!Application.isMobilePlatform) return GraphicsTier.High;
             var memory = SystemInfo.systemMemorySize;
-            if (memory > 0 && memory < 3500) return GraphicsTier.Low;
-            if (memory >= 7000 && SystemInfo.processorCount >= 8) return GraphicsTier.High;
+            if (memory > 0 && memory < LowBelowMb) return GraphicsTier.Low;
+            if (memory >= HighFromMb && SystemInfo.processorCount >= 8) return GraphicsTier.High;
             return GraphicsTier.Medium;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void ApplyAtStart() => Apply();
 
-        /// <summary>Draws with the effective tier from now on.</summary>
+        /// <summary>
+        /// Draws with the effective tier from now on. Every call builds a FRESH copy of the project's
+        /// URP asset and assigns it: on the device, editing the live copy's render scale / MSAA did
+        /// nothing until the game restarted (Redmi Pad 2026-11-10: Low picked in-game stayed at 21 fps,
+        /// the same Low after a restart drew 54). Assigning a new asset makes URP rebuild its pipeline.
+        /// </summary>
         public static void Apply()
         {
-            if (_copy == null)
+            if (_source == null)
             {
-                var active = (QualitySettings.renderPipeline ?? GraphicsSettings.defaultRenderPipeline) as UniversalRenderPipelineAsset;
-                if (active == null) return;
-                _copy = Object.Instantiate(active);
-                _copy.name = active.name + " (tier)";
-                QualitySettings.renderPipeline = _copy;
+                _source = (QualitySettings.renderPipeline ?? GraphicsSettings.defaultRenderPipeline) as UniversalRenderPipelineAsset;
+                if (_source == null) return;
             }
+            var old = _copy;
+            _copy = Object.Instantiate(_source);
+            _copy.name = _source.name + " (tier)";
 
             var tier = Tiers[Mathf.Clamp((int)Effective - 1, 0, Tiers.Length - 1)];
             // a 1440p phone at full scale would pay for pixels nobody sees: the short side is capped
@@ -101,6 +112,9 @@ namespace CityBuilder.Core
             _copy.shadowDistance = tier.shadowDistance;
             // no post effects in the game: HDR buys nothing but bandwidth
             _copy.supportsHDR = false;
+
+            QualitySettings.renderPipeline = _copy;
+            if (old != null) Object.Destroy(old);
         }
     }
 }

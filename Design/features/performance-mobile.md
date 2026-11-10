@@ -5,11 +5,13 @@
 > - Auto picks **Medium** here (3.9 GB) → **21 fps** in the game (GPU ~46 ms, even over plain fog),
 >   menu 28 fps. **Low → 54 fps** (GPU 15 ms, town 54 fps, CPU main 12–13 ms). Medium = scale 0.9 +
 >   MSAA 4x (1800x1080), Low = 0.6 + MSAA 2x (1200x720): 2.25× the pixels + 2× MSAA ≈ 3× the GPU time.
-> - **BUG: switching the tier in Settings does NOT take effect until the game restarts**
->   (`GraphicsQuality.Apply` edits the runtime URP copy's renderScale/MSAA; on the device only the
->   values present at startup are drawn): Low picked in-session stayed at 21 fps/46 ms, the same Low
->   after a restart gave 54 fps/16 ms. Likely fix: build a NEW copy and reassign
->   `QualitySettings.renderPipeline` in Apply (pipeline re-created), or say "after restart".
+> - **FIXED (same day): a tier switched in Settings took effect only after a restart** (editing the
+>   live URP copy's renderScale/MSAA did nothing on the device). `GraphicsQuality.Apply` now builds a
+>   FRESH copy of the project's asset each call, assigns it to `QualitySettings.renderPipeline` and
+>   destroys the old one. Verified on the tablet in-session: Low 54 → Medium 21 → Low 54 fps. No
+>   editor test: the bug never showed in the editor.
+> - **Auto thresholds changed (the user: «чини оба»):** under **4 500 MB** → Low (was 3 500; a "4 GB"
+>   device reports ~3 800), ≥ 7 000 MB + 8 cores → High, the rest Medium. The tablet now gets Low.
 > - GPU-bound frames inflate BehaviourUpdate (14–16 ms at Medium vs 6 ms at Low): a script that
 >   draws (MinimapCameraUpdater calls `Camera.Render()` from Update every 0.15 s in the sandbox) waits
 >   for the GPU there. Scripts at Low: ~6 ms (Pixel 3.4), physics 1.0, NavMesh 0.4.
