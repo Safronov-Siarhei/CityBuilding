@@ -86,7 +86,12 @@
     - CineBell swings about its yoke (x axis), 24° once going, on a 1.15 s period. A timber lever to the front carries the rope; CineClapper follows 0.1 s late.
     - CineBellRope is a unit rod keyed every frame from the lever to between his fists.
     - The priest faces the bell; both arms are AIMED at the grip, which rises and falls with the swing, and his knees and back give on each haul.
-  - Groups still to make: the townsfolk (fright, flight, the merchant calling).
+  - The priest APPROVED (2026-11-10).
+  - The townsfolk (`townsfolk_anim.py`) were sent on 2026-11-10. This is the LAST animation group.
+    - Market (shot 2): the merchant calls (hand waving high, the other cupped at his mouth), then turns to the woman with an open palm. She reaches for a fruit, looks it over and drops it in her basket. A peasant pulls the cart past: the shafts follow his fists, the body pitches about its axle, the wheels turn by the distance rolled.
+    - Panic (shot 11): a torch orc storms in. The woman shrieks with her hands to her face and runs; the merchant ducks behind his counter, arms over his head, trembling. The peasant flings the shafts (the cart drops onto them) and runs. The orc topples the cloth stall backward as he passes.
+    - Built for it, with the approved look unchanged: `village.cart(wheels=False)` + `village.cart_wheel` + `village.CART`; the stalls one by one through `village.stall`.
+    - `kids_anim.mix_any` crossfades poses that do not share keys (aims fade by weight).
 - The elder's fate is NOT shown. Later he may turn up as a captive in an orc camp (a future mission hook).
 - The campaign has **cutscenes, a story and levels**. The story frame: a big human kingdom, and an orc
   portal opens on its outskirts.

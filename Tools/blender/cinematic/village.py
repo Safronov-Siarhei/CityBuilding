@@ -187,26 +187,33 @@ def stalls():
     return b
 
 
-def cart():
+CART = dict(L=0.42, W=0.2, z=0.2, r=0.2, shrink=0.65)   # before the 0.65 and SET_SCALE
+
+
+def cart_wheel(b, y, z):
+    """One spoked wheel at (0, y, z): rim, eight spokes, an iron hub."""
+    r = CART['r']
+    pts = [(r * math.cos(2 * math.pi * i / 16), z + r * math.sin(2 * math.pi * i / 16)) for i in range(17)]
+    for (x0_, z0_), (x1_, z1_) in zip(pts, pts[1:]):
+        b.rod((x0_, y, z0_), (x1_, y, z1_), 0.028, 'wood_dark')
+    for i in range(8):
+        a = math.pi * i / 4
+        b.rod((0, y, z), (r * math.cos(a), y, z + r * math.sin(a)), 0.014, 'wood_mid')
+    b.hcylinder('y', (0, y, z), 0.03, 0.04, 'iron', sides=8)
+
+
+def cart(wheels=True):
     """A farm cart: two big spoked wheels, a plank bed with rails, shafts resting on the ground,
-    a load of hay and sacks."""
+    a load of hay and sacks. wheels=False leaves the wheels off (townsfolk_anim turns them)."""
     b = Builder()
-    L, W, z = 0.42, 0.2, 0.2
+    L, W, z = CART['L'], CART['W'], CART['z']
     b.box(-L, L, -W, W, z, z + 0.035, 'wood_mid', bevel=0.005)
     for sy in (-1, 1):
         b.box(-L, L, sy * W - 0.012, sy * W + 0.012, z + 0.035, z + 0.13, 'wood_light')
         for x in (-L + 0.02, 0.0, L - 0.02):
             b.box(x - 0.012, x + 0.012, sy * W - 0.016, sy * W + 0.016, z, z + 0.14, 'wood_dark')
-        # the wheel: rim, hub, eight spokes
-        y = sy * (W + 0.05)
-        r = 0.2
-        pts = [(r * math.cos(2 * math.pi * i / 16), z - 0.0 + r * math.sin(2 * math.pi * i / 16)) for i in range(17)]
-        for (x0_, z0_), (x1_, z1_) in zip(pts, pts[1:]):
-            b.rod((x0_, y, z0_), (x1_, y, z1_), 0.028, 'wood_dark')
-        for i in range(8):
-            a = math.pi * i / 4
-            b.rod((0, y, z), (r * math.cos(a), y, z + r * math.sin(a)), 0.014, 'wood_mid')
-        b.hcylinder('y', (0, y, z), 0.03, 0.04, 'iron', sides=8)
+        if wheels:
+            cart_wheel(b, sy * (W + 0.05), z)
     b.hcylinder('y', (0, 0, z), W + 0.06, 0.016, 'wood_dark', sides=6)                             # the axle
     for sy in (-1, 1):
         b.rod((L, sy * 0.1, z + 0.03), (L + 0.5, sy * 0.1, 0.02), 0.026, 'wood_dark')                 # shafts
@@ -217,7 +224,7 @@ def cart():
     sack(b, 0.25, 0.08, z0=z + 0.035, r=0.07, h=0.13)
     b.rod((-0.3, -0.12, z + 0.2), (0.3, 0.12, z + 0.06), 0.012, 'burlap')                          # a rope over it
     for v in b.bm.verts:                     # drawn large; a wheel comes to a man's chest once grown
-        v.co *= 0.65
+        v.co *= CART['shrink']
     return b
 
 

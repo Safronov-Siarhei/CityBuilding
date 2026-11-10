@@ -139,6 +139,21 @@ def stare(t):
 
 # ---------------------------------------------------------------- a timeline of moves
 
+def mix_any(a, b, w):
+    """a2.mix for poses that need not share keys: an aim only one side has fades in or out by
+    its weight; any other one-sided key is kept as it is."""
+    out = {}
+    for k in set(a) | set(b):
+        if k in a and k in b:
+            out[k] = [x + (y - x) * w for x, y in zip(a[k], b[k])]
+        elif k.startswith("aim."):
+            v = a.get(k) or b.get(k)
+            out[k] = list(v[:3]) + [v[3] * ((1 - w) if k in a else w)]
+        else:
+            out[k] = list(a.get(k) or b.get(k))
+    return out
+
+
 class Track:
     """A figure's moves in order: ('pose', dur, at, fn(t), face) holds a spot; ('jump', dur, p0, p1);
     ('run', dur, p0, p1). Bakes the root (ground point and heading) and the pose, crossfading
@@ -214,7 +229,7 @@ class Track:
             if i > 0 and u < 0.12:                           # crossfade from the move before
                 pm = self.moves[i - 1]
                 _, _, prev = self.sample(i - 1, pm[1])
-                pose = a2.mix(prev, pose, a2.ease(u / 0.12))
+                pose = mix_any(prev, pose, a2.ease(u / 0.12))
             if head is not None:
                 if heading is None:
                     heading = head
