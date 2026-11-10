@@ -114,9 +114,9 @@ def axe_head(d, base, top, side, blade, ink):
     ux, uy = top[0] - base[0], top[1] - base[1]
     n = math.hypot(ux, uy)
     ux, uy = ux / n, uy / n
-    # the blade faces in and up, over the skull: the heraldic crossed axes, blades meeting above
+    # the blade faces OUT, towards the ring (the user, 2026-11-10)
     vx, vy = -uy, ux
-    if vx * side > 0:
+    if vx * side < 0:
         vx, vy = -vx, -vy
     def at(along, out):
         return p(top[0] + ux * along + vx * out, top[1] + uy * along + vy * out)
@@ -139,8 +139,8 @@ def orc_skull(d, cx, cy, bone, ink, blade):
     within ~62 px of the centre so nothing crosses the medallion's ring (the user, 2026-11-10)."""
     # the axes behind: hafts crossed, heads at the top corners
     for a in (-1, 1):
-        d.line([p(cx - a * 40, cy + 44), p(cx + a * 34, cy - 40)], fill=WOOD_HI, width=8 * SS)
-        axe_head(d, (cx - a * 40, cy + 44), (cx + a * 34, cy - 40), a, blade, ink)
+        d.line([p(cx - a * 36, cy + 46), p(cx + a * 30, cy - 46)], fill=WOOD_HI, width=8 * SS)
+        axe_head(d, (cx - a * 36, cy + 46), (cx + a * 30, cy - 46), a, blade, ink)
     # horns
     for a in (-1, 1):
         d.polygon([p(cx + a * 18, cy - 20), p(cx + a * 42, cy - 36), p(cx + a * 36, cy - 12), p(cx + a * 26, cy - 6)], fill=bone, outline=ink, width=3 * SS)
