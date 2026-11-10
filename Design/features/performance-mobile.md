@@ -123,5 +123,15 @@ timestats) — a flagship, the wrong phone to conclude "fast enough" from.
 
 ## Watch list
 Map 3 decor ~240k tris; L3 orc camps ~136 palisade renderers; main base ~180 pieces; 5 model
-children per building; detail shader fragment cost; fog overdraw; autosave hitch; APK 49.7 MB vs
-Telegram's 50 MB cap.
+children per building; detail shader fragment cost; fog overdraw; autosave hitch.
+
+## APK size (measured 2026-11-10, dev APK of that day)
+Real content ~198 MB (the 365 MB file has ~167 MB of orphan zip data from Gradle's in-place update --
+not in the entries, Play's AAB won't carry it). `data.unity3d` 167 MB LZ4HC, 308 MB raw, of which
+**meshes 251 MB**: dungeons 153 MB (12 variants, 7.2 M verts, 2701 meshes), islands 48 MB, Map/Inv
+13 MB, buildings small. Textures ~0. Inside meshes: positions 90, **UV 83 (3 UV sets per vertex,
+the palette needs 1)**, triangles 33, normals 30, vertex colours 12 MB. Exact duplicate meshes only
+6.7 MB. Native libs ~24 MB packed. Estimated Play download ≈ 185-190 MB -- at Google Play's 200 MB
+base-module cap. Levers: drop the extra UV sets/colours on map meshes (find which shader keeps them
+past stripUnusedMeshComponents), Medium compression per map chunk, slimmer dungeon variants, Play
+Asset Delivery for dungeons. Analysis scripts: UnityPy on the APK (pip `UnityPy`).
