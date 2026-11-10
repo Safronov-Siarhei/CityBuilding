@@ -264,9 +264,8 @@ def king_icon():
             oval(d, cx + dx * s, cy + dy * s, r * s, r * s * 0.8, (255, 255, 255, 255), 0)
     # the town behind: a tower with a flag, houses with red roofs
     shape(d, [(40, 820), (40, 420), (190, 420), (190, 820)], (214, 204, 186, 255))
-    for k in range(4):
-        shape(d, [(40 + k * 40, 420), (40 + k * 40, 380), (60 + k * 40, 380), (60 + k * 40, 420)], (214, 204, 186, 255), 10)
-    shape(d, [(30, 430), (115, 300), (200, 430)], (196, 60, 44, 255))
+    # the conical roof sits on the tower's top and overhangs it
+    shape(d, [(18, 445), (115, 290), (212, 445)], (196, 60, 44, 255))
     line(d, [(115, 300), (115, 210)], OUT, 10)
     shape(d, [(115, 215), (190, 235), (115, 260)], (60, 130, 200, 255), 8)
     oval(d, 115, 560, 22, 34, (60, 40, 30, 255), 6)
@@ -287,26 +286,44 @@ def king_icon():
     RED, RED_D = (190, 36, 40, 255), (130, 20, 28, 255)
 
     # the cloak and the ermine collar
-    cloak = [(150, 1044), (230, 800), (380, 730), (644, 730), (794, 800), (874, 1044)]
+    # broad rounded shoulders under the cloak
+    cloak = bez([(100, 1060), (110, 880), (240, 790), (380, 745), (512, 740), (644, 745), (784, 790), (914, 880), (924, 1060)])
     shape(d, cloak, RED)
     clipped(img, cloak, lambda dd: [dd.polygon(P(q), fill=(80, 0, 10, 110)) for q in (
-        [(512, 760), (874, 760), (874, 1044), (560, 1044)], [(300, 900), (340, 880), (320, 1044), (270, 1044)])])
-    clipped(img, cloak, lambda dd: dd.polygon(P([(250, 820), (300, 800), (240, 1044), (190, 1044)]), fill=(240, 90, 90, 110)))
-    line(d, [(512, 760), (512, 1044)], RED_D, 10)
+        [(512, 760), (930, 760), (930, 1060), (560, 1060)], [(300, 930), (340, 910), (320, 1060), (270, 1060)])])
+    clipped(img, cloak, lambda dd: dd.polygon(P([(190, 860), (240, 840), (200, 1060), (150, 1060)]), fill=(240, 90, 90, 110)))
+    line(d, [(512, 900), (512, 1060)], RED_D, 10)
     for x in (470, 554):
-        oval(d, x, 930, 14, 14, GOLD, 6)
-    collar = bez([(220, 850), (300, 740), (512, 730), (724, 740), (804, 850), (700, 880), (512, 860), (324, 880), (220, 850)])
+        oval(d, x, 970, 14, 14, GOLD, 6)
+    # the hammer, raised in his right fist: everything laid out along the handle (u up it, v across)
+    base, tip = (730, 880), (850, 340)
+    L = math.hypot(tip[0] - base[0], tip[1] - base[1])
+    u = ((tip[0] - base[0]) / L, (tip[1] - base[1]) / L)
+    v = (-u[1], u[0])  # to his left of the handle = screen right-ish
+
+    def at(s, t):  # s along the handle from the base, t across it
+        return (base[0] + u[0] * s + v[0] * t, base[1] + u[1] * s + v[1] * t)
+
+    # the sleeve from his shoulder to the wrist, and the ermine cuff
+    wrist = at(150, 0)
+    sleeve = [(600, 1060), (560, 900), (wrist[0] - 55, wrist[1] + 10), (wrist[0] + 60, wrist[1] + 30), (760, 1060)]
+    shape(d, sleeve, RED)
+    clipped(img, sleeve, lambda dd: dd.polygon(P([(690, 700), (900, 700), (900, 1060), (720, 1060)]), fill=(80, 0, 10, 110)))
+    # an ermine capelet lying over both shoulders, its hem in soft scallops
+    collar = bez([(150, 920), (175, 800), (330, 750), (512, 742), (694, 750), (849, 800), (874, 920),
+                  (820, 950), (760, 915), (700, 950), (640, 915), (576, 950), (512, 915), (448, 950),
+                  (384, 915), (324, 950), (264, 915), (204, 950), (150, 920)])
     shape(d, collar, (250, 248, 240, 255))
-    for x, y in ((290, 820), (380, 790), (470, 845), (560, 845), (650, 790), (740, 820)):
+    clipped(img, collar, lambda dd: dd.polygon(P([(512, 740), (900, 740), (900, 960), (560, 960)]), fill=(150, 150, 170, 70)))
+    for x, y in ((230, 860), (330, 820), (420, 880), (604, 880), (694, 820), (794, 860), (280, 905), (744, 905)):
         shape(d, [(x, y - 14), (x + 8, y + 10), (x - 8, y + 10)], OUT, 0)
     # the face
     oval(d, 512, 470, 175, 190, SKIN)
     face = [(512 + 175 * math.cos(a / 40 * math.pi * 2), 470 + 190 * math.sin(a / 40 * math.pi * 2)) for a in range(40)]
     clipped(img, face, lambda dd: dd.polygon(P(bez([(600, 260), (650, 450), (560, 700), (760, 700), (760, 260)])), fill=(200, 110, 80, 100)))
-    # ears
+    # rosy cheeks, high up, under the beard's edge
     for side in (-1, 1):
-        oval(d, 512 + side * 172, 480, 32, 46, SKIN)
-        oval(d, 512 + side * 172, 480, 14, 24, SKIN_D, 0)
+        oval(d, 512 + side * 100, 500, 36, 24, (240, 140, 120, 255), 0)
     # the beard: a big ginger cloud from cheek to cheek, down over the collar
     beard = bez([(340, 470), (330, 600), (360, 690), (380, 790), (450, 790), (480, 860), (512, 840), (545, 860), (575, 790), (645, 790), (665, 690), (695, 600), (684, 470), (650, 560), (600, 590), (512, 600), (424, 590), (374, 560), (340, 470)])
     shape(d, beard, BEARD)
@@ -315,10 +332,15 @@ def king_icon():
         line(d, bez([(x - 30, y - 30), (x - 8, y), (x - 20, y + 40)]), BEARD_D, 8)
     for x, y in ((390, 640), (440, 730), (380, 560)):
         line(d, bez([(x - 10, y - 30), (x + 6, y), (x - 4, y + 34)]), BEARD_H, 7)
-    # the laugh: an open mouth in the beard
-    shape(d, bez([(440, 610), (512, 600), (584, 610), (570, 670), (512, 690), (454, 670), (440, 610)]), (120, 30, 30, 255))
-    shape(d, bez([(452, 612), (512, 604), (572, 612), (564, 632), (512, 632), (460, 632)]), (255, 252, 240, 255), 0)
-    shape(d, bez([(475, 665), (512, 645), (550, 665), (512, 685)]), (220, 90, 90, 255), 0)
+    # ears over the beard's sideburns
+    for side in (-1, 1):
+        oval(d, 512 + side * 176, 470, 30, 44, SKIN)
+        oval(d, 512 + side * 176, 470, 13, 23, SKIN_D, 0)
+    # the laugh: an open mouth in the beard, upper teeth, a round tongue
+    mouth = bez([(440, 610), (512, 600), (584, 610), (570, 670), (512, 690), (454, 670), (440, 610)])
+    shape(d, mouth, (120, 30, 30, 255))
+    clipped(img, mouth, lambda dd: dd.rectangle(P([(400, 590), (620, 630)]), fill=(255, 252, 240, 255)))
+    clipped(img, mouth, lambda dd: dd.ellipse(P([(462, 650), (562, 720)]), fill=(220, 90, 90, 255)))
     # the moustache, curled up
     for side in (-1, 1):
         # a fat lobe from under the nose, thinning to a tip curled up past the cheek
@@ -328,9 +350,7 @@ def king_icon():
                       (512 + side * 80, 612), (512 + side * 35, 612), (512, 590)])
         shape(d, stache, BEARD_H)
         line(d, bez([(512 + side * 30, 585), (512 + side * 80, 575), (512 + side * 125, 590)]), BEARD_D, 6)
-    # cheeks and nose
-    for side in (-1, 1):
-        oval(d, 512 + side * 105, 520, 42, 30, (240, 140, 120, 255), 0)
+    # the nose
     oval(d, 512, 515, 44, 40, SKIN_D)
     oval(d, 498, 503, 12, 9, (255, 230, 210, 255), 0)
     # eyes looking at you, eyebrows up
@@ -356,22 +376,32 @@ def king_icon():
     line(d, [(345, 312), (680, 312)], GOLD_H, 8)
     for x, c in ((410, (60, 120, 220, 255)), (512, (220, 40, 50, 255)), (614, (60, 170, 90, 255))):
         oval(d, x, 332, 20, 18, c, 7)
-    oval(d, 512, 245, 14, 14, (220, 40, 50, 255), 6)
 
-    # the hammer, raised in his right fist
-    handle = [(735, 860), (870, 330)]
-    line(d, handle, OUT, 44)
-    line(d, handle, (176, 116, 60, 255), 28)
-    head = [(780, 250), (960, 300), (935, 400), (755, 350)]
+    shape(d, [at(130, -60), at(130, 62), at(175, 62), at(175, -60)], (250, 248, 240, 255))
+    # the handle, its end showing below the fist
+    line(d, [at(60, 0), tip], OUT, 44)
+    line(d, [at(60, 0), tip], (176, 116, 60, 255), 28)
+    line(d, [at(70, -6), at(L - 20, -6)], (210, 150, 90, 255), 6)
+    # the head: a square-faced block across the handle's top
+    hs = L - 10
+    head = [at(hs - 48, -70), at(hs - 48, 110), at(hs + 48, 110), at(hs + 48, -70)]
     shape(d, head, (120, 124, 134, 255))
-    shape(d, [(940, 300), (985, 312), (962, 412), (918, 400)], (90, 94, 104, 255))
-    line(d, [(790, 270), (940, 312)], (200, 204, 212, 255), 10)
-    shape(d, bez([(700, 690), (750, 640), (820, 660), (845, 720), (810, 790), (740, 790), (700, 750), (700, 690)]), SKIN)
-    for k in range(3):
-        line(d, [(724, 700 + k * 26), (800, 712 + k * 26)], SKIN_D, 7)
-    shape(d, bez([(690, 760), (760, 800), (840, 760), (820, 830), (720, 830)]), RED)
+    shape(d, [at(hs - 54, 92), at(hs - 54, 128), at(hs + 54, 128), at(hs + 54, 92)], (90, 94, 104, 255))
+    line(d, [at(hs + 32, -54), at(hs + 32, 88)], (200, 204, 212, 255), 10)
+    # the fist round the handle: a palm, four curled fingers in front, the thumb over them
+    g = 230  # where the grip is along the handle
+    shape(d, bez([at(g - 70, -50), at(g - 80, 0), at(g - 70, 52), at(g, 62), at(g + 62, 46), at(g + 70, 0),
+                  at(g + 62, -48), at(g, -60), at(g - 70, -50)]), SKIN)
+    for k in range(4):
+        s = g + 45 - k * 30
+        finger = bez([at(s + 13, -30), at(s + 17, -62), at(s, -64), at(s - 17, -62), at(s - 13, -30)]) + [at(s - 13, 10), at(s + 13, 10)]
+        shape(d, finger, SKIN, 9)
+    thumb = bez([at(g + 30, 24), at(g + 60, 40), at(g + 58, -10), at(g + 50, -40), at(g + 36, -42), at(g + 30, -10), at(g + 14, 20)])
+    shape(d, thumb, SKIN, 9)
+    clipped(img, thumb, lambda dd: dd.polygon(P([at(g, 0), at(g + 80, 0), at(g + 80, 60), at(g, 60)]), fill=(200, 110, 80, 90)))
+    hammer_shine = at(hs + 30, 100)
     # sparkles: the crown and the hammer shine
-    for x, y, r in ((452, 160, 34), (300, 205, 22), (965, 265, 30), (612, 300, 16)):
+    for x, y, r in ((452, 160, 34), (300, 205, 22), (hammer_shine[0], hammer_shine[1], 30), (612, 300, 16)):
         soft(img, lambda dd, x=x, y=y, r=r: dd.ellipse(P([(x - r, y - r), (x + r, y + r)]), fill=(255, 255, 220, 140)), 8)
         sparkle(d, x, y, r, (255, 255, 240, 255))
     vignette(img, 0.35)
