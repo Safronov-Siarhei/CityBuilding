@@ -1,5 +1,22 @@
 # Performance on mobile
 
+> **2026-11-10 REDMI PAD (Helio G99, Mali-G57 MC2, 4 GB, 1200x2000) -- the first weak device measured.**
+> Same sandbox save as the Pixel. **The GPU is the limit and the tier decides everything:**
+> - Auto picks **Medium** here (3.9 GB) → **21 fps** in the game (GPU ~46 ms, even over plain fog),
+>   menu 28 fps. **Low → 54 fps** (GPU 15 ms, town 54 fps, CPU main 12–13 ms). Medium = scale 0.9 +
+>   MSAA 4x (1800x1080), Low = 0.6 + MSAA 2x (1200x720): 2.25× the pixels + 2× MSAA ≈ 3× the GPU time.
+> - **BUG: switching the tier in Settings does NOT take effect until the game restarts**
+>   (`GraphicsQuality.Apply` edits the runtime URP copy's renderScale/MSAA; on the device only the
+>   values present at startup are drawn): Low picked in-session stayed at 21 fps/46 ms, the same Low
+>   after a restart gave 54 fps/16 ms. Likely fix: build a NEW copy and reassign
+>   `QualitySettings.renderPipeline` in Apply (pipeline re-created), or say "after restart".
+> - GPU-bound frames inflate BehaviourUpdate (14–16 ms at Medium vs 6 ms at Low): a script that
+>   draws (MinimapCameraUpdater calls `Camera.Render()` from Update every 0.15 s in the sandbox) waits
+>   for the GPU there. Scripts at Low: ~6 ms (Pixel 3.4), physics 1.0, NavMesh 0.4.
+> - Per-script markers (`X.Update() [Invoke]`) do NOT exist in a non-deep development player --
+>   a ProfilerRecorder split by script finds nothing (tried, reverted).
+> - The cheats panel's «К лагерю» did not react to adb taps on the tablet (worked on the Pixel).
+
 > **2026-11-10 MEASURED ON THE PIXEL 6 PRO** (development APK + `Cheats/PerfProbe.cs`; the user's sandbox
 > day 22: 52 orcs, 20 people, 3120x1440). Holds **60 fps everywhere** (town, fog, an L4 orc camp, menu).
 > - **The phone is loafing:** Mali GPU at **251–351 MHz of ~850**, CPU cores at ~40 % clock. So the
