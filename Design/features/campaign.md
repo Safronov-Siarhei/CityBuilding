@@ -9,13 +9,20 @@
   - CineMerchant, CinePeasant (with a sickle), CinePeasantWoman (with a basket), CineBoy and CineGirl.
   - The children are scaled to about 0.67 with heads 1.18x bigger.
   - None of them may look like Ардан.
-- The orcs (`orcs_cast.py`) are built and their renders went to the user; awaiting approval:
+- The orcs (`orcs_cast.py`) are APPROVED. The torchbearer's axe was fixed first: it is now gripped in the fist with the haft up.
   - CineOrcChampion leaps out of the portal: scaled 1.3, a bare painted chest, one great spiked pauldron, a scar, a topknot and a cleaver.
   - CineOrcTorch carries a torch and an axe.
   - CineOrcSpear carries a spear and a shield with claw slashes.
   - They use the game's orc look and the OrcPalette, on the orcs' own wider joints.
   - Trap: `figure.material()` is made ONCE a session. `ensure_palette`/`ensure_atlas` remake their
     images, so an earlier orc copy pointed at removed images and rendered black.
+- The church (`church.py`, CineChurch, ~6 500 tris) is built and its renders went to the user; awaiting approval.
+  - It is the game's Church1 with more detail:
+    - stained lancets, a spoked rose window, quoins, stepped buttresses;
+    - an OPEN belfry the priest can stand in, with the bell, its yoke and its rope;
+    - steps, a strapped door, lanterns, a notice board and a bench.
+  - Set pieces are drawn to the game's building standard and then grown by `figure.SET_SCALE` (1.6), so a cutscene figure fits the doors.
+  - Render: `church.py -- render <out>`.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## What the user decided
@@ -71,6 +78,6 @@ Commands:
   - `ARDAN_SHEET=1,5,9` renders those frames as PNGs instead of the clips.
 - Chase versus stealth for mission 1.
 - The cutscene shot list, detailed action by action.
-- The rest of the cinematic set: the church, the market, the
+- The rest of the cinematic set: houses, the market stalls, the cart, the
   square's stones and the portal.
 - The level structure beyond mission 1.

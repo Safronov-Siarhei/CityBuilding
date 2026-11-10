@@ -139,3 +139,30 @@ def grow_part(b, parts, bone, factor, pivot):
     for v in b.bm.verts:
         if v[layer] == index:
             v.co = p + (v.co - p) * factor
+
+
+# Buildings and props for the cutscenes are drawn at the game's building standard (details.py:
+# a door 0.5 high for a 0.45 citizen) and then grown by this much, so a cutscene figure (~0.56)
+# walks through their doors.
+SET_SCALE = 1.6
+
+
+def install_static(name, b, scale=SET_SCALE, location=(0, 0, 0)):
+    """A set piece (no rig): the Builder's mesh, scaled, in the «Кино» collection."""
+    for v in b.bm.verts:
+        v.co *= scale
+    me = b.to_mesh(name)
+    me.materials.append(material())
+    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+    obj = bpy.data.objects.get(name)
+    if obj is None:
+        obj = bpy.data.objects.new(name, me)
+        ensure_collection().objects.link(obj)
+    else:
+        old = obj.data
+        obj.data = me
+        if old.users == 0:
+            bpy.data.meshes.remove(old)
+    obj.location = location
+    print(f"MODEL {name} tris={sum(len(p.vertices) - 2 for p in me.polygons)}")
+    return obj
