@@ -38,6 +38,9 @@ namespace CityBuilder.UI
         [SerializeField] private float size = 1f;
 
         private static RateUsWindow _current;
+        // the interface behind, hidden while the window is up (the user, 2026-11-10: «скрывать весь
+        // задний интерфейс везде»): every other screen-space root canvas under ours, switched off and back
+        private readonly System.Collections.Generic.List<Canvas> _hidden = new System.Collections.Generic.List<Canvas>();
         private float _t;
         private bool _closing;
 
@@ -72,6 +75,27 @@ namespace CityBuilder.UI
             rate.onClick.AddListener(Rate);
             group.alpha = 0f;
             window.localScale = Vector3.one * (PopFromScale * size);
+            HideTheInterfaceBehind();
+        }
+
+        private void HideTheInterfaceBehind()
+        {
+            var own = GetComponent<Canvas>();
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (canvas == own || !canvas.enabled || !canvas.isRootCanvas) continue;
+                // the 3D world's own labels stay; anything drawn over us (the loading screen) too
+                if (canvas.renderMode == RenderMode.WorldSpace || canvas.sortingOrder > own.sortingOrder) continue;
+                canvas.enabled = false;
+                _hidden.Add(canvas);
+            }
+        }
+
+        private void ShowTheInterfaceBehind()
+        {
+            foreach (var canvas in _hidden)
+                if (canvas != null) canvas.enabled = true;
+            _hidden.Clear();
         }
 
         private void Update()
@@ -119,10 +143,12 @@ namespace CityBuilder.UI
             _closing = true;
             _t = 0f;
             group.interactable = false;
+            ShowTheInterfaceBehind();
         }
 
         private void OnDestroy()
         {
+            ShowTheInterfaceBehind();
             if (_current != this) return;
             _current = null;
             // the window's big pictures go with it
