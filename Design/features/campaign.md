@@ -15,6 +15,7 @@
   Chimney smoke from `Campaign/Chimneys.json` (`Tools/blender/cinematic/chimneys.py`, Blender model
   coords mapped (x, z, y), `chimneySigns` if mirrored) until 46 s. Title `#cine_opening_title`
   (sheet row 745) 0.6-4.8 s.
+  - Trap: `BuildingDetail.shader` (palette material of buildings, set pieces AND the cast) had no `Cull [_Cull]` -- setting _Cull did nothing until 2026-11-11; verify a look fix in a FRAME, not by the code.
   - Traps: the Editor asmdef needs `Unity.RenderPipelines.Core.Runtime` for VolumeProfile; run
     `run.ps1 -Steps a,b` from the PowerShell tool (from bash the list arrives as ONE unknown step and
     nothing runs, report says only RUN FINISHED); Blender for encode_frames is
