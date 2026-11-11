@@ -581,6 +581,9 @@ namespace CityBuilder.Core
         [SerializeField] private float shopAdStubSeconds = 2f;
         // a bundle's timer turns red and pulses this many seconds before it changes (shop_timer_warn_seconds)
         [SerializeField] private float shopTimerWarnSeconds = 30f;
+        // the bases a crystal offer's bonus (+%) is counted from: a crystal's dollars, an ad's crystals
+        [SerializeField] private float shopCrystalUsd = 0.01f;
+        [SerializeField] private float shopAdCrystalsBase = 10f;
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
@@ -1207,6 +1210,8 @@ namespace CityBuilder.Core
         public float ShopStarterDelaySeconds => shopStarterDelaySeconds;
         public float ShopAdStubSeconds => shopAdStubSeconds;
         public float ShopTimerWarnSeconds => shopTimerWarnSeconds;
+        public float ShopCrystalUsd => shopCrystalUsd;
+        public float ShopAdCrystalsBase => shopAdCrystalsBase;
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
@@ -1327,20 +1332,25 @@ namespace CityBuilder.Core
         }
 
         /// <summary>
-        /// One row of the «Наборы» tab (the user, 2026-11-11): the sandbox shop's bundle. `kind` is
-        /// `normal` (crystals or an ad), `bonus` (the free «Подарок короля») or `starter` (the first
-        /// game's free gift, once per account). Offered to a player whose level is in levelFrom..levelTo.
+        /// One bundle of the «Наборы» tab on one level (the user, 2026-11-11): `kind` is `normal`
+        /// (resources for crystals or an ad), `bonus` (the free «Подарок короля»), `starter` (the first
+        /// game's free gift, once per account), `ad_crystals` (crystals for an ad) or `paid_crystals`
+        /// (crystals for money). Offered to a player whose level is in levelFrom..levelTo.
         /// </summary>
         [System.Serializable]
         public class OfferBundle
         {
             public string id;
+            /// <summary>The localization key of its name (#bundle_&lt;the sheet row's id&gt;, the same on every level).</summary>
+            public string nameKey;
             public string kind;
             public float weight;
             public int levelFrom;
             public int levelTo;
             public List<OfferGood> goods = new List<OfferGood>();
             public int priceCrystals;
+            /// <summary>paid_crystals only: the price in US dollars, the base tier (the game will show Google Play's price).</summary>
+            public float priceUsd;
         }
 
         /// <summary>One row of «Наборы: уровни»: the player is at `level` once the lab and the citizens reach these.</summary>
@@ -2125,6 +2135,8 @@ namespace CityBuilder.Core
             shopStarterDelaySeconds = Read(economy, "shop_starter_delay_seconds", shopStarterDelaySeconds);
             shopAdStubSeconds = Read(economy, "shop_ad_stub_seconds", shopAdStubSeconds);
             shopTimerWarnSeconds = Read(economy, "shop_timer_warn_seconds", shopTimerWarnSeconds);
+            shopCrystalUsd = Read(economy, "shop_crystal_usd", shopCrystalUsd);
+            shopAdCrystalsBase = Read(economy, "shop_ad_crystals_base", shopAdCrystalsBase);
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);

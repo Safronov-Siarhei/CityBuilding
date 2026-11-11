@@ -10,12 +10,18 @@ namespace CityBuilder.Shop
         public double EndsAt;
         public bool Taken;
 
+        /// <summary>The kind of bundles this place shows (normal, ad_crystals, paid_crystals); a normal place also takes the free ones.</summary>
+        public string Kind = OfferRotation.KindNormal;
+
         public bool IsFree => Bundle != null && (Bundle.kind == OfferRotation.KindBonus || Bundle.kind == OfferRotation.KindStarter);
+        public bool IsPaid => Bundle != null && Bundle.kind == OfferRotation.KindPaidCrystals;
+        public bool IsAdOnly => Bundle != null && Bundle.kind == OfferRotation.KindAdCrystals;
     }
 
     /// <summary>
     /// The sandbox offer shop's rules (the user, 2026-11-11), plain C# so a test can drive the clock:
-    /// three slots, each on its own `period`, the first changes `period` after the start and the others
+    /// four places (round 4: resources, resources, crystals for an ad, crystals for money -- each
+    /// place picks only its own kind), each on its own `period`, the first changes `period` after the start and the others
     /// `stagger` later each, so they change one at a time. A new bundle is a weighted pick among the
     /// `normal` bundles of the player's level, never one already on another slot nor the one it
     /// replaces. On a change, once `bonusMinSeconds` have passed since the start (re-entering must
@@ -27,9 +33,14 @@ namespace CityBuilder.Shop
         public const string KindNormal = "normal";
         public const string KindBonus = "bonus";
         public const string KindStarter = "starter";
-        public const int SlotCount = 3;
+        public const string KindAdCrystals = "ad_crystals";
+        public const string KindPaidCrystals = "paid_crystals";
 
-        public readonly OfferSlot[] Slots = new OfferSlot[SlotCount];
+        /// <summary>The shop's places in order (the user, 2026-11-11).</summary>
+        public static readonly string[] DefaultPlaces = { KindNormal, KindNormal, KindAdCrystals, KindPaidCrystals };
+
+        public readonly OfferSlot[] Slots;
+        public int SlotCount => Slots.Length;
 
         private readonly IReadOnlyList<BalanceConfig.OfferBundle> _bundles;
         private readonly double _period;
@@ -40,16 +51,18 @@ namespace CityBuilder.Shop
         private readonly List<BalanceConfig.OfferBundle> _pool = new List<BalanceConfig.OfferBundle>();
         private double _startedAt;
 
-        public OfferRotation(IReadOnlyList<BalanceConfig.OfferBundle> bundles, double period, double stagger,
+        public OfferRotation(IReadOnlyList<BalanceConfig.OfferBundle> bundles, string[] places, double period, double stagger,
                              double bonusChance, double bonusMinSeconds, int seed)
         {
+            places = places ?? DefaultPlaces;
+            Slots = new OfferSlot[places.Length];
             _bundles = bundles ?? new List<BalanceConfig.OfferBundle>();
             _period = period > 1 ? period : 1;
             _stagger = stagger > 0 ? stagger : 0;
             _bonusChance = bonusChance;
             _bonusMinSeconds = bonusMinSeconds;
             _random = new System.Random(seed);
-            for (var i = 0; i < SlotCount; i++) Slots[i] = new OfferSlot();
+            for (var i = 0; i < SlotCount; i++) Slots[i] = new OfferSlot { Kind = places[i] };
         }
 
         /// <summary>The first three bundles: ordinary ones only (a bonus never on entry).</summary>
@@ -62,7 +75,7 @@ namespace CityBuilder.Shop
                 Slots[i].Taken = false;
                 Slots[i].EndsAt = now + _period + i * _stagger;
             }
-            for (var i = 0; i < SlotCount; i++) Slots[i].Bundle = Pick(KindNormal, level, i);
+            for (var i = 0; i < SlotCount; i++) Slots[i].Bundle = Pick(Slots[i].Kind, level, i);
         }
 
         /// <summary>
@@ -80,10 +93,11 @@ namespace CityBuilder.Shop
                 // a long pause (the phone asleep) changes a slot once, onto the next period from now
                 while (slot.EndsAt <= now) slot.EndsAt += _period;
                 BalanceConfig.OfferBundle next = null;
-                if (now - _startedAt >= _bonusMinSeconds && !HasFreeOnScreen() && _random.NextDouble() < _bonusChance)
+                // the free bonus comes only on a resources place
+                if (slot.Kind == KindNormal && now - _startedAt >= _bonusMinSeconds && !HasFreeOnScreen() && _random.NextDouble() < _bonusChance)
                     next = Pick(KindBonus, level, i);
                 if (next != null) bonusAppeared = true;
-                else next = Pick(KindNormal, level, i);
+                else next = Pick(slot.Kind, level, i);
                 slot.Bundle = next;
                 slot.Taken = false;
                 changed = true;
@@ -97,9 +111,10 @@ namespace CityBuilder.Shop
             if (HasFreeOnScreen()) return false;
             var starter = Pick(KindStarter, level, -1);
             if (starter == null) return false;
-            var soonest = 0;
-            for (var i = 1; i < SlotCount; i++)
-                if (Slots[i].EndsAt < Slots[soonest].EndsAt) soonest = i;
+            var soonest = -1;
+            for (var i = 0; i < SlotCount; i++)
+                if (Slots[i].Kind == KindNormal && (soonest < 0 || Slots[i].EndsAt < Slots[soonest].EndsAt)) soonest = i;
+            if (soonest < 0) return false;
             Slots[soonest].Bundle = starter;
             Slots[soonest].Taken = false;
             Slots[soonest].EndsAt = now + _period;
@@ -170,6 +185,25 @@ namespace CityBuilder.Shop
                 if (Slots[i].Bundle != null && Slots[i].Bundle.id == bundle.id) return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// A crystal offer's bonus in whole percent (the user: always an integer): crystals for an ad
+        /// against `adBase` crystals per ad, crystals for money against `crystalUsd` dollars a
+        /// crystal. 0 for anything else or no bonus.
+        /// </summary>
+        public static int BonusPercent(BalanceConfig.OfferBundle bundle, float crystalUsd, float adBase)
+        {
+            if (bundle == null || bundle.goods.Count == 0) return 0;
+            var crystals = 0;
+            foreach (var good in bundle.goods)
+                if (good.resource == "Crystals") crystals += good.amount;
+            double ratio;
+            if (bundle.kind == KindAdCrystals && adBase > 0) ratio = crystals / (double)adBase;
+            else if (bundle.kind == KindPaidCrystals && bundle.priceUsd > 0 && crystalUsd > 0) ratio = crystals * (double)crystalUsd / bundle.priceUsd;
+            else return 0;
+            var percent = (int)System.Math.Round((ratio - 1) * 100);
+            return percent > 0 ? percent : 0;
         }
 
         /// <summary>The player's bundle level: the highest row of «Наборы: уровни» whose lab and citizens are both met; 1 if none.</summary>

@@ -80,7 +80,7 @@ namespace CityBuilder.Shop
             var any = free;
             if (!any)
                 foreach (var slot in rotation.Slots)
-                    if (slot.Bundle != null && !slot.Taken) { any = true; break; }
+                    if (slot.Bundle != null && !slot.Taken && !slot.IsPaid) { any = true; break; }
             if (dot.activeSelf != any) dot.SetActive(any);
             if (glow.gameObject.activeSelf != free) glow.gameObject.SetActive(free);
             if (free)

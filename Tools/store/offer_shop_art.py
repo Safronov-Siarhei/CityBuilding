@@ -25,8 +25,10 @@ GOLD = ((230, 166, 36), (255, 214, 102), (118, 70, 8))
 X0, Y0, X1, Y1 = 90, 200, 1830, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
 RX0, RX1, RY0, RY1 = 620, 1300, Y0 - 78, IY0 + 40
-SX0, SX1, SH = IX0 + 50, IX1 - 50, 196
-TOPS = (IY0 + 92, IY0 + 330, IY0 + 568)
+SX0, SX1, SH = IX0 + 50, IX1 - 50, 150
+# four offers (the user, 2026-11-11): two of goods, crystals for an ad, crystals for money
+TOPS = tuple(IY0 + 92 + k * 172 for k in range(4))
+ORANGE = ((234, 118, 30), (255, 172, 84), (124, 52, 8))   # crystals for money
 CROP = (40, RY0 - 12, 1880, 1080)          # the window picture: the frame, its shadow and the ribbon
 PAD = 40                                    # room round a strip for its shadow / glow
 
@@ -41,14 +43,14 @@ def shadow(img, box, radius, blur=16, alpha=150, dy=14):
     return Image.alpha_composite(img, s.filter(ImageFilter.GaussianBlur(blur)))
 
 
-def parchment(img, box, radius=34, rim=(158, 110, 58), rim_w=4):
+def parchment(img, box, radius=34, rim=(158, 110, 58), rim_w=4, fill=(247, 232, 196), edge_fill=(218, 184, 128)):
     x0, y0, x1, y1 = box
     p = layer(*img.size)
-    ImageDraw.Draw(p).rounded_rectangle(box, radius, fill=(247, 232, 196, 255))
+    ImageDraw.Draw(p).rounded_rectangle(box, radius, fill=fill + (255,))
     m = Image.new('L', img.size, 0)
     ImageDraw.Draw(m).rounded_rectangle((x0 + 30, y0 + 26, x1 - 30, y1 - 26), 20, fill=255)
     m = m.filter(ImageFilter.GaussianBlur(26))
-    edge = Image.new('RGBA', img.size, (218, 184, 128, 255))
+    edge = Image.new('RGBA', img.size, edge_fill + (255,))
     p = Image.composite(p, Image.composite(edge, p, p.split()[3]), m)
     img = Image.alpha_composite(img, p)
     ImageDraw.Draw(img).rounded_rectangle(box, radius, outline=rim, width=rim_w)
@@ -87,16 +89,38 @@ def window(theme):
 
 
 # ------------------------------------------------------------------ the strips
-def strip(gold):
+STRIPS = {   # name: glow, rim, rim width, fill, edge
+    'Strip': (None, (158, 110, 58), 4, (247, 232, 196), (218, 184, 128)),
+    'StripGold': ((255, 206, 80, 170), (214, 160, 40), 7, (247, 232, 196), (218, 184, 128)),
+    # the crystal offers stand apart (the user): icy blue for an ad, blue with a gold glow for money
+    'StripCrystal': (None, (52, 120, 186), 6, (222, 240, 252), (164, 206, 238)),
+    'StripPaid': ((255, 196, 72, 190), (214, 150, 30), 7, (214, 232, 255), (150, 190, 240)),
+}
+
+
+def strip(name):
+    glow_c, rim, rim_w, fill, edge = STRIPS[name]
     w, h = SX1 - SX0 + 2 * PAD, SH + 2 * PAD
     box = (PAD, PAD, w - PAD, h - PAD)
     img = shadow(layer(w, h), box, 34, 12, 140, 10)
-    if gold:   # a warm glow so the free one reads first
+    if glow_c:   # a glow so this one reads first
         g = layer(w, h)
-        ImageDraw.Draw(g).rounded_rectangle((box[0] - 14, box[1] - 14, box[2] + 14, box[3] + 14), 44, fill=(255, 206, 80, 170))
+        ImageDraw.Draw(g).rounded_rectangle((box[0] - 14, box[1] - 14, box[2] + 14, box[3] + 14), 44, fill=glow_c)
         img = Image.alpha_composite(img, g.filter(ImageFilter.GaussianBlur(16)))
-    img = parchment(img, box, rim=(214, 160, 40) if gold else (158, 110, 58), rim_w=7 if gold else 4)
-    save(img, 'StripGold' if gold else 'Strip')
+    img = parchment(img, box, rim=rim, rim_w=rim_w, fill=fill, edge_fill=edge)
+    save(img, name)
+
+
+def badge():
+    """The «+100%» flag over a crystal offer: a red ribbon plate with a gold rim."""
+    s = 4
+    w, h = 150, 50
+    img = layer(w * s, (h + 6) * s)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((0, 6 * s, w * s - 1, (h + 6) * s - 1), 14 * s, fill=(96, 12, 14))
+    d.rounded_rectangle((0, 0, w * s - 1, h * s - 1), 14 * s, fill=(206, 38, 36), outline=(250, 200, 70), width=4 * s)
+    d.rounded_rectangle((8 * s, 6 * s, (w - 8) * s, 22 * s), 8 * s, fill=(234, 92, 80))
+    save(img.resize((w, h + 6), Image.LANCZOS), 'Badge')
 
 
 def button(name, w, colours, radius=34):
@@ -211,9 +235,12 @@ def close():
 os.makedirs(OUT, exist_ok=True)
 for t in THEMES:
     window(t)
-strip(False)
-strip(True)
+for n in STRIPS:
+    strip(n)
+badge()
 button('ButtonGreen', 280, GREEN)
+button('ButtonGreenWide', 476, GREEN)
+button('ButtonOrange', 476, ORANGE)
 button('ButtonBlue', 171, BLUE)
 button('ButtonGold', 476, GOLD)
 play()
@@ -249,20 +276,24 @@ layout = {
     'strips': [[SX0, t, SX1, t + SH] for t in TOPS],
     'pad': PAD,
     # inside a strip, from its top-left (the mock-up's places)
-    'name': rel(44, 14, 840, 74),
-    'goods': [rel(44 + 240 * k, 84, 44 + 240 * k + 92, 176) for k in range(3)],
-    'amounts': [rel(44 + 240 * k + 100, 96, 44 + 240 * k + 236, 168) for k in range(3)],
-    'timer': rel(771, 64, 961, 132),
-    'timer_text': rel(827, 64, 953, 132),
-    'watch': rel(996, 46, 1276, 155),
-    'watch_play': rel(1012, 66, 1072, 126),
-    'watch_label': rel(1070, 46, 1270, 146),
-    'buy': rel(1301, 46, 1472, 155),
-    'buy_price': rel(1311, 46, 1388, 146),
-    'buy_crystal': rel(1386, 64, 1450, 128),
-    'free': rel(996, 46, 1472, 155),
-    'free_label': rel(1010, 46, 1458, 146),
-    'stamp': rel(1076, 52, 1436, 144),
+    'name': rel(44, 8, 600, 56),
+    'badge': rel(600, 6, 750, 62),
+    'goods': [rel(44 + 200 * k, 66, 114 + 200 * k, 136) for k in range(3)],
+    'amounts': [rel(122 + 200 * k, 66, 240 + 200 * k, 136) for k in range(3)],
+    'timer': rel(771, 41, 961, 109),
+    'timer_text': rel(827, 41, 953, 109),
+    'watch': rel(996, 25, 1276, 134),
+    'watch_play': rel(1012, 45, 1072, 105),
+    'watch_label': rel(1070, 25, 1270, 125),
+    'buy': rel(1301, 25, 1472, 134),
+    'buy_price': rel(1311, 25, 1388, 125),
+    'buy_crystal': rel(1386, 43, 1450, 107),
+    'free': rel(996, 25, 1472, 134),
+    'free_label': rel(1010, 25, 1458, 125),
+    # the crystal offers' one wide button: green for an ad (with the play sign), orange for money
+    'wide_play': rel(1040, 45, 1100, 105),
+    'wide_ad_label': rel(1100, 25, 1440, 125),
+    'stamp': rel(1076, 29, 1436, 121),
 }
 with open(OUT + 'layout.json', 'w', encoding='utf-8') as f:
     json.dump(layout, f, indent=1)

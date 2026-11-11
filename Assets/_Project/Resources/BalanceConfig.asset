@@ -7435,13 +7435,15 @@ MonoBehaviour:
   islandStartRocks: 40
   tutorialRewardCrystals: 25
   shopSlotSeconds: 180
-  shopSlotStaggerSeconds: 60
+  shopSlotStaggerSeconds: 45
   shopBonusChance: 0.15
   shopBonusMinSeconds: 300
   shopNoticeSeconds: 30
   shopStarterDelaySeconds: 120
   shopAdStubSeconds: 2
   shopTimerWarnSeconds: 30
+  shopCrystalUsd: 0.01
+  shopAdCrystalsBase: 10
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
   tutorialBuildSeconds: 5
@@ -8342,6 +8344,7 @@ MonoBehaviour:
     level: 5
   offerBundles:
   - id: builder_1
+    nameKey: '#bundle_builder'
     kind: normal
     weight: 1
     levelFrom: 1
@@ -8352,7 +8355,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 50
     priceCrystals: 2
+    priceUsd: 0
   - id: builder_2
+    nameKey: '#bundle_builder'
     kind: normal
     weight: 1
     levelFrom: 2
@@ -8363,7 +8368,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 80
     priceCrystals: 2
+    priceUsd: 0
   - id: builder_3
+    nameKey: '#bundle_builder'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8374,7 +8381,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 120
     priceCrystals: 2
+    priceUsd: 0
   - id: builder_4
+    nameKey: '#bundle_builder'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8385,7 +8394,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 170
     priceCrystals: 3
+    priceUsd: 0
   - id: builder_5
+    nameKey: '#bundle_builder'
     kind: normal
     weight: 1
     levelFrom: 5
@@ -8396,7 +8407,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 230
     priceCrystals: 3
+    priceUsd: 0
   - id: lumber_1
+    nameKey: '#bundle_lumber'
     kind: normal
     weight: 1
     levelFrom: 1
@@ -8405,7 +8418,9 @@ MonoBehaviour:
     - resource: Wood
       amount: 140
     priceCrystals: 1
+    priceUsd: 0
   - id: lumber_2
+    nameKey: '#bundle_lumber'
     kind: normal
     weight: 1
     levelFrom: 2
@@ -8414,7 +8429,9 @@ MonoBehaviour:
     - resource: Wood
       amount: 220
     priceCrystals: 1
+    priceUsd: 0
   - id: lumber_3
+    nameKey: '#bundle_lumber'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8423,7 +8440,9 @@ MonoBehaviour:
     - resource: Wood
       amount: 340
     priceCrystals: 1
+    priceUsd: 0
   - id: lumber_4
+    nameKey: '#bundle_lumber'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8432,7 +8451,9 @@ MonoBehaviour:
     - resource: Wood
       amount: 480
     priceCrystals: 2
+    priceUsd: 0
   - id: lumber_5
+    nameKey: '#bundle_lumber'
     kind: normal
     weight: 1
     levelFrom: 5
@@ -8441,7 +8462,9 @@ MonoBehaviour:
     - resource: Wood
       amount: 640
     priceCrystals: 2
+    priceUsd: 0
   - id: mason_1
+    nameKey: '#bundle_mason'
     kind: normal
     weight: 1
     levelFrom: 1
@@ -8450,7 +8473,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 110
     priceCrystals: 1
+    priceUsd: 0
   - id: mason_2
+    nameKey: '#bundle_mason'
     kind: normal
     weight: 1
     levelFrom: 2
@@ -8459,7 +8484,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 180
     priceCrystals: 1
+    priceUsd: 0
   - id: mason_3
+    nameKey: '#bundle_mason'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8468,7 +8495,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 260
     priceCrystals: 1
+    priceUsd: 0
   - id: mason_4
+    nameKey: '#bundle_mason'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8477,7 +8506,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 370
     priceCrystals: 2
+    priceUsd: 0
   - id: mason_5
+    nameKey: '#bundle_mason'
     kind: normal
     weight: 1
     levelFrom: 5
@@ -8486,7 +8517,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 510
     priceCrystals: 2
+    priceUsd: 0
   - id: treasury_1
+    nameKey: '#bundle_treasury'
     kind: normal
     weight: 1
     levelFrom: 1
@@ -8495,7 +8528,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 120
     priceCrystals: 2
+    priceUsd: 0
   - id: treasury_2
+    nameKey: '#bundle_treasury'
     kind: normal
     weight: 1
     levelFrom: 2
@@ -8504,7 +8539,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 190
     priceCrystals: 2
+    priceUsd: 0
   - id: treasury_3
+    nameKey: '#bundle_treasury'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8513,7 +8550,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 290
     priceCrystals: 2
+    priceUsd: 0
   - id: treasury_4
+    nameKey: '#bundle_treasury'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8522,7 +8561,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 410
     priceCrystals: 3
+    priceUsd: 0
   - id: treasury_5
+    nameKey: '#bundle_treasury'
     kind: normal
     weight: 1
     levelFrom: 5
@@ -8531,7 +8572,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 550
     priceCrystals: 3
+    priceUsd: 0
   - id: pantry_1
+    nameKey: '#bundle_pantry'
     kind: normal
     weight: 1
     levelFrom: 1
@@ -8540,7 +8583,9 @@ MonoBehaviour:
     - resource: Food
       amount: 70
     priceCrystals: 1
+    priceUsd: 0
   - id: pantry_2
+    nameKey: '#bundle_pantry'
     kind: normal
     weight: 1
     levelFrom: 2
@@ -8549,7 +8594,9 @@ MonoBehaviour:
     - resource: Food
       amount: 110
     priceCrystals: 1
+    priceUsd: 0
   - id: pantry_3
+    nameKey: '#bundle_pantry'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8558,7 +8605,9 @@ MonoBehaviour:
     - resource: Food
       amount: 170
     priceCrystals: 1
+    priceUsd: 0
   - id: pantry_4
+    nameKey: '#bundle_pantry'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8567,7 +8616,9 @@ MonoBehaviour:
     - resource: Food
       amount: 240
     priceCrystals: 2
+    priceUsd: 0
   - id: pantry_5
+    nameKey: '#bundle_pantry'
     kind: normal
     weight: 1
     levelFrom: 5
@@ -8576,87 +8627,814 @@ MonoBehaviour:
     - resource: Food
       amount: 320
     priceCrystals: 2
-  - id: smith_2
+    priceUsd: 0
+  - id: farmer_1
+    nameKey: '#bundle_farmer'
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Grain
+      amount: 120
+    priceCrystals: 1
+    priceUsd: 0
+  - id: farmer_2
+    nameKey: '#bundle_farmer'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Iron
-      amount: 100
-    - resource: Coal
-      amount: 100
-    priceCrystals: 2
-  - id: smith_3
+    - resource: Grain
+      amount: 190
+    priceCrystals: 1
+    priceUsd: 0
+  - id: farmer_3
+    nameKey: '#bundle_farmer'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Iron
-      amount: 140
-    - resource: Coal
-      amount: 140
-    priceCrystals: 2
-  - id: smith_4
+    - resource: Grain
+      amount: 290
+    priceCrystals: 1
+    priceUsd: 0
+  - id: farmer_4
+    nameKey: '#bundle_farmer'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Iron
-      amount: 200
-    - resource: Coal
-      amount: 200
-    priceCrystals: 3
-  - id: smith_5
-    kind: normal
-    weight: 1
-    levelFrom: 5
-    levelTo: 5
-    goods:
-    - resource: Iron
-      amount: 280
-    - resource: Coal
-      amount: 280
-    priceCrystals: 3
-  - id: gold_2
-    kind: normal
-    weight: 1
-    levelFrom: 2
-    levelTo: 2
-    goods:
-    - resource: Gold
-      amount: 140
-    priceCrystals: 2
-  - id: gold_3
-    kind: normal
-    weight: 1
-    levelFrom: 3
-    levelTo: 3
-    goods:
-    - resource: Gold
-      amount: 220
-    priceCrystals: 2
-  - id: gold_4
-    kind: normal
-    weight: 1
-    levelFrom: 4
-    levelTo: 4
-    goods:
-    - resource: Gold
-      amount: 310
-    priceCrystals: 3
-  - id: gold_5
-    kind: normal
-    weight: 1
-    levelFrom: 5
-    levelTo: 5
-    goods:
-    - resource: Gold
+    - resource: Grain
       amount: 410
+    priceCrystals: 2
+    priceUsd: 0
+  - id: farmer_5
+    nameKey: '#bundle_farmer'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Grain
+      amount: 550
+    priceCrystals: 2
+    priceUsd: 0
+  - id: carpenter_1
+    nameKey: '#bundle_carpenter'
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 100
+    - resource: Coins
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: carpenter_2
+    nameKey: '#bundle_carpenter'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 160
+    - resource: Coins
+      amount: 100
+    priceCrystals: 2
+    priceUsd: 0
+  - id: carpenter_3
+    nameKey: '#bundle_carpenter'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 240
+    - resource: Coins
+      amount: 140
+    priceCrystals: 2
+    priceUsd: 0
+  - id: carpenter_4
+    nameKey: '#bundle_carpenter'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 340
+    - resource: Coins
+      amount: 200
     priceCrystals: 3
+    priceUsd: 0
+  - id: carpenter_5
+    nameKey: '#bundle_carpenter'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 460
+    - resource: Coins
+      amount: 280
+    priceCrystals: 3
+    priceUsd: 0
+  - id: quarry_1
+    nameKey: '#bundle_quarry'
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Stone
+      amount: 90
+    - resource: Coins
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: quarry_2
+    nameKey: '#bundle_quarry'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Stone
+      amount: 140
+    - resource: Coins
+      amount: 100
+    priceCrystals: 2
+    priceUsd: 0
+  - id: quarry_3
+    nameKey: '#bundle_quarry'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Stone
+      amount: 220
+    - resource: Coins
+      amount: 140
+    priceCrystals: 2
+    priceUsd: 0
+  - id: quarry_4
+    nameKey: '#bundle_quarry'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Stone
+      amount: 310
+    - resource: Coins
+      amount: 200
+    priceCrystals: 3
+    priceUsd: 0
+  - id: quarry_5
+    nameKey: '#bundle_quarry'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Stone
+      amount: 410
+    - resource: Coins
+      amount: 280
+    priceCrystals: 3
+    priceUsd: 0
+  - id: settler_1
+    nameKey: '#bundle_settler'
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 60
+    - resource: Stone
+      amount: 40
+    - resource: Food
+      amount: 40
+    priceCrystals: 2
+    priceUsd: 0
+  - id: settler_2
+    nameKey: '#bundle_settler'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 100
+    - resource: Stone
+      amount: 60
+    - resource: Food
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: settler_3
+    nameKey: '#bundle_settler'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 140
+    - resource: Stone
+      amount: 100
+    - resource: Food
+      amount: 100
+    priceCrystals: 2
+    priceUsd: 0
+  - id: settler_4
+    nameKey: '#bundle_settler'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 200
+    - resource: Stone
+      amount: 140
+    - resource: Food
+      amount: 140
+    priceCrystals: 3
+    priceUsd: 0
+  - id: settler_5
+    nameKey: '#bundle_settler'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 280
+    - resource: Stone
+      amount: 180
+    - resource: Food
+      amount: 180
+    priceCrystals: 3
+    priceUsd: 0
+  - id: hunter_1
+    nameKey: '#bundle_hunter'
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Meat
+      amount: 50
+    - resource: Food
+      amount: 50
+    priceCrystals: 1
+    priceUsd: 0
+  - id: hunter_2
+    nameKey: '#bundle_hunter'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Meat
+      amount: 80
+    - resource: Food
+      amount: 80
+    priceCrystals: 1
+    priceUsd: 0
+  - id: hunter_3
+    nameKey: '#bundle_hunter'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Meat
+      amount: 120
+    - resource: Food
+      amount: 120
+    priceCrystals: 1
+    priceUsd: 0
+  - id: hunter_4
+    nameKey: '#bundle_hunter'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Meat
+      amount: 170
+    - resource: Food
+      amount: 170
+    priceCrystals: 2
+    priceUsd: 0
+  - id: hunter_5
+    nameKey: '#bundle_hunter'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Meat
+      amount: 230
+    - resource: Food
+      amount: 230
+    priceCrystals: 2
+    priceUsd: 0
+  - id: smith_2
+    nameKey: '#bundle_smith'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Iron
+      amount: 100
+    - resource: Coal
+      amount: 100
+    priceCrystals: 2
+    priceUsd: 0
+  - id: smith_3
+    nameKey: '#bundle_smith'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Iron
+      amount: 150
+    - resource: Coal
+      amount: 150
+    priceCrystals: 2
+    priceUsd: 0
+  - id: smith_4
+    nameKey: '#bundle_smith'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Iron
+      amount: 210
+    - resource: Coal
+      amount: 210
+    priceCrystals: 3
+    priceUsd: 0
+  - id: smith_5
+    nameKey: '#bundle_smith'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Iron
+      amount: 290
+    - resource: Coal
+      amount: 290
+    priceCrystals: 3
+    priceUsd: 0
+  - id: gold_2
+    nameKey: '#bundle_gold'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Gold
+      amount: 140
+    priceCrystals: 2
+    priceUsd: 0
+  - id: gold_3
+    nameKey: '#bundle_gold'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Gold
+      amount: 210
+    priceCrystals: 2
+    priceUsd: 0
+  - id: gold_4
+    nameKey: '#bundle_gold'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Gold
+      amount: 300
+    priceCrystals: 3
+    priceUsd: 0
+  - id: gold_5
+    nameKey: '#bundle_gold'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Gold
+      amount: 400
+    priceCrystals: 3
+    priceUsd: 0
+  - id: miller_2
+    nameKey: '#bundle_miller'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Flour
+      amount: 80
+    priceCrystals: 1
+    priceUsd: 0
+  - id: miller_3
+    nameKey: '#bundle_miller'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Flour
+      amount: 120
+    priceCrystals: 1
+    priceUsd: 0
+  - id: miller_4
+    nameKey: '#bundle_miller'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Flour
+      amount: 170
+    priceCrystals: 2
+    priceUsd: 0
+  - id: miller_5
+    nameKey: '#bundle_miller'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Flour
+      amount: 230
+    priceCrystals: 2
+    priceUsd: 0
+  - id: baker_2
+    nameKey: '#bundle_baker'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Bread
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: baker_3
+    nameKey: '#bundle_baker'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Bread
+      amount: 90
+    priceCrystals: 2
+    priceUsd: 0
+  - id: baker_4
+    nameKey: '#bundle_baker'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Bread
+      amount: 130
+    priceCrystals: 3
+    priceUsd: 0
+  - id: baker_5
+    nameKey: '#bundle_baker'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Bread
+      amount: 170
+    priceCrystals: 3
+    priceUsd: 0
+  - id: coalman_2
+    nameKey: '#bundle_coalman'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Coal
+      amount: 150
+    priceCrystals: 1
+    priceUsd: 0
+  - id: coalman_3
+    nameKey: '#bundle_coalman'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Coal
+      amount: 220
+    priceCrystals: 1
+    priceUsd: 0
+  - id: coalman_4
+    nameKey: '#bundle_coalman'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coal
+      amount: 320
+    priceCrystals: 2
+    priceUsd: 0
+  - id: coalman_5
+    nameKey: '#bundle_coalman'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coal
+      amount: 430
+    priceCrystals: 2
+    priceUsd: 0
+  - id: ironore_2
+    nameKey: '#bundle_ironore'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Iron
+      amount: 150
+    priceCrystals: 1
+    priceUsd: 0
+  - id: ironore_3
+    nameKey: '#bundle_ironore'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Iron
+      amount: 220
+    priceCrystals: 1
+    priceUsd: 0
+  - id: ironore_4
+    nameKey: '#bundle_ironore'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Iron
+      amount: 320
+    priceCrystals: 2
+    priceUsd: 0
+  - id: ironore_5
+    nameKey: '#bundle_ironore'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Iron
+      amount: 430
+    priceCrystals: 2
+    priceUsd: 0
+  - id: feast_2
+    nameKey: '#bundle_feast'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Food
+      amount: 60
+    - resource: Bread
+      amount: 40
+    priceCrystals: 2
+    priceUsd: 0
+  - id: feast_3
+    nameKey: '#bundle_feast'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Food
+      amount: 90
+    - resource: Bread
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: feast_4
+    nameKey: '#bundle_feast'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Food
+      amount: 130
+    - resource: Bread
+      amount: 80
+    priceCrystals: 3
+    priceUsd: 0
+  - id: feast_5
+    nameKey: '#bundle_feast'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Food
+      amount: 170
+    - resource: Bread
+      amount: 110
+    priceCrystals: 3
+    priceUsd: 0
+  - id: merchant_2
+    nameKey: '#bundle_merchant'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Coins
+      amount: 80
+    - resource: Gold
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: merchant_3
+    nameKey: '#bundle_merchant'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Coins
+      amount: 120
+    - resource: Gold
+      amount: 90
+    priceCrystals: 2
+    priceUsd: 0
+  - id: merchant_4
+    nameKey: '#bundle_merchant'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coins
+      amount: 170
+    - resource: Gold
+      amount: 130
+    priceCrystals: 3
+    priceUsd: 0
+  - id: merchant_5
+    nameKey: '#bundle_merchant'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coins
+      amount: 230
+    - resource: Gold
+      amount: 170
+    priceCrystals: 3
+    priceUsd: 0
+  - id: granary_2
+    nameKey: '#bundle_granary'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Grain
+      amount: 80
+    - resource: Flour
+      amount: 50
+    priceCrystals: 2
+    priceUsd: 0
+  - id: granary_3
+    nameKey: '#bundle_granary'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Grain
+      amount: 120
+    - resource: Flour
+      amount: 70
+    priceCrystals: 2
+    priceUsd: 0
+  - id: granary_4
+    nameKey: '#bundle_granary'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Grain
+      amount: 170
+    - resource: Flour
+      amount: 110
+    priceCrystals: 3
+    priceUsd: 0
+  - id: granary_5
+    nameKey: '#bundle_granary'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Grain
+      amount: 230
+    - resource: Flour
+      amount: 140
+    priceCrystals: 3
+    priceUsd: 0
+  - id: workshop_2
+    nameKey: '#bundle_workshop'
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 80
+    - resource: Iron
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: workshop_3
+    nameKey: '#bundle_workshop'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Iron
+      amount: 90
+    priceCrystals: 2
+    priceUsd: 0
+  - id: workshop_4
+    nameKey: '#bundle_workshop'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 170
+    - resource: Iron
+      amount: 130
+    priceCrystals: 3
+    priceUsd: 0
+  - id: workshop_5
+    nameKey: '#bundle_workshop'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 230
+    - resource: Iron
+      amount: 170
+    priceCrystals: 3
+    priceUsd: 0
   - id: bars_3
+    nameKey: '#bundle_bars'
     kind: normal
     weight: 1
     levelFrom: 3
@@ -8667,7 +9445,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 140
     priceCrystals: 3
+    priceUsd: 0
   - id: bars_4
+    nameKey: '#bundle_bars'
     kind: normal
     weight: 1
     levelFrom: 4
@@ -8678,51 +9458,318 @@ MonoBehaviour:
     - resource: Coins
       amount: 200
     priceCrystals: 4
+    priceUsd: 0
   - id: bars_5
+    nameKey: '#bundle_bars'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
     - resource: IronBar
-      amount: 140
+      amount: 130
     - resource: Coins
-      amount: 280
+      amount: 270
     priceCrystals: 4
-  - id: crystals_3
+    priceUsd: 0
+  - id: copper_3
+    nameKey: '#bundle_copper'
     kind: normal
-    weight: 0.5
+    weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Crystals
-      amount: 1
-    - resource: Wood
-      amount: 240
-    priceCrystals: 3
-  - id: crystals_4
+    - resource: CopperOre
+      amount: 120
+    priceCrystals: 1
+    priceUsd: 0
+  - id: copper_4
+    nameKey: '#bundle_copper'
     kind: normal
-    weight: 0.5
+    weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Crystals
-      amount: 2
-    - resource: Wood
-      amount: 340
-    priceCrystals: 4
-  - id: crystals_5
+    - resource: CopperOre
+      amount: 170
+    priceCrystals: 2
+    priceUsd: 0
+  - id: copper_5
+    nameKey: '#bundle_copper'
     kind: normal
-    weight: 0.5
+    weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Crystals
-      amount: 2
-    - resource: Wood
-      amount: 460
+    - resource: CopperOre
+      amount: 230
+    priceCrystals: 2
+    priceUsd: 0
+  - id: copperbars_3
+    nameKey: '#bundle_copperbars'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: CopperBar
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: copperbars_4
+    nameKey: '#bundle_copperbars'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: CopperBar
+      amount: 80
+    priceCrystals: 3
+    priceUsd: 0
+  - id: copperbars_5
+    nameKey: '#bundle_copperbars'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: CopperBar
+      amount: 110
+    priceCrystals: 3
+    priceUsd: 0
+  - id: forge_3
+    nameKey: '#bundle_forge'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Coal
+      amount: 80
+    - resource: IronBar
+      amount: 40
+    priceCrystals: 3
+    priceUsd: 0
+  - id: forge_4
+    nameKey: '#bundle_forge'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coal
+      amount: 110
+    - resource: IronBar
+      amount: 60
     priceCrystals: 4
+    priceUsd: 0
+  - id: forge_5
+    nameKey: '#bundle_forge'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coal
+      amount: 150
+    - resource: IronBar
+      amount: 80
+    priceCrystals: 4
+    priceUsd: 0
+  - id: fortress_3
+    nameKey: '#bundle_fortress'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Stone
+      amount: 150
+    - resource: IronBar
+      amount: 30
+    priceCrystals: 3
+    priceUsd: 0
+  - id: fortress_4
+    nameKey: '#bundle_fortress'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Stone
+      amount: 210
+    - resource: IronBar
+      amount: 40
+    priceCrystals: 4
+    priceUsd: 0
+  - id: fortress_5
+    nameKey: '#bundle_fortress'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Stone
+      amount: 290
+    - resource: IronBar
+      amount: 60
+    priceCrystals: 4
+    priceUsd: 0
+  - id: mint_3
+    nameKey: '#bundle_mint'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Gold
+      amount: 80
+    - resource: Coal
+      amount: 60
+    priceCrystals: 2
+    priceUsd: 0
+  - id: mint_4
+    nameKey: '#bundle_mint'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Gold
+      amount: 110
+    - resource: Coal
+      amount: 80
+    priceCrystals: 3
+    priceUsd: 0
+  - id: mint_5
+    nameKey: '#bundle_mint'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Gold
+      amount: 150
+    - resource: Coal
+      amount: 110
+    priceCrystals: 3
+    priceUsd: 0
+  - id: goldbars_4
+    nameKey: '#bundle_goldbars'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: GoldBar
+      amount: 40
+    priceCrystals: 3
+    priceUsd: 0
+  - id: goldbars_5
+    nameKey: '#bundle_goldbars'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: GoldBar
+      amount: 50
+    priceCrystals: 3
+    priceUsd: 0
+  - id: royal_4
+    nameKey: '#bundle_royal'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coins
+      amount: 100
+    - resource: GoldBar
+      amount: 20
+    priceCrystals: 3
+    priceUsd: 0
+  - id: royal_5
+    nameKey: '#bundle_royal'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coins
+      amount: 140
+    - resource: GoldBar
+      amount: 30
+    priceCrystals: 3
+    priceUsd: 0
+  - id: metals_4
+    nameKey: '#bundle_metals'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: IronBar
+      amount: 40
+    - resource: CopperBar
+      amount: 40
+    priceCrystals: 3
+    priceUsd: 0
+  - id: metals_5
+    nameKey: '#bundle_metals'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: IronBar
+      amount: 50
+    - resource: CopperBar
+      amount: 50
+    priceCrystals: 3
+    priceUsd: 0
+  - id: lumbermill_3
+    nameKey: '#bundle_lumbermill'
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 200
+    - resource: Stone
+      amount: 100
+    priceCrystals: 2
+    priceUsd: 0
+  - id: lumbermill_4
+    nameKey: '#bundle_lumbermill'
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 280
+    - resource: Stone
+      amount: 140
+    priceCrystals: 3
+    priceUsd: 0
+  - id: lumbermill_5
+    nameKey: '#bundle_lumbermill'
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 380
+    - resource: Stone
+      amount: 190
+    priceCrystals: 3
+    priceUsd: 0
   - id: gift_build_1
+    nameKey: '#bundle_gift_build'
     kind: bonus
     weight: 1
     levelFrom: 1
@@ -8733,7 +9780,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 30
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_build_2
+    nameKey: '#bundle_gift_build'
     kind: bonus
     weight: 1
     levelFrom: 2
@@ -8744,7 +9793,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 50
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_build_3
+    nameKey: '#bundle_gift_build'
     kind: bonus
     weight: 1
     levelFrom: 3
@@ -8755,7 +9806,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 70
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_build_4
+    nameKey: '#bundle_gift_build'
     kind: bonus
     weight: 1
     levelFrom: 4
@@ -8766,7 +9819,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 100
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_build_5
+    nameKey: '#bundle_gift_build'
     kind: bonus
     weight: 1
     levelFrom: 5
@@ -8777,7 +9832,9 @@ MonoBehaviour:
     - resource: Stone
       amount: 140
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_coins_1
+    nameKey: '#bundle_gift_coins'
     kind: bonus
     weight: 1
     levelFrom: 1
@@ -8786,7 +9843,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 50
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_coins_2
+    nameKey: '#bundle_gift_coins'
     kind: bonus
     weight: 1
     levelFrom: 2
@@ -8795,7 +9854,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 80
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_coins_3
+    nameKey: '#bundle_gift_coins'
     kind: bonus
     weight: 1
     levelFrom: 3
@@ -8804,7 +9865,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 120
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_coins_4
+    nameKey: '#bundle_gift_coins'
     kind: bonus
     weight: 1
     levelFrom: 4
@@ -8813,7 +9876,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 170
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_coins_5
+    nameKey: '#bundle_gift_coins'
     kind: bonus
     weight: 1
     levelFrom: 5
@@ -8822,7 +9887,9 @@ MonoBehaviour:
     - resource: Coins
       amount: 230
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_food_1
+    nameKey: '#bundle_gift_food'
     kind: bonus
     weight: 1
     levelFrom: 1
@@ -8831,7 +9898,9 @@ MonoBehaviour:
     - resource: Food
       amount: 40
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_food_2
+    nameKey: '#bundle_gift_food'
     kind: bonus
     weight: 1
     levelFrom: 2
@@ -8840,7 +9909,9 @@ MonoBehaviour:
     - resource: Food
       amount: 60
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_food_3
+    nameKey: '#bundle_gift_food'
     kind: bonus
     weight: 1
     levelFrom: 3
@@ -8849,7 +9920,9 @@ MonoBehaviour:
     - resource: Food
       amount: 100
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_food_4
+    nameKey: '#bundle_gift_food'
     kind: bonus
     weight: 1
     levelFrom: 4
@@ -8858,7 +9931,9 @@ MonoBehaviour:
     - resource: Food
       amount: 140
     priceCrystals: 0
+    priceUsd: 0
   - id: gift_food_5
+    nameKey: '#bundle_gift_food'
     kind: bonus
     weight: 1
     levelFrom: 5
@@ -8867,10 +9942,72 @@ MonoBehaviour:
     - resource: Food
       amount: 180
     priceCrystals: 0
-  - id: starter
+    priceUsd: 0
+  - id: starter_1
+    nameKey: '#bundle_starter'
     kind: starter
     weight: 1
     levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 80
+    - resource: Coins
+      amount: 100
+    priceCrystals: 0
+    priceUsd: 0
+  - id: starter_2
+    nameKey: '#bundle_starter'
+    kind: starter
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 80
+    - resource: Coins
+      amount: 100
+    priceCrystals: 0
+    priceUsd: 0
+  - id: starter_3
+    nameKey: '#bundle_starter'
+    kind: starter
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 80
+    - resource: Coins
+      amount: 100
+    priceCrystals: 0
+    priceUsd: 0
+  - id: starter_4
+    nameKey: '#bundle_starter'
+    kind: starter
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 80
+    - resource: Coins
+      amount: 100
+    priceCrystals: 0
+    priceUsd: 0
+  - id: starter_5
+    nameKey: '#bundle_starter'
+    kind: starter
+    weight: 1
+    levelFrom: 5
     levelTo: 5
     goods:
     - resource: Wood
@@ -8880,6 +10017,117 @@ MonoBehaviour:
     - resource: Coins
       amount: 100
     priceCrystals: 0
+    priceUsd: 0
+  - id: ad_crystals_10
+    nameKey: '#bundle_ad_crystals_10'
+    kind: ad_crystals
+    weight: 10
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 10
+    priceCrystals: 0
+    priceUsd: 0
+  - id: ad_crystals_15
+    nameKey: '#bundle_ad_crystals_15'
+    kind: ad_crystals
+    weight: 4
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 15
+    priceCrystals: 0
+    priceUsd: 0
+  - id: ad_crystals_20
+    nameKey: '#bundle_ad_crystals_20'
+    kind: ad_crystals
+    weight: 2
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 20
+    priceCrystals: 0
+    priceUsd: 0
+  - id: ad_crystals_30
+    nameKey: '#bundle_ad_crystals_30'
+    kind: ad_crystals
+    weight: 1
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 30
+    priceCrystals: 0
+    priceUsd: 0
+  - id: ad_crystals_50
+    nameKey: '#bundle_ad_crystals_50'
+    kind: ad_crystals
+    weight: 0.3
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 50
+    priceCrystals: 0
+    priceUsd: 0
+  - id: paid_crystals_1
+    nameKey: '#bundle_paid_crystals_1'
+    kind: paid_crystals
+    weight: 10
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 199
+    priceCrystals: 0
+    priceUsd: 0.99
+  - id: paid_crystals_2
+    nameKey: '#bundle_paid_crystals_2'
+    kind: paid_crystals
+    weight: 3
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 249
+    priceCrystals: 0
+    priceUsd: 0.99
+  - id: paid_crystals_3
+    nameKey: '#bundle_paid_crystals_3'
+    kind: paid_crystals
+    weight: 4
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 1199
+    priceCrystals: 0
+    priceUsd: 4.99
+  - id: paid_crystals_4
+    nameKey: '#bundle_paid_crystals_4'
+    kind: paid_crystals
+    weight: 1
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 1499
+    priceCrystals: 0
+    priceUsd: 4.99
+  - id: paid_crystals_5
+    nameKey: '#bundle_paid_crystals_5'
+    kind: paid_crystals
+    weight: 0.5
+    levelFrom: 1
+    levelTo: 99
+    goods:
+    - resource: Crystals
+      amount: 3499
+    priceCrystals: 0
+    priceUsd: 9.99
   offerLevels:
   - level: 1
     labFrom: 0

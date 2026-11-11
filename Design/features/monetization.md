@@ -4,10 +4,9 @@
 > делай»): built, see «Offer shop: how it is built». Nothing else is built (no ads SDK, no IAP).
 
 ## Offer shop: how it is built (2026-11-11)
-- **Sheet:** «Наборы» (gid 2000061: bundle, name_ru/en, kind normal|bonus|starter, weight, level_from/to,
-  res1..3 + amount1..3 -- a ResourceType name or `Crystals` --, price_crystals), «Наборы: уровни»
+- **Sheet:** «Наборы» (gid 2000061; layout since round 4 -- see below; kinds normal|bonus|starter|ad_crystals|paid_crystals; a resource is a ResourceType name or `Crystals`), «Наборы: уровни»
   (2000062: level, lab_from, citizens_from), both -> `Balance/bundles.csv` (stacked tables);
-  «Наборы: настройки» (2000063, -> economy: shop_slot_seconds 180, shop_slot_stagger_seconds 60,
+  «Наборы: настройки» (2000063, -> economy: shop_slot_seconds 180, shop_slot_stagger_seconds 45, shop_crystal_usd, shop_ad_crystals_base,
   shop_bonus_chance, shop_bonus_min_seconds, shop_notice_seconds 30, shop_starter_delay_seconds,
   shop_ad_stub_seconds); «Тексты: лавка» (2000030, #shop_*). A bundle's name is NOT a localization
   row: the importer makes `#bundle_<id>` from name_ru/name_en. All numbers are first guesses.
@@ -24,7 +23,7 @@
   900, pauses timeScale, hides the interface behind, tap outside closes, window picture per season
   Resources/Shop/Window_<theme>), `OfferShopHud` (stall icon under the sack: timer, red dot when
   anything can be taken, breathing glow while a free one waits; gold notice for shop_notice_seconds
-  only on a free one, tap opens), `OfferMenuStrip` (three cards in the game menu right of its entries).
+  only on a free one, tap opens), `OfferMenuStrip` (four cards in the game menu right of its entries).
 - **Build:** `Editor/SetupProjectOfferShop.cs` from `Tools/store/offer_shop_art.py` (UI/Shop/*.png +
   layout.json, no words in pictures). The event feed's `LeftColumnTop` moved down one button + timer.
 - **Round 2 (the user, 2026-11-11, after a look in the editor):** a red close seal on the frame's
@@ -48,7 +47,24 @@
 - **Trap (2026-11-11):** never hand-write a bare `.meta` (guid only) for a PNG: Unity imported Close/Counter
   as CUBE textures (`textureShape: 2`), no sprite -> white boxes. Copy a working PNG meta and change the
   guid; `UiTextureImport` now forces `Texture2D`, and the shop build logs any picture that is not a sprite.
-- **Open:** the numbers (the user tunes the sheet); a real ad network; whether the menu cards' place
+- **Round 4 -- four offers (the user, 2026-11-11; built, setup x2, `OfferRotationTests` green, not seen in play):**
+  places `OfferRotation.DefaultPlaces` = goods, goods, crystals for an ad, crystals for money; each
+  place picks only its kind (`normal`/`ad_crystals`/`paid_crystals`), a gift and the starter only on a
+  goods place. Shop stagger 45 s (4 x 45 = the 180 s period, so one change at a time -- a stagger
+  over period/4 makes two slots change together). **1 crystal = $0.01** (`shop_crystal_usd`), **one ad
+  = 10 crystals** (`shop_ad_crystals_base`); no ad cap, every slot reloads after the period. The
+  **bonus %** is computed, a whole number (`OfferRotation.BonusPercent`: ad = crystals/base - 1, paid
+  = crystals x usd / price - 1), shown as a red «+N%» badge when > 0. Crystals for money = a stand-in:
+  the orange «$0.99» button shows «Покупки появятся позже» (`Pay.Money`, `OfferShop.Buy` refuses).
+  Crystal strips look apart: `StripCrystal` (icy blue), `StripPaid` (blue + gold glow); wide green
+  «Смотреть» (greyed with no ad fill) / wide orange price buttons. Strips 150 px high.
+  **«Наборы» layout changed:** one FAMILY per row -- `bundle, kind, weight, l1_amount1..3, l1_price,
+  ... l5_*, res1..3, name_ru, name_en, comment`; the same resources on every level, an empty level
+  group = the family is not offered there (higher families start at level 2-4). The importer makes a
+  bundle `<family>_<level>` per filled level (name key `#bundle_<family>`); crystal kinds fill level 1
+  only and hold for every level (paid: l1_price = USD). 30 goods families, 3 gifts, starter, 5 ad and 5
+  paid crystal offers. Crystal PRICES of goods unchanged on purpose (the user will test first).
+- **Open:** the numbers (the user tunes the sheet); Google Play Billing for the paid offers; a real ad network; whether the menu cards' place
   and the window size (0.8 of the art) suit the phone -- not seen on a device yet.
 
 ## Decided (the user, 2026-11-11)

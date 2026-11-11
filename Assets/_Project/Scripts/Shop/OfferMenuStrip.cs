@@ -63,7 +63,7 @@ namespace CityBuilder.Shop
             if (content.activeSelf != on) content.SetActive(on);
             if (!on) return;
             var now = shop.Now;
-            for (var i = 0; i < cards.Length && i < OfferRotation.SlotCount; i++)
+            for (var i = 0; i < cards.Length && i < shop.Rotation.SlotCount; i++)
             {
                 var card = cards[i];
                 var slot = shop.Rotation.Slots[i];
@@ -77,7 +77,7 @@ namespace CityBuilder.Shop
                     card.lastId = bundle.id;
                     card.shownId = bundle.id;
                     card.shownTaken = -1;
-                    card.name.text = Localization.Get("#bundle_" + bundle.id);
+                    card.name.text = Localization.Get(bundle.nameKey);
                     for (var g = 0; g < card.goodIcons.Length; g++)
                     {
                         var has = g < bundle.goods.Count;

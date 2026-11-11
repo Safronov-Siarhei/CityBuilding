@@ -12,7 +12,7 @@ namespace CityBuilder.EditorTools
     /// <summary>
     /// The sandbox offer shop (the user, 2026-11-11; card Design/features/monetization.md): the window
     /// prefab in Resources (Shop/OfferShopWindow.cs), the stall icon + loud notice on the HUD
-    /// (OfferShopHud), the three cards in the game menu (OfferMenuStrip) and the OfferShop itself.
+    /// (OfferShopHud), the four cards in the game menu (OfferMenuStrip) and the OfferShop itself.
     /// Pieces and places from Tools/store/offer_shop_art.py (UI/Shop/*.png + layout.json, the 1920 x
     /// 1080 reference, y down; a strip's inner rects from its top-left). Words are localization keys
     /// (#shop_*); a bundle's name is #bundle_&lt;id&gt; from the «Наборы» tab.
@@ -38,9 +38,9 @@ namespace CityBuilder.EditorTools
             public float[] frame;
             public float[] title;
             public float pad;
-            public float[] strip0, strip1, strip2;
+            public float[] strip0, strip1, strip2, strip3;
             public float[] close, counter, counter_icon, counter_text, toast;
-            public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp;
+            public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp, badge, wide_play, wide_ad_label;
             public float[] good0, good1, good2, amount0, amount1, amount2;
         }
 
@@ -54,7 +54,7 @@ namespace CityBuilder.EditorTools
             var json = File.ReadAllText(path);
             var raw = JsonUtility.FromJson<OfferShopLayout>(json);
             var lists = JsonUtility.FromJson<OfferShopLists>(Flatten(json));
-            raw.strip0 = lists.strips_0; raw.strip1 = lists.strips_1; raw.strip2 = lists.strips_2;
+            raw.strip0 = lists.strips_0; raw.strip1 = lists.strips_1; raw.strip2 = lists.strips_2; raw.strip3 = lists.strips_3;
             raw.good0 = lists.goods_0; raw.good1 = lists.goods_1; raw.good2 = lists.goods_2;
             raw.amount0 = lists.amounts_0; raw.amount1 = lists.amounts_1; raw.amount2 = lists.amounts_2;
             return raw;
@@ -63,7 +63,7 @@ namespace CityBuilder.EditorTools
         [Serializable]
         private class OfferShopLists
         {
-            public float[] strips_0, strips_1, strips_2, goods_0, goods_1, goods_2, amounts_0, amounts_1, amounts_2;
+            public float[] strips_0, strips_1, strips_2, strips_3, goods_0, goods_1, goods_2, amounts_0, amounts_1, amounts_2;
         }
 
         /// <summary>"strips": [[a],[b],[c]] -> "strips_0": [a], "strips_1": [b], ... (only the three lists of lists).</summary>
@@ -211,7 +211,7 @@ namespace CityBuilder.EditorTools
             PlaceIn(title.rectTransform, screenRect, layout.title);
             Rim(title, new Color(0.35f, 0.05f, 0.06f), 4f);
 
-            var strips = new[] { layout.strip0, layout.strip1, layout.strip2 };
+            var strips = new[] { layout.strip0, layout.strip1, layout.strip2, layout.strip3 };
             var goods = new[] { layout.good0, layout.good1, layout.good2 };
             var amounts = new[] { layout.amount0, layout.amount1, layout.amount2 };
             var views = new OfferShopWindow.SlotView[strips.Length];
@@ -224,8 +224,18 @@ namespace CityBuilder.EditorTools
                 var view = new OfferShopWindow.SlotView { root = slot.gameObject };
                 view.back = ShopImage(slot, "Back", "Strip", box, Grow(box, layout.pad)).gameObject;
                 view.backGold = ShopImage(slot, "BackGold", "StripGold", box, Grow(box, layout.pad)).gameObject;
+                view.backCrystal = ShopImage(slot, "BackCrystal", "StripCrystal", box, Grow(box, layout.pad)).gameObject;
+                view.backPaid = ShopImage(slot, "BackPaid", "StripPaid", box, Grow(box, layout.pad)).gameObject;
 
-                view.name = ShopText(slot, "Name", null, 42, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
+                // the crystal offers' «+N%» over the strip
+                var badge = ShopImage(slot, "Badge", "Badge", box, On(box, layout.badge));
+                view.badgeText = ShopText(badge.transform, "Text", null, 34, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+                StretchFull(view.badgeText.rectTransform);
+                view.badgeText.rectTransform.offsetMin = new Vector2(0f, 6f);
+                Rim(view.badgeText, UiTheme.Rgb(0x600c0e), 3f);
+                view.badge = badge.gameObject;
+
+                view.name = ShopText(slot, "Name", null, 36, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
                 PlaceIn(view.name.rectTransform, box, On(box, layout.name));
                 view.goodIcons = new Image[goods.Length];
                 view.goodAmounts = new Text[goods.Length];
@@ -236,7 +246,7 @@ namespace CityBuilder.EditorTools
                     icon.raycastTarget = false;
                     PlaceIn(icon.rectTransform, box, On(box, goods[g]));
                     view.goodIcons[g] = icon;
-                    var amount = ShopText(slot, $"Amount{g + 1}", null, 50, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
+                    var amount = ShopText(slot, $"Amount{g + 1}", null, 44, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
                     PlaceIn(amount.rectTransform, box, On(box, amounts[g]));
                     Rim(amount, ShopCream, 3f);
                     view.goodAmounts[g] = amount;
@@ -271,6 +281,17 @@ namespace CityBuilder.EditorTools
                 PlaceIn(freeLabel.rectTransform, freeRect, On(box, layout.free_label));
                 Rim(freeLabel, UiTheme.Rgb(0x764608), 3f);
 
+                // crystals for an ad: one wide green button; for money: one wide orange one (a stand-in: no store yet)
+                view.watchWide = ShopButton(slot, "WatchWide", "ButtonGreenWide", box, freeRect);
+                ShopImage(view.watchWide.transform, "Play", "Play", freeRect, On(box, layout.wide_play));
+                view.watchWideLabel = ShopText(view.watchWide.transform, "Label", null, 38, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+                PlaceIn(view.watchWideLabel.rectTransform, freeRect, On(box, layout.wide_ad_label));
+                Rim(view.watchWideLabel, UiTheme.Rgb(0x1c5412), 3f);
+                view.money = ShopButton(slot, "Money", "ButtonOrange", box, freeRect);
+                view.moneyLabel = ShopText(view.money.transform, "Label", null, 50, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+                PlaceIn(view.moneyLabel.rectTransform, freeRect, On(box, layout.free_label));
+                Rim(view.moneyLabel, UiTheme.Rgb(0x7c3408), 3f);
+
                 var stampRect = On(box, layout.stamp);
                 var stamp = ShopImage(slot, "Stamp", "Stamp", box, stampRect);
                 stamp.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -4f);
@@ -295,7 +316,7 @@ namespace CityBuilder.EditorTools
             PlaceIn(counterIcon.rectTransform, layout.counter, layout.counter_icon);
             var counterText = ShopText(counter.transform, "Count", null, 48, UiTheme.Heavy, new Color(1f, 240 / 255f, 210 / 255f), TextAnchor.MiddleRight);
             PlaceIn(counterText.rectTransform, layout.counter, layout.counter_text);
-            var toast = ShopText(window, "NoCrystals", "#shop_no_crystals", 40, UiTheme.Heavy, OfferShopWindow.WarnColor, TextAnchor.MiddleRight);
+            var toast = ShopText(window, "Toast", null, 40, UiTheme.Heavy, OfferShopWindow.WarnColor, TextAnchor.MiddleRight);
             PlaceIn(toast.rectTransform, screenRect, layout.toast);
             Rim(toast, new Color(0.25f, 0.04f, 0.03f), 3f);
             Rim(counterText, new Color(0.24f, 0.14f, 0.06f), 3f);
@@ -429,7 +450,7 @@ namespace CityBuilder.EditorTools
             Anchor(header.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(x + 24f, top - 8f), new Vector2(400f, 50f));
             Rim(header, new Color(0.2f, 0.12f, 0.05f), 3f);
 
-            var cards = new OfferMenuStrip.Card[OfferRotation.SlotCount];
+            var cards = new OfferMenuStrip.Card[OfferRotation.DefaultPlaces.Length];
             for (var i = 0; i < cards.Length; i++)
             {
                 var image = CreateImage(content.transform, $"Card{i + 1}", Color.white);

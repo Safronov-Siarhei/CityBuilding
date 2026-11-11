@@ -19,7 +19,7 @@ namespace CityBuilder.Shop
     /// </summary>
     public class OfferShop : MonoBehaviour
     {
-        public enum Pay { Free, Crystals, Ad }
+        public enum Pay { Free, Crystals, Ad, Money }
 
         private const string StarterGivenPref = "shop.starter_given";
         private const string CrystalsResource = "Crystals";
@@ -55,7 +55,7 @@ namespace CityBuilder.Shop
         private void Start()
         {
             _config = BalanceConfig.Sandbox;
-            Rotation = new OfferRotation(_config.OfferBundles, _config.ShopSlotSeconds, _config.ShopSlotStaggerSeconds,
+            Rotation = new OfferRotation(_config.OfferBundles, OfferRotation.DefaultPlaces, _config.ShopSlotSeconds, _config.ShopSlotStaggerSeconds,
                 _config.ShopBonusChance, _config.ShopBonusMinSeconds, Environment.TickCount);
             _level = CurrentLevel();
             Rotation.Start(Now, _level);
@@ -99,10 +99,13 @@ namespace CityBuilder.Shop
         /// <summary>Takes the slot's bundle the chosen way. False if it cannot be (taken, no crystals, an ad already playing).</summary>
         public bool Buy(int slot, Pay pay)
         {
-            if (Rotation == null || slot < 0 || slot >= OfferRotation.SlotCount) return false;
+            if (Rotation == null || slot < 0 || slot >= Rotation.SlotCount) return false;
             var s = Rotation.Slots[slot];
             if (s.Bundle == null || s.Taken || AdPlayingSlot >= 0) return false;
             if (s.IsFree != (pay == Pay.Free)) return false;
+            // crystals for money: no store yet (the user, 2026-11-11: a stand-in) -- the window says so
+            if (s.IsPaid || pay == Pay.Money) return false;
+            if (s.IsAdOnly && pay != Pay.Ad) return false;
             switch (pay)
             {
                 case Pay.Crystals:

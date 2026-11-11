@@ -131,8 +131,8 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// bundles.csv: the «Наборы» table (header `bundle`: name_ru, name_en, kind, weight,
-        /// level_from, level_to, res1..3/amount1..3, price_crystals) and, after it, the «Наборы:
+        /// bundles.csv: the «Наборы» table (header `bundle`: kind, weight, l1..l5 _amount1..3 + _price,
+        /// res1..3, name_ru, name_en -- the user's layout 2026-11-11) and, after it, the «Наборы:
         /// уровни» table (header `level`: lab_from, citizens_from). A header row switches the table.
         /// </summary>
         private static OfferTables ReadBundles(string path)
@@ -164,32 +164,45 @@ namespace CityBuilder.EditorTools
                     result.Levels.Add(new BalanceConfig.OfferLevel { level = lv, labFrom = ToInt(Cell("lab_from")), citizensFrom = ToInt(Cell("citizens_from")) });
                     continue;
                 }
-                var bundle = new BalanceConfig.OfferBundle
+                // one row = one bundle on every level: l<N>_amount1..3 + l<N>_price per level, the
+                // resources res1..3 shared; a level whose amounts are empty does not offer it. The
+                // crystal kinds fill level 1 only and are the same on every level.
+                var kind = Cell("kind").Length > 0 ? Cell("kind") : "normal";
+                var weight = ToFloat(Cell("weight"));
+                if (weight <= 0f) weight = 1f;
+                var resources = new[] { Cell("res1"), Cell("res2"), Cell("res3") };
+                var known = true;
+                foreach (var res in resources)
                 {
-                    id = first,
-                    kind = Cell("kind").Length > 0 ? Cell("kind") : "normal",
-                    weight = ToFloat(Cell("weight")),
-                    levelFrom = ToInt(Cell("level_from")),
-                    levelTo = ToInt(Cell("level_to")),
-                    priceCrystals = ToInt(Cell("price_crystals")),
-                };
-                for (var g = 1; g <= 3; g++)
-                {
-                    var res = Cell("res" + g);
-                    var amount = ToInt(Cell("amount" + g));
-                    if (res.Length == 0 || amount <= 0) continue;
-                    if (res != "Crystals" && !Enum.TryParse<ResourceType>(res, out _))
-                    {
-                        Debug.LogError($"BalanceImporter: {path}: bundle '{first}' has an unknown resource '{res}'.");
-                        continue;
-                    }
-                    bundle.goods.Add(new BalanceConfig.OfferGood { resource = res, amount = amount });
+                    if (res.Length == 0 || res == "Crystals" || Enum.TryParse<ResourceType>(res, out _)) continue;
+                    Debug.LogError($"BalanceImporter: {path}: bundle '{first}' has an unknown resource '{res}'.");
+                    known = false;
                 }
-                if (bundle.weight <= 0f) bundle.weight = 1f;
-                if (bundle.levelTo < bundle.levelFrom) bundle.levelTo = bundle.levelFrom;
-                result.Bundles.Add(bundle);
-                var names = new Dictionary<string, string> { ["ru"] = Cell("name_ru"), ["en"] = Cell("name_en") };
-                result.Names["#bundle_" + first] = names;
+                if (!known) continue;
+                var crystalKind = kind == "ad_crystals" || kind == "paid_crystals";
+                for (var level = 1; level <= (crystalKind ? 1 : 5); level++)
+                {
+                    var bundle = new BalanceConfig.OfferBundle
+                    {
+                        id = crystalKind ? first : first + "_" + level,
+                        nameKey = "#bundle_" + first,
+                        kind = kind,
+                        weight = weight,
+                        levelFrom = crystalKind ? 1 : level,
+                        levelTo = crystalKind ? 99 : level,
+                    };
+                    var price = Cell($"l{level}_price");
+                    if (kind == "paid_crystals") bundle.priceUsd = ToFloat(price);
+                    else bundle.priceCrystals = ToInt(price);
+                    for (var g = 0; g < 3; g++)
+                    {
+                        var amount = ToInt(Cell($"l{level}_amount{g + 1}"));
+                        if (resources[g].Length == 0 || amount <= 0) continue;
+                        bundle.goods.Add(new BalanceConfig.OfferGood { resource = resources[g], amount = amount });
+                    }
+                    if (bundle.goods.Count > 0) result.Bundles.Add(bundle);
+                }
+                result.Names["#bundle_" + first] = new Dictionary<string, string> { ["ru"] = Cell("name_ru"), ["en"] = Cell("name_en") };
             }
             return result;
         }

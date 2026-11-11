@@ -37,6 +37,8 @@ namespace CityBuilder.Shop
             public GameObject root;
             public GameObject back;
             public GameObject backGold;
+            public GameObject backCrystal;
+            public GameObject backPaid;
             public Image flash;
             public Text name;
             public Image[] goodIcons;
@@ -48,6 +50,12 @@ namespace CityBuilder.Shop
             public Text price;
             public Button free;
             public GameObject stamp;
+            public Button watchWide;
+            public Text watchWideLabel;
+            public Button money;
+            public Text moneyLabel;
+            public GameObject badge;
+            public Text badgeText;
             [NonSerialized] public int shownSeconds = -1;
             [NonSerialized] public string shownId;
             [NonSerialized] public int shownState = -1;
@@ -104,6 +112,8 @@ namespace CityBuilder.Shop
                 slots[i].watch.onClick.AddListener(() => Take(index, OfferShop.Pay.Ad));
                 slots[i].buy.onClick.AddListener(() => Take(index, OfferShop.Pay.Crystals));
                 slots[i].free.onClick.AddListener(() => Take(index, OfferShop.Pay.Free));
+                slots[i].watchWide.onClick.AddListener(() => Take(index, OfferShop.Pay.Ad));
+                slots[i].money.onClick.AddListener(() => Take(index, OfferShop.Pay.Money));
                 slots[i].buyHome = ((RectTransform)slots[i].buy.transform).anchoredPosition;
             }
             _counterHome = counter.anchoredPosition;
@@ -139,17 +149,29 @@ namespace CityBuilder.Shop
         {
             if (_closing || OfferShop.Instance == null) return;
             var s = OfferShop.Instance.Rotation.Slots[slot];
+            if (pay == OfferShop.Pay.Money)
+            {
+                // no store yet: a line says purchases come later
+                Toast("#shop_buy_soon");
+                return;
+            }
             if (pay == OfferShop.Pay.Crystals && s.Bundle != null && Wallet.UpgradeCrystals < s.Bundle.priceCrystals)
             {
                 // not enough: the counter and the button shake red, a line says why
                 _counterShakeT = 0f;
                 slots[slot].shakeT = 0f;
-                _toastLeft = ToastSeconds;
-                toast.gameObject.SetActive(true);
+                Toast("#shop_no_crystals");
                 return;
             }
             OfferShop.Instance.Buy(slot, pay);
             Redraw();
+        }
+
+        private void Toast(string key)
+        {
+            toast.text = Localization.Get(key);
+            _toastLeft = ToastSeconds;
+            toast.gameObject.SetActive(true);
         }
 
         /// <summary>The goods fly from the strip to where they went (OfferRewardFlight), one good after another.</summary>
@@ -198,7 +220,7 @@ namespace CityBuilder.Shop
             DrawCounter(dt);
             var now = shop.Now;
             var adReady = RewardedAds.IsReady;
-            for (var i = 0; i < slots.Length && i < OfferRotation.SlotCount; i++)
+            for (var i = 0; i < slots.Length && i < shop.Rotation.SlotCount; i++)
                 Draw(slots[i], shop.Rotation.Slots[i], i == shop.AdPlayingSlot, adReady, now, dt);
         }
 
@@ -238,8 +260,14 @@ namespace CityBuilder.Shop
             var bundle = slot.Bundle;
             view.root.SetActive(bundle != null);
             if (bundle == null) return;
-            // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show)
-            var state = slot.Taken ? 0 : slot.IsFree ? 1 : adPlaying ? 3 : adReady ? 2 : 4;
+            // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show),
+            // 5 crystals for an ad, 6 its ad playing, 7 no ad to show, 8 crystals for money
+            int state;
+            if (slot.Taken) state = 0;
+            else if (slot.IsFree) state = 1;
+            else if (slot.IsPaid) state = 8;
+            else if (slot.IsAdOnly) state = adPlaying ? 6 : adReady ? 5 : 7;
+            else state = adPlaying ? 3 : adReady ? 2 : 4;
             if (view.shownId != bundle.id || view.shownState != state)
             {
                 // a new bundle (not the window's first look): pop it in with a flash
@@ -247,9 +275,16 @@ namespace CityBuilder.Shop
                 view.lastId = bundle.id;
                 view.shownId = bundle.id;
                 view.shownState = state;
-                view.name.text = Localization.Get("#bundle_" + bundle.id);
-                view.back.SetActive(!slot.IsFree);
+                view.name.text = Localization.Get(bundle.nameKey);
+                var crystalOffer = slot.IsAdOnly || slot.IsPaid;
+                view.back.SetActive(!slot.IsFree && !crystalOffer);
                 view.backGold.SetActive(slot.IsFree);
+                view.backCrystal.SetActive(slot.IsAdOnly);
+                view.backPaid.SetActive(slot.IsPaid);
+                var config = BalanceConfig.Sandbox;
+                var bonus = OfferRotation.BonusPercent(bundle, config.ShopCrystalUsd, config.ShopAdCrystalsBase);
+                view.badge.SetActive(bonus > 0);
+                if (bonus > 0) view.badgeText.text = Localization.Format("#shop_bonus", bonus);
                 for (var g = 0; g < view.goodIcons.Length; g++)
                 {
                     var has = g < bundle.goods.Count;
@@ -263,7 +298,14 @@ namespace CityBuilder.Shop
                 Dim(view, state == 0);
                 view.free.gameObject.SetActive(state == 1);
                 view.watch.gameObject.SetActive(state == 2 || state == 3);
-                view.buy.gameObject.SetActive(state >= 2);
+                view.buy.gameObject.SetActive(state >= 2 && state <= 4);
+                view.watchWide.gameObject.SetActive(state >= 5 && state <= 7);
+                view.watchWide.interactable = state == 5;
+                view.watchWideLabel.text = Localization.Get(state == 6 ? "#shop_ad_playing" : "#shop_watch");
+                view.money.gameObject.SetActive(state == 8);
+                if (state == 8)
+                    view.moneyLabel.text = Localization.Format("#shop_price_usd",
+                        bundle.priceUsd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
                 view.watch.interactable = state == 2;
                 view.buy.interactable = state == 2 || state == 4;
                 view.watchLabel.text = Localization.Get(state == 3 ? "#shop_ad_playing" : "#shop_watch");
