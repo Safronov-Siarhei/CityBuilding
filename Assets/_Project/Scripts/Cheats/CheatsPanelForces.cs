@@ -311,6 +311,8 @@ namespace CityBuilder.Cheats
             DrawRenderTuning();
 
             if (Button("Окно оценки игры")) { SetOpen(false); RateUsWindow.Show(); }
+            if (Button(Shop.RewardedAds.NoFillForTest ? "Лавка: реклама ЕСТЬ (сейчас нет)" : "Лавка: рекламы НЕТ (сейчас есть)"))
+                Shop.RewardedAds.NoFillForTest = !Shop.RewardedAds.NoFillForTest;
 
             Header("Сохранение");
             var save = FindAnyObjectByType<GameSaveController>();

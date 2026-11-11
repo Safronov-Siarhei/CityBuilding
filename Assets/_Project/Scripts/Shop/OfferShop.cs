@@ -113,6 +113,7 @@ namespace CityBuilder.Shop
                     Give(s);
                     return true;
                 case Pay.Ad:
+                    if (!RewardedAds.IsReady) return false;
                     StartCoroutine(PlayAd(slot, s.Bundle));
                     return true;
                 default:

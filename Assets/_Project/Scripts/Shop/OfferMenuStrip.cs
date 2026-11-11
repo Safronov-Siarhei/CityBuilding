@@ -24,6 +24,11 @@ namespace CityBuilder.Shop
             [NonSerialized] public string shownId;
             [NonSerialized] public int shownSeconds = -1;
             [NonSerialized] public int shownTaken = -1;
+            [NonSerialized] public bool shownWarn;
+            [NonSerialized] public string lastId;
+            [NonSerialized] public float changeT = 1f;
+            [NonSerialized] public Color timerColor;
+            [NonSerialized] public Vector3 home;
         }
 
         [SerializeField] private GameObject content;
@@ -33,7 +38,12 @@ namespace CityBuilder.Shop
 
         private void Awake()
         {
-            foreach (var card in cards) card.button.onClick.AddListener(OfferShopWindow.Show);
+            foreach (var card in cards)
+            {
+                card.button.onClick.AddListener(OfferShopWindow.Show);
+                card.timerColor = card.timer.color;
+                card.home = card.button.transform.localScale;
+            }
         }
 
         private void OnEnable()
@@ -62,6 +72,9 @@ namespace CityBuilder.Shop
                 if (bundle == null) continue;
                 if (card.shownId != bundle.id)
                 {
+                    // a new bundle while the menu is up: pop it in
+                    if (card.lastId != null && card.lastId != bundle.id) card.changeT = 0f;
+                    card.lastId = bundle.id;
                     card.shownId = bundle.id;
                     card.shownTaken = -1;
                     card.name.text = Localization.Get("#bundle_" + bundle.id);
@@ -84,6 +97,19 @@ namespace CityBuilder.Shop
                     card.shownTaken = taken;
                     card.shownSeconds = seconds;
                     card.timer.text = slot.Taken ? Localization.Get("#shop_taken") : OfferShopWindow.Clock(seconds);
+                }
+                var warn = !slot.Taken && slot.EndsAt - now <= BalanceConfig.Sandbox.ShopTimerWarnSeconds;
+                if (warn != card.shownWarn)
+                {
+                    card.shownWarn = warn;
+                    card.timer.color = warn ? OfferShopWindow.WarnColor : card.timerColor;
+                }
+                if (card.changeT < 1f)
+                {
+                    card.changeT = Mathf.Min(1f, card.changeT + Time.unscaledDeltaTime / 0.4f);
+                    var k = card.changeT - 1f;
+                    var back = 1f + 2.2f * k * k * k + 1.2f * k * k;
+                    card.button.transform.localScale = new Vector3(card.home.x, card.home.y * Mathf.LerpUnclamped(0.2f, 1f, back), 1f);
                 }
             }
         }

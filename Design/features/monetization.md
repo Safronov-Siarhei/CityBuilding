@@ -27,6 +27,19 @@
   only on a free one, tap opens), `OfferMenuStrip` (three cards in the game menu right of its entries).
 - **Build:** `Editor/SetupProjectOfferShop.cs` from `Tools/store/offer_shop_art.py` (UI/Shop/*.png +
   layout.json, no words in pictures). The event feed's `LeftColumnTop` moved down one button + timer.
+- **Round 2 (the user, 2026-11-11, after a look in the editor):** a red close seal on the frame's
+  top-right (the tap outside still closes); the HUD dot half on the button (its centre on the rim at
+  45°); the notice's countdown bar a plain rectangle (no rounded ends; `Bar.png` deleted); the
+  player's crystals (count + icon) on the frame's top edge, and a crystal buy without enough shakes the
+  counter and the button red with «Не хватает кристаллов» under it for 1.8 s (the feed is hidden
+  behind the window, so the line is in it); no ad fill (`RewardedAds.IsReady`, a stand-in; cheat
+  «Лавка: рекламы НЕТ») -> only the crystal button; a timer in its last `shop_timer_warn_seconds`
+  (30) is red and pulses (the window's strips and the menu cards); a new bundle pops in (scale Y
+  0.2 -> 1 with overshoot) with a cream flash (strips) / a pop (menu cards). Not compiled in batchmode
+  (the user's editor was open) -- first setup will tell.
+- **Waiting on the user:** which «resources received» effect (options offered 2026-11-11: icons fly
+  to the HUD resource bar / to the sack; a «+N» float per good; the strip's goods bursting into the
+  stamp; a counter roll on the resource bar).
 - **Open:** the numbers (the user tunes the sheet); a real ad network; whether the menu cards' place
   and the window size (0.8 of the art) suit the phone -- not seen on a device yet.
 

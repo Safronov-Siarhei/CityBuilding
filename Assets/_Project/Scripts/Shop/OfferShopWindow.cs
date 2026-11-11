@@ -11,8 +11,12 @@ namespace CityBuilder.Shop
     /// The shop's window «Лавка» (mock-up Design/store/OfferShop_Mockup.png, the rate-us window's
     /// style): three parchment strips, each a bundle with its goods and its timer, and per state
     /// «Смотреть» + the blue crystal price, the gold «Забрать бесплатно», or the «Получено» stamp.
-    /// The game pauses while it is up; a tap outside the frame closes it. One prefab in Resources
-    /// (SetupProjectOfferShop); the window's picture per map season is loaded for it alone.
+    /// The game pauses while it is up; the red seal or a tap outside the frame closes it. The player's
+    /// crystals sit on the frame's top-right; a crystal buy without enough shakes them red with a line
+    /// under them. «Смотреть» shows only while an ad is ready (<see cref="RewardedAds"/>). A timer
+    /// turns red and pulses in its last shop_timer_warn_seconds; a new bundle pops in with a flash.
+    /// One prefab in Resources (SetupProjectOfferShop); the window's picture per map season is
+    /// loaded for it alone.
     /// </summary>
     public class OfferShopWindow : MonoBehaviour
     {
@@ -20,6 +24,12 @@ namespace CityBuilder.Shop
         private const float PopSeconds = 0.22f;
         private const float CloseSeconds = 0.15f;
         private const float PopFromScale = 0.85f;
+        private const float ChangeSeconds = 0.45f;
+        private const float ShakeSeconds = 0.45f;
+        private const float ToastSeconds = 1.8f;
+        private static readonly Color TimerColor = new Color(1f, 240 / 255f, 210 / 255f);
+        /// <summary>The warning red of a running-out timer and of missing crystals.</summary>
+        public static readonly Color WarnColor = new Color(1f, 0.33f, 0.27f);
 
         [Serializable]
         public class SlotView
@@ -27,6 +37,7 @@ namespace CityBuilder.Shop
             public GameObject root;
             public GameObject back;
             public GameObject backGold;
+            public Image flash;
             public Text name;
             public Image[] goodIcons;
             public Text[] goodAmounts;
@@ -40,22 +51,36 @@ namespace CityBuilder.Shop
             [NonSerialized] public int shownSeconds = -1;
             [NonSerialized] public string shownId;
             [NonSerialized] public int shownState = -1;
+            [NonSerialized] public bool shownWarn;
+            [NonSerialized] public string lastId;
+            [NonSerialized] public float changeT = ChangeSeconds;
+            [NonSerialized] public float shakeT = ShakeSeconds;
+            [NonSerialized] public Vector2 buyHome;
         }
 
         [SerializeField] private CanvasGroup group;
         [SerializeField] private RectTransform window;
         [SerializeField] private Button shade;
+        [SerializeField] private Button close;
         [SerializeField] private Image picture;
         [SerializeField] private float size = 1f;
         [SerializeField] private SlotView[] slots = new SlotView[0];
         [SerializeField] private ResourceIconLibrary icons;
         [SerializeField] private Sprite crystal;
+        [SerializeField] private RectTransform counter;
+        [SerializeField] private Text counterText;
+        [SerializeField] private Text toast;
 
         private static OfferShopWindow _current;
         private readonly System.Collections.Generic.List<Canvas> _hidden = new System.Collections.Generic.List<Canvas>();
         private float _t;
         private bool _closing;
         private float _timeScaleBefore = 1f;
+        private int _shownCrystals = -1;
+        private float _counterShakeT = ShakeSeconds;
+        private Vector2 _counterHome;
+        private float _toastLeft;
+        private float _warnSeconds;
 
         public static bool IsOpen => _current != null;
 
@@ -71,13 +96,18 @@ namespace CityBuilder.Shop
         private void Awake()
         {
             shade.onClick.AddListener(Close);
+            close.onClick.AddListener(Close);
             for (var i = 0; i < slots.Length; i++)
             {
                 var index = i;
                 slots[i].watch.onClick.AddListener(() => Take(index, OfferShop.Pay.Ad));
                 slots[i].buy.onClick.AddListener(() => Take(index, OfferShop.Pay.Crystals));
                 slots[i].free.onClick.AddListener(() => Take(index, OfferShop.Pay.Free));
+                slots[i].buyHome = ((RectTransform)slots[i].buy.transform).anchoredPosition;
             }
+            _counterHome = counter.anchoredPosition;
+            toast.gameObject.SetActive(false);
+            _warnSeconds = BalanceConfig.Sandbox.ShopTimerWarnSeconds;
             group.alpha = 0f;
             window.localScale = Vector3.one * (PopFromScale * size);
             _timeScaleBefore = Time.timeScale;
@@ -102,6 +132,16 @@ namespace CityBuilder.Shop
         private void Take(int slot, OfferShop.Pay pay)
         {
             if (_closing || OfferShop.Instance == null) return;
+            var s = OfferShop.Instance.Rotation.Slots[slot];
+            if (pay == OfferShop.Pay.Crystals && s.Bundle != null && Wallet.UpgradeCrystals < s.Bundle.priceCrystals)
+            {
+                // not enough: the counter and the button shake red, a line says why
+                _counterShakeT = 0f;
+                slots[slot].shakeT = 0f;
+                _toastLeft = ToastSeconds;
+                toast.gameObject.SetActive(true);
+                return;
+            }
             OfferShop.Instance.Buy(slot, pay);
             Redraw();
         }
@@ -119,7 +159,8 @@ namespace CityBuilder.Shop
 
         private void Update()
         {
-            _t += Time.unscaledDeltaTime;
+            var dt = Time.unscaledDeltaTime;
+            _t += dt;
             if (_closing)
             {
                 group.alpha = 1f - Mathf.Clamp01(_t / CloseSeconds);
@@ -128,8 +169,7 @@ namespace CityBuilder.Shop
             }
             var k = Mathf.Clamp01(_t / PopSeconds);
             group.alpha = k;
-            var back = 1f + 2.2f * Mathf.Pow(k - 1f, 3f) + 1.2f * Mathf.Pow(k - 1f, 2f);
-            window.localScale = Vector3.one * (size * Mathf.LerpUnclamped(PopFromScale, 1f, back));
+            window.localScale = Vector3.one * (size * Mathf.LerpUnclamped(PopFromScale, 1f, Back(k)));
 
             var shop = OfferShop.Instance;
             if (shop == null || shop.Rotation == null || !OfferShop.Allowed)
@@ -137,20 +177,56 @@ namespace CityBuilder.Shop
                 Close();
                 return;
             }
+            DrawCounter(dt);
             var now = shop.Now;
+            var adReady = RewardedAds.IsReady;
             for (var i = 0; i < slots.Length && i < OfferRotation.SlotCount; i++)
-                Draw(slots[i], shop.Rotation.Slots[i], i == shop.AdPlayingSlot, now);
+                Draw(slots[i], shop.Rotation.Slots[i], i == shop.AdPlayingSlot, adReady, now, dt);
+        }
+
+        /// <summary>An ease with a small overshoot, 0..1.</summary>
+        private static float Back(float k) => 1f + 2.2f * Mathf.Pow(k - 1f, 3f) + 1.2f * Mathf.Pow(k - 1f, 2f);
+
+        /// <summary>A decaying side-to-side shake for t in 0..ShakeSeconds.</summary>
+        private static float Shake(float t) => t >= ShakeSeconds ? 0f : Mathf.Sin(t * 60f) * 14f * (1f - t / ShakeSeconds);
+
+        private void DrawCounter(float dt)
+        {
+            var crystals = Wallet.UpgradeCrystals;
+            if (crystals != _shownCrystals)
+            {
+                _shownCrystals = crystals;
+                counterText.text = crystals.ToString();
+            }
+            if (_counterShakeT < ShakeSeconds)
+            {
+                _counterShakeT += dt;
+                counter.anchoredPosition = _counterHome + new Vector2(Shake(_counterShakeT), 0f);
+                counterText.color = _counterShakeT < ShakeSeconds ? WarnColor : TimerColor;
+            }
+            if (_toastLeft > 0f)
+            {
+                _toastLeft -= dt;
+                var c = toast.color;
+                c.a = Mathf.Clamp01(_toastLeft / 0.4f);
+                toast.color = c;
+                if (_toastLeft <= 0f) toast.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>Writes a strip only when something on it changed (no strings built per frame).</summary>
-        private void Draw(SlotView view, OfferSlot slot, bool adPlaying, double now)
+        private void Draw(SlotView view, OfferSlot slot, bool adPlaying, bool adReady, double now, float dt)
         {
             var bundle = slot.Bundle;
             view.root.SetActive(bundle != null);
             if (bundle == null) return;
-            var state = slot.Taken ? 0 : slot.IsFree ? 1 : adPlaying ? 3 : 2;
+            // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show)
+            var state = slot.Taken ? 0 : slot.IsFree ? 1 : adPlaying ? 3 : adReady ? 2 : 4;
             if (view.shownId != bundle.id || view.shownState != state)
             {
+                // a new bundle (not the window's first look): pop it in with a flash
+                if (view.lastId != null && view.lastId != bundle.id) view.changeT = 0f;
+                view.lastId = bundle.id;
                 view.shownId = bundle.id;
                 view.shownState = state;
                 view.name.text = Localization.Get("#bundle_" + bundle.id);
@@ -167,18 +243,57 @@ namespace CityBuilder.Shop
                 }
                 view.stamp.SetActive(state == 0);
                 view.free.gameObject.SetActive(state == 1);
-                view.watch.gameObject.SetActive(state >= 2);
+                view.watch.gameObject.SetActive(state == 2 || state == 3);
                 view.buy.gameObject.SetActive(state >= 2);
                 view.watch.interactable = state == 2;
-                view.buy.interactable = state == 2;
+                view.buy.interactable = state == 2 || state == 4;
                 view.watchLabel.text = Localization.Get(state == 3 ? "#shop_ad_playing" : "#shop_watch");
                 view.price.text = bundle.priceCrystals.ToString();
             }
-            var seconds = Mathf.Max(0, Mathf.CeilToInt((float)(slot.EndsAt - now)));
+
+            var left = (float)(slot.EndsAt - now);
+            var seconds = Mathf.Max(0, Mathf.CeilToInt(left));
             if (seconds != view.shownSeconds)
             {
                 view.shownSeconds = seconds;
                 view.timer.text = Clock(seconds);
+            }
+            // the last seconds: red and a pulse, so the player sees it is about to go
+            var warn = !slot.Taken && left <= _warnSeconds;
+            var pill = view.timer.transform.parent;
+            if (warn != view.shownWarn)
+            {
+                view.shownWarn = warn;
+                view.timer.color = warn ? WarnColor : TimerColor;
+                if (!warn) pill.localScale = Vector3.one;
+            }
+            if (warn)
+            {
+                var p = 1f + 0.08f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f));
+                pill.localScale = new Vector3(p, p, 1f);
+            }
+
+            var rt = (RectTransform)view.root.transform;
+            if (view.changeT < ChangeSeconds)
+            {
+                view.changeT += dt;
+                var c = Mathf.Clamp01(view.changeT / ChangeSeconds);
+                rt.localScale = new Vector3(1f, Mathf.LerpUnclamped(0.2f, 1f, Back(c)), 1f);
+                var f = view.flash.color;
+                f.a = 0.85f * (1f - c);
+                view.flash.color = f;
+                view.flash.gameObject.SetActive(c < 1f);
+            }
+            else if (view.flash.gameObject.activeSelf)
+            {
+                rt.localScale = Vector3.one;
+                view.flash.gameObject.SetActive(false);
+            }
+
+            if (view.shakeT < ShakeSeconds)
+            {
+                view.shakeT += dt;
+                ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + new Vector2(Shake(view.shakeT), 0f);
             }
         }
 

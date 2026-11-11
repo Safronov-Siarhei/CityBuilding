@@ -39,6 +39,7 @@ namespace CityBuilder.EditorTools
             public float[] title;
             public float pad;
             public float[] strip0, strip1, strip2;
+            public float[] close, counter, counter_icon, counter_text, toast;
             public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp;
             public float[] good0, good1, good2, amount0, amount1, amount2;
         }
@@ -270,10 +271,33 @@ namespace CityBuilder.EditorTools
                 var stampText = ShopText(stamp.transform, "Text", "#shop_taken", 48, UiTheme.Heavy, UiTheme.Rgb(0x348424), TextAnchor.MiddleCenter);
                 StretchFull(stampText.rectTransform);
                 view.stamp = stamp.gameObject;
+                // a new bundle's flash, over the whole strip (OfferShopWindow fades it)
+                view.flash = ShopImage(slot, "Flash", "Strip", box, Grow(box, layout.pad));
+                view.flash.color = new Color(1f, 0.97f, 0.85f, 0f);
+                view.flash.gameObject.SetActive(false);
                 views[i] = view;
             }
 
+            // the player's crystals on the frame's top-right, and the line when they are too few
+            var counter = ShopImage(window, "Crystals", "Counter", screenRect, layout.counter);
+            var counterIcon = CreateImage(counter.transform, "Icon", Color.white);
+            counterIcon.sprite = CrystalIcon();
+            counterIcon.preserveAspect = true;
+            counterIcon.raycastTarget = false;
+            PlaceIn(counterIcon.rectTransform, layout.counter, layout.counter_icon);
+            var counterText = ShopText(counter.transform, "Count", null, 48, UiTheme.Heavy, new Color(1f, 240 / 255f, 210 / 255f), TextAnchor.MiddleRight);
+            PlaceIn(counterText.rectTransform, layout.counter, layout.counter_text);
+            var toast = ShopText(window, "NoCrystals", "#shop_no_crystals", 40, UiTheme.Heavy, OfferShopWindow.WarnColor, TextAnchor.MiddleRight);
+            PlaceIn(toast.rectTransform, screenRect, layout.toast);
+            Rim(toast, new Color(0.25f, 0.04f, 0.03f), 3f);
+            // the close seal (the user, 2026-11-11: a tap outside closes too, the seal shows how)
+            var close = ShopButton(window, "Close", "Close", screenRect, layout.close);
+
             var so = new SerializedObject(screen);
+            so.FindProperty("close").objectReferenceValue = close;
+            so.FindProperty("counter").objectReferenceValue = counter.rectTransform;
+            so.FindProperty("counterText").objectReferenceValue = counterText;
+            so.FindProperty("toast").objectReferenceValue = toast;
             so.FindProperty("group").objectReferenceValue = root.GetComponent<CanvasGroup>();
             so.FindProperty("window").objectReferenceValue = window;
             so.FindProperty("shade").objectReferenceValue = shadeButton;
@@ -326,7 +350,9 @@ namespace CityBuilder.EditorTools
             var dot = CreateImage(holder, "Dot", Color.white);
             dot.sprite = ShopSprite("Dot");
             dot.raycastTarget = false;
-            Anchor(dot.rectTransform, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-8f, -8f), new Vector2(32f, 32f));
+            // half of it on the round button (the user, 2026-11-11): its centre on the button's rim at 45 degrees
+            var rim = WorkforceButtonSize * 0.5f * 0.7071f;
+            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(rim, rim), new Vector2(32f, 32f));
 
             // the loud notice, to the right of the icon
             const float noticeScale = 0.8f;
@@ -349,12 +375,10 @@ namespace CityBuilder.EditorTools
             var noticeBody = ShopText(notice.transform, "Body", "#shop_notice_body", 26, UiTheme.Regular, ShopInk, TextAnchor.MiddleLeft);
             Anchor(noticeBody.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(m + 112f, -m - 50f), new Vector2(nw - m * 2 - 120f, 36f));
             var track = CreateImage(notice.transform, "Track", new Color(218 / 255f, 184 / 255f, 128 / 255f));
-            track.sprite = ShopSprite("Bar");
             track.raycastTarget = false;
             var barW = nw - m * 2 - 40f;
             Anchor(track.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(m + 20f, m + 8f), new Vector2(barW, 12f));
             var fill = CreateImage(track.transform, "Fill", new Color(230 / 255f, 166 / 255f, 36 / 255f));
-            fill.sprite = ShopSprite("Bar");
             fill.raycastTarget = false;
             Anchor(fill.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(barW, 12f));
 

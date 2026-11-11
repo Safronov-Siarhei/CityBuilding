@@ -579,6 +579,8 @@ namespace CityBuilder.Core
         [SerializeField] private float shopNoticeSeconds = 30f;
         [SerializeField] private float shopStarterDelaySeconds = 120f;
         [SerializeField] private float shopAdStubSeconds = 2f;
+        // a bundle's timer turns red and pulses this many seconds before it changes (shop_timer_warn_seconds)
+        [SerializeField] private float shopTimerWarnSeconds = 30f;
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
@@ -1204,6 +1206,7 @@ namespace CityBuilder.Core
         public float ShopNoticeSeconds => shopNoticeSeconds;
         public float ShopStarterDelaySeconds => shopStarterDelaySeconds;
         public float ShopAdStubSeconds => shopAdStubSeconds;
+        public float ShopTimerWarnSeconds => shopTimerWarnSeconds;
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
@@ -2121,6 +2124,7 @@ namespace CityBuilder.Core
             shopNoticeSeconds = Read(economy, "shop_notice_seconds", shopNoticeSeconds);
             shopStarterDelaySeconds = Read(economy, "shop_starter_delay_seconds", shopStarterDelaySeconds);
             shopAdStubSeconds = Read(economy, "shop_ad_stub_seconds", shopAdStubSeconds);
+            shopTimerWarnSeconds = Read(economy, "shop_timer_warn_seconds", shopTimerWarnSeconds);
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);

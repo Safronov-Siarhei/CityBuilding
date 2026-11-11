@@ -193,10 +193,19 @@ def card():
     save(img, 'Card')
 
 
-def bar():
-    img = layer(64, 16)
-    ImageDraw.Draw(img).rounded_rectangle((0, 0, 63, 15), 7, fill=(255, 255, 255))
-    save(img, 'Bar')
+def close():
+    """The close button (the user, 2026-11-11: a tap outside closes too, but a button shows how): a round red seal with a cream cross."""
+    s = 4
+    img = layer(120 * s, 120 * s)
+    d = ImageDraw.Draw(img)
+    d.ellipse((6 * s, 12 * s, 114 * s, 118 * s), fill=(70, 10, 12))
+    d.ellipse((6 * s, 4 * s, 114 * s, 110 * s), fill=(196, 44, 42), outline=(90, 14, 16), width=6 * s)
+    d.ellipse((20 * s, 14 * s, 100 * s, 56 * s), fill=(228, 92, 82))
+    d.ellipse((14 * s, 12 * s, 106 * s, 102 * s), fill=(196, 44, 42))
+    for a, b in (((38, 38), (82, 78)), ((82, 38), (38, 78))):
+        d.line((a[0] * s, a[1] * s, b[0] * s, b[1] * s), fill=(90, 14, 16), width=20 * s)
+        d.line((a[0] * s, a[1] * s, b[0] * s, b[1] * s), fill=(255, 240, 200), width=12 * s)
+    save(img.resize((120, 120), Image.LANCZOS), 'Close')
 
 
 os.makedirs(OUT, exist_ok=True)
@@ -210,13 +219,14 @@ button('ButtonGold', 476, GOLD)
 play()
 pill('Timer', 190, 68, 17)
 pill('HudTimer', 92, 36, 0)
+pill('Counter', 260, 80, 0)
+close()
 stamp()
 stall()
 glow()
 dot()
 notice()
 card()
-bar()
 
 
 def rel(x0, y0, x1, y1):
@@ -228,6 +238,13 @@ layout = {
     'window': list(CROP),
     'frame': [X0, Y0, X1, Y1],
     'title': [RX0 + 20, RY0 + 8, RX1 - 20, RY1 - 6],
+    # the close seal on the frame's top-right corner; the player's crystals left of it, on the frame's top edge
+    'close': [X1 - 92, Y0 - 44, X1 + 28, Y0 + 76],
+    'counter': [X1 - 400, Y0 - 40, X1 - 140, Y0 + 40],
+    'counter_icon': [X1 - 214, Y0 - 34, X1 - 146, Y0 + 34],
+    'counter_text': [X1 - 384, Y0 - 40, X1 - 222, Y0 + 40],
+    # «Не хватает кристаллов», under the counter for a moment
+    'toast': [X1 - 760, Y0 + 44, X1 - 60, Y0 + 92],
     # each strip's box; its picture is the box grown by `pad` (shadow, glow)
     'strips': [[SX0, t, SX1, t + SH] for t in TOPS],
     'pad': PAD,
