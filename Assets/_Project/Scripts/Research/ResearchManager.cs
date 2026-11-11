@@ -157,6 +157,9 @@ namespace CityBuilder.Research
         /// one with the most scientists on it. Two laboratories are not a designed case -- this only
         /// has to be predictable rather than clever.
         /// </summary>
+        /// <summary>The town's Laboratory, or null (BuildHints flies there).</summary>
+        public BuildingInstance Laboratory => Lab;
+
         private BuildingInstance Lab
         {
             get

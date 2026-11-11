@@ -281,21 +281,42 @@ namespace CityBuilder.UI
             foreach (var buildingButton in _buildingButtons)
             {
                 var building = buildingButton.Building;
-                // A building nobody has researched yet is absent, not greyed: the hotbar is a row of
-                // icons with no room to explain itself, and the Laboratory's window is where the
-                // player is told what is still locked and what it costs.
+                // A building not researched yet, or waiting on another, stands under a padlock in the
+                // sandbox (the user, 2026-11-11): a tap leads to what it waits on (BuildHints) -- it used to
+                // be absent, and the player never learned it existed.
                 var show = building != null
                            && (Tutorial.TutorialMode.IsActive
                                ? Tutorial.TutorialRules.Allows(building)     // whatever its category: the tutorial's one tab
                                : building.category == category
-                           && (Invasion.InvasionRules.Active
-                               ? Invasion.InvasionRules.Allows(building)   // a run's nine, nothing to research
-                               : Research.ResearchManager.BuildingUnlocked(building.buildingName)));
+                           && (!Invasion.InvasionRules.Active || Invasion.InvasionRules.Allows(building)));   // a run's nine
                 buildingButton.gameObject.SetActive(show);
                 if (show && (Invasion.InvasionRules.Active || Tutorial.TutorialMode.IsActive)) ShowLimit(buildingButton);
+                if (show) ShowLock(buildingButton);
             }
 
             FitCardsRow();
+        }
+
+        private float _lockCheck;
+
+        /// <summary>A building put down or lost changes what waits on it: the padlocks are looked at twice a second while the row is open.</summary>
+        private void LateUpdate()
+        {
+            if (!_open || _buildingButtons == null) return;
+            _lockCheck -= Time.unscaledDeltaTime;
+            if (_lockCheck > 0f) return;
+            _lockCheck = 0.5f;
+            foreach (var card in _buildingButtons)
+                if (card != null && card.gameObject.activeSelf) ShowLock(card);
+        }
+
+        private static void ShowLock(HotbarButtonHandler card)
+        {
+            var shade = card.transform.Find("LockShade");
+            if (shade == null) return;
+            var locked = BuildHints.IsLocked(card.Building);
+            if (shade.gameObject.activeSelf != locked) shade.gameObject.SetActive(locked);
+            if (locked && shade.GetSiblingIndex() != card.transform.childCount - 1) shade.SetAsLastSibling();
         }
 
         /// <summary>

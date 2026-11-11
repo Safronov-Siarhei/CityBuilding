@@ -58,6 +58,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [construction-look](construction-look.md) | the building wrapped in a construction net inside scaffolding while building/upgrading, the dust finish | стройка, леса, сетка, стройплощадка, пыль, эффект окончания стройки |
 | [invasion-newyear](invasion-newyear.md) | the New Year Invasion map: winter fir map, tree, gifts and the Thief, blizzard, midnight salute, Ice Shaman | новогодняя карта, подарки, воришка, метель, куранты, шаман |
 | **Interface & meta** | | |
+| [hints](hints.md) | sandbox «what is missing»: padlock on build cards, arrow + blink leading to the needed building, its «Улучшить», or the Laboratory's research; chains to the first doable step; BUILT 2026-11-11, not played | подсказки, замок, стрелка, не хватает здания, нужно исследование |
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | direction decided; sandbox offer shop BUILT: 4 offers (2 goods, crystals for an ad, crystals for money -- a stand-in), bundles sheet by family x 5 levels, bonus % badge; ideas: paid looks | монетизация, реклама, покупки |

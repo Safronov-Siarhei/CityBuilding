@@ -13,7 +13,14 @@ namespace CityBuilder.UI
 
         public void SelectThisBuilding()
         {
-            if (buildingPlacer != null && building != null) buildingPlacer.SelectBuilding(Building);
+            if (buildingPlacer == null || building == null) return;
+            // under a padlock (sandbox): to what it waits on -- a building's card or the Laboratory (the user, 2026-11-11)
+            if (BuildHints.IsLocked(Building))
+            {
+                BuildHints.LeadToBuild(Building);
+                return;
+            }
+            buildingPlacer.SelectBuilding(Building);
         }
     }
 }

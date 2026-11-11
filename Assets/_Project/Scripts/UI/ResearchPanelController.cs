@@ -140,6 +140,27 @@ namespace CityBuilder.UI
         /// <summary>The card is up.</summary>
         public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
 
+        /// <summary>«Улучшить лабораторию» at the foot (BuildHints points at it), or null while hidden.</summary>
+        public RectTransform LabUpgradeButton
+        {
+            get
+            {
+                var button = upgradeControls != null && upgradeControls.activeInHierarchy ? upgradeControls.GetComponentInChildren<Button>() : null;
+                return button != null ? (RectTransform)button.transform : null;
+            }
+        }
+
+        /// <summary>The button under this topic's level picture, on its tab (switched to), or null if it has no row.</summary>
+        public RectTransform ActionOf(ResearchTopic topic)
+        {
+            if (topic == null) return null;
+            var units = topic.Kind != ResearchKind.UnlockBuilding && topic.Kind != ResearchKind.BuildingLevel;
+            if (units) SelectUnitsTab();
+            else SelectBuildingsTab();
+            var cell = CellOf(topic);
+            return cell != null && cell.Action != null ? (RectTransform)cell.Action.transform : null;
+        }
+
         /// <summary>What the bubble over a picture says while it is up, for the tests.</summary>
         public string BubbleText => bubble != null && bubble.gameObject.activeSelf && bubbleText != null ? bubbleText.text : string.Empty;
 
@@ -294,6 +315,13 @@ namespace CityBuilder.UI
             if (blocker == Localization.Get("#research_blocked_coins")) Flash(coinsLabel);
             else if (blocker == Localization.Get("#research_blocked_crystals")) Flash(crystalsLabel);
             else if (cell != null) ShowBubble(cell, blocker ?? Localization.Get("#research_blocked_unknown"));
+            // what it waits on (the user, 2026-11-11): a bigger Laboratory -> «Улучшить лабораторию»; the level before -> its button
+            if (topic != null && BuildHints.Allowed)
+            {
+                if (research.Laboratory != null && research.LabLevel < topic.RequiredLabLevel) GuideHint.Point(LabUpgradeButton);
+                else if (topic.PrerequisiteTopicId != null && !research.IsCompleted(topic.PrerequisiteTopicId))
+                    GuideHint.Point(ActionOf(ResearchCatalog.ById(topic.PrerequisiteTopicId)));
+            }
             Refresh();
         }
 

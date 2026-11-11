@@ -41,6 +41,9 @@
   levels 2/3 (user, 2026-10-28: no double key -- every tier starts_unlocked=1, no unlock research).
   A researched level upgrades soldiers already recruited. Heroes are NOT in the lab (XP levels).
 
+- Since 2026-11-11 a research-locked building SHOWS in the build menu under a padlock (sandbox); its tap
+  leads to its row here -- see [hints](hints.md).
+
 ## Code
 `Research/ResearchManager.cs`, `Research/ResearchCatalog.cs` (category order, skips orc rows),
 `Research/ResearchTopic.cs` (`RequiredLabLevel`, `ResearchKind`, `Crystals`), `UI/ResearchPanelController.cs`, `Core/Wallet.cs`,

@@ -55,6 +55,9 @@ namespace CityBuilder.UI
         /// <summary>The card is up.</summary>
         public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
 
+        /// <summary>«Улучшить» (BuildHints points at it), or null while hidden.</summary>
+        public RectTransform UpgradeButtonRect => upgradeButton != null && upgradeButton.gameObject.activeInHierarchy ? (RectTransform)upgradeButton.transform : null;
+
         public void Show(BuildingInstance instance)
         {
             _currentInstance = instance;
@@ -64,8 +67,29 @@ namespace CityBuilder.UI
             if (sandboxCard != null) sandboxCard.SetActive(!run);
             if (runCard != null) runCard.gameObject.SetActive(run);
             ModalGate.SetBlocked(true);
+            WireUpgradeLock();
             Refresh();
             ShowHarvestRadius();
+        }
+
+        /// <summary>
+        /// «Уровень N: нужно исследование» takes a tap: to that research in the Laboratory (BuildHints;
+        /// the user, 2026-11-11). Wired once, at the first card.
+        /// </summary>
+        private void WireUpgradeLock()
+        {
+            if (upgradeLockLabel == null || upgradeLockLabel.GetComponent<Button>() != null) return;
+            upgradeLockLabel.raycastTarget = true;
+            var button = upgradeLockLabel.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.onClick.AddListener(ShowUpgradeResearch);
+        }
+
+        public void ShowUpgradeResearch()
+        {
+            var b = _currentInstance;
+            if (b == null || b.Data == null || b.Site != null || b.NextLevelResearched || !BuildHints.Allowed) return;
+            BuildHints.LeadToResearch(Research.ResearchTopic.BuildingLevelId(b.Data.buildingName, b.Level + 1));
         }
 
         /// <summary>m:ss.</summary>

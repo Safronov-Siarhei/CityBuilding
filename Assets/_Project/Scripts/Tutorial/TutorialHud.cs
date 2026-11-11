@@ -265,7 +265,7 @@ namespace CityBuilder.Tutorial
         }
 
         /// <summary>A plain down-pointing triangle, drawn once.</summary>
-        private static Sprite ArrowSprite()
+        internal static Sprite ArrowSprite()
         {
             const int size = 64;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };

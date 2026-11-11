@@ -611,6 +611,9 @@ namespace CityBuilder.Core
         [SerializeField] private int tutorialFishShoals = 2;
         [SerializeField] private float tutorialPeopleHintSeconds = 6f;
         [SerializeField] private float tutorialBlinkSeconds = 0.5f;
+        // the sandbox's «what is missing» hints (GuideHint): how long the arrow stays, one blink
+        [SerializeField] private float hintSeconds = 8f;
+        [SerializeField] private float hintBlinkSeconds = 0.5f;
         [SerializeField] private float tutorialRaidCameraSeconds = 3f;
         [SerializeField] private float victoryDelaySeconds = 3f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -1246,6 +1249,8 @@ namespace CityBuilder.Core
         public int TutorialFishShoals => tutorialFishShoals;
         public float TutorialPeopleHintSeconds => tutorialPeopleHintSeconds;
         public float TutorialBlinkSeconds => tutorialBlinkSeconds;
+        public float HintSeconds => hintSeconds;
+        public float HintBlinkSeconds => hintBlinkSeconds;
 
         /// <summary>The tutorial's camera goes to the orcs this long after the soldier is hired (`tutorial_raid_camera_sec`; the user, 2026-11-06: 3).</summary>
         public float TutorialRaidCameraSeconds => tutorialRaidCameraSeconds;
@@ -2172,6 +2177,8 @@ namespace CityBuilder.Core
             tutorialFishShoals = (int)Read(economy, "tutorial_fish_shoals", tutorialFishShoals);
             tutorialPeopleHintSeconds = Read(economy, "tutorial_people_hint_sec", tutorialPeopleHintSeconds);
             tutorialBlinkSeconds = Read(economy, "tutorial_blink_sec", tutorialBlinkSeconds);
+            hintSeconds = Read(economy, "hint_sec", hintSeconds);
+            hintBlinkSeconds = Read(economy, "hint_blink_sec", hintBlinkSeconds);
             tutorialRaidCameraSeconds = Read(economy, "tutorial_raid_camera_sec", tutorialRaidCameraSeconds);
             victoryDelaySeconds = Read(economy, "victory_delay_sec", victoryDelaySeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);

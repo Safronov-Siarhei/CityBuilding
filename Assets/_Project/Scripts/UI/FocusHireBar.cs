@@ -126,6 +126,8 @@ namespace CityBuilder.UI
             if (!hired && blocker != null)
             {
                 EventLogManager.Instance?.Post(GameEvent.ForSettlement(blocker, EventSeverity.Warning, EventGlyph.Alert, null));
+                // the Barracks too low for this tier: to its «Улучшить» (the user, 2026-11-11)
+                if (barracks.Level < SoldierStats.BarracksLevel(types[index]) && BuildHints.Allowed) BuildHints.LeadToUpgrade(barracks);
             }
             _refreshIn = 0f;
             return hired;
@@ -143,6 +145,7 @@ namespace CityBuilder.UI
             if (built == null && blocker != null)
             {
                 EventLogManager.Instance?.Post(GameEvent.ForSettlement(blocker, EventSeverity.Warning, EventGlyph.Alert, null));
+                if (shipyard.Level < Ships.ShipStats.ShipyardLevel(shipKind) && BuildHints.Allowed) BuildHints.LeadToUpgrade(shipyard);
             }
             _refreshIn = 0f;
             return built;
@@ -185,6 +188,7 @@ namespace CityBuilder.UI
                 case HeroRoster.Offer.CastleTooLow:
                     EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#hero_need_castle", name, balance.castleLevel),
                         EventSeverity.Warning, EventGlyph.Alert, null));
+                    if (BuildHints.Allowed) BuildHints.LeadToUpgrade(Target ?? BuildingInstance.TownHall);
                     break;
                 case HeroRoster.Offer.NotEnoughMoney:
                     EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#hero_no_coins", name, balance.price),

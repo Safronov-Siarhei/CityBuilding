@@ -174,6 +174,22 @@ namespace CityBuilder.EditorTools
                 handlerSO.ApplyModifiedPropertiesWithoutUndo();
 
                 UnityEventTools.AddPersistentListener(button.onClick, handler.SelectThisBuilding);
+
+                // the sandbox's padlock (BuildHints.IsLocked): the card dimmed, the lock over it; the
+                // taps still reach the card, which leads to what it waits on (the user, 2026-11-11)
+                var lockShade = CreateImage(button.transform, "LockShade", new Color(0.12f, 0.1f, 0.08f, 0.55f));
+                lockShade.raycastTarget = false;
+                StretchFull(lockShade.rectTransform);
+                var padlock = CreateImage(lockShade.transform, "Lock", Color.white);
+                padlock.sprite = HudGlyph("Lock");
+                padlock.preserveAspect = true;
+                padlock.raycastTarget = false;
+                padlock.rectTransform.anchorMin = padlock.rectTransform.anchorMax = new Vector2(1f, 1f);
+                padlock.rectTransform.pivot = new Vector2(1f, 1f);
+                padlock.rectTransform.anchoredPosition = new Vector2(-8f, -8f);
+                padlock.rectTransform.sizeDelta = new Vector2(52f, 52f);
+                lockShade.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(2f, -2f);
+                lockShade.gameObject.SetActive(false);
             }
 
             // Fixed display order; only categories that actually have a hotbar building get a tab.
