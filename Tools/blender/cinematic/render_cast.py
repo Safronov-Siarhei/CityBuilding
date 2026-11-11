@@ -12,11 +12,12 @@ import bpy  # noqa: E402
 import ardan  # noqa: E402
 import elder  # noqa: E402
 import priest  # noqa: E402
+import mage  # noqa: E402
 import townsfolk  # noqa: E402
 import orcs_cast  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
-BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": elder.make, "CinePriest": priest.make}
+BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": elder.make, "CinePriest": priest.make, "CineMage": mage.make}
 BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
 BUILDERS.update({n: (lambda nn: (lambda: orcs_cast.make(nn)))(n) for n in orcs_cast.FIGURES})
 
