@@ -83,79 +83,94 @@ def backdrop(W, H):
 
 # ------------------------------------------------------------------ 1. the shop's «Бустеры» tab
 
+TALL_Y0, TALL_Y1 = 110, 1066       # the taller shop window (the user, 2026-11-11: tabs at the bottom)
+
+
+def tall_window(theme='summer'):
+    """The shop's frame drawn by offer_shop_art.window() at the taller size, into the scratch folder --
+    only that function is run (the art script writes the game's pictures when run whole)."""
+    src = open(m.R + 'Tools/store/offer_shop_art.py', encoding='utf-8').read()
+    ns = {'__file__': m.R + 'Tools/store/offer_shop_art.py'}
+    exec(src[:src.index('STRIPS = {')], ns)
+    tmp = os.environ.get('TEMP', '/tmp') + '/booster_mockup/'
+    os.makedirs(tmp + 'Resources/Shop', exist_ok=True)
+    ns['OUT'] = tmp
+    ns['window'](theme, Y0=TALL_Y0, Y1=TALL_Y1, name='Tall_')
+    return Image.open(tmp + 'Resources/Shop/Tall_' + theme + '.png').convert('RGBA'), (40, TALL_Y0 - 78 - 12)
+
+
 def shop():
-    import json
-    layout = json.load(open(m.SHOP + 'layout.json', encoding='utf-8'))
-    W, H = layout['reference']
+    W, H = 1920, 1080
     img = backdrop(W, H)
-    m.paste(img, m.SHOP + 'Resources/Shop/Window_summer.png', layout['window'], keep=False)
+    frame, at = tall_window()
+    img.alpha_composite(frame.crop((0, 0, frame.width, min(frame.height, H - at[1]))), at)
     d = ImageDraw.Draw(img)
-    tx = layout['title']
-    m.text(d, ((tx[0] + tx[2]) / 2, (tx[1] + tx[3]) / 2), 'Лавка', 72, (255, 240, 199), stroke=4, stroke_fill=(90, 13, 15))
-    ci = layout['counter_icon']
-    m.text(d, (ci[0] - 8, (ci[1] + ci[3]) / 2), '989', 48, (255, 240, 210), anchor='rm', stroke=3, stroke_fill=(61, 36, 15))
-    m.paste(img, m.CRYSTAL, ci)
-    m.paste(img, m.SHOP + 'Close.png', layout['close'])
+    X0, X1 = 90, 1830
+    IY0, IY1 = TALL_Y0 + 34, TALL_Y1 - 34
+    RY0, RY1 = TALL_Y0 - 78, IY0 + 40
+    m.text(d, (960, (RY0 + RY1) / 2), 'Лавка', 72, (255, 240, 199), stroke=4, stroke_fill=(90, 13, 15))
+    SX0, SX1 = X0 + 34 + 50, X1 - 34 - 50
+    m.text(d, (SX1 - 76, IY0 + 48), '989', 48, (255, 240, 210), anchor='rm', stroke=3, stroke_fill=(61, 36, 15))
+    m.paste(img, m.CRYSTAL, (SX1 - 68, IY0 + 14, SX1, IY0 + 82))
+    m.paste(img, m.SHOP + 'Close.png', (X1 - 92, TALL_Y0 - 44, X1 + 28, TALL_Y0 + 76))
     d = ImageDraw.Draw(img)
 
-    sx0, sx1 = layout['strips'][0][0], layout['strips'][0][2]
-    # two tabs over the strips' area: «Предложения» and «Бустеры» (picked)
+    # the boosters as long strips like the offers; more than four scroll (a bar on the right)
+    med_font = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
+    stocks = [2, 0, 1, 0, 3, 0]
+    SH, top = 150, IY0 + 92
+    for k, (name, effect, mins, price, ad, colours, icons) in enumerate(BOOSTERS[:4]):
+        y0 = top + k * 172
+        box = (SX0, y0, SX1 - 30, y0 + SH)
+        m.paste(img, m.SHOP + 'Strip.png', (box[0] - 40, box[1] - 40, box[2] + 40, box[3] + 40), keep=False)
+        d = ImageDraw.Draw(img)
+        img.alpha_composite(medallion(124, colours, icons, arrow=mins > 0), (box[0] + 30, y0 + 13))
+        d = ImageDraw.Draw(img)
+        if stocks[k]:
+            bx, byy = box[0] + 40, y0 + 22
+            d.ellipse((bx - 28, byy - 28, bx + 28, byy + 28), fill=(60, 130, 50), outline='white', width=4)
+            m.text(d, (bx, byy), f'×{stocks[k]}', 26, 'white')
+        m.text(d, (box[0] + 180, y0 + 42), name, 44, INK, anchor='lm')
+        m.text(d, (box[0] + 180, y0 + 92), effect, 32, (110, 72, 36), anchor='lm', path=med_font)
+        if ad:
+            when = f'За кристаллы — {mins} мин, за рекламу — {ad} мин'
+        else:
+            when = 'Одно здание, сразу'
+        m.text(d, (box[0] + 180, y0 + 128), when, 26, (140, 100, 60), anchor='lm', path=med_font)
+        # the offers' own buttons and places: «▶ Смотреть» (green), the price (blue)
+        rx = box[2]
+        blue = (rx - 30 - 230, y0 + 21, rx - 30, y0 + 130)
+        m.paste(img, m.SHOP + 'ButtonBlue.png', blue, keep=False)
+        d = ImageDraw.Draw(img)
+        amount(d, img, blue[2] - 46, y0 + 72, price, 46, 'white', (16, 60, 112))
+        if ad:
+            green = (blue[0] - 20 - 290, y0 + 21, blue[0] - 20, y0 + 130)
+            m.paste(img, m.SHOP + 'ButtonGreen.png', green, keep=False)
+            m.paste(img, m.SHOP + 'Play.png', (green[0] + 20, y0 + 45, green[0] + 80, y0 + 105))
+            d = ImageDraw.Draw(img)
+            m.text(d, ((green[0] + 80 + green[2]) / 2, y0 + 72), 'Смотреть', 38, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    # the scroll bar: 4 of 6 shown
+    bar_y0, bar_y1 = top, top + 3 * 172 + SH
+    m.over(img, lambda g: g.rounded_rectangle((SX1 - 14, bar_y0, SX1, bar_y1), 7, fill=(40, 24, 10, 120)))
+    m.over(img, lambda g: g.rounded_rectangle((SX1 - 14, bar_y0, SX1, bar_y0 + (bar_y1 - bar_y0) * 4 // 6), 7,
+                                              fill=(250, 236, 204, 230)))
+
+    # the tabs, bottom centre
+    d = ImageDraw.Draw(img)
+    tw, th = 340, 78
+    ty0 = IY1 - 20 - th
     tabs = (('Предложения', False), ('Бустеры', True))
-    tx0, ty0, tw, th = sx0, 262, 330, 70
     for i, (name, on) in enumerate(tabs):
-        x0 = tx0 + i * (tw + 16)
+        x0 = 960 - tw - 10 + i * (tw + 20)
         box = (x0, ty0, x0 + tw, ty0 + th)
         if on:
-            d.rounded_rectangle(box, 18, fill=(255, 238, 190), outline=(150, 92, 30), width=5)
-            m.text(d, ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), name, 40, INK)
+            d.rounded_rectangle(box, 20, fill=(255, 238, 190), outline=(150, 92, 30), width=5)
+            m.text(d, ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), name, 42, INK)
         else:
-            d.rounded_rectangle(box, 18, fill=(150, 108, 64), outline=(96, 60, 24), width=5)
-            m.text(d, ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), name, 38, (240, 220, 186))
-    # a red dot on «Предложения»: a free gift is waiting there
-    d.ellipse((tx0 + tw - 26, ty0 - 10, tx0 + tw + 6, ty0 + 22), fill=(220, 40, 30), outline='white', width=3)
-
-    gap = 26
-    cols, rows = 3, 2
-    gx0, gy0, gy1 = sx0, 352, 990
-    cw = (sx1 - sx0 - (cols - 1) * gap) / cols
-    ch = (gy1 - gy0 - (rows - 1) * gap) / rows
-    stocks = [2, 0, 1, 0, 3, 0]
-    for i, (name, effect, mins, price, ad, colours, icons) in enumerate(BOOSTERS):
-        c, r = i % cols, i // cols
-        x0, y0 = gx0 + c * (cw + gap), gy0 + r * (ch + gap)
-        box = (int(x0), int(y0), int(x0 + cw), int(y0 + ch))
-        m.over(img, lambda g: g.rounded_rectangle((box[0] + 4, box[1] + 8, box[2] + 4, box[3] + 8), 26, fill=(30, 15, 0, 120)))
-        d = ImageDraw.Draw(img)
-        d.rounded_rectangle(box, 26, fill=(250, 236, 204), outline=(150, 100, 46), width=5)
-        med = medallion(150, colours, icons, arrow=mins > 0)
-        img.alpha_composite(med, (box[0] + 22, box[1] + 26))
-        d = ImageDraw.Draw(img)
-        lx = box[0] + 194
-        m.text(d, (lx, box[1] + 50), name, 42, INK, anchor='lm')
-        m.text(d, (lx, box[1] + 100), effect, 30, (110, 72, 36), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
-        m.text(d, (lx, box[1] + 142), f'{mins} мин игры' if mins else 'Одно здание', 30, (110, 72, 36), anchor='lm',
-               path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
-        if stocks[i]:                                 # how many are kept: a badge on the medallion's top-left
-            bx, byy = box[0] + 30, box[1] + 30
-            d.ellipse((bx - 30, byy - 30, bx + 30, byy + 30), fill=(60, 130, 50), outline='white', width=4)
-            m.text(d, (bx, byy), f'×{stocks[i]}', 28, 'white')
-        # the buttons: crystals (blue), an ad for a shorter one (green)
-        by0, by1 = box[3] - 112, box[3] - 22
-        if ad:
-            blue = (box[0] + 22, by0, box[0] + 22 + 210, by1)
-            green = (blue[2] + 16, by0, box[2] - 22, by1)
-            m.paste(img, m.SHOP + 'ButtonBlue.png', blue, keep=False)
-            m.paste(img, m.SHOP + 'ButtonGreen.png', green, keep=False)
-            d = ImageDraw.Draw(img)
-            amount(d, img, blue[2] - 40, (by0 + by1) / 2 - 4, price, 40, 'white', (16, 60, 112))
-            m.paste(img, m.SHOP + 'Play.png', (green[0] + 22, by0 + 20, green[0] + 72, by1 - 24))
-            d = ImageDraw.Draw(img)
-            m.text(d, ((green[0] + 72 + green[2]) / 2, (by0 + by1) / 2 - 4), f'{ad} мин', 38, 'white', stroke=3, stroke_fill=(20, 80, 20))
-        else:
-            blue = (box[0] + 22, by0, box[2] - 22, by1)
-            m.paste(img, m.SHOP + 'ButtonBlueWide.png', blue, keep=False)
-            d = ImageDraw.Draw(img)
-            amount(d, img, (blue[0] + blue[2]) / 2 + 60, (by0 + by1) / 2 - 4, price, 40, 'white', (16, 60, 112))
+            d.rounded_rectangle(box, 20, fill=(150, 108, 64), outline=(96, 60, 24), width=5)
+            m.text(d, ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), name, 40, (240, 220, 186))
+    x0 = 960 - tw - 10
+    d.ellipse((x0 + tw - 26, ty0 - 12, x0 + tw + 8, ty0 + 22), fill=(220, 40, 30), outline='white', width=3)
     img.convert('RGB').save(OUT + 'Booster_Shop.png')
 
 

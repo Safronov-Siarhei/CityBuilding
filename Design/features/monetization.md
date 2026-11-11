@@ -6,7 +6,7 @@
 > RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
 
 ## Offer shop: how it is built (2026-11-11)
-- **Sheet:** «Наборы» (gid 2000061; layout since round 4 -- see below; kinds normal|bonus|starter|ad_crystals|paid_crystals; a resource is a ResourceType name or `Crystals`), «Наборы: уровни»
+- **Sheet:** «Песочница (Лавка): Предложения» (was «Наборы», gid 2000061; layout since round 4 -- see below; kinds normal|bonus|starter|ad_crystals|paid_crystals; a resource is a ResourceType name or `Crystals`), «Наборы: уровни»
   (2000062: level, lab_from, citizens_from), both -> `Balance/bundles.csv` (stacked tables);
   «Наборы: настройки» (2000063, -> economy: shop_slot_seconds 180, shop_slot_stagger_seconds 45, shop_crystal_usd, shop_ad_crystals_base,
   shop_bonus_chance, shop_bonus_min_seconds, shop_notice_seconds 30, shop_starter_delay_seconds,
@@ -214,6 +214,13 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   дух, «Готово!» (instant finish); active boosters as a row of medallions with a time ring under the top
   bar (tap -> «Запасы»); a hint at the right moment (raid -> «Боевой дух», only if in stock, 8 s).
   Building look A (gold ground ring + rising motes + badge) or B (gold outline glow + badge).
+- **Shop v2 (the user):** the whole shop window TALLER, the tabs «Предложения» | «Бустеры» at the BOTTOM centre,
+  boosters as long strips like the offers (more than four scroll). The ad button reads «▶ Смотреть» (the
+  user did not get «▶ 5 мин»); the strip says «За кристаллы — 15 мин, за рекламу — 5 мин».
+- **Round 3 (the user, shop v2 look approved):** the SAME time for crystals and for an ad (no shorter ad
+  version); boosters get their OWN sheet tab «Песочница (Лавка): Бустеры» (the bundles tab renamed
+  «Песочница (Лавка): Предложения», gid 2000061 unchanged -- the pull goes by gid); FOUR booster slots
+  like the offers, each with a 15-min recharge after it is taken; a booster lasts 5 min (to discuss).
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
