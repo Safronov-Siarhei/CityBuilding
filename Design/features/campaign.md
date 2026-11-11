@@ -1,6 +1,6 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**, mp4 sent. Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**; **v5 (3b06d52d4) = the user's notes on v4** (see below), mp4 1080p sent. OPEN with the user: the orc TORCH (static flame looks silly -- replace) and the SUBTITLES (the user dislikes them, to discuss). Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
 - **Effects (v3):** `Scripts/Campaign/OpeningFx.cs` on the village object, stepped by the director on the
   film clock (`Step(time, dt, camFrom, camAt, lens, dof)`); every number in the `fx` block of
   `Campaign/OpeningScript.json`. Portal: `Shaders/CineVortex.shader` quad in the arch (door given as
@@ -19,6 +19,15 @@
     `run.ps1 -Steps a,b` from the PowerShell tool (from bash the list arrives as ONE unknown step and
     nothing runs, report says only RUN FINISHED); Blender for encode_frames is
     `G:\SteamLibrary\steamapps\common\Blenderlender.exe`.
+- **v5 fixes (2026-11-11):** `CineTwoSided` gives houses, set pieces and figures two-sided copies
+  of their URP Lit materials (_Cull 0) -- the game models leave out faces the top-down camera never
+  sees (head bottoms, roof and stall-cloth undersides); the belfry's dark back wall removed from
+  church.py (a black slab in Unity); the amulet light found by bone name (the old path missed, the
+  light sat at his feet) + `OpeningFx.AmuletGlow` halo, range 0.35; the 32 s chime cue removed;
+  storm: `Shaders/CineStormSky.shader` dome on the camera, cover 0->1 from 33.9 over 7 s; fog
+  3-30 after the portal (hides the empty far town); film frames 1920x1080 JPG 95 (encoder takes the
+  frame size). Unity may crash on QUIT after the film (finalizer in AssetDatabase) -- frames are
+  complete if the log has `[CampaignFilm] 1809`.
 - **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
   synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
   `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
