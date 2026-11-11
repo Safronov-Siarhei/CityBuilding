@@ -180,6 +180,103 @@ def book(d, cx, cy, ink):
                p(cx + 13, cy - 26), p(cx + 24, cy - 38), p(cx + 24, cy - 18)], fill=GOLD)
 
 
+def castle_rich(d, cx, cy, ink):
+    """The sandbox's emblem drawn richer (the user, 2026-11-12, after the campaign's shield): a stone
+    castle in two tones of stone with block lines and a lit left face, two towers with terracotta
+    cone roofs and gold finials, crenellations, arrow-slit windows, a wooden gate under a gold
+    portcullis, a red pennant on the keep."""
+    stone, stone_lo, stone_hi = (196, 178, 150, 255), (150, 132, 106, 255), (226, 212, 186, 255)
+    roof, roof_lo, roof_hi = (196, 86, 52, 255), (140, 54, 32, 255), (232, 128, 86, 255)
+    door, door_lo = (122, 74, 34, 255), (84, 48, 20, 255)
+
+    def blocks(x0, y0, x1, y1):
+        row = 0
+        y = y0 + 9
+        while y < y1 - 2:
+            d.line([p(x0 + 2, y), p(x1 - 2, y)], fill=stone_lo, width=1 * SS)
+            off = 6 if row % 2 else 0
+            x = x0 + 8 + off
+            while x < x1 - 4:
+                d.line([p(x, y - 9), p(x, y)], fill=stone_lo, width=1 * SS)
+                x += 13
+            y += 9
+            row += 1
+
+    # the curtain wall
+    d.rectangle([p(cx - 38, cy - 8), p(cx + 38, cy + 46)], fill=stone, outline=ink, width=3 * SS)
+    blocks(cx - 38, cy - 8, cx + 38, cy + 46)
+    for x in range(-38, 38, 13):
+        d.rectangle([p(cx + x, cy - 17), p(cx + x + 8, cy - 8)], fill=stone, outline=ink, width=2 * SS)
+    # the keep, behind the gate, with the pennant
+    d.rectangle([p(cx - 12, cy - 34), p(cx + 12, cy - 8)], fill=stone_hi, outline=ink, width=3 * SS)
+    for x in (-12, -2, 6):
+        d.rectangle([p(cx + x, cy - 40), p(cx + x + 6, cy - 34)], fill=stone_hi, outline=ink, width=2 * SS)
+    d.rectangle([p(cx - 3, cy - 28), p(cx + 3, cy - 18)], fill=ink)
+    d.line([p(cx, cy - 40), p(cx, cy - 64)], fill=ink, width=3 * SS)
+    d.polygon([p(cx + 1, cy - 64), p(cx + 22, cy - 59), p(cx + 1, cy - 53)], fill=(200, 44, 36, 255), outline=ink, width=2 * SS)
+    # two towers
+    for x in (-52, 32):
+        d.rectangle([p(cx + x, cy - 30), p(cx + x + 20, cy + 46)], fill=stone, outline=ink, width=3 * SS)
+        d.rectangle([p(cx + x + 3, cy - 28), p(cx + x + 7, cy + 44)], fill=stone_hi)
+        blocks(cx + x, cy - 30, cx + x + 20, cy + 46)
+        d.rounded_rectangle([p(cx + x + 7, cy - 14), p(cx + x + 13, cy - 2)], radius=3 * SS, fill=ink)
+        d.rounded_rectangle([p(cx + x + 7, cy + 14), p(cx + x + 13, cy + 26)], radius=3 * SS, fill=ink)
+        d.polygon([p(cx + x - 5, cy - 30), p(cx + x + 10, cy - 64), p(cx + x + 25, cy - 30)], fill=roof, outline=ink, width=3 * SS)
+        d.polygon([p(cx + x + 1, cy - 31), p(cx + x + 10, cy - 58), p(cx + x + 7, cy - 31)], fill=roof_hi)
+        for k in range(1, 3):
+            y = cy - 30 - k * 10
+            half = 15 * (1 - k * 10 / 34)
+            d.line([p(cx + x + 10 - half, y), p(cx + x + 10 + half, y)], fill=roof_lo, width=2 * SS)
+        d.ellipse([p(cx + x + 7, cy - 70), p(cx + x + 13, cy - 64)], fill=GOLD, outline=ink, width=1 * SS)
+    # the gate: a wooden door with planks and studs, a gold portcullis raised in the arch
+    d.rounded_rectangle([p(cx - 14, cy + 12), p(cx + 14, cy + 47)], radius=14 * SS, fill=door_lo, outline=ink, width=3 * SS)
+    d.rounded_rectangle([p(cx - 11, cy + 15), p(cx + 11, cy + 46)], radius=11 * SS, fill=door)
+    for x in (-5, 0, 5):
+        d.line([p(cx + x, cy + 18), p(cx + x, cy + 45)], fill=door_lo, width=1 * SS)
+    for x in (-8, -3, 3, 8):
+        d.line([p(cx + x, cy + 15), p(cx + x, cy + 24)], fill=GOLD, width=2 * SS)
+    d.line([p(cx - 10, cy + 22), p(cx + 10, cy + 22)], fill=GOLD, width=2 * SS)
+    d.ellipse([p(cx + 5, cy + 33), p(cx + 8, cy + 36)], fill=GOLD)
+
+
+def book_rich(d, cx, cy, ink):
+    """The tutorial's emblem drawn richer: an open book in a leather binding with gold corners,
+    pages shaded towards the spine with lines of text, a red ribbon; over it a gold crown with
+    jewels and a sheen."""
+    leather, leather_lo = (122, 62, 34, 255), (84, 40, 20, 255)
+    page, page_lo = (250, 240, 214, 255), (222, 204, 166, 255)
+    # the binding
+    d.polygon([p(cx - 56, cy - 2), p(cx, cy + 6), p(cx + 56, cy - 2), p(cx + 56, cy + 46), p(cx, cy + 54), p(cx - 56, cy + 46)], fill=leather, outline=ink, width=3 * SS)
+    d.line([p(cx - 52, cy + 44), p(cx, cy + 51), p(cx + 52, cy + 44)], fill=leather_lo, width=2 * SS)
+    for s in (-1, 1):
+        x = cx + 56 * s
+        d.polygon([p(x, cy - 2), p(x - 10 * s, cy - 1), p(x, cy + 9)], fill=GOLD, outline=ink, width=1 * SS)
+        d.polygon([p(x, cy + 46), p(x - 10 * s, cy + 47), p(x, cy + 36)], fill=GOLD, outline=ink, width=1 * SS)
+    # the pages, a few edges showing under each side
+    for s in (-1, 1):
+        for k in (3, 1):
+            d.polygon([p(cx + 50 * s, cy + 2 - k), p(cx + 2 * s, cy + 9 - k), p(cx + 2 * s, cy + 46 - k), p(cx + 50 * s, cy + 40 - k)], fill=page_lo, outline=ink, width=1 * SS)
+        d.polygon([p(cx + 48 * s, cy - 2), p(cx + 2 * s, cy + 5), p(cx + 2 * s, cy + 43), p(cx + 48 * s, cy + 37)], fill=page, outline=ink, width=2 * SS)
+        # shade towards the spine
+        d.polygon([p(cx + 10 * s, cy + 4), p(cx + 2 * s, cy + 5), p(cx + 2 * s, cy + 43), p(cx + 10 * s, cy + 42)], fill=page_lo)
+        for k in range(4):
+            y = cy + 8 + k * 7
+            d.line([p(cx + 42 * s, y - 1), p(cx + 14 * s, y + 3)], fill=(150, 120, 90, 255), width=2 * SS)
+    d.line([p(cx, cy + 5), p(cx, cy + 46)], fill=ink, width=3 * SS)
+    # the red ribbon
+    d.polygon([p(cx + 18, cy + 40), p(cx + 24, cy + 40), p(cx + 24, cy + 60), p(cx + 21, cy + 56), p(cx + 18, cy + 60)], fill=(196, 40, 34, 255), outline=ink, width=1 * SS)
+    # the crown
+    pts = [p(cx - 30, cy - 12), p(cx - 32, cy - 44), p(cx - 15, cy - 28), p(cx, cy - 52), p(cx + 15, cy - 28), p(cx + 32, cy - 44), p(cx + 30, cy - 12)]
+    d.polygon(pts, fill=GOLD, outline=ink, width=3 * SS)
+    d.polygon([p(cx - 26, cy - 15), p(cx - 27, cy - 36), p(cx - 15, cy - 24), p(cx - 12, cy - 15)], fill=GOLD_HI)
+    d.rounded_rectangle([p(cx - 32, cy - 16), p(cx + 32, cy - 6)], radius=3 * SS, fill=GOLD_LO, outline=ink, width=2 * SS)
+    for x, col in ((-18, (200, 44, 36, 255)), (0, (52, 96, 196, 255)), (18, (200, 44, 36, 255))):
+        d.ellipse([p(cx + x - 4, cy - 15), p(cx + x + 4, cy - 7)], fill=col, outline=ink, width=1 * SS)
+    for x, y in ((-32, -44), (0, -52), (32, -44)):
+        d.ellipse([p(cx + x - 4, cy + y - 4), p(cx + x + 4, cy + y + 4)], fill=GOLD_HI, outline=ink, width=1 * SS)
+    d.ellipse([p(cx - 5, cy - 34), p(cx + 5, cy - 24)], fill=(52, 96, 196, 255), outline=ink, width=1 * SS)
+
+
 def shield_crest(d, cx, cy, ink):
     """The campaign's emblem (the user, 2026-11-12: variant 5, «более красиво прорисовать щит и
     мечи»): a kite shield in a gold rim with rivets, its field quartered in two blues, a gold boss
@@ -322,11 +419,11 @@ def banner(name, spec):
     d.ellipse([p(cx - inner, cy - inner), p(cx + inner, cy + inner)], fill=CARD_EDGE if name != "Invasion" else IRON_EDGE)
     d.ellipse([p(cx - inner + 4, cy - inner + 4), p(cx + inner - 4, cy + inner - 4)], fill=face)
     if name == "Sandbox":
-        castle(d, cx, cy + 6, WOOD_DARK)
+        castle_rich(d, cx, cy + 6, WOOD_DARK)
     elif name == "Invasion":
         orc_skull(d, cx, cy + 2, (226, 214, 186, 255), (24, 20, 18, 255), (160, 156, 148, 255))
     elif name == "Tutorial":
-        book(d, cx, cy + 6, WOOD_DARK)
+        book_rich(d, cx, cy + 6, WOOD_DARK)
     else:
         shield_crest(d, cx, cy + 2, WOOD_DARK)
 
