@@ -15,7 +15,12 @@ set. Models go to the user for approval as renders BEFORE they enter the game; p
 (Hovel, Cottage, Warehouse, Sawmill) → approval → the rest.
 
 ## Files and tools
-- The `.blend` files are NOT in git: they live on the user's Google Drive, synced to every device —
+- The `.blend` sources are IN THE REPO since 2026-11-11: `Blender/` at the root (outside Assets/: Unity
+  never imports it, nothing reaches a build; ~207 MB, Blender's *.blend1 backups left out). The WORKING
+  copy stays the user's Google Drive folder; after Blender work run `python Tools/blend_sync.py`
+  (Drive -> repo, changed files only) and commit `Blender/` with the task; on a machine without the
+  Drive, `python Tools/blend_sync.py --to-drive --source <folder>` makes a working folder from the repo.
+- The working folder: the user's Google Drive, synced to every device —
   on the current machine `H:\Другие компьютеры\Ноутбук\blender projects\Buildings3D\` (~227 MB:
   Buildings-Size1.blend, Buildings-Size1-Models.blend, Map-*/Inv-*/Dungeon-*.blend, Water.png…).
   Placeholder boxes `Buildings-Size1.blend` — READ-ONLY for the AI, the user's own, NOT regenerable.

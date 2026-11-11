@@ -14,4 +14,4 @@ The user: «нужно чтобы абсолютно вся информация
 - A new standing rule from the user also goes into `Design/WORKING_RULES.md` (and CLAUDE.md if short).
 - Parked ideas get a row in `Design/features/ideas.md`.
 - Never commit secrets: the repo is public (Telegram token stays in the env var).
-- Not in git by decision pending: the .blend files (~227 MB on the user's Google Drive) -- see [[reference_machine_paths]].
+- The .blend sources are in the repo too (user agreed 2026-11-11: «они всё равно в сборку не попадают»): `Blender/` at the root, outside Assets/. After Blender work: `python Tools/blend_sync.py` (Drive -> repo) and commit `Blender/`. See [[reference_machine_paths]].

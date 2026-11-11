@@ -65,6 +65,8 @@ see the map at the bottom.
   one: after changing notes run `python Tools/memory_sync.py` (two-way, newer wins; `--to-local`
   restores a fresh machine, `--to-repo` pushes local notes in).
 - Invasion-mode changes and decisions are also logged in `Design/Invasion.md`.
+- After Blender work: `python Tools/blend_sync.py` (the Drive working folder -> `Blender/` in the repo)
+  and commit `Blender/` — the repo holds the sources too (outside Assets/, never in a build).
 
 ## Where everything is (map)
 | What | Where |
@@ -77,5 +79,5 @@ see the map at the bottom.
 | Long history these were distilled from | `Design/features/archive/` |
 | Balance + texts | `Assets/_Project/Balance/*.csv` and the Google Sheet above |
 | Campaign data | `Assets/_Project/Campaign/*.json` |
-| Blender model scripts | `Tools/blender/` (the `.blend` files: see `Design/features/art-pipeline.md` → Files) |
+| Blender model scripts | `Tools/blender/`; the `.blend` sources: `Blender/` (working copy on the user's Drive; `Tools/blend_sync.py`) |
 | Machines, tools, versions | `.claude/memory/reference_machine_paths.md`, `Design/features/build-and-test.md` |

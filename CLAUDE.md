@@ -29,7 +29,8 @@
   or a switch to another AI). Every rule: `Design/WORKING_RULES.md`; other AIs start at `AGENTS.md`.
   The memory notes are kept in `.claude/memory/` too: after updating memory, run
   `python Tools/memory_sync.py` (two-way, newer wins; `--to-local` restores a fresh machine) and
-  commit `.claude/memory/` with the task.
+  commit `.claude/memory/` with the task. The `.blend` sources are in `Blender/` (outside Assets/, never
+  in a build): after Blender work run `python Tools/blend_sync.py` and commit `Blender/`.
 - The user's other standing rules (full list in WORKING_RULES): new models/animations go to the user
   as renders for approval BEFORE entering the game; cutscenes are discussed before they are built;
   never build an APK unasked; push right after every commit; sizes in map cells; «дёшево» = lacks

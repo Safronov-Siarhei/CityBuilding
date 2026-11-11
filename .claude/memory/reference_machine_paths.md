@@ -19,3 +19,4 @@ See [[project_current_state]], [[feedback_batchmode_workflow]].
 - Claude in Chrome works here after the user signed the extension in with the app's account (2026-10-20). Localization tab: data ends at row 266+ (append below the last; ctrl+Down from A2 finds it); read cells via #t-name-box and #t-formula-bar-input.
 - Tools/research/run.ps1 -Steps setup,setup,editmode,playmode [-Filter X] [-Graphics] finds Unity itself; warm runs: setup ~30-45 s, EditMode ~10 s, PlayMode ~4 min.
 - PlayMode flakes (2026-10-20): Map1-based tests fail one at a time in full runs (a different one each run: StorageAndUpgradeTests.Photograph_TheBuildingLevels, AuthoredModelTests.Photograph_TheAuthoredBuilding, PrisonerCageTests.AnOrcWithNoSoldierToFightKillsAPrisoner) and pass alone -- order-dependent, not caused by the map work.
+- Since 2026-11-11 a copy of that Blender folder is in the repo at `Blender/` (Tools/blend_sync.py keeps it in step; .blend1 backups skipped).
