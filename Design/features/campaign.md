@@ -1,6 +1,6 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**; **v5 (3b06d52d4) = the user's notes on v4** (see below), mp4 1080p sent. v6 = torch flame live (`CineFigure.LightTorch`, particles at the left forearm part's farthest vertex; modelled flame removed in orcs_cast.py) + SPEECH BUBBLES (user's choice): sub cues carry `"speaker"` (NOT `actor` -- a cue with actor is dispatched as an actor cue and the line never shows), bubble sprites drawn by setup (BubbleBody 9-sliced, BubbleTail), follows the head, clamped in frame, tail points at the speaker; numbers in subtitle.bubble*. Film MSAA 4x: 8x at 1080p crashed the GPU driver (and the Claude app with it). Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**; film ACCEPTED by the user 2026-11-11 after v10 + hand-placed props; **v5 (3b06d52d4) = the user's notes on v4** (see below), mp4 1080p sent. v6 = torch flame live (`CineFigure.LightTorch`, particles at the left forearm part's farthest vertex; modelled flame removed in orcs_cast.py) + SPEECH BUBBLES (user's choice): sub cues carry `"speaker"` (NOT `actor` -- a cue with actor is dispatched as an actor cue and the line never shows), bubble sprites drawn by setup (BubbleBody 9-sliced, BubbleTail), follows the head, clamped in frame, tail points at the speaker; numbers in subtitle.bubble*. Film MSAA 4x: 8x at 1080p crashed the GPU driver (and the Claude app with it). Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
 - **Effects (v3):** `Scripts/Campaign/OpeningFx.cs` on the village object, stepped by the director on the
   film clock (`Step(time, dt, camFrom, camAt, lens, dof)`); every number in the `fx` block of
   `Campaign/OpeningScript.json`. Portal: `Shaders/CineVortex.shader` quad in the arch (door given as
@@ -47,7 +47,10 @@
   0.008 < LaneY 0.014 (+0.003 on odd segments) < CobbleY 0.021, square +0.003; one seed per street,
   cobbles seed 0 so overlaps match), camera near plane 0.25 -- a lane flickered. Farm props exported
   (`farm_props.py -- export`) and placed by `OpeningVillage.Props` (stacks/bales by roads past 13 m
-  and at field edges, pens/hen yards at farms past 26 m, washing at town houses).
+  and at field edges, pens/hen yards at farms past 26 m, washing at town houses). Then (user: «стогов
+  не видно») 16 props SET BY HAND in camera view: `Campaign/OpeningProps.json` (x, z, yaw; placed by
+  `OpeningVillage.Featured` right after the streets, before the houses, nudged in rings up to
+  `search` m off a road). The user then said the film is fine: «остальное нравится, можно идти дальше».
 - **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
   synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
   `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
