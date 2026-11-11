@@ -221,6 +221,10 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   version); boosters get their OWN sheet tab «Песочница (Лавка): Бустеры» (the bundles tab renamed
   «Песочница (Лавка): Предложения», gid 2000061 unchanged -- the pull goes by gid); FOUR booster slots
   like the offers, each with a 15-min recharge after it is taken; a booster lasts 5 min (to discuss).
+- **Round 4 (the user, the list, in progress):** 12+ boosters; the 4 slots change every 15 min, never
+  two of the same; EACH booster its own icon. Tiers: wood / stone / ore boosters speed up gathering by
+  sawmill/quarry/mine workers AND by ordinary citizens, in tiers ×1.2 / ×1.5 / ×2; the food booster adds
+  +1 / +2 / +3 to a food building's output. The user continues the list.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
