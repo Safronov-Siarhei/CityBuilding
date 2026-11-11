@@ -181,6 +181,22 @@
     - Pillar blocks sway slightly, and ruin stones are placed so none sits inside another.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
+## Entering the campaign (decided 2026-11-12, NOT built yet)
+- The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
+  -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
+- The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
+  over a 3D diorama or a level ribbon). Art: `Tools/campaign/campaign_map.py` (borrows
+  Tools/loading/loading_maps.py's painters; a numpy fallback when scipy is missing) ->
+  `UI/Campaign/CampaignMap_Wide.png` (2400x1080) + `Campaign/CampaignMap.json` (level points as
+  fractions of the picture, title keys `#campaign_level_N`); preview with mock flags
+  `Design/campaign_map_preview.png` -- DRAFT sent for approval. Ардан's village (1), the wheat, the
+  forest, the river and bridge, the town (2), a castle on a hill (3); the rest of the kingdom under a
+  parchment fog (chapters to come). Flags and «Играть» are the game's own UI over the picture.
+- Release scope: 3 LEVELS; the map is a fun placeholder, its places follow the story later (the user:
+  «править будем потом исходя из сюжета»). Next: discuss the story of the coming chapters.
+- The opening film plays before LEVEL 1 the first time (and can be watched again from it); today the
+  banner goes straight into the film + mission 1.
+
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.
   1. Wide (5 s): the camera glides over roofs to the square; chimney smoke, birds, the church.

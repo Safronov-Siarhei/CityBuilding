@@ -96,3 +96,4 @@ Related: [[project-tutorial]], [[project-invasion-mode]], [[project-monetization
 - 2026-11-12: campaign banner emblem = variant 5 (shield + crossed swords) drawn richer (user: the first looked «дёшево»); sent for approval.
 - 2026-11-12: the user approved the shield emblem; the sandbox and tutorial emblems redrawn rich too (castle_rich, book_rich), sent.
 - 2026-11-12: all four mode-banner emblems APPROVED (sandbox castle, tutorial book, campaign shield); in Assets already, shown after the next build.
+- 2026-11-12: campaign ENTRY decided (card campaign.md «Entering the campaign»): banner -> loading -> 2D parchment campaign MAP -> tap a level -> «Играть» bottom centre -> level; film before level 1 the first time; 3 levels at release; map draft (Tools/campaign/campaign_map.py) sent for approval; next: discuss the story of the coming chapters.
