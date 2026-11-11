@@ -203,8 +203,8 @@ def close():
     d.ellipse((20 * s, 14 * s, 100 * s, 56 * s), fill=(228, 92, 82))
     d.ellipse((14 * s, 12 * s, 106 * s, 102 * s), fill=(196, 44, 42))
     for a, b in (((38, 38), (82, 78)), ((82, 38), (38, 78))):
-        d.line((a[0] * s, a[1] * s, b[0] * s, b[1] * s), fill=(90, 14, 16), width=20 * s)
-        d.line((a[0] * s, a[1] * s, b[0] * s, b[1] * s), fill=(255, 240, 200), width=12 * s)
+        # one colour, no dark edge (the user, 2026-11-11)
+        d.line((a[0] * s, a[1] * s, b[0] * s, b[1] * s), fill=(255, 240, 200), width=14 * s)
     save(img.resize((120, 120), Image.LANCZOS), 'Close')
 
 
@@ -219,7 +219,6 @@ button('ButtonGold', 476, GOLD)
 play()
 pill('Timer', 190, 68, 17)
 pill('HudTimer', 92, 36, 0)
-pill('Counter', 260, 80, 0)
 close()
 stamp()
 stall()
@@ -238,13 +237,14 @@ layout = {
     'window': list(CROP),
     'frame': [X0, Y0, X1, Y1],
     'title': [RX0 + 20, RY0 + 8, RX1 - 20, RY1 - 6],
-    # the close seal on the frame's top-right corner; the player's crystals left of it, on the frame's top edge
+    # the close seal on the frame's top-right corner; the player's crystals under the frame's top edge
     'close': [X1 - 92, Y0 - 44, X1 + 28, Y0 + 76],
-    'counter': [X1 - 400, Y0 - 40, X1 - 140, Y0 + 40],
-    'counter_icon': [X1 - 214, Y0 - 34, X1 - 146, Y0 + 34],
-    'counter_text': [X1 - 384, Y0 - 40, X1 - 222, Y0 + 40],
-    # «Не хватает кристаллов», under the counter for a moment
-    'toast': [X1 - 760, Y0 + 44, X1 - 60, Y0 + 92],
+    # just the number and the icon, no plate, under the frame's top edge right above the strips (the user)
+    'counter': [SX1 - 290, IY0 + 12, SX1, IY0 + 84],
+    'counter_icon': [SX1 - 68, IY0 + 14, SX1, IY0 + 82],
+    'counter_text': [SX1 - 286, IY0 + 12, SX1 - 76, IY0 + 84],
+    # «Не хватает кристаллов», left of the counter for a moment
+    'toast': [SX1 - 860, IY0 + 16, SX1 - 300, IY0 + 80],
     # each strip's box; its picture is the box grown by `pad` (shadow, glow)
     'strips': [[SX0, t, SX1, t + SH] for t in TOPS],
     'pad': PAD,

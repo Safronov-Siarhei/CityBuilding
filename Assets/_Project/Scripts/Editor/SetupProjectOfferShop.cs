@@ -285,7 +285,9 @@ namespace CityBuilder.EditorTools
             }
 
             // the player's crystals on the frame's top-right, and the line when they are too few
-            var counter = ShopImage(window, "Crystals", "Counter", screenRect, layout.counter);
+            var counter = new GameObject("Crystals", typeof(RectTransform)).GetComponent<RectTransform>();
+            counter.SetParent(window, false);
+            PlaceIn(counter, screenRect, layout.counter);
             var counterIcon = CreateImage(counter.transform, "Icon", Color.white);
             counterIcon.sprite = CrystalIcon();
             counterIcon.preserveAspect = true;
@@ -296,12 +298,13 @@ namespace CityBuilder.EditorTools
             var toast = ShopText(window, "NoCrystals", "#shop_no_crystals", 40, UiTheme.Heavy, OfferShopWindow.WarnColor, TextAnchor.MiddleRight);
             PlaceIn(toast.rectTransform, screenRect, layout.toast);
             Rim(toast, new Color(0.25f, 0.04f, 0.03f), 3f);
+            Rim(counterText, new Color(0.24f, 0.14f, 0.06f), 3f);
             // the close seal (the user, 2026-11-11: a tap outside closes too, the seal shows how)
             var close = ShopButton(window, "Close", "Close", screenRect, layout.close);
 
             var so = new SerializedObject(screen);
             so.FindProperty("close").objectReferenceValue = close;
-            so.FindProperty("counter").objectReferenceValue = counter.rectTransform;
+            so.FindProperty("counter").objectReferenceValue = counter;
             so.FindProperty("counterText").objectReferenceValue = counterText;
             so.FindProperty("toast").objectReferenceValue = toast;
             so.FindProperty("group").objectReferenceValue = root.GetComponent<CanvasGroup>();
