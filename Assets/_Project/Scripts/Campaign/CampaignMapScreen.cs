@@ -36,7 +36,9 @@ namespace CityBuilder.Campaign
 
         [SerializeField] private TextAsset mapFile;
         [SerializeField] private Sprite picture;
-        [SerializeField] private Sprite backGlyph, playGlyph, replayGlyph, lockGlyph;
+        [SerializeField] private Sprite backGlyph, playGlyph, replayGlyph, lockGlyph, settingsGlyph;
+        // the game's own settings card, built into the scene by setup (the user: a settings button top right)
+        [SerializeField] private SettingsPanelController settings;
         [SerializeField] private string menuScene = "MainMenu";
 
         private Level[] _levels = new Level[0];
@@ -52,7 +54,7 @@ namespace CityBuilder.Campaign
         {
             if (mapFile != null) _levels = JsonUtility.FromJson<MapFile>(mapFile.text).levels ?? new Level[0];
             if (FindObjectOfType<EventSystem>() == null)
-                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+                new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Build();
         }
 
@@ -94,6 +96,9 @@ namespace CityBuilder.Campaign
             }
             MissionSkin.Round(safe, "Back", "round_main", HudInk.OnMain, backGlyph, new Vector2(0f, 1f), new Vector2(66f, -66f), 92f)
                 .onClick.AddListener(() => LoadingScreen.OutToMenu(menuScene));
+            if (settings != null)
+                MissionSkin.Round(safe, "Settings", "round_main", HudInk.OnMain, settingsGlyph, new Vector2(1f, 1f), new Vector2(-66f, -66f), 92f)
+                    .onClick.AddListener(settings.OpenPanel);
 
             _hint = MissionSkin.Label(safe, Localization.Get("#campaign_pick"), UiTheme.Bold, 30, UiTheme.Parchment, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);

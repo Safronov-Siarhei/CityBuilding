@@ -118,7 +118,7 @@ namespace CityBuilder.UI
                 case Sandbox: menu.ChooseMode((int)GameMode.Sandbox); break;
                 case Invasion: menu.ChooseMode((int)GameMode.Invasion); break;
                 // the campaign (the user, 2026-11-12): the loading screen, then the campaign map (pick a level, «Играть»)
-                case Campaign: LoadingScreen.IntoGame(CampaignScene); break;
+                case Campaign: LoadingScreen.ToCampaignMap(CampaignScene); break;
             }
         }
 

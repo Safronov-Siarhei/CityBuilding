@@ -211,6 +211,12 @@
   done; CampaignMap.json `scene` empty = «Скоро» (levels 2-3 now), `bestKey` = its record. The chart's
   texture folder `UI/Campaign` is a UI-art folder in UiTextureImport. Texts: CSV + sheet «Тексты: обучение
   и сюжет» rows 54-60 (`#campaign_soon` was an OLD key, hence `#campaign_level_soon`). Untested, not seen.
+- **The user's first look (2026-11-12), fixed:** the map took no taps -- the screen made an EventSystem
+  with the OLD StandaloneInputModule while the project runs the new Input System only (TRAP: always
+  `InputSystemUIInputModule`; the scene now carries one); the menu -> map loading is its own 5 s
+  (`loading_seconds_campaign_map`, sheet «Время и загрузка» row 6, `LoadingScreen.ToCampaignMap`); map ->
+  level stays the sandbox's `loading_seconds_enter`; a SETTINGS button top right opens the game's own
+  settings card (`BuildSettingsPanel` on a SettingsCanvas in the map scene).
 
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.

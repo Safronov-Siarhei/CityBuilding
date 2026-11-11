@@ -65,7 +65,17 @@ namespace CityBuilder.UI
         public static void OutToMenu(string sceneName) => Load(sceneName, false);
 
         /// <summary>Loads `sceneName` behind the screen; without the prefab (a test scene), loads it plainly.</summary>
-        public static void Load(string sceneName, bool intoGame)
+        public static void Load(string sceneName, bool intoGame) => Load(sceneName, intoGame, -1f);
+
+        /// <summary>Into the campaign map: its own time (loading_seconds_campaign_map).</summary>
+        public static void ToCampaignMap(string sceneName)
+        {
+            var config = BalanceConfig.Instance;
+            Load(sceneName, true, config == null ? 5f : config.LoadingSecondsCampaignMap);
+        }
+
+        /// <summary>Loads `sceneName` behind the screen for `seconds` (below 0: the enter/exit time).</summary>
+        public static void Load(string sceneName, bool intoGame, float seconds)
         {
             if (_current != null) return;
             var prefab = UnityEngine.Resources.Load<LoadingScreen>(ResourcePath);
@@ -77,7 +87,7 @@ namespace CityBuilder.UI
             _current = Instantiate(prefab);
             DontDestroyOnLoad(_current.gameObject);
             var config = BalanceConfig.Instance;
-            var seconds = config == null ? (intoGame ? 10f : 5f) : intoGame ? config.LoadingSecondsEnter : config.LoadingSecondsExit;
+            if (seconds < 0f) seconds = config == null ? (intoGame ? 10f : 5f) : intoGame ? config.LoadingSecondsEnter : config.LoadingSecondsExit;
             _current.Begin(sceneName, Mathf.Max(0.5f, seconds));
         }
 

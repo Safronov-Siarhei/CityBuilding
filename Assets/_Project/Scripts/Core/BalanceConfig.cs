@@ -592,6 +592,8 @@ namespace CityBuilder.Core
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
+        // the ship from the menu to the campaign map (loading_seconds_campaign_map; the user, 2026-11-12: 5 s)
+        [SerializeField] private float loadingSecondsCampaignMap = 5f;
         // the tutorial's rules (tutorial_build_sec, tutorial_start_people, tutorial_king_heal_below)
         [SerializeField] private float tutorialBuildSeconds = 5f;
         [SerializeField] private int tutorialStartPeople = 3;
@@ -1229,6 +1231,7 @@ namespace CityBuilder.Core
         }
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
+        public float LoadingSecondsCampaignMap => loadingSecondsCampaignMap;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
         public int TutorialStartPeople => tutorialStartPeople;
         public float TutorialKingHealBelow => tutorialKingHealBelow;
@@ -2145,6 +2148,7 @@ namespace CityBuilder.Core
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
+            loadingSecondsCampaignMap = Read(economy, "loading_seconds_campaign_map", loadingSecondsCampaignMap);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
             shopSlotSeconds = Read(economy, "shop_slot_seconds", shopSlotSeconds);
             shopSlotStaggerSeconds = Read(economy, "shop_slot_stagger_seconds", shopSlotStaggerSeconds);

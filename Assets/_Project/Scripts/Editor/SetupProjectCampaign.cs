@@ -33,6 +33,14 @@ namespace CityBuilder.EditorTools
             c.clearFlags = CameraClearFlags.SolidColor;
             c.backgroundColor = new Color(0.16f, 0.11f, 0.07f);
             cam.AddComponent<AudioListener>();
+            new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+            // the game's settings card on its own canvas above the map (the screen draws the map at run time)
+            var settingsCanvas = new GameObject("SettingsCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var sc = settingsCanvas.GetComponent<Canvas>();
+            sc.renderMode = RenderMode.ScreenSpaceOverlay;
+            sc.sortingOrder = 10;
+            ConfigureScaler(settingsCanvas.GetComponent<CanvasScaler>());
+            var settings = BuildSettingsPanel(settingsCanvas.transform, CreatePanelSprite(), null);
             var screen = new GameObject("CampaignMapScreen").AddComponent<CityBuilder.Campaign.CampaignMapScreen>();
             var so = new SerializedObject(screen);
             so.FindProperty("mapFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/CampaignMap.json");
@@ -49,6 +57,8 @@ namespace CityBuilder.EditorTools
             Art("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
             Art("replayGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
             Art("lockGlyph", UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
+            Art("settingsGlyph", UiTextureImport.GlyphsFolder + "/Hud_Settings.png");
+            so.FindProperty("settings").objectReferenceValue = settings;
             so.ApplyModifiedPropertiesWithoutUndo();
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists(CampaignMapScenePath);
