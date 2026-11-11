@@ -60,6 +60,14 @@ def rounded(size, r):
     return m
 
 
+def over(pic, draw):
+    """Draws `draw(ImageDraw)` on a clear layer and composites it: ImageDraw on an RGBA picture REPLACES
+    the alpha, so a translucent shape would punch a hole the background shows through."""
+    layer = Image.new('RGBA', pic.size, (0, 0, 0, 0))
+    draw(ImageDraw.Draw(layer))
+    pic.alpha_composite(layer)
+
+
 def crystal(size, alpha=1.0):
     pic = Image.open(CRYSTAL).convert('RGBA')
     pic.thumbnail((size, size), Image.LANCZOS)
@@ -76,10 +84,18 @@ def amount_plaque(img, cx, cy, amount, s, dim=False):
     w = tw + icon + int(46 * s)
     h = int(60 * s)
     x0, y0 = int(cx - w / 2), int(cy - h / 2)
+    # drawn on its own layer and composited: ImageDraw on an RGBA picture REPLACES the alpha, so a
+    # see-through fill punched a hole the window's green background showed through (the user's «зелёная полоска»)
+    layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    ld.rounded_rectangle((x0, y0, x0 + w, y0 + h), h // 2, fill=(62, 36, 16, 255), outline=(176, 124, 52),
+                         width=max(2, int(3 * s)))
+    img.alpha_composite(layer)
+    layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(layer).rounded_rectangle((x0 + 6 * s, y0 + 5 * s, x0 + w - 6 * s, y0 + h * 0.45), h // 3,
+                                            fill=(255, 255, 255, 22))
+    img.alpha_composite(layer)
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((x0, y0, x0 + w, y0 + h), h // 2, fill=(62, 36, 16, 240), outline=(176, 124, 52),
-                        width=max(2, int(3 * s)))
-    d.rounded_rectangle((x0 + 6 * s, y0 + 5 * s, x0 + w - 6 * s, y0 + h * 0.45), h // 3, fill=(255, 255, 255, 28))
     colour = (200, 186, 160) if dim else (255, 246, 222)
     d.text((x0 + int(16 * s), cy), str(amount), font=f, fill=colour, anchor='lm', stroke_width=int(2 * s),
            stroke_fill=(30, 15, 5))
@@ -131,8 +147,8 @@ def tile(img, box, day, amount, state, big):
     inner = inner.filter(ImageFilter.GaussianBlur(5 * S))
     inner.putalpha(Image.composite(inner.getchannel('A'), Image.new('L', t.size, 0), face_mask))
     t.alpha_composite(inner)
-    td.rounded_rectangle((pad + 6 * S, pad + 6 * S, pad + w - 6 * S, pad + h - 6 * S), r - 6 * S,
-                         outline=(255, 250, 220, 120), width=2 * S)
+    over(t, lambda g: g.rounded_rectangle((pad + 6 * S, pad + 6 * S, pad + w - 6 * S, pad + h - 6 * S), r - 6 * S,
+                                          outline=(255, 250, 220, 120), width=2 * S))
 
     cx = pad + w / 2
     cy = pad + h * 0.41
@@ -179,7 +195,7 @@ def tile(img, box, day, amount, state, big):
                     (ex + side * 34 * S, ry0 + rh + 6 * S), (ex, ry0 + rh + 6 * S)], fill=dark)
     td.rounded_rectangle((rx0, ry0, rx0 + rw, ry0 + rh), 10 * S, fill=ribbon,
                          outline=tuple(int(c * 0.5) for c in ribbon), width=3 * S)
-    td.rounded_rectangle((rx0 + 6 * S, ry0 + 5 * S, rx0 + rw - 6 * S, ry0 + rh * 0.42), 6 * S, fill=(255, 255, 255, 45))
+    # no gloss band on the ribbon: the user did not like it (2026-11-11)
     td.text((cx, ry0 + rh / 2 + 1 * S), f'День {day}', font=font(28 * S), fill=(255, 242, 214), anchor='mm',
             stroke_width=2 * S, stroke_fill=tuple(int(c * 0.4) for c in ribbon))
 
@@ -188,7 +204,8 @@ def tile(img, box, day, amount, state, big):
     if state == 'taken':                              # a big green tick over the dimmed crystal
         td = ImageDraw.Draw(t)
         br = 42 * S
-        td.ellipse((cx - br, cy - br + 4 * S, cx + br, cy + br + 4 * S), fill=(20, 40, 10, 120))
+        over(t, lambda g: g.ellipse((cx - br, cy - br + 4 * S, cx + br, cy + br + 4 * S), fill=(20, 40, 10, 120)))
+        td = ImageDraw.Draw(t)
         td.ellipse((cx - br, cy - br, cx + br, cy + br), fill=(80, 176, 64), outline=(255, 255, 255), width=5 * S)
         td.line([(cx - 20 * S, cy + 2 * S), (cx - 5 * S, cy + 17 * S), (cx + 22 * S, cy - 14 * S)], fill='white',
                 width=11 * S, joint='curve')
