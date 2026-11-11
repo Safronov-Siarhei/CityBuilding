@@ -43,6 +43,11 @@
   Bushes along road verges. FARM PROPS `Tools/blender/cinematic/farm_props.py` (CineHaystack,
   CineHayBales, CinePigPen, CineHenYard, CineWashing from approved pieces): renders SENT FOR
   APPROVAL, not exported, not in the film.
+- **v10 (2026-11-11):** ground layers each at their own height (OpeningVillage FieldY 0.004 < RingY
+  0.008 < LaneY 0.014 (+0.003 on odd segments) < CobbleY 0.021, square +0.003; one seed per street,
+  cobbles seed 0 so overlaps match), camera near plane 0.25 -- a lane flickered. Farm props exported
+  (`farm_props.py -- export`) and placed by `OpeningVillage.Props` (stacks/bales by roads past 13 m
+  and at field edges, pens/hen yards at farms past 26 m, washing at town houses).
 - **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
   synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
   `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
