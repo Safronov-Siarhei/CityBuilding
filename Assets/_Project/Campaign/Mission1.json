@@ -658,7 +658,7 @@
   "every": 4.0
  },
  "world": {
-  "comment": "Mission 1's world round the player (the user's first playtest). corridor: what is off the way is dark like a dungeon (the mask lit within villageRadius of the square, trackHalf of the track, the field's ears (the field's earsBand + fieldEdge of the track, fieldMargin past its outline), the open boxes (x0,z0,x1,z1: the far bank's fields), and gateHalf x (gateFront in front, gateBack behind) of the end point; texel m a mask cell; the darkness's color, strength, soft, wobble) and an invisible wall wallHeight high where the light ends. markers: a small flag (pole poleHeight x poleWidth, pennant flagWidth x flagHeight fluttering at flutter) in a glowing ring (ringRadius, ringWidth) at each checkpoint, ringColor ahead, flashing reachedColor once reached and gone, flag and all, over goneSeconds; a pillar of light (beaconHeight x beaconWidth, beaconColor) at the end, all pulsing at pulse. guide: a golden arrow distance m before his feet, pointing to the track ahead m on, shown after idleSeconds standing still or when he is more than offRoute m off the track. leftovers: the film's villagers (id = film actor) run their path and are gone; hunts: an orc runs a villager down along path (gap m behind) when Ардан comes within radius of trigger -- at its end the villager falls; dead: villagers lying in the streets; folk: refugees before the gate (clip, yaw); props: models placed (x, z, yaw, scale); animals: a model (Fauna, the loose pig) running path at speed (hopping hop m) once he is within radius of trigger, then gone. Village frame, metres. The darkness lifts over fadeSeconds for the mage's scene. onTrack (dead, props, animals' path start): put on the road, side m to its right going down the route. animals: graze = seen standing at the path's start before he comes near; stay = stays at the path's end; yaw turns a model whose forward is not +z (the pig: 90). folk with a beat walk it to and fro, crouching at its ends (workers). patches: a model in a grid over box every step m (the far bank's wheat).",
+  "comment": "Mission 1's world round the player (the user's first playtest). corridor: what is off the way is dark like a dungeon (the mask lit within villageRadius of the square, trackHalf of the track, the field's ears (the field's earsBand + fieldEdge of the track, fieldMargin past its outline), the open boxes (x0,z0,x1,z1: the far bank's fields), and gateHalf x (gateFront in front, gateBack behind) of the end point; texel m a mask cell; the darkness's color, strength, soft, wobble) and an invisible wall wallHeight high where the light ends. markers: a small flag (pole poleHeight x poleWidth, pennant flagWidth x flagHeight fluttering at flutter) in a glowing ring (ringRadius, ringWidth) at each checkpoint, ringColor ahead, flashing reachedColor once reached and gone, flag and all, over goneSeconds; a pillar of light (beaconHeight x beaconWidth, beaconColor) at the end, all pulsing at pulse. guide: a golden arrow distance m before his feet, pointing to the track ahead m on, shown after idleSeconds standing still or when he is more than offRoute m off the track. leftovers: the film's villagers (id = film actor) run their path and are gone; hunts: an orc runs a villager down along path (gap m behind) when Ардан comes within radius of trigger -- at its end the villager falls; dead: villagers lying in the streets; folk: refugees before the gate (clip, yaw); props: models placed (x, z, yaw, scale); animals: a model (Fauna, the loose pig) running path at speed (hopping hop m) once he is within radius of trigger, then gone. Village frame, metres. The darkness lifts over fadeSeconds for the mage's scene. onTrack (dead, props, animals' path start): put on the road, side m to its right going down the route. animals: graze = seen standing at the path's start before he comes near; stay = stays at the path's end; yaw turns a model whose forward is not +z (the pig: -90). folk with a beat walk it to and fro, crouching at its ends (workers). patches: a model in a grid over box every step m (the far bank's wheat). A patch's sway: that share of its tiles gets the field's swaying ear material.",
   "corridor": {
    "texel": 1.0,
    "villageRadius": 30.0,
@@ -1017,7 +1017,7 @@
     "speed": 1.3,
     "hop": 0.03,
     "scale": 1.0,
-    "yaw": 90.0,
+    "yaw": -90.0,
     "stay": true
    },
    {
@@ -1040,7 +1040,7 @@
     "speed": 1.2,
     "hop": 0.03,
     "scale": 1.0,
-    "yaw": 90.0,
+    "yaw": -90.0,
     "stay": true
    },
    {
@@ -1208,7 +1208,8 @@
     ],
     "step": 0.96,
     "scale": 1.0,
-    "yaw": 0.0
+    "yaw": 0.0,
+    "sway": 0.35
    },
    {
     "model": "CineWheat",
@@ -1220,7 +1221,8 @@
     ],
     "step": 0.96,
     "scale": 1.0,
-    "yaw": 0.0
+    "yaw": 0.0,
+    "sway": 0.35
    }
   ]
  }

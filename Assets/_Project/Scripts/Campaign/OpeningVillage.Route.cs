@@ -252,6 +252,7 @@ namespace CityBuilder.Campaign
                     }
                 }
             }
+            WindyEars = windy;
             SwayingEars = 0;
             if (ears != null)
             {
@@ -499,6 +500,9 @@ namespace CityBuilder.Campaign
         /// <summary>How far a point is from the way (the market street and the laid track).</summary>
         /// <summary>How many ear tiles sway (the batchmode check).</summary>
         public int SwayingEars { get; private set; }
+
+        /// <summary>The ears' swaying material (null without wind): the far bank's wheat sways with it too.</summary>
+        public Material[] WindyEars { get; private set; }
 
         /// <summary>How far from the track the field's ears stand (the darkness keeps to them).</summary>
         public float EarsBand => _route?.field != null ? _route.field.earsBand : 0f;

@@ -377,13 +377,16 @@ namespace CityBuilder.Campaign
             var note = new GameObject("Checkpoint", typeof(RectTransform), typeof(UnityEngine.UI.Text), typeof(UnityEngine.UI.Shadow));
             note.transform.SetParent(canvas.transform, false);
             var nr = (RectTransform)note.transform;
-            nr.anchorMin = nr.anchorMax = new Vector2(0.5f, 1f);
-            nr.pivot = new Vector2(0.5f, 1f);
-            nr.anchoredPosition = new Vector2(0f, -70f);
+            // low in the middle, over the run's clock and its stretch line (the user: at the top it
+            // hid behind Ардан's portrait)
+            nr.anchorMin = nr.anchorMax = new Vector2(0.5f, 0f);
+            nr.pivot = new Vector2(0.5f, 0f);
+            nr.anchoredPosition = new Vector2(0f, 124f);
             nr.sizeDelta = new Vector2(600f, 50f);
             _notice = note.GetComponent<UnityEngine.UI.Text>();
             _notice.font = UI.UiTheme.Regular;
             _notice.fontSize = 30;
+            note.AddComponent<UnityEngine.UI.Outline>().effectColor = new Color(0.1f, 0.06f, 0.03f, 0.9f);
             _notice.alignment = TextAnchor.MiddleCenter;
             _notice.raycastTarget = false;
             _notice.color = Color.clear;

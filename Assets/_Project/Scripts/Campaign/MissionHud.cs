@@ -222,17 +222,23 @@ namespace CityBuilder.Campaign
             MissionSkin.Round(panel.transform, "Close", "round_main", HudInk.OnMain, _art.closeGlyph, new Vector2(1f, 1f), new Vector2(-14f, -14f), 64f).onClick.AddListener(Close);
         }
 
+        /// <summary>Time stands, the screen dims; the window's buttons go on _modal, which covers the
+        /// safe area exactly (it once bled three screens wide for the dim, and the menu's buttons,
+        /// anchored to its top left, were drawn off screen: the user saw only the dimming).</summary>
         private void Dim()
         {
             Time.timeScale = 0f;
-            _modal = new GameObject("Modal", typeof(RectTransform), typeof(Image), typeof(Button));
+            _modal = new GameObject("Modal", typeof(RectTransform));
             _modal.transform.SetParent(_safe, false);
-            var r = (RectTransform)_modal.transform;
+            Fill((RectTransform)_modal.transform);
+            var dim = new GameObject("Dim", typeof(RectTransform), typeof(Image), typeof(Button));
+            dim.transform.SetParent(_modal.transform, false);
+            var r = (RectTransform)dim.transform;
             r.anchorMin = new Vector2(-1f, -1f);
             r.anchorMax = new Vector2(2f, 2f);
             r.offsetMin = r.offsetMax = Vector2.zero;
-            _modal.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
-            var bb = _modal.GetComponent<Button>();
+            dim.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            var bb = dim.GetComponent<Button>();
             bb.transition = Selectable.Transition.None;
             bb.onClick.AddListener(Close);
         }

@@ -145,12 +145,8 @@ namespace CityBuilder.Campaign
 
         private static void Round(Transform panel, Sprite glyph, string role, HudInk ink, string text, Vector2 at, UnityEngine.Events.UnityAction onClick)
         {
-            var b = MissionSkin.Round(panel, "Button", role, ink, glyph, at, Vector2.zero, 84f);
-            b.onClick.AddListener(onClick);
-            var plaque = MissionSkin.Image(b.transform, "Label", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, 4f), new Vector2(170f, 36f));
-            plaque.raycastTarget = false;
-            var t = MissionSkin.Label(plaque.transform, text, UiTheme.Bold, 20, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
-            t.raycastTarget = false;
+            var b = MissionSkin.Round(panel, "Button", role, ink, glyph, at, Vector2.zero, 96f);
+            b.onClick.AddListener(onClick);          // icons only, as the sandbox's (the user)
         }
 
         private static RectTransform Box(Transform parent, string name, Vector2 min, Vector2 max, Vector2 size, Color colour)

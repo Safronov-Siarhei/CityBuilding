@@ -87,7 +87,7 @@ namespace CityBuilder.Campaign
         }
 
         /// <summary>A patch of models in a grid (the far bank's fields): x0, z0, x1, z1, every `step` m.</summary>
-        [Serializable] public class Patch { public string model; public float[] box; public float step, scale, yaw; }
+        [Serializable] public class Patch { public string model; public float[] box; public float step, scale, yaw, sway; }
 
         private class Run
         {
@@ -191,16 +191,23 @@ namespace CityBuilder.Campaign
                     if (model == null || pa.box == null || pa.box.Length < 4 || pa.step <= 0f) continue;
                     for (var x = Mathf.Min(pa.box[0], pa.box[2]); x <= Mathf.Max(pa.box[0], pa.box[2]) + 1e-3f; x += pa.step)
                         for (var z = Mathf.Min(pa.box[1], pa.box[3]); z <= Mathf.Max(pa.box[1], pa.box[3]) + 1e-3f; z += pa.step)
-                            Prop(model, new Vector3(x, 0f, z), pa.yaw, pa.scale);
+                        {
+                            var go = Prop(model, new Vector3(x, 0f, z), pa.yaw, pa.scale);
+                            // a share of the tiles sways, as in the field (the user: the far bank's too)
+                            var windy = village.WindyEars;
+                            if (windy != null && pa.sway > 0f && Mathf.Repeat(Mathf.Sin(x * 12.9898f + z * 78.233f) * 43758.55f, 1f) < pa.sway)
+                                foreach (var r in go.GetComponentsInChildren<Renderer>()) r.sharedMaterials = windy;
+                        }
                 }
         }
 
-        private void Prop(GameObject model, Vector3 at, float yaw, float scale)
+        private GameObject Prop(GameObject model, Vector3 at, float yaw, float scale)
         {
             var go = UnityEngine.Object.Instantiate(model, _root);
             go.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
             go.transform.localScale = model.transform.localScale * (scale > 0f ? scale : 1f);
             CineTwoSided.Apply(go);
+            return go;
         }
 
         /// <summary>A point put on the road (its nearest point, `side` m to its right going down the
