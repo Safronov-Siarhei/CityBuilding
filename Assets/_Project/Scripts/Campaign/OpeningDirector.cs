@@ -178,7 +178,31 @@ namespace CityBuilder.Campaign
 
         private void Update()
         {
-            if (Application.isPlaying && Playing) Step(UnityEngine.Time.deltaTime);
+            // after the end the village goes on living under the mission (MissionOne): the orcs, the
+            // fires, the smoke, the folk -- only the cues have run out and the camera is the mission's
+            if (Application.isPlaying && (Playing || (_finished && KeepAlive))) Step(UnityEngine.Time.deltaTime);
+        }
+
+        /// <summary>Go on stepping the world once the film has ended (the mission plays in it).</summary>
+        public bool KeepAlive { get; set; }
+
+        /// <summary>The camera stops following the shots: the mission drives it from here on.</summary>
+        public bool CameraReleased { get; set; }
+
+        /// <summary>Takes an actor out of the film's hands (Ардан, for the player): the director no
+        /// longer moves or animates it.</summary>
+        public CineFigure Release(string id)
+        {
+            if (!_actors.TryGetValue(id, out var a)) return null;
+            _actors.Remove(id);
+            return a.fig;
+        }
+
+        /// <summary>Where the camera stands and looks, for the effects' depth of field and the storm dome.</summary>
+        public void SetCameraAim(Vector3 from, Vector3 at)
+        {
+            _camFrom = from;
+            _camAt = at;
         }
 
         public void Play()
@@ -246,7 +270,7 @@ namespace CityBuilder.Campaign
             StepRope();
             StepSack(dt);
             if (life != null) life.Step(dt);
-            StepCamera();
+            if (!CameraReleased) StepCamera();
             StepSubtitle();
             if (fx != null) fx.Step(Time, dt, _camFrom, _camAt, cam.focalLength, _shallow);
             if (sound != null) sound.Step(Time);

@@ -98,6 +98,14 @@ foreach ($step in $Steps) {
             Write-Output "=== film$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
         }
+        'mission' {
+            # mission 1's handover and controls checked in batchmode (Editor/CampaignPhotos.Mission) into RunLogs/campaign/mission/ -- needs graphics
+            $log = "$logs/mission_run.log"
+            $code = Invoke-Unity "mission$i" @('-batchmode', '-quit', '-projectPath', $project,
+                '-executeMethod', 'CityBuilder.EditorTools.CampaignPhotos.Mission', '-logFile', $log)
+            Write-Output "=== mission$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
+            Write-LogProblems $log
+        }
         'campaign' {
             # photos of the campaign's opening village (Editor/CampaignPhotos) into RunLogs/campaign/ -- needs graphics
             $log = "$logs/campaign_run.log"

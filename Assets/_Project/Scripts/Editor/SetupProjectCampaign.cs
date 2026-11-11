@@ -27,6 +27,7 @@ namespace CityBuilder.EditorTools
         private const string OpeningTracksPath = "Assets/_Project/Campaign/OpeningTracks.json";
         public const string CampaignAudioFolder = "Assets/_Project/Audio/Campaign";
         private const string ChimneysPath = "Assets/_Project/Campaign/Chimneys.json";
+        private const string Mission1Path = "Assets/_Project/Campaign/Mission1.json";
         private const string OpeningVolumePath = "Assets/_Project/Campaign/OpeningVolume.asset";
 
         // the village's houses: the game's own buildings (OpeningVillage picks among them by id)
@@ -262,6 +263,15 @@ namespace CityBuilder.EditorTools
                 dst.FindPropertyRelative("clips").objectReferenceValue = src.FindPropertyRelative("clips").objectReferenceValue;
             }
             dso.ApplyModifiedPropertiesWithoutUndo();
+
+            // mission 1 takes over where the film ends: the game's camera over Ардан and the floating stick
+            var mission = new GameObject("MissionOne").AddComponent<MissionOne>();
+            var mso = new SerializedObject(mission);
+            mso.FindProperty("director").objectReferenceValue = director;
+            mso.FindProperty("village").objectReferenceValue = village;
+            mso.FindProperty("cam").objectReferenceValue = cam;
+            mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            mso.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(ScenesFolder);
             DeleteIfExists(CampaignOpeningScenePath);

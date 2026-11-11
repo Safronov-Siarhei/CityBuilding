@@ -128,6 +128,71 @@ namespace CityBuilder.EditorTools
             Debug.Log($"[CampaignFilm] {frames} frames to {dir}; shots {shots}");
         }
 
+        /// <summary>
+        /// Mission 1's handover and controls (run.ps1 -Steps mission): the film run to its end unseen,
+        /// then the stick steered by a script -- up the market street into the houses, then round --
+        /// with Ардан's position logged each second and a few frames of the game's view saved to
+        /// RunLogs/campaign/mission/.
+        /// </summary>
+        public static void Mission()
+        {
+            EditorSceneManager.OpenScene(SetupProject.CampaignOpeningScenePath);
+            var village = Object.FindAnyObjectByType<OpeningVillage>();
+            village.Build();
+            var director = Object.FindAnyObjectByType<OpeningDirector>();
+            var mission = Object.FindAnyObjectByType<MissionOne>();
+            var cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
+            var dir = Path.Combine(Directory.GetCurrentDirectory(), "RunLogs", "campaign", "mission");
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            Directory.CreateDirectory(dir);
+            var wasAsync = EditorSettings.asyncShaderCompilation;
+            EditorSettings.asyncShaderCompilation = false;
+            var rt = new RenderTexture(1280, 720, 24) { antiAliasing = 4 };
+            var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            director.Play();
+            const float dt = 1f / 30f;
+            while (director.Playing) director.Step(dt);
+            mission.Begin();
+            Physics.SyncTransforms();
+            // (seconds, stick): wait, run up the screen, up-left, left, down-right
+            var plan = new[] { (1.5f, Vector2.zero), (6f, Vector2.up), (3f, new Vector2(-0.7f, 0.7f)), (2f, Vector2.left), (2f, new Vector2(0.3f, 0.3f)), (2f, new Vector2(0.7f, -0.7f)) };
+            var shots = new[] { 0.3f, 1.5f, 4f, 7.5f, 10.5f, 13f, 16f };
+            var log = new System.Text.StringBuilder();
+            var t = 0f;
+            var next = 0;
+            var nextLog = 0f;
+            foreach (var (seconds, stick) in plan)
+            {
+                for (var s = 0f; s < seconds; s += dt, t += dt)
+                {
+                    director.Step(dt);
+                    mission.Step(dt, stick);
+                    Physics.SyncTransforms();
+                    mission.StepCamera(dt);
+                    if (t >= nextLog)
+                    {
+                        var p = mission.Ardan.position;
+                        log.Append($"t{t:F0}=({p.x:F2},{p.z:F2}) ");
+                        nextLog += 1f;
+                    }
+                    if (next < shots.Length && t >= shots[next])
+                    {
+                        cam.targetTexture = rt;
+                        cam.Render();
+                        RenderTexture.active = rt;
+                        tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                        tex.Apply();
+                        File.WriteAllBytes(Path.Combine(dir, $"m{next}_{t:F1}s.jpg"), tex.EncodeToJPG(90));
+                        RenderTexture.active = null;
+                        cam.targetTexture = null;
+                        next++;
+                    }
+                }
+            }
+            EditorSettings.asyncShaderCompilation = wasAsync;
+            Debug.Log($"[Mission1] path {log}");
+        }
+
         private static void Simulate(OpeningLife life, float seconds)
         {
             for (var t = 0f; t < seconds; t += 1f / 30f) life.Step(1f / 30f);

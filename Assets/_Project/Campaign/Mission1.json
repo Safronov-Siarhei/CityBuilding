@@ -1,0 +1,8 @@
+{
+ "comment": "Mission 1 В«Р‘РµРіСЃС‚РІРѕВ» (the user, 2026-11-11): the main game's camera (pitch 50 like the game's rig, its 60-degree lens), no zoom, never turning (yaw 180: the camera looks south, the way the route runs, so the run goes up the screen), РђСЂРґР°РЅ always in the middle. Distances in the film's village frame (houses there are grown 1.6x). blend = seconds the film's last shot eases into this view. joystick: radius/knob in 1280x720 reference pixels, deadzone and walkBelow as a share of the radius (below walkBelow he walks), hint shown after hintDelay s and faded once he has run hintFadeAfter s. runner: РђСЂРґР°РЅ's collision post and turn rate; trunkRadius = the posts round the trees.",
+ "camera": {"pitch": 50.0, "yaw": 180.0, "distance": 6.0, "fov": 60.0, "aimHeight": 0.25, "blend": 1.4},
+ "joystick": {"radius": 70.0, "knob": 28.0, "deadzone": 0.15, "walkBelow": 0.5, "hintDelay": 0.8, "hintFadeAfter": 1.5},
+ "runner": {"radius": 0.14, "height": 0.5, "turnRate": 12.0, "trunkRadius": 0.18, "fade": 0.2},
+ "solidPieces": ["CineChurch", "CineStallFruit", "CineStallCloth", "CineCartBody"],
+ "hintKey": "#m1_hint_move"
+}

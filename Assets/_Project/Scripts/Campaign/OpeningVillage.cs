@@ -68,6 +68,9 @@ namespace CityBuilder.Campaign
         private readonly Dictionary<string, Transform> _pieces = new Dictionary<string, Transform>();
         private readonly Dictionary<string, (Pose ruin, Pose arch)> _stonePoses = new Dictionary<string, (Pose, Pose)>();
         private readonly List<(Vector2 at, float r)> _taken = new List<(Vector2, float)>();
+        /// <summary>What a runner cannot pass through: the houses and props (boxed), the trees (by the trunk).</summary>
+        private readonly List<Transform> _solids = new List<Transform>();
+        private readonly List<Transform> _trunks = new List<Transform>();
         private readonly List<Vector2[]> _streets = new List<Vector2[]>();
         private readonly List<Vector2[]> _lanes = new List<Vector2[]>();
         private readonly List<Transform> _houses = new List<Transform>();
@@ -126,6 +129,8 @@ namespace CityBuilder.Campaign
             _streets.Clear();
             _lanes.Clear();
             _houses.Clear();
+            _solids.Clear();
+            _trunks.Clear();
             BuildingCount = 0;
             _rnd = new Random(seed);
 
@@ -310,6 +315,7 @@ namespace CityBuilder.Campaign
             go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
             CineTwoSided.Apply(go);
             Reserve(at, radius);
+            _solids.Add(go.transform);
             return true;
         }
 
@@ -484,6 +490,7 @@ namespace CityBuilder.Campaign
                     Quaternion.Euler(0f, (float)_rnd.NextDouble() * 360f, 0f) * model.transform.rotation);
                 go.transform.localScale = model.transform.localScale * BuildingScale * (0.8f + (float)_rnd.NextDouble() * 0.5f);
                 Reserve(at, 0.7f);
+                _trunks.Add(go.transform);
                 count++;
             }
         }
@@ -510,6 +517,7 @@ namespace CityBuilder.Campaign
             go.transform.localScale = prefab.transform.localScale * BuildingScale;
             Reserve(at, radius);
             if (id != "Well") _houses.Add(go.transform);
+            _solids.Add(go.transform);
             BuildingCount++;
             return true;
         }
@@ -597,6 +605,53 @@ namespace CityBuilder.Campaign
             go.transform.SetPositionAndRotation(pose.position, pose.rotation * model.transform.rotation);
             _pieces[name] = go.transform;
             return go.transform;
+        }
+
+        /// <summary>
+        /// Colliders for a runner (mission 1, the user, 2026-11-11: Ардан runs through the village the
+        /// film was shot in): a box round each house, prop and named set piece, fitted to its meshes
+        /// in its own frame so a turned house gets a turned box, and a post round each tree's trunk.
+        /// Only built when a mission asks -- the film needs none.
+        /// </summary>
+        public void MakeSolid(IEnumerable<string> pieces, float trunkRadius, float height)
+        {
+            var list = new List<Transform>(_solids);
+            if (pieces != null)
+                foreach (var name in pieces)
+                    if (_pieces.TryGetValue(name, out var t) && t != null) list.Add(t);
+            foreach (var t in list)
+            {
+                if (t == null || t.GetComponent<Collider>() != null) continue;
+                var any = false;
+                var b = new Bounds();
+                foreach (var mf in t.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (mf.sharedMesh == null || mf.name == "Back") continue;
+                    var mb = mf.sharedMesh.bounds;
+                    for (var i = 0; i < 8; i++)
+                    {
+                        var c = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                        var local = t.InverseTransformPoint(mf.transform.TransformPoint(c));
+                        if (!any) { b = new Bounds(local, Vector3.zero); any = true; } else b.Encapsulate(local);
+                    }
+                }
+                if (!any) continue;
+                var box = t.gameObject.AddComponent<BoxCollider>();
+                box.center = b.center;
+                box.size = b.size;
+            }
+            foreach (var t in _trunks)
+            {
+                if (t == null || t.Find("Trunk") != null) continue;
+                // a child of its own, upright in the world: the tree's frame may be turned by its import
+                var trunk = new GameObject("Trunk", typeof(CapsuleCollider));
+                trunk.transform.SetParent(_root, false);
+                trunk.transform.position = t.position;
+                var post = trunk.GetComponent<CapsuleCollider>();
+                post.radius = trunkRadius;
+                post.height = height;
+                post.center = new Vector3(0f, height * 0.5f, 0f);
+            }
         }
 
         private static Pose ToPose(Placement p) =>
