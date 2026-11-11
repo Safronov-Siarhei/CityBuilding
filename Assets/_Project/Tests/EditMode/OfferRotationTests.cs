@@ -123,5 +123,19 @@ namespace CityBuilder.Tests.EditMode
             Assert.That(OfferRotation.BonusPercent(C(OfferRotation.KindAdCrystals, 10, 0f), 0.01f, 10f), Is.Zero, "the base ad has no badge");
             Assert.That(OfferRotation.BonusPercent(C(OfferRotation.KindNormal, 100, 0f), 0.01f, 10f), Is.Zero);
         }
+
+        [Test]
+        public void AGoodsBundleOverTheAdLimitIsForCrystalsOnly()
+        {
+            // the user, 2026-11-11: a bundle worth more than shop_ad_max_ads ads is never given for an ad
+            var cheap = B("cheap", OfferRotation.KindNormal, 1, 1);
+            cheap.ads = 2f;
+            var dear = B("dear", OfferRotation.KindNormal, 1, 1);
+            dear.ads = 2.01f;
+            Assert.IsTrue(OfferRotation.AdAllowed(cheap, 2f), "exactly the limit is still an ad");
+            Assert.IsFalse(OfferRotation.AdAllowed(dear, 2f));
+            Assert.IsTrue(OfferRotation.AdAllowed(dear, 0f), "a limit of 0 is off");
+            Assert.IsFalse(OfferRotation.AdAllowed(B("gift", OfferRotation.KindBonus, 1, 1), 2f), "only goods bundles");
+        }
     }
 }

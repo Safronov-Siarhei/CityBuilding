@@ -241,6 +241,7 @@ badge()
 button('ButtonGreen', 280, GREEN)
 button('ButtonGreenWide', 476, GREEN)
 button('ButtonOrange', 476, ORANGE)
+button('ButtonBlueWide', 476, BLUE)   # a goods bundle for crystals only (no ad, or worth over shop_ad_max_ads)
 button('ButtonBlue', 171, BLUE)
 button('ButtonGold', 476, GOLD)
 play()
@@ -293,6 +294,9 @@ layout = {
     # the crystal offers' one wide button: green for an ad (with the play sign), orange for money
     'wide_play': rel(1040, 45, 1100, 105),
     'wide_ad_label': rel(1100, 25, 1440, 125),
+    # the wide blue crystals-only button: the price right-aligned, the crystal after it
+    'wide_price': rel(1040, 25, 1296, 125),
+    'wide_crystal': rel(1306, 43, 1370, 107),
     'stamp': rel(1076, 29, 1436, 121),
 }
 with open(OUT + 'layout.json', 'w', encoding='utf-8') as f:

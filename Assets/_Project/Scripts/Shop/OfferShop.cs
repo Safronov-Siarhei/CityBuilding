@@ -119,6 +119,8 @@ namespace CityBuilder.Shop
                     return true;
                 case Pay.Ad:
                     if (!RewardedAds.IsReady) return false;
+                    // a goods bundle worth more than shop_ad_max_ads ads: crystals only
+                    if (!s.IsAdOnly && !OfferRotation.AdAllowed(s.Bundle, _config.ShopAdMaxAds)) return false;
                     StartCoroutine(PlayAd(slot, s.Bundle));
                     return true;
                 default:

@@ -194,6 +194,7 @@ namespace CityBuilder.EditorTools
                     var price = Cell($"l{level}_price");
                     if (kind == "paid_crystals") bundle.priceUsd = ToFloat(price);
                     else bundle.priceCrystals = ToInt(price);
+                    bundle.ads = ToFloat(Cell($"l{level}_ads"));
                     for (var g = 0; g < 3; g++)
                     {
                         var amount = ToInt(Cell($"l{level}_amount{g + 1}"));

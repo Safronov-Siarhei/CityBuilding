@@ -7444,6 +7444,7 @@ MonoBehaviour:
   shopTimerWarnSeconds: 30
   shopCrystalUsd: 0.01
   shopAdCrystalsBase: 10
+  shopAdMaxAds: 2
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
   tutorialBuildSeconds: 5
@@ -8351,11 +8352,12 @@ MonoBehaviour:
     levelTo: 1
     goods:
     - resource: Wood
-      amount: 80
+      amount: 20
     - resource: Stone
-      amount: 50
-    priceCrystals: 2
+      amount: 20
+    priceCrystals: 3
     priceUsd: 0
+    ads: 0.32
   - id: builder_2
     nameKey: '#bundle_builder'
     kind: normal
@@ -8364,11 +8366,12 @@ MonoBehaviour:
     levelTo: 2
     goods:
     - resource: Wood
-      amount: 130
+      amount: 40
     - resource: Stone
-      amount: 80
-    priceCrystals: 2
+      amount: 40
+    priceCrystals: 6
     priceUsd: 0
+    ads: 0.64
   - id: builder_3
     nameKey: '#bundle_builder'
     kind: normal
@@ -8377,11 +8380,12 @@ MonoBehaviour:
     levelTo: 3
     goods:
     - resource: Wood
-      amount: 190
+      amount: 60
     - resource: Stone
-      amount: 120
-    priceCrystals: 2
+      amount: 60
+    priceCrystals: 8
     priceUsd: 0
+    ads: 0.96
   - id: builder_4
     nameKey: '#bundle_builder'
     kind: normal
@@ -8390,11 +8394,12 @@ MonoBehaviour:
     levelTo: 4
     goods:
     - resource: Wood
-      amount: 270
+      amount: 80
     - resource: Stone
-      amount: 170
-    priceCrystals: 3
+      amount: 80
+    priceCrystals: 10
     priceUsd: 0
+    ads: 1.28
   - id: builder_5
     nameKey: '#bundle_builder'
     kind: normal
@@ -8403,11 +8408,12 @@ MonoBehaviour:
     levelTo: 5
     goods:
     - resource: Wood
-      amount: 370
+      amount: 100
     - resource: Stone
-      amount: 230
-    priceCrystals: 3
+      amount: 100
+    priceCrystals: 16
     priceUsd: 0
+    ads: 1.6
   - id: lumber_1
     nameKey: '#bundle_lumber'
     kind: normal
@@ -8416,9 +8422,10 @@ MonoBehaviour:
     levelTo: 1
     goods:
     - resource: Wood
-      amount: 140
+      amount: 20
     priceCrystals: 1
     priceUsd: 0
+    ads: 0.14
   - id: lumber_2
     nameKey: '#bundle_lumber'
     kind: normal
@@ -8427,9 +8434,10 @@ MonoBehaviour:
     levelTo: 2
     goods:
     - resource: Wood
-      amount: 220
-    priceCrystals: 1
+      amount: 40
+    priceCrystals: 2
     priceUsd: 0
+    ads: 0.28
   - id: lumber_3
     nameKey: '#bundle_lumber'
     kind: normal
@@ -8438,9 +8446,10 @@ MonoBehaviour:
     levelTo: 3
     goods:
     - resource: Wood
-      amount: 340
-    priceCrystals: 1
+      amount: 60
+    priceCrystals: 3
     priceUsd: 0
+    ads: 0.42
   - id: lumber_4
     nameKey: '#bundle_lumber'
     kind: normal
@@ -8449,9 +8458,10 @@ MonoBehaviour:
     levelTo: 4
     goods:
     - resource: Wood
-      amount: 480
-    priceCrystals: 2
+      amount: 80
+    priceCrystals: 4
     priceUsd: 0
+    ads: 0.56
   - id: lumber_5
     nameKey: '#bundle_lumber'
     kind: normal
@@ -8460,9 +8470,10 @@ MonoBehaviour:
     levelTo: 5
     goods:
     - resource: Wood
-      amount: 640
-    priceCrystals: 2
+      amount: 100
+    priceCrystals: 5
     priceUsd: 0
+    ads: 0.7
   - id: mason_1
     nameKey: '#bundle_mason'
     kind: normal
@@ -8471,9 +8482,10 @@ MonoBehaviour:
     levelTo: 1
     goods:
     - resource: Stone
-      amount: 110
+      amount: 20
     priceCrystals: 1
     priceUsd: 0
+    ads: 0.18
   - id: mason_2
     nameKey: '#bundle_mason'
     kind: normal
@@ -8482,9 +8494,10 @@ MonoBehaviour:
     levelTo: 2
     goods:
     - resource: Stone
-      amount: 180
-    priceCrystals: 1
+      amount: 40
+    priceCrystals: 2
     priceUsd: 0
+    ads: 0.36
   - id: mason_3
     nameKey: '#bundle_mason'
     kind: normal
@@ -8493,9 +8506,10 @@ MonoBehaviour:
     levelTo: 3
     goods:
     - resource: Stone
-      amount: 260
-    priceCrystals: 1
+      amount: 60
+    priceCrystals: 3
     priceUsd: 0
+    ads: 0.54
   - id: mason_4
     nameKey: '#bundle_mason'
     kind: normal
@@ -8504,9 +8518,10 @@ MonoBehaviour:
     levelTo: 4
     goods:
     - resource: Stone
-      amount: 370
-    priceCrystals: 2
+      amount: 80
+    priceCrystals: 4
     priceUsd: 0
+    ads: 0.72
   - id: mason_5
     nameKey: '#bundle_mason'
     kind: normal
@@ -8515,9 +8530,10 @@ MonoBehaviour:
     levelTo: 5
     goods:
     - resource: Stone
-      amount: 510
-    priceCrystals: 2
+      amount: 100
+    priceCrystals: 5
     priceUsd: 0
+    ads: 0.9
   - id: treasury_1
     nameKey: '#bundle_treasury'
     kind: normal
@@ -8526,9 +8542,10 @@ MonoBehaviour:
     levelTo: 1
     goods:
     - resource: Coins
-      amount: 120
-    priceCrystals: 2
+      amount: 100
+    priceCrystals: 6
     priceUsd: 0
+    ads: 0.8
   - id: treasury_2
     nameKey: '#bundle_treasury'
     kind: normal
@@ -8537,9 +8554,10 @@ MonoBehaviour:
     levelTo: 2
     goods:
     - resource: Coins
-      amount: 190
-    priceCrystals: 2
+      amount: 200
+    priceCrystals: 10
     priceUsd: 0
+    ads: 1.6
   - id: treasury_3
     nameKey: '#bundle_treasury'
     kind: normal
@@ -8548,9 +8566,10 @@ MonoBehaviour:
     levelTo: 3
     goods:
     - resource: Coins
-      amount: 290
-    priceCrystals: 2
+      amount: 500
+    priceCrystals: 30
     priceUsd: 0
+    ads: 4
   - id: treasury_4
     nameKey: '#bundle_treasury'
     kind: normal
@@ -8559,9 +8578,10 @@ MonoBehaviour:
     levelTo: 4
     goods:
     - resource: Coins
-      amount: 410
-    priceCrystals: 3
+      amount: 1000
+    priceCrystals: 50
     priceUsd: 0
+    ads: 8
   - id: treasury_5
     nameKey: '#bundle_treasury'
     kind: normal
@@ -8570,9 +8590,10 @@ MonoBehaviour:
     levelTo: 5
     goods:
     - resource: Coins
-      amount: 550
-    priceCrystals: 3
+      amount: 2500
+    priceCrystals: 100
     priceUsd: 0
+    ads: 20
   - id: pantry_1
     nameKey: '#bundle_pantry'
     kind: normal
@@ -8581,9 +8602,10 @@ MonoBehaviour:
     levelTo: 1
     goods:
     - resource: Food
-      amount: 70
+      amount: 10
     priceCrystals: 1
     priceUsd: 0
+    ads: 0.12
   - id: pantry_2
     nameKey: '#bundle_pantry'
     kind: normal
@@ -8592,9 +8614,10 @@ MonoBehaviour:
     levelTo: 2
     goods:
     - resource: Food
-      amount: 110
-    priceCrystals: 1
+      amount: 20
+    priceCrystals: 2
     priceUsd: 0
+    ads: 0.24
   - id: pantry_3
     nameKey: '#bundle_pantry'
     kind: normal
@@ -8603,9 +8626,10 @@ MonoBehaviour:
     levelTo: 3
     goods:
     - resource: Food
-      amount: 170
-    priceCrystals: 1
+      amount: 40
+    priceCrystals: 4
     priceUsd: 0
+    ads: 0.48
   - id: pantry_4
     nameKey: '#bundle_pantry'
     kind: normal
@@ -8614,9 +8638,10 @@ MonoBehaviour:
     levelTo: 4
     goods:
     - resource: Food
-      amount: 240
-    priceCrystals: 2
+      amount: 100
+    priceCrystals: 10
     priceUsd: 0
+    ads: 1.2
   - id: pantry_5
     nameKey: '#bundle_pantry'
     kind: normal
@@ -8625,64 +8650,80 @@ MonoBehaviour:
     levelTo: 5
     goods:
     - resource: Food
-      amount: 320
-    priceCrystals: 2
+      amount: 120
+    priceCrystals: 10
     priceUsd: 0
-  - id: farmer_1
-    nameKey: '#bundle_farmer'
+    ads: 1.44
+  - id: supplies_1
+    nameKey: '#bundle_supplies'
     kind: normal
     weight: 1
     levelFrom: 1
     levelTo: 1
     goods:
-    - resource: Grain
-      amount: 120
-    priceCrystals: 1
+    - resource: Food
+      amount: 10
+    - resource: Coins
+      amount: 50
+    priceCrystals: 5
     priceUsd: 0
-  - id: farmer_2
-    nameKey: '#bundle_farmer'
+    ads: 0.52
+  - id: supplies_2
+    nameKey: '#bundle_supplies'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Grain
-      amount: 190
-    priceCrystals: 1
+    - resource: Food
+      amount: 20
+    - resource: Coins
+      amount: 200
+    priceCrystals: 15
     priceUsd: 0
-  - id: farmer_3
-    nameKey: '#bundle_farmer'
+    ads: 1.84
+  - id: supplies_3
+    nameKey: '#bundle_supplies'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Grain
-      amount: 290
-    priceCrystals: 1
+    - resource: Food
+      amount: 120
+    - resource: Coins
+      amount: 140
+    priceCrystals: 2
     priceUsd: 0
-  - id: farmer_4
-    nameKey: '#bundle_farmer'
+    ads: 2.56
+  - id: supplies_4
+    nameKey: '#bundle_supplies'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Grain
-      amount: 410
-    priceCrystals: 2
+    - resource: Food
+      amount: 170
+    - resource: Coins
+      amount: 200
+    priceCrystals: 3
     priceUsd: 0
-  - id: farmer_5
-    nameKey: '#bundle_farmer'
+    ads: 3.64
+  - id: supplies_5
+    nameKey: '#bundle_supplies'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Grain
-      amount: 550
-    priceCrystals: 2
+    - resource: Food
+      amount: 230
+    - resource: Coins
+      amount: 280
+    priceCrystals: 3
     priceUsd: 0
+    ads: 5
   - id: carpenter_1
     nameKey: '#bundle_carpenter'
     kind: normal
@@ -8696,6 +8737,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.18
   - id: carpenter_2
     nameKey: '#bundle_carpenter'
     kind: normal
@@ -8709,6 +8751,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.92
   - id: carpenter_3
     nameKey: '#bundle_carpenter'
     kind: normal
@@ -8722,6 +8765,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.8
   - id: carpenter_4
     nameKey: '#bundle_carpenter'
     kind: normal
@@ -8735,6 +8779,7 @@ MonoBehaviour:
       amount: 200
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.98
   - id: carpenter_5
     nameKey: '#bundle_carpenter'
     kind: normal
@@ -8748,6 +8793,7 @@ MonoBehaviour:
       amount: 280
     priceCrystals: 3
     priceUsd: 0
+    ads: 5.46
   - id: quarry_1
     nameKey: '#bundle_quarry'
     kind: normal
@@ -8761,6 +8807,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.29
   - id: quarry_2
     nameKey: '#bundle_quarry'
     kind: normal
@@ -8774,6 +8821,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.06
   - id: quarry_3
     nameKey: '#bundle_quarry'
     kind: normal
@@ -8787,6 +8835,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 2
     priceUsd: 0
+    ads: 3.1
   - id: quarry_4
     nameKey: '#bundle_quarry'
     kind: normal
@@ -8800,6 +8849,7 @@ MonoBehaviour:
       amount: 200
     priceCrystals: 3
     priceUsd: 0
+    ads: 4.39
   - id: quarry_5
     nameKey: '#bundle_quarry'
     kind: normal
@@ -8813,6 +8863,7 @@ MonoBehaviour:
       amount: 280
     priceCrystals: 3
     priceUsd: 0
+    ads: 5.93
   - id: settler_1
     nameKey: '#bundle_settler'
     kind: normal
@@ -8828,6 +8879,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.26
   - id: settler_2
     nameKey: '#bundle_settler'
     kind: normal
@@ -8843,6 +8895,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.96
   - id: settler_3
     nameKey: '#bundle_settler'
     kind: normal
@@ -8858,6 +8911,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 2
     priceUsd: 0
+    ads: 3.08
   - id: settler_4
     nameKey: '#bundle_settler'
     kind: normal
@@ -8873,6 +8927,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 3
     priceUsd: 0
+    ads: 4.34
   - id: settler_5
     nameKey: '#bundle_settler'
     kind: normal
@@ -8888,71 +8943,87 @@ MonoBehaviour:
       amount: 180
     priceCrystals: 3
     priceUsd: 0
-  - id: hunter_1
-    nameKey: '#bundle_hunter'
+    ads: 5.74
+  - id: convoy_1
+    nameKey: '#bundle_convoy'
     kind: normal
     weight: 1
     levelFrom: 1
     levelTo: 1
     goods:
-    - resource: Meat
-      amount: 50
-    - resource: Food
-      amount: 50
-    priceCrystals: 1
+    - resource: Wood
+      amount: 80
+    - resource: Stone
+      amount: 60
+    - resource: Coins
+      amount: 60
+    priceCrystals: 3
     priceUsd: 0
-  - id: hunter_2
-    nameKey: '#bundle_hunter'
+    ads: 1.58
+  - id: convoy_2
+    nameKey: '#bundle_convoy'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Meat
-      amount: 80
-    - resource: Food
-      amount: 80
-    priceCrystals: 1
+    - resource: Wood
+      amount: 130
+    - resource: Stone
+      amount: 100
+    - resource: Coins
+      amount: 100
+    priceCrystals: 3
     priceUsd: 0
-  - id: hunter_3
-    nameKey: '#bundle_hunter'
+    ads: 2.61
+  - id: convoy_3
+    nameKey: '#bundle_convoy'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Meat
-      amount: 120
-    - resource: Food
-      amount: 120
-    priceCrystals: 1
+    - resource: Wood
+      amount: 190
+    - resource: Stone
+      amount: 140
+    - resource: Coins
+      amount: 140
+    priceCrystals: 3
     priceUsd: 0
-  - id: hunter_4
-    nameKey: '#bundle_hunter'
+    ads: 3.71
+  - id: convoy_4
+    nameKey: '#bundle_convoy'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Meat
-      amount: 170
-    - resource: Food
-      amount: 170
-    priceCrystals: 2
+    - resource: Wood
+      amount: 270
+    - resource: Stone
+      amount: 200
+    - resource: Coins
+      amount: 200
+    priceCrystals: 4
     priceUsd: 0
-  - id: hunter_5
-    nameKey: '#bundle_hunter'
+    ads: 5.29
+  - id: convoy_5
+    nameKey: '#bundle_convoy'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Meat
-      amount: 230
-    - resource: Food
-      amount: 230
-    priceCrystals: 2
+    - resource: Wood
+      amount: 370
+    - resource: Stone
+      amount: 280
+    - resource: Coins
+      amount: 280
+    priceCrystals: 4
     priceUsd: 0
+    ads: 7.35
   - id: smith_2
     nameKey: '#bundle_smith'
     kind: normal
@@ -8966,6 +9037,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.4
   - id: smith_3
     nameKey: '#bundle_smith'
     kind: normal
@@ -8979,6 +9051,7 @@ MonoBehaviour:
       amount: 150
     priceCrystals: 2
     priceUsd: 0
+    ads: 3.6
   - id: smith_4
     nameKey: '#bundle_smith'
     kind: normal
@@ -8992,6 +9065,7 @@ MonoBehaviour:
       amount: 210
     priceCrystals: 3
     priceUsd: 0
+    ads: 5.04
   - id: smith_5
     nameKey: '#bundle_smith'
     kind: normal
@@ -9005,6 +9079,7 @@ MonoBehaviour:
       amount: 290
     priceCrystals: 3
     priceUsd: 0
+    ads: 6.96
   - id: gold_2
     nameKey: '#bundle_gold'
     kind: normal
@@ -9016,6 +9091,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.8
   - id: gold_3
     nameKey: '#bundle_gold'
     kind: normal
@@ -9027,6 +9103,7 @@ MonoBehaviour:
       amount: 210
     priceCrystals: 2
     priceUsd: 0
+    ads: 4.2
   - id: gold_4
     nameKey: '#bundle_gold'
     kind: normal
@@ -9038,6 +9115,7 @@ MonoBehaviour:
       amount: 300
     priceCrystals: 3
     priceUsd: 0
+    ads: 6
   - id: gold_5
     nameKey: '#bundle_gold'
     kind: normal
@@ -9049,94 +9127,119 @@ MonoBehaviour:
       amount: 400
     priceCrystals: 3
     priceUsd: 0
-  - id: miller_2
-    nameKey: '#bundle_miller'
+    ads: 8
+  - id: woodcoal_2
+    nameKey: '#bundle_woodcoal'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Flour
+    - resource: Wood
+      amount: 100
+    - resource: Coal
       amount: 80
-    priceCrystals: 1
+    priceCrystals: 2
     priceUsd: 0
-  - id: miller_3
-    nameKey: '#bundle_miller'
+    ads: 1.66
+  - id: woodcoal_3
+    nameKey: '#bundle_woodcoal'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Flour
+    - resource: Wood
+      amount: 150
+    - resource: Coal
       amount: 120
-    priceCrystals: 1
+    priceCrystals: 2
     priceUsd: 0
-  - id: miller_4
-    nameKey: '#bundle_miller'
+    ads: 2.49
+  - id: woodcoal_4
+    nameKey: '#bundle_woodcoal'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Flour
+    - resource: Wood
+      amount: 210
+    - resource: Coal
       amount: 170
-    priceCrystals: 2
+    priceCrystals: 3
     priceUsd: 0
-  - id: miller_5
-    nameKey: '#bundle_miller'
+    ads: 3.51
+  - id: woodcoal_5
+    nameKey: '#bundle_woodcoal'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Flour
+    - resource: Wood
+      amount: 290
+    - resource: Coal
       amount: 230
-    priceCrystals: 2
+    priceCrystals: 3
     priceUsd: 0
-  - id: baker_2
-    nameKey: '#bundle_baker'
+    ads: 4.79
+  - id: stoneworks_2
+    nameKey: '#bundle_stoneworks'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Bread
+    - resource: Stone
+      amount: 120
+    - resource: Iron
       amount: 60
     priceCrystals: 2
     priceUsd: 0
-  - id: baker_3
-    nameKey: '#bundle_baker'
+    ads: 1.8
+  - id: stoneworks_3
+    nameKey: '#bundle_stoneworks'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Bread
+    - resource: Stone
+      amount: 180
+    - resource: Iron
       amount: 90
     priceCrystals: 2
     priceUsd: 0
-  - id: baker_4
-    nameKey: '#bundle_baker'
+    ads: 2.7
+  - id: stoneworks_4
+    nameKey: '#bundle_stoneworks'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Bread
+    - resource: Stone
+      amount: 260
+    - resource: Iron
       amount: 130
     priceCrystals: 3
     priceUsd: 0
-  - id: baker_5
-    nameKey: '#bundle_baker'
+    ads: 3.9
+  - id: stoneworks_5
+    nameKey: '#bundle_stoneworks'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Bread
+    - resource: Stone
+      amount: 340
+    - resource: Iron
       amount: 170
     priceCrystals: 3
     priceUsd: 0
+    ads: 5.1
   - id: coalman_2
     nameKey: '#bundle_coalman'
     kind: normal
@@ -9148,6 +9251,7 @@ MonoBehaviour:
       amount: 150
     priceCrystals: 1
     priceUsd: 0
+    ads: 1.8
   - id: coalman_3
     nameKey: '#bundle_coalman'
     kind: normal
@@ -9159,6 +9263,7 @@ MonoBehaviour:
       amount: 220
     priceCrystals: 1
     priceUsd: 0
+    ads: 2.64
   - id: coalman_4
     nameKey: '#bundle_coalman'
     kind: normal
@@ -9170,6 +9275,7 @@ MonoBehaviour:
       amount: 320
     priceCrystals: 2
     priceUsd: 0
+    ads: 3.84
   - id: coalman_5
     nameKey: '#bundle_coalman'
     kind: normal
@@ -9181,6 +9287,7 @@ MonoBehaviour:
       amount: 430
     priceCrystals: 2
     priceUsd: 0
+    ads: 5.16
   - id: ironore_2
     nameKey: '#bundle_ironore'
     kind: normal
@@ -9192,6 +9299,7 @@ MonoBehaviour:
       amount: 150
     priceCrystals: 1
     priceUsd: 0
+    ads: 1.8
   - id: ironore_3
     nameKey: '#bundle_ironore'
     kind: normal
@@ -9203,6 +9311,7 @@ MonoBehaviour:
       amount: 220
     priceCrystals: 1
     priceUsd: 0
+    ads: 2.64
   - id: ironore_4
     nameKey: '#bundle_ironore'
     kind: normal
@@ -9214,6 +9323,7 @@ MonoBehaviour:
       amount: 320
     priceCrystals: 2
     priceUsd: 0
+    ads: 3.84
   - id: ironore_5
     nameKey: '#bundle_ironore'
     kind: normal
@@ -9225,58 +9335,63 @@ MonoBehaviour:
       amount: 430
     priceCrystals: 2
     priceUsd: 0
-  - id: feast_2
-    nameKey: '#bundle_feast'
+    ads: 5.16
+  - id: prospector_2
+    nameKey: '#bundle_prospector'
     kind: normal
     weight: 1
     levelFrom: 2
     levelTo: 2
     goods:
-    - resource: Food
-      amount: 60
-    - resource: Bread
-      amount: 40
+    - resource: Gold
+      amount: 80
+    - resource: Coins
+      amount: 80
     priceCrystals: 2
     priceUsd: 0
-  - id: feast_3
-    nameKey: '#bundle_feast'
+    ads: 2.24
+  - id: prospector_3
+    nameKey: '#bundle_prospector'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Food
-      amount: 90
-    - resource: Bread
-      amount: 60
+    - resource: Gold
+      amount: 120
+    - resource: Coins
+      amount: 120
     priceCrystals: 2
     priceUsd: 0
-  - id: feast_4
-    nameKey: '#bundle_feast'
+    ads: 3.36
+  - id: prospector_4
+    nameKey: '#bundle_prospector'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Food
-      amount: 130
-    - resource: Bread
-      amount: 80
+    - resource: Gold
+      amount: 170
+    - resource: Coins
+      amount: 170
     priceCrystals: 3
     priceUsd: 0
-  - id: feast_5
-    nameKey: '#bundle_feast'
+    ads: 4.76
+  - id: prospector_5
+    nameKey: '#bundle_prospector'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Food
-      amount: 170
-    - resource: Bread
-      amount: 110
+    - resource: Gold
+      amount: 230
+    - resource: Coins
+      amount: 230
     priceCrystals: 3
     priceUsd: 0
+    ads: 6.44
   - id: merchant_2
     nameKey: '#bundle_merchant'
     kind: normal
@@ -9290,6 +9405,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.84
   - id: merchant_3
     nameKey: '#bundle_merchant'
     kind: normal
@@ -9303,6 +9419,7 @@ MonoBehaviour:
       amount: 90
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.76
   - id: merchant_4
     nameKey: '#bundle_merchant'
     kind: normal
@@ -9316,6 +9433,7 @@ MonoBehaviour:
       amount: 130
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.96
   - id: merchant_5
     nameKey: '#bundle_merchant'
     kind: normal
@@ -9329,58 +9447,49 @@ MonoBehaviour:
       amount: 170
     priceCrystals: 3
     priceUsd: 0
-  - id: granary_2
-    nameKey: '#bundle_granary'
-    kind: normal
-    weight: 1
-    levelFrom: 2
-    levelTo: 2
-    goods:
-    - resource: Grain
-      amount: 80
-    - resource: Flour
-      amount: 50
-    priceCrystals: 2
-    priceUsd: 0
-  - id: granary_3
-    nameKey: '#bundle_granary'
+    ads: 5.24
+  - id: miner_3
+    nameKey: '#bundle_miner'
     kind: normal
     weight: 1
     levelFrom: 3
     levelTo: 3
     goods:
-    - resource: Grain
-      amount: 120
-    - resource: Flour
-      amount: 70
+    - resource: Iron
+      amount: 90
+    - resource: CopperOre
+      amount: 60
     priceCrystals: 2
     priceUsd: 0
-  - id: granary_4
-    nameKey: '#bundle_granary'
+    ads: 1.8
+  - id: miner_4
+    nameKey: '#bundle_miner'
     kind: normal
     weight: 1
     levelFrom: 4
     levelTo: 4
     goods:
-    - resource: Grain
-      amount: 170
-    - resource: Flour
-      amount: 110
+    - resource: Iron
+      amount: 130
+    - resource: CopperOre
+      amount: 80
     priceCrystals: 3
     priceUsd: 0
-  - id: granary_5
-    nameKey: '#bundle_granary'
+    ads: 2.52
+  - id: miner_5
+    nameKey: '#bundle_miner'
     kind: normal
     weight: 1
     levelFrom: 5
     levelTo: 5
     goods:
-    - resource: Grain
-      amount: 230
-    - resource: Flour
-      amount: 140
+    - resource: Iron
+      amount: 170
+    - resource: CopperOre
+      amount: 110
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.36
   - id: workshop_2
     nameKey: '#bundle_workshop'
     kind: normal
@@ -9394,6 +9503,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.28
   - id: workshop_3
     nameKey: '#bundle_workshop'
     kind: normal
@@ -9407,6 +9517,7 @@ MonoBehaviour:
       amount: 90
     priceCrystals: 2
     priceUsd: 0
+    ads: 1.92
   - id: workshop_4
     nameKey: '#bundle_workshop'
     kind: normal
@@ -9420,6 +9531,7 @@ MonoBehaviour:
       amount: 130
     priceCrystals: 3
     priceUsd: 0
+    ads: 2.75
   - id: workshop_5
     nameKey: '#bundle_workshop'
     kind: normal
@@ -9433,6 +9545,7 @@ MonoBehaviour:
       amount: 170
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.65
   - id: bars_3
     nameKey: '#bundle_bars'
     kind: normal
@@ -9446,6 +9559,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.92
   - id: bars_4
     nameKey: '#bundle_bars'
     kind: normal
@@ -9459,6 +9573,7 @@ MonoBehaviour:
       amount: 200
     priceCrystals: 4
     priceUsd: 0
+    ads: 5.6
   - id: bars_5
     nameKey: '#bundle_bars'
     kind: normal
@@ -9472,6 +9587,7 @@ MonoBehaviour:
       amount: 270
     priceCrystals: 4
     priceUsd: 0
+    ads: 7.36
   - id: copper_3
     nameKey: '#bundle_copper'
     kind: normal
@@ -9483,6 +9599,7 @@ MonoBehaviour:
       amount: 120
     priceCrystals: 1
     priceUsd: 0
+    ads: 1.44
   - id: copper_4
     nameKey: '#bundle_copper'
     kind: normal
@@ -9494,6 +9611,7 @@ MonoBehaviour:
       amount: 170
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.04
   - id: copper_5
     nameKey: '#bundle_copper'
     kind: normal
@@ -9505,6 +9623,7 @@ MonoBehaviour:
       amount: 230
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.76
   - id: copperbars_3
     nameKey: '#bundle_copperbars'
     kind: normal
@@ -9516,6 +9635,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.4
   - id: copperbars_4
     nameKey: '#bundle_copperbars'
     kind: normal
@@ -9527,6 +9647,7 @@ MonoBehaviour:
       amount: 80
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.2
   - id: copperbars_5
     nameKey: '#bundle_copperbars'
     kind: normal
@@ -9538,6 +9659,7 @@ MonoBehaviour:
       amount: 110
     priceCrystals: 3
     priceUsd: 0
+    ads: 4.4
   - id: forge_3
     nameKey: '#bundle_forge'
     kind: normal
@@ -9551,6 +9673,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 3
     priceUsd: 0
+    ads: 2.56
   - id: forge_4
     nameKey: '#bundle_forge'
     kind: normal
@@ -9564,6 +9687,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 4
     priceUsd: 0
+    ads: 3.72
   - id: forge_5
     nameKey: '#bundle_forge'
     kind: normal
@@ -9577,6 +9701,7 @@ MonoBehaviour:
       amount: 80
     priceCrystals: 4
     priceUsd: 0
+    ads: 5
   - id: fortress_3
     nameKey: '#bundle_fortress'
     kind: normal
@@ -9590,6 +9715,7 @@ MonoBehaviour:
       amount: 30
     priceCrystals: 3
     priceUsd: 0
+    ads: 2.55
   - id: fortress_4
     nameKey: '#bundle_fortress'
     kind: normal
@@ -9603,6 +9729,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 4
     priceUsd: 0
+    ads: 3.49
   - id: fortress_5
     nameKey: '#bundle_fortress'
     kind: normal
@@ -9616,6 +9743,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 4
     priceUsd: 0
+    ads: 5.01
   - id: mint_3
     nameKey: '#bundle_mint'
     kind: normal
@@ -9629,6 +9757,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.32
   - id: mint_4
     nameKey: '#bundle_mint'
     kind: normal
@@ -9642,6 +9771,7 @@ MonoBehaviour:
       amount: 80
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.16
   - id: mint_5
     nameKey: '#bundle_mint'
     kind: normal
@@ -9655,6 +9785,7 @@ MonoBehaviour:
       amount: 110
     priceCrystals: 3
     priceUsd: 0
+    ads: 4.32
   - id: goldbars_4
     nameKey: '#bundle_goldbars'
     kind: normal
@@ -9666,6 +9797,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.2
   - id: goldbars_5
     nameKey: '#bundle_goldbars'
     kind: normal
@@ -9677,6 +9809,7 @@ MonoBehaviour:
       amount: 50
     priceCrystals: 3
     priceUsd: 0
+    ads: 4
   - id: royal_4
     nameKey: '#bundle_royal'
     kind: normal
@@ -9690,6 +9823,7 @@ MonoBehaviour:
       amount: 20
     priceCrystals: 3
     priceUsd: 0
+    ads: 2.4
   - id: royal_5
     nameKey: '#bundle_royal'
     kind: normal
@@ -9703,6 +9837,7 @@ MonoBehaviour:
       amount: 30
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.52
   - id: metals_4
     nameKey: '#bundle_metals'
     kind: normal
@@ -9716,6 +9851,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.2
   - id: metals_5
     nameKey: '#bundle_metals'
     kind: normal
@@ -9729,6 +9865,7 @@ MonoBehaviour:
       amount: 50
     priceCrystals: 3
     priceUsd: 0
+    ads: 4
   - id: lumbermill_3
     nameKey: '#bundle_lumbermill'
     kind: normal
@@ -9742,6 +9879,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 2
     priceUsd: 0
+    ads: 2.3
   - id: lumbermill_4
     nameKey: '#bundle_lumbermill'
     kind: normal
@@ -9755,6 +9893,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 3
     priceUsd: 0
+    ads: 3.22
   - id: lumbermill_5
     nameKey: '#bundle_lumbermill'
     kind: normal
@@ -9768,6 +9907,7 @@ MonoBehaviour:
       amount: 190
     priceCrystals: 3
     priceUsd: 0
+    ads: 4.37
   - id: gift_build_1
     nameKey: '#bundle_gift_build'
     kind: bonus
@@ -9781,6 +9921,7 @@ MonoBehaviour:
       amount: 30
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.62
   - id: gift_build_2
     nameKey: '#bundle_gift_build'
     kind: bonus
@@ -9794,6 +9935,7 @@ MonoBehaviour:
       amount: 50
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.01
   - id: gift_build_3
     nameKey: '#bundle_gift_build'
     kind: bonus
@@ -9807,6 +9949,7 @@ MonoBehaviour:
       amount: 70
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.47
   - id: gift_build_4
     nameKey: '#bundle_gift_build'
     kind: bonus
@@ -9820,6 +9963,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.09
   - id: gift_build_5
     nameKey: '#bundle_gift_build'
     kind: bonus
@@ -9833,6 +9977,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.87
   - id: gift_coins_1
     nameKey: '#bundle_gift_coins'
     kind: bonus
@@ -9844,6 +9989,7 @@ MonoBehaviour:
       amount: 50
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.4
   - id: gift_coins_2
     nameKey: '#bundle_gift_coins'
     kind: bonus
@@ -9855,6 +10001,7 @@ MonoBehaviour:
       amount: 80
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.64
   - id: gift_coins_3
     nameKey: '#bundle_gift_coins'
     kind: bonus
@@ -9866,6 +10013,7 @@ MonoBehaviour:
       amount: 120
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.96
   - id: gift_coins_4
     nameKey: '#bundle_gift_coins'
     kind: bonus
@@ -9877,6 +10025,7 @@ MonoBehaviour:
       amount: 170
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.36
   - id: gift_coins_5
     nameKey: '#bundle_gift_coins'
     kind: bonus
@@ -9888,6 +10037,7 @@ MonoBehaviour:
       amount: 230
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.84
   - id: gift_food_1
     nameKey: '#bundle_gift_food'
     kind: bonus
@@ -9899,6 +10049,7 @@ MonoBehaviour:
       amount: 40
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.48
   - id: gift_food_2
     nameKey: '#bundle_gift_food'
     kind: bonus
@@ -9910,6 +10061,7 @@ MonoBehaviour:
       amount: 60
     priceCrystals: 0
     priceUsd: 0
+    ads: 0.72
   - id: gift_food_3
     nameKey: '#bundle_gift_food'
     kind: bonus
@@ -9921,6 +10073,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.2
   - id: gift_food_4
     nameKey: '#bundle_gift_food'
     kind: bonus
@@ -9932,6 +10085,7 @@ MonoBehaviour:
       amount: 140
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.68
   - id: gift_food_5
     nameKey: '#bundle_gift_food'
     kind: bonus
@@ -9943,6 +10097,7 @@ MonoBehaviour:
       amount: 180
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.16
   - id: starter_1
     nameKey: '#bundle_starter'
     kind: starter
@@ -9958,6 +10113,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.36
   - id: starter_2
     nameKey: '#bundle_starter'
     kind: starter
@@ -9973,6 +10129,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.36
   - id: starter_3
     nameKey: '#bundle_starter'
     kind: starter
@@ -9988,6 +10145,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.36
   - id: starter_4
     nameKey: '#bundle_starter'
     kind: starter
@@ -10003,6 +10161,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.36
   - id: starter_5
     nameKey: '#bundle_starter'
     kind: starter
@@ -10018,6 +10177,7 @@ MonoBehaviour:
       amount: 100
     priceCrystals: 0
     priceUsd: 0
+    ads: 2.36
   - id: ad_crystals_10
     nameKey: '#bundle_ad_crystals_10'
     kind: ad_crystals
@@ -10029,6 +10189,7 @@ MonoBehaviour:
       amount: 10
     priceCrystals: 0
     priceUsd: 0
+    ads: 1
   - id: ad_crystals_15
     nameKey: '#bundle_ad_crystals_15'
     kind: ad_crystals
@@ -10040,6 +10201,7 @@ MonoBehaviour:
       amount: 15
     priceCrystals: 0
     priceUsd: 0
+    ads: 1.5
   - id: ad_crystals_20
     nameKey: '#bundle_ad_crystals_20'
     kind: ad_crystals
@@ -10051,6 +10213,7 @@ MonoBehaviour:
       amount: 20
     priceCrystals: 0
     priceUsd: 0
+    ads: 2
   - id: ad_crystals_30
     nameKey: '#bundle_ad_crystals_30'
     kind: ad_crystals
@@ -10062,6 +10225,7 @@ MonoBehaviour:
       amount: 30
     priceCrystals: 0
     priceUsd: 0
+    ads: 3
   - id: ad_crystals_50
     nameKey: '#bundle_ad_crystals_50'
     kind: ad_crystals
@@ -10073,6 +10237,7 @@ MonoBehaviour:
       amount: 50
     priceCrystals: 0
     priceUsd: 0
+    ads: 5
   - id: paid_crystals_1
     nameKey: '#bundle_paid_crystals_1'
     kind: paid_crystals
@@ -10084,6 +10249,7 @@ MonoBehaviour:
       amount: 199
     priceCrystals: 0
     priceUsd: 0.99
+    ads: 19.9
   - id: paid_crystals_2
     nameKey: '#bundle_paid_crystals_2'
     kind: paid_crystals
@@ -10095,6 +10261,7 @@ MonoBehaviour:
       amount: 249
     priceCrystals: 0
     priceUsd: 0.99
+    ads: 24.9
   - id: paid_crystals_3
     nameKey: '#bundle_paid_crystals_3'
     kind: paid_crystals
@@ -10106,6 +10273,7 @@ MonoBehaviour:
       amount: 1199
     priceCrystals: 0
     priceUsd: 4.99
+    ads: 119.9
   - id: paid_crystals_4
     nameKey: '#bundle_paid_crystals_4'
     kind: paid_crystals
@@ -10117,6 +10285,7 @@ MonoBehaviour:
       amount: 1499
     priceCrystals: 0
     priceUsd: 4.99
+    ads: 149.9
   - id: paid_crystals_5
     nameKey: '#bundle_paid_crystals_5'
     kind: paid_crystals
@@ -10128,6 +10297,7 @@ MonoBehaviour:
       amount: 3499
     priceCrystals: 0
     priceUsd: 9.99
+    ads: 349.9
   offerLevels:
   - level: 1
     labFrom: 0

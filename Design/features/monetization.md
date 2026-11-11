@@ -64,6 +64,15 @@
   bundle `<family>_<level>` per filled level (name key `#bundle_<family>`); crystal kinds fill level 1
   only and hold for every level (paid: l1_price = USD). 30 goods families, 3 gifts, starter, 5 ad and 5
   paid crystal offers. Crystal PRICES of goods unchanged on purpose (the user will test first).
+- **Ad limit (the user, 2026-11-11: never give bundles for nothing):** «Наборы» has a formula column
+  `lN_ads` after each `lN_price` = the level's worth in ads by «Цены ресурсов» (sum of amount x price per
+  10 / 10 / its B3). The CSV export carries the computed number; the importer reads it into
+  `OfferBundle.ads`. A goods bundle with ads > `shop_ad_max_ads` (2, «Наборы: настройки») is crystals only
+  (`OfferRotation.AdAllowed`; `OfferShop.Buy` refuses Pay.Ad): ONE wide blue button with the price and a
+  crystal (`ButtonBlueWide`, `SlotView.buyWide`) -- the same wide button now also stands for «no ad to
+  show». Tested in `OfferRotationTests.AGoodsBundleOverTheAdLimitIsForCrystalsOnly`. The user moved
+  res1..3 and name_ru before the level groups (the importer reads by header name; `bundle` must stay
+  column A, `level` on «Наборы: уровни»; headers must not be renamed).
 - **Trap (2026-11-11):** `ResourceType` still lists Grain, Flour, Bread, Meat (kept for old saves) but
   NOTHING makes or uses them since 2026-11-02 (food-and-hunger) -- never put them in a bundle or a price
   list (Population is not a resource either). Six round-4 families did (farmer, hunter, miller, baker,

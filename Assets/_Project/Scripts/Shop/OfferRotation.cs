@@ -192,6 +192,10 @@ namespace CityBuilder.Shop
         /// against `adBase` crystals per ad, crystals for money against `crystalUsd` dollars a
         /// crystal. 0 for anything else or no bonus.
         /// </summary>
+        /// <summary>A goods bundle may be taken for an ad only while it is worth at most maxAds ads (lN_ads; 0 = not counted); above that crystals only (the user, 2026-11-11).</summary>
+        public static bool AdAllowed(BalanceConfig.OfferBundle bundle, float maxAds) =>
+            bundle != null && bundle.kind == KindNormal && (maxAds <= 0f || bundle.ads <= maxAds);
+
         public static int BonusPercent(BalanceConfig.OfferBundle bundle, float crystalUsd, float adBase)
         {
             if (bundle == null || bundle.goods.Count == 0) return 0;

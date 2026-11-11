@@ -584,6 +584,8 @@ namespace CityBuilder.Core
         // the bases a crystal offer's bonus (+%) is counted from: a crystal's dollars, an ad's crystals
         [SerializeField] private float shopCrystalUsd = 0.01f;
         [SerializeField] private float shopAdCrystalsBase = 10f;
+        // a goods bundle worth more ads than this is sold for crystals only (the user, 2026-11-11: no bundles for nothing)
+        [SerializeField] private float shopAdMaxAds = 2f;
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
@@ -1212,6 +1214,7 @@ namespace CityBuilder.Core
         public float ShopTimerWarnSeconds => shopTimerWarnSeconds;
         public float ShopCrystalUsd => shopCrystalUsd;
         public float ShopAdCrystalsBase => shopAdCrystalsBase;
+        public float ShopAdMaxAds => shopAdMaxAds;
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
@@ -1351,6 +1354,8 @@ namespace CityBuilder.Core
             public int priceCrystals;
             /// <summary>paid_crystals only: the price in US dollars, the base tier (the game will show Google Play's price).</summary>
             public float priceUsd;
+            /// <summary>What it is worth in ads (the sheet's lN_ads formula from «Цены ресурсов»); over shop_ad_max_ads -> crystals only.</summary>
+            public float ads;
         }
 
         /// <summary>One row of «Наборы: уровни»: the player is at `level` once the lab and the citizens reach these.</summary>
@@ -2137,6 +2142,7 @@ namespace CityBuilder.Core
             shopTimerWarnSeconds = Read(economy, "shop_timer_warn_seconds", shopTimerWarnSeconds);
             shopCrystalUsd = Read(economy, "shop_crystal_usd", shopCrystalUsd);
             shopAdCrystalsBase = Read(economy, "shop_ad_crystals_base", shopAdCrystalsBase);
+            shopAdMaxAds = Read(economy, "shop_ad_max_ads", shopAdMaxAds);
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);

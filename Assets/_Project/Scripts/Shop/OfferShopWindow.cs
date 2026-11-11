@@ -52,6 +52,8 @@ namespace CityBuilder.Shop
             public GameObject stamp;
             public Button watchWide;
             public Text watchWideLabel;
+            public Button buyWide;
+            public Text buyWidePrice;
             public Button money;
             public Text moneyLabel;
             public GameObject badge;
@@ -64,6 +66,7 @@ namespace CityBuilder.Shop
             [NonSerialized] public float changeT = ChangeSeconds;
             [NonSerialized] public float shakeT = ShakeSeconds;
             [NonSerialized] public Vector2 buyHome;
+            [NonSerialized] public Vector2 buyWideHome;
         }
 
         [SerializeField] private CanvasGroup group;
@@ -114,7 +117,9 @@ namespace CityBuilder.Shop
                 slots[i].free.onClick.AddListener(() => Take(index, OfferShop.Pay.Free));
                 slots[i].watchWide.onClick.AddListener(() => Take(index, OfferShop.Pay.Ad));
                 slots[i].money.onClick.AddListener(() => Take(index, OfferShop.Pay.Money));
+                slots[i].buyWide.onClick.AddListener(() => Take(index, OfferShop.Pay.Crystals));
                 slots[i].buyHome = ((RectTransform)slots[i].buy.transform).anchoredPosition;
+                slots[i].buyWideHome = ((RectTransform)slots[i].buyWide.transform).anchoredPosition;
             }
             _counterHome = counter.anchoredPosition;
             toast.gameObject.SetActive(false);
@@ -260,13 +265,15 @@ namespace CityBuilder.Shop
             var bundle = slot.Bundle;
             view.root.SetActive(bundle != null);
             if (bundle == null) return;
-            // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show),
+            // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show, or worth
+            // more than shop_ad_max_ads ads -- one wide blue button),
             // 5 crystals for an ad, 6 its ad playing, 7 no ad to show, 8 crystals for money
             int state;
             if (slot.Taken) state = 0;
             else if (slot.IsFree) state = 1;
             else if (slot.IsPaid) state = 8;
             else if (slot.IsAdOnly) state = adPlaying ? 6 : adReady ? 5 : 7;
+            else if (!OfferRotation.AdAllowed(bundle, BalanceConfig.Sandbox.ShopAdMaxAds)) state = 4;
             else state = adPlaying ? 3 : adReady ? 2 : 4;
             if (view.shownId != bundle.id || view.shownState != state)
             {
@@ -298,7 +305,9 @@ namespace CityBuilder.Shop
                 Dim(view, state == 0);
                 view.free.gameObject.SetActive(state == 1);
                 view.watch.gameObject.SetActive(state == 2 || state == 3);
-                view.buy.gameObject.SetActive(state >= 2 && state <= 4);
+                view.buy.gameObject.SetActive(state == 2 || state == 3);
+                view.buyWide.gameObject.SetActive(state == 4);
+                view.buyWidePrice.text = bundle.priceCrystals.ToString();
                 view.watchWide.gameObject.SetActive(state >= 5 && state <= 7);
                 view.watchWide.interactable = state == 5;
                 view.watchWideLabel.text = Localization.Get(state == 6 ? "#shop_ad_playing" : "#shop_watch");
@@ -307,7 +316,7 @@ namespace CityBuilder.Shop
                     view.moneyLabel.text = Localization.Format("#shop_price_usd",
                         bundle.priceUsd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
                 view.watch.interactable = state == 2;
-                view.buy.interactable = state == 2 || state == 4;
+                view.buy.interactable = state == 2;
                 view.watchLabel.text = Localization.Get(state == 3 ? "#shop_ad_playing" : "#shop_watch");
                 view.price.text = bundle.priceCrystals.ToString();
             }
@@ -355,7 +364,9 @@ namespace CityBuilder.Shop
             if (view.shakeT < ShakeSeconds)
             {
                 view.shakeT += dt;
-                ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + new Vector2(Shake(view.shakeT), 0f);
+                var dx = new Vector2(Shake(view.shakeT), 0f);
+                ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + dx;
+                ((RectTransform)view.buyWide.transform).anchoredPosition = view.buyWideHome + dx;
             }
         }
 

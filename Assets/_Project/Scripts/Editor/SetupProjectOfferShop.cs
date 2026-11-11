@@ -40,7 +40,7 @@ namespace CityBuilder.EditorTools
             public float pad;
             public float[] strip0, strip1, strip2, strip3;
             public float[] close, counter, counter_icon, counter_text, toast;
-            public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp, badge, wide_play, wide_ad_label;
+            public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp, badge, wide_play, wide_ad_label, wide_price, wide_crystal;
             public float[] good0, good1, good2, amount0, amount1, amount2;
         }
 
@@ -287,6 +287,16 @@ namespace CityBuilder.EditorTools
                 view.watchWideLabel = ShopText(view.watchWide.transform, "Label", null, 38, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
                 PlaceIn(view.watchWideLabel.rectTransform, freeRect, On(box, layout.wide_ad_label));
                 Rim(view.watchWideLabel, UiTheme.Rgb(0x1c5412), 3f);
+                // a goods bundle for crystals only (no ad to show, or worth more than shop_ad_max_ads ads): one wide blue button
+                view.buyWide = ShopButton(slot, "BuyWide", "ButtonBlueWide", box, freeRect);
+                view.buyWidePrice = ShopText(view.buyWide.transform, "Price", null, 54, UiTheme.Heavy, Color.white, TextAnchor.MiddleRight);
+                PlaceIn(view.buyWidePrice.rectTransform, freeRect, On(box, layout.wide_price));
+                Rim(view.buyWidePrice, UiTheme.Rgb(0x103c70), 3f);
+                var wideCrystal = CreateImage(view.buyWide.transform, "Crystal", Color.white);
+                wideCrystal.sprite = CrystalIcon();
+                wideCrystal.preserveAspect = true;
+                wideCrystal.raycastTarget = false;
+                PlaceIn(wideCrystal.rectTransform, freeRect, On(box, layout.wide_crystal));
                 view.money = ShopButton(slot, "Money", "ButtonOrange", box, freeRect);
                 view.moneyLabel = ShopText(view.money.transform, "Label", null, 50, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
                 PlaceIn(view.moneyLabel.rectTransform, freeRect, On(box, layout.free_label));
