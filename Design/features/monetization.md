@@ -13,6 +13,23 @@
   2026-11-11: crystals are spent only in the sandbox (research lvl 3+, `DiplomacyWindow`); the Invasion
   hub only SHOWS them. Keep it so: any future Invasion purchase must be looks only.
 
+## BEFORE RELEASE (the user, 2026-11-11: «запомни»)
+Players' crystals must survive a reinstall. Today `Wallet.UpgradeCrystals` is PlayerPrefs only, so a
+reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Saved Games) or our own server.
+
+## Sandbox offer bundles (the user's concept, 2026-11-11; discussed, not built)
+- In the sandbox's menu (the round top-left button, pauses the game) THREE long bundle offers, each on
+  a 3-minute timer, starts 1 minute apart so they change one by one; a new one is random from the sheet
+  and never the same as the other two on screen.
+- Contents like wood+stone, coins, crystals, iron+coal; their OWN sheet tab, ~50 bundles, the user fills it.
+- Bundles have LEVELS so the amounts fit the player's progress.
+- Paid with crystals OR a rewarded ad (the player chooses); sometimes a FREE bonus bundle (small).
+- On a change, a special notification on the left for 30 s (must stand out from the usual feed).
+- Look: like the rate-us window (parchment, ribbon); to be discussed.
+- Open (Claude's review, same day): what «level» is; a daily cap on ads; notify on every change or only
+  on special ones; menu tab vs its own button; crystal bundle cannot be bought for crystals; timer in
+  real or game time; the ad SDK is not in the game yet (a stand-in ad first).
+
 ## Proposed order (Claude, 2026-11-11; the user agreed to the frame, items not yet confirmed one by one)
 1. Rewarded ads by choice. 2. «Королевский набор» -- a one-off non-consumable (rewards without watching,
    starting crystals, an exclusive look). 3. Looks: HUD styles, castle looks, map themes. 4. Crystal packs
