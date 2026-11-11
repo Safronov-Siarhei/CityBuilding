@@ -84,7 +84,17 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
   sheet has a quota and may silently not show, so a button should open the store page (or our window
   calls the review flow by itself, not from a button).
-- Proposed timing (numbers on the sheet): only after a happy moment (raid won, portal closed, tutorial
+- **WHEN it shows -- the user's rules (2026-11-11, decided; not built yet):** only on an EVENT from a
+  list (each its own sheet row, can be switched off), never in the tutorial, a fight, placement, or over
+  another window. First show after 20 min of PLAY time, then at most once per 20-25 min of play.
+  After «Оценить» (opens the store page, not the in-app review sheet -- that one silently skips): at most
+  ONCE A DAY, on an event 10-15 min into a session, and the window's «Позже» becomes «Уже оценил».
+  «Уже оценил» does NOT stop it (the user: once a day does not annoy, it closes at once) -- it keeps
+  the once-a-day rhythm. Invasion: only on a NEW RECORD (a run cannot be won). The user's events: Town
+  Hall L3, bot destroyed, orc portal base destroyed, each dungeon cleared, 100 people, Laboratory L4,
+  a ship built (not the tutorial's), campaign mission 1, Invasion record, the second day's login. The
+  user asked for a LONGER list so a session is never without one (Claude's proposal pending).
+- Old proposal, superseded: only after a happy moment (raid won, portal closed, tutorial
   done, Town Hall up), never after a defeat, not before N sessions; «Позже» = again in N days, gone after
   two refusals or after «Оценить».
 

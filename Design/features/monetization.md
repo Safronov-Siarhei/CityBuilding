@@ -178,6 +178,19 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   the building palette is full). Next: the chosen one replaces Res_UpgradeCrystal (and the shop's
   crystal sprites / OfferShop art if they draw their own).
 
+## Daily login bonus (the user, 2026-11-11; agreed, not built)
+- A 10-day calendar of crystals: 10-10-10-10-50-10-10-10-10-99, then it starts again; a MISSED day
+  starts the chain from day 1. «×2 за рекламу» on the day's reward (agreed). Proposed: the calendar
+  window in the main menu at the first login of the day; the day turns at local midnight; numbers on
+  the sheet; clock cheating tolerated until the cloud save.
+
+## POSTPONED indefinitely: play only online (the user's idea, 2026-11-11)
+- Idea: check the connection and refuse to play offline (so offline players do not dodge the ads), and
+  sell a bundle that lifts it. Claude advised against: ads are rewarded only (forcing online adds no
+  views), «requires internet» is a top 1-star complaint for a single-player game, a paid unlock reads as
+  ransom. Softer alternative offered: shop / ads / daily bonus need the net (grey «Нет сети»), the game
+  itself does not. The user: note it, implementation put off indefinitely.
+
 ## POSTPONED: chests with a roulette (the user's idea, 2026-11-11; agreed to put off)
 - **Idea:** chests of three classes -- common (an ad or crystals), rare and legendary (crystals only);
   opening spins a roulette that gives resources, crystals with a small chance.
