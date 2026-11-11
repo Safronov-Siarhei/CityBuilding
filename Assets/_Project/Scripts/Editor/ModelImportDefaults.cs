@@ -122,6 +122,11 @@ namespace CityBuilder.EditorTools
                 modelImporter.avatarSetup = ModelImporterAvatarSetup.NoAvatar;
                 modelImporter.animationCompression = ModelImporterAnimationCompression.KeyframeReduction;
                 modelImporter.meshCompression = ModelImporterMeshCompression.Medium;
+                // CineFigure cuts each figure into rigid parts at runtime (reads its vertices and
+                // triangles): unreadable, Play mode logged «Not allowed to access triangles» and every
+                // villager, orc and Ардан came out empty -- the batchmode checks never saw it, the
+                // editor lets edit mode read any mesh (the user, 2026-11-11: «не вижу многих жителей»)
+                modelImporter.isReadable = true;
                 return;
             }
 
