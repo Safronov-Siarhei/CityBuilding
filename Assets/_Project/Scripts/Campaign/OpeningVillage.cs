@@ -135,6 +135,7 @@ namespace CityBuilder.Campaign
             StreetHouses();
             Outskirts();
             MoreFields();
+            Props();
             Trees();
             Decor();
         }
@@ -144,7 +145,7 @@ namespace CityBuilder.Campaign
         private void Ground()
         {
             Flat("Grass", Quad(new Vector2(-400, -400), new Vector2(400, -400), new Vector2(400, 400), new Vector2(-400, 400), -0.01f), grass);
-            Flat("Square", Disc(Vector2.zero, 4.3f, 40, 0.006f), cobble);
+            Flat("Square", Disc(Vector2.zero, 4.3f, 40, CobbleY + 0.003f), cobble);
             Reserve(Vector2.zero, 5.4f);                                       // the square stays open
             Reserve(new Vector2(0f, 7.4f), 3.4f);                              // the church
             Reserve(new Vector2(2.4f, -5.6f), 2.6f);                           // the market
@@ -168,12 +169,25 @@ namespace CityBuilder.Campaign
                 var a = Mathf.PI * 2f * i / (ring.Length - 1);
                 ring[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 17f;
             }
-            Street(ring, 1.6f, dirt, false);
+            Street(ring, 1.6f, dirt, false, RingY);
         }
 
-        private void Street(Vector2[] line, float width, Material material, bool lane = true)
+        // Every flat layer at its own height, 3 mm apart and more, so no two ever share a depth and
+        // flicker (the user, 2026-11-11: a sandy lane blinked where it met the cobbles). Cobbles over
+        // dirt lanes over the ring road over fields over grass; a lane's own segments alternate, as
+        // two segments meet at a bend with their ruts running different ways. Cobble streets and the
+        // square share one world-space pattern, so where they overlap nothing can show.
+        private const float FieldY = 0.004f;
+        private const float RingY = 0.008f;
+        private const float LaneY = 0.014f;
+        private const float CobbleY = 0.021f;
+
+        private void Street(Vector2[] line, float width, Material material, bool lane = true, float y = -1f)
         {
             _streets.Add(line);
+            var cobbled = material == cobble;
+            if (y < 0f) y = cobbled ? CobbleY : LaneY;
+            var seed = cobbled ? 0f : (float)_rnd.NextDouble() * 50f;
             if (lane && line.Length > 2) _lanes.Add(line);
             for (var i = 0; i + 1 < line.Length; i++)
             {
@@ -182,7 +196,8 @@ namespace CityBuilder.Campaign
                 var side = Perp((b - a).normalized) * (width / 2f);
                 // a little past each end, so the bends close
                 var ext = (b - a).normalized * (width / 2f);
-                Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, 0.003f + 0.0005f * (_streets.Count % 4)), material, b - a);
+                var h = cobbled ? y : y + 0.003f * (i % 2);
+                Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, h), material, b - a, seed);
             }
         }
 
@@ -251,7 +266,7 @@ namespace CityBuilder.Campaign
                 if (!Free(at, Mathf.Max(w, d) * 0.6f)) continue;
                 var q = Quaternion.Euler(0f, turn, 0f);
                 Vector2 C(float x, float z) { var v = q * new Vector3(x, 0, z); return at + new Vector2(v.x, v.z); }
-                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), 0.004f), field, C(1, 0) - at);
+                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), FieldY), field, C(1, 0) - at);
                 Reserve(at, Mathf.Max(w, d) * 0.55f);
                 PlaceFacing(FarmHouses[_rnd.Next(FarmHouses.Length)], at + (Vector2)(q * Vector3.right * (w / 2f + 2.2f)).XZ(), Vector2.zero - at, 0.1f);
             }
@@ -275,9 +290,77 @@ namespace CityBuilder.Campaign
                 var turn = Mathf.Atan2(at.x, at.y) * Mathf.Rad2Deg + ((float)_rnd.NextDouble() - 0.5f) * 40f;
                 var q = Quaternion.Euler(0f, turn, 0f);
                 Vector2 C(float x, float z) { var v = q * new Vector3(x, 0, z); return at + new Vector2(v.x, v.z); }
-                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), 0.004f), field, C(1, 0) - at);
+                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), FieldY), field, C(1, 0) - at);
                 Reserve(at, radius);
                 placed++;
+            }
+        }
+
+        /// <summary>
+        /// Country life (the user, 2026-11-11): haystacks and stacked bales along the roads out of
+        /// town, pig pens and hen yards by the farmsteads, washing lines by the town houses -- the
+        /// approved farm_props.py pieces, each kept clear of roads, houses and each other.
+        /// </summary>
+        private void Props()
+        {
+            bool Put(string id, Vector2 at, float radius, float yaw)
+            {
+                var model = SetPieceModel(id);
+                if (model == null || !Free(at, radius) || NearStreet(at, radius * 0.7f)) return false;
+                var go = Instantiate(model, _root);
+                go.name = id;
+                go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
+                CineTwoSided.Apply(go);
+                Reserve(at, radius);
+                return true;
+            }
+            float Yaw() => (float)_rnd.NextDouble() * 360f;
+
+            // by the roads, past the old town
+            foreach (var line in _streets)
+            {
+                for (var i = 0; i + 1 < line.Length; i++)
+                {
+                    var a = line[i];
+                    var b = line[i + 1];
+                    var len = (b - a).magnitude;
+                    var dir = (b - a) / len;
+                    for (var t = 2f; t < len; t += 4.5f + (float)_rnd.NextDouble() * 4f)
+                    {
+                        var along = a + dir * t;
+                        if (along.magnitude < 13f || _rnd.NextDouble() > 0.45) continue;
+                        var side = Perp(dir) * (_rnd.NextDouble() < 0.5 ? -1f : 1f);
+                        var spot = along + side * (2.0f + (float)_rnd.NextDouble() * 0.8f);
+                        if (_rnd.NextDouble() < 0.6) Put("CineHaystack", spot, 0.6f, Yaw());
+                        else Put("CineHayBales", spot, 0.7f, Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg + 90f);
+                    }
+                }
+            }
+            // by the houses: pens and hen yards at the farms, washing at the town houses
+            foreach (var house in _houses.ToArray())
+            {
+                var at = house.position.XZ();
+                var far = at.magnitude > 26f;
+                var chance = far ? 0.7 : 0.25;
+                if (_rnd.NextDouble() > chance) continue;
+                for (var k = 0; k < 6; k++)
+                {
+                    var a = (float)_rnd.NextDouble() * Mathf.PI * 2f;
+                    var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                    if (far)
+                    {
+                        var pen = _rnd.NextDouble() < 0.55;
+                        if (Put(pen ? "CinePigPen" : "CineHenYard", at + dir * (pen ? 3.6f : 3.0f), pen ? 1.7f : 1.1f, Yaw())) break;
+                    }
+                    else if (Put("CineWashing", at + dir * 2.4f, 0.8f, Mathf.Atan2(dir.y, -dir.x) * Mathf.Rad2Deg)) break;
+                }
+            }
+            // and a stack or two at the field edges
+            for (var i = 0; i < 60; i++)
+            {
+                var a = (float)_rnd.NextDouble() * Mathf.PI * 2f;
+                var at = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (22f + (float)_rnd.NextDouble() * 30f);
+                Put(_rnd.NextDouble() < 0.7 ? "CineHaystack" : "CineHayBales", at, 0.7f, Yaw());
             }
         }
 
@@ -514,7 +597,7 @@ namespace CityBuilder.Campaign
         private MaterialPropertyBlock _mpb;
 
         /// <summary>A flat ground piece; dir lays a lane's ruts or a field's furrows along it (CineGround).</summary>
-        private void Flat(string name, Mesh mesh, Material material, Vector2 dir = default)
+        private void Flat(string name, Mesh mesh, Material material, Vector2 dir = default, float seed = -1f)
         {
             var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_root, false);
@@ -525,7 +608,7 @@ namespace CityBuilder.Campaign
             {
                 _mpb ??= new MaterialPropertyBlock();
                 _mpb.SetVector("_Dir", new Vector4(dir.x, 0f, dir.y, 0f));
-                _mpb.SetFloat("_Seed", (float)_rnd.NextDouble() * 50f);
+                _mpb.SetFloat("_Seed", seed >= 0f ? seed : (float)_rnd.NextDouble() * 50f);
                 r.SetPropertyBlock(_mpb);
             }
         }

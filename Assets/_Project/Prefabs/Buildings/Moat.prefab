@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &627166631066158667
+--- !u!1 &181799605205730473
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4103901207657710835}
-  - component: {fileID: 145369501256574431}
-  - component: {fileID: 3217012757210936053}
+  - component: {fileID: 909633849755470181}
+  - component: {fileID: 1729043814822915882}
+  - component: {fileID: 4479985451578535433}
   m_Layer: 0
   m_Name: MoatWater
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4103901207657710835
+--- !u!4 &909633849755470181
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 627166631066158667}
+  m_GameObject: {fileID: 181799605205730473}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.04, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1954044114919188263}
+  m_Father: {fileID: 8166171635768524727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &145369501256574431
+--- !u!33 &1729043814822915882
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 627166631066158667}
+  m_GameObject: {fileID: 181799605205730473}
   m_Mesh: {fileID: 0}
---- !u!23 &3217012757210936053
+--- !u!23 &4479985451578535433
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 627166631066158667}
+  m_GameObject: {fileID: 181799605205730473}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &5055481939533258727
+--- !u!1 &427824836044630750
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1954044114919188263}
-  - component: {fileID: 209656999819548979}
-  - component: {fileID: 6690456974771427784}
-  - component: {fileID: 192123466754174113}
+  - component: {fileID: 8166171635768524727}
+  - component: {fileID: 6795016971303923618}
+  - component: {fileID: 4672861744661118612}
+  - component: {fileID: 865214897782181184}
   m_Layer: 0
   m_Name: Moat
   m_TagString: Untagged
@@ -109,43 +109,43 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1954044114919188263
+--- !u!4 &8166171635768524727
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5055481939533258727}
+  m_GameObject: {fileID: 427824836044630750}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2458823149370858854}
-  - {fileID: 4041663992747894358}
-  - {fileID: 4103901207657710835}
+  - {fileID: 9127731185493090687}
+  - {fileID: 247404056307214107}
+  - {fileID: 909633849755470181}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &209656999819548979
+--- !u!114 &6795016971303923618
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5055481939533258727}
+  m_GameObject: {fileID: 427824836044630750}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &6690456974771427784
+--- !u!65 &4672861744661118612
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5055481939533258727}
+  m_GameObject: {fileID: 427824836044630750}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -160,20 +160,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.92, y: 0.035030518, z: 0.92}
   m_Center: {x: 0, y: 0.017515259, z: 0}
---- !u!114 &192123466754174113
+--- !u!114 &865214897782181184
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5055481939533258727}
+  m_GameObject: {fileID: 427824836044630750}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 22f3149f743ba2346b982fa87c53a160, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.MoatAppearance
-  banks: {fileID: 7839510527934574950}
-  water: {fileID: 145369501256574431}
+  banks: {fileID: 4301163286991274716}
+  water: {fileID: 1729043814822915882}
   bankMesh: {fileID: 2498008440398968610, guid: 73b49e86223a94b44b03bf99c7248d79, type: 3}
   bankMatrix:
     e00: 1
@@ -192,7 +192,7 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 1
---- !u!1 &8831803001465806794
+--- !u!1 &453206069998387143
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -200,9 +200,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2458823149370858854}
-  - component: {fileID: 278418341885250815}
-  - component: {fileID: 7364950825118876812}
+  - component: {fileID: 9127731185493090687}
+  - component: {fileID: 5938756239537917208}
+  - component: {fileID: 6827684744793982055}
   m_Layer: 0
   m_Name: Moat1-lvl1(Clone)
   m_TagString: Untagged
@@ -210,36 +210,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2458823149370858854
+--- !u!4 &9127731185493090687
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8831803001465806794}
+  m_GameObject: {fileID: 453206069998387143}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.000015258789, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1954044114919188263}
+  m_Father: {fileID: 8166171635768524727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &278418341885250815
+--- !u!33 &5938756239537917208
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8831803001465806794}
+  m_GameObject: {fileID: 453206069998387143}
   m_Mesh: {fileID: -759825985199317263, guid: 4b0931b199896be47b239ceeec2f67f6, type: 3}
---- !u!23 &7364950825118876812
+--- !u!23 &6827684744793982055
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8831803001465806794}
+  m_GameObject: {fileID: 453206069998387143}
   m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -282,7 +282,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &9041424081518796264
+--- !u!1 &5493114258013962434
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -290,9 +290,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4041663992747894358}
-  - component: {fileID: 7839510527934574950}
-  - component: {fileID: 2926886115703356217}
+  - component: {fileID: 247404056307214107}
+  - component: {fileID: 4301163286991274716}
+  - component: {fileID: 7398930055824486942}
   m_Layer: 0
   m_Name: MoatBanks
   m_TagString: Untagged
@@ -300,36 +300,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4041663992747894358
+--- !u!4 &247404056307214107
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9041424081518796264}
+  m_GameObject: {fileID: 5493114258013962434}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1954044114919188263}
+  m_Father: {fileID: 8166171635768524727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7839510527934574950
+--- !u!33 &4301163286991274716
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9041424081518796264}
+  m_GameObject: {fileID: 5493114258013962434}
   m_Mesh: {fileID: 0}
---- !u!23 &2926886115703356217
+--- !u!23 &7398930055824486942
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9041424081518796264}
+  m_GameObject: {fileID: 5493114258013962434}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

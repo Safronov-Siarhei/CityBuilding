@@ -44,7 +44,7 @@ namespace CityBuilder.EditorTools
             cameraGO.tag = "MainCamera";
             var cam = cameraGO.GetComponent<Camera>();
             cam.clearFlags = CameraClearFlags.Skybox;
-            cam.nearClipPlane = 0.1f;
+            cam.nearClipPlane = 0.25f;                       // depth precision for the flat ground layers far off
             cam.farClipPlane = 400f;
             cam.fieldOfView = 40f;
             cameraGO.transform.SetPositionAndRotation(new Vector3(-9f, 8.5f, -15f), Quaternion.LookRotation(new Vector3(9f, -7f, 17f)));

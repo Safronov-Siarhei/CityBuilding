@@ -4,6 +4,10 @@ details' hay bales, rail fence and trough, the village's hens and washing line -
 grown by figure.SET_SCALE. Renders go to the user for approval before Unity sees them.
 
     blender --background <Buildings-Size1-Models.blend> --python farm_props.py -- render <out dir>
+    blender --background <Buildings-Size1-Models.blend> --python farm_props.py -- export <unity project>
+
+Exported as export_cine.py exports the set pieces (Z forward, axes baked) into Models/Cinematic;
+OpeningVillage.Props scatters them.
 """
 import math
 import os
@@ -144,7 +148,29 @@ def render(out):
         bpy.ops.render.render(write_still=True)
 
 
+def export(project):
+    import bpy
+    from mathutils import Matrix
+    folder = os.path.join(project, "Assets", "_Project", "Models", "Cinematic")
+    for name in SETS:
+        o = make(name)
+        o.matrix_world = Matrix.Identity(4)
+        bpy.ops.object.select_all(action='DESELECT')
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        path = os.path.join(folder, name + ".fbx")
+        bpy.ops.export_scene.fbx(
+            filepath=path, use_selection=True, object_types={'MESH'},
+            axis_forward='Z', axis_up='Y', apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=True, use_mesh_modifiers=True, mesh_smooth_type='FACE',
+            add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False,
+            colors_type='LINEAR', prioritize_active_color=True)
+        print("EXPORTED", path)
+
+
 if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if argv and argv[0] == "render":
         render(argv[1])
+    elif argv and argv[0] == "export":
+        export(argv[1])
