@@ -171,7 +171,7 @@ namespace CityBuilder.Campaign
 
         private void Start()
         {
-            if (!autoPlay) return;
+            if (!autoPlay || Playing || _finished) return;
             if (village.BuildingCount == 0) village.Build();
             Play();
         }

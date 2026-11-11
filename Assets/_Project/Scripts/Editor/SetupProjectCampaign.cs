@@ -288,6 +288,7 @@ namespace CityBuilder.EditorTools
             mso.FindProperty("village").objectReferenceValue = village;
             mso.FindProperty("cam").objectReferenceValue = cam;
             mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
             mso.FindProperty("fx").objectReferenceValue = fx;
             mso.ApplyModifiedPropertiesWithoutUndo();
 

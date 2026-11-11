@@ -252,6 +252,22 @@ namespace CityBuilder.EditorTools
             }
             var at2 = mission.Ardan.position;
             log.Append($" | BACK caught {mission.Chase?.Catches - before} more, stopped at ({at2.x:F1},{at2.z:F1}) mage t {mission.Mage?.T:F1}");
+            // and into the town: the guards close behind him, black, the title, the summary
+            var endShots = new[] { (1.2f, "end_guards"), (3.4f, "end_title"), (5.0f, "end_summary") };
+            var endNext = 0;
+            for (var e = 0f; e < 150f && (mission.End == null || mission.End.T < 5.5f); e += dt)
+            {
+                var pos = mission.Ardan.position;
+                var target = e < 0f ? pos : (pos.z > -235f ? new Vector3(-4f, 0f, -236f) : new Vector3(-4f, 0f, -243f));
+                var want = (target - pos).normalized;
+                if (mission.End != null && endNext < endShots.Length && mission.End.T >= endShots[endNext].Item1) Shoot(endShots[endNext++].Item2);
+                director.Step(dt);
+                mission.Step(dt, new Vector2(Vector3.Dot(want, right), Vector3.Dot(want, up)));
+                Physics.SyncTransforms();
+                mission.StepCamera(dt);
+                t += dt;
+            }
+            log.Append($" | END {(mission.End != null && mission.End.Started ? "reached" : "NOT reached")} t {mission.End?.T:F1} summary [{mission.End?.Report}]");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }

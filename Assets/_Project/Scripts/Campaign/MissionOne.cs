@@ -27,6 +27,7 @@ namespace CityBuilder.Campaign
             public CalmConfig calm;
             public MissionChase.Config chase;
             public MissionMage.Config mage;
+            public MissionEnd.Config finish;
         }
 
         [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend; }
@@ -39,6 +40,17 @@ namespace CityBuilder.Campaign
         [SerializeField] private Camera cam;
         [SerializeField] private TextAsset configFile;
         [SerializeField] private OpeningFx fx;
+        [SerializeField] private GameObject guardModel;
+
+        /// <summary>Set by «Ещё раз» before the scene is loaded again: the film is run through
+        /// unseen (under the loading screen) and play begins at once.</summary>
+        public static bool SkipFilm;
+
+        private MissionEnd _end;
+        private float _elapsed;
+
+        /// <summary>The end at the gate, for the batchmode check.</summary>
+        public MissionEnd End => _end;
 
         private Config _c;
         private CineFigure _ardan;
@@ -106,9 +118,19 @@ namespace CityBuilder.Campaign
                 _chase = new MissionChase(_c.chase, village, _ardan, _body, director.Member, director.FlameMaterial, transform, Localization.Get);
                 Overlay();
             }
+            if (_c.finish != null) _end = new MissionEnd(_c.finish, guardModel, transform);
             if (_c.mage != null && fx != null)
                 _mage = new MissionMage(_c.mage, village, director.Member, fx.SparkMaterial, fx.DustMaterial, director.FlameMaterial, transform);
             Running = true;
+        }
+
+        private void Start()
+        {
+            if (!SkipFilm || director == null) return;
+            SkipFilm = false;
+            if (village.BuildingCount == 0) village.Build();
+            if (!director.Playing) director.Play();
+            while (director.Playing) director.Step(1f / 15f);
         }
 
         private void Update()
@@ -125,6 +147,23 @@ namespace CityBuilder.Campaign
         public void Step(float dt, Vector2? steer)
         {
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
+            if (_end != null)
+            {
+                if (!_end.Started) _elapsed += dt;
+                if (_end.Ready(_ardan.transform.position))
+                {
+                    // in at the gate: the say is taken for good, the town's guards close behind him
+                    _end.Begin();
+                    _stick.Locked = true;
+                }
+                if (_end.Started)
+                {
+                    _end.Step(dt, cam, _elapsed, _chase != null ? _chase.Catches : 0);
+                    if (_black != null) _black.color = new Color(0f, 0f, 0f, _end.Fade);
+                    RunOn(dt, _end.RunTo);
+                    return;
+                }
+            }
             if (_mage != null)
             {
                 _mage.Step(dt);
@@ -138,7 +177,7 @@ namespace CityBuilder.Campaign
                 if (_mage.Playing)
                 {
                     if (_black != null) _black.color = new Color(0f, 0f, 0f, _mage.Fade);
-                    RunOn(dt);
+                    RunOn(dt, new Vector2(_c.mage.runTo[0], _c.mage.runTo[1]));
                     return;
                 }
                 if (_mage.Done && _stick.Locked)
@@ -186,10 +225,10 @@ namespace CityBuilder.Campaign
         }
 
         /// <summary>In the mage's scene Ардан runs on down the track by himself, past the mage.</summary>
-        private void RunOn(float dt)
+        private void RunOn(float dt, Vector2 target)
         {
             var t = _ardan.transform;
-            var to = new Vector3(_c.mage.runTo[0] - t.position.x, 0f, _c.mage.runTo[1] - t.position.z);
+            var to = new Vector3(target.x - t.position.x, 0f, target.y - t.position.z);
             if (to.magnitude > 0.2f)
             {
                 var dir = to.normalized;

@@ -399,5 +399,42 @@
     "z": -177.9
    }
   ]
+ },
+ "finish": {
+  "comment": "Mission 1's end at the town gate (the user 2026-11-11: guards and a fade, then the summary and the menu). When Ардан passes triggerZ (into the gate's passage) the player's say is taken; he runs on to runTo. The guards (the sandbox's SoldierSpearman-lvl3 at guardScale, facing yaw) step from (x, z) to (toX, toZ) behind him from closeAt over closeSeconds; the screen goes black from fadeAt over fadeSeconds; the title (titleKey) shows at titleAt, the summary at summaryAt: the run's time (timeKey, {0} = m:ss) and the catches (caughtKey), buttons retryKey (the mission again, the film skipped) and menuKey (to menuScene). Village frame, metres, seconds.",
+  "guardScale": 1.6,
+  "triggerZ": -238.6,
+  "runTo": [
+   -4.0,
+   -243.5
+  ],
+  "closeAt": 0.7,
+  "closeSeconds": 0.8,
+  "fadeAt": 1.6,
+  "fadeSeconds": 1.0,
+  "titleAt": 2.7,
+  "summaryAt": 4.2,
+  "guards": [
+   {
+    "x": -5.2,
+    "z": -240.4,
+    "toX": -4.35,
+    "toZ": -240.0,
+    "yaw": 0.0
+   },
+   {
+    "x": -2.8,
+    "z": -240.4,
+    "toX": -3.65,
+    "toZ": -240.0,
+    "yaw": 0.0
+   }
+  ],
+  "titleKey": "#m1_done",
+  "timeKey": "#m1_time",
+  "caughtKey": "#m1_caught",
+  "retryKey": "#m1_retry",
+  "menuKey": "#m1_menu",
+  "menuScene": "MainMenu"
  }
 }
