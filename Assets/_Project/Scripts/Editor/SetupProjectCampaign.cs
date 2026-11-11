@@ -288,6 +288,7 @@ namespace CityBuilder.EditorTools
             mso.FindProperty("village").objectReferenceValue = village;
             mso.FindProperty("cam").objectReferenceValue = cam;
             mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            mso.FindProperty("fx").objectReferenceValue = fx;
             mso.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory(ScenesFolder);

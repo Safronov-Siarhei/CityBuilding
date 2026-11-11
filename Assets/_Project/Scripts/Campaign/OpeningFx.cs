@@ -457,10 +457,18 @@ namespace CityBuilder.Campaign
             _gnd0 = RenderSettings.ambientGroundColor;
         }
 
+        /// <summary>
+        /// How far the portal's storm has let go, 0..1 (mission 1, the user, 2026-11-11: the film's
+        /// crimson light lay over the whole route and the wheat read orange). MissionOne raises it
+        /// as Ардан runs away from the village; the sun, sky, fog, ambient and the storm dome ease
+        /// back towards the morning by it.
+        /// </summary>
+        public float Calm { get; set; }
+
         private void StepMood(float time)
         {
             var w = Mathf.Clamp01((time - _c.moodStart) / _c.moodSeconds);
-            w = w * w * (3f - 2f * w);
+            w = w * w * (3f - 2f * w) * (1f - Mathf.Clamp01(Calm));
             var sun = RenderSettings.sun;
             if (sun != null)
             {
@@ -479,7 +487,7 @@ namespace CityBuilder.Campaign
             if (_storm != null)
             {
                 var k = Mathf.Clamp01((time - _c.stormStart) / _c.stormSeconds);
-                _storm.SetFloat("_Cover", k * k * (3f - 2f * k));
+                _storm.SetFloat("_Cover", k * k * (3f - 2f * k) * (1f - Mathf.Clamp01(Calm)));
                 _storm.SetFloat("_T", time);
                 _stormDome.gameObject.SetActive(time >= _c.stormStart);
             }

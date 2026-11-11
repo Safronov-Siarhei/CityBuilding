@@ -208,17 +208,55 @@ namespace CityBuilder.Campaign
             if (y < 0f) y = cobbled ? CobbleY : LaneY;
             var seed = cobbled ? 0f : (float)_rnd.NextDouble() * 50f;
             if (lane && line.Length > 2) _lanes.Add(line);
-            for (var i = 0; i + 1 < line.Length; i++)
-            {
-                var a = line[i];
-                var b = line[i + 1];
-                var side = Perp((b - a).normalized) * (width / 2f);
-                // a little past each end, so the bends close
-                var ext = (b - a).normalized * (width / 2f);
-                var h = cobbled ? y : y + 0.003f * (i % 2);
-                Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, h), material, b - a, seed);
-            }
+            // one continuous ribbon along the curve (separate quads per step left notches on the
+            // outside of every bend); dirt roads alternate a hair in height where they cross
+            var h = cobbled ? y : y + 0.003f * (_streets.Count % 2);
+            Flat("Street", Ribbon(line, width, h, width * 0.5f), material, line[line.Length - 1] - line[0], seed);
             return line;
+        }
+
+        /// <summary>
+        /// A flat ribbon `width` wide along a line, `ext` past each end so it closes over whatever it
+        /// meets. UV0 = (metres along it, metres across from its middle): the dirt's ruts and the
+        /// water's ripples follow the road however it bends.
+        /// </summary>
+        private static Mesh Ribbon(Vector2[] line, float width, float y, float ext)
+        {
+            var n = line.Length;
+            var v = new Vector3[n * 2];
+            var uv = new Vector2[n * 2];
+            var tri = new int[(n - 1) * 6];
+            var along = 0f;
+            for (var i = 0; i < n; i++)
+            {
+                var a = line[Mathf.Max(0, i - 1)];
+                var b = line[Mathf.Min(n - 1, i + 1)];
+                var dir = (b - a).normalized;
+                var side = Perp(dir) * (width * 0.5f);
+                var p = line[i];
+                if (i > 0) along += (line[i] - line[i - 1]).magnitude;
+                if (i == 0) p -= dir * ext;
+                if (i == n - 1) p += dir * ext;
+                v[i * 2] = new Vector3(p.x - side.x, y, p.y - side.y);
+                v[i * 2 + 1] = new Vector3(p.x + side.x, y, p.y + side.y);
+                uv[i * 2] = new Vector2(along, -width * 0.5f);
+                uv[i * 2 + 1] = new Vector2(along, width * 0.5f);
+            }
+            for (var i = 0; i + 1 < n; i++)
+            {
+                var k = i * 2;
+                tri[i * 6] = k; tri[i * 6 + 1] = k + 1; tri[i * 6 + 2] = k + 2;
+                tri[i * 6 + 3] = k + 1; tri[i * 6 + 4] = k + 3; tri[i * 6 + 5] = k + 2;
+            }
+            // wound to face up
+            if (n > 1 && Vector3.Cross(v[1] - v[0], v[2] - v[0]).y < 0f)
+                for (var i = 0; i < tri.Length; i += 3) (tri[i + 1], tri[i + 2]) = (tri[i + 2], tri[i + 1]);
+            var mesh = new Mesh { name = "Ribbon", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.vertices = v;
+            mesh.uv = uv;
+            mesh.triangles = tri;
+            mesh.RecalculateNormals();
+            return mesh;
         }
 
         /// <summary>Where a meandering road must run true (the bridge, the gate): its point and reach.</summary>

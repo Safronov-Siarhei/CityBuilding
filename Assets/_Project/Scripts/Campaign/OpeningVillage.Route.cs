@@ -128,10 +128,11 @@ namespace CityBuilder.Campaign
         // ------------------------------------------------------------ the wheat
 
         /// <summary>
-        /// One slab for the body of the field (cells of the ear tile's size, the track cut out of it,
-        /// sides where it ends), and the ear tiles stood on it only within earsBand of the track -- a
-        /// whole field of ears would be far too many triangles for a phone, and the camera never sees
-        /// that far from the track.
+        /// One slab for the body of the field, and the ear tiles stood on it only within earsBand of
+        /// the track -- a whole field of ears would be far too many triangles for a phone, and the
+        /// camera never sees that far from the track. The slab's edge follows the track and the
+        /// field's outline smoothly (marching squares over "how far inside the wheat", each cell cut
+        /// where that crosses zero): square cells left a staircase along a curving track.
         /// </summary>
         private void WheatField()
         {
@@ -140,48 +141,76 @@ namespace CityBuilder.Campaign
             if (f?.poly == null || wheatBody == null) return;
             var poly = Points(f.poly);
             var box = Bounds(poly, 0f);
-            // the body in fine cells, so the track's edge steps only a little; the ears in whole tiles
             var cell = f.cell > 0f ? f.cell : f.tile;
             var nx = Mathf.CeilToInt(box.width / cell);
             var nz = Mathf.CeilToInt(box.height / cell);
-            var on = new bool[nx, nz];
             var clear = _route.laneWidth * 0.5f + 0.15f;
-            for (var i = 0; i < nx; i++)
-            {
-                for (var j = 0; j < nz; j++)
+            // how far inside the wheat each grid corner is (negative: outside it)
+            var inside = new float[nx + 1, nz + 1];
+            for (var i = 0; i <= nx; i++)
+                for (var j = 0; j <= nz; j++)
                 {
-                    var c = new Vector2(box.xMin + (i + 0.5f) * cell, box.yMin + (j + 0.5f) * cell);
-                    on[i, j] = Inside(poly, c) && PathDistance(c) > clear;
+                    var c = new Vector2(box.xMin + i * cell, box.yMin + j * cell);
+                    inside[i, j] = Mathf.Min(PathDistance(c) - clear, PolySigned(poly, c));
                 }
-            }
             var v = new List<Vector3>();
             var tri = new List<int>();
-            void Face(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-            {
-                var k = v.Count;
-                v.Add(a); v.Add(b); v.Add(c); v.Add(d);
-                tri.Add(k); tri.Add(k + 1); tri.Add(k + 2); tri.Add(k); tri.Add(k + 2); tri.Add(k + 3);
-            }
             var h = f.height;
-            var earsRoot = new GameObject("WheatEars").transform;
-            earsRoot.SetParent(_root, false);
+            var corner = new Vector2[4];
+            var value = new float[4];
+            var ring = new List<Vector2>(8);
+            var cut = new List<Vector2>(4);
             for (var i = 0; i < nx; i++)
             {
                 for (var j = 0; j < nz; j++)
                 {
-                    if (!on[i, j]) continue;
-                    var x0 = box.xMin + i * cell;
-                    var z0 = box.yMin + j * cell;
-                    var x1 = x0 + cell;
-                    var z1 = z0 + cell;
-                    // top, wound clockwise seen from above (Unity's front face)
-                    Face(new Vector3(x0, h, z0), new Vector3(x0, h, z1), new Vector3(x1, h, z1), new Vector3(x1, h, z0));
-                    if (i == 0 || !on[i - 1, j]) Face(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x0, h, z1), new Vector3(x0, h, z0));
-                    if (i == nx - 1 || !on[i + 1, j]) Face(new Vector3(x1, 0, z1), new Vector3(x1, 0, z0), new Vector3(x1, h, z0), new Vector3(x1, h, z1));
-                    if (j == 0 || !on[i, j - 1]) Face(new Vector3(x1, 0, z0), new Vector3(x0, 0, z0), new Vector3(x0, h, z0), new Vector3(x1, h, z0));
-                    if (j == nz - 1 || !on[i, j + 1]) Face(new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, h, z1), new Vector3(x0, h, z1));
+                    corner[0] = new Vector2(box.xMin + i * cell, box.yMin + j * cell);
+                    corner[1] = corner[0] + new Vector2(cell, 0f);
+                    corner[2] = corner[0] + new Vector2(cell, cell);
+                    corner[3] = corner[0] + new Vector2(0f, cell);
+                    value[0] = inside[i, j];
+                    value[1] = inside[i + 1, j];
+                    value[2] = inside[i + 1, j + 1];
+                    value[3] = inside[i, j + 1];
+                    if (value[0] <= 0f && value[1] <= 0f && value[2] <= 0f && value[3] <= 0f) continue;
+                    // the cell clipped to the wheat: corners inside, and where an edge crosses out
+                    ring.Clear();
+                    cut.Clear();
+                    for (var k = 0; k < 4; k++)
+                    {
+                        var n = (k + 1) % 4;
+                        if (value[k] > 0f) ring.Add(corner[k]);
+                        if ((value[k] > 0f) != (value[n] > 0f))
+                        {
+                            var q = Vector2.Lerp(corner[k], corner[n], value[k] / (value[k] - value[n]));
+                            ring.Add(q);
+                            cut.Add(q);
+                        }
+                    }
+                    // the top: a fan, wound clockwise from above (the ring runs anticlockwise)
+                    var start = v.Count;
+                    foreach (var q in ring) v.Add(new Vector3(q.x, h, q.y));
+                    for (var k = 1; k + 1 < ring.Count; k++)
+                    {
+                        tri.Add(start); tri.Add(start + k + 1); tri.Add(start + k);
+                    }
+                    // the side where the wheat ends, both faces (cheap: only along the edge)
+                    for (var k = 0; k + 1 < cut.Count; k += 2)
+                    {
+                        var a0 = new Vector3(cut[k].x, 0f, cut[k].y);
+                        var a1 = new Vector3(cut[k + 1].x, 0f, cut[k + 1].y);
+                        // each face its own corners: shared ones got normals that cancelled out (black)
+                        var w = v.Count;
+                        v.Add(a0); v.Add(a1); v.Add(a1 + Vector3.up * h); v.Add(a0 + Vector3.up * h);
+                        tri.Add(w); tri.Add(w + 1); tri.Add(w + 2); tri.Add(w); tri.Add(w + 2); tri.Add(w + 3);
+                        w = v.Count;
+                        v.Add(a0); v.Add(a1); v.Add(a1 + Vector3.up * h); v.Add(a0 + Vector3.up * h);
+                        tri.Add(w); tri.Add(w + 2); tri.Add(w + 1); tri.Add(w); tri.Add(w + 3); tri.Add(w + 2);
+                    }
                 }
             }
+            var earsRoot = new GameObject("WheatEars").transform;
+            earsRoot.SetParent(_root, false);
             // the ears: whole tiles, only where the whole tile stands on the body (clear of the
             // track and inside the field) and near enough the track for the camera to see
             if (ears != null)
@@ -292,15 +321,12 @@ namespace CityBuilder.Campaign
                     break;
                 }
             }
-            var y = LaneY + 0.006f;
+            Flat("River", Ribbon(line, r.width, LaneY + 0.006f, 0f), water, line[line.Length - 1] - line[0], 3f);
             for (var i = 0; i + 1 < line.Length; i++)
             {
                 var a = line[i];
                 var c = line[i + 1];
                 var d = (c - a).normalized;
-                var side = Perp(d) * (r.width * 0.5f);
-                var ext = d * (r.width * 0.5f);
-                Flat("River", Quad(a - ext - side, c + ext - side, c + ext + side, a - ext + side, y), water, c - a, 3f);
                 // the water stops a runner, all but where the bridge spans it
                 var len = (c - a).magnitude;
                 for (var s = 0f; s < len; s += 1f)
@@ -462,6 +488,14 @@ namespace CityBuilder.Campaign
                 hi = Vector2.Max(hi, p);
             }
             return Rect.MinMaxRect(lo.x - pad, lo.y - pad, hi.x + pad, hi.y + pad);
+        }
+
+        /// <summary>How far inside the polygon a point is (negative outside).</summary>
+        private static float PolySigned(Vector2[] poly, Vector2 p)
+        {
+            var d = float.MaxValue;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++) d = Mathf.Min(d, DistanceToSegment(p, poly[j], poly[i]));
+            return Inside(poly, p) ? d : -d;
         }
 
         private static bool Inside(Vector2[] poly, Vector2 p)

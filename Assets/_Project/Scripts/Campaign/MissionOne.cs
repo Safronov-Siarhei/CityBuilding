@@ -24,16 +24,19 @@ namespace CityBuilder.Campaign
             public RunnerConfig runner;
             public string[] solidPieces;
             public string hintKey;
+            public CalmConfig calm;
         }
 
         [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend; }
         [Serializable] private class StickConfig { public float radius, knob, deadzone, walkBelow, hintDelay, hintFadeAfter; }
+        [Serializable] private class CalmConfig { public float from, to; }
         [Serializable] private class RunnerConfig { public float radius, height, turnRate, trunkRadius, fade; }
 
         [SerializeField] private OpeningDirector director;
         [SerializeField] private OpeningVillage village;
         [SerializeField] private Camera cam;
         [SerializeField] private TextAsset configFile;
+        [SerializeField] private OpeningFx fx;
 
         private Config _c;
         private CineFigure _ardan;
@@ -125,6 +128,12 @@ namespace CityBuilder.Campaign
             }
             else _ardan.Play("Idle", _c.runner.fade);
             _ardan.Tick(dt);
+            // the storm lets go as he gets away from the portal (the square, the village's origin)
+            if (fx != null && _c.calm != null)
+            {
+                var d = new Vector2(t.position.x, t.position.z).magnitude;
+                fx.Calm = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(_c.calm.from, _c.calm.to, d));
+            }
         }
 
         /// <summary>The game's view, Ардан in the middle of it; eased into from the film's last shot.</summary>

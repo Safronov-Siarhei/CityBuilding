@@ -1,5 +1,5 @@
 {
- "comment": "Mission 1 «Бегство» (the user, 2026-11-11): the main game's camera (pitch 50 like the game's rig, its 60-degree lens), no zoom, never turning (yaw 180: the camera looks south, the way the route runs, so the run goes up the screen), Ардан always in the middle. Distances in the film's village frame (houses there are grown 1.6x). blend = seconds the film's last shot eases into this view. joystick: radius/knob in 1280x720 reference pixels, deadzone and walkBelow as a share of the radius (below walkBelow he walks), hint shown after hintDelay s and faded once he has run hintFadeAfter s. runner: Ардан's collision post and turn rate; trunkRadius = the posts round the trees.",
+ "comment": "Mission 1 «Бегство» (the user, 2026-11-11): the main game's camera (pitch 50 like the game's rig, its 60-degree lens), no zoom, never turning (yaw 180: the camera looks south, the way the route runs, so the run goes up the screen), Ардан always in the middle. Distances in the film's village frame (houses there are grown 1.6x). blend = seconds the film's last shot eases into this view. joystick: radius/knob in 1280x720 reference pixels, deadzone and walkBelow as a share of the radius (below walkBelow he walks), hint shown after hintDelay s and faded once he has run hintFadeAfter s. runner: Ардан's collision post and turn rate; trunkRadius = the posts round the trees. calm: the portal's storm light (OpeningFx mood) eases back to the morning as Ардан gets from 'from' to 'to' metres from the square.",
  "camera": {
   "pitch": 50.0,
   "yaw": 180.0,
@@ -37,7 +37,7 @@
   "WallTower-lvl3"
  ],
  "route": {
-  "comment": "The approved map (Design/mission1_map_v1.png) in the village frame, metres (x, z): the track from the square (path; the dirt lane is laid from point pathFrom, where the market street ends). field = the tall wheat (poly; the slab of the field's body 'height' high in fine cells of 'cell' so the track's edge barely steps, the ear tiles ('tile' wide) only within earsBand of the track). forest = trees every treeEvery m (jittered) kept clearPath off the track, bushes every bushEvery; fallenTree 'along' m down the track, its middle 'offset' m to the side, trees kept 'clear' m off its ends. river: centre line, width = 3 bridge pieces (the user), banks. bridge: the sandbox's Bridge, 'pieces' pieces of 'piece' m (1 cell grown 1.6x) centred on x, z; deck = its top (crossings.py DECK 0.22 x 1.6), ramp = how far the ground climbs to it. town: the sandbox's level-3 Barbican (gate, its middle cell the way through, 'passage' wide), fencePieces of level-3 wall each side and a wall tower at each end, on wallZ; houses behind, width x depth. wiggle = how far (m) the track (route.wiggle) and the river (river.wiggle) meander off their smooth curves (the user: no straight roads); it fades to nothing at the ends, by the bridge and at the gate.",
+  "comment": "The approved map (Design/mission1_map_v1.png) in the village frame, metres (x, z): the track from the square (path; the dirt lane is laid from point pathFrom, where the market street ends). field = the tall wheat (poly; the slab of the field's body 'height' high in cells of 'cell', its edge cut smoothly along the track and the outline (marching squares), the ear tiles ('tile' wide) only within earsBand of the track). forest = trees every treeEvery m (jittered) kept clearPath off the track, bushes every bushEvery; fallenTree 'along' m down the track, its middle 'offset' m to the side, trees kept 'clear' m off its ends. river: centre line, width = 3 bridge pieces (the user), banks. bridge: the sandbox's Bridge, 'pieces' pieces of 'piece' m (1 cell grown 1.6x) centred on x, z; deck = its top (crossings.py DECK 0.22 x 1.6), ramp = how far the ground climbs to it. town: the sandbox's level-3 Barbican (gate, its middle cell the way through, 'passage' wide), fencePieces of level-3 wall each side and a wall tower at each end, on wallZ; houses behind, width x depth. wiggle = how far (m) the track (route.wiggle) and the river (river.wiggle) meander off their smooth curves (the user: no straight roads); it fades to nothing at the ends, by the bridge and at the gate.",
   "path": [
    0,
    -5.6,
@@ -92,7 +92,7 @@
    "tile": 0.96,
    "earsBand": 9.0,
    "height": 0.274,
-   "cell": 0.24
+   "cell": 0.48
   },
   "forest": {
    "min": [
@@ -166,5 +166,9 @@
    ]
   },
   "wiggle": 1.2
+ },
+ "calm": {
+  "from": 30.0,
+  "to": 75.0
  }
 }

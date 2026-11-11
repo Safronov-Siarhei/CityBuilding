@@ -43,12 +43,14 @@ Shader "CityBuilder/CineGround"
                 float _Seed;
             CBUFFER_END
 
-            struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; };
+            // uv: a road ribbon's (metres along, metres across from its middle); zero on other pieces
+            struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; float2 uv : TEXCOORD0; };
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
                 float3 normalWS : TEXCOORD1;
+                float2 uv : TEXCOORD2;
             };
 
             Varyings Vert(Attributes input)
@@ -57,6 +59,7 @@ Shader "CityBuilder/CineGround"
                 o.positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 o.positionCS = TransformWorldToHClip(o.positionWS);
                 o.normalWS = TransformObjectToWorldNormal(input.normalOS);
+                o.uv = input.uv;
                 return o;
             }
 
@@ -122,12 +125,11 @@ Shader "CityBuilder/CineGround"
                 return c;
             }
 
-            half3 Dirt(float2 p)
+            half3 Dirt(float2 p, float2 uv)
             {
-                float2 dir = normalize(_Dir.xz + 1e-4);
-                float2 side = float2(-dir.y, dir.x);
-                float along = dot(p, dir);
-                float across = dot(p, side) + (Fbm(float2(along * 0.15, _Seed)) - 0.5) * 0.25;
+                // along and across the road itself (its ribbon's uv), so the ruts follow its bends
+                float along = uv.x;
+                float across = uv.y + (Fbm(float2(along * 0.15, _Seed)) - 0.5) * 0.25;
                 half3 c = lerp(Hex(0xCD, 0xA8, 0x6D), Hex(0xB6, 0x8C, 0x57), Fbm(p * 1.7 + _Seed));
                 // two wheel ruts, darker and smoother
                 float rut = exp(-pow((abs(across) - 0.3) / 0.08, 2.0));
@@ -157,16 +159,16 @@ Shader "CityBuilder/CineGround"
                 return c;
             }
 
-            half3 Water(float2 p)
+            half3 Water(float2 p, float2 uv)
             {
-                float2 dir = normalize(_Dir.xz + 1e-4);
-                float2 side = float2(-dir.y, dir.x);
-                float along = dot(p, dir);
-                float across = dot(p, side);
+                float along = uv.x;
+                float across = uv.y;
                 half3 c = lerp(Hex(0x2F, 0x86, 0xC4), Hex(0x4D, 0xB6, 0xE6), Fbm(p * 0.35 + _Seed));
                 // ripples running along the flow, broken up
                 float rip = sin(along * 3.1 + Fbm(p * 0.8) * 6.0) * sin(across * 1.7 + along * 0.4);
                 c = lerp(c, Hex(0xBF, 0xEA, 0xFA), smoothstep(0.82, 0.97, rip) * 0.6);
+                // shallower and lighter along the banks
+                c = lerp(c, Hex(0x7C, 0xCF, 0xEE), smoothstep(1.6, 2.4, abs(across)) * 0.7);
                 return c;
             }
 
@@ -181,8 +183,8 @@ Shader "CityBuilder/CineGround"
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 p = input.positionWS.xz;
-                half3 albedo = _Mode < 0.5 ? Grass(p) : _Mode < 1.5 ? Cobble(p) : _Mode < 2.5 ? Dirt(p) : _Mode < 3.5 ? Field(p)
-                    : _Mode < 4.5 ? Water(p) : Wheat(p, input.positionWS.y);
+                half3 albedo = _Mode < 0.5 ? Grass(p) : _Mode < 1.5 ? Cobble(p) : _Mode < 2.5 ? Dirt(p, input.uv) : _Mode < 3.5 ? Field(p)
+                    : _Mode < 4.5 ? Water(p, input.uv) : Wheat(p, input.positionWS.y);
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 Light light = GetMainLight(shadowCoord);
                 float3 n = normalize(input.normalWS);
