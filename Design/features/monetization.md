@@ -165,6 +165,14 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Still open:** the silver level disc over an upgraded LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker`;
   it has a model for level 1 only): models for levels 2-5 or hide the disc -- the user said wait.
 
+## Crystal icon redesign (the user, 2026-11-11; WAITING on the user's pick)
+- The crystals are the game's main currency and the icon (`UI/Icons/Res_UpgradeCrystal.png`, a pale
+  violet cluster) is lost in the counters. 12 SVG sketches shown; the user picked 1 (cut violet stone),
+  3 (ice-blue brilliant), 4 (brighter cluster on gold), 5 (blue stone in a gold medal), 9 (winged) to
+  see rendered. `Tools/blender/crystal_icons.py -- <out> 256` renders them stand-alone (own materials:
+  the building palette is full). Next: the chosen one replaces Res_UpgradeCrystal (and the shop's
+  crystal sprites / OfferShop art if they draw their own).
+
 ## POSTPONED: chests with a roulette (the user's idea, 2026-11-11; agreed to put off)
 - **Idea:** chests of three classes -- common (an ad or crystals), rare and legendary (crystals only);
   opening spins a roulette that gives resources, crystals with a small chance.
