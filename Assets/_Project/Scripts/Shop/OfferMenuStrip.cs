@@ -97,6 +97,8 @@ namespace CityBuilder.Shop
                     card.shownTaken = taken;
                     card.shownSeconds = seconds;
                     card.timer.text = slot.Taken ? Localization.Get("#shop_taken") : OfferShopWindow.Clock(seconds);
+                    // a taken bundle's card goes grey, as in the shop window
+                    if (card.button.targetGraphic != null) card.button.targetGraphic.color = slot.Taken ? new Color(0.62f, 0.62f, 0.62f, 1f) : Color.white;
                 }
                 var warn = !slot.Taken && slot.EndsAt - now <= BalanceConfig.Sandbox.ShopTimerWarnSeconds;
                 if (warn != card.shownWarn)

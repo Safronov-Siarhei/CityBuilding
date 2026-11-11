@@ -260,6 +260,7 @@ namespace CityBuilder.Shop
                     view.goodAmounts[g].text = bundle.goods[g].amount.ToString();
                 }
                 view.stamp.SetActive(state == 0);
+                Dim(view, state == 0);
                 view.free.gameObject.SetActive(state == 1);
                 view.watch.gameObject.SetActive(state == 2 || state == 3);
                 view.buy.gameObject.SetActive(state >= 2);
@@ -283,6 +284,7 @@ namespace CityBuilder.Shop
             {
                 view.shownWarn = warn;
                 view.timer.color = warn ? WarnColor : TimerColor;
+                if (slot.Taken) SetAlpha(view.timer, TakenFade);
                 if (!warn) pill.localScale = Vector3.one;
             }
             if (warn)
@@ -313,6 +315,33 @@ namespace CityBuilder.Shop
                 view.shakeT += dt;
                 ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + new Vector2(Shake(view.shakeT), 0f);
             }
+        }
+
+        /// <summary>The grey of a taken strip's parchment, and how faint its words, goods and timer get (the user, 2026-11-11: taken reads as inactive).</summary>
+        private static readonly Color TakenBack = new Color(0.62f, 0.62f, 0.62f, 1f);
+        private const float TakenFade = 0.45f;
+
+        /// <summary>A taken bundle goes grey and faint; its «Получено» stamp stays bright.</summary>
+        private static void Dim(SlotView view, bool taken)
+        {
+            var a = taken ? TakenFade : 1f;
+            var back = view.back.GetComponent<Image>();
+            if (back != null) back.color = taken ? TakenBack : Color.white;
+            var backGold = view.backGold.GetComponent<Image>();
+            if (backGold != null) backGold.color = taken ? TakenBack : Color.white;
+            SetAlpha(view.name, a);
+            foreach (var icon in view.goodIcons) SetAlpha(icon, a);
+            foreach (var amount in view.goodAmounts) SetAlpha(amount, a);
+            SetAlpha(view.timer, a);
+            var pill = view.timer.transform.parent.GetComponent<Image>();
+            if (pill != null) SetAlpha(pill, a);
+        }
+
+        private static void SetAlpha(Graphic graphic, float alpha)
+        {
+            var c = graphic.color;
+            c.a = alpha;
+            graphic.color = c;
         }
 
         private Sprite Icon(string resource)

@@ -44,6 +44,7 @@
   the target's picture (and the sack's glyph) fades in at its screen place and out after. Round 2 and
   this compiled and built 2026-11-11 (setup x2), not seen in play yet.
 - **Round 3 (the user):** the close seal's cross one colour (no dark edge); the crystals are just the number + icon, no plate (`Counter.png` deleted), under the frame's top edge at the strips' right end; «Не хватает кристаллов» left of them.
+- **Taken = inactive (the user):** a taken strip's parchment goes grey (0.62), its name, goods and timer fade to 45 %, the «Получено» stamp stays bright (`OfferShopWindow.Dim`); the menu card of a taken bundle goes grey too. Runtime code only, not built.
 - **Trap (2026-11-11):** never hand-write a bare `.meta` (guid only) for a PNG: Unity imported Close/Counter
   as CUBE textures (`textureShape: 2`), no sprite -> white boxes. Copy a working PNG meta and change the
   guid; `UiTextureImport` now forces `Texture2D`, and the shop build logs any picture that is not a sprite.
