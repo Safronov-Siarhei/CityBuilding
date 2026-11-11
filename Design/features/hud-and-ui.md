@@ -85,7 +85,7 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   Drawbridge/Dec*, the list written by the builder). `LoadGamePanelController` (also the in-game load).
 - invasion: window; theme picture across the top (`Inv_<theme>.png`) with King/Queen leaning in at the
   sides (`Peek_*.png`, Tools/blender/render_peek.py), points plaque (sum of the period's best 5 runs),
-  crystals plaque (`Core/Wallet`, 0 for now) + «!», themes on the picture; «Топ 5 забегов …», the
+  crystals plaque (`Wallet.UpgradeCrystals`, the one currency, the sandbox's icon `Res_UpgradeCrystal`; the user, 2026-11-11) + «!», themes on the picture; «Топ 5 забегов …», the
   player's own lit row (no online board yet), «Забег»; Day/Week/Month tabs under the window
   (`InvasionHubController`).
 - Badges: orange «!» on Offers/Discord/YouTube until first opened (PlayerPrefs `menu.seen.*`).
@@ -97,7 +97,7 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   (`GameSaveData.season`, -1 = old save = summer).
 - Art: `MenuArtBake` (Explicit, -Graphics) `Bake_TheMapsInEverySeason` (Map_<id>_<theme>.png) and
   `Bake_TheInvasionThemes`; glyphs Info/Discord/YouTube/Theme_*/Heart/Shield/Radius in
-  make_hud_glyphs.py; the colour crystal goes to UI/MenuArt/Crystal.png (Glyphs import as silhouettes:
+  make_hud_glyphs.py (Glyphs import as silhouettes:
   a colour sprite there renders BLACK).
 - The campaign card/panel code was removed (shelved; in git history before 2026-10-25).
 Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMenuTests`,

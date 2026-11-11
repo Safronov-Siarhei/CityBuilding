@@ -77,7 +77,7 @@ namespace CityBuilder.UI
             if (playerRowName != null) playerRowName.text = Localization.Get("#invasion_you");
             if (playerRowPoints != null) playerRowPoints.text = points.ToString();
             if (playerRowReward != null) playerRowReward.text = "—";
-            if (crystalsText != null) crystalsText.text = Wallet.Crystals.ToString();
+            if (crystalsText != null) crystalsText.text = Wallet.UpgradeCrystals.ToString();
         }
 
         private void ShowPicture()

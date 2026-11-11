@@ -135,7 +135,7 @@ namespace CityBuilder.Tutorial
             _hud.Tick(null, false, null, Vector3.zero, 0f);
             if (PlayerPrefs.GetInt(RewardedKey, 0) != 0) return;
             PlayerPrefs.SetInt(RewardedKey, 1);
-            Wallet.Crystals += BalanceConfig.Instance.TutorialRewardCrystals;
+            Wallet.UpgradeCrystals += BalanceConfig.Instance.TutorialRewardCrystals;
         }
 
         private void Update()

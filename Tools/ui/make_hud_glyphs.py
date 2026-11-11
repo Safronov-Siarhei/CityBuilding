@@ -390,29 +390,6 @@ def radius():
     return img
 
 
-def crystal():
-    """The game's currency (the user, 2026-10-25: a beautiful crystal): a cut gem in colour, not a
-    white glyph -- it is shown as it is, never tinted. Facets lit from the top left."""
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    top, girdle, bottom = 0.14, 0.4, 0.92
-    d.polygon([(u(0.3), u(top)), (u(0.38), u(0.27)), (u(0.31), u(girdle)), (u(0.12), u(girdle))], fill=(150, 235, 255, 255))
-    d.polygon([(u(0.38), u(0.27)), (u(0.62), u(0.27)), (u(0.69), u(girdle)), (u(0.31), u(girdle))], fill=(95, 200, 245, 255))
-    d.polygon([(u(0.7), u(top)), (u(0.88), u(girdle)), (u(0.69), u(girdle)), (u(0.62), u(0.27))], fill=(60, 160, 230, 255))
-    d.polygon([(u(0.3), u(top)), (u(0.7), u(top)), (u(0.62), u(0.27)), (u(0.38), u(0.27))], fill=(205, 248, 255, 255))
-    d.polygon([(u(0.12), u(girdle)), (u(0.31), u(girdle)), (u(0.5), u(bottom))], fill=(70, 175, 235, 255))
-    d.polygon([(u(0.31), u(girdle)), (u(0.5), u(girdle)), (u(0.5), u(bottom))], fill=(45, 140, 220, 255))
-    d.polygon([(u(0.5), u(girdle)), (u(0.69), u(girdle)), (u(0.5), u(bottom))], fill=(30, 105, 195, 255))
-    d.polygon([(u(0.69), u(girdle)), (u(0.88), u(girdle)), (u(0.5), u(bottom))], fill=(22, 80, 165, 255))
-    rim = [(u(0.3), u(top)), (u(0.7), u(top)), (u(0.88), u(girdle)), (u(0.5), u(bottom)), (u(0.12), u(girdle))]
-    d.line(rim + [rim[0]], fill=(16, 40, 90, 255), width=int(u(0.025)), joint="curve")
-    d.polygon([(u(0.4), u(0.17)), (u(0.47), u(0.17)), (u(0.36), u(0.33)), (u(0.32), u(0.3))], fill=(255, 255, 255, 220))
-    # with the menu's pictures, which keep their colours (the glyphs folder imports a silhouette)
-    art = os.path.join(PROJECT, "Assets", "_Project", "UI", "MenuArt")
-    os.makedirs(art, exist_ok=True)
-    img.resize((SIZE * 2, SIZE * 2), Image.LANCZOS).save(os.path.join(art, "Crystal.png"))
-
-
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
@@ -422,7 +399,6 @@ def main():
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
                      ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):
         save(fn(), name)
-    crystal()
     print("HUD GLYPHS ->", OUT)
 
 

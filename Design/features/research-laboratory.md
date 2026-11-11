@@ -20,10 +20,9 @@
   research zeroed (user: not in the lab), so their levels are free; the Laboratory itself has none.
 - UPGRADE CRYSTALS (user, 2026-10-28): levels >= `research_crystals_from_level` (3) cost
   `research_crystals` (1) on top of the coins (`ResearchTopic.Crystals`). Account purse
-  `Wallet.UpgradeCrystals` (PlayerPrefs, kept between games, sandbox only -- the lab is sandbox only);
+  `Wallet.UpgradeCrystals` (PlayerPrefs, kept between games; the lab is sandbox only);
   cancel / lost lab refund it in full; saved as `currentResearchPaidCrystals`; infinite-resources cheat
-  makes them free; cheat GameCheats/Research «+10 кристаллов улучшения». Separate from the blue shop
-  crystal `Wallet.Crystals`. Icon `UI/Icons/Res_UpgradeCrystal.png` (render_icons.py, violet shards on gold).
+  makes them free; cheat GameCheats/Research «+10 кристаллов улучшения». The game's ONE currency since 2026-11-11 (the user: the Invasion's crystals are the same; the blue `Wallet.Crystals` purse and icon are gone). Icon `UI/Icons/Res_UpgradeCrystal.png` (render_icons.py, violet shards on gold).
 - Cost in coins (+ crystal from lvl 3), taken at start; time = the topic's own real seconds (floor
   `research_min_seconds`). Cancel refunds 70 % of the coins and the whole crystal.
 - PARALLEL (user, 2026-10-28, answer Б): each scientist runs ONE research -- as many at once as

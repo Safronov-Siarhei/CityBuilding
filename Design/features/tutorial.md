@@ -281,7 +281,7 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
    After Sail: Land (the transport empty) -> Guard (no orc alive) -> Tower (no watchtower) -> Portal ->
    Done. Breaking the portal is the map's win (`GameOverManager`, the only portal); the victory panel
    says `#over_tutorial_reason` with the reward and has no «play on»; the reward
-   (`Wallet.Crystals += tutorial_reward_crystals`) is paid ONCE (`PlayerPrefs tutorial.rewarded`), replays
+   (`Wallet.UpgradeCrystals += tutorial_reward_crystals`) is paid ONCE (`PlayerPrefs tutorial.rewarded`), replays
    pay nothing. Test: PlayMode `TutorialTests` (map, no bot/main base/fog, the rules, the orc island:
    1 portal, 1 tower, 1 guard; the script past TownHall).
 5. Texts and numbers are in (economy `tutorial_*`, localization `#tutorial_hint_*`, `#mode_tutorial`,

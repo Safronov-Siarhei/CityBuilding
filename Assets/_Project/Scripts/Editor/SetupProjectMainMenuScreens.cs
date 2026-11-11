@@ -463,7 +463,7 @@ namespace CityBuilder.EditorTools
             // the points and the crystals as the game's resource chips (the user's pick «А», 2026-10-25):
             // a parchment capsule, a disc with its sign on the left, the number
             var pointsText = Counter(frame.transform, "Points", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Color(0.88f, 0.66f, 0.23f), "Trophy", null);
-            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, MenuArt("Crystal"));
+            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"));
             var info = MenuRoundButton(frame.transform, "InfoButton", "round", "Info", HudInk.OnRound, 96f, 0.5f);
             Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 80f), new Vector2(96f, 96f));
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
@@ -673,10 +673,10 @@ namespace CityBuilder.EditorTools
             return MenuLabel(plaque.transform, "Number", null, 42, new Vector2(38f, 3f), new Vector2(130f, 60f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleLeft);
         }
 
-        /// <summary>The crystal, the game's currency, in its own colours (Tools/ui/make_hud_glyphs.py draws it into MenuArt).</summary>
+        /// <summary>The crystal, the game's one currency: the sandbox's icon everywhere (the user, 2026-11-11).</summary>
         private static void Gem(Transform parent, Vector2 position, float size)
         {
-            var art = MenuArt("Crystal");
+            var art = IconSprite("Res_UpgradeCrystal");
             if (art == null) return;
             var gem = CreateImage(parent, "Crystal", Color.white);
             gem.sprite = art;
