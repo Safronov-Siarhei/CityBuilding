@@ -231,7 +231,12 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   digging), never walking.
   Taxes (the user, 2026-11-12): a «Казна» booster, tax ×1.2 / ×1.5 / ×2, lasts 10 MIN (tax comes once per
   120-s game day, so 5 min is 2-3 payouts); priced like the other boosters' tiers. So the duration is a
-  per-booster sheet column (default 5 min). The user continues the list.
+  per-booster sheet column (default 5 min).
+  The rest (the user, 2026-11-12): Зодчий -- 3 min of INSTANT building; Учёный -- 3 min of instant
+  research; Боевой дух -- as proposed (+50% damage to the army and heroes), 3 min; Стойкость -- buildings'
+  HP +20% / +50% / +100%; Вербовка -- hiring at HALF the price; Ремонт -- repairs every damaged
+  building at once; Новосёлы -- +10 citizens at once. Ремесло (workshops) and «Готово!» not named
+  (asked). Open: tiers / durations of these, Новосёлы vs housing.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
