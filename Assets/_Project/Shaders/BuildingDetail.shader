@@ -31,6 +31,8 @@ Shader "CityBuilder/BuildingDetail"
         _DetailStrength ("Detail strength", Range(0, 1)) = 1
         _ShadeStrength ("Ground darkening strength", Range(0, 1)) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.15
+        // back faces culled in the game; the campaign film's close cameras draw both (CineTwoSided)
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
         _SnowMask ("Takes snow in winter", Range(0, 1)) = 1
         [Toggle(_WIND)] _Wind ("Sways in the wind", Float) = 0
         _WindStrength ("Wind: sway at full weight, metres", Float) = 0.08
@@ -99,6 +101,7 @@ Shader "CityBuilder/BuildingDetail"
         Pass
         {
             Name "ForwardLit"
+            Cull [_Cull]
             Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
@@ -218,6 +221,7 @@ Shader "CityBuilder/BuildingDetail"
         Pass
         {
             Name "ShadowCaster"
+            Cull [_Cull]
             Tags { "LightMode" = "ShadowCaster" }
             ZWrite On
             ZTest LEqual
@@ -265,6 +269,7 @@ Shader "CityBuilder/BuildingDetail"
         Pass
         {
             Name "DepthOnly"
+            Cull [_Cull]
             Tags { "LightMode" = "DepthOnly" }
             ZWrite On
             ColorMask R
