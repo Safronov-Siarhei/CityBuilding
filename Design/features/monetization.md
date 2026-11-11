@@ -214,6 +214,9 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   дух, «Готово!» (instant finish); active boosters as a row of medallions with a time ring under the top
   bar (tap -> «Запасы»); a hint at the right moment (raid -> «Боевой дух», only if in stock, 8 s).
   Building look A (gold ground ring + rising motes + badge) or B (gold outline glow + badge).
+- **Shop v2 (the user):** the whole shop window TALLER, the tabs «Предложения» | «Бустеры» at the BOTTOM centre,
+  boosters as long strips like the offers (more than four scroll). The ad button reads «▶ Смотреть» (the
+  user did not get «▶ 5 мин»); the strip says «За кристаллы — 15 мин, за рекламу — 5 мин».
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
