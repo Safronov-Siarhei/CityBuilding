@@ -34,6 +34,69 @@ namespace CityBuilder.Campaign
             CineTwoSided.Apply(gameObject);
         }
 
+        private ParticleSystem _torch;
+
+        /// <summary>
+        /// A living flame on the torch (the user, 2026-11-11: the modelled flame stood still and looked
+        /// silly; the model now ends in the tarred rag). The rag's top is the left forearm part's vertex
+        /// farthest from its joint -- the torch reaches far past the hand. Sized by the figure's height.
+        /// </summary>
+        public void LightTorch(Material flame)
+        {
+            if (flame == null || _torch != null) return;
+            Transform bone = null;
+            Mesh part = null;
+            foreach (var mf in GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.transform.parent == null || mf.transform.parent.name != "forearm.L") continue;
+                bone = mf.transform.parent;
+                part = mf.sharedMesh;
+            }
+            if (bone == null || part == null) return;
+            var tip = Vector3.zero;
+            foreach (var v in part.vertices) if (v.sqrMagnitude > tip.sqrMagnitude) tip = v;
+            var height = 0f;
+            foreach (var r in GetComponentsInChildren<MeshRenderer>()) height = Mathf.Max(height, r.bounds.max.y - transform.position.y);
+            height = Mathf.Max(0.2f, height);
+
+            var go = new GameObject("TorchFlame", typeof(ParticleSystem));
+            go.transform.SetParent(bone, false);
+            go.transform.localPosition = tip;
+            go.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            var ps = go.GetComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.duration = 2f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.45f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.25f * height, 0.45f * height);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.07f * height, 0.12f * height);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 40;
+            var em = ps.emission;
+            em.rateOverTime = 45f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.02f * height;
+            var sol = ps.sizeOverLifetime;
+            sol.enabled = true;
+            sol.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.15f));
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.92f, 0.5f), 0f), new GradientColorKey(new Color(1f, 0.55f, 0.12f), 0.45f), new GradientColorKey(new Color(0.8f, 0.18f, 0.05f), 1f) },
+                new[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(0.8f, 0.5f), new GradientAlphaKey(0f, 1f) });
+            col.color = new ParticleSystem.MinMaxGradient(g);
+            var r2 = go.GetComponent<ParticleSystemRenderer>();
+            r2.sharedMaterial = flame;
+            r2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ps.Play();
+            ps.Simulate(0.5f, true, true, false);
+            if (Application.isPlaying) ps.Play();
+            _torch = ps;
+        }
+
         // the rigid parts cut from each model's skinned mesh, shared by every copy of that model
         private static readonly Dictionary<Mesh, (int bone, Mesh part)[]> PartsByMesh = new Dictionary<Mesh, (int, Mesh)[]>();
 
@@ -163,6 +226,7 @@ namespace CityBuilder.Campaign
 
         public void Tick(float dt)
         {
+            if (_torch != null && !Application.isPlaying) _torch.Simulate(dt, true, false, false);
             if (_clip == null) return;
             if (_bones == null) Bind();
             _time += dt * _rate;

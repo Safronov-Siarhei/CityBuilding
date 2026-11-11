@@ -52,7 +52,7 @@ namespace CityBuilder.Campaign
 
         [Serializable] private class SackInfo { public float vx, vy, vz, gravity, spinX, spinZ; }
         [Serializable] private class RopeInfo { public float width; }
-        [Serializable] private class SubInfo { public float fadeIn, fadeOut; }
+        [Serializable] private class SubInfo { public float fadeIn, fadeOut, bubbleMaxWidth, bubbleMargin, bubbleLift; }
         [Serializable] private class ActorInfo { public string id; public string figure; public bool hidden; }
 
         [Serializable] private class Shot
@@ -90,6 +90,7 @@ namespace CityBuilder.Campaign
             public string track;
             public bool hold;
             public string who;
+            public string speaker;
             public string key;
             public float seconds;
         }
@@ -116,6 +117,9 @@ namespace CityBuilder.Campaign
         [SerializeField] private TextAsset tracksFile;
         [SerializeField] private Camera cam;
         [SerializeField] private Text subtitle;
+        [SerializeField] private RectTransform bubble;
+        [SerializeField] private Text bubbleText;
+        [SerializeField] private RectTransform bubbleTail;
         [SerializeField] private Material ropeMaterial;
         [SerializeField] private OpeningFx fx;
         [SerializeField] private OpeningSound sound;
@@ -165,6 +169,7 @@ namespace CityBuilder.Campaign
         private Vector3 _sackVel;
         private float _subT0 = -1f, _subLen;
         private string _subText;
+        private string _subActor;
         private bool _finished;
         private Vector3 _camFrom, _camAt;
         private bool _shallow;
@@ -205,6 +210,7 @@ namespace CityBuilder.Campaign
                 go.name = a.id;
                 var fig = go.AddComponent<CineFigure>();
                 fig.Init(member.clips);
+                if (a.figure == "CineOrcTorch" && life != null) fig.LightTorch(life.FlameMaterial);
                 fig.Play("Idle", 0f);
                 go.SetActive(!a.hidden);
                 _actors[a.id] = new Actor { id = a.id, figure = a.figure, t = go.transform, fig = fig };
@@ -333,7 +339,10 @@ namespace CityBuilder.Campaign
                 case "sub":
                     _subT0 = c.t;
                     _subLen = c.seconds;
-                    _subText = $"<color=#F2CF6B>{Localization.Get(c.who)}</color>  {Localization.Get(c.key)}";
+                    _subActor = c.speaker;
+                    _subText = bubble != null && !string.IsNullOrEmpty(c.speaker)
+                        ? Localization.Get(c.key)
+                        : $"<color=#F2CF6B>{Localization.Get(c.who)}</color>  {Localization.Get(c.key)}";
                     break;
             }
         }
@@ -556,6 +565,11 @@ namespace CityBuilder.Campaign
 
         private void StepSubtitle()
         {
+            if (bubble != null)
+            {
+                StepBubble();
+                if (!string.IsNullOrEmpty(_subActor)) return;
+            }
             if (subtitle == null) return;
             if (_subT0 < 0f || Time > _subT0 + _subLen + _s.subtitle.fadeOut)
             {
@@ -569,6 +583,62 @@ namespace CityBuilder.Campaign
             var c = subtitle.color;
             c.a = alpha;
             subtitle.color = c;
+        }
+
+        /// <summary>
+        /// The line in a speech bubble over the speaker's head (the user, 2026-11-11: comic bubbles
+        /// instead of subtitles). It pops in, follows the head across the frame, stays inside it, and
+        /// its tail always points down at the speaker.
+        /// </summary>
+        private void StepBubble()
+        {
+            var show = _subT0 >= 0f && !string.IsNullOrEmpty(_subActor) && Time <= _subT0 + _subLen + _s.subtitle.fadeOut
+                       && _actors.TryGetValue(_subActor, out _);
+            bubble.gameObject.SetActive(show);
+            if (!show) return;
+            var speaker = _actors[_subActor];
+            var top = speaker.t.position.y;
+            foreach (var r in speaker.t.GetComponentsInChildren<MeshRenderer>()) top = Mathf.Max(top, r.bounds.max.y);
+            var head = new Vector3(speaker.t.position.x, top, speaker.t.position.z);
+            var canvas = (RectTransform)bubble.parent;
+            var screen = cam.WorldToScreenPoint(head);
+            if (screen.z <= 0f)
+            {
+                bubble.gameObject.SetActive(false);
+                return;
+            }
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas, screen, cam, out var local);
+            if (bubbleText.text != _subText)
+            {
+                bubbleText.text = _subText;
+                var le = bubbleText.GetComponent<LayoutElement>();
+                if (le != null)
+                {
+                    le.preferredWidth = -1f;
+                    le.preferredWidth = Mathf.Min(bubbleText.preferredWidth, _s.subtitle.bubbleMaxWidth);
+                }
+                LayoutRebuilder.ForceRebuildLayoutImmediate(bubble);
+            }
+            var size = bubble.rect.size;
+            var half = canvas.rect.size * 0.5f;
+            var margin = _s.subtitle.bubbleMargin;
+            var tail = bubbleTail.rect.height;
+            var x = Mathf.Clamp(local.x, -half.x + margin + size.x * 0.5f, half.x - margin - size.x * 0.5f);
+            var y = Mathf.Clamp(local.y + tail + _s.subtitle.bubbleLift, -half.y + margin, half.y - margin - size.y);
+            bubble.anchoredPosition = new Vector2(x, y);
+            var tx = Mathf.Clamp(local.x - x, -size.x * 0.5f + 28f, size.x * 0.5f - 28f);
+            bubbleTail.anchoredPosition = new Vector2(tx, bubbleTail.anchoredPosition.y);
+
+            var u = Time - _subT0;
+            var fadeIn = Mathf.Max(0.01f, _s.subtitle.fadeIn);
+            var alpha = Mathf.Clamp01(u / fadeIn) *
+                        (u > _subLen ? 1f - Mathf.Clamp01((u - _subLen) / Mathf.Max(0.01f, _s.subtitle.fadeOut)) : 1f);
+            var group = bubble.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = alpha;
+            // a little overshoot as it pops in
+            var k = Mathf.Clamp01(u / (fadeIn * 1.6f));
+            var pop = 1f + 0.12f * Mathf.Sin(k * Mathf.PI) * (1f - k * 0.3f);
+            bubble.localScale = Vector3.one * Mathf.Lerp(0.7f, 1f, Mathf.Min(1f, k * 1.4f)) * (k < 1f ? pop : 1f);
         }
 
         // ------------------------------------------------------------ helpers

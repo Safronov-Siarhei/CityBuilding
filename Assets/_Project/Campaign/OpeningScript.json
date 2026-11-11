@@ -59,7 +59,7 @@
   {"t": 52.95, "clip": "sfx_bell", "volume": 0.17},
   {"t": 53.55, "clip": "sfx_bell", "volume": 0.11}
  ],
- "subtitle": {"fadeIn": 0.15, "fadeOut": 0.3},
+ "subtitle": {"fadeIn": 0.18, "fadeOut": 0.3, "bubbleMaxWidth": 420, "bubbleMargin": 24, "bubbleLift": 10},
  "actors": [
   {"id": "ardan", "figure": "CineArdan"},
   {"id": "elder", "figure": "CineElder"},
@@ -143,7 +143,7 @@
   {"t": 17.0, "actor": "elder", "perf": "P_Talk"},
   {"t": 17.0, "evt": "values", "track": "talk/amulet"},
   {"t": 17.0, "evt": "values", "track": "talk/runes"},
-  {"t": 17.5, "evt": "sub", "who": "#cine_name_elder", "key": "#cine_opening_stones", "seconds": 1.8},
+  {"t": 17.5, "evt": "sub", "speaker": "elder", "who": "#cine_name_elder", "key": "#cine_opening_stones", "seconds": 1.8},
   {"t": 20.0, "actor": "mother", "clip": "Run", "speed": 0.92, "path": [3.2, 0.0, -2.9, 0.75, 0.085, -1.3]},
   {"t": 20.4, "evt": "panic", "at": [0.0, 0.0, 0.0]},
   {"t": 23.5, "actor": "ardan", "perf": "P_Hold"},
@@ -180,7 +180,7 @@
   {"t": 51.8, "actor": "ardan", "perf": "P_DropRun"},
   {"t": 51.8, "actor": "elder", "perf": "P_Shout"},
   {"t": 51.8, "actor": "champion", "perf": "P_Roar"},
-  {"t": 52.7, "evt": "sub", "who": "#cine_name_elder", "key": "#cine_opening_run", "seconds": 2.4},
+  {"t": 52.7, "evt": "sub", "speaker": "elder", "who": "#cine_name_elder", "key": "#cine_opening_run", "seconds": 2.4},
   {"t": 53.65, "evt": "sack"},
   {"t": 54.4, "actor": "champion", "clip": "Walk", "speed": 0.5, "path": [0.0, 0.085, -0.95, 0.0, 0.0, -2.0]},
   {"t": 55.0, "actor": "elder", "clip": "Run", "speed": 0.6, "hideAtEnd": true, "path": [0.36, 0.0, -2.4, -1.6, 0.0, -2.9, -4.4, 0.0, -1.2, -14.0, 0.0, -2.0]},

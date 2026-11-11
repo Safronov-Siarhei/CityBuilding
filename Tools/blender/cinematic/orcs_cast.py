@@ -211,12 +211,10 @@ def torchbearer():
     def hold(b, k, wr):
         x, y, z = wr.x, wr.y - 0.02, wr.z - 0.06
         if k == 1:
-            # the torch: a stick with a tarred rag head, flames up
+            # the torch: a stick with a tarred rag head; the flame is live in Unity (CineFigure.LightTorch --
+            # the modelled flame stood still and looked silly, the user 2026-11-11)
             b.rod((x, y + 0.01, z - 0.05), (x, y - 0.03, z + 0.2), 0.022, o.TIMBER_LIGHT)
             b.cylinder(x, y - 0.03, z + 0.18, z + 0.225, 0.024, o.HAIR, sides=6)
-            o.tube(b, [(x, y - 0.03, z + 0.22), (x + 0.01, y - 0.03, z + 0.29), (x - 0.005, y - 0.025, z + 0.34)],
-                   [0.032, 0.022, 0], o.FIRE, sides=6)
-            o.tube(b, [(x, y - 0.034, z + 0.22), (x - 0.012, y - 0.04, z + 0.27)], [0.02, 0], 'plaster_yellow', sides=5)
         else:
             # the axe gripped in the fist, haft up and a little forward, the blade facing forward
             # (2026-11-10: it was held out level and its head hung in the air)

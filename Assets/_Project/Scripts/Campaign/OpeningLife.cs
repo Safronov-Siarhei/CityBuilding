@@ -105,6 +105,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private CastMember[] cast = new CastMember[0];
         [SerializeField] private TextAsset config;
         [SerializeField] private Material flameMaterial;
+        public Material FlameMaterial => flameMaterial;
         [SerializeField] private Material smokeMaterial;
 
         private Config _c;
@@ -605,6 +606,7 @@ namespace CityBuilder.Campaign
             go.name = id;
             var fig = go.AddComponent<CineFigure>();
             fig.Init(member.clips);
+            if (member.id == "CineOrcTorch") fig.LightTorch(flameMaterial);
             var a = new Agent { t = go.transform, fig = fig, id = id, orc = orc, lane = -1 };
             (orc ? _orcs : _people).Add(a);
             return a;

@@ -33,7 +33,7 @@ namespace CityBuilder.EditorTools
             var cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
             var dir = Path.Combine(Directory.GetCurrentDirectory(), "RunLogs", "campaign");
             Directory.CreateDirectory(dir);
-            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 8 };
+            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 4 };
             var tex = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
             // the first render skipped the ground while its shader still compiled in the background
             // (the first view showed the sky's lower half instead of the grass): compile up front
@@ -98,7 +98,7 @@ namespace CityBuilder.EditorTools
             Directory.CreateDirectory(dir);
             var wasAsync = EditorSettings.asyncShaderCompilation;
             EditorSettings.asyncShaderCompilation = false;
-            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 8 };
+            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 4 };
             var tex = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
             director.Play();
             cam.targetTexture = rt;
