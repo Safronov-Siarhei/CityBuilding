@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Research;
 using CityBuilder.Citizens;
@@ -25,6 +26,9 @@ namespace CityBuilder.Shop
         private const string CrystalsResource = "Crystals";
 
         public static OfferShop Instance { get; private set; }
+
+        /// <summary>The slot number the «Не хватает ресурсов» offer goes by in AdPlayingSlot and Given.</summary>
+        public const int ShortageSlot = 99;
 
         /// <summary>The slots changed or one was taken: redraw.</summary>
         public event Action Changed;
@@ -132,6 +136,73 @@ namespace CityBuilder.Shop
                     Give(s, slot);
                     return true;
             }
+        }
+
+        /// <summary>
+        /// The «Не хватает ресурсов» offer for this price, or null if nothing is missing (or the shop is
+        /// off here): the shortfall of each resource, priced by shop_price10_* (the user, 2026-11-11).
+        /// </summary>
+        public BalanceConfig.OfferBundle ShortageFor(IEnumerable<ResourceAmount> cost)
+        {
+            if (cost == null || !Allowed || ResourceManager.Instance == null) return null;
+            var list = new List<ResourceAmount>(cost);
+            if (ResourceManager.Instance.HasEnough(list)) return null;
+            var missing = new List<BalanceConfig.OfferGood>();
+            foreach (var c in list)
+            {
+                var lack = c.amount - ResourceManager.Instance.GetAmount(c.type);
+                if (lack <= 0) continue;
+                var found = missing.Find(g => g.resource == c.type.ToString());
+                if (found != null) found.amount += lack;
+                else missing.Add(new BalanceConfig.OfferGood { resource = c.type.ToString(), amount = lack });
+            }
+            if (missing.Count == 0) return null;
+            var config = _config ?? BalanceConfig.Sandbox;
+            return OfferRotation.ShortageBundle(missing,
+                r => Enum.TryParse<ResourceType>(r, out var t) ? config.ShopPrice10(t) : 0f, config.ShopAdCrystalsBase);
+        }
+
+        /// <summary>Takes the «Не хватает ресурсов» offer: crystals, or an ad while it is worth at most shop_ad_max_ads ads. The goods go in past the storehouse ceiling.</summary>
+        public bool BuyShortage(BalanceConfig.OfferBundle bundle, Pay pay)
+        {
+            if (bundle == null || bundle.kind != OfferRotation.KindShortage || AdPlayingSlot >= 0) return false;
+            var config = _config ?? BalanceConfig.Sandbox;
+            switch (pay)
+            {
+                case Pay.Crystals:
+                    if (Wallet.UpgradeCrystals < bundle.priceCrystals)
+                    {
+                        Feed("#shop_no_crystals");
+                        return false;
+                    }
+                    Wallet.UpgradeCrystals -= bundle.priceCrystals;
+                    GiveShortage(bundle);
+                    return true;
+                case Pay.Ad:
+                    if (!RewardedAds.IsReady || !OfferRotation.AdAllowed(bundle, config.ShopAdMaxAds)) return false;
+                    StartCoroutine(PlayShortageAd(bundle));
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private IEnumerator PlayShortageAd(BalanceConfig.OfferBundle bundle)
+        {
+            AdPlayingSlot = ShortageSlot;
+            Changed?.Invoke();
+            yield return new WaitForSecondsRealtime((_config ?? BalanceConfig.Sandbox).ShopAdStubSeconds);
+            AdPlayingSlot = -1;
+            GiveShortage(bundle);
+        }
+
+        private void GiveShortage(BalanceConfig.OfferBundle bundle)
+        {
+            foreach (var good in bundle.goods)
+                if (Enum.TryParse<ResourceType>(good.resource, out var type) && ResourceManager.Instance != null)
+                    ResourceManager.Instance.AddOverCapacity(type, good.amount);
+            Given?.Invoke(ShortageSlot, bundle);
+            Changed?.Invoke();
         }
 
         /// <summary>The rewarded ad's stand-in: a few real seconds, then the reward (the slot may have changed meanwhile -- the bundle watched is what is given).</summary>

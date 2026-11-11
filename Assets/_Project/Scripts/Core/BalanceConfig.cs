@@ -586,6 +586,9 @@ namespace CityBuilder.Core
         [SerializeField] private float shopAdCrystalsBase = 10f;
         // a goods bundle worth more ads than this is sold for crystals only (the user, 2026-11-11: no bundles for nothing)
         [SerializeField] private float shopAdMaxAds = 2f;
+        // each resource's worth in crystals per 10 (shop_price10_<ResourceType>, «Наборы: настройки» -> «Цены ресурсов»):
+        // prices the «Не хватает ресурсов» offer; indexed by ResourceType
+        [SerializeField] private float[] shopPrice10 = new float[0];
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
@@ -1215,6 +1218,12 @@ namespace CityBuilder.Core
         public float ShopCrystalUsd => shopCrystalUsd;
         public float ShopAdCrystalsBase => shopAdCrystalsBase;
         public float ShopAdMaxAds => shopAdMaxAds;
+        /// <summary>A resource's worth in crystals per 10 pieces (0 if the sheet has none).</summary>
+        public float ShopPrice10(Resources.ResourceType type)
+        {
+            var i = (int)type;
+            return shopPrice10 != null && i >= 0 && i < shopPrice10.Length ? shopPrice10[i] : 0f;
+        }
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
@@ -2143,6 +2152,16 @@ namespace CityBuilder.Core
             shopCrystalUsd = Read(economy, "shop_crystal_usd", shopCrystalUsd);
             shopAdCrystalsBase = Read(economy, "shop_ad_crystals_base", shopAdCrystalsBase);
             shopAdMaxAds = Read(economy, "shop_ad_max_ads", shopAdMaxAds);
+            {
+                var types = (Resources.ResourceType[])System.Enum.GetValues(typeof(Resources.ResourceType));
+                var prices = new float[types.Length];
+                for (var i = 0; i < types.Length; i++)
+                {
+                    var key = "shop_price10_" + types[i];
+                    prices[i] = economy != null && economy.TryGetValue(key, out var v) ? v : ShopPrice10(types[i]);
+                }
+                shopPrice10 = prices;
+            }
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);

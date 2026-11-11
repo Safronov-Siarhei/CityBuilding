@@ -137,5 +137,33 @@ namespace CityBuilder.Tests.EditMode
             Assert.IsTrue(OfferRotation.AdAllowed(dear, 0f), "a limit of 0 is off");
             Assert.IsFalse(OfferRotation.AdAllowed(B("gift", OfferRotation.KindBonus, 1, 1), 2f), "only goods bundles");
         }
+
+        [Test]
+        public void TheShortageOfferIsTheShortfallAtItsWorth()
+        {
+            // the user, 2026-11-11: exactly what a building lacks, priced by shop_price10_*, ad-or-crystals by the ad limit
+            float Price(string r) => r == "Wood" ? 0.7f : r == "Stone" ? 0.9f : 0f;
+            var small = OfferRotation.ShortageBundle(new List<BalanceConfig.OfferGood>
+            {
+                new BalanceConfig.OfferGood { resource = "Wood", amount = 40 },
+                new BalanceConfig.OfferGood { resource = "Stone", amount = 15 },
+            }, Price, 10f);
+            // 40 x 0.07 + 15 x 0.09 = 4.15 -> 5 crystals, 0.415 ads
+            Assert.That(small.priceCrystals, Is.EqualTo(5));
+            Assert.That(small.ads, Is.EqualTo(0.415f).Within(0.001f));
+            Assert.IsTrue(OfferRotation.AdAllowed(small, 2f));
+            var big = OfferRotation.ShortageBundle(new List<BalanceConfig.OfferGood>
+            {
+                new BalanceConfig.OfferGood { resource = "Wood", amount = 400 },
+            }, Price, 10f);
+            Assert.That(big.priceCrystals, Is.EqualTo(28));
+            Assert.IsFalse(OfferRotation.AdAllowed(big, 2f), "worth 2.8 ads: crystals only");
+            var tiny = OfferRotation.ShortageBundle(new List<BalanceConfig.OfferGood>
+            {
+                new BalanceConfig.OfferGood { resource = "Wood", amount = 1 },
+            }, Price, 10f);
+            Assert.That(tiny.priceCrystals, Is.EqualTo(1), "never free");
+            Assert.That(OfferRotation.BonusPercent(small, 0.01f, 10f), Is.Zero, "no badge");
+        }
     }
 }

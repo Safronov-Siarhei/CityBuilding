@@ -134,15 +134,26 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   left column with a timer and a red dot, glowing; gold notification with a 30-s bar). Drawn by
   `Tools/store/offer_shop_mockup.py`. Then: the sheet tabs and the code.
 
-## WAITING: open the shop on a shortage (the user's idea, 2026-11-11; «пока что ничего»)
-- Sandbox: tapping Build / Upgrade without enough resources should open the offer shop. Questions put
-  to the user, not answered yet: when for building (tap in the build menu -- Claude's pick -- or on the
-  placement confirm); a «Не хватает: …» line in the shop (+ highlight bundles with the missing resource);
-  sandbox only (no shop in Invasion/tutorial/dungeon); buildings only for now (army/heroes/research/ships
-  later). Upgrade entry points: BuildingFocus buttons, BuildingInfoPanelController.upgradeButton
-  (TryUpgrade); placement: BuildingPlacer (canAfford). Also open: the silver level disc over an upgraded
-  LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker` -- it has a model for level 1 only): models for levels
-  2-5 or hide the disc -- the user said wait.
+## «Не хватает ресурсов» (the user, 2026-11-11; BUILT, setup x2, `OfferRotationTests` green, not seen in play)
+- **Rule:** in the sandbox, PICKING a building card the player cannot afford (`BuildingPlacer.SelectBuilding`)
+  puts up the «Не хватает ресурсов» window over the placement; buying closes it and the player goes on
+  placing (the building is NOT placed for them -- they may not have chosen the spot). Closing without buying
+  leaves the usual red «not enough» placement. Buildings only for now (army/heroes/research/ships later).
+  No shop outside the sandbox (Invasion = leaderboards, tutorial); the dungeon (coin-only offers) maybe later.
+- **The offer:** exactly the shortfall per resource (up to 3, like a building's price), at its worth by
+  `shop_price10_<ResourceType>` -- rows on «Наборы: настройки» that are FORMULAS reading «Цены ресурсов»
+  (the user: export the prices, not the calculator below them) -> economy.csv -> `BalanceConfig.ShopPrice10`.
+  Whole crystals rounded up, at least 1, no discount (`OfferRotation.ShortageBundle`, kind `shortage`); worth
+  over shop_ad_max_ads ads -> crystals only (wide blue button), else ad + crystals. The goods go in PAST the
+  storehouse ceiling (`ResourceManager.AddOverCapacity`; the user: paid goods are never lost; production then
+  adds nothing until the stock drops under the ceiling).
+- **Code:** `OfferShop.ShortageFor(cost)` / `BuyShortage(bundle, pay)` (slot number `OfferShop.ShortageSlot` =
+  99 in AdPlayingSlot/Given); `OfferShopWindow.ShowShortage(bundle)` = the same component in `shortage` mode
+  (prefab `Resources/OfferShortageWindow`, built by `BuildOfferShopWindow(true)` from layout.json's `s_*`
+  rects, picture `Resources/Shop/WindowShort_<theme>` from offer_shop_art.py), one strip, no timer, closes
+  1.4 s after the goods fly. Texts `#shop_shortage_title`, `#shop_shortage_name`.
+- **Still open:** the silver level disc over an upgraded LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker`;
+  it has a model for level 1 only): models for levels 2-5 or hide the disc -- the user said wait.
 
 ## POSTPONED: chests with a roulette (the user's idea, 2026-11-11; agreed to put off)
 - **Idea:** chests of three classes -- common (an ad or crystals), rare and legendary (crystals only);

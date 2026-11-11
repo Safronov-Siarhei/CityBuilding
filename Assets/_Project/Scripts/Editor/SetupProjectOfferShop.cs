@@ -20,6 +20,7 @@ namespace CityBuilder.EditorTools
     public static partial class SetupProject
     {
         private const string OfferShopPrefabPath = "Assets/_Project/Resources/OfferShopWindow.prefab";
+        private const string OfferShortagePrefabPath = "Assets/_Project/Resources/OfferShortageWindow.prefab";
         /// <summary>The window against the art's reference size: big enough for its buttons on a phone.</summary>
         private const float OfferShopSize = 0.8f;
         /// <summary>The shop's stall icon, under the sack (the user, 2026-11-11).</summary>
@@ -42,6 +43,8 @@ namespace CityBuilder.EditorTools
             public float[] close, counter, counter_icon, counter_text, toast;
             public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp, badge, wide_play, wide_ad_label, wide_price, wide_crystal;
             public float[] good0, good1, good2, amount0, amount1, amount2;
+            // the «Не хватает ресурсов» window: its frame, title, seal, crystals, line and its one strip
+            public float[] s_window, s_frame, s_title, s_close, s_counter, s_counter_icon, s_counter_text, s_toast, s_strip;
         }
 
         private static Sprite ShopSprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.ShopFolder}/{name}.png");
@@ -172,18 +175,36 @@ namespace CityBuilder.EditorTools
 
         private static void BuildOfferShopWindow()
         {
+            BuildOfferShopWindow(false);
+            BuildOfferShopWindow(true);
+        }
+
+        /// <summary>The shop window; with `shortage` the «Не хватает ресурсов» one (the user, 2026-11-11): the same parts on a short frame, one strip, no timer.</summary>
+        private static void BuildOfferShopWindow(bool shortage)
+        {
             var layout = ReadOfferShopLayout();
             if (layout == null)
             {
                 Debug.LogWarning("BuildOfferShopWindow: no UI/Shop/layout.json -- run Tools/store/offer_shop_art.py.");
                 return;
             }
-            ReimportShopArt();
+            if (shortage)
+            {
+                if (layout.s_strip == null || layout.s_strip.Length < 4)
+                {
+                    Debug.LogError("BuildOfferShopWindow: layout.json has no short window -- run Tools/store/offer_shop_art.py.");
+                    return;
+                }
+                layout.window = layout.s_window; layout.frame = layout.s_frame; layout.title = layout.s_title;
+                layout.close = layout.s_close; layout.counter = layout.s_counter; layout.counter_icon = layout.s_counter_icon;
+                layout.counter_text = layout.s_counter_text; layout.toast = layout.s_toast;
+            }
+            else ReimportShopArt();
             var refW = layout.reference[0];
             var refH = layout.reference[1];
             var screenRect = new[] { 0f, 0f, refW, refH };
 
-            var root = new GameObject("OfferShopWindow", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
+            var root = new GameObject(shortage ? "OfferShortageWindow" : "OfferShopWindow", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
             var canvas = root.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 900;   // as the rate-us window: over the interface, under the loading screen
@@ -207,11 +228,11 @@ namespace CityBuilder.EditorTools
             picture.raycastTarget = false;
             PlaceIn(picture.rectTransform, screenRect, layout.window);
 
-            var title = ShopText(window, "Title", "#shop_title", 72, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f), TextAnchor.MiddleCenter);
+            var title = ShopText(window, "Title", shortage ? "#shop_shortage_title" : "#shop_title", 72, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f), TextAnchor.MiddleCenter);
             PlaceIn(title.rectTransform, screenRect, layout.title);
             Rim(title, new Color(0.35f, 0.05f, 0.06f), 4f);
 
-            var strips = new[] { layout.strip0, layout.strip1, layout.strip2, layout.strip3 };
+            var strips = shortage ? new[] { layout.s_strip } : new[] { layout.strip0, layout.strip1, layout.strip2, layout.strip3 };
             var goods = new[] { layout.good0, layout.good1, layout.good2 };
             var amounts = new[] { layout.amount0, layout.amount1, layout.amount2 };
             var views = new OfferShopWindow.SlotView[strips.Length];
@@ -345,14 +366,17 @@ namespace CityBuilder.EditorTools
             so.FindProperty("size").floatValue = OfferShopSize;
             so.FindProperty("icons").objectReferenceValue = ShopIcons();
             so.FindProperty("crystal").objectReferenceValue = CrystalIcon();
+            so.FindProperty("shortage").boolValue = shortage;
+            so.FindProperty("pictureName").stringValue = shortage ? "Shop/WindowShort_" : "Shop/Window_";
             so.ApplyModifiedPropertiesWithoutUndo();
             // the views hold plain C# lists of references: set through the component, then saved with it
             var field = typeof(OfferShopWindow).GetField("slots", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             field.SetValue(screen, views);
             EditorUtility.SetDirty(screen);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(OfferShopPrefabPath));
-            PrefabUtility.SaveAsPrefabAsset(root, OfferShopPrefabPath);
+            var path = shortage ? OfferShortagePrefabPath : OfferShopPrefabPath;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            PrefabUtility.SaveAsPrefabAsset(root, path);
             UnityEngine.Object.DestroyImmediate(root);
         }
 

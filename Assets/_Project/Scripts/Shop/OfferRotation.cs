@@ -33,6 +33,8 @@ namespace CityBuilder.Shop
         public const string KindNormal = "normal";
         public const string KindBonus = "bonus";
         public const string KindStarter = "starter";
+        /// <summary>The «Не хватает ресурсов» offer: exactly what a building lacks, made on the spot (not in the sheet).</summary>
+        public const string KindShortage = "shortage";
         public const string KindAdCrystals = "ad_crystals";
         public const string KindPaidCrystals = "paid_crystals";
 
@@ -194,7 +196,30 @@ namespace CityBuilder.Shop
         /// </summary>
         /// <summary>A goods bundle may be taken for an ad only while it is worth at most maxAds ads (lN_ads; 0 = not counted); above that crystals only (the user, 2026-11-11).</summary>
         public static bool AdAllowed(BalanceConfig.OfferBundle bundle, float maxAds) =>
-            bundle != null && bundle.kind == KindNormal && (maxAds <= 0f || bundle.ads <= maxAds);
+            bundle != null && (bundle.kind == KindNormal || bundle.kind == KindShortage) && (maxAds <= 0f || bundle.ads <= maxAds);
+
+        /// <summary>
+        /// The «Не хватает ресурсов» offer (the user, 2026-11-11): the missing goods at their worth by
+        /// shop_price10_* (no discount -- the rotating bundles stay the bargain), whole crystals rounded
+        /// up, at least 1; `ads` = worth / one ad's crystals, so AdAllowed decides ad-or-crystals as for a bundle.
+        /// </summary>
+        public static BalanceConfig.OfferBundle ShortageBundle(List<BalanceConfig.OfferGood> missing, System.Func<string, float> price10, float adBase)
+        {
+            var worth = 0.0;
+            foreach (var good in missing) worth += good.amount * (double)price10(good.resource) / 10.0;
+            return new BalanceConfig.OfferBundle
+            {
+                id = KindShortage,
+                nameKey = "#shop_shortage_name",
+                kind = KindShortage,
+                weight = 0f,
+                levelFrom = 1,
+                levelTo = 99,
+                goods = missing,
+                priceCrystals = System.Math.Max(1, (int)System.Math.Ceiling(worth - 1e-6)),
+                ads = adBase > 0 ? (float)(worth / adBase) : 0f,
+            };
+        }
 
         public static int BonusPercent(BalanceConfig.OfferBundle bundle, float crystalUsd, float adBase)
         {

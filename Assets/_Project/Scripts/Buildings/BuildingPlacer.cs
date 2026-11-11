@@ -380,6 +380,11 @@ namespace CityBuilder.Buildings
             var router = TouchInputRouter.Instance;
             if (router != null) router.SingleDragOwner = DragOwner.Camera;
 
+            // too poor for it (sandbox only): «Не хватает ресурсов» with exactly the shortfall, over the
+            // placement -- buying closes it and the player goes on placing (the user, 2026-11-11)
+            if (Shop.OfferShop.Instance != null)
+                Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(CostOf(_selectedBuilding)));
+
             if (_selectedBuilding.prefab == null) return;
 
             _ghostInstance = Instantiate(_selectedBuilding.prefab);

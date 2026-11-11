@@ -21,6 +21,9 @@ namespace CityBuilder.Shop
     public class OfferShopWindow : MonoBehaviour
     {
         private const string ResourcePath = "OfferShopWindow";
+        private const string ShortagePath = "OfferShortageWindow";
+        /// <summary>How long the «Не хватает ресурсов» window stays after the goods were given (their flight).</summary>
+        private const float ShortageCloseDelay = 1.4f;
         private const float PopSeconds = 0.22f;
         private const float CloseSeconds = 0.15f;
         private const float PopFromScale = 0.85f;
@@ -81,6 +84,9 @@ namespace CityBuilder.Shop
         [SerializeField] private RectTransform counter;
         [SerializeField] private Text counterText;
         [SerializeField] private Text toast;
+        /// <summary>The «Не хватает ресурсов» window (the user, 2026-11-11): the shop's look, one strip -- exactly what a building lacks.</summary>
+        [SerializeField] private bool shortage;
+        [SerializeField] private string pictureName = "Shop/Window_";
 
         private static OfferShopWindow _current;
         private readonly System.Collections.Generic.List<Canvas> _hidden = new System.Collections.Generic.List<Canvas>();
@@ -95,6 +101,24 @@ namespace CityBuilder.Shop
         private OfferRewardFlight _flight;
 
         public static bool IsOpen => _current != null;
+
+        private static BalanceConfig.OfferBundle _pendingShortage;
+        private OfferSlot _shortageSlot;
+        private float _closeIn = -1f;
+
+        /// <summary>
+        /// Puts up «Не хватает ресурсов» with this offer (OfferShop.ShortageFor): picking a building the
+        /// player cannot afford sends them here; buying closes it and they go on placing the building.
+        /// </summary>
+        public static void ShowShortage(BalanceConfig.OfferBundle bundle)
+        {
+            if (bundle == null || _current != null || OfferShop.Instance == null || !OfferShop.Allowed) return;
+            var prefab = UnityEngine.Resources.Load<OfferShopWindow>(ShortagePath);
+            if (prefab == null) return;
+            _pendingShortage = bundle;
+            _current = Instantiate(prefab);
+            _pendingShortage = null;
+        }
 
         /// <summary>Puts the window up (nothing if it is up, the shop is off here, or the prefab is missing).</summary>
         public static void Show()
@@ -129,7 +153,13 @@ namespace CityBuilder.Shop
             _timeScaleBefore = Time.timeScale;
             Time.timeScale = 0f;
             HideTheInterfaceBehind();
-            if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>("Shop/Window_" + ThemeId());
+            if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>(pictureName + ThemeId());
+            if (shortage)
+            {
+                _shortageSlot = new OfferSlot { Bundle = _pendingShortage, EndsAt = (OfferShop.Instance != null ? OfferShop.Instance.Now : 0) + 1e6 };
+                // no timer: the offer lasts as long as the window
+                if (slots.Length > 0 && slots[0].timer != null) slots[0].timer.transform.parent.gameObject.SetActive(false);
+            }
             _flight = gameObject.AddComponent<OfferRewardFlight>();
             if (OfferShop.Instance != null)
             {
@@ -153,7 +183,8 @@ namespace CityBuilder.Shop
         private void Take(int slot, OfferShop.Pay pay)
         {
             if (_closing || OfferShop.Instance == null) return;
-            var s = OfferShop.Instance.Rotation.Slots[slot];
+            var s = shortage ? _shortageSlot : OfferShop.Instance.Rotation.Slots[slot];
+            if (s == null || s.Taken) return;
             if (pay == OfferShop.Pay.Money)
             {
                 // no store yet: a line says purchases come later
@@ -168,7 +199,8 @@ namespace CityBuilder.Shop
                 Toast("#shop_no_crystals");
                 return;
             }
-            OfferShop.Instance.Buy(slot, pay);
+            if (shortage) OfferShop.Instance.BuyShortage(s.Bundle, pay);
+            else OfferShop.Instance.Buy(slot, pay);
             Redraw();
         }
 
@@ -182,6 +214,14 @@ namespace CityBuilder.Shop
         /// <summary>The goods fly from the strip to where they went (OfferRewardFlight), one good after another.</summary>
         private void OnGiven(int slot, BalanceConfig.OfferBundle bundle)
         {
+            if (shortage)
+            {
+                if (slot != OfferShop.ShortageSlot || _shortageSlot == null || bundle != _shortageSlot.Bundle) return;
+                _shortageSlot.Taken = true;
+                _closeIn = ShortageCloseDelay;
+                slot = 0;
+            }
+            else if (slot == OfferShop.ShortageSlot) return;
             if (_closing || slot < 0 || slot >= slots.Length || bundle == null) return;
             var view = slots[slot];
             for (var g = 0; g < bundle.goods.Count && g < view.goodIcons.Length; g++)
@@ -217,7 +257,7 @@ namespace CityBuilder.Shop
             window.localScale = Vector3.one * (size * Mathf.LerpUnclamped(PopFromScale, 1f, Back(k)));
 
             var shop = OfferShop.Instance;
-            if (shop == null || shop.Rotation == null || !OfferShop.Allowed)
+            if (shop == null || shop.Rotation == null || !OfferShop.Allowed || (shortage && _shortageSlot?.Bundle == null))
             {
                 Close();
                 return;
@@ -225,6 +265,16 @@ namespace CityBuilder.Shop
             DrawCounter(dt);
             var now = shop.Now;
             var adReady = RewardedAds.IsReady;
+            if (shortage)
+            {
+                if (slots.Length > 0) Draw(slots[0], _shortageSlot, shop.AdPlayingSlot == OfferShop.ShortageSlot, adReady, now, dt);
+                if (_closeIn >= 0f)
+                {
+                    _closeIn -= dt;
+                    if (_closeIn < 0f) Close();
+                }
+                return;
+            }
             for (var i = 0; i < slots.Length && i < shop.Rotation.SlotCount; i++)
                 Draw(slots[i], shop.Rotation.Slots[i], i == shop.AdPlayingSlot, adReady, now, dt);
         }

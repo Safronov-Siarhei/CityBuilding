@@ -175,6 +175,20 @@ namespace CityBuilder.Resources
         }
 
         /// <summary>
+        /// Adds all of it even past the storehouse ceiling: goods the player PAID for in the shop (the
+        /// user, 2026-11-11: crystals or an ad were spent, so nothing is lost). Production then simply
+        /// adds nothing until the stock drops back under the ceiling (Add keeps what is above it).
+        /// </summary>
+        public void AddOverCapacity(ResourceType type, int amount)
+        {
+            if (amount <= 0) return;
+            _resources.TryGetValue(type, out var current);
+            var updated = current + amount;
+            _resources[type] = updated;
+            OnResourceChanged?.Invoke(type, updated);
+        }
+
+        /// <summary>
         /// Add, plus the tally that says the settlement MADE this rather than being handed it.
         ///
         /// Counts what actually fitted, not what was offered: output that overflowed a full

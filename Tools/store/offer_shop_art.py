@@ -62,14 +62,21 @@ def save(img, name):
 
 
 # ------------------------------------------------------------------ the window, one per map theme
-def window(theme):
+def window(theme, Y0=Y0, Y1=Y1, name='Window_'):
+    """The frame per map theme; the short one (Y0/Y1 of the «Не хватает ресурсов» window, one strip) too."""
+    IY0, IY1 = Y0 + 34, Y1 - 34
+    RY0, RY1 = Y0 - 78, IY0 + 40
+    crop = (CROP[0], RY0 - 12, CROP[2], Y1 + 30)
     img = layer(W, H)
     img = shadow(img, (X0, Y0, X1, Y1), 60, 22, 170, 24)
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((X0, Y0, X1, Y1), 60, fill=(92, 54, 26, 255), outline=(44, 24, 8), width=7)
     d.rounded_rectangle((X0 + 14, Y0 + 14, X1 - 14, Y1 - 14), 50, fill=(126, 77, 37, 255))
     town = Image.open(LOADING + 'Load_' + theme + '.png').convert('RGB')
-    inner = town.crop((820, 140, 1920, 760)).resize((IX1 - IX0, IY1 - IY0)).filter(ImageFilter.GaussianBlur(12))
+    # the big window keeps its picture as it was; the short one takes a band at the same stretch
+    src_h = 620 if name == 'Window_' else round(620 * (IY1 - IY0) / 782)
+    top = 140 + (620 - src_h) // 2
+    inner = town.crop((820, top, 1920, top + src_h)).resize((IX1 - IX0, IY1 - IY0)).filter(ImageFilter.GaussianBlur(12))
     inner = ImageEnhance.Brightness(ImageEnhance.Color(inner).enhance(1.15)).enhance(0.8).convert('RGBA')
     mask = Image.new('L', inner.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, inner.width - 1, inner.height - 1), 36, fill=255)
@@ -85,7 +92,7 @@ def window(theme):
     d.rounded_rectangle((RX0, RY0, RX1, RY1), 24, fill=(196, 44, 42), outline=(90, 14, 16), width=6, corners=(True, True, False, False))
     d.line((RX0 + 26, RY0 + 18, RX1 - 26, RY0 + 18), fill=(228, 92, 82), width=5)
     os.makedirs(OUT + 'Resources/Shop', exist_ok=True)
-    img.crop(CROP).save(OUT + 'Resources/Shop/Window_' + theme + '.png', optimize=True)
+    img.crop(CROP if name == 'Window_' else crop).save(OUT + 'Resources/Shop/' + name + theme + '.png', optimize=True)
 
 
 # ------------------------------------------------------------------ the strips
@@ -233,8 +240,13 @@ def close():
 
 
 os.makedirs(OUT, exist_ok=True)
+# the «Не хватает ресурсов» window (the user, 2026-11-11): the shop's look with one strip
+SY0 = 330
+SY1 = SY0 + 34 + 92 + SH + 60 + 34
+SCROP = (CROP[0], SY0 - 78 - 12, CROP[2], SY1 + 30)
 for t in THEMES:
     window(t)
+    window(t, SY0, SY1, 'WindowShort_')
 for n in STRIPS:
     strip(n)
 badge()
@@ -299,6 +311,19 @@ layout = {
     'wide_crystal': rel(1306, 43, 1370, 107),
     'stamp': rel(1076, 29, 1436, 121),
 }
+# the short window: the same parts moved to its frame (the strip's own insides are shared)
+SIY0 = SY0 + 34
+layout.update({
+    's_window': list(SCROP),
+    's_frame': [X0, SY0, X1, SY1],
+    's_title': [RX0 + 20, SY0 - 78 + 8, RX1 - 20, SIY0 + 40 - 6],
+    's_close': [X1 - 92, SY0 - 44, X1 + 28, SY0 + 76],
+    's_counter': [SX1 - 290, SIY0 + 12, SX1, SIY0 + 84],
+    's_counter_icon': [SX1 - 68, SIY0 + 14, SX1, SIY0 + 82],
+    's_counter_text': [SX1 - 286, SIY0 + 12, SX1 - 76, SIY0 + 84],
+    's_toast': [SX1 - 860, SIY0 + 16, SX1 - 300, SIY0 + 80],
+    's_strip': [SX0, SIY0 + 92, SX1, SIY0 + 92 + SH],
+})
 with open(OUT + 'layout.json', 'w', encoding='utf-8') as f:
     json.dump(layout, f, indent=1)
 print('ok')
