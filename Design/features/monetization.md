@@ -113,6 +113,25 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   left column with a timer and a red dot, glowing; gold notification with a 30-s bar). Drawn by
   `Tools/store/offer_shop_mockup.py`. Then: the sheet tabs and the code.
 
+## POSTPONED: chests with a roulette (the user's idea, 2026-11-11; agreed to put off)
+- **Idea:** chests of three classes -- common (an ad or crystals), rare and legendary (crystals only);
+  opening spins a roulette that gives resources, crystals with a small chance.
+- **Agreed shape (Claude's proposal):** NOT a fifth strip (four already fill the window's height; five
+  timers overload it; a chest always on show is no longer special) -- a chest is a RARE kind on the goods
+  places 1-2, like the King's gift: weights and contents in the sheet, its class by the strip's and the
+  chest's colour; contents follow the player's bundle level; the roulette is a small window over the shop
+  with the existing reward flight.
+- **Rules to keep:** the result is rolled first by the odds and the spin only lands on it (no «almost
+  legendary» rigging); a «Шансы» button with the sheet's percentages (Google Play demands odds before a
+  paid random item -- crystals are bought with money, so a crystal chest counts; Belgium/Netherlands
+  restrict it, an ad-opened chest is safer); the average crystals out of a chest stay well under its
+  crystal price (else chests farm crystals) -- a «средний возврат» check next to the sheet row.
+- **Why postponed:** the 4-offer shop is not seen in play yet; goods' crystal prices are untested (a
+  chest's price and crystal odds depend on them); no real ads/billing to judge it; the random-reward
+  rules are settled once, with Google Play Billing before release. **Come back** after the user has played
+  and tuned the current shop. To decide then: how often each class shows, its crystal price, what is
+  inside (only resources + crystals, or later speed-ups/decorations).
+
 ## Proposed order (Claude, 2026-11-11; the user agreed to the frame, items not yet confirmed one by one)
 1. Rewarded ads by choice. 2. «Королевский набор» -- a one-off non-consumable (rewards without watching,
    starting crystals, an exclusive look). 3. Looks: HUD styles, castle looks, map themes. 4. Crystal packs
