@@ -600,6 +600,7 @@ namespace CityBuilder.Dungeon
                 Wallet.UpgradeCrystals += crystals;
                 _slainNow.Add(lair.BossId);
                 DungeonRecord.BossesSlain.Add(lair.BossId);
+                UI.RateUsDirector.Note("dungeon_boss");
                 // resources too (the user, 2026-11-02: «после убийства босса я ничего не получил»),
                 // each rising over the boss as it falls
                 var popups = UI.ResourceGainPopups.Instance;

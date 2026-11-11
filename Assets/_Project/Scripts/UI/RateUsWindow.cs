@@ -51,7 +51,7 @@ namespace CityBuilder.UI
         /// <summary>The window is up.</summary>
         public static bool IsOpen => _current != null;
 
-        /// <summary>The player pressed «Оценить» once (the window should not come back).</summary>
+        /// <summary>The player pressed «Оценить» once: the window comes at most once a day after that (RateUsDirector).</summary>
         public static bool Rated => PlayerPrefs.GetInt(RatedPref, 0) == 1;
 
         /// <summary>How many times the player put it off («Позже» or a tap outside).</summary>
@@ -81,6 +81,13 @@ namespace CityBuilder.UI
             window.localScale = Vector3.one * (PopFromScale * size);
             HideTheInterfaceBehind();
             if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>("RateUs/Window_" + ThemeId());
+            // after «Оценить» once: «Уже оценил» instead of «Позже» (the user, 2026-11-11) -- it closes the same way
+            if (Rated)
+            {
+                var label = window.Find("Later");
+                var localized = label != null ? label.GetComponent<LocalizedText>() : null;
+                if (localized != null) localized.SetKey("#rateus_already");
+            }
         }
 
         /// <summary>The picture for the map being played: the New Year Invasion map has its own, else the map's season; the menu shows the last game's.</summary>

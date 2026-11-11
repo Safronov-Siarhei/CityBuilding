@@ -70,7 +70,11 @@ namespace CityBuilder.Campaign
 
         public bool Ready(Vector3 ardan) => T < 0f && ardan.z < _c.triggerZ;
 
-        public void Begin() => T = 0f;
+        public void Begin()
+        {
+            T = 0f;
+            UI.RateUsDirector.Note("campaign_mission", menu: true);   // the rate-us window, back in the menu
+        }
 
         public Vector2 RunTo => new Vector2(_c.runTo[0], _c.runTo[1]);
 

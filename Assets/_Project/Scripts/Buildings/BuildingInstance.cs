@@ -952,6 +952,13 @@ namespace CityBuilder.Buildings
             var before = Data.LevelStats(Level);
             var healthBefore = HealthAt(Level);
             Level++;
+            // happy moments for the rate-us window (the user, 2026-11-11)
+            if (!IsBot)
+            {
+                if (Data.buildingName == BuildingIds.TownHall) UI.RateUsDirector.Note("town_hall_level");
+                else if (Data.buildingName == Research.ResearchManager.LaboratoryBuildingId) UI.RateUsDirector.Note("lab_level");
+                else if (Level >= 3) UI.RateUsDirector.Note("building_l3");
+            }
             var after = Data.LevelStats(Level);
             var healthAfter = HealthAt(Level);
 

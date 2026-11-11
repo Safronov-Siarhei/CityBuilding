@@ -84,7 +84,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   Review sheet or the store page); NO «do you like it?» gating, NO reward for rating; the In-App Review
   sheet has a quota and may silently not show, so a button should open the store page (or our window
   calls the review flow by itself, not from a button).
-- **WHEN it shows -- the user's rules (2026-11-11, decided; not built yet):** only on an EVENT from a
+- **WHEN it shows -- the user's rules (2026-11-11, decided; BUILT 2026-11-11 in `UI/RateUsDirector.cs`, numbers and event switches on «Наборы: настройки» rateus_*, not yet seen on a phone):** only on an EVENT from a
   list (each its own sheet row, can be switched off), never in the tutorial, a fight, placement, or over
   another window. First show after 20 min of PLAY time, then at most once per 20-25 min of play.
   After «Оценить» (opens the store page, not the in-app review sheet -- that one silently skips): at most
@@ -99,7 +99,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   two refusals or after «Оценить».
 
 ## Open
-- Rate window: WHEN it shows (the user will say; proposed below), then see it on a phone.
+- Rate window: see the WHEN rules working on a phone (RateUsDirector; the cheat «Окно оценки игры» still forces it).
 - The user's corrections to both icons.
 - The king is not a character in the game yet (if he wins, he may need to appear in the menu/tutorial).
 - Feature graphic 1024x500 and screenshots.

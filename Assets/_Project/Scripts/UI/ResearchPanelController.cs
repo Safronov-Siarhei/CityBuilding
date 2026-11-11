@@ -591,17 +591,19 @@ namespace CityBuilder.UI
             if (topic == null) return price;
 
             if (topic.Coins > 0) Chip(price.transform, iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, topic.Coins);
-            if (topic.Crystals > 0) Chip(price.transform, crystalIcon, topic.Crystals);
+            if (topic.Crystals > 0) Chip(price.transform, crystalIcon, topic.Crystals, iconRight: true);
             return price;
         }
 
-        private static void Chip(Transform parent, Sprite icon, int amount)
+        /// <summary>A price: icon then number; crystals number then icon (the user, 2026-11-11: the rule for the whole game).</summary>
+        private static void Chip(Transform parent, Sprite icon, int amount, bool iconRight = false)
         {
             var image = NewImage(parent, "Icon", icon, Color.white, Vector2.zero, new Vector2(30f, 30f));
             image.preserveAspect = true;
             image.raycastTarget = false;
-            var text = NewText(parent, "Amount", amount.ToString(), 20, TextAnchor.MiddleLeft, Vector2.zero, new Vector2(16f + 12f * amount.ToString().Length, 30f), UiTheme.Ink, UiTheme.Bold);
+            var text = NewText(parent, "Amount", amount.ToString(), 20, iconRight ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, Vector2.zero, new Vector2(16f + 12f * amount.ToString().Length, 30f), UiTheme.Ink, UiTheme.Bold);
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            if (iconRight) image.transform.SetAsLastSibling();
         }
 
         private void Act(Cell cell)

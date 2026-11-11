@@ -1,6 +1,7 @@
 using System;
 using CityBuilder.Core;
 using CityBuilder.Resources;
+using CityBuilder.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,6 +89,7 @@ namespace CityBuilder.Shop
                         card.goodIcons[g].sprite = res == "Crystals" ? crystal
                             : icons != null && Enum.TryParse<ResourceType>(res, out var type) ? icons.GetIcon(type) : null;
                         card.goodAmounts[g].text = bundle.goods[g].amount.ToString();
+                        CrystalOrder.Lay(card.goodIcons[g], card.goodAmounts[g], res == "Crystals");
                     }
                 }
                 var taken = slot.Taken ? 1 : 0;

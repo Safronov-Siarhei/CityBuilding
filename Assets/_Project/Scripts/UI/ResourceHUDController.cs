@@ -226,7 +226,7 @@ namespace CityBuilder.UI
         private void PlaceCrystals(ref int slot, float slotWidth)
         {
             if (crystalText != null) crystalText.text = _crystals.ToString();
-            PlaceChip(crystalIcon, crystalText, crystalBackground, slot++, slotWidth);
+            PlaceChip(crystalIcon, crystalText, crystalBackground, slot++, slotWidth, iconRight: true);
             _crystalsPlaced = true;
         }
 
@@ -248,7 +248,7 @@ namespace CityBuilder.UI
         private const float IconTextGap = 8f;
         private const float PillInset = 10f;
 
-        private void PlaceChip(RectTransform icon, Text amount, RectTransform background, int slot, float slotWidth)
+        private void PlaceChip(RectTransform icon, Text amount, RectTransform background, int slot, float slotWidth, bool iconRight = false)
         {
             var center = -barWidth * 0.5f + _packOffset + slotWidth * (slot + 0.5f);
 
@@ -263,11 +263,14 @@ namespace CityBuilder.UI
                 var maxText = width - iconWidth - 2f * PillInset;
                 var textWidth = amount != null ? Mathf.Min(maxText, amount.preferredWidth + 2f) : 0f;
                 var groupLeft = center - (iconWidth + textWidth) * 0.5f;
-                if (icon != null) icon.anchoredPosition = new Vector2(groupLeft + icon.sizeDelta.x * 0.5f, 0f);
+                // crystals: the number LEFT, the icon RIGHT (the user, 2026-11-11: the rule for the whole game)
+                if (icon != null)
+                    icon.anchoredPosition = new Vector2(iconRight ? groupLeft + textWidth + IconTextGap + icon.sizeDelta.x * 0.5f
+                                                                  : groupLeft + icon.sizeDelta.x * 0.5f, 0f);
                 if (amount != null)
                 {
                     var rect = amount.GetComponent<RectTransform>();
-                    rect.anchoredPosition = new Vector2(groupLeft + iconWidth + textWidth * 0.5f, 0f);
+                    rect.anchoredPosition = new Vector2(iconRight ? groupLeft + textWidth * 0.5f : groupLeft + iconWidth + textWidth * 0.5f, 0f);
                     rect.sizeDelta = new Vector2(textWidth, rect.sizeDelta.y);
                 }
                 return;

@@ -92,7 +92,12 @@ namespace CityBuilder.Invasion
         {
             if (Finished) return;
             Finished = true;
+            // a new personal best: the rate-us window in the menu (the user, 2026-11-11: a run cannot be won)
+            var best = 0;
+            foreach (var day in InvasionRecords.LoadDays())
+                foreach (var run in day.runs) best = Math.Max(best, run);
             InvasionRecords.Record(Total, DateTime.Now, BalanceConfig.Instance.InvasionRunsCountedPerDay);
+            if (Total > best) UI.RateUsDirector.Note("invasion_record", menu: true);
         }
     }
 }

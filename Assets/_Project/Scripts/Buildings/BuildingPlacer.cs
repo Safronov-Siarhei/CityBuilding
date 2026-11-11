@@ -981,6 +981,8 @@ namespace CityBuilder.Buildings
 
             var placedData = _selectedBuilding;
             if (!PlaceAt(cell)) return;
+            // the first of its kind: a happy moment for the rate-us window (the user, 2026-11-11)
+            if (BuildingInstance.CountOf(placedData.buildingName) == 1) UI.RateUsDirector.Note("first_building");
 
             // Roads and fences stay in hand, and the next piece is offered right after this one.
             if (!placedData.keepSelectedAfterPlacement)

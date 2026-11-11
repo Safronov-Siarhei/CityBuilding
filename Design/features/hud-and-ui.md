@@ -21,6 +21,14 @@
 > **2026-11-10:** the modes screen's banners unroll from the screen's FIRST faded-in frame and stay rolled up
 > while it is away (`ModeBannersController`: was alpha > 0.5, so they showed whole, folded and unrolled again).
 > **Rule:** the user SKETCHES layouts; implement their sketch, don't redesign or restyle unasked.
+> **Rule (the user, 2026-11-11, the whole game):** an amount of CRYSTALS is the NUMBER LEFT, the crystal
+> icon RIGHT; other resources keep icon-then-number. Done in: the top bar's crystal chip
+> (`ResourceHUDController.PlaceChip(iconRight)`), the research window's counter and prices
+> (`SetupProjectPanels` Counter, `ResearchPanelController.Chip(iconRight)`), the tutorial's win panel
+> (`GameOverController.ShowTutorialReward`), the Invasion hub's crystals plaque and leaderboard reward
+> (`SetupProjectMainMenuScreens` Counter(discRight), Gem), shop/menu-strip goods (`UI/CrystalOrder.Lay`
+> per good), the daily bonus window. Already so: the shop counter and buy buttons, the modes banner's
+> tutorial reward, the «+N» popups. A new crystal amount anywhere follows it.
 > **Read with:** [art-pipeline](art-pipeline.md) (icons), [balance-and-localization](balance-and-localization.md) (all text).
 
 ## Layout (user's sketch round 2 + round 3 fixes)

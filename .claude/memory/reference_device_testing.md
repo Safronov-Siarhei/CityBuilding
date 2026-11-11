@@ -19,3 +19,9 @@ The user enables USB debugging and lets Claude play the build on their phone (fi
 - Release build: `logcat -s Unity` is nearly empty (logs stripped), so no exceptions show there.
 
 Related: [[feedback_build_to_telegram]], [[project_mobile_device_fleet]], [[project_orc_faction]].
+
+**Profiling on the phone (2026-11-10):** build `build_android.ps1 -Development`; `Cheats/PerfProbe.cs`
+logs a `PERF …` line every 3 s (`adb logcat -s Unity | grep PERF`). The Pixel 6 Pro runs the game at
+GPU 251–351 MHz of ~850 and CPU at ~40 % clock, so its CPU/GPU ms are DVFS-stretched, not load --
+read GPU ms with `cat /sys/devices/platform/1c500000.mali/cur_freq`. Close the cheats panel before
+measuring (it adds 26 KB/frame GC and ~85 setpass). Numbers: performance-mobile card.

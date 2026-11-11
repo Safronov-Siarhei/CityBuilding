@@ -949,22 +949,23 @@ namespace CityBuilder.EditorTools
 
             // the player's coins and upgrade crystals, top centre -- nothing else (the user's mockup)
             var crystalIcon = IconSprite("Res_UpgradeCrystal");
-            Text Counter(string name, Sprite icon, float x)
+            // the crystals: the number LEFT, the icon RIGHT (the user, 2026-11-11: the rule for the whole game)
+            Text Counter(string name, Sprite icon, float x, bool iconRight = false)
             {
                 var image = CreateImage(card.transform, name + "Icon", Color.white);
                 image.sprite = icon;
                 image.preserveAspect = true;
                 image.raycastTarget = false;
                 image.rectTransform.anchorMin = image.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                image.rectTransform.anchoredPosition = new Vector2(x, 380f);
+                image.rectTransform.anchoredPosition = new Vector2(iconRight ? x + 115f : x, 380f);
                 image.rectTransform.sizeDelta = new Vector2(46f, 46f);
-                var amount = CreateText(card.transform, name, "0", 30, new Vector2(x + 82f, 380f), new Vector2(110f, 44f), addShadow: false);
-                amount.alignment = TextAnchor.MiddleLeft;
+                var amount = CreateText(card.transform, name, "0", 30, new Vector2(iconRight ? x + 30f : x + 82f, 380f), new Vector2(110f, 44f), addShadow: false);
+                amount.alignment = iconRight ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
                 amount.fontStyle = FontStyle.Bold;
                 return amount;
             }
             var coins = Counter("Coins", iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, -150f);
-            var crystals = Counter("Crystals", crystalIcon, 40f);
+            var crystals = Counter("Crystals", crystalIcon, 40f, iconRight: true);
 
             BuildScrollList(card.transform, new Vector2(0f, -8f), new Vector2(1700f, 720f),
                 "#research_empty", out var content, out var emptyLabelGO);
