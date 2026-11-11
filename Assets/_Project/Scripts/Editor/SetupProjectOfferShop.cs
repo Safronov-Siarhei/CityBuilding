@@ -42,7 +42,7 @@ namespace CityBuilder.EditorTools
             public float[] strip0, strip1, strip2, strip3;
             public float[] close, counter, counter_icon, counter_text, toast;
             public float[] name, timer, timer_text, watch, watch_play, watch_label, buy, buy_price, buy_crystal, free, free_label, stamp, badge, wide_play, wide_ad_label, wide_price, wide_crystal;
-            public float[] good0, good1, good2, amount0, amount1, amount2;
+            public float[] good0, good1, good2, good3, amount0, amount1, amount2, amount3;
             // the «Не хватает ресурсов» window: its frame, title, seal, crystals, line and its one strip
             public float[] s_window, s_frame, s_title, s_close, s_counter, s_counter_icon, s_counter_text, s_toast, s_strip;
         }
@@ -58,15 +58,15 @@ namespace CityBuilder.EditorTools
             var raw = JsonUtility.FromJson<OfferShopLayout>(json);
             var lists = JsonUtility.FromJson<OfferShopLists>(Flatten(json));
             raw.strip0 = lists.strips_0; raw.strip1 = lists.strips_1; raw.strip2 = lists.strips_2; raw.strip3 = lists.strips_3;
-            raw.good0 = lists.goods_0; raw.good1 = lists.goods_1; raw.good2 = lists.goods_2;
-            raw.amount0 = lists.amounts_0; raw.amount1 = lists.amounts_1; raw.amount2 = lists.amounts_2;
+            raw.good0 = lists.goods_0; raw.good1 = lists.goods_1; raw.good2 = lists.goods_2; raw.good3 = lists.goods_3;
+            raw.amount0 = lists.amounts_0; raw.amount1 = lists.amounts_1; raw.amount2 = lists.amounts_2; raw.amount3 = lists.amounts_3;
             return raw;
         }
 
         [Serializable]
         private class OfferShopLists
         {
-            public float[] strips_0, strips_1, strips_2, strips_3, goods_0, goods_1, goods_2, amounts_0, amounts_1, amounts_2;
+            public float[] strips_0, strips_1, strips_2, strips_3, goods_0, goods_1, goods_2, goods_3, amounts_0, amounts_1, amounts_2, amounts_3;
         }
 
         /// <summary>"strips": [[a],[b],[c]] -> "strips_0": [a], "strips_1": [b], ... (only the three lists of lists).</summary>
@@ -233,8 +233,9 @@ namespace CityBuilder.EditorTools
             Rim(title, new Color(0.35f, 0.05f, 0.06f), 4f);
 
             var strips = shortage ? new[] { layout.s_strip } : new[] { layout.strip0, layout.strip1, layout.strip2, layout.strip3 };
-            var goods = new[] { layout.good0, layout.good1, layout.good2 };
-            var amounts = new[] { layout.amount0, layout.amount1, layout.amount2 };
+            // four places: a building's price, and so its shortfall, can ask for four resources
+            var goods = new[] { layout.good0, layout.good1, layout.good2, layout.good3 };
+            var amounts = new[] { layout.amount0, layout.amount1, layout.amount2, layout.amount3 };
             var views = new OfferShopWindow.SlotView[strips.Length];
             for (var i = 0; i < strips.Length; i++)
             {

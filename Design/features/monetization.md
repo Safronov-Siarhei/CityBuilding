@@ -140,7 +140,7 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   placing (the building is NOT placed for them -- they may not have chosen the spot). Closing without buying
   leaves the usual red «not enough» placement. Buildings only for now (army/heroes/research/ships later).
   No shop outside the sandbox (Invasion = leaderboards, tutorial); the dungeon (coin-only offers) maybe later.
-- **The offer:** exactly the shortfall per resource (up to 3, like a building's price), at its worth by
+- **The offer:** exactly the shortfall per resource (up to 4), at its worth by
   `shop_price10_<ResourceType>` -- rows on «Наборы: настройки» that are FORMULAS reading «Цены ресурсов»
   (the user: export the prices, not the calculator below them) -> economy.csv -> `BalanceConfig.ShopPrice10`.
   Whole crystals rounded up, at least 1, no discount (`OfferRotation.ShortageBundle`, kind `shortage`); worth
@@ -152,6 +152,15 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   (prefab `Resources/OfferShortageWindow`, built by `BuildOfferShopWindow(true)` from layout.json's `s_*`
   rects, picture `Resources/Shop/WindowShort_<theme>` from offer_shop_art.py), one strip, no timer, closes
   1.4 s after the goods fly. Texts `#shop_shortage_title`, `#shop_shortage_name`.
+- **Upgrade too (the user's playtest, 2026-11-11):** «Улучшить» in the building panel
+  (`BuildingInfoPanelController.Upgrade`) that fails for lack of resources (researched, not being built)
+  puts up the same window with the upgrade's shortfall; after buying the player presses Upgrade again.
+  The button drops its selected (pressed) look after the click.
+- **Trap:** a building that WAITS on another (`requiredBuilding`, «Нужен: Коттедж») gets NO shortage offer
+  on picking -- the goods would not let it stand (the playtest: bought, still red). Gate `HasRequiredBuilding()`.
+- **Art:** the short window's ribbon is wider than the shop's (`SRX0/SRX1` = shop ribbon ± 150 px in
+  offer_shop_art.py) -- «Не хватает ресурсов» did not fit. A strip has FOUR good places (a price, so a
+  shortfall, can ask for four resources; bundles use three).
 - **Still open:** the silver level disc over an upgraded LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker`;
   it has a model for level 1 only): models for levels 2-5 or hide the disc -- the user said wait.
 

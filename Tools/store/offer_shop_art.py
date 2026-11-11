@@ -62,8 +62,8 @@ def save(img, name):
 
 
 # ------------------------------------------------------------------ the window, one per map theme
-def window(theme, Y0=Y0, Y1=Y1, name='Window_'):
-    """The frame per map theme; the short one (Y0/Y1 of the «Не хватает ресурсов» window, one strip) too."""
+def window(theme, Y0=Y0, Y1=Y1, name='Window_', RX0=RX0, RX1=RX1):
+    """The frame per map theme; the short one (Y0/Y1 of the «Не хватает ресурсов» window, one strip, a wider ribbon for its longer title) too."""
     IY0, IY1 = Y0 + 34, Y1 - 34
     RY0, RY1 = Y0 - 78, IY0 + 40
     crop = (CROP[0], RY0 - 12, CROP[2], Y1 + 30)
@@ -244,9 +244,10 @@ os.makedirs(OUT, exist_ok=True)
 SY0 = 330
 SY1 = SY0 + 34 + 92 + SH + 60 + 34
 SCROP = (CROP[0], SY0 - 78 - 12, CROP[2], SY1 + 30)
+SRX0, SRX1 = RX0 - 150, RX1 + 150   # «Не хватает ресурсов» does not fit the shop's ribbon (the user, 2026-11-11)
 for t in THEMES:
     window(t)
-    window(t, SY0, SY1, 'WindowShort_')
+    window(t, SY0, SY1, 'WindowShort_', SRX0, SRX1)
 for n in STRIPS:
     strip(n)
 badge()
@@ -291,8 +292,9 @@ layout = {
     # inside a strip, from its top-left (the mock-up's places)
     'name': rel(44, 8, 600, 56),
     'badge': rel(600, 6, 750, 62),
-    'goods': [rel(44 + 200 * k, 66, 114 + 200 * k, 136) for k in range(3)],
-    'amounts': [rel(122 + 200 * k, 66, 240 + 200 * k, 136) for k in range(3)],
+    # four places: a building's price can ask for four resources, and so can its shortfall
+    'goods': [rel(44 + 200 * k, 66, 114 + 200 * k, 136) for k in range(4)],
+    'amounts': [rel(122 + 200 * k, 66, 240 + 200 * k, 136) for k in range(4)],
     'timer': rel(771, 41, 961, 109),
     'timer_text': rel(827, 41, 953, 109),
     'watch': rel(996, 25, 1276, 134),
@@ -316,7 +318,7 @@ SIY0 = SY0 + 34
 layout.update({
     's_window': list(SCROP),
     's_frame': [X0, SY0, X1, SY1],
-    's_title': [RX0 + 20, SY0 - 78 + 8, RX1 - 20, SIY0 + 40 - 6],
+    's_title': [SRX0 + 20, SY0 - 78 + 8, SRX1 - 20, SIY0 + 40 - 6],
     's_close': [X1 - 92, SY0 - 44, X1 + 28, SY0 + 76],
     's_counter': [SX1 - 290, SIY0 + 12, SX1, SIY0 + 84],
     's_counter_icon': [SX1 - 68, SIY0 + 14, SX1, SIY0 + 82],

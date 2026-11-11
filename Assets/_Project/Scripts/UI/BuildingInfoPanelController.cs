@@ -162,7 +162,16 @@ namespace CityBuilder.UI
 
         public void Upgrade()
         {
-            _currentInstance?.TryUpgrade();
+            // the button keeps no pressed look after the click
+            if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+            if (_currentInstance == null) return;
+            if (!_currentInstance.TryUpgrade() && _currentInstance.NextLevelResearched && _currentInstance.IsOperational
+                && _currentInstance.Site == null && Shop.OfferShop.Instance != null)
+            {
+                // too poor for it (sandbox only): «Не хватает ресурсов» with exactly the shortfall; after
+                // buying the player presses Upgrade again (the user, 2026-11-11)
+                Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(_currentInstance.GetUpgradeCost()));
+            }
             Refresh();
         }
 
