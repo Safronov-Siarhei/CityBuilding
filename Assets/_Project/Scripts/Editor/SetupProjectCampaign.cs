@@ -25,6 +25,7 @@ namespace CityBuilder.EditorTools
         private const string OpeningLifePath = "Assets/_Project/Campaign/OpeningLife.json";
         private const string OpeningScriptPath = "Assets/_Project/Campaign/OpeningScript.json";
         private const string OpeningTracksPath = "Assets/_Project/Campaign/OpeningTracks.json";
+        public const string CampaignAudioFolder = "Assets/_Project/Audio/Campaign";
         private const string ChimneysPath = "Assets/_Project/Campaign/Chimneys.json";
         private const string OpeningVolumePath = "Assets/_Project/Campaign/OpeningVolume.asset";
 
@@ -205,6 +206,25 @@ namespace CityBuilder.EditorTools
             fso.FindProperty("title").objectReferenceValue = title;
             fso.ApplyModifiedPropertiesWithoutUndo();
 
+            // the film's sound: every clip of Audio/Campaign, played by the cue sheet in OpeningScript.json
+            var sound = new GameObject("FilmSound").AddComponent<OpeningSound>();
+            var sso = new SerializedObject(sound);
+            sso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            var audio = new List<AudioClip>();
+            if (Directory.Exists(CampaignAudioFolder))
+            {
+                foreach (var file in Directory.GetFiles(CampaignAudioFolder, "*.ogg"))
+                {
+                    var a = AssetDatabase.LoadAssetAtPath<AudioClip>(file.Replace('\\', '/'));
+                    if (a != null) audio.Add(a);
+                }
+            }
+            var clipsProp = sso.FindProperty("clips");
+            clipsProp.arraySize = audio.Count;
+            for (var i = 0; i < audio.Count; i++) clipsProp.GetArrayElementAtIndex(i).objectReferenceValue = audio[i];
+            sso.ApplyModifiedPropertiesWithoutUndo();
+            cameraGO.AddComponent<AudioListener>();
+
             var director = new GameObject("OpeningDirector").AddComponent<OpeningDirector>();
             var dso = new SerializedObject(director);
             dso.FindProperty("village").objectReferenceValue = village;
@@ -214,6 +234,7 @@ namespace CityBuilder.EditorTools
             dso.FindProperty("cam").objectReferenceValue = cam;
             dso.FindProperty("subtitle").objectReferenceValue = line;
             dso.FindProperty("fx").objectReferenceValue = fx;
+            dso.FindProperty("sound").objectReferenceValue = sound;
             dso.FindProperty("ropeMaterial").objectReferenceValue = Matte("CampaignRope", new Color(0.55f, 0.42f, 0.26f));
             var dcast = dso.FindProperty("cast");
             dcast.arraySize = castProp.arraySize;

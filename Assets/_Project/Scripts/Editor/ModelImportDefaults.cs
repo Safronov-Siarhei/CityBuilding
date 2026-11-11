@@ -161,6 +161,22 @@ namespace CityBuilder.EditorTools
             modelImporter.meshCompression = ModelImporterMeshCompression.Medium;
         }
 
+        /// <summary>The campaign film's audio, weighed for phones: music and ambience (mus_/amb_) are
+        /// streamed rather than held in memory; short effects are mono and decompressed on load.</summary>
+        private void OnPreprocessAudio()
+        {
+            if (!assetPath.StartsWith("Assets/_Project/Audio/")) return;
+            var audio = (AudioImporter)assetImporter;
+            var name = System.IO.Path.GetFileName(assetPath);
+            var stream = name.StartsWith("mus_") || name.StartsWith("amb_");
+            audio.forceToMono = !stream;
+            var s = audio.defaultSampleSettings;
+            s.compressionFormat = AudioCompressionFormat.Vorbis;
+            s.quality = stream ? 0.5f : 0.6f;
+            s.loadType = stream ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+            audio.defaultSampleSettings = s;
+        }
+
         /// <summary>The cast's takes come in as "<rig>|<clip>": named by the clip alone, and looped
         /// where OpeningCast.json says so.</summary>
         private void OnPreprocessAnimation()

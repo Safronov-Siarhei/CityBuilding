@@ -1,6 +1,6 @@
 # Campaign («Кампания»)
 
-**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. Still to do from the user's choice: birds/animals and villagers at work (new models -> renders for approval first), sound and music (no audio assets: source to be asked). Next after that: the handover into mission 1 (not built).
+**Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**, mp4 sent. Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
 - **Effects (v3):** `Scripts/Campaign/OpeningFx.cs` on the village object, stepped by the director on the
   film clock (`Step(time, dt, camFrom, camAt, lens, dof)`); every number in the `fx` block of
   `Campaign/OpeningScript.json`. Portal: `Shaders/CineVortex.shader` quad in the arch (door given as
@@ -19,6 +19,16 @@
     `run.ps1 -Steps a,b` from the PowerShell tool (from bash the list arrives as ONE unknown step and
     nothing runs, report says only RUN FINISHED); Blender for encode_frames is
     `G:\SteamLibrary\steamapps\common\Blenderlender.exe`.
+- **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
+  synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
+  `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
+  `Tools/audio/cut.py` (Blender mixdown -- no ffmpeg on this machine). Music: mus_village (Old Tower
+  Inn) 0 s, mus_portal (Evil Approach 14-33 s) 20.2 s, mus_attack (War Theme 36-62 s) 36.6 s.
+  Cue sheet = `"sounds"` in OpeningScript.json (t, clip, volume, length, fadeIn, fadeOut, loop),
+  played by `Scripts/Campaign/OpeningSound.cs` (pooled 2D AudioSources, play mode only, StopAll at
+  the end) and laid into the mp4 by `encode_frames.py ... <script.json> <audio folder>` -- one sheet
+  for both. Bell strikes follow the clapper hits of the bell track (48.4 + 0.6/1.13/1.63/2.23/2.8/3.37).
+  Import (ModelImportDefaults.OnPreprocessAudio): mus_/amb_ streamed, sfx mono + decompress on load.
 - **Unity part 1 (2026-11-10):** scene `Scenes/CampaignOpening.unity` (NOT in the build list), made by
   `SetupProjectCampaign.cs`: procedural morning sky `CampaignSky.mat`, low warm sun, trilight ambient,
   linear haze fog 45-140. `Scripts/Campaign/OpeningVillage.cs` lays the village out on Start (seed 11):

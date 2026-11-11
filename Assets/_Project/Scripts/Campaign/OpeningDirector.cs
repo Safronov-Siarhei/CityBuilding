@@ -118,6 +118,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private Text subtitle;
         [SerializeField] private Material ropeMaterial;
         [SerializeField] private OpeningFx fx;
+        [SerializeField] private OpeningSound sound;
         [SerializeField] private OpeningLife.CastMember[] cast = new OpeningLife.CastMember[0];
         [SerializeField] private bool autoPlay = true;
 
@@ -221,6 +222,7 @@ namespace CityBuilder.Campaign
             if (swirlPiece != null) swirlPiece.gameObject.SetActive(false);
             if (subtitle != null) subtitle.text = string.Empty;
             if (fx != null) fx.Begin();
+            if (sound != null) sound.Begin();
 
             cam.usePhysicalProperties = true;
             cam.sensorSize = new Vector2(_s.lens.sensorWidth, _s.lens.sensorHeight);
@@ -246,10 +248,12 @@ namespace CityBuilder.Campaign
             StepCamera();
             StepSubtitle();
             if (fx != null) fx.Step(Time, dt, _camFrom, _camAt, cam.focalLength, _shallow);
+            if (sound != null) sound.Step(Time);
             if (!_finished && Time >= _s.end)
             {
                 _finished = true;
                 Playing = false;
+                if (sound != null) sound.StopAll();
                 Finished?.Invoke();
             }
         }
