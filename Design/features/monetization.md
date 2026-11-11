@@ -1,6 +1,28 @@
-# Monetization (ideas only — nothing built)
+# Monetization (decided direction 2026-11-11 — nothing built)
 
-> **Status (2026-10-21):** ideas from 2026-10-14/15. Don't build anything until the user asks.
+> **Status (2026-11-11):** the user settled the direction below. Still don't build anything until the user asks.
+
+## Decided (the user, 2026-11-11)
+- **Market: the whole world** → Google Play Billing is the main till; Russia is a side case (see «Store
+  payments and regions»).
+- **Goal at launch: as many players and reviews as possible**, money second → free to play, a light
+  touch: nothing that blocks, nags or slows a free player.
+- **Ads ONLY by the player's choice** (rewarded: a doubled reward, the offer icon). No banners, no
+  interstitials -- for now («пока»).
+- **Invasion will have shared leaderboards** → nothing bought may make an Invasion run stronger. Checked
+  2026-11-11: crystals are spent only in the sandbox (research lvl 3+, `DiplomacyWindow`); the Invasion
+  hub only SHOWS them. Keep it so: any future Invasion purchase must be looks only.
+
+## Proposed order (Claude, 2026-11-11; the user agreed to the frame, items not yet confirmed one by one)
+1. Rewarded ads by choice. 2. «Королевский набор» -- a one-off non-consumable (rewards without watching,
+   starting crystals, an exclusive look). 3. Looks: HUD styles, castle looks, map themes. 4. Crystal packs
+   -- ONLY after a cloud save: `Wallet` lives in PlayerPrefs (lost on reinstall, easy to edit), bought
+   currency there means refunds and complaints; non-consumables Google restores by itself, so they come first.
+5. Later, by release data: campaign chapters as paid add-ons or a season pass.
+Never: energy, timers lengthened to sell skips, power for money in Invasion. Prices: by country tests, no
+guessed numbers. Ads need a consent window (EU); declaring a child audience tightens ad rules a lot.
+
+## Earlier ideas (2026-10-14/15)
 > **Read with:** [hud-and-ui](hud-and-ui.md), [resources-and-storage](resources-and-storage.md).
 
 1. **Rewarded-ad offer icon:** from time to time an icon pops up in a HUD corner offering resources
