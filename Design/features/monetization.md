@@ -224,7 +224,11 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Round 4 (the user, the list, in progress):** 12+ boosters; the 4 slots change every 15 min, never
   two of the same; EACH booster its own icon. Tiers: wood / stone / ore boosters speed up gathering by
   sawmill/quarry/mine workers AND by ordinary citizens, in tiers ×1.2 / ×1.5 / ×2; the food booster adds
-  +1 / +2 / +3 to a food building's output. The user continues the list.
+  +1 / +2 / +3 to a food building's output EACH production cycle (all food buildings alike).
+  Tiers are separate boosters in the pool: tier I for an ad OR crystals, tiers II and III for crystals
+  only. One icon per booster kind; the tier is written ON the icon's corner («×1.2», «+2») -- not by
+  rim colour. Gathering boosters speed up only the ACTION on the resource (chopping, quarrying,
+  digging), never walking. The user continues the list.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
