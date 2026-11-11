@@ -225,7 +225,13 @@
   through real raycast taps (menu -> map 5.5 s, both medals, «Играть» -> CampaignOpening after 10.5 s)
   could NOT reproduce it; the loading screen's chart is painted in the same style as the campaign map,
   so its 5 s may read as «the map, not answering». The screen now logs `[CampaignMap] up / picked /
-  play` to the Editor log for the next report. OPEN until the user retests.
+  play` to the Editor log for the next report.
+- **FOUND (2026-11-12, from a canvas dump in the user's Editor log): the map's canvas drew LAST** (renderOrder 3,
+  over the loading screen 1000 and the settings card 10) while those still took the taps: so the loading
+  looked gone at 20% and the map would not answer, and the settings card opened INVISIBLE -- a stray tap
+  in it picked the Dock HUD look for the whole game (reset to Classic in the Editor's PlayerPrefs).
+  TRAP: a Canvas made in code and left at its default sortingOrder 0 is never sorted; ALWAYS set
+  `sortingOrder` explicitly (the map's is now -10). Re-check by the user pending.
 
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.

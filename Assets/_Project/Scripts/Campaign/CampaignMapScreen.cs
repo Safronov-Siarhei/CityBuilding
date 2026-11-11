@@ -66,7 +66,12 @@ namespace CityBuilder.Campaign
         {
             var go = new GameObject("CampaignMap", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             go.transform.SetParent(transform, false);
-            go.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var canvas = go.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // under everything else (settings 10, loading screen 1000). Set it EXPLICITLY: a canvas made in
+            // code and left at its default 0 is never sorted -- it drew last, over the loading screen and
+            // the settings card, which still took the taps unseen (the user's Editor log, 2026-11-12)
+            canvas.sortingOrder = -10;
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);
