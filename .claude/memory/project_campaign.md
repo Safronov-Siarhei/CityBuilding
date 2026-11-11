@@ -95,3 +95,4 @@ Related: [[project-tutorial]], [[project-invasion-mode]], [[project-monetization
 - 2026-11-12: campaign framework work started (user: no tests, no builds until a general pass later). Step 1: the campaign banner ART redrawn open (royal blue + gold, sword-behind-scroll emblem; was grey with a lock).
 - 2026-11-12: campaign banner emblem = variant 5 (shield + crossed swords) drawn richer (user: the first looked «дёшево»); sent for approval.
 - 2026-11-12: the user approved the shield emblem; the sandbox and tutorial emblems redrawn rich too (castle_rich, book_rich), sent.
+- 2026-11-12: all four mode-banner emblems APPROVED (sandbox castle, tutorial book, campaign shield); in Assets already, shown after the next build.
