@@ -180,24 +180,92 @@ def book(d, cx, cy, ink):
                p(cx + 13, cy - 26), p(cx + 24, cy - 38), p(cx + 24, cy - 18)], fill=GOLD)
 
 
-def tale(d, cx, cy, ink):
-    """The campaign's emblem, the kingdom's tale: a sword standing behind an unrolled scroll."""
-    blade, blade_hi = (196, 192, 184, 255), (236, 233, 226, 255)
-    # the sword: blade, gold cross-guard, grip, pommel
-    d.polygon([p(cx - 9, cy + 46), p(cx - 9, cy - 46), p(cx, cy - 62), p(cx + 9, cy - 46), p(cx + 9, cy + 46)], fill=blade, outline=ink, width=3 * SS)
-    d.line([p(cx - 2, cy - 50), p(cx - 2, cy + 40)], fill=blade_hi, width=3 * SS)
-    d.rounded_rectangle([p(cx - 34, cy - 40), p(cx + 34, cy - 30)], radius=4 * SS, fill=GOLD, outline=ink, width=2 * SS)
-    d.rectangle([p(cx - 6, cy - 62), p(cx + 6, cy - 40)], fill=WOOD)
-    d.rectangle([p(cx - 6, cy - 62), p(cx + 6, cy - 40)], outline=ink, width=2 * SS)
-    d.ellipse([p(cx - 10, cy - 76), p(cx + 10, cy - 58)], fill=GOLD, outline=ink, width=2 * SS)
-    # the scroll across it, its ends rolled
-    d.rounded_rectangle([p(cx - 50, cy - 6), p(cx + 50, cy + 40)], radius=4 * SS, fill=PARCHMENT, outline=ink, width=3 * SS)
-    for x in (-50, 50):
-        d.ellipse([p(cx + x - 10, cy - 10), p(cx + x + 10, cy + 44)], fill=CARD_EDGE, outline=ink, width=3 * SS)
-        d.ellipse([p(cx + x - 4, cy - 2), p(cx + x + 4, cy + 8)], fill=ink)
-    for k in range(3):
-        y = cy + 6 + k * 10
-        d.line([p(cx - 34, y), p(cx + (30 if k < 2 else 8), y)], fill=ink, width=3 * SS)
+def shield_crest(d, cx, cy, ink):
+    """The campaign's emblem (the user, 2026-11-12: variant 5, «более красиво прорисовать щит и
+    мечи»): a kite shield in a gold rim with rivets, its field quartered in two blues, a gold boss
+    with a small crown, a sheen down its left; behind it two crossed swords -- bevelled blades with a
+    fuller, gold cross-guards with curled ends, wrapped grips, round pommels."""
+    import math
+    blade, blade_hi, blade_lo = (206, 204, 198, 255), (246, 244, 238, 255), (150, 148, 144, 255)
+    blue, blue_lo, blue_hi = (52, 84, 168, 255), (34, 56, 120, 255), (98, 132, 210, 255)
+    grip, grip_lo = (110, 62, 28, 255), (70, 38, 16, 255)
+
+    def sword(tip, hilt):
+        ux, uy = hilt[0] - tip[0], hilt[1] - tip[1]
+        n = math.hypot(ux, uy)
+        ux, uy = ux / n, uy / n
+        vx, vy = -uy, ux
+        def at(a, o):
+            return p(tip[0] + ux * a + vx * o, tip[1] + uy * a + vy * o)
+        L = n
+        # the blade: a point, straight edges, one half lit and one in shade, a fuller down the middle
+        d.polygon([at(0, 0), at(14, 7), at(L - 22, 7), at(L - 22, -7), at(14, -7)], fill=blade_lo, outline=ink, width=3 * SS)
+        d.polygon([at(2, 0), at(14, 5), at(L - 24, 5), at(L - 24, 0)], fill=blade_hi)
+        d.line([at(20, 0), at(L - 28, 0)], fill=blade_lo, width=2 * SS)
+        # the cross-guard: a gold bar with curled ends
+        d.polygon([at(L - 25, 14), at(L - 19, 14), at(L - 19, -14), at(L - 25, -14)], fill=GOLD, outline=ink, width=2 * SS)
+        for s in (1, -1):
+            x, y = tip[0] + ux * (L - 22) + vx * 16 * s, tip[1] + uy * (L - 22) + vy * 16 * s
+            d.ellipse([p(x - 4, y - 4), p(x + 4, y + 4)], fill=GOLD, outline=ink, width=2 * SS)
+        d.line([at(L - 24, 11), at(L - 24, -11)], fill=GOLD_HI, width=2 * SS)
+        # the grip, wrapped, and the pommel
+        d.polygon([at(L - 19, 4), at(L - 6, 4), at(L - 6, -4), at(L - 19, -4)], fill=grip, outline=ink, width=2 * SS)
+        for k in range(2):
+            a = L - 17 + k * 5
+            d.line([at(a, 4), at(a + 3, -4)], fill=grip_lo, width=2 * SS)
+        px, py = tip[0] + ux * (L - 1), tip[1] + uy * (L - 1)
+        d.ellipse([p(px - 6, py - 6), p(px + 6, py + 6)], fill=GOLD, outline=ink, width=2 * SS)
+        d.ellipse([p(px - 3, py - 4), p(px + 1, py)], fill=GOLD_HI)
+
+    sword((cx + 50, cy - 58), (cx - 44, cy + 46))
+    sword((cx - 50, cy - 58), (cx + 44, cy + 46))
+
+    # the shield: a kite in a gold rim
+    def kite(inset):
+        # a heater shield: a gently arched top, straight sides to the waist, then a convex curve
+        # (a quadratic Bezier) into the point
+        top, side, waist, point = cy - 44 + inset, 38 - inset, cy + 6, cy + 56 - inset * 1.5
+        pts = []
+        for k in range(9):
+            t = k / 8
+            pts.append((cx - side + 2 * side * t, top - 4 * math.sin(math.pi * t)))
+        for k in range(11):
+            t = k / 10
+            x = (1 - t) ** 2 * side + 2 * (1 - t) * t * side + t * t * 0
+            y = (1 - t) ** 2 * waist + 2 * (1 - t) * t * (point - 14) + t * t * point
+            pts.append((cx + x, y))
+        for k in range(9, -1, -1):
+            t = k / 10
+            x = (1 - t) ** 2 * side + 2 * (1 - t) * t * side
+            y = (1 - t) ** 2 * waist + 2 * (1 - t) * t * (point - 14) + t * t * point
+            pts.append((cx - x, y))
+        return [p(x, y) for x, y in pts]
+    d.polygon(kite(0), fill=GOLD_LO, outline=ink, width=3 * SS)
+    d.polygon(kite(3), fill=GOLD)
+    field = kite(8)
+    d.polygon(field, fill=blue)
+    # quartered: the lower-left and upper-right quarters a shade darker
+    mask = Image.new("L", d.im.size, 0)
+    ImageDraw.Draw(mask).polygon(field, fill=255)
+    q = Image.new("L", d.im.size, 0)
+    qd = ImageDraw.Draw(q)
+    qd.rectangle([p(cx, cy - 60), p(cx + 60, cy - 2)], fill=255)
+    qd.rectangle([p(cx - 60, cy - 2), p(cx, cy + 70)], fill=255)
+    from PIL import ImageChops
+    dark = ImageChops.multiply(mask, q)
+    d._image.paste(Image.new("RGBA", d.im.size, blue_lo), (0, 0), dark)
+    # a sheen down the left
+    d.line([p(cx - 25, cy - 36), p(cx - 25, cy - 8)], fill=blue_hi, width=3 * SS)
+    # the gold cross between the quarters
+    d.line([p(cx, cy - 38), p(cx, cy + 48)], fill=GOLD, width=4 * SS)
+    d.line([p(cx - 30, cy - 2), p(cx + 30, cy - 2)], fill=GOLD, width=4 * SS)
+    # rivets round the rim
+    for x, y in ((-31, -42), (31, -42), (-33, -16), (33, -16), (-31, 12), (31, 12), (-18, 36), (18, 36)):
+        d.ellipse([p(cx + x - 3, cy + y - 3), p(cx + x + 3, cy + y + 3)], fill=GOLD_HI, outline=ink, width=1 * SS)
+    # the boss with a small crown
+    d.ellipse([p(cx - 14, cy - 16), p(cx + 14, cy + 12)], fill=GOLD, outline=ink, width=2 * SS)
+    d.ellipse([p(cx - 9, cy - 12), p(cx - 1, cy - 5)], fill=GOLD_HI)
+    d.polygon([p(cx - 8, cy + 4), p(cx - 8, cy - 6), p(cx - 4, cy - 1), p(cx, cy - 9), p(cx + 4, cy - 1), p(cx + 8, cy - 6), p(cx + 8, cy + 4)], fill=ink)
 
 
 def lock(d, cx, cy, ink):
@@ -260,7 +328,7 @@ def banner(name, spec):
     elif name == "Tutorial":
         book(d, cx, cy + 6, WOOD_DARK)
     else:
-        tale(d, cx, cy + 6, WOOD_DARK)
+        shield_crest(d, cx, cy + 2, WOOD_DARK)
 
     img = img.resize((W, H), Image.LANCZOS)
     img.save(os.path.join(OUT, f"Banner_{name}.png"))
