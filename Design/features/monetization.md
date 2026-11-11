@@ -134,6 +134,16 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   left column with a timer and a red dot, glowing; gold notification with a 30-s bar). Drawn by
   `Tools/store/offer_shop_mockup.py`. Then: the sheet tabs and the code.
 
+## WAITING: open the shop on a shortage (the user's idea, 2026-11-11; «пока что ничего»)
+- Sandbox: tapping Build / Upgrade without enough resources should open the offer shop. Questions put
+  to the user, not answered yet: when for building (tap in the build menu -- Claude's pick -- or on the
+  placement confirm); a «Не хватает: …» line in the shop (+ highlight bundles with the missing resource);
+  sandbox only (no shop in Invasion/tutorial/dungeon); buildings only for now (army/heroes/research/ships
+  later). Upgrade entry points: BuildingFocus buttons, BuildingInfoPanelController.upgradeButton
+  (TryUpgrade); placement: BuildingPlacer (canAfford). Also open: the silver level disc over an upgraded
+  LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker` -- it has a model for level 1 only): models for levels
+  2-5 or hide the disc -- the user said wait.
+
 ## POSTPONED: chests with a roulette (the user's idea, 2026-11-11; agreed to put off)
 - **Idea:** chests of three classes -- common (an ad or crystals), rare and legendary (crystals only);
   opening spins a roulette that gives resources, crystals with a small chance.
