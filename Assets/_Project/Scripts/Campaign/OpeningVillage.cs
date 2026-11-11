@@ -166,7 +166,7 @@ namespace CityBuilder.Campaign
             // the roads out of the square: into the market street, to the fields east and west,
             // up past the church, and lanes between them; then a ring road round the old houses
             Street(new[] { new Vector2(0, -4), new Vector2(0, -12), new Vector2(-3, -24), new Vector2(-6, -44) }, 2.4f, cobble);
-            Street(new[] { new Vector2(0, 4), new Vector2(0, 5.4f) }, 1.8f, cobble);
+            Street(new[] { new Vector2(0, 4), new Vector2(0, 5.4f) }, 1.8f, cobble, false);   // no lane: walkers turned at the church wall (the user: «ходят в стену»)
             Street(new[] { new Vector2(4.2f, 0.6f), new Vector2(14, 2), new Vector2(26, 6), new Vector2(46, 11) }, 2.2f, cobble);
             Street(new[] { new Vector2(-4.2f, -0.4f), new Vector2(-14, -2), new Vector2(-26, -1), new Vector2(-46, 4) }, 2.2f, cobble);
             Street(new[] { new Vector2(3.1f, 3.1f), new Vector2(9, 11), new Vector2(14, 22), new Vector2(19, 40) }, 1.8f, dirt);

@@ -27,6 +27,13 @@ namespace CityBuilder.Campaign
         {
             public float sight, lose, catchDistance, wheatSight, walkSpeed, runSpeed, turnRate, radius, height;
             public float caughtSeconds, fadeSeconds, noticeSeconds;
+            /// <summary>The kill (the user's second playtest: being caught must read as losing): the orc
+            /// lunges `lunge` m over lungeSeconds leaning lungeLean degrees, Ардан falls on his back from
+            /// fallAt over fallSeconds, the screen flashes red (hurt alpha), «Ардана схватили!» shows.</summary>
+            public float lunge, lungeSeconds, lungeLean, fallAt, fallSeconds, hurt, trailRoadFrom;
+            public string caughtKey;
+            /// <summary>The orcs start once he has moved this far (m) after the film or a checkpoint.</summary>
+            public float armAfter;
             public float detourSeconds, eyeHeight, eyeSize, roarCooldown;
             public string checkpointKey;
             public Checkpoint[] checkpoints;
@@ -36,7 +43,8 @@ namespace CityBuilder.Campaign
         }
 
         [Serializable] public class Checkpoint { public float x, z, r; }
-        [Serializable] public class Patrol { public string figure; public float[] beat; }
+        /// <summary>A patrol's beat; `onTrack`: each point put on the road (its nearest point), `side` m off it.</summary>
+        [Serializable] public class Patrol { public string figure; public float[] beat; public bool onTrack; public float side; }
         [Serializable] public class Ambush { public string figure; public float[] hide, trigger; public float triggerRadius, runSpeed, follow, catchUp; }
         [Serializable] public class Hunters { public string[] figures; public float[] spawn; public float startZ, giveUpZ, searchSeconds, searchRadius, trailSpeed; }
 
@@ -76,6 +84,16 @@ namespace CityBuilder.Campaign
         private float _clock;
         private bool _huntersOut;
         private static Sprite _eyeSprite;
+        private Orc _catcher;
+        private Quaternion _catcherTurn, _ardanUp;
+        private Vector3 _catcherFrom, _ardanAt;
+        private string _caughtText;
+
+        /// <summary>0..1, the red flash over the screen as he is struck down.</summary>
+        public float Hurt { get; private set; }
+
+        /// <summary>He is back at a checkpoint, the orcs on their beats (the mission waits for him to move again).</summary>
+        public event Action Respawned;
 
         /// <summary>An orc has just seen him (for the roar): where it stands.</summary>
         public event Action<Vector3> Spotted;
@@ -124,6 +142,20 @@ namespace CityBuilder.Campaign
             return ambush;
         }
 
+        /// <summary>For the check's runner: the nearest active orc within `within` m, if any.</summary>
+        public Vector3? NearestOrc(Vector3 at, float within)
+        {
+            Vector3? best = null;
+            var bd = within;
+            foreach (var o in _orcs)
+            {
+                if (!o.fig.gameObject.activeSelf) continue;
+                var d = (o.fig.transform.position - at).magnitude;
+                if (d < bd) { bd = d; best = o.fig.transform.position; }
+            }
+            return best;
+        }
+
         /// <summary>For the check: how many orcs there are, how many are chasing, the nearest's distance.</summary>
         public string Report()
         {
@@ -151,12 +183,27 @@ namespace CityBuilder.Campaign
             _text = text;
             _respawn = ardan.transform.position;
             _respawnFacing = ardan.transform.rotation;
+            // the checkpoints stand ON the road (the user's second playtest: one was off in the forest)
+            if (c.checkpoints != null)
+                foreach (var k in c.checkpoints)
+                {
+                    var on = village.TrackNearest(new Vector2(k.x, k.z), out _);
+                    k.x = on.x;
+                    k.z = on.y;
+                }
             if (c.orcs != null)
                 foreach (var p in c.orcs)
                 {
                     var o = Spawn(p.figure, cast, flame, parent);
                     if (o == null) continue;
                     o.beat = Points(p.beat);
+                    if (p.onTrack)
+                        for (var i = 0; i < o.beat.Length; i++)
+                        {
+                            // kept to the lit way: an orc whose beat ran off into the dark stuck there
+                            var on = village.TrackNearest(o.beat[i], out var dir);
+                            o.beat[i] = on + new Vector2(dir.y, -dir.x) * p.side;
+                        }
                     o.home = new Vector3(o.beat[0].x, 0f, o.beat[0].y);
                     _orcs.Add(o);
                 }
@@ -327,7 +374,9 @@ namespace CityBuilder.Campaign
                 }
                 if (o.eye != null)
                 {
-                    o.eye.enabled = o.chasing && sees;
+                    // the eye while it is after him, seen or not (the user's second playtest: the orc
+                    // running at him through the wheat had none)
+                    o.eye.enabled = o.chasing || (o.hunter && (o.hunt == Hunt.Chase || o.hunt == Hunt.ToLastSeen || o.hunt == Hunt.Trail));
                     if (o.eye.enabled && Camera.main != null) o.eye.transform.rotation = Camera.main.transform.rotation;
                 }
                 if (o.chasing && !was && _clock - o.roarAt > _c.roarCooldown)
@@ -339,12 +388,20 @@ namespace CityBuilder.Campaign
                 {
                     _caught = 0f;
                     Catches++;
+                    _catcher = o;
+                    var face = new Vector3(me.x - p.x, 0f, me.z - p.z);
+                    _catcherTurn = face.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(face) : o.fig.transform.rotation;
+                    _catcherFrom = p;
+                    _ardanUp = _ardan.transform.rotation;
+                    _ardanAt = me;
+                    _caughtText = _text(_c.caughtKey);
                     _ardan.Play("Idle", 0.1f);
                     foreach (var q in _orcs)
                     {
                         q.fig.Play("Idle", 0.2f);
                         if (q.eye != null) q.eye.enabled = false;
                     }
+                    Spotted?.Invoke(p);
                     return;
                 }
             }
@@ -408,8 +465,15 @@ namespace CityBuilder.Campaign
                     Move(o, o.searchAt - at, _c.walkSpeed, false, dt);
                     break;
                 case Hunt.Trail:
-                    // on his trail: towards him, at a brisk walk -- he can stay ahead, but not rest
-                    Move(o, to, h.trailSpeed, h.trailSpeed > _c.walkSpeed * 1.5f, dt);
+                    // on his trail: towards him, at a brisk walk -- he can stay ahead, but not rest;
+                    // while he is far, down the road (straight at him it ran into the dark's wall)
+                    var aim = to;
+                    if (d > _c.trailRoadFrom)
+                    {
+                        var ahead = _village.TrackAhead(at, 3f);
+                        if ((ahead - at).sqrMagnitude > 0.04f) aim = ahead - at;
+                    }
+                    Move(o, aim, h.trailSpeed, h.trailSpeed > _c.walkSpeed * 1.5f, dt);
                     break;
             }
         }
@@ -488,11 +552,36 @@ namespace CityBuilder.Campaign
             var f = _c.fadeSeconds;
             _ardan.Tick(dt);
             foreach (var o in _orcs) if (o.fig.gameObject.activeSelf) o.fig.Tick(dt);
+            if (_caught < hold + f)
+            {
+                // the orc lunges at him, leaning in, and straightens
+                if (_catcher != null)
+                {
+                    var u = Mathf.Clamp01(_caught / Mathf.Max(0.05f, _c.lungeSeconds));
+                    var lean = _c.lungeLean * Mathf.Sin(Mathf.PI * u);
+                    _catcher.fig.transform.SetPositionAndRotation(
+                        _catcherFrom + _catcherTurn * Vector3.forward * (_c.lunge * Mathf.Sin(Mathf.PI * 0.5f * u)),
+                        _catcherTurn * Quaternion.Euler(lean, 0f, 0f));
+                }
+                // he falls on his back, faster as he goes
+                var v = Mathf.Clamp01((_caught - _c.fallAt) / Mathf.Max(0.05f, _c.fallSeconds));
+                var k = v * v;
+                var lying = Quaternion.Euler(-90f, _ardanUp.eulerAngles.y, 0f);
+                _ardan.transform.SetPositionAndRotation(_ardanAt + Vector3.up * 0.06f * k, Quaternion.Slerp(_ardanUp, lying, k));
+                var since = _caught - _c.fallAt;
+                Hurt = since < 0f ? 0f : _c.hurt * Mathf.Clamp01(1f - since / 0.8f) * Mathf.Clamp01(since / 0.08f);
+                Notice = _caughtText;
+                NoticeAlpha = Mathf.Clamp01(Mathf.Min((_caught - _c.fallAt) / 0.25f, (hold + f - _caught) / 0.3f));
+                _noticeT = -1f;
+            }
+            else Hurt = 0f;
             if (_caught < hold) Fade = 0f;
             else if (_caught < hold + f) Fade = (_caught - hold) / f;
             else if (_caught < hold + f + dt * 1.5f)
             {
                 Fade = 1f;
+                Hurt = 0f;
+                NoticeAlpha = 0f;
                 Place(_ardanBody, _respawn);
                 _ardan.transform.rotation = _respawnFacing;
                 _ardan.Play("Idle", 0f);
@@ -506,7 +595,30 @@ namespace CityBuilder.Campaign
             {
                 Fade = 0f;
                 _caught = -1f;
+                _catcher = null;
+                // the checkpoint's notice again: this is where he is
+                if (_reached >= 0)
+                {
+                    Notice = _text(_c.checkpointKey);
+                    _noticeT = 0f;
+                }
+                Respawned?.Invoke();
             }
+        }
+
+        /// <summary>Play has not begun for the orcs yet (he has not moved since the film or since
+        /// coming back): they stand and breathe, nobody sees him (the user's second playtest: an orc
+        /// ran at him before he had taken the stick).</summary>
+        public void Hold(float dt)
+        {
+            if (Off || _caught >= 0f) return;
+            foreach (var o in _orcs)
+            {
+                if (!o.fig.gameObject.activeSelf) continue;
+                o.fig.Play("Idle", 0.2f);
+                o.fig.Tick(dt);
+            }
+            if (_noticeT >= 0f) Checkpoints(new Vector2(_ardan.transform.position.x, _ardan.transform.position.z), dt);
         }
 
         private static void Place(CharacterController body, Vector3 at)

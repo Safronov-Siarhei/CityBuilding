@@ -30,6 +30,10 @@ namespace CityBuilder.Campaign
             public int seed;
             public int walkers;
             public int squareStanders;
+            /// <summary>Folk standing by the church door: x, z, yaw (the user: just three there).</summary>
+            public float[] churchFolk;
+            /// <summary>Square pairs keep off the church side (z above this).</summary>
+            public float squareMaxZ = 99f;
             public string[] walkerFigures;
             public float laneSpread;
             public float squareInner;
@@ -176,6 +180,7 @@ namespace CityBuilder.Campaign
             {
                 var ang = Range(0f, Mathf.PI * 2f);
                 var r = Range(_c.squareInner, _c.squareOuter);
+                if (Mathf.Sin(ang) * r > _c.squareMaxZ) ang = -ang;      // the church side stays to the three below
                 var at = new Vector3(Mathf.Cos(ang) * r, 0f, Mathf.Sin(ang) * r);
                 var off = new Vector3(-Mathf.Sin(ang), 0f, Mathf.Cos(ang)) * 0.28f;
                 var p = Spawn(_c.walkerFigures[_rnd.Next(_c.walkerFigures.Length)], false);
@@ -187,6 +192,15 @@ namespace CityBuilder.Campaign
                     Place(who, pos, other - pos, true);
                 }
             }
+            if (_c.churchFolk != null)
+                for (var i = 0; i + 2 < _c.churchFolk.Length; i += 3)
+                {
+                    var p = Spawn(_c.walkerFigures[_rnd.Next(_c.walkerFigures.Length)], false);
+                    p.mode = Mode.Stand;
+                    p.fig.Play(i == 0 ? "Talk" : "Idle", 0f, 1f, Range(0f, 3f));
+                    var yaw = _c.churchFolk[i + 2] * Mathf.Deg2Rad;
+                    Place(p, new Vector3(_c.churchFolk[i], 0f, _c.churchFolk[i + 1]), new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw)), true);
+                }
             Step(0f);
         }
 

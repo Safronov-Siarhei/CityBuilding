@@ -32,7 +32,7 @@ namespace CityBuilder.Campaign
             public TownConfig town;
         }
 
-        [Serializable] private class FieldConfig { public float[] poly, cartTrack; public float tile, cell, earsBand, height, cartWidth; }
+        [Serializable] private class FieldConfig { public float[] poly, cartTrack; public float tile, cell, earsBand, height, cartWidth, sway, swayStrength, swayHeight; }
         [Serializable] private class ForestConfig { public float[] min, max; public float treeEvery, clearPath, bushEvery; }
         [Serializable] private class FallenConfig { public float along, offset, clear; }
         [Serializable] private class RiverConfig { public float[] line; public float width, bank, wiggle; }
@@ -108,6 +108,7 @@ namespace CityBuilder.Campaign
             if (_route == null || _route.path == null) return;
             _path = Points(_route.path);
             _track = null;
+            _way = null;
             if (_route.bridge != null) _pins.Add((new Vector2(_route.bridge.x, _route.bridge.z), _route.bridge.pieces * _route.bridge.piece * 0.5f + 2f));
             if (_route.town != null) _pins.Add((new Vector2(_route.town.gateX, _route.town.wallZ), 3f));
             if (_route.field?.poly != null) _routeAreas.Add(Bounds(Points(_route.field.poly), 1f));
@@ -230,6 +231,28 @@ namespace CityBuilder.Campaign
             earsRoot.SetParent(_root, false);
             // the ears: whole tiles, only where the whole tile stands on the body (clear of the
             // track and inside the field) and near enough the track for the camera to see
+            // some tiles sway in the wind (the user's second playtest: the ears stood unnaturally
+            // still): the buildings' own shader's wind (BuildingDetail _WIND, by height over the
+            // tile's foot) on a copy of the ears' material, given to a share `sway` of the tiles
+            Material[] windy = null;
+            if (ears != null && f.sway > 0f)
+            {
+                var r = ears.GetComponentInChildren<Renderer>();
+                if (r != null && r.sharedMaterials.Length > 0 && r.sharedMaterials[0] != null && r.sharedMaterials[0].HasProperty("_WindStrength"))
+                {
+                    windy = new Material[r.sharedMaterials.Length];
+                    for (var i = 0; i < windy.Length; i++)
+                    {
+                        windy[i] = new Material(r.sharedMaterials[i]) { name = r.sharedMaterials[i].name + " (wind)" };
+                        windy[i].SetFloat("_Wind", 1f);
+                        windy[i].EnableKeyword("_WIND");
+                        windy[i].SetFloat("_WindStrength", f.swayStrength);
+                        windy[i].SetFloat("_WindHeight", f.swayHeight);
+                        windy[i].SetFloat("_WindByUV3", 0f);
+                    }
+                }
+            }
+            SwayingEars = 0;
             if (ears != null)
             {
                 var half = f.tile * 0.5f;
@@ -246,6 +269,11 @@ namespace CityBuilder.Campaign
                         e.name = "Ears";
                         // a quarter turn now and then, so the tiles do not repeat in rows
                         e.transform.SetPositionAndRotation(new Vector3(c.x, 0f, c.y), Quaternion.Euler(0f, 90f * _rnd.Next(4), 0f) * ears.transform.rotation);
+                        if (windy != null && Mathf.Repeat(Mathf.Sin(c.x * 12.9898f + c.y * 78.233f) * 43758.55f, 1f) < f.sway)
+                        {
+                            foreach (var er in e.GetComponentsInChildren<Renderer>()) er.sharedMaterials = windy;
+                            SwayingEars++;
+                        }
                     }
                 }
             }
@@ -469,30 +497,34 @@ namespace CityBuilder.Campaign
         // ------------------------------------------------------------ geometry
 
         /// <summary>How far a point is from the way (the market street and the laid track).</summary>
+        /// <summary>How many ear tiles sway (the batchmode check).</summary>
+        public int SwayingEars { get; private set; }
+
+        /// <summary>How far from the track the field's ears stand (the darkness keeps to them).</summary>
+        public float EarsBand => _route?.field != null ? _route.field.earsBand : 0f;
+
         public float TrackDistance(Vector2 p) => _route == null || _path == null ? float.MaxValue : PathDistance(p);
+
+        private List<Vector2> _way;
+
+        /// <summary>The way as one line: the market street's raw points, then the laid track.</summary>
+        private List<Vector2> Way()
+        {
+            if (_way != null) return _way;
+            var line = new List<Vector2>();
+            for (var i = 0; i < _route.pathFrom && i < _path.Length; i++) line.Add(_path[i]);
+            if (_track != null) line.AddRange(_track);
+            if (_track != null) _way = line;           // cached once the track is laid
+            return line;
+        }
 
         /// <summary>The way's point `ahead` metres on from the point of it nearest `p` (the guide arrow).</summary>
         public Vector2 TrackAhead(Vector2 p, float ahead)
         {
             if (_route == null || _path == null) return p;
-            var line = new List<Vector2>();
-            for (var i = 0; i < _route.pathFrom && i < _path.Length; i++) line.Add(_path[i]);
-            if (_track != null) line.AddRange(_track);
+            var line = Way();
             if (line.Count < 2) return p;
-            var best = float.MaxValue;
-            var at = 0f;
-            var run = 0f;
-            for (var i = 0; i + 1 < line.Count; i++)
-            {
-                var a = line[i];
-                var b = line[i + 1];
-                var ab = b - a;
-                var l = ab.magnitude;
-                var t = l > 1e-5f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / (l * l)) : 0f;
-                var d = (a + ab * t - p).sqrMagnitude;
-                if (d < best) { best = d; at = run + t * l; }
-                run += l;
-            }
+            var at = Nearest(line, p, out _, out var run);
             var want = Mathf.Min(run, at + ahead);
             for (var i = 0; i + 1 < line.Count; i++)
             {
@@ -501,6 +533,51 @@ namespace CityBuilder.Campaign
                 want -= l;
             }
             return line[line.Count - 1];
+        }
+
+        /// <summary>The way's point nearest `p` and the way's direction there (down the route): the
+        /// mission puts its checkpoints, patrols, the dead and the animals ON the road by it (the
+        /// user's second playtest: «контрольные точки должны стоять прямо на дороге»).</summary>
+        public Vector2 TrackNearest(Vector2 p, out Vector2 dir)
+        {
+            dir = Vector2.down;
+            if (_route == null || _path == null) return p;
+            var line = Way();
+            if (line.Count < 2) return p;
+            var along = Nearest(line, p, out dir, out _);
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                var l = (line[i + 1] - line[i]).magnitude;
+                if (along <= l || i + 2 == line.Count) return Vector2.Lerp(line[i], line[i + 1], l > 1e-5f ? Mathf.Clamp01(along / l) : 0f);
+                along -= l;
+            }
+            return line[line.Count - 1];
+        }
+
+        /// <summary>How far along `line` its point nearest `p` lies; the segment's direction there and the line's length.</summary>
+        private static float Nearest(List<Vector2> line, Vector2 p, out Vector2 dir, out float length)
+        {
+            var best = float.MaxValue;
+            var at = 0f;
+            var run = 0f;
+            dir = Vector2.down;
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                var a = line[i];
+                var ab = line[i + 1] - a;
+                var l = ab.magnitude;
+                var t = l > 1e-5f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / (l * l)) : 0f;
+                var d = (a + ab * t - p).sqrMagnitude;
+                if (d < best)
+                {
+                    best = d;
+                    at = run + t * l;
+                    if (l > 1e-5f) dir = ab / l;
+                }
+                run += l;
+            }
+            length = run;
+            return at;
         }
 
         /// <summary>The field's outline's bounds, and how far inside it a point is (negative outside).</summary>

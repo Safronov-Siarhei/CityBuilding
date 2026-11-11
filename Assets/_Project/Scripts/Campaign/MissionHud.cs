@@ -7,19 +7,24 @@ using UnityEngine.UI;
 namespace CityBuilder.Campaign
 {
     /// <summary>
-    /// Mission 1's own HUD (the user's first playtest, 2026-11-11), in the game's parchment-and-gold kit:
-    ///   - top left the MENU button: pauses, «Продолжить» / «Начать заново» / «В меню»;
-    ///   - top right the CURRENT OBJECTIVE, changing as he gets on (Mission1.json "hud" objectives);
-    ///   - top centre ARDAN's portrait, like the King's in the other modes (no health, no level), «Ардан»
-    ///     under it; a tap pauses the game and opens his short story.
+    /// Mission 1's own HUD (the user's playtests, 2026-11-11), drawn in the SANDBOX HUD's kit
+    /// (MissionSkin: the same skin sprites and inks, the same 108-in-1920 round buttons -- the second
+    /// playtest found the first, home-made look out of keeping with the game):
+    ///   - top left the MENU button (round_main): as in the sandbox, the screen dims and round buttons
+    ///     drop under it -- go on, start over, to the menu; the same spot closes it. Time stands;
+    ///   - top right the CURRENT OBJECTIVE on a plaque, changing as he gets on;
+    ///   - top centre ARDAN's portrait in the King's frame (round_value, parchment circle, no health,
+    ///     no level), «Ардан» on a plaque under it; a tap pauses and opens his short story;
+    ///   - bottom centre the RUN'S CLOCK (the second playtest: records, and how long each stretch
+    ///     took): at every checkpoint the stretch's time shows over it for a while, against the best.
     /// Pausing is Time.timeScale = 0: the film's world and the mission step by deltaTime and stand.
     /// </summary>
     public class MissionHud
     {
         [Serializable] public class Config
         {
-            public float button, portrait, margin;
-            public string nameKey, storyKey, objectiveKey, pauseKey, resumeKey, restartKey, menuKey, closeKey, menuScene;
+            public float button, portrait, margin, timerWidth, splitSeconds;
+            public string nameKey, storyKey, objectiveKey, pauseKey, resumeKey, restartKey, menuKey, closeKey, menuScene, splitKey;
             public Objective[] objectives;
         }
 
@@ -27,18 +32,23 @@ namespace CityBuilder.Campaign
 
         [Serializable] public struct Art
         {
-            public Sprite disc, rim, mask, panel, pillParchment, pillWood, menuGlyph, closeGlyph, portrait;
+            public Sprite disc, rim, mask, panel, pillParchment, pillWood, menuGlyph, closeGlyph, portrait, playGlyph, restartGlyph, homeGlyph;
         }
 
         private readonly Config _c;
         private readonly Art _art;
         private readonly Canvas _canvas;
-        private readonly Text _objective;
+        private readonly RectTransform _safe;
+        private readonly Text _objective, _clock, _split;
         private GameObject _modal;
         private int _stage = -1;
+        private float _splitT = -1f;
 
         /// <summary>The objective's text now, for the batchmode check.</summary>
         public string ObjectiveText => _objective != null ? _objective.text : null;
+        /// <summary>The clock's and the last split's text, for the batchmode check.</summary>
+        public string ClockText => _clock != null ? _clock.text : null;
+        public string SplitText { get; private set; }
 
         public bool Paused => _modal != null;
 
@@ -57,39 +67,66 @@ namespace CityBuilder.Campaign
             scaler.matchWidthOrHeight = 1f;
             if (UnityEngine.EventSystems.EventSystem.current == null)
                 new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
-            var safe = SafeArea(go.transform);
+            _safe = SafeArea(go.transform);
+            var b = c.button;
 
             // the menu, top left
-            var menu = RoundButton(safe, "Menu", new Vector2(0f, 1f), new Vector2(c.margin + c.button * 0.5f, -c.margin - c.button * 0.5f), c.button, art.menuGlyph);
-            menu.onClick.AddListener(OpenPause);
+            MissionSkin.Round(_safe, "Menu", "round_main", HudInk.OnMain, art.menuGlyph, new Vector2(0f, 1f),
+                new Vector2(c.margin + b * 0.5f, -c.margin - b * 0.5f), b).onClick.AddListener(OpenPause);
 
-            // the objective, top right
-            var pill = Box(safe, "Objective", art.pillParchment, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-c.margin, -c.margin), new Vector2(380f, 64f));
-            Label(pill, Localization.Get(c.objectiveKey), UiTheme.Bold, 18, new Vector2(0f, 0.55f), new Vector2(1f, 1f), UiTheme.InkSoft, TextAnchor.MiddleCenter);
-            _objective = Label(pill, "", UiTheme.Bold, 22, new Vector2(0f, 0f), new Vector2(1f, 0.62f), UiTheme.Ink, TextAnchor.MiddleCenter);
+            // the objective, top right, on a plaque
+            var plaque = MissionSkin.Image(_safe, "Objective", "plaque", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-c.margin, -c.margin), new Vector2(380f, 70f));
+            MissionSkin.Label(plaque.transform, Localization.Get(c.objectiveKey), UiTheme.Bold, 17, UiTheme.InkSoft, TextAnchor.MiddleCenter, new Vector2(0f, 0.56f), new Vector2(1f, 0.95f), new Vector2(14f, 0f));
+            _objective = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.MiddleCenter, new Vector2(0f, 0.08f), new Vector2(1f, 0.62f), new Vector2(14f, 0f));
 
-            // Ардан, top centre
-            var face = RoundButton(safe, "Ardan", new Vector2(0.5f, 1f), new Vector2(0f, -c.margin - c.portrait * 0.5f), c.portrait, null);
-            var maskGo = new GameObject("Mask", typeof(RectTransform), typeof(Image), typeof(Mask));
-            maskGo.transform.SetParent(face.transform, false);
-            Fill((RectTransform)maskGo.transform, 0.1f);
-            maskGo.GetComponent<Image>().sprite = art.mask;
-            maskGo.GetComponent<Mask>().showMaskGraphic = false;
-            var pic = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
-            pic.transform.SetParent(maskGo.transform, false);
-            Fill((RectTransform)pic.transform, 0f);
+            // Ардан, top centre, in the King's frame
+            var p = c.portrait;
+            var frame = MissionSkin.Image(_safe, "Ardan", "round_value", new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -c.margin - p * 0.5f), new Vector2(p, p));
+            frame.type = Image.Type.Simple;
+            var face = frame.gameObject.AddComponent<Button>();
+            var mask = new GameObject("Mask", typeof(RectTransform), typeof(Image), typeof(Mask));
+            mask.transform.SetParent(frame.transform, false);
+            var mr = (RectTransform)mask.transform;
+            mr.anchorMin = mr.anchorMax = new Vector2(0.5f, 0.5f);
+            mr.sizeDelta = new Vector2(p * (1f - 16f / 108f), p * (1f - 16f / 108f));
+            var mi = mask.GetComponent<Image>();
+            mi.sprite = art.mask;
+            mi.color = UiTheme.Parchment;
+            mi.raycastTarget = false;
+            mask.GetComponent<Mask>().showMaskGraphic = true;
+            var pic = new GameObject("Face", typeof(RectTransform), typeof(Image));
+            pic.transform.SetParent(mask.transform, false);
+            Fill((RectTransform)pic.transform);
             pic.GetComponent<Image>().sprite = art.portrait;
+            pic.GetComponent<Image>().preserveAspect = true;
             pic.GetComponent<Image>().raycastTarget = false;
-            face.transform.Find("Rim")?.SetAsLastSibling();
             face.onClick.AddListener(OpenStory);
-            var tag = Box(safe, "Name", art.pillWood, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -c.margin - c.portrait - 4f), new Vector2(150f, 36f));
-            tag.pivot = new Vector2(0.5f, 1f);
-            Label(tag, Localization.Get(c.nameKey), UiTheme.Bold, 22, Vector2.zero, Vector2.one, UiTheme.OnWood, TextAnchor.MiddleCenter);
+            var tag = MissionSkin.Image(_safe, "Name", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -c.margin - p - 2f), new Vector2(150f, 40f));
+            MissionSkin.Label(tag.transform, Localization.Get(c.nameKey), UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+
+            // the run's clock, bottom centre, and the stretch's time over it at a checkpoint
+            var clock = MissionSkin.Image(_safe, "Clock", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, c.margin), new Vector2(c.timerWidth, 52f));
+            _clock = MissionSkin.Label(clock.transform, MissionSkin.Clock(0f), UiTheme.Heavy, 28, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            _split = MissionSkin.Label(_safe, "", UiTheme.Bold, 22, Color.clear, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);
+            var sr = (RectTransform)_split.transform;
+            sr.sizeDelta = new Vector2(600f, 34f);
+            sr.anchoredPosition = new Vector2(0f, c.margin + 52f + 22f);
+            _split.gameObject.AddComponent<Outline>().effectColor = new Color(0.1f, 0.06f, 0.03f, 0.9f);
         }
 
-        /// <summary>The objective for where he is now (by how far south he has come).</summary>
-        public void Step(Vector3 ardan)
+        /// <summary>The objective for where he is now (by how far south he has come), and the clock.</summary>
+        public void Step(Vector3 ardan, float elapsed, float dt)
         {
+            if (_clock != null) _clock.text = MissionSkin.Clock(elapsed);
+            if (_splitT >= 0f)
+            {
+                _splitT += dt;
+                var a = Mathf.Clamp01(Mathf.Min(_splitT / 0.25f, (_c.splitSeconds - _splitT) / 0.6f));
+                var col = _split.color;
+                col.a = a;
+                _split.color = col;
+                if (_splitT > _c.splitSeconds) _splitT = -1f;
+            }
             if (_c.objectives == null || _objective == null) return;
             var stage = _c.objectives.Length - 1;
             for (var i = 0; i < _c.objectives.Length; i++)
@@ -99,67 +136,105 @@ namespace CityBuilder.Campaign
             _objective.text = Localization.Get(_c.objectives[stage].key);
         }
 
+        /// <summary>A stretch run: «Участок N: m:ss.t», and against the best one (green ahead, red behind).</summary>
+        public void Split(int stretch, float seconds, float best)
+        {
+            var text = string.Format(Localization.Get(_c.splitKey), stretch, MissionSkin.Clock(seconds));
+            var col = UiTheme.Parchment;
+            if (best > 0f)
+            {
+                var d = seconds - best;
+                text += $"  ({(d < 0f ? "-" : "+")}{MissionSkin.Clock(Mathf.Abs(d))})";
+                col = d < 0f ? new Color(0.55f, 0.95f, 0.45f) : new Color(1f, 0.55f, 0.45f);
+            }
+            SplitText = text;
+            _split.text = text;
+            col.a = 0f;
+            _split.color = col;
+            _splitT = 0f;
+        }
+
         /// <summary>Hidden for the end (the summary takes the screen).</summary>
         public void Hide() => _canvas.gameObject.SetActive(false);
 
         // ------------------------------------------------------------ the windows
 
+        /// <summary>The sandbox's game menu: the screen dims, the menu button stays on top to close
+        /// it, round buttons drop under it -- go on, start over, to the menu.</summary>
         private void OpenPause()
         {
             if (_modal != null) return;
-            var panel = Modal(new Vector2(460f, 380f), Localization.Get(_c.pauseKey));
-            WideButton(panel, Localization.Get(_c.resumeKey), 0.62f, UiTheme.Good, Close);
-            WideButton(panel, Localization.Get(_c.restartKey), 0.40f, UiTheme.Wood, () =>
+            Dim();
+            var c = _c;
+            var b = c.button;
+            MissionSkin.Round(_modal.transform, "Close", "round_main", HudInk.OnMain, _art.menuGlyph, new Vector2(0f, 1f),
+                new Vector2(c.margin + b * 0.5f, -c.margin - b * 0.5f), b).onClick.AddListener(Close);
+            var entries = new (Sprite glyph, UnityEngine.Events.UnityAction act)[]
             {
-                Close();
-                MissionOne.SkipFilm = true;
-                LoadingScreen.IntoGame(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            });
-            WideButton(panel, Localization.Get(_c.menuKey), 0.18f, UiTheme.Wood, () =>
-            {
-                Close();
-                LoadingScreen.OutToMenu(_c.menuScene);
-            });
+                (_art.playGlyph, Close),
+                (_art.restartGlyph, () =>
+                {
+                    Close();
+                    MissionOne.SkipFilm = true;
+                    LoadingScreen.IntoGame(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+                }),
+                (_art.homeGlyph, () =>
+                {
+                    Close();
+                    LoadingScreen.OutToMenu(c.menuScene);
+                }),
+            };
+            var step = b * 0.9f + 12f;
+            for (var i = 0; i < entries.Length; i++)
+                MissionSkin.Round(_modal.transform, "Entry", "round", HudInk.OnRound, entries[i].glyph, new Vector2(0f, 1f),
+                    new Vector2(c.margin + b * 0.5f, -c.margin - b - 12f - step * 0.5f - i * step), b * 0.9f).onClick.AddListener(entries[i].act);
         }
 
         private void OpenStory()
         {
             if (_modal != null) return;
-            var panel = Modal(new Vector2(640f, 420f), Localization.Get(_c.nameKey));
-            var pic = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
-            pic.transform.SetParent(panel, false);
-            var pr = (RectTransform)pic.transform;
-            pr.anchorMin = pr.anchorMax = new Vector2(0f, 1f);
-            pr.pivot = new Vector2(0f, 1f);
-            pr.anchoredPosition = new Vector2(34f, -86f);
-            pr.sizeDelta = new Vector2(150f, 150f);
+            Dim();
+            var panel = MissionSkin.Image(_modal.transform, "Story", "panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(680f, 440f));
+            var title = MissionSkin.Image(panel.transform, "Title", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(260f, 58f));
+            MissionSkin.Label(title.transform, Localization.Get(_c.nameKey), UiTheme.Heavy, 30, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            var frame = MissionSkin.Image(panel.transform, "Portrait", "round_value", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(40f, -60f), new Vector2(150f, 150f));
+            frame.type = Image.Type.Simple;
+            var mask = new GameObject("Mask", typeof(RectTransform), typeof(Image), typeof(Mask));
+            mask.transform.SetParent(frame.transform, false);
+            var mr = (RectTransform)mask.transform;
+            mr.anchorMin = mr.anchorMax = new Vector2(0.5f, 0.5f);
+            mr.sizeDelta = new Vector2(128f, 128f);
+            mask.GetComponent<Image>().sprite = _art.mask;
+            mask.GetComponent<Image>().color = UiTheme.Parchment;
+            var pic = new GameObject("Face", typeof(RectTransform), typeof(Image));
+            pic.transform.SetParent(mask.transform, false);
+            Fill((RectTransform)pic.transform);
             pic.GetComponent<Image>().sprite = _art.portrait;
-            var story = Label(panel, Localization.Get(_c.storyKey), UiTheme.Regular, 21, new Vector2(0f, 0f), new Vector2(1f, 1f), UiTheme.Ink, TextAnchor.UpperLeft);
+            pic.GetComponent<Image>().preserveAspect = true;
+            var story = MissionSkin.Label(panel.transform, Localization.Get(_c.storyKey), UiTheme.Regular, 21, MissionSkin.Ink(HudInk.OnPanel), TextAnchor.UpperLeft, Vector2.zero, Vector2.one, Vector2.zero);
             var sr = (RectTransform)story.transform;
-            sr.offsetMin = new Vector2(204f, 96f);
-            sr.offsetMax = new Vector2(-34f, -86f);
-            story.horizontalOverflow = HorizontalWrapMode.Wrap;
+            sr.offsetMin = new Vector2(214f, 40f);
+            sr.offsetMax = new Vector2(-40f, -60f);
             story.verticalOverflow = VerticalWrapMode.Truncate;
             story.resizeTextForBestFit = true;
             story.resizeTextMinSize = 14;
             story.resizeTextMaxSize = 21;
-            WideButton(panel, Localization.Get(_c.closeKey), 0.11f, UiTheme.Good, Close);
+            MissionSkin.Round(panel.transform, "Close", "round_main", HudInk.OnMain, _art.closeGlyph, new Vector2(1f, 1f), new Vector2(-14f, -14f), 64f).onClick.AddListener(Close);
         }
 
-        private RectTransform Modal(Vector2 size, string title)
+        private void Dim()
         {
             Time.timeScale = 0f;
-            _modal = new GameObject("Modal", typeof(RectTransform), typeof(Image));
-            _modal.transform.SetParent(_canvas.transform, false);
-            Fill((RectTransform)_modal.transform, 0f);
-            _modal.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.55f);
-            var panel = Box(_modal.transform, "Panel", _art.panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size);
-            panel.pivot = new Vector2(0.5f, 0.5f);
-            var t = Label(panel, title, UiTheme.Heavy, 34, new Vector2(0f, 1f), new Vector2(1f, 1f), UiTheme.Ink, TextAnchor.MiddleCenter);
-            var tr = (RectTransform)t.transform;
-            tr.offsetMin = new Vector2(20f, -78f);
-            tr.offsetMax = new Vector2(-20f, -18f);
-            return panel;
+            _modal = new GameObject("Modal", typeof(RectTransform), typeof(Image), typeof(Button));
+            _modal.transform.SetParent(_safe, false);
+            var r = (RectTransform)_modal.transform;
+            r.anchorMin = new Vector2(-1f, -1f);
+            r.anchorMax = new Vector2(2f, 2f);
+            r.offsetMin = r.offsetMax = Vector2.zero;
+            _modal.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            var bb = _modal.GetComponent<Button>();
+            bb.transition = Selectable.Transition.None;
+            bb.onClick.AddListener(Close);
         }
 
         private void Close()
@@ -185,90 +260,11 @@ namespace CityBuilder.Campaign
             return r;
         }
 
-        private Button RoundButton(Transform parent, string name, Vector2 anchor, Vector2 at, float size, Sprite glyph)
+        private static void Fill(RectTransform r)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(parent, false);
-            var r = (RectTransform)go.transform;
-            r.anchorMin = r.anchorMax = anchor;
-            r.anchoredPosition = at;
-            r.sizeDelta = new Vector2(size, size);
-            var disc = go.GetComponent<Image>();
-            disc.sprite = _art.disc;
-            disc.color = UiTheme.Wood;
-            var rim = new GameObject("Rim", typeof(RectTransform), typeof(Image));
-            rim.transform.SetParent(go.transform, false);
-            Fill((RectTransform)rim.transform, 0f);
-            rim.GetComponent<Image>().sprite = _art.rim;
-            rim.GetComponent<Image>().raycastTarget = false;
-            if (glyph != null)
-            {
-                var g = new GameObject("Glyph", typeof(RectTransform), typeof(Image));
-                g.transform.SetParent(go.transform, false);
-                Fill((RectTransform)g.transform, 0.24f);
-                g.GetComponent<Image>().sprite = glyph;
-                g.GetComponent<Image>().color = UiTheme.OnWood;
-                g.GetComponent<Image>().raycastTarget = false;
-            }
-            return go.GetComponent<Button>();
-        }
-
-        private static void Fill(RectTransform r, float inset)
-        {
-            r.anchorMin = new Vector2(inset, inset);
-            r.anchorMax = new Vector2(1f - inset, 1f - inset);
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
             r.offsetMin = r.offsetMax = Vector2.zero;
-        }
-
-        private static RectTransform Box(Transform parent, string name, Sprite sprite, Vector2 min, Vector2 max, Vector2 at, Vector2 size)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(parent, false);
-            var r = (RectTransform)go.transform;
-            r.anchorMin = min;
-            r.anchorMax = max;
-            r.pivot = new Vector2(max.x >= 1f ? 1f : max.x <= 0f ? 0f : 0.5f, max.y >= 1f ? 1f : max.y <= 0f ? 0f : 0.5f);
-            r.anchoredPosition = at;
-            r.sizeDelta = size;
-            var img = go.GetComponent<Image>();
-            img.sprite = sprite;
-            if (sprite != null && sprite.border.sqrMagnitude > 0f) img.type = Image.Type.Sliced;
-            return r;
-        }
-
-        private static Text Label(Transform parent, string text, Font font, int size, Vector2 min, Vector2 max, Color colour, TextAnchor align)
-        {
-            var go = new GameObject("Text", typeof(RectTransform), typeof(Text));
-            go.transform.SetParent(parent, false);
-            var r = (RectTransform)go.transform;
-            r.anchorMin = min;
-            r.anchorMax = max;
-            r.offsetMin = new Vector2(10f, 0f);
-            r.offsetMax = new Vector2(-10f, 0f);
-            var t = go.GetComponent<Text>();
-            t.font = font;
-            t.fontSize = size;
-            t.alignment = align;
-            t.color = colour;
-            t.text = text;
-            t.raycastTarget = false;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap;
-            return t;
-        }
-
-        private void WideButton(RectTransform panel, string text, float y, Color colour, UnityEngine.Events.UnityAction onClick)
-        {
-            var go = new GameObject("Button", typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(panel, false);
-            var r = (RectTransform)go.transform;
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, y);
-            r.sizeDelta = new Vector2(300f, 62f);
-            var img = go.GetComponent<Image>();
-            img.sprite = _art.pillWood;
-            if (img.sprite != null && img.sprite.border.sqrMagnitude > 0f) img.type = Image.Type.Sliced;
-            img.color = colour == UiTheme.Wood ? Color.white : colour;
-            go.GetComponent<Button>().onClick.AddListener(onClick);
-            Label(r, text, UiTheme.Bold, 26, Vector2.zero, Vector2.one, UiTheme.OnWood, TextAnchor.MiddleCenter);
         }
     }
 }

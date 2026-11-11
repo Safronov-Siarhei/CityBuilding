@@ -184,6 +184,7 @@ namespace CityBuilder.EditorTools
             // the mage's scene: frames at its beats, by its own clock
             var mageShots = new[] { (1.2f, "mage_wave"), (3.8f, "mage_strike"), (4.45f, "mage_orb"), (5.3f, "mage_fall"), (6.4f, "mage_drift"), (9.5f, "mage_hold") };
             var mageNext = 0;
+            var wasFrozen = false;
             var endShots0 = new[] { (1.0f, "end_guards"), (3.4f, "end_title") };
             var endNext0 = 0;
             while (path != null && t < 420f && (mission.End == null || mission.End.T < 5.5f))
@@ -205,6 +206,19 @@ namespace CityBuilder.EditorTools
                     log.Append($"[{mageShots[mageNext - 1].Item2} at ({mission.Ardan.position.x:F1},{mission.Ardan.position.z:F1})] ");
                 }
                 var pos = mission.Ardan.position;
+                // brought back to a checkpoint: on from the waypoint nearest him again (it went on
+                // at the old far one, straight into the dark's wall)
+                var frozen = mission.Chase != null && mission.Chase.Frozen;
+                if (wasFrozen && !frozen)
+                {
+                    var bestD = float.MaxValue;
+                    for (var i = 0; i < path.Count; i++)
+                    {
+                        var dd = (path[i] - new Vector2(pos.x, pos.z)).sqrMagnitude;
+                        if (dd < bestD) { bestD = dd; wp = Mathf.Min(i + 1, path.Count - 1); }
+                    }
+                }
+                wasFrozen = frozen;
                 var to = new Vector3(path[wp].x - pos.x, 0f, path[wp].y - pos.z);
                 if (to.magnitude < 1.0f && wp < path.Count - 1)
                 {
@@ -213,6 +227,17 @@ namespace CityBuilder.EditorTools
                     continue;
                 }
                 var want = to.normalized;
+                // a player slips round an orc on the road: the runner steps aside from the nearest
+                // one close by (the forest's patrols, the user's second playtest)
+                var orc = mission.Chase?.NearestOrc(pos, 4f);
+                if (orc.HasValue && Vector3.Dot(orc.Value - pos, want) > 0.5f)          // only one ahead of him
+                {
+                    var away = pos - orc.Value;
+                    away.y = 0f;
+                    var side = Vector3.Cross(Vector3.up, want);
+                    if (Vector3.Dot(side, away) < 0f) side = -side;
+                    want = (want * 0.6f + side * 1.1f + away.normalized * 0.4f).normalized;
+                }
                 if (dodge > 0f)
                 {
                     want = Vector3.Cross(Vector3.up, want) * dodgeSide;  // sidestep round what blocks him
@@ -280,7 +305,7 @@ namespace CityBuilder.EditorTools
                 mission.StepCamera(dt);
                 t += dt;
             }
-            log.Append($" | END {(mission.End != null && mission.End.Started ? "reached" : "NOT reached")} t {mission.End?.T:F1} summary [{mission.End?.Report}] objective [{mission.Hud?.ObjectiveText}]");
+            log.Append($" | END {(mission.End != null && mission.End.Started ? "reached" : "NOT reached")} t {mission.End?.T:F1} summary [{mission.End?.Report}] objective [{mission.Hud?.ObjectiveText}] clock [{mission.Hud?.ClockText}] split [{mission.Hud?.SplitText}] swayingEars {village.SwayingEars}");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }

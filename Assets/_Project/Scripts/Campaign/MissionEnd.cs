@@ -23,7 +23,7 @@ namespace CityBuilder.Campaign
             public float guardScale, triggerZ, closeAt, closeSeconds, fadeAt, fadeSeconds, titleAt, summaryAt;
             public float[] runTo;
             public Guard[] guards;
-            public string titleKey, timeKey, caughtKey, retryKey, menuKey, menuScene;
+            public string titleKey, timeKey, caughtKey, retryKey, menuKey, menuScene, bestKey, recordKey;
         }
 
         [Serializable] public class Guard { public float x, z, toX, toZ, yaw; }
@@ -45,9 +45,13 @@ namespace CityBuilder.Campaign
         /// <summary>The summary's lines, for the batchmode check.</summary>
         public string Report { get; private set; }
 
-        public MissionEnd(Config c, GameObject guardModel, Transform parent)
+        private readonly Sprite _retryGlyph, _menuGlyph;
+
+        public MissionEnd(Config c, GameObject guardModel, Transform parent, Sprite retryGlyph = null, Sprite menuGlyph = null)
         {
             _c = c;
+            _retryGlyph = retryGlyph;
+            _menuGlyph = menuGlyph;
             if (guardModel == null || c.guards == null) return;
             foreach (var g in c.guards)
             {
@@ -70,8 +74,9 @@ namespace CityBuilder.Campaign
 
         public Vector2 RunTo => new Vector2(_c.runTo[0], _c.runTo[1]);
 
-        /// <summary>One frame of the end; `elapsed` and `caught` go into the summary.</summary>
-        public void Step(float dt, Camera cam, float elapsed, int caught)
+        /// <summary>One frame of the end; `elapsed`, `caught` and the best run before this one
+        /// (0: none) go into the summary.</summary>
+        public void Step(float dt, Camera cam, float elapsed, int caught, float best = 0f)
         {
             if (T < 0f) return;
             var before = T;
@@ -80,7 +85,7 @@ namespace CityBuilder.Campaign
             foreach (var g in _guards) g.root.position = Vector3.Lerp(g.from, g.to, u);
             if (before < _c.titleAt && T >= _c.titleAt) Title(cam);
             if (_title != null) _title.color = new Color(1f, 0.92f, 0.7f, Mathf.Clamp01((T - _c.titleAt) / 0.6f));
-            if (before < _c.summaryAt && T >= _c.summaryAt) Summary(elapsed, caught);
+            if (before < _c.summaryAt && T >= _c.summaryAt) Summary(elapsed, caught, best);
         }
 
         // ------------------------------------------------------------ the title and the summary
@@ -111,27 +116,41 @@ namespace CityBuilder.Campaign
             _title.color = Color.clear;
         }
 
-        private void Summary(float elapsed, int caught)
+        /// <summary>The run's time (and the record: the best before, or «Новый рекорд!»), how often
+        /// he was caught; «Ещё раз» and «В меню» as the sandbox's round buttons, on the skin's panel
+        /// (the user's second playtest: the campaign's screens in the game's own kit).</summary>
+        private void Summary(float elapsed, int caught, float best)
         {
-            var s = Mathf.FloorToInt(elapsed);
-            var time = string.Format(Localization.Get(_c.timeKey), $"{s / 60}:{s % 60:00}");
+            var time = string.Format(Localization.Get(_c.timeKey), MissionSkin.Clock(elapsed));
             var times = string.Format(Localization.Get(_c.caughtKey), caught);
-            Report = time + " | " + times;
-            var panel = Box(_canvas.transform, "Summary", new Vector2(0.5f, 0.34f), new Vector2(0.5f, 0.34f), new Vector2(560f, 250f), UiTheme.Parchment);
+            var record = best <= 0f || elapsed < best ? Localization.Get(_c.recordKey) : string.Format(Localization.Get(_c.bestKey), MissionSkin.Clock(best));
+            Report = time + " | " + record + " | " + times;
+            var panel = MissionSkin.Image(_canvas.transform, "Summary", "panel", new Vector2(0.5f, 0.34f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(580f, 320f));
             _summary = panel.gameObject;
-            var edge = panel.gameObject.AddComponent<Outline>();
-            edge.effectColor = UiTheme.WoodEdge;
-            edge.effectDistance = new Vector2(4f, -4f);
-            var a = Label(panel, time, UiTheme.Bold, 34, new Vector2(0.5f, 0.8f), new Vector2(520f, 50f));
-            a.color = UiTheme.Ink;
-            var b = Label(panel, times, UiTheme.Bold, 34, new Vector2(0.5f, 0.58f), new Vector2(520f, 50f));
-            b.color = UiTheme.Ink;
-            Button(panel, Localization.Get(_c.retryKey), new Vector2(0.27f, 0.2f), UiTheme.Good, () =>
+            var ink = MissionSkin.Ink(HudInk.OnPanel);
+            var lines = new[] { (time, 0.86f, ink), (record, 0.69f, best <= 0f || elapsed < best ? UiTheme.Good : ink), (times, 0.52f, ink) };
+            foreach (var (text, y, colour) in lines)
+            {
+                var t = Label(panel.transform, text, UiTheme.Bold, 32, new Vector2(0.5f, y), new Vector2(540f, 46f));
+                t.color = colour;
+                t.GetComponent<Shadow>().enabled = false;
+            }
+            Round(panel.transform, _retryGlyph, "round_main", HudInk.OnMain, Localization.Get(_c.retryKey), new Vector2(0.3f, 0.22f), () =>
             {
                 MissionOne.SkipFilm = true;
                 LoadingScreen.IntoGame(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             });
-            Button(panel, Localization.Get(_c.menuKey), new Vector2(0.73f, 0.2f), UiTheme.Wood, () => LoadingScreen.OutToMenu(_c.menuScene));
+            Round(panel.transform, _menuGlyph, "round", HudInk.OnRound, Localization.Get(_c.menuKey), new Vector2(0.7f, 0.22f), () => LoadingScreen.OutToMenu(_c.menuScene));
+        }
+
+        private static void Round(Transform panel, Sprite glyph, string role, HudInk ink, string text, Vector2 at, UnityEngine.Events.UnityAction onClick)
+        {
+            var b = MissionSkin.Round(panel, "Button", role, ink, glyph, at, Vector2.zero, 84f);
+            b.onClick.AddListener(onClick);
+            var plaque = MissionSkin.Image(b.transform, "Label", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, 4f), new Vector2(170f, 36f));
+            plaque.raycastTarget = false;
+            var t = MissionSkin.Label(plaque.transform, text, UiTheme.Bold, 20, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            t.raycastTarget = false;
         }
 
         private static RectTransform Box(Transform parent, string name, Vector2 min, Vector2 max, Vector2 size, Color colour)
@@ -162,15 +181,6 @@ namespace CityBuilder.Campaign
             t.text = text;
             go.GetComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.35f);
             return t;
-        }
-
-        private static void Button(RectTransform panel, string text, Vector2 at, Color colour, UnityEngine.Events.UnityAction onClick)
-        {
-            var r = Box(panel, "Button", at, at, new Vector2(230f, 64f), colour);
-            var b = r.gameObject.AddComponent<UnityEngine.UI.Button>();
-            b.onClick.AddListener(onClick);
-            var t = Label(r, text, UiTheme.Bold, 30, new Vector2(0.5f, 0.5f), new Vector2(220f, 60f));
-            t.color = UiTheme.OnWood;
         }
     }
 }

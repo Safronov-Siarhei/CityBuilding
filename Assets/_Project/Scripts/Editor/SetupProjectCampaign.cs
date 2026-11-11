@@ -309,6 +309,9 @@ namespace CityBuilder.EditorTools
             ArtSprite("menuGlyph", UiTextureImport.GlyphsFolder + "/Hud_Menu.png");
             ArtSprite("closeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Cancel.png");
             ArtSprite("portrait", UiTextureImport.IconsFolder + "/PortraitArdan.png");
+            ArtSprite("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
+            ArtSprite("restartGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
+            ArtSprite("homeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Home.png");
             mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
             mso.FindProperty("fx").objectReferenceValue = fx;
             mso.ApplyModifiedPropertiesWithoutUndo();

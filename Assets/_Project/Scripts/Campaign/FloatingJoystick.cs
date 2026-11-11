@@ -146,11 +146,24 @@ namespace CityBuilder.Campaign
             Hint(dt, Value.sqrMagnitude > 0f);
         }
 
+        /// <summary>The player has not taken the stick yet (play waits for him to move): the hint's
+        /// ghost stick BLINKS low in the middle until he does (the user's second playtest).</summary>
+        public bool Beckon { get; set; }
+
         private void Hint(float dt, bool moving)
         {
             if (moving) _moved += dt;
             var want = _age >= _hintDelay && _moved < _hintFadeAfter ? 1f : 0f;
-            _hintGroup.alpha = Mathf.MoveTowards(_hintGroup.alpha, want, dt * 2f);
+            if (Beckon)
+            {
+                _hintGroup.alpha = 0.3f + 0.7f * (0.5f + 0.5f * Mathf.Cos(_age * 6f));
+                _hint.localScale = Vector3.one * (1f + 0.08f * (0.5f + 0.5f * Mathf.Cos(_age * 6f)));
+            }
+            else
+            {
+                _hintGroup.alpha = Mathf.MoveTowards(_hintGroup.alpha, want, dt * 2f);
+                _hint.localScale = Vector3.one;
+            }
             // the dot glides out and back, now this way, now that
             var a = Mathf.Floor(_age / 1.6f) * 1.3f;
             var r = Mathf.Sin(Mathf.Repeat(_age, 1.6f) / 1.6f * Mathf.PI) * _hint.sizeDelta.x * 0.3f;

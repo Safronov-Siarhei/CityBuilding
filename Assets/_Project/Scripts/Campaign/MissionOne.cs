@@ -60,6 +60,7 @@ namespace CityBuilder.Campaign
 
         /// <summary>The HUD (its objective), for the batchmode check.</summary>
         public MissionHud Hud => _hud;
+        public MissionWorld World => _world;
 
         /// <summary>Set by «Ещё раз» before the scene is loaded again: the film is run through
         /// unseen (under the loading screen) and play begins at once.</summary>
@@ -67,6 +68,15 @@ namespace CityBuilder.Campaign
 
         private MissionEnd _end;
         private float _elapsed;
+        // play waits for him to move (the user's second playtest): the orcs stand, the stick blinks
+        private bool _armed;
+        private Vector3 _armFrom;
+        // the run's clock starts at his first step; a split at every checkpoint, kept as records
+        private bool _clockOn;
+        private int _lastReached = -1;
+        private float _stretchFrom, _bestBefore;
+        private const string BestKey = "m1_best";
+        private const string SplitKey = "m1_split_";
 
         /// <summary>The end at the gate, for the batchmode check.</summary>
         public MissionEnd End => _end;
@@ -141,7 +151,10 @@ namespace CityBuilder.Campaign
                 _chase = new MissionChase(_c.chase, village, _ardan, _body, director.Member, director.FlameMaterial, transform, Localization.Get);
                 Overlay();
             }
-            if (_c.finish != null) _end = new MissionEnd(_c.finish, guardModel, transform);
+            if (_c.finish != null) _end = new MissionEnd(_c.finish, guardModel, transform, hudArt.restartGlyph, hudArt.homeGlyph);
+            _bestBefore = PlayerPrefs.GetFloat(BestKey, 0f);
+            Arm(false);
+            if (_chase != null) _chase.Respawned += () => Arm(false);
             if (_c.world != null)
             {
                 var finish = _c.finish != null ? new Vector2(_c.finish.runTo[0], _c.finish.runTo[1]) : Vector2.zero;
@@ -184,6 +197,14 @@ namespace CityBuilder.Campaign
             }
         }
 
+        /// <summary>Play waits (armed = false) until he has moved armAfter m from where he stands now.</summary>
+        private void Arm(bool armed)
+        {
+            _armed = armed;
+            if (_ardan != null) _armFrom = _ardan.transform.position;
+            if (_stick != null) _stick.Beckon = !armed;
+        }
+
         private static Color Col(float[] a) => a != null && a.Length >= 3 ? new Color(a[0], a[1], a[2], a.Length > 3 ? a[3] : 1f) : Color.white;
 
         private void Start()
@@ -211,21 +232,31 @@ namespace CityBuilder.Campaign
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
             if (_music != null && _c.sound != null) _music.volume = Mathf.MoveTowards(_music.volume, _end != null && _end.Started ? 0f : _c.sound.music, dt * _c.sound.music / Mathf.Max(0.1f, _c.sound.musicFadeIn));
             var here = _ardan.transform.position;
+            if (!_armed && _c.chase != null && new Vector2(here.x - _armFrom.x, here.z - _armFrom.z).magnitude > _c.chase.armAfter)
+            {
+                Arm(true);
+                _clockOn = true;
+            }
+            if (_world != null) _world.DarkLifted = _mage != null && _mage.Playing;
             _world?.Step(dt, here, _stick.Value.sqrMagnitude > 0f, _chase != null ? _chase.Reached : -1);
-            _hud?.Step(here);
+            if (_clockOn && (_end == null || !_end.Started)) _elapsed += dt;
+            _hud?.Step(here, _elapsed, dt);
+            Splits();
             if (_end != null)
             {
-                if (!_end.Started) _elapsed += dt;
                 if (_end.Ready(_ardan.transform.position))
                 {
-                    // in at the gate: the say is taken for good, the town's guards close behind him
+                    // at the gate: the say is taken for good; the last stretch and the record kept
                     _end.Begin();
                     _stick.Locked = true;
                     _hud?.Hide();
+                    Stretch(_c.chase?.checkpoints != null ? _c.chase.checkpoints.Length : 0);
+                    if (_bestBefore <= 0f || _elapsed < _bestBefore) PlayerPrefs.SetFloat(BestKey, _elapsed);
+                    PlayerPrefs.Save();
                 }
                 if (_end.Started)
                 {
-                    _end.Step(dt, cam, _elapsed, _chase != null ? _chase.Catches : 0);
+                    _end.Step(dt, cam, _elapsed, _chase != null ? _chase.Catches : 0, _bestBefore);
                     if (_black != null) _black.color = new Color(0f, 0f, 0f, _end.Fade);
                     RunOn(dt, _end.RunTo);
                     return;
@@ -255,8 +286,10 @@ namespace CityBuilder.Campaign
             }
             if (_chase != null)
             {
-                _chase.Step(dt);
-                _black.color = new Color(0f, 0f, 0f, _chase.Fade);
+                if (_armed) _chase.Step(dt);
+                else _chase.Hold(dt);
+                // struck down: a red flash, then the black of being brought back
+                _black.color = _chase.Fade >= _chase.Hurt ? new Color(0f, 0f, 0f, _chase.Fade) : new Color(0.55f, 0.02f, 0.02f, _chase.Hurt);
                 _notice.text = _chase.Notice;
                 _notice.color = new Color(1f, 0.96f, 0.84f, _chase.NoticeAlpha);
                 if (_chase.Frozen) return;
@@ -289,6 +322,24 @@ namespace CityBuilder.Campaign
                 var d = new Vector2(t.position.x, t.position.z).magnitude;
                 fx.Calm = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(_c.calm.from, _c.calm.to, d));
             }
+        }
+
+        /// <summary>A checkpoint reached: the stretch to it goes up over the clock.</summary>
+        private void Splits()
+        {
+            if (_chase == null || _chase.Reached <= _lastReached) return;
+            for (var i = _lastReached + 1; i <= _chase.Reached; i++) Stretch(i);
+            _lastReached = _chase.Reached;
+        }
+
+        /// <summary>Stretch `i` (0-based) run: its time against the best one, the best kept.</summary>
+        private void Stretch(int i)
+        {
+            var seconds = _elapsed - _stretchFrom;
+            _stretchFrom = _elapsed;
+            var best = PlayerPrefs.GetFloat(SplitKey + i, 0f);
+            if (best <= 0f || seconds < best) PlayerPrefs.SetFloat(SplitKey + i, seconds);
+            _hud?.Split(i + 1, seconds, best);
         }
 
         /// <summary>In the mage's scene Ардан runs on down the track by himself, past the mage.</summary>

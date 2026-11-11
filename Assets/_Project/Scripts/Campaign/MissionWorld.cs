@@ -31,20 +31,23 @@ namespace CityBuilder.Campaign
             public Placed[] folk;
             public Placed[] props;
             public Runner[] animals;
+            public Patch[] patches;
         }
 
         [Serializable] public class Corridor
         {
-            public float texel, villageRadius, trackHalf, fieldMargin, gateHalf, gateFront, gateBack;
-            public float soft, wobble, strength, wallHeight;
+            public float texel, villageRadius, trackHalf, fieldMargin, fieldEdge, gateHalf, gateFront, gateBack;
+            public float soft, wobble, strength, wallHeight, fadeSeconds;
             public float[] color;
+            /// <summary>More lit ground: x0, z0, x1, z1 boxes (the far bank's fields).</summary>
+            public float[] open;
         }
 
         [Serializable] public class Markers
         {
-            public string flag;
-            public float ringRadius, ringWidth, flagScale, beaconHeight, beaconWidth, pulse;
-            public float[] ringColor, reachedColor, beaconColor;
+            public float ringRadius, ringWidth, beaconHeight, beaconWidth, pulse;
+            public float poleHeight, poleWidth, flagWidth, flagHeight, flutter, goneSeconds;
+            public float[] ringColor, reachedColor, beaconColor, poleColor, flagColor;
         }
 
         [Serializable] public class Guide { public float idleSeconds, ahead, distance, size, offRoute; public float[] color; }
@@ -56,6 +59,13 @@ namespace CityBuilder.Campaign
             public string id, model, figure;
             public float[] path, trigger;
             public float radius, speed, hop, scale, yaw;
+            /// <summary>Seen standing (grazing) at the path's start before he comes near, not hidden.</summary>
+            public bool graze;
+            /// <summary>Stays where the path ends (the pigs), instead of being gone.</summary>
+            public bool stay;
+            /// <summary>The path moved so its start lies on the road, `side` metres off it.</summary>
+            public bool onTrack;
+            public float side;
         }
 
         /// <summary>An orc running a villager down: both run `path`; at its end the villager falls.</summary>
@@ -66,7 +76,18 @@ namespace CityBuilder.Campaign
             public float radius, speed, gap;
         }
 
-        [Serializable] public class Placed { public string figure, model, clip; public float x, z, yaw, scale; public bool lying; }
+        /// <summary>A figure or a model set down: lying (the dead), with a clip (folk), walking to and
+        /// fro along `beat` (workers in the fields); `onTrack` puts it on the road, `side` m off it.</summary>
+        [Serializable] public class Placed
+        {
+            public string figure, model, clip;
+            public float x, z, yaw, scale, side;
+            public bool lying, onTrack;
+            public float[] beat;
+        }
+
+        /// <summary>A patch of models in a grid (the far bank's fields): x0, z0, x1, z1, every `step` m.</summary>
+        [Serializable] public class Patch { public string model; public float[] box; public float step, scale, yaw; }
 
         private class Run
         {
@@ -76,7 +97,9 @@ namespace CityBuilder.Campaign
             public float s, speed, hop, len;
             public Vector2 trigger;
             public float radius;
-            public bool on, done;
+            public bool on, done, stay, beat;
+            public float yaw, timer;
+            public int dir = 1;
             public CineFigure chaser;
             public float gap;
             public bool falls;
@@ -86,7 +109,23 @@ namespace CityBuilder.Campaign
         private readonly OpeningVillage _village;
         private readonly Transform _root;
         private readonly List<Run> _runs = new List<Run>();
-        private readonly List<(Transform ring, Material mat)> _rings = new List<(Transform, Material)>();
+        private readonly List<(Transform ring, Material mat, Transform flag, Transform cloth)> _rings = new List<(Transform, Material, Transform, Transform)>();
+        private readonly List<float> _ringGone = new List<float>();
+        private Material _darkMat;
+        private float _dark = 1f;
+
+        /// <summary>The darkness off the way is lifted (the mage's scene: the user's second playtest
+        /// found the dark on both banks strange there); eased over corridor.fadeSeconds.</summary>
+        public bool DarkLifted { get; set; }
+
+        /// <summary>The corridor's mask, HELD here on purpose: the material alone does not keep it
+        /// (_DarkMask is not among the shader's declared properties), and on «Ещё раз» the film is
+        /// run through inside the scene's loading, whose unloading of unused assets then destroyed
+        /// the mask -- the shader drew the dark over the whole screen (the user's second playtest:
+        /// «после рестарта ... очень тёмный мир»; CampaignPlayTests). The dungeon keeps its own the
+        /// same way.</summary>
+        public Texture2D Mask { get; private set; }
+        public Material DarkMaterial => _darkMat;
         private readonly MissionChase.Checkpoint[] _checkpoints;
         private Material _beacon;
         private Transform _arrow;
@@ -142,11 +181,35 @@ namespace CityBuilder.Campaign
                 {
                     var model = village.Model(p.model);
                     if (model == null) continue;
-                    var go = UnityEngine.Object.Instantiate(model, _root);
-                    go.transform.SetPositionAndRotation(new Vector3(p.x, 0f, p.z), Quaternion.Euler(0f, p.yaw, 0f) * model.transform.rotation);
-                    go.transform.localScale = model.transform.localScale * (p.scale > 0f ? p.scale : 1f);
-                    CineTwoSided.Apply(go);
+                    var at = OnRoad(p.onTrack, new Vector2(p.x, p.z), p.side);
+                    Prop(model, new Vector3(at.x, 0f, at.y), p.yaw, p.scale);
                 }
+            if (c.patches != null)
+                foreach (var pa in c.patches)
+                {
+                    var model = village.Model(pa.model);
+                    if (model == null || pa.box == null || pa.box.Length < 4 || pa.step <= 0f) continue;
+                    for (var x = Mathf.Min(pa.box[0], pa.box[2]); x <= Mathf.Max(pa.box[0], pa.box[2]) + 1e-3f; x += pa.step)
+                        for (var z = Mathf.Min(pa.box[1], pa.box[3]); z <= Mathf.Max(pa.box[1], pa.box[3]) + 1e-3f; z += pa.step)
+                            Prop(model, new Vector3(x, 0f, z), pa.yaw, pa.scale);
+                }
+        }
+
+        private void Prop(GameObject model, Vector3 at, float yaw, float scale)
+        {
+            var go = UnityEngine.Object.Instantiate(model, _root);
+            go.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
+            go.transform.localScale = model.transform.localScale * (scale > 0f ? scale : 1f);
+            CineTwoSided.Apply(go);
+        }
+
+        /// <summary>A point put on the road (its nearest point, `side` m to its right going down the
+        /// route) when `onTrack`; else as given.</summary>
+        private Vector2 OnRoad(bool onTrack, Vector2 p, float side)
+        {
+            if (!onTrack) return p;
+            var at = _village.TrackNearest(p, out var dir);
+            return at + new Vector2(dir.y, -dir.x) * side;
         }
 
         public void Step(float dt, Vector3 ardan, bool moving, int reached)
@@ -154,12 +217,37 @@ namespace CityBuilder.Campaign
             _clock += dt;
             var me = new Vector2(ardan.x, ardan.z);
             foreach (var r in _runs) StepRun(r, me, dt);
-            // the checkpoints' rings: gold ahead, green once reached
+            // the checkpoints: a gold ring with a small flag in it; once reached it flashes green and
+            // is gone, flag and all (the user's second playtest)
             for (var i = 0; i < _rings.Count; i++)
             {
-                var c = i <= reached ? Col(_c.markers.reachedColor) : Col(_c.markers.ringColor);
-                c *= 0.75f + 0.25f * Mathf.Sin(_clock * _c.markers.pulse + i);
-                _rings[i].mat.SetColor("_BaseColor", c);
+                var (ring, mat, flag, cloth) = _rings[i];
+                if (!ring.gameObject.activeSelf) continue;
+                var c = Col(_c.markers.ringColor) * (0.75f + 0.25f * Mathf.Sin(_clock * _c.markers.pulse + i));
+                if (i <= reached)
+                {
+                    _ringGone[i] += dt;
+                    var k = Mathf.Clamp01(_ringGone[i] / Mathf.Max(0.05f, _c.markers.goneSeconds));
+                    c = Col(_c.markers.reachedColor) * (1f + 0.6f * (1f - k));
+                    c.a = 1f - k;
+                    ring.localScale = Vector3.one * (1f + 0.5f * k);
+                    if (flag != null) flag.localScale = Vector3.one * (1f - k);
+                    if (k >= 1f)
+                    {
+                        ring.gameObject.SetActive(false);
+                        if (flag != null) flag.gameObject.SetActive(false);
+                        continue;
+                    }
+                }
+                mat.SetColor("_BaseColor", c);
+                if (cloth != null) cloth.localRotation = Quaternion.Euler(0f, 12f * Mathf.Sin(_clock * _c.markers.flutter + i * 1.7f), 0f);
+            }
+            // the darkness eases off for the mage's scene and back after it
+            if (_darkMat != null)
+            {
+                var want = DarkLifted ? 0f : 1f;
+                _dark = Mathf.MoveTowards(_dark, want, dt / Mathf.Max(0.05f, _c.corridor.fadeSeconds));
+                _darkMat.SetFloat("_Strength", _c.corridor.strength * _dark);
             }
             if (_beacon != null)
                 _beacon.SetColor("_BaseColor", Col(_c.markers.beaconColor) * (0.8f + 0.2f * Mathf.Sin(_clock * _c.markers.pulse)));
@@ -193,10 +281,14 @@ namespace CityBuilder.Campaign
                 for (var i = 0; i < w; i++)
                 {
                     var p = min + new Vector2((i + 0.5f) * k.texel, (j + 0.5f) * k.texel);
+                    // in the field only the standing ears are lit, the bare ground beyond is dark (the
+                    // user's second playtest: he ran off over the field's empty edge)
+                    var off = _village.TrackDistance(p);
                     var lit = p.magnitude < k.villageRadius
-                              || _village.TrackDistance(p) < k.trackHalf
-                              || _village.FieldSigned(p) > -k.fieldMargin
-                              || (Mathf.Abs(p.x - finish.x) < k.gateHalf && p.y < finish.y + k.gateFront && p.y > finish.y - k.gateBack);
+                              || off < k.trackHalf
+                              || (_village.FieldSigned(p) > -k.fieldMargin && off < _village.EarsBand + k.fieldEdge)
+                              || (Mathf.Abs(p.x - finish.x) < k.gateHalf && p.y < finish.y + k.gateFront && p.y > finish.y - k.gateBack)
+                              || InOpen(k.open, p);
                     open[i, j] = lit;
                     px[j * w + i] = lit ? (byte)255 : (byte)0;
                 }
@@ -206,7 +298,9 @@ namespace CityBuilder.Campaign
             if (cam == null) return;
             UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).requiresDepthTexture = true;
             var m = new Material(source) { name = "CorridorDark (runtime)" };
+            _darkMat = m;
             m.SetTexture("_DarkMask", tex);
+            Mask = tex;
             m.SetVector("_DarkRect", new Vector4(min.x, min.y, 1f / (w * k.texel), 1f / (h * k.texel)));
             m.SetFloat("_Strength", k.strength);
             m.SetFloat("_Soft", k.soft);
@@ -248,6 +342,15 @@ namespace CityBuilder.Campaign
             for (var j = 0; j < h; j++) { EdgeWall(walls, open, 0, j, min, k, size); EdgeWall(walls, open, w - 1, j, min, k, size); }
         }
 
+        private static bool InOpen(float[] boxes, Vector2 p)
+        {
+            if (boxes == null) return false;
+            for (var i = 0; i + 3 < boxes.Length; i += 4)
+                if (p.x >= Mathf.Min(boxes[i], boxes[i + 2]) && p.x <= Mathf.Max(boxes[i], boxes[i + 2]) &&
+                    p.y >= Mathf.Min(boxes[i + 1], boxes[i + 3]) && p.y <= Mathf.Max(boxes[i + 1], boxes[i + 3])) return true;
+            return false;
+        }
+
         private static void EdgeWall(Transform walls, bool[,] open, int i, int j, Vector2 min, Corridor k, Vector3 size)
         {
             if (!open[i, j]) return;
@@ -262,7 +365,6 @@ namespace CityBuilder.Campaign
         private void Marks(Material spark, Vector2 finish)
         {
             var m = _c.markers;
-            var flag = _village.Model(m.flag);
             if (_checkpoints != null)
                 for (var i = 0; i < _checkpoints.Length; i++)
                 {
@@ -270,15 +372,9 @@ namespace CityBuilder.Campaign
                     var at = new Vector3(k.x, 0f, k.z);
                     var mat = new Material(spark) { name = "CheckpointRing" };
                     var ring = Ring("CheckpointRing", at, m.ringRadius, m.ringWidth, mat);
-                    _rings.Add((ring, mat));
-                    if (flag != null)
-                    {
-                        var go = UnityEngine.Object.Instantiate(flag, _root);
-                        go.name = "CheckpointFlag";
-                        go.transform.SetPositionAndRotation(at + new Vector3(m.ringRadius * 0.8f, 0f, 0f), flag.transform.rotation);
-                        go.transform.localScale = flag.transform.localScale * m.flagScale;
-                        CineTwoSided.Apply(go);
-                    }
+                    var (flag, cloth) = Pennant(at);
+                    _rings.Add((ring, mat, flag, cloth));
+                    _ringGone.Add(0f);
                 }
             // the end: a pillar of light before the gate, and a ring at its foot
             _beacon = new Material(spark) { name = "FinishBeacon" };
@@ -346,6 +442,58 @@ namespace CityBuilder.Campaign
             return go.transform;
         }
 
+        /// <summary>A small flag in the ring's middle (the user's second playtest: the big statue with
+        /// a flag looked silly): a thin dark pole and a pennant on it that flutters.</summary>
+        private (Transform flag, Transform cloth) Pennant(Vector3 at)
+        {
+            var m = _c.markers;
+            var root = new GameObject("CheckpointFlag").transform;
+            root.SetParent(_root, false);
+            root.position = at;
+            var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            UnityEngine.Object.DestroyImmediate(pole.GetComponent<Collider>());
+            pole.name = "Pole";
+            pole.transform.SetParent(root, false);
+            pole.transform.localPosition = Vector3.up * m.poleHeight * 0.5f;
+            pole.transform.localScale = new Vector3(m.poleWidth, m.poleHeight * 0.5f, m.poleWidth);
+            pole.GetComponent<Renderer>().sharedMaterial = Lit(Col(m.poleColor));
+            pole.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+            var cloth = new GameObject("Pennant", typeof(MeshFilter), typeof(MeshRenderer)).transform;
+            cloth.SetParent(root, false);
+            cloth.localPosition = Vector3.up * m.poleHeight;
+            var w = m.flagWidth;
+            var h = m.flagHeight;
+            var mesh = new Mesh
+            {
+                name = "Pennant",
+                // a swallow-tailed pennant off the pole's top (drawn both sides: cull off)
+                vertices = new[] { new Vector3(0f, 0f, 0f), new Vector3(0f, -h, 0f), new Vector3(w, -h * 0.05f, 0f), new Vector3(w * 0.72f, -h * 0.5f, 0f), new Vector3(w, -h * 0.95f, 0f) },
+                triangles = new[] { 0, 2, 3, 0, 3, 1, 1, 3, 4 },
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            cloth.GetComponent<MeshFilter>().sharedMesh = mesh;
+            var cr = cloth.GetComponent<MeshRenderer>();
+            cr.sharedMaterial = Lit(Col(m.flagColor));
+            cr.shadowCastingMode = ShadowCastingMode.Off;
+            return (root, cloth);
+        }
+
+        private static Material _litBase;
+
+        private static Material Lit(Color colour)
+        {
+            if (_litBase == null)
+            {
+                var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Universal Render Pipeline/Simple Lit");
+                _litBase = new Material(shader);
+            }
+            var m = new Material(_litBase) { name = "MissionMark" };
+            m.SetColor("_BaseColor", colour);
+            if (m.HasProperty("_Cull")) m.SetFloat("_Cull", 0f);
+            return m;
+        }
+
         // ------------------------------------------------------------ the arrow
 
         private void Arrow(Material spark)
@@ -403,25 +551,35 @@ namespace CityBuilder.Campaign
         {
             var path = new Vector3[r.path.Length / 2];
             for (var i = 0; i < path.Length; i++) path[i] = new Vector3(r.path[i * 2], 0f, r.path[i * 2 + 1]);
+            if (r.onTrack && path.Length > 0)
+            {
+                // the whole path moved so it starts on the road, `side` m off it
+                var start = OnRoad(true, new Vector2(path[0].x, path[0].z), r.side);
+                var shift = new Vector3(start.x - path[0].x, 0f, start.y - path[0].z);
+                for (var i = 0; i < path.Length; i++) path[i] += shift;
+            }
             var len = 0f;
             for (var i = 0; i + 1 < path.Length; i++) len += (path[i + 1] - path[i]).magnitude;
             var run = new Run
             {
-                t = t, fig = fig, path = path, len = len, speed = r.speed, hop = r.hop,
+                t = t, fig = fig, path = path, len = len, speed = r.speed, hop = r.hop, stay = r.stay, yaw = fig != null ? 0f : r.yaw,
                 trigger = r.trigger != null && r.trigger.Length >= 2 ? new Vector2(r.trigger[0], r.trigger[1]) : Vector2.zero,
                 radius = r.trigger != null && r.trigger.Length >= 2 ? r.radius : -1f,
             };
             t.position = path[0];
-            if (path.Length > 1) t.rotation = Quaternion.LookRotation(path[1] - path[0]) * (fig != null ? Quaternion.identity : Quaternion.Euler(0f, r.yaw, 0f));
+            // a model's own forward may not be +z (the pig is modelled facing +x: it ran sideways)
+            if (path.Length > 1) t.rotation = Quaternion.LookRotation(path[1] - path[0]) * Quaternion.Euler(0f, run.yaw, 0f);
             if (fig != null) fig.Play("Idle", 0f);
-            // the film's people are already in sight: they set off at once; the rest wait to be seen
+            // the film's people are already in sight: they set off at once; grazing animals stand
+            // in sight until he comes near; the rest wait to be seen
             if (run.radius < 0f) run.on = true;
-            else t.gameObject.SetActive(false);
+            else if (!r.graze) t.gameObject.SetActive(false);
             return run;
         }
 
         private void StepRun(Run r, Vector2 me, float dt)
         {
+            if (r.beat) { StepBeat(r, dt); return; }
             if (r.done) { if (r.fig != null && r.t.gameObject.activeSelf) r.fig.Tick(dt); if (r.chaser != null && r.chaser.gameObject.activeSelf) r.chaser.Tick(dt); return; }
             if (!r.on)
             {
@@ -438,7 +596,7 @@ namespace CityBuilder.Campaign
             var at = Along(r.path, Mathf.Min(r.s, r.len), out var dir);
             var hop = r.hop > 0f ? Mathf.Abs(Mathf.Sin(r.s * 6f)) * r.hop : 0f;
             r.t.position = at + Vector3.up * hop;
-            if (dir.sqrMagnitude > 0f) r.t.rotation = Quaternion.Slerp(r.t.rotation, Quaternion.LookRotation(dir), Mathf.Clamp01(10f * dt));
+            if (dir.sqrMagnitude > 0f) r.t.rotation = Quaternion.Slerp(r.t.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(0f, r.yaw, 0f), Mathf.Clamp01(10f * dt));
             if (r.fig != null)
             {
                 var natural = r.fig.Clips != null ? r.fig.Clips.runSpeed : r.speed;
@@ -462,7 +620,41 @@ namespace CityBuilder.Campaign
                 r.fig.Play("Idle", 0.1f);
                 r.chaser?.Play("Idle", 0.2f);
             }
+            else if (r.stay)
+            {
+                // the pigs stop where they ran to and stand there, snuffling (they used to vanish)
+                r.t.position = r.path[r.path.Length - 1];
+                r.fig?.Play("Idle", 0.2f);
+            }
             else r.t.gameObject.SetActive(false);
+        }
+
+        /// <summary>A worker walking to and fro along his beat, now and then stopping at its ends to
+        /// bend to the work (Crouch where the figure has it, else Idle).</summary>
+        private void StepBeat(Run r, float dt)
+        {
+            if (r.timer > 0f)
+            {
+                r.timer -= dt;
+                r.fig.Tick(dt);
+                return;
+            }
+            r.s += r.speed * dt * r.dir;
+            if (r.s >= r.len || r.s <= 0f)
+            {
+                r.s = Mathf.Clamp(r.s, 0f, r.len);
+                r.dir = -r.dir;
+                r.timer = 2.5f + Mathf.Repeat(r.len * 3.1f + r.s, 2f);
+                r.fig.Play(r.fig.Clips != null && r.fig.Clips.Find("Crouch") != null ? "Crouch" : "Idle", 0.25f);
+                r.fig.Tick(dt);
+                return;
+            }
+            var at = Along(r.path, r.s, out var dir);
+            r.t.position = at;
+            if (dir.sqrMagnitude > 0f) r.t.rotation = Quaternion.Slerp(r.t.rotation, Quaternion.LookRotation(dir * r.dir), Mathf.Clamp01(8f * dt));
+            var natural = r.fig.Clips != null ? r.fig.Clips.walkSpeed : r.speed;
+            r.fig.Play("Walk", 0.25f, natural > 0f ? r.speed / natural : 1f);
+            r.fig.Tick(dt);
         }
 
         // ------------------------------------------------------------ the placed
@@ -471,7 +663,20 @@ namespace CityBuilder.Campaign
         {
             var fig = Figure(cast, p.figure);
             if (fig == null) return;
-            fig.transform.SetPositionAndRotation(new Vector3(p.x, 0f, p.z), Quaternion.Euler(0f, p.yaw, 0f));
+            var at = OnRoad(p.onTrack, new Vector2(p.x, p.z), p.side);
+            fig.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, p.yaw, 0f));
+            if (p.beat != null && p.beat.Length >= 4)
+            {
+                // a worker: to and fro along the beat
+                var path = new Vector3[p.beat.Length / 2];
+                for (var i = 0; i < path.Length; i++) path[i] = new Vector3(p.beat[i * 2], 0f, p.beat[i * 2 + 1]);
+                var len = 0f;
+                for (var i = 0; i + 1 < path.Length; i++) len += (path[i + 1] - path[i]).magnitude;
+                fig.transform.position = path[0];
+                fig.Play("Walk", 0f);
+                _runs.Add(new Run { t = fig.transform, fig = fig, path = path, len = len, beat = true, speed = fig.Clips != null ? fig.Clips.walkSpeed * 0.8f : 0.4f, timer = Mathf.Repeat(p.x * 1.7f, 3f) });
+                return;
+            }
             fig.Play(string.IsNullOrEmpty(p.clip) ? "Idle" : p.clip, 0f, 1f, Mathf.Repeat(p.x * 7.3f + p.z, 2f));
             fig.Tick(0f);
             if (dead || p.lying) Lie(fig.transform);
