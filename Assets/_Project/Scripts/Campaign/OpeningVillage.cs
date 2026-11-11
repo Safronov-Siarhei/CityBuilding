@@ -324,23 +324,39 @@ namespace CityBuilder.Campaign
             Place("Well", new Vector2(3.3f, 2.2f), 30f);
         }
 
+        /// <summary>The point `t` metres along a polyline, and its direction there.</summary>
+        private static Vector2 AlongLine(Vector2[] line, float t, out Vector2 dir)
+        {
+            for (var i = 0; i + 1 < line.Length; i++)
+            {
+                var seg = line[i + 1] - line[i];
+                var l = seg.magnitude;
+                if (l < 1e-5f) continue;
+                dir = seg / l;
+                if (t <= l || i + 2 == line.Length) return line[i] + dir * Mathf.Min(t, l);
+                t -= l;
+            }
+            dir = Vector2.up;
+            return line[line.Length - 1];
+        }
+
         private void StreetHouses()
         {
+            // walked along each street as a whole: since the streets curve (2026-11-11) a line is
+            // many 1.2 m pieces, and a walk per piece never got past its 1.5 m start -- the village
+            // lost all but 9 of its houses (the user: «зданий нету»)
             foreach (var line in _streets)
             {
-                for (var i = 0; i + 1 < line.Length; i++)
+                var len = 0f;
+                for (var i = 0; i + 1 < line.Length; i++) len += (line[i + 1] - line[i]).magnitude;
                 {
-                    var a = line[i];
-                    var b = line[i + 1];
-                    var len = (b - a).magnitude;
-                    var dir = (b - a) / len;
                     for (var side = -1; side <= 1; side += 2)
                     {
-                        var n = Perp(dir) * side;
                         var t = 1.5f;
                         while (t < len)
                         {
-                            var along = a + dir * t;
+                            var along = AlongLine(line, t, out var dir);
+                            var n = Perp(dir) * side;
                             var far = along.magnitude;
                             var pool = far > 30f ? FarmHouses : TownHouses;
                             var id = pool[_rnd.Next(pool.Length)];
@@ -464,15 +480,12 @@ namespace CityBuilder.Campaign
             // by the roads, past the old town
             foreach (var line in _streets)
             {
-                for (var i = 0; i + 1 < line.Length; i++)
+                var len = 0f;
+                for (var i = 0; i + 1 < line.Length; i++) len += (line[i + 1] - line[i]).magnitude;
                 {
-                    var a = line[i];
-                    var b = line[i + 1];
-                    var len = (b - a).magnitude;
-                    var dir = (b - a) / len;
                     for (var t = 2f; t < len; t += 4.5f + (float)_rnd.NextDouble() * 4f)
                     {
-                        var along = a + dir * t;
+                        var along = AlongLine(line, t, out var dir);
                         if (along.magnitude < 13f || _rnd.NextDouble() > 0.45) continue;
                         var side = Perp(dir) * (_rnd.NextDouble() < 0.5 ? -1f : 1f);
                         var spot = along + side * (2.0f + (float)_rnd.NextDouble() * 0.8f);
