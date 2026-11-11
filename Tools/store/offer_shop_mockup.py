@@ -19,7 +19,8 @@ W, H = 1920, 1080
 INK = (84, 50, 24)
 INK_SOFT = (140, 98, 58)
 GREEN = ((70, 170, 44), (118, 214, 72), (28, 84, 18))
-VIOLET = ((128, 70, 196), (172, 120, 232), (58, 24, 98))
+# the crystal price: blue, not violet -- the violet crystal melted into a violet button (the user, 2026-11-11)
+VIOLET = ((40, 132, 204), (102, 182, 240), (16, 60, 112))
 GOLD = ((230, 166, 36), (255, 214, 102), (118, 70, 8))
 
 
