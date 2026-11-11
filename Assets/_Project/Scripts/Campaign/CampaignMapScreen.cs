@@ -45,9 +45,9 @@ namespace CityBuilder.Campaign
         private readonly List<RectTransform> _flags = new List<RectTransform>();
         private readonly List<Image> _rings = new List<Image>();
         private int _picked = -1;
-        private CanvasGroup _bar;
-        private Text _title, _line, _hint;
-        private Button _play, _replay;
+        private CanvasGroup _bar, _ui, _flagsGroup;
+        private Text _record, _line, _hint;
+        private Button _play;
         private float _shown;
 
         private void Start()
@@ -93,7 +93,10 @@ namespace CityBuilder.Campaign
             fit.aspectRatio = picture != null ? picture.rect.width / picture.rect.height : 2400f / 1080f;
             Frame(map, fit);
 
-            for (var i = 0; i < _levels.Length; i++) Flag(map, i);
+            // the flags on their own layer, so the settings card can hide them with the buttons
+            var flags = Stretch(map, "Flags");
+            _flagsGroup = flags.gameObject.AddComponent<CanvasGroup>();
+            for (var i = 0; i < _levels.Length; i++) Flag(flags, i);
 
             // the safe area: the buttons keep clear of a camera cut-out
             var safe = Stretch(root, "Safe");
@@ -103,29 +106,32 @@ namespace CityBuilder.Campaign
                 safe.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
                 safe.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
             }
+            _ui = safe.gameObject.AddComponent<CanvasGroup>();
             MissionSkin.Round(safe, "Back", "round_main", HudInk.OnMain, backGlyph, new Vector2(0f, 1f), new Vector2(66f, -66f), 92f)
-                .onClick.AddListener(() => LoadingScreen.OutToMenu(menuScene));
+                .onClick.AddListener(() =>
+                {
+                    // back to the choice of mode, where the campaign was picked (the user)
+                    MainMenuController.OpenOnModes = true;
+                    LoadingScreen.OutToMenu(menuScene);
+                });
             if (settings != null)
                 MissionSkin.Round(safe, "Settings", "round_main", HudInk.OnMain, settingsGlyph, new Vector2(1f, 1f), new Vector2(-66f, -66f), 92f)
                     .onClick.AddListener(settings.OpenPanel);
 
-            _hint = MissionSkin.Label(safe, Localization.Get("#campaign_pick"), UiTheme.Bold, 30, UiTheme.Parchment, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);
-            Place(_hint.rectTransform, new Vector2(0f, 70f), new Vector2(600f, 50f));
-            _hint.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(2f, -2f);
+            // white words with a shadow over the chart (the user, 2026-11-12): the hint and «Скоро» at the
+            // bottom centre, the picked level's record at the top centre
+            _hint = Caption(safe, Localization.Get("#campaign_pick"), new Vector2(0.5f, 0f), new Vector2(0f, 70f));
+            _record = Caption(safe, "", new Vector2(0.5f, 1f), new Vector2(0f, -60f));
 
-            // the bar that lights up once a level is picked: its name, a line under it, «Играть»
+            // the bar that lights up once a level is picked: «Играть», or why it cannot be played
             var bar = new GameObject("Bar", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<RectTransform>();
             bar.SetParent(safe, false);
             bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0f);
             bar.pivot = new Vector2(0.5f, 0f);
             bar.anchoredPosition = new Vector2(0f, 18f);
-            bar.sizeDelta = new Vector2(560f, 236f);
+            bar.sizeDelta = new Vector2(560f, 140f);
             _bar = bar.GetComponent<CanvasGroup>();
-            var plaque = MissionSkin.Image(bar, "Plaque", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(520f, 96f));
-            var ink = MissionSkin.Ink(HudInk.OnPlaque);
-            _title = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 30, ink, TextAnchor.MiddleCenter, new Vector2(0f, 0.45f), new Vector2(1f, 1f), new Vector2(16f, 2f));
-            _line = MissionSkin.Label(plaque.transform, "", UiTheme.Regular, 22, ink, TextAnchor.MiddleCenter, new Vector2(0f, 0f), new Vector2(1f, 0.5f), new Vector2(16f, 4f));
+            _line = Caption(bar, "", new Vector2(0.5f, 0f), new Vector2(0f, 52f));
 
             // «Играть» as the mode screen has it (the user: «возьми из меню выбора режима кнопку Играть»):
             // the menu look's own button, its text in the button ink
@@ -138,16 +144,21 @@ namespace CityBuilder.Campaign
             playImg.sprite = MenuSprite("button");
             if (playImg.sprite != null && playImg.sprite.border.sqrMagnitude > 0f) playImg.type = Image.Type.Sliced;
             _play = playImg.gameObject.AddComponent<Button>();
-            _play.onClick.AddListener(() => Enter(false));
+            _play.onClick.AddListener(Enter);
             var playText = MissionSkin.Label(playImg.transform, Localization.Get("#newgame_play"), UiTheme.Bold, 48, MissionSkin.Ink(HudInk.OnButton),
                 TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(20f, 10f));
             playText.rectTransform.anchoredPosition = new Vector2(0f, 4f);
 
-            _replay = MissionSkin.Round(bar, "Replay", "round", HudInk.OnRound, replayGlyph, new Vector2(0.5f, 0f), new Vector2(-280f, 60f), 88f);
-            _replay.onClick.AddListener(() => Enter(true));
-
             _bar.alpha = 0f;
             _bar.interactable = _bar.blocksRaycasts = false;
+        }
+
+        private static Text Caption(Transform parent, string text, Vector2 anchor, Vector2 at)
+        {
+            var t = MissionSkin.Label(parent, text, UiTheme.Bold, 34, Color.white, TextAnchor.MiddleCenter, anchor, anchor, Vector2.zero);
+            Place(t.rectTransform, at, new Vector2(900f, 56f));
+            t.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(2.5f, -2.5f);
+            return t;
         }
 
         private void Flag(RectTransform map, int i)
@@ -201,33 +212,36 @@ namespace CityBuilder.Campaign
             _picked = i;
             _shown = 0f;
             var lv = _levels[i];
-            _title.text = Localization.Get(lv.titleKey);
             var playable = Playable(i);
-            if (string.IsNullOrEmpty(lv.scene)) _line.text = Localization.Get("#campaign_level_soon");
-            else if (!Open(i)) _line.text = Localization.Get("#campaign_locked");
-            else
-            {
-                var best = string.IsNullOrEmpty(lv.bestKey) ? 0f : PlayerPrefs.GetFloat(lv.bestKey, 0f);
-                _line.text = best > 0f ? Localization.Format("#m1_best", MissionSkin.Clock(best)) : "";
-            }
+            // the name is on the map already; a playable level shows its record top centre, a closed one
+            // says why in place of «Играть» (the user, 2026-11-12)
+            _line.text = playable ? "" : Localization.Get(string.IsNullOrEmpty(lv.scene) ? "#campaign_level_soon" : "#campaign_locked");
+            var best = playable && !string.IsNullOrEmpty(lv.bestKey) ? PlayerPrefs.GetFloat(lv.bestKey, 0f) : 0f;
+            _record.text = best > 0f ? Localization.Format("#m1_best", MissionSkin.Clock(best)) : "";
             _play.gameObject.SetActive(playable);
-            _replay.gameObject.SetActive(playable && i == 0 && CampaignProgress.FilmSeen);
             _hint.gameObject.SetActive(false);
             _bar.interactable = _bar.blocksRaycasts = true;
         }
 
-        private void Enter(bool film)
+        private void Enter()
         {
-            Debug.Log($"[CampaignMap] play {(_picked >= 0 ? _levels[_picked].id : "-")} film={film}");
+            Debug.Log($"[CampaignMap] play {(_picked >= 0 ? _levels[_picked].id : "-")}");
             if (_picked < 0 || !Playable(_picked)) return;
-            // level 1: the film the first time, or on a replay; otherwise straight into the mission
-            if (_picked == 0) MissionOne.SkipFilm = !film && CampaignProgress.FilmSeen;
+            // level 1: the film the first time; after that straight into the mission (the film has its own «Пропустить»)
+            if (_picked == 0) MissionOne.SkipFilm = CampaignProgress.FilmSeen;
             LoadingScreen.IntoGame(_levels[_picked].scene);
         }
 
         private void Update()
         {
             var dt = Time.unscaledDeltaTime;
+            // the settings card hides the map's buttons and flags behind it (the user, 2026-11-12)
+            var hidden = settings != null && settings.gameObject.activeInHierarchy;
+            if (_ui != null)
+            {
+                _ui.alpha = _flagsGroup.alpha = hidden ? 0f : 1f;
+                _ui.blocksRaycasts = _flagsGroup.blocksRaycasts = !hidden;
+            }
             if (_picked >= 0 && _bar != null)
             {
                 // «Играть» lights up: the bar fades in and the button breathes

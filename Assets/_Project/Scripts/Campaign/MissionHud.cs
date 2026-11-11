@@ -106,6 +106,7 @@ namespace CityBuilder.Campaign
 
             // the run's clock, bottom centre, and the stretch's time over it at a checkpoint
             var clock = MissionSkin.Image(_safe, "Clock", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, c.margin), new Vector2(c.timerWidth, 52f));
+            _clockPlaque = clock.gameObject;
             _clock = MissionSkin.Label(clock.transform, MissionSkin.Clock(0f), UiTheme.Heavy, 28, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
             _split = MissionSkin.Label(_safe, "", UiTheme.Bold, 22, Color.clear, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);
             var sr = (RectTransform)_split.transform;
@@ -156,6 +157,18 @@ namespace CityBuilder.Campaign
 
         /// <summary>Hidden for the end (the summary takes the screen).</summary>
         public void Hide() => _canvas.gameObject.SetActive(false);
+
+        private GameObject _clockPlaque;
+
+        /// <summary>The clock off while the mage speaks (the user, 2026-11-12: it covered his line).</summary>
+        public bool ClockShown
+        {
+            set
+            {
+                if (_clockPlaque != null && _clockPlaque.activeSelf != value) _clockPlaque.SetActive(value);
+                if (_split != null && _split.gameObject.activeSelf != value) _split.gameObject.SetActive(value);
+            }
+        }
 
         // ------------------------------------------------------------ the windows
 

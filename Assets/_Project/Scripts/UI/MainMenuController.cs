@@ -70,8 +70,16 @@ namespace CityBuilder.UI
         /// <summary>The mode whose screen is up, if any.</summary>
         public GameMode? ChosenMode => _screen == Screen.Sandbox ? GameMode.Sandbox : _screen == Screen.Invasion ? GameMode.Invasion : (GameMode?)null;
 
+        /// <summary>Open on the choice of mode next time the menu loads (the campaign map's Back, the user, 2026-11-12).</summary>
+        public static bool OpenOnModes;
+
         private void Start()
         {
+            if (OpenOnModes)
+            {
+                OpenOnModes = false;
+                _screen = Screen.Modes;
+            }
             if (tutorialReward != null) tutorialReward.text = "+" + BalanceConfig.Instance.TutorialRewardCrystals;
             RefreshBadges();
             Snap();

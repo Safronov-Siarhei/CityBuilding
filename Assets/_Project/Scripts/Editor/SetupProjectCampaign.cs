@@ -41,6 +41,8 @@ namespace CityBuilder.EditorTools
             sc.sortingOrder = 10;
             ConfigureScaler(settingsCanvas.GetComponent<CanvasScaler>());
             var settings = BuildSettingsPanel(settingsCanvas.transform, CreatePanelSprite(), null);
+            // the same look as the main menu's settings card (the user: it looked like no other window)
+            ApplyTheme(settingsCanvas.transform);
             var screen = new GameObject("CampaignMapScreen").AddComponent<CityBuilder.Campaign.CampaignMapScreen>();
             var so = new SerializedObject(screen);
             so.FindProperty("mapFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/CampaignMap.json");

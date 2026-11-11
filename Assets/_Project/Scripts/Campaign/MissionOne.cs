@@ -213,7 +213,13 @@ namespace CityBuilder.Campaign
 
         private void Start()
         {
-            if (!SkipFilm || director == null) return;
+            if (director == null) return;
+            if (!SkipFilm)
+            {
+                // the film plays: «Пропустить» bottom right (the user, 2026-11-12)
+                FilmSkip.Attach(director);
+                return;
+            }
             SkipFilm = false;
             if (village.BuildingCount == 0) village.Build();
             if (!director.Playing) director.Play();
@@ -245,6 +251,7 @@ namespace CityBuilder.Campaign
             _world?.Step(dt, here, _stick.Value.sqrMagnitude > 0f, _chase != null ? _chase.Reached : -1);
             if (_clockOn && (_end == null || !_end.Started)) _elapsed += dt;
             _hud?.Step(here, _elapsed, dt);
+            if (_hud != null) _hud.ClockShown = _mage == null || !_mage.Playing;
             Splits();
             if (_end != null)
             {

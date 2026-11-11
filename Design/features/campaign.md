@@ -232,6 +232,16 @@
   in it picked the Dock HUD look for the whole game (reset to Classic in the Editor's PlayerPrefs).
   TRAP: a Canvas made in code and left at its default sortingOrder 0 is never sorted; ALWAYS set
   `sortingOrder` explicitly (the map's is now -10). Re-check by the user pending.
+- **The user's third look (2026-11-12), built (NOT compiled here: their Unity was open; needs `setup` twice):**
+  the map's settings card themed like the main menu's (`ApplyTheme` on the SettingsCanvas) and, while it is
+  open, the map's buttons and flags hidden (CanvasGroups on Safe and Flags); NO plaque under the picked
+  level (its name is on the map) -- the record is white text with a shadow TOP CENTRE, and a closed level
+  says «Скоро» / «Сначала пройди…» the same way BOTTOM CENTRE in place of «Играть»; the film-replay button
+  removed (the user: pointless next to «Играть»), so level 1 replays the mission, and the film has
+  «Пропустить» bottom right instead (`FilmSkip.cs`: dip to black, the film run to its end in one go -- the
+  director's end stops the sounds and starts the mission -- fade in; `#film_skip`, sheet row 61); Back
+  goes to the CHOICE OF MODE (`MainMenuController.OpenOnModes`); in mission 1 the clock and splits hide
+  while the mage scene plays (`MissionHud.ClockShown`; it covered his line).
 
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.
