@@ -121,7 +121,7 @@ def build(with_bell=True):
         f.rect(s - th + 0.09, s + th - 0.09, bell1 - 0.08, bell1, 0.02, 'stone_light')       # the lintel over the opening
         f.rect(s - th + 0.09, s + th - 0.09, bell0, bell0 + 0.06, 0.02, 'stone_light')        # a parapet to lean on
     b.box(tx - th + 0.09, tx + th - 0.09, ty - th + 0.09, ty + th - 0.09, bell0, bell0 + 0.02, 'wood_mid')   # floor
-    b.box(tx - th + 0.12, tx + th - 0.12, ty + th - 0.14, ty + th - 0.1, bell0, bell1 - 0.1, 'window')     # dark back wall
+    # (no dark back wall: in the Unity film it read as a black slab beside the bell -- the user, 2026-11-11)
     # the yoke and the bell, its rope down to the floor
     b.box(tx - th + 0.09, tx + th - 0.09, ty - 0.025, ty + 0.025, bell1 - 0.12, bell1 - 0.08, 'wood_dark')
     BELFRY.update(tx=tx, ty=ty, floor=bell0, top=bell1)

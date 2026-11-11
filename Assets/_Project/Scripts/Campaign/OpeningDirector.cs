@@ -425,8 +425,16 @@ namespace CityBuilder.Campaign
                     _amulet.intensity = value * L.amuletScale;
                     if (_actors.TryGetValue("ardan", out var ardan))
                     {
-                        var chest = ardan.t.Find("CineArdanRig/hips/chest");
-                        _amulet.transform.position = (chest != null ? chest.position : ardan.t.position) + ardan.t.forward * 0.08f;
+                        // the stone hangs at 0.335 of the model, the chest bone spans 0.27-0.39 and
+                        // the stone sits 0.075 in front of it (ardan.py, ardan_anim.BONES)
+                        var chest = FindBone(ardan.t, "chest");
+                        var head = FindBone(ardan.t, "head");
+                        if (chest != null && head != null)
+                        {
+                            var span = head.position - chest.position;
+                            _amulet.transform.position = chest.position + span * 0.54f + ardan.t.forward * (span.magnitude * 0.62f);
+                        }
+                        if (fx != null) fx.AmuletGlow(_amulet.transform.position, value, cam);
                     }
                     break;
                 case "talk/runes":
@@ -564,6 +572,12 @@ namespace CityBuilder.Campaign
         }
 
         // ------------------------------------------------------------ helpers
+
+        private static Transform FindBone(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true)) if (t.name == name) return t;
+            return null;
+        }
 
         private Light MakeLight(string name, Color colour, float range)
         {

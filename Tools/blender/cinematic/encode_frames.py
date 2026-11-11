@@ -54,7 +54,8 @@ def main():
     files = sorted(f for f in os.listdir(src) if f.lower().endswith((".jpg", ".png")))
     sc = bpy.context.scene
     sc.render.fps = fps
-    sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+    first = bpy.data.images.load(os.path.join(src, files[0]))
+    sc.render.resolution_x, sc.render.resolution_y = first.size[0], first.size[1]
     sc.render.resolution_percentage = 100
     ed = sc.sequence_editor_create()
     strips = ed.strips if hasattr(ed, "strips") else ed.sequences

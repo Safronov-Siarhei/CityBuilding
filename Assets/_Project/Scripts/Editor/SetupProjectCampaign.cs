@@ -202,6 +202,7 @@ namespace CityBuilder.EditorTools
             fso.FindProperty("sparkMaterial").objectReferenceValue = ParticleMaterial("CampaignSpark", dot, true);
             fso.FindProperty("dustMaterial").objectReferenceValue = ParticleMaterial("CampaignDust", dot, false);
             fso.FindProperty("debrisMaterial").objectReferenceValue = Matte("CampaignDebris", new Color(0.55f, 0.53f, 0.5f));
+            fso.FindProperty("stormMaterial").objectReferenceValue = ShaderMaterial("CampaignStormSky", "CityBuilder/CineStormSky");
             fso.FindProperty("volume").objectReferenceValue = volume;
             fso.FindProperty("title").objectReferenceValue = title;
             fso.ApplyModifiedPropertiesWithoutUndo();

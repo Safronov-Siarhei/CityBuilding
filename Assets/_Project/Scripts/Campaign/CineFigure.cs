@@ -31,6 +31,7 @@ namespace CityBuilder.Campaign
             clips = set;
             _bones = null;
             Rigidify();
+            CineTwoSided.Apply(gameObject);
         }
 
         // the rigid parts cut from each model's skinned mesh, shared by every copy of that model

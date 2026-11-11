@@ -36,11 +36,14 @@ namespace CityBuilder.Campaign
             public float blastFlash, blastLight, blastLightRange, ringSeconds, ringRadius, debrisSpeed, debrisSize;
             public int debris;
             public float sparksRate, sparksRadius, sparksLife, sparksSize;
-            public float moodStart, moodSeconds, sunIntensity, skyExposure, skyAtmosphere, fogEnd;
+            public float moodStart, moodSeconds, sunIntensity, skyExposure, skyAtmosphere, fogEnd, fogStart;
+            public float stormStart, stormSeconds, stormScale, stormSpeed;
+            public float[] stormDark, stormLight;
             public float[] sunColor, skyTint, fogColor, ambientSky, ambientEquator, ambientGround;
             public float bloomThreshold, bloomIntensity, vignette, saturation, contrast, dofAperture;
             public float smokeRate, smokeLife, smokeSize, smokeSpeed, smokeStop;
             public float[] chimneySigns;
+            public float amuletGlowSize;
             public string titleKey;
             public float titleStart, titleSeconds, titleFade;
         }
@@ -59,6 +62,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private Material sparkMaterial;
         [SerializeField] private Material dustMaterial;
         [SerializeField] private Material debrisMaterial;
+        [SerializeField] private Material stormMaterial;
         [SerializeField] private Volume volume;
         [SerializeField] private Text title;
 
@@ -79,7 +83,9 @@ namespace CityBuilder.Campaign
         private float _arcTimer;
         private bool _blasted, _dusted;
         private readonly HashSet<int> _dustDone = new HashSet<int>();
-        private float _sunI0, _exp0, _atm0, _fogEnd0;
+        private float _sunI0, _exp0, _atm0, _fogEnd0, _fogStart0;
+        private Material _storm;
+        private Transform _stormDome;
         private Color _sunC0, _tint0, _fog0, _amb0, _equ0, _gnd0;
         private Bloom _bloom;
         private DepthOfField _dof;
@@ -119,10 +125,12 @@ namespace CityBuilder.Campaign
         public void Step(float time, float dt, Vector3 camFrom, Vector3 camAt, float lens, bool shallow)
         {
             if (_c == null) return;
+            _time = time;
             StepRunes(time);
             StepCracks(time);
             StepAssembly(time, dt);
             StepVortex(time);
+            if (_stormDome != null) _stormDome.position = camFrom;
             StepMood(time);
             StepSmoke(time);
             StepTitle(time);
@@ -424,6 +432,26 @@ namespace CityBuilder.Campaign
             }
             _fog0 = RenderSettings.fogColor;
             _fogEnd0 = RenderSettings.fogEndDistance;
+            _fogStart0 = RenderSettings.fogStartDistance;
+            if (stormMaterial != null)
+            {
+                var dome = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                dome.name = "StormSky";
+                Kill(dome.GetComponent<Collider>());
+                dome.transform.SetParent(_root, false);
+                dome.transform.localScale = Vector3.one * 300f;
+                _storm = new Material(stormMaterial);
+                _storm.SetColor("_Dark", Col(_c.stormDark));
+                _storm.SetColor("_Light", Col(_c.stormLight));
+                _storm.SetFloat("_Scale", _c.stormScale);
+                _storm.SetFloat("_Speed", _c.stormSpeed);
+                _storm.SetFloat("_Cover", 0f);
+                var r = dome.GetComponent<Renderer>();
+                r.sharedMaterial = _storm;
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                _stormDome = dome.transform;
+            }
             _amb0 = RenderSettings.ambientSkyColor;
             _equ0 = RenderSettings.ambientEquatorColor;
             _gnd0 = RenderSettings.ambientGroundColor;
@@ -447,6 +475,14 @@ namespace CityBuilder.Campaign
             }
             RenderSettings.fogColor = Color.Lerp(_fog0, Col(_c.fogColor), w);
             RenderSettings.fogEndDistance = Mathf.Lerp(_fogEnd0, _c.fogEnd, w);
+            RenderSettings.fogStartDistance = Mathf.Lerp(_fogStart0, _c.fogStart, w);
+            if (_storm != null)
+            {
+                var k = Mathf.Clamp01((time - _c.stormStart) / _c.stormSeconds);
+                _storm.SetFloat("_Cover", k * k * (3f - 2f * k));
+                _storm.SetFloat("_T", time);
+                _stormDome.gameObject.SetActive(time >= _c.stormStart);
+            }
             RenderSettings.ambientSkyColor = Color.Lerp(_amb0, Col(_c.ambientSky), w);
             RenderSettings.ambientEquatorColor = Color.Lerp(_equ0, Col(_c.ambientEquator), w);
             RenderSettings.ambientGroundColor = Color.Lerp(_gnd0, Col(_c.ambientGround), w);
@@ -552,6 +588,40 @@ namespace CityBuilder.Campaign
             var c = title.color;
             c.a = a;
             title.color = c;
+        }
+
+        // ------------------------------------------------------------ the amulet's glow
+
+        private float _time;
+        private Transform _amuletGlow;
+        private Material _amuletMat;
+
+        /// <summary>A soft blue halo on Ardan's amulet stone (the director puts it there each frame;
+        /// a point light alone only lit the ground under him -- the user, 2026-11-11).</summary>
+        public void AmuletGlow(Vector3 at, float strength, Camera cam)
+        {
+            if (_c == null) return;
+            if (_amuletGlow == null)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                go.name = "AmuletGlow";
+                Kill(go.GetComponent<Collider>());
+                go.transform.SetParent(_root, false);
+                _amuletMat = new Material(sparkMaterial);
+                var r = go.GetComponent<Renderer>();
+                r.sharedMaterial = _amuletMat;
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                _amuletGlow = go.transform;
+            }
+            var on = strength > 0.01f;
+            _amuletGlow.gameObject.SetActive(on);
+            if (!on) return;
+            _amuletGlow.position = at;
+            _amuletGlow.rotation = Quaternion.LookRotation(at - cam.transform.position);
+            _amuletGlow.localScale = Vector3.one * _c.amuletGlowSize * (0.8f + 0.2f * Mathf.Sin(_time * 9f));
+            var c = Col(_c.runeColor) * Mathf.Clamp01(strength);
+            c.a = Mathf.Clamp01(strength);
+            _amuletMat.SetColor("_BaseColor", c);
         }
 
         // ------------------------------------------------------------ helpers

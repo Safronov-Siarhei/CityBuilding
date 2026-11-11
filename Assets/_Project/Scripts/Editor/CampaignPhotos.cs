@@ -33,8 +33,8 @@ namespace CityBuilder.EditorTools
             var cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
             var dir = Path.Combine(Directory.GetCurrentDirectory(), "RunLogs", "campaign");
             Directory.CreateDirectory(dir);
-            var rt = new RenderTexture(1280, 720, 24) { antiAliasing = 4 };
-            var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 8 };
+            var tex = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
             // the first render skipped the ground while its shader still compiled in the background
             // (the first view showed the sky's lower half instead of the grass): compile up front
             // and throw a warm-up frame away
@@ -50,7 +50,7 @@ namespace CityBuilder.EditorTools
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;
-                tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                tex.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
                 tex.Apply();
                 File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
                 RenderTexture.active = null;
@@ -98,8 +98,8 @@ namespace CityBuilder.EditorTools
             Directory.CreateDirectory(dir);
             var wasAsync = EditorSettings.asyncShaderCompilation;
             EditorSettings.asyncShaderCompilation = false;
-            var rt = new RenderTexture(1280, 720, 24) { antiAliasing = 4 };
-            var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            var rt = new RenderTexture(1920, 1080, 24) { antiAliasing = 8 };
+            var tex = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
             director.Play();
             cam.targetTexture = rt;
             cam.Render();                                   // warm-up: shaders compiled before the first frame
@@ -118,9 +118,9 @@ namespace CityBuilder.EditorTools
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;
-                tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                tex.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
                 tex.Apply();
-                File.WriteAllBytes(Path.Combine(dir, $"{f:D5}.jpg"), tex.EncodeToJPG(88));
+                File.WriteAllBytes(Path.Combine(dir, $"{f:D5}.jpg"), tex.EncodeToJPG(95));
                 RenderTexture.active = null;
             }
             cam.targetTexture = null;
@@ -140,7 +140,7 @@ namespace CityBuilder.EditorTools
             cam.targetTexture = rt;
             cam.Render();
             RenderTexture.active = rt;
-            tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+            tex.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
             tex.Apply();
             File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
             RenderTexture.active = null;

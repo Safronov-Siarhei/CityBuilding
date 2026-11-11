@@ -290,6 +290,7 @@ namespace CityBuilder.Campaign
             var radius = Mathf.Max(size.x, size.y) * 0.5f;
             if (!Free(at, radius) || NearStreet(at, Mathf.Min(size.x, size.y) * 0.45f)) return false;
             var go = Strip(prefab);
+            CineTwoSided.Apply(go);
             go.name = id;
             go.transform.SetParent(_root, false);
             go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * prefab.transform.rotation);
@@ -311,6 +312,7 @@ namespace CityBuilder.Campaign
             if (prefab != null)
             {
                 var go = Strip(prefab);
+                CineTwoSided.Apply(go);
                 go.transform.localScale = prefab.transform.localScale * BuildingScale;
                 var any = false;
                 var b = new Bounds();
@@ -377,6 +379,7 @@ namespace CityBuilder.Campaign
             foreach (var p in setPieces) if (p.id == name) model = p.prefab;
             if (model == null) return null;
             var go = Instantiate(model, _root);
+            CineTwoSided.Apply(go);
             go.name = name;
             go.transform.SetPositionAndRotation(pose.position, pose.rotation * model.transform.rotation);
             _pieces[name] = go.transform;
