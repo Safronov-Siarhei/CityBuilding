@@ -67,7 +67,10 @@ def build(with_bell=True):
     b.box(x0, x1, y0, y1, FOOTING, U_TOP, 'stone_light', bevel=0.02)
     b.box(x0 - 0.02, x1 + 0.02, y0 - 0.02, y1 + 0.02, FOOTING, FOOTING + 0.08, 'stone_mid', bevel=0.01)   # plinth
     b.gable_block('y', y0, y1, x0, x1, U_TOP, zr, 'stone_light')
-    d.roof(b, 0, (y0 + y1) / 2, 'y', (y1 - y0) / 2 + 0.1, hs, U_TOP, **d.PURPLE)
+    # the roof starts at the bell tower's back wall: run to the usual overhang it went 0.17 into the
+    # tower, its ridge level with the belfry floor, and showed inside the belfry (the user, 2026-11-11)
+    r0, r1 = -0.88 + 0.4, y1 + 0.1
+    d.roof(b, 0, (r0 + r1) / 2, 'y', (r1 - r0) / 2, hs, U_TOP, **d.PURPLE)
     for y in [y0 + 0.15 + i * 0.25 for i in range(8)]:
         b.box(-0.03, 0.03, y - 0.03, y + 0.03, zr + 0.04, zr + 0.1, 'roof_purple_dark', bevel=0.01)       # ridge crests
     for px, sx in ((x0, -1), (x1, 1)):
@@ -101,7 +104,7 @@ def build(with_bell=True):
 
     # ---- the bell tower on the front: an open belfry tall enough for the priest
     tx, ty, th = 0.0, -0.88, 0.4
-    stone_top = U_TOP + 0.62
+    stone_top = U_TOP + 0.8      # the belfry floor clears the nave's ridge (it showed through the openings)
     bell0, bell1 = stone_top + 0.08, stone_top + 0.5
     d.footing(b, tx - th, tx + th, ty - th, ty + th)
     b.box(tx - th, tx + th, ty - th, ty + th, FOOTING, stone_top, 'stone_light', bevel=0.025)

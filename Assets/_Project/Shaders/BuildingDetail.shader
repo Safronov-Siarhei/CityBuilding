@@ -33,6 +33,9 @@ Shader "CityBuilder/BuildingDetail"
         _Smoothness ("Smoothness", Range(0, 1)) = 0.15
         // back faces culled in the game; the campaign film's close cameras draw both (CineTwoSided)
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
+        // depth offset: 0 in the game; the film's back-face copies are pushed behind (CineTwoSided)
+        _OffsetFactor ("Depth offset factor", Float) = 0
+        _OffsetUnits ("Depth offset units", Float) = 0
         _SnowMask ("Takes snow in winter", Range(0, 1)) = 1
         [Toggle(_WIND)] _Wind ("Sways in the wind", Float) = 0
         _WindStrength ("Wind: sway at full weight, metres", Float) = 0.08
@@ -102,6 +105,7 @@ Shader "CityBuilder/BuildingDetail"
         {
             Name "ForwardLit"
             Cull [_Cull]
+            Offset [_OffsetFactor], [_OffsetUnits]
             Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
@@ -270,6 +274,7 @@ Shader "CityBuilder/BuildingDetail"
         {
             Name "DepthOnly"
             Cull [_Cull]
+            Offset [_OffsetFactor], [_OffsetUnits]
             Tags { "LightMode" = "DepthOnly" }
             ZWrite On
             ColorMask R

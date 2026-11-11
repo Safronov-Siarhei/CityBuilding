@@ -321,6 +321,8 @@ namespace CityBuilder.Campaign
                 var meadow = Mathf.PerlinNoise(at.x / 14f + 7f, at.y / 14f + 7f);
                 var r = (float)_rnd.NextDouble();
                 var s = BuildingScale * (0.8f + (float)_rnd.NextDouble() * 0.5f);
+                // bushes line the roads' verges (the user, 2026-11-11)
+                if (NearStreet(at, 2.6f) && r < 0.22f) { Add(bushes, at, s * 1.2f); continue; }
                 if (meadow > 0.62f && r < 0.5f) Add(flowers, at, s);
                 else if (r < 0.32f * clump * 1.6f) Add(tufts, at, s);
                 else if (r < 0.05f * clump) Add(bushes, at, s);
