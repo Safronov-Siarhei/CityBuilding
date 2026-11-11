@@ -37,6 +37,8 @@ namespace CityBuilder.EditorTools
             "Orchard", "PigFarm", "Windmill", "Granary",
         };
 
+        [System.Serializable] private class RouteModelNames { public string[] models; }
+
         private static void BuildCampaignOpeningScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -114,6 +116,21 @@ namespace CityBuilder.EditorTools
             so.FindProperty("cobble").objectReferenceValue = GroundMaterial("CampaignCobble", 1f);
             so.FindProperty("dirt").objectReferenceValue = GroundMaterial("CampaignDirt", 2f);
             so.FindProperty("field").objectReferenceValue = GroundMaterial("CampaignField", 3f);
+            // mission 1's route (the approved map): its plan, the river and the wheat's body, and the
+            // sandbox's own models it uses (bridge, Barbican, wall, towers) named in Mission1.json
+            so.FindProperty("routeFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            so.FindProperty("water").objectReferenceValue = GroundMaterial("CampaignWater", 4f);
+            so.FindProperty("wheatBody").objectReferenceValue = GroundMaterial("CampaignWheat", 5f);
+            var routeNames = JsonUtility.FromJson<RouteModelNames>(File.ReadAllText(Mission1Path)).models ?? new string[0];
+            var routeProp = so.FindProperty("routeModels");
+            routeProp.arraySize = routeNames.Length;
+            for (var i = 0; i < routeNames.Length; i++)
+            {
+                var m = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Buildings/{routeNames[i]}.fbx");
+                if (m == null) Debug.LogError($"[Campaign] route model {routeNames[i]} not found");
+                routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("id").stringValue = routeNames[i];
+                routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue = m;
+            }
             // and the islands' meadow props: Map 3's decor kit and its material
             var map3 = AssetDatabase.LoadAssetAtPath<CityBuilder.Maps.MeshMapDefinition>("Assets/_Project/Resources/MeshMaps/Map3.asset");
             if (map3 != null)

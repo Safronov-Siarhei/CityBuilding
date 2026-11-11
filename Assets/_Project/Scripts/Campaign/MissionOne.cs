@@ -118,7 +118,7 @@ namespace CityBuilder.Campaign
                 var speed = walk ? clips.walkSpeed : clips.runSpeed;
                 _body.Move(dir * speed * dt);
                 var p = t.position;
-                p.y = 0f;                                         // the village is flat
+                p.y = village.HeightAt(new Vector2(p.x, p.z));    // flat ground, or the bridge's deck
                 t.position = p;
                 t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(dir), Mathf.Clamp01(_c.runner.turnRate * dt));
                 _ardan.Play(walk ? "Walk" : "Run", _c.runner.fade);

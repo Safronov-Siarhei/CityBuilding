@@ -154,41 +154,73 @@ namespace CityBuilder.EditorTools
             while (director.Playing) director.Step(dt);
             mission.Begin();
             Physics.SyncTransforms();
-            // (seconds, stick): wait, run up the screen, up-left, left, down-right
-            var plan = new[] { (1.5f, Vector2.zero), (6f, Vector2.up), (3f, new Vector2(-0.7f, 0.7f)), (2f, Vector2.left), (2f, new Vector2(0.3f, 0.3f)), (2f, new Vector2(0.7f, -0.7f)) };
-            var shots = new[] { 0.3f, 1.5f, 4f, 7.5f, 10.5f, 13f, 16f };
+            // the stick steered down the route's track, as a player would run it: towards the next
+            // point, round whatever stops him (the fallen tree), a frame at each landmark
+            var path = village.RoutePath;
+            var shots = new System.Collections.Generic.Dictionary<int, string> { { 5, "field" }, { 9, "fallen_tree" }, { 13, "forest" }, { 14, "bridge_near" }, { 16, "bridge_over" }, { 17, "gate" } };
             var log = new System.Text.StringBuilder();
             var t = 0f;
-            var next = 0;
             var nextLog = 0f;
-            foreach (var (seconds, stick) in plan)
+            var wp = 1;
+            var lastPos = mission.Ardan.position;
+            var stuckFor = 0f;
+            var dodge = 0f;
+            var dodgeSide = 1f;
+            var stuckShots = 0;
+            var yaw = 180f * Mathf.Deg2Rad;
+            var up = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
+            var right = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
+            void Shoot(string name)
             {
-                for (var s = 0f; s < seconds; s += dt, t += dt)
+                cam.targetTexture = rt;
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(dir, $"{name}_{t:F0}s.jpg"), tex.EncodeToJPG(90));
+                RenderTexture.active = null;
+                cam.targetTexture = null;
+            }
+            while (path != null && wp < path.Count && t < 420f)
+            {
+                var pos = mission.Ardan.position;
+                var to = new Vector3(path[wp].x - pos.x, 0f, path[wp].y - pos.z);
+                if (to.magnitude < 1.0f)
                 {
-                    director.Step(dt);
-                    mission.Step(dt, stick);
-                    Physics.SyncTransforms();
-                    mission.StepCamera(dt);
-                    if (t >= nextLog)
-                    {
-                        var p = mission.Ardan.position;
-                        log.Append($"t{t:F0}=({p.x:F2},{p.z:F2}) ");
-                        nextLog += 1f;
-                    }
-                    if (next < shots.Length && t >= shots[next])
-                    {
-                        cam.targetTexture = rt;
-                        cam.Render();
-                        RenderTexture.active = rt;
-                        tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
-                        tex.Apply();
-                        File.WriteAllBytes(Path.Combine(dir, $"m{next}_{t:F1}s.jpg"), tex.EncodeToJPG(90));
-                        RenderTexture.active = null;
-                        cam.targetTexture = null;
-                        next++;
-                    }
+                    if (shots.TryGetValue(wp, out var shot)) Shoot(shot);
+                    wp++;
+                    continue;
+                }
+                var want = to.normalized;
+                if (dodge > 0f)
+                {
+                    want = Vector3.Cross(Vector3.up, want) * dodgeSide;  // sidestep round what blocks him
+                    dodge -= dt;
+                }
+                var stick = new Vector2(Vector3.Dot(want, right), Vector3.Dot(want, up));
+                director.Step(dt);
+                mission.Step(dt, stick);
+                Physics.SyncTransforms();
+                mission.StepCamera(dt);
+                t += dt;
+                var moved = (mission.Ardan.position - lastPos).magnitude;
+                lastPos = mission.Ardan.position;
+                stuckFor = moved < 0.2f * dt ? stuckFor + dt : 0f;
+                if (stuckFor > 0.6f)
+                {
+                    dodge = 2.2f;
+                    dodgeSide = -dodgeSide;                              // try the other way next time
+                    stuckFor = 0f;
+                    if (stuckShots++ == 0) Shoot("stuck");
+                    log.Append($"[stuck@({lastPos.x:F1},{lastPos.z:F1})] ");
+                }
+                if (t >= nextLog)
+                {
+                    log.Append($"t{t:F0}=({lastPos.x:F1},{lastPos.z:F1}) ");
+                    nextLog += 15f;
                 }
             }
+            log.Append($"END t{t:F0} wp{wp}/{path?.Count}");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }

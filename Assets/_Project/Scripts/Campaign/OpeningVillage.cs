@@ -15,7 +15,7 @@ namespace CityBuilder.Campaign
     /// The buildings are the game's prefabs with everything but their looks stripped (as the main
     /// menu's background does), grown by <see cref="BuildingScale"/> to the cutscene figures' size.
     /// </summary>
-    public class OpeningVillage : MonoBehaviour
+    public partial class OpeningVillage : MonoBehaviour
     {
         [Serializable]
         public struct Prop
@@ -127,6 +127,7 @@ namespace CityBuilder.Campaign
             _stonePoses.Clear();
             _taken.Clear();
             _streets.Clear();
+            _pins.Clear();
             _lanes.Clear();
             _houses.Clear();
             _solids.Clear();
@@ -137,6 +138,7 @@ namespace CityBuilder.Campaign
             Ground();
             SetPieces();
             Streets();
+            RouteReserve();
             Featured();
             SquareRing();
             StreetHouses();
@@ -145,6 +147,7 @@ namespace CityBuilder.Campaign
             Props();
             Trees();
             Decor();
+            RouteBuild();
         }
 
         // ------------------------------------------------------------ the land
@@ -176,7 +179,7 @@ namespace CityBuilder.Campaign
                 var a = Mathf.PI * 2f * i / (ring.Length - 1);
                 ring[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 17f;
             }
-            Street(ring, 1.6f, dirt, false, RingY);
+            Street(ring, 1.6f, dirt, false, RingY, 0f);
         }
 
         // Every flat layer at its own height, 3 mm apart and more, so no two ever share a depth and
@@ -189,10 +192,19 @@ namespace CityBuilder.Campaign
         private const float LaneY = 0.014f;
         private const float CobbleY = 0.021f;
 
-        private void Street(Vector2[] line, float width, Material material, bool lane = true, float y = -1f)
+        /// <summary>
+        /// A road laid along a smooth curve through its points (the user, 2026-11-11: «дороги прямой
+        /// формы, выглядит не естественно»): Catmull-Rom through the given points, sampled every
+        /// ~1.2 m, and a dirt road meanders a little to either side as well (`wiggle` metres; cobbles
+        /// keep to the curve). The meander fades out at the road's ends, so it still meets the square
+        /// and the roads it joins, and near the pins (the bridge, the gate). Returns the line as laid.
+        /// </summary>
+        private Vector2[] Street(Vector2[] line, float width, Material material, bool lane = true, float y = -1f, float wiggle = -1f, bool smooth = true)
         {
-            _streets.Add(line);
             var cobbled = material == cobble;
+            if (wiggle < 0f) wiggle = cobbled ? 0f : 0.6f;
+            if (smooth) line = Smooth(line, 1.2f, wiggle);
+            _streets.Add(line);
             if (y < 0f) y = cobbled ? CobbleY : LaneY;
             var seed = cobbled ? 0f : (float)_rnd.NextDouble() * 50f;
             if (lane && line.Length > 2) _lanes.Add(line);
@@ -206,6 +218,53 @@ namespace CityBuilder.Campaign
                 var h = cobbled ? y : y + 0.003f * (i % 2);
                 Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, h), material, b - a, seed);
             }
+            return line;
+        }
+
+        /// <summary>Where a meandering road must run true (the bridge, the gate): its point and reach.</summary>
+        private readonly List<(Vector2 at, float r)> _pins = new List<(Vector2, float)>();
+
+        private Vector2[] Smooth(Vector2[] pts, float step, float wiggle)
+        {
+            if (pts.Length < 2) return pts;
+            var outPts = new List<Vector2>();
+            var phase = pts[0].x * 0.37f + pts[0].y * 0.73f;
+            var total = 0f;
+            for (var i = 0; i + 1 < pts.Length; i++) total += (pts[i + 1] - pts[i]).magnitude;
+            for (var i = 0; i + 1 < pts.Length; i++)
+            {
+                var p0 = pts[Mathf.Max(0, i - 1)];
+                var p1 = pts[i];
+                var p2 = pts[i + 1];
+                var p3 = pts[Mathf.Min(pts.Length - 1, i + 2)];
+                var len = (p2 - p1).magnitude;
+                var n = Mathf.Max(1, Mathf.CeilToInt(len / step));
+                for (var k = 0; k < n; k++)
+                {
+                    var t = k / (float)n;
+                    var t2 = t * t;
+                    var t3 = t2 * t;
+                    var q = 0.5f * (2f * p1 + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2 + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
+                    outPts.Add(q);
+                }
+            }
+            outPts.Add(pts[pts.Length - 1]);
+            if (wiggle <= 0f) return outPts.ToArray();
+            // the meander: a slow sideways drift, nothing at the ends or at a pin
+            var res = new Vector2[outPts.Count];
+            var s = 0f;
+            for (var i = 0; i < outPts.Count; i++)
+            {
+                if (i > 0) s += (outPts[i] - outPts[i - 1]).magnitude;
+                var a = outPts[Mathf.Max(0, i - 1)];
+                var b = outPts[Mathf.Min(outPts.Count - 1, i + 1)];
+                var side = Perp((b - a).normalized);
+                var fade = Mathf.Clamp01(Mathf.Min(s, total - s) / 6f);
+                foreach (var (at, r) in _pins) fade = Mathf.Min(fade, Mathf.Clamp01(((outPts[i] - at).magnitude - r) / 6f));
+                var drift = (Mathf.PerlinNoise(s * 0.06f + phase, 0.5f) - 0.5f) * 2f + (Mathf.PerlinNoise(s * 0.19f + phase, 7.5f) - 0.5f) * 0.6f;
+                res[i] = outPts[i] + side * drift * wiggle * fade;
+            }
+            return res;
         }
 
         // ------------------------------------------------------------ the houses
@@ -663,6 +722,7 @@ namespace CityBuilder.Campaign
 
         private bool Free(Vector2 at, float r)
         {
+            if (_routeAreas.Count > 0 && InRoute(at, r)) return false;
             foreach (var (p, pr) in _taken)
             {
                 if ((p - at).sqrMagnitude < (pr + r) * (pr + r)) return false;

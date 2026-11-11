@@ -1,0 +1,478 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace CityBuilder.Campaign
+{
+    /// <summary>
+    /// Mission 1's way out of the village, laid by the map the user approved (2026-11-11,
+    /// Design/mission1_map_v1.png): south down the market street, a dirt track through a field of
+    /// tall wheat and a forest (a fallen tree across it), a river crossed by the sandbox's own bridge
+    /// -- three pieces, the river as wide as they are, the middle one the mage brings down -- and the
+    /// town's wall: the sandbox's level-3 Barbican, Fence and wall towers (the user: the made-for-the-
+    /// film bridge and castle were rejected). Everything is in Campaign/Mission1.json "route".
+    ///
+    /// The route's ground is reserved right after the streets, so the village's houses, fields,
+    /// trees and decor keep out of it; the route itself is laid last.
+    /// </summary>
+    public partial class OpeningVillage
+    {
+        [Serializable] private class RouteFile { public Route route; }
+
+        [Serializable] private class Route
+        {
+            public float[] path;
+            public int pathFrom;
+            public float laneWidth, wiggle;
+            public FieldConfig field;
+            public ForestConfig forest;
+            public FallenConfig fallenTree;
+            public RiverConfig river;
+            public BridgeConfig bridge;
+            public TownConfig town;
+        }
+
+        [Serializable] private class FieldConfig { public float[] poly; public float tile, cell, earsBand, height; }
+        [Serializable] private class ForestConfig { public float[] min, max; public float treeEvery, clearPath, bushEvery; }
+        [Serializable] private class FallenConfig { public float along, offset, clear; }
+        [Serializable] private class RiverConfig { public float[] line; public float width, bank, wiggle; }
+        [Serializable] private class BridgeConfig { public string model; public float x, z, piece, yaw, deck, ramp; public int pieces; }
+
+        [Serializable] private class TownConfig
+        {
+            public float wallZ, gateX, piece, passage, gateYaw, fenceYaw, towerYaw, depth, houseEvery, width;
+            public string gate, fence, tower;
+            public int fencePieces;
+            public string[] houses;
+        }
+
+        [SerializeField] private TextAsset routeFile;
+        [SerializeField] private Prop[] routeModels = new Prop[0];
+        [SerializeField] private Material water;
+        [SerializeField] private Material wheatBody;
+
+        private Route _route;
+        private readonly List<Rect> _routeAreas = new List<Rect>();
+        private readonly List<Transform> _bridgePieces = new List<Transform>();
+        private Vector2[] _path;
+        /// <summary>The track as laid (smoothed, meandering): what the wheat and the trees keep off.</summary>
+        private Vector2[] _track;
+        private float _bridgeZ;
+
+        /// <summary>The route's track, village frame (x, z), from the square to the town gate.</summary>
+        public IReadOnlyList<Vector2> RoutePath => _path;
+
+        /// <summary>The track as laid, from the end of the market street (null before the route is built).</summary>
+        public IReadOnlyList<Vector2> RouteTrack => _track;
+
+        /// <summary>The bridge's pieces in order across the river; the middle one is the mage's.</summary>
+        public IReadOnlyList<Transform> BridgePieces => _bridgePieces;
+
+        /// <summary>The ground's height under a runner: the bridge's deck (ramped at its ends), else 0.</summary>
+        public float HeightAt(Vector2 at)
+        {
+            var b = _route?.bridge;
+            if (b == null || _bridgePieces.Count == 0) return 0f;
+            var half = b.pieces * b.piece * 0.5f;
+            var across = Mathf.Abs(at.x - b.x);
+            if (across > b.piece * 0.5f) return 0f;
+            var along = Mathf.Abs(at.y - _bridgeZ);
+            if (along <= half) return b.deck;
+            return along < half + b.ramp ? b.deck * (1f - (along - half) / b.ramp) : 0f;
+        }
+
+        private void RouteReserve()
+        {
+            _route = null;
+            _routeAreas.Clear();
+            _bridgePieces.Clear();
+            _path = null;
+            if (routeFile == null) return;
+            _route = JsonUtility.FromJson<RouteFile>(routeFile.text)?.route;
+            if (_route == null || _route.path == null) return;
+            _path = Points(_route.path);
+            _track = null;
+            if (_route.bridge != null) _pins.Add((new Vector2(_route.bridge.x, _route.bridge.z), _route.bridge.pieces * _route.bridge.piece * 0.5f + 2f));
+            if (_route.town != null) _pins.Add((new Vector2(_route.town.gateX, _route.town.wallZ), 3f));
+            if (_route.field?.poly != null) _routeAreas.Add(Bounds(Points(_route.field.poly), 1f));
+            if (_route.forest?.min != null)
+                _routeAreas.Add(Rect.MinMaxRect(_route.forest.min[0], _route.forest.min[1], _route.forest.max[0], _route.forest.max[1]));
+            if (_route.river?.line != null) _routeAreas.Add(Bounds(Points(_route.river.line), _route.river.width * 0.5f + _route.river.bank + 1f));
+            var t = _route.town;
+            if (t != null) _routeAreas.Add(Rect.MinMaxRect(t.gateX - t.width * 0.5f, t.wallZ - t.depth, t.gateX + t.width * 0.5f, t.wallZ + 3f));
+            // the track itself, from where the market street ends
+            for (var i = Mathf.Max(0, _route.pathFrom); i + 1 < _path.Length; i++)
+                _routeAreas.Add(Bounds(new[] { _path[i], _path[i + 1] }, _route.laneWidth));
+        }
+
+        private bool InRoute(Vector2 at, float r)
+        {
+            foreach (var a in _routeAreas)
+                if (at.x + r > a.xMin && at.x - r < a.xMax && at.y + r > a.yMin && at.y - r < a.yMax) return true;
+            return false;
+        }
+
+        private void RouteBuild()
+        {
+            if (_route == null) return;
+            var track = new List<Vector2>();
+            for (var i = Mathf.Max(0, _route.pathFrom); i < _path.Length; i++) track.Add(_path[i]);
+            if (track.Count > 1) _track = Street(track.ToArray(), _route.laneWidth, dirt, false, -1f, _route.wiggle);
+            River();
+            Bridge();
+            WheatField();
+            Forest();
+            Town();
+        }
+
+        // ------------------------------------------------------------ the wheat
+
+        /// <summary>
+        /// One slab for the body of the field (cells of the ear tile's size, the track cut out of it,
+        /// sides where it ends), and the ear tiles stood on it only within earsBand of the track -- a
+        /// whole field of ears would be far too many triangles for a phone, and the camera never sees
+        /// that far from the track.
+        /// </summary>
+        private void WheatField()
+        {
+            var f = _route.field;
+            var ears = SetPieceModel("CineWheat");
+            if (f?.poly == null || wheatBody == null) return;
+            var poly = Points(f.poly);
+            var box = Bounds(poly, 0f);
+            // the body in fine cells, so the track's edge steps only a little; the ears in whole tiles
+            var cell = f.cell > 0f ? f.cell : f.tile;
+            var nx = Mathf.CeilToInt(box.width / cell);
+            var nz = Mathf.CeilToInt(box.height / cell);
+            var on = new bool[nx, nz];
+            var clear = _route.laneWidth * 0.5f + 0.15f;
+            for (var i = 0; i < nx; i++)
+            {
+                for (var j = 0; j < nz; j++)
+                {
+                    var c = new Vector2(box.xMin + (i + 0.5f) * cell, box.yMin + (j + 0.5f) * cell);
+                    on[i, j] = Inside(poly, c) && PathDistance(c) > clear;
+                }
+            }
+            var v = new List<Vector3>();
+            var tri = new List<int>();
+            void Face(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+            {
+                var k = v.Count;
+                v.Add(a); v.Add(b); v.Add(c); v.Add(d);
+                tri.Add(k); tri.Add(k + 1); tri.Add(k + 2); tri.Add(k); tri.Add(k + 2); tri.Add(k + 3);
+            }
+            var h = f.height;
+            var earsRoot = new GameObject("WheatEars").transform;
+            earsRoot.SetParent(_root, false);
+            for (var i = 0; i < nx; i++)
+            {
+                for (var j = 0; j < nz; j++)
+                {
+                    if (!on[i, j]) continue;
+                    var x0 = box.xMin + i * cell;
+                    var z0 = box.yMin + j * cell;
+                    var x1 = x0 + cell;
+                    var z1 = z0 + cell;
+                    // top, wound clockwise seen from above (Unity's front face)
+                    Face(new Vector3(x0, h, z0), new Vector3(x0, h, z1), new Vector3(x1, h, z1), new Vector3(x1, h, z0));
+                    if (i == 0 || !on[i - 1, j]) Face(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x0, h, z1), new Vector3(x0, h, z0));
+                    if (i == nx - 1 || !on[i + 1, j]) Face(new Vector3(x1, 0, z1), new Vector3(x1, 0, z0), new Vector3(x1, h, z0), new Vector3(x1, h, z1));
+                    if (j == 0 || !on[i, j - 1]) Face(new Vector3(x1, 0, z0), new Vector3(x0, 0, z0), new Vector3(x0, h, z0), new Vector3(x1, h, z0));
+                    if (j == nz - 1 || !on[i, j + 1]) Face(new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, h, z1), new Vector3(x0, h, z1));
+                }
+            }
+            // the ears: whole tiles, only where the whole tile stands on the body (clear of the
+            // track and inside the field) and near enough the track for the camera to see
+            if (ears != null)
+            {
+                var half = f.tile * 0.5f;
+                for (var x = box.xMin + half; x < box.xMax - half; x += f.tile)
+                {
+                    for (var z = box.yMin + half; z < box.yMax - half; z += f.tile)
+                    {
+                        var c = new Vector2(x, z);
+                        var d = PathDistance(c);
+                        if (d < clear + half * 1.42f || d > f.earsBand) continue;
+                        if (!Inside(poly, c + new Vector2(-half, -half)) || !Inside(poly, c + new Vector2(half, half)) ||
+                            !Inside(poly, c + new Vector2(-half, half)) || !Inside(poly, c + new Vector2(half, -half))) continue;
+                        var e = Instantiate(ears, earsRoot);
+                        e.name = "Ears";
+                        // a quarter turn now and then, so the tiles do not repeat in rows
+                        e.transform.SetPositionAndRotation(new Vector3(c.x, 0f, c.y), Quaternion.Euler(0f, 90f * _rnd.Next(4), 0f) * ears.transform.rotation);
+                    }
+                }
+            }
+            var mesh = new Mesh { name = "WheatBody", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.SetVertices(v);
+            mesh.SetTriangles(tri, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            var go = new GameObject("WheatBody", typeof(MeshFilter), typeof(MeshRenderer));
+            go.transform.SetParent(_root, false);
+            go.GetComponent<MeshFilter>().sharedMesh = mesh;
+            go.GetComponent<MeshRenderer>().sharedMaterial = wheatBody;
+        }
+
+        // ------------------------------------------------------------ the forest
+
+        private void Forest()
+        {
+            var f = _route.forest;
+            if (f?.min == null || trees.Length == 0) return;
+            // the fallen tree first, across the track; the trees keep clear of both its ends, so
+            // there is a way round it whichever end the crown lies at
+            Vector2 endA = new Vector2(1e6f, 1e6f), endB = endA;
+            var fallen = SetPieceModel("CineFallenTree");
+            var fc = _route.fallenTree;
+            if (fallen != null && fc != null && PointAlong(fc.along, out var at, out var dir))
+            {
+                var side = Perp(dir);
+                var centre = at + side * fc.offset;
+                var go = Instantiate(fallen, _root);
+                go.name = "CineFallenTree";
+                go.transform.SetPositionAndRotation(new Vector3(centre.x, 0f, centre.y),
+                    Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.y)) * fallen.transform.rotation);
+                CineTwoSided.Apply(go);
+                _solids.Add(go.transform);
+                endA = centre + side * 1.6f;
+                endB = centre - side * 1.6f;
+            }
+            var clearAround = fc != null ? fc.clear : 0f;
+            var step = f.treeEvery;
+            for (var x = f.min[0]; x < f.max[0]; x += step)
+            {
+                for (var z = f.min[1]; z < f.max[1]; z += step)
+                {
+                    var p = new Vector2(x + ((float)_rnd.NextDouble() - 0.5f) * step * 0.8f, z + ((float)_rnd.NextDouble() - 0.5f) * step * 0.8f);
+                    if (PathDistance(p) < f.clearPath || (p - endA).magnitude < clearAround || (p - endB).magnitude < clearAround) continue;
+                    var model = trees[_rnd.Next(trees.Length)];
+                    var go = Instantiate(model, _root);
+                    go.name = "Tree";
+                    go.transform.SetPositionAndRotation(new Vector3(p.x, 0f, p.y),
+                        Quaternion.Euler(0f, (float)_rnd.NextDouble() * 360f, 0f) * model.transform.rotation);
+                    go.transform.localScale = model.transform.localScale * BuildingScale * (0.9f + (float)_rnd.NextDouble() * 0.5f);
+                    _trunks.Add(go.transform);
+                }
+            }
+            var bush = SetPieceModel("CineBushClump");
+            if (bush == null || f.bushEvery <= 0f) return;
+            for (var x = f.min[0]; x < f.max[0]; x += f.bushEvery)
+            {
+                for (var z = f.min[1]; z < f.max[1]; z += f.bushEvery)
+                {
+                    var p = new Vector2(x + ((float)_rnd.NextDouble() - 0.5f) * f.bushEvery, z + ((float)_rnd.NextDouble() - 0.5f) * f.bushEvery);
+                    if (PathDistance(p) < _route.laneWidth * 0.5f + 0.5f || (p - endA).magnitude < clearAround || (p - endB).magnitude < clearAround) continue;
+                    var go = Instantiate(bush, _root);
+                    go.name = "Bush";
+                    go.transform.SetPositionAndRotation(new Vector3(p.x, 0f, p.y),
+                        Quaternion.Euler(0f, (float)_rnd.NextDouble() * 360f, 0f) * bush.transform.rotation);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------ the river and the bridge
+
+        private void River()
+        {
+            var r = _route.river;
+            if (r?.line == null || water == null) return;
+            var line = Smooth(Points(r.line), 1.5f, r.wiggle);
+            Street(line, r.width + r.bank * 2f, dirt, false, -1f, 0f, false);
+            var b = _route.bridge;
+            // the bridge stands where the river's centre crosses its x
+            if (b != null)
+            {
+                _bridgeZ = b.z;
+                for (var i = 0; i + 1 < line.Length; i++)
+                {
+                    if ((line[i].x - b.x) * (line[i + 1].x - b.x) > 0f) continue;
+                    var u = Mathf.Abs(line[i + 1].x - line[i].x) < 1e-4f ? 0f : (b.x - line[i].x) / (line[i + 1].x - line[i].x);
+                    _bridgeZ = Mathf.Lerp(line[i].y, line[i + 1].y, u);
+                    break;
+                }
+            }
+            var y = LaneY + 0.006f;
+            for (var i = 0; i + 1 < line.Length; i++)
+            {
+                var a = line[i];
+                var c = line[i + 1];
+                var d = (c - a).normalized;
+                var side = Perp(d) * (r.width * 0.5f);
+                var ext = d * (r.width * 0.5f);
+                Flat("River", Quad(a - ext - side, c + ext - side, c + ext + side, a - ext + side, y), water, c - a, 3f);
+                // the water stops a runner, all but where the bridge spans it
+                var len = (c - a).magnitude;
+                for (var s = 0f; s < len; s += 1f)
+                {
+                    var m = a + d * Mathf.Min(len, s + 0.5f);
+                    if (b != null && Mathf.Abs(m.x - b.x) < b.piece * 0.5f + 0.55f) continue;
+                    var wall = new GameObject("RiverEdge", typeof(BoxCollider));
+                    wall.transform.SetParent(_root, false);
+                    wall.transform.SetPositionAndRotation(new Vector3(m.x, 0.5f, m.y), Quaternion.LookRotation(new Vector3(d.x, 0f, d.y)));
+                    wall.GetComponent<BoxCollider>().size = new Vector3(r.width, 1f, 1.05f);
+                }
+            }
+        }
+
+        private void Bridge()
+        {
+            var b = _route.bridge;
+            var model = RouteModel(b?.model);
+            if (model == null) return;
+            for (var i = 0; i < b.pieces; i++)
+            {
+                var z = _bridgeZ + (i - (b.pieces - 1) * 0.5f) * b.piece;
+                var go = Instantiate(model, _root);
+                go.name = "BridgePiece" + i;
+                go.transform.SetPositionAndRotation(new Vector3(b.x, 0f, z), Quaternion.Euler(0f, b.yaw, 0f) * model.transform.rotation);
+                go.transform.localScale = model.transform.localScale * BuildingScale;
+                CineTwoSided.Apply(go);
+                _bridgePieces.Add(go.transform);
+            }
+        }
+
+        // ------------------------------------------------------------ the town
+
+        /// <summary>The Barbican in the middle of the wall (its middle cell the way through, its end
+        /// cells walls), fencePieces of the stone wall each side, a wall tower at each end, and
+        /// the town's houses behind, a street up from the gate.</summary>
+        private void Town()
+        {
+            var t = _route.town;
+            if (t == null) return;
+            var gate = RouteModel(t.gate);
+            if (gate != null)
+            {
+                var go = PutRouteModel(gate, new Vector2(t.gateX, t.wallZ), t.gateYaw, "TownGate", false);
+                // two posts either side of the passage instead of one box over it
+                foreach (var s in new[] { -1f, 1f })
+                {
+                    var post = new GameObject("GateSide", typeof(BoxCollider));
+                    post.transform.SetParent(_root, false);
+                    post.transform.position = new Vector3(t.gateX + s * (t.passage * 0.5f + t.piece * 0.5f), 1f, t.wallZ);
+                    post.GetComponent<BoxCollider>().size = new Vector3(t.piece, 2f, t.piece);
+                }
+                _ = go;
+            }
+            var fence = RouteModel(t.fence);
+            var gateHalf = t.piece * 1.5f;
+            for (var k = 0; k < t.fencePieces && fence != null; k++)
+            {
+                foreach (var s in new[] { -1f, 1f })
+                    PutRouteModel(fence, new Vector2(t.gateX + s * (gateHalf + (k + 0.5f) * t.piece), t.wallZ), t.fenceYaw, "TownWall", true);
+            }
+            var tower = RouteModel(t.tower);
+            if (tower != null)
+            {
+                foreach (var s in new[] { -1f, 1f })
+                    PutRouteModel(tower, new Vector2(t.gateX + s * (gateHalf + (t.fencePieces + 0.5f) * t.piece), t.wallZ), t.towerYaw, "TownTower", true);
+            }
+            // the town behind: a cobbled street up from the gate, houses either side
+            Street(new[] { new Vector2(t.gateX, t.wallZ + 1f), new Vector2(t.gateX, t.wallZ - t.depth) }, 2.2f, cobble, false);
+            if (t.houses == null || t.houses.Length == 0) return;
+            var n = 0;
+            for (var z = t.wallZ - 3.5f; z > t.wallZ - t.depth; z -= t.houseEvery)
+            {
+                for (var x = t.gateX - t.width * 0.5f + 2f; x < t.gateX + t.width * 0.5f - 2f; x += t.houseEvery)
+                {
+                    if (Mathf.Abs(x - t.gateX) < 2.6f) continue;
+                    var id = t.houses[n++ % t.houses.Length];
+                    var prefab = Prefab(id);
+                    if (prefab == null) continue;
+                    var go = Strip(prefab);
+                    CineTwoSided.Apply(go);
+                    go.name = id;
+                    go.transform.SetParent(_root, false);
+                    var yaw = x < t.gateX ? 90f : -90f;
+                    go.transform.SetPositionAndRotation(new Vector3(x, 0f, z), Quaternion.Euler(0f, yaw, 0f) * prefab.transform.rotation);
+                    go.transform.localScale = prefab.transform.localScale * BuildingScale;
+                    _houses.Add(go.transform);
+                    _solids.Add(go.transform);
+                }
+            }
+        }
+
+        private GameObject PutRouteModel(GameObject model, Vector2 at, float yaw, string name, bool solid)
+        {
+            var go = Instantiate(model, _root);
+            go.name = name;
+            go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
+            go.transform.localScale = model.transform.localScale * BuildingScale;
+            CineTwoSided.Apply(go);
+            if (solid) _solids.Add(go.transform);
+            return go;
+        }
+
+        private GameObject RouteModel(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            foreach (var m in routeModels) if (m.id == id) return m.prefab;
+            return null;
+        }
+
+        // ------------------------------------------------------------ geometry
+
+        private float PathDistance(Vector2 p)
+        {
+            var best = float.MaxValue;
+            for (var i = 0; i < _route.pathFrom && i + 1 < _path.Length; i++)
+                best = Mathf.Min(best, DistanceToSegment(p, _path[i], _path[i + 1]));
+            var line = _track ?? _path;
+            for (var i = 0; i + 1 < line.Length; i++)
+                best = Mathf.Min(best, DistanceToSegment(p, line[i], line[i + 1]));
+            return best;
+        }
+
+        /// <summary>The point `along` metres down the track (from its start) and the track's way there.</summary>
+        private bool PointAlong(float along, out Vector2 at, out Vector2 dir)
+        {
+            at = dir = Vector2.zero;
+            // along the market street first (the raw points), then the laid track
+            var line = new List<Vector2>();
+            for (var i = 0; i <= _route.pathFrom && i < _path.Length; i++) line.Add(_path[i]);
+            if (_track != null) for (var i = 1; i < _track.Length; i++) line.Add(_track[i]);
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                var seg = (line[i + 1] - line[i]).magnitude;
+                if (along <= seg)
+                {
+                    dir = (line[i + 1] - line[i]).normalized;
+                    at = line[i] + dir * along;
+                    return true;
+                }
+                along -= seg;
+            }
+            return false;
+        }
+
+        private static Vector2[] Points(float[] xz)
+        {
+            var p = new Vector2[xz.Length / 2];
+            for (var i = 0; i < p.Length; i++) p[i] = new Vector2(xz[i * 2], xz[i * 2 + 1]);
+            return p;
+        }
+
+        private static Rect Bounds(Vector2[] pts, float pad)
+        {
+            Vector2 lo = pts[0], hi = pts[0];
+            foreach (var p in pts)
+            {
+                lo = Vector2.Min(lo, p);
+                hi = Vector2.Max(hi, p);
+            }
+            return Rect.MinMaxRect(lo.x - pad, lo.y - pad, hi.x + pad, hi.y + pad);
+        }
+
+        private static bool Inside(Vector2[] poly, Vector2 p)
+        {
+            var inside = false;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+            {
+                if ((poly[i].y > p.y) != (poly[j].y > p.y) &&
+                    p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x) inside = !inside;
+            }
+            return inside;
+        }
+    }
+}

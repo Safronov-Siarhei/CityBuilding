@@ -8,11 +8,13 @@
 //   _Mode 2 dirt   -- a packed earth lane: two wheel ruts along its length (_Dir), pebbles, grass
 //                     creeping in from the edges.
 //   _Mode 3 field  -- ploughed furrows along _Dir with a green tint of shoots.
+//   _Mode 4 water  -- mission 1's river: deep and shallow blues, ripples along the flow (_Dir), lighter at the banks.
+//   _Mode 5 wheat  -- the body of a standing wheat field (a slab under the ear tiles): golden, darker low down.
 Shader "CityBuilder/CineGround"
 {
     Properties
     {
-        _Mode ("0 grass, 1 cobble, 2 dirt, 3 field", Float) = 0
+        _Mode ("0 grass, 1 cobble, 2 dirt, 3 field, 4 water, 5 wheat", Float) = 0
         _Dir ("Lane direction (xz)", Vector) = (1, 0, 0, 0)
         _Seed ("Seed", Float) = 0
     }
@@ -155,10 +157,32 @@ Shader "CityBuilder/CineGround"
                 return c;
             }
 
+            half3 Water(float2 p)
+            {
+                float2 dir = normalize(_Dir.xz + 1e-4);
+                float2 side = float2(-dir.y, dir.x);
+                float along = dot(p, dir);
+                float across = dot(p, side);
+                half3 c = lerp(Hex(0x2F, 0x86, 0xC4), Hex(0x4D, 0xB6, 0xE6), Fbm(p * 0.35 + _Seed));
+                // ripples running along the flow, broken up
+                float rip = sin(along * 3.1 + Fbm(p * 0.8) * 6.0) * sin(across * 1.7 + along * 0.4);
+                c = lerp(c, Hex(0xBF, 0xEA, 0xFA), smoothstep(0.82, 0.97, rip) * 0.6);
+                return c;
+            }
+
+            half3 Wheat(float2 p, float y)
+            {
+                half3 c = lerp(Hex(0xE2, 0xB8, 0x4E), Hex(0xF4, 0xD4, 0x6C), Fbm(p * 0.9 + 3.0));
+                c = lerp(c, Hex(0xF6, 0xD6, 0x72), step(0.8, Hash(floor(p * 18.0))) * 0.6);   // flecks of bright ears
+                c *= lerp(0.6, 1.0, saturate(y / 0.27));                                       // shaded low down
+                return c;
+            }
+
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 p = input.positionWS.xz;
-                half3 albedo = _Mode < 0.5 ? Grass(p) : _Mode < 1.5 ? Cobble(p) : _Mode < 2.5 ? Dirt(p) : Field(p);
+                half3 albedo = _Mode < 0.5 ? Grass(p) : _Mode < 1.5 ? Cobble(p) : _Mode < 2.5 ? Dirt(p) : _Mode < 3.5 ? Field(p)
+                    : _Mode < 4.5 ? Water(p) : Wheat(p, input.positionWS.y);
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 Light light = GetMainLight(shadowCoord);
                 float3 n = normalize(input.normalWS);
