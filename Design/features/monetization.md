@@ -64,6 +64,12 @@
   bundle `<family>_<level>` per filled level (name key `#bundle_<family>`); crystal kinds fill level 1
   only and hold for every level (paid: l1_price = USD). 30 goods families, 3 gifts, starter, 5 ad and 5
   paid crystal offers. Crystal PRICES of goods unchanged on purpose (the user will test first).
+- **«Цены ресурсов» (calc-only tab, gid 2000064, the user 2026-11-11):** each resource's worth in crystals
+  per 10 pcs (Claude's starting guesses: a level-1 bundle ~ 1 ad = 10 crystals; Crystals row = 10, fixed)
+  and a calculator of offers: up to 3 resources (dropdown) -> value in crystals, bonus % (vs the crystal
+  price, else the $ price at B2, else one ad -- the same rule as `BonusPercent`), value in ads. Not read by
+  the game. By these guesses the goods bundles' crystal prices (1-3) are ~+400..900 % cheap -- the user
+  tunes either side after testing. Rejected for now: auto-checking every «Наборы» row, recipe-derived prices.
 - **Open:** the numbers (the user tunes the sheet); Google Play Billing for the paid offers; a real ad network; whether the menu cards' place
   and the window size (0.8 of the art) suit the phone -- not seen on a device yet.
 
