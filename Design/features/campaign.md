@@ -29,6 +29,12 @@
   3-30 after the portal (hides the empty far town); film frames 1920x1080 JPG 95 (encoder takes the
   frame size). Unity may crash on QUIT after the film (finalizer in AssetDatabase) -- frames are
   complete if the log has `[CampaignFilm] 1809`.
+- **v8 (2026-11-11, b74a08a44):** speech bubbles REJECTED by the user -> subtitles at the bottom
+  middle, white, shadow + soft outline, anchors 0.22-0.78 (no speaker name). Ground: `Shaders/CineGround.shader`
+  (world-space, modes grass zones / cobble / dirt lane with ruts along `_Dir` / field furrows), palette
+  in sRGB converted to linear, fog PER PIXEL (the grass is one 800 m quad -- per-vertex fog whitened
+  it). `OpeningVillage.MoreFields` (~70 strips 20-54 m out) + `Decor` (Map 3's decor kit tufts/flowers/
+  pebbles/bushes, 25 m combined chunks, no shadows).
 - **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
   synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
   `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
