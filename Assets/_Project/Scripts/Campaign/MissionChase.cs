@@ -68,6 +68,33 @@ namespace CityBuilder.Campaign
 
         public int Catches { get; private set; }
 
+        /// <summary>Set once the mage holds the bank: nothing chases him any more.</summary>
+        public bool Off { get; private set; }
+
+        /// <summary>The mage's scene begins: the ambush orc is handed over (sprung if it was not), the
+        /// patrols far behind are put away, and the chase is over.</summary>
+        public CineFigure Stop()
+        {
+            Off = true;
+            CineFigure ambush = null;
+            foreach (var o in _orcs)
+            {
+                if (o.ambush)
+                {
+                    ambush = o.fig;
+                    if (!o.fig.gameObject.activeSelf)
+                    {
+                        o.fig.gameObject.SetActive(true);
+                        Place(o.body, o.home);
+                    }
+                }
+                else o.fig.gameObject.SetActive(false);
+            }
+            _noticeT = -1f;
+            NoticeAlpha = 0f;
+            return ambush;
+        }
+
         /// <summary>For the check: how many orcs there are, how many are chasing, the nearest's distance.</summary>
         public string Report()
         {
@@ -152,6 +179,7 @@ namespace CityBuilder.Campaign
 
         public void Step(float dt)
         {
+            if (Off) return;
             if (_caught >= 0f)
             {
                 StepCaught(dt);

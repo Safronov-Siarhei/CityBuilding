@@ -84,6 +84,19 @@ namespace CityBuilder.Campaign
             return along < half + b.ramp ? b.deck * (1f - (along - half) / b.ramp) : 0f;
         }
 
+        /// <summary>The mage's orb took this piece: the gap stops a runner, and the deck's height
+        /// ends at its edge.</summary>
+        public void BreakBridge(Transform piece)
+        {
+            var b = _route?.bridge;
+            if (b == null || piece == null) return;
+            var gap = new GameObject("BridgeGap", typeof(BoxCollider));
+            gap.transform.SetParent(_root, false);
+            gap.transform.position = new Vector3(b.x, 0.5f + b.deck, piece.position.z);
+            gap.GetComponent<BoxCollider>().size = new Vector3(b.piece + 1.4f, 1f + b.deck * 2f, b.piece * 0.9f);
+            UnityEngine.Physics.SyncTransforms();
+        }
+
         private void RouteReserve()
         {
             _route = null;

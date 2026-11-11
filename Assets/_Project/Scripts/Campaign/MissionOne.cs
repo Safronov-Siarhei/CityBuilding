@@ -26,6 +26,7 @@ namespace CityBuilder.Campaign
             public string hintKey;
             public CalmConfig calm;
             public MissionChase.Config chase;
+            public MissionMage.Config mage;
         }
 
         [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend; }
@@ -49,6 +50,10 @@ namespace CityBuilder.Campaign
 
         /// <summary>The chase, for the batchmode check (how often he was caught).</summary>
         public MissionChase Chase => _chase;
+
+        /// <summary>The mage at the bridge, for the batchmode check (its scene clock).</summary>
+        public MissionMage Mage => _mage;
+        private MissionMage _mage;
         private Vector3 _fromPos;
         private Quaternion _fromRot;
         private float _fromFov, _blend;
@@ -101,6 +106,8 @@ namespace CityBuilder.Campaign
                 _chase = new MissionChase(_c.chase, village, _ardan, _body, director.Member, director.FlameMaterial, transform, Localization.Get);
                 Overlay();
             }
+            if (_c.mage != null && fx != null)
+                _mage = new MissionMage(_c.mage, village, director.Member, fx.SparkMaterial, fx.DustMaterial, director.FlameMaterial, transform);
             Running = true;
         }
 
@@ -118,6 +125,28 @@ namespace CityBuilder.Campaign
         public void Step(float dt, Vector2? steer)
         {
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
+            if (_mage != null)
+            {
+                _mage.Step(dt);
+                if (_mage.Ready(_ardan.transform.position))
+                {
+                    // the mage's scene: the player's say is taken, the stick put away
+                    _mage.Begin(_chase != null ? _chase.Stop() : null);
+                    _stick.Locked = true;
+                    director.Say(_c.mage.lineKey, _c.mage.lineSeconds);
+                }
+                if (_mage.Playing)
+                {
+                    if (_black != null) _black.color = new Color(0f, 0f, 0f, _mage.Fade);
+                    RunOn(dt);
+                    return;
+                }
+                if (_mage.Done && _stick.Locked)
+                {
+                    _stick.Locked = false;
+                    if (_black != null) _black.color = Color.clear;
+                }
+            }
             if (_chase != null)
             {
                 _chase.Step(dt);
@@ -154,6 +183,25 @@ namespace CityBuilder.Campaign
                 var d = new Vector2(t.position.x, t.position.z).magnitude;
                 fx.Calm = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(_c.calm.from, _c.calm.to, d));
             }
+        }
+
+        /// <summary>In the mage's scene Ардан runs on down the track by himself, past the mage.</summary>
+        private void RunOn(float dt)
+        {
+            var t = _ardan.transform;
+            var to = new Vector3(_c.mage.runTo[0] - t.position.x, 0f, _c.mage.runTo[1] - t.position.z);
+            if (to.magnitude > 0.2f)
+            {
+                var dir = to.normalized;
+                _body.Move(dir * _ardan.Clips.runSpeed * dt);
+                var p = t.position;
+                p.y = village.HeightAt(new Vector2(p.x, p.z));
+                t.position = p;
+                t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(dir), Mathf.Clamp01(_c.runner.turnRate * dt));
+                _ardan.Play("Run", _c.runner.fade);
+            }
+            else _ardan.Play("Idle", _c.runner.fade);
+            _ardan.Tick(dt);
         }
 
         /// <summary>The black that falls when he is caught, and the checkpoint notice high in the middle.</summary>
@@ -194,8 +242,20 @@ namespace CityBuilder.Campaign
             var pos = aim - rot * Vector3.forward * c.distance;
             _blend = c.blend > 0f ? Mathf.Min(1f, _blend + dt / c.blend) : 1f;
             var w = Mathf.SmoothStep(0f, 1f, _blend);
-            cam.transform.SetPositionAndRotation(Vector3.Lerp(_fromPos, pos, w), Quaternion.Slerp(_fromRot, rot, w));
-            cam.fieldOfView = Mathf.Lerp(_fromFov, c.fov, w);
+            pos = Vector3.Lerp(_fromPos, pos, w);
+            rot = Quaternion.Slerp(_fromRot, rot, w);
+            var fov = Mathf.Lerp(_fromFov, c.fov, w);
+            // the mage's scene takes the camera down to him, and gives it back
+            if (_mage != null && _mage.OnShot)
+            {
+                _mage.Shot(out var from, out var at);
+                pos = from;
+                rot = Quaternion.LookRotation(at - from);
+                fov = _mage.Fov;
+                aim = at;
+            }
+            cam.transform.SetPositionAndRotation(pos, rot);
+            cam.fieldOfView = fov;
             director.SetCameraAim(cam.transform.position, aim);
         }
     }

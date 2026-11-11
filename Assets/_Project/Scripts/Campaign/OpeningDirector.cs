@@ -209,6 +209,14 @@ namespace CityBuilder.Campaign
         public Material FlameMaterial => life != null ? life.FlameMaterial : null;
 
         /// <summary>Where the camera stands and looks, for the effects' depth of field and the storm dome.</summary>
+        /// <summary>A line in the film's subtitle, from now for `seconds` (mission 1's mage).</summary>
+        public void Say(string key, float seconds)
+        {
+            _subT0 = Time;
+            _subLen = seconds;
+            _subText = Localization.Get(key);
+        }
+
         public void SetCameraAim(Vector3 from, Vector3 at)
         {
             _camFrom = from;

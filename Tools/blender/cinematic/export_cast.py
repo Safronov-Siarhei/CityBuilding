@@ -39,6 +39,8 @@ import kids_anim as ka  # noqa: E402
 import orc_anim as oa  # noqa: E402
 import orcs_cast as oc  # noqa: E402
 import priest  # noqa: E402
+import mage  # noqa: E402
+import mage_anim as ma  # noqa: E402
 import townsfolk as tf  # noqa: E402
 import townsfolk_anim as ta  # noqa: E402
 import perfs as pf  # noqa: E402
@@ -196,6 +198,14 @@ def cast():
 
     arm = ka.rig_figure(priest.make((0, 0, 0)), priest.SCALE)
     out.append(("CinePriest", arm, priest.SCALE, ka.apply, human_clips(), []))
+
+    # the mage at the bridge (mission 1, approved 2026-11-11): his own idle and the scene's three clips
+    arm = ka.rig_figure(mage.make((0, 0, 0)), mage.SCALE)
+    c = human_clips(idle_fn=ma.idle)
+    c["Wave"] = clip(ma.wave, ma.WAVE_SECONDS)
+    c["Cast"] = clip(ma.cast, ma.CAST_SECONDS)
+    c["Hold"] = clip(ma.hold, ma.HOLD_SECONDS, True)
+    out.append(("CineMage", arm, mage.SCALE, ea.apply, c, []))
 
     for n in ("CineMerchant", "CinePeasant", "CinePeasantWoman"):
         arm = ka.rig_figure(tf.make(n), tf.FIGURES[n][1])

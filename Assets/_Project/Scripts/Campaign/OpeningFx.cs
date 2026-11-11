@@ -465,6 +465,10 @@ namespace CityBuilder.Campaign
         /// </summary>
         public float Calm { get; set; }
 
+        /// <summary>The soft glowing dot (sparks, the mage's orb) and the soft puff (dust, splashes).</summary>
+        public Material SparkMaterial => sparkMaterial;
+        public Material DustMaterial => dustMaterial;
+
         private void StepMood(float time)
         {
             var w = Mathf.Clamp01((time - _c.moodStart) / _c.moodSeconds);

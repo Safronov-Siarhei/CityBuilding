@@ -77,8 +77,24 @@ namespace CityBuilder.Campaign
             return j;
         }
 
+        /// <summary>Put away (a scene has the player's say): no ring, no hint, no reading.</summary>
+        public bool Locked
+        {
+            get => _locked;
+            set
+            {
+                _locked = value;
+                Value = Vector2.zero;
+                _stick.alpha = 0f;
+                _hintGroup.alpha = 0f;
+            }
+        }
+
+        private bool _locked;
+
         private void Update()
         {
+            if (_locked) return;
             var dt = Time.unscaledDeltaTime;
             _age += dt;
             var pressed = false;

@@ -181,8 +181,16 @@ namespace CityBuilder.EditorTools
                 RenderTexture.active = null;
                 cam.targetTexture = null;
             }
+            // the mage's scene: frames at its beats, by its own clock
+            var mageShots = new[] { (1.2f, "mage_wave"), (3.8f, "mage_strike"), (4.45f, "mage_orb"), (5.3f, "mage_fall"), (6.4f, "mage_drift"), (9.5f, "mage_hold") };
+            var mageNext = 0;
             while (path != null && wp < path.Count && t < 420f)
             {
+                if (mission.Mage != null && mageNext < mageShots.Length && mission.Mage.T >= mageShots[mageNext].Item1)
+                {
+                    Shoot(mageShots[mageNext++].Item2);
+                    log.Append($"[{mageShots[mageNext - 1].Item2} at ({mission.Ardan.position.x:F1},{mission.Ardan.position.z:F1})] ");
+                }
                 var pos = mission.Ardan.position;
                 var to = new Vector3(path[wp].x - pos.x, 0f, path[wp].y - pos.z);
                 if (to.magnitude < 1.0f)
@@ -221,13 +229,13 @@ namespace CityBuilder.EditorTools
                 }
             }
             log.Append($"END t{t:F0} wp{wp}/{path?.Count} caught {mission.Chase?.Catches}");
-            // then back north into the orc standing at the bridge's far end: he must be caught and
-            // brought back to the checkpoint before the bridge
+            // then back north over the bridge: the mage brought its middle down, so he must stop at
+            // the gap, and nothing may catch him
             var before = mission.Chase?.Catches ?? 0;
-            for (var back = 0f; back < 75f && (mission.Chase?.Catches ?? 0) == before; back += dt)
+            for (var back = 0f; back < 70f; back += dt)
             {
                 var pos = mission.Ardan.position;
-                var want = new Vector3(-4f - pos.x, 0f, -182f - pos.z).normalized;
+                var want = new Vector3(-4f - pos.x, 0f, -176f - pos.z).normalized;
                 director.Step(dt);
                 mission.Step(dt, new Vector2(Vector3.Dot(want, right), Vector3.Dot(want, up)));
                 Physics.SyncTransforms();
@@ -243,7 +251,7 @@ namespace CityBuilder.EditorTools
                 t += dt;
             }
             var at2 = mission.Ardan.position;
-            log.Append($" | BACK caught {mission.Chase?.Catches} now at ({at2.x:F1},{at2.z:F1})");
+            log.Append($" | BACK caught {mission.Chase?.Catches - before} more, stopped at ({at2.x:F1},{at2.z:F1}) mage t {mission.Mage?.T:F1}");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }
