@@ -151,9 +151,15 @@ namespace CityBuilder.EditorTools
             foreach (var file in files)
             {
                 var path = file.Replace(Path.DirectorySeparatorChar, '/');
+                // also when it does not load as a sprite: Close/Counter came in through a bare meta
+                // (guid only) in an open editor and stayed plain textures in the Library although
+                // their meta said Sprite -- the prefab got white boxes (2026-11-11)
                 if (AssetImporter.GetAtPath(path) is TextureImporter ti
-                    && (ti.textureType != TextureImporterType.Sprite || ti.GetPlatformTextureSettings("Android").maxTextureSize != 1024))
+                    && (ti.textureType != TextureImporterType.Sprite || ti.GetPlatformTextureSettings("Android").maxTextureSize != 1024
+                        || AssetDatabase.LoadAssetAtPath<Sprite>(path) == null))
                     AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                if (AssetDatabase.LoadAssetAtPath<Sprite>(path) == null)
+                    Debug.LogError($"BuildOfferShopWindow: {path} does not load as a sprite.");
             }
         }
 

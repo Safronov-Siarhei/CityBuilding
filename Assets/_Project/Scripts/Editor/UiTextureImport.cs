@@ -53,6 +53,9 @@ namespace CityBuilder.EditorTools
             if (!(assetImporter is TextureImporter importer)) return;
 
             importer.textureType = TextureImporterType.Sprite;
+            // a picture that came in through a bare meta (guid only) was imported as a CUBE and had no
+            // sprite -- white boxes in the shop window (2026-11-11)
+            importer.textureShape = TextureImporterShape.Texture2D;
             importer.spriteImportMode = SpriteImportMode.Single;
             importer.mipmapEnabled = false;
             importer.alphaIsTransparency = true;
