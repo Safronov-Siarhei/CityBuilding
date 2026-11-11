@@ -30,6 +30,8 @@ namespace CityBuilder.Shop
         public event Action Changed;
         /// <summary>A free bundle came up: the loud notice on the left.</summary>
         public event Action FreeArrived;
+        /// <summary>A bundle was given from this slot (the window flies its goods to where they went).</summary>
+        public event Action<int, BalanceConfig.OfferBundle> Given;
 
         public OfferRotation Rotation { get; private set; }
         /// <summary>The slot whose ad is playing, or -1.</summary>
@@ -110,7 +112,7 @@ namespace CityBuilder.Shop
                         return false;
                     }
                     Wallet.UpgradeCrystals -= s.Bundle.priceCrystals;
-                    Give(s);
+                    Give(s, slot);
                     return true;
                 case Pay.Ad:
                     if (!RewardedAds.IsReady) return false;
@@ -122,7 +124,7 @@ namespace CityBuilder.Shop
                         PlayerPrefs.SetInt(StarterGivenPref, 1);
                         PlayerPrefs.Save();
                     }
-                    Give(s);
+                    Give(s, slot);
                     return true;
             }
         }
@@ -135,12 +137,12 @@ namespace CityBuilder.Shop
             yield return new WaitForSecondsRealtime(_config.ShopAdStubSeconds);
             AdPlayingSlot = -1;
             var s = Rotation.Slots[slot];
-            if (s.Bundle == bundle) Give(s);
-            else Give(new OfferSlot { Bundle = bundle });
+            if (s.Bundle == bundle) Give(s, slot);
+            else Give(new OfferSlot { Bundle = bundle }, slot);
             Changed?.Invoke();
         }
 
-        private void Give(OfferSlot slot)
+        private void Give(OfferSlot slot, int index)
         {
             slot.Taken = true;
             var lost = false;
@@ -155,6 +157,7 @@ namespace CityBuilder.Shop
                 if (ResourceManager.Instance.Add(type, good.amount) < good.amount) lost = true;
             }
             if (lost) Feed("#shop_storage_full");
+            Given?.Invoke(index, slot.Bundle);
             Changed?.Invoke();
         }
 

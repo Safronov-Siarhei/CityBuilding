@@ -35,11 +35,14 @@
   behind the window, so the line is in it); no ad fill (`RewardedAds.IsReady`, a stand-in; cheat
   «Лавка: рекламы НЕТ») -> only the crystal button; a timer in its last `shop_timer_warn_seconds`
   (30) is red and pulses (the window's strips and the menu cards); a new bundle pops in (scale Y
-  0.2 -> 1 with overshoot) with a cream flash (strips) / a pop (menu cards). Not compiled in batchmode
-  (the user's editor was open) -- first setup will tell.
-- **Waiting on the user:** which «resources received» effect (options offered 2026-11-11: icons fly
-  to the HUD resource bar / to the sack; a «+N» float per good; the strip's goods bursting into the
-  stamp; a counter roll on the resource bar).
+  0.2 -> 1 with overshoot) with a cream flash (strips) / a pop (menu cards).
+- **Received effect (the user, 2026-11-11: show where it flies IN the shop window):**
+  `OfferRewardFlight` (on the window, fed by `OfferShop.Given`): a «+N» rises over each good in the
+  strip, 6 icons per good arc to its place and a «+N» rises there, the place punches as they land.
+  Place = the top bar's chip `Icon_<type>` (wood, stone, coins, food -- if on screen), else the sack
+  `InventoryButton`; crystals -> the window's crystal counter. The HUD behind is hidden, so a copy of
+  the target's picture (and the sack's glyph) fades in at its screen place and out after. Round 2 and
+  this compiled and built 2026-11-11 (setup x2), not seen in play yet.
 - **Open:** the numbers (the user tunes the sheet); a real ad network; whether the menu cards' place
   and the window size (0.8 of the art) suit the phone -- not seen on a device yet.
 

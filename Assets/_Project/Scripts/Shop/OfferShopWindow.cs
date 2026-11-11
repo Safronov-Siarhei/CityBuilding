@@ -81,6 +81,7 @@ namespace CityBuilder.Shop
         private Vector2 _counterHome;
         private float _toastLeft;
         private float _warnSeconds;
+        private OfferRewardFlight _flight;
 
         public static bool IsOpen => _current != null;
 
@@ -114,7 +115,12 @@ namespace CityBuilder.Shop
             Time.timeScale = 0f;
             HideTheInterfaceBehind();
             if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>("Shop/Window_" + ThemeId());
-            if (OfferShop.Instance != null) OfferShop.Instance.Changed += Redraw;
+            _flight = gameObject.AddComponent<OfferRewardFlight>();
+            if (OfferShop.Instance != null)
+            {
+                OfferShop.Instance.Changed += Redraw;
+                OfferShop.Instance.Given += OnGiven;
+            }
             Redraw();
         }
 
@@ -144,6 +150,18 @@ namespace CityBuilder.Shop
             }
             OfferShop.Instance.Buy(slot, pay);
             Redraw();
+        }
+
+        /// <summary>The goods fly from the strip to where they went (OfferRewardFlight), one good after another.</summary>
+        private void OnGiven(int slot, BalanceConfig.OfferBundle bundle)
+        {
+            if (_closing || slot < 0 || slot >= slots.Length || bundle == null) return;
+            var view = slots[slot];
+            for (var g = 0; g < bundle.goods.Count && g < view.goodIcons.Length; g++)
+            {
+                var good = bundle.goods[g];
+                _flight.Fly(Icon(good.resource), good.resource, good.amount, view.goodIcons[g].rectTransform, counter, g * 0.15f);
+            }
         }
 
         /// <summary>Forces every strip to redraw (a change or a purchase).</summary>
@@ -342,7 +360,11 @@ namespace CityBuilder.Shop
 
         private void OnDestroy()
         {
-            if (OfferShop.Instance != null) OfferShop.Instance.Changed -= Redraw;
+            if (OfferShop.Instance != null)
+            {
+                OfferShop.Instance.Changed -= Redraw;
+                OfferShop.Instance.Given -= OnGiven;
+            }
             ShowTheInterfaceBehind();
             if (!_closing) Time.timeScale = _timeScaleBefore;
             if (_current != this) return;
