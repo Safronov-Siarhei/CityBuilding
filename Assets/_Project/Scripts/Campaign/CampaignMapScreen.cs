@@ -56,6 +56,7 @@ namespace CityBuilder.Campaign
             if (FindObjectOfType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Build();
+            Debug.Log($"[CampaignMap] up, {_levels.Length} levels");
         }
 
         private bool Open(int i) => i == 0 || CampaignProgress.Done(_levels[i - 1].id);
@@ -75,14 +76,17 @@ namespace CityBuilder.Campaign
             // the parchment fills the screen (cropped at the sides on a squarer screen); the flags ride on it
             var back = Stretch(root, "Backdrop");
             back.gameObject.AddComponent<Image>().color = new Color(0.16f, 0.11f, 0.07f);
-            var map = new GameObject("Picture", typeof(RectTransform), typeof(Image), typeof(AspectRatioFitter)).GetComponent<RectTransform>();
-            map.SetParent(root, false);
-            var img = map.GetComponent<Image>();
+            // the fitter sizes a frame; the picture inside it can slide (a fitter zeroes its own position)
+            var frame = new GameObject("Frame", typeof(RectTransform), typeof(AspectRatioFitter)).GetComponent<RectTransform>();
+            frame.SetParent(root, false);
+            var map = Stretch(frame, "Picture");
+            var img = map.gameObject.AddComponent<Image>();
             img.sprite = picture;
             img.raycastTarget = false;
-            var fit = map.GetComponent<AspectRatioFitter>();
+            var fit = frame.GetComponent<AspectRatioFitter>();
             fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
             fit.aspectRatio = picture != null ? picture.rect.width / picture.rect.height : 2400f / 1080f;
+            Frame(map, fit);
 
             for (var i = 0; i < _levels.Length; i++) Flag(map, i);
 
@@ -111,32 +115,30 @@ namespace CityBuilder.Campaign
             bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0f);
             bar.pivot = new Vector2(0.5f, 0f);
             bar.anchoredPosition = new Vector2(0f, 18f);
-            bar.sizeDelta = new Vector2(560f, 210f);
+            bar.sizeDelta = new Vector2(560f, 236f);
             _bar = bar.GetComponent<CanvasGroup>();
             var plaque = MissionSkin.Image(bar, "Plaque", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(520f, 96f));
             var ink = MissionSkin.Ink(HudInk.OnPlaque);
             _title = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 30, ink, TextAnchor.MiddleCenter, new Vector2(0f, 0.45f), new Vector2(1f, 1f), new Vector2(16f, 2f));
             _line = MissionSkin.Label(plaque.transform, "", UiTheme.Regular, 22, ink, TextAnchor.MiddleCenter, new Vector2(0f, 0f), new Vector2(1f, 0.5f), new Vector2(16f, 4f));
 
-            var playImg = MissionSkin.Image(bar, "Play", "round_main", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(250f, 96f));
+            // «Играть» as the mode screen has it (the user: «возьми из меню выбора режима кнопку Играть»):
+            // the menu look's own button, its text in the button ink
+            var playImg = new GameObject("Play", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            playImg.transform.SetParent(bar, false);
+            var pr = playImg.rectTransform;
+            pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
+            pr.pivot = new Vector2(0.5f, 0f);
+            pr.sizeDelta = new Vector2(420f, 120f);
+            playImg.sprite = MenuSprite("button");
+            if (playImg.sprite != null && playImg.sprite.border.sqrMagnitude > 0f) playImg.type = Image.Type.Sliced;
             _play = playImg.gameObject.AddComponent<Button>();
             _play.onClick.AddListener(() => Enter(false));
-            var glyph = new GameObject("Icon", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-            glyph.SetParent(playImg.transform, false);
-            glyph.anchorMin = glyph.anchorMax = new Vector2(0f, 0.5f);
-            glyph.anchoredPosition = new Vector2(52f, 2f);
-            glyph.sizeDelta = new Vector2(52f, 52f);
-            var gi = glyph.GetComponent<Image>();
-            gi.sprite = playGlyph;
-            gi.preserveAspect = true;
-            gi.color = MissionSkin.Ink(HudInk.OnMain);
-            gi.raycastTarget = false;
-            var playText = MissionSkin.Label(playImg.transform, Localization.Get("#campaign_play"), UiTheme.Bold, 36, MissionSkin.Ink(HudInk.OnMain),
-                TextAnchor.MiddleCenter, new Vector2(0.3f, 0f), new Vector2(1f, 1f), new Vector2(4f, 4f));
-            playText.resizeTextForBestFit = true;
-            playText.resizeTextMaxSize = 36;
+            var playText = MissionSkin.Label(playImg.transform, Localization.Get("#newgame_play"), UiTheme.Bold, 48, MissionSkin.Ink(HudInk.OnButton),
+                TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(20f, 10f));
+            playText.rectTransform.anchoredPosition = new Vector2(0f, 4f);
 
-            _replay = MissionSkin.Round(bar, "Replay", "round", HudInk.OnRound, replayGlyph, new Vector2(0.5f, 0f), new Vector2(-180f, 48f), 80f);
+            _replay = MissionSkin.Round(bar, "Replay", "round", HudInk.OnRound, replayGlyph, new Vector2(0.5f, 0f), new Vector2(-280f, 60f), 88f);
             _replay.onClick.AddListener(() => Enter(true));
 
             _bar.alpha = 0f;
@@ -190,6 +192,7 @@ namespace CityBuilder.Campaign
 
         private void Pick(int i)
         {
+            Debug.Log($"[CampaignMap] picked {_levels[i].id}");
             _picked = i;
             _shown = 0f;
             var lv = _levels[i];
@@ -210,6 +213,7 @@ namespace CityBuilder.Campaign
 
         private void Enter(bool film)
         {
+            Debug.Log($"[CampaignMap] play {(_picked >= 0 ? _levels[_picked].id : "-")} film={film}");
             if (_picked < 0 || !Playable(_picked)) return;
             // level 1: the film the first time, or on a replay; otherwise straight into the mission
             if (_picked == 0) MissionOne.SkipFilm = !film && CampaignProgress.FilmSeen;
@@ -235,6 +239,38 @@ namespace CityBuilder.Campaign
                 _rings[i].color = c;
                 _flags[i].localScale = Vector3.one * (on ? 1.12f + 0.03f * Mathf.Sin(Time.unscaledTime * 3f) : 1f);
             }
+        }
+
+        /// <summary>A sprite of the menu's look (Resources/MenuSkins/&lt;look&gt;/&lt;role&gt;), as the mode screen draws.</summary>
+        private static Sprite MenuSprite(string role)
+        {
+            var s = UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkins.Current}/{role}");
+            return s != null ? s : UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkin.Classic}/{role}");
+        }
+
+        /// <summary>The chart fills the screen, slid sideways so every level stays on it; a screen too narrow
+        /// for all of them (a tablet) gets the whole chart with dark margins.</summary>
+        private void Frame(RectTransform map, AspectRatioFitter fit)
+        {
+            if (_levels.Length == 0 || Screen.height <= 0) return;
+            const float margin = 0.06f;
+            var min = 1f;
+            var max = 0f;
+            foreach (var lv in _levels)
+            {
+                min = Mathf.Min(min, lv.x - margin);
+                max = Mathf.Max(max, lv.x + margin);
+            }
+            var seen = Screen.width / (float)Screen.height / fit.aspectRatio;
+            if (seen >= 1f) return;
+            if (seen < max - min)
+            {
+                fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+                return;
+            }
+            var centre = Mathf.Clamp(0.5f, max - seen * 0.5f, min + seen * 0.5f);
+            // the canvas matches height (720 tall), so the chart is 720 * aspect wide
+            map.anchoredPosition = new Vector2((0.5f - centre) * 720f * fit.aspectRatio, 0f);
         }
 
         private static RectTransform Stretch(Transform parent, string name)

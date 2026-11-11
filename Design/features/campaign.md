@@ -217,6 +217,15 @@
   (`loading_seconds_campaign_map`, sheet «Время и загрузка» row 6, `LoadingScreen.ToCampaignMap`); map ->
   level stays the sandbox's `loading_seconds_enter`; a SETTINGS button top right opens the game's own
   settings card (`BuildSettingsPanel` on a SettingsCanvas in the map scene).
+- **The user's second look (2026-11-12):** «Играть» is now the MODE SCREEN's button (MenuSkins/<look>/button,
+  `#newgame_play`, 48, ink OnButton, 420x120); the chart slides sideways so every level stays on screen,
+  and a screen too narrow for all of them (4:3) shows the whole chart (FitInParent) -- level 1 was cut
+  off on 4:3 (the fitter sits on a parent «Frame»: an AspectRatioFitter zeroes its own position). The
+  user reported «loading 1 s, then no taps for 5 s, then nothing taps at all»: a PlayMode probe going
+  through real raycast taps (menu -> map 5.5 s, both medals, «Играть» -> CampaignOpening after 10.5 s)
+  could NOT reproduce it; the loading screen's chart is painted in the same style as the campaign map,
+  so its 5 s may read as «the map, not answering». The screen now logs `[CampaignMap] up / picked /
+  play` to the Editor log for the next report. OPEN until the user retests.
 
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.
