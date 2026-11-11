@@ -1,6 +1,34 @@
-# Monetization (decided direction 2026-11-11 — nothing built)
+# Monetization (direction decided 2026-11-11; the sandbox offer shop BUILT 2026-11-11)
 
-> **Status (2026-11-11):** the user settled the direction below. Still don't build anything until the user asks.
+> **Status (2026-11-11):** the user settled the direction below and asked for the offer shop («Да,
+> делай»): built, see «Offer shop: how it is built». Nothing else is built (no ads SDK, no IAP).
+
+## Offer shop: how it is built (2026-11-11)
+- **Sheet:** «Наборы» (gid 2000061: bundle, name_ru/en, kind normal|bonus|starter, weight, level_from/to,
+  res1..3 + amount1..3 -- a ResourceType name or `Crystals` --, price_crystals), «Наборы: уровни»
+  (2000062: level, lab_from, citizens_from), both -> `Balance/bundles.csv` (stacked tables);
+  «Наборы: настройки» (2000063, -> economy: shop_slot_seconds 180, shop_slot_stagger_seconds 60,
+  shop_bonus_chance, shop_bonus_min_seconds, shop_notice_seconds 30, shop_starter_delay_seconds,
+  shop_ad_stub_seconds); «Тексты: лавка» (2000030, #shop_*). A bundle's name is NOT a localization
+  row: the importer makes `#bundle_<id>` from name_ru/name_en. All numbers are first guesses.
+- **Code** (`Scripts/Shop/`): `OfferRotation` (plain rules, tested by `OfferRotationTests`): slot i
+  first changes at period + i*stagger, then every period -> one change a minute; weighted pick of
+  `normal` bundles of the level, never one on another slot nor the replaced one; a bonus only after
+  shop_bonus_min_seconds of the session, by chance, one free bundle on screen at most; `PutStarter`
+  puts the starter on the slot changing soonest. `OfferShop` (on the gameplay UI root; real time
+  `Time.realtimeSinceStartupAsDouble`; off when Invasion/tutorial/dungeon): level every second,
+  `Buy(slot, Free|Crystals|Ad)`, ad stand-in = wait shop_ad_stub_seconds then give, goods via
+  `ResourceManager.Add` (+ `Wallet` for Crystals), a part that does not fit -> feed line
+  #shop_storage_full, too few crystals -> #shop_no_crystals; starter once per account (PlayerPrefs
+  `shop.starter_given`, set on claim). `OfferShopWindow` (prefab Resources/OfferShopWindow, sorting
+  900, pauses timeScale, hides the interface behind, tap outside closes, window picture per season
+  Resources/Shop/Window_<theme>), `OfferShopHud` (stall icon under the sack: timer, red dot when
+  anything can be taken, breathing glow while a free one waits; gold notice for shop_notice_seconds
+  only on a free one, tap opens), `OfferMenuStrip` (three cards in the game menu right of its entries).
+- **Build:** `Editor/SetupProjectOfferShop.cs` from `Tools/store/offer_shop_art.py` (UI/Shop/*.png +
+  layout.json, no words in pictures). The event feed's `LeftColumnTop` moved down one button + timer.
+- **Open:** the numbers (the user tunes the sheet); a real ad network; whether the menu cards' place
+  and the window size (0.8 of the art) suit the phone -- not seen on a device yet.
 
 ## Decided (the user, 2026-11-11)
 - **Market: the whole world** → Google Play Billing is the main till; Russia is a side case (see «Store

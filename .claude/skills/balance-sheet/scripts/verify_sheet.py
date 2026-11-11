@@ -49,6 +49,8 @@ TABS = {
     # tables with their own headers (building / unit / key): compared by first cell, cell by cell
     "invasion": {"stacked": True},
     "sandbox": {"stacked": True},
+    # the sandbox offer shop (2026-11-11): «Наборы» (bundle) and «Наборы: уровни» (level) tables
+    "bundles": {"stacked": True},
     # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
     "botwaves": {"key": ["wave", "unit"]},
     # every number of the tutorial (2026-11-05): key/value like economy

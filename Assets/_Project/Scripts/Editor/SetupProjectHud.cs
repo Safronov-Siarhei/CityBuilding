@@ -36,8 +36,8 @@ namespace CityBuilder.EditorTools
         private const float WorkforceButtonTop = MenuButtonTop - RoundButton - 18f;
         /// <summary>The inventory's round button, under the citizens button (the user, 2026-10-25).</summary>
         private const float InventoryButtonTop = WorkforceButtonTop - WorkforceButtonSize - 18f;
-        /// <summary>Where the left column under the menu, the citizens and the inventory buttons frees up -- the event feed starts here.</summary>
-        private const float LeftColumnTop = InventoryButtonTop - WorkforceButtonSize - 20f;
+        /// <summary>Where the left column under the menu, the citizens, the inventory and the shop (with its timer, 24) frees up -- the event feed starts here.</summary>
+        private const float LeftColumnTop = ShopButtonTop - WorkforceButtonSize - 20f - 24f;
 
         /// <summary>One of Tools/ui/make_hud_glyphs.py's white silhouettes, or null if it was never drawn.</summary>
         private static Sprite HudGlyph(string name)

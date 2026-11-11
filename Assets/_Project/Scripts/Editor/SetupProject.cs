@@ -85,6 +85,7 @@ namespace CityBuilder.EditorTools
             BuildMainMenuScene();
             BuildLoadingScreen();
             BuildRateUsWindow();
+            BuildOfferShopWindow();
             // the campaign's opening cutscene (SetupProjectCampaign) -- not in the build list yet
             BuildCampaignOpeningScene();
 

@@ -60,7 +60,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Interface & meta** | | |
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
-| [monetization](monetization.md) | ideas only: rewarded ads, paid HUD looks, promo codes | монетизация, реклама, покупки |
+| [monetization](monetization.md) | direction decided; sandbox offer shop BUILT (bundles sheet, HUD stall icon, ad stand-in); ideas: paid looks | монетизация, реклама, покупки |
 | [store-listing](store-listing.md) | Google Play icon candidates (orc over the wall, builder king), Tools/store/make_icons.py; the rate-us window concept (king + orc over a blurred town) | иконка, гугл плей, стор, листинг, оценка, отзыв, окно оценки |
 | **Pipelines** | | |
 | [balance-and-localization](balance-and-localization.md) | Google Sheet → CSV → BalanceConfig; localization keys | баланс, таблица, локализация |

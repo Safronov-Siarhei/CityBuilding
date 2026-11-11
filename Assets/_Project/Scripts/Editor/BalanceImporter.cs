@@ -93,6 +93,9 @@ namespace CityBuilder.EditorTools
             }
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
+            var offers = ReadBundles(BundlesCsvPath);
+            config.EditorSetOffers(offers.Bundles, offers.Levels);
+            bundleNames = offers.Names;
             EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
@@ -112,6 +115,83 @@ namespace CityBuilder.EditorTools
                       $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}; the sandbox tab's " +
                       $"{Math.Max(0, sandbox.Buildings.Count - 1)} buildings and {sandbox.Keys.Count} keys over {ConfigAssetPath}");
             return config;
+        }
+
+        /// <summary>The «Наборы» tabs (the user, 2026-11-11): the sandbox offer shop's bundles and levels.</summary>
+        public const string BundlesCsvPath = BalanceFolder + "/bundles.csv";
+
+        /// <summary>Bundle names read with the bundles (`#bundle_&lt;id&gt;` -> language -> text), added to the localization asset.</summary>
+        private static Dictionary<string, Dictionary<string, string>> bundleNames = new Dictionary<string, Dictionary<string, string>>();
+
+        private class OfferTables
+        {
+            public readonly List<BalanceConfig.OfferBundle> Bundles = new List<BalanceConfig.OfferBundle>();
+            public readonly List<BalanceConfig.OfferLevel> Levels = new List<BalanceConfig.OfferLevel>();
+            public readonly Dictionary<string, Dictionary<string, string>> Names = new Dictionary<string, Dictionary<string, string>>();
+        }
+
+        /// <summary>
+        /// bundles.csv: the «Наборы» table (header `bundle`: name_ru, name_en, kind, weight,
+        /// level_from, level_to, res1..3/amount1..3, price_crystals) and, after it, the «Наборы:
+        /// уровни» table (header `level`: lab_from, citizens_from). A header row switches the table.
+        /// </summary>
+        private static OfferTables ReadBundles(string path)
+        {
+            var result = new OfferTables();
+            if (!File.Exists(path)) return result;
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            int ToInt(string s) => int.TryParse(s, System.Globalization.NumberStyles.Integer, culture, out var v) ? v : 0;
+            float ToFloat(string s) => float.TryParse(s.Replace(',', '.'), System.Globalization.NumberStyles.Float, culture, out var v) ? v : 0f;
+            List<string> header = null;
+            foreach (var row in ReadCsv(path))
+            {
+                if (row.Count == 0) continue;
+                var first = row[0].Trim();
+                if (first == "bundle" || first == "level")
+                {
+                    header = row.ConvertAll(h => h.Trim());
+                    continue;
+                }
+                if (header == null || first.Length == 0 || first.Contains(" ")) continue;
+                string Cell(string name)
+                {
+                    var c = header.IndexOf(name);
+                    return c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                }
+                if (header[0] == "level")
+                {
+                    if (!int.TryParse(first, out var lv)) continue;
+                    result.Levels.Add(new BalanceConfig.OfferLevel { level = lv, labFrom = ToInt(Cell("lab_from")), citizensFrom = ToInt(Cell("citizens_from")) });
+                    continue;
+                }
+                var bundle = new BalanceConfig.OfferBundle
+                {
+                    id = first,
+                    kind = Cell("kind").Length > 0 ? Cell("kind") : "normal",
+                    weight = ToFloat(Cell("weight")),
+                    levelFrom = ToInt(Cell("level_from")),
+                    levelTo = ToInt(Cell("level_to")),
+                    priceCrystals = ToInt(Cell("price_crystals")),
+                };
+                for (var g = 1; g <= 3; g++)
+                {
+                    var res = Cell("res" + g);
+                    var amount = ToInt(Cell("amount" + g));
+                    if (res.Length == 0 || amount <= 0) continue;
+                    if (res != "Crystals" && !Enum.TryParse<ResourceType>(res, out _))
+                    {
+                        Debug.LogError($"BalanceImporter: {path}: bundle '{first}' has an unknown resource '{res}'.");
+                        continue;
+                    }
+                    bundle.goods.Add(new BalanceConfig.OfferGood { resource = res, amount = amount });
+                }
+                if (bundle.weight <= 0f) bundle.weight = 1f;
+                if (bundle.levelTo < bundle.levelFrom) bundle.levelTo = bundle.levelFrom;
+                result.Bundles.Add(bundle);
+                var names = new Dictionary<string, string> { ["ru"] = Cell("name_ru"), ["en"] = Cell("name_en") };
+                result.Names["#bundle_" + first] = names;
+            }
+            return result;
         }
 
         /// <summary>The botwaves tab: wave, unit (an OrcKind sheet id: bot_soldier, bot_archer), count, level, comment.</summary>
@@ -716,6 +796,17 @@ namespace CityBuilder.EditorTools
                     // rows, and pasting one back into the sheet splits it in half.
                     entry.values.Add(value.Replace("\\n", "\n"));
                 }
+                entries.Add(entry);
+            }
+
+            // the bundles' names live on the «Наборы» tab beside their numbers (the user fills one row per bundle)
+            foreach (var pair in bundleNames)
+            {
+                if (!seen.Add(pair.Key)) continue;
+                var entry = new LocalizationConfig.Entry { key = pair.Key, values = new List<string>() };
+                foreach (var language in languages)
+                    entry.values.Add(pair.Value.TryGetValue(language, out var text) && text.Length > 0 ? text
+                        : pair.Value.TryGetValue("en", out var en) ? en : string.Empty);
                 entries.Add(entry);
             }
 

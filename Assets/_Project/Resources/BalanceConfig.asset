@@ -7434,6 +7434,13 @@ MonoBehaviour:
   drawbridgeRaiseSeconds: 1.5
   islandStartRocks: 40
   tutorialRewardCrystals: 25
+  shopSlotSeconds: 180
+  shopSlotStaggerSeconds: 60
+  shopBonusChance: 0.15
+  shopBonusMinSeconds: 300
+  shopNoticeSeconds: 30
+  shopStarterDelaySeconds: 120
+  shopAdStubSeconds: 2
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
   tutorialBuildSeconds: 5
@@ -8332,3 +8339,559 @@ MonoBehaviour:
     unit: bot_archer
     count: 15
     level: 5
+  offerBundles:
+  - id: builder_1
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 80
+    - resource: Stone
+      amount: 50
+    priceCrystals: 2
+  - id: builder_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 130
+    - resource: Stone
+      amount: 80
+    priceCrystals: 2
+  - id: builder_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 190
+    - resource: Stone
+      amount: 120
+    priceCrystals: 2
+  - id: builder_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 270
+    - resource: Stone
+      amount: 170
+    priceCrystals: 3
+  - id: builder_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 370
+    - resource: Stone
+      amount: 230
+    priceCrystals: 3
+  - id: lumber_1
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 140
+    priceCrystals: 1
+  - id: lumber_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 220
+    priceCrystals: 1
+  - id: lumber_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 340
+    priceCrystals: 1
+  - id: lumber_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 480
+    priceCrystals: 2
+  - id: lumber_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 640
+    priceCrystals: 2
+  - id: mason_1
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Stone
+      amount: 110
+    priceCrystals: 1
+  - id: mason_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Stone
+      amount: 180
+    priceCrystals: 1
+  - id: mason_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Stone
+      amount: 260
+    priceCrystals: 1
+  - id: mason_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Stone
+      amount: 370
+    priceCrystals: 2
+  - id: mason_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Stone
+      amount: 510
+    priceCrystals: 2
+  - id: treasury_1
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Coins
+      amount: 120
+    priceCrystals: 2
+  - id: treasury_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Coins
+      amount: 190
+    priceCrystals: 2
+  - id: treasury_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Coins
+      amount: 290
+    priceCrystals: 2
+  - id: treasury_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coins
+      amount: 410
+    priceCrystals: 3
+  - id: treasury_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coins
+      amount: 550
+    priceCrystals: 3
+  - id: pantry_1
+    kind: normal
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Food
+      amount: 70
+    priceCrystals: 1
+  - id: pantry_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Food
+      amount: 110
+    priceCrystals: 1
+  - id: pantry_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Food
+      amount: 170
+    priceCrystals: 1
+  - id: pantry_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Food
+      amount: 240
+    priceCrystals: 2
+  - id: pantry_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Food
+      amount: 320
+    priceCrystals: 2
+  - id: smith_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Iron
+      amount: 100
+    - resource: Coal
+      amount: 100
+    priceCrystals: 2
+  - id: smith_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Iron
+      amount: 140
+    - resource: Coal
+      amount: 140
+    priceCrystals: 2
+  - id: smith_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Iron
+      amount: 200
+    - resource: Coal
+      amount: 200
+    priceCrystals: 3
+  - id: smith_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Iron
+      amount: 280
+    - resource: Coal
+      amount: 280
+    priceCrystals: 3
+  - id: gold_2
+    kind: normal
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Gold
+      amount: 140
+    priceCrystals: 2
+  - id: gold_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Gold
+      amount: 220
+    priceCrystals: 2
+  - id: gold_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Gold
+      amount: 310
+    priceCrystals: 3
+  - id: gold_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Gold
+      amount: 410
+    priceCrystals: 3
+  - id: bars_3
+    kind: normal
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: IronBar
+      amount: 70
+    - resource: Coins
+      amount: 140
+    priceCrystals: 3
+  - id: bars_4
+    kind: normal
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: IronBar
+      amount: 100
+    - resource: Coins
+      amount: 200
+    priceCrystals: 4
+  - id: bars_5
+    kind: normal
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: IronBar
+      amount: 140
+    - resource: Coins
+      amount: 280
+    priceCrystals: 4
+  - id: crystals_3
+    kind: normal
+    weight: 0.5
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Crystals
+      amount: 1
+    - resource: Wood
+      amount: 240
+    priceCrystals: 3
+  - id: crystals_4
+    kind: normal
+    weight: 0.5
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Crystals
+      amount: 2
+    - resource: Wood
+      amount: 340
+    priceCrystals: 4
+  - id: crystals_5
+    kind: normal
+    weight: 0.5
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Crystals
+      amount: 2
+    - resource: Wood
+      amount: 460
+    priceCrystals: 4
+  - id: gift_build_1
+    kind: bonus
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Wood
+      amount: 50
+    - resource: Stone
+      amount: 30
+    priceCrystals: 0
+  - id: gift_build_2
+    kind: bonus
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Wood
+      amount: 80
+    - resource: Stone
+      amount: 50
+    priceCrystals: 0
+  - id: gift_build_3
+    kind: bonus
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 70
+    priceCrystals: 0
+  - id: gift_build_4
+    kind: bonus
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Wood
+      amount: 170
+    - resource: Stone
+      amount: 100
+    priceCrystals: 0
+  - id: gift_build_5
+    kind: bonus
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 230
+    - resource: Stone
+      amount: 140
+    priceCrystals: 0
+  - id: gift_coins_1
+    kind: bonus
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Coins
+      amount: 50
+    priceCrystals: 0
+  - id: gift_coins_2
+    kind: bonus
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Coins
+      amount: 80
+    priceCrystals: 0
+  - id: gift_coins_3
+    kind: bonus
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Coins
+      amount: 120
+    priceCrystals: 0
+  - id: gift_coins_4
+    kind: bonus
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Coins
+      amount: 170
+    priceCrystals: 0
+  - id: gift_coins_5
+    kind: bonus
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Coins
+      amount: 230
+    priceCrystals: 0
+  - id: gift_food_1
+    kind: bonus
+    weight: 1
+    levelFrom: 1
+    levelTo: 1
+    goods:
+    - resource: Food
+      amount: 40
+    priceCrystals: 0
+  - id: gift_food_2
+    kind: bonus
+    weight: 1
+    levelFrom: 2
+    levelTo: 2
+    goods:
+    - resource: Food
+      amount: 60
+    priceCrystals: 0
+  - id: gift_food_3
+    kind: bonus
+    weight: 1
+    levelFrom: 3
+    levelTo: 3
+    goods:
+    - resource: Food
+      amount: 100
+    priceCrystals: 0
+  - id: gift_food_4
+    kind: bonus
+    weight: 1
+    levelFrom: 4
+    levelTo: 4
+    goods:
+    - resource: Food
+      amount: 140
+    priceCrystals: 0
+  - id: gift_food_5
+    kind: bonus
+    weight: 1
+    levelFrom: 5
+    levelTo: 5
+    goods:
+    - resource: Food
+      amount: 180
+    priceCrystals: 0
+  - id: starter
+    kind: starter
+    weight: 1
+    levelFrom: 1
+    levelTo: 5
+    goods:
+    - resource: Wood
+      amount: 120
+    - resource: Stone
+      amount: 80
+    - resource: Coins
+      amount: 100
+    priceCrystals: 0
+  offerLevels:
+  - level: 1
+    labFrom: 0
+    citizensFrom: 0
+  - level: 2
+    labFrom: 0
+    citizensFrom: 20
+  - level: 3
+    labFrom: 1
+    citizensFrom: 40
+  - level: 4
+    labFrom: 2
+    citizensFrom: 70
+  - level: 5
+    labFrom: 3
+    citizensFrom: 110

@@ -326,6 +326,7 @@ namespace CityBuilder.EditorTools
             BuildMigrationPanel(uiRoot, panelSprite);
             BuildWorkforcePanel(uiRoot, panelSprite, hud);
             BuildInventoryPanel(uiRoot, panelSprite, hud, iconLibrary);
+            BuildOfferShopHud(uiRoot, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
             BuildRuinCard(uiRoot, panelSprite, iconLibrary);
             BuildDiplomacyWindow(uiRoot, panelSprite, infoPanel);

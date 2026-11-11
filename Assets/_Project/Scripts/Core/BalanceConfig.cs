@@ -569,6 +569,16 @@ namespace CityBuilder.Core
         [SerializeField] private int islandStartRocks = 40;
         // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
         [SerializeField] private int tutorialRewardCrystals = 25;
+        // the sandbox offer shop («Наборы: настройки»): a slot's real seconds, the slots' stagger, the
+        // free bonus's chance per change and its earliest second, the loud notice's seconds, the
+        // starter gift's second in the first game, the ad stand-in's seconds
+        [SerializeField] private float shopSlotSeconds = 180f;
+        [SerializeField] private float shopSlotStaggerSeconds = 60f;
+        [SerializeField] private float shopBonusChance = 0.15f;
+        [SerializeField] private float shopBonusMinSeconds = 300f;
+        [SerializeField] private float shopNoticeSeconds = 30f;
+        [SerializeField] private float shopStarterDelaySeconds = 120f;
+        [SerializeField] private float shopAdStubSeconds = 2f;
         // the loading screen's ship: seconds it sails into a game and out to the menu (loading_seconds_enter / _exit)
         [SerializeField] private float loadingSecondsEnter = 10f;
         [SerializeField] private float loadingSecondsExit = 5f;
@@ -1187,6 +1197,13 @@ namespace CityBuilder.Core
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public int IslandStartRocks => islandStartRocks;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
+        public float ShopSlotSeconds => shopSlotSeconds;
+        public float ShopSlotStaggerSeconds => shopSlotStaggerSeconds;
+        public float ShopBonusChance => shopBonusChance;
+        public float ShopBonusMinSeconds => shopBonusMinSeconds;
+        public float ShopNoticeSeconds => shopNoticeSeconds;
+        public float ShopStarterDelaySeconds => shopStarterDelaySeconds;
+        public float ShopAdStubSeconds => shopAdStubSeconds;
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
@@ -1296,6 +1313,54 @@ namespace CityBuilder.Core
 #if UNITY_EDITOR
         /// <summary>The importer's way in (BalanceImporter, the botwaves tab).</summary>
         public void EditorSetBotWaves(List<BotWaveRow> rows) => botWaves = rows ?? new List<BotWaveRow>();
+#endif
+
+        /// <summary>One good inside an offer bundle: a ResourceType name or `Crystals`, and how many.</summary>
+        [System.Serializable]
+        public class OfferGood
+        {
+            public string resource;
+            public int amount;
+        }
+
+        /// <summary>
+        /// One row of the «Наборы» tab (the user, 2026-11-11): the sandbox shop's bundle. `kind` is
+        /// `normal` (crystals or an ad), `bonus` (the free «Подарок короля») or `starter` (the first
+        /// game's free gift, once per account). Offered to a player whose level is in levelFrom..levelTo.
+        /// </summary>
+        [System.Serializable]
+        public class OfferBundle
+        {
+            public string id;
+            public string kind;
+            public float weight;
+            public int levelFrom;
+            public int levelTo;
+            public List<OfferGood> goods = new List<OfferGood>();
+            public int priceCrystals;
+        }
+
+        /// <summary>One row of «Наборы: уровни»: the player is at `level` once the lab and the citizens reach these.</summary>
+        [System.Serializable]
+        public class OfferLevel
+        {
+            public int level;
+            public int labFrom;
+            public int citizensFrom;
+        }
+
+        [SerializeField] private List<OfferBundle> offerBundles = new List<OfferBundle>();
+        [SerializeField] private List<OfferLevel> offerLevels = new List<OfferLevel>();
+        public IReadOnlyList<OfferBundle> OfferBundles => offerBundles;
+        public IReadOnlyList<OfferLevel> OfferLevels => offerLevels;
+
+#if UNITY_EDITOR
+        /// <summary>The importer's way in (BalanceImporter, the «Наборы» tabs).</summary>
+        public void EditorSetOffers(List<OfferBundle> bundles, List<OfferLevel> levels)
+        {
+            offerBundles = bundles ?? new List<OfferBundle>();
+            offerLevels = levels ?? new List<OfferLevel>();
+        }
 #endif
         public int BotWarEscorts => botWarEscorts;
         public float BotWarGuardRadiusCells => botWarGuardRadiusCells;
@@ -2049,6 +2114,13 @@ namespace CityBuilder.Core
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
+            shopSlotSeconds = Read(economy, "shop_slot_seconds", shopSlotSeconds);
+            shopSlotStaggerSeconds = Read(economy, "shop_slot_stagger_seconds", shopSlotStaggerSeconds);
+            shopBonusChance = Read(economy, "shop_bonus_chance", shopBonusChance);
+            shopBonusMinSeconds = Read(economy, "shop_bonus_min_seconds", shopBonusMinSeconds);
+            shopNoticeSeconds = Read(economy, "shop_notice_seconds", shopNoticeSeconds);
+            shopStarterDelaySeconds = Read(economy, "shop_starter_delay_seconds", shopStarterDelaySeconds);
+            shopAdStubSeconds = Read(economy, "shop_ad_stub_seconds", shopAdStubSeconds);
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);

@@ -40,12 +40,14 @@ namespace CityBuilder.EditorTools
         public const string LoadingFolder = "Assets/_Project/UI/Loading";
         /// <summary>The rate-us window's pieces (Tools/store/rate_window_art.py), placed by SetupProjectRateUs.</summary>
         public const string RateUsFolder = "Assets/_Project/UI/RateUs";
+        /// <summary>The sandbox offer shop's pieces (Tools/store/offer_shop_art.py), placed by SetupProjectOfferShop.</summary>
+        public const string ShopFolder = "Assets/_Project/UI/Shop";
 
         private void OnPreprocessTexture()
         {
             var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(RateUsFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/");
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
@@ -67,7 +69,7 @@ namespace CityBuilder.EditorTools
                 overridden = true,
                 format = TextureImporterFormat.ASTC_4x4,
                 // the rate-us window shows its art at half size: half the texture is enough
-                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") ? 1024 : 2048,
+                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") ? 1024 : 2048,
                 compressionQuality = 100,
             });
 
