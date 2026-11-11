@@ -26,9 +26,23 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - Paid with crystals OR a rewarded ad (the player chooses); sometimes a FREE bonus bundle (small).
 - On a change, a special notification on the left for 30 s (must stand out from the usual feed).
 - Look: like the rate-us window (parchment, ribbon); to be discussed.
-- Open (Claude's review, same day): what «level» is; a daily cap on ads; notify on every change or only
-  on special ones; menu tab vs its own button; crystal bundle cannot be bought for crystals; timer in
-  real or game time; the ad SDK is not in the game yet (a stand-in ad first).
+- Decided with the user (2026-11-11, round 2):
+  - The loud 30-s notification only for a FREE bonus (and maybe a rare rich bundle); ordinary changes
+    are quiet (timer + dot). Early in the FIRST sandbox game: a free bundle + the notification, so the
+    player learns the shop exists (once per account).
+  - No ad cap needed (the player chooses): each bundle can be taken ONCE per its 3-minute period, then
+    «Получено» until it changes.
+  - Bundle level = laboratory level + number of citizens (a levels table on the sheet: level, lab from,
+    citizens from; the highest row met wins; no lab = lab level 0).
+  - A «crystals» bundle = crystals + another resource, sold for crystals: the crystals inside are fewer
+    than the price, so the buy costs fewer crystals net.
+  - Timers in REAL time, kept per session only: re-entering the game/mode rerolls the bundles (the user:
+    we lose nothing). Exception: the free bonus must not be farmable by re-entering (it appears after
+    some minutes of play, not on entry; the starter one once per account).
+  - Its own place: a small shop icon in the left HUD column (under the sack) with a timer, glowing when a
+    bonus is up; the notification opens it. The same three offers ALSO shown in the sandbox menu.
+  - Ads are a stand-in for now (no ad network yet).
+- Next: a mock-up in the rate-us window's style for approval, then the sheet tabs and the code.
 
 ## Proposed order (Claude, 2026-11-11; the user agreed to the frame, items not yet confirmed one by one)
 1. Rewarded ads by choice. 2. «Королевский набор» -- a one-off non-consumable (rewards without watching,
