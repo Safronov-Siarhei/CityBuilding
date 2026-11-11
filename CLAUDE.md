@@ -25,3 +25,12 @@
 - The project is worked on from two devices: `git fetch` before starting; once per device,
   `git config core.safecrlf false`.
 - The repo is PUBLIC: nothing secret in commits.
+- **Everything lives in the repo** (the user, 2026-11-11: the work must survive a deleted Claude folder
+  or a switch to another AI). Every rule: `Design/WORKING_RULES.md`; other AIs start at `AGENTS.md`.
+  The memory notes are kept in `.claude/memory/` too: after updating memory, run
+  `python Tools/memory_sync.py` (two-way, newer wins; `--to-local` restores a fresh machine) and
+  commit `.claude/memory/` with the task.
+- The user's other standing rules (full list in WORKING_RULES): new models/animations go to the user
+  as renders for approval BEFORE entering the game; cutscenes are discussed before they are built;
+  never build an APK unasked; push right after every commit; sizes in map cells; «дёшево» = lacks
+  detail; anything to copy goes as a file; do every playtest item.

@@ -13,6 +13,9 @@ implement it, the traps already paid for, and what is open.
    is worse than none. A new feature gets a new card and a row in this table.
 4. Cards hold durable knowledge. Day-by-day history lives in git log and `archive/`.
 
+How to work with the user (every rule): `Design/WORKING_RULES.md`. The AI's memory notes (current
+state, latest playtest lists, decisions, references) are in the repo too: `.claude/memory/MEMORY.md`.
+
 A short Russian overview of the whole game (genres, modes, loop, mechanics): `Design/GDD.md` —
 keep it in step when a mechanic changes in a way a newcomer would notice.
 
@@ -62,6 +65,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | direction decided; sandbox offer shop BUILT: 4 offers (2 goods, crystals for an ad, crystals for money -- a stand-in), bundles sheet by family x 5 levels, bonus % badge; ideas: paid looks | монетизация, реклама, покупки |
+| [ideas](ideas.md) | the user's PARKED ideas (PvP raids, lane mode, whirlpool, water tower, roulette…) — not to be built until asked | идеи, PvP, тракт, водоворот, водная башня, рулетка |
 | [store-listing](store-listing.md) | Google Play icon candidates (orc over the wall, builder king), Tools/store/make_icons.py; the rate-us window concept (king + orc over a blurred town) | иконка, гугл плей, стор, листинг, оценка, отзыв, окно оценки |
 | **Pipelines** | | |
 | [balance-and-localization](balance-and-localization.md) | Google Sheet → CSV → BalanceConfig; localization keys | баланс, таблица, локализация |

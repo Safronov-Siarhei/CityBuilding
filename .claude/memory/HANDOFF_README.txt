@@ -1,13 +1,18 @@
-Перенос контекста CityBuilding на другое устройство (2026-10-20)
+Перенос проекта CityBuilding на другое устройство или другой ИИ (обновлено 2026-11-11)
 
-1. memory/  ->  скопировать содержимое в (знания по фичам теперь в Design/features/, они уже в git)
-   C:\Users\<имя>\.claude\projects\<папка проекта>\memory\
-   Имя папки проекта строится из пути к проекту: для D:\Fork\CityBuilding это D--Fork-CityBuilding.
-   Проще всего склонировать проект тоже в D:\Fork\CityBuilding.
+Вся информация проекта лежит в репозитории:
+- правила работы с пользователем: Design/WORKING_RULES.md (коротко: CLAUDE.md; для других ИИ: AGENTS.md);
+- карточки фич: Design/features/README.md; отложенные идеи: Design/features/ideas.md;
+- память ИИ (текущее состояние, списки с прохождений, решения, ссылки): .claude/memory/MEMORY.md.
 
-2. local-tools/  ->  скопировать в те же места внутри проекта (Tools/research, Tools/balance).
-   Токена Telegram в файлах нет: скрипт берёт его из переменной окружения TELEGRAM_BOT_TOKEN.
+На новом устройстве с Claude Code:
+1. Склонировать проект (лучше в тот же путь, например G:\Fork\CityBuilding).
+2. python Tools/memory_sync.py --to-local
+   (кладёт память в C:\Users\<имя>\.claude\projects\<папка проекта>\memory\; имя папки = путь проекта,
+   где ':' и '\' заменены на '-', например G--Fork-CityBuilding).
+3. Поставить Unity 6000.5.4f1 (с Android Build Support), Blender 5.2.2, Python 3.
+4. Дать доступ к Google-таблице баланса (id в Design/WORKING_RULES.md) и к Google Drive с .blend-файлами
+   (Design/features/art-pipeline.md, раздел Files and tools).
+5. Токен Telegram для отправки сборок: переменная окружения TELEGRAM_BOT_TOKEN (в файлах его нет и быть не должно).
 
-3. Отдельно, вручную:
-   - Blender-файлы из D:/blender projects/Buildings3D/ (Buildings-Size1*.blend, Map-4-TwoRivers.blend и др.);
-   - Blender 5.2.2 и Unity 6000.5.4f1 с Android Build Support.
+После изменений памяти: python Tools/memory_sync.py, затем закоммитить .claude/memory/.

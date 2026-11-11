@@ -15,9 +15,15 @@ set. Models go to the user for approval as renders BEFORE they enter the game; p
 (Hovel, Cottage, Warehouse, Sawmill) → approval → the rest.
 
 ## Files and tools
-- Placeholder boxes: `D:\blender projects\Buildings3D\Buildings-Size1.blend` — READ-ONLY for Claude.
-  Claude writes `Buildings-Size1-Models.blend` next to it.
-- Blender 5.2.2: `D:\SteamLibrary\steamapps\common\Blender\blender.exe --background <Models.blend> --python <script>`;
+- The `.blend` files are NOT in git: they live on the user's Google Drive, synced to every device —
+  on the current machine `H:\Другие компьютеры\Ноутбук\blender projects\Buildings3D\` (~227 MB:
+  Buildings-Size1.blend, Buildings-Size1-Models.blend, Map-*/Inv-*/Dungeon-*.blend, Water.png…).
+  Placeholder boxes `Buildings-Size1.blend` — READ-ONLY for the AI, the user's own, NOT regenerable.
+  `Buildings-Size1-Models.blend` and the map/dungeon `.blend` files are BUILT by the scripts in
+  `Tools/blender/` (a model script builds into the Models file; map generators write their `.blend`),
+  so they can be rebuilt; hand edits made in Blender would be lost. Without the Drive, ask the user.
+- Blender 5.2.2: `G:\SteamLibrary\steamapps\common\Blender\blender.exe --background <Models.blend> --python <script>`
+  (older notes say `D:\...`; machine paths: `.claude/memory/reference_machine_paths.md`);
   scripts print `MODEL … tris=` and `FITS` / `DOES NOT FIT`.
 - `Tools/blender/`: `kit.py` (palette 40 cells — FULL; primitives; `kit.run`, `kit.borrow`),
   `details.py` (THE STANDARD sizes + shared details), `detail.py` (detail atlas, `OVERRIDE`),

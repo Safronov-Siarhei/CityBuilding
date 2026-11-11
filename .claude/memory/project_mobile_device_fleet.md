@@ -66,3 +66,5 @@ visually interpolated" -- a change to the picture, not the simulation.
 on the A71. ~4x slower => we are GPU-bound and the render fixes are the right work. Only ~1.5-2x
 slower => we are CPU-bound (Kryo 470 vs Tensor is about 2x) and graphics tiers will save nothing.
 One measurement settles a question that is otherwise pure guesswork.
+
+OPEN QUESTION (the user, 2026-11-10) -- to think over, not decided: checking the device and its CAMERA CUT-OUT. Since d33c5ff62 the HUD ignores the side safe-area insets (left column at the screen edge, the user's wish); on some phones the cut-out may cover a side button or the event feed. Options to weigh: shift only what Screen.cutouts would cover, a per-device list, or a «cut-out margin» setting; check on every fleet phone before release. Card hud-and-ui.md «Open».
