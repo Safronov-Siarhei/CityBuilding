@@ -161,6 +161,7 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Art:** the short window's ribbon is wider than the shop's (`SRX0/SRX1` = shop ribbon ± 150 px in
   offer_shop_art.py) -- «Не хватает ресурсов» did not fit. A strip has FOUR good places (a price, so a
   shortfall, can ask for four resources; bundles use three).
+- **Wide blue button:** price + crystal are centred as a group at runtime (`OfferShopWindow.CentreWidePrice`, on a price change) -- the layout's right-aligned price left them right of centre.
 - **Still open:** the silver level disc over an upgraded LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker`;
   it has a model for level 1 only): models for levels 2-5 or hide the disc -- the user said wait.
 

@@ -70,6 +70,8 @@ namespace CityBuilder.Shop
             [NonSerialized] public float shakeT = ShakeSeconds;
             [NonSerialized] public Vector2 buyHome;
             [NonSerialized] public Vector2 buyWideHome;
+            [NonSerialized] public Vector2 widePriceHome, wideCrystalHome;
+            [NonSerialized] public RectTransform wideCrystal;
         }
 
         [SerializeField] private CanvasGroup group;
@@ -144,6 +146,9 @@ namespace CityBuilder.Shop
                 slots[i].buyWide.onClick.AddListener(() => Take(index, OfferShop.Pay.Crystals));
                 slots[i].buyHome = ((RectTransform)slots[i].buy.transform).anchoredPosition;
                 slots[i].buyWideHome = ((RectTransform)slots[i].buyWide.transform).anchoredPosition;
+                slots[i].wideCrystal = slots[i].buyWide.transform.Find("Crystal") as RectTransform;
+                slots[i].widePriceHome = slots[i].buyWidePrice.rectTransform.anchoredPosition;
+                if (slots[i].wideCrystal != null) slots[i].wideCrystal.anchoredPosition = slots[i].wideCrystalHome = slots[i].wideCrystal.anchoredPosition;
             }
             _counterHome = counter.anchoredPosition;
             toast.gameObject.SetActive(false);
@@ -209,6 +214,26 @@ namespace CityBuilder.Shop
             toast.text = Localization.Get(key);
             _toastLeft = ToastSeconds;
             toast.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// The wide blue button's price and crystal as one group in its middle (the user, 2026-11-11: it sat
+        /// right of centre). The price is right-aligned, so the group's left edge is its right edge less the
+        /// number's width; both move by the same amount from where SetupProject put them.
+        /// </summary>
+        private static void CentreWidePrice(SlotView view)
+        {
+            if (view.wideCrystal == null) return;
+            var price = view.buyWidePrice.rectTransform;
+            var button = (RectTransform)view.buyWide.transform;
+            price.anchoredPosition = view.widePriceHome;
+            view.wideCrystal.anchoredPosition = view.wideCrystalHome;
+            var priceRight = button.InverseTransformPoint(price.TransformPoint(new Vector3(price.rect.xMax, 0f, 0f))).x;
+            var crystalRight = button.InverseTransformPoint(view.wideCrystal.TransformPoint(new Vector3(view.wideCrystal.rect.xMax, 0f, 0f))).x;
+            var left = priceRight - view.buyWidePrice.preferredWidth;
+            var shift = new Vector2(button.rect.center.x - (left + crystalRight) * 0.5f, 0f);
+            price.anchoredPosition = view.widePriceHome + shift;
+            view.wideCrystal.anchoredPosition = view.wideCrystalHome + shift;
         }
 
         /// <summary>The goods fly from the strip to where they went (OfferRewardFlight), one good after another.</summary>
@@ -357,7 +382,12 @@ namespace CityBuilder.Shop
                 view.watch.gameObject.SetActive(state == 2 || state == 3);
                 view.buy.gameObject.SetActive(state == 2 || state == 3);
                 view.buyWide.gameObject.SetActive(state == 4);
-                view.buyWidePrice.text = bundle.priceCrystals.ToString();
+                var widePrice = bundle.priceCrystals.ToString();
+                if (view.buyWidePrice.text != widePrice)
+                {
+                    view.buyWidePrice.text = widePrice;
+                    CentreWidePrice(view);
+                }
                 view.watchWide.gameObject.SetActive(state >= 5 && state <= 7);
                 view.watchWide.interactable = state == 5;
                 view.watchWideLabel.text = Localization.Get(state == 6 ? "#shop_ad_playing" : "#shop_watch");
