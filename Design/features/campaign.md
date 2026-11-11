@@ -35,6 +35,14 @@
   in sRGB converted to linear, fog PER PIXEL (the grass is one 800 m quad -- per-vertex fog whitened
   it). `OpeningVillage.MoreFields` (~70 strips 20-54 m out) + `Decor` (Map 3's decor kit tufts/flowers/
   pebbles/bushes, 25 m combined chunks, no shadows).
+- **v9 (2026-11-11, 9dc8a7bf6):** CineTwoSided REDONE: culling off made flush details (windows,
+  doors, roof tiles) z-fight their walls -> flicker; now each renderer gets a twin "Back" drawing
+  only back faces (_Cull Front) pushed deeper (`BuildingDetail` `_OffsetFactor/_OffsetUnits`, 0 in
+  the game). church.py: nave roof starts at the tower's back wall, belfry `stone_top` U_TOP+0.8
+  (ridge was level with the belfry floor) -> bell/priest/rope re-exported, bell shot camera +0.288.
+  Bushes along road verges. FARM PROPS `Tools/blender/cinematic/farm_props.py` (CineHaystack,
+  CineHayBales, CinePigPen, CineHenYard, CineWashing from approved pieces): renders SENT FOR
+  APPROVAL, not exported, not in the film.
 - **Sound (v4, 2026-11-11):** the user chose free sounds. 18 CC0 clips from OpenGameArt + our own
   synthesised church bell (`Tools/audio/bell.py`; the only bell found was CC-BY-SA) in
   `Assets/_Project/Audio/Campaign/` (sources in its `CREDITS.md`), cut/faded/re-encoded to OGG by
