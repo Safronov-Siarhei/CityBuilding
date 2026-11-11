@@ -25,6 +25,7 @@ namespace CityBuilder.Campaign
             public string[] solidPieces;
             public string hintKey;
             public CalmConfig calm;
+            public MissionChase.Config chase;
         }
 
         [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend; }
@@ -42,6 +43,12 @@ namespace CityBuilder.Campaign
         private CineFigure _ardan;
         private CharacterController _body;
         private FloatingJoystick _stick;
+        private MissionChase _chase;
+        private UnityEngine.UI.Image _black;
+        private UnityEngine.UI.Text _notice;
+
+        /// <summary>The chase, for the batchmode check (how often he was caught).</summary>
+        public MissionChase Chase => _chase;
         private Vector3 _fromPos;
         private Quaternion _fromRot;
         private float _fromFov, _blend;
@@ -89,6 +96,11 @@ namespace CityBuilder.Campaign
             var j = _c.joystick;
             _stick = FloatingJoystick.Create(j.radius, j.knob, j.deadzone, j.hintDelay, j.hintFadeAfter, Localization.Get(_c.hintKey));
             _stick.transform.SetParent(transform, false);
+            if (_c.chase != null)
+            {
+                _chase = new MissionChase(_c.chase, village, _ardan, _body, director.Member, director.FlameMaterial, transform, Localization.Get);
+                Overlay();
+            }
             Running = true;
         }
 
@@ -106,6 +118,14 @@ namespace CityBuilder.Campaign
         public void Step(float dt, Vector2? steer)
         {
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
+            if (_chase != null)
+            {
+                _chase.Step(dt);
+                _black.color = new Color(0f, 0f, 0f, _chase.Fade);
+                _notice.text = _chase.Notice;
+                _notice.color = new Color(1f, 0.96f, 0.84f, _chase.NoticeAlpha);
+                if (_chase.Frozen) return;
+            }
             var v = _stick.Value;
             var m = v.magnitude;
             var t = _ardan.transform;
@@ -134,6 +154,35 @@ namespace CityBuilder.Campaign
                 var d = new Vector2(t.position.x, t.position.z).magnitude;
                 fx.Calm = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(_c.calm.from, _c.calm.to, d));
             }
+        }
+
+        /// <summary>The black that falls when he is caught, and the checkpoint notice high in the middle.</summary>
+        private void Overlay()
+        {
+            var canvas = _stick.GetComponent<Canvas>();
+            var black = new GameObject("Black", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            black.transform.SetParent(canvas.transform, false);
+            var r = (RectTransform)black.transform;
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
+            r.offsetMin = r.offsetMax = Vector2.zero;
+            _black = black.GetComponent<UnityEngine.UI.Image>();
+            _black.color = Color.clear;
+            _black.raycastTarget = false;
+            var note = new GameObject("Checkpoint", typeof(RectTransform), typeof(UnityEngine.UI.Text), typeof(UnityEngine.UI.Shadow));
+            note.transform.SetParent(canvas.transform, false);
+            var nr = (RectTransform)note.transform;
+            nr.anchorMin = nr.anchorMax = new Vector2(0.5f, 1f);
+            nr.pivot = new Vector2(0.5f, 1f);
+            nr.anchoredPosition = new Vector2(0f, -70f);
+            nr.sizeDelta = new Vector2(600f, 50f);
+            _notice = note.GetComponent<UnityEngine.UI.Text>();
+            _notice.font = UI.UiTheme.Regular;
+            _notice.fontSize = 30;
+            _notice.alignment = TextAnchor.MiddleCenter;
+            _notice.raycastTarget = false;
+            _notice.color = Color.clear;
+            note.GetComponent<UnityEngine.UI.Shadow>().effectColor = new Color(0f, 0f, 0f, 0.6f);
         }
 
         /// <summary>The game's view, Ардан in the middle of it; eased into from the film's last shot.</summary>

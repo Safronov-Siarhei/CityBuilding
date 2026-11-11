@@ -92,7 +92,20 @@
    "tile": 0.96,
    "earsBand": 9.0,
    "height": 0.274,
-   "cell": 0.48
+   "cell": 0.48,
+   "cartTrack": [
+    -40,
+    -70,
+    -20,
+    -70.6,
+    0,
+    -71.5,
+    16,
+    -71.8,
+    32,
+    -72
+   ],
+   "cartWidth": 1.6
   },
   "forest": {
    "min": [
@@ -172,5 +185,132 @@
  "calm": {
   "from": 30.0,
   "to": 75.0
+ },
+ "chase": {
+  "comment": "Mission 1's orcs (the user: a chase, orcs slower than Ардан, who runs 1.007 m/s). An orc sees him within sight m -- in the tall wheat only within wheatSight -- runs at runSpeed, gives up past lose; patrols walk their beat to and fro at walkSpeed. Within catchDistance he is caught: caughtSeconds to see it, fadeSeconds to black and back, and he is at the last checkpoint reached (x, z, radius r) with the orcs back on their beats; the notice (checkpointKey) shows noticeSeconds. The ambush orc hides at hide (the bushes by the bridge), bursts out when he comes within triggerRadius of trigger, runs at its runSpeed and stops at stopZ (the bridge's far end: the mage's scene, not built yet). Village frame, metres.",
+  "sight": 6.0,
+  "lose": 8.5,
+  "catchDistance": 0.45,
+  "wheatSight": 1.3,
+  "walkSpeed": 0.42,
+  "runSpeed": 0.8,
+  "turnRate": 8.0,
+  "radius": 0.14,
+  "height": 0.5,
+  "caughtSeconds": 1.0,
+  "fadeSeconds": 0.45,
+  "noticeSeconds": 2.2,
+  "checkpointKey": "#m1_checkpoint",
+  "checkpoints": [
+   {
+    "x": -6.0,
+    "z": -44.0,
+    "r": 3.0
+   },
+   {
+    "x": -2.0,
+    "z": -104.0,
+    "r": 3.0
+   },
+   {
+    "x": -4.0,
+    "z": -166.0,
+    "r": 3.0
+   }
+  ],
+  "orcs": [
+   {
+    "figure": "CineOrcTorch",
+    "beat": [
+     12,
+     -8,
+     7,
+     -14,
+     11,
+     -20
+    ]
+   },
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     -12,
+     -14,
+     -7,
+     -20,
+     -11,
+     -27
+    ]
+   },
+   {
+    "figure": "CineOrcTorch",
+    "beat": [
+     9,
+     -28,
+     2,
+     -33,
+     7,
+     -38
+    ]
+   },
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     -36,
+     -70,
+     30,
+     -72
+    ]
+   },
+   {
+    "figure": "CineOrcTorch",
+    "beat": [
+     28,
+     -72,
+     -36,
+     -70
+    ]
+   },
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     6,
+     -71.6,
+     -30,
+     -70.3
+    ]
+   },
+   {
+    "figure": "CineOrcTorch",
+    "beat": [
+     20,
+     -142,
+     -12,
+     -139
+    ]
+   },
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     -14,
+     -150,
+     22,
+     -147
+    ]
+   }
+  ],
+  "ambush": {
+   "figure": "CineOrcSpear",
+   "hide": [
+    9.0,
+    -173.0
+   ],
+   "trigger": [
+    -4.0,
+    -172.0
+   ],
+   "triggerRadius": 4.5,
+   "runSpeed": 0.97,
+   "stopZ": -185.5
+  }
  }
 }

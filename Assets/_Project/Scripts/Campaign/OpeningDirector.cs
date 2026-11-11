@@ -198,6 +198,16 @@ namespace CityBuilder.Campaign
             return a.fig;
         }
 
+        /// <summary>A cast member's model and clips by its figure name (mission 1's orcs come from the film's cast).</summary>
+        public OpeningLife.CastMember? Member(string figure)
+        {
+            foreach (var m in cast) if (m.id == figure) return m;
+            return null;
+        }
+
+        /// <summary>The torches' flame material.</summary>
+        public Material FlameMaterial => life != null ? life.FlameMaterial : null;
+
         /// <summary>Where the camera stands and looks, for the effects' depth of field and the storm dome.</summary>
         public void SetCameraAim(Vector3 from, Vector3 at)
         {

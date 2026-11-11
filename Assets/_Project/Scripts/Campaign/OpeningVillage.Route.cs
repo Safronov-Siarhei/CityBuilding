@@ -32,7 +32,7 @@ namespace CityBuilder.Campaign
             public TownConfig town;
         }
 
-        [Serializable] private class FieldConfig { public float[] poly; public float tile, cell, earsBand, height; }
+        [Serializable] private class FieldConfig { public float[] poly, cartTrack; public float tile, cell, earsBand, height, cartWidth; }
         [Serializable] private class ForestConfig { public float[] min, max; public float treeEvery, clearPath, bushEvery; }
         [Serializable] private class FallenConfig { public float along, offset, clear; }
         [Serializable] private class RiverConfig { public float[] line; public float width, bank, wiggle; }
@@ -57,6 +57,9 @@ namespace CityBuilder.Campaign
         private Vector2[] _path;
         /// <summary>The track as laid (smoothed, meandering): what the wheat and the trees keep off.</summary>
         private Vector2[] _track;
+        /// <summary>The field's cart track, across it (the orcs' beat), as laid.</summary>
+        private Vector2[] _cart;
+        private Vector2[] _fieldPoly;
         private float _bridgeZ;
 
         /// <summary>The route's track, village frame (x, z), from the square to the town gate.</summary>
@@ -118,6 +121,7 @@ namespace CityBuilder.Campaign
             var track = new List<Vector2>();
             for (var i = Mathf.Max(0, _route.pathFrom); i < _path.Length; i++) track.Add(_path[i]);
             if (track.Count > 1) _track = Street(track.ToArray(), _route.laneWidth, dirt, false, -1f, _route.wiggle);
+            _cart = _route.field?.cartTrack != null ? Street(Points(_route.field.cartTrack), _route.field.cartWidth, dirt, false, -1f, 0.5f) : null;
             River();
             Bridge();
             WheatField();
@@ -139,7 +143,7 @@ namespace CityBuilder.Campaign
             var f = _route.field;
             var ears = SetPieceModel("CineWheat");
             if (f?.poly == null || wheatBody == null) return;
-            var poly = Points(f.poly);
+            var poly = _fieldPoly = Points(f.poly);
             var box = Bounds(poly, 0f);
             var cell = f.cell > 0f ? f.cell : f.tile;
             var nx = Mathf.CeilToInt(box.width / cell);
@@ -151,7 +155,7 @@ namespace CityBuilder.Campaign
                 for (var j = 0; j <= nz; j++)
                 {
                     var c = new Vector2(box.xMin + i * cell, box.yMin + j * cell);
-                    inside[i, j] = Mathf.Min(PathDistance(c) - clear, PolySigned(poly, c));
+                    inside[i, j] = Mathf.Min(Mathf.Min(PathDistance(c) - clear, CartDistance(c) - (f.cartWidth * 0.5f + 0.15f)), PolySigned(poly, c));
                 }
             var v = new List<Vector3>();
             var tri = new List<int>();
@@ -222,7 +226,7 @@ namespace CityBuilder.Campaign
                     {
                         var c = new Vector2(x, z);
                         var d = PathDistance(c);
-                        if (d < clear + half * 1.42f || d > f.earsBand) continue;
+                        if (d < clear + half * 1.42f || d > f.earsBand || CartDistance(c) < f.cartWidth * 0.5f + 0.15f + half * 1.42f) continue;
                         if (!Inside(poly, c + new Vector2(-half, -half)) || !Inside(poly, c + new Vector2(half, half)) ||
                             !Inside(poly, c + new Vector2(-half, half)) || !Inside(poly, c + new Vector2(half, -half))) continue;
                         var e = Instantiate(ears, earsRoot);
@@ -500,6 +504,23 @@ namespace CityBuilder.Campaign
                 hi = Vector2.Max(hi, p);
             }
             return Rect.MinMaxRect(lo.x - pad, lo.y - pad, hi.x + pad, hi.y + pad);
+        }
+
+        private float CartDistance(Vector2 p)
+        {
+            if (_cart == null) return float.MaxValue;
+            var best = float.MaxValue;
+            for (var i = 0; i + 1 < _cart.Length; i++) best = Mathf.Min(best, DistanceToSegment(p, _cart[i], _cart[i + 1]));
+            return best;
+        }
+
+        /// <summary>Is a point in the standing wheat (in the field, off its tracks)? The orcs do not
+        /// see Ардан there unless right beside him.</summary>
+        public bool InWheat(Vector2 p)
+        {
+            var f = _route?.field;
+            if (f == null || _fieldPoly == null || !Inside(_fieldPoly, p)) return false;
+            return PathDistance(p) > _route.laneWidth * 0.5f + 0.15f && CartDistance(p) > f.cartWidth * 0.5f + 0.15f;
         }
 
         /// <summary>How far inside the polygon a point is (negative outside).</summary>

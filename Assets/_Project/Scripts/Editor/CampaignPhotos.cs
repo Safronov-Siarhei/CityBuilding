@@ -216,11 +216,34 @@ namespace CityBuilder.EditorTools
                 }
                 if (t >= nextLog)
                 {
-                    log.Append($"t{t:F0}=({lastPos.x:F1},{lastPos.z:F1}) ");
-                    nextLog += 15f;
+                    log.Append($"t{t:F0}=({lastPos.x:F1},{lastPos.z:F1}) [{mission.Chase?.Report()}] ");
+                    nextLog += 5f;
                 }
             }
-            log.Append($"END t{t:F0} wp{wp}/{path?.Count}");
+            log.Append($"END t{t:F0} wp{wp}/{path?.Count} caught {mission.Chase?.Catches}");
+            // then back north into the orc standing at the bridge's far end: he must be caught and
+            // brought back to the checkpoint before the bridge
+            var before = mission.Chase?.Catches ?? 0;
+            for (var back = 0f; back < 75f && (mission.Chase?.Catches ?? 0) == before; back += dt)
+            {
+                var pos = mission.Ardan.position;
+                var want = new Vector3(-4f - pos.x, 0f, -182f - pos.z).normalized;
+                director.Step(dt);
+                mission.Step(dt, new Vector2(Vector3.Dot(want, right), Vector3.Dot(want, up)));
+                Physics.SyncTransforms();
+                mission.StepCamera(dt);
+                t += dt;
+            }
+            for (var s2 = 0f; s2 < 3f; s2 += dt)
+            {
+                director.Step(dt);
+                mission.Step(dt, Vector2.zero);
+                Physics.SyncTransforms();
+                mission.StepCamera(dt);
+                t += dt;
+            }
+            var at2 = mission.Ardan.position;
+            log.Append($" | BACK caught {mission.Chase?.Catches} now at ({at2.x:F1},{at2.z:F1})");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }
