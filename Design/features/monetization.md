@@ -64,6 +64,12 @@
   bundle `<family>_<level>` per filled level (name key `#bundle_<family>`); crystal kinds fill level 1
   only and hold for every level (paid: l1_price = USD). 30 goods families, 3 gifts, starter, 5 ad and 5
   paid crystal offers. Crystal PRICES of goods unchanged on purpose (the user will test first).
+- **Trap (2026-11-11):** `ResourceType` still lists Grain, Flour, Bread, Meat (kept for old saves) but
+  NOTHING makes or uses them since 2026-11-02 (food-and-hunger) -- never put them in a bundle or a price
+  list (Population is not a resource either). Six round-4 families did (farmer, hunter, miller, baker,
+  feast, granary): replaced by supplies (Food+Coins, L1), convoy (Wood+Stone+Coins, L1), woodcoal
+  (Wood+Coal, L2), stoneworks (Stone+Iron, L2), prospector (Gold+Coins, L2), miner (Iron+CopperOre, L3).
+  bundles.csv pulled; BalanceConfig/LocalizationConfig rebuild with the next code build.
 - **«Цены ресурсов» (calc-only tab, gid 2000064, the user 2026-11-11):** each resource's worth in crystals
   per 10 pcs (Claude's starting guesses: a level-1 bundle ~ 1 ad = 10 crystals; Crystals row = 10, fixed)
   and a calculator of offers: up to 3 resources (dropdown) -> value in crystals, bonus % (vs the crystal
