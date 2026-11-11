@@ -42,7 +42,11 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   - Its own place: a small shop icon in the left HUD column (under the sack) with a timer, glowing when a
     bonus is up; the notification opens it. The same three offers ALSO shown in the sandbox menu.
   - Ads are a stand-in for now (no ad network yet).
-- Next: a mock-up in the rate-us window's style for approval, then the sheet tabs and the code.
+- Mock-up v1 (2026-11-11, awaiting the user's verdict): `Design/store/OfferShop_Mockup.png` (window
+  «Лавка»: three parchment strips -- ordinary with timer + «Смотреть» + crystal price, the gold-rimmed
+  free «Подарок короля», a taken one with a «Получено» stamp) and `OfferShop_Hud.png` (stall icon in the
+  left column with a timer and a red dot, glowing; gold notification with a 30-s bar). Drawn by
+  `Tools/store/offer_shop_mockup.py`. Then: the sheet tabs and the code.
 
 ## Proposed order (Claude, 2026-11-11; the user agreed to the frame, items not yet confirmed one by one)
 1. Rewarded ads by choice. 2. «Королевский набор» -- a one-off non-consumable (rewards without watching,
