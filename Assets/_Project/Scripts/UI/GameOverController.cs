@@ -74,11 +74,12 @@ namespace CityBuilder.UI
             var centre = label.anchoredPosition;
             const float icon = 96f;
             const float gap = 14f;
-            // the pair measured and centred as one (the user, 2026-11-06: it sat off the middle)
+            // the pair measured and centred as one (the user, 2026-11-06: it sat off the middle); the
+            // number LEFT, the crystal RIGHT (the user, 2026-11-11: the rule for the whole game)
             var textWidth = reasonLabel.preferredWidth;
             var left = centre.x - (icon + gap + textWidth) * 0.5f;
             label.sizeDelta = new Vector2(textWidth + 4f, label.sizeDelta.y);
-            label.anchoredPosition = new Vector2(left + icon + gap + label.sizeDelta.x * 0.5f, centre.y);
+            label.anchoredPosition = new Vector2(left + label.sizeDelta.x * 0.5f, centre.y);
             if (crystalIcon != null && label.parent.Find("TutorialCrystal") == null)
             {
                 var go = new GameObject("TutorialCrystal", typeof(RectTransform), typeof(Image));
@@ -89,7 +90,7 @@ namespace CityBuilder.UI
                 image.raycastTarget = false;
                 image.rectTransform.anchorMin = image.rectTransform.anchorMax = label.anchorMin;
                 image.rectTransform.sizeDelta = new Vector2(icon, icon);
-                image.rectTransform.anchoredPosition = new Vector2(left + icon * 0.5f, centre.y);
+                image.rectTransform.anchoredPosition = new Vector2(left + textWidth + gap + icon * 0.5f, centre.y);
             }
             var menu = panelRoot != null ? panelRoot.transform.Find("Card/GameOverMenuButton") as RectTransform : null;
             if (menu != null) menu.anchoredPosition = new Vector2(0f, menu.anchoredPosition.y);

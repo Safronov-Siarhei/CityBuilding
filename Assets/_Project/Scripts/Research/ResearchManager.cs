@@ -206,6 +206,9 @@ namespace CityBuilder.Research
             return run != null ? RefundCoins(run.PaidCoins, BalanceConfig.Instance.ResearchCancelRefundPercent) : 0;
         }
 
+        /// <summary>How many researches are done (RateUsDirector watches it grow).</summary>
+        public int CompletedCount => _completed.Count;
+
         public bool IsCompleted(string topicId)
         {
             return topicId != null && _completed.Contains(topicId);

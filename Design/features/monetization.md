@@ -1,7 +1,9 @@
 # Monetization (direction decided 2026-11-11; the sandbox offer shop BUILT 2026-11-11)
 
 > **Status (2026-11-11):** the user settled the direction below and asked for the offer shop («Да,
-> делай»): built, see «Offer shop: how it is built». Nothing else is built (no ads SDK, no IAP).
+> делай»): built, see «Offer shop: how it is built». The daily login bonus is built too. No ads SDK, no IAP.
+> **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon
+> RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
 
 ## Offer shop: how it is built (2026-11-11)
 - **Sheet:** «Наборы» (gid 2000061; layout since round 4 -- see below; kinds normal|bonus|starter|ad_crystals|paid_crystals; a resource is a ResourceType name or `Crystals`), «Наборы: уровни»
@@ -178,11 +180,29 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   the building palette is full). Next: the chosen one replaces Res_UpgradeCrystal (and the shop's
   crystal sprites / OfferShop art if they draw their own).
 
-## Daily login bonus (the user, 2026-11-11; agreed, not built)
-- A 10-day calendar of crystals: 10-10-10-10-50-10-10-10-10-99, then it starts again; a MISSED day
-  starts the chain from day 1. «×2 за рекламу» on the day's reward (agreed). Proposed: the calendar
-  window in the main menu at the first login of the day; the day turns at local midnight; numbers on
-  the sheet; clock cheating tolerated until the cloud save.
+## Daily login bonus (BUILT 2026-11-11, concept approved; not yet seen on a phone)
+- **Rules (the user):** a 10-day calendar of crystals 10-10-10-10-50-10-10-10-10-99 (sheet «Наборы:
+  настройки»: daily_bonus_1..10), then it starts again; a MISSED day starts the chain from day 1.
+  «×2» (daily_bonus_ad_mult) for a rewarded ad. Closing the window any other way (seal, tap outside)
+  still gives the plain reward -- the bonus is never lost by a misclick. The day turns at local midnight;
+  clock cheating tolerated until the cloud save.
+- **Logic:** `UI/DailyBonus.cs` (static; PlayerPrefs daily.last_claim / daily.streak; Due, TodayIndex,
+  IndexFor -- testable --, Reward, Claim(doubled), ResetToday for the cheat «Ежедневный бонус: снова»).
+  Days 5 and 10 note `daily_big` for the rate-us window. Reads BalanceConfig.Sandbox (not the run's).
+- **Window:** `UI/DailyBonusWindow.cs`, prefab `Resources/DailyBonusWindow.prefab` from
+  `Editor/SetupProjectDailyBonus.cs` (after BuildOfferShopWindow). The offer shop's frame/picture per
+  season/close seal/buttons (UI/Shop) + its own pieces from `Tools/store/daily_bonus_art.py` ->
+  `UI/DailyBonus/` (Card_taken/today/ahead/big/big_today, Pill, Tick, layout.json, all in the 1920x1080
+  reference). The concept: `Tools/store/daily_bonus_mockup.py` -> `Design/store/DailyBonus_Mockup.png`
+  (the art script imports its `tile(bare=True)`, so the two never drift). Today's card gets its tick
+  for 0.6 s, then the window goes. No ad ready (RewardedAds.IsReady false): only «Забрать», centred.
+  The ad is the shop's stand-in (shop_ad_stub_seconds).
+- **When:** RateUsDirector puts it up in the MAIN MENU when DailyBonus.Due and calm for rateus_delay_sec
+  (no other window, no loading); the rate-us window waits while it is open.
+- **Texts:** «Тексты: лавка» #daily_title, #daily_day ({0}), #daily_line, #daily_take, #daily_double (×{0}).
+- **Look (the user):** cards with a gold bevelled rim, a ribbon «День N» (NO gloss on it), rays for today,
+  royal blue big days; the amount on a SOLID dark pill (a translucent one let the green background through).
+- **Trap:** PIL ImageDraw on an RGBA picture REPLACES alpha -- translucent shapes go through `over()`.
 
 ## POSTPONED indefinitely: play only online (the user's idea, 2026-11-11)
 - Idea: check the connection and refuse to play offline (so offline players do not dodge the ads), and

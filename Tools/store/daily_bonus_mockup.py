@@ -103,8 +103,10 @@ def amount_plaque(img, cx, cy, amount, s, dim=False):
     img.alpha_composite(pic, (x0 + int(16 * s) + tw + int(10 * s), int(cy - pic.height / 2)))
 
 
-def tile(img, box, day, amount, state, big):
-    """A day card, drawn at 2x and scaled down for clean edges. state: taken / today / ahead."""
+def tile(img, box, day, amount, state, big, bare=False):
+    """A day card, drawn at 2x and scaled down for clean edges. state: taken / today / ahead.
+    `bare`: only the card (frame, face, rays, glow, sparkles, ribbon) -- the game's sprite; the crystal,
+    the words, the amount pill and the tick are laid over it in Unity (daily_bonus_art.py)."""
     S = 2
     x0, y0, x1, y1 = box
     w, h = (x1 - x0) * S, (y1 - y0) * S
@@ -170,8 +172,9 @@ def tile(img, box, day, amount, state, big):
     ImageDraw.Draw(glow).ellipse((cx - gr, cy - gr, cx + gr, cy + gr),
                                  fill=(255, 255, 240, 60 if state == 'taken' else 170))
     t.alpha_composite(glow.filter(ImageFilter.GaussianBlur(18 * S)))
-    pic = crystal(int((122 if big else 98) * S), 0.5 if state == 'taken' else 1.0)
-    t.alpha_composite(pic, (int(cx - pic.width / 2), int(cy - pic.height / 2)))
+    if not bare:
+        pic = crystal(int((122 if big else 98) * S), 0.5 if state == 'taken' else 1.0)
+        t.alpha_composite(pic, (int(cx - pic.width / 2), int(cy - pic.height / 2)))
     td = ImageDraw.Draw(t)
     if big and state != 'taken':                      # sparkles around the big days' crystal
         for sx, sy, sr in ((-0.33, -0.2, 9), (0.34, -0.1, 7), (0.27, 0.18, 5), (-0.3, 0.14, 6)):
@@ -196,6 +199,10 @@ def tile(img, box, day, amount, state, big):
     td.rounded_rectangle((rx0, ry0, rx0 + rw, ry0 + rh), 10 * S, fill=ribbon,
                          outline=tuple(int(c * 0.5) for c in ribbon), width=3 * S)
     # no gloss band on the ribbon: the user did not like it (2026-11-11)
+    if bare:
+        t = t.resize((t.width // S, t.height // S), Image.LANCZOS)
+        img.alpha_composite(t, (x0 - pad // S, y0 - pad // S))
+        return
     td.text((cx, ry0 + rh / 2 + 1 * S), f'День {day}', font=font(28 * S), fill=(255, 242, 214), anchor='mm',
             stroke_width=2 * S, stroke_fill=tuple(int(c * 0.4) for c in ribbon))
 
@@ -272,4 +279,5 @@ def main():
     print('ok', OUT)
 
 
-main()
+if __name__ == '__main__':
+    main()

@@ -463,7 +463,7 @@ namespace CityBuilder.EditorTools
             // the points and the crystals as the game's resource chips (the user's pick «А», 2026-10-25):
             // a parchment capsule, a disc with its sign on the left, the number
             var pointsText = Counter(frame.transform, "Points", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Color(0.88f, 0.66f, 0.23f), "Trophy", null);
-            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"));
+            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"), discRight: true);
             var info = MenuRoundButton(frame.transform, "InfoButton", "round", "Info", HudInk.OnRound, 96f, 0.5f);
             Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 80f), new Vector2(96f, 96f));
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
@@ -494,8 +494,9 @@ namespace CityBuilder.EditorTools
             var place = MenuLabel(row.transform, "Place", null, 32, new Vector2(-480f, 2f), new Vector2(80f, 50f), HudInk.OnPanel, bold: true);
             var name = MenuLabel(row.transform, "Name", null, 32, new Vector2(-170f, 2f), new Vector2(460f, 50f), HudInk.OnPanel, align: TextAnchor.MiddleLeft);
             var score = MenuLabel(row.transform, "Points", null, 32, new Vector2(220f, 2f), new Vector2(200f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleRight);
-            Gem(row.transform, new Vector2(380f, 2f), 44f);
-            var reward = MenuLabel(row.transform, "Reward", null, 32, new Vector2(460f, 2f), new Vector2(110f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleLeft);
+            // the reward: the number LEFT, the crystal RIGHT (the user, 2026-11-11: the rule for the whole game)
+            var reward = MenuLabel(row.transform, "Reward", null, 32, new Vector2(410f, 2f), new Vector2(110f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleRight);
+            Gem(row.transform, new Vector2(495f, 2f), 44f);
             MenuLabel(window, "Soon", "#invasion_board_soon", 24, new Vector2(0f, -226f), new Vector2(1100f, 40f), HudInk.OnPanel);
 
             var run = MenuTextButton(window, "RunButton", "button", "#invasion_run", HudInk.OnButton, new Vector2(0f, -330f), new Vector2(420f, 110f), 46);
@@ -644,14 +645,15 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>A number on a parchment capsule with a disc on its left -- the HUD's resource chip, as the user picked for the points and the crystals.</summary>
-        private static Text Counter(Transform parent, string name, Vector2 position, Color disc, string glyph, Sprite picture)
+        private static Text Counter(Transform parent, string name, Vector2 position, Color disc, string glyph, Sprite picture, bool discRight = false)
         {
             var plaque = MenuImage(parent, name, "plaque", position, new Vector2(230f, 84f));
             plaque.raycastTarget = false;
             var round = CreateImage(plaque.transform, "Disc", disc);
             round.sprite = SkinSprite("circle_mask");
             round.raycastTarget = false;
-            Anchor(round.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(40f, 3f), new Vector2(62f, 62f));
+            // the crystals: the disc on the RIGHT, the number before it (the user, 2026-11-11: the rule for the whole game)
+            Anchor(round.rectTransform, new Vector2(discRight ? 1f : 0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(discRight ? -40f : 40f, 3f), new Vector2(62f, 62f));
             var rim = round.gameObject.AddComponent<Outline>();
             rim.effectColor = new Color(0.35f, 0.2f, 0.09f);
             rim.effectDistance = new Vector2(3f, -3f);
@@ -670,7 +672,8 @@ namespace CityBuilder.EditorTools
                 gem.raycastTarget = false;
                 Anchor(gem.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(46f, 46f));
             }
-            return MenuLabel(plaque.transform, "Number", null, 42, new Vector2(38f, 3f), new Vector2(130f, 60f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleLeft);
+            return MenuLabel(plaque.transform, "Number", null, 42, new Vector2(discRight ? -38f : 38f, 3f), new Vector2(130f, 60f), HudInk.OnMenuPlaque, bold: true,
+                             align: discRight ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
         }
 
         /// <summary>The crystal, the game's one currency: the sandbox's icon everywhere (the user, 2026-11-11).</summary>

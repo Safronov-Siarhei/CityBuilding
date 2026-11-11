@@ -2,6 +2,7 @@ using System;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
+using CityBuilder.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -375,6 +376,7 @@ namespace CityBuilder.Shop
                     if (!has) continue;
                     view.goodIcons[g].sprite = Icon(bundle.goods[g].resource);
                     view.goodAmounts[g].text = bundle.goods[g].amount.ToString();
+                    CrystalOrder.Lay(view.goodIcons[g], view.goodAmounts[g], bundle.goods[g].resource == "Crystals");
                 }
                 view.stamp.SetActive(state == 0);
                 Dim(view, state == 0);

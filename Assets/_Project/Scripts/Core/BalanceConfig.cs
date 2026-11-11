@@ -614,6 +614,18 @@ namespace CityBuilder.Core
         // the sandbox's «what is missing» hints (GuideHint): how long the arrow stays, one blink
         [SerializeField] private float hintSeconds = 8f;
         [SerializeField] private float hintBlinkSeconds = 0.5f;
+        // the rate-us window's rhythm (RateUsDirector; the user, 2026-11-11): minutes of play, seconds
+        [SerializeField] private float rateUsFirstMinutes = 20f;
+        [SerializeField] private float rateUsGapMinutes = 20f;
+        [SerializeField] private float rateUsRatedSessionMinutes = 10f;
+        [SerializeField] private float rateUsFallbackMinutes = 35f;
+        [SerializeField] private float rateUsDelaySeconds = 2f;
+        [SerializeField] private float rateUsWaitSeconds = 120f;
+        [SerializeField] private int[] rateUsPeopleSteps = { 25, 50, 100, 150, 200 };
+        [SerializeField] private List<string> rateUsEventsOff = new List<string>();
+        // the daily login bonus (DailyBonus): crystals per day of the 10-day chain
+        [SerializeField] private int[] dailyBonusCrystals = { 10, 10, 10, 10, 50, 10, 10, 10, 10, 99 };
+        [SerializeField] private float dailyBonusAdMultiplier = 2f;
         [SerializeField] private float tutorialRaidCameraSeconds = 3f;
         [SerializeField] private float victoryDelaySeconds = 3f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -1251,6 +1263,24 @@ namespace CityBuilder.Core
         public float TutorialBlinkSeconds => tutorialBlinkSeconds;
         public float HintSeconds => hintSeconds;
         public float HintBlinkSeconds => hintBlinkSeconds;
+
+        /// <summary>The rate-us window's events (rateus_ev_&lt;key&gt; on the sheet, 1 = on): ids, not words.</summary>
+        public static readonly string[] RateUsEvents =
+        {
+            "raid_repelled", "research", "building_l3", "first_building", "sea_cache", "ship", "town_hall_level", "lab_level",
+            "people", "hero_bought", "hero_level", "orc_camp", "bot_peace", "bot_destroyed", "orc_portal", "victory",
+            "dungeon_boss", "campaign_mission", "invasion_record", "day2", "day7", "daily_big",
+        };
+        public bool RateUsEventOn(string key) => !rateUsEventsOff.Contains(key);
+        public float RateUsFirstMinutes => rateUsFirstMinutes;
+        public float RateUsGapMinutes => rateUsGapMinutes;
+        public float RateUsRatedSessionMinutes => rateUsRatedSessionMinutes;
+        public float RateUsFallbackMinutes => rateUsFallbackMinutes;
+        public float RateUsDelaySeconds => rateUsDelaySeconds;
+        public float RateUsWaitSeconds => rateUsWaitSeconds;
+        public int[] RateUsPeopleSteps => rateUsPeopleSteps;
+        public int[] DailyBonusCrystals => dailyBonusCrystals;
+        public float DailyBonusAdMultiplier => dailyBonusAdMultiplier;
 
         /// <summary>The tutorial's camera goes to the orcs this long after the soldier is hired (`tutorial_raid_camera_sec`; the user, 2026-11-06: 3).</summary>
         public float TutorialRaidCameraSeconds => tutorialRaidCameraSeconds;
@@ -2179,6 +2209,20 @@ namespace CityBuilder.Core
             tutorialBlinkSeconds = Read(economy, "tutorial_blink_sec", tutorialBlinkSeconds);
             hintSeconds = Read(economy, "hint_sec", hintSeconds);
             hintBlinkSeconds = Read(economy, "hint_blink_sec", hintBlinkSeconds);
+            rateUsFirstMinutes = Read(economy, "rateus_first_min", rateUsFirstMinutes);
+            rateUsGapMinutes = Read(economy, "rateus_gap_min", rateUsGapMinutes);
+            rateUsRatedSessionMinutes = Read(economy, "rateus_rated_session_min", rateUsRatedSessionMinutes);
+            rateUsFallbackMinutes = Read(economy, "rateus_fallback_min", rateUsFallbackMinutes);
+            rateUsDelaySeconds = Read(economy, "rateus_delay_sec", rateUsDelaySeconds);
+            rateUsWaitSeconds = Read(economy, "rateus_wait_sec", rateUsWaitSeconds);
+            for (var i = 0; i < rateUsPeopleSteps.Length; i++)
+                rateUsPeopleSteps[i] = (int)Read(economy, $"rateus_people_{i + 1}", rateUsPeopleSteps[i]);
+            rateUsEventsOff.Clear();
+            foreach (var key in RateUsEvents)
+                if (Read(economy, "rateus_ev_" + key, 1f) < 0.5f) rateUsEventsOff.Add(key);
+            for (var i = 0; i < dailyBonusCrystals.Length; i++)
+                dailyBonusCrystals[i] = (int)Read(economy, $"daily_bonus_{i + 1}", dailyBonusCrystals[i]);
+            dailyBonusAdMultiplier = Read(economy, "daily_bonus_ad_mult", dailyBonusAdMultiplier);
             tutorialRaidCameraSeconds = Read(economy, "tutorial_raid_camera_sec", tutorialRaidCameraSeconds);
             victoryDelaySeconds = Read(economy, "victory_delay_sec", victoryDelaySeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);
