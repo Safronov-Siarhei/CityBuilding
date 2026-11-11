@@ -60,6 +60,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private Material cobble;
         [SerializeField] private Material dirt;
         [SerializeField] private Material field;
+        [SerializeField] private CityBuilder.Maps.MapDecorData decorKit;
+        [SerializeField] private Material decorMaterial;
         [SerializeField] private int seed = 11;
 
         private readonly Dictionary<string, Transform> _pieces = new Dictionary<string, Transform>();
@@ -132,7 +134,9 @@ namespace CityBuilder.Campaign
             SquareRing();
             StreetHouses();
             Outskirts();
+            MoreFields();
             Trees();
+            Decor();
         }
 
         // ------------------------------------------------------------ the land
@@ -178,7 +182,7 @@ namespace CityBuilder.Campaign
                 var side = Perp((b - a).normalized) * (width / 2f);
                 // a little past each end, so the bends close
                 var ext = (b - a).normalized * (width / 2f);
-                Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, 0.003f + 0.0005f * (_streets.Count % 4)), material);
+                Flat("Street", Quad(a - ext - side, b + ext - side, b + ext + side, a - ext + side, 0.003f + 0.0005f * (_streets.Count % 4)), material, b - a);
             }
         }
 
@@ -247,9 +251,91 @@ namespace CityBuilder.Campaign
                 if (!Free(at, Mathf.Max(w, d) * 0.6f)) continue;
                 var q = Quaternion.Euler(0f, turn, 0f);
                 Vector2 C(float x, float z) { var v = q * new Vector3(x, 0, z); return at + new Vector2(v.x, v.z); }
-                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), 0.004f), field);
+                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), 0.004f), field, C(1, 0) - at);
                 Reserve(at, Mathf.Max(w, d) * 0.55f);
                 PlaceFacing(FarmHouses[_rnd.Next(FarmHouses.Length)], at + (Vector2)(q * Vector3.right * (w / 2f + 2.2f)).XZ(), Vector2.zero - at, 0.1f);
+            }
+        }
+
+        /// <summary>Ploughed strips all round the village out to the forest (the user, 2026-11-11: the
+        /// country round the village looked empty), each its own size and turn, clear of the roads.</summary>
+        private void MoreFields()
+        {
+            var placed = 0;
+            for (var i = 0; i < 900 && placed < 70; i++)
+            {
+                var a = (float)_rnd.NextDouble() * Mathf.PI * 2f;
+                var r = 20f + (float)_rnd.NextDouble() * 34f;
+                var at = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                var w = 5f + (float)_rnd.NextDouble() * 7f;
+                var d = 3f + (float)_rnd.NextDouble() * 4f;
+                var radius = Mathf.Max(w, d) * 0.55f;
+                if (NearStreet(at, radius + 0.8f) || !Free(at, radius)) continue;
+                // furrows mostly along the way out from the village, as strip fields lie
+                var turn = Mathf.Atan2(at.x, at.y) * Mathf.Rad2Deg + ((float)_rnd.NextDouble() - 0.5f) * 40f;
+                var q = Quaternion.Euler(0f, turn, 0f);
+                Vector2 C(float x, float z) { var v = q * new Vector3(x, 0, z); return at + new Vector2(v.x, v.z); }
+                Flat("Field", Quad(C(-w / 2, -d / 2), C(w / 2, -d / 2), C(w / 2, d / 2), C(-w / 2, d / 2), 0.004f), field, C(1, 0) - at);
+                Reserve(at, radius);
+                placed++;
+            }
+        }
+
+        /// <summary>
+        /// The islands' meadow props (the map decor kit: grass tufts, flowers, pebbles, bushes) strewn
+        /// over the grass in clumps, kept off roads, fields and buildings, combined into a few big
+        /// meshes in 25 m chunks (a renderer per prop would cost far more than it is worth).
+        /// </summary>
+        private void Decor()
+        {
+            if (decorKit == null || decorMaterial == null) return;
+            var protos = decorKit.Prototypes;
+            List<Mesh> Kind(string k)
+            {
+                var l = new List<Mesh>();
+                foreach (var m in protos) if (m != null && m.name.Contains(k)) l.Add(m);
+                return l;
+            }
+            var tufts = Kind("tuft");
+            var flowers = Kind("flowers");
+            var pebbles = Kind("pebbles");
+            var bushes = Kind("bush");
+            if (tufts.Count == 0) return;
+            var chunks = new Dictionary<Vector2Int, List<CombineInstance>>();
+            void Add(List<Mesh> kind, Vector2 at, float scale)
+            {
+                if (kind.Count == 0) return;
+                var key = new Vector2Int(Mathf.FloorToInt(at.x / 25f), Mathf.FloorToInt(at.y / 25f));
+                if (!chunks.TryGetValue(key, out var list)) chunks[key] = list = new List<CombineInstance>();
+                list.Add(new CombineInstance
+                {
+                    mesh = kind[_rnd.Next(kind.Count)],
+                    transform = Matrix4x4.TRS(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, (float)_rnd.NextDouble() * 360f, 0f), Vector3.one * scale),
+                });
+            }
+            for (var i = 0; i < 26000; i++)
+            {
+                var at = new Vector2(((float)_rnd.NextDouble() - 0.5f) * 180f, ((float)_rnd.NextDouble() - 0.5f) * 180f);
+                if (at.magnitude < 4.6f || NearStreet(at, 1.3f) || !Free(at, 0.25f)) continue;
+                var clump = Mathf.PerlinNoise(at.x / 3f + 40f, at.y / 3f + 40f);
+                var meadow = Mathf.PerlinNoise(at.x / 14f + 7f, at.y / 14f + 7f);
+                var r = (float)_rnd.NextDouble();
+                var s = BuildingScale * (0.8f + (float)_rnd.NextDouble() * 0.5f);
+                if (meadow > 0.62f && r < 0.5f) Add(flowers, at, s);
+                else if (r < 0.32f * clump * 1.6f) Add(tufts, at, s);
+                else if (r < 0.05f * clump) Add(bushes, at, s);
+                else if (r < 0.03f) Add(pebbles, at, s);
+            }
+            foreach (var kv in chunks)
+            {
+                var mesh = new Mesh { name = "Decor", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+                mesh.CombineMeshes(kv.Value.ToArray(), true, true);
+                var go = new GameObject("Decor", typeof(MeshFilter), typeof(MeshRenderer));
+                go.transform.SetParent(_root, false);
+                go.GetComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.GetComponent<MeshRenderer>();
+                mr.sharedMaterial = decorMaterial;
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
         }
 
@@ -423,12 +509,23 @@ namespace CityBuilder.Campaign
 
         private static Vector2 Perp(Vector2 v) => new Vector2(-v.y, v.x);
 
-        private void Flat(string name, Mesh mesh, Material material)
+        private MaterialPropertyBlock _mpb;
+
+        /// <summary>A flat ground piece; dir lays a lane's ruts or a field's furrows along it (CineGround).</summary>
+        private void Flat(string name, Mesh mesh, Material material, Vector2 dir = default)
         {
             var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_root, false);
             go.GetComponent<MeshFilter>().sharedMesh = mesh;
-            go.GetComponent<MeshRenderer>().sharedMaterial = material;
+            var r = go.GetComponent<MeshRenderer>();
+            r.sharedMaterial = material;
+            if (dir != default)
+            {
+                _mpb ??= new MaterialPropertyBlock();
+                _mpb.SetVector("_Dir", new Vector4(dir.x, 0f, dir.y, 0f));
+                _mpb.SetFloat("_Seed", (float)_rnd.NextDouble() * 50f);
+                r.SetPropertyBlock(_mpb);
+            }
         }
 
         private static Mesh Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float y)

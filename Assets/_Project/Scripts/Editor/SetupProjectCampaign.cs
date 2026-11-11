@@ -107,10 +107,18 @@ namespace CityBuilder.EditorTools
                 setProp.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue = set[i];
             }
             so.FindProperty("setFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningSetPath);
-            so.FindProperty("grass").objectReferenceValue = Matte("CampaignGrass", new Color(0.36f, 0.6f, 0.27f));
-            so.FindProperty("cobble").objectReferenceValue = Matte("CampaignCobble", new Color(0.66f, 0.64f, 0.6f));
-            so.FindProperty("dirt").objectReferenceValue = Matte("CampaignDirt", new Color(0.62f, 0.5f, 0.34f));
-            so.FindProperty("field").objectReferenceValue = Matte("CampaignField", new Color(0.5f, 0.38f, 0.24f));
+            // the ground: the islands' grass zones, cobbles, rutted lanes, furrowed fields (CineGround)
+            so.FindProperty("grass").objectReferenceValue = GroundMaterial("CampaignGrass", 0f);
+            so.FindProperty("cobble").objectReferenceValue = GroundMaterial("CampaignCobble", 1f);
+            so.FindProperty("dirt").objectReferenceValue = GroundMaterial("CampaignDirt", 2f);
+            so.FindProperty("field").objectReferenceValue = GroundMaterial("CampaignField", 3f);
+            // and the islands' meadow props: Map 3's decor kit and its material
+            var map3 = AssetDatabase.LoadAssetAtPath<CityBuilder.Maps.MeshMapDefinition>("Assets/_Project/Resources/MeshMaps/Map3.asset");
+            if (map3 != null)
+            {
+                so.FindProperty("decorKit").objectReferenceValue = map3.DecorData;
+                so.FindProperty("decorMaterial").objectReferenceValue = map3.DecorMaterial;
+            }
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // the living background: villagers, their flight, the orcs and the fires
@@ -146,11 +154,13 @@ namespace CityBuilder.EditorTools
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);
             scaler.matchWidthOrHeight = 1f;
-            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline));
+            // the line at the bottom middle, white with a soft shadow, kept to the middle half of the
+            // screen so a long line wraps instead of running edge to edge (the user, 2026-11-11)
+            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
             textGO.transform.SetParent(canvasGO.transform, false);
             var rect = (RectTransform)textGO.transform;
-            rect.anchorMin = new Vector2(0.1f, 0f);
-            rect.anchorMax = new Vector2(0.9f, 0f);
+            rect.anchorMin = new Vector2(0.22f, 0f);
+            rect.anchorMax = new Vector2(0.78f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 46f);
             rect.sizeDelta = new Vector2(0f, 80f);
@@ -163,48 +173,11 @@ namespace CityBuilder.EditorTools
             line.horizontalOverflow = HorizontalWrapMode.Wrap;
             line.raycastTarget = false;
             var outline = textGO.GetComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            outline.effectDistance = new Vector2(2f, -2f);
-
-            // the speech bubble over the speaker's head (the user, 2026-11-11: instead of subtitles)
-            var bubbleGO = new GameObject("Bubble", typeof(RectTransform), typeof(Image), typeof(CanvasGroup),
-                typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
-            bubbleGO.transform.SetParent(canvasGO.transform, false);
-            var brect = (RectTransform)bubbleGO.transform;
-            brect.anchorMin = brect.anchorMax = new Vector2(0.5f, 0.5f);
-            brect.pivot = new Vector2(0.5f, 0f);
-            var bimg = bubbleGO.GetComponent<Image>();
-            bimg.sprite = BubbleSprite("BubbleBody", false);
-            bimg.type = Image.Type.Sliced;
-            bimg.raycastTarget = false;
-            var vlg = bubbleGO.GetComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(26, 26, 16, 18);
-            vlg.childControlWidth = vlg.childControlHeight = true;
-            vlg.childForceExpandWidth = vlg.childForceExpandHeight = false;
-            var fit = bubbleGO.GetComponent<ContentSizeFitter>();
-            fit.horizontalFit = fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            bubbleGO.GetComponent<CanvasGroup>().blocksRaycasts = false;
-            var btextGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(LayoutElement));
-            btextGO.transform.SetParent(bubbleGO.transform, false);
-            var btext = btextGO.GetComponent<Text>();
-            btext.font = CityBuilder.UI.UiTheme.Regular;
-            btext.fontSize = 30;
-            btext.alignment = TextAnchor.MiddleCenter;
-            btext.color = new Color(0.22f, 0.13f, 0.06f);
-            btext.horizontalOverflow = HorizontalWrapMode.Wrap;
-            btext.raycastTarget = false;
-            var tailGO = new GameObject("Tail", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
-            tailGO.transform.SetParent(bubbleGO.transform, false);
-            tailGO.GetComponent<LayoutElement>().ignoreLayout = true;
-            var tail = (RectTransform)tailGO.transform;
-            tail.anchorMin = tail.anchorMax = new Vector2(0.5f, 0f);
-            tail.pivot = new Vector2(0.5f, 1f);
-            tail.sizeDelta = new Vector2(34f, 30f);
-            tail.anchoredPosition = new Vector2(0f, 9f);       // over the bubble's own rim, so the rim opens into it
-            var timg = tailGO.GetComponent<Image>();
-            timg.sprite = BubbleSprite("BubbleTail", true);
-            timg.raycastTarget = false;
-            bubbleGO.SetActive(false);
+            outline.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            var shadow = textGO.GetComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
+            shadow.effectDistance = new Vector2(3f, -4f);
 
             // the title over the first wide shot
             var titleGO = new GameObject("Title", typeof(RectTransform), typeof(Text), typeof(Outline));
@@ -274,9 +247,6 @@ namespace CityBuilder.EditorTools
             dso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
             dso.FindProperty("cam").objectReferenceValue = cam;
             dso.FindProperty("subtitle").objectReferenceValue = line;
-            dso.FindProperty("bubble").objectReferenceValue = brect;
-            dso.FindProperty("bubbleText").objectReferenceValue = btext;
-            dso.FindProperty("bubbleTail").objectReferenceValue = tail;
             dso.FindProperty("fx").objectReferenceValue = fx;
             dso.FindProperty("sound").objectReferenceValue = sound;
             dso.FindProperty("ropeMaterial").objectReferenceValue = Matte("CampaignRope", new Color(0.55f, 0.42f, 0.26f));
@@ -446,64 +416,6 @@ namespace CityBuilder.EditorTools
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        /// <summary>The speech bubble's pictures, drawn here: a parchment-white rounded body with a dark
-        /// brown rim (9-sliced), and its tail -- a triangle pointing down with the rim on its two slanted
-        /// sides only, its top laid over the body's rim.</summary>
-        private static Sprite BubbleSprite(string name, bool tail)
-        {
-            var path = $"Assets/_Project/Campaign/{name}.png";
-            if (!File.Exists(path))
-            {
-                var w = tail ? 68 : 96;
-                var h = tail ? 60 : 96;
-                var fill = new Color(1f, 0.97f, 0.9f, 1f);
-                var rim = new Color(0.25f, 0.15f, 0.07f, 1f);
-                const float line = 5f;
-                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-                for (var y = 0; y < h; y++)
-                {
-                    for (var x = 0; x < w; x++)
-                    {
-                        float d;                                    // signed distance, negative inside
-                        if (tail)
-                        {
-                            // the triangle (0,h)-(w,h)-(w/2,0) in pixels; the top edge has no rim
-                            var px = x + 0.5f;
-                            var py = y + 0.5f;
-                            var ax = Mathf.Abs(px - w * 0.5f);
-                            var slope = (w * 0.5f) / h;
-                            var side = (ax - py * slope) / Mathf.Sqrt(1f + slope * slope);
-                            d = side;
-                        }
-                        else
-                        {
-                            const float r = 30f;
-                            var qx = Mathf.Max(Mathf.Abs(x + 0.5f - w * 0.5f) - (w * 0.5f - r - 3f), 0f);
-                            var qy = Mathf.Max(Mathf.Abs(y + 0.5f - h * 0.5f) - (h * 0.5f - r - 3f), 0f);
-                            d = Mathf.Sqrt(qx * qx + qy * qy) - r;
-                        }
-                        Color c;
-                        if (d > 0.5f) c = Color.clear;
-                        else if (d > -line) c = rim;
-                        else c = fill;
-                        if (d > -0.5f && d <= 0.5f) c.a = 0.5f - d;    // a soft outer edge
-                        tex.SetPixel(x, y, c);
-                    }
-                }
-                File.WriteAllBytes(path, tex.EncodeToPNG());
-                Object.DestroyImmediate(tex);
-                AssetDatabase.ImportAsset(path);
-                var imp = (TextureImporter)AssetImporter.GetAtPath(path);
-                imp.textureType = TextureImporterType.Sprite;
-                imp.alphaIsTransparency = true;
-                imp.mipmapEnabled = false;
-                imp.textureCompression = TextureImporterCompression.Uncompressed;
-                if (!tail) imp.spriteBorder = new Vector4(40f, 40f, 40f, 40f);
-                imp.SaveAndReimport();
-            }
-            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
-        }
-
         /// <summary>URP's unlit particle material: additive for flames, alpha-blended for smoke.</summary>
         private static Material ParticleMaterial(string name, Texture2D dot, bool additive)
         {
@@ -521,6 +433,14 @@ namespace CityBuilder.EditorTools
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = (int)RenderQueue.Transparent;
             AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
+        private static Material GroundMaterial(string name, float mode)
+        {
+            var m = ShaderMaterial(name, "CityBuilder/CineGround");
+            m.SetFloat("_Mode", mode);
+            EditorUtility.SetDirty(m);
             return m;
         }
 
