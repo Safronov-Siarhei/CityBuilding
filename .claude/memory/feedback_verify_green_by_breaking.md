@@ -8,8 +8,6 @@ metadata:
   modified: 2026-08-18T13:53:38.427Z
 ---
 
-**Narrowed by the user 2026-11-04 (CLAUDE.md «Builds and tests: fewer checks than edits»):** break-to-verify ONLY for a bug's regression test, once. Small edits get no build/test; one general background test run after a substantial body of work. CLAUDE.md wins over the rest of this note.
-
 Before reporting a suite green as evidence a feature works, **deliberately break the mechanism and re-run.** The right test must go red, with a message that names the real symptom. Then restore and re-run clean. Keep a `.cp` of the file first so the restore is exact.
 
 **Why:** in this project a green suite has repeatedly meant nothing, and each time the test looked completely reasonable. The failures were never in the assertion — they were in the world the test set up.
