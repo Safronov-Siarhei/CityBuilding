@@ -94,10 +94,48 @@ def bush_clump():
     return b
 
 
+
+STEP_DECK = 0.22        # the sandbox Bridge's deck top (crossings.DECK)
+STEP_HALF = 0.44        # its half-width
+
+
+def bridge_steps():
+    """Timber steps down from the end of the sandbox's Bridge to the bank (the user, 2026-11-11:
+    the deck ended in the air -- «им нужны какие-то ступеньки»). Same timber as the bridge: three
+    planked treads on two sloping stringers, a post at each top corner, a stone footing where they
+    meet the ground. Origin at the bridge's end, the flight running down towards -y."""
+    b = Builder()
+    n = 3
+    rise = STEP_DECK / (n + 1)
+    run = 0.13
+    half = STEP_HALF - 0.04
+    for k in range(n):
+        top = STEP_DECK - (k + 1) * rise                # tread k from the top, its upper face
+        y1 = -k * run
+        y0 = y1 - run
+        b.box(-half, half, y0, y1, top - 0.035, top, 'wood_mid')
+        b.box(-half, half, y0 - 0.004, y0 + 0.008, top - 0.002, top + 0.003, 'wood_dark')   # the nosing seam
+        b.box(-half, half, y1 - 0.012, y1, top - rise, top - 0.035, 'wood_dark')            # the riser
+    # the stringers, sloping from under the deck's edge to the footing
+    length = n * run
+    for sx in (-1, 1):
+        x = sx * (half + 0.02)
+        b.prism([(0.0, STEP_DECK - 0.02), (0.0, STEP_DECK - 0.12), (-length + 0.02, -0.02), (-length - 0.02, 0.04)],
+                (x - 0.025, 0, 0), (0, 1, 0), (0, 0, 1), 0.05, 'wood_dark', back_cap=True)
+        b.box(x - 0.025, x + 0.025, -0.03, 0.03, 0.0, STEP_DECK + 0.16, 'wood_dark', bevel=0.006)   # a post
+        b.box(x - 0.03, x + 0.03, -0.035, 0.035, STEP_DECK + 0.14, STEP_DECK + 0.17, 'wood_mid')
+    # the footing: flat stones bedded at the bottom step
+    b.box(-half - 0.06, half + 0.06, -length - 0.1, -length + 0.03, -0.02, 0.025, 'stone_mid', bevel=0.012)
+    for x, y in ((-0.3, -length - 0.14), (0.05, -length - 0.16), (0.32, -length - 0.12)):
+        b.box(x - 0.08, x + 0.08, y - 0.05, y + 0.05, -0.02, 0.012, 'stone_light', bevel=0.01)
+    return b
+
+
 SETS = {
     "CineWheat": wheat,
     "CineFallenTree": fallen_tree,
     "CineBushClump": bush_clump,
+    "CineBridgeSteps": bridge_steps,
 }
 
 
@@ -180,6 +218,73 @@ def render(out):
         print("RENDERED", sc.render.filepath)
 
 
+def render_steps(out):
+    """The sandbox's Bridge (three level-1 pieces over a strip of water) with the new steps at both
+    ends and Ардан on them, as the game camera sees it and closer."""
+    import bpy
+    from mathutils import Vector
+    import ardan
+    sys.path.insert(0, os.path.dirname(HERE))
+    import crossings
+    os.makedirs(out, exist_ok=True)
+    sc = bpy.context.scene
+    objs = []
+    piece = 1.0 * fg.SET_SCALE
+    for i in range(3):
+        objs.append(fg.install_static("StepsPreviewBridge%d" % i, crossings.bridge(1), location=(0, (i - 1) * piece, 0)))
+    first = make("CineBridgeSteps", (0, -1.5 * piece, 0))
+    objs.append(first)
+    other = first.copy()
+    other.location = (0, 1.5 * piece, 0)
+    other.rotation_euler = (0, 0, math.pi)
+    sc.collection.objects.link(other)
+    objs.append(other)
+    ardan_obj = ardan.make(Vector((0.15, -1.5 * piece - 0.25, 0.12)))
+    objs.append(ardan_obj)
+    keep = set()
+    for o in objs:
+        keep |= {o.name} | {c.name for c in o.children_recursive}
+    for o in sc.objects:
+        if o.type in ('MESH', 'CURVE', 'EMPTY', 'ARMATURE'):
+            o.hide_render = o.name not in keep
+    sc.render.engine = 'BLENDER_EEVEE'
+    sc.render.resolution_x, sc.render.resolution_y = 1600, 900
+    sc.view_settings.view_transform = 'Standard'
+    for name, energy, rx, rz in (("SetSun", 3.5, 50, -25), ("SetFill", 1.0, 70, 150)):
+        light = bpy.data.objects.new(name, bpy.data.lights.new(name, 'SUN'))
+        light.data.energy = energy
+        sc.collection.objects.link(light)
+        light.rotation_euler = (math.radians(rx), 0, math.radians(rz))
+    w = sc.world or bpy.data.worlds.new("W")
+    sc.world = w
+    w.use_nodes = True
+    w.node_tree.nodes["Background"].inputs[0].default_value = (0.8, 0.82, 0.88, 1)
+    for name, size, loc, col in (("StepsGround", (40, 40, 1), (0, 0, -0.004), (0.33, 0.55, 0.2, 1)),
+                                 ("StepsBank", (20, 3 * piece + 1.4, 1), (0, 0, -0.002), (0.62, 0.48, 0.3, 1)),
+                                 ("StepsWater", (20, 3 * piece - 0.1, 1), (0, 0, 0.0), (0.12, 0.45, 0.75, 1))):
+        bpy.ops.mesh.primitive_plane_add(size=1, location=loc)
+        o = bpy.context.active_object
+        o.name = name
+        o.scale = size
+        m = bpy.data.materials.new(name)
+        m.use_nodes = True
+        m.node_tree.nodes["Principled BSDF"].inputs[0].default_value = col
+        o.data.materials.append(m)
+    cam = bpy.data.objects.new("SetCam", bpy.data.cameras.new("SetCam"))
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    for name, at, off, lens in (("steps_game_view", (0, 0, 0.2), (0, -4.6, 5.5), 35),
+                                ("steps_close", (0, -2.4, 0.2), (1.7, -2.2, 1.1), 40),
+                                ("steps_side", (0, -2.2, 0.15), (2.4, -0.2, 0.6), 40)):
+        at = Vector(at)
+        cam.location = at + Vector(off)
+        cam.data.lens = lens
+        cam.rotation_euler = (at - cam.location).to_track_quat('-Z', 'Y').to_euler()
+        sc.render.filepath = os.path.join(out, name + ".png")
+        bpy.ops.render.render(write_still=True)
+        print("RENDERED", sc.render.filepath)
+
+
 def export(project):
     import bpy
     from mathutils import Matrix
@@ -204,5 +309,7 @@ if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if argv and argv[0] == "render":
         render(argv[1])
+    elif argv and argv[0] == "render_steps":
+        render_steps(argv[1])
     elif argv and argv[0] == "export":
         export(argv[1])
