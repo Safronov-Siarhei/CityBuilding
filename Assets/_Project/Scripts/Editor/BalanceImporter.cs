@@ -33,6 +33,8 @@ namespace CityBuilder.EditorTools
         public const string LocalizationCsvPath = BalanceFolder + "/localization.csv";
         public const string LocalizationAssetPath = "Assets/_Project/Resources/LocalizationConfig.asset";
         public const string SettingsAssetPath = BalanceFolder + "/BalanceSheetSettings.asset";
+        /// <summary>Which sheet tabs make up which CSV: target, gid, the tab's name (for the reader).</summary>
+        public const string SheetTabsPath = BalanceFolder + "/sheet_tabs.csv";
         public const string ConfigAssetPath = "Assets/_Project/Resources/BalanceConfig.asset";
         /// <summary>The sheet's invasion tab: the Invasion mode's own numbers, laid over the other tabs for a run.</summary>
         public const string InvasionCsvPath = BalanceFolder + "/invasion.csv";
@@ -301,37 +303,26 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// Downloads each sheet tab published as CSV (Sheets: Файл -> Поделиться -> Опубликовать в
-        /// интернете -> вкладка -> CSV) into the committed files, then rebuilds the asset. URLs live
-        /// in the BalanceSheetSettings asset next to the CSVs.
+        /// Downloads the sheet's tabs, published as CSV, into the committed files, then rebuilds the
+        /// asset. The sheet is many small tabs named for what they hold (the user, 2026-11-11), the
+        /// files stay nine: Balance/sheet_tabs.csv says which tabs make up which file, in order, and
+        /// a file is written only when every one of its tabs came down.
         /// </summary>
         [MenuItem("CityBuilder/Balance/Pull From Google Sheets")]
         public static void PullFromGoogleSheets()
         {
             var settings = LoadOrCreateSettings();
-            if (string.IsNullOrWhiteSpace(settings.unitsCsvUrl) && string.IsNullOrWhiteSpace(settings.economyCsvUrl)
-                && string.IsNullOrWhiteSpace(settings.buildingsCsvUrl))
+            if (string.IsNullOrWhiteSpace(settings.publishedUrl))
             {
                 Selection.activeObject = settings;
                 EditorUtility.DisplayDialog("Баланс",
-                    "Ссылки на опубликованные вкладки не заданы.\n\n" +
-                    "В Google Sheets: Файл → Поделиться → Опубликовать в интернете → выбрать вкладку → формат CSV.\n" +
-                    "Полученные ссылки вставь в BalanceSheetSettings (открыт в инспекторе).", "OK");
+                    "Ссылка на опубликованную таблицу не задана.\n\n" +
+                    "В Google Sheets: Файл → Поделиться → Опубликовать в интернете → весь документ → CSV.\n" +
+                    "Ссылку (до /pub включительно) вставь в BalanceSheetSettings (открыт в инспекторе).", "OK");
                 return;
             }
 
-            var downloaded = DownloadAll(new[]
-            {
-                (settings.unitsCsvUrl, UnitsCsvPath),
-                (settings.economyCsvUrl, EconomyCsvPath),
-                (settings.buildingsCsvUrl, BuildingsCsvPath),
-                (settings.recipesCsvUrl, RecipesCsvPath),
-                (settings.localizationCsvUrl, LocalizationCsvPath),
-                (settings.invasionCsvUrl, InvasionCsvPath),
-                (settings.sandboxCsvUrl, SandboxCsvPath),
-                (settings.botWavesCsvUrl, BotWavesCsvPath),
-                (settings.tutorialCsvUrl, TutorialCsvPath),
-            });
+            var downloaded = DownloadAll(settings.publishedUrl.Trim(), ReadSheetTabs());
 
             AssetDatabase.Refresh();
             if (downloaded == 0)
@@ -341,28 +332,44 @@ namespace CityBuilder.EditorTools
             }
 
             RebuildConfig();
-            EditorUtility.DisplayDialog("Баланс", $"Обновлено вкладок: {downloaded}. Конфиг пересобран.", "OK");
+            EditorUtility.DisplayDialog("Баланс", $"Обновлено файлов: {downloaded}. Конфиг пересобран.", "OK");
         }
 
-        // a published tab answers in a second or two; a request that hangs gives up rather than the Editor
         private const int DownloadTimeoutSeconds = 30;
 
-        /// <summary>
-        /// Downloads every tab at once with UnityWebRequest, each with a timeout, behind a cancelable
-        /// progress bar (2026-11-10: the old one-by-one WebClient had no timeout and could hold the
-        /// Editor for minutes -- Mono's WebClient stalls on proxy detection / TLS). Returns how many
-        /// tabs were written; a failed tab leaves its CSV untouched.
-        /// </summary>
-        private static int DownloadAll((string url, string path)[] tabs)
+        /// <summary>sheet_tabs.csv: each target file (without .csv) with the gids of its tabs, in the listed order.</summary>
+        private static List<(string target, List<string> gids)> ReadSheetTabs()
         {
-            var requests = new List<(UnityEngine.Networking.UnityWebRequest request, string url, string path)>();
-            foreach (var (url, path) in tabs)
+            var targets = new List<(string target, List<string> gids)>();
+            var lines = File.ReadAllLines(SheetTabsPath);
+            for (var i = 1; i < lines.Length; i++)
             {
-                if (string.IsNullOrWhiteSpace(url)) continue;
-                var request = UnityEngine.Networking.UnityWebRequest.Get(url.Trim());
-                request.timeout = DownloadTimeoutSeconds;
-                request.SendWebRequest();
-                requests.Add((request, url, path));
+                var cells = lines[i].Split(',');
+                if (cells.Length < 2 || cells[0].Trim().Length == 0) continue;
+                var target = cells[0].Trim();
+                var at = targets.FindIndex(t => t.target == target);
+                if (at < 0)
+                {
+                    targets.Add((target, new List<string>()));
+                    at = targets.Count - 1;
+                }
+                targets[at].gids.Add(cells[1].Trim());
+            }
+            return targets;
+        }
+
+        private static int DownloadAll(string publishedUrl, List<(string target, List<string> gids)> targets)
+        {
+            var requests = new Dictionary<string, UnityEngine.Networking.UnityWebRequest>();
+            foreach (var (_, gids) in targets)
+            {
+                foreach (var gid in gids)
+                {
+                    var request = UnityEngine.Networking.UnityWebRequest.Get($"{publishedUrl}?gid={gid}&single=true&output=csv");
+                    request.timeout = DownloadTimeoutSeconds;
+                    request.SendWebRequest();
+                    requests[gid] = request;
+                }
             }
 
             var written = 0;
@@ -371,42 +378,93 @@ namespace CityBuilder.EditorTools
                 while (true)
                 {
                     var done = 0;
-                    foreach (var r in requests) done += r.request.isDone ? 1 : 0;
+                    foreach (var r in requests.Values) done += r.isDone ? 1 : 0;
                     if (done == requests.Count) break;
-                    if (EditorUtility.DisplayCancelableProgressBar("Баланс", $"Скачиваю вкладки таблицы: {done} из {requests.Count}", requests.Count > 0 ? done / (float)requests.Count : 1f))
+                    if (EditorUtility.DisplayCancelableProgressBar("Баланс", $"Скачиваю листы таблицы: {done} из {requests.Count}", requests.Count > 0 ? done / (float)requests.Count : 1f))
                     {
                         Debug.LogWarning("BalanceImporter: pull cancelled -- CSVs not yet downloaded are left as they were.");
-                        foreach (var r in requests) if (!r.request.isDone) r.request.Abort();
+                        foreach (var r in requests.Values) if (!r.isDone) r.Abort();
                         break;
                     }
                     System.Threading.Thread.Sleep(50);
                 }
 
-                foreach (var (request, url, path) in requests)
+                foreach (var (target, gids) in targets)
                 {
-                    if (!request.isDone || request.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                    var parts = new List<string>();
+                    foreach (var gid in gids)
                     {
-                        Debug.LogError($"BalanceImporter: could not download {url} -- {request.error}");
+                        var csv = DownloadedCsv(requests[gid], gid);
+                        if (csv != null) parts.Add(csv);
+                    }
+                    // half a file would silently lose the keys of the tab that failed
+                    if (parts.Count < gids.Count)
+                    {
+                        Debug.LogError($"BalanceImporter: {target}.csv left as it was -- not all of its sheet tabs came down.");
                         continue;
                     }
-                    var csv = request.downloadHandler.text;
-                    if (string.IsNullOrWhiteSpace(csv) || csv.TrimStart().StartsWith("<", StringComparison.Ordinal))
-                    {
-                        // A published CSV link returns CSV; HTML means the link points at the
-                        // document's viewer instead, or the publication was revoked.
-                        Debug.LogError($"BalanceImporter: {url} returned HTML rather than CSV. Re-publish that tab as CSV and copy the link it gives you.");
-                        continue;
-                    }
-                    File.WriteAllText(path, csv, new UTF8Encoding(false));
+                    File.WriteAllText($"{BalanceFolder}/{target}.csv", MergeTabs(parts), new UTF8Encoding(false));
                     written++;
                 }
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
-                foreach (var r in requests) r.request.Dispose();
+                foreach (var r in requests.Values) r.Dispose();
             }
             return written;
+        }
+
+        /// <summary>The tab's CSV, or null (logged) when it did not download or is not CSV.</summary>
+        private static string DownloadedCsv(UnityEngine.Networking.UnityWebRequest request, string gid)
+        {
+            if (!request.isDone || request.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"BalanceImporter: could not download sheet tab {gid} -- {request.error}");
+                return null;
+            }
+            var csv = request.downloadHandler.text;
+            if (string.IsNullOrWhiteSpace(csv) || csv.TrimStart().StartsWith("<", StringComparison.Ordinal))
+            {
+                // A published CSV link returns CSV; HTML means the publication was revoked or the tab is gone.
+                Debug.LogError($"BalanceImporter: sheet tab {gid} returned HTML rather than CSV. Check that the whole document is published and the tab exists.");
+                return null;
+            }
+            return csv;
+        }
+
+        /// <summary>
+        /// One file out of a target's tabs. Tabs with the first tab's header (economy, localization)
+        /// follow on with theirs dropped; a tab with a header of its own (the building / unit / key
+        /// tables of invasion and sandbox) keeps it after a blank line, as one stacked tab had them.
+        /// </summary>
+        private static string MergeTabs(List<string> tabs)
+        {
+            if (tabs.Count == 1) return tabs[0];
+            var merged = new StringBuilder(tabs[0].TrimEnd('\r', '\n'));
+            var header = FirstCell(tabs[0]);
+            for (var i = 1; i < tabs.Count; i++)
+            {
+                var tab = tabs[i].TrimEnd('\r', '\n');
+                if (FirstCell(tab) == header)
+                {
+                    var lineEnd = tab.IndexOf('\n');
+                    if (lineEnd < 0) continue;
+                    tab = tab.Substring(lineEnd + 1);
+                }
+                else
+                {
+                    merged.Append("\r\n");
+                }
+                merged.Append("\r\n").Append(tab);
+            }
+            return merged.ToString();
+        }
+
+        private static string FirstCell(string csv)
+        {
+            var end = csv.IndexOfAny(new[] { ',', '\r', '\n' });
+            return (end < 0 ? csv : csv.Substring(0, end)).Trim().TrimStart('\uFEFF');
         }
 
         private static BalanceSheetSettings LoadOrCreateSettings()

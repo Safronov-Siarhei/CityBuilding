@@ -6,38 +6,13 @@ namespace CityBuilder.EditorTools
     /// Where the balance spreadsheet lives. Editor-only by design: the game never reads a URL,
     /// only the committed CSVs and the asset built from them (see BalanceImporter).
     ///
-    /// Fill these from Google Sheets: Файл → Поделиться → Опубликовать в интернете → выбрать
-    /// вкладку → формат CSV → скопировать ссылку. One link per tab; the link ends in
-    /// output=csv and works without signing in, which is exactly why nothing here needs
-    /// credentials or a Google Cloud project.
+    /// One link for the whole document (Sheets: Файл → Поделиться → Опубликовать в интернете →
+    /// весь документ → CSV), cut after /pub; which tabs are read is Balance/sheet_tabs.csv. It works
+    /// without signing in, which is why nothing here needs credentials or a Google Cloud project.
     /// </summary>
     public class BalanceSheetSettings : ScriptableObject
     {
-        [Tooltip("Опубликованная как CSV вкладка units")]
-        public string unitsCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка economy")]
-        public string economyCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка buildings")]
-        public string buildingsCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка recipes")]
-        public string recipesCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка localization")]
-        public string localizationCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка invasion (все цифры режима Нашествие)")]
-        public string invasionCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка sandbox (стройка, жители и герои песочницы)")]
-        public string sandboxCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка botwaves (волны набегов бота на войне)")]
-        public string botWavesCsvUrl = string.Empty;
-
-        [Tooltip("Опубликованная как CSV вкладка tutorial (все числа обучения)")]
-        public string tutorialCsvUrl = string.Empty;
+        [Tooltip("Ссылка на опубликованную таблицу, до /pub включительно")]
+        public string publishedUrl = string.Empty;
     }
 }

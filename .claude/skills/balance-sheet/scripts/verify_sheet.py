@@ -41,18 +41,18 @@ PUBLISHED = (
 # tabs; buildings, units and recipes are keyed on an id (recipes needs two columns, since
 # the Smelter owns four rows).
 TABS = {
-    "units": {"gid": "538856846", "key": ["id"]},
-    "economy": {"gid": "257341966", "key": ["key"]},
-    "buildings": {"gid": "766628053", "key": ["id"]},
-    "recipes": {"gid": "208452028", "key": ["building", "recipe_id"]},
-    "localization": {"gid": "304072291", "key": ["key"]},
-    # three tables one under another (building / unit / key headers): compared by first cell, cell by cell
-    "invasion": {"gid": "1941808734", "stacked": True},
-    "sandbox": {"gid": "291742027", "stacked": True},
+    "units": {"key": ["id"]},
+    "economy": {"key": ["key"]},
+    "buildings": {"key": ["id"]},
+    "recipes": {"key": ["building", "recipe_id"]},
+    "localization": {"key": ["key"]},
+    # tables with their own headers (building / unit / key): compared by first cell, cell by cell
+    "invasion": {"stacked": True},
+    "sandbox": {"stacked": True},
     # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
-    "botwaves": {"gid": "1680852949", "key": ["wave", "unit"]},
+    "botwaves": {"key": ["wave", "unit"]},
     # every number of the tutorial (2026-11-05): key/value like economy
-    "tutorial": {"gid": "1105001", "key": ["key"]},
+    "tutorial": {"key": ["key"]},
 }
 
 # Differences that are correct and permanent. Reported as a note, not as a failure.
@@ -69,6 +69,27 @@ IGNORED_CELLS = {
 def fetch(gid):
     url = PUBLISHED.format(gid=gid, cb=int(time.time()))
     return urllib.request.urlopen(url, timeout=60).read().decode("utf-8-sig")
+
+
+def sheet_tabs():
+    """Balance/sheet_tabs.csv: each repo CSV with the gids of the sheet tabs it is made of (2026-11-11)."""
+    out = {}
+    with io.open(os.path.join(BALANCE, "sheet_tabs.csv"), encoding="utf-8") as handle:
+        for row in list(csv.reader(handle))[1:]:
+            if row:
+                out.setdefault(row[0], []).append(row[1])
+    return out
+
+
+def fetch_target(name):
+    """The rows of a repo CSV as the sheet has them: its tabs one after another, as BalanceImporter.MergeTabs does."""
+    merged = []
+    for gid in sheet_tabs()[name]:
+        table = rows(fetch(gid))
+        if merged and table and table[0][0] == merged[0][0]:
+            table = table[1:]
+        merged.extend(table)
+    return merged
 
 
 def rows(text):
@@ -129,7 +150,7 @@ def index(table, header, key_columns):
 
 def compare_stacked(name, spec):
     """The invasion tab: every row by its first cell (an id, a key or a table's header), its cells in order."""
-    sheet, repo = rows(fetch(spec["gid"])), read_repo(name)
+    sheet, repo = fetch_target(name), read_repo(name)
     if not sheet or not repo:
         print("%-13s COULD NOT READ" % name)
         return 1
@@ -165,7 +186,7 @@ def compare_stacked(name, spec):
 def compare(name, spec):
     if spec.get("stacked"):
         return compare_stacked(name, spec)
-    sheet = rows(fetch(spec["gid"]))
+    sheet = fetch_target(name)
     repo = read_repo(name)
     if not sheet or not repo:
         print("%-13s COULD NOT READ" % name)

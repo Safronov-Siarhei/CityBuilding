@@ -34,27 +34,16 @@ surface that nothing has run yet.
 | Edit URL | `https://docs.google.com/spreadsheets/d/<id>/edit#gid=<gid>` |
 | Browser | the user has two Chrome browsers connected; theirs is named **DepigoGames** |
 
-Tab gids — the same ones in `Assets/_Project/Balance/BalanceSheetSettings.asset`:
+**Since 2026-11-11 the sheet is many Russian-named tabs** (first tab «Оглавление» says what is where):
+`Assets/_Project/Balance/sheet_tabs.csv` (`target,gid,tab`) lists which tabs make up each repo CSV; that
+file is the tab table, gids included. Find a key's tab through it or by its prefix in the index, e.g.
+`get_values(id, "'Орки и набеги'!A:C")`. A new numeric key goes on the matching green tab, a new text on
+the matching «Тексты: …» tab, an Invasion key on «Нашествие: настройки», a sandbox key on «Песочница:
+настройки». A tutorial key goes on «Обучение», never on a green tab. A new tab needs `addSheet`, one line in sheet_tabs.csv and a row in «Оглавление». The tabs
+«СТАРЫЙ … (не править)» are hidden leftovers: nothing reads them, never edit them.
 
-| tab | gid |
-|---|---|
-| units | 538856846 |
-| economy | 257341966 |
-| buildings | 766628053 |
-| recipes | 208452028 |
-| localization | 304072291 |
-| invasion | 1941808734 |
-| sandbox | 291742027 |
-| tutorial | 1105001 |
-| botwaves | 1680852949 |
-
-`tutorial` (2026-11-05) is key/value like economy: EVERY number of the tutorial (`tutorial_*`), laid over
-the economy keys of the sandbox config. A tutorial key goes HERE, never into economy.
-`sandbox` (2026-10-25) has the same stacked shape (`building`, `key`): the SANDBOX's building prices,
-build times, housing and its hero/people/repair/minimap keys, laid over the other tabs for the sandbox.
-`invasion` (2026-10-23) is three tables stacked in one tab (`building`, `unit`, `key` header rows): the
-Invasion mode's numbers laid over the other tabs for a run. Row order matters only within a table;
-`verify_sheet.py` compares it by first cell. A key added for the mode goes HERE, not into economy.
+`Нашествие: *` and `Песочница: *` are the modes' numbers laid over the other tabs (each table with its
+own `building`/`unit`/`key` header); `verify_sheet.py` compares them by first cell.
 
 **If the document id ever stops working, find it through Drive → Недавние, not by guessing.**
 The `2PACX-…` string in the published CSV links is a publication id, not a document id, and no
@@ -68,12 +57,12 @@ loaded with ToolSearch "select:..."). Use it instead of the browser: no screensh
 no clipboard. If its tools are missing, check `mcp__ccd_connectors__session_connectors_status`;
 fall back to the browser section below only when the connector is unavailable.
 
-- **Read** a range: `get_values(spreadsheetId, "economy!A160:C170")` -- find a row's number by
+- **Read** a range: `get_values(spreadsheetId, "'Армия и отряды'!A2:C13")` -- find a row's number by
   reading column A of the tab, never by guessing from the repo CSV (the orders differ).
 - **Insert rows**: `insert_dimension(sheetId=<tab gid>, dimension="ROWS", startIndex=<row-1>,
   endIndex=<row-1+n>, inheritFromBefore=true)`; the gid is the tab's `sheetId` (table below).
   An insert renumbers everything below it: do the lower edits first, or re-read.
-- **Write**: `update_values(spreadsheetId, "economy!A184:C185", [[...], [...]])`. Values are
+- **Write**: `update_values(spreadsheetId, "'Армия и отряды'!A14:C15", [[...], [...]])`. Values are
   entered AS IF TYPED (USER_ENTERED): a text starting with `+`, `-` or `=` becomes a formula and
   reads back `0` -- write it with a leading apostrophe (`"'+{0}"`), which is not stored. Write
   decimals the way the sheet shows them, as text with a comma (`"0,5"`), like the CSV.
