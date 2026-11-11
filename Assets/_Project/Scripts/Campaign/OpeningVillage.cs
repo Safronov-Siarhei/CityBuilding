@@ -56,6 +56,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject[] trees = new GameObject[0];
         [SerializeField] private Prop[] setPieces = new Prop[0];
         [SerializeField] private TextAsset setFile;
+        [SerializeField] private TextAsset propsFile;
         [SerializeField] private Material grass;
         [SerializeField] private Material cobble;
         [SerializeField] private Material dirt;
@@ -131,6 +132,7 @@ namespace CityBuilder.Campaign
             Ground();
             SetPieces();
             Streets();
+            Featured();
             SquareRing();
             StreetHouses();
             Outskirts();
@@ -296,6 +298,56 @@ namespace CityBuilder.Campaign
             }
         }
 
+        [Serializable] private class PropsFile { public float search; public FeaturedProp[] featured; }
+        [Serializable] private class FeaturedProp { public string id; public float x, z, yaw; }
+
+        private bool PutProp(string id, Vector2 at, float radius, float yaw)
+        {
+            var model = SetPieceModel(id);
+            if (model == null || !Free(at, radius) || NearStreet(at, radius * 0.7f)) return false;
+            var go = Instantiate(model, _root);
+            go.name = id;
+            go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
+            CineTwoSided.Apply(go);
+            Reserve(at, radius);
+            return true;
+        }
+
+        /// <summary>The model's footprint radius, from its mesh.</summary>
+        private float PropRadius(string id)
+        {
+            var model = SetPieceModel(id);
+            var mf = model != null ? model.GetComponentInChildren<MeshFilter>() : null;
+            if (mf == null || mf.sharedMesh == null) return 0.7f;
+            var size = Vector3.Scale(mf.sharedMesh.bounds.size, mf.transform.lossyScale);
+            return Mathf.Max(size.x, size.z) * 0.5f;
+        }
+
+        /// <summary>
+        /// The farm props set by hand where the cameras look (Campaign/OpeningProps.json), before the
+        /// houses so they keep their places; a spot on a road is nudged outwards in rings.
+        /// </summary>
+        private void Featured()
+        {
+            if (propsFile == null) return;
+            var file = JsonUtility.FromJson<PropsFile>(propsFile.text);
+            foreach (var f in file.featured)
+            {
+                var want = new Vector2(f.x, f.z);
+                var radius = PropRadius(f.id);
+                var done = PutProp(f.id, want, radius, f.yaw);
+                for (var r = 0.5f; !done && r <= file.search; r += 0.5f)
+                {
+                    for (var k = 0; k < 8 && !done; k++)
+                    {
+                        var a = k * Mathf.PI / 4f;
+                        done = PutProp(f.id, want + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, radius, f.yaw);
+                    }
+                }
+                if (!done) Debug.Log($"[OpeningVillage] no room for {f.id} at {want}");
+            }
+        }
+
         /// <summary>
         /// Country life (the user, 2026-11-11): haystacks and stacked bales along the roads out of
         /// town, pig pens and hen yards by the farmsteads, washing lines by the town houses -- the
@@ -303,17 +355,7 @@ namespace CityBuilder.Campaign
         /// </summary>
         private void Props()
         {
-            bool Put(string id, Vector2 at, float radius, float yaw)
-            {
-                var model = SetPieceModel(id);
-                if (model == null || !Free(at, radius) || NearStreet(at, radius * 0.7f)) return false;
-                var go = Instantiate(model, _root);
-                go.name = id;
-                go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, yaw, 0f) * model.transform.rotation);
-                CineTwoSided.Apply(go);
-                Reserve(at, radius);
-                return true;
-            }
+            bool Put(string id, Vector2 at, float radius, float yaw) => PutProp(id, at, radius, yaw);
             float Yaw() => (float)_rnd.NextDouble() * 360f;
 
             // by the roads, past the old town

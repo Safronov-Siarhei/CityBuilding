@@ -107,6 +107,7 @@ namespace CityBuilder.EditorTools
                 setProp.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue = set[i];
             }
             so.FindProperty("setFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningSetPath);
+            so.FindProperty("propsFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/OpeningProps.json");
             // the ground: the islands' grass zones, cobbles, rutted lanes, furrowed fields (CineGround)
             so.FindProperty("grass").objectReferenceValue = GroundMaterial("CampaignGrass", 0f);
             so.FindProperty("cobble").objectReferenceValue = GroundMaterial("CampaignCobble", 1f);
