@@ -204,6 +204,19 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   royal blue big days; the amount on a SOLID dark pill (a translucent one let the green background through).
 - **Trap:** PIL ImageDraw on an RGBA picture REPLACES alpha -- translucent shapes go through `over()`.
 
+## Boosters (the user, 2026-11-11; being discussed, concepts shown, nothing built)
+- **Decided:** bought in the shop's new tab «Бустеры» (tabs «Предложения» | «Бустеры»); kept in the
+  «Запасы» window (no tab: «Ресурсы», a gap, «Бустеры» with captions), tapping a booster there opens its
+  activation window; SANDBOX ONLY, not tied to a map, one stock for the account (like crystals -- so a
+  cloud save before selling); a building sped up by a booster must SHOW it (a visual effect on it).
+- **Proposed, awaiting the user:** time counts only during play; the same booster again adds time (not
+  strength); a shorter version for an ad, N per day; starter set Урожай, Ремесло, Зодчий, Учёный, Боевой
+  дух, «Готово!» (instant finish); active boosters as a row of medallions with a time ring under the top
+  bar (tap -> «Запасы»); a hint at the right moment (raid -> «Боевой дух», only if in stock, 8 s).
+  Building look A (gold ground ring + rising motes + badge) or B (gold outline glow + badge).
+- **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
+  `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
+
 ## POSTPONED indefinitely: play only online (the user's idea, 2026-11-11)
 - Idea: check the connection and refuse to play offline (so offline players do not dodge the ads), and
   sell a bundle that lifts it. Claude advised against: ads are rewarded only (forcing online adds no
