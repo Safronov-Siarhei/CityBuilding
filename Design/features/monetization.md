@@ -228,7 +228,10 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   Tiers are separate boosters in the pool: tier I for an ad OR crystals, tiers II and III for crystals
   only. One icon per booster kind; the tier is written ON the icon's corner («×1.2», «+2») -- not by
   rim colour. Gathering boosters speed up only the ACTION on the resource (chopping, quarrying,
-  digging), never walking. The user continues the list.
+  digging), never walking.
+  Taxes (the user, 2026-11-12): a «Казна» booster, tax ×1.2 / ×1.5 / ×2, lasts 10 MIN (tax comes once per
+  120-s game day, so 5 min is 2-3 payouts); priced like the other boosters' tiers. So the duration is a
+  per-booster sheet column (default 5 min). The user continues the list.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
