@@ -40,7 +40,8 @@ MODES = {
     "Sandbox": ((95, 150, 52, 255), (52, 92, 28, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
     "Invasion": ((168, 48, 38, 255), (84, 22, 18, 255), (40, 30, 28, 255), (IRON, IRON_EDGE, IRON_HI), (IRON_HI, (190, 186, 178, 255)), True),
     "Tutorial": ((44, 140, 130, 255), (22, 88, 82, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
-    "Campaign": ((150, 143, 128, 255), (96, 90, 80, 255), (205, 198, 182, 255), (WOOD, WOOD_DARK, WOOD_HI), ((170, 160, 140, 255), (200, 192, 175, 255)), False),
+    # the campaign OPEN (the user, 2026-11-12: it was grey and locked, «скоро»): royal blue and gold
+    "Campaign": ((48, 76, 152, 255), (24, 40, 92, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
 }
 
 
@@ -179,6 +180,26 @@ def book(d, cx, cy, ink):
                p(cx + 13, cy - 26), p(cx + 24, cy - 38), p(cx + 24, cy - 18)], fill=GOLD)
 
 
+def tale(d, cx, cy, ink):
+    """The campaign's emblem, the kingdom's tale: a sword standing behind an unrolled scroll."""
+    blade, blade_hi = (196, 192, 184, 255), (236, 233, 226, 255)
+    # the sword: blade, gold cross-guard, grip, pommel
+    d.polygon([p(cx - 9, cy + 46), p(cx - 9, cy - 46), p(cx, cy - 62), p(cx + 9, cy - 46), p(cx + 9, cy + 46)], fill=blade, outline=ink, width=3 * SS)
+    d.line([p(cx - 2, cy - 50), p(cx - 2, cy + 40)], fill=blade_hi, width=3 * SS)
+    d.rounded_rectangle([p(cx - 34, cy - 40), p(cx + 34, cy - 30)], radius=4 * SS, fill=GOLD, outline=ink, width=2 * SS)
+    d.rectangle([p(cx - 6, cy - 62), p(cx + 6, cy - 40)], fill=WOOD)
+    d.rectangle([p(cx - 6, cy - 62), p(cx + 6, cy - 40)], outline=ink, width=2 * SS)
+    d.ellipse([p(cx - 10, cy - 76), p(cx + 10, cy - 58)], fill=GOLD, outline=ink, width=2 * SS)
+    # the scroll across it, its ends rolled
+    d.rounded_rectangle([p(cx - 50, cy - 6), p(cx + 50, cy + 40)], radius=4 * SS, fill=PARCHMENT, outline=ink, width=3 * SS)
+    for x in (-50, 50):
+        d.ellipse([p(cx + x - 10, cy - 10), p(cx + x + 10, cy + 44)], fill=CARD_EDGE, outline=ink, width=3 * SS)
+        d.ellipse([p(cx + x - 4, cy - 2), p(cx + x + 4, cy + 8)], fill=ink)
+    for k in range(3):
+        y = cy + 6 + k * 10
+        d.line([p(cx - 34, y), p(cx + (30 if k < 2 else 8), y)], fill=ink, width=3 * SS)
+
+
 def lock(d, cx, cy, ink):
     d.rounded_rectangle([p(cx - 28, cy - 50), p(cx + 28, cy + 6)], radius=28 * SS, outline=ink, width=12 * SS)
     d.rounded_rectangle([p(cx - 42, cy - 10), p(cx + 42, cy + 48)], radius=8 * SS, fill=ink)
@@ -199,7 +220,7 @@ def banner(name, spec):
     dashed(d, cloth_outline(22, torn), seam, 3)
 
     # tassels at the tail's points
-    # tassels in the banner's own colour under a cap of its perch's metal (gold; iron; grey when closed)
+    # tassels in the banner's own colour under a cap of its perch's metal (gold; iron)
     for x in (40, W - 40):
         d.line([p(x, TAIL_SIDE - 6), p(x, 610)], fill=hem, width=4 * SS)
         d.polygon([p(x - 11, 616), p(x + 11, 616), p(x + 9, 646), p(x - 9, 646)], fill=hem)
@@ -223,7 +244,7 @@ def banner(name, spec):
 
     # the medallion: parchment in a gold ring (iron for the invasion), the emblem in wood ink
     cx, cy, r = W / 2, 182, 96
-    ring, ring_hi = (finial[0], finial[1]) if name != "Campaign" else ((170, 160, 140, 255), (200, 192, 175, 255))
+    ring, ring_hi = finial[0], finial[1]
     d.ellipse([p(cx - r, cy - r + 9), p(cx + r, cy + r + 9)], fill=SHADOW)
     d.ellipse([p(cx - r, cy - r), p(cx + r, cy + r)], fill=WOOD_EDGE if name != "Invasion" else IRON_EDGE)
     d.ellipse([p(cx - r + 6, cy - r + 6), p(cx + r - 6, cy + r - 6)], fill=ring)
@@ -239,7 +260,7 @@ def banner(name, spec):
     elif name == "Tutorial":
         book(d, cx, cy + 6, WOOD_DARK)
     else:
-        lock(d, cx, cy + 4, (110, 102, 90, 255))
+        tale(d, cx, cy + 6, WOOD_DARK)
 
     img = img.resize((W, H), Image.LANCZOS)
     img.save(os.path.join(OUT, f"Banner_{name}.png"))
