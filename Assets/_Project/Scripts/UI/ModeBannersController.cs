@@ -38,6 +38,7 @@ namespace CityBuilder.UI
         [SerializeField] private Text rewardAmount;
 
         private static readonly string[] MottoKeys = { "#banner_motto_tutorial", "#banner_motto_sandbox", "#banner_motto_invasion", "#banner_motto_campaign" };
+        private const string CampaignScene = "CampaignOpening";
         private static readonly Color Dimmed = new Color(0.72f, 0.72f, 0.72f, 1f);
 
         private int _picked = Sandbox;
@@ -47,7 +48,7 @@ namespace CityBuilder.UI
 
         private void Awake()
         {
-            _picked = Mathf.Clamp(PlayerPrefs.GetInt(PickedKey, Sandbox), Tutorial, Invasion);
+            _picked = Mathf.Clamp(PlayerPrefs.GetInt(PickedKey, Sandbox), Tutorial, Campaign);
             _scale = new float[banners.Length];
             for (var i = 0; i < _scale.Length; i++) _scale[i] = 1f;
         }
@@ -87,7 +88,6 @@ namespace CityBuilder.UI
                 if (cloths.Length > i && cloths[i] != null)
                     cloths[i].color = Color.Lerp(cloths[i].color, picked ? Color.white : Dimmed, k);
             }
-            if (playButton != null) playButton.color = _picked == Campaign ? Dimmed : Color.white;
         }
 
         /// <summary>A tap on a banner: picks it, or starts it when it is picked already.</summary>
@@ -117,6 +117,8 @@ namespace CityBuilder.UI
                 case Tutorial: menu.StartTutorial(); break;
                 case Sandbox: menu.ChooseMode((int)GameMode.Sandbox); break;
                 case Invasion: menu.ChooseMode((int)GameMode.Invasion); break;
+                // the campaign (the user, 2026-11-11: open it, it goes into the release): the opening film, then mission 1
+                case Campaign: LoadingScreen.IntoGame(CampaignScene); break;
             }
         }
 
@@ -124,12 +126,9 @@ namespace CityBuilder.UI
         {
             if (index < 0 || index >= banners.Length) return;
             _picked = index;
-            // the last mode picked is the one waiting next time (the campaign is not a choice yet)
-            if (index != Campaign)
-            {
-                PlayerPrefs.SetInt(PickedKey, index);
-                PlayerPrefs.Save();
-            }
+            // the last mode picked is the one waiting next time
+            PlayerPrefs.SetInt(PickedKey, index);
+            PlayerPrefs.Save();
             // the picked banner in front of its neighbours
             banners[index].SetAsLastSibling();
             ShowMotto();
@@ -148,7 +147,7 @@ namespace CityBuilder.UI
             var counted = config != null ? config.InvasionRunsCountedPerDay : 5;
             var points = CityBuilder.Invasion.InvasionRecords.DayPoints(CityBuilder.Invasion.InvasionRecords.LoadDays(), System.DateTime.Now, counted);
             SetLine(Invasion, Localization.Format("#banner_points_today", points));
-            SetLine(Campaign, Localization.Get("#banner_soon"));
+            SetLine(Campaign, Localization.Get("#banner_campaign_line"));
         }
 
         /// <summary>The picked mode's motto, over «Играть».</summary>

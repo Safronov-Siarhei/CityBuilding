@@ -93,6 +93,7 @@ namespace CityBuilder.EditorTools
             {
                 new EditorBuildSettingsScene($"{ScenesFolder}/MainMenu.unity", true),
                 new EditorBuildSettingsScene($"{ScenesFolder}/CityBuilder.unity", true),
+                new EditorBuildSettingsScene(CampaignOpeningScenePath, true),
             };
 
             CleanupTemplateAssets();

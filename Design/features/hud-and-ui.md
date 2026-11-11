@@ -55,6 +55,7 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   unroll from the perch on entry (staggered). `UI/ModeBannersController.cs`, built by
   `SetupProjectMainMenuScreens.BuildModeBanners`. The old pills, round «!» and tutorial plaque are
   gone (MainMenuController.tutorialReward left unwired). Round 3 (the user saw it, 11-10): smaller name plaques (196x54, 26 pt); the MOTTO moved off the banners to ONE line bottom centre over «Играть», showing the picked mode's; the live line sits under the plaque, 190 wide and best-fit (14..26 pt) so big numbers stay inside the seam.
+  **CAMPAIGN BANNER OPEN (the user, 2026-11-11: «сделай активным баннер кампании… в релиз это пойдёт»):** picking it is remembered like the others, «Играть» is no longer dimmed for it, and it starts `LoadingScreen.IntoGame("CampaignOpening")` (the opening film, then mission 1; the scene is now in the build list, SetupProject). Its live line is `#banner_campaign_line` «Глава 1: Бегство» (was «Скоро»; sheet «Тексты: интерфейс и меню» row 142). Not seen by the user yet.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
 - sandbox (REDONE 2026-11-10, the user picked concept В «Знамя и доска» of three, PIL concepts in
