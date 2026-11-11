@@ -88,12 +88,14 @@ namespace CityBuilder.EditorTools
             BuildOfferShopWindow();
             // the campaign's opening cutscene (SetupProjectCampaign) -- not in the build list yet
             BuildCampaignOpeningScene();
+            BuildCampaignMapScene();
 
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene($"{ScenesFolder}/MainMenu.unity", true),
                 new EditorBuildSettingsScene($"{ScenesFolder}/CityBuilder.unity", true),
                 new EditorBuildSettingsScene(CampaignOpeningScenePath, true),
+                new EditorBuildSettingsScene(CampaignMapScenePath, true),
             };
 
             CleanupTemplateAssets();

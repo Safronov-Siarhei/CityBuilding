@@ -77,9 +77,9 @@ ROAD = [VILLAGE, (560, 720), FIELD, (800, 690), (880, 600), FOREST, (1060, 590),
         (1540, 520), (1650, 440), (1740, 400), CASTLE]
 # the level points: what the game shows; name keys are the localization's
 LEVELS = [
-    {"id": "m1", "at": VILLAGE, "titleKey": "#campaign_level_1"},
-    {"id": "m2", "at": TOWN, "titleKey": "#campaign_level_2"},
-    {"id": "m3", "at": CASTLE, "titleKey": "#campaign_level_3"},
+    {"id": "m1", "at": VILLAGE, "titleKey": "#campaign_level_1", "scene": "CampaignOpening", "bestKey": "m1_best"},
+    {"id": "m2", "at": TOWN, "titleKey": "#campaign_level_2", "scene": "", "bestKey": ""},
+    {"id": "m3", "at": CASTLE, "titleKey": "#campaign_level_3", "scene": "", "bestKey": ""},
 ]
 FOG_FROM = 1960  # x where the unknown lands begin
 
@@ -307,9 +307,9 @@ def main():
     os.makedirs(pic, exist_ok=True)
     img.save(os.path.join(pic, "CampaignMap_Wide.png"), optimize=True)
     data = {
-        "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each.",
+        "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done.",
         "picture": "CampaignMap_Wide",
-        "levels": [{"id": lv["id"], "x": round(lv["at"][0] / W, 4), "y": round(lv["at"][1] / H, 4), "titleKey": lv["titleKey"]} for lv in LEVELS],
+        "levels": [{"id": lv["id"], "x": round(lv["at"][0] / W, 4), "y": round(lv["at"][1] / H, 4), "titleKey": lv["titleKey"], "scene": lv["scene"], "bestKey": lv["bestKey"]} for lv in LEVELS],
     }
     with open(os.path.join(ROOT, "Assets", "_Project", "Campaign", "CampaignMap.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)

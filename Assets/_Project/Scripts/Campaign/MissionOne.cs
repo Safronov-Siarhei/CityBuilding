@@ -76,6 +76,8 @@ namespace CityBuilder.Campaign
         private int _lastReached = -1;
         private float _stretchFrom, _bestBefore;
         private const string BestKey = "m1_best";
+        /// <summary>This mission's id on the campaign map (Campaign/CampaignMap.json).</summary>
+        public const string LevelId = "m1";
         private const string SplitKey = "m1_split_";
 
         /// <summary>The end at the gate, for the batchmode check.</summary>
@@ -116,6 +118,8 @@ namespace CityBuilder.Campaign
         public void Begin()
         {
             if (Running) return;
+            // the film has been seen once: from now on level 1 starts past it (the map can replay it)
+            PlayerPrefs.SetInt(CampaignProgress.FilmSeenKey, 1);
             _c = JsonUtility.FromJson<Config>(configFile.text);
             director.KeepAlive = true;
             director.CameraReleased = true;
@@ -252,6 +256,7 @@ namespace CityBuilder.Campaign
                     _hud?.Hide();
                     Stretch(_c.chase?.checkpoints != null ? _c.chase.checkpoints.Length : 0);
                     if (_bestBefore <= 0f || _elapsed < _bestBefore) PlayerPrefs.SetFloat(BestKey, _elapsed);
+                    CampaignProgress.MarkDone(LevelId);
                     PlayerPrefs.Save();
                 }
                 if (_end.Started)

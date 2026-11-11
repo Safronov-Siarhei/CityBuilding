@@ -1,24 +1,30 @@
 {
- "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each.",
+ "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done.",
  "picture": "CampaignMap_Wide",
  "levels": [
   {
    "id": "m1",
    "x": 0.1958,
    "y": 0.5926,
-   "titleKey": "#campaign_level_1"
+   "titleKey": "#campaign_level_1",
+   "scene": "CampaignOpening",
+   "bestKey": "m1_best"
   },
   {
    "id": "m2",
    "x": 0.5917,
    "y": 0.5185,
-   "titleKey": "#campaign_level_2"
+   "titleKey": "#campaign_level_2",
+   "scene": "",
+   "bestKey": ""
   },
   {
    "id": "m3",
    "x": 0.7625,
    "y": 0.3333,
-   "titleKey": "#campaign_level_3"
+   "titleKey": "#campaign_level_3",
+   "scene": "",
+   "bestKey": ""
   }
  ]
 }

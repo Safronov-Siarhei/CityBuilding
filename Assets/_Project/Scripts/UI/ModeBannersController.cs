@@ -38,7 +38,7 @@ namespace CityBuilder.UI
         [SerializeField] private Text rewardAmount;
 
         private static readonly string[] MottoKeys = { "#banner_motto_tutorial", "#banner_motto_sandbox", "#banner_motto_invasion", "#banner_motto_campaign" };
-        private const string CampaignScene = "CampaignOpening";
+        private const string CampaignScene = "CampaignMap";
         private static readonly Color Dimmed = new Color(0.72f, 0.72f, 0.72f, 1f);
 
         private int _picked = Sandbox;
@@ -117,7 +117,7 @@ namespace CityBuilder.UI
                 case Tutorial: menu.StartTutorial(); break;
                 case Sandbox: menu.ChooseMode((int)GameMode.Sandbox); break;
                 case Invasion: menu.ChooseMode((int)GameMode.Invasion); break;
-                // the campaign (the user, 2026-11-11: open it, it goes into the release): the opening film, then mission 1
+                // the campaign (the user, 2026-11-12): the loading screen, then the campaign map (pick a level, «Играть»)
                 case Campaign: LoadingScreen.IntoGame(CampaignScene); break;
             }
         }

@@ -181,7 +181,7 @@
     - Pillar blocks sway slightly, and ruin stones are placed so none sits inside another.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
-## Entering the campaign (decided 2026-11-12, NOT built yet)
+## Entering the campaign (decided 2026-11-12; map APPROVED and the screen BUILT the same day, not seen)
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
@@ -194,8 +194,23 @@
   parchment fog (chapters to come). Flags and «Играть» are the game's own UI over the picture.
 - Release scope: 3 LEVELS; the map is a fun placeholder, its places follow the story later (the user:
   «править будем потом исходя из сюжета»). Next: discuss the story of the coming chapters.
-- The opening film plays before LEVEL 1 the first time (and can be watched again from it); today the
-  banner goes straight into the film + mission 1.
+- The opening film plays before LEVEL 1 the first time (and can be watched again from it).
+- **BUILT (2026-11-12, the user approved the map: «подходит»):** scene `Scenes/CampaignMap.unity` (in the
+  build list) made by `SetupProjectCampaign.BuildCampaignMapScene`: a camera + `Scripts/Campaign/CampaignMapScreen.cs`,
+  which draws everything at run time in the HUD kit (MissionSkin): the chart filling the screen
+  (AspectRatioFitter Envelope: a squarer screen crops its sides), a numbered round medal + name plaque on
+  each level point (a lock when closed, a gold dot when done), a gold ring and a pulse on the picked one,
+  Back top left (-> MainMenu), the hint `#campaign_pick` at the bottom until a level is tapped; then the
+  bar fades in bottom centre: the name, a line (best time `#m1_best` / `#campaign_level_soon` /
+  `#campaign_locked`), «Играть» (`#campaign_play`, breathes) and, for level 1 once the film was seen, a
+  replay round button (Hud_Rotate) that plays the film first. «Играть» -> the loading screen -> the level
+  (the user: «снова загрузочный экран, а потом сценка и уровень»). The banner now loads `CampaignMap`;
+  Mission1.json menuScene (pause Home, the end's menu) -> `CampaignMap`.
+  Progress: `CampaignProgress.cs` (PlayerPrefs `campaign_done_<id>`, `campaign_film_seen`): MissionOne
+  marks the film seen on the handover and `m1` done at the gate; a level opens when the one before is
+  done; CampaignMap.json `scene` empty = «Скоро» (levels 2-3 now), `bestKey` = its record. The chart's
+  texture folder `UI/Campaign` is a UI-art folder in UiTextureImport. Texts: CSV + sheet «Тексты: обучение
+  и сюжет» rows 54-60 (`#campaign_soon` was an OLD key, hence `#campaign_level_soon`). Untested, not seen.
 
 ## What the user decided
 - **The opening cutscene's shot list was AGREED on 2026-11-10.** It is about 60 s long, set in the morning.

@@ -20,6 +20,40 @@ namespace CityBuilder.EditorTools
     public static partial class SetupProject
     {
         public const string CampaignOpeningScenePath = ScenesFolder + "/CampaignOpening.unity";
+        public const string CampaignMapScenePath = ScenesFolder + "/CampaignMap.unity";
+
+        /// <summary>The campaign map (the user, 2026-11-12): banner -> loading -> this map -> a level ->
+        /// «Играть». A camera, and CampaignMapScreen, which draws the rest at run time.</summary>
+        private static void BuildCampaignMapScene()
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cam = new GameObject("Main Camera", typeof(Camera));
+            cam.tag = "MainCamera";
+            var c = cam.GetComponent<Camera>();
+            c.clearFlags = CameraClearFlags.SolidColor;
+            c.backgroundColor = new Color(0.16f, 0.11f, 0.07f);
+            cam.AddComponent<AudioListener>();
+            var screen = new GameObject("CampaignMapScreen").AddComponent<CityBuilder.Campaign.CampaignMapScreen>();
+            var so = new SerializedObject(screen);
+            so.FindProperty("mapFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/CampaignMap.json");
+            void Art(string field, string path)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) Debug.LogError($"[Campaign] map sprite {path} not found");
+                so.FindProperty(field).objectReferenceValue = sprite;
+            }
+            // the chart came in before its folder was a UI one: import it again as a sprite
+            AssetDatabase.ImportAsset(UiTextureImport.CampaignFolder + "/CampaignMap_Wide.png", ImportAssetOptions.ForceUpdate);
+            Art("picture", UiTextureImport.CampaignFolder + "/CampaignMap_Wide.png");
+            Art("backGlyph", UiTextureImport.GlyphsFolder + "/Hud_Back.png");
+            Art("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
+            Art("replayGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
+            Art("lockGlyph", UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Directory.CreateDirectory(ScenesFolder);
+            DeleteIfExists(CampaignMapScenePath);
+            EditorSceneManager.SaveScene(scene, CampaignMapScenePath);
+        }
         private const string CinematicModelsFolder = "Assets/_Project/Models/Cinematic";
         private const string OpeningSetPath = "Assets/_Project/Campaign/OpeningSet.json";
         private const string OpeningLifePath = "Assets/_Project/Campaign/OpeningLife.json";
