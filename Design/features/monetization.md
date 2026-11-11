@@ -66,7 +66,7 @@
   paid crystal offers. Crystal PRICES of goods unchanged on purpose (the user will test first).
 - **Ad limit (the user, 2026-11-11: never give bundles for nothing):** «Наборы» has a formula column
   `lN_ads` after each `lN_price` = the level's worth in ads by «Цены ресурсов» (sum of amount x price per
-  10 / 10 / its B3). The CSV export carries the computed number; the importer reads it into
+  10 / 10 / its B3). Beside it `lN_worth` = the level's worth in crystals (compare with lN_price; NOT read by the game). Both formula columns are painted green (the user). The CSV export carries the computed number; the importer reads it into
   `OfferBundle.ads`. A goods bundle with ads > `shop_ad_max_ads` (2, «Наборы: настройки») is crystals only
   (`OfferRotation.AdAllowed`; `OfferShop.Buy` refuses Pay.Ad): ONE wide blue button with the price and a
   crystal (`ButtonBlueWide`, `SlotView.buyWide`) -- the same wide button now also stands for «no ad to
