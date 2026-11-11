@@ -189,7 +189,8 @@ RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_Gold": res_gold_ore, "Res_GoldBar": res_gold_bar, "Res_Coins": res_coins,
              "Res_Grain": res_grain, "Res_Flour": res_flour, "Res_Bread": res_bread,
              "Res_Food": res_food, "Res_Population": res_people,
-             "Res_UpgradeCrystal": res_upgrade_crystal,
+             # Res_UpgradeCrystal is no longer drawn here (the user, 2026-11-11): variant 4 of
+             # crystal_icons.py, copied from Design/art/crystal_icons/Crystal_4.png
              # buildings drawn here rather than taken whole from the file
              "Moat": bld_moat, "Drawbridge": bld_drawbridge(1), "Bridge": bld_bridge(1),
              "Castle": bld_castle(1), **{f"Castle_L{lv}": bld_castle(lv) for lv in range(2, 6)},

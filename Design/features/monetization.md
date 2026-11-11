@@ -165,7 +165,12 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Still open:** the silver level disc over an upgraded LIGHTHOUSE (`BuildingInstance.UpdateLevelMarker`;
   it has a model for level 1 only): models for levels 2-5 or hide the disc -- the user said wait.
 
-## Crystal icon redesign (the user, 2026-11-11; WAITING on the user's pick)
+## Crystal icon redesign (the user, 2026-11-11; variant 4 IN THE GAME)
+- **Chosen: 4 (the brighter cluster on gold)**, copied over `UI/Icons/Res_UpgradeCrystal.png` (name kept;
+  every crystal in the game -- counters, shop, buttons, lab, dungeon -- reads that one file). All five
+  candidates + the old icon + the comparison sheet are kept OUTSIDE Assets in `Design/art/crystal_icons/`
+  (not in the build) for a later swap: copy another `Crystal_<n>.png` over the same file.
+  `render_icons.py` no longer draws Res_UpgradeCrystal (it would put the old cluster back).
 - The crystals are the game's main currency and the icon (`UI/Icons/Res_UpgradeCrystal.png`, a pale
   violet cluster) is lost in the counters. 12 SVG sketches shown; the user picked 1 (cut violet stone),
   3 (ice-blue brilliant), 4 (brighter cluster on gold), 5 (blue stone in a gold medal), 9 (winged) to
