@@ -37,7 +37,7 @@
   "WallTower-lvl3"
  ],
  "route": {
-  "comment": "The approved map (Design/mission1_map_v1.png) in the village frame, metres (x, z): the track from the square (path; the dirt lane is laid from point pathFrom, where the market street ends). field = the tall wheat (poly; the slab of the field's body 'height' high in cells of 'cell', its edge cut smoothly along the track and the outline (marching squares), the ear tiles ('tile' wide) only within earsBand of the track). forest = trees every treeEvery m (jittered) kept clearPath off the track, bushes every bushEvery; fallenTree 'along' m down the track, its middle 'offset' m to the side, trees kept 'clear' m off its ends. river: centre line, width = 3 bridge pieces (the user), banks. bridge: the sandbox's Bridge, 'pieces' pieces of 'piece' m (1 cell grown 1.6x) centred on x, z; deck = its top (crossings.py DECK 0.22 x 1.6), ramp = how far the ground climbs to it. town: the sandbox's level-3 Barbican (gate, its middle cell the way through, 'passage' wide), fencePieces of level-3 wall each side and a wall tower at each end, on wallZ; houses behind, width x depth. wiggle = how far (m) the track (route.wiggle) and the river (river.wiggle) meander off their smooth curves (the user: no straight roads); it fades to nothing at the ends, by the bridge and at the gate.",
+  "comment": "The approved map (Design/mission1_map_v1.png) in the village frame, metres (x, z): the track from the square (path; the dirt lane is laid from point pathFrom, where the market street ends). field = the tall wheat (poly; the slab of the field's body 'height' high in cells of 'cell', its edge cut smoothly along the track and the outline (marching squares), the ear tiles ('tile' wide) only within earsBand of the track). forest = trees every treeEvery m (jittered) kept clearPath off the track, bushes every bushEvery; fallenTree 'along' m down the track, its middle 'offset' m to the side, trees kept 'clear' m off its ends. river: centre line, width = 3 bridge pieces (the user), banks. bridge: the sandbox's Bridge, 'pieces' pieces of 'piece' m (1 cell grown 1.6x) centred on x, z; deck = its top (crossings.py DECK 0.22 x 1.6), ramp = how far the ground climbs to it. town: the sandbox's level-3 Barbican (gate, its middle cell the way through, 'passage' wide), fencePieces of level-3 wall each side and a wall tower at each end, on wallZ; houses behind, width x depth. wiggle = how far (m) the track (route.wiggle) and the river (river.wiggle) meander off their smooth curves (the user: no straight roads); it fades to nothing at the ends, by the bridge and at the gate. bridge.steps: the timber steps model set at both ends (stepsYaw turns the north one; the south one is turned 180 more); ramp = the flight's length, over which a runner climbs to the deck.",
   "path": [
    0,
    -5.6,
@@ -137,7 +137,9 @@
    "piece": 1.6,
    "yaw": 0.0,
    "deck": 0.352,
-   "ramp": 0.8
+   "ramp": 0.66,
+   "steps": "CineBridgeSteps",
+   "stepsYaw": 180.0
   },
   "town": {
    "wallZ": -238.0,

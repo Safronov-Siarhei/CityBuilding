@@ -36,7 +36,7 @@ namespace CityBuilder.Campaign
         [Serializable] private class ForestConfig { public float[] min, max; public float treeEvery, clearPath, bushEvery; }
         [Serializable] private class FallenConfig { public float along, offset, clear; }
         [Serializable] private class RiverConfig { public float[] line; public float width, bank, wiggle; }
-        [Serializable] private class BridgeConfig { public string model; public float x, z, piece, yaw, deck, ramp; public int pieces; }
+        [Serializable] private class BridgeConfig { public string model, steps; public float x, z, piece, yaw, deck, ramp, stepsYaw; public int pieces; }
 
         [Serializable] private class TownConfig
         {
@@ -355,6 +355,18 @@ namespace CityBuilder.Campaign
                 go.transform.localScale = model.transform.localScale * BuildingScale;
                 CineTwoSided.Apply(go);
                 _bridgePieces.Add(go.transform);
+            }
+            // timber steps down to each bank (the user, 2026-11-11: the deck's ends hung in the air)
+            var steps = SetPieceModel(b.steps);
+            if (steps == null) return;
+            var half = b.pieces * b.piece * 0.5f;
+            foreach (var s in new[] { 1f, -1f })
+            {
+                var go = Instantiate(steps, _root);
+                go.name = "BridgeSteps";
+                go.transform.SetPositionAndRotation(new Vector3(b.x, 0f, _bridgeZ + s * half),
+                    Quaternion.Euler(0f, b.stepsYaw + (s > 0f ? 0f : 180f), 0f) * steps.transform.rotation);
+                CineTwoSided.Apply(go);
             }
         }
 
