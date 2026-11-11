@@ -157,7 +157,7 @@ namespace CityBuilder.EditorTools
             // the stick steered down the route's track, as a player would run it: towards the next
             // point, round whatever stops him (the fallen tree), a frame at each landmark
             var path = village.RoutePath;
-            var shots = new System.Collections.Generic.Dictionary<int, string> { { 5, "field" }, { 9, "fallen_tree" }, { 13, "forest" }, { 14, "bridge_near" }, { 16, "bridge_over" }, { 17, "gate" } };
+            var shots = new System.Collections.Generic.Dictionary<int, string> { { 2, "village" }, { 5, "field" }, { 9, "fallen_tree" }, { 13, "forest" }, { 14, "bridge_near" }, { 15, "bridge_over" } };
             var log = new System.Text.StringBuilder();
             var t = 0f;
             var nextLog = 0f;
@@ -184,8 +184,21 @@ namespace CityBuilder.EditorTools
             // the mage's scene: frames at its beats, by its own clock
             var mageShots = new[] { (1.2f, "mage_wave"), (3.8f, "mage_strike"), (4.45f, "mage_orb"), (5.3f, "mage_fall"), (6.4f, "mage_drift"), (9.5f, "mage_hold") };
             var mageNext = 0;
-            while (path != null && wp < path.Count && t < 420f)
+            var endShots0 = new[] { (1.0f, "end_guards"), (3.4f, "end_title") };
+            var endNext0 = 0;
+            while (path != null && t < 420f && (mission.End == null || mission.End.T < 5.5f))
             {
+                if (mission.End != null && mission.End.Started)
+                {
+                    if (endNext0 < endShots0.Length && mission.End.T >= endShots0[endNext0].Item1) Shoot(endShots0[endNext0++].Item2);
+                    director.Step(dt);
+                    mission.Step(dt, Vector2.zero);
+                    Physics.SyncTransforms();
+                    mission.StepCamera(dt);
+                    t += dt;
+                    continue;
+                }
+                if (wp >= path.Count) { wp = path.Count - 1; }
                 if (mission.Mage != null && mageNext < mageShots.Length && mission.Mage.T >= mageShots[mageNext].Item1)
                 {
                     Shoot(mageShots[mageNext++].Item2);
@@ -193,7 +206,7 @@ namespace CityBuilder.EditorTools
                 }
                 var pos = mission.Ardan.position;
                 var to = new Vector3(path[wp].x - pos.x, 0f, path[wp].y - pos.z);
-                if (to.magnitude < 1.0f)
+                if (to.magnitude < 1.0f && wp < path.Count - 1)
                 {
                     if (shots.TryGetValue(wp, out var shot)) Shoot(shot);
                     wp++;
@@ -258,7 +271,7 @@ namespace CityBuilder.EditorTools
             for (var e = 0f; e < 150f && (mission.End == null || mission.End.T < 5.5f); e += dt)
             {
                 var pos = mission.Ardan.position;
-                var target = e < 0f ? pos : (pos.z > -235f ? new Vector3(-4f, 0f, -236f) : new Vector3(-4f, 0f, -243f));
+                var target = new Vector3(-4f, 0f, -194f);
                 var want = (target - pos).normalized;
                 if (mission.End != null && endNext < endShots.Length && mission.End.T >= endShots[endNext].Item1) Shoot(endShots[endNext++].Item2);
                 director.Step(dt);
@@ -267,7 +280,7 @@ namespace CityBuilder.EditorTools
                 mission.StepCamera(dt);
                 t += dt;
             }
-            log.Append($" | END {(mission.End != null && mission.End.Started ? "reached" : "NOT reached")} t {mission.End?.T:F1} summary [{mission.End?.Report}]");
+            log.Append($" | END {(mission.End != null && mission.End.Started ? "reached" : "NOT reached")} t {mission.End?.T:F1} summary [{mission.End?.Report}] objective [{mission.Hud?.ObjectiveText}]");
             EditorSettings.asyncShaderCompilation = wasAsync;
             Debug.Log($"[Mission1] path {log}");
         }

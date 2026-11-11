@@ -211,6 +211,17 @@ namespace CityBuilder.Campaign
             _releaseTimer = 0f;
         }
 
+        /// <summary>More orcs out of the portal, `every` seconds apart (mission 1: the user's playtest
+        /// wanted more orcs in the village, setting it alight): torchbearers and spearmen in turn.</summary>
+        public void Reinforce(int torch, int spear, float every)
+        {
+            if (_c == null) return;
+            _c.torchOrcs += torch;
+            _c.spearOrcs += spear;
+            _c.orcInterval = every;
+            _toRelease += torch + spear;
+        }
+
         /// <summary>Starts by itself in play (until the director takes over).</summary>
         [SerializeField] private bool autoBegin = true;
 

@@ -157,6 +157,29 @@ namespace CityBuilder.Campaign
             _hintDot.anchoredPosition = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
         }
 
+        /// <summary>The game's own look (the user's playtest: «джойстик выглядит дёшево»): a dark
+        /// glass well in a gold rim for the base, a polished gold knob with its own rim and a glint;
+        /// the hint's ghost the same rim, faint.</summary>
+        public void Skin(Sprite disc, Sprite rim, Color well, Color gold)
+        {
+            if (disc == null || rim == null) return;
+            var b = _base.GetComponent<Image>();
+            b.sprite = disc;
+            b.color = well;
+            Image(_base, "Rim", rim, _base.sizeDelta.x, new Color(1f, 1f, 1f, 0.95f)).SetAsFirstSibling();
+            _base.Find("Rim").SetSiblingIndex(0);
+            var k = _knob.GetComponent<Image>();
+            k.sprite = disc;
+            k.color = gold;
+            Image(_knob, "Rim", rim, _knob.sizeDelta.x, Color.white);
+            var glint = Image(_knob, "Glint", Circle(32, 0f, 1f), _knob.sizeDelta.x * 0.34f, new Color(1f, 1f, 0.92f, 0.55f));
+            glint.anchoredPosition = new Vector2(-_knob.sizeDelta.x * 0.16f, _knob.sizeDelta.y * 0.18f);
+            _knob.SetAsLastSibling();
+            var h = _hint.GetComponent<Image>();
+            h.sprite = rim;
+            h.color = new Color(1f, 1f, 1f, 0.5f);
+        }
+
         private static RectTransform Image(Transform parent, string name, Sprite sprite, float size, Color color)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));

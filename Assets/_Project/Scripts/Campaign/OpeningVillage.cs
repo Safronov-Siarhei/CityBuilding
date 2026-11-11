@@ -416,7 +416,7 @@ namespace CityBuilder.Campaign
             }
         }
 
-        [Serializable] private class PropsFile { public float search; public FeaturedProp[] featured; }
+        [Serializable] private class PropsFile { public float search; public FeaturedProp[] featured, houses; }
         [Serializable] private class FeaturedProp { public string id; public float x, z, yaw; }
 
         private bool PutProp(string id, Vector2 at, float radius, float yaw)
@@ -450,6 +450,21 @@ namespace CityBuilder.Campaign
         {
             if (propsFile == null) return;
             var file = JsonUtility.FromJson<PropsFile>(propsFile.text);
+            // houses set on purpose (the user's playtest: a corner of the square looked empty), facing the square
+            if (file.houses != null)
+                foreach (var f in file.houses)
+                {
+                    var want = new Vector2(f.x, f.z);
+                    var face = -want.normalized;
+                    var done = PlaceFacing(f.id, want, face, 0f);
+                    for (var r = 0.5f; !done && r <= file.search; r += 0.5f)
+                        for (var k = 0; k < 8 && !done; k++)
+                        {
+                            var a = k * Mathf.PI / 4f;
+                            done = PlaceFacing(f.id, want + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, face, 0f);
+                        }
+                    if (!done) Debug.Log($"[OpeningVillage] no room for house {f.id} at {want}");
+                }
             foreach (var f in file.featured)
             {
                 var want = new Vector2(f.x, f.z);

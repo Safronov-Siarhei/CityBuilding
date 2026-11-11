@@ -94,12 +94,46 @@ def washing():
     return b
 
 
+def pig():
+    """One of the pen's pigs on its own (the sandbox's pig, PigFarm), loose in mission 1's village
+    (the user, 2026-11-11: «свиньи бегают по городу»). Facing -y, its feet at the origin."""
+    b = Builder()
+    pigfarm1.pig(b, 0.0, 0.0, 0, size=0.55, muddy=False)
+    return b
+
+
+def pig_pen_broken():
+    """The pig pen the orcs smashed (mission 1): the back and one side still up, the front and the
+    other side down -- rails snapped and lying in the mud, a post knocked flat, the trough over --
+    and no pigs (they are loose in the streets)."""
+    b = Builder()
+    w, h = 0.8, 0.6
+    d.rail_fence(b, [(-w, -h + 0.25), (-w, h), (w, h), (w, 0.1)], post_step=0.4)
+    # the broken side: stumps, one rail still hanging off a post
+    for x, y in ((w, -0.3), (0.4, -h), (-0.1, -h), (-0.55, -h)):
+        b.box(x - 0.022, x + 0.022, y - 0.022, y + 0.022, 0, 0.07 + 0.05 * ((x * 7) % 1), 'wood_dark')
+    b.rod((w, 0.1, 0.22), (w + 0.05, -0.35, 0.04), 0.02, 'wood_mid')
+    # rails down in the mud, snapped, and a post lying flat
+    for (x0, y0, x1, y1) in ((0.6, -0.75, 0.05, -0.9), (-0.05, -0.72, -0.5, -0.95), (0.95, -0.2, 1.05, -0.65),
+                             (-0.3, -0.85, -0.75, -0.7), (0.25, -1.05, 0.55, -1.15)):
+        b.rod((x0, y0, 0.015), (x1, y1, 0.02), 0.021, 'wood_mid')
+    b.rod((0.15, -0.6, 0.02), (0.18, -0.92, 0.025), 0.024, 'wood_dark')
+    b.cylinder(0.3, 0.2, 0.0, 0.008, 0.26, 'wood_dark', sides=10)                       # the wallow
+    b.zbox(-0.5, -0.15, 0.0, 0.07, 0.42, 0.09, 75, 'wood_mid', bevel=0.008)             # the trough, over
+    d.hay_bale(b, 0.75, 0.62, 35)
+    for x, y in ((0.4, -0.95), (-0.2, -1.1), (0.7, -1.25)):
+        b.cylinder(x, y, 0.0, 0.006, 0.14, 'wood_dark', sides=8)                         # trampled mud
+    return b
+
+
 SETS = {
     "CineHaystack": haystack,
     "CineHayBales": hay_bales,
     "CinePigPen": pig_pen,
     "CineHenYard": hen_yard,
     "CineWashing": washing,
+    "CinePig": pig,
+    "CinePigPenBroken": pig_pen_broken,
 }
 
 
@@ -148,6 +182,56 @@ def render(out):
         bpy.ops.render.render(write_still=True)
 
 
+def render_new(out):
+    """The loose pig and the smashed pen with Ардан for scale, the game's view and closer."""
+    import bpy
+    from mathutils import Vector
+    import ardan
+    os.makedirs(out, exist_ok=True)
+    objs = [make("CinePigPenBroken", (0, 0, 0)), make("CinePig", (1.6, -0.9, 0))]
+    p2 = objs[1].copy()
+    p2.location = (2.1, -0.4, 0)
+    p2.rotation_euler = (0, 0, 2.2)
+    bpy.context.scene.collection.objects.link(p2)
+    objs.append(p2)
+    objs.append(ardan.make(Vector((1.0, -1.6, 0))))
+    sc = bpy.context.scene
+    keep = set()
+    for o in objs:
+        keep |= {o.name} | {c.name for c in o.children_recursive}
+    for o in sc.objects:
+        o.hide_render = o.name not in keep
+    sc.render.engine = 'BLENDER_EEVEE'
+    sc.render.resolution_x, sc.render.resolution_y = 1600, 900
+    sc.view_settings.view_transform = 'Standard'
+    for name, energy, rx, rz in (("SetSun", 3.5, 50, -25), ("SetFill", 1.0, 70, 150)):
+        light = bpy.data.objects.new(name, bpy.data.lights.new(name, 'SUN'))
+        light.data.energy = energy
+        sc.collection.objects.link(light)
+        light.rotation_euler = (math.radians(rx), 0, math.radians(rz))
+    w = sc.world or bpy.data.worlds.new("W")
+    sc.world = w
+    w.use_nodes = True
+    w.node_tree.nodes["Background"].inputs[0].default_value = (0.8, 0.82, 0.88, 1)
+    bpy.ops.mesh.primitive_plane_add(size=30, location=(0, 0, -0.003))
+    g = bpy.context.active_object
+    m = bpy.data.materials.new("G")
+    m.use_nodes = True
+    m.node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.33, 0.55, 0.2, 1)
+    g.data.materials.append(m)
+    cam = bpy.data.objects.new("SetCam", bpy.data.cameras.new("SetCam"))
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    for name, at, off, lens in (("pen_pig_game", (0.8, -0.5, 0.2), (0, -4.2, 5.0), 35),
+                                ("pen_pig_close", (0.8, -0.5, 0.25), (1.8, -2.6, 1.3), 40)):
+        at = Vector(at)
+        cam.location = at + Vector(off)
+        cam.data.lens = lens
+        cam.rotation_euler = (at - cam.location).to_track_quat('-Z', 'Y').to_euler()
+        sc.render.filepath = os.path.join(out, name + ".png")
+        bpy.ops.render.render(write_still=True)
+
+
 def export(project):
     import bpy
     from mathutils import Matrix
@@ -172,5 +256,7 @@ if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if argv and argv[0] == "render":
         render(argv[1])
+    elif argv and argv[0] == "render_new":
+        render_new(argv[1])
     elif argv and argv[0] == "export":
         export(argv[1])

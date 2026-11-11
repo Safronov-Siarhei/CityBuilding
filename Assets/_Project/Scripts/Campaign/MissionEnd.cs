@@ -9,10 +9,11 @@ namespace CityBuilder.Campaign
 {
     /// <summary>
     /// Mission 1's end at the town gate (the user, 2026-11-11: «Стража и затемнение», then «Итог + в
-    /// меню»). Ардан runs into the gate's passage and the player's say is taken: he runs on into
-    /// the town, two of the town's spearmen (the sandbox's level-3 Spearman, no new model) step
-    /// together behind him and close the way, the screen goes black, «Миссия выполнена» shows, and
-    /// then the summary -- the run's time and how often he was caught -- with «Ещё раз» and «В меню».
+    /// меню»; the first playtest: the guards stand IN FRONT of the gate and do not move, the mission
+    /// ends before the gate, not inside). Ардан reaches the light before the gate and the player's
+    /// say is taken; the two spearmen (the sandbox's level-3 Spearman) stand either side of the way,
+    /// the screen goes black, «Миссия выполнена» shows, and then the summary -- the run's time and how
+    /// often he was caught -- with «Ещё раз» and «В меню».
     /// Every number and key is in Mission1.json "finish".
     /// </summary>
     public class MissionEnd
@@ -91,11 +92,10 @@ namespace CityBuilder.Campaign
                 new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             var go = new GameObject("MissionEnd", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             _canvas = go.GetComponent<Canvas>();
-            // drawn by the camera (over the black), so the batchmode check's frames show it too
-            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            _canvas.worldCamera = cam;
-            _canvas.planeDistance = cam.nearClipPlane + 0.05f;
-            _canvas.sortingOrder = 60;
+            // an overlay above the mission's own (the joystick's black is an overlay at 50): drawn by
+            // the camera it lay UNDER that black, and the end was a black screen (the user's playtest)
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.sortingOrder = 70;
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);

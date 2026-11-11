@@ -28,10 +28,18 @@ namespace CityBuilder.Campaign
             public MissionChase.Config chase;
             public MissionMage.Config mage;
             public MissionEnd.Config finish;
+            public MissionWorld.Config world;
+            public MissionHud.Config hud;
+            public SoundConfig sound;
+            public ReinforceConfig reinforce;
         }
 
-        [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend; }
-        [Serializable] private class StickConfig { public float radius, knob, deadzone, walkBelow, hintDelay, hintFadeAfter; }
+        [Serializable] private class ReinforceConfig { public int torch, spear; public float every; }
+
+        [Serializable] private class SoundConfig { public float music, musicFadeIn, roar; }
+
+        [Serializable] private class CameraConfig { public float pitch, yaw, distance, fov, aimHeight, blend, near, far; }
+        [Serializable] private class StickConfig { public float radius, knob, deadzone, walkBelow, hintDelay, hintFadeAfter; public float[] well, gold; }
         [Serializable] private class CalmConfig { public float from, to; }
         [Serializable] private class RunnerConfig { public float radius, height, turnRate, trunkRadius, fade; }
 
@@ -41,6 +49,17 @@ namespace CityBuilder.Campaign
         [SerializeField] private TextAsset configFile;
         [SerializeField] private OpeningFx fx;
         [SerializeField] private GameObject guardModel;
+        [SerializeField] private Material darkMaterial;
+        [SerializeField] private AudioClip music;
+        [SerializeField] private AudioClip roar;
+        [SerializeField] private MissionHud.Art hudArt;
+
+        private MissionWorld _world;
+        private MissionHud _hud;
+        private AudioSource _music, _roar;
+
+        /// <summary>The HUD (its objective), for the batchmode check.</summary>
+        public MissionHud Hud => _hud;
 
         /// <summary>Set by «Ещё раз» before the scene is loaded again: the film is run through
         /// unseen (under the loading screen) and play begins at once.</summary>
@@ -108,21 +127,64 @@ namespace CityBuilder.Campaign
             _fromFov = cam.usePhysicalProperties ? Camera.FocalLengthToFieldOfView(cam.focalLength, cam.sensorSize.y) : cam.fieldOfView;
             cam.usePhysicalProperties = false;
             cam.fieldOfView = _fromFov;
+            // a deeper near plane: the film's 0.25 m made the gate's coat of arms flicker on its wall
+            if (_c.camera.near > 0f) cam.nearClipPlane = _c.camera.near;
+            if (_c.camera.far > 0f) cam.farClipPlane = _c.camera.far;
             _blend = 0f;
 
             var j = _c.joystick;
             _stick = FloatingJoystick.Create(j.radius, j.knob, j.deadzone, j.hintDelay, j.hintFadeAfter, Localization.Get(_c.hintKey));
             _stick.transform.SetParent(transform, false);
+            _stick.Skin(hudArt.disc, hudArt.rim, Col(j.well), Col(j.gold));
             if (_c.chase != null)
             {
                 _chase = new MissionChase(_c.chase, village, _ardan, _body, director.Member, director.FlameMaterial, transform, Localization.Get);
                 Overlay();
             }
             if (_c.finish != null) _end = new MissionEnd(_c.finish, guardModel, transform);
+            if (_c.world != null)
+            {
+                var finish = _c.finish != null ? new Vector2(_c.finish.runTo[0], _c.finish.runTo[1]) : Vector2.zero;
+                _world = new MissionWorld(_c.world, village, transform, darkMaterial, fx != null ? fx.SparkMaterial : null,
+                    _c.chase?.checkpoints, finish, director.Member, director.Release);
+            }
+            if (_c.hud != null) _hud = new MissionHud(_c.hud, hudArt, transform);
+            if (_c.reinforce != null && director.Life != null) director.Life.Reinforce(_c.reinforce.torch, _c.reinforce.spear, _c.reinforce.every);
+            Sound();
             if (_c.mage != null && fx != null)
                 _mage = new MissionMage(_c.mage, village, director.Member, fx.SparkMaterial, fx.DustMaterial, director.FlameMaterial, transform);
             Running = true;
         }
+
+        /// <summary>A light, uneasy loop under the run, and the orcs' roar when one first sees him.</summary>
+        private void Sound()
+        {
+            var s = _c.sound;
+            if (s == null) return;
+            if (music != null)
+            {
+                _music = gameObject.AddComponent<AudioSource>();
+                _music.clip = music;
+                _music.loop = true;
+                _music.spatialBlend = 0f;
+                _music.volume = 0f;
+                _music.Play();
+            }
+            if (roar != null && _chase != null)
+            {
+                _roar = gameObject.AddComponent<AudioSource>();
+                _roar.spatialBlend = 0f;
+                _chase.Spotted += at =>
+                {
+                    // nearer roars louder; a roar off screen is a warning
+                    var d = (at - _ardan.transform.position).magnitude;
+                    _roar.pitch = 0.9f + 0.2f * Mathf.PerlinNoise(at.x, at.z);
+                    _roar.PlayOneShot(roar, s.roar * Mathf.Clamp01(1.2f - d / 14f));
+                };
+            }
+        }
+
+        private static Color Col(float[] a) => a != null && a.Length >= 3 ? new Color(a[0], a[1], a[2], a.Length > 3 ? a[3] : 1f) : Color.white;
 
         private void Start()
         {
@@ -147,6 +209,10 @@ namespace CityBuilder.Campaign
         public void Step(float dt, Vector2? steer)
         {
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
+            if (_music != null && _c.sound != null) _music.volume = Mathf.MoveTowards(_music.volume, _end != null && _end.Started ? 0f : _c.sound.music, dt * _c.sound.music / Mathf.Max(0.1f, _c.sound.musicFadeIn));
+            var here = _ardan.transform.position;
+            _world?.Step(dt, here, _stick.Value.sqrMagnitude > 0f, _chase != null ? _chase.Reached : -1);
+            _hud?.Step(here);
             if (_end != null)
             {
                 if (!_end.Started) _elapsed += dt;
@@ -155,6 +221,7 @@ namespace CityBuilder.Campaign
                     // in at the gate: the say is taken for good, the town's guards close behind him
                     _end.Begin();
                     _stick.Locked = true;
+                    _hud?.Hide();
                 }
                 if (_end.Started)
                 {

@@ -3,10 +3,12 @@
  "camera": {
   "pitch": 50.0,
   "yaw": 180.0,
-  "distance": 6.0,
+  "distance": 5.1,
   "fov": 60.0,
   "aimHeight": 0.25,
-  "blend": 1.4
+  "blend": 1.4,
+  "near": 0.35,
+  "far": 260.0
  },
  "joystick": {
   "radius": 70.0,
@@ -14,7 +16,19 @@
   "deadzone": 0.15,
   "walkBelow": 0.5,
   "hintDelay": 0.8,
-  "hintFadeAfter": 1.5
+  "hintFadeAfter": 1.5,
+  "well": [
+   0.1,
+   0.07,
+   0.05,
+   0.55
+  ],
+  "gold": [
+   1.0,
+   0.84,
+   0.48,
+   1.0
+  ]
  },
  "runner": {
   "radius": 0.14,
@@ -34,7 +48,10 @@
   "Bridge1-lvl1",
   "FortifiedGate1-lvl3",
   "Fence1-lvl3-Straight",
-  "WallTower-lvl3"
+  "WallTower-lvl3",
+  "Fauna/FaunaDeer",
+  "Fauna/FaunaRabbit",
+  "Flag1-lvl1"
  ],
  "route": {
   "comment": "The approved map (Design/mission1_map_v1.png) in the village frame, metres (x, z): the track from the square (path; the dirt lane is laid from point pathFrom, where the market street ends). field = the tall wheat (poly; the slab of the field's body 'height' high in cells of 'cell', its edge cut smoothly along the track and the outline (marching squares), the ear tiles ('tile' wide) only within earsBand of the track). forest = trees every treeEvery m (jittered) kept clearPath off the track, bushes every bushEvery; fallenTree 'along' m down the track, its middle 'offset' m to the side, trees kept 'clear' m off its ends. river: centre line, width = 3 bridge pieces (the user), banks. bridge: the sandbox's Bridge, 'pieces' pieces of 'piece' m (1 cell grown 1.6x) centred on x, z; deck = its top (crossings.py DECK 0.22 x 1.6), ramp = how far the ground climbs to it. town: the sandbox's level-3 Barbican (gate, its middle cell the way through, 'passage' wide), fencePieces of level-3 wall each side and a wall tower at each end, on wallZ; houses behind, width x depth. wiggle = how far (m) the track (route.wiggle) and the river (river.wiggle) meander off their smooth curves (the user: no straight roads); it fades to nothing at the ends, by the bridge and at the gate. bridge.steps: the timber steps model set at both ends (stepsYaw turns the north one; the south one is turned 180 more); ramp = the flight's length, over which a runner climbs to the deck.",
@@ -72,9 +89,7 @@
    -4,
    -186,
    -4,
-   -192,
-   -4,
-   -238
+   -196.0
   ],
   "pathFrom": 3,
   "laneWidth": 2.0,
@@ -155,7 +170,7 @@
    "stepsYaw": 180.0
   },
   "town": {
-   "wallZ": -238.0,
+   "wallZ": -196.0,
    "gateX": -4.0,
    "piece": 1.6,
    "passage": 1.6,
@@ -187,7 +202,7 @@
   "to": 75.0
  },
  "chase": {
-  "comment": "Mission 1's orcs (the user: a chase, orcs slower than Ардан, who runs 1.007 m/s). An orc sees him within sight m -- in the tall wheat only within wheatSight -- runs at runSpeed, gives up past lose; patrols walk their beat to and fro at walkSpeed. Within catchDistance he is caught: caughtSeconds to see it, fadeSeconds to black and back, and he is at the last checkpoint reached (x, z, radius r) with the orcs back on their beats; the notice (checkpointKey) shows noticeSeconds. The ambush orc hides at hide (the bushes by the bridge), bursts out when he comes within triggerRadius of trigger, runs at its runSpeed and stops at stopZ (the bridge's middle piece: it halts there at the sight of the mage, and his scene takes it). Village frame, metres.",
+  "comment": "Mission 1's orcs (the user: a chase, orcs slower than Ардан, who runs 1.007 m/s). An orc sees him within sight m -- in the tall wheat only within wheatSight -- runs at runSpeed, gives up past lose; patrols walk their beat to and fro at walkSpeed. Stuck against a trunk or a wall it steps round for detourSeconds. While it sees him a red eye (eyeSize m) hangs eyeHeight m over it; its first sight of him (again after roarCooldown s) is a roar. HUNTERS come out of the village (spawn x,z pairs) once he is south of startZ: they chase while they see him, then run to where they last saw him, search searchRadius m round it for searchSeconds, then follow his trail at trailSpeed; south of giveUpZ (the forest's edge) they give up. Within catchDistance he is caught: caughtSeconds to see it, fadeSeconds to black and back, and he is at the last checkpoint reached (x, z, radius r) with the orcs back on their beats; the notice (checkpointKey) shows noticeSeconds. The AMBUSH orc hides at hide (the bushes by the bridge), bursts out when he comes within triggerRadius of trigger and closes in to follow m behind him (its speed his run speed x (1 + (distance - follow) x catchUp)): on his heels at the crossing, where the mage's scene takes it. Village frame, metres.",
   "sight": 6.0,
   "lose": 8.5,
   "catchDistance": 0.45,
@@ -219,6 +234,39 @@
    }
   ],
   "orcs": [
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     -4,
+     -6,
+     -9,
+     -9,
+     -14,
+     -6
+    ]
+   },
+   {
+    "figure": "CineOrcTorch",
+    "beat": [
+     5,
+     -22,
+     0,
+     -18,
+     -6,
+     -21
+    ]
+   },
+   {
+    "figure": "CineOrcSpear",
+    "beat": [
+     -8,
+     -32,
+     -2,
+     -38,
+     4,
+     -35
+    ]
+   },
    {
     "figure": "CineOrcTorch",
     "beat": [
@@ -301,16 +349,41 @@
   "ambush": {
    "figure": "CineOrcSpear",
    "hide": [
-    9.0,
-    -173.0
+    0.5,
+    -170.0
    ],
    "trigger": [
     -4.0,
-    -172.0
+    -168.0
    ],
-   "triggerRadius": 4.5,
+   "triggerRadius": 5.0,
    "runSpeed": 0.97,
-   "stopZ": -181.9
+   "follow": 2.0,
+   "catchUp": 0.6
+  },
+  "detourSeconds": 0.8,
+  "eyeHeight": 1.05,
+  "eyeSize": 0.2,
+  "roarCooldown": 8.0,
+  "hunters": {
+   "figures": [
+    "CineOrcTorch",
+    "CineOrcSpear",
+    "CineOrcSpear"
+   ],
+   "spawn": [
+    -3.0,
+    -32.0,
+    3.0,
+    -35.0,
+    -9.0,
+    -37.0
+   ],
+   "startZ": -48.0,
+   "giveUpZ": -104.0,
+   "searchSeconds": 5.0,
+   "searchRadius": 4.0,
+   "trailSpeed": 0.62
   }
  },
  "mage": {
@@ -319,15 +392,15 @@
   "lineKey": "#m1_mage_line",
   "stand": [
    -2.5,
-   -190.0
+   -185.9
   ],
   "runTo": [
    -4.2,
-   -196.0
+   -190.5
   ],
   "waveYaw": 270.0,
   "bridgeYaw": 0.0,
-  "triggerZ": -186.4,
+  "triggerZ": -184.7,
   "lineAt": 0.2,
   "lineSeconds": 2.6,
   "turnAt": 2.6,
@@ -401,32 +474,32 @@
   ]
  },
  "finish": {
-  "comment": "Mission 1's end at the town gate (the user 2026-11-11: guards and a fade, then the summary and the menu). When Ардан passes triggerZ (into the gate's passage) the player's say is taken; he runs on to runTo. The guards (the sandbox's SoldierSpearman-lvl3 at guardScale, facing yaw) step from (x, z) to (toX, toZ) behind him from closeAt over closeSeconds; the screen goes black from fadeAt over fadeSeconds; the title (titleKey) shows at titleAt, the summary at summaryAt: the run's time (timeKey, {0} = m:ss) and the catches (caughtKey), buttons retryKey (the mission again, the film skipped) and menuKey (to menuScene). Village frame, metres, seconds.",
+  "comment": "Mission 1's end before the town gate (the user: guards and a fade, then the summary and the menu; the first playtest: the guards stand IN FRONT of the gate, no closing, the end is before the gate). When Ардан passes triggerZ (the light before the gate) the player's say is taken; he runs the last steps to runTo. The guards (the sandbox's SoldierSpearman-lvl3 at guardScale, facing yaw) stand at (x, z) (toX/toZ the same: they do not move); the screen goes black from fadeAt over fadeSeconds; the title (titleKey) shows at titleAt, the summary at summaryAt: the run's time (timeKey, {0} = m:ss) and the catches (caughtKey), buttons retryKey (the mission again, the film skipped) and menuKey (to menuScene). Village frame, metres, seconds.",
   "guardScale": 1.6,
-  "triggerZ": -238.6,
+  "triggerZ": -193.2,
   "runTo": [
    -4.0,
-   -243.5
+   -193.8
   ],
-  "closeAt": 0.7,
-  "closeSeconds": 0.8,
-  "fadeAt": 1.6,
+  "closeAt": 0.0,
+  "closeSeconds": 1.0,
+  "fadeAt": 1.2,
   "fadeSeconds": 1.0,
   "titleAt": 2.7,
   "summaryAt": 4.2,
   "guards": [
    {
-    "x": -5.2,
-    "z": -240.4,
-    "toX": -4.35,
-    "toZ": -240.0,
+    "x": -5.5,
+    "z": -195.1,
+    "toX": -5.5,
+    "toZ": -195.1,
     "yaw": 0.0
    },
    {
-    "x": -2.8,
-    "z": -240.4,
-    "toX": -3.65,
-    "toZ": -240.0,
+    "x": -2.5,
+    "z": -195.1,
+    "toX": -2.5,
+    "toZ": -195.1,
     "yaw": 0.0
    }
   ],
@@ -436,5 +509,392 @@
   "retryKey": "#m1_retry",
   "menuKey": "#m1_menu",
   "menuScene": "MainMenu"
+ },
+ "hud": {
+  "comment": "Mission 1's HUD (the user's playtest): the menu button (button px) top left, the current objective top right, Ардан's portrait (portrait px) top centre with his name under it; a tap on him pauses and shows his story. An objective holds while Ардан is north of its untilZ (the first that does).",
+  "button": 72.0,
+  "portrait": 86.0,
+  "margin": 16.0,
+  "nameKey": "#m1_hud_name",
+  "storyKey": "#m1_story",
+  "objectiveKey": "#m1_objective",
+  "pauseKey": "#m1_pause",
+  "resumeKey": "#m1_resume",
+  "restartKey": "#m1_restart",
+  "menuKey": "#m1_menu",
+  "closeKey": "#m1_close",
+  "menuScene": "MainMenu",
+  "objectives": [
+   {
+    "key": "#m1_obj_village",
+    "untilZ": -46.0
+   },
+   {
+    "key": "#m1_obj_field",
+    "untilZ": -104.0
+   },
+   {
+    "key": "#m1_obj_forest",
+    "untilZ": -179.0
+   },
+   {
+    "key": "#m1_obj_bridge",
+    "untilZ": -186.0
+   },
+   {
+    "key": "#m1_obj_gate",
+    "untilZ": -9999.0
+   }
+  ]
+ },
+ "sound": {
+  "comment": "Mission 1's sound: the music (Stealth in the Woods, CC0, Lisboa / OpenGameArt) looped at music volume, faded in over musicFadeIn s and out at the end; an orc's roar at roar volume (quieter the further off).",
+  "music": 0.35,
+  "musicFadeIn": 3.0,
+  "roar": 0.9
+ },
+ "reinforce": {
+  "comment": "More orcs out of the portal once play begins (the user: more orcs in the village): torch and spear more, one every `every` s; they run the streets, fire houses, run people down.",
+  "torch": 6,
+  "spear": 6,
+  "every": 4.0
+ },
+ "world": {
+  "comment": "Mission 1's world round the player (the user's first playtest). corridor: what is off the way is dark like a dungeon (the mask lit within villageRadius of the square, trackHalf of the track, fieldMargin outside the field, and gateHalf x (gateFront in front, gateBack behind) of the end point; texel m a mask cell; the darkness's color, strength, soft, wobble) and an invisible wall wallHeight high where the light ends. markers: a flag (scaled flagScale) and a glowing ring (ringRadius, ringWidth) at each checkpoint, ringColor ahead, reachedColor once reached; a pillar of light (beaconHeight x beaconWidth, beaconColor) at the end, all pulsing at pulse. guide: a golden arrow distance m before his feet, pointing to the track ahead m on, shown after idleSeconds standing still or when he is more than offRoute m off the track. leftovers: the film's villagers (id = film actor) run their path and are gone; hunts: an orc runs a villager down along path (gap m behind) when Ардан comes within radius of trigger -- at its end the villager falls; dead: villagers lying in the streets; folk: refugees before the gate (clip, yaw); props: models placed (x, z, yaw, scale); animals: a model (Fauna, the loose pig) running path at speed (hopping hop m) once he is within radius of trigger, then gone. Village frame, metres.",
+  "corridor": {
+   "texel": 1.0,
+   "villageRadius": 30.0,
+   "trackHalf": 4.5,
+   "fieldMargin": 1.5,
+   "gateHalf": 10.0,
+   "gateFront": 6.0,
+   "gateBack": 1.0,
+   "soft": 1.6,
+   "wobble": 0.35,
+   "strength": 0.92,
+   "color": [
+    0.02,
+    0.03,
+    0.05
+   ],
+   "wallHeight": 2.0
+  },
+  "markers": {
+   "flag": "Flag1-lvl1",
+   "ringRadius": 1.0,
+   "ringWidth": 0.25,
+   "flagScale": 1.6,
+   "beaconHeight": 6.0,
+   "beaconWidth": 0.6,
+   "pulse": 3.0,
+   "ringColor": [
+    1.0,
+    0.8,
+    0.35
+   ],
+   "reachedColor": [
+    0.4,
+    1.0,
+    0.45
+   ],
+   "beaconColor": [
+    1.0,
+    0.85,
+    0.4
+   ]
+  },
+  "guide": {
+   "idleSeconds": 2.0,
+   "ahead": 6.0,
+   "distance": 1.0,
+   "size": 0.8,
+   "offRoute": 4.0,
+   "color": [
+    1.0,
+    0.85,
+    0.35
+   ]
+  },
+  "leftovers": [
+   {
+    "id": "merchant",
+    "path": [
+     -6.4,
+     -44,
+     -12,
+     -52,
+     -24,
+     -58
+    ],
+    "speed": 1.0
+   },
+   {
+    "id": "marketWoman",
+    "path": [
+     -6.6,
+     -44,
+     -4,
+     -54,
+     6,
+     -60,
+     20,
+     -62
+    ],
+    "speed": 0.95
+   },
+   {
+    "id": "peasant",
+    "path": [
+     -6.8,
+     -44,
+     -16,
+     -48,
+     -30,
+     -50
+    ],
+    "speed": 1.05
+   },
+   {
+    "id": "elder",
+    "path": [
+     -14.0,
+     -2.0,
+     -26,
+     -4,
+     -40,
+     2
+    ],
+    "speed": 0.8
+   }
+  ],
+  "hunts": [
+   {
+    "victim": "CinePeasantWoman",
+    "orc": "CineOrcSpear",
+    "path": [
+     12,
+     -18,
+     8,
+     -26,
+     5,
+     -31
+    ],
+    "trigger": [
+     -2.0,
+     -18.0
+    ],
+    "radius": 9.0,
+    "speed": 1.0,
+    "gap": 1.2
+   },
+   {
+    "victim": "CinePeasant",
+    "orc": "CineOrcTorch",
+    "path": [
+     -24,
+     -47,
+     -18,
+     -56,
+     -13,
+     -63
+    ],
+    "trigger": [
+     -6.0,
+     -50.0
+    ],
+    "radius": 11.0,
+    "speed": 1.05,
+    "gap": 1.3
+   }
+  ],
+  "dead": [
+   {
+    "figure": "CinePeasant",
+    "x": -1.8,
+    "z": -15.0,
+    "yaw": 30.0
+   },
+   {
+    "figure": "CineMerchant",
+    "x": 2.6,
+    "z": -28.5,
+    "yaw": 200.0
+   },
+   {
+    "figure": "CinePeasantWoman",
+    "x": -5.4,
+    "z": -37.5,
+    "yaw": 110.0
+   },
+   {
+    "figure": "CinePeasant",
+    "x": -9.5,
+    "z": -46.5,
+    "yaw": 300.0
+   }
+  ],
+  "folk": [
+   {
+    "figure": "CinePeasantWoman",
+    "x": -7.8,
+    "z": -193.2,
+    "yaw": 160.0,
+    "clip": "Talk"
+   },
+   {
+    "figure": "CineBoy",
+    "x": -8.6,
+    "z": -192.4,
+    "yaw": 130.0,
+    "clip": "Idle"
+   },
+   {
+    "figure": "CinePeasant",
+    "x": 0.4,
+    "z": -193.0,
+    "yaw": 210.0,
+    "clip": "Talk"
+   },
+   {
+    "figure": "CineMerchant",
+    "x": 1.3,
+    "z": -192.2,
+    "yaw": 230.0,
+    "clip": "Idle"
+   }
+  ],
+  "props": [
+   {
+    "model": "CinePigPenBroken",
+    "x": 9.0,
+    "z": -22.0,
+    "yaw": 20.0,
+    "scale": 1.0
+   }
+  ],
+  "animals": [
+   {
+    "model": "CinePig",
+    "path": [
+     8,
+     -21,
+     3,
+     -19,
+     -2,
+     -22,
+     -8,
+     -21,
+     -14,
+     -17
+    ],
+    "trigger": [
+     -1.0,
+     -12.0
+    ],
+    "radius": 11.0,
+    "speed": 1.3,
+    "hop": 0.03,
+    "scale": 1.0
+   },
+   {
+    "model": "CinePig",
+    "path": [
+     9,
+     -24,
+     6,
+     -30,
+     0,
+     -32,
+     -6,
+     -30
+    ],
+    "trigger": [
+     -2.0,
+     -24.0
+    ],
+    "radius": 10.0,
+    "speed": 1.2,
+    "hop": 0.03,
+    "scale": 1.0
+   },
+   {
+    "model": "FaunaRabbit",
+    "path": [
+     -8,
+     -60,
+     -2,
+     -63,
+     6,
+     -66,
+     12,
+     -64
+    ],
+    "trigger": [
+     -6.0,
+     -55.0
+    ],
+    "radius": 10.0,
+    "speed": 2.2,
+    "hop": 0.08,
+    "scale": 1.6
+   },
+   {
+    "model": "FaunaDeer",
+    "path": [
+     -36,
+     -82,
+     -12,
+     -86,
+     20,
+     -90
+    ],
+    "trigger": [
+     -6.0,
+     -76.0
+    ],
+    "radius": 16.0,
+    "speed": 2.6,
+    "hop": 0.0,
+    "scale": 1.6
+   },
+   {
+    "model": "FaunaDeer",
+    "path": [
+     18,
+     -120,
+     0,
+     -126,
+     -22,
+     -131
+    ],
+    "trigger": [
+     -6.0,
+     -116.0
+    ],
+    "radius": 14.0,
+    "speed": 2.4,
+    "hop": 0.0,
+    "scale": 1.6
+   },
+   {
+    "model": "FaunaRabbit",
+    "path": [
+     6,
+     -146,
+     0,
+     -150,
+     -8,
+     -152
+    ],
+    "trigger": [
+     6.0,
+     -143.0
+    ],
+    "radius": 9.0,
+    "speed": 2.0,
+    "hop": 0.08,
+    "scale": 1.6
+   }
+  ]
  }
 }

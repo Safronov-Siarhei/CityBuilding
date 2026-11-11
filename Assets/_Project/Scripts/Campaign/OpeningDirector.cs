@@ -169,10 +169,13 @@ namespace CityBuilder.Campaign
         private Vector3 _camFrom, _camAt;
         private bool _shallow;
 
-        private void Start()
+        private System.Collections.IEnumerator Start()
         {
-            if (!autoPlay || Playing || _finished) return;
+            if (!autoPlay || Playing || _finished) yield break;
             if (village.BuildingCount == 0) village.Build();
+            // not under the loading screen: the film waited for nobody and began behind it (the user's playtest)
+            while (UI.LoadingScreen.Busy) yield return null;
+            if (Playing || _finished) yield break;
             Play();
         }
 
@@ -204,6 +207,9 @@ namespace CityBuilder.Campaign
             foreach (var m in cast) if (m.id == figure) return m;
             return null;
         }
+
+        /// <summary>The village's life (its folk and the orcs out of the portal).</summary>
+        public OpeningLife Life => life;
 
         /// <summary>The torches' flame material.</summary>
         public Material FlameMaterial => life != null ? life.FlameMaterial : null;

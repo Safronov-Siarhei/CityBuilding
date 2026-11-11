@@ -8,9 +8,15 @@ namespace CityBuilder.Campaign
     /// Mission 1's orcs and the chase (the user, 2026-11-11: a CHASE, orcs slower than Ардан):
     ///   - patrols walk their beats (the village streets, the field's cart track, the forest);
     ///   - one SEES him within `sight` -- but not in the tall wheat unless right beside him -- and
-    ///     runs at him, a little slower than he runs; it gives up past `lose`, and walks back;
-    ///   - the ambush orc waits hidden in the bushes by the bridge and bursts out as he comes near;
-    ///     it stops at the bridge's far end for now (the mage brings the bridge down on it later);
+    ///     runs at him, a little slower than he runs; it gives up past `lose`, and walks back. While
+    ///     it sees him a RED EYE hangs over it, and the first sight of him brings a ROAR (Spotted);
+    ///   - HUNTERS (the user's playtest: «добавь орков которые будут преследовать игрока из самого
+    ///     города»): once he leaves the village they come after him from it; out of sight they go
+    ///     to where they last saw him and search round it, then pick up his trail again, until he
+    ///     reaches the forest -- the field becomes a game of hiding in the wheat;
+    ///   - the ambush orc bursts out of the bushes by the bridge and closes in to `follow` metres
+    ///     behind him, so at the crossing it is right on his heels (the mage's scene takes it);
+    ///   - an orc that stops against a tree or a house steps round it (it used to stand there);
     ///   - caught: a beat, a fade to black, and he is back at the last checkpoint with the orcs
     ///     back on their beats. Checkpoints: the village's way out, the forest edge, before the bridge.
     /// Every number is in Mission1.json "chase".
@@ -21,15 +27,20 @@ namespace CityBuilder.Campaign
         {
             public float sight, lose, catchDistance, wheatSight, walkSpeed, runSpeed, turnRate, radius, height;
             public float caughtSeconds, fadeSeconds, noticeSeconds;
+            public float detourSeconds, eyeHeight, eyeSize, roarCooldown;
             public string checkpointKey;
             public Checkpoint[] checkpoints;
             public Patrol[] orcs;
             public Ambush ambush;
+            public Hunters hunters;
         }
 
         [Serializable] public class Checkpoint { public float x, z, r; }
         [Serializable] public class Patrol { public string figure; public float[] beat; }
-        [Serializable] public class Ambush { public string figure; public float[] hide, trigger; public float triggerRadius, runSpeed, stopZ; }
+        [Serializable] public class Ambush { public string figure; public float[] hide, trigger; public float triggerRadius, runSpeed, follow, catchUp; }
+        [Serializable] public class Hunters { public string[] figures; public float[] spawn; public float startZ, giveUpZ, searchSeconds, searchRadius, trailSpeed; }
+
+        private enum Hunt { Waiting, Chase, ToLastSeen, Search, Trail, Gone }
 
         private class Orc
         {
@@ -41,7 +52,14 @@ namespace CityBuilder.Campaign
             public bool chasing;
             public bool ambush;
             public bool woken;
+            public bool hunter;
+            public Hunt hunt;
+            public Vector2 lastSeen, searchAt;
+            public float timer;
             public Vector3 home;
+            public float detour, detourSide = 1f;
+            public float roarAt = -99f;
+            public SpriteRenderer eye;
         }
 
         private readonly Config _c;
@@ -50,10 +68,17 @@ namespace CityBuilder.Campaign
         private readonly CharacterController _ardanBody;
         private readonly List<Orc> _orcs = new List<Orc>();
         private readonly Func<string, string> _text;
+        private readonly System.Random _rnd = new System.Random(11);
         private Vector3 _respawn;
         private Quaternion _respawnFacing;
         private int _reached = -1;
         private float _caught = -1f;
+        private float _clock;
+        private bool _huntersOut;
+        private static Sprite _eyeSprite;
+
+        /// <summary>An orc has just seen him (for the roar): where it stands.</summary>
+        public event Action<Vector3> Spotted;
 
         /// <summary>Set while the player has no say: caught, fading, coming back.</summary>
         public bool Frozen => _caught >= 0f;
@@ -68,6 +93,9 @@ namespace CityBuilder.Campaign
 
         public int Catches { get; private set; }
 
+        /// <summary>The last checkpoint reached (-1: none yet).</summary>
+        public int Reached => _reached;
+
         /// <summary>Set once the mage holds the bank: nothing chases him any more.</summary>
         public bool Off { get; private set; }
 
@@ -79,6 +107,7 @@ namespace CityBuilder.Campaign
             CineFigure ambush = null;
             foreach (var o in _orcs)
             {
+                if (o.eye != null) o.eye.enabled = false;
                 if (o.ambush)
                 {
                     ambush = o.fig;
@@ -141,6 +170,15 @@ namespace CityBuilder.Campaign
                     _orcs.Add(o);
                 }
             }
+            if (c.hunters?.figures != null)
+                for (var i = 0; i < c.hunters.figures.Length; i++)
+                {
+                    var o = Spawn(c.hunters.figures[i], cast, flame, parent);
+                    if (o == null) continue;
+                    o.hunter = true;
+                    o.home = new Vector3(c.hunters.spawn[i * 2], 0f, c.hunters.spawn[i * 2 + 1]);
+                    _orcs.Add(o);
+                }
             ResetOrcs();
         }
 
@@ -160,7 +198,51 @@ namespace CityBuilder.Campaign
             body.skinWidth = _c.radius * 0.1f;
             body.minMoveDistance = 0f;
             body.stepOffset = 0f;
-            return new Orc { fig = fig, body = body };
+            // the red eye over its head while it sees him (the user's playtest)
+            var eye = new GameObject("SeesYou", typeof(SpriteRenderer));
+            eye.transform.SetParent(go.transform, false);
+            eye.transform.localPosition = Vector3.up * _c.eyeHeight;
+            var sr = eye.GetComponent<SpriteRenderer>();
+            sr.sprite = EyeSprite();
+            sr.enabled = false;
+            sr.sortingOrder = 10;
+            var scale = _c.eyeSize / Mathf.Max(0.01f, sr.sprite.bounds.size.x);
+            eye.transform.localScale = Vector3.one * scale / Mathf.Max(0.01f, go.transform.lossyScale.x);
+            return new Orc { fig = fig, body = body, eye = sr };
+        }
+
+        /// <summary>A small DRAWN eye, a game icon (the user: «глаз выглядит реалистичным, а должен быть
+        /// маленьким и нарисованным»): a thick dark outline, a flat red almond, a round black pupil and
+        /// one white glint -- no shading.</summary>
+        private static Sprite EyeSprite()
+        {
+            if (_eyeSprite != null) return _eyeSprite;
+            const int w = 64, h = 40;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "OrcEye" };
+            var px = new Color32[w * h];
+            var ink = new Color32(40, 12, 10, 255);
+            var red = new Color32(230, 40, 30, 255);
+            var black = new Color32(20, 6, 6, 255);
+            var white = new Color32(255, 250, 235, 255);
+            for (var y = 0; y < h; y++)
+                for (var x = 0; x < w; x++)
+                {
+                    // the almond in -1..1 across, its half-height 0.9 at the middle
+                    var u = (x + 0.5f) / w * 2.2f - 1.1f;
+                    var v = (y + 0.5f) / h * 2.2f - 1.1f;
+                    var lid = 0.9f * (1f - u * u);
+                    var c = new Color32(0, 0, 0, 0);
+                    if (lid > 0f && Mathf.Abs(v) < lid + 0.16f && Mathf.Abs(u) < 1.08f) c = ink;
+                    if (lid > 0.12f && Mathf.Abs(v) < lid - 0.04f) c = red;
+                    var r2 = u * u + v * v * 0.8f;
+                    if (c.a > 0 && c.r == red.r && r2 < 0.12f) c = black;
+                    if (c.a > 0 && (u + 0.16f) * (u + 0.16f) + (v - 0.2f) * (v - 0.2f) < 0.012f) c = white;
+                    px[y * w + x] = c;
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            _eyeSprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+            return _eyeSprite;
         }
 
         private void ResetOrcs()
@@ -172,9 +254,13 @@ namespace CityBuilder.Campaign
                 o.dir = 1;
                 o.chasing = false;
                 o.woken = false;
-                o.fig.gameObject.SetActive(!o.ambush);
+                o.detour = 0f;
+                o.hunt = Hunt.Waiting;
+                o.fig.gameObject.SetActive(!o.ambush && !o.hunter);
+                if (o.eye != null) o.eye.enabled = false;
                 o.fig.Play("Idle", 0f);
             }
+            _huntersOut = false;
         }
 
         public void Step(float dt)
@@ -185,10 +271,24 @@ namespace CityBuilder.Campaign
                 StepCaught(dt);
                 return;
             }
+            _clock += dt;
             var me = _ardan.transform.position;
             var me2 = new Vector2(me.x, me.z);
             Checkpoints(me2, dt);
             var hidden = _village.InWheat(me2);
+            // the hunters come out of the village once he is out of it (and only until the forest)
+            var h = _c.hunters;
+            if (h != null && !_huntersOut && me.z < h.startZ && me.z > h.giveUpZ)
+            {
+                _huntersOut = true;
+                foreach (var o in _orcs)
+                    if (o.hunter)
+                    {
+                        Place(o.body, o.home);
+                        o.fig.gameObject.SetActive(true);
+                        o.hunt = Hunt.Trail;
+                    }
+            }
             foreach (var o in _orcs)
             {
                 if (!o.fig.gameObject.activeSelf)
@@ -200,39 +300,117 @@ namespace CityBuilder.Campaign
                         o.woken = true;
                         o.chasing = true;
                         o.fig.gameObject.SetActive(true);
+                        Spotted?.Invoke(o.fig.transform.position);
                     }
                     continue;
                 }
                 var p = o.fig.transform.position;
                 var to = new Vector2(me.x - p.x, me.z - p.z);
                 var d = to.magnitude;
+                var sees = d < _c.sight && (!hidden || d < _c.wheatSight);
+                var was = o.chasing;
                 if (o.ambush)
                 {
-                    // it runs him down to the bridge's far end and stops there (the mage's place, later)
-                    if (p.z <= _c.ambush.stopZ)
-                    {
-                        // it waits there; it still catches him if he comes back to it
-                        o.fig.Play("Idle", 0.2f);
-                        o.fig.Tick(dt);
-                    }
-                    else Move(o, to, _c.ambush.runSpeed, true, dt);
+                    // it closes in to `follow` behind him and holds there: on his heels at the bridge
+                    var a = _c.ambush;
+                    var his = _ardan.Clips != null ? _ardan.Clips.runSpeed : a.runSpeed;
+                    var speed = Mathf.Clamp(his * (1f + (d - a.follow) * a.catchUp), his * 0.5f, his * 1.6f);
+                    Move(o, to, speed, true, dt);
                 }
+                else if (o.hunter) StepHunter(o, me2, to, d, sees, dt);
                 else
                 {
-                    var sees = d < _c.sight && (!hidden || d < _c.wheatSight);
                     if (sees) o.chasing = true;
                     else if (d > _c.lose) o.chasing = false;
                     if (o.chasing) Move(o, to, _c.runSpeed, true, dt);
                     else Walk(o, dt);
+                }
+                if (o.eye != null)
+                {
+                    o.eye.enabled = o.chasing && sees;
+                    if (o.eye.enabled && Camera.main != null) o.eye.transform.rotation = Camera.main.transform.rotation;
+                }
+                if (o.chasing && !was && _clock - o.roarAt > _c.roarCooldown)
+                {
+                    o.roarAt = _clock;
+                    Spotted?.Invoke(p);
                 }
                 if (d < _c.catchDistance)
                 {
                     _caught = 0f;
                     Catches++;
                     _ardan.Play("Idle", 0.1f);
-                    foreach (var q in _orcs) q.fig.Play("Idle", 0.2f);
+                    foreach (var q in _orcs)
+                    {
+                        q.fig.Play("Idle", 0.2f);
+                        if (q.eye != null) q.eye.enabled = false;
+                    }
                     return;
                 }
+            }
+        }
+
+        /// <summary>A hunter: runs at him while it sees him; when it loses him, to where it last saw
+        /// him, searches round there a while, then follows his trail (it knows roughly where he went)
+        /// at a walk; past the forest's edge it gives up for good.</summary>
+        private void StepHunter(Orc o, Vector2 me, Vector2 to, float d, bool sees, float dt)
+        {
+            var h = _c.hunters;
+            var p = o.fig.transform.position;
+            var at = new Vector2(p.x, p.z);
+            if (me.y < h.giveUpZ)
+            {
+                if (o.hunt != Hunt.Gone)
+                {
+                    o.hunt = Hunt.Gone;
+                    o.chasing = false;
+                }
+                Move(o, new Vector2(o.home.x, o.home.z) - at, _c.walkSpeed, false, dt);
+                return;
+            }
+            if (sees)
+            {
+                o.hunt = Hunt.Chase;
+                o.chasing = true;
+                o.lastSeen = me;
+            }
+            switch (o.hunt)
+            {
+                case Hunt.Chase:
+                    if (!sees)
+                    {
+                        o.hunt = Hunt.ToLastSeen;
+                        o.chasing = false;
+                    }
+                    Move(o, sees ? to : o.lastSeen - at, _c.runSpeed, true, dt);
+                    break;
+                case Hunt.ToLastSeen:
+                    if ((o.lastSeen - at).magnitude < 0.5f)
+                    {
+                        o.hunt = Hunt.Search;
+                        o.timer = h.searchSeconds;
+                        o.searchAt = o.lastSeen;
+                    }
+                    else Move(o, o.lastSeen - at, _c.runSpeed * 0.85f, true, dt);
+                    break;
+                case Hunt.Search:
+                    o.timer -= dt;
+                    if (o.timer <= 0f)
+                    {
+                        o.hunt = Hunt.Trail;
+                        break;
+                    }
+                    if ((o.searchAt - at).magnitude < 0.4f)
+                    {
+                        var ang = (float)_rnd.NextDouble() * Mathf.PI * 2f;
+                        o.searchAt = o.lastSeen + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * h.searchRadius * (float)_rnd.NextDouble();
+                    }
+                    Move(o, o.searchAt - at, _c.walkSpeed, false, dt);
+                    break;
+                case Hunt.Trail:
+                    // on his trail: towards him, at a brisk walk -- he can stay ahead, but not rest
+                    Move(o, to, h.trailSpeed, h.trailSpeed > _c.walkSpeed * 1.5f, dt);
+                    break;
             }
         }
 
@@ -256,8 +434,21 @@ namespace CityBuilder.Campaign
         {
             var t = o.fig.transform;
             var dir = new Vector3(to.x, 0f, to.y).normalized;
+            // stuck against a trunk or a wall: step round it for a moment, now this side, now that
+            if (o.detour > 0f)
+            {
+                o.detour -= dt;
+                dir = (dir * 0.35f + Vector3.Cross(Vector3.up, dir) * o.detourSide).normalized;
+            }
+            var before = t.position;
             o.body.Move(dir * speed * dt);
             var p = t.position;
+            var moved = new Vector2(p.x - before.x, p.z - before.z).magnitude;
+            if (o.detour <= 0f && speed * dt > 1e-4f && moved < speed * dt * 0.3f && to.magnitude > 0.5f)
+            {
+                o.detour = _c.detourSeconds;
+                o.detourSide = -o.detourSide;
+            }
             p.y = _village.HeightAt(new Vector2(p.x, p.z));
             t.position = p;
             if (dir.sqrMagnitude > 0f) t.rotation = Quaternion.Slerp(t.rotation, Quaternion.LookRotation(dir), Mathf.Clamp01(_c.turnRate * dt));

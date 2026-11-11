@@ -126,9 +126,11 @@ namespace CityBuilder.EditorTools
             routeProp.arraySize = routeNames.Length;
             for (var i = 0; i < routeNames.Length; i++)
             {
-                var m = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Buildings/{routeNames[i]}.fbx");
+                // a bare name is a sandbox building; "Fauna/FaunaDeer" is any folder under Models
+                var file = routeNames[i].Contains("/") ? $"Assets/_Project/Models/{routeNames[i]}.fbx" : $"Assets/_Project/Models/Buildings/{routeNames[i]}.fbx";
+                var m = AssetDatabase.LoadAssetAtPath<GameObject>(file);
                 if (m == null) Debug.LogError($"[Campaign] route model {routeNames[i]} not found");
-                routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("id").stringValue = routeNames[i];
+                routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("id").stringValue = routeNames[i].Substring(routeNames[i].LastIndexOf('/') + 1);
                 routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue = m;
             }
             // and the islands' meadow props: Map 3's decor kit and its material
@@ -288,6 +290,25 @@ namespace CityBuilder.EditorTools
             mso.FindProperty("village").objectReferenceValue = village;
             mso.FindProperty("cam").objectReferenceValue = cam;
             mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            mso.FindProperty("darkMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/DungeonDark.mat");
+            mso.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_mission1.ogg");
+            mso.FindProperty("roar").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_roar.ogg");
+            var art = mso.FindProperty("hudArt");
+            void ArtSprite(string field, string path)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) Debug.LogError($"[Campaign] HUD sprite {path} not found");
+                art.FindPropertyRelative(field).objectReferenceValue = sprite;
+            }
+            ArtSprite("disc", UiTextureImport.SkinFolder + "/event_disc.png");
+            ArtSprite("rim", UiTextureImport.SkinFolder + "/event_rim.png");
+            ArtSprite("mask", UiTextureImport.SkinFolder + "/circle_mask.png");
+            ArtSprite("panel", UiTextureImport.SkinFolder + "/panel.png");
+            ArtSprite("pillParchment", UiTextureImport.SkinFolder + "/pill_parchment.png");
+            ArtSprite("pillWood", UiTextureImport.SkinFolder + "/pill_wood.png");
+            ArtSprite("menuGlyph", UiTextureImport.GlyphsFolder + "/Hud_Menu.png");
+            ArtSprite("closeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Cancel.png");
+            ArtSprite("portrait", UiTextureImport.IconsFolder + "/PortraitArdan.png");
             mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
             mso.FindProperty("fx").objectReferenceValue = fx;
             mso.ApplyModifiedPropertiesWithoutUndo();

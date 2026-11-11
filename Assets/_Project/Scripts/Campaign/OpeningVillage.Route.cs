@@ -468,6 +468,48 @@ namespace CityBuilder.Campaign
 
         // ------------------------------------------------------------ geometry
 
+        /// <summary>How far a point is from the way (the market street and the laid track).</summary>
+        public float TrackDistance(Vector2 p) => _route == null || _path == null ? float.MaxValue : PathDistance(p);
+
+        /// <summary>The way's point `ahead` metres on from the point of it nearest `p` (the guide arrow).</summary>
+        public Vector2 TrackAhead(Vector2 p, float ahead)
+        {
+            if (_route == null || _path == null) return p;
+            var line = new List<Vector2>();
+            for (var i = 0; i < _route.pathFrom && i < _path.Length; i++) line.Add(_path[i]);
+            if (_track != null) line.AddRange(_track);
+            if (line.Count < 2) return p;
+            var best = float.MaxValue;
+            var at = 0f;
+            var run = 0f;
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                var a = line[i];
+                var b = line[i + 1];
+                var ab = b - a;
+                var l = ab.magnitude;
+                var t = l > 1e-5f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / (l * l)) : 0f;
+                var d = (a + ab * t - p).sqrMagnitude;
+                if (d < best) { best = d; at = run + t * l; }
+                run += l;
+            }
+            var want = Mathf.Min(run, at + ahead);
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                var l = (line[i + 1] - line[i]).magnitude;
+                if (want <= l) return Vector2.Lerp(line[i], line[i + 1], l > 1e-5f ? want / l : 0f);
+                want -= l;
+            }
+            return line[line.Count - 1];
+        }
+
+        /// <summary>The field's outline's bounds, and how far inside it a point is (negative outside).</summary>
+        public Rect FieldBounds => _fieldPoly != null ? Bounds(_fieldPoly, 0f) : new Rect();
+        public float FieldSigned(Vector2 p) => _fieldPoly != null ? PolySigned(_fieldPoly, p) : float.MinValue;
+
+        /// <summary>Any model the village knows by name: the route's (sandbox buildings, fauna) or the film's set pieces.</summary>
+        public GameObject Model(string id) => RouteModel(id) ?? SetPieceModel(id);
+
         private float PathDistance(Vector2 p)
         {
             var best = float.MaxValue;
