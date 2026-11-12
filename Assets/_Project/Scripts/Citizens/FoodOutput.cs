@@ -1,4 +1,4 @@
-using CityBuilder.Buildings;
+﻿using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
@@ -110,7 +110,8 @@ namespace CityBuilder.Citizens
                 && ProductionBuilding.FertileShare(producer.Instance, map) >= 0.5f) amount += config.FoodFertileBonus;
             // a Fisher's Hut with a shoal in its reach: the whole catch doubled
             if (producer.BuildingId == BuildingIds.FisherHut) amount = Mathf.RoundToInt(amount * producer.SiteMultiplier());
-            return amount;
+            // Изобилие: +N to every food building's day (the user, 2026-11-12)
+            return amount + Shop.Boosters.FoodBonus;
         }
     }
 }

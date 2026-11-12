@@ -5,6 +5,31 @@
 > **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon
 > RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
 
+## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
+- **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table
+  (name_ru/en, desc_ru/en with `{0}`, effect, duration_sec, price_crystals, ad) and a `key` table
+  (booster_slots, booster_slot_recharge_sec, every hint_* number, hint_raid_near_cells 30). The importer
+  (`ReadBoosters`) writes `BalanceConfig.Boosters` + merges the keys into the sandbox economy; names are
+  `#booster_<id>` / `#booster_desc_<id>`. Window words in «Тексты: лавка» (#booster_*, #shop_tab_*, #inventory_*).
+- **Code** (`Scripts/Shop/`): `Boosters` (static: stock `booster.stock.<id>` + time left `booster.left.<id>`
+  in PlayerPrefs, one per account; Tick by the game's clock, sandbox only; `Use` = at once (Ремонт ->
+  `BuildingInstance.RepairFree`, Новосёлы -> AddCitizens) or +duration; effect helpers asked by
+  CitizenAgent (chop/dig speed), FoodOutput.PerDay, TaxManager, ConstructionSite, ResearchManager,
+  SoldierUnit.StrikeDamage, BuildingInstance.TryDamage, SoldierTypes.RecruitCost). `BoosterShop` (beside
+  OfferShop: 4 places, no duplicates, 15-min real-time recharge, ad stub or crystals). `OfferShopWindow`
+  got the bottom tabs «Предложения | Бустеры» and a booster look of each strip (`ShowBoosters()` opens on
+  it). `InventoryPanelController`: resources 4 to a row, booster tiles 6 to a row (owned or running, gold
+  frame + time), the card grows; tap -> window beside it «Включить»/«Продлить». `BoosterHud` (chips under
+  the resource bar, ring of time left, tap -> Запасы), `DayOnMinimap` (sandbox: «День» on the minimap
+  foot; Invasion untouched), `BoosterAuras` (violet spiral ribbons, `Shaders/BoosterStream`, material
+  `Materials/BoosterStream.mat`; `BuildingInstance.All` registry added for it), `BoosterHints` (banner
+  above the build menu; triggers and pacing as agreed below; Вербовка offered from FocusHireBar.ShowSoldiers).
+- **Art:** `Tools/store/booster_art.py` -> `UI/Shop/Resources/Shop/Boosters/Booster_<id>.png` (192 px,
+  glow baked) + TabOn/TabOff, BoosterRing/Disc, BoosterTile(On).
+- **Traps:** booster time runs only in a sandbox game (OfferShop.Allowed); the shop window pauses
+  timeScale, so the clocks stop while it is open; prices are empty in the sheet (the user sets them).
+- **Open:** nobody has seen it in the game yet; prices; the real ads SDK.
+
 ## Offer shop: how it is built (2026-11-11)
 - **Sheet:** «Песочница (Лавка): Предложения» (was «Наборы», gid 2000061; layout since round 4 -- see below; kinds normal|bonus|starter|ad_crystals|paid_crystals; a resource is a ResourceType name or `Crystals`), «Наборы: уровни»
   (2000062: level, lab_from, citizens_from), both -> `Balance/bundles.csv` (stacked tables);

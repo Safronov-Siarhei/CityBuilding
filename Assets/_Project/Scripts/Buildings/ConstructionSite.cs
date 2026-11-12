@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -70,6 +70,8 @@ namespace CityBuilder.Buildings
         private void Update()
         {
             Remaining -= Time.deltaTime;
+            // Зодчий: whatever stands under scaffolding while it runs is done at once (the user, 2026-11-12)
+            if (Shop.Boosters.InstantBuild) Remaining = 0f;
             if (Remaining > 0f) return;
             Finish();
         }

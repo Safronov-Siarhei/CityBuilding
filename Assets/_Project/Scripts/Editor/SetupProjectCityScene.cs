@@ -737,6 +737,20 @@ namespace CityBuilder.EditorTools
             else Debug.LogWarning("[SetupProject] Shaders/IconBillboard is missing -- no worker-shortage marks.");
             shortageSO.FindProperty("material").objectReferenceValue = shortageMaterial;
             shortageSO.ApplyModifiedPropertiesWithoutUndo();
+            // the boosters' violet stream round the buildings they work on (Shaders/BoosterStream; the user, 2026-11-12)
+            var auras = managers.AddComponent<Shop.BoosterAuras>();
+            const string streamPath = "Assets/_Project/Materials/BoosterStream.mat";
+            var stream = AssetDatabase.LoadAssetAtPath<Material>(streamPath);
+            var streamShader = Shader.Find("CityBuilder/BoosterStream");
+            if (stream == null && streamShader != null)
+            {
+                stream = new Material(streamShader) { name = "BoosterStream" };
+                AssetDatabase.CreateAsset(stream, streamPath);
+            }
+            if (stream == null) Debug.LogWarning("[SetupProject] Shaders/BoosterStream is missing -- no booster streams.");
+            var aurasSO = new SerializedObject(auras);
+            aurasSO.FindProperty("material").objectReferenceValue = stream;
+            aurasSO.ApplyModifiedPropertiesWithoutUndo();
             var meshMapApplier = managers.AddComponent<MeshMapApplier>();
             var meshMapApplierSO = new SerializedObject(meshMapApplier);
             meshMapApplierSO.FindProperty("saveController").objectReferenceValue = saveController;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
@@ -114,6 +114,17 @@ namespace CityBuilder.Buildings
 
         /// <summary>Every standing house -- whatever holds people, the Town Hall aside (Citizens.HousePeople's houses).</summary>
         public static IReadOnlyList<BuildingInstance> Houses => _houses;
+
+        private static readonly List<BuildingInstance> _all = new List<BuildingInstance>();
+        /// <summary>Every building standing (enabled), the player's and the others' -- for the boosters' streams (Shop/BoosterAuras), no scene search.</summary>
+        public static IReadOnlyList<BuildingInstance> All => _all;
+
+        private void OnEnable()
+        {
+            if (!_all.Contains(this)) _all.Add(this);
+        }
+
+        private void OnDisable() => _all.Remove(this);
 
         /// <summary>A building whose people come from it (the user, 2026-10-25: the houses, not the Town Hall).</summary>
         public static bool IsHouse(BuildingData data) =>
@@ -370,6 +381,8 @@ namespace CityBuilder.Buildings
             if (amount <= 0 || CurrentHealth <= 0) return;
             // the King's Blessing: nothing of the player's takes damage while it lasts; the Captain's Спасение: this one
             if (!IsBot && (Combat.HeroBlessing.Active || IsShielded)) return;
+            // Стойкость: the player's buildings take less of a blow (the user, 2026-11-12)
+            if (!IsBot) amount = Mathf.Max(1, Mathf.RoundToInt(amount * Shop.Boosters.BuildingDamageFactor));
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
             ShowHealthBar();
@@ -527,6 +540,16 @@ namespace CityBuilder.Buildings
             var share = BalanceConfig.Instance.RepairCostFraction * Mathf.Clamp01(missing);
             foreach (var amount in cost) amount.amount = Mathf.Max(1, Mathf.CeilToInt(amount.amount * share));
             return cost;
+        }
+
+        /// <summary>Ремонт (the booster): mended to full for nothing -- the player's standing, damaged buildings only.</summary>
+        public void RepairFree()
+        {
+            if (IsBot || Data == null || CurrentHealth <= 0 || CurrentHealth >= MaxHealth || (Site != null && !Site.IsUpgrade)) return;
+            Decay = 0f;
+            UpdateDecayWarningMarker();
+            CurrentHealth = MaxHealth;
+            if (_healthBar != null) _healthBar.Report(1f);
         }
 
         public bool TryRepair()

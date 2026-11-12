@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Citizens;
@@ -146,6 +146,9 @@ namespace CityBuilder.Research
             // One scientist per research: the ones beyond the scientists stand still, not lost.
             var working = Mathf.Min(_running.Count, LabWorkers);
             for (var i = 0; i < working; i++) _running[i].Elapsed += Time.deltaTime;
+            // Учёный: every running research is done at once while it runs (the user, 2026-11-12)
+            if (Shop.Boosters.InstantResearch)
+                for (var i = 0; i < _running.Count; i++) _running[i].Elapsed = TotalSeconds(_running[i].Topic);
             for (var i = working - 1; i >= 0; i--)
             {
                 if (_running[i].Elapsed >= TotalSeconds(_running[i].Topic)) Complete(i);

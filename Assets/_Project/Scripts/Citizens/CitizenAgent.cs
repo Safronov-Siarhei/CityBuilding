@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Grid;
@@ -63,6 +63,10 @@ namespace CityBuilder.Citizens
         /// rather than a cosmetic pause.
         /// </summary>
         private static float HarvestSeconds => Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.GatherSeconds : Core.BalanceConfig.Instance.HarvestSeconds;
+
+        /// <summary>The chop or the dig itself, shortened by Лесоруб / Каменотёс (the walk is not: the user, 2026-11-12).</summary>
+        private static float HarvestSecondsFor(ResourceNode node) =>
+            node == null ? HarvestSeconds : HarvestSeconds / Mathf.Max(0.01f, Shop.Boosters.WorkSpeed(node.ResourceType));
         // Close enough to work a resource node, instead of demanding its exact center: trees carve
         // themselves out of the NavMesh (see TreesAreaSpawner's NavMeshObstacle), so a route to a
         // tree's center can never fully complete -- the agent would grind against the carve until
@@ -347,7 +351,7 @@ namespace CityBuilder.Citizens
                 if (_mode == Mode.Gathering && IsWithinReachOf(_gatherNode.transform.position))
                 {
                     _isWalking = false;
-                    BeginPause(HarvestSeconds);
+                    BeginPause(HarvestSecondsFor(_gatherNode));
                     return;
                 }
 
@@ -522,7 +526,7 @@ namespace CityBuilder.Citizens
                     }
                     else
                     {
-                        BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
+                        BeginPause(_headingToNode ? HarvestSecondsFor(_workNode) : BuildingRestSeconds);
                     }
                     return;
                 }
@@ -616,7 +620,7 @@ namespace CityBuilder.Citizens
                     return;
                 }
 
-                BeginPause(HarvestSeconds);
+                BeginPause(HarvestSecondsFor(_gatherNode));
                 // by hand: an axe to a tree, a pick to a rock
                 Waddle?.Work(_gatherNode.ResourceType == Resources.ResourceType.Stone ? WorkKind.Mine : WorkKind.Chop, _gatherNode.transform.position);
                 return;
@@ -633,7 +637,7 @@ namespace CityBuilder.Citizens
                 else
                 {
                     // Working: resume the interrupted commute leg from here.
-                    BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
+                    BeginPause(_headingToNode ? HarvestSecondsFor(_workNode) : BuildingRestSeconds);
                 }
                 return;
             }
@@ -654,7 +658,7 @@ namespace CityBuilder.Citizens
             }
 
             // Working: pause at whichever end was just reached before looping to the other.
-            BeginPause(_headingToNode ? HarvestSeconds : BuildingRestSeconds);
+            BeginPause(_headingToNode ? HarvestSecondsFor(_workNode) : BuildingRestSeconds);
             if (_headingToNode && _nodePos.HasValue) Waddle?.Work(_workKind, _nodePos.Value);
         }
 
