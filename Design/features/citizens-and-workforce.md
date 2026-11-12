@@ -70,6 +70,22 @@ citizen selects it; a tap on the world orders it to walk/gather.
   (user, 2026-10-14). A campaign with tiers as milestones was floated, not decided.
 - Units drawn at `UnitSize.Scale` = 0.625 (a citizen is 0.45 m, fits 0.5 m doors).
 
+## AGREED, NOT BUILT: residents bound to houses, work by island (the user, 2026-11-12)
+Why: with houses on several islands the town-wide pool would let one island's people outnumber the
+others when the main island's houses burn; work on another island had no way to get there.
+- A house makes ITS OWN residents up to its places, then stops; they appear beside it (so on its island).
+- A burnt or demolished house: its residents LEAVE the town (no re-housing).
+- A building takes workers only from residents of ITS island; none free there -> a «no workers» mark
+  over it and ONE notice («на этом острове нет жителей»), shown once.
+- Barracks (and other hiring buildings) hire only from their island; a soldier KEEPS his place in his
+  house (the house does not grow a replacement). OPEN: what happens to a soldier whose house is
+  destroyed -- proposed: he stays in the army, homeless, and on disband leaves the town.
+- The Town Hall is a house too: a few permanent residents, made silently (never shown as making
+  people) -- a hidden guard against an outright loss.
+- Moving people between islands = only by building new houses there (no ferrying of citizens).
+- Hunger takes people one by one from ANY house on the map (no per-island economy).
+- Old saves do not matter (only the user plays).
+
 ## Code
 `Citizens/CitizenManager.cs`, `Citizens/CitizenAgent.cs` (modes Wandering/Working/ManualMove/Gathering,
 own copy of route logic, `Route/RouteVersion`), `Citizens/CitizenVisualsManager.cs` (pool, who walks
