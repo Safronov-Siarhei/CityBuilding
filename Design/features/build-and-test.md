@@ -85,6 +85,9 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 (`Editor/BuildWindows.cs`) → `D:\Builds CB` (previous build deleted first) → Telegram via
 `send_build_to_telegram.py` (token from `TELEGRAM_BOT_TOKEN`; 50 MB cap). Identifier
 `com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
+**This machine (2026-11-12): Unity 6000.5.4f1 in D:\unity has NO Android Build Support** (PlaybackEngines
+holds only Windows): no APK until the module is added in Unity Hub (Android Build Support + OpenJDK + SDK/NDK).
+`build_android.ps1` now finds the project and the editor like run.ps1 and stops with that message.
 
 ## Cheats / debug
 `Cheats/CheatsPanel*.cs` (2026-10-31, was DebugPanel): a «Читы» button top-right opens a plain draggable IMGUI
