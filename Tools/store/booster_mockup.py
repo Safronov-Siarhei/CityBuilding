@@ -432,8 +432,66 @@ def hud():
     img.convert('RGB').save(OUT + 'Booster_Hud.png')
 
 
+# ------------------------------------------------------------------ 4. the hints at the right moment
+
+def hint(img, y0, b, title, line, stock, ad, edge):
+    """One hint plaque, bottom centre: the booster's medallion (its stock badge if held), the reason, the
+    effect, and «Включить» (held) or «▶ Смотреть» (taken from the shop's slot and switched on at once)."""
+    W = img.width
+    med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
+    hw, hh = 1000, 136
+    hx0 = (W - hw) // 2
+    m.over(img, lambda g: g.rounded_rectangle((hx0 + 4, y0 + 8, hx0 + hw + 4, y0 + hh + 8), 30, fill=(0, 0, 0, 110)))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((hx0, y0, hx0 + hw, y0 + hh), 30, fill=(250, 236, 204), outline=edge, width=5)
+    img.alpha_composite(medallion(104, b[5], b[6], arrow=False), (hx0 + 16, y0 + 16))
+    d = ImageDraw.Draw(img)
+    if stock:
+        bx, by = hx0 + 104, y0 + 104
+        d.ellipse((bx - 24, by - 24, bx + 24, by + 24), fill=(60, 130, 50), outline='white', width=4)
+        m.text(d, (bx, by), f'×{stock}', 22, 'white')
+    m.text(d, (hx0 + 142, y0 + 46), title, 34, edge, anchor='lm')
+    m.text(d, (hx0 + 142, y0 + 92), line, 27, (110, 72, 36), anchor='lm', path=med)
+    gb = (hx0 + hw - 290, y0 + 18, hx0 + hw - 18, y0 + hh - 18)
+    m.paste(img, m.SHOP + 'ButtonGreen.png', gb, keep=False)
+    cy = (gb[1] + gb[3]) / 2 - 4
+    if ad:
+        m.paste(img, m.SHOP + 'Play.png', (gb[0] + 20, int(cy - 28), gb[0] + 76, int(cy + 28)))
+        d = ImageDraw.Draw(img)
+        m.text(d, ((gb[0] + 76 + gb[2]) / 2, cy), 'Смотреть', 34, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    else:
+        d = ImageDraw.Draw(img)
+        m.text(d, ((gb[0] + gb[2]) / 2, cy), 'Включить', 36, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    # the time it has left before it fades by itself (8 s): a thin bar along the plaque's foot
+    m.over(img, lambda g: g.rounded_rectangle((hx0 + 30, y0 + hh - 12, hx0 + 30 + (hw - 60) * 0.6, y0 + hh - 6), 3,
+                                              fill=edge + (200,)))
+
+
+def hints():
+    W, H = 1920, 1080
+    img = ground(W, H).convert('RGBA')
+    building(img, 'Icons/Cottage.png', 300, 420, 240)
+    building(img, 'Icons/Sawmill.png', 960, 380, 260)
+    building(img, 'Icons/Cottage.png', 1620, 430, 240)
+    d = ImageDraw.Draw(img)
+    med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
+    m.text(d, (960, 520), 'А. Бустер есть в запасе: «Включить» берёт его из «Запасов»', 30, 'white', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
+    hint(img, 560, BOOSTERS[6], 'Орки высадились на остров!', 'Боевой дух: +50% урона, 3 мин', 1, False, (170, 40, 30))
+    d = ImageDraw.Draw(img)
+    m.text(d, (960, 780), 'Б. В запасе нет, но он сейчас в слоте Лавки: реклама — и он сразу включён', 30, 'white',
+           stroke=3, stroke_fill=(30, 40, 20), path=med)
+    hint(img, 820, BOOSTERS[9], 'После боя повреждены здания', 'Ремонт есть в Лавке: чинит все здания', 0, True,
+         (150, 92, 30))
+    d = ImageDraw.Draw(img)
+    m.text(d, (960, 1010), 'полоска внизу плашки — сколько осталось до того, как она погаснет сама (8 с)', 24,
+           'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
+    img.convert('RGB').save(OUT + 'Booster_Hints.png')
+
+
 if __name__ == '__main__':
     shop()
     inventory()
     hud()
+    hints()
     print('ok')

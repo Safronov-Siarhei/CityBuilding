@@ -258,7 +258,20 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look APPROVED 2026-11-12: a VIOLET «magic» wind stream winding up round every
   boosted building (one colour for all; the user's idea after a well-known town builder) + the booster's
   badge over the roof; to build as one ribbon mesh with a scrolling texture (one draw, no particles).
-  Hint rules still open.
+- **Hints at the right moment (the user, 2026-11-12)** -- shown only when the booster is IN STOCK (case A,
+  «Включить»); triggers:
+  - Боевой дух: orcs or the bot's army LANDED on the player's Town Hall island (not merely sailing);
+  - Ремонт: damaged buildings after a fight; Стойкость: enemies coming; Вербовка: barracks/hire opened;
+    Зодчий: a long build/upgrade started; Учёный: a long research started;
+  - Новосёлы: 10+ citizens left and the houses have room for them (not refilling yet); or free places;
+  - Казна: coins below 50;
+  - Лесоруб / Каменотёс / Изобилие: that resource below 5 AND working extraction buildings with 3+
+    workers in all;
+  - frequency (agreed): fades by itself in 8 s (a bar on its foot) or a swipe; one hint on screen; the
+    same hint once per 10 min; none in the first 7 min; ignored 3 times in a row -> quiet till next session;
+    all numbers in the sheet.
+  - OPEN: case B -- not in stock but in a shop slot right now: sometimes offer it («▶ Смотреть», taken and
+    switched on at once); how often/which triggers still to discuss. Concept `Booster_Hints.png`.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
