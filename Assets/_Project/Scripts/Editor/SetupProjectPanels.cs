@@ -786,6 +786,7 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("recipeControls").objectReferenceValue = recipeControls;
             controllerSO.FindProperty("recipeRow").objectReferenceValue = recipeRowRect;
             controllerSO.FindProperty("recipeButtonSprite").objectReferenceValue = SkinSprite("card") ?? panelSprite;
+            controllerSO.FindProperty("recipeArrowSprite").objectReferenceValue = HudGlyph("Play");
             controllerSO.FindProperty("workerControls").objectReferenceValue = workerControls;
             controllerSO.FindProperty("workersLabel").objectReferenceValue = workers;
             controllerSO.FindProperty("idleLabel").objectReferenceValue = idle;

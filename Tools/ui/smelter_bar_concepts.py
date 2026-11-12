@@ -121,7 +121,7 @@ def row_x(count):
 
 def caption(canvas, letter, text):
     d = ImageDraw.Draw(canvas)
-    p = plaque(560, 64)
+    p = plaque(int(110 + d.textlength(text, font=font(28, "Bold"))), 64)
     canvas.alpha_composite(p, (30, 24))
     d.text((52, 36), letter, font=font(36), fill=(255, 214, 90))
     d.text((92, 40), text, font=font(28, "Bold"), fill=(255, 246, 225))
@@ -211,7 +211,68 @@ def concept_c():
     return c
 
 
+def final():
+    """The approved look (the user, 2026-11-12: «вариант А, только убери стоимость»): A without the
+    plaques, the smelt's bar over the building as a sawmill's over its tree, and the recipe in
+    pictures on the building card's band."""
+    c = ground()
+    # the bar over the building: a pill, the bar's icon on the left, gold filling (HarvestProgressBar)
+    pill = Image.new("RGBA", (260, 56))
+    d = ImageDraw.Draw(pill)
+    d.rounded_rectangle([0, 0, 259, 55], 28, fill=(40, 28, 18, 230), outline=(250, 226, 160, 255), width=4)
+    d.rounded_rectangle([48, 14, 48 + int(196 * .6), 41], 13, fill=(242, 206, 90, 255))
+    pill.alpha_composite(sprite("Res_IronBar", (44, 44)), (6, 6))
+    put_centre(c, pill, W // 2, 22 + 10)
+    xs = row_x(4)
+    cy = H - 24 - 80
+    for i, (bar, ore) in enumerate(METALS):
+        chosen = i == CHOSEN
+        b = button(main=chosen)
+        icon = sprite("Res_" + bar, (int(BTN * .72),) * 2)
+        b.alpha_composite(icon, ((b.width - icon.width) // 2, (b.height - icon.height) // 2))
+        put_centre(c, b, xs[i], cy)
+        if chosen:
+            put_centre(c, tick_badge(), xs[i] + 46, cy - 46)
+    mark_button(c, xs[3], cy)
+    caption(c, "1", "Нижний ряд и шкала плавки")
+
+    # the card's band with the recipe in pictures
+    card = Image.new("RGBA", (W, 300), (30, 22, 16, 255))
+    panel = nine("card", (900, 240), (34, 34, 34, 34))
+    card.alpha_composite(panel, (W // 2 - 450, 30))
+    cd = ImageDraw.Draw(card)
+    title = "Плавильня"
+    cd.text((W // 2 - cd.textlength(title, font=font(40)) / 2, 50), title, font=font(40), fill=(70, 42, 20))
+    cd.rounded_rectangle([W // 2 - 420, 140, W // 2 + 420, 230], 16, fill=(52, 36, 24, 235))
+    parts = [("2", None), (None, "Res_Iron"), ("+", None), ("1", None), (None, "Res_Coal"), ("▶", None), ("1", None), (None, "Res_IronBar")]
+    widths = [30 if t else 56 for t, _ in parts]
+    x = W // 2 - (sum(widths) + 8 * (len(parts) - 1)) / 2
+    for (t, ic), w in zip(parts, widths):
+        if ic:
+            card.alpha_composite(sprite(ic, (56, 56)), (int(x), 157))
+        elif t == "▶":
+            cd.polygon([(x + 6, 168), (x + 6, 202), (x + 30, 185)], fill=(255, 255, 255, 235))
+        else:
+            cd.text((x + w / 2 - cd.textlength(t, font=font(36)) / 2, 162), t, font=font(36), fill=(255, 255, 255))
+        x += w + 8
+    p = plaque(int(110 + cd.textlength("Окно здания: рецепт картинками", font=font(28, "Bold"))), 64)
+    card.alpha_composite(p, (30, 24))
+    cd.text((52, 36), "2", font=font(36), fill=(255, 214, 90))
+    cd.text((92, 40), "Окно здания: рецепт картинками", font=font(28, "Bold"), fill=(255, 246, 225))
+
+    sheet = Image.new("RGBA", (W, H + 300 + 12), (30, 22, 16, 255))
+    sheet.alpha_composite(c, (0, 0))
+    sheet.alpha_composite(card, (0, H + 12))
+    out = os.path.join(os.path.dirname(OUT), "Smelter_Final_Concept.png")
+    sheet.convert("RGB").save(out, optimize=True)
+    print(out)
+
+
 def main():
+    import sys
+    if "final" in sys.argv:
+        final()
+        return
     panels = [concept_a(), concept_b(), concept_c()]
     sheet = Image.new("RGBA", (W, H * 3 + 24), (30, 22, 16, 255))
     for i, p in enumerate(panels):

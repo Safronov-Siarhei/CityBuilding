@@ -24,6 +24,7 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject recipeControls;
         [SerializeField] private RectTransform recipeRow;
         [SerializeField] private Sprite recipeButtonSprite;
+        [SerializeField] private Sprite recipeArrowSprite;
         [SerializeField] private GameObject workerControls;
         [SerializeField] private Text workersLabel;
         [SerializeField] private Text idleLabel;
@@ -244,9 +245,14 @@ namespace CityBuilder.UI
                     return;
                 }
                 var empty = _currentProduction != null && _currentProduction.NothingLeftInReach;
-                var choice = _currentProduction != null && _currentProduction.HasRecipeChoice;
-                runCard.ShowBand(empty ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource)) : ProductionLine(data) ?? DecorLine(), empty, choice);
-                if (choice) RefreshRecipeControls(null, runCard.RecipeRow);
+                // a converter (the Плавильня) shows its recipe in pictures, «2 [ore] + 1 [coal] -> 1 [bar]»;
+                // its metal is picked by the buttons beside the «!» (FocusHireBar, the user 2026-11-12)
+                var converts = _currentProduction != null && _currentProduction.MaxWorkers > 0
+                    && _currentProduction.SelectedRecipe != null && _currentProduction.SelectedRecipe.HasInputs;
+                var line = empty ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource))
+                    : converts ? null : ProductionLine(data) ?? DecorLine();
+                runCard.ShowBand(line, empty, converts && !empty);
+                if (converts && !empty) RefreshRecipeFormula(runCard.RecipeRow);
                 return;
             }
 
@@ -434,8 +440,9 @@ namespace CityBuilder.UI
 
             // Rebuilt only when a different building is selected: unlike the workforce list this is
             // a handful of buttons that never change while one card is open.
-            if (_recipeButtonsOwner != _currentProduction || _recipeButtonsRow != row)
+            if (_recipeButtonsOwner != _currentProduction || _recipeButtonsRow != row || row.childCount != _recipeButtons.Count)
             {
+                _formulaOwner = null;
                 for (var i = row.childCount - 1; i >= 0; i--)
                 {
                     Destroy(row.GetChild(i).gameObject);
@@ -495,6 +502,98 @@ namespace CityBuilder.UI
             button.onClick.AddListener(() => SelectRecipe(captured));
 
             return image;
+        }
+
+        // ---------------------------------------------------------------- the recipe in pictures
+
+        private ProductionBuilding _formulaOwner;
+        private BuildingRecipe _formulaRecipe;
+        private RectTransform _formulaRow;
+
+        /// <summary>
+        /// The selected recipe as icons on the card's band: each input's amount and icon, «+» between
+        /// them, «→», then what comes out. Rebuilt only when the building or its recipe changes.
+        /// </summary>
+        private void RefreshRecipeFormula(RectTransform row)
+        {
+            if (row == null || _currentProduction == null) return;
+            var recipe = _currentProduction.SelectedRecipe;
+            if (_formulaOwner == _currentProduction && _formulaRecipe == recipe && _formulaRow == row && row.childCount > 0) return;
+            _formulaOwner = _currentProduction;
+            _formulaRecipe = recipe;
+            _formulaRow = row;
+            // the picker shares the row; it is gone now
+            _recipeButtonsOwner = null;
+            _recipeButtons.Clear();
+            for (var i = row.childCount - 1; i >= 0; i--) Destroy(row.GetChild(i).gameObject);
+            if (recipe == null) return;
+
+            const float icon = 44f, gap = 6f, sign = 34f;
+            var parts = new List<RectTransform>();
+            for (var i = 0; i < recipe.inputs.Count; i++)
+            {
+                if (i > 0) parts.Add(FormulaText(row, "+", sign));
+                parts.Add(FormulaText(row, recipe.inputs[i].amount.ToString(), 30f));
+                parts.Add(FormulaIcon(row, recipe.inputs[i].type, icon));
+            }
+            parts.Add(FormulaArrow(row, sign));   // Rubik has no «→»: the Play glyph
+            parts.Add(FormulaText(row, recipe.outputAmount.ToString(), 30f));
+            parts.Add(FormulaIcon(row, recipe.output, icon));
+
+            var width = -gap;
+            foreach (var part in parts) width += part.sizeDelta.x + gap;
+            var x = -width * 0.5f;
+            foreach (var part in parts)
+            {
+                part.anchoredPosition = new Vector2(x + part.sizeDelta.x * 0.5f, 0f);
+                x += part.sizeDelta.x + gap;
+            }
+        }
+
+        private RectTransform FormulaIcon(RectTransform row, ResourceType type, float size)
+        {
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(row, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(size, size);
+            var image = go.GetComponent<Image>();
+            image.sprite = iconLibrary != null ? iconLibrary.GetIcon(type) : null;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        private RectTransform FormulaArrow(RectTransform row, float size)
+        {
+            var go = new GameObject("Arrow", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(row, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(size, size);
+            var image = go.GetComponent<Image>();
+            image.sprite = recipeArrowSprite;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            image.color = new Color(1f, 1f, 1f, 0.92f);
+            return rect;
+        }
+
+        private static RectTransform FormulaText(RectTransform row, string content, float width)
+        {
+            var go = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(row, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(width, 44f);
+            var text = go.GetComponent<Text>();
+            text.text = content;
+            text.font = UiTheme.Heavy;
+            text.fontSize = 30;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = new Color(1f, 1f, 1f, 0.92f);
+            text.raycastTarget = false;
+            return rect;
         }
 
         public void SelectRecipe(int index)

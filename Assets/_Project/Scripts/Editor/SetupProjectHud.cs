@@ -180,6 +180,9 @@ namespace CityBuilder.EditorTools
             // the Workshop's machines, each opened by a Workshop level
             BuildHireBar(row.transform, FocusHireBar.Kind.Workshop, new[] { SoldierType.Ram, SoldierType.Ballista, SoldierType.Catapult, SoldierType.SiegeTower },
                 new[] { "PortraitRam", "PortraitBallista", "PortraitCatapult", "PortraitSiegeTower" }, iconLibrary);
+            // the Smelter's metals (the user, 2026-11-12, concept A): a tap picks what is smelted; the soldier types are only slot fillers
+            BuildHireBar(row.transform, FocusHireBar.Kind.Smelter, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer },
+                new[] { "Res_CopperBar", "Res_IronBar", "Res_GoldBar" }, iconLibrary, new[] { "SmeltCopperBar", "SmeltIronBar", "SmeltGoldBar" });
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
             // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers
@@ -234,6 +237,7 @@ namespace CityBuilder.EditorTools
             var priceTexts = new Object[n];
             var priceIcons = new Object[n];
             var ticks = new Object[n];
+            var picked = new Object[n];
             var locks = new Object[n];
             var lockTexts = new Object[n];
             const float size = 128f;
@@ -244,6 +248,16 @@ namespace CityBuilder.EditorTools
                 if (icon != null) Object.DestroyImmediate(icon.gameObject);
                 UnityEventTools.AddIntPersistentListener(button.onClick, bar.Tap, i);
                 buttons[i] = button.gameObject;
+
+                // the Smelter's chosen metal sits on the gold button (concept A)
+                if (kind == FocusHireBar.Kind.Smelter)
+                {
+                    var lit = HudImage(button.transform, "Picked", "round_main", new Vector2(size, size * 226f / 216f), false);
+                    lit.preserveAspect = true;
+                    lit.raycastTarget = false;
+                    lit.gameObject.SetActive(false);
+                    picked[i] = lit.gameObject;
+                }
 
                 var face = CreateImage(button.transform, "Face", Color.white);
                 face.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{portraits[i]}.png");
@@ -269,6 +283,17 @@ namespace CityBuilder.EditorTools
                 priceTexts[i] = amount;
                 priceIcons[i] = coin;
 
+                if (kind == FocusHireBar.Kind.Smelter)
+                {
+                    // a green tick at the top right of the metal being smelted
+                    var tick = CreateImage(button.transform, "Smelting", new Color(0.35f, 0.8f, 0.35f, 1f));
+                    tick.sprite = HudGlyph("Check");
+                    tick.preserveAspect = true;
+                    tick.raycastTarget = false;
+                    Anchor(tick.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(46f, 46f), new Vector2(46f, 46f));
+                    tick.gameObject.SetActive(false);
+                    ticks[i] = tick.gameObject;
+                }
                 if (kind == FocusHireBar.Kind.Castle)
                 {
                     var mark = CreateImage(button.transform, "Owned", new Color(0.35f, 0.8f, 0.35f, 1f));
@@ -301,6 +326,7 @@ namespace CityBuilder.EditorTools
             WriteObjects(so.FindProperty("priceTexts"), priceTexts);
             WriteObjects(so.FindProperty("priceIcons"), priceIcons);
             WriteObjects(so.FindProperty("ticks"), ticks);
+            WriteObjects(so.FindProperty("picked"), picked);
             WriteObjects(so.FindProperty("locks"), locks);
             WriteObjects(so.FindProperty("lockTexts"), lockTexts);
             so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;

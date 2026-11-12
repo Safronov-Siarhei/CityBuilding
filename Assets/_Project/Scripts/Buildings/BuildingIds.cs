@@ -24,6 +24,9 @@
         public const string Workshop = "Workshop";
         public const string Church = "Church";
 
+        /// <summary>The Плавильня (the user, 2026-11-12): its metals are picked by the bar buttons beside the «!» (UI.FocusHireBar).</summary>
+        public const string Smelter = "Smelter";
+
         /// <summary>
         /// Buildings put away for now (the user, 2026-11-02, the food rework): the Windmill is gone
         /// from the food chain and the Barns from storage -- every food sits in the Pantries. They

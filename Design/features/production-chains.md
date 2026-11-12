@@ -33,6 +33,26 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
   Workshops: batches ×1.5 at L2, ×2 at L3. Can't express ×1.5 of 1 batch → mines/Smelter tick
   doubled (6→12 s) with batch count doubled. Reuse that trick rather than fractional batches.
 
+## Smelter controls (the user, 2026-11-12, concept A approved; built, setup green, not seen)
+- A tapped Плавильня shows, like the Barracks, round buttons beside the «!»: copper, iron, gold bar
+  (no price). A tap picks what is smelted; the metal smelting now sits on the gold button with a green
+  tick. `UI/FocusHireBar` Kind.Smelter (`SmeltedBars`, `Smelt`, `ShowMetals`, `picked` objects),
+  built in `SetupProjectHud.BuildBuildingFocus`.
+- The card's band shows the recipe in PICTURES: «2 [ore] + 1 [coal] ▶ 1 [bar]»
+  (`BuildingInfoPanelController.RefreshRecipeFormula`; the arrow is the `Hud_Play` glyph -- Rubik has
+  no «→»). The old text picker on the card is gone for a converter.
+- A bar over the building fills towards the next smelt, the bar's icon on it (as a sawmill's over its
+  tree): `ProductionBuilding.ShowSmeltBar` (HarvestProgressBar; hidden with no workers, while built,
+  or when the last tick was short of an input).
+- MINTING (gold bar -> coins) has NO button now: the recipe stays in the data but cannot be picked.
+  Open: what gold bars are for (the user is deciding; proposals: level-5 upgrades, diplomacy, keep minting).
+- Concepts: `Tools/ui/smelter_bar_concepts.py` (A/B/C sheet, `final` -> `Design/ui/Smelter_Final_Concept.png`).
+
+## Planned (agreed in talk 2026-11-12, NOT built)
+- Оружейня: iron bar + coal -> melee weapons; melee soldiers hired for melee weapons + coins.
+- Мастерская стрелка: ranged weapons (the user doubts copper fits; proposed wood + iron bar) -> ranged
+  soldiers for ranged weapons + coins. Copper's role open (proposed: ship hulls, siege machines).
+
 ## How it works
 - `recipes` tab owns ALL production: one row per thing a building can make (`building, recipe_id,
   in1/in1_amount, in2.., out, out_amount`). No row = produces nothing.

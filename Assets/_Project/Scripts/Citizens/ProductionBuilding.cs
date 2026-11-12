@@ -215,6 +215,7 @@ namespace CityBuilder.Citizens
 
         private void OnDestroy()
         {
+            if (_smeltBar != null) Destroy(_smeltBar.gameObject);
             All.Remove(this);
             CitizenVisualsManager.Instance?.UnregisterProductionBuilding(this);
 
@@ -246,9 +247,10 @@ namespace CityBuilder.Citizens
                 if (FoodOutput.IsProducer(data.buildingName)) TickFood();
                 return;
             }
-            if (data == null || AssignedWorkers <= 0 || data.productionIntervalSeconds <= 0f) return;
-            // not while it is being built or upgraded (ConstructionSite)
-            if (_buildingInstance != null && !_buildingInstance.IsOperational) return;
+            var working = data != null && AssignedWorkers > 0 && data.productionIntervalSeconds > 0f
+                && (_buildingInstance == null || _buildingInstance.IsOperational);   // not while built or upgraded (ConstructionSite)
+            ShowSmeltBar(working && !_starved, data);
+            if (!working) return;
 
             // A gatherer earns nothing here. Its wood and stone arrive on a worker's back, and
             // ticking as well would pay it twice -- and would keep paying after the last boulder
@@ -269,6 +271,7 @@ namespace CityBuilder.Citizens
             // A workshop runs as many batches as it has material for: a mill with three hands and
             // grain for two mills two sacks' worth this tick, not none.
             var batches = AffordableBatches(wanted, recipe.inputs, StocksFor(recipe, resources));
+            _starved = recipe.HasInputs && batches <= 0;
 
             if (recipe.HasInputs && !ReportMissingInput(recipe, batches <= 0)) return;
 
@@ -301,6 +304,35 @@ namespace CityBuilder.Citizens
         }
 
         private int _shoalShare;
+
+        // ---------------------------------------------------------------- the smelt's bar (the user, 2026-11-12)
+
+        private HarvestProgressBar _smeltBar;
+        private ResourceType _smeltBarFor;
+        private bool _starved;
+
+        /// <summary>
+        /// Over a converter at work (the Плавильня): a bar like a sawmill's over its tree, filling
+        /// towards the next batch, with the icon of what comes out -- a new metal picked gets a new
+        /// bar. Hidden while nobody works there, while it is being built, or while an input is short
+        /// (the last tick could not run a batch).
+        /// </summary>
+        private void ShowSmeltBar(bool on, BuildingData data)
+        {
+            var recipe = SelectedRecipe;
+            if (!on || recipe == null || !recipe.HasInputs || data == null || data.productionIntervalSeconds <= 0f)
+            {
+                if (_smeltBar != null) _smeltBar.Hide();
+                return;
+            }
+            if (_smeltBar == null || _smeltBarFor != recipe.output)
+            {
+                if (_smeltBar != null) Destroy(_smeltBar.gameObject);
+                _smeltBar = HarvestProgressBar.CreateFor(transform, recipe.output);
+                _smeltBarFor = recipe.output;
+            }
+            _smeltBar.Report(_timer / data.productionIntervalSeconds);
+        }
 
         /// <summary>
         /// A food producer at work: its day's food comes in ones, evenly over the day -- five a day is
